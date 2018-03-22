@@ -1,0 +1,42 @@
+#
+# INCOMPACT 3D parameters - 3D Turbulent channel flow
+#
+128    #nx
+129    #ny
+128     #nz
+1      #nphi
+0      #p_row
+0      #p_col
+#
+# INCOMPACT 3D Flow parameters
+#
+4.      #xlx/pi    # Lx (Adimensional size in x-direction)
+2.      #yly       # Ly (Adimensional size in y-direction)
+1.3333333333333333   #zlz/pi    # Lz (Adimensional size in z-direction)
+4200.   #re        # Reynolds number
+0.125   #noise     # Intensity for initial condition (0.01=1%,1=100%) (t=0)
+0.005   #dt        # Time step
+#
+# INCOMPACT3D Flow configuration
+#
+1      #iin        # Initial condition (0: no-noise, 1: white noise, 2: fixed white noise)
+1      #ifirst     # First iteration
+80000  #ilast      # Last iteration
+3      #nscheme    # Temporal scheme (1:AB2, 2:AB3, 3: RK3, 4:KN+AB3 (-DIMPLICIT flag required))
+2      #istret     # y-mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
+0.259065151 #beta       # Refinement parameter
+#
+# INCOMPACT 3D File parameters
+#
+0      # ilit      # Read initial flow field? (0:no, 1:yes)
+200000 # isave     # Frequency for writing backup file (sauve.dat)
+2500   # imodulo   # Frequency for visualization for VISU_INSTA
+.11111111111111111111 # wrotation
+5000   # irotation
+20001  # initstats1
+40001  # initstats2
+#
+# NUMERICAL DISSIPATION
+#
+0      #jLES       #LES Model (0:DNS, 1:iLES, 2:Explicit Simple Smagorinsky, 3:Explicit Wall-Adaptive LES, 4: Explicit Dynamic Smagorinsky LES)
+4.     # npi2
