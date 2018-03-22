@@ -29,6 +29,54 @@ New developers may find the notes in [CONTRIBUTING](https://bitbucket.org/incomp
 - [**Twitter**](https://twitter.com/incompact3d)
 
 
+### Main improvments/changes ### 
+
+* There are now more flexibility in terms of boundary conditions. You can choose the combinations 1-2 or 2-1 along with the classic 0-0, 1-1 and 2-2 for any direction for the velocity and the scalar.
+
+* There is now a customized file for each case, i.e. bc_tgv.f90, bc_lock.f90, bc_channel.f90, bc_cylinder.f90, bc_jet.f90... this allows concentrating the case specific in a single file. 
+The subroutines init, inflow, outflow, in-situ processing which are case specific are in this file.
+
+* There is no need for recompiling the code if changing the mesh size or the p_row/p_col values.
+
+* The pre_correc was redesigned to work with all boundary conditions. We are still reinfocing the normal velocity equal to zero when using free-slip (this is important when using scalar) 
+
+* All numerical digits were changed to text variables in order to reduce occurances of _mytype and improve the readabilty of the code. Real 0 is now zero, 1 is one... this is not valid for integers! 
+
+* The terms in the scalar subroutine were rewriten to 
+
+* The paraview.f90 is a subroutine that generates the XDMF meta file to open the raw output in Paraview. The .xdmf�s are generated when initiallizing the code and are separated in 3D and 2D fields (i.e. friction velocity map, deposit map, mean planes).
+
+* The restart 
+
+* The visu.prm
+
+* The stretching is defined with a -DSTRETCHING flag on the Makefile. If you do not add this flag and recompile the code, the stretching wont work. The stretching in x, y and z controlled by istretx,istrety and istretz is under development. 
+
+* We removed the deprectaed TWOD flag and the content. If you wish to run a 2D case, you can do a quasi-2D case with nclz1=nclzn=0 and use nz=6 (if DNS) or nz=8 (if ILES). This is the minimum number of points required by the stencil. You can use zlz=0.05, for example. 
+
+
+
+
+### Cannonical cases for code validation ###
+
+1) BC-TGV.f90 ** 3D Taylor-Green problem (TGV)
+Reference paper/data: Dairay et al. (2017)
+
+2) BC-Channel-flow.f90 ** Turbulent channel flow
+Reference paper/data: Moser & Kim (1999)
+
+3) BC-Cylinder.f90 ** Flow over a cylinder
+Reference paper/data: 
+
+4) BC-Lock-exchange.f90 ** Lock-exchange problem
+Reference paper/data: Espath et al. (2014)
+
+5) BC-Periodic-hill.f90.f90 ** Periodic Hill
+Reference paper/data: 
+
+6) BC-TBL.f90 ** Turbulent Boundary Layer
+add the implicit, stretching and tripping...
+
 
 ## Base flow configurations
 
