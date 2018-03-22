@@ -6,21 +6,20 @@ This repository contains a major upgrade in the Incompact3d code.
 
 The new version is faster, more flexible and user friendly.
 
-The main homepage for Incompact3d can be found at [incompact3d.com](https://www.incompact3d.com/).
+The main homepage for Incompact3d can be found at [incompact3d.com](https://www.incompact3d.com/). You can find a list of the work related to the code.
 
-This is the BitBucket repository of Incompact3d source code, including instructions for running and compiling Incompact3d, below.
+This is the GitHub repository of Incompact3d source code, including instructions for running and compiling Incompact3d, below.
 
 ## Resources
 
 - **Homepage:** <https://www.incompact3d.com/>
 - **Binaries:** <https://www.incompact3d.com/download.html>
 - **Documentation:** <https://www.incompact3d.com/docs>
-- **Source code:** <https://bitbucket.org/incompact3d/incompact3d/src/v2.0/>
 - **Git clone URL:** <git@bitbucket.org:incompact3d/incompact3d.git>
 - **Discussion forum:** <https://www.discourse.incompact3d.com/>
 - **Mailing lists:** <https://www.incompact3d.com/community.html>
 
-New developers may find the notes in [CONTRIBUTING](https://bitbucket.org/incompact3d/incompact3d/src/v2.0/CONTRIBUTING.md) helpful to start contributing to the Incompact3d codebase.
+New users and developers are welcome to join.
 
 ### External Resources
 
