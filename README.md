@@ -89,7 +89,7 @@ Now run `make` to build the `Incompact3d` executable. To perform a parallel buil
 This takes a while, but only has to be done once. If the defaults in the build do not work for you, and you need to set specific make parameters, you can save them in `Make.user`. The build will automatically check for the existence of `Makefile` and use it if it exists.
 Building Incompact3d requires very little of disk space and virtual memory.
 
-**Note:** The build process will fail badly if any of the build directory's parent directories have spaces or other shell meta-characters such as `$` or `:` in their names (this is due to a limitation in GNU make).
+**Note:** The compiling process 
 
 Once it is built, you can run the `Incompact3d` executable using its full path in the directory created above (the `Incompact3d` directory).
 
