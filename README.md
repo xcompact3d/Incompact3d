@@ -43,25 +43,6 @@ Incompact3d is built in a flow configuration specific files. You must choose a c
 | Density current              | Lock-exchange    |
 
 
-
-
-
-
-## Currently Supported Platforms
-
-Incompact3d is built and tested regularly on the following platforms:
-
-| Operating System | Architecture     |
-|:----------------:|:----------------:|
-| Linux 2.6.18+    | x86-64 (64-bit)  |
-|                  | i686 (32-bit)    |
-| macOS 10.8+      | x86-64 (64-bit)  |
-
-It's possible that Incompact3d will build and work on other platforms too, and we're always looking to better our platform coverage. If you're using Incompact3d on a platform not listed here, let us know!
-
-
-
-
 ## Source Download and Compilation
 
 First, make sure you have all the [required dependencies](#required-build-tools-and-external-libraries) installed.
