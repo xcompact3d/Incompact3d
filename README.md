@@ -1,10 +1,8 @@
 ## The Incompact3d code
 
-Incompact3d is a Fortran-MPI based, finite difference high-performance code for CFD.
+Incompact3d is a Fortran-MPI based, finite difference high-performance code for solving the incompressible Navier-Stokes equation and as many as you need scalar transport equations.
 
-This repository contains a major upgrade in the Incompact3d code.
-
-The new version is faster, more flexible and user friendly.
+This repository contains a major upgrade in the Incompact3d code. The new version is faster, more flexible and user friendly.
 
 The main homepage for Incompact3d can be found at [incompact3d.com](https://www.incompact3d.com/). You can find a list of the work related to the code.
 
