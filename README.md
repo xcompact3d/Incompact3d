@@ -13,9 +13,9 @@ This is the GitHub repository of Incompact3d source code, including instructions
 - **Homepage:** <https://www.incompact3d.com/>
 - **Binaries:** <https://www.incompact3d.com/download.html>
 - **Documentation:** <https://www.incompact3d.com/docs>
-- **Git clone URL:** <git@bitbucket.org:incompact3d/incompact3d.git>
-- **Discussion forum:** <https://www.discourse.incompact3d.com/>
-- **Mailing lists:** <https://www.incompact3d.com/community.html>
+- **Discussion section (FORUM):** <https://github.com/xcompact3d/Incompact3d/issues>
+- **Git clone URL-SSH:** <git@github.com:xcompact3d/Incompact3d.git>
+- **Git clone URL-HTTPS:** <https://github.com/xcompact3d/Incompact3d.git>
 
 New users and developers are welcome to join.
 
@@ -56,36 +56,16 @@ The subroutines init, inflow, outflow, in-situ processing which are case specifi
 
 ### Cannonical cases for code validation ###
 
-1) BC-TGV.f90 ** 3D Taylor-Green problem (TGV)
-Reference paper/data: Dairay et al. (2017)
-
-2) BC-Channel-flow.f90 ** Turbulent channel flow
-Reference paper/data: Moser & Kim (1999)
-
-3) BC-Cylinder.f90 ** Flow over a cylinder
-Reference paper/data: 
-
-4) BC-Lock-exchange.f90 ** Lock-exchange problem
-Reference paper/data: Espath et al. (2014)
-
-5) BC-Periodic-hill.f90.f90 ** Periodic Hill
-Reference paper/data: 
-
-6) BC-TBL.f90 ** Turbulent Boundary Layer
-add the implicit, stretching and tripping...
-
-
-## Base flow configurations
-
-Incompact3d is built in a flow configuration specific files. You must choose a case and set it on the 'Makefile' and recompile.
+Incompact3d is built in a flow configuration specific files. You must choose a case and set it on the 'Makefile' and recompile. The following cases are set to match the parameters for the specific reference data.
 
 |Code| Flow configuration             | BC File         | Reference |
 |:----------------:|:----------------:|:----------------:|:----------------:|
-|1| Taylor-Green vortices        | TGV              | 
-|2| Turbulent Channel            | Channel-flow     |
+|1| Taylor-Green vortices        | TGV              | Dairay et al. (2017)
+|2| Turbulent Channel            | Channel-flow     | Moser & Kim (1999)
 |3| Flow over a Cylinder         | Cylinder         |
 |4| Periodic Hill                | Periodic-Hill    |
 |5| Density current              | Lock-exchange    |
+|6| Boundary Layer               | TBL              |
 
 
 ## Source Download and Compilation
