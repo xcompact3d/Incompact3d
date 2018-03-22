@@ -82,13 +82,13 @@ add the implicit, stretching and tripping...
 
 Incompact3d is built in a flow configuration specific files. You must choose a case and set it on the 'Makefile' and recompile.
 
-| Case             | Filename         |
-|:----------------:|:----------------:|
-| Turbulent Channel            | Channel-flow     |
-| Flow over a Cylinder         | Cylinder         |
-| Taylor-Green vortices        | TGV              |
-| Periodic Hill                | Periodic-Hill    |
-| Density current              | Lock-exchange    |
+|Code| Flow configuration             | BC File         | Reference |
+|:----------------:|:----------------:|:----------------:|:----------------:|
+|1| Taylor-Green vortices        | TGV              | 
+|2| Turbulent Channel            | Channel-flow     |
+|3| Flow over a Cylinder         | Cylinder         |
+|4| Periodic Hill                | Periodic-Hill    |
+|5| Density current              | Lock-exchange    |
 
 
 ## Source Download and Compilation
@@ -243,4 +243,4 @@ The Julia source code is organized as follows:
     doc/src/manual source for the user manual
     src/           source for Incompact3d code core
     test/          test suites
-    ui/            source for various front ends (under development)
+    ui/            source for various front ends (under development)z
