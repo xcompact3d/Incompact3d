@@ -22,6 +22,8 @@ PROGRAM incompact3d
   real(8) :: tstart,t1,trank,tranksum,ttotal,tremaining,telapsed
 
   TYPE(DECOMP_INFO) :: phG,ph1,ph2,ph3,ph4
+ 
+  if (nrank==0) call system('mkdir data out')
 
   call ft_parameter(.true.)
 
