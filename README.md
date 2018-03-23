@@ -220,4 +220,11 @@ The Julia source code is organized as follows:
     doc/src/manual source for the user manual
     src/           source for Incompact3d code core
     test/          test suites
-    ui/            source for various front ends (under development)z
+    ui/            source for various front ends (under development)
+    
+## GitHub configuration
+
+To add you SSH key to your GitHub account please follow the steps https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/ or just
+
+    pbcopy < ~/.ssh/id_rsa.pub
+    # Copies the contents of the id_rsa.pub file to your clipboard
