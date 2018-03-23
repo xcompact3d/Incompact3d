@@ -8,7 +8,7 @@
 #
 # INCOMPACT 3D Flow parameters
 #
-2.      #xlx, yly, zlz over pi # (Adimensional size in every)
+1.      #xlx, yly, zlz over pi # (Adimensional size in every)
 5000.   #re        # Reynolds number
 0.00    #ri
 0.00    #noise     # Intensity for initial condition (0.01=1%,1=100%) (t=0) (for lock and temporal)

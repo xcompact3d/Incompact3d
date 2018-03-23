@@ -12,11 +12,12 @@
 #   -DVISU        - enable visu.f90
 #   -DVISUEXTRA   - enable extra options visu.f90
 #   -DELES        - enable explicit LES modelling
+#   -DSTRETCHING  - enable mesh stretching in y direction
 # generate a Git version string
 GIT_VERSION := $(shell git describe --tag --long --always)
 
 FLOW_TYPE = Channel-flow#TGV
-OPTIONS = -DVISU -DVISUEXTRA -DOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"#all above
+OPTIONS = -DVISU -DVISUEXTRA -DSTRETCHING -DOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"#all above
 LCL = local#local,lad,sdu,archer
 IVER = 17#15,16,17,18
 CMP = gcc#intel,gcc
