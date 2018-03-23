@@ -10,33 +10,27 @@
 #   -DTIMING      - save a file with detailed timing between subroutines
 #   -DPOST        - enable statistics processing
 #   -DVISU        - enable visu.f90
-#   -DVISUEXTRA   - enable visu.f90
+#   -DVISUEXTRA   - enable extra options visu.f90
 #   -DELES        - enable explicit LES modelling
 # generate a Git version string
 GIT_VERSION := $(shell git describe --tag --long --always)
 
-FLOW_TYPE = Channel-flow
-OPTIONS = -DVISU -DPOST -DDOUBLE_PREC -DSTRETCHING -DVERSION=\"$(GIT_VERSION)\" #-D$(FLOW_TYPE) #-DELES# -DVISUEXTRA -DSTATS #all above
-LCL = local#local,lad,sdu
-IVER = 17#16,17
-CMP = intel#intel,gcc
-FFT = mkl#mkl,generic,fftw3_f03,fftw3
+FLOW_TYPE = Channel-flow#TGV
+OPTIONS = -DVISU -DVISUEXTRA -DOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"#all above
+LCL = local#local,lad,sdu,archer
+IVER = 17#15,16,17,18
+CMP = gcc#intel,gcc
+FFT = generic#mkl,generic,fftw3_f03,fftw3
 
 #######CMP settings###########
 ifeq ($(CMP),intel)
 FC = mpiifort
 FFLAGS = -fpp -O3 -xHost -heap-arrays -shared-intel -mcmodel=large -safe-cray-ptr -g -traceback
-#FFLAGS = -fpp -O3 -xHost -fp-model fast=2 -ipo -g -traceback# -CA -warn all
-#FFLAGS = -cpp -xSSE4.2 -ipo -heaparrays -safe-cray-ptr -g -traceback ##LAD
-#FFLAGS = -cpp -O3 -heaparrays -safe-cray-ptr -g -traceback -xHost  -fp-model fast=2
-#FFLAGS = -fpp -fast -g -traceback
-#FFLAGS = -fpp -O3 -g -ladvisor
 ##debuggin test: -check all -check bounds -chintel eck uninit -gen-interfaces -warn interfaces
 else ifeq ($(CMP),gcc)
 FC = mpif90
 #FFLAGS = -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -x f95-cpp-input
 FFLAGS = -cpp -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -march=native
-#FFLAGS = -cpp -O2 -fimplicit-none  -Wall  -Wline-truncation  -Wcharacter-truncation  -Wsurprising  -Waliasing  -Wimplicit-interface  -Wunused-parameter  -fwhole-file  -fcheck=all  -std=f2008  -pedantic  -fbacktrace
 endif
 
 ### List of files for the main code
