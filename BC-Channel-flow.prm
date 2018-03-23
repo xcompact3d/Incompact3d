@@ -15,7 +15,7 @@
 1.3333333333333333   #zlz/pi    # Lz (Adimensional size in z-direction)
 4200.   #re        # Reynolds number
 0.125   #noise     # Intensity for initial condition (0.01=1%,1=100%) (t=0)
-0.005   #dt        # Time step
+0.001   #dt        # Time step
 #
 # INCOMPACT3D Flow configuration
 #
@@ -32,7 +32,7 @@
 200000 # isave     # Frequency for writing backup file (sauve.dat)
 2500   # imodulo   # Frequency for visualization for VISU_INSTA
 .11111111111111111111 # wrotation
-5000   # irotation
+0      # irotation
 20001  # initstats1
 40001  # initstats2
 #
