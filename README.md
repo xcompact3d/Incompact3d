@@ -109,7 +109,7 @@ Building Incompact3d requires very little of disk space and virtual memory.
 
 Once it is built, you can run the `Incompact3d` executable using its full path in the directory created above (the `Incompact3d` directory).
 
-Now you should be able to run Julia like this:
+Now you should be able to run Incompact3d like this:
 
     mpirun -n 4 ./incompact3d
 
@@ -174,9 +174,9 @@ latest version.
 
 Incompact3d can be compiled for a non-generic architecture by configuring the `ARCH` Makefile variable. See the appropriate section of `Makefile` for additional customization options, such as `MARCH` and `CPU_TARGET`.
 
-For example, to build for Pentium 4, set `MARCH=pentium4` this will compile the code for the processor specific vectorization level.
+For example, to build for Pentium 4, set `march=pentium4` this will compile the code for the processor specific vectorization level.
 
-You can also set `MARCH=native` for a maximum-performance build customized for the current machine CPU.
+You can also set `march=native` for a maximum-performance build customized for the current machine CPU.
 
 
 #### Ubuntu
@@ -186,14 +186,13 @@ In order to compile and execute Incompact3d in the latest Ubuntu version please 
     sudo apt install gfortran libopenmpi-dev
 
 
-
 #### Fedora/RHEL/CentOS
 
 On RHEL/CentOS 6 systems, the default compiler (`gcc` 4.4) is too old to build Incompact3d.
 
     sudo dnf install gcc-gfortran
 
-Install or contact your systems administrator to install a more recent version of `gcc`. The [Scientific Linux Developer Toolset](http://linux.web.cern.ch/linux/devtoolset/) works well.
+Install or contact your systems administrator to install a more recent version of `gcc`.
 
 ### OS X
 
@@ -229,13 +228,11 @@ If you with to compile the code with Intel
 
 ## Source Code Organization
 
-The Julia source code is organized as follows:
+The code is organized as follows:
 
-    contrib/       editor support for Julia source, miscellaneous scripts
-    doc/src/manual source for the user manual
-    src/           source for Incompact3d code core
-    test/          test suites
-    ui/            source for various front ends (under development)
+    src/           source for Incompact3d core
+    data/          3d binary files
+    out/           2d planes and statistics
     
 ## GitHub Configuration
 
