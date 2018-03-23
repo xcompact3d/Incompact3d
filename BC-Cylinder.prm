@@ -3,7 +3,7 @@
 #
 513    #nx
 257    #ny
-128    #nz
+32 #128    #nz
 1      #nphi
 0      #p_row
 0      #p_col
@@ -12,7 +12,7 @@
 #
 20.    #xlx       # Lx (Adimensional size in x-direction)
 12.    #yly       # Ly (Adimensional size in y-direction)
-4.     #zlz       # Lz (Adimensional size in z-direction)
+0.5 #4.     #zlz       # Lz (Adimensional size in z-direction)
 700.   #re        # Reynolds number
 0.     #angle     # Solid rotation angle in degrees
 2.     #u1        # Convective velocity for velocity outflow (0: vphase, 1:umax1, 2: u2)
