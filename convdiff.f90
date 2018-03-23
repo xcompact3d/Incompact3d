@@ -325,11 +325,6 @@ subroutine scalar(ux1,uy1,uz1,phi1,phis1,phiss1,di1,ta1,tb1,tc1,td1,&
   nvect2 = ysize(1)*ysize(2)*ysize(3)
   nvect3 = zsize(1)*zsize(2)*zsize(3)
 
-  !It comes from convdiff
-  !call transpose_x_to_y(uy1,uy2)
-  !call transpose_x_to_y(uz1,uz2)
-  !call transpose_y_to_z(uz2,uz3)
-  
   do is = 1, nphi
 
      !X PENCILS
