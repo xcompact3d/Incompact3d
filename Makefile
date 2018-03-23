@@ -15,12 +15,12 @@
 # generate a Git version string
 GIT_VERSION := $(shell git describe --tag --long --always)
 
-FLOW_TYPE = Channel-flow#TGV
-OPTIONS = -DVISU -DVISUEXTRA -DSTRETCHING -DOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"#all above
+FLOW_TYPE = Cylinder#Channel-flow#TGV
+OPTIONS = -DVISU -DVISUEXTRA -DSTRETCHING -DIBM -DFORCES  -DOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"#all above
 LCL = local#local,lad,sdu,archer
 IVER = 17#15,16,17,18
 CMP = gcc#intel,gcc
-FFT = generic#mkl,generic,fftw3_f03,fftw3
+FFT = fftw3#mkl,generic,fftw3_f03,fftw3
 
 #######CMP settings###########
 ifeq ($(CMP),intel)
@@ -67,15 +67,15 @@ ifeq ($(FFT),mkl)
   MKL_MOD=mkl_mod
   MKL_DFTI=mkl_dfti
 else ifeq ($(FFT),fftw3)
-  FFTW3_PATH=/usr#ubuntu 14 from sudo apt-get install libfftw3-dev
-  #FFTW3_PATH=/usr/lib64#fedora23 from dnf install fftw fftw-devel
-  #FFTW3_PATH=/usr/local/Cellar/fftw/3.3.4_1#osx brew install fftw
+  #FFTW3_PATH=/usr 
+  #FFTW3_PATH=/usr/lib64
+  FFTW3_PATH=/usr/local/Cellar/fftw/3.3.7_1/
   INC=-I$(FFTW3_PATH)/include
   LIBFFT=-L$(FFTW3_PATH) -lfftw3 -lfftw3f
 else ifeq ($(FFT),fftw3_f03)
-  FFTW3_PATH=/usr#ubuntu from sudo apt-get install libfftw3-dev
-  #FFTW3_PATH=/usr/lib64#fedora23 from dnf install fftw fftw-devel
-  #FFTW3_PATH=/usr/local/Cellar/fftw/3.3.4_1#osx brew install fftw
+  #FFTW3_PATH=/usr                            #ubuntu # apt install libfftw3-dev
+  #FFTW3_PATH=/usr/lib64                      #fedora # dnf install fftw fftw-devel
+  FFTW3_PATH=/usr/local/Cellar/fftw/3.3.7_1/  #macOS  # brew install fftw
   INC=-I$(FFTW3_PATH)/include
   LIBFFT=-L$(FFTW3_PATH)/lib -lfftw3 -lfftw3f
 else ifeq ($(FFT),generic)
