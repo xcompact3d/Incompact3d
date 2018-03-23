@@ -114,10 +114,6 @@ post:
 	$(FC) $(FFLAGS) $(OPTIONS) post.f90 -c
 	$(FC) $(FFLAGS) -o $@ $(PSRC:.f90=.o)
 
-.PHONY: dir
-dir:
-	mkdir data out stats
-
 .PHONY: clean
 clean:
 	rm -f *.o *.mod incompact3d post
