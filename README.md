@@ -239,9 +239,8 @@ The Julia source code is organized as follows:
     test/          test suites
     ui/            source for various front ends (under development)
     
-## GitHub configuration
+## GitHub Configuration
 
-To add you SSH key to your GitHub account please follow the steps https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/ or just
+To add you SSH key to your GitHub account please follow the steps https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/ or just copy the contents of the id_rsa.pub file to your clipboard, go to Personal settings and add a new SSH key
 
     pbcopy < ~/.ssh/id_rsa.pub
-    # Copies the contents of the id_rsa.pub file to your clipboard
