@@ -17,7 +17,7 @@
 GIT_VERSION := $(shell git describe --tag --long --always)
 
 FLOW_TYPE = TGV#Cylinder# Channel-flow# TGV
-OPTIONS = -DVISU -DVISUEXTRA -DOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\" #all above
+OPTIONS = -DVISU -DVISUEXTRA -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\" #all above
 LCL = local# local,lad,sdu,archer
 IVER = 17# 15,16,17,18
 CMP = gcc# intel,gcc

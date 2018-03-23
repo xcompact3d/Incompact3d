@@ -27,12 +27,12 @@ module variables
   real(mytype) :: fpi2
 
 #ifndef DOUBLE_PREC
-  integer :: prec = 4
+  integer,parameter :: prec = 4
 #else
 #ifdef SAVE_SINGLE
-  integer :: prec = 4
+  integer,parameter :: prec = 4
 #else
-  integer :: prec = 8  
+  integer,parameter :: prec = 8  
 #endif
 #endif
 
