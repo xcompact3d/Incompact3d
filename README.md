@@ -68,6 +68,23 @@ Incompact3d is built in a flow configuration specific files. You must choose a c
 |6| Boundary Layer               | TBL              |
 
 
+## New compiling FLAGS
+If the flags are not specified in the Makefile, the compile ignore the sections related to each flag. For example, if you do not need IBM in your simulation, do not compile the code with -DIBM, 
+
+   -DDOUBLE_PREC - use double-precision
+   -DSAVE_SINGLE - save 3D data in single-precision
+   -DDEBG        - debuggin incompact3d.f90
+   -DIBM         - enable IBM calls
+   -DTIMING      - save a file with detailed timing between subroutines
+   -DPOST        - enable statistics processing
+   -DVISU        - enable visu.f90
+   -DVISUEXTRA   - enable extra options visu.f90
+   -DELES        - enable explicit LES modelling
+   -DSTRETCHING  - enable mesh stretching in y direction
+
+**Note:** In order to compile the code with the apropiate flags you must enter the -D$FLAG, i.e., -DDOUBLE_PREC
+
+
 ## Source Download and Compilation
 
 First, make sure you have all the [required dependencies](#required-build-tools-and-external-libraries) installed.
