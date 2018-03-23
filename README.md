@@ -75,7 +75,6 @@ If the flags are not specified in the Makefile, the compile ignore the sections 
    -DSAVE_SINGLE - save 3D data in single-precision
    -DDEBG        - debuggin incompact3d.f90
    -DIBM         - enable IBM calls
-   -DTIMING      - save a file with detailed timing between subroutines
    -DPOST        - enable statistics processing
    -DVISU        - enable visu.f90
    -DVISUEXTRA   - enable extra options visu.f90
@@ -153,15 +152,13 @@ latest version.
    run them. `git` will not be able to undo these changes!_
 
 
-## Platform-Specific Build Notes
+## Platform-Specific Notes
 
 ### Linux
 
 #### General
 
-* GCC version 4.7 or later is required to build Julia.
-* To use external shared libraries not in the system library search path, set `USE` and `LDFLAGS=-Wl,-rpath,/path/to/dir/contains/libXXX.so` in `Makefile`.
-  * Instead of setting `LDFLAGS`, putting the library directory into the environment variable `LD_LIBRARY_PATH` (at both compile and run time) also works.
+* GCC version 4.7 or later is required to compile the code.
 
   - is highly recommended that you remove the limits of the environment (e.g. in `.bash_profile`)
 
@@ -207,8 +204,9 @@ On current systems, we recommend that you install the command line tools as desc
 
 ### External FFT libraries
 
-#### FFTW
+* To use external shared FFT libraries not in the system library search path, set `USE` and `LDFLAGS=-Wl,-rpath,/path/to/dir/contains/` in `Makefile`.
 
+#### FFTW
 
 
 ### Intel compilers and Math Kernel Library (MKL)
