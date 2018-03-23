@@ -285,8 +285,8 @@ subroutine convdiff(ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
 
   if (itime.lt.irotation) then
      if (nrank==0) print *,'Rotating turbulent channel!'
-     tb1 = tb1 + wrotation*uz1
-     tc1 = tc1 - wrotation*uy1
+     ta1 = ta1 - wrotation*uy1
+     tb1 = tb1 + wrotation*ux1
   endif
 
 #ifdef ELES
