@@ -695,7 +695,6 @@ contains
 
     allocate (varsingle(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
     varsingle=var
-    print *,'test'
     call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
          MPI_ORDER_FORTRAN, real_type_single, newtype, ierror)
     call MPI_TYPE_COMMIT(newtype,ierror)
