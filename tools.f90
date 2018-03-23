@@ -614,9 +614,9 @@ subroutine stretching()
      if (istret.eq.3) yeta(1)=-half
      do j=2,ny
         if (istret==1) yeta(j)=real(j-1,mytype)*(one/nym)
-        if (istret==2) yeta(j)=real(j-1,mytype)*(one/nym)
-        if (istret==3) yeta(j)=(real(j-1,mytype)*(half/nym)-half)
-        den1=sqrt(alpha*beta+one)
+        if (istret==2) yeta(j)=real(j-1,mytype)*(one/nym)-half
+        if (istret==3) yeta(j)=real(j-1,mytype)*(half/nym)-half
+      den1=sqrt(alpha*beta+one)
         xnum=den1/sqrt(alpha/pi)/sqrt(beta)/sqrt(pi)
         den=two*sqrt(alpha/pi)*sqrt(beta)*pi*sqrt(pi)
         den3=((sin(pi*yeta(j)))*(sin(pi*yeta(j)))/beta/pi)+alpha/pi
