@@ -7,7 +7,6 @@
 #   -DSAVE_SINGLE - Save 3D data in single-precision
 #   -DDEBG        - debuggin incompact3d.f90
 #   -DIBM         - enable IBM calls
-#   -DTIMING      - save a file with detailed timing between subroutines
 #   -DPOST        - enable statistics processing
 #   -DVISU        - enable visu.f90
 #   -DVISUEXTRA   - enable extra options visu.f90
