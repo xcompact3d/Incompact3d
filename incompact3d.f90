@@ -35,10 +35,6 @@ PROGRAM incompact3d
 
   call parameter()
 
-#ifdef ELES
-  call init_explicit_les()
-#endif
-
   call init_variables()
 
   call schemes()
@@ -51,6 +47,10 @@ PROGRAM incompact3d
 
   call decomp_2d_poisson_init()
   call decomp_info_init(nxm,nym,nzm,phG)
+
+#ifdef ELES
+    call init_explicit_les()
+#endif
 
   if (ilit==0) call init(ux1,uy1,uz1,ep1,phi1,gx1,gy1,gz1,phis1,hx1,hy1,hz1,phiss1)
 
