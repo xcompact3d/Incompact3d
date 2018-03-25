@@ -60,8 +60,8 @@ Incompact3d is built in a flow configuration specific files. You must choose a c
 
 |Code| Flow configuration             | BC File         | Reference |
 |:----------------:|:----------------:|:----------------:|:----------------:|
-|1| Taylor-Green vortices        | TGV              | Dairay et al. (2017)
-|2| Turbulent Channel            | Channel-flow     | Moser, Kim & Mansour (1999)
+|1| Taylor-Green vortices        | TGV              |
+|2| Turbulent Channel            | Channel-flow     |[Moser, Kim & Mansour (1999)](http://turbulence.ices.utexas.edu/data/MKM/chan180/profiles/)
 |3| Flow over a Cylinder         | Cylinder         |
 |4| Periodic Hill                | Periodic-Hill    |
 |5| Density current              | Lock-exchange    |
