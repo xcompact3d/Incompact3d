@@ -28,7 +28,6 @@ subroutine convdiff(ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
 
   sgsx1=zero; sgsy1=zero; sgsz1=zero; nut1=zero; srt_smag=zero
 
-  if (itime.gt.10) then
 
      if (jLES==2) then !SMAG
 
@@ -56,7 +55,6 @@ subroutine convdiff(ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
           sgsx1,sgsy1,sgsz1,ta1,td1,te1,tf1,di1,ta2,td2,te2,tf2,tj2,di2,&
           ta3,td3,te3,tf3,di3)
 
-  endif
 
   ta1 = zero; tb1 = zero; tc1 = zero
   td1 = zero; te1 = zero; tf1 = zero
