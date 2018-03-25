@@ -1,34 +1,3 @@
-!################################################################################
-!This file is part of Incompact3d.
-!
-!Incompact3d
-!Copyright (c) 2012 Eric Lamballais and Sylvain Laizet
-!eric.lamballais@univ-poitiers.fr / sylvain.laizet@gmail.com
-!
-!    Incompact3d is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU General Public License as published by
-!    the Free Software Foundation.
-!
-!    Incompact3d is distributed in the hope that it will be useful,
-!    but WITHOUT ANY WARRANTY; without even the implied warranty of
-!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU General Public License for more details.
-!
-!    You should have received a copy of the GNU General Public License
-!    along with the code.  If not, see <http://www.gnu.org/licenses/>.
-!-------------------------------------------------------------------------------
-!-------------------------------------------------------------------------------
-!    We kindly request that you cite Incompact3d in your publications and
-!    presentations. The following citations are suggested:
-!
-!    1-Laizet S. & Lamballais E., 2009, High-order compact schemes for
-!    incompressible flows: a simple and efficient method with the quasi-spectral
-!    accuracy, J. Comp. Phys.,  vol 228 (15), pp 5989-6015
-!
-!    2-Laizet S. & Li N., 2011, Incompact3d: a powerful tool to tackle turbulence
-!    problems with up to 0(10^5) computational cores, Int. J. of Numerical
-!    Methods in Fluids, vol 67 (11), pp 1735-1757
-!################################################################################
 #ifdef ELES
 
 subroutine init_explicit_les
@@ -355,7 +324,7 @@ subroutine dynsmag(ux1,uy1,uz1,ep1,sxx1,syy1,szz1,sxy1,sxz1,syz1,&
     uxz1 = ta1 * tc1
     uyz1 = tb1 * tc1
 
-    if (nclx.eq.0) then
+    if (nclx1.eq.0.and.nclxn.eq.0) then
 
         call filx(ux1f, ta1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 0) !ux1
         call filx(uy1f, tb1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1) !uy1
@@ -409,7 +378,7 @@ subroutine dynsmag(ux1,uy1,uz1,ep1,sxx1,syy1,szz1,sxy1,sxz1,syz1,&
     call transpose_x_to_y(uxz1f, th2)
     call transpose_x_to_y(uyz1f, ti2)
 
-    if (ncly.eq.0) then
+    if (ncly1.eq.0.and.nclyn.eq.0) then
 
         call fily(ux2f, ta2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1) !ux2
         call fily(uy2f, tb2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 0) !uy2
@@ -467,7 +436,7 @@ subroutine dynsmag(ux1,uy1,uz1,ep1,sxx1,syy1,szz1,sxy1,sxz1,syz1,&
     call transpose_y_to_z(uxz2f, th3)
     call transpose_y_to_z(uyz2f, ti3)
 
-    if (nclz.eq.0) then
+    if (nclz1.eq.0.and.nclzn.eq.0) then
 
         call filz(ux3f, ta3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1) !ux3
         call filz(uy3f, tb3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1) !uy3
@@ -674,7 +643,7 @@ subroutine dynsmag(ux1,uy1,uz1,ep1,sxx1,syy1,szz1,sxy1,sxz1,syz1,&
 
     !Need to filter Aij components
 
-    if (nclx.eq.0) then
+    if (nclx1.eq.0.and.nclxn.eq.0) then
 
         call filx(axx1f, axx1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1)
         call filx(ayy1f, ayy1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1)
@@ -714,7 +683,7 @@ subroutine dynsmag(ux1,uy1,uz1,ep1,sxx1,syy1,szz1,sxy1,sxz1,syz1,&
     call transpose_x_to_y(axz1f, te2)
     call transpose_x_to_y(ayz1f, tf2)
 
-    if (ncly.eq.0) then
+    if (ncly1.eq.0.and.nclyn.eq.0) then
 
         call fily(axx2f, ta2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1)
         call fily(ayy2f, tb2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1)
@@ -757,7 +726,7 @@ subroutine dynsmag(ux1,uy1,uz1,ep1,sxx1,syy1,szz1,sxy1,sxz1,syz1,&
     call transpose_y_to_z(axz2f, te3)
     call transpose_y_to_z(ayz2f, tf3)
 
-    if (nclz.eq.0) then
+    if (nclz1.eq.0.and.nclzn.eq.0) then
 
         call filz(axx3f, ta3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1)
         call filz(ayy3f, tb3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1)
