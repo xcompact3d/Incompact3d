@@ -31,11 +31,11 @@ FFLAGS = -fpp -O3 -xHost -heap-arrays -shared-intel -mcmodel=large -safe-cray-pt
 else ifeq ($(CMP),gcc)
 FC = mpif90
 #FFLAGS = -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -x f95-cpp-input
-FFLAGS = -cpp -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -march=native
+FFLAGS = -cpp -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -march=native -ffree-line-length-none
 endif
 
 ### List of files for the main code
-SRC = decomp_2d.f90 glassman.f90 fft_$(FFT).f90 module_param.f90 io.f90 variables.f90 poisson.f90 schemes.f90 BC-$(FLOW_TYPE).f90 convdiff.f90 navier.f90 derive.f90 parameters.f90 tools.f90 visu.f90 paraview.f90 genepsi3d.f90 filter.f90 incompact3d.f90
+SRC = decomp_2d.f90 glassman.f90 fft_$(FFT).f90 module_param.f90 io.f90 variables.f90 poisson.f90 schemes.f90 BC-$(FLOW_TYPE).f90 convdiff.f90 navier.f90 derive.f90 parameters.f90 tools.f90 visu.f90 paraview.f90 genepsi3d.f90 filter.f90 les_models.f90 incompact3d.f90
 
 ### List of files for the post-processing code
 PSRC = decomp_2d.f90 module_param.f90 io.f90 variables.f90 schemes.f90 derive.f90 BC-$(FLOW_TYPE).f90 parameters.f90 tools.f90 visu.f90 paraview.f90 post.f90
