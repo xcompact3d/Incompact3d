@@ -1,6 +1,6 @@
 subroutine convdiff(ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
      ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2,&
-     ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3,phi1,nut1)
+     ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3,phi1,ep1,nut1)
 
   USE param
   USE variables
@@ -8,7 +8,7 @@ subroutine convdiff(ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
 
   implicit none
 
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,sumphi,nut1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,sumphi,nut1,ep1
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
   real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux2,uy2,uz2
@@ -315,9 +315,14 @@ subroutine scalar(ux1,uy1,uz1,phi1,phis1,phiss1,di1,ta1,tb1,tc1,td1,&
   real(mytype),dimension(ysize(1),ysize(2),ysize(3),nphi) :: phi2
   real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: uz3,di3,ta3,tb3
   real(mytype),dimension(zsize(1),zsize(2),zsize(3),nphi) :: phi3
+  integer :: ijk,nvect1,nvect2,nvect3,i,j,k,is
 
-  integer :: ijk,nvect1,nvect2,nvect3,i,j,k,nxyz,is
-  real(mytype) :: x,y,z
+#ifdef ELES
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: kappat1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: sgsphi1
+  kappat1 = nut1 / pr_t
+  call lesdiff_scalar(phi1, di1, di2, di3, kappat1, sgsphi1)
+#endif
 
   nvect1 = xsize(1)*xsize(2)*xsize(3)
   nvect2 = ysize(1)*ysize(2)*ysize(3)
@@ -384,8 +389,9 @@ subroutine scalar(ux1,uy1,uz1,phi1,phis1,phiss1,di1,ta1,tb1,tc1,td1,&
      enddo
 
 #ifdef ELES
+  if (nrank==0) print *, "sgsphi",i," min max= ",minval(sgsphi1(:,:,:,is)),maxval(sgsphi1(:,:,:,is))
      do ijk=1,nvect1
-        ta1(ijk,1,1)=(xnu/nsc(is) + nut1(ijk,1,1))*ta1(ijk,1,1)-tb1(ijk,1,1)+e1(ijk,1,1)
+        ta1(ijk,1,1)=(xnu/nsc(is) + kappat1(ijk,1,1) )*ta1(ijk,1,1)-tb1(ijk,1,1)+sgsphi1(ijk,1,1,is)
      enddo
 #else
      do ijk=1,nvect1
