@@ -389,7 +389,7 @@ subroutine scalar(ux1,uy1,uz1,phi1,phis1,phiss1,di1,ta1,tb1,tc1,td1,&
      enddo
 
 #ifdef ELES
-  if (nrank==0) print *, "sgsphi",i," min max= ",minval(sgsphi1(:,:,:,is)),maxval(sgsphi1(:,:,:,is))
+  if (nrank == 0) print *, "sgsphi",is,"min max= ",minval(sgsphi1(:,:,:,is)),maxval(sgsphi1(:,:,:,is))
      do ijk=1,nvect1
         ta1(ijk,1,1)=(xnu/nsc(is) + kappat1(ijk,1,1) )*ta1(ijk,1,1)-tb1(ijk,1,1)+sgsphi1(ijk,1,1,is)
      enddo
