@@ -24,7 +24,7 @@ New users and developers are welcome to join.
 - [**Twitter**](https://twitter.com/incompact3d)
 
 
-### Main improvments/changes ### 
+### Main improvements/changes ### 
 
 - [**Wiki**](https://github.com/xcompact3d/Incompact3d/wiki/New-Features)
 
