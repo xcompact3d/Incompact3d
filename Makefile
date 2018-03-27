@@ -16,8 +16,11 @@
 # generate a Git version string
 GIT_VERSION := $(shell git describe --tag --long --always)
 
-FLOW_TYPE = TGV#Cylinder# Channel-flow# TGV
-OPTIONS = -DVISU -DVISUEXTRA -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\" #all above
+FLOW_TYPE = TGV# TGV# Channel-flow# Cylinder
+OPTIONS = -DVISU -DVISUEXTRA -DDOUBLE_PREC -DPOST -DVERSION=\"$(GIT_VERSION)\" #all above                 #TGV
+#OPTIONS = -DVISU -DVISUEXTRA -DDOUBLE_PREC -DPOST -DSAVE_SINGLE -DVERSION=\"$(GIT_VERSION)\" #all above   #Channel-flow
+#OPTIONS = -DVISU -DVISUEXTRA -DDOUBLE_PREC -DFORCES -DIBM -DVERSION=\"$(GIT_VERSION)\" #all above          #Cylinder
+
 LCL = local# local,lad,sdu,archer
 IVER = 17# 15,16,17,18
 CMP = gcc# intel,gcc
