@@ -28,13 +28,13 @@ New users and developers are welcome to join.
 
 - [**Wiki**](https://github.com/xcompact3d/Incompact3d/wiki/New-Features)
 
-### Cannonical cases for code validation ###
+### Benchmark test cases for code comparison ###
 
-Incompact3d is built in a flow configuration specific files. You must choose a case and set it on the 'Makefile' and recompile. The following cases are set to match the parameters for the specific reference data.
+We estabilished a solid and easy way to run a range of benchmark test cases to verify the code. Incompact3d works now on a flow configuration specific file. You must choose a case and set it on the 'Makefile' and recompile. The following cases are set to match the parameters for cases of reference articles obtained with different codes.
 
 |Code| Flow configuration             | BC File         | Reference |
 |:----------------:|:----------------:|:----------------:|:----------------:|
-|1| Taylor-Green vortices        | TGV              |Beck et al. (2014)
+|1| Taylor-Green vortex        | TGV              |Beck et al. (2014)
 |2| Turbulent Channel            | Channel-flow     |[Moser, Kim & Mansour (1999)](http://turbulence.ices.utexas.edu/data/MKM/chan180/profiles/)
 |3| Flow over a Cylinder         | Cylinder         |Mittal et Balachandar (1995)
 |4| Periodic Hill                | Periodic-Hill    |Breuer et al. (2009)
