@@ -23,8 +23,6 @@ PROGRAM incompact3d
 
   TYPE(DECOMP_INFO) :: phG,ph1,ph2,ph3,ph4
  
-  if (nrank==0) call system('mkdir data out')
-
   call ft_parameter(.true.)
 
   call MPI_INIT(code)
@@ -33,6 +31,8 @@ PROGRAM incompact3d
   call init_coarser_mesh_statV(nvisu,nvisu,nvisu,.true.)    !start from 1 == true
   call init_coarser_mesh_statP(nprobe,nprobe,nprobe,.true.) !start from 1 == true
 
+  if (nrank==0) call system('mkdir data out')
+  
   call parameter()
 
   call init_variables()

@@ -1098,4 +1098,4 @@ subroutine lesdiff_scalar(phi1, di1, di2, di3, kappat1, sgsphi1)
 
 end subroutine lesdiff_scalar
 
-#endif ELES
+#endif
