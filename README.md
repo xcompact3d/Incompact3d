@@ -21,38 +21,12 @@ New users and developers are welcome to join.
 
 ### External Resources
 
-- [**StackOverflow**](https://stackoverflow.com/questions/tagged/incompact3d)
-- [**Youtube**](https://www.youtube.com/channel/incompact3d)
 - [**Twitter**](https://twitter.com/incompact3d)
 
 
-### Main improvments/changes ### 
+### Main improvements/changes ### 
 
-* There are now more flexibility in terms of boundary conditions. You can choose the combinations 1-2 or 2-1 along with the classic 0-0, 1-1 and 2-2 for any direction for the velocity and the scalar.
-
-* There is now a customized file for each case, i.e. bc_tgv.f90, bc_lock.f90, bc_channel.f90, bc_cylinder.f90, bc_jet.f90... this allows concentrating the case specific in a single file. 
-The subroutines init, inflow, outflow, in-situ processing which are case specific are in this file.
-
-* There is no need for recompiling the code if changing the mesh size or the p_row/p_col values.
-
-* The pre_correc was redesigned to work with all boundary conditions. We are still reinfocing the normal velocity equal to zero when using free-slip (this is important when using scalar) 
-
-* All numerical digits were changed to text variables in order to reduce occurances of _mytype and improve the readabilty of the code. Real 0 is now zero, 1 is one... this is not valid for integers! 
-
-* The terms in the scalar subroutine were rewriten to 
-
-* The paraview.f90 is a subroutine that generates the XDMF meta file to open the raw output in Paraview. The .xdmf�s are generated when initiallizing the code and are separated in 3D and 2D fields (i.e. friction velocity map, deposit map, mean planes).
-
-* The restart 
-
-* The visu.prm
-
-* The stretching is defined with a -DSTRETCHING flag on the Makefile. If you do not add this flag and recompile the code, the stretching wont work. The stretching in x, y and z controlled by istretx,istrety and istretz is under development. 
-
-* We removed the deprectaed TWOD flag and the content. If you wish to run a 2D case, you can do a quasi-2D case with nclz1=nclzn=0 and use nz=6 (if DNS) or nz=8 (if ILES). This is the minimum number of points required by the stencil. You can use zlz=0.05, for example. 
-
-
-
+- [**Wiki**](https://github.com/xcompact3d/Incompact3d/wiki/New-Features)
 
 ### Cannonical cases for code validation ###
 
@@ -89,7 +63,7 @@ If the flags are not specified in the Makefile, the compile ignore the sections 
 First, make sure you have all the [required dependencies](#required-build-tools-and-external-libraries) installed.
 Then, acquire the source code by cloning the git repository:
 
-    git clone git@bitbucket.org:incompact3d/incompact3d.git
+    git clone git@github.com:xcompact3d/Incompact3d.git
 
 (If you are behind a firewall, you may need to use the `https` protocol instead of the `git` protocol:
 
@@ -238,4 +212,4 @@ The code is organized as follows:
 
 To add you SSH key to your GitHub account please follow the steps https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/ or just copy the contents of the id_rsa.pub file to your clipboard, go to Personal settings and add a new SSH key
 
-    pbcopy < ~/.ssh/id_rsa.pub
+    pbcopy < ~/.ssh/id_rsa.pub 
