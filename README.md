@@ -5,7 +5,7 @@
 </a>
 </div>
 
-[![Build Status](https://travis-ci.org/xcompact3d/Incompact3d.svg?branch=master)](https://travis-ci.org/xcompact3d/Incompact3d)
+Linux [![Build Status](https://travis-ci.org/xcompact3d/Incompact3d.svg?branch=master)](https://travis-ci.org/xcompact3d/Incompact3d)
 
 ## The Incompact3d code
 
