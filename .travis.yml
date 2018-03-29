@@ -1,0 +1,12 @@
+language: c
+sudo: required
+
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev
+
+install: true
+
+script:
+  - make clean
+  - make
