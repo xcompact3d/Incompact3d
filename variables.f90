@@ -48,6 +48,9 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:) :: px1, py1, pz1
   real(mytype), save, allocatable, dimension(:,:,:) :: ep1, diss1, pre1, depo, depof, kine
 
+  ! Arrays related to LMN: all need atleast density
+  real(mytype), save, allocatable, dimension(:,:,:) :: rho1, rho2, rho3
+
   !arrays for post processing
   real(mytype), save, allocatable, dimension(:,:,:) :: f1,fm1
   real(mytype), save, allocatable, dimension(:,:,:) :: uxm1, uym1, phim1, prem1, dissm1
@@ -122,6 +125,7 @@ contains
     call alloc_x(diss1, opt_global=.true.) !global indices
     call alloc_x(pre1, opt_global=.true.) !global indices
     call alloc_x(nut1, opt_global=.true.) !global indices
+    call alloc_x(rho1, opt_global=.true.) !global indices
 
     allocate(phi1(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),1:nphi)) !global indices
     allocate(phis1(xsize(1),xsize(2),xsize(3),1:nphi))
@@ -189,7 +193,7 @@ contains
     call alloc_y(tg2);call alloc_y(th2);call alloc_y(ti2)
     call alloc_y(tj2);call alloc_y(di2)
     allocate(phi2(ysize(1),ysize(2),ysize(3),1:nphi))
-
+    call alloc_y(rho2)
 
     !Z PENCILS
     call alloc_z(ux3);call alloc_z(uy3);call alloc_z(uz3)
@@ -198,6 +202,7 @@ contains
     call alloc_z(tg3);call alloc_z(th3);call alloc_z(ti3)
     call alloc_z(di3)
     allocate(phi3(zsize(1),zsize(2),zsize(3),1:nphi))
+    call alloc_y(rho3)
 
     ! if all periodic
     !   allocate (pp3(ph%zst(1):ph%zen(1),ph%zst(2):ph%zen(2),ph%zst(3):ph%zen(3)))
