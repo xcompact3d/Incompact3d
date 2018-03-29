@@ -6,8 +6,8 @@
 </div>
 
 Build status:
-[![travis][travis-img]](https://travis-ci.org/xcompact3d/Incompact3d/master)
-[travis-img]: https://img.shields.io/travis/JuliaLang/julia/master.svg?label=Linux+/+macOS
+[![travis][travis-img]]https://travis-ci.org/xcompact3d/Incompact3d.svg?branch=master)
+[travis-img]: https://img.shields.io/travis//xcompact3d/Incompact3d.svg?branch=master
 
 
 ## The Incompact3d code
