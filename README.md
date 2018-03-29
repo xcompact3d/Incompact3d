@@ -1,12 +1,12 @@
 <a name="logo"/>
 <div align="center">
 <a href="https://www.incompact3d.com" target="_blank">
-<img src="https://www.incompact3d.com/uploads/5/8/7/2/58724623/incompact3d.png" alt="Logo" width="210" height="142"></img>
+<img src="https://www.incompact3d.com/uploads/5/8/7/2/58724623/incompact3d.png" alt="Logo" width="300" height="100"></img>
 </a>
 </div>
 
 Build status:
-[![travis][travis-img]](https://travis-ci.org/xcompact3d/Incompact3d)
+[![travis][travis-img]](https://travis-ci.org/xcompact3d/Incompact3d/master)
 [travis-img]: https://img.shields.io/travis/JuliaLang/julia/master.svg?label=Linux+/+macOS
 
 
