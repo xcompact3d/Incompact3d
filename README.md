@@ -1,3 +1,15 @@
+<a name="logo"/>
+<div align="center">
+<a href="https://www.incompact3d.com" target="_blank">
+<img src="https://www.incompact3d.com/uploads/5/8/7/2/58724623/incompact3d.png" alt="Logo" width="210" height="142"></img>
+</a>
+</div>
+
+Build status:
+[![travis][travis-img]](https://travis-ci.org/xcompact3d/Incompact3d)
+[travis-img]: https://img.shields.io/travis/JuliaLang/julia/master.svg?label=Linux+/+macOS
+
+
 ## The Incompact3d code
 
 Incompact3d is a Fortran-MPI based, finite difference high-performance code for solving the incompressible Navier-Stokes equation and as many as you need scalar transport equations.
