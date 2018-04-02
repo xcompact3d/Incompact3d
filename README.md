@@ -203,6 +203,8 @@ After installation, for a 64-bit architecture, the environment should be set up 
 
     # bash
     source /path/to/intel/bin/compilervars.sh intel64
+    [export I_MPI_SHM_LMT=shm](https://software.intel.com/en-us/mpi-developer-reference-linux-shared-memory-control)
+
 
 The code is compiled with the mpiifort command and the appropriate flags are set in the `Makefile` file.
 If you with to compile the code with Intel
