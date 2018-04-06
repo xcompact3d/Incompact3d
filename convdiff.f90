@@ -47,11 +47,11 @@ subroutine convdiff(ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
              sxx1,syy1,szz1,sxy1,sxz1,syz1,srt_smag,nut1,ta2,ta3,di1,di2,di3)
 
         if (itime.gt.10) call dynsmag(ux1,uy1,uz1,ep1,sxx1,syy1,szz1,sxy1,sxz1,syz1,&
-                                      srt_smag,nut1,di1,ta1,tb1,tc1,td1,ta2,tb2,tc2,td2,te2,tf2,&
-                                      tg2,th2,ti2,di2,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3)
+             srt_smag,nut1,di1,ta1,tb1,tc1,td1,ta2,tb2,tc2,td2,te2,tf2,&
+             tg2,th2,ti2,di2,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3)
      endif
 
-     call lesdiff(ux1,uy1,uz1,sxx1,syy1,szz1,sxy1,sxz1,syz1,nut1,&
+     call lesdiff(ux1,uy1,uz1,ep1,sxx1,syy1,szz1,sxy1,sxz1,syz1,nut1,&
           sgsx1,sgsy1,sgsz1,ta1,td1,te1,tf1,di1,ta2,td2,te2,tf2,tj2,di2,&
           ta3,td3,te3,tf3,di3)
 
