@@ -30,6 +30,7 @@ subroutine parameter()
 
   allocate(nsc(nphi),uset(nphi),cp(nphi),ri(nphi),group(nphi))
 
+  ro = 99999999._mytype
   ri = zero
   nsc = one
   uset = zero
@@ -54,6 +55,7 @@ subroutine parameter()
   itrip = 0
   wrotation = zero
   irotation = 0
+  itest=1
   
   
   save_ux = 0
