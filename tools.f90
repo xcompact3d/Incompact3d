@@ -589,7 +589,7 @@ subroutine stretching()
   !*******************************************************************
   !
   USE decomp_2d
-  USE decomp_2d_poisson
+  !USE decomp_2d_poisson
   USE variables
   USE param
   USE var
@@ -676,7 +676,7 @@ subroutine stretching()
         endif
      enddo
   endif
-  if (alpha.eq.zero) then
+  if (alpha.eq.0.) then
      ypi(1)=-1.e10
      do j=2,ny
         yetai(j)=real(j-1,mytype)*(one/ny)
@@ -684,18 +684,86 @@ subroutine stretching()
      enddo
   endif
 
+!Mapping!!, metric terms
+if (istret .ne. 3) then
   do j=1,ny
-     ppy(j)=yly*(alpha/pi+(one/pi/beta)*sin(pi*yeta(j))* &
-          sin(pi*yeta(j)))
+     ppy(j)=yly*(alpha/pi+(one/pi/beta)*sin(pi*yeta(j))*sin(pi*yeta(j)))
      pp2y(j)=ppy(j)*ppy(j)
      pp4y(j)=(-two/beta*cos(pi*yeta(j))*sin(pi*yeta(j)))
   enddo
   do j=1,ny
-     ppyi(j)=yly*(alpha/pi+(one/pi/beta)*sin(pi*yetai(j))* &
-          sin(pi*yetai(j)))
+     ppyi(j)=yly*(alpha/pi+(one/pi/beta)*sin(pi*yetai(j))*sin(pi*yetai(j)))
      pp2yi(j)=ppyi(j)*ppyi(j)
      pp4yi(j)=(-two/beta*cos(pi*yetai(j))*sin(pi*yetai(j)))
   enddo
+endif
+
+if (istret .eq. 3) then
+do j=1,ny
+   ppy(j)=yly*(alpha/pi+(one/pi/beta)*sin(pi*yeta(j))*sin(pi*yeta(j)))
+   pp2y(j)=ppy(j)*ppy(j)
+   pp4y(j)=(-two/beta*cos(pi*yeta(j))*sin(pi*yeta(j)))/two
+enddo
+do j=1,ny
+   ppyi(j)=yly*(alpha/pi+(one/pi/beta)*sin(pi*yetai(j))*sin(pi*yetai(j)))
+   pp2yi(j)=ppyi(j)*ppyi(j)
+   pp4yi(j)=(-two/beta*cos(pi*yetai(j))*sin(pi*yetai(j)))/two
+enddo
+endif
+
+!   yp(1) = 0.0
+!   yp(2) = 0.01
+!   coeff0= 1.1
+!   blender1 = 0.0
+!   blender2 = 0.0
+!   do j=3,ny
+!!      yeta(j)=(j-1.)*(1./ny)
+!!      yp(j)=-beta*cos(pi*yeta(j))/sin(yeta(j)*pi)
+!
+!     if (yp(j-1).LE.3.5*1.0) then
+!       dy_plus_target = 8.0
+!       !Calculate re_tau guess somewhere
+!      dy_plus_current= (yp(j-1)-yp(j-2))*85.0
+!       !dy_plus_coeff is from 1 to 0
+!       dy_plus_coeff = (dy_plus_target-dy_plus_current)/dy_plus_target
+!       coeff = coeff0**dy_plus_coeff
+!
+!       dy_plus_coeff_old1 = dy_plus_coeff   !will be required for blenders
+!     else if (yp(j-1).GE.39.0*1.0) then
+!       dy_plus_target = 10.0
+!       !Calculate re_tau guess somewhere
+!       dy_plus_current= (yp(j-1)-yp(j-2))*85.0
+!       !dy_plus_coeff is from 1 to 0
+!       dy_plus_coeff = (dy_plus_target-dy_plus_current)/dy_plus_target
+!
+!       if (blender2.LT.1.0) blender2 = blender2 + 0.1   !carry the coeff smoothly
+!       coeff = coeff0**((1.0-blender2)*dy_plus_coeff_old2+blender2*dy_plus_coeff)
+!     else
+!       dy_plus_target = 80.0
+!       !Calculate re_tau guess somewhere
+!       dy_plus_current= (yp(j-1)-yp(j-2))*85.0
+!       !dy_plus_coeff is from 1 to 0
+!       dy_plus_coeff = (dy_plus_target-dy_plus_current)/dy_plus_target
+!
+!       if (blender1.LT.1.0) blender1 = blender1 + 0.1   !carry the coeff smoothly
+!       coeff = coeff0**((1.0-blender1)*dy_plus_coeff_old1+blender1*dy_plus_coeff)
+!
+!       dy_plus_coeff_old2 = dy_plus_coeff   !will be required for blenders
+!     endif
+!     yp(j) = yp(j-1)+(yp(j-1)-yp(j-2))*coeff
+!   enddo
+!
+!   !Normalize to yly
+!   ypmax = yp(ny)
+!   yp = yp/ypmax*yly
+
+if (nrank==0) then
+open(10,file='yp.dat', form='formatted')
+do j=1,ny
+write(10,*)yp(j)
+enddo
+close(10)
+endif
 
 end subroutine stretching
 
@@ -706,7 +774,7 @@ subroutine inversion5_v1(aaa,eee,spI)
 !*****************************************************************
 
 USE decomp_2d
-USE decomp_2d_poisson
+!USE decomp_2d_poisson
 USE variables
 USE param
 USE var
@@ -741,8 +809,8 @@ do m=1,ny/2-2
       mi=m+i
       do k=spI%yst(3),spI%yen(3)
       do j=spI%yst(1),spI%yen(1)
-         if (real(aaa(j,m,k,3), kind=mytype).ne.0.) tmp1=real(aaa(j,mi,k,3-i), kind=mytype)/real(aaa(j,m,k,3), kind=mytype)
-         if (aimag(aaa(j,m,k,3)).ne.0.)tmp2=aimag(aaa(j,mi,k,3-i))/aimag(aaa(j,m,k,3))
+         if (real(aaa(j,m,k,3), kind=mytype).ne.zero) tmp1=real(aaa(j,mi,k,3-i), kind=mytype)/real(aaa(j,m,k,3), kind=mytype)
+         if (aimag(aaa(j,m,k,3)).ne.zero)tmp2=aimag(aaa(j,mi,k,3-i))/aimag(aaa(j,m,k,3))
          sr(j,k)=cmplx(tmp1,tmp2, kind=mytype)
          eee(j,mi,k)=cmplx(real(eee(j,mi,k), kind=mytype)-tmp1*real(eee(j,m,k), kind=mytype),&
               aimag(eee(j,mi,k))-tmp2*aimag(eee(j,m,k)), kind=mytype)
@@ -765,12 +833,12 @@ do j=spI%yst(1),spI%yen(1)
    if (abs(real(aaa(j,ny/2-1,k,3), kind=mytype)).gt.epsilon) then
       tmp1=real(aaa(j,ny/2,k,2), kind=mytype)/real(aaa(j,ny/2-1,k,3), kind=mytype)
    else
-      tmp1=0.
+      tmp1=zero
    endif
    if (abs(aimag(aaa(j,ny/2-1,k,3))).gt.epsilon) then
       tmp2=aimag(aaa(j,ny/2,k,2))/aimag(aaa(j,ny/2-1,k,3))
    else
-      tmp2=0.
+      tmp2=zero
    endif
    sr(j,k)=cmplx(tmp1,tmp2, kind=mytype)
    b1(j,k)=cmplx(real(aaa(j,ny/2,k,3), kind=mytype)-tmp1*real(aaa(j,ny/2-1,k,4), kind=mytype),&
@@ -780,28 +848,28 @@ do j=spI%yst(1),spI%yen(1)
       tmp1=real(sr(j,k), kind=mytype)/real(b1(j,k), kind=mytype)
       tmp3=real(eee(j,ny/2,k), kind=mytype)/real(b1(j,k), kind=mytype)-tmp1*real(eee(j,ny/2-1,k), kind=mytype)
    else
-      tmp1=0.
-      tmp3=0.
+      tmp1=zero
+      tmp3=zero
    endif
    if (abs(aimag(b1(j,k))).gt.epsilon) then
       tmp2=aimag(sr(j,k))/aimag(b1(j,k))
       tmp4=aimag(eee(j,ny/2,k))/aimag(b1(j,k))-tmp2*aimag(eee(j,ny/2-1,k))
    else
-      tmp2=0.
-      tmp4=0.
+      tmp2=zero
+      tmp4=zero
    endif
    a1(j,k)=cmplx(tmp1,tmp2, kind=mytype)
    eee(j,ny/2,k)=cmplx(tmp3,tmp4, kind=mytype)
 
    if (abs(real(aaa(j,ny/2-1,k,3), kind=mytype)).gt.epsilon) then
-      tmp1=1./real(aaa(j,ny/2-1,k,3), kind=mytype)
+      tmp1=one/real(aaa(j,ny/2-1,k,3), kind=mytype)
    else
-      tmp1=0.
+      tmp1=zero
    endif
    if (abs(aimag(aaa(j,ny/2-1,k,3))).gt.epsilon) then
-      tmp2=1./aimag(aaa(j,ny/2-1,k,3))
+      tmp2=one/aimag(aaa(j,ny/2-1,k,3))
    else
-      tmp2=0.
+      tmp2=zero
    endif
    b1(j,k)=cmplx(tmp1,tmp2, kind=mytype)
    a1(j,k)=cmplx(real(aaa(j,ny/2-1,k,4), kind=mytype)*real(b1(j,k), kind=mytype),&
@@ -815,14 +883,14 @@ do i=ny/2-2,1,-1
 do k=spI%yst(3),spI%yen(3)
 do j=spI%yst(1),spI%yen(1)
    if (abs(real(aaa(j,i,k,3), kind=mytype)).gt.epsilon) then
-      tmp1=1./real(aaa(j,i,k,3), kind=mytype)
+      tmp1=one/real(aaa(j,i,k,3), kind=mytype)
    else
-      tmp1=0.
+      tmp1=zero
    endif
    if (abs(aimag(aaa(j,i,k,3))).gt.epsilon) then
-      tmp2=1./aimag(aaa(j,i,k,3))
+      tmp2=one/aimag(aaa(j,i,k,3))
    else
-      tmp2=0.
+      tmp2=zero
    endif
    sr(j,k)=cmplx(tmp1,tmp2, kind=mytype)
    a1(j,k)=cmplx(real(aaa(j,i,k,4), kind=mytype)*real(sr(j,k), kind=mytype),&
@@ -849,7 +917,7 @@ subroutine inversion5_v2(aaa,eee,spI)
 !*****************************************************************
 
 USE decomp_2d
-USE decomp_2d_poisson
+!USE decomp_2d_poisson
 USE variables
 USE param
 USE var
@@ -866,8 +934,8 @@ TYPE(DECOMP_INFO) :: spI
   real(mytype), parameter :: epsilon = 1.e-8
 #endif
 
-complex(mytype),dimension(spI%yst(1):spI%yen(1),ny,spI%yst(3):spI%yen(3),5) :: aaa
-complex(mytype),dimension(spI%yst(1):spI%yen(1),ny,spI%yst(3):spI%yen(3)) :: eee
+complex(mytype),dimension(spI%yst(1):spI%yen(1),nym,spI%yst(3):spI%yen(3),5) :: aaa
+complex(mytype),dimension(spI%yst(1):spI%yen(1),nym,spI%yst(3):spI%yen(3)) :: eee
 integer :: i,j,k,m,mi,jc
 integer,dimension(2) :: ja,jb
 complex(mytype),dimension(spI%yst(1):spI%yen(1),spI%yst(3):spI%yen(3)) :: sr
@@ -879,13 +947,14 @@ do i=1,2
    ja(i)=4-i
    jb(i)=5-i
 enddo
-do m=1,ny-2
+do m=1,nym-2
    do i=1,2
    mi=m+i
    do k=spI%yst(3),spI%yen(3)
    do j=spI%yst(1),spI%yen(1)
-      if (real(aaa(j,m,k,3), kind=mytype).ne.0.) tmp1=real(aaa(j,mi,k,3-i), kind=mytype)/real(aaa(j,m,k,3), kind=mytype)
-      if (aimag(aaa(j,m,k,3)).ne.0.)tmp2=aimag(aaa(j,mi,k,3-i))/aimag(aaa(j,m,k,3))
+      if (real(aaa(j,m,k,3), kind=mytype).ne.zero) tmp1=real(aaa(j,mi,k,3-i), kind=mytype)/real(aaa(j,m,k,3), kind=mytype)
+      if (aimag(aaa(j,m,k,3)).ne.zero)tmp2=aimag(aaa(j,mi,k,3-i))/aimag(aaa(j,m,k,3))
+      sr(j,k)=cmplx(tmp1,tmp2, kind=mytype)
       eee(j,mi,k)=cmplx(real(eee(j,mi,k), kind=mytype)-tmp1*real(eee(j,m,k), kind=mytype),&
            aimag(eee(j,mi,k))-tmp2*aimag(eee(j,m,k)), kind=mytype)
    enddo
@@ -902,66 +971,67 @@ enddo
 enddo
 do k=spI%yst(3),spI%yen(3)
 do j=spI%yst(1),spI%yen(1)
-   if (abs(real(aaa(j,ny-1,k,3), kind=mytype)).gt.epsilon) then
-      tmp1=real(aaa(j,ny,k,2), kind=mytype)/real(aaa(j,ny-1,k,3), kind=mytype)
+   if (abs(real(aaa(j,nym-1,k,3), kind=mytype)).gt.epsilon) then
+      tmp1=real(aaa(j,nym,k,2), kind=mytype)/real(aaa(j,nym-1,k,3), kind=mytype)
    else
-      tmp1=0.
+      tmp1=zero
    endif
-   if (abs(aimag(aaa(j,ny-1,k,3))).gt.epsilon) then
-      tmp2=aimag(aaa(j,ny,k,2))/aimag(aaa(j,ny-1,k,3))
+   if (abs(aimag(aaa(j,nym-1,k,3))).gt.epsilon) then
+      tmp2=aimag(aaa(j,nym,k,2))/aimag(aaa(j,nym-1,k,3))
    else
-      tmp2=0.
+      tmp2=zero
    endif
-   b1(j,k)=cmplx(real(aaa(j,ny,k,3), kind=mytype)-tmp1*real(aaa(j,ny-1,k,4), kind=mytype),&
-        aimag(aaa(j,ny,k,3))-tmp2*aimag(aaa(j,ny-1,k,4)), kind=mytype)
+   sr(j,k)=cmplx(tmp1,tmp2, kind=mytype)
+   b1(j,k)=cmplx(real(aaa(j,nym,k,3), kind=mytype)-tmp1*real(aaa(j,nym-1,k,4), kind=mytype),&
+        aimag(aaa(j,nym,k,3))-tmp2*aimag(aaa(j,nym-1,k,4)), kind=mytype)
    if (abs(real(b1(j,k), kind=mytype)).gt.epsilon) then
       tmp1=real(sr(j,k), kind=mytype)/real(b1(j,k), kind=mytype)
-      tmp3=real(eee(j,ny,k), kind=mytype)/real(b1(j,k), kind=mytype)-tmp1*real(eee(j,ny-1,k), kind=mytype)
+      tmp3=real(eee(j,nym,k), kind=mytype)/real(b1(j,k), kind=mytype)-tmp1*real(eee(j,nym-1,k), kind=mytype)
    else
-      tmp1=0.
-      tmp3=0.
+      tmp1=zero
+      tmp3=zero
    endif
    if (abs(aimag(b1(j,k))).gt.epsilon) then
       tmp2=aimag(sr(j,k))/aimag(b1(j,k))
-      tmp4=aimag(eee(j,ny,k))/aimag(b1(j,k))-tmp2*aimag(eee(j,ny-1,k))
+      tmp4=aimag(eee(j,nym,k))/aimag(b1(j,k))-tmp2*aimag(eee(j,nym-1,k))
    else
-      tmp2=0.
-      tmp4=0.
+      tmp2=zero
+      tmp4=zero
    endif
    a1(j,k)=cmplx(tmp1,tmp2, kind=mytype)
-   eee(j,ny,k)=cmplx(tmp3,tmp4, kind=mytype)
+   eee(j,nym,k)=cmplx(tmp3,tmp4, kind=mytype)
 
-   if (abs(real(aaa(j,ny-1,k,3), kind=mytype)).gt.epsilon) then
-      tmp1=1./real(aaa(j,ny-1,k,3), kind=mytype)
+   if (abs(real(aaa(j,nym-1,k,3), kind=mytype)).gt.epsilon) then
+      tmp1=one/real(aaa(j,nym-1,k,3), kind=mytype)
    else
-      tmp1=0.
+      tmp1=zero
    endif
-   if (abs(aimag(aaa(j,ny-1,k,3))).gt.epsilon) then
-      tmp2=1./aimag(aaa(j,ny-1,k,3))
+   if (abs(aimag(aaa(j,nym-1,k,3))).gt.epsilon) then
+      tmp2=one/aimag(aaa(j,nym-1,k,3))
    else
-      tmp2=0.
+      tmp2=zero
    endif
    b1(j,k)=cmplx(tmp1,tmp2, kind=mytype)
-   a1(j,k)=cmplx(real(aaa(j,ny-1,k,4), kind=mytype)*real(b1(j,k), kind=mytype),&
-        aimag(aaa(j,ny-1,k,4))*aimag(b1(j,k)), kind=mytype)
-   eee(j,ny-1,k)=cmplx(real(eee(j,ny-1,k), kind=mytype)*real(b1(j,k), kind=mytype)-&
-        real(a1(j,k), kind=mytype)*real(eee(j,ny,k), kind=mytype),&
-        aimag(eee(j,ny-1,k))*aimag(b1(j,k))-aimag(a1(j,k))*aimag(eee(j,ny,k)), kind=mytype)
+   a1(j,k)=cmplx(real(aaa(j,nym-1,k,4), kind=mytype)*real(b1(j,k), kind=mytype),&
+        aimag(aaa(j,nym-1,k,4))*aimag(b1(j,k)), kind=mytype)
+   eee(j,nym-1,k)=cmplx(real(eee(j,nym-1,k), kind=mytype)*real(b1(j,k), kind=mytype)-&
+        real(a1(j,k), kind=mytype)*real(eee(j,nym,k), kind=mytype),&
+        aimag(eee(j,nym-1,k))*aimag(b1(j,k))-aimag(a1(j,k))*aimag(eee(j,nym,k)), kind=mytype)
 enddo
 enddo
 
-do i=ny-2,1,-1
+do i=nym-2,1,-1
 do k=spI%yst(3),spI%yen(3)
 do j=spI%yst(1),spI%yen(1)
    if (abs(real(aaa(j,i,k,3), kind=mytype)).gt.epsilon) then
-      tmp1=1./real(aaa(j,i,k,3), kind=mytype)
+      tmp1=one/real(aaa(j,i,k,3), kind=mytype)
    else
-      tmp1=0.
+      tmp1=zero
    endif
    if (abs(aimag(aaa(j,i,k,3))).gt.epsilon) then
-      tmp2=1./aimag(aaa(j,i,k,3))
+      tmp2=one/aimag(aaa(j,i,k,3))
    else
-      tmp2=0.
+      tmp2=zero
    endif
    sr(j,k)=cmplx(tmp1,tmp2, kind=mytype)
    a1(j,k)=cmplx(real(aaa(j,i,k,4), kind=mytype)*real(sr(j,k), kind=mytype),&
@@ -1497,7 +1567,12 @@ real(mytype) :: z_pos, randx, p_tr, b_tr, x_pos, y_pos, A_tr
 
 !Done in X-Pencils
 seed0=randomseed !Seed for random number
-A_tr=A_trip*min(1.0,0.8+real(itime)/200.0)
+!A_tr=A_trip*min(1.0,0.8+real(itime)/200.0)
+!xs_tr=4.0/2.853
+!ys_tr=2.0/2.853
+!ts_tr=4.0/2.853
+!x0_tr=40.0/2.853
+A_tr = 0.1*dt
 
 if ((itime.eq.ifirst).and.(nrank.eq.0)) then
 call random_seed(SIZE=ii)
@@ -1515,7 +1590,7 @@ call random_seed(PUT=seed0*(/ (1, i = 1, ii) /))
     call random_number(randx)
     h_coeff(j)=1.0*(randx-0.5)
   enddo
-    h_coeff=h_coeff/sqrt(real(z_modes)) 
+    h_coeff=h_coeff/sqrt(DBLE(z_modes)) 
 endif
 
 !Initialization h_nxt  (always bounded by xsize(3)^2 operations)
@@ -1570,11 +1645,13 @@ end if
   do i=1,xsize(1)
     x_pos=(xstart(1)+(i-1)-1)*dx
     do j=1,xsize(2) 
-      y_pos=(xstart(2)+(j-1)-1)*dy   
+      !y_pos=(xstart(2)+(j-1)-1)*dy   
+      y_pos=yp(xstart(2)+(j-1))
       do k=1,xsize(3)
        !g(z)*EXP_F(X,Y)
        ta(i,j,k)=((1.0-b_tr)*h_i(k)+b_tr*h_nxt(k))
-       ta(i,j,k)=A_tr*exp(-((x_pos-x0_tr)/xs_tr)**2-(y_pos/ys_tr)**2)*ta(i,j,k)  
+       !ta(i,j,k)=A_tr*exp(-((x_pos-x0_tr)/xs_tr)**2-(y_pos/ys_tr)**2)*ta(i,j,k)
+       ta(i,j,k)=A_tr*exp(-((x_pos-x0_tr)/xs_tr)**2-((y_pos-0.5)/ys_tr)**2)*ta(i,j,k)  
        tb(i,j,k)=tb(i,j,k)+ta(i,j,k)
        
        z_pos=-zlz/2.0+(xstart(3)+(k-1)-1)*dz
