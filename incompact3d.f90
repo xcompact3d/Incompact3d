@@ -31,11 +31,16 @@ PROGRAM incompact3d
   call init_coarser_mesh_statV(nvisu,nvisu,nvisu,.true.)    !start from 1 == true
   call init_coarser_mesh_statP(nprobe,nprobe,nprobe,.true.) !start from 1 == true
 
-  if (nrank==0) call system('mkdir data out')
+  if (nrank==0) call system('mkdir data out probes')
   
   call parameter()
 
   call init_variables()
+
+#ifdef IMPLICIT
+iimplicit=1
+if (nrank==0) print *,'--SEMI IMPLICIT CODE (IN BETA)-------------------'
+#endif
 
   call schemes()
 
@@ -125,12 +130,22 @@ PROGRAM incompact3d
              ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3,phi1,ep1,nut1)
 
         if (iscalar==1) then
+#ifdef IMPLICIT
+           call scalarimp(ux1,uy1,uz1,phi1,phis1,phiss1,di1,tg1,th1,ti1,td1,&
+                uy2,uz2,phi2,di2,ta2,tb2,tc2,td2,uz3,phi3,di3,ta3,tb3)
+#else           
            call scalar(ux1,uy1,uz1,phi1,phis1,phiss1,di1,tg1,th1,ti1,td1,&
                 uy2,uz2,phi2,di2,ta2,tb2,tc2,td2,uz3,phi3,di3,ta3,tb3,ep1,nut1)
+#endif
         endif
 
         !X PENCILS
+#ifdef IMPLICIT
+         call inttimp (ux1,uy1,uz1,gx1,gy1,gz1,hx1,hy1,hz1,ta1,tb1,tc1,px1,py1,pz1,&
+              td1,te1,tf1,ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2)
+#else           
         call intt(ux1,uy1,uz1,gx1,gy1,gz1,hx1,hy1,hz1,ta1,tb1,tc1)
+#endif
         call pre_correc(ux1,uy1,uz1,ep1)
 
 #ifdef IBM
@@ -157,6 +172,7 @@ PROGRAM incompact3d
         !X PENCILS
         call corgp(ux1,ux2,uy1,uz1,px1,py1,pz1)
 
+     if (mod(itime,itest)==0) then
         !does not matter --> output=DIV U=0 (in dv3)
         call divergence(ux1,uy1,uz1,ep1,ta1,tb1,tc1,di1,td1,te1,tf1,&
              td2,te2,tf2,di2,ta2,tb2,tc2,ta3,tb3,tc3,di3,td3,te3,tf3,dv3,&
@@ -164,6 +180,7 @@ PROGRAM incompact3d
 
         call test_speed_min_max(ux1,uy1,uz1)
         if (iscalar==1) call test_scalar_min_max(phi1)
+     endif
 
      enddo
 
