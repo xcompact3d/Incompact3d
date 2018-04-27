@@ -482,15 +482,7 @@ subroutine mean_plane_x (f1,nx,ny,nz,fm1)
   real(mytype),intent(out),dimension(ny,nz) :: fm1
   integer :: i,j,k
 
-  fm1 = zero
-  do j=1,ny
-    do k=1,nz
-      do i=1,nx
-        fm1(j,k)=fm1(j,k)+f1(i,j,k)
-      enddo
-      fm1(j,k)=fm1(j,k)/real(nx,mytype)
-    enddo
-  enddo
+  fm1 = sum(f1,DIM=1)/real(nx,mytype)
   return
 
 end subroutine mean_plane_x
@@ -506,15 +498,7 @@ subroutine mean_plane_y (f2,nx,ny,nz,fm2)
   real(mytype),intent(out),dimension(nx,nz) :: fm2
   integer :: i,j,k
 
-  fm2 = zero
-  do k=1,nz
-    do i=1,nx
-      do j=1,ny
-        fm2(i,k)=fm2(i,k)+f2(i,j,k)
-      enddo
-      fm2(i,k)=fm2(i,k)/real(ny,mytype)
-    enddo
-  enddo
+  fm2 = sum(f2,DIM=2)/real(ny,mytype)
   return
 
 end subroutine mean_plane_y
@@ -530,15 +514,7 @@ subroutine mean_plane_z (f3,nx,ny,nz,fm3)
   real(mytype),intent(out),dimension(nx,ny) :: fm3
   integer :: i,j,k
 
-  fm3 = zero
-  do i=1,nx
-    do j=1,ny
-      do k=1,nz
-        fm3(i,j)=fm3(i,j)+f3(i,j,k)
-      enddo
-      fm3(i,j)=fm3(i,j)/real(nz,mytype)
-    enddo
-  enddo
+  fm3 = sum(f3,DIM=3)/real(nz,mytype)
   return
 
 end subroutine mean_plane_z
