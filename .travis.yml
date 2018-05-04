@@ -9,6 +9,17 @@ install: true
 
 script:
   - make clean
+  - export FLOW_TYPE=Channel-flow
+  - make
+  - make clean
+  - export FLOW_TYPE=Cylinder
+  - make
+  - make clean
+  - export FLOW_TYPE=Lock-exchange
+  - make
+  - make clean
+  - export FLOW_TYPE=Periodic-hill
+  - make
+  - make clean
   - export FLOW_TYPE=TGV
   - make
-  - mpirun -n 1 ./incompact3d

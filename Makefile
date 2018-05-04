@@ -26,14 +26,14 @@ CMP = gcc# intel,gcc
 FFT = generic# mkl,generic,fftw3
 
 #######Minimum defs###########
-ifeq ($(FLOW_TYPE),Cylinder)
-DEFS2 = -DIBM -DFORCES
-else ifeq ($(FLOW_TYPE),Channel-flow)
+ifeq ($(FLOW_TYPE),Channel-flow)
 DEFS2 = -DSTRETCHING -DPOST
-else ifeq ($(FLOW_TYPE),Periodic-hill)
-DEFS2 = -DIBM -DSTRETCHING -DPOST
+else ifeq ($(FLOW_TYPE),Cylinder)
+DEFS2 = -DIBM -DFORCES
 else ifeq ($(FLOW_TYPE),Lock-exchange)
 DEFS2 = -DPOST
+else ifeq ($(FLOW_TYPE),Periodic-hill)
+DEFS2 = -DIBM -DSTRETCHING -DPOST
 else ifeq ($(FLOW_TYPE),TGV)
 DEFS2 = -DPOST
 endif
