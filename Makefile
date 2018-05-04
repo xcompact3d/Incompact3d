@@ -16,15 +16,27 @@
 # generate a Git version string
 GIT_VERSION := $(shell git describe --tag --long --always)
 
-FLOW_TYPE = TGV# TGV# Channel-flow# Cylinder
-OPTIONS = -DVISU -DVISUEXTRA -DDOUBLE_PREC -DPOST -DVERSION=\"$(GIT_VERSION)\" #all above                 #TGV
-#OPTIONS = -DVISU -DVISUEXTRA -DDOUBLE_PREC -DPOST -DSAVE_SINGLE -DVERSION=\"$(GIT_VERSION)\" #all above   #Channel-flow
-#OPTIONS = -DVISU -DVISUEXTRA -DDOUBLE_PREC -DFORCES -DIBM -DVERSION=\"$(GIT_VERSION)\" #all above          #Cylinder
+#FLOW_TYPE = #Lock-exchange# TGV# Channel-flow# Cylinder
+
+DEFS = -DVISU -DVISUEXTRA -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"
 
 LCL = local# local,lad,sdu,archer
 IVER = 17# 15,16,17,18
 CMP = gcc# intel,gcc
 FFT = generic# mkl,generic,fftw3
+
+#######Minimum defs###########
+ifeq ($(FLOW_TYPE),Cylinder)
+DEFS2 = -DIBM -DFORCES
+else ifeq ($(FLOW_TYPE),Channel-flow)
+DEFS2 = -DSTRETCHING -DPOST
+else ifeq ($(FLOW_TYPE),Periodic-hill)
+DEFS2 = -DIBM -DSTRETCHING -DPOST
+else ifeq ($(FLOW_TYPE),Lock-exchange)
+DEFS2 = -DPOST
+else ifeq ($(FLOW_TYPE),TGV)
+DEFS2 = -DPOST
+endif
 
 #######CMP settings###########
 ifeq ($(CMP),intel)
@@ -110,11 +122,11 @@ incompact3d : $(OBJ)
 	$(FC) -O3 -o $@ $(OBJ) $(LIBFFT)
 
 %.o : %.f90
-	$(FC) $(FFLAGS) $(OPTIONS) $(INC) -c $<
+	$(FC) $(FFLAGS) $(DEFS) $(DEFS2) $(INC) -c $<
 
 .PHONY: post
 post:
-	$(FC) $(FFLAGS) $(OPTIONS) post.f90 -c
+	$(FC) $(FFLAGS) $(DEFS) $(DEFS2) post.f90 -c
 	$(FC) $(FFLAGS) -o $@ $(PSRC:.f90=.o)
 
 .PHONY: clean

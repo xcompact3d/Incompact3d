@@ -21,7 +21,7 @@
 1      #jLES       #LES Model (0:DNS, 1:iLES, 2:Explicit Simple Smagorinsky, 3:Explicit Wall-Adaptive LES, 4: Explicit Dynamic Smagorinsky LES)
 1      #iin        # Initial condition (0: empty, 1: prescribed)
 1      #ifirst     # First iteration
-40000 #ilast      # Last iteration
+40 #000 #ilast      # Last iteration
 2      #nscheme    # Temporal scheme (1:AB2, 2:AB3, 3: RK3, 4:KN+AB3 (-DIMPLICIT flag required))
 #velocity
 1      #nclx1      #Boundary condition in x=0  (0: Periodic, 1:Free-slip, 2: Dirichlet)
