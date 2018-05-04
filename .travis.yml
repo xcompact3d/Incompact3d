@@ -9,4 +9,6 @@ install: true
 
 script:
   - make clean
+  - export FLOW_TYPE=TGV
   - make
+  - mpirun -n 1 ./incompact3d
