@@ -117,11 +117,11 @@ latest version.
    happens, the build may fail with an error like
 
    ```sh
-    *** This error is usually fixed by running 'make clean'. If the error persists, try 'make realclean' ***
+    *** This error is usually fixed by running 'make clean'. If the error persists, try 'make cleanall' ***
    ```
 
    As described, running `make clean && make` is usually sufficient.
-   Occasionally, the stronger cleanup done by `make realclean` is needed.
+   Occasionally, the stronger cleanup done by `make cleanall` is needed.
 
 2. New versions of external dependencies may be introduced which may
    occasionally cause conflicts with existing builds of older versions.
