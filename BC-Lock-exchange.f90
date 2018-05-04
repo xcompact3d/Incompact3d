@@ -1,7 +1,6 @@
 module flow_type
   use decomp_2d, only : mytype
   real(mytype) :: pfront
-  integer :: iprocessing
 
 end module flow_type
 
