@@ -2584,7 +2584,7 @@ subroutine deryy_dns_00(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
         ry(i,ny  ,k)=alsajy
      enddo
   enddo
-#IFDEF IMPLICIT
+#ifdef IMPLICIT
   return
 #endif
   do k=1,nz
@@ -2701,7 +2701,7 @@ subroutine deryy_dns_11(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
                 -uy(i,ny  ,k)+uy(i,ny-3,k))
         enddo
      enddo
-#IFDEF IMPLICIT
+#ifdef IMPLICIT
      return
 #endif
      do k=1,nz
@@ -2771,7 +2771,7 @@ subroutine deryy_dns_11(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
            ty(i,ny  ,k)=zero
         enddo
      enddo
-#IFDEF IMPLICIT
+#ifdef IMPLICIT
      return
 #endif
      do k=1,nz
@@ -2863,7 +2863,7 @@ subroutine deryy_dns_12(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
                 +csny*uy(i,ny-2,k)+dsny*uy(i,ny-3,k)
         enddo
      enddo
-#IFDEF IMPLICIT
+#ifdef IMPLICIT
      return
 #endif
      do k=1,nz
@@ -2928,7 +2928,7 @@ subroutine deryy_dns_12(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
                 +csny*uy(i,ny-2,k)+dsny*uy(i,ny-3,k)
         enddo
      enddo
-#IFDEF IMPLICIT
+#ifdef IMPLICIT
      return
 #endif
      do k=1,nz
@@ -3020,7 +3020,7 @@ subroutine deryy_dns_21(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
                 -uy(i,ny  ,k)+uy(i,ny-3,k))
         enddo
      enddo
-#IFDEF IMPLICIT
+#ifdef IMPLICIT
      return
 #endif
      do k=1,nz
@@ -3085,7 +3085,7 @@ subroutine deryy_dns_21(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
            ty(i,ny  ,k)=zero
         enddo
      enddo
-#IFDEF IMPLICIT
+#ifdef IMPLICIT
      return
 #endif
      do k=1,nz
@@ -3166,7 +3166,7 @@ subroutine deryy_dns_22(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
              +csny*uy(i,ny-2,k)+dsny*uy(i,ny-3,k)
      enddo
   enddo
-#IFDEF IMPLICIT
+#ifdef IMPLICIT
      return
 #endif
   do k=1,nz
@@ -3304,7 +3304,7 @@ subroutine deryy_iles_00(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
         ry(i,ny  ,k)=alsajy
      enddo
   enddo
-#IFDEF IMPLICIT
+#ifdef IMPLICIT
      return
 #endif
   do k=1,nz
@@ -3450,7 +3450,7 @@ subroutine deryy_iles_11(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
                 -uy(i,ny  ,k)+uy(i,ny-4,k))
         enddo
      enddo
-#IFDEF IMPLICIT
+#ifdef IMPLICIT
      return
 #endif
      do k=1,nz
@@ -3546,7 +3546,7 @@ subroutine deryy_iles_11(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
            ty(i,ny  ,k)=zero
         enddo
      enddo
-#IFDEF IMPLICIT
+#ifdef IMPLICIT
      return
 #endif
      do k=1,nz
@@ -3659,7 +3659,7 @@ subroutine deryy_iles_12(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
                 +csny*uy(i,ny-2,k)+dsny*uy(i,ny-3,k)
         enddo
      enddo
-#IFDEF IMPLICIT
+#ifdef IMPLICIT
      return
 #endif
      do k=1,nz
@@ -3744,7 +3744,7 @@ subroutine deryy_iles_12(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
                 +csny*uy(i,ny-2,k)+dsny*uy(i,ny-3,k)
         enddo
      enddo
-#IFDEF IMPLICIT
+#ifdef IMPLICIT
      return
 #endif
      do k=1,nz
@@ -3858,7 +3858,7 @@ subroutine deryy_iles_21(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
                 -uy(i,ny  ,k)+uy(i,ny-4,k))
         enddo
      enddo
-#IFDEF IMPLICIT
+#ifdef IMPLICIT
      return
 #endif
      do k=1,nz
@@ -3943,7 +3943,7 @@ subroutine deryy_iles_21(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
            ty(i,ny  ,k)=zero
         enddo
      enddo
-#IFDEF IMPLICIT
+#ifdef IMPLICIT
      return
 #endif
      do k=1,nz
@@ -4038,7 +4038,7 @@ subroutine deryy_iles_22(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
              +csny*uy(i,ny-2,k)+dsny*uy(i,ny-3,k)
      enddo
   enddo
-#IFDEF IMPLICIT
+#ifdef IMPLICIT
   return
 #endif
   do k=1,nz
