@@ -510,7 +510,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
      csi = csi / (nine*d2)  
      dsi=(198._mytype*xnpi2 + 128._mytype*xmpi2 - 40._mytype*xnpi2*xmpi2 - 736._mytype)/&
           (405._mytype*xnpi2 - 640._mytype*xmpi2 + 144._mytype)
-     dsi = dsi / (16.*d2)  
+     dsi = dsi / (16._mytype*d2)  
   else
      alsai=(45._mytype*fpi2*pi*pi-272._mytype)/(two*(45._mytype*fpi2*pi*pi-208._mytype))
      asi  =((six-nine*alsai)/four)/d2
@@ -675,24 +675,24 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
 
   integer :: i
 
-  alcaix6=9./62. 
-  acix6=(63./62.)/dx
-  bcix6=(17./62.)/3./dx 
+  alcaix6=nine/62._mytype 
+  acix6=(63._mytype/62._mytype)/dx
+  bcix6=(17._mytype/62._mytype)/three/dx 
 
   cfx6(1)=alcaix6 
   cfx6(2)=alcaix6 
   cfx6(nxm-2)=alcaix6 
   cfx6(nxm-1)=alcaix6 
-  cfx6(nxm)=0. 
-  if (nclx1==0) ccx6(1)=2.  
-  if (nclx1==1) ccx6(1)=1. + alcaix6 
-  if (nclx1==2) ccx6(1)=1. + alcaix6 
-  ccx6(2)=1. 
-  ccx6(nxm-2)=1. 
-  ccx6(nxm-1)=1. 
-  if (nclxn==0) ccx6(nxm)=1. + alcaix6*alcaix6  
-  if (nclxn==1) ccx6(nxm)=1. + alcaix6 
-  if (nclxn==2) ccx6(nxm)=1. + alcaix6
+  cfx6(nxm)=zero
+  if (nclx1==0) ccx6(1)=two
+  if (nclx1==1) ccx6(1)=one + alcaix6 
+  if (nclx1==2) ccx6(1)=one + alcaix6 
+  ccx6(2)=one 
+  ccx6(nxm-2)=one 
+  ccx6(nxm-1)=one 
+  if (nclxn==0) ccx6(nxm)=one + alcaix6*alcaix6  
+  if (nclxn==1) ccx6(nxm)=one + alcaix6 
+  if (nclxn==2) ccx6(nxm)=one + alcaix6
   cbx6(1)=alcaix6 
   cbx6(2)=alcaix6 
   cbx6(nxm-2)=alcaix6 
@@ -700,7 +700,7 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
   cbx6(nxm)=0. 
   do i=3,nxm-3 
      cfx6(i)=alcaix6 
-     ccx6(i)=1. 
+     ccx6(i)=one
      cbx6(i)=alcaix6 
   enddo
 
@@ -708,20 +708,20 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
   cfi6(2)=alcaix6 
   cfi6(nx-2)=alcaix6 
   cfi6(nx-1)=alcaix6 
-  cfi6(nx)=0. 
-  cci6(1)=1. 
-  cci6(2)=1. 
-  cci6(nx-2)=1. 
-  cci6(nx-1)=1. 
-  cci6(nx)=1. 
+  cfi6(nx)=zero
+  cci6(1)=one 
+  cci6(2)=one
+  cci6(nx-2)=one
+  cci6(nx-1)=one
+  cci6(nx)=one
   cbi6(1)=alcaix6 
   cbi6(2)=alcaix6 
   cbi6(nx-2)=alcaix6 
   cbi6(nx-1)=alcaix6 + alcaix6 
-  cbi6(nx)=0. 
+  cbi6(nx)=zero
   do i=3,nx-3 
      cfi6(i)=alcaix6 
-     cci6(i)=1. 
+     cci6(i)=one
      cbi6(i)=alcaix6 
   enddo
 
@@ -731,70 +731,70 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      dicix6=0.00293016
 
      !ORDRE 6
-     aicix6=1./64.*(75.+70.*ailcaix6-320.*dicix6)
-     bicix6=1./128.*(126.*ailcaix6-25.+1152.*dicix6)
-     cicix6=1./128.*(-10.*ailcaix6+3.-640.*dicix6)
-     aicix6=aicix6/2.
-     bicix6=bicix6/2.
-     cicix6=cicix6/2.
-     dicix6=dicix6/2.
+     aicix6=one/64._mytype *(75._mytype +70._mytype *ailcaix6-320._mytype *dicix6)
+     bicix6=one/128._mytype *(126._mytype *ailcaix6-25._mytype +1152._mytype *dicix6)
+     cicix6=one/128._mytype *(-ten*ailcaix6+three.-640._mytype *dicix6)
+     aicix6=aicix6/two
+     bicix6=bicix6/two
+     cicix6=cicix6/two
+     dicix6=dicix6/two
   else
      !Classic
      !ailcaix6=3./10.
      !dicix6=0.
 
      !Crazy
-     ailcaix6=0.49
-     dicix6=0.
+     ailcaix6=0.49_mytype 
+     dicix6=zero
 
-     aicix6=1./128.*(75.+70.*ailcaix6)
-     bicix6=1./256.*(126.*ailcaix6-25.)
-     cicix6=1./256.*(-10.*ailcaix6+3.)
-     dicix6=dicix6/2.
+     aicix6=one/128._mytype *(75._mytype +70._mytype*ailcaix6)
+     bicix6=one/256._mytype *(126._mytype*ailcaix6-25._mytype)
+     cicix6=one/256._mytype *(-ten*ailcaix6+three)
+     dicix6=dicix6/two
   endif
 
   cifx6(1)=ailcaix6 
   cifx6(2)=ailcaix6 
   cifx6(nxm-2)=ailcaix6 
   cifx6(nxm-1)=ailcaix6 
-  cifx6(nxm)=0. 
-  if (nclx1==0) cicx6(1)=2.  
-  if (nclx1==1) cicx6(1)=1. + ailcaix6 
-  if (nclx1==2) cicx6(1)=1. + ailcaix6 
-  cicx6(2)=1. 
-  cicx6(nxm-2)=1. 
-  cicx6(nxm-1)=1. 
-  if (nclxn==0) cicx6(nxm)=1. + ailcaix6*ailcaix6
-  if (nclxn==1) cicx6(nxm)=1. + ailcaix6 
-  if (nclxn==2) cicx6(nxm)=1. + ailcaix6
+  cifx6(nxm)=zero
+  if (nclx1==0) cicx6(1)=two 
+  if (nclx1==1) cicx6(1)=one + ailcaix6 
+  if (nclx1==2) cicx6(1)=one + ailcaix6 
+  cicx6(2)=one
+  cicx6(nxm-2)=one
+  cicx6(nxm-1)=one
+  if (nclxn==0) cicx6(nxm)=one + ailcaix6*ailcaix6
+  if (nclxn==1) cicx6(nxm)=one + ailcaix6 
+  if (nclxn==2) cicx6(nxm)=one + ailcaix6
   cibx6(1)=ailcaix6 
   cibx6(2)=ailcaix6 
   cibx6(nxm-2)=ailcaix6 
   cibx6(nxm-1)=ailcaix6 
-  cibx6(nxm)=0. 
+  cibx6(nxm)=zero
   do i=3,nxm-3 
      cifx6(i)=ailcaix6 
-     cicx6(i)=1. 
+     cicx6(i)=one
      cibx6(i)=ailcaix6 
   enddo
   cifi6(1)=ailcaix6 + ailcaix6 
   cifi6(2)=ailcaix6 
   cifi6(nx-2)=ailcaix6 
   cifi6(nx-1)=ailcaix6 
-  cifi6(nx)=0. 
-  cici6(1)=1. 
-  cici6(2)=1. 
-  cici6(nx-2)=1. 
-  cici6(nx-1)=1. 
-  cici6(nx)=1. 
+  cifi6(nx)=zero
+  cici6(1)=one
+  cici6(2)=one
+  cici6(nx-2)=one 
+  cici6(nx-1)=one
+  cici6(nx)=one
   cibi6(1)=ailcaix6 
   cibi6(2)=ailcaix6 
   cibi6(nx-2)=ailcaix6 
   cibi6(nx-1)=ailcaix6 + ailcaix6 
-  cibi6(nx)=0. 
+  cibi6(nx)=zero
   do i=3,nx-3 
      cifi6(i)=ailcaix6 
-     cici6(i)=1. 
+     cici6(i)=one
      cibi6(i)=ailcaix6 
   enddo
 
@@ -806,8 +806,8 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      cifip6(i)=cifi6(i)
      cfip6(i)=cfi6(i)
   enddo
-  cfxp6(1)=0.
-  cfip6(1)=0.
+  cfxp6(1)=zero
+  cfip6(1)=zero
   call prepare (cbx6,ccx6,cfx6 ,csx6 ,cwx6 ,nxm)
   call prepare (cbx6,ccx6,cfxp6,csxp6,cwxp6,nxm)
   call prepare (cibx6,cicx6,cifx6 ,cisx6 ,ciwx6 ,nxm)
@@ -817,9 +817,9 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
   call prepare (cibi6,cici6,cifi6 ,cisi6 ,ciwi6 ,nx)
   call prepare (cibi6,cici6,cifip6,cisip6,ciwip6,nx)
   if (nclxn.eq.1) then
-     cbx6(nxm-1)=0.
+     cbx6(nxm-1)=zero
      cibx6(nxm)=0
-     cbi6(nx-1)=0.
+     cbi6(nx-1)=zero
      cibi6(nx)=0
      call prepare (cbx6,ccx6,cfxp6,csxp6,cwxp6,nxm)
      call prepare (cibx6,cicx6,cifxp6,cisxp6,ciwxp6,nxm)
@@ -827,10 +827,10 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      call prepare (cibi6,cici6,cifip6,cisip6,ciwip6,nx)
   endif
   if (nclxn.eq.2) then
-     cbx6(nxm-1)=0.
-     cibx6(nxm)=0.
-     cbi6(nx-1)=0.
-     cibi6(nx)=0.
+     cbx6(nxm-1)=zero
+     cibx6(nxm)=zero
+     cbi6(nx-1)=zero
+     cibi6(nx)=zero
      call prepare (cbx6,ccx6,cfxp6,csxp6,cwxp6,nxm)
      call prepare (cibx6,cicx6,cifxp6,cisxp6,ciwxp6,nxm)
      call prepare (cbi6,cci6,cfip6,csip6,cwip6,nx)
