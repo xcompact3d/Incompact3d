@@ -658,7 +658,7 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
 !*******************************************************************
 
   use decomp_2d, only : mytype
-  use param, only : jLES
+  use param, only : jLES, zero, one, two, three, nine, ten
 
   implicit none
 
@@ -733,7 +733,7 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      !ORDRE 6
      aicix6=one/64._mytype *(75._mytype +70._mytype *ailcaix6-320._mytype *dicix6)
      bicix6=one/128._mytype *(126._mytype *ailcaix6-25._mytype +1152._mytype *dicix6)
-     cicix6=one/128._mytype *(-ten*ailcaix6+three.-640._mytype *dicix6)
+     cicix6=one/128._mytype *(-ten*ailcaix6+three-640._mytype *dicix6)
      aicix6=aicix6/two
      bicix6=bicix6/two
      cicix6=cicix6/two
