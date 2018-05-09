@@ -14,7 +14,9 @@ subroutine ft_parameter(arg)
   USE variables
   USE flow_type
   USE complex_geometry
+#ifdef FORCES
   USE forces
+#endif
   USE decomp_2d, only : nrank
   implicit none
 
@@ -90,6 +92,7 @@ subroutine ft_parameter(arg)
   read (10,*) izap  
   read (10,*) nraf
   read (10,*) nobjmax
+#ifdef FORCES
   read (10,*) a !
   read (10,*) a !INCOMPACT 3D Forces - Drag and Lift coefficients
   read (10,*) a !
@@ -97,13 +100,16 @@ subroutine ft_parameter(arg)
   read (10,*) xrd
   read (10,*) yld
   read (10,*) yud
+#endif
   close(10)
 
   if (nrank==0) then
      print *,'=======================Cylinder============================'
      write(*,"(' cex, cey, ra       : (',F6.2,',',F6.2,',',F6.2,')')") cex, cey, ra
+#ifdef FORCES
      write(*,"(' xld, xrd, yld, yud : (',F6.2,',',F6.2,',',F6.2',',F6.2,')')") &
                  xld, xrd, yld, yud
+#endif
      print *,'==========================================================='
   endif
   return
