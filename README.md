@@ -67,7 +67,7 @@ If the flags are not specified in the Makefile, the compile ignore the sections 
 **Note:** In order to compile the code with the apropiate flags you must enter the -D$FLAG, i.e., -DDOUBLE_PREC
 
 You can do an export of the variable in order to the Makefile knows what BC you want to compiler
-   export FLOW_TYPE=Channel-flow
+       export FLOW_TYPE=Channel-flow
 or uncomment line 19 from the Makefile
 
 ## Source Download and Compilation
