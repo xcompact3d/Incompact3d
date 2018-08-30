@@ -43,7 +43,7 @@ We estabilished a solid and easy way to run a range of benchmark test cases to v
 
 |Code| Flow configuration             | BC File         | Reference | Dataset |
 |:----------------:|:----------------:|:----------------:|:----------------:|:----------------:|
-|1| Taylor-Green Vortex        | TGV              |[Beck et al. (2014)](https://link.springer.com/article/10.1007/s00162-011-0253-7)
+|1| Taylor-Green Vortices        | TGV              |[Beck et al. (2014)](https://link.springer.com/article/10.1007/s00162-011-0253-7)
 |2| Periodic Channel            | Channel-flow     |[Moser, Kim & Mansour (1999)](https://www.researchgate.net/publication/243777258_Direct_Numerical_Simulation_of_Turbulent_Channel_Flow_up_to_Re590)|[Dataset](http://turbulence.ices.utexas.edu/data/MKM/chan180/profiles/)
 |3| Flow over a Cylinder         | Cylinder         |[Mittal and Balachandar (1995)](https://www.researchgate.net/publication/252073966_Effect_of_three-dimensionality_on_the_lift_and_drag_of_nominal_two-dimensional_cylinders)
 |4| Periodic Hill                | Periodic-Hill    |[Breuer et al. (2009)](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&ved=2ahUKEwiR9fjTx97cAhWCC5AKHbItAwEQFjAAegQIAhAC&url=https%3A%2F%2Fcfd.spbstu.ru%2Fagarbaruk%2Fdoc%2F2009_Breuer-et-al._Flow-over-periodic-hills.-Numerical-and-experimental-study-in-a-wide-range-of-Reynolds-numbers.pdf&usg=AOvVaw0pL7mF2TaPEbY0a8dOK-fN)
