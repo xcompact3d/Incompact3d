@@ -12,8 +12,10 @@ module forces
   USE flow_type
   implicit none
 
-  real(mytype),allocatable,dimension(:,:,:) :: ux03, uy03, ux13, uy13, epcv3
-  real(mytype) :: xld,xrd,yld,yud
+  integer :: nvol
+  real(mytype),allocatable,dimension(:,:,:) :: ux03, uy03, ux13, uy13
+  real(mytype),allocatable,dimension(:,:,:,:) :: epcv3
+  real(mytype),allocatable,dimension(:) :: xld,xrd,yld,yud
 
 contains
 
@@ -26,9 +28,11 @@ contains
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
     real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: ep2
     real(mytype), dimension(zsize(1),zsize(2),zsize(3)) :: ep3
-    integer :: i,j,k,icvlf,icvrt,jcvlw,jcvup
+    integer :: i,ic,j,k,icvlf,icvrt,jcvlw,jcvup
+
     call alloc_z(ux03);call alloc_z(uy03);call alloc_z(ux13);call alloc_z(uy13)
-    call alloc_z(epcv3)
+    allocate(epcv3(zsize(1),zsize(2),zsize(3),nvol))
+
 
     !     Definition of the Control Volume
     !*****************************************************************
@@ -37,36 +41,37 @@ contains
 
     call transpose_x_to_y(ep1,ep2)
     call transpose_y_to_z(ep2,ep3)
-    if (istret.ne.0) then
-       icvlf = nint((cex-xld)/dx)+1
-       icvrt = nint((cex+xrd)/dx)+1
-       do j=1,ny
-          if (yp(j).le.(cey-yld)) then
-             jcvlw = j
-          else if (yp(j).le.(cey+yud)) then
-             jcvup = j
+    epcv3(:,:,:,:) = zero
+    do ic=1, nvol
+       if (istret.ne.0) then
+          !not prepared
+!!$          icvlf = nint((cex(ic)-xld)/dx)+1
+!!$          icvrt = nint((cex(ic)+xrd)/dx)+1
+!!$          do j=1,ny
+!!$             if (yp(j).le.(cey(ic)-yld)) then
+!!$                jcvlw = j
+!!$             else if (yp(j).le.(cey(ic)+yud)) then
+!!$                jcvup = j
+!!$             endif
+!!$          enddo
+       else
+          icvlf = nint(xld(ic)/dx)+1-zstart(1)+1
+          icvrt = nint(xrd(ic)/dx)+1-zstart(1)+1
+          jcvlw = nint(yld(ic)/dy)+1-zstart(2)+1
+          jcvup = nint(yud(ic)/dy)+1-zstart(2)+1
+       endif
+       do i=1,zsize(1)
+          if (i.ge.icvlf.and.i.le.icvrt) then
+             do j=1,zsize(2)
+                if (j.ge.jcvlw.and.j.le.jcvup) then
+                   do k=1,zsize(3)
+                      epcv3(i,j,k,ic) = (one - ep3(i,j,k))
+                   enddo
+                endif
+             enddo
           endif
        enddo
-    else
-       icvlf = nint((cex-xld)/dx)+1
-       icvrt = nint((cex+xrd)/dx)+1
-       jcvlw = nint((cey-yld)/dy)+1
-       jcvup = nint((cey+yud)/dy)+1
-    endif
-
-    epcv3(:,:,:) = zero
-    do i=1,zsize(1)
-       if (i+zstart(1)-1 < icvlf) cycle
-       if (i+zstart(1)-1 > icvrt) cycle
-       do j=1,zsize(2)
-          if (j+zstart(2)-1 < jcvlw) cycle
-          if (j+zstart(2)-1 > jcvup) cycle
-          do k=1,zsize(3)
-             epcv3(i,j,k) = (one - ep3(i,j,k))
-          enddo
-       enddo
     enddo
-
   end subroutine init_forces
 
   subroutine restart_forces(irestart)
@@ -126,6 +131,7 @@ end module forces
   !***********************************************************************
 subroutine force(ux1,uy1,uz1,ux03,ux13,uy03,uy13,ep1,epcv3,pp3,nzmsize,phG,ph2,ph3)
 
+  USE forces, only : nvol
   USE param
   USE variables
   USE decomp_2d
@@ -134,12 +140,14 @@ subroutine force(ux1,uy1,uz1,ux03,ux13,uy03,uy13,ep1,epcv3,pp3,nzmsize,phG,ph2,p
   implicit none
 
   TYPE(DECOMP_INFO) :: phG,ph2,ph3
+  character(len=30) :: filename
   integer :: nzmsize
-  integer                                             :: i, j, k, ijk, code
+  integer                                             :: i, ic, j, k, ijk, code
   integer                                             :: nvect1,nvect2,nvect3
   real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
   real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: ux2, uy2, uz2, ep2
-  real(mytype), dimension(zsize(1),zsize(2),zsize(3)) :: ux3, uy3, uz3, ep3, epcv3
+  real(mytype), dimension(zsize(1),zsize(2),zsize(3)) :: ux3, uy3, uz3, ep3
+  real(mytype), dimension(zsize(1),zsize(2),zsize(3),nvol) :: epcv3
   real(mytype), dimension(zsize(1),zsize(2),zsize(3)) :: ux03, uy03, ux13, uy13
   integer :: icvlf,icvrt,jcvlw,jcvup !counters that
   !      real(mytype),dimension(ny) :: yp
@@ -188,15 +196,15 @@ subroutine force(ux1,uy1,uz1,ux03,ux13,uy03,uy13,ep1,epcv3,pp3,nzmsize,phG,ph2,p
 
   !WORK Z-PENCILS
   call interiz6(tta3,pp3,ddi3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
-  (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
+       (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
   !WORK Y-PENCILS
   call transpose_z_to_y(tta3,tta2,ph3) !nxm nym nz
   call interiy6(ttb2,tta2,ddi2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
-  (ph3%yen(1)-ph3%yst(1)+1),nym,ysize(2),ysize(3),1)
+       (ph3%yen(1)-ph3%yst(1)+1),nym,ysize(2),ysize(3),1)
   !WORK X-PENCILS
   call transpose_y_to_x(ttb2,tta1,ph2) !nxm ny nz
   call interi6(ppi1,tta1,ddi1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
-  nxm,xsize(1),xsize(2),xsize(3),1)
+       nxm,xsize(1),xsize(2),xsize(3),1)
 
   !X ==> Y
   call transpose_x_to_y(ux1,ux2)
@@ -305,336 +313,331 @@ subroutine force(ux1,uy1,uz1,ux03,ux13,uy03,uy13,ep1,epcv3,pp3,nzmsize,phG,ph2,p
   !         Excluding the body internal cells. If the centroid 
   !         of the cell falls inside the body the cell is 
   !         excluded.
-
-  do k=1,zsize(3)
-     tsumx=zero
-     tsumy=zero
-     sumx(k)=zero
-     sumy(k)=zero
-     do j=1,zsize(2)  !zstart(2),zend(2)
+  do ic=1, nvol
+     do k=1,zsize(3)
+        tsumx=zero
+        tsumy=zero
+        sumx(k)=zero
+        sumy(k)=zero
+        do j=1,zsize(2)  !zstart(2),zend(2)
 #ifdef STRETCHING
-        dy = ppy(j-1+zstart(2))
+           dy = ppy(j-1+zstart(2))
 #endif
-        do i=1,zsize(1) !zstart(1),zend(1)
-           !     The velocity time rate has to be relative to the cell center, 
-           !     and not to the nodes, because, here, we have an integral 
-           !     relative to the volume, and, therefore, this has a sense 
-           !     of a "source".
-           fac   = (onepfive*ux3(i,j,k)-two*ux03(i,j,k)+half*ux13(i,j,k))*epcv3(i,j,k)
-           dudt1 = fac/dt
-           tsumx = tsumx+dudt1*dx*dy
-           !sumx(k) = sumx(k)+dudt1*dx*dy
+           do i=1,zsize(1) !zstart(1),zend(1)
+              !     The velocity time rate has to be relative to the cell center, 
+              !     and not to the nodes, because, here, we have an integral 
+              !     relative to the volume, and, therefore, this has a sense 
+              !     of a "source".
+              fac   = (onepfive*ux3(i,j,k)-two*ux03(i,j,k)+half*ux13(i,j,k))*epcv3(i,j,k,ic)
+              dudt1 = fac/dt
+              tsumx = tsumx+dudt1*dx*dy
+              !sumx(k) = sumx(k)+dudt1*dx*dy
 
-           fac   = (onepfive*uy3(i,j,k)-two*uy03(i,j,k)+half*uy13(i,j,k))*epcv3(i,j,k)
-           dudt1 = fac/dt
-           tsumy = tsumy+dudt1*dx*dy
-           !sumy(k) = sumy(k)+dudt1*dx*dy
+              fac   = (onepfive*uy3(i,j,k)-two*uy03(i,j,k)+half*uy13(i,j,k))*epcv3(i,j,k,ic)
+              dudt1 = fac/dt
+              tsumy = tsumy+dudt1*dx*dy
+              !sumy(k) = sumy(k)+dudt1*dx*dy
+           enddo
         enddo
-     enddo
-     call MPI_ALLREDUCE(tsumx,tsumx1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     call MPI_ALLREDUCE(tsumy,tsumy1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     sumx(k) = tsumx1
-     sumy(k) = tsumy1
-     !*********************************************************************************
-     !     Secondly, the surface momentum fluxes
-     !*********************************************************************************
+        call MPI_ALLREDUCE(tsumx,tsumx1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        call MPI_ALLREDUCE(tsumy,tsumy1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        sumx(k) = tsumx1
+        sumy(k) = tsumy1
+        !*********************************************************************************
+        !     Secondly, the surface momentum fluxes
+        !*********************************************************************************
 
-     !       (icvlf)      (icvrt)
-     !(jcvup) B____________C  
-     !        \            \
-     !        \     __     \
-     !        \    \__\    \
-     !        \            \
-     !        \       CV   \
-     !        A____________D
-     !(jcvlw)                    
-     !      
-     fxab=zero
-     fyab=zero
-     fxbc=zero
-     fybc=zero
-     fxcd=zero
-     fycd=zero
-     fxda=zero
-     fyda=zero
-     do  j=2,zsize(2)-1 !j=zstart(2)+1, zend(2)-1
+        !       (icvlf)      (icvrt)
+        !(jcvup) B____________C  
+        !        \            \
+        !        \     __     \
+        !        \    \__\    \
+        !        \            \
+        !        \       CV   \
+        !        A____________D
+        !(jcvlw)                    
+        !      
+        fxab=zero
+        fyab=zero
+        fxbc=zero
+        fybc=zero
+        fxcd=zero
+        fycd=zero
+        fxda=zero
+        fyda=zero
+        do  j=2,zsize(2)-1 !j=zstart(2)+1, zend(2)-1
 #ifdef STRETCHING
-        dy = ppy(j-1+zstart(2))
+           dy = ppy(j-1+zstart(2))
 #endif
-        do  i=2,zsize(1)-1!i=zstart(1)+1, zend(1)-1
-           !         AB face
-           if ((epcv3(i,j,k).eq.1).and.(epcv3(i-1,j,k).eq.0).and.(epcv3(i,j+1,k).eq.1).and.(ep3(i,j,k).eq.0)) then
-              uxm = (ux3(i,j,k)+ux3(i,j+1,k))*half*epcv3(i,j,k)
-              uym = (uy3(i,j,k)+uy3(i,j+1,k))*half*epcv3(i,j,k)
-              pxab=-uxm*uxm*dy
-              fxab= fxab+pxab
-              pyab=-uxm*uym*dy
-              fyab= fyab+pyab
-              !         CD face
-           elseif ((epcv3(i,j,k).eq.1).and.(epcv3(i+1,j,k).eq.0).and.(epcv3(i,j+1,k).eq.1).and.(ep3(i,j,k).eq.0)) then
-              uxm = (ux3(i,j,k)+ux3(i,j+1,k))*half*epcv3(i,j,k)
-              uym = (uy3(i,j,k)+uy3(i,j+1,k))*half*epcv3(i,j,k)
-              pxcd=+uxm*uxm*dy
-              fxcd= fxcd+pxcd
-              pycd=+uxm*uym*dy
-              fycd= fycd+pycd
-              !         DA face
-           elseif ((epcv3(i,j,k).eq.1).and.(epcv3(i,j-1,k).eq.0).and.(epcv3(i+1,j,k).eq.1).and.(ep3(i,j,k).eq.0)) then
-              uxm = (ux3(i,j,k)+ux3(i+1,j,k))*half*epcv3(i,j,k)
-              uym = (uy3(i,j,k)+uy3(i+1,j,k))*half*epcv3(i,j,k)
-              pxda=-uxm*uym*dx
-              fxda= fxda+pxda
-              pyda=-uym*uym*dx
-              fyda= fyda+pyda
-              !         BC face
-           elseif ((epcv3(i,j,k).eq.1).and.(epcv3(i,j+1,k).eq.0).and.(epcv3(i+1,j,k).eq.1).and.(ep3(i,j,k).eq.0)) then
-              uxm = (ux3(i,j,k)+ux3(i+1,j,k))*half*epcv3(i,j,k)
-              uym = (uy3(i,j,k)+uy3(i+1,j,k))*half*epcv3(i,j,k)
-              pxbc=+uxm*uym*dx
-              fxbc= fxbc+pxbc
-              pybc=+uym*uym*dx
-              fybc= fybc+pybc
-           endif
+           do  i=2,zsize(1)-1!i=zstart(1)+1, zend(1)-1
+              !         AB face
+              if ((epcv3(i,j,k,ic).eq.1).and.(epcv3(i-1,j,k,ic).eq.0).and.(epcv3(i,j+1,k,ic).eq.1).and.(ep3(i,j,k).eq.0)) then
+                 uxm = (ux3(i,j,k)+ux3(i,j+1,k))*half*epcv3(i,j,k,ic)
+                 uym = (uy3(i,j,k)+uy3(i,j+1,k))*half*epcv3(i,j,k,ic)
+                 pxab=-uxm*uxm*dy
+                 fxab= fxab+pxab
+                 pyab=-uxm*uym*dy
+                 fyab= fyab+pyab
+                 !         CD face
+              elseif ((epcv3(i,j,k,ic).eq.1).and.(epcv3(i+1,j,k,ic).eq.0).and.(epcv3(i,j+1,k,ic).eq.1).and.(ep3(i,j,k).eq.0)) then
+                 uxm = (ux3(i,j,k)+ux3(i,j+1,k))*half*epcv3(i,j,k,ic)
+                 uym = (uy3(i,j,k)+uy3(i,j+1,k))*half*epcv3(i,j,k,ic)
+                 pxcd=+uxm*uxm*dy
+                 fxcd= fxcd+pxcd
+                 pycd=+uxm*uym*dy
+                 fycd= fycd+pycd
+                 !         DA face
+              elseif ((epcv3(i,j,k,ic).eq.1).and.(epcv3(i,j-1,k,ic).eq.0).and.(epcv3(i+1,j,k,ic).eq.1).and.(ep3(i,j,k).eq.0)) then
+                 uxm = (ux3(i,j,k)+ux3(i+1,j,k))*half*epcv3(i,j,k,ic)
+                 uym = (uy3(i,j,k)+uy3(i+1,j,k))*half*epcv3(i,j,k,ic)
+                 pxda=-uxm*uym*dx
+                 fxda= fxda+pxda
+                 pyda=-uym*uym*dx
+                 fyda= fyda+pyda
+                 !         BC face
+              elseif ((epcv3(i,j,k,ic).eq.1).and.(epcv3(i,j+1,k,ic).eq.0).and.(epcv3(i+1,j,k,ic).eq.1).and.(ep3(i,j,k).eq.0)) then
+                 uxm = (ux3(i,j,k)+ux3(i+1,j,k))*half*epcv3(i,j,k,ic)
+                 uym = (uy3(i,j,k)+uy3(i+1,j,k))*half*epcv3(i,j,k,ic)
+                 pxbc=+uxm*uym*dx
+                 fxbc= fxbc+pxbc
+                 pybc=+uym*uym*dx
+                 fybc= fybc+pybc
+              endif
+           enddo
         enddo
-     enddo
 
 
 
 
-     call MPI_ALLREDUCE(fxbc,fxbc1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     call MPI_ALLREDUCE(fybc,fybc1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        call MPI_ALLREDUCE(fxbc,fxbc1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        call MPI_ALLREDUCE(fybc,fybc1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
-     call MPI_ALLREDUCE(fxda,fxda1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     call MPI_ALLREDUCE(fyda,fyda1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        call MPI_ALLREDUCE(fxda,fxda1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        call MPI_ALLREDUCE(fyda,fyda1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
-     call MPI_ALLREDUCE(fxab,fxab1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     call MPI_ALLREDUCE(fyab,fyab1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        call MPI_ALLREDUCE(fxab,fxab1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        call MPI_ALLREDUCE(fyab,fyab1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
-     call MPI_ALLREDUCE(fxcd,fxcd1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     call MPI_ALLREDUCE(fycd,fycd1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        call MPI_ALLREDUCE(fxcd,fxcd1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        call MPI_ALLREDUCE(fycd,fycd1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
-     !     The components of the total momentum
+        !     The components of the total momentum
 
-     tvcx(k) = fxab1+fxbc1+fxcd1+fxda1
-     tvcy(k) = fyab1+fybc1+fycd1+fyda1
-     xmom    = sumx(k)+fxab1+fxbc1+fxcd1+fxda1
-     ymom    = sumy(k)+fyab1+fybc1+fycd1+fyda1
+        tvcx(k) = fxab1+fxbc1+fxcd1+fxda1
+        tvcy(k) = fyab1+fybc1+fycd1+fyda1
+        xmom    = sumx(k)+fxab1+fxbc1+fxcd1+fxda1
+        ymom    = sumy(k)+fyab1+fybc1+fycd1+fyda1
 
-     !********************************************************************************************
+        !********************************************************************************************
 
-     !*************************************************************
-     !       Calculation of forces on the external CV surface
-     !*************************************************************
-
-
-     !      call transpose_y_to_z(ta2,ta3) ! dudx
-     !      call transpose_y_to_z(tb2,tb3) ! dvdx
-     !      call transpose_y_to_z(tc2,tc3) ! dudy
-     !      call transpose_y_to_z(td2,td3) ! dvdy
-
-     !     VISCOUSE FORCES CONTRIBUTION.
-     !
-     !        THE PRESSURE CONTRIBUTION. 
-     !
-     !        Note: We shall pretend that pressure is given by 
-     !        a vector pp(i,j,1). In this instance, we may obtain
-     !        the pressure difference between two given points in
-     !        the field. In reality this pressure difference has
-     !        to be drawn from somewhere in the code.
-     !
-     !
-     !       (icvlf)      (icvrt)
-     !(jcvup) B____________C  
-     !        \            \
-     !        \     __     \
-     !        \    \__\    \
-     !        \            \
-     !        \       CV   \
-     !        A____________D
-     !(jcvlw)  
+        !*************************************************************
+        !       Calculation of forces on the external CV surface
+        !*************************************************************
 
 
-     rho  = one
-     foxpr= zero
-     foypr= zero
-     pab1  = zero
-     pcd1  = zero
-     padx1 = zero
-     pbc1  = zero
+        !      call transpose_y_to_z(ta2,ta3) ! dudx
+        !      call transpose_y_to_z(tb2,tb3) ! dvdx
+        !      call transpose_y_to_z(tc2,tc3) ! dudy
+        !      call transpose_y_to_z(td2,td3) ! dvdy
+
+        !     VISCOUSE FORCES CONTRIBUTION.
+        !
+        !        THE PRESSURE CONTRIBUTION. 
+        !
+        !        Note: We shall pretend that pressure is given by 
+        !        a vector pp(i,j,1). In this instance, we may obtain
+        !        the pressure difference between two given points in
+        !        the field. In reality this pressure difference has
+        !        to be drawn from somewhere in the code.
+        !
+        !
+        !       (icvlf)      (icvrt)
+        !(jcvup) B____________C  
+        !        \            \
+        !        \     __     \
+        !        \    \__\    \
+        !        \            \
+        !        \       CV   \
+        !        A____________D
+        !(jcvlw)  
 
 
-     foxab= zero
-     foyab= zero
-     foxbc= zero
-     foybc= zero
-     foxcd= zero
-     foycd= zero
-     foxda= zero
-     foyda= zero
+        rho  = one
+        foxpr= zero
+        foypr= zero
+        pab1  = zero
+        pcd1  = zero
+        padx1 = zero
+        pbc1  = zero
 
-     do j=1,zsize(2)-1
+
+        foxab= zero
+        foyab= zero
+        foxbc= zero
+        foybc= zero
+        foxcd= zero
+        foycd= zero
+        foxda= zero
+        foyda= zero
+
+        do j=1,zsize(2)-1
 #ifdef STRETCHING
-        dy = ppy(j-1+zstart(2))
+           dy = ppy(j-1+zstart(2))
 #endif
-        do i=2,zsize(1)-1
-           pab  = zero
-           pcd  = zero
-           !         Along CV's entrance face AB
-           if ((epcv3(i,j,k).eq.1).and.(epcv3(i-1,j,k).eq.0).and.(epcv3(i,j+1,k).eq.1).and.(ep3(i-1,j,k).eq.0)) then
-              pab  = (ppi3(i,j,k) + ppi3(i,j+1,k))*half*epcv3(i,j,k)
-              !if (k==2) print *,'pab, i, j, k, nrank', pab, i, j, k, nrank
+           do i=2,zsize(1)-1
+              pab  = zero
+              pcd  = zero
+              !         Along CV's entrance face AB
+              if ((epcv3(i,j,k,ic).eq.1).and.(epcv3(i-1,j,k,ic).eq.0).and.(epcv3(i,j+1,k,ic).eq.1).and.(ep3(i-1,j,k).eq.0)) then
+                 pab  = (ppi3(i,j,k) + ppi3(i,j+1,k))*half*epcv3(i,j,k,ic)
+                 !if (k==2) print *,'pab, i, j, k, nrank', pab, i, j, k, nrank
 
-              !         Viscouse force
-              dudxm = (ta3(i,j,k)+ta3(i,j+1,k))*half
-              dudym = (tc3(i,j,k)+tc3(i,j+1,k))*half
-              dvdxm = (tb3(i,j,k)+tb3(i,j+1,k))*half
-              pxab  =-two*xnu*dudxm*dy
-              foxab = foxab+pxab
-              pyab  =-xnu*(dvdxm+dudym)*dy
-              foyab = foyab+pyab
+                 !         Viscouse force
+                 dudxm = (ta3(i,j,k)+ta3(i,j+1,k))*half
+                 dudym = (tc3(i,j,k)+tc3(i,j+1,k))*half
+                 dvdxm = (tb3(i,j,k)+tb3(i,j+1,k))*half
+                 pxab  =-two*xnu*dudxm*dy
+                 foxab = foxab+pxab
+                 pyab  =-xnu*(dvdxm+dudym)*dy
+                 foyab = foyab+pyab
 
-              !         Along CV's exit face CD
-           elseif ((epcv3(i,j,k).eq.1).and.(epcv3(i+1,j,k).eq.0).and.(epcv3(i,j+1,k).eq.1).and.(ep3(i+1,j,k).eq.0)) then
-              pcd  = (ppi3(i,j,k) + ppi3(i,j+1,k))*half*epcv3(i,j,k)
-              !if (k==2) print *,'pcd, i, j, k, nrank', pcd, i, j, k, nrank
+                 !         Along CV's exit face CD
+              elseif ((epcv3(i,j,k,ic).eq.1).and.(epcv3(i+1,j,k,ic).eq.0).and.(epcv3(i,j+1,k,ic).eq.1).and.(ep3(i+1,j,k).eq.0)) then
+                 pcd  = (ppi3(i,j,k) + ppi3(i,j+1,k))*half*epcv3(i,j,k,ic)
+                 !if (k==2) print *,'pcd, i, j, k, nrank', pcd, i, j, k, nrank
 
-              !         Viscouse force
-              dudxm = (ta3(i,j,k)+ta3(i,j+1,k))*half
-              dudym = (tc3(i,j,k)+tc3(i,j+1,k))*half
-              dvdxm = (tb3(i,j,k)+tb3(i,j+1,k))*half
-              pxcd  =+two*xnu*dudxm*dy
-              foxcd = foxcd+pxcd
-              pycd  =+xnu*(dvdxm+dudym)*dy
-              foycd = foycd+pycd
-           endif
-           pab1 = pab1 + pab
-           pcd1 = pcd1 + pcd
+                 !         Viscouse force
+                 dudxm = (ta3(i,j,k)+ta3(i,j+1,k))*half
+                 dudym = (tc3(i,j,k)+tc3(i,j+1,k))*half
+                 dvdxm = (tb3(i,j,k)+tb3(i,j+1,k))*half
+                 pxcd  =+two*xnu*dudxm*dy
+                 foxcd = foxcd+pxcd
+                 pycd  =+xnu*(dvdxm+dudym)*dy
+                 foycd = foycd+pycd
+              endif
+              pab1 = pab1 + pab
+              pcd1 = pcd1 + pcd
+           enddo
         enddo
-     enddo
-     !if (k==2)   print *,'pab, nrank', pab1, nrank
-     !if (k==2)   print *,'pcd, nrank', pcd1,  nrank
-     !        The pressure force between planes AB and CD
-     call MPI_ALLREDUCE(pab1,pab,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     call MPI_ALLREDUCE(pcd1,pcd,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     difp  = (pab/dt-pcd/dt)/rho
-     pxp   = difp*dy !a possible problem for stretching
-     foxpr = foxpr+pxp
+        !if (k==2)   print *,'pab, nrank', pab1, nrank
+        !if (k==2)   print *,'pcd, nrank', pcd1,  nrank
+        !        The pressure force between planes AB and CD
+        call MPI_ALLREDUCE(pab1,pab,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        call MPI_ALLREDUCE(pcd1,pcd,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        difp  = (pab/dt-pcd/dt)/rho
+        pxp   = difp*dy !a possible problem for stretching
+        foxpr = foxpr+pxp
 
 
 
 
 
-     do j=2,zsize(2)-1 
-        do i=1,zsize(1)-1
-           padx = zero
-           pbc  = zero
-           !         Along CV's lower face DA
-           if ((epcv3(i,j,k).eq.1).and.(epcv3(i,j-1,k).eq.0).and.(epcv3(i+1,j,k).eq.1).and.((1-ep3(i,j-1,k)).eq.1)) then
-              padx = (ppi3(i,j,k) + ppi3(i+1,j,k))/2.0*epcv3(i,j,k)
-              !if (k==2) print *,'padx, i, j, k, nrank', padx, i, j, k, nrank
+        do j=2,zsize(2)-1 
+           do i=1,zsize(1)-1
+              padx = zero
+              pbc  = zero
+              !         Along CV's lower face DA
+              if ((epcv3(i,j,k,ic).eq.1).and.(epcv3(i,j-1,k,ic).eq.0).and.(epcv3(i+1,j,k,ic).eq.1).and.((1-ep3(i,j-1,k)).eq.1)) then
+                 padx = (ppi3(i,j,k) + ppi3(i+1,j,k))/2.0*epcv3(i,j,k,ic)
+                 !if (k==2) print *,'padx, i, j, k, nrank', padx, i, j, k, nrank
 
-              !         Viscouse force
-              dudym = (tc3(i,j,k)+tc3(i+1,j,k))*half
-              dvdxm = (tb3(i,j,k)+tb3(i+1,j,k))*half
-              dvdym = (td3(i,j,k)+td3(i+1,j,k))*half
-              pxda  =-xnu*(dudym+dvdxm)*dx
-              foxda = foxda+pxda
-              pyda  =-two*xnu*dvdym*dx
-              foyda = foyda+pyda
+                 !         Viscouse force
+                 dudym = (tc3(i,j,k)+tc3(i+1,j,k))*half
+                 dvdxm = (tb3(i,j,k)+tb3(i+1,j,k))*half
+                 dvdym = (td3(i,j,k)+td3(i+1,j,k))*half
+                 pxda  =-xnu*(dudym+dvdxm)*dx
+                 foxda = foxda+pxda
+                 pyda  =-two*xnu*dvdym*dx
+                 foyda = foyda+pyda
 
-              !         Along CV's upper face BC
-           elseif ((epcv3(i,j,k).eq.1).and.(epcv3(i,j+1,k).eq.0).and.(epcv3(i+1,j,k).eq.1).and.((one-ep3(i,j+1,k)).eq.one)) then
-              pbc  = (ppi3(i,j,k) + ppi3(i+1,j,k))*half*epcv3(i,j,k)
-              !if (k==2) print *,'pbc, i, j, k, nrank', pbc, i, j, k, nrank
+                 !         Along CV's upper face BC
+              elseif ((epcv3(i,j,k,ic).eq.1).and.(epcv3(i,j+1,k,ic).eq.0).and.(epcv3(i+1,j,k,ic).eq.1).and.((one-ep3(i,j+1,k)).eq.one)) then
+                 pbc  = (ppi3(i,j,k) + ppi3(i+1,j,k))*half*epcv3(i,j,k,ic)
+                 !if (k==2) print *,'pbc, i, j, k, nrank', pbc, i, j, k, nrank
 
-              !         Viscouse force
-              dudym = (tc3(i,j,k)+tc3(i+1,j,k))*half
-              dvdxm = (tb3(i,j,k)+tb3(i+1,j,k))*half
-              dvdym = (td3(i,j,k)+td3(i+1,j,k))*half
-              pxbc  =+xnu*(dudym+dvdxm)*dx
-              foxbc = foxbc+pxbc
-              pybc  =+two*xnu*dvdym*dx
-              foybc = foybc+pybc
-           endif
-           padx1 = padx1 + padx
-           pbc1  = pbc1  + pbc
+                 !         Viscouse force
+                 dudym = (tc3(i,j,k)+tc3(i+1,j,k))*half
+                 dvdxm = (tb3(i,j,k)+tb3(i+1,j,k))*half
+                 dvdym = (td3(i,j,k)+td3(i+1,j,k))*half
+                 pxbc  =+xnu*(dudym+dvdxm)*dx
+                 foxbc = foxbc+pxbc
+                 pybc  =+two*xnu*dvdym*dx
+                 foybc = foybc+pybc
+              endif
+              padx1 = padx1 + padx
+              pbc1  = pbc1  + pbc
+           enddo
         enddo
+        !if (k==2)   print *,'pad, nrank', padx1, nrank
+        !if (k==2)   print *,'pbc, nrank', pbc1,  nrank
+        !        The pressure force between planes AD and BC
+        call MPI_ALLREDUCE(padx1,padx,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        call MPI_ALLREDUCE(pbc1,pbc,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        difp  = (padx/dt-pbc/dt)/rho
+        pyp   = difp*dx
+        foypr = foypr+pyp
+        !if (k==2)   print *,'difp, pyp, foypr, nrank', difp, pyp, foypr,  nrank
+
+        !if (k==1) print *,'foypr', foypr
+        call MPI_ALLREDUCE(foxab,foxab1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        call MPI_ALLREDUCE(foyab,foyab1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+
+        call MPI_ALLREDUCE(foxcd,foxcd1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        call MPI_ALLREDUCE(foycd,foycd1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+
+        call MPI_ALLREDUCE(foxbc,foxbc1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        call MPI_ALLREDUCE(foybc,foybc1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+
+        call MPI_ALLREDUCE(foxda,foxda1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        call MPI_ALLREDUCE(foyda,foyda1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+
+
+
+
+
+
+        !        The resultant components along x and y
+        !
+        f2xx(k)=foxab1+foxbc1+foxcd1+foxda1 + foxpr
+        f2yy(k)=foyab1+foybc1+foycd1+foyda1 + foypr
+
+        !       Calculation of the aerodynamic force components
+        !
+        !
+        !       Adjusting length scales reference. Multiply by the 
+        !       airfoil maximum thickness and divide by chord. One 
+        !       should observe that, in fact, calculated values   
+        !       of lift and drag correspond already to the coefficients,
+        !       because the program works with nondimensonalized 
+        !       variables. The point here is that the original reference
+        !       for lengths is the maximum thickness, and the force 
+        !       coefficients are obtained considering as reference 
+        !       the airfoil chord.
+
+
+        xDrag(k) = two*(f2xx(k)-xmom)
+        yLift(k) = two*(f2yy(k)-ymom) !Ja foi dividido por dz em rmomentum e sforce 
+
+        !if (nrank==0) print *,'xDrag, yLift', 2*f2xx(k), 2*f2yy(k), 2*xmom, 2*ymom, xDrag(k), yLift(k)
+
+        !**************************************************************************************************
+
      enddo
-     !if (k==2)   print *,'pad, nrank', padx1, nrank
-     !if (k==2)   print *,'pbc, nrank', pbc1,  nrank
-     !        The pressure force between planes AD and BC
-     call MPI_ALLREDUCE(padx1,padx,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     call MPI_ALLREDUCE(pbc1,pbc,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     difp  = (padx/dt-pbc/dt)/rho
-     pyp   = difp*dx
-     foypr = foypr+pyp
-     !if (k==2)   print *,'difp, pyp, foypr, nrank', difp, pyp, foypr,  nrank
-
-     !if (k==1) print *,'foypr', foypr
-     call MPI_ALLREDUCE(foxab,foxab1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     call MPI_ALLREDUCE(foyab,foyab1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-
-     call MPI_ALLREDUCE(foxcd,foxcd1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     call MPI_ALLREDUCE(foycd,foycd1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-
-     call MPI_ALLREDUCE(foxbc,foxbc1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     call MPI_ALLREDUCE(foybc,foybc1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-
-     call MPI_ALLREDUCE(foxda,foxda1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     call MPI_ALLREDUCE(foyda,foyda1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-
-
-
-
-
-
-     !        The resultant components along x and y
-     !
-     f2xx(k)=foxab1+foxbc1+foxcd1+foxda1 + foxpr
-     f2yy(k)=foyab1+foybc1+foycd1+foyda1 + foypr
-
-     !       Calculation of the aerodynamic force components
-     !
-     !
-     !       Adjusting length scales reference. Multiply by the 
-     !       airfoil maximum thickness and divide by chord. One 
-     !       should observe that, in fact, calculated values   
-     !       of lift and drag correspond already to the coefficients,
-     !       because the program works with nondimensonalized 
-     !       variables. The point here is that the original reference
-     !       for lengths is the maximum thickness, and the force 
-     !       coefficients are obtained considering as reference 
-     !       the airfoil chord.
-
-
-     xDrag(k) = two*(f2xx(k)-xmom)
-     yLift(k) = two*(f2yy(k)-ymom) !Ja foi dividido por dz em rmomentum e sforce 
-
-     !if (nrank==0) print *,'xDrag, yLift', 2*f2xx(k), 2*f2yy(k), 2*xmom, 2*ymom, xDrag(k), yLift(k)
-
-     !**************************************************************************************************
-
-
+     ! Adições por Felipe Schuch
+     xDrag_mean = sum(xDrag(:))/real(nz,mytype)
+     yLift_mean = sum(yLift(:))/real(nz,mytype)
+     if (nrank .eq. 0) then
+        write(filename,"('./out/aerof_avr',I1.1)") ic
+        open(67,file=filename,status='unknown',form='formatted',access='direct',recl=43) !43 = 3*14+1
+        !Utilizando o acesso direto, cada valor para os coeficientes será escrito na linha itime-2,
+        !eliminando problemas com possível restart
+        write(67,'(3E14.6,A)',rec=itime-2) t,&                     !1
+             xDrag_mean,&                                          !2
+             yLift_mean,&                                          !3
+             char(10) !new line character                          !+1
+        close(67)
+     endif
   enddo
-
-!!!
-  ! Adições por Felipe Schuch
-!!!
-  xDrag_mean = sum(xDrag)/real(nz,mytype)
-  yLift_mean = sum(yLift)/real(nz,mytype)
-  if (nrank .eq. 0) then
-     open(67,file='./out/aerof_avr',status='unknown',form='formatted',access='direct',recl=43) !43 = 3*14+1
-     !Utilizando o acesso direto, cada valor para os coeficientes será escrito na linha itime-2,
-     !eliminando problemas com possível restart
-     write(67,'(3E14.6,A)',rec=itime-2) t,&                     !1
-          xDrag_mean,&                                          !2
-          yLift_mean,&                                          !3
-          char(10) !new line character                          !+1
-     close(67)
-  endif
-!!!
-  !
-!!!
 
   do ijk=1,nvect3
      ux13(ijk,1,1)=ux03(ijk,1,1)
@@ -649,6 +652,3 @@ subroutine force(ux1,uy1,uz1,ux03,ux13,uy03,uy13,ep1,epcv3,pp3,nzmsize,phG,ph2,p
   return
 
 end subroutine force
-
-
-

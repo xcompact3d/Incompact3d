@@ -2,6 +2,9 @@
 #ifdef VISU
 subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
 
+#ifdef FORCES
+  USE forces
+#endif
   USE param
   USE variables
   USE decomp_2d
@@ -79,7 +82,7 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
   if (nrank .eq. 0) call paraview()
 
   if (protection) then !Files that must be protected from rewriting
-                       !when visu runs from post-processing
+     !when visu runs from post-processing
      save_ux=0; save_uy=0; save_uz=0; save_ibm=0; save_phi=0; save_pre=0
   endif
 
@@ -167,6 +170,17 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 #endif
+
+#ifdef FORCES
+  do is=1, nvol
+     uvisu = 0._mytype
+     call transpose_z_to_y (epcv3(:,:,:,is),temp2)
+     call transpose_y_to_x (temp2,temp1) 
+     call fine_to_coarseV(1,temp1,uvisu)    
+     write(filename,"('./data/epcv',I1.1,I4.4)") is ,0
+     call decomp_2d_write_one(1,uvisu,filename,2)
+  enddo
+#endif 
 
   if (iscalar.eq.1) then
      if (save_phi.eq.1) then
