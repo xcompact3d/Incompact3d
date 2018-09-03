@@ -230,11 +230,11 @@ subroutine force(ux1,uy1,ep1,pp3,nzmsize,phG,ph2,ph3)
      !         of the cell falls inside the body the cell is 
      !         excluded.
 
-     tunstxl(:)=0.
-     tunstyl(:)=0.
+     tunstxl(:)=zero
+     tunstyl(:)=zero
      do k=1,xsize(3)
-        tsumx=0.0
-        tsumy=0.0
+        tsumx=zero
+        tsumy=zero
         do j=jcvlw_lx(iv),jcvup_lx(iv)
            do i=icvlf_lx(iv),icvrt_lx(iv)
               !     The velocity time rate has to be relative to the cell center, 
@@ -242,12 +242,12 @@ subroutine force(ux1,uy1,ep1,pp3,nzmsize,phG,ph2,ph3)
               !     relative to the volume, and, therefore, this has a sense 
               !     of a "source".
               !         fac   = (1.5*ux1(i,j,k)-2.0*ux01(i,j,k)+0.5*ux11(i,j,k))*epcv1(i,j,k)
-              fac   = (1.5*ux1(i,j,k)-2.0*ux01(i,j,k)+0.5*ux11(i,j,k))*(1.-ep1(i,j,k))
+              fac   = (onepfive*ux1(i,j,k)-two*ux01(i,j,k)+half*ux11(i,j,k))*(one-ep1(i,j,k))
               tsumx = tsumx+fac*dx*dy/dt
               !sumx(k) = sumx(k)+dudt1*dx*dy
 
               !         fac   = (1.5*uy1(i,j,k)-2.0*uy01(i,j,k)+0.5*uy11(i,j,k))*epcv1(i,j,k)
-              fac   = (1.5*uy1(i,j,k)-2.0*uy01(i,j,k)+0.5*uy11(i,j,k))*(1.-ep1(i,j,k))
+              fac   = (onepfive*uy1(i,j,k)-two*uy01(i,j,k)+half*uy11(i,j,k))*(one-ep1(i,j,k))
               tsumy = tsumy+fac*dx*dy/dt
               !sumy(k) = sumy(k)+dudt1*dx*dy
            enddo
@@ -273,41 +273,41 @@ subroutine force(ux1,uy1,ep1,pp3,nzmsize,phG,ph2,ph3)
 !!$!(jcvlw)                    
 !!$!      
 
-     tconvxl(:)=0.
-     tconvyl(:)=0.
-     tdiffxl(:)=0.
-     tdiffyl(:)=0.
-     tpresxl(:)=0.
-     tpresyl(:)=0.
+     tconvxl(:)=zero
+     tconvyl(:)=zero
+     tdiffxl(:)=zero
+     tdiffyl(:)=zero
+     tpresxl(:)=zero
+     tpresyl(:)=zero
      !BC and AD : x-pencils
      !AD
      if ((jcvlw(iv).ge.xstart(2)).and.(jcvlw(iv).le.xend(2))) then
         j=jcvlw(iv)-xstart(2)+1
         do k=1,xsize(3)
            kk=xstart(3)-1+k
-           fcvx=0.0
-           fcvy=0.0
-           fpry=0.0
-           fdix=0.0
-           fdiy=0.0
+           fcvx=zero
+           fcvy=zero
+           fpry=zero
+           fdix=zero
+           fdiy=zero
            do i=icvlf_lx(iv),icvrt_lx(iv)-1
               !momentum flux
-              uxmid = 0.5*(ux1(i,j,k)+ux1(i+1,j,k))
-              uymid = 0.5*(uy1(i,j,k)+uy1(i+1,j,k))
+              uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
+              uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
               fcvx= fcvx -uxmid*uymid*dx
               fcvy= fcvy -uymid*uymid*dx
 
 
               !pressure
-              prmid = 0.5*(ppi1(i,j,k)+ppi1(i+1,j,k))
+              prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))
               fpry = fpry +prmid*dx
 
               !viscous term
-              dudymid = 0.5*(tc1(i,j,k)+tc1(i+1,j,k))
-              dvdxmid = 0.5*(tb1(i,j,k)+tb1(i+1,j,k))
-              dvdymid = 0.5*(td1(i,j,k)+td1(i+1,j,k))
+              dudymid = half*(tc1(i,j,k)+tc1(i+1,j,k))
+              dvdxmid = half*(tb1(i,j,k)+tb1(i+1,j,k))
+              dvdymid = half*(td1(i,j,k)+td1(i+1,j,k))
               fdix = fdix -(xnu*(dudymid+dvdxmid)*dx)
-              fdiy = fdiy -2.0*xnu*dvdymid*dx
+              fdiy = fdiy -two*xnu*dvdymid*dx
 
            enddo
 
@@ -323,28 +323,28 @@ subroutine force(ux1,uy1,ep1,pp3,nzmsize,phG,ph2,ph3)
         j=jcvup(iv)-xstart(2)+1
         do k=1,xsize(3)
            kk=xstart(3)-1+k
-           fcvx=0.0
-           fcvy=0.0
-           fpry=0.0
-           fdix=0.0
-           fdiy=0.0
+           fcvx=zero
+           fcvy=zero
+           fpry=zero
+           fdix=zero
+           fdiy=zero
            do i=icvlf_lx(iv),icvrt_lx(iv)-1
               !momentum flux
-              uxmid = 0.5*(ux1(i,j,k)+ux1(i+1,j,k))
-              uymid = 0.5*(uy1(i,j,k)+uy1(i+1,j,k))
+              uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
+              uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
               fcvx= fcvx +uxmid*uymid*dx
               fcvy= fcvy +uymid*uymid*dx
 
               !pressure
-              prmid = 0.5*(ppi1(i,j,k)+ppi1(i+1,j,k))
+              prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))
               fpry = fpry -prmid*dx
 
               !viscous term
-              dudymid = 0.5*(tc1(i,j,k)+tc1(i+1,j,k))
-              dvdxmid = 0.5*(tb1(i,j,k)+tb1(i+1,j,k))
-              dvdymid = 0.5*(td1(i,j,k)+td1(i+1,j,k))
+              dudymid = half*(tc1(i,j,k)+tc1(i+1,j,k))
+              dvdxmid = half*(tb1(i,j,k)+tb1(i+1,j,k))
+              dvdymid = half*(td1(i,j,k)+td1(i+1,j,k))
               fdix = fdix +(xnu*(dudymid+dvdxmid)*dx)
-              fdiy = fdiy +2.0*xnu*dvdymid*dx
+              fdiy = fdiy +half*xnu*dvdymid*dx
 
            enddo
            tconvxl(kk)=tconvxl(kk)+fcvx
@@ -360,27 +360,27 @@ subroutine force(ux1,uy1,ep1,pp3,nzmsize,phG,ph2,ph3)
         i=icvlf(iv)-ystart(1)+1
         do k=1,ysize(3)
            kk=ystart(3)-1+k
-           fcvx=0.0
-           fcvy=0.0
-           fprx=0.0
-           fdix=0.0
-           fdiy=0.0
+           fcvx=zero
+           fcvy=zero
+           fprx=zero
+           fdix=zero
+           fdiy=zero
            do j=jcvlw_ly(iv),jcvup_ly(iv)-1
               !momentum flux
-              uxmid = 0.5*(ux2(i,j,k)+ux2(i,j+1,k))
-              uymid = 0.5*(uy2(i,j,k)+uy2(i,j+1,k))
+              uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k))
+              uymid = half*(uy2(i,j,k)+uy2(i,j+1,k))
               fcvx= fcvx -uxmid*uxmid*dy
               fcvy= fcvy -uxmid*uymid*dy
 
               !pressure
-              prmid=0.5*(ppi2(i,j,k)+ppi2(i,j+1,k))
+              prmid=half*(ppi2(i,j,k)+ppi2(i,j+1,k))
               fprx = fprx +prmid*dy
 
               !viscous term
-              dudxmid = 0.5*(ta2(i,j,k)+ta2(i,j+1,k))
-              dudymid = 0.5*(tc2(i,j,k)+tc2(i,j+1,k))
-              dvdxmid = 0.5*(tb2(i,j,k)+tb2(i,j+1,k))
-              fdix = fdix -2.0*xnu*dudxmid*dy
+              dudxmid = half*(ta2(i,j,k)+ta2(i,j+1,k))
+              dudymid = half*(tc2(i,j,k)+tc2(i,j+1,k))
+              dvdxmid = half*(tb2(i,j,k)+tb2(i,j+1,k))
+              fdix = fdix -two*xnu*dudxmid*dy
               fdiy = fdiy -xnu*(dvdxmid+dudymid)*dy
            enddo
            tconvxl(kk)=tconvxl(kk)+fcvx
@@ -395,27 +395,27 @@ subroutine force(ux1,uy1,ep1,pp3,nzmsize,phG,ph2,ph3)
         i=icvrt(iv)-ystart(1)+1
         do k=1,ysize(3)
            kk=ystart(3)-1+k
-           fcvx=0.0
-           fcvy=0.0
-           fprx=0.0
-           fdix=0.0
-           fdiy=0.0
+           fcvx=zero
+           fcvy=zero
+           fprx=zero
+           fdix=zero
+           fdiy=zero
            do j=jcvlw_ly(iv),jcvup_ly(iv)-1
               !momentum flux
-              uxmid = 0.5*(ux2(i,j,k)+ux2(i,j+1,k))
-              uymid = 0.5*(uy2(i,j,k)+uy2(i,j+1,k))
+              uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k))
+              uymid = half*(uy2(i,j,k)+uy2(i,j+1,k))
               fcvx= fcvx +uxmid*uxmid*dy
               fcvy= fcvy +uxmid*uymid*dy
 
               !pressure
-              prmid=0.5*(ppi2(i,j,k)+ppi2(i,j+1,k))
+              prmid=half*(ppi2(i,j,k)+ppi2(i,j+1,k))
               fprx = fprx -prmid*dy
 
               !viscous term
-              dudxmid = 0.5*(ta2(i,j,k)+ta2(i,j+1,k))
-              dudymid = 0.5*(tc2(i,j,k)+tc2(i,j+1,k))
-              dvdxmid = 0.5*(tb2(i,j,k)+tb2(i,j+1,k))
-              fdix = fdix +2.0*xnu*dudxmid*dy
+              dudxmid = half*(ta2(i,j,k)+ta2(i,j+1,k))
+              dudymid = half*(tc2(i,j,k)+tc2(i,j+1,k))
+              dvdxmid = half*(tb2(i,j,k)+tb2(i,j+1,k))
+              fdix = fdix +two*xnu*dudxmid*dy
               fdiy = fdiy +xnu*(dvdxmid+dudymid)*dy
            enddo
            tconvxl(kk)=tconvxl(kk)+fcvx
@@ -439,8 +439,8 @@ subroutine force(ux1,uy1,ep1,pp3,nzmsize,phG,ph2,ph3)
 
         xmom    = tunstx(k)+tconvx(k)
         ymom    = tunsty(k)+tconvy(k)
-        xDrag(k) = 2.*(tdiffx(k)+tpresx(k)-xmom)
-        yLift(k) = 2.*(tdiffy(k)+tpresy(k)-ymom)
+        xDrag(k) = two*(tdiffx(k)+tpresx(k)-xmom)
+        yLift(k) = two*(tdiffy(k)+tpresy(k)-ymom)
 
         !if (nrank==0) print *,'xDrag, yLift', xDrag(k), yLift(k)!, icvlf, icvrt, jcvlw, jcvup
      enddo
