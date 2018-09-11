@@ -41,13 +41,13 @@ New users and developers are welcome to join.
 
 We estabilished a solid and easy way to run a range of benchmark test cases to verify the code. Incompact3d works now on a flow configuration specific file. You must choose a case and set it on the 'Makefile' and recompile. The following cases are set to match the parameters for cases of reference articles obtained with different codes.
 
-|Code| Flow configuration             | BC File         | Reference |
-|:----------------:|:----------------:|:----------------:|:----------------:|
-|1| Taylor-Green vortex        | TGV              |Beck et al. (2014)
-|2| Turbulent Channel            | Channel-flow     |[Moser, Kim & Mansour (1999)](http://turbulence.ices.utexas.edu/data/MKM/chan180/profiles/)
-|3| Flow over a Cylinder         | Cylinder         |Mittal et Balachandar (1995)
-|4| Periodic Hill                | Periodic-Hill    |Breuer et al. (2009)
-|5| Density current              | Lock-exchange    |Necker et al. (2002)
+|Code| Flow configuration             | BC File         | Reference | Dataset |
+|:----------------:|:----------------:|:----------------:|:----------------:|:----------------:|
+|1| Taylor-Green Vortices        | TGV              |[Beck et al. (2014)](https://link.springer.com/article/10.1007/s00162-011-0253-7)
+|2| Periodic Channel            | Channel-flow     |[Moser, Kim & Mansour (1999)](https://www.researchgate.net/publication/243777258_Direct_Numerical_Simulation_of_Turbulent_Channel_Flow_up_to_Re590)|[Dataset](http://turbulence.ices.utexas.edu/data/MKM/chan180/profiles/)
+|3| Flow over a Cylinder         | Cylinder         |[Mittal and Balachandar (1995)](https://www.researchgate.net/publication/252073966_Effect_of_three-dimensionality_on_the_lift_and_drag_of_nominal_two-dimensional_cylinders)
+|4| Periodic Hill                | Periodic-Hill    |[Breuer et al. (2009)](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&ved=2ahUKEwiR9fjTx97cAhWCC5AKHbItAwEQFjAAegQIAhAC&url=https%3A%2F%2Fcfd.spbstu.ru%2Fagarbaruk%2Fdoc%2F2009_Breuer-et-al._Flow-over-periodic-hills.-Numerical-and-experimental-study-in-a-wide-range-of-Reynolds-numbers.pdf&usg=AOvVaw0pL7mF2TaPEbY0a8dOK-fN)
+|5| Gravity Current              | Lock-exchange    |[Necker et al. (2002)](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.483.5774&rep=rep1&type=pdf)
 |6| Boundary Layer               | TBL              |
 
 
