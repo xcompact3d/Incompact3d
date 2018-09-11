@@ -13,7 +13,7 @@ module forces
   implicit none
 
   integer :: nvol
-  real(mytype),allocatable,dimension(:,:,:) :: ux01, uy01, ux11, uy11
+  real(mytype),save,allocatable,dimension(:,:,:) :: ux01, uy01, ux11, uy11
   real(mytype),allocatable,dimension(:) :: xld,xrd,yld,yud
   integer,allocatable,dimension(:) :: icvlf,icvrt,jcvlw,jcvup
   integer,allocatable,dimension(:) :: icvlf_lx,icvrt_lx,icvlf_ly,icvrt_ly
@@ -35,6 +35,11 @@ contains
     call alloc_x(ux11)
     call alloc_x(uy11)
 
+    ux01 = zero
+    uy01 = zero
+    ux11 = zero
+    uy11 = zero
+    
     allocate(icvlf(nvol),icvrt(nvol),jcvlw(nvol),jcvup(nvol))
     allocate(icvlf_lx(nvol),icvrt_lx(nvol),icvlf_ly(nvol),icvrt_ly(nvol))
     allocate(jcvlw_lx(nvol),jcvup_lx(nvol),jcvlw_ly(nvol),jcvup_ly(nvol))
@@ -57,7 +62,26 @@ contains
        jcvlw_ly(iv) = jcvlw(iv)
        jcvup_ly(iv) = jcvup(iv)
     enddo
-    
+
+    if (nrank==0) then
+       print *,'========================Forces============================='
+       print *,'                       (icvlf)      (icvrt) '
+       print *,'                (jcvup) B____________C '
+       print *,'                        \            \ '
+       print *,'                        \     __     \ '
+       print *,'                        \    \__\    \ '
+       print *,'                        \            \ '
+       print *,'                        \       CV   \ '
+       print *,'                (jcvlw) A____________D '
+       do iv=1,nvol
+          write(*,"(' Control Volume     : #',I1)") iv
+          write(*,"('     xld, icvlf     : (',F6.2,',',I6,')')") xld(iv), icvlf(iv)
+          write(*,"('     xrd, icvrt     : (',F6.2,',',I6,')')") xrd(iv), icvrt(iv)
+          write(*,"('     yld, jcvlw     : (',F6.2,',',I6,')')") yld(iv), jcvlw(iv)
+          write(*,"('     yud, jcvup     : (',F6.2,',',I6,')')") yud(iv), jcvup(iv)
+       enddo
+       print *,'==========================================================='
+    endif
   end subroutine init_forces
 
   subroutine restart_forces(irestart)
@@ -115,7 +139,9 @@ contains
 end module forces
 
 !***********************************************************************
-subroutine force(ux1,uy1,ep1,pp3,nzmsize,phG,ph2,ph3)
+subroutine force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
+     ux2,uy2,ta2,tb2,tc2,td2,di2,pp3,&
+     nzmsize,phG,ph2,ph3)
 
   !***********************************************************************
 
@@ -200,7 +226,7 @@ subroutine force(ux1,uy1,ep1,pp3,nzmsize,phG,ph2,ph3)
   call interi6(ppi1,tta1,ddi1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
        nxm,xsize(1),xsize(2),xsize(3),1)
 
-  call derx (ta1,ux1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1) ! dudx
+  call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)    ! dudx
   call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1) ! dvdx
   call transpose_x_to_y(ta1,ta2) ! dudx
   call transpose_x_to_y(tb1,tb2) ! dvdx
@@ -210,7 +236,7 @@ subroutine force(ux1,uy1,ep1,pp3,nzmsize,phG,ph2,ph3)
   call transpose_x_to_y(ppi1,ppi2)
 
   call dery (tc2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1) ! dudy
-  call dery (td2,uy2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1) ! dvdy
+  call dery (td2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)    ! dvdy
   call transpose_y_to_x(tc2,tc1) ! dudy
   call transpose_y_to_x(td2,td1) ! dvdy
 
@@ -230,8 +256,8 @@ subroutine force(ux1,uy1,ep1,pp3,nzmsize,phG,ph2,ph3)
      !         of the cell falls inside the body the cell is 
      !         excluded.
 
-     tunstxl(:)=zero
-     tunstyl(:)=zero
+     tunstxl=zero
+     tunstyl=zero
      do k=1,xsize(3)
         tsumx=zero
         tsumy=zero
@@ -269,16 +295,14 @@ subroutine force(ux1,uy1,ep1,pp3,nzmsize,phG,ph2,ph3)
 !!$!        \    \__\    \
 !!$!        \            \
 !!$!        \       CV   \
-!!$!        A____________D
-!!$!(jcvlw)                    
-!!$!      
+!!$!(jcvlw) A____________D      
 
-     tconvxl(:)=zero
-     tconvyl(:)=zero
-     tdiffxl(:)=zero
-     tdiffyl(:)=zero
-     tpresxl(:)=zero
-     tpresyl(:)=zero
+     tconvxl=zero
+     tconvyl=zero
+     tdiffxl=zero
+     tdiffyl=zero
+     tpresxl=zero
+     tpresyl=zero
      !BC and AD : x-pencils
      !AD
      if ((jcvlw(iv).ge.xstart(2)).and.(jcvlw(iv).le.xend(2))) then
@@ -344,7 +368,7 @@ subroutine force(ux1,uy1,ep1,pp3,nzmsize,phG,ph2,ph3)
               dvdxmid = half*(tb1(i,j,k)+tb1(i+1,j,k))
               dvdymid = half*(td1(i,j,k)+td1(i+1,j,k))
               fdix = fdix +(xnu*(dudymid+dvdxmid)*dx)
-              fdiy = fdiy +half*xnu*dvdymid*dx
+              fdiy = fdiy +two*xnu*dvdymid*dx
 
            enddo
            tconvxl(kk)=tconvxl(kk)+fcvx
@@ -442,7 +466,6 @@ subroutine force(ux1,uy1,ep1,pp3,nzmsize,phG,ph2,ph3)
         xDrag(k) = two*(tdiffx(k)+tpresx(k)-xmom)
         yLift(k) = two*(tdiffy(k)+tpresy(k)-ymom)
 
-        !if (nrank==0) print *,'xDrag, yLift', xDrag(k), yLift(k)!, icvlf, icvrt, jcvlw, jcvup
      enddo
      !Edited by F. Schuch
      xDrag_mean = sum(xDrag(:))/real(nz,mytype)

@@ -94,17 +94,6 @@ SUBROUTINE paraview()
         WRITE(nfil,*)'               </DataItem>'
         WRITE(nfil,*)'            </Attribute>'
      END IF
-#ifdef FORCES
-        do is=1, nvol
-           WRITE(nfil,*)'            <Attribute Name="epcv'//CHAR(48+is)//'" Center="Node">'
-           WRITE(nfil,*)'               <DataItem Format="Binary" '
-           WRITE(nfil,*)'                DataType="Float" Precision="'//CHAR(48+prec)//'" Endian="little" Seek="0"'
-           WRITE(nfil,*)'                Dimensions="',nz/nvisu,ny/nvisu,nx/nvisu,'">'
-           WRITE(nfil,*)'                  ./data/epcv'//CHAR(48+is)//'0000'
-           WRITE(nfil,*)'               </DataItem>'
-           WRITE(nfil,*)'            </Attribute>'
-        enddo
-#endif
      IF (iscalar.EQ.1.AND.save_phi.EQ.1) THEN
         DO is=1, nphi
            WRITE(nfil,*)'            <Attribute Name="phi'//CHAR(48+is)//'" Center="Node">'

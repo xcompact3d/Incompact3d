@@ -189,7 +189,9 @@ if (nrank==0) print *,'--SEMI IMPLICIT CODE (IN BETA)-------------------'
      call CONVERGENCE_STATISTIC2(ux1,ep1,tik1,tik2,tak1,tak2)
 #endif
 #ifdef FORCES
-     call force(ux1,uy1,ep1,pp3,nzmsize,phG,ph2,ph3)
+     call force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
+          ux2,uy2,ta2,tb2,tc2,td2,di2,pp3,&
+          nzmsize,phG,ph2,ph3)
      if (mod(itime,isave).eq.0) call restart_forces(1)
 #endif
 #ifdef POST
