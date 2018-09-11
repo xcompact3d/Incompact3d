@@ -1,6 +1,6 @@
 module flow_type
   use decomp_2d, only : mytype
-
+  
   integer :: ncil
   real(mytype) :: ra
   real(mytype),allocatable,dimension(:) :: cex,cey
@@ -27,7 +27,6 @@ subroutine ft_parameter(arg)
   integer :: i
   character :: a
 
-  
   nclx1 = 2 !Boundary condition in x=0  (0: Periodic, 1:Free-slip, 2: Dirichlet)
   nclxn = 2 !Boundary condition in x=Lx (0: Periodic, 1:Free-slip, 2: Dirichlet)
   ncly1 = 1 !Boundary condition in y=0  (0: Periodic, 1:Free-slip, 2: Dirichlet)
@@ -118,13 +117,6 @@ subroutine ft_parameter(arg)
         write(*,"(' Cylinder           : #',I1)") i
         write(*,"(' cex, cey, ra       : (',F6.2,',',F6.2,',',F6.2,')')") cex(i), cey(i), ra
      enddo
-#ifdef FORCES
-     do i=1,nvol
-        write(*,"(' Control Volume     : #',I1)") i
-        write(*,"(' xld, xrd, yld, yud : (',F6.2,',',F6.2,',',F6.2',',F6.2,')')") &
-             xld(i), xrd(i), yld(i), yud(i)
-     enddo
-#endif
      print *,'==========================================================='
   endif
   return
@@ -133,7 +125,7 @@ end subroutine ft_parameter
 subroutine geomcomplex(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
   use flow_type, only : cex,cey,ra,ncil
   use decomp_2d, only : mytype
-  use param, only : two
+  use param, only : zero, one, two
   implicit none
   !
   real(mytype),dimension(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
@@ -143,15 +135,22 @@ subroutine geomcomplex(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
   real(mytype)               :: remp
   integer                    :: i,ic,j,k
   real(mytype)               :: xm,ym,r
+  real(mytype)               :: zeromach
 
+  zeromach=one
+  do while ((one + zeromach / two) .gt. one)
+     zeromach = zeromach/two
+  end do
+  zeromach = 1.0e1*zeromach
+  
   do ic=1, ncil
      do k=nzi,nzf
         do j=nyi,nyf
            ym=yp(j)
            do i=nxi,nxf
               xm=real(i-1,mytype)*dx
-              r=sqrt((xm-cex(ic))*(xm-cex(ic))+(ym-cey(ic))*(ym-cey(ic)))
-              if (r .gt. ra) cycle
+              r=sqrt((xm-cex(ic))**two+(ym-cey(ic))**two)
+              if (r-ra .gt. zeromach) cycle
               epsi(i,j,k)=remp
            enddo
         enddo
