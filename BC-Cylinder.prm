@@ -44,8 +44,9 @@
 # INCOMPACT 3D Body (old school)
 #
 2      #ivirt # IBM? (0:no-IBM, 1: old school, 2: Lagrangian Poly)
-5.     #cex  # X-centre position of the solid body
-6.     #cey  # Y-centre position of the solid body
+1      #ncil #Observe the variable nobjmax
+5.     #cex(ncil)# X-centre position of the solid body
+6.     #cey(ncil)# Y-centre position of the solid body
 0.5    #ra   # Radius of the solid body
 #
 # INCOMPACT 3D Forcing with Lagrangian Polynomials
@@ -58,7 +59,8 @@
 #
 # INCOMPACT 3D Forces - Drag and Lift coefficients
 #
-1.5  #xld
-3.5  #xrd
-2.5  #yld
-2.5  #yud
+4      #nvol
+3.5 3.5 4.0 4.4 #xld
+8.5 8.5 6.0 5.6 #xrd
+3.5 4.5 5.0 5.4 #yld
+8.5 7.5 7.0 6.6 #yud

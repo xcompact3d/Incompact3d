@@ -22,7 +22,7 @@ PROGRAM incompact3d
   real(8) :: tstart,t1,trank,tranksum,ttotal,tremaining,telapsed
 
   TYPE(DECOMP_INFO) :: phG,ph1,ph2,ph3,ph4
- 
+
   call ft_parameter(.true.)
 
   call MPI_INIT(code)
@@ -32,14 +32,14 @@ PROGRAM incompact3d
   call init_coarser_mesh_statP(nprobe,nprobe,nprobe,.true.) !start from 1 == true
 
   if (nrank==0) call system('mkdir data out probes')
-  
+
   call parameter()
 
   call init_variables()
 
 #ifdef IMPLICIT
-iimplicit=1
-if (nrank==0) print *,'--SEMI IMPLICIT CODE (IN BETA)-------------------'
+  iimplicit=1
+  if (nrank==0) print *,'--SEMI IMPLICIT CODE (IN BETA)-------------------'
 #endif
 
   call schemes()
@@ -54,7 +54,7 @@ if (nrank==0) print *,'--SEMI IMPLICIT CODE (IN BETA)-------------------'
   call decomp_info_init(nxm,nym,nzm,phG)
 
 #ifdef ELES
-    call init_explicit_les()
+  call init_explicit_les()
 #endif
 
   if (ilit==0) call init(ux1,uy1,uz1,ep1,phi1,gx1,gy1,gz1,phis1,hx1,hy1,hz1,phiss1)
@@ -73,7 +73,7 @@ if (nrank==0) print *,'--SEMI IMPLICIT CODE (IN BETA)-------------------'
 #endif
 
 #ifdef FORCES
-  call init_forces(ep1)
+  call init_forces()
   if (ilit==1) call restart_forces(0)
 #endif
 
@@ -141,8 +141,8 @@ if (nrank==0) print *,'--SEMI IMPLICIT CODE (IN BETA)-------------------'
 
         !X PENCILS
 #ifdef IMPLICIT
-         call inttimp (ux1,uy1,uz1,gx1,gy1,gz1,hx1,hy1,hz1,ta1,tb1,tc1,px1,py1,pz1,&
-              td1,te1,tf1,ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2)
+        call inttimp (ux1,uy1,uz1,gx1,gy1,gz1,hx1,hy1,hz1,ta1,tb1,tc1,px1,py1,pz1,&
+             td1,te1,tf1,ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2)
 #else           
         call intt(ux1,uy1,uz1,gx1,gy1,gz1,hx1,hy1,hz1,ta1,tb1,tc1)
 #endif
@@ -172,15 +172,15 @@ if (nrank==0) print *,'--SEMI IMPLICIT CODE (IN BETA)-------------------'
         !X PENCILS
         call corgp(ux1,ux2,uy1,uz1,px1,py1,pz1)
 
-     if (mod(itime,itest)==0) then
-        !does not matter --> output=DIV U=0 (in dv3)
-        call divergence(ux1,uy1,uz1,ep1,ta1,tb1,tc1,di1,td1,te1,tf1,&
-             td2,te2,tf2,di2,ta2,tb2,tc2,ta3,tb3,tc3,di3,td3,te3,tf3,dv3,&
-             nxmsize,nymsize,nzmsize,ph1,ph3,ph4,2)
+        if (mod(itime,itest)==0) then
+           !does not matter --> output=DIV U=0 (in dv3)
+           call divergence(ux1,uy1,uz1,ep1,ta1,tb1,tc1,di1,td1,te1,tf1,&
+                td2,te2,tf2,di2,ta2,tb2,tc2,ta3,tb3,tc3,di3,td3,te3,tf3,dv3,&
+                nxmsize,nymsize,nzmsize,ph1,ph3,ph4,2)
 
-        call test_speed_min_max(ux1,uy1,uz1)
-        if (iscalar==1) call test_scalar_min_max(phi1)
-     endif
+           call test_speed_min_max(ux1,uy1,uz1)
+           if (iscalar==1) call test_scalar_min_max(phi1)
+        endif
 
      enddo
 
@@ -189,7 +189,9 @@ if (nrank==0) print *,'--SEMI IMPLICIT CODE (IN BETA)-------------------'
      call CONVERGENCE_STATISTIC2(ux1,ep1,tik1,tik2,tak1,tak2)
 #endif
 #ifdef FORCES
-     call force(ux1,uy1,uz1,ux03,ux13,uy03,uy13,ep1,epcv3,pp3,nzmsize,phG,ph2,ph3)
+     call force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
+          ux2,uy2,ta2,tb2,tc2,td2,di2,pp3,&
+          nzmsize,phG,ph2,ph3)
      if (mod(itime,isave).eq.0) call restart_forces(1)
 #endif
 #ifdef POST

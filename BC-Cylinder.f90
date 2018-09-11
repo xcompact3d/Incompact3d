@@ -1,6 +1,9 @@
 module flow_type
   use decomp_2d, only : mytype
-  real(mytype) :: cex,cey,ra
+  
+  integer :: ncil
+  real(mytype) :: ra
+  real(mytype),allocatable,dimension(:) :: cex,cey
 
 end module flow_type
 
@@ -21,6 +24,7 @@ subroutine ft_parameter(arg)
   implicit none
 
   logical,intent(in) :: arg
+  integer :: i
   character :: a
 
   nclx1 = 2 !Boundary condition in x=0  (0: Periodic, 1:Free-slip, 2: Dirichlet)
@@ -81,6 +85,8 @@ subroutine ft_parameter(arg)
   read (10,*) a ! INCOMPACT 3D Body (old school)
   read (10,*) a !
   read (10,*) ivirt
+  read (10,*) ncil
+  allocate(cex(ncil),cey(ncil))
   read (10,*) cex
   read (10,*) cey
   read (10,*) ra
@@ -96,6 +102,8 @@ subroutine ft_parameter(arg)
   read (10,*) a !
   read (10,*) a !INCOMPACT 3D Forces - Drag and Lift coefficients
   read (10,*) a !
+  read (10,*) nvol
+  allocate(xld(nvol),xrd(nvol),yld(nvol),yud(nvol))
   read (10,*) xld
   read (10,*) xrd
   read (10,*) yld
@@ -105,19 +113,19 @@ subroutine ft_parameter(arg)
 
   if (nrank==0) then
      print *,'=======================Cylinder============================'
-     write(*,"(' cex, cey, ra       : (',F6.2,',',F6.2,',',F6.2,')')") cex, cey, ra
-#ifdef FORCES
-     write(*,"(' xld, xrd, yld, yud : (',F6.2,',',F6.2,',',F6.2',',F6.2,')')") &
-                 xld, xrd, yld, yud
-#endif
+     do i=1,ncil
+        write(*,"(' Cylinder           : #',I1)") i
+        write(*,"(' cex, cey, ra       : (',F6.2,',',F6.2,',',F6.2,')')") cex(i), cey(i), ra
+     enddo
      print *,'==========================================================='
   endif
   return
 end subroutine ft_parameter
 !********************************************************************
 subroutine geomcomplex(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
-  use flow_type, only : cex,cey,ra
+  use flow_type, only : cex,cey,ra,ncil
   use decomp_2d, only : mytype
+  use param, only : zero, one, two
   implicit none
   !
   real(mytype),dimension(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
@@ -125,17 +133,26 @@ subroutine geomcomplex(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
   integer                    :: nxi,nxf,ny,nyi,nyf,nzi,nzf
   real(mytype)               :: dx,dz
   real(mytype)               :: remp
-  integer                    :: i,j,k
+  integer                    :: i,ic,j,k
   real(mytype)               :: xm,ym,r
+  real(mytype)               :: zeromach
 
-  do k=nzi,nzf
-     do j=nyi,nyf
-        ym=yp(j)
-        do i=nxi,nxf
-           xm=real(i-1,mytype)*dx
-           r=sqrt((xm-cex)*(xm-cex)+(ym-cey)*(ym-cey))
-           if (r .gt. ra) cycle
-           epsi(i,j,k)=remp
+  zeromach=one
+  do while ((one + zeromach / two) .gt. one)
+     zeromach = zeromach/two
+  end do
+  zeromach = 1.0e1*zeromach
+
+  do ic=1, ncil
+     do k=nzi,nzf
+        do j=nyi,nyf
+           ym=yp(j)
+           do i=nxi,nxf
+              xm=real(i-1,mytype)*dx
+              r=sqrt((xm-cex(ic))**two+(ym-cey(ic))**two)
+              if (r-ra .gt. zeromach) cycle
+              epsi(i,j,k)=remp
+           enddo
         enddo
      enddo
   enddo
