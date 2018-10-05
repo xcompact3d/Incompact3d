@@ -13,7 +13,7 @@ module forces
   implicit none
 
   integer :: nvol
-  real(mytype),save,allocatable,dimension(:,:,:) :: ux01, uy01, ux11, uy11
+  real(mytype),save,allocatable,dimension(:,:,:) :: ux01, uy01, ux11, uy11, ppi1
   real(mytype),allocatable,dimension(:) :: xld,xrd,yld,yud
   integer,allocatable,dimension(:) :: icvlf,icvrt,jcvlw,jcvup
   integer,allocatable,dimension(:) :: icvlf_lx,icvrt_lx,icvlf_ly,icvrt_ly
@@ -34,6 +34,7 @@ contains
     call alloc_x(uy01)
     call alloc_x(ux11)
     call alloc_x(uy11)
+    call alloc_x(ppi1)
 
     ux01 = zero
     uy01 = zero
@@ -140,8 +141,7 @@ end module forces
 
 !***********************************************************************
 subroutine force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
-     ux2,uy2,ta2,tb2,tc2,td2,di2,pp3,&
-     nzmsize,phG,ph2,ph3)
+     ux2,uy2,ta2,tb2,tc2,td2,di2)
 
   !***********************************************************************
 
@@ -162,20 +162,7 @@ subroutine force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
   real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
   real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ta1,tb1,tc1,td1,di1
   real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: ux2, uy2
-  real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: ta2,tb2,tc2,td2,di2
-
-  !Pressure
-  real(mytype),dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzm) :: pp3  
-  !Z PENCILS NXM NYM NZM-->NXM NYM NZ
-  real(mytype),dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),zsize(3)) :: tta3,ddi3
-  !Y PENCILS NXM NYM NZ -->NXM NY NZ
-  real(mytype),dimension(ph3%yst(1):ph3%yen(1),nym,ysize(3)) :: tta2
-  real(mytype),dimension(ph3%yst(1):ph3%yen(1),ysize(2),ysize(3)) :: ttb2,ddi2
-  !X PENCILS NXM NY NZ  -->NX NY NZ
-  real(mytype),dimension(nxm,xsize(2),xsize(3)) :: tta1
-  !NX NY NZ X --> Y --> Z
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ddi1,ppi1
-  real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ppi2
+  real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: ta2,tb2,tc2,td2,di2,ppi2
 
   real(mytype), dimension(nz) :: yLift,xDrag
   real(mytype) :: yLift_mean,xDrag_mean
@@ -213,18 +200,6 @@ subroutine force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
      enddo
      return
   endif
-
-  !WORK Z-PENCILS
-  call interiz6(tta3,pp3,ddi3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
-       (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
-  !WORK Y-PENCILS
-  call transpose_z_to_y(tta3,tta2,ph3) !nxm nym nz
-  call interiy6(ttb2,tta2,ddi2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
-       (ph3%yen(1)-ph3%yst(1)+1),nym,ysize(2),ysize(3),1)
-  !WORK X-PENCILS
-  call transpose_y_to_x(ttb2,tta1,ph2) !nxm ny nz
-  call interi6(ppi1,tta1,ddi1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
-       nxm,xsize(1),xsize(2),xsize(3),1)
 
   call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)    ! dudx
   call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1) ! dvdx
@@ -320,7 +295,6 @@ subroutine force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
               uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
               fcvx= fcvx -uxmid*uymid*dx
               fcvy= fcvy -uymid*uymid*dx
-
 
               !pressure
               prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))

@@ -238,7 +238,10 @@ subroutine gradp(ta1,tb1,tc1,di1,td2,tf2,ta2,tb2,tc2,di2,&
   USE decomp_2d
   USE variables
   USE MPI
-
+#ifdef FORCES
+  USE forces, only : ppi1
+#endif
+  
   implicit none
 
   TYPE(DECOMP_INFO) :: ph2,ph3
@@ -286,6 +289,11 @@ subroutine gradp(ta1,tb1,tc1,di1,td2,tf2,ta2,tb2,tc2,di2,&
   call interi6(tc1,tf1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
   nxmsize,xsize(1),xsize(2),xsize(3),1)
 
+#ifdef FORCES
+  call interi6(ppi1,td1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
+  nxmsize,xsize(1),xsize(2),xsize(3),1)
+#endif
+  
   !we are in X pencils:
   if (nclx1.eq.2) then
     do k=1,xsize(3)
