@@ -188,8 +188,7 @@ PROGRAM incompact3d
 #endif
 #ifdef FORCES
      call force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
-          ux2,uy2,ta2,tb2,tc2,td2,di2,pp3,&
-          nzmsize,phG,ph2,ph3)
+          ux2,uy2,ta2,tb2,tc2,td2,di2)
      if (mod(itime,isave).eq.0) call restart_forces(1)
 #endif
 #ifdef POST
