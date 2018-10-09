@@ -32,7 +32,7 @@
 100000 # isave     # Frequency for writing backup file (sauve.dat)
 2000   # imodulo   # Frequency for visualization for VISU_INSTA
 500001 #initstats1
-550001 #initstats2
+600001 #initstats2
 #
 # NUMERICAL DISSIPATION
 #

@@ -103,9 +103,16 @@ subroutine geomcomplex(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
   real(mytype)               :: remp
   integer                    :: i,j,k
   real(mytype)               :: xm,ym
+  real(mytype)               :: zeromach
   !
   real(mytype), dimension(nxi:nxf) :: dune
   real(mytype) :: y_bump
+  !
+  zeromach=one
+  do while ((one + zeromach / two) .gt. one)
+     zeromach = zeromach/two
+  end do
+  zeromach = 1.0e1*zeromach
   !
   y_bump=zero
   dune=zero
@@ -116,28 +123,28 @@ subroutine geomcomplex(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
      else
         xm = xm*twentyeight
      endif
-     if ((xm.ge.0.).and.(xm.le.9.)) then
-        y_bump=min(28.,28+0.006775070969851*xm**2-2.124527775800E-03*xm**3)
+     if ((xm.ge.zero).and.(xm.le.nine)) then
+        y_bump=min(28.,28+0.006775070969851*xm**two-2.124527775800E-03*xm**three)
      endif
-     if ((xm.ge.9.).and.(xm.le.14.)) then
+     if ((xm.ge.9.).and.(xm.le.fourteen)) then
         y_bump=  2.507355893131E+01      +9.754803562315E-01*xm&
-             -1.016116352781E-01*xm**2  +1.889794677828E-03*xm**3
+             -1.016116352781E-01*xm**two +1.889794677828E-03*xm**three
      endif
-     if ((xm.ge.14.).and.(xm.le.20.)) then
+     if ((xm.ge.14.).and.(xm.le.twenty)) then
         y_bump=  2.579601052357E+01      +8.206693007457E-01*xm &
-             -9.055370274339E-02*xm**2  +1.626510569859E-03*xm**3
+             -9.055370274339E-02*xm**two +1.626510569859E-03*xm**three
      endif
-     if ((xm.ge.20.).and.(xm.le.30.)) then
+     if ((xm.ge.20.).and.(xm.le.30._mytype)) then
         y_bump=  4.046435022819E+01      -1.379581654948E+00*xm &
-             +1.945884504128E-02*xm**2  -2.070318932190E-04*xm**3
+             +1.945884504128E-02*xm**two -2.070318932190E-04*xm**three
      endif
-     if ((xm.ge.30.).and.(xm.le.40.)) then
+     if ((xm.ge.30.).and.(xm.le.40._mytype)) then
         y_bump=  1.792461334664E+01      +8.743920332081E-01*xm &
-             -5.567361123058E-02*xm**2  +6.277731764683E-04*xm**3
+             -5.567361123058E-02*xm**two +6.277731764683E-04*xm**three
      endif
-     if ((xm.ge.40.).and.(xm.le.54.)) then
-        y_bump=max(0.,5.639011190988E+01      -2.010520359035E+00*xm &
-             +1.644919857549E-02*xm**2  +2.674976141766E-05*xm**3)
+     if ((xm.ge.40.).and.(xm.le.54._mytype)) then
+        y_bump=max(0.,5.639011190988E+01  -2.010520359035E+00*xm &
+             +1.644919857549E-02*xm**two  +2.674976141766E-05*xm**three)
      endif
      dune(i)=y_bump/twentyeight
   enddo
@@ -146,7 +153,7 @@ subroutine geomcomplex(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
      do j=nyi,nyf
         ym=yp(j)
         do i=nxi,nxf
-           if (ym.le.dune(i)) then
+           if (ym-dune(i).le.zeromach) then
               epsi(i,j,k)=remp
            endif
         enddo
