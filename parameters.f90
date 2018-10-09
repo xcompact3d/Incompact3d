@@ -124,6 +124,8 @@ subroutine parameter()
   dy=yly/real(nym,mytype)
   dz=zlz/real(nzm,mytype)
 
+  if (nrank==0) call system('mkdir data out probes 2> /dev/null')
+
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter incompact3d.prm done'
 #endif
@@ -136,7 +138,11 @@ subroutine parameter()
      print *,'(p_row,p_col)=',p_row,p_col
      print *,''
 #ifdef DOUBLE_PREC
+#ifdef SAVE_SINGLE
+     print *,'Numerical precision: Double, saving in single'
+#else
      print *,'Numerical precision: Double'
+#endif
 #else
      print *,'Numerical precision: Single'
 #endif

@@ -31,8 +31,6 @@ PROGRAM incompact3d
   call init_coarser_mesh_statV(nvisu,nvisu,nvisu,.true.)    !start from 1 == true
   call init_coarser_mesh_statP(nprobe,nprobe,nprobe,.true.) !start from 1 == true
 
-  if (nrank==0) call system('mkdir data out probes')
-
   call parameter()
 
   call init_variables()

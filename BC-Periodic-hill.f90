@@ -92,7 +92,7 @@ subroutine ft_parameter(arg)
 end subroutine ft_parameter
 !********************************************************************
 subroutine geomcomplex(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
-  use param, only : xlx,zero,two,twentyeight
+  use param, only : xlx,zero,one,two,three,nine,fourteen,twenty,twentyeight
   use decomp_2d, only : mytype
   implicit none
   !
