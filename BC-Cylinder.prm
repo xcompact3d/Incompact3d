@@ -1,9 +1,9 @@
 #
 # INCOMPACT 3D parameters - Cylinder configuration
 #
-513    #nx
-257    #ny
-32 #128    #nz
+361    #nx
+217    #ny
+6      #nz
 1      #nphi
 0      #p_row
 0      #p_col
@@ -12,14 +12,14 @@
 #
 20.    #xlx       # Lx (Adimensional size in x-direction)
 12.    #yly       # Ly (Adimensional size in y-direction)
-0.5 #4.     #zlz       # Lz (Adimensional size in z-direction)
-700.   #re        # Reynolds number
+.2     #zlz       # Lz (Adimensional size in z-direction)
+300.   #re        # Reynolds number
 0.     #angle     # Solid rotation angle in degrees
 2.     #u1        # Convective velocity for velocity outflow (0: vphase, 1:umax1, 2: u2)
 2.     #u2        # Convective velocity for concentration outflow (0: to use calculated vphase)
 0.10   #noise     # Intensity for initial condition (0.01=1%,1=100%) (t=0) (for lock and temporal)
 0.     #noise1    # Intensity for inflow subroutine (0.01=1%,1=100%) (t>0)
-0.0005 #dt        # Time step
+0.0025 #dt        # Time step
 #
 # INCOMPACT3D Flow configuration
 #
