@@ -132,15 +132,14 @@ latest version.
 
 * GCC version 4.7 or later is required to compile the code.
 
-  - is highly recommended that you remove the limits of the environment (e.g. in `.bash_profile`)
+We recommended that you remove the limits of the environment (e.g. in `.bash_profile`)
 
-    ulimit -s unlimited
     ulimit -c unlimited
+    ulimit -s unlimited
 
-    You must exit and re-login from your terminal for the change to take effect
+You must exit and re-login from your terminal for the change to take effect
 
     ulimit -a
-
 
 #### Architecture Customization
 
