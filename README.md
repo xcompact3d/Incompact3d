@@ -32,7 +32,6 @@ New users and developers are welcome to join.
 
 - [**Twitter**](https://twitter.com/incompact3d)
 
-
 ### Main improvements/changes ### 
 
 - [**Wiki**](https://github.com/xcompact3d/Incompact3d/wiki/New-Features)
@@ -122,20 +121,7 @@ latest version.
    ```sh
     *** This error is usually fixed by running 'make clean'. If the error persists, try 'make cleanall' ***
    ```
-
-   As described, running `make clean && make` is usually sufficient.
-   Occasionally, the stronger cleanup done by `make cleanall` is needed.
-
-2. New versions of external dependencies may be introduced which may
-   occasionally cause conflicts with existing builds of older versions.
-
-   a. To delete existing binaries of `Incompact3d` and all its dependencies,
-      delete the `./usr` directory _in the source tree_.
-
-3. If you've updated OS X recently, be sure to run `xcode-select --install` to update the command line tools.
-
-   _To avoid losing work, make sure you know what these commands do before you
-   run them. `git` will not be able to undo these changes!_
+   As described, running `make clean && make` is usually sufficient. Occasionally, the stronger cleanup done by `make cleanall` is needed.
 
 
 ## Platform-Specific Notes
@@ -158,12 +144,7 @@ latest version.
 
 #### Architecture Customization
 
-Incompact3d can be compiled for a non-generic architecture by configuring the `ARCH` Makefile variable. See the appropriate section of `Makefile` for additional customization options, such as `MARCH` and `CPU_TARGET`.
-
-For example, to build for Pentium 4, set `march=pentium4` this will compile the code for the processor specific vectorization level.
-
-You can also set `march=native` for a maximum-performance build customized for the current machine CPU.
-
+Incompact3d can be compiled for a non-generic architecture by configuring the `ARCH` Makefile variable. See the appropriate section of `Makefile` for additional customization options, such as `MARCH` and `CPU_TARGET`. You can also set `march=native` for a maximum-performance build customized for the current machine CPU.
 
 #### Ubuntu
 
@@ -171,67 +152,44 @@ In order to compile and execute Incompact3d in the latest Ubuntu version please 
 
     sudo apt install gfortran libopenmpi-dev
 
-
 #### Fedora/RHEL/CentOS
 
-On RHEL/CentOS 6 systems, the default compiler (`gcc` 4.4) is too old to build Incompact3d.
+On RHEL/CentOS 6 systems:
 
     sudo dnf install gcc-gfortran
-
-Install or contact your systems administrator to install a more recent version of `gcc`.
 
 ### OS X
 
 You need to have the current Xcode command line utilities installed: run `xcode-select --install` in the terminal.
-You will need to rerun this terminal command after each OS X update, otherwise you may run into errors involving missing libraries or headers. You will also need a 64-bit gfortran to compile the code. The gfortran-4.7 (and newer) compilers in Brew, Fink, and MacPorts work for building Incompact3d.
-
-On current systems, we recommend that you install the command line tools as described above. Older systems do not have a separate command line tools package from Apple, and will require a full Xcode install. On these, you will need at least Xcode 4.3.3. In Xcode prior to v5.0, you can alternatively go to Preferences -> Downloads and select the Command Line Utilities.
-
-### External FFT libraries
-
-* To use external shared FFT libraries not in the system library search path, set `USE` and `LDFLAGS=-Wl,-rpath,/path/to/dir/contains/` in `Makefile`.
-
-#### FFTW
+You will need to rerun this terminal command after each OS X update, otherwise you may run into errors involving missing libraries or headers. You will also need a 64-bit gfortran to compile the code. The gfortran-4.7 (and newer) compilers in Brew, Fink, and MacPorts work for building Incompact3d. On current systems, we recommend that you install the command line tools as described above. Older systems do not have a separate command line tools package from Apple, and will require a full Xcode install. On these, you will need at least Xcode 4.3.3. In Xcode prior to v5.0, you can alternatively go to Preferences -> Downloads and select the Command Line Utilities.
 
 
 ### Intel compilers and Math Kernel Library (MKL)
 
-To build Incompact3d using the Intel compilers, and link against
-the [MKL] FFTW libraries, first make sure you have a recent version
-of the Intel Parallel Studio XE Cluster Edition (version 15 or later).
-
-Qualified students, classroom educators and open-source contributors can obtain a license and download the latest version on https://software.intel.com/en-us/parallel-studio-xe/choose-download/student-linux-fortran
+To build Incompact3d using the Intel compilers, and link the [MKL] FFTW libraries, first make sure you have a recent version
+of the Intel Parallel Studio XE Cluster Edition (version 15 or later). Qualified students, classroom educators and open-source contributors can obtain a license and download the latest version on https://software.intel.com/en-us/parallel-studio-xe/choose-download/student-linux-fortran
 
 After installation, for a 64-bit architecture, the environment should be set up as follows:
 
     # bash
     source /path/to/intel/bin/compilervars.sh intel64
-    
-    
+        
 You also need to activate the shared memory copy [LMT mechanism](https://software.intel.com/en-us/mpi-developer-reference-linux-shared-memory-control)
 
     export I_MPI_SHM_LMT=shm
 
 The code is compiled with the mpiifort command and the appropriate flags are set in the `Makefile` file.
-If you with to compile the code with Intel
+If you eish to compile the code with Intel Compiler use:
 
       LCL = local# local,lad,sdu,archer
       IVER = 17# 15,16,17,18
       CMP = intel
       FFT = mkl
       
- If you have a not-standard installation the supercomputer you're using, you have to edit and create a flag manually. 
+ If you have a non-standard installation the supercomputer you're using, you have to edit and create a custom flag. 
       
-## Source Code Organization
-
-The code is organized as follows:
-
-    src/           source for Incompact3d core
-    data/          3d binary files
-    out/           2d planes and statistics
-    
 ## GitHub Configuration
 
-To add you SSH key to your GitHub account please follow the steps https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/ or just copy the contents of the id_rsa.pub file to your clipboard, go to Personal settings and add a new SSH key
+To add you SSH key to your GitHub account please follow the steps https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/ or just copy the content of the id_rsa.pub file to your clipboard, go to Personal settings and add a new SSH key:
 
     cat ~/.ssh/id_rsa.pub
