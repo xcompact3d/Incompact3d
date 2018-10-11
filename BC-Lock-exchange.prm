@@ -1,24 +1,24 @@
 #
 # INCOMPACT 3D parameters - Lock-exchange configuration
 #
-193   #nx
-193    #ny
-32    #nz
+201   #nx
+101    #ny
+48    #nz
 1      #nphi
 2      #p_row
 2      #p_col
 #
 # INCOMPACT 3D Flow parameters
 #
-2.    #xlx       # Lx (Adimensional size in x-direction)
-2.     #yly       # Ly (Adimensional size in y-direction)
-1.     #zlz       # Lz (Adimensional size in z-direction)
+4.    #xlx       # Lx (Adimensional size in x-direction)
+1.     #yly       # Ly (Adimensional size in y-direction)
+0.5     #zlz       # Lz (Adimensional size in z-direction)
 10000.  #re        # Reynolds number
-1.     #pfront    # Initial front position (for lock-exchange)
+0.5     #pfront    # Initial front position (for lock-exchange)
 # Particle 1
 1.     # Richardson part number        [ri(1)]
 1.     # Schmidt number                [nsc(1)]
-0.02   # uset (part settling speed)    [uset(1)]
+0.01   # uset (part settling speed)    [uset(1)]
 1.     # Concentration (part)          [cp(1)]
 #
 0.     #angle     # Solid rotation angle in degrees
@@ -33,7 +33,7 @@
 1      #ifirst     # First iteration
 150000 #ilast      # Last iteration
 2      #nscheme    # Temporal scheme (1:AB2, 2:AB3, 3: RK3, 4:KN+AB3 (-DIMPLICIT flag required))
-2      #cont_phi   # Limit phi value?(0:no, 1:limit to 0 (can be greater than 1), 2: limit to 0 and 1)
+0      #cont_phi   # Limit phi value?(0:no, 1:limit to 0 (can be greater than 1), 2: limit to 0 and 1)
 #velocity
 1      #nclx1      #Boundary condition in x=0  (0: Periodic, 1:Free-slip, 2: Dirichlet)
 1      #nclxn      #Boundary condition in x=Lx (0: Periodic, 1:Free-slip, 2: Dirichlet)
@@ -59,4 +59,4 @@
 # NUMERICAL DISSIPATION
 #
 1      #jLES       #LES Model (0:DNS, 1:iLES, 2:Explicit Simple Smagorinsky, 3:Explicit Wall-Adaptive LES, 4: Explicit Dynamic Smagorinsky LES)
-10.     # npi2
+20.     # npi2
