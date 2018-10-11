@@ -47,8 +47,8 @@ subroutine convdiff(ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
              sxx1,syy1,szz1,sxy1,sxz1,syz1,srt_smag,nut1,ta2,ta3,di1,di2,di3)
 
         if (itime.gt.10) call dynsmag(ux1,uy1,uz1,ep1,sxx1,syy1,szz1,sxy1,sxz1,syz1,&
-             srt_smag,nut1,di1,ta1,tb1,tc1,td1,ta2,tb2,tc2,td2,te2,tf2,&
-             tg2,th2,ti2,di2,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3)
+                              srt_smag,nut1,di1,ta1,tb1,tc1,td1,ta2,tb2,tc2,td2,te2,tf2,&
+                              tg2,th2,ti2,di2,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3)
      endif
 
      call lesdiff(ux1,uy1,uz1,ep1,sxx1,syy1,szz1,sxy1,sxz1,syz1,nut1,&
@@ -73,43 +73,37 @@ subroutine convdiff(ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
   nvect2 = ysize(1)*ysize(2)*ysize(3)
   nvect3 = zsize(1)*zsize(2)*zsize(3)
 
-  !  !u.rot(u)
-  !  !WORK X-PENCILS
-  !   call derx (ta1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-  !   call derx (tb1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-  !   call transpose_x_to_y(ux1,ux2)
-  !   call transpose_x_to_y(uy1,uy2)
-  !   call transpose_x_to_y(uz1,uz2)
-  !   call transpose_x_to_y(ta1,ta2)
-  !   call transpose_x_to_y(tb1,tb2)
-  !  !WORK Y-PENCILS
-  !   call dery (tc2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1) 
-  !   call dery (td2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1) 
-  !   call transpose_y_to_z(ux2,ux3)
-  !   call transpose_y_to_z(uy2,uy3)
-  !   call transpose_y_to_z(uz2,uz3)
-  !   call transpose_y_to_z(ta2,ta3)
-  !   call transpose_y_to_z(tb2,tb3)
-  !   call transpose_y_to_z(tc2,tc3)
-  !   call transpose_y_to_z(td2,td3)
-  !  !WORK Z-PENCILS
-  !   call derz (te3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-  !   call derz (tf3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-  !   do ijk = 1,nvect3
-  !      ta3(ijk,1,1) = uz3(ijk,1,1)*(te3(ijk,1,1)-tb3(ijk,1,1))-&
-  !           uy3(ijk,1,1)*(ta3(ijk,1,1)-tc3(ijk,1,1))
-  !      tb3(ijk,1,1) = ux3(ijk,1,1)*(ta3(ijk,1,1)-tc3(ijk,1,1))-&
-  !           uz3(ijk,1,1)*(td3(ijk,1,1)-tf3(ijk,1,1))
-  !      tc3(ijk,1,1) = uy3(ijk,1,1)*(td3(ijk,1,1)-tf3(ijk,1,1))-&
-  !           ux3(ijk,1,1)*(te3(ijk,1,1)-tb3(ijk,1,1))
-  !   enddo
+  !u.rot(u)
+  !WORK X-PENCILS
+  ! call derx (ta1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+  ! call derx (tb1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+  ! call transpose_x_to_y(ux1,ux2)
+  ! call transpose_x_to_y(uy1,uy2)
+  ! call transpose_x_to_y(uz1,uz2)
+  ! call transpose_x_to_y(ta1,ta2)
+  ! call transpose_x_to_y(tb1,tb2)
+  ! !WORK Y-PENCILS
+  ! call dery (tc2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1) 
+  ! call dery (td2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1) 
+  ! call transpose_y_to_z(ux2,ux3)
+  ! call transpose_y_to_z(uy2,uy3)
+  ! call transpose_y_to_z(uz2,uz3)
+  ! call transpose_y_to_z(ta2,ta3)
+  ! call transpose_y_to_z(tb2,tb3)
+  ! call transpose_y_to_z(tc2,tc3)
+  ! call transpose_y_to_z(td2,td3)
+  ! !WORK Z-PENCILS
+  ! call derz (te3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+  ! call derz (tf3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+  ! ta3 = uz3*(te3-tb3)-uy3*(ta3-tc3)
+  ! tb3 = ux3*(ta3-tc3)-uz3*(td3-tf3)
+  ! tc3 = uy3*(td3-tf3)-ux3*(te3-tb3)
+
   !SKEW!
   !WORK X-PENCILS
-  do ijk = 1,nvect1
-     ta1(ijk,1,1) = ux1(ijk,1,1)*ux1(ijk,1,1)
-     tb1(ijk,1,1) = ux1(ijk,1,1)*uy1(ijk,1,1)
-     tc1(ijk,1,1) = ux1(ijk,1,1)*uz1(ijk,1,1)
-  enddo
+  ta1 = ux1*ux1
+  tb1 = ux1*uy1
+  tc1 = ux1*uz1
 
   call derx (td1,ta1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
   call derx (te1,tb1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
@@ -118,11 +112,9 @@ subroutine convdiff(ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
   call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
   call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
 
-  do ijk = 1,nvect1
-     ta1(ijk,1,1) = half*td1(ijk,1,1)+half*ux1(ijk,1,1)*ta1(ijk,1,1)
-     tb1(ijk,1,1) = half*te1(ijk,1,1)+half*ux1(ijk,1,1)*tb1(ijk,1,1)
-     tc1(ijk,1,1) = half*tf1(ijk,1,1)+half*ux1(ijk,1,1)*tc1(ijk,1,1)
-  enddo
+  ta1 = half*td1+half*ux1*ta1
+  tb1 = half*te1+half*ux1*tb1
+  tc1 = half*tf1+half*ux1*tc1
 
   call transpose_x_to_y(ux1,ux2)
   call transpose_x_to_y(uy1,uy2)
@@ -132,11 +124,9 @@ subroutine convdiff(ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
   call transpose_x_to_y(tc1,tc2)
 
   !WORK Y-PENCILS
-  do ijk = 1,nvect2
-     td2(ijk,1,1) = ux2(ijk,1,1)*uy2(ijk,1,1)
-     te2(ijk,1,1) = uy2(ijk,1,1)*uy2(ijk,1,1)
-     tf2(ijk,1,1) = uz2(ijk,1,1)*uy2(ijk,1,1)
-  enddo
+  td2 = ux2*uy2
+  te2 = uy2*uy2
+  tf2 = uz2*uy2
 
   call dery (tg2,td2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
   call dery (th2,te2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
@@ -145,11 +135,10 @@ subroutine convdiff(ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
   call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
   call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
 
-  do ijk = 1,nvect2
-     ta2(ijk,1,1) = ta2(ijk,1,1)+half*tg2(ijk,1,1)+half*uy2(ijk,1,1)*td2(ijk,1,1)
-     tb2(ijk,1,1) = tb2(ijk,1,1)+half*th2(ijk,1,1)+half*uy2(ijk,1,1)*te2(ijk,1,1)
-     tc2(ijk,1,1) = tc2(ijk,1,1)+half*ti2(ijk,1,1)+half*uy2(ijk,1,1)*tf2(ijk,1,1)
-  enddo
+  ta2 = ta2+half*tg2+half*uy2*td2
+  tb2 = tb2+half*th2+half*uy2*te2
+  tc2 = tc2+half*ti2+half*uy2*tf2
+  
   call transpose_y_to_z(ux2,ux3)
   call transpose_y_to_z(uy2,uy3)
   call transpose_y_to_z(uz2,uz3)
@@ -158,11 +147,9 @@ subroutine convdiff(ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
   call transpose_y_to_z(tc2,tc3)
 
   !WORK Z-PENCILS
-  do ijk = 1,nvect3
-     td3(ijk,1,1) = ux3(ijk,1,1)*uz3(ijk,1,1)
-     te3(ijk,1,1) = uy3(ijk,1,1)*uz3(ijk,1,1)
-     tf3(ijk,1,1) = uz3(ijk,1,1)*uz3(ijk,1,1)
-  enddo
+  td3 = ux3*uz3
+  te3 = uy3*uz3
+  tf3 = uz3*uz3
 
   call derz (tg3,td3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
   call derz (th3,te3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
@@ -171,11 +158,9 @@ subroutine convdiff(ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
   call derz (te3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
   call derz (tf3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
 
-  do ijk = 1,nvect3
-     ta3(ijk,1,1) = ta3(ijk,1,1)+half*tg3(ijk,1,1)+half*uz3(ijk,1,1)*td3(ijk,1,1)
-     tb3(ijk,1,1) = tb3(ijk,1,1)+half*th3(ijk,1,1)+half*uz3(ijk,1,1)*te3(ijk,1,1)
-     tc3(ijk,1,1) = tc3(ijk,1,1)+half*ti3(ijk,1,1)+half*uz3(ijk,1,1)*tf3(ijk,1,1)
-  enddo
+  ta3 = ta3+half*tg3+half*uz3*td3
+  tb3 = tb3+half*th3+half*uz3*te3
+  tc3 = tc3+half*ti3+half*uz3*tf3
 
   !ALL THE CONVECTIVE TERMS ARE IN TA3, TB3 and TC3
   td3 = ta3 
@@ -201,8 +186,8 @@ subroutine convdiff(ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
 
   !DIFFUSIVE TERMS IN Y
   !-->for ux
+  call deryy (td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
   if (istret.ne.0) then
-     call deryy (td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
      call dery (te2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
      do k = 1,ysize(3)
         do j = 1,ysize(2)
@@ -211,13 +196,11 @@ subroutine convdiff(ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
            enddo
         enddo
      enddo
-  else
-     call deryy (td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
   endif
 
   !-->for uy
+  call deryy (te2,uy2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0)
   if (istret.ne.0) then
-     call deryy (te2,uy2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0)
      call dery (tf2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
      do k = 1,ysize(3)
         do j = 1,ysize(2)
@@ -226,13 +209,11 @@ subroutine convdiff(ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
            enddo
         enddo
      enddo
-  else
-     call deryy (te2,uy2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0)
   endif
 
   !-->for uz
+  call deryy (tf2,uz2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
   if (istret.ne.0) then
-     call deryy (tf2,uz2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
      call dery (tj2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
      do k = 1,ysize(3)
         do j = 1,ysize(2)
@@ -241,8 +222,6 @@ subroutine convdiff(ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
            enddo
         enddo
      enddo
-  else
-     call deryy (tf2,uz2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
   endif
 
   ta2 = ta2 + td2 
@@ -271,7 +250,6 @@ subroutine convdiff(ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
   tc1 = tc1 + tf1
 
   sumphi =  zero
-
   do is = 1, nphi
      sumphi = sumphi  + phi1(:,:,:,is)*ri(is) !Mod. by Ricardo
   enddo
@@ -332,22 +310,15 @@ subroutine scalar(ux1,uy1,uz1,phi1,phis1,phiss1,di1,ta1,tb1,tc1,td1,&
 
      !X PENCILS
      call derxS (tb1,phi1(:,:,:,is),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1)
-     do ijk = 1,nvect1
-        tb1(ijk,1,1) = tb1(ijk,1,1)*(ux1(ijk,1,1)+uset(is)*anglex)
-     enddo
-
+     tb1 = tb1*(ux1+uset(is)*anglex)
      call derxxS (ta1,phi1(:,:,:,is),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1)
-
      call transpose_x_to_y(phi1(:,:,:,is),phi2(:,:,:,is))
 
      !Y PENCILS
      call deryS (tb2,phi2(:,:,:,is),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
-     do ijk = 1,nvect2
-       tb2(ijk,1,1) = tb2(ijk,1,1)*(uy2(ijk,1,1)-uset(is)*angley)
-     enddo
-
+       tb2 = tb2*(uy2-uset(is)*angley)
+     call deryyS (ta2,phi2(:,:,:,is),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
      if (istret.ne.0) then
-        call deryyS (ta2,phi2(:,:,:,is),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
         call deryS (tc2,phi2(:,:,:,is),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
         do k = 1,ysize(3)
            do j = 1,ysize(2)
@@ -356,47 +327,33 @@ subroutine scalar(ux1,uy1,uz1,phi1,phis1,phiss1,di1,ta1,tb1,tc1,td1,&
               enddo
            enddo
         enddo
-     else
-        call deryyS (ta2,phi2(:,:,:,is),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
      endif
-
      call transpose_y_to_z(phi2(:,:,:,is),phi3(:,:,:,is))
 
      !Z PENCILS
      call derzS (tb3,phi3(:,:,:,is),di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1)
-     do ijk = 1,nvect3
-        tb3(ijk,1,1) = tb3(ijk,1,1)*uz3(ijk,1,1)
-     enddo
-
+     tb3 = tb3*uz3
      call derzzS (ta3,phi3(:,:,:,is),di3,sz,sfzpS,sszpS,swzpS,zsize(1),zsize(2),zsize(3),1)
 
      call transpose_z_to_y(ta3,tc2)
      call transpose_z_to_y(tb3,td2)
 
      !Y PENCILS ADD TERMS
-     do ijk = 1,nvect2
-        tc2(ijk,1,1) = tc2(ijk,1,1)+ta2(ijk,1,1)
-        td2(ijk,1,1) = td2(ijk,1,1)+tb2(ijk,1,1)
-     enddo
+     tc2 = tc2+ta2
+     td2 = td2+tb2
 
      call transpose_y_to_x(tc2,tc1)
      call transpose_y_to_x(td2,td1)
 
      !X PENCILS ADD TERMS
-     do ijk = 1,nvect1
-        ta1(ijk,1,1) = ta1(ijk,1,1)+tc1(ijk,1,1) !SECOND DERIVATIVE
-        tb1(ijk,1,1) = tb1(ijk,1,1)+td1(ijk,1,1) !FIRST DERIVATIVE
-     enddo
+     ta1 = ta1+tc1 !SECOND DERIVATIVE
+     tb1 = tb1+td1 !FIRST DERIVATIVE
 
 #ifdef ELES
   if (nrank == 0) print *, "sgsphi",is,"min max= ",minval(sgsphi1(:,:,:,is)),maxval(sgsphi1(:,:,:,is))
-     do ijk=1,nvect1
-        ta1(ijk,1,1)=(xnu/nsc(is) + kappat1(ijk,1,1) )*ta1(ijk,1,1)-tb1(ijk,1,1)+sgsphi1(ijk,1,1,is)
-     enddo
+     ta1 = ( xnu/nsc(is) + kappat1 )*ta1 - tb1 + sgsphi1(:,:,:,is)
 #else
-     do ijk=1,nvect1
-        ta1(ijk,1,1)=(xnu/nsc(is))*ta1(ijk,1,1)-tb1(ijk,1,1)
-     enddo
+     ta1 = ( xnu/nsc(is)           )*ta1 - tb1
 #endif
 
      !TIME ADVANCEMENT
@@ -443,14 +400,14 @@ subroutine scalar(ux1,uy1,uz1,phi1,phis1,phiss1,di1,ta1,tb1,tc1,td1,&
 
      if (cont_phi.eq.1) then  !Controle de phi. Ativa no prm.
         do ijk = 1,nvect1
-           if (phi1(ijk,1,1,is).lt.zero) phi1(ijk,1,1,is) =  zero
+           if (phi1(ijk,1,1,is).lt.zero) phi1(ijk,1,1,is) = zero
         enddo
      endif
 
      if (cont_phi.eq.2) then  !Controle de phi. Ativa no prm.
         do ijk = 1,nvect1
-           if (phi1(ijk,1,1,is).gt.cp(is)) phi1(ijk,1,1,is) =  cp(is)
-           if (phi1(ijk,1,1,is).lt.zero) phi1(ijk,1,1,is) =  zero
+           if (phi1(ijk,1,1,is).gt.cp(is)) phi1(ijk,1,1,is) = cp(is)
+           if (phi1(ijk,1,1,is).lt.zero) phi1(ijk,1,1,is) = zero
         enddo
      endif
 
