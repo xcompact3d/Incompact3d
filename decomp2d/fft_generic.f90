@@ -25,7 +25,7 @@ module decomp_2d_fft
 
   ! common code used for all engines, including global variables, 
   ! generic interface definitions and several subroutines
-#include "fft_common.f90"
+#include "fft_common.inc"
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !  This routine performs one-time initialisations for the FFT engine
@@ -297,7 +297,7 @@ module decomp_2d_fft
   end subroutine c2r_1m_z
 
 
-#include "fft_common_3d.f90"
+#include "fft_common_3d.inc"
 
   
 end module decomp_2d_fft

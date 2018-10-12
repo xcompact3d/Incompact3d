@@ -104,7 +104,7 @@ contains
 
     data_type = real_type
 
-#include "io_write_one.f90"
+#include "io_write_one.inc"
 
     return
   end subroutine write_one_real
@@ -126,7 +126,7 @@ contains
 
     data_type = complex_type
 
-#include "io_write_one.f90"
+#include "io_write_one.inc"
     
     return
   end subroutine write_one_complex
@@ -224,7 +224,7 @@ contains
     
     data_type = complex_type
 
-#include "io_read_one.f90"
+#include "io_read_one.inc"
     
     return
   end subroutine read_one_complex
@@ -251,7 +251,7 @@ contains
 
     data_type = real_type
 
-#include "io_write_var.f90"
+#include "io_write_var.inc"
 
     return
   end subroutine write_var_real
@@ -273,7 +273,7 @@ contains
 
     data_type = complex_type
 
-#include "io_write_var.f90"
+#include "io_write_var.inc"
 
     return
   end subroutine write_var_complex
@@ -300,7 +300,7 @@ contains
 
     data_type = real_type
 
-#include "io_read_var.f90"
+#include "io_read_var.inc"
 
     return
   end subroutine read_var_real
@@ -322,7 +322,7 @@ contains
 
     data_type = complex_type
 
-#include "io_read_var.f90"
+#include "io_read_var.inc"
 
     return
   end subroutine read_var_complex
@@ -558,7 +558,7 @@ contains
 
     data_type = real_type
 
-#include "io_write_plane.f90"
+#include "io_write_plane.inc"
 
     return
   end subroutine write_plane_3d_real
@@ -585,7 +585,7 @@ contains
 
     data_type = complex_type
 
-#include "io_write_plane.f90"
+#include "io_write_plane.inc"
 
     return
   end subroutine write_plane_3d_complex
@@ -637,7 +637,7 @@ contains
 
     data_type = real_type
 
-#include "io_write_every.f90"
+#include "io_write_every.inc"
     
     return
   end subroutine write_every_real
@@ -663,7 +663,7 @@ contains
 
     data_type = complex_type
 
-#include "io_write_every.f90"
+#include "io_write_every.inc"
     
     return
   end subroutine write_every_complex

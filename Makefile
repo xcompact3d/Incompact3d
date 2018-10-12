@@ -1,7 +1,6 @@
 #=======================================================================
 # Makefile for Incompact3D modified by Ricardo
 #=======================================================================
-
 # Choose pre-processing options
 #   -DDOUBLE_PREC - use double-precision
 #   -DSAVE_SINGLE - Save 3D data in single-precision
@@ -16,7 +15,7 @@
 # generate a Git version string
 GIT_VERSION := $(shell git describe --tag --long --always)
 
-#FLOW_TYPE = #Lock-exchange# TGV# Channel-flow# Cylinder
+FLOW_TYPE = Lock-exchange# TGV# Channel-flow# Cylinder
 
 DEFS = -DVISU -DVISUEXTRA -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"
 
@@ -46,11 +45,21 @@ FFLAGS = -fpp -O3 -xHost -heap-arrays -shared-intel -mcmodel=large -safe-cray-pt
 else ifeq ($(CMP),gcc)
 FC = mpif90
 #FFLAGS = -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -x f95-cpp-input
-FFLAGS = -cpp -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -march=native -ffree-line-length-none
+FFLAGS = -cpp  -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none
 endif
 
+
+MODDIR = ./mod  
+DECOMPDIR = ./decomp2d
+SRCDIR = ./src
+
 ### List of files for the main code
-SRC = decomp_2d.f90 glassman.f90 fft_$(FFT).f90 module_param.f90 io.f90 variables.f90 poisson.f90 schemes.f90 BC-$(FLOW_TYPE).f90 implicit.f90 convdiff.f90 navier.f90 derive.f90 parameters.f90 tools.f90 visu.f90 paraview.f90 genepsi3d.f90 filter.f90 les_models.f90 incompact3d.f90
+SRCDECOMP = $(DECOMPDIR)/decomp_2d.f90 $(DECOMPDIR)/glassman.f90 $(DECOMPDIR)/fft_$(FFT).f90 $(DECOMPDIR)/module_param.f90 $(DECOMPDIR)/io.f90 
+OBJDECOMP = $(SRCDECOMP:%.f90=%.o)
+SRC = $(SRCDIR)/variables.f90 $(SRCDIR)/poisson.f90 $(SRCDIR)/schemes.f90 $(SRCDIR)/derive.f90 $(SRCDIR)/parameters.f90 $(SRCDIR)/*.f90
+OBJ = $(SRC:%.f90=%.o)
+SRC = $(SRCDIR)/variables.f90 $(SRCDIR)/poisson.f90 $(SRCDIR)/schemes.f90 $(SRCDIR)/BC-$(FLOW_TYPE).f90 $(SRCDIR)/implicit.f90 $(SRCDIR)/convdiff.f90 $(SRCDIR)/navier.f90 $(SRCDIR)/derive.f90 $(SRCDIR)/parameters.f90 $(SRCDIR)/tools.f90 $(SRCDIR)/visu.f90 $(SRCDIR)/paraview.f90 $(SRCDIR)/genepsi3d.f90 $(SRCDIR)/filter.f90 $(SRCDIR)/les_models.f90 $(SRCDIR)/incompact3d.f90
+
 
 ### List of files for the post-processing code
 PSRC = decomp_2d.f90 module_param.f90 io.f90 variables.f90 schemes.f90 derive.f90 BC-$(FLOW_TYPE).f90 parameters.f90 tools.f90 visu.f90 paraview.f90 post.f90
@@ -100,26 +109,26 @@ else ifeq ($(FFT),generic)
 endif
 
 #######OPTIONS settings###########
-#ifneq (,$(findstring DSHM,$(OPTIONS)))
-#SRC := FreeIPC.f90 $(SRC)
-#OBJ = $(SRC:.f90=.o) alloc_shm.o FreeIPC_c.o
-#else
-OBJ = $(SRC:.f90=.o)
-#endif
-
+OPT = -I$(SRCDIR) -I$(DECOMPDIR) $(FFLAGS)
+LINKOPT = $(FFLAGS)
 #-----------------------------------------------------------------------
 # Normally no need to change anything below
 
 all: incompact3d
 
-#alloc_shm.o: alloc_shm.c
-#	$(CC) $(CFLAGS) -c $<
+incompact3d : $(OBJDECOMP) $(OBJ)
+	$(FC) -o $@ $(LINKOPT) $(OBJDECOMP) $(OBJ) $(LIBFFT)
 
-#FreeIPC_c.o: FreeIPC_c.c
-#	$(CC) $(CFLAGS) -c $<
+$(OBJDECOMP):$(DECOMPDIR)%.o : $(DECOMPDIR)%.f90
+	$(FC) $(FFLAGS) $(OPT) -c $<
+	mv $(@F) ${DECOMPDIR}
+	#mv *.mod ${DECOMPDIR}
 
-incompact3d : $(OBJ)
-	$(FC) -O3 -o $@ $(OBJ) $(LIBFFT)
+
+$(OBJ):$(SRCDIR)%.o : $(SRCDIR)%.f90
+	$(FC) $(FFLAGS) $(OPT) -c $<
+	mv $(@F) ${SRCDIR}
+	#mv *.mod ${SRCDIR}
 
 %.o : %.f90
 	$(FC) $(FFLAGS) $(DEFS) $(DEFS2) $(INC) -c $<
@@ -130,8 +139,12 @@ post:
 	$(FC) $(FFLAGS) -o $@ $(PSRC:.f90=.o)
 
 .PHONY: clean
+
 clean:
+	rm -f $(DECOMPDIR)/*.o $(DECOMPDIR)/*.mod 
+	rm -f $(SRCDIR)/*.o $(SRCDIR)/*.mod 
 	rm -f *.o *.mod incompact3d post
+
 .PHONY: cleanall
 cleanall: clean
 	rm -f *~ \#*\# out/* data/* stats/* planes/* *.xdmf *.log *.out nodefile core sauve*

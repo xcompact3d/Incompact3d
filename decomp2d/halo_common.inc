@@ -10,7 +10,7 @@
 !=======================================================================
 
 ! This file contain common code to be included by subroutines 
-! 'update_halo_...' in halo.f90
+! 'update_halo_...' in halo.inc
 
     if (present(opt_decomp)) then
        decomp = opt_decomp
