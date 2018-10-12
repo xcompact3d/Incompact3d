@@ -1,0 +1,25 @@
+language: c
+sudo: required
+
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev
+
+install: true
+
+script:
+  - make clean
+  - export FLOW_TYPE=Channel-flow
+  - make
+  - make clean
+  - export FLOW_TYPE=Cylinder
+  - make
+  - make clean
+  - export FLOW_TYPE=Lock-exchange
+  - make
+  - make clean
+  - export FLOW_TYPE=Periodic-hill
+  - make
+  - make clean
+  - export FLOW_TYPE=TGV
+  - make
