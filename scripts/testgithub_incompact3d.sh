@@ -1,0 +1,227 @@
+#!/bin/bash
+#
+### Ask what should be run:-
+### - 1 Get the bitbucket repository
+### - 2 From an existing bitbucket repository, create all the tests
+### - 3 Run on the test which existing folders
+#
+###
+#
+echo "*****************************************************************"
+echo "      Script to test the various cases of the distribution."
+echo "      It starts from the latest 2.0 version of the bitbucket"
+echo "      repository, which is downloaded."
+echo "*****************************************************************"
+#
+###
+#
+rm -rf Incompact3d
+rm -rf BENCHMARK_SUITE
+rm -rf .output_incompact3d
+#
+echo
+#
+mkdir .output_incompact3d
+#
+git clone https://github.com/xcompact3d/Incompact3d
+#
+cd Incompact3d
+#
+echo
+#
+git status
+#
+echo
+#
+git log >& ../OUTPUT_git_log.log
+#
+git rev-list --all >& ../OUTPUT_git_rev-list.log
+#
+echo
+#
+export RevisionNumber=`git rev-list --count HEAD`
+#
+echo "The latest revision is the $RevisionNumber th one."
+#
+echo
+#
+read -p "Do you want to compare with another revision? (Yes/No): " RevisionYesNo
+#
+if [ $RevisionYesNo == "Yes" ] 
+    then
+    read -p "Revision code for comparison : " OldRevisionCode
+#
+    OldRevisionLineNumber="$(grep -n "$OldRevisionCode" ../OUTPUT_git_rev-list.log | head -n 1 | cut -d: -f1)"
+#
+    OldRevisionLineNumber=$(($RevisionNumber - $OldRevisionLineNumber))
+    OldRevisionLineNumber=$(($OldRevisionLineNumber + 1))
+#
+    echo "The revision to compare to is the $OldRevisionLineNumber th."
+#
+elif [ $RevisionYesNo == "No" ]
+    then
+    echo "The script will be run for the latest revision number only."
+fi
+#
+echo
+#
+read -p "Compiler (gcc or intel): " compiler
+read -p "Number of processors for the tests: " nprocs
+read -p "Number of rows for the tests: " prow
+read -p "Number of cols for the tests: " pcol
+read -p "Number of time steps: " timesteps
+echo
+#
+### Scan all the BC*.prm files
+#
+export listBCfiles=`ls BC*prm`
+#
+echo
+#
+mkdir ../BENCHMARK_SUITE
+mkdir ../BENCHMARK_SUITE/$RevisionNumber
+#
+if [ $RevisionYesNo == "Yes" ]
+    then
+    mkdir ../BENCHMARK_SUITE/$OldRevisionLineNumber
+    listrevision[0]="$OldRevisionLineNumber"
+    listrevision[1]="$RevisionNumber"
+else
+    listrevision[0]="$RevisionNumber"
+fi
+#
+for Revision in $listrevision
+do
+#
+    for prmfile in $listBCfiles
+    do
+#
+####### Identify the tests and get their name
+#
+        echo "*****************************************************************"
+#
+        echo
+#
+        BCfile=${prmfile/.prm/}
+        NameTestCase=${BCfile:3}
+#
+        echo "   The $NameTestCase test case is prepared using the $compiler compiler"
+        echo "   with $nprocs processors and $timesteps time-steps."
+#
+        echo
+#
+####### Create a directory for each of the cases (identified from the BC*.prm files)
+#
+        echo "   A new directory is created, by copying the repository."
+        echo "   This directory is called $NameTestCase and located under BENCHMARK_SUITE/$Revision"
+        echo "   where $Revision is the revision to be dealt with."
+#
+        export workdir=`pwd`
+#
+        mkdir $workdir/../BENCHMARK_SUITE/$Revision/$NameTestCase
+#
+####### Copy all the files (Makefile, *.f90, *.prm in each directory
+#
+        echo
+        echo "   The required files (*.f90, *prm and Makefile) are copied under BENCHMARK_SUITE/$Revision/$NameTestCase"
+        echo "   and the folders required for the simulation to run are created."
+#
+        cp *.f90 BC-$NameTestCase.prm probes.prm post.prm visu.prm Makefile ../BENCHMARK_SUITE/$Revision/$NameTestCase/.
+#
+        mkdir ../BENCHMARK_SUITE/$Revision/$NameTestCase/out
+#
+        cd ../BENCHMARK_SUITE/$Revision/$NameTestCase/
+#
+####### Change the compiler and flow types for what it needed (ask which one)
+####### And add the right option for each case:
+#
+        echo
+#
+        sed -i -e "s/.*CMP =.*/CMP = $compiler/" Makefile
+        sed -i -e "s/.*FLOW_TYPE =.*/FLOW_TYPE = $NameTestCase/" Makefile
+#
+        if [ $NameTestCase == "Channel-flow" ]
+        then
+            sed -i -e "s/.*OPTIONS =.*/OPTIONS = -DSTRETCHING -DPOST -DVISU -DVISUEXTRA/" Makefile
+        elif [ $NameTestCase == "Cylinder" ]
+        then
+            sed -i -e "s/.*OPTIONS =.*/OPTIONS = -DIBM -DFORCES -DVISU -DVISUEXTRA -DSTRETCHING/" Makefile
+        elif [ $NameTestCase == "Jet_plane" ]
+        then
+            sed -i -e "s/.*OPTIONS =.*/OPTIONS = -DSTRETCHING -DVISU -DVISUEXTRA/" Makefile
+        elif [ $NameTestCase == "Lock-exchange" ]
+        then
+            sed -i -e "s/.*OPTIONS =.*/OPTIONS = -DPOST -DVISU -DVISUEXTRA/" Makefile
+        elif [ $NameTestCase == "Periodic-hill" ]
+        then
+            sed -i -e "s/.*OPTIONS =.*/OPTIONS = -DSTRETCHING -DIBM -DPOST -DVISU -DVISUEXTRA/" Makefile
+        elif [ $NameTestCase == "TBL" ]
+        then
+            sed -i -e "s/.*OPTIONS =.*/OPTIONS = /" Makefile
+        elif [ $NameTestCase == "TGV" ]
+        then
+            sed -i -e "s/.*OPTIONS =.*/OPTIONS = -DVISU -DVISUEXTRA/" Makefile
+        fi
+#
+####### Compile and link
+#
+        echo "   Beginning of compiling/Linking"
+#
+        make >& compile.log
+#
+        echo "   End of compiling/linking"
+#
+        if [ -f "incompact3d" ]
+        then
+            echo "   The executable file incompact3d was created."
+        else
+            echo "   The file incompact3d was not created. Check what error(s) occur(s) in the file compile.log."
+            echo "   The last 25 lines shows:"
+            tail -25 compile.log
+        fi
+#
+        echo
+#
+####### Change the number of time steps
+#
+        if [ -f "incompact3d" ]
+        then
+            sed -i -e "s/.*ilast.*/$timesteps    #ilast/" BC-$NameTestCase.prm
+            sed -i -e "s/.*p_row.*/$prow   #p_row/" BC-$NameTestCase.prm
+            sed -i -e "s/.*p_col.*/$pcol   #p_col/" BC-$NameTestCase.prm
+#
+####### Run the simulation in parallel on npcrocs
+#
+            echo "   Start the simulation for $timesteps time-steps"
+#
+            mpirun -np $nprocs ./incompact3d >& OUTPUT_${NameTestCase}_${nprocs}_${timesteps}.log
+#
+        else
+            echo "   The simulation will not be run."
+        fi
+#
+####### Complete the run
+#
+        if [ -f "incompact3d" ]
+        then
+            echo
+            echo
+            echo "   The simulation of test case $NameTestCase using the $compiler compiler"
+            echo "   with $nprocs processors and $timesteps time-steps is completed."
+            echo
+            echo
+        fi
+#
+        cd $workdir
+#
+    done
+#
+done
+#
+echo
+#
+echo "*****************************************************************"
+echo "               All the simulations are completed."
+echo "               Check the output of each of them"
+echo "               in the OUTPUT*.log files"
+echo "*****************************************************************"
