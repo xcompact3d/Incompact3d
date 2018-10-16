@@ -9,8 +9,9 @@
 #
 echo "*****************************************************************"
 echo "      Script to test the various cases of the distribution."
-echo "      It starts from the latest 2.0 version of the bitbucket"
-echo "      repository, which is downloaded."
+echo "      It starts from the latest 2.0 version of the"
+echo "      github.com/xcompact3d/Incompact3d repository, which is"
+echo "      downloaded."
 echo "*****************************************************************"
 #
 ###
