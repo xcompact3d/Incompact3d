@@ -9,8 +9,9 @@
 #
 echo "*****************************************************************"
 echo "      Script to test the various cases of the distribution."
-echo "      It starts from the latest 2.0 version of the bitbucket"
-echo "      repository, which is downloaded."
+echo "      It starts from the latest 2.0 version of the"
+echo "      github.com/xcompact3d/Incompact3d repository, which is"
+echo "      downloaded."
 echo "*****************************************************************"
 #
 ###
@@ -47,7 +48,7 @@ echo
 #
 read -p "Do you want to compare with another revision? (Yes/No): " RevisionYesNo
 #
-if [ $RevisionYesNo == "Yes" ] 
+if [ $RevisionYesNo == "Yes" ]
     then
     read -p "Revision code for comparison : " OldRevisionCode
 #
@@ -138,30 +139,7 @@ do
         echo
 #
         sed -i -e "s/.*CMP =.*/CMP = $compiler/" Makefile
-        sed -i -e "s/.*FLOW_TYPE =.*/FLOW_TYPE = $NameTestCase/" Makefile
-#
-        if [ $NameTestCase == "Channel-flow" ]
-        then
-            sed -i -e "s/.*OPTIONS =.*/OPTIONS = -DSTRETCHING -DPOST -DVISU -DVISUEXTRA/" Makefile
-        elif [ $NameTestCase == "Cylinder" ]
-        then
-            sed -i -e "s/.*OPTIONS =.*/OPTIONS = -DIBM -DFORCES -DVISU -DVISUEXTRA -DSTRETCHING/" Makefile
-        elif [ $NameTestCase == "Jet_plane" ]
-        then
-            sed -i -e "s/.*OPTIONS =.*/OPTIONS = -DSTRETCHING -DVISU -DVISUEXTRA/" Makefile
-        elif [ $NameTestCase == "Lock-exchange" ]
-        then
-            sed -i -e "s/.*OPTIONS =.*/OPTIONS = -DPOST -DVISU -DVISUEXTRA/" Makefile
-        elif [ $NameTestCase == "Periodic-hill" ]
-        then
-            sed -i -e "s/.*OPTIONS =.*/OPTIONS = -DSTRETCHING -DIBM -DPOST -DVISU -DVISUEXTRA/" Makefile
-        elif [ $NameTestCase == "TBL" ]
-        then
-            sed -i -e "s/.*OPTIONS =.*/OPTIONS = /" Makefile
-        elif [ $NameTestCase == "TGV" ]
-        then
-            sed -i -e "s/.*OPTIONS =.*/OPTIONS = -DVISU -DVISUEXTRA/" Makefile
-        fi
+        export FLOW_TYPE=$NameTestCase
 #
 ####### Compile and link
 #
