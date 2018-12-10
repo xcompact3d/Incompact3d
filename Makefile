@@ -126,16 +126,17 @@ incompact3d : $(OBJDECOMP) $(OBJ)
 	$(FC) -o $@ $(LINKOPT) $(OBJDECOMP) $(OBJ) $(LIBFFT)
 
 $(OBJDECOMP):$(DECOMPDIR)%.o : $(DECOMPDIR)%.f90
-	$(FC) $(FFLAGS) $(OPT) -c $<
+	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(DEFS2) $(INC) -c $<
 	mv $(@F) ${DECOMPDIR}
 	#mv *.mod ${DECOMPDIR}
 
 
 $(OBJ):$(SRCDIR)%.o : $(SRCDIR)%.f90
-	$(FC) $(FFLAGS) $(OPT) -c $<
+	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(DEFS2) $(INC) -c $<
 	mv $(@F) ${SRCDIR}
 	#mv *.mod ${SRCDIR}
 
+## This %.o : %.f90 doesn't appear to be called...
 %.o : %.f90
 	$(FC) $(FFLAGS) $(DEFS) $(DEFS2) $(INC) -c $<
 
