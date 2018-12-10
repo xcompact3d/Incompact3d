@@ -19,6 +19,7 @@ GIT_VERSION := $(shell git describe --tag --long --always)
 FLOW_TYPE = Lock-exchange
 # FLOW_TYPE = TGV
 # FLOW_TYPE = Channel-flow
+# FLOW_TYPE = Periodic-hill
 # FLOW_TYPE = Cylinder
 # FLOW_TYPE = dbg-schemes
 

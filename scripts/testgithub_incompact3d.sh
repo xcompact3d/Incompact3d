@@ -24,11 +24,23 @@ echo
 #
 mkdir .output_incompact3d
 #
-git clone https://github.com/xcompact3d/Incompact3d
+read -p "Do you want to use github or local repository? (git/local): " Repo
+if [ $Repo == "local" ]
+then
+		git clone ${I3D_HOME} Incompact3d
+else
+		git clone https://github.com/xcompact3d/Incompact3d
+fi
 #
 cd Incompact3d
 #
 echo
+read -p "Which branch would you like to use? (default: master): " Branch
+if [ -z $Branch ]
+then
+		echo "Checking out branch " $Branch
+		git checkout ${Branch}
+fi
 #
 git status
 #
@@ -75,7 +87,7 @@ echo
 #
 ### Scan all the BC*.prm files
 #
-export listBCfiles=`ls BC*prm`
+export listBCfiles=`ls examples/*/BC*prm`
 #
 echo
 #
@@ -104,7 +116,8 @@ do
         echo
 #
         BCfile=${prmfile/.prm/}
-        NameTestCase=${BCfile:3}
+        NameTestCase=${BCfile##*/}      # Strip path from case name
+				NameTestCase=${NameTestCase:3}  # Strip BC- from case name
 #
         echo "   The $NameTestCase test case is prepared using the $compiler compiler"
         echo "   with $nprocs processors and $timesteps time-steps."
@@ -120,14 +133,18 @@ do
         export workdir=`pwd`
 #
         mkdir $workdir/../BENCHMARK_SUITE/$Revision/$NameTestCase
+        mkdir $workdir/../BENCHMARK_SUITE/$Revision/$NameTestCase/src
+        mkdir $workdir/../BENCHMARK_SUITE/$Revision/$NameTestCase/decomp2d
 #
 ####### Copy all the files (Makefile, *.f90, *.prm in each directory
 #
         echo
-        echo "   The required files (*.f90, *prm and Makefile) are copied under BENCHMARK_SUITE/$Revision/$NameTestCase"
+        echo "   The required files (*.f90, *.inc, *.prm and Makefile) are copied under BENCHMARK_SUITE/$Revision/$NameTestCase"
         echo "   and the folders required for the simulation to run are created."
 #
-        cp *.f90 BC-$NameTestCase.prm probes.prm post.prm visu.prm Makefile ../BENCHMARK_SUITE/$Revision/$NameTestCase/.
+        cp decomp2d/*.f90 decomp2d/*.inc ../BENCHMARK_SUITE/$Revision/$NameTestCase/decomp2d/.
+				cp src/*.f90 ../BENCHMARK_SUITE/$Revision/$NameTestCase/src/.
+				cp $prmfile examples/probes.prm examples/post.prm examples/visu.prm Makefile ../BENCHMARK_SUITE/$Revision/$NameTestCase/.
 #
         mkdir ../BENCHMARK_SUITE/$Revision/$NameTestCase/out
 #
