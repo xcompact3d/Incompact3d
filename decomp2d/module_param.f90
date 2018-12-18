@@ -203,6 +203,7 @@ module param
   integer :: cont_phi,itr,itime,itest,iprocessing
   integer :: ifft,ivirt,istret,iforc_entree,iturb
   integer :: itype,iin,nscheme,ifirst,ilast,iles,iimplicit
+  integer :: ntime ! How many (sub)timestpeps do we need to store?
   integer :: isave,ilit,idebmod,imodulo,imodulo2,idemarre,icommence,irecord
   integer :: iscalar,nxboite,istat,iread,iadvance_time,irotation
   integer :: ilag,npif,izap

@@ -145,7 +145,7 @@ PROGRAM incompact3d
         call inttimp (ux1,uy1,uz1,gx1,gy1,gz1,hx1,hy1,hz1,ta1,tb1,tc1,px1,py1,pz1,&
              td1,te1,tf1,ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2)
 #else           
-        call intt(ux1,uy1,uz1,gx1,gy1,gz1,hx1,hy1,hz1,ta1,tb1,tc1)
+        call int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
 #endif
         call pre_correc(ux1,uy1,uz1,ep1)
 

@@ -331,44 +331,40 @@ contains
 
     adt(:)=zero ; bdt(:)=zero ; cdt(:)=zero ; gdt(:)=zero
     if (nscheme.eq.1) then ! Euler
-   	iavance_temps=1 
-   	adt(1)=1.0_mytype*dt
-   	bdt(1)=0.0_mytype*dt
-   	gdt(1)=adt(1)+bdt(1)
-   	gdt(3)=gdt(1)        
-	allocate(dux1(xsize(1),xsize(2),xsize(3),1))
-	allocate(duy1(xsize(1),xsize(2),xsize(3),1))
-	allocate(duz1(xsize(1),xsize(2),xsize(3),1))
+       iavance_temps=1 
+       adt(1)=1.0_mytype*dt
+       bdt(1)=0.0_mytype*dt
+       gdt(1)=adt(1)+bdt(1)
+       gdt(3)=gdt(1)
+
+       ntime = 1
     elseif (nscheme.eq.2) then ! AB2
-   	iavance_temps=1 
-   	adt(1)=1.5_mytype*dt
-   	bdt(1)=-0.5_mytype*dt
-   	gdt(1)=adt(1)+bdt(1)
-   	gdt(3)=gdt(1)
-	allocate(dux1(xsize(1),xsize(2),xsize(3),2))
-	allocate(duy1(xsize(1),xsize(2),xsize(3),2))
-	allocate(duz1(xsize(1),xsize(2),xsize(3),2))
+       iavance_temps=1 
+       adt(1)=1.5_mytype*dt
+       bdt(1)=-0.5_mytype*dt
+       gdt(1)=adt(1)+bdt(1)
+       gdt(3)=gdt(1)
+
+       ntime = 2
     elseif (nscheme.eq.3) then ! AB3
-       	iadvance_time=1
-       	adt(1)= (23._mytype/12._mytype)*dt
-       	bdt(1)=-(16._mytype/12._mytype)*dt
-       	cdt(1)= ( 5._mytype/12._mytype)*dt
-       	gdt(1)=adt(1)+bdt(1)+cdt(1)
-       	gdt(3)=gdt(1)
-	allocate(dux1(xsize(1),xsize(2),xsize(3),3))
-	allocate(duy1(xsize(1),xsize(2),xsize(3),3))
-	allocate(duz1(xsize(1),xsize(2),xsize(3),3))
+       iadvance_time=1
+       adt(1)= (23._mytype/12._mytype)*dt
+       bdt(1)=-(16._mytype/12._mytype)*dt
+       cdt(1)= ( 5._mytype/12._mytype)*dt
+       gdt(1)=adt(1)+bdt(1)+cdt(1)
+       gdt(3)=gdt(1)
+
+       ntime = 3
     elseif(nschema==4) then  ! AB4
-   	iavance_temps=1 
-   	adt(1)=(55.0_mytype/24.0_mytype)*dt
-   	bdt(1)=-(59.0_mytype/24.0_mytype)*dt
-   	cdt(1)=(37.0_mytype/24.0_mytype)*dt
-   	ddt(1)=-(9.0_mytype/24.0_mytype)*dt
-   	gdt(1)=adt(1)+bdt(1)+cdt(1)+ddt(1)
-   	gdt(3)=gdt(1)
-	allocate(dux1(xsize(1),xsize(2),xsize(3),4))
-	allocate(duy1(xsize(1),xsize(2),xsize(3),4))
-	allocate(duz1(xsize(1),xsize(2),xsize(3),4))
+       iavance_temps=1 
+       adt(1)=(55.0_mytype/24.0_mytype)*dt
+       bdt(1)=-(59.0_mytype/24.0_mytype)*dt
+       cdt(1)=(37.0_mytype/24.0_mytype)*dt
+       ddt(1)=-(9.0_mytype/24.0_mytype)*dt
+       gdt(1)=adt(1)+bdt(1)+cdt(1)+ddt(1)
+       gdt(3)=gdt(1)
+
+       ntime = 4
     elseif(nscheme.eq.5) then !RK3
        iadvance_time=3
        adt(1)=(8._mytype/15._mytype)*dt
@@ -380,9 +376,8 @@ contains
        adt(3)=(3._mytype/4._mytype)*dt
        bdt(3)=(-5._mytype/12._mytype)*dt
        gdt(3)=adt(3)+bdt(3)
-	allocate(dux1(xsize(1),xsize(2),xsize(3),1))
-	allocate(duy1(xsize(1),xsize(2),xsize(3),1))
-	allocate(duz1(xsize(1),xsize(2),xsize(3),1))
+
+       ntime = 2
     elseif(nscheme.eq.6) then !RK4 Carpenter and Kennedy
        iadvance_temp=5 
        adt(1)=0.0_mytype
@@ -400,10 +395,13 @@ contains
        gdt(3)=0.25185480577_mytype*dt
        gdt(4)=0.33602636754_mytype*dt
        gdt(5)=0.041717869325_mytype*dt
-	allocate(dux1(xsize(1),xsize(2),xsize(3),2))
-	allocate(duy1(xsize(1),xsize(2),xsize(3),2))
-	allocate(duz1(xsize(1),xsize(2),xsize(3),2))
-      endif
+
+       ntime = 2
+    endif
+    allocate(dux1(xsize(1),xsize(2),xsize(3),ntime))
+    allocate(duy1(xsize(1),xsize(2),xsize(3),ntime))
+    allocate(duz1(xsize(1),xsize(2),xsize(3),ntime))
+
     !TRIPPING PARAMES LOST HERE
     z_modes=int(zlz /zs_tr)
     allocate(h_coeff(z_modes))
