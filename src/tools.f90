@@ -272,7 +272,7 @@ return
 end subroutine test_speed_min_max
 !*******************************************************************
 subroutine restart(ux1,uy1,uz1,ep1,pp3,phi1,gx1,gy1,gz1,px1,py1,pz1,phis1,&
-     hx1,hy1,hz1,phiss1,phG,irestart)
+     hx1,hy1,hz1,phiss1,irestart)
 
   USE decomp_2d
   USE decomp_2d_io
@@ -282,7 +282,6 @@ subroutine restart(ux1,uy1,uz1,ep1,pp3,phi1,gx1,gy1,gz1,px1,py1,pz1,phis1,&
 
   implicit none
 
-  TYPE(DECOMP_INFO) :: phG
   integer :: i,j,k,irestart,nzmsize,fh,ierror,is,code
   integer :: ierror_o=0 !error to open sauve file during restart
   real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1

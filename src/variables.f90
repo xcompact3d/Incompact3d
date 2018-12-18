@@ -71,10 +71,13 @@ module var
   ! define all work arrays here
   real(mytype), save, allocatable, dimension(:,:,:) :: ta1,tb1,tc1,td1,&
   te1,tf1,tg1,th1,ti1,di1
+  real(mytype), save, allocatable, dimension(:,:,:) :: pp1,pgy1,pgz1
   real(mytype), save, allocatable, dimension(:,:,:) :: ta2,tb2,tc2,td2,&
   te2,tf2,tg2,th2,ti2,tj2,di2
+  real(mytype), save, allocatable, dimension(:,:,:) :: pp2,ppi2,pgy2,pgz2,pgzi2,dip2,dipp2,duxdxp2,uyp2,uzp2,upi2,duydypi2
   real(mytype), save, allocatable, dimension(:,:,:) :: ta3,tb3,tc3,td3,&
   te3,tf3,tg3,th3,ti3,di3
+  real(mytype), save, allocatable, dimension(:,:,:) :: pgz3,ppi3,dip3,dipp3,duxydxyp3,uzp3
 
   integer, save :: nxmsize, nymsize, nzmsize
 
@@ -82,7 +85,7 @@ contains
 
   subroutine init_variables
 
-    TYPE(DECOMP_INFO), save :: ph  ! decomposition object
+    TYPE(DECOMP_INFO), save :: ph! decomposition object
 
 #ifdef DEBG
     if (nrank .eq. 0) print *,'# init_variables start'
@@ -106,8 +109,6 @@ contains
        nzmsize = zsize(3) -1
     endif
     call decomp_info_init(nxmsize, nymsize, nzmsize, ph)
-
-
     !xsize(i), ysize(i), zsize(i), i=1,2,3 - sizes of the sub-domains held by the current process. The first letter refers to the pencil orientation and the three 1D array elements contain the sub-domain sizes in X, Y and Z directions, respectively. In a 2D pencil decomposition, there is always one dimension which completely resides in local memory. So by definition xsize(1)==nx_global, ysize(2)==ny_global and zsize(3)==nz_global.
 
     !xstart(i), ystart(i), zstart(i), xend(i), yend(i), zend(i), i=1,2,3 - the starting and ending indices for each sub-domain, as in the global coordinate system. Obviously, it can be seen that xsize(i)=xend(i)-xstart(i)+1. It may be convenient for certain applications to use global coordinate (for example when extracting a 2D plane from a 3D domain, it is easier to know which process owns the plane if global index is used). 
@@ -134,6 +135,10 @@ contains
     call alloc_x(td1);call alloc_x(te1);call alloc_x(tf1)
     call alloc_x(tg1);call alloc_x(th1);call alloc_x(ti1)
     call alloc_x(di1);call alloc_x(ep1)
+    
+    allocate(pp1(nxmsize,xsize(2),xsize(3)))
+    allocate(pgy1(nxmsize,xsize(2),xsize(3)))
+    allocate(pgz1(nxmsize,xsize(2),xsize(3)))
 
     !inflow/ouflow 2d arrays
     allocate(bxx1(xsize(2),xsize(3)),bxy1(xsize(2),xsize(3)))
@@ -190,7 +195,19 @@ contains
     call alloc_y(tg2);call alloc_y(th2);call alloc_y(ti2)
     call alloc_y(tj2);call alloc_y(di2)
     allocate(phi2(ysize(1),ysize(2),ysize(3),1:nphi))
+    allocate(pgz2(ph3%yst(1):ph3%yen(1),nymsize,ysize(3)))
+    allocate(pp2(ph3%yst(1):ph3%yen(1),nymsize,ysize(3)))
+    allocate(dip2(ph3%yst(1):ph3%yen(1),ysize(2),ysize(3)))
+    allocate(ppi2(ph3%yst(1):ph3%yen(1),ysize(2),ysize(3)))
+    allocate(pgy2(ph3%yst(1):ph3%yen(1),ysize(2),ysize(3)))
+    allocate(pgzi2(ph3%yst(1):ph3%yen(1),ysize(2),ysize(3)))
 
+    allocate(duxdxp2(ph1%yst(1):ph1%yen(1),ysize(2),ysize(3)))
+    allocate(uyp2(ph1%yst(1):ph1%yen(1),ysize(2),ysize(3)))
+    allocate(uzp2(ph1%yst(1):ph1%yen(1),ysize(2),ysize(3)))
+    allocate(dipp2(ph1%yst(1):ph1%yen(1),ysize(2),ysize(3)))
+    allocate(upi2(ph1%yst(1):ph1%yen(1),nymsize,ysize(3)))
+    allocate(duydypi2(ph1%yst(1):ph1%yen(1),nymsize,ysize(3)))
 
     !Z PENCILS
     call alloc_z(ux3);call alloc_z(uy3);call alloc_z(uz3)
@@ -199,7 +216,14 @@ contains
     call alloc_z(tg3);call alloc_z(th3);call alloc_z(ti3)
     call alloc_z(di3)
     allocate(phi3(zsize(1),zsize(2),zsize(3),1:nphi))
+    allocate(pgz3(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),zsize(3)))
+    allocate(ppi3(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),zsize(3)))
+    allocate(dip3(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),zsize(3)))
 
+    allocate(duxydxyp3(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),zsize(3)))
+    allocate(uzp3(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),zsize(3)))
+    allocate(dipp3(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),zsize(3)))
+    
     ! if all periodic
     !   allocate (pp3(ph%zst(1):ph%zen(1),ph%zst(2):ph%zen(2),ph%zst(3):ph%zen(3)))
     !   allocate (dv3(ph%zst(1):ph%zen(1),ph%zst(2):ph%zen(2),ph%zst(3):ph%zen(3)))

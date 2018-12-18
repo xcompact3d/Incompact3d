@@ -21,7 +21,7 @@ PROGRAM incompact3d
   real(mytype) :: x,y,z,timeleft
   real(8) :: tstart,t1,trank,tranksum,ttotal,tremaining,telapsed
 
-  TYPE(DECOMP_INFO) :: phG,ph1,ph2,ph3,ph4
+ ! TYPE(DECOMP_INFO) :: phG,ph1,ph2,ph3,ph4
 
   call ft_parameter(.true.)
 
@@ -30,8 +30,16 @@ PROGRAM incompact3d
   call init_coarser_mesh_statS(nstat,nstat,nstat,.true.)    !start from 1 == true
   call init_coarser_mesh_statV(nvisu,nvisu,nvisu,.true.)    !start from 1 == true
   call init_coarser_mesh_statP(nprobe,nprobe,nprobe,.true.) !start from 1 == true
-
   call parameter()
+ !div: nx ny nz --> nxm ny nz --> nxm nym nz --> nxm nym nzm
+  call decomp_info_init(nxm, nym, nzm, ph1)
+  call decomp_info_init(nxm, ny, nz, ph4)
+  !gradp: nxm nym nzm -> nxm nym nz --> nxm ny nz --> nx ny nz
+  call decomp_info_init(nxm, ny, nz, ph2)
+  call decomp_info_init(nxm, nym, nz, ph3)
+
+  
+  
 
   call init_variables()
 
@@ -103,12 +111,7 @@ PROGRAM incompact3d
   tstart=zero;t1=zero;trank=zero;tranksum=zero;ttotal=zero
   call cpu_time(tstart)
 
-  !div: nx ny nz --> nxm ny nz --> nxm nym nz --> nxm nym nzm
-  call decomp_info_init(nxm, nym, nzm, ph1)
-  call decomp_info_init(nxm, ny, nz, ph4)
-  !gradp: nxm nym nzm -> nxm nym nz --> nxm ny nz --> nx ny nz
-  call decomp_info_init(nxm, ny, nz, ph2)
-  call decomp_info_init(nxm, nym, nz, ph3)
+ 
 
   do itime=ifirst,ilast
      t=itime*dt
@@ -156,25 +159,22 @@ PROGRAM incompact3d
 #endif
 
         !X-->Y-->Z
-        call divergence (ux1,uy1,uz1,ep1,ta1,tb1,tc1,di1,td1,te1,tf1,&
-             td2,te2,tf2,di2,ta2,tb2,tc2,ta3,tb3,tc3,di3,td3,te3,tf3,pp3,&
-             nxmsize,nymsize,nzmsize,ph1,ph3,ph4,1)
+        call divergence (ux1,uy1,uz1,ep1,pp3,&
+             nxmsize,nymsize,nzmsize,1)
 
         !POISSON Z-->Z
         call poisson(pp3)
 
         !Z-->Y-->X
-        call gradp(px1,py1,pz1,di1,td2,tf2,ta2,tb2,tc2,di2,&
-             ta3,tc3,di3,pp3,nxmsize,nymsize,nzmsize,ph2,ph3)
+        call gradp(px1,py1,pz1,pp3)
 
         !X PENCILS
         call corpg(ux1,uy1,uz1,px1,py1,pz1)
 
         if (mod(itime,itest)==0) then
            !does not matter --> output=DIV U=0 (in dv3)
-           call divergence(ux1,uy1,uz1,ep1,ta1,tb1,tc1,di1,td1,te1,tf1,&
-                td2,te2,tf2,di2,ta2,tb2,tc2,ta3,tb3,tc3,di3,td3,te3,tf3,dv3,&
-                nxmsize,nymsize,nzmsize,ph1,ph3,ph4,2)
+           call divergence(ux1,uy1,uz1,ep1,dv3,&
+                nxmsize,nymsize,nzmsize,2)
 
            call test_speed_min_max(ux1,uy1,uz1)
            if (iscalar==1) call test_scalar_min_max(phi1)
@@ -205,7 +205,7 @@ PROGRAM incompact3d
         call VISU_INSTA (ux1,uy1,uz1,phi1,ep1,.false.)
 
         if (save_pre.eq.1.OR.save_prem.eq.1) call VISU_PRE (pp3,ta1,tb1,di1,&
-             ta2,tb2,di2,ta3,di3,nxmsize,nymsize,nzmsize,phG,ph2,ph3,uvisu,pre1)
+             ta2,tb2,di2,ta3,di3,nxmsize,nymsize,nzmsize,uvisu,pre1)
      endif
 #endif
 

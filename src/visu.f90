@@ -414,7 +414,7 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
 
 end subroutine VISU_INSTA
 !############################################################################
-subroutine VISU_PRE (pp3,ta1,tb1,di1,ta2,tb2,di2,ta3,di3,nxmsize,nymsize,nzmsize,phG,ph2,ph3,uvisu,pre1)
+subroutine VISU_PRE (pp3,ta1,tb1,di1,ta2,tb2,di2,ta3,di3,nxmsize,nymsize,nzmsize,uvisu,pre1)
 
   USE param
   USE variables
@@ -423,7 +423,6 @@ subroutine VISU_PRE (pp3,ta1,tb1,di1,ta2,tb2,di2,ta3,di3,nxmsize,nymsize,nzmsize
 
   implicit none
 
-  TYPE(DECOMP_INFO) :: phG,ph2,ph3
   real(mytype),dimension(xszV(1),xszV(2),xszV(3)) :: uvisu
   real(mytype),dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize) :: pp3
   !Z PENCILS NXM NYM NZM-->NXM NYM NZ
