@@ -70,6 +70,7 @@ module var
   ! define all work arrays here
   real(mytype), save, allocatable, dimension(:,:,:) :: ta1,tb1,tc1,td1,&
   te1,tf1,tg1,th1,ti1,di1
+  real(mytype), save, allocatable, dimension(:,:,:) :: pp1,pgy1,pgz1
   real(mytype), save, allocatable, dimension(:,:,:) :: ta2,tb2,tc2,td2,&
   te2,tf2,tg2,th2,ti2,tj2,di2
   real(mytype), save, allocatable, dimension(:,:,:) :: pp2,ppi2,pgy2,pgz2,pgzi2,dip2
@@ -133,6 +134,10 @@ contains
     call alloc_x(td1);call alloc_x(te1);call alloc_x(tf1)
     call alloc_x(tg1);call alloc_x(th1);call alloc_x(ti1)
     call alloc_x(di1);call alloc_x(ep1)
+    
+    allocate(pp1(nxmsize,xsize(2),xsize(3)))
+    allocate(pgy1(nxmsize,xsize(2),xsize(3)))
+    allocate(pgz1(nxmsize,xsize(2),xsize(3)))
 
     !inflow/ouflow 2d arrays
     allocate(bxx1(xsize(2),xsize(3)),bxy1(xsize(2),xsize(3)))

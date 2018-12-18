@@ -239,32 +239,32 @@ end subroutine divergence
 !subroutine GRADP
 !Computation of the pressure gradient from the pressure mesh to the
 !velocity mesh
-!Saving pressure gradient on boundaries for correct imposition of
-!BCs on u* via the fractional step method
+!Saving pressure gradients on boundaries for correct imposition of
+!BCs on u* via the fractional step methodi (it is not possible to
+!impose BC after correction by pressure gradient otherwise lost of
+!incompressibility--> BCs are imposed on u*
 !written by SL 2018
 !********************************************************************  
-!*******************************************************************
-subroutine gradp(px1,py1,pz1,di1,pp3)
+subroutine gradp(px1,py1,pz1,pp3)
 
   USE param
   USE decomp_2d
   USE variables
   USE MPI
-  USE var, only: pp2,ppi2,pgy2,pgz2,pgzi2,dip2,pgz3,ppi3,dip3,nxmsize,nymsize,nzmsize
+  USE var, only: pp1,pgy1,pgz1,di1,pp2,ppi2,pgy2,pgz2,pgzi2,dip2,&
+          pgz3,ppi3,dip3,nxmsize,nymsize,nzmsize
 #ifdef FORCES
   USE forces, only : ppi1
 #endif
   
   implicit none
 
-  integer :: i,j,k,ijk,code
+  integer :: i,j,k,code
   integer, dimension(2) :: dims, dummy_coords
   logical, dimension(2) :: dummy_periods
 
   real(mytype),dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize) :: pp3
-  !X PENCILS NXM NY NZ  -->NX NY NZ
-  real(mytype),dimension(nxmsize,xsize(2),xsize(3)) :: td1,te1,tf1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: px1,py1,pz1,di1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: px1,py1,pz1
 
   !WORK Z-PENCILS
   call interiz6(ppi3,pp3,dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
@@ -285,19 +285,19 @@ subroutine gradp(px1,py1,pz1,di1,pp3)
 
   !WORK X-PENCILS
 
-  call transpose_y_to_x(ppi2,td1,ph2) !nxm ny nz
-  call transpose_y_to_x(pgy2,te1,ph2)
-  call transpose_y_to_x(pgzi2,tf1,ph2)
+  call transpose_y_to_x(ppi2,pp1,ph2) !nxm ny nz
+  call transpose_y_to_x(pgy2,pgy1,ph2)
+  call transpose_y_to_x(pgzi2,pgz1,ph2)
 
-  call deci6(px1,td1,di1,sx,cfip6,csip6,cwip6,cfx6,csx6,cwx6,&
+  call deci6(px1,pp1,di1,sx,cfip6,csip6,cwip6,cfx6,csx6,cwx6,&
   nxmsize,xsize(1),xsize(2),xsize(3),1)
-  call interi6(py1,te1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
+  call interi6(py1,pgy1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
   nxmsize,xsize(1),xsize(2),xsize(3),1)
-  call interi6(pz1,tf1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
+  call interi6(pz1,pgz1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
   nxmsize,xsize(1),xsize(2),xsize(3),1)
 
 #ifdef FORCES
-  call interi6(ppi1,td1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
+  call interi6(ppi1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
   nxmsize,xsize(1),xsize(2),xsize(3),1)
 #endif
   
