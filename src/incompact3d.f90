@@ -167,8 +167,7 @@ PROGRAM incompact3d
         call poisson(pp3)
 
         !Z-->Y-->X
-        call gradp(px1,py1,pz1,di1,td2,tf2,ta2,tb2,tc2,di2,&
-             tc3,di3,pp3,nxmsize,nymsize,nzmsize)
+        call gradp(px1,py1,pz1,di1,pp3)
 
         !X PENCILS
         call corpg(ux1,uy1,uz1,px1,py1,pz1)

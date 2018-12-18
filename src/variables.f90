@@ -72,8 +72,10 @@ module var
   te1,tf1,tg1,th1,ti1,di1
   real(mytype), save, allocatable, dimension(:,:,:) :: ta2,tb2,tc2,td2,&
   te2,tf2,tg2,th2,ti2,tj2,di2
+  real(mytype), save, allocatable, dimension(:,:,:) :: pp2,ppi2,pgy2,pgz2,pgzi2,dip2
   real(mytype), save, allocatable, dimension(:,:,:) :: ta3,tb3,tc3,td3,&
-  te3,tf3,tg3,th3,ti3,di3,pgz3,ppi3
+  te3,tf3,tg3,th3,ti3,di3
+  real(mytype), save, allocatable, dimension(:,:,:) :: pgz3,ppi3,dip3
 
   integer, save :: nxmsize, nymsize, nzmsize
 
@@ -187,7 +189,12 @@ contains
     call alloc_y(tg2);call alloc_y(th2);call alloc_y(ti2)
     call alloc_y(tj2);call alloc_y(di2)
     allocate(phi2(ysize(1),ysize(2),ysize(3),1:nphi))
-
+    allocate(pgz2(ph3%yst(1):ph3%yen(1),nymsize,ysize(3)))
+    allocate(pp2(ph3%yst(1):ph3%yen(1),nymsize,ysize(3)))
+    allocate(dip2(ph3%yst(1):ph3%yen(1),ysize(2),ysize(3)))
+    allocate(ppi2(ph3%yst(1):ph3%yen(1),ysize(2),ysize(3)))
+    allocate(pgy2(ph3%yst(1):ph3%yen(1),ysize(2),ysize(3)))
+    allocate(pgzi2(ph3%yst(1):ph3%yen(1),ysize(2),ysize(3)))
 
     !Z PENCILS
     call alloc_z(ux3);call alloc_z(uy3);call alloc_z(uz3)
@@ -197,7 +204,8 @@ contains
     call alloc_z(di3)
     allocate(phi3(zsize(1),zsize(2),zsize(3),1:nphi))
     allocate(pgz3(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),zsize(3)))
-
+    allocate(ppi3(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),zsize(3)))
+    allocate(dip3(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),zsize(3)))
     ! if all periodic
     !   allocate (pp3(ph%zst(1):ph%zen(1),ph%zst(2):ph%zen(2),ph%zst(3):ph%zen(3)))
     !   allocate (dv3(ph%zst(1):ph%zen(1),ph%zst(2):ph%zen(2),ph%zst(3):ph%zen(3)))

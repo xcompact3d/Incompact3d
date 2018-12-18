@@ -244,57 +244,50 @@ end subroutine divergence
 !written by SL 2018
 !********************************************************************  
 !*******************************************************************
-subroutine gradp(px1,py1,pz1,di1,td2,tf2,ta2,tb2,tc2,di2,&
-  tc3,di3,pp3,nxmsize,nymsize,nzmsize)
+subroutine gradp(px1,py1,pz1,di1,pp3)
 
   USE param
   USE decomp_2d
   USE variables
   USE MPI
-  USE var, only: pgz3
+  USE var, only: pp2,ppi2,pgy2,pgz2,pgzi2,dip2,pgz3,ppi3,dip3,nxmsize,nymsize,nzmsize
 #ifdef FORCES
   USE forces, only : ppi1
 #endif
   
   implicit none
 
-!  TYPE(DECOMP_INFO) :: ph2,ph3
-  integer :: i,j,k,ijk,nxmsize,nymsize,nzmsize,code
+  integer :: i,j,k,ijk,code
   integer, dimension(2) :: dims, dummy_coords
   logical, dimension(2) :: dummy_periods
 
   real(mytype),dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize) :: pp3
-  !Z PENCILS NXM NYM NZM-->NXM NYM NZ
-  real(mytype),dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),zsize(3)) :: tc3,di3
-  !Y PENCILS NXM NYM NZ -->NXM NY NZ
-  real(mytype),dimension(ph3%yst(1):ph3%yen(1),nymsize,ysize(3)) :: ta2,tc2
-  real(mytype),dimension(ph3%yst(1):ph3%yen(1),ysize(2),ysize(3)) :: tb2,td2,tf2,di2
   !X PENCILS NXM NY NZ  -->NX NY NZ
   real(mytype),dimension(nxmsize,xsize(2),xsize(3)) :: td1,te1,tf1
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: px1,py1,pz1,di1
 
   !WORK Z-PENCILS
-  call interiz6(pgz3,pp3,di3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
+  call interiz6(ppi3,pp3,dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
   (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
-  call deciz6(tc3,pp3,di3,sz,cfip6z,csip6z,cwip6z,cfz6,csz6,cwz6,&
+  call deciz6(pgz3,pp3,dip3,sz,cfip6z,csip6z,cwip6z,cfz6,csz6,cwz6,&
   (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
 
   !WORK Y-PENCILS
-  call transpose_z_to_y(pgz3,ta2,ph3) !nxm nym nz
-  call transpose_z_to_y(tc3,tc2,ph3)
+  call transpose_z_to_y(pgz3,pgz2,ph3) !nxm nym nz
+  call transpose_z_to_y(ppi3,pp2,ph3)
 
-  call interiy6(tb2,ta2,di2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
+  call interiy6(ppi2,pp2,dip2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
   (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
-  call deciy6(td2,ta2,di2,sy,cfip6y,csip6y,cwip6y,cfy6,csy6,cwy6,ppy,&
+  call deciy6(pgy2,pp2,dip2,sy,cfip6y,csip6y,cwip6y,cfy6,csy6,cwy6,ppy,&
   (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
-  call interiy6(tf2,tc2,di2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
+  call interiy6(pgzi2,pgz2,dip2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
   (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
 
   !WORK X-PENCILS
 
-  call transpose_y_to_x(tb2,td1,ph2) !nxm ny nz
-  call transpose_y_to_x(td2,te1,ph2)
-  call transpose_y_to_x(tf2,tf1,ph2)
+  call transpose_y_to_x(ppi2,td1,ph2) !nxm ny nz
+  call transpose_y_to_x(pgy2,te1,ph2)
+  call transpose_y_to_x(pgzi2,tf1,ph2)
 
   call deci6(px1,td1,di1,sx,cfip6,csip6,cwip6,cfx6,csx6,cwx6,&
   nxmsize,xsize(1),xsize(2),xsize(3),1)
