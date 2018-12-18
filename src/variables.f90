@@ -331,7 +331,7 @@ contains
 
     adt(:)=zero ; bdt(:)=zero ; cdt(:)=zero ; gdt(:)=zero
     if (nscheme.eq.1) then ! Euler
-       iavance_temps=1 
+       iadvance_time=1 
        adt(1)=1.0_mytype*dt
        bdt(1)=0.0_mytype*dt
        gdt(1)=adt(1)+bdt(1)
@@ -339,7 +339,7 @@ contains
 
        ntime = 1
     elseif (nscheme.eq.2) then ! AB2
-       iavance_temps=1 
+       iadvance_time=1 
        adt(1)=1.5_mytype*dt
        bdt(1)=-0.5_mytype*dt
        gdt(1)=adt(1)+bdt(1)
@@ -356,7 +356,7 @@ contains
 
        ntime = 3
     elseif(nschema==4) then  ! AB4
-       iavance_temps=1 
+       iadvance_time=1 
        adt(1)=(55.0_mytype/24.0_mytype)*dt
        bdt(1)=-(59.0_mytype/24.0_mytype)*dt
        cdt(1)=(37.0_mytype/24.0_mytype)*dt
@@ -379,7 +379,7 @@ contains
 
        ntime = 2
     elseif(nscheme.eq.6) then !RK4 Carpenter and Kennedy
-       iadvance_temp=5 
+       iadvance_time=5 
        adt(1)=0.0_mytype
        adt(2)=-0.4178904745_mytype
        adt(3)=-1.192151694643_mytype
