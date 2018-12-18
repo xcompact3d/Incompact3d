@@ -130,13 +130,13 @@ subroutine corpg (ux,uy,uz,px,py,pz)
 end subroutine corpg
 !********************************************************************
 subroutine divergence (ux1,uy1,uz1,ep1,ta1,tb1,tc1,di1,td1,te1,tf1,&
-  td2,te2,tf2,di2,ta2,tb2,tc2,pp3,&
+  pp3,&
   nxmsize,nymsize,nzmsize,nlock)
 
   USE param
   USE decomp_2d
   USE variables
-  USE var, ONLY: dip3, ppi3, pgz3, po3
+  USE var, ONLY: pgy2, pgzi2, ppi2, pp2, pgz2, dip2, ppi3, pgz3, po3, dip3
   USE MPI
 
   implicit none
@@ -146,9 +146,6 @@ subroutine divergence (ux1,uy1,uz1,ep1,ta1,tb1,tc1,di1,td1,te1,tf1,&
   !X PENCILS NX NY NZ  -->NXM NY NZ
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ta1,tb1,tc1,di1,ux1,uy1,uz1,ep1
   real(mytype),dimension(nxmsize,xsize(2),xsize(3)) :: td1,te1,tf1
-  !Y PENCILS NXM NY NZ  -->NXM NYM NZ
-  real(mytype),dimension(ph1%yst(1):ph1%yen(1),ysize(2),ysize(3)) :: td2,te2,tf2,di2
-  real(mytype),dimension(ph1%yst(1):ph1%yen(1),nymsize,ysize(3)) :: ta2,tb2,tc2
   !Z PENCILS NXM NYM NZ  -->NXM NYM NZM
   real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: pp3
 
@@ -173,20 +170,21 @@ subroutine divergence (ux1,uy1,uz1,ep1,ta1,tb1,tc1,di1,td1,te1,tf1,&
   call inter6(te1,tb1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
   call inter6(tf1,tc1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
 
-  call transpose_x_to_y(td1,td2,ph4)!->NXM NY NZ
-  call transpose_x_to_y(te1,te2,ph4)
-  call transpose_x_to_y(tf1,tf2,ph4)
+  call transpose_x_to_y(td1,ppi2,ph4)!->NXM NY NZ
+  call transpose_x_to_y(te1,pgy2,ph4)
+  call transpose_x_to_y(tf1,pgzi2,ph4)
 
   !WORK Y-PENCILS
-  call intery6(ta2,td2,di2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
-  call decy6(tb2,te2,di2,sy,cfy6,csy6,cwy6,ppyi,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),0)
-  call intery6(tc2,tf2,di2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
+  call intery6(pp2,ppi2,dip2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
+  call decy6(pgz2,pgy2,dip2,sy,cfy6,csy6,cwy6,ppyi,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),0)
 
   !! Compute sum dudx + dvdy
-  ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
+  pp2(:,:,:) = pp2(:,:,:) + pgz2(:,:,:)
+
+  call intery6(pgz2,pgzi2,dip2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
   
-  call transpose_y_to_z(ta2,ppi3,ph3)!->NXM NYM NZ
-  call transpose_y_to_z(tc2,pgz3,ph3)
+  call transpose_y_to_z(pp2,ppi3,ph3)!->NXM NYM NZ
+  call transpose_y_to_z(pgz2,pgz3,ph3)
 
   !WORK Z-PENCILS
   call interz6(pp3,ppi3,dip3,sz,cifzp6,ciszp6,ciwzp6,(ph1%zen(1)-ph1%zst(1)+1),&

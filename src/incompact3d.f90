@@ -160,7 +160,7 @@ PROGRAM incompact3d
 
         !X-->Y-->Z
         call divergence (ux1,uy1,uz1,ep1,ta1,tb1,tc1,di1,td1,te1,tf1,&
-             td2,te2,tf2,di2,ta2,tb2,tc2,pp3,&
+             pp3,&
              nxmsize,nymsize,nzmsize,1)
 
         !POISSON Z-->Z
@@ -175,7 +175,7 @@ PROGRAM incompact3d
         if (mod(itime,itest)==0) then
            !does not matter --> output=DIV U=0 (in dv3)
            call divergence(ux1,uy1,uz1,ep1,ta1,tb1,tc1,di1,td1,te1,tf1,&
-                td2,te2,tf2,di2,ta2,tb2,tc2,dv3,&
+                dv3,&
                 nxmsize,nymsize,nzmsize,2)
 
            call test_speed_min_max(ux1,uy1,uz1)
