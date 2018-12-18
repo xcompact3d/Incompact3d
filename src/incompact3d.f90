@@ -168,7 +168,7 @@ PROGRAM incompact3d
              ta3,tc3,di3,pp3,nxmsize,nymsize,nzmsize,ph2,ph3)
 
         !X PENCILS
-        call corgp(ux1,ux2,uy1,uz1,px1,py1,pz1)
+        call corpg(ux1,uy1,uz1,px1,py1,pz1)
 
         if (mod(itime,itest)==0) then
            !does not matter --> output=DIV U=0 (in dv3)

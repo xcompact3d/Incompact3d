@@ -102,29 +102,32 @@ if (nscheme.eq.2) then !AB3
 #endif
 
 end subroutine intt
-!********************************************************************
-subroutine corgp (ux,gx,uy,uz,px,py,pz)
 
+!********************************************************************
+!subroutine CORPG
+!Correction of u* by the pressure gradient to get a divergence free
+!field
+!written by SL 2018
+!********************************************************************    
+subroutine corpg (ux,uy,uz,px,py,pz)
+  
   USE decomp_2d
   USE variables
   USE param
-  USE var
+  USE var, only: ta2
   USE MPI
-
+  
   implicit none
 
   integer :: ijk,nxyz
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,px,py,pz
-  real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: gx
 
-  do ijk=1,xsize(1)*xsize(2)*xsize(3)
-    ux(ijk,1,1)=-px(ijk,1,1)+ux(ijk,1,1)
-    uy(ijk,1,1)=-py(ijk,1,1)+uy(ijk,1,1)
-    uz(ijk,1,1)=-pz(ijk,1,1)+uz(ijk,1,1)
-  enddo
-
+  ux(:,:,:)=-px(:,:,:)+ux(:,:,:)
+  uy(:,:,:)=-py(:,:,:)+uy(:,:,:)
+  uz(:,:,:)=-pz(:,:,:)+uz(:,:,:)
+  
   return
-end subroutine corgp
+end subroutine corpg
 !********************************************************************
 subroutine divergence (ux1,uy1,uz1,ep1,ta1,tb1,tc1,di1,td1,te1,tf1,&
   td2,te2,tf2,di2,ta2,tb2,tc2,ta3,tb3,tc3,di3,td3,te3,tf3,pp3,&
@@ -230,14 +233,25 @@ subroutine divergence (ux1,uy1,uz1,ep1,ta1,tb1,tc1,di1,td1,te1,tf1,&
 
   return
 end subroutine divergence
+
+
+!********************************************************************
+!subroutine GRADP
+!Computation of the pressure gradient from the pressure mesh to the
+!velocity mesh
+!Saving pressure gradient on boundaries for correct imposition of
+!BCs on u* via the fractional step method
+!written by SL 2018
+!********************************************************************  
 !*******************************************************************
-subroutine gradp(ta1,tb1,tc1,di1,td2,tf2,ta2,tb2,tc2,di2,&
+subroutine gradp(px1,py1,pz1,di1,td2,tf2,ta2,tb2,tc2,di2,&
   ta3,tc3,di3,pp3,nxmsize,nymsize,nzmsize,ph2,ph3)
 
   USE param
   USE decomp_2d
   USE variables
   USE MPI
+  USE var, only: 
 #ifdef FORCES
   USE forces, only : ppi1
 #endif
@@ -257,7 +271,7 @@ subroutine gradp(ta1,tb1,tc1,di1,td2,tf2,ta2,tb2,tc2,di2,&
   real(mytype),dimension(ph3%yst(1):ph3%yen(1),ysize(2),ysize(3)) :: tb2,td2,tf2,di2
   !X PENCILS NXM NY NZ  -->NX NY NZ
   real(mytype),dimension(nxmsize,xsize(2),xsize(3)) :: td1,te1,tf1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ta1,tb1,tc1,di1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: px1,py1,pz1,di1
 
   !WORK Z-PENCILS
   call interiz6(ta3,pp3,di3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
@@ -282,11 +296,11 @@ subroutine gradp(ta1,tb1,tc1,di1,td2,tf2,ta2,tb2,tc2,di2,&
   call transpose_y_to_x(td2,te1,ph2)
   call transpose_y_to_x(tf2,tf1,ph2)
 
-  call deci6(ta1,td1,di1,sx,cfip6,csip6,cwip6,cfx6,csx6,cwx6,&
+  call deci6(px1,td1,di1,sx,cfip6,csip6,cwip6,cfx6,csx6,cwx6,&
   nxmsize,xsize(1),xsize(2),xsize(3),1)
-  call interi6(tb1,te1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
+  call interi6(py1,te1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
   nxmsize,xsize(1),xsize(2),xsize(3),1)
-  call interi6(tc1,tf1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
+  call interi6(pz1,tf1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
   nxmsize,xsize(1),xsize(2),xsize(3),1)
 
 #ifdef FORCES
@@ -298,16 +312,16 @@ subroutine gradp(ta1,tb1,tc1,di1,td2,tf2,ta2,tb2,tc2,di2,&
   if (nclx1.eq.2) then
     do k=1,xsize(3)
       do j=1,xsize(2)
-        dpdyx1(j,k)=tb1(1,j,k)/gdt(itr)
-        dpdzx1(j,k)=tc1(1,j,k)/gdt(itr)
+        dpdyx1(j,k)=py1(1,j,k)/gdt(itr)
+        dpdzx1(j,k)=pz1(1,j,k)/gdt(itr)
       enddo
     enddo
   endif
   if (nclxn.eq.2) then
     do k=1,xsize(3)
       do j=1,xsize(2)
-        dpdyxn(j,k)=tb1(nx,j,k)/gdt(itr)
-        dpdzxn(j,k)=tc1(nx,j,k)/gdt(itr)
+        dpdyxn(j,k)=py1(nx,j,k)/gdt(itr)
+        dpdzxn(j,k)=pz1(nx,j,k)/gdt(itr)
       enddo
     enddo
   endif
@@ -316,8 +330,8 @@ subroutine gradp(ta1,tb1,tc1,di1,td2,tf2,ta2,tb2,tc2,di2,&
     if (xsize(2)==1) then
       do k=1,xsize(3)
         do i=1,xsize(1)
-          dpdxy1(i,k)=ta1(i,1,k)/gdt(itr)
-          dpdzy1(i,k)=tc1(i,1,k)/gdt(itr)
+          dpdxy1(i,k)=px1(i,1,k)/gdt(itr)
+          dpdzy1(i,k)=pz1(i,1,k)/gdt(itr)
         enddo
       enddo
     endif
@@ -326,8 +340,8 @@ subroutine gradp(ta1,tb1,tc1,di1,td2,tf2,ta2,tb2,tc2,di2,&
     if (xsize(2)==ny) then
       do k=1,xsize(3)
         do i=1,xsize(1)
-          dpdxyn(i,k)=ta1(i,ny,k)/gdt(itr)
-          dpdzyn(i,k)=tc1(i,ny,k)/gdt(itr)
+          dpdxyn(i,k)=px1(i,ny,k)/gdt(itr)
+          dpdzyn(i,k)=pz1(i,ny,k)/gdt(itr)
         enddo
       enddo
     endif
@@ -337,8 +351,8 @@ subroutine gradp(ta1,tb1,tc1,di1,td2,tf2,ta2,tb2,tc2,di2,&
     if (xstart(3)==1) then
       do j=1,xsize(2)
         do i=1,xsize(1)
-          dpdxz1(i,j)=tb1(i,j,1)/gdt(itr)
-          dpdyz1(i,j)=tc1(i,j,1)/gdt(itr)
+          dpdxz1(i,j)=py1(i,j,1)/gdt(itr)
+          dpdyz1(i,j)=pz1(i,j,1)/gdt(itr)
         enddo
       enddo
     endif
@@ -347,8 +361,8 @@ subroutine gradp(ta1,tb1,tc1,di1,td2,tf2,ta2,tb2,tc2,di2,&
     if (xend(3)==nz) then
       do j=1,xsize(2)
         do i=1,xsize(1)
-          dpdxzn(i,j)=tb1(i,j,xsize(3))/gdt(itr)
-          dpdyzn(i,j)=tc1(i,j,xsize(3))/gdt(itr)
+          dpdxzn(i,j)=py1(i,j,xsize(3))/gdt(itr)
+          dpdyzn(i,j)=pz1(i,j,xsize(3))/gdt(itr)
         enddo
       enddo
     endif
