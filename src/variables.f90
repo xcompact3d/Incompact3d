@@ -73,10 +73,10 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:) :: pp1,pgy1,pgz1
   real(mytype), save, allocatable, dimension(:,:,:) :: ta2,tb2,tc2,td2,&
   te2,tf2,tg2,th2,ti2,tj2,di2
-  real(mytype), save, allocatable, dimension(:,:,:) :: pp2,ppi2,pgy2,pgz2,pgzi2,dip2
+  real(mytype), save, allocatable, dimension(:,:,:) :: pp2,ppi2,pgy2,pgz2,pgzi2,dip2,dipp2,duxdxp2,uyp2,uzp2,upi2,duydypi2
   real(mytype), save, allocatable, dimension(:,:,:) :: ta3,tb3,tc3,td3,&
   te3,tf3,tg3,th3,ti3,di3
-  real(mytype), save, allocatable, dimension(:,:,:) :: pgz3,ppi3,dip3
+  real(mytype), save, allocatable, dimension(:,:,:) :: pgz3,ppi3,dip3,dipp3,duxydxyp3,uzp3
 
   integer, save :: nxmsize, nymsize, nzmsize
 
@@ -201,6 +201,13 @@ contains
     allocate(pgy2(ph3%yst(1):ph3%yen(1),ysize(2),ysize(3)))
     allocate(pgzi2(ph3%yst(1):ph3%yen(1),ysize(2),ysize(3)))
 
+    allocate(duxdxp2(ph1%yst(1):ph1%yen(1),ysize(2),ysize(3)))
+    allocate(uyp2(ph1%yst(1):ph1%yen(1),ysize(2),ysize(3)))
+    allocate(uzp2(ph1%yst(1):ph1%yen(1),ysize(2),ysize(3)))
+    allocate(dipp2(ph1%yst(1):ph1%yen(1),ysize(2),ysize(3)))
+    allocate(upi2(ph1%yst(1):ph1%yen(1),nymsize,ysize(3)))
+    allocate(duydypi2(ph1%yst(1):ph1%yen(1),nymsize,ysize(3)))
+
     !Z PENCILS
     call alloc_z(ux3);call alloc_z(uy3);call alloc_z(uz3)
     call alloc_z(ta3);call alloc_z(tb3);call alloc_z(tc3)
@@ -211,6 +218,11 @@ contains
     allocate(pgz3(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),zsize(3)))
     allocate(ppi3(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),zsize(3)))
     allocate(dip3(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),zsize(3)))
+
+    allocate(duxydxyp3(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),zsize(3)))
+    allocate(uzp3(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),zsize(3)))
+    allocate(dipp3(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),zsize(3)))
+    
     ! if all periodic
     !   allocate (pp3(ph%zst(1):ph%zen(1),ph%zst(2):ph%zen(2),ph%zst(3):ph%zen(3)))
     !   allocate (dv3(ph%zst(1):ph%zen(1),ph%zst(2):ph%zen(2),ph%zst(3):ph%zen(3)))

@@ -136,8 +136,8 @@ subroutine divergence (ux1,uy1,uz1,ep1,pp3,&
   USE decomp_2d
   USE variables
   USE var, ONLY: ta1, tb1, tc1, pp1, pgy1, pgz1, di1, &
-       pgy2, pgzi2, ppi2, pp2, pgz2, dip2, &
-       ppi3, pgz3, po3, dip3
+       duxdxp2, uyp2, uzp2, duydypi2, upi2, dipp2, &
+       duxydxyp3, uzp3, po3, dipp3
   USE MPI
 
   implicit none
@@ -172,26 +172,26 @@ subroutine divergence (ux1,uy1,uz1,ep1,pp3,&
   call inter6(pgy1,tb1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
   call inter6(pgz1,tc1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
 
-  call transpose_x_to_y(pp1,ppi2,ph4)!->NXM NY NZ
-  call transpose_x_to_y(pgy1,pgy2,ph4)
-  call transpose_x_to_y(pgz1,pgzi2,ph4)
+  call transpose_x_to_y(pp1,duxdxp2,ph4)!->NXM NY NZ
+  call transpose_x_to_y(pgy1,uyp2,ph4)
+  call transpose_x_to_y(pgz1,uzp2,ph4)
 
   !WORK Y-PENCILS
-  call intery6(pp2,ppi2,dip2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
-  call decy6(pgz2,pgy2,dip2,sy,cfy6,csy6,cwy6,ppyi,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),0)
+  call intery6(upi2,duxdxp2,dipp2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
+  call decy6(duydypi2,uyp2,dipp2,sy,cfy6,csy6,cwy6,ppyi,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),0)
 
   !! Compute sum dudx + dvdy
-  pp2(:,:,:) = pp2(:,:,:) + pgz2(:,:,:)
+  duydypi2(:,:,:) = duydypi2(:,:,:) + upi2(:,:,:)
 
-  call intery6(pgz2,pgzi2,dip2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
+  call intery6(upi2,uzp2,dipp2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
   
-  call transpose_y_to_z(pp2,ppi3,ph3)!->NXM NYM NZ
-  call transpose_y_to_z(pgz2,pgz3,ph3)
+  call transpose_y_to_z(duydypi2,duxydxyp3,ph3)!->NXM NYM NZ
+  call transpose_y_to_z(upi2,uzp3,ph3)
 
   !WORK Z-PENCILS
-  call interz6(pp3,ppi3,dip3,sz,cifzp6,ciszp6,ciwzp6,(ph1%zen(1)-ph1%zst(1)+1),&
+  call interz6(pp3,duxydxyp3,dipp3,sz,cifzp6,ciszp6,ciwzp6,(ph1%zen(1)-ph1%zst(1)+1),&
   (ph1%zen(2)-ph1%zst(2)+1),zsize(3),nzmsize,1)
-  call decz6(po3,pgz3,dip3,sz,cfz6,csz6,cwz6,(ph1%zen(1)-ph1%zst(1)+1),&
+  call decz6(po3,uzp3,dipp3,sz,cfz6,csz6,cwz6,(ph1%zen(1)-ph1%zst(1)+1),&
   (ph1%zen(2)-ph1%zst(2)+1),zsize(3),nzmsize,0)
 
   !! Compute sum dudx + dvdy + dwdz
@@ -236,6 +236,9 @@ end subroutine divergence
 !BCs on u* via the fractional step methodi (it is not possible to
 !impose BC after correction by pressure gradient otherwise lost of
 !incompressibility--> BCs are imposed on u*
+!
+! INPUT: pp3 - pressure field (on pressure mesh)
+! OUTPUT: px1, py1, pz1 - pressure gradients (on velocity mesh)
 !written by SL 2018
 !********************************************************************  
 subroutine gradp(px1,py1,pz1,pp3)
