@@ -1,0 +1,328 @@
+<?xml version="1.0" ?>
+ <!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>
+ <Xdmf xmlns:xi="http://www.w3.org/2001/XInclude" Version="2.0">
+ <Domain>
+     <Topology name="topo" TopologyType="3DCoRectMesh"
+         Dimensions="           1          81          81 ">
+     </Topology>
+     <Geometry name="geo" Type="ORIGIN_DXDYDZ">
+         <!-- Origin -->
+         <DataItem Format="XML" Dimensions="3">
+         0.0 0.0 0.0
+         </DataItem>
+         <!-- DxDyDz -->
+         <DataItem Format="XML" Dimensions="3">
+            0.00000000       3.9269908169872414E-002   3.9269908169872414E-002
+         </DataItem>
+     </Geometry>
+
+
+     <Grid Name="TimeSeries" GridType="Collection" CollectionType="Temporal">
+         <Time TimeType="HyperSlab">
+             <DataItem Format="XML" NumberType="Float" Dimensions="3">
+            <!--Start, Stride, Count-->
+             0.0   5.00000024E-04
+             </DataItem>
+         </Time>
+
+
+         <Grid Name="0000" GridType="Uniform">
+             <Topology Reference="/Xdmf/Domain/Topology[1]"/>
+             <Geometry Reference="/Xdmf/Domain/Geometry[1]"/>
+             <Attribute Name="phim1" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/phim10000
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uxm" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uxm0000
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uym" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uym0000
+                </DataItem>
+             </Attribute>
+         </Grid>
+
+
+         <Grid Name="0001" GridType="Uniform">
+             <Topology Reference="/Xdmf/Domain/Topology[1]"/>
+             <Geometry Reference="/Xdmf/Domain/Geometry[1]"/>
+             <Attribute Name="phim1" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/phim10001
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uxm" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uxm0001
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uym" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uym0001
+                </DataItem>
+             </Attribute>
+         </Grid>
+
+
+         <Grid Name="0002" GridType="Uniform">
+             <Topology Reference="/Xdmf/Domain/Topology[1]"/>
+             <Geometry Reference="/Xdmf/Domain/Geometry[1]"/>
+             <Attribute Name="phim1" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/phim10002
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uxm" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uxm0002
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uym" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uym0002
+                </DataItem>
+             </Attribute>
+         </Grid>
+
+
+         <Grid Name="0003" GridType="Uniform">
+             <Topology Reference="/Xdmf/Domain/Topology[1]"/>
+             <Geometry Reference="/Xdmf/Domain/Geometry[1]"/>
+             <Attribute Name="phim1" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/phim10003
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uxm" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uxm0003
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uym" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uym0003
+                </DataItem>
+             </Attribute>
+         </Grid>
+
+
+         <Grid Name="0004" GridType="Uniform">
+             <Topology Reference="/Xdmf/Domain/Topology[1]"/>
+             <Geometry Reference="/Xdmf/Domain/Geometry[1]"/>
+             <Attribute Name="phim1" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/phim10004
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uxm" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uxm0004
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uym" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uym0004
+                </DataItem>
+             </Attribute>
+         </Grid>
+
+
+         <Grid Name="0005" GridType="Uniform">
+             <Topology Reference="/Xdmf/Domain/Topology[1]"/>
+             <Geometry Reference="/Xdmf/Domain/Geometry[1]"/>
+             <Attribute Name="phim1" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/phim10005
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uxm" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uxm0005
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uym" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uym0005
+                </DataItem>
+             </Attribute>
+         </Grid>
+
+
+         <Grid Name="0006" GridType="Uniform">
+             <Topology Reference="/Xdmf/Domain/Topology[1]"/>
+             <Geometry Reference="/Xdmf/Domain/Geometry[1]"/>
+             <Attribute Name="phim1" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/phim10006
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uxm" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uxm0006
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uym" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uym0006
+                </DataItem>
+             </Attribute>
+         </Grid>
+
+
+         <Grid Name="0007" GridType="Uniform">
+             <Topology Reference="/Xdmf/Domain/Topology[1]"/>
+             <Geometry Reference="/Xdmf/Domain/Geometry[1]"/>
+             <Attribute Name="phim1" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/phim10007
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uxm" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uxm0007
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uym" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uym0007
+                </DataItem>
+             </Attribute>
+         </Grid>
+
+
+         <Grid Name="0008" GridType="Uniform">
+             <Topology Reference="/Xdmf/Domain/Topology[1]"/>
+             <Geometry Reference="/Xdmf/Domain/Geometry[1]"/>
+             <Attribute Name="phim1" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/phim10008
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uxm" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uxm0008
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uym" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uym0008
+                </DataItem>
+             </Attribute>
+         </Grid>
+
+
+         <Grid Name="0009" GridType="Uniform">
+             <Topology Reference="/Xdmf/Domain/Topology[1]"/>
+             <Geometry Reference="/Xdmf/Domain/Geometry[1]"/>
+             <Attribute Name="phim1" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/phim10009
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uxm" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uxm0009
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uym" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uym0009
+                </DataItem>
+             </Attribute>
+         </Grid>
+
+
+         <Grid Name="0010" GridType="Uniform">
+             <Topology Reference="/Xdmf/Domain/Topology[1]"/>
+             <Geometry Reference="/Xdmf/Domain/Geometry[1]"/>
+             <Attribute Name="phim1" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/phim10010
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uxm" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uxm0010
+                </DataItem>
+             </Attribute>
+             <Attribute Name="uym" Center="Node">
+                <DataItem Format="Binary" 
+                 DataType="Float" Precision="8" Endian="little" Seek="0"
+                 Dimensions="           1          81          81 ">
+                   ./data/uym0010
+                </DataItem>
+             </Attribute>
+         </Grid>
+
+
+     </Grid>
+ </Domain>
+</Xdmf>
