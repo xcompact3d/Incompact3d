@@ -47,7 +47,8 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:) :: gx1, gy1, gz1, hx1, hy1, hz1
   real(mytype), save, allocatable, dimension(:,:,:) :: px1, py1, pz1
   real(mytype), save, allocatable, dimension(:,:,:) :: ep1, diss1, pre1, depo, depof, kine
-
+  real(mytype), save, allocatable, dimension(:,:,:,:) :: dux1,duy1,duz1  ! Output of convdiff
+  
   !arrays for post processing
   real(mytype), save, allocatable, dimension(:,:,:) :: f1,fm1
   real(mytype), save, allocatable, dimension(:,:,:) :: uxm1, uym1, phim1, prem1, dissm1
@@ -305,22 +306,46 @@ contains
     endif
 
     adt(:)=zero ; bdt(:)=zero ; cdt(:)=zero ; gdt(:)=zero
-    if (nscheme.eq.1) then !AB2
-       iadvance_time=1
-       adt(1)=1.5_mytype*dt
-       bdt(1)=-0.5_mytype*dt
-       gdt(1)=adt(1)+bdt(1)
-       gdt(3)=gdt(1)
-    endif
-    if (nscheme.eq.2) then !AB3
-       iadvance_time=1
-       adt(1)= (23._mytype/12._mytype)*dt
-       bdt(1)=-(16._mytype/12._mytype)*dt
-       cdt(1)= ( 5._mytype/12._mytype)*dt
-       gdt(1)=adt(1)+bdt(1)+cdt(1)
-       gdt(3)=gdt(1)
-    endif
-    if (nscheme.eq.3) then !RK3
+    if (nscheme.eq.1) then ! Euler
+   	iavance_temps=1 
+   	adt(1)=1.0_mytype*dt
+   	bdt(1)=0.0_mytype*dt
+   	gdt(1)=adt(1)+bdt(1)
+   	gdt(3)=gdt(1)        
+	allocate(dux1(xsize(1),xsize(2),xsize(3),1))
+	allocate(duy1(xsize(1),xsize(2),xsize(3),1))
+	allocate(duz1(xsize(1),xsize(2),xsize(3),1))
+    elseif (nscheme.eq.2) then ! AB2
+   	iavance_temps=1 
+   	adt(1)=1.5_mytype*dt
+   	bdt(1)=-0.5_mytype*dt
+   	gdt(1)=adt(1)+bdt(1)
+   	gdt(3)=gdt(1)
+	allocate(dux1(xsize(1),xsize(2),xsize(3),2))
+	allocate(duy1(xsize(1),xsize(2),xsize(3),2))
+	allocate(duz1(xsize(1),xsize(2),xsize(3),2))
+    elseif (nscheme.eq.3) then ! AB3
+       	iadvance_time=1
+       	adt(1)= (23._mytype/12._mytype)*dt
+       	bdt(1)=-(16._mytype/12._mytype)*dt
+       	cdt(1)= ( 5._mytype/12._mytype)*dt
+       	gdt(1)=adt(1)+bdt(1)+cdt(1)
+       	gdt(3)=gdt(1)
+	allocate(dux1(xsize(1),xsize(2),xsize(3),3))
+	allocate(duy1(xsize(1),xsize(2),xsize(3),3))
+	allocate(duz1(xsize(1),xsize(2),xsize(3),3))
+    elseif(nschema==4) then  ! AB4
+   	iavance_temps=1 
+   	adt(1)=(55.0_mytype/24.0_mytype)*dt
+   	bdt(1)=-(59.0_mytype/24.0_mytype)*dt
+   	cdt(1)=(37.0_mytype/24.0_mytype)*dt
+   	ddt(1)=-(9.0_mytype/24.0_mytype)*dt
+   	gdt(1)=adt(1)+bdt(1)+cdt(1)+ddt(1)
+   	gdt(3)=gdt(1)
+	allocate(dux1(xsize(1),xsize(2),xsize(3),4))
+	allocate(duy1(xsize(1),xsize(2),xsize(3),4))
+	allocate(duz1(xsize(1),xsize(2),xsize(3),4))
+    elseif(nscheme.eq.5) then !RK3
        iadvance_time=3
        adt(1)=(8._mytype/15._mytype)*dt
        bdt(1)=0._mytype
@@ -331,7 +356,30 @@ contains
        adt(3)=(3._mytype/4._mytype)*dt
        bdt(3)=(-5._mytype/12._mytype)*dt
        gdt(3)=adt(3)+bdt(3)
-    endif
+	allocate(dux1(xsize(1),xsize(2),xsize(3),1))
+	allocate(duy1(xsize(1),xsize(2),xsize(3),1))
+	allocate(duz1(xsize(1),xsize(2),xsize(3),1))
+    elseif(nscheme.eq.6) then !RK4 Carpenter and Kennedy
+       iadvance_temp=5 
+       adt(1)=0.0_mytype
+       adt(2)=-0.4178904745_mytype
+       adt(3)=-1.192151694643_mytype
+       adt(4)=-1.697784692471_mytype
+       adt(5)=-1.514183444257_mytype
+       bdt(1)=0.1496590219993_mytype
+       bdt(2)=0.3792103129999_mytype
+       bdt(3)=0.8229550293869_mytype
+       bdt(4)=0.6994504559488_mytype
+       bdt(5)=0.1530572479681_mytype
+       gdt(1)=0.1496590219993_mytype*dt
+       gdt(2)=0.220741935365_mytype*dt
+       gdt(3)=0.25185480577_mytype*dt
+       gdt(4)=0.33602636754_mytype*dt
+       gdt(5)=0.041717869325_mytype*dt
+	allocate(dux1(xsize(1),xsize(2),xsize(3),2))
+	allocate(duy1(xsize(1),xsize(2),xsize(3),2))
+	allocate(duz1(xsize(1),xsize(2),xsize(3),2))
+      endif
     !TRIPPING PARAMES LOST HERE
     z_modes=int(zlz /zs_tr)
     allocate(h_coeff(z_modes))

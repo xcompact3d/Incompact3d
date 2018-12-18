@@ -1,107 +1,142 @@
-!******************************************************************
-subroutine  intt (ux,uy,uz,gx,gy,gz,hx,hy,hz,ta1,tb1,tc1)
+!************************************************************************
+! Time-marching subroutine used to advance the numerical solution in time  
+!
+! output: 
+! 
+! input: ux, uy, uz 
+! 
+!************************************************************************ 
+subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
 
   USE param
   USE variables
   USE decomp_2d
-
   implicit none
 
   integer :: ijk,nxyz
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: gx,gy,gz
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: hx,hy,hz
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ta1,tb1,tc1
 
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# intt start'
 #endif
 
-  nxyz=xsize(1)*xsize(2)*xsize(3)
+  !>>> Euler 
+if (nscheme.eq.1) then 
+	ux1(:,:,:)=gdt(itr)*dux1(:,:,:,1)+ux1(:,:,:) 
+	uy1(:,:,:)=gdt(itr)*duy1(:,:,:,1)+uy1(:,:,:)
+	uz1(:,:,:)=gdt(itr)*duz1(:,:,:,1)+uz1(:,:,:)
+!>>> Adam-Bashforth second order (AB2)
+elseif(nscheme.eq.2) then
+	! Do first time step with Euler
+      	if(itime.eq.1.and.ilit.eq.0) then
+  	ux1(:,:,:)=gdt(itr)*dux1(:,:,:,1)+ux1(:,:,:) 
+  	uy1(:,:,:)=gdt(itr)*duy1(:,:,:,1)+uy1(:,:,:)
+  	uz1(:,:,:)=gdt(itr)*duz1(:,:,:,1)+uz1(:,:,:)
+      	else
+  	ux1(:,:,:)=adt(itr)*dux1(:,:,:,1)+bdt(itr)*dux1(:,:,:,2)+ux1(:,:,:)
+  	uy1(:,:,:)=adt(itr)*duy1(:,:,:,1)+bdt(itr)*duy1(:,:,:,2)+uy1(:,:,:)
+  	uz1(:,:,:)=adt(itr)*duz1(:,:,:,1)+bdt(itr)*duz1(:,:,:,2)+uz1(:,:,:)
+      	endif	
+  	dux1(:,:,:,2)=dux1(:,:,:,1) 
+  	duy1(:,:,:,2)=duy1(:,:,:,1) 
+  	duz1(:,:,:,2)=duz1(:,:,:,1) 
+!>>> Adams-Bashforth third order (AB3) 
+elseif(nscheme.eq.3) then
+	! Do first time step with Euler
+      if(itime.eq.1.and.ilit.eq.0) then
+  	ux1(:,:,:)=dt*dux1(:,:,:,1)+ux1(:,:,:)
+  	uy1(:,:,:)=dt*duy1(:,:,:,1)+uy1(:,:,:)
+  	uz1(:,:,:)=dt*duz1(:,:,:,1)+uz1(:,:,:)
+      	! Do second time step with AB2
+      	elseif(itime.eq.2.and.ilit.eq.0) then
+      	ux1(:,:,:)=onepfive*dt*dux1(:,:,:,1)-half*dt*dux1(:,:,:,2)+ux1(:,:,:)
+      	uy1(:,:,:)=onepfive*dt*duy1(:,:,:,1)-half*dt*duy1(:,:,:,2)+uy1(:,:,:)
+      	uz1(:,:,:)=onepfive*dt*duz1(:,:,:,1)-half*dt*duz1(:,:,:,2)+uz1(:,:,:)
+  	dux1(:,:,:,3)=dux1(:,:,:,2) 
+  	duy1(:,:,:,3)=duy1(:,:,:,2) 
+  	duz1(:,:,:,3)=duz1(:,:,:,2) 
+      	! Finally using AB3
+      	else
+      	ux1(:,:,:)=adt(itr)*dux1(:,:,:,1)+bdt(itr)*dux1(:,:,:,2)+cdt(itr)*dux1(:,:,:,3)+ux1(:,:,:)
+      	uy1(:,:,:)=adt(itr)*duy1(:,:,:,1)+bdt(itr)*duy1(:,:,:,2)+cdt(itr)*duy1(:,:,:,3)+uy1(:,:,:)
+      	uz1(:,:,:)=adt(itr)*duz1(:,:,:,1)+bdt(itr)*duz1(:,:,:,2)+cdt(itr)*duz1(:,:,:,3)+uz1(:,:,:)
+  	dux1(:,:,:,3)=dux1(:,:,:,2) 
+  	duy1(:,:,:,3)=duy1(:,:,:,2) 
+  	duz1(:,:,:,3)=duz1(:,:,:,2) 
+      	endif	
+  	dux1(:,:,:,2)=dux1(:,:,:,1) 
+  	duy1(:,:,:,2)=duy1(:,:,:,1) 
+  	duz1(:,:,:,2)=duz1(:,:,:,1) 
+!>>> Adams-Bashforth fourth order (AB4)
+elseif(nscheme.eq.4) then
+	!if (itime.eq.1.and.ilit.eq.0) then
+      	!ux(:,:,:)=gdt(itr)*hx(:,:,:)+ux(:,:,:)
+      	!uy(:,:,:)=gdt(itr)*hy(:,:,:)+uy(:,:,:) 
+      	!uz(:,:,:)=gdt(itr)*hz(:,:,:)+uz(:,:,:)
+      	!gx(:,:,:)=hx(:,:,:)
+      	!gy(:,:,:)=hy(:,:,:)
+      	!gz(:,:,:)=hz(:,:,:)            
+	!elseif (itime.eq.2.and.ilit.eq.0) then 	   
+      	!ux(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+ux(:,:,:)
+      	!uy(:,:,:)=adt(itr)*hy(:,:,:)+bdt(itr)*gy(:,:,:)+uy(:,:,:)   
+      	!uz(:,:,:)=adt(itr)*hz(:,:,:)+bdt(itr)*gz(:,:,:)+uz(:,:,:)
+      	!gox(:,:,:)=gx(:,:,:)
+      	!goy(:,:,:)=gy(:,:,:)
+      	!goz(:,:,:)=gz(:,:,:)
+      	!gx(:,:,:)=hx(:,:,:)
+      	!gy(:,:,:)=hy(:,:,:)
+      	!gz(:,:,:)=hz(:,:,:)            
+	!elseif (itime.eq.3.and.ilit.eq.0) then 
+      	!ux(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+cdt(itr)*gox(:,:,:)+ux(:,:,:)
+      	!uy(:,:,:)=adt(itr)*hy(:,:,:)+bdt(itr)*gy(:,:,:)+cdt(itr)*goy(:,:,:)+uy(:,:,:)   
+      	!uz(:,:,:)=adt(itr)*hz(:,:,:)+bdt(itr)*gz(:,:,:)+cdt(itr)*goz(:,:,:)+uz(:,:,:)
+      	!gox(:,:,:)=gx(:,:,:)
+      	!goy(:,:,:)=gy(:,:,:)
+      	!goz(:,:,:)=gz(:,:,:)
+      	!gx(:,:,:)=hx(:,:,:)
+      	!gy(:,:,:)=hy(:,:,:)
+      	!gz(:,:,:)=hz(:,:,:)            
+	!else 
+      	!ux(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+cdt(itr)*gox(:,:,:)+ddt(itr)*gax(:,:,:)+ux(:,:,:)
+      	!uy(:,:,:)=adt(itr)*hy(:,:,:)+bdt(itr)*gy(:,:,:)+cdt(itr)*goy(:,:,:)+ddt(itr)*gay(:,:,:)+uy(:,:,:)   
+      	!uz(:,:,:)=adt(itr)*hz(:,:,:)+bdt(itr)*gz(:,:,:)+cdt(itr)*goz(:,:,:)+ddt(itr)*gaz(:,:,:)+uz(:,:,:)
+      	!gax(:,:,:)=gox(:,:,:)
+      	!gay(:,:,:)=goy(:,:,:)
+      	!gaz(:,:,:)=goz(:,:,:)		     
+      	!gox(:,:,:)=gx(:,:,:)
+      	!goy(:,:,:)=gy(:,:,:)
+      	!goz(:,:,:)=gz(:,:,:)
+      	!gx(:,:,:)=hx(:,:,:)
+      	!gy(:,:,:)=hy(:,:,:)
+      	!gz(:,:,:)=hz(:,:,:)            
+	!endif	
+!>>> Runge-Kutta (low storage) RK3
+elseif(nscheme.eq.5) then
+  	if(itr.eq.1) then
+  	ux1(:,:,:)=gdt(itr)*dux1(:,:,:,1)+ux1(:,:,:) 
+  	uy1(:,:,:)=gdt(itr)*duy1(:,:,:,1)+uy1(:,:,:)
+  	uz1(:,:,:)=gdt(itr)*duz1(:,:,:,1)+uz1(:,:,:)
+      	else
+  	ux1(:,:,:)=adt(itr)*dux1(:,:,:,1)+bdt(itr)*dux1(:,:,:,2)+ux1(:,:,:)
+  	uy1(:,:,:)=adt(itr)*duy1(:,:,:,1)+bdt(itr)*duy1(:,:,:,2)+uy1(:,:,:)
+  	uz1(:,:,:)=adt(itr)*duz1(:,:,:,1)+bdt(itr)*duz1(:,:,:,2)+uz1(:,:,:)
+      	endif	
+  	dux1(:,:,:,2)=dux1(:,:,:,1) 
+  	duy1(:,:,:,2)=duy1(:,:,:,1) 
+  	duz1(:,:,:,2)=duz1(:,:,:,1) 
+!>>> Runge-Kutta (low storage) RK4
+elseif(nscheme.eq.6) then
 
-  if ((nscheme.eq.1).or.(nscheme.eq.3)) then !AB2 or RK3
-    if ((nscheme.eq.1.and.itime.eq.1.and.ilit.eq.0).or.&
-    (nscheme.eq.3.and.itr.eq.1)) then
-    do ijk=1,nxyz
-      ux(ijk,1,1)=gdt(itr)*ta1(ijk,1,1)+ux(ijk,1,1)
-      uy(ijk,1,1)=gdt(itr)*tb1(ijk,1,1)+uy(ijk,1,1)
-      uz(ijk,1,1)=gdt(itr)*tc1(ijk,1,1)+uz(ijk,1,1)
-      gx(ijk,1,1)=ta1(ijk,1,1)
-      gy(ijk,1,1)=tb1(ijk,1,1)
-      gz(ijk,1,1)=tc1(ijk,1,1)
-    enddo
-  else
-    if (nz.gt.1) then
-      do ijk=1,nxyz
-        ux(ijk,1,1)=adt(itr)*ta1(ijk,1,1)+bdt(itr)*gx(ijk,1,1)+ux(ijk,1,1)
-        uy(ijk,1,1)=adt(itr)*tb1(ijk,1,1)+bdt(itr)*gy(ijk,1,1)+uy(ijk,1,1)
-        uz(ijk,1,1)=adt(itr)*tc1(ijk,1,1)+bdt(itr)*gz(ijk,1,1)+uz(ijk,1,1)
-        gx(ijk,1,1)=ta1(ijk,1,1)
-        gy(ijk,1,1)=tb1(ijk,1,1)
-        gz(ijk,1,1)=tc1(ijk,1,1)
-      enddo
-    else
-      do ijk=1,nxyz
-        ux(ijk,1,1)=adt(itr)*ta1(ijk,1,1)+bdt(itr)*gx(ijk,1,1)+ux(ijk,1,1)
-        uy(ijk,1,1)=adt(itr)*tb1(ijk,1,1)+bdt(itr)*gy(ijk,1,1)+uy(ijk,1,1)
-        gx(ijk,1,1)=ta1(ijk,1,1)
-        gy(ijk,1,1)=tb1(ijk,1,1)
-      enddo
-    endif
-  endif
 endif
-
-if (nscheme.eq.2) then !AB3
-  if ((itime.eq.1).and.(ilit.eq.0)) then
-    if (nrank==0) print *,'start with Euler',itime
-    do ijk=1,nxyz !start with Euler
-      ux(ijk,1,1)=dt*ta1(ijk,1,1)+ux(ijk,1,1)
-      uy(ijk,1,1)=dt*tb1(ijk,1,1)+uy(ijk,1,1)
-      uz(ijk,1,1)=dt*tc1(ijk,1,1)+uz(ijk,1,1)
-      gx(ijk,1,1)=ta1(ijk,1,1)
-      gy(ijk,1,1)=tb1(ijk,1,1)
-      gz(ijk,1,1)=tc1(ijk,1,1)
-    enddo
-  else
-    if  ((itime.eq.2).and.(ilit.eq.0)) then
-      if (nrank==0) print *,'then with AB2',itime
-        do ijk=1,nxyz
-          ux(ijk,1,1)=onepfive*dt*ta1(ijk,1,1)-half*dt*gx(ijk,1,1)+ux(ijk,1,1)
-          uy(ijk,1,1)=onepfive*dt*tb1(ijk,1,1)-half*dt*gy(ijk,1,1)+uy(ijk,1,1)
-          uz(ijk,1,1)=onepfive*dt*tc1(ijk,1,1)-half*dt*gz(ijk,1,1)+uz(ijk,1,1)
-          hx(ijk,1,1)=gx(ijk,1,1)
-          hy(ijk,1,1)=gy(ijk,1,1)
-          hz(ijk,1,1)=gz(ijk,1,1)
-          gx(ijk,1,1)=ta1(ijk,1,1)
-          gy(ijk,1,1)=tb1(ijk,1,1)
-          gz(ijk,1,1)=tc1(ijk,1,1)
-        enddo
-      else
-        do ijk=1,nxyz
-          ux(ijk,1,1)=adt(itr)*ta1(ijk,1,1)+bdt(itr)*gx(ijk,1,1)+&
-          cdt(itr)*hx(ijk,1,1)+ux(ijk,1,1)
-          uy(ijk,1,1)=adt(itr)*tb1(ijk,1,1)+bdt(itr)*gy(ijk,1,1)+&
-          cdt(itr)*hy(ijk,1,1)+uy(ijk,1,1)
-          uz(ijk,1,1)=adt(itr)*tc1(ijk,1,1)+bdt(itr)*gz(ijk,1,1)+&
-          cdt(itr)*hz(ijk,1,1)+uz(ijk,1,1)
-          hx(ijk,1,1)=gx(ijk,1,1)
-          hy(ijk,1,1)=gy(ijk,1,1)
-          hz(ijk,1,1)=gz(ijk,1,1)
-          gx(ijk,1,1)=ta1(ijk,1,1)
-          gy(ijk,1,1)=tb1(ijk,1,1)
-          gz(ijk,1,1)=tc1(ijk,1,1)
-        enddo
-      endif
-    endif
-  endif
-
-  return
 
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# intt done'
 #endif
+  
+return
 
-end subroutine intt
+end subroutine int_time_momentum
 
 !********************************************************************
 !subroutine CORPG

@@ -236,7 +236,7 @@ module param
 
   character :: filesauve*80, filenoise*80, &
   nchamp*80,filepath*80, fileturb*80, filevisu*80, datapath*80
-  real(mytype), dimension(5) :: adt,bdt,cdt,gdt
+  real(mytype), dimension(5) :: adt,bdt,cdt,ddt,gdt
 
   !VISU
   integer :: save_w,save_w1,save_w2,save_w3,save_qc,save_pc
