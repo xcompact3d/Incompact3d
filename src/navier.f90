@@ -129,14 +129,15 @@ subroutine corpg (ux,uy,uz,px,py,pz)
   return
 end subroutine corpg
 !********************************************************************
-subroutine divergence (ux1,uy1,uz1,ep1,ta1,tb1,tc1,di1,td1,te1,tf1,&
-  pp3,&
+subroutine divergence (ux1,uy1,uz1,ep1,pp3,&
   nxmsize,nymsize,nzmsize,nlock)
 
   USE param
   USE decomp_2d
   USE variables
-  USE var, ONLY: pgy2, pgzi2, ppi2, pp2, pgz2, dip2, ppi3, pgz3, po3, dip3
+  USE var, ONLY: ta1, tb1, tc1, pp1, pgy1, pgz1, di1, &
+       pgy2, pgzi2, ppi2, pp2, pgz2, dip2, &
+       ppi3, pgz3, po3, dip3
   USE MPI
 
   implicit none
@@ -144,8 +145,7 @@ subroutine divergence (ux1,uy1,uz1,ep1,ta1,tb1,tc1,di1,td1,te1,tf1,&
 !  TYPE(DECOMP_INFO) :: ph1,ph3,ph4
 
   !X PENCILS NX NY NZ  -->NXM NY NZ
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ta1,tb1,tc1,di1,ux1,uy1,uz1,ep1
-  real(mytype),dimension(nxmsize,xsize(2),xsize(3)) :: td1,te1,tf1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1,uy1,uz1,ep1
   !Z PENCILS NXM NYM NZ  -->NXM NYM NZM
   real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: pp3
 
@@ -153,26 +153,28 @@ subroutine divergence (ux1,uy1,uz1,ep1,ta1,tb1,tc1,di1,td1,te1,tf1,&
   integer :: nxmsize,nymsize,nzmsize,code
   real(mytype) :: tmax,tmoy,tmax1,tmoy1
 
-
   nvect1=xsize(1)*xsize(2)*xsize(3)
   nvect2=ysize(1)*ysize(2)*ysize(3)
   nvect3=(ph1%zen(1)-ph1%zst(1)+1)*(ph1%zen(2)-ph1%zst(2)+1)*nzmsize
 
-  if (ivirt.eq.0.and.ilag.eq.0) ep1(:,:,:)=zero
-  do ijk=1,nvect1
-    ta1(ijk,1,1)=(one-ep1(ijk,1,1))*ux1(ijk,1,1)
-    tb1(ijk,1,1)=(one-ep1(ijk,1,1))*uy1(ijk,1,1)
-    tc1(ijk,1,1)=(one-ep1(ijk,1,1))*uz1(ijk,1,1)
-  enddo
+  if (ivirt.eq.0.and.ilag.eq.0) then
+     ta1(:,:,:) = ux1(:,:,:)
+     tb1(:,:,:) = uy1(:,:,:)
+     tc1(:,:,:) = uz1(:,:,:)
+  else
+     ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)
+     tb1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:)
+     tc1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:)
+  endif
 
   !WORK X-PENCILS
-  call decx6(td1,ta1,di1,sx,cfx6,csx6,cwx6,xsize(1),nxmsize,xsize(2),xsize(3),0)
-  call inter6(te1,tb1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
-  call inter6(tf1,tc1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+  call decx6(pp1,ta1,di1,sx,cfx6,csx6,cwx6,xsize(1),nxmsize,xsize(2),xsize(3),0)
+  call inter6(pgy1,tb1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+  call inter6(pgz1,tc1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
 
-  call transpose_x_to_y(td1,ppi2,ph4)!->NXM NY NZ
-  call transpose_x_to_y(te1,pgy2,ph4)
-  call transpose_x_to_y(tf1,pgzi2,ph4)
+  call transpose_x_to_y(pp1,ppi2,ph4)!->NXM NY NZ
+  call transpose_x_to_y(pgy1,pgy2,ph4)
+  call transpose_x_to_y(pgz1,pgzi2,ph4)
 
   !WORK Y-PENCILS
   call intery6(pp2,ppi2,dip2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
