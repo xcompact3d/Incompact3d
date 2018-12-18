@@ -130,12 +130,13 @@ subroutine corpg (ux,uy,uz,px,py,pz)
 end subroutine corpg
 !********************************************************************
 subroutine divergence (ux1,uy1,uz1,ep1,ta1,tb1,tc1,di1,td1,te1,tf1,&
-  td2,te2,tf2,di2,ta2,tb2,tc2,ta3,tb3,tc3,di3,td3,te3,tf3,pp3,&
+  td2,te2,tf2,di2,ta2,tb2,tc2,pp3,&
   nxmsize,nymsize,nzmsize,nlock)
 
   USE param
   USE decomp_2d
   USE variables
+  USE var, ONLY: dip3, ppi3, pgz3, po3
   USE MPI
 
   implicit none
@@ -149,8 +150,7 @@ subroutine divergence (ux1,uy1,uz1,ep1,ta1,tb1,tc1,di1,td1,te1,tf1,&
   real(mytype),dimension(ph1%yst(1):ph1%yen(1),ysize(2),ysize(3)) :: td2,te2,tf2,di2
   real(mytype),dimension(ph1%yst(1):ph1%yen(1),nymsize,ysize(3)) :: ta2,tb2,tc2
   !Z PENCILS NXM NYM NZ  -->NXM NYM NZM
-  real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),zsize(3)) :: ta3,tb3,tc3,di3
-  real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: td3,te3,tf3,pp3
+  real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: pp3
 
   integer :: ijk,nvect1,nvect2,nvect3,i,j,k,nlock
   integer :: nxmsize,nymsize,nzmsize,code
@@ -177,32 +177,25 @@ subroutine divergence (ux1,uy1,uz1,ep1,ta1,tb1,tc1,di1,td1,te1,tf1,&
   call transpose_x_to_y(te1,te2,ph4)
   call transpose_x_to_y(tf1,tf2,ph4)
 
-
   !WORK Y-PENCILS
   call intery6(ta2,td2,di2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
   call decy6(tb2,te2,di2,sy,cfy6,csy6,cwy6,ppyi,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),0)
   call intery6(tc2,tf2,di2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
 
-  call transpose_y_to_z(ta2,ta3,ph3)!->NXM NYM NZ
-  call transpose_y_to_z(tb2,tb3,ph3)
-  call transpose_y_to_z(tc2,tc3,ph3)
-
+  !! Compute sum dudx + dvdy
+  ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
+  
+  call transpose_y_to_z(ta2,ppi3,ph3)!->NXM NYM NZ
+  call transpose_y_to_z(tc2,pgz3,ph3)
 
   !WORK Z-PENCILS
-  call interz6(td3,ta3,di3,sz,cifzp6,ciszp6,ciwzp6,(ph1%zen(1)-ph1%zst(1)+1),&
+  call interz6(pp3,ppi3,dip3,sz,cifzp6,ciszp6,ciwzp6,(ph1%zen(1)-ph1%zst(1)+1),&
   (ph1%zen(2)-ph1%zst(2)+1),zsize(3),nzmsize,1)
-  call interz6(te3,tb3,di3,sz,cifzp6,ciszp6,ciwzp6,(ph1%zen(1)-ph1%zst(1)+1),&
-  (ph1%zen(2)-ph1%zst(2)+1),zsize(3),nzmsize,1)
-  call decz6(tf3,tc3,di3,sz,cfz6,csz6,cwz6,(ph1%zen(1)-ph1%zst(1)+1),&
+  call decz6(po3,pgz3,dip3,sz,cfz6,csz6,cwz6,(ph1%zen(1)-ph1%zst(1)+1),&
   (ph1%zen(2)-ph1%zst(2)+1),zsize(3),nzmsize,0)
 
-  do k=1,nzmsize
-    do j=ph1%zst(2),ph1%zen(2)
-      do i=ph1%zst(1),ph1%zen(1)
-        pp3(i,j,k)=td3(i,j,k)+te3(i,j,k)+tf3(i,j,k)
-      enddo
-    enddo
-  enddo
+  !! Compute sum dudx + dvdy + dwdz
+  pp3(:,:,:) = pp3(:,:,:) + po3(:,:,:)
 
   if (nlock==2) then
     pp3(:,:,:)=pp3(:,:,:)-pp3(ph1%zst(1),ph1%zst(2),nzmsize)
