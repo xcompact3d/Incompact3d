@@ -131,7 +131,7 @@ end subroutine corpg
 !********************************************************************
 subroutine divergence (ux1,uy1,uz1,ep1,ta1,tb1,tc1,di1,td1,te1,tf1,&
   td2,te2,tf2,di2,ta2,tb2,tc2,ta3,tb3,tc3,di3,td3,te3,tf3,pp3,&
-  nxmsize,nymsize,nzmsize,ph1,ph3,ph4,nlock)
+  nxmsize,nymsize,nzmsize,nlock)
 
   USE param
   USE decomp_2d
@@ -140,7 +140,7 @@ subroutine divergence (ux1,uy1,uz1,ep1,ta1,tb1,tc1,di1,td1,te1,tf1,&
 
   implicit none
 
-  TYPE(DECOMP_INFO) :: ph1,ph3,ph4
+!  TYPE(DECOMP_INFO) :: ph1,ph3,ph4
 
   !X PENCILS NX NY NZ  -->NXM NY NZ
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ta1,tb1,tc1,di1,ux1,uy1,uz1,ep1
@@ -245,27 +245,27 @@ end subroutine divergence
 !********************************************************************  
 !*******************************************************************
 subroutine gradp(px1,py1,pz1,di1,td2,tf2,ta2,tb2,tc2,di2,&
-  ta3,tc3,di3,pp3,nxmsize,nymsize,nzmsize,ph2,ph3)
+  tc3,di3,pp3,nxmsize,nymsize,nzmsize)
 
   USE param
   USE decomp_2d
   USE variables
   USE MPI
-  USE var, only: 
+  USE var, only: pgz3
 #ifdef FORCES
   USE forces, only : ppi1
 #endif
   
   implicit none
 
-  TYPE(DECOMP_INFO) :: ph2,ph3
+!  TYPE(DECOMP_INFO) :: ph2,ph3
   integer :: i,j,k,ijk,nxmsize,nymsize,nzmsize,code
   integer, dimension(2) :: dims, dummy_coords
   logical, dimension(2) :: dummy_periods
 
   real(mytype),dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize) :: pp3
   !Z PENCILS NXM NYM NZM-->NXM NYM NZ
-  real(mytype),dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),zsize(3)) :: ta3,tc3,di3
+  real(mytype),dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),zsize(3)) :: tc3,di3
   !Y PENCILS NXM NYM NZ -->NXM NY NZ
   real(mytype),dimension(ph3%yst(1):ph3%yen(1),nymsize,ysize(3)) :: ta2,tc2
   real(mytype),dimension(ph3%yst(1):ph3%yen(1),ysize(2),ysize(3)) :: tb2,td2,tf2,di2
@@ -274,13 +274,13 @@ subroutine gradp(px1,py1,pz1,di1,td2,tf2,ta2,tb2,tc2,di2,&
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: px1,py1,pz1,di1
 
   !WORK Z-PENCILS
-  call interiz6(ta3,pp3,di3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
+  call interiz6(pgz3,pp3,di3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
   (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
   call deciz6(tc3,pp3,di3,sz,cfip6z,csip6z,cwip6z,cfz6,csz6,cwz6,&
   (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
 
   !WORK Y-PENCILS
-  call transpose_z_to_y(ta3,ta2,ph3) !nxm nym nz
+  call transpose_z_to_y(pgz3,ta2,ph3) !nxm nym nz
   call transpose_z_to_y(tc3,tc2,ph3)
 
   call interiy6(tb2,ta2,di2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
