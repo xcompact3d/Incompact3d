@@ -65,8 +65,7 @@ PROGRAM incompact3d
 
   if (ilit==0) call init(ux1,uy1,uz1,ep1,phi1,gx1,gy1,gz1,phis1,hx1,hy1,hz1,phiss1)
 
-  if (ilit==1) call restart(ux1,uy1,uz1,ep1,pp3,phi1,gx1,gy1,gz1,&
-       px1,py1,pz1,phis1,hx1,hy1,hz1,phiss1,phG,0)
+  if (ilit==1) call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,0)
 
 
 #ifdef IBM
@@ -96,17 +95,6 @@ PROGRAM incompact3d
   call test_speed_min_max(ux1,uy1,uz1)
   if (iscalar==1) call test_scalar_min_max(phi1)
 
-#ifdef STATS
-  u1sum=zero;v1sum=zero;w1sum=zero
-  u2sum=zero;v2sum=zero;w2sum=zero
-  u3sum=zero;v3sum=zero;w3sum=zero
-  u4sum=zero;v4sum=zero;w4sum=zero
-  uvsum=zero;uwsum=zero;vwsum=zero
-  upsum=zero;vpsum=zero;wpsum=zero
-  ppsum=zero; psum=zero; dudx=zero
-  u1sum_tik=zero;u1sum_tak=zero
-  tik1=zero;tik2=zero;tak1=zero;tak2=zero
-#endif
 
   tstart=zero;t1=zero;trank=zero;tranksum=zero;ttotal=zero
   call cpu_time(tstart)
@@ -124,31 +112,9 @@ PROGRAM incompact3d
      do itr=1,iadvance_time
 
         call boundary_conditions(ux1,uy1,uz1,phi1,ep1)
-
-        !X-->Y-->Z-->Y-->X
-        call convdiff(ux1,uy1,uz1,dux1,duy1,duz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
-             ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2,&
-             ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3,phi1,ep1,nut1)
-
-        if (iscalar==1) then
-#ifdef IMPLICIT
-           call scalarimp(ux1,uy1,uz1,phi1,phis1,phiss1,di1,tg1,th1,ti1,td1,&
-                uy2,uz2,phi2,di2,ta2,tb2,tc2,td2,uz3,phi3,di3,ta3,tb3)
-#else           
-           call scalar(ux1,uy1,uz1,phi1,phis1,phiss1,di1,tg1,th1,ti1,td1,&
-                uy2,uz2,phi2,di2,ta2,tb2,tc2,td2,uz3,phi3,di3,ta3,tb3,ep1,nut1)
-#endif
-        endif
-
-        !X PENCILS
-#ifdef IMPLICIT
-        call inttimp (ux1,uy1,uz1,gx1,gy1,gz1,hx1,hy1,hz1,ta1,tb1,tc1,px1,py1,pz1,&
-             td1,te1,tf1,ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2)
-#else           
+        call convdiff(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
         call int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
-#endif
         call pre_correc(ux1,uy1,uz1,ep1)
-
 #ifdef IBM
         if (ivirt==1) then !solid body old school
            !we are in X-pencil
@@ -157,23 +123,13 @@ PROGRAM incompact3d
            call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,2)
         endif
 #endif
-
-        !X-->Y-->Z
-        call divergence (ux1,uy1,uz1,ep1,pp3,1)
-
-        !POISSON Z-->Z
+        call divergence(ux1,uy1,uz1,ep1,pp3,1)
         call poisson(pp3)
-
-        !Z-->Y-->X
         call gradp(px1,py1,pz1,pp3)
-
-        !X PENCILS
         call corpg(ux1,uy1,uz1,px1,py1,pz1)
 
         if (mod(itime,itest)==0) then
-           !does not matter --> output=DIV U=0 (in dv3)
            call divergence(ux1,uy1,uz1,ep1,dv3,2)
-
            call test_speed_min_max(ux1,uy1,uz1)
            if (iscalar==1) call test_scalar_min_max(phi1)
         endif
@@ -223,10 +179,8 @@ PROGRAM incompact3d
      endif
 #endif
 
-#ifdef VISU
-     if (mod(itime,isave).eq.0) call restart(ux1,uy1,uz1,ep1,pp3,phi1,gx1,gy1,gz1,&
-          px1,py1,pz1,phis1,hx1,hy1,hz1,phiss1,phG,1)
-#endif
+     if (mod(itime,isave).eq.0) call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,0) 
+
      call cpu_time(trank)
 
      telapsed = (trank-tstart)/thirtysixthousand

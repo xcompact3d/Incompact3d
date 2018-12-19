@@ -271,8 +271,7 @@ endif
 return
 end subroutine test_speed_min_max
 !*******************************************************************
-subroutine restart(ux1,uy1,uz1,ep1,pp3,phi1,gx1,gy1,gz1,px1,py1,pz1,phis1,&
-     hx1,hy1,hz1,phiss1,irestart)
+subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,irestart)
 
   USE decomp_2d
   USE decomp_2d_io
@@ -285,10 +284,9 @@ subroutine restart(ux1,uy1,uz1,ep1,pp3,phi1,gx1,gy1,gz1,px1,py1,pz1,phis1,&
   integer :: i,j,k,irestart,nzmsize,fh,ierror,is,code
   integer :: ierror_o=0 !error to open sauve file during restart
   real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-  real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: gx1,gy1,gz1
-  real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: hx1,hy1,hz1
   real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: px1,py1,pz1
-  real(mytype), dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1, phis1, phiss1
+  real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
+  real(mytype), dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1
   real(mytype), dimension(phG%zst(1):phG%zen(1),phG%zst(2):phG%zen(2),phG%zst(3):phG%zen(3)) :: pp3
   integer (kind=MPI_OFFSET_KIND) :: filesize, disp
   real(mytype) :: xdt
@@ -302,191 +300,60 @@ subroutine restart(ux1,uy1,uz1,ep1,pp3,phi1,gx1,gy1,gz1,px1,py1,pz1,phis1,&
      !if (nrank==0) print *,'File size',real((s3df*16.)*1e-9,4),'GB'
   end if
 
-  write(filename,"('sauve',I7.7)") itime
-  write(filestart,"('sauve',I7.7)") ifirst-1
+  write(filename,"('restart',I7.7)") itime
+  write(filestart,"('restart',I7.7)") ifirst-1
 
-  if (iscalar==0) then
-     if (nscheme.ne.2) then !not AB3
-        if (irestart==1) then !write
-           call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
-                MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
-                fh, ierror)
-           filesize = 0_MPI_OFFSET_KIND
-           call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
-           disp = 0_MPI_OFFSET_KIND
-           call decomp_2d_write_var(fh,disp,1,ux1)
-           call decomp_2d_write_var(fh,disp,1,uy1)
-           call decomp_2d_write_var(fh,disp,1,uz1)
-           call decomp_2d_write_var(fh,disp,1,gx1)
-           call decomp_2d_write_var(fh,disp,1,gy1)
-           call decomp_2d_write_var(fh,disp,1,gz1)
-           call decomp_2d_write_var(fh,disp,1,px1)
-           call decomp_2d_write_var(fh,disp,1,py1)
-           call decomp_2d_write_var(fh,disp,1,pz1)
-           call decomp_2d_write_var(fh,disp,1,pp3,phG)
-           call MPI_FILE_CLOSE(fh,ierror)
-        else
-           if (nrank==0) print *,'RESTART from file:', filestart
-           call MPI_FILE_OPEN(MPI_COMM_WORLD, filestart, &
-                MPI_MODE_RDONLY, MPI_INFO_NULL, &
-                fh, ierror_o)
-           disp = 0_MPI_OFFSET_KIND
-           call decomp_2d_read_var(fh,disp,1,ux1)
-           call decomp_2d_read_var(fh,disp,1,uy1)
-           call decomp_2d_read_var(fh,disp,1,uz1)
-           call decomp_2d_read_var(fh,disp,1,gx1)
-           call decomp_2d_read_var(fh,disp,1,gy1)
-           call decomp_2d_read_var(fh,disp,1,gz1)
-           call decomp_2d_read_var(fh,disp,1,px1)
-           call decomp_2d_read_var(fh,disp,1,py1)
-           call decomp_2d_read_var(fh,disp,1,pz1)
-           call decomp_2d_read_var(fh,disp,1,pp3,phG)
-           call MPI_FILE_CLOSE(fh,ierror_o)
-        endif
-     else !AB3
-        if (irestart==1) then !write
-           call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
-                MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
-                fh, ierror)
-           filesize = 0_MPI_OFFSET_KIND
-           call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
-           disp = 0_MPI_OFFSET_KIND
-           call decomp_2d_write_var(fh,disp,1,ux1)
-           call decomp_2d_write_var(fh,disp,1,uy1)
-           call decomp_2d_write_var(fh,disp,1,uz1)
-           call decomp_2d_write_var(fh,disp,1,gx1)
-           call decomp_2d_write_var(fh,disp,1,gy1)
-           call decomp_2d_write_var(fh,disp,1,gz1)
-           call decomp_2d_write_var(fh,disp,1,hx1)
-           call decomp_2d_write_var(fh,disp,1,hy1)
-           call decomp_2d_write_var(fh,disp,1,hz1)
-           call decomp_2d_write_var(fh,disp,1,px1)
-           call decomp_2d_write_var(fh,disp,1,py1)
-           call decomp_2d_write_var(fh,disp,1,pz1)
-           call decomp_2d_write_var(fh,disp,1,pp3,phG)
-           call MPI_FILE_CLOSE(fh,ierror)
-        else
-           if (nrank==0) print *,'RESTART from file:', filestart
-           call MPI_FILE_OPEN(MPI_COMM_WORLD, filestart, &
-                MPI_MODE_RDONLY, MPI_INFO_NULL, &
-                fh, ierror_o)
-           disp = 0_MPI_OFFSET_KIND
-           call decomp_2d_read_var(fh,disp,1,ux1)
-           call decomp_2d_read_var(fh,disp,1,uy1)
-           call decomp_2d_read_var(fh,disp,1,uz1)
-           call decomp_2d_read_var(fh,disp,1,gx1)
-           call decomp_2d_read_var(fh,disp,1,gy1)
-           call decomp_2d_read_var(fh,disp,1,gz1)
-           call decomp_2d_read_var(fh,disp,1,hx1)
-           call decomp_2d_read_var(fh,disp,1,hy1)
-           call decomp_2d_read_var(fh,disp,1,hz1)
-           call decomp_2d_read_var(fh,disp,1,px1)
-           call decomp_2d_read_var(fh,disp,1,py1)
-           call decomp_2d_read_var(fh,disp,1,pz1)
-           call decomp_2d_read_var(fh,disp,1,pp3,phG)
-           call MPI_FILE_CLOSE(fh,ierror_o)
-        endif
+  if (irestart==1) then !write
+     call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
+          MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
+          fh, ierror)
+     filesize = 0_MPI_OFFSET_KIND
+     call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
+     disp = 0_MPI_OFFSET_KIND
+     call decomp_2d_write_var(fh,disp,1,ux1)
+     call decomp_2d_write_var(fh,disp,1,uy1)
+     call decomp_2d_write_var(fh,disp,1,uz1)
+     call decomp_2d_write_var(fh,disp,1,ep1)
+     do is=1, ntime
+        call decomp_2d_write_var(fh,disp,1,dux1(:,:,:,is))
+        call decomp_2d_write_var(fh,disp,1,duy1(:,:,:,is))
+        call decomp_2d_write_var(fh,disp,1,duz1(:,:,:,is))
+     end do
+     call decomp_2d_write_var(fh,disp,1,px1)
+     call decomp_2d_write_var(fh,disp,1,py1)
+     call decomp_2d_write_var(fh,disp,1,pz1)
+     call decomp_2d_write_var(fh,disp,1,pp3,phG)
+     if (iscalar==1) then
+        do is=1, nphi
+           call decomp_2d_write_var(fh,disp,1,phi1(:,:,:,is))
+        end do
      endif
-  else !SCALAR
-     if (nscheme.ne.2) then !not AB3
-        if (irestart==1) then !write
-           call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
-                MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
-                fh, ierror)
-           filesize = 0_MPI_OFFSET_KIND
-           call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
-           disp = 0_MPI_OFFSET_KIND
-           call decomp_2d_write_var(fh,disp,1,ux1)
-           call decomp_2d_write_var(fh,disp,1,uy1)
-           call decomp_2d_write_var(fh,disp,1,uz1)
-           call decomp_2d_write_var(fh,disp,1,gx1)
-           call decomp_2d_write_var(fh,disp,1,gy1)
-           call decomp_2d_write_var(fh,disp,1,gz1)
-           call decomp_2d_write_var(fh,disp,1,px1)
-           call decomp_2d_write_var(fh,disp,1,py1)
-           call decomp_2d_write_var(fh,disp,1,pz1)
-           call decomp_2d_write_var(fh,disp,1,pp3,phG)
-           do is=1, nphi
-              call decomp_2d_write_var(fh,disp,1,phi1(:,:,:,is))
-              call decomp_2d_write_var(fh,disp,1,phis1(:,:,:,is))
-           end do
-           call MPI_FILE_CLOSE(fh,ierror)
-        else
-           if (nrank==0) print *,'RESTART from file:', filestart
-           call MPI_FILE_OPEN(MPI_COMM_WORLD, filestart, &
-                MPI_MODE_RDONLY, MPI_INFO_NULL, &
-                fh, ierror_o)
-           disp = 0_MPI_OFFSET_KIND
-           call decomp_2d_read_var(fh,disp,1,ux1)
-           call decomp_2d_read_var(fh,disp,1,uy1)
-           call decomp_2d_read_var(fh,disp,1,uz1)
-           call decomp_2d_read_var(fh,disp,1,gx1)
-           call decomp_2d_read_var(fh,disp,1,gy1)
-           call decomp_2d_read_var(fh,disp,1,gz1)
-           call decomp_2d_read_var(fh,disp,1,px1)
-           call decomp_2d_read_var(fh,disp,1,py1)
-           call decomp_2d_read_var(fh,disp,1,pz1)
-           call decomp_2d_read_var(fh,disp,1,pp3,phG)
-           do is=1, nphi
-              call decomp_2d_read_var(fh,disp,1,phi1(:,:,:,is))
-              call decomp_2d_read_var(fh,disp,1,phis1(:,:,:,is))
-           end do
-           call MPI_FILE_CLOSE(fh,ierror_o)
-        endif
-     else !SCALAR + AB3
-        if (irestart==1) then !write
-           call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
-                MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
-                fh, ierror)
-           filesize = 0_MPI_OFFSET_KIND
-           call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
-           disp = 0_MPI_OFFSET_KIND
-           call decomp_2d_write_var(fh,disp,1,ux1)
-           call decomp_2d_write_var(fh,disp,1,uy1)
-           call decomp_2d_write_var(fh,disp,1,uz1)
-           call decomp_2d_write_var(fh,disp,1,gx1)
-           call decomp_2d_write_var(fh,disp,1,gy1)
-           call decomp_2d_write_var(fh,disp,1,gz1)
-           call decomp_2d_write_var(fh,disp,1,hx1)
-           call decomp_2d_write_var(fh,disp,1,hy1)
-           call decomp_2d_write_var(fh,disp,1,hz1)
-           call decomp_2d_write_var(fh,disp,1,px1)
-           call decomp_2d_write_var(fh,disp,1,py1)
-           call decomp_2d_write_var(fh,disp,1,pz1)
-           call decomp_2d_write_var(fh,disp,1,pp3,phG)
-           do is=1, nphi
-              call decomp_2d_write_var(fh,disp,1,phi1(:,:,:,is))
-              call decomp_2d_write_var(fh,disp,1,phis1(:,:,:,is))
-              call decomp_2d_write_var(fh,disp,1,phiss1(:,:,:,is))
-           end do
-           call MPI_FILE_CLOSE(fh,ierror)
-        else
-           if (nrank==0) print *,'RESTART from file:', filestart
-           call MPI_FILE_OPEN(MPI_COMM_WORLD, filestart, &
-                MPI_MODE_RDONLY, MPI_INFO_NULL, &
-                fh, ierror_o)
-           disp = 0_MPI_OFFSET_KIND
-           call decomp_2d_read_var(fh,disp,1,ux1)
-           call decomp_2d_read_var(fh,disp,1,uy1)
-           call decomp_2d_read_var(fh,disp,1,uz1)
-           call decomp_2d_read_var(fh,disp,1,gx1)
-           call decomp_2d_read_var(fh,disp,1,gy1)
-           call decomp_2d_read_var(fh,disp,1,gz1)
-           call decomp_2d_read_var(fh,disp,1,hx1)
-           call decomp_2d_read_var(fh,disp,1,hy1)
-           call decomp_2d_read_var(fh,disp,1,hz1)
-           call decomp_2d_read_var(fh,disp,1,px1)
-           call decomp_2d_read_var(fh,disp,1,py1)
-           call decomp_2d_read_var(fh,disp,1,pz1)
-           call decomp_2d_read_var(fh,disp,1,pp3,phG)
-           do is=1, nphi
-              call decomp_2d_read_var(fh,disp,1,phi1(:,:,:,is))
-              call decomp_2d_read_var(fh,disp,1,phis1(:,:,:,is))
-              call decomp_2d_read_var(fh,disp,1,phiss1(:,:,:,is))
-           end do
-           call MPI_FILE_CLOSE(fh,ierror_o)
-        endif
+     call MPI_FILE_CLOSE(fh,ierror)
+  else
+     if (nrank==0) print *,'RESTART from file:', filestart
+     call MPI_FILE_OPEN(MPI_COMM_WORLD, filestart, &
+          MPI_MODE_RDONLY, MPI_INFO_NULL, &
+          fh, ierror_o)
+     disp = 0_MPI_OFFSET_KIND
+     call decomp_2d_read_var(fh,disp,1,ux1)
+     call decomp_2d_read_var(fh,disp,1,uy1)
+     call decomp_2d_read_var(fh,disp,1,uz1)
+     call decomp_2d_read_var(fh,disp,1,ep1)     
+     do is=1, ntime
+        call decomp_2d_read_var(fh,disp,1,dux1(:,:,:,is))
+        call decomp_2d_read_var(fh,disp,1,duy1(:,:,:,is))
+        call decomp_2d_read_var(fh,disp,1,duz1(:,:,:,is))
+     end do
+     call decomp_2d_read_var(fh,disp,1,px1)
+     call decomp_2d_read_var(fh,disp,1,py1)
+     call decomp_2d_read_var(fh,disp,1,pz1)
+     call decomp_2d_read_var(fh,disp,1,pp3,phG)
+     if (iscalar==1) then
+        do is=1, nphi
+           call decomp_2d_read_var(fh,disp,1,phi1(:,:,:,is))
+        end do
      endif
+     call MPI_FILE_CLOSE(fh,ierror_o)
   endif
 
   if (nrank.eq.0) then
