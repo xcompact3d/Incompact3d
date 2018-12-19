@@ -1,0 +1,250 @@
+ In auto-tuning mode......
+ factors:            1           2
+ processor grid           1  by            2  time=   3.0616054000000000E-002
+ processor grid           2  by            1  time=   1.3278303999999998E-002
+ the best processor grid is probably            2  by            1
+ ===========================================================
+ ======================Incompact3d==========================
+ ===Copyright (c) 2018 Eric Lamballais and Sylvain Laizet===
+ ===Modified by Felipe Schuch and Ricardo Frantz============
+ ===========================================================
+ Git version        : b04b48c
+ 
+ (lx,ly,lz)=   3.1415926535897931        3.1415926535897931        3.1415926535897931     
+ (nx,ny,nz)=          81          81          81
+ (dx,dy,dz)=   3.9269908169872414E-002   3.9269908169872414E-002   3.9269908169872414E-002
+ (nx*ny*nz)=      531441
+ (p_row,p_col)=           0           0
+ 
+ Numerical precision: Double
+ Boundary condition : (nclx1 ,nclxn )=(1,1)
+                      (ncly1 ,nclyn )=(1,1)
+                      (nclz1 ,nclzn )=(1,1)
+ High and low speed : u1=  2.00 and u2=  1.00
+ Reynolds number Re :   5000.00000000
+ Time step dt       :      0.00050000
+ Spatial scheme     :     63.00000000
+                    : iLES
+ Temporal scheme    : Adams-bashforth 2
+ Scalar             : on
+ Boundary condition : (nclxS1,nclxSn)=(1,1)
+                      (nclyS1,nclySn)=(1,1)
+                      (nclzS1,nclzSn)=(1,1)
+ Particle fraction  : #1
+ Concentration      :      1.00000000
+ Richardson number  :      0.00000000
+ Settling velocity  :      0.00000000
+ Schmidt number     :      1.00000000
+ Immersed boundary  : off
+ 
+ Initializing variables...
+ Filled initial domain!
+ Writing XDMF files
+ ===========================================================
+ Writing snapshot =>           0
+ This simulation requieres  0.171635762     GB
+ Time in visu (s)  0.172020838    
+ Writing speed (MB/s)   99.7761459    
+ TRAP SIMPS Mp Mps   31.006276680273906        31.006276680273992     
+ U,V,W min=  -1.00000000      -1.00000000      -2.49998458E-02
+ U,V,W max=   1.00000000       1.00000000       2.49999855E-02
+ Phi1 min max=   1.00000000       1.00000000    
+ -----------------------------------------------------------
+ Time step =      1/     10, Time unit =   0.0005
+ DIV U* max mean=   2.44099474      0.442106307    
+  
+ ***** Using the generic FFT engine *****
+  
+ DIV U  max mean=   1.65201186E-13   2.14750550E-14
+ U,V,W min=  -1.00966489      -1.00811446      -3.26369442E-02
+ U,V,W max=   1.01161468       1.00795889       3.02522406E-02
+ Phi1 min max=   1.00000000       1.00000000    
+ TRAP SIMPS Mp Mps   31.006276680273906        31.006276680273992     
+ Time per this time step (s):  0.654905975    
+ Snapshot current/final            1          10
+ Writing XDMF files
+ ===========================================================
+ Writing snapshot =>           1
+ This simulation requieres  0.171635762     GB
+ Time in visu (s)  0.162294060    
+ Writing speed (MB/s)   105.756035    
+ Remaining time:******** h ** min
+ Elapsed time:         0 h  0 min
+ -----------------------------------------------------------
+ Time step =      2/     10, Time unit =   0.0010
+ DIV U* max mean=   5.42958975E-02   9.40546300E-03
+ DIV U  max mean=   1.58970059E-13   1.06158860E-14
+ U,V,W min=  -1.00949657      -1.00790310      -3.15312184E-02
+ U,V,W max=   1.01140451       1.00744188       2.93300077E-02
+ Phi1 min max=   1.00000000       1.00000000    
+ TRAP SIMPS Mp Mps   31.006276680273906        31.006276680273992     
+ Time per this time step (s):  0.629153013    
+ Snapshot current/final            2          10
+ Writing XDMF files
+ ===========================================================
+ Writing snapshot =>           2
+ This simulation requieres  0.171635762     GB
+ Time in visu (s)  0.152162477    
+ Writing speed (MB/s)   112.797684    
+ Remaining time:       0 h  0 min
+ Elapsed time:         0 h  0 min
+ -----------------------------------------------------------
+ Time step =      3/     10, Time unit =   0.0015
+ DIV U* max mean=   6.26886496E-03   6.82699203E-04
+ DIV U  max mean=   1.55708779E-13   1.05925781E-14
+ U,V,W min=  -1.00933468      -1.00774062      -3.04994602E-02
+ U,V,W max=   1.01112902       1.00703669       2.84639150E-02
+ Phi1 min max=   1.00000000       1.00000000    
+ TRAP SIMPS Mp Mps   31.006276680273906        31.006276680273992     
+ Time per this time step (s):  0.631820023    
+ Snapshot current/final            3          10
+ Writing XDMF files
+ ===========================================================
+ Writing snapshot =>           3
+ This simulation requieres  0.171635762     GB
+ Time in visu (s)  0.147480935    
+ Writing speed (MB/s)   116.378273    
+ Remaining time:       0 h  0 min
+ Elapsed time:         0 h  0 min
+ -----------------------------------------------------------
+ Time step =      4/     10, Time unit =   0.0020
+ DIV U* max mean=   5.94646391E-03   6.52934657E-04
+ DIV U  max mean=   1.73860926E-13   1.05151136E-14
+ U,V,W min=  -1.00917518      -1.00758088      -2.95380671E-02
+ U,V,W max=   1.01086760       1.00665247       2.76503265E-02
+ Phi1 min max=   1.00000000       1.00000000    
+ TRAP SIMPS Mp Mps   31.006276680273906        31.006276680273992     
+ Time per this time step (s):  0.628485024    
+ Snapshot current/final            4          10
+ Writing XDMF files
+ ===========================================================
+ Writing snapshot =>           4
+ This simulation requieres  0.171635762     GB
+ Time in visu (s)  0.147173196    
+ Writing speed (MB/s)   116.621620    
+ Remaining time:       0 h  0 min
+ Elapsed time:         0 h  0 min
+ -----------------------------------------------------------
+ Time step =      5/     10, Time unit =   0.0025
+ DIV U* max mean=   5.64251048E-03   6.25197194E-04
+ DIV U  max mean=   1.48672741E-13   1.04475119E-14
+ U,V,W min=  -1.00901711      -1.00742447      -2.86416803E-02
+ U,V,W max=   1.01061642       1.00628805       2.68851947E-02
+ Phi1 min max=   1.00000000       1.00000000    
+ TRAP SIMPS Mp Mps   31.006276680273906        31.006276680273992     
+ Time per this time step (s):  0.628588974    
+ Snapshot current/final            5          10
+ Writing XDMF files
+ ===========================================================
+ Writing snapshot =>           5
+ This simulation requieres  0.171635762     GB
+ Time in visu (s)  0.156500161    
+ Writing speed (MB/s)   109.671295    
+ Remaining time:       0 h  0 min
+ Elapsed time:         0 h  0 min
+ -----------------------------------------------------------
+ Time step =      6/     10, Time unit =   0.0030
+ DIV U* max mean=   5.35592064E-03   5.99305029E-04
+ DIV U  max mean=   1.58373314E-13   1.07016006E-14
+ U,V,W min=  -1.00886071      -1.00727141      -2.78054830E-02
+ U,V,W max=   1.01037478       1.00594199       2.61648893E-02
+ Phi1 min max=   1.00000000       1.00000000    
+ TRAP SIMPS Mp Mps   31.006276680273906        31.006276680273992     
+ Time per this time step (s):  0.629247010    
+ Snapshot current/final            6          10
+ Writing XDMF files
+ ===========================================================
+ Writing snapshot =>           6
+ This simulation requieres  0.171635762     GB
+ Time in visu (s)  0.149398789    
+ Writing speed (MB/s)   114.884308    
+ Remaining time:       0 h  0 min
+ Elapsed time:         0 h  0 min
+ -----------------------------------------------------------
+ Time step =      7/     10, Time unit =   0.0035
+ DIV U* max mean=   5.08562196E-03   5.75120212E-04
+ DIV U  max mean=   1.50154195E-13   1.05963839E-14
+ U,V,W min=  -1.00870645      -1.00712156      -2.70250365E-02
+ U,V,W max=   1.01014221       1.00561249       2.57985331E-02
+ Phi1 min max=   1.00000000       1.00000000    
+ TRAP SIMPS Mp Mps   31.006276680273906        31.006276680273992     
+ Time per this time step (s):  0.630271018    
+ Snapshot current/final            7          10
+ Writing XDMF files
+ ===========================================================
+ Writing snapshot =>           7
+ This simulation requieres  0.171635762     GB
+ Time in visu (s)  0.145860031    
+ Writing speed (MB/s)   117.671555    
+ Remaining time:       0 h  0 min
+ Elapsed time:         0 h  0 min
+ -----------------------------------------------------------
+ Time step =      8/     10, Time unit =   0.0040
+ DIV U* max mean=   4.83062770E-03   5.52541343E-04
+ DIV U  max mean=   1.51788304E-13   1.05798311E-14
+ U,V,W min=  -1.00855446      -1.00697470      -2.62962636E-02
+ U,V,W max=   1.00991809       1.00532448       2.55075432E-02
+ Phi1 min max=   1.00000000       1.00000000    
+ TRAP SIMPS Mp Mps   31.006276680273906        31.006276680273992     
+ Time per this time step (s):  0.637246013    
+ Snapshot current/final            8          10
+ Writing XDMF files
+ ===========================================================
+ Writing snapshot =>           8
+ This simulation requieres  0.171635762     GB
+ Time in visu (s)  0.146385536    
+ Writing speed (MB/s)   117.249130    
+ Remaining time:       0 h  0 min
+ Elapsed time:         0 h  0 min
+ -----------------------------------------------------------
+ Time step =      9/     10, Time unit =   0.0045
+ DIV U* max mean=   4.59001632E-03   5.31458238E-04
+ DIV U  max mean=   1.55576940E-13   1.05380089E-14
+ U,V,W min=  -1.00840497      -1.00683081      -2.56154034E-02
+ U,V,W max=   1.00970185       1.00534499       2.52256263E-02
+ Phi1 min max=   1.00000000       1.00000000    
+ TRAP SIMPS Mp Mps   31.006276680273906        31.006276680273992     
+ Time per this time step (s):  0.629594982    
+ Snapshot current/final            9          10
+ Writing XDMF files
+ ===========================================================
+ Writing snapshot =>           9
+ This simulation requieres  0.171635762     GB
+ Time in visu (s)  0.146420807    
+ Writing speed (MB/s)   117.220879    
+ Remaining time:       0 h  0 min
+ Elapsed time:         0 h  0 min
+ -----------------------------------------------------------
+ Time step =     10/     10, Time unit =   0.0050
+ DIV U* max mean=   4.36292309E-03   5.11775550E-04
+ DIV U  max mean=   1.52676483E-13   1.04880780E-14
+ U,V,W min=  -1.00825810      -1.00668967      -2.52268501E-02
+ U,V,W max=   1.00949299       1.00535977       2.49519181E-02
+ Phi1 min max=   1.00000000       1.00000000    
+ TRAP SIMPS Mp Mps   31.006276680273906        31.006276680273992     
+ Time per this time step (s):  0.629342020    
+ Snapshot current/final           10          10
+ Writing XDMF files
+ ===========================================================
+ Writing snapshot =>          10
+ This simulation requieres  0.171635762     GB
+ Time in visu (s)  0.147372395    
+ Writing speed (MB/s)   116.463982    
+ Remaining time:       0 h  0 min
+ Elapsed time:         0 h  0 min
+ ===========================================================
+ 
+ Good job! Incompact3d finished successfully!
+ 
+ 2DECOMP with p_row*p_col=           0           0
+ 
+ nx*ny*nz=      531441
+ nx,ny,nz=          81          81          81
+ dx,dy,dz=   3.9269908169872414E-002   3.9269908169872414E-002   3.9269908169872414E-002
+ 
+ Averaged time per step (s):  0.868910193    
+ Total wallclock (s):   7.82019186    
+ Total wallclock (m):  0.130336538    
+ Total wallclock (h):   2.17227545E-03
+ Total wallclock (d):   9.05109046E-05
+ 
