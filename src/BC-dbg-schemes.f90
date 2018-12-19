@@ -15,7 +15,7 @@ subroutine ft_parameter(arg)
   logical,intent(in) :: arg
   character :: a
 
-  open(10,file='../BC-dbg-schemes.prm',status='unknown',form='formatted')
+  open(10,file='BC-dbg-schemes.prm',status='unknown',form='formatted')
   read (10,*) a !
   read (10,*) a ! INCOMPACT 3D computational parameters
   read (10,*) a !
