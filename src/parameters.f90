@@ -158,9 +158,26 @@ subroutine parameter()
      if (jLES.eq.2) print *,'                   : Explicit Simple Smagorinsky'
      if (jLES.eq.3) print *,'                   : Explicit Wall-Adaptive LES'
      if (jLES.eq.4) print *,'                   : Explicit Dynamic Smagorinsky LES'
-     if (nscheme.eq.1) print *,'Temporal scheme    : Adams-bashforth 2'
-     if (nscheme.eq.2) print *,'Temporal scheme    : Adams-bashforth 3'
-     if (nscheme.eq.3) print *,'Temporal scheme    : Runge-Kutta 3'
+     if (nscheme.eq.1) then
+        print *,'Temporal scheme    : Forwards Euler'
+     elseif (nscheme.eq.2) then
+        print *,'Temporal scheme    : Adams-bashforth 2'
+     elseif (nscheme.eq.3) then
+        print *,'Temporal scheme    : Adams-bashforth 3'
+     elseif (nscheme.eq.4) then
+        print *,'Temporal scheme    : Adams-bashforth 4'
+        print *,'Error: Adams-bashforth 4 not implemented!'
+        stop
+     elseif (nscheme.eq.5) then
+        print *,'Temporal scheme    : Runge-kutta 3'
+     elseif (nscheme.eq.6) then
+        print *,'Temporal scheme    : Runge-kutta 4'
+        print *,'Error: Runge-kutta 4 not implemented!'
+        stop
+     else
+        print *,'Error: nscheme must be specified as 1-6'
+        stop
+     endif
      if (iscalar.eq.0) print *,'Scalar             : off'
      if (iscalar.eq.1) then
         print *,'Scalar             : on'
