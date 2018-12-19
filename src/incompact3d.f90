@@ -63,7 +63,7 @@ PROGRAM incompact3d
   call init_explicit_les()
 #endif
 
-  if (ilit==0) call init(ux1,uy1,uz1,ep1,phi1,gx1,gy1,gz1,phis1,hx1,hy1,hz1,phiss1)
+  if (ilit==0) call init(ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
 
   if (ilit==1) call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,0)
 

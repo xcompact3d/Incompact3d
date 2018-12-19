@@ -44,7 +44,6 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:) :: uy1, uy2, uy3
   real(mytype), save, allocatable, dimension(:,:,:) :: uz1, uz2, uz3
   real(mytype), save, allocatable, dimension(:,:,:,:) :: phi1, phi2, phi3, phis1, phiss1
-  real(mytype), save, allocatable, dimension(:,:,:) :: gx1, gy1, gz1, hx1, hy1, hz1
   real(mytype), save, allocatable, dimension(:,:,:) :: px1, py1, pz1
   real(mytype), save, allocatable, dimension(:,:,:) :: ep1, diss1, pre1, depo, depof, kine
   real(mytype), save, allocatable, dimension(:,:,:,:) :: dux1,duy1,duz1  ! Output of convdiff
@@ -129,8 +128,6 @@ contains
     allocate(phis1(xsize(1),xsize(2),xsize(3),1:nphi))
     allocate(phiss1(xsize(1),xsize(2),xsize(3),1:nphi))
 
-    call alloc_x(gx1);call alloc_x(gy1);call alloc_x(gz1)
-    call alloc_x(hx1);call alloc_x(hy1);call alloc_x(hz1)
     call alloc_x(ta1);call alloc_x(tb1);call alloc_x(tc1)
     call alloc_x(td1);call alloc_x(te1);call alloc_x(tf1)
     call alloc_x(tg1);call alloc_x(th1);call alloc_x(ti1)

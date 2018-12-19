@@ -79,7 +79,7 @@ subroutine ft_parameter(arg)
   return
 end subroutine ft_parameter
 !********************************************************************
-subroutine init (ux1,uy1,uz1,ep1,phi1,gx1,gy1,gz1,phis1,hx1,hy1,hz1,phiss1)
+subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
 
   USE decomp_2d
   USE decomp_2d_io
@@ -90,9 +90,8 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,gx1,gy1,gz1,phis1,hx1,hy1,hz1,phiss1)
   implicit none
 
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: gx1,gy1,gz1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: hx1,hy1,hz1
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1,phis1,phiss1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
 
   call debug_schemes()
 

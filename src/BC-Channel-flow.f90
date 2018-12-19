@@ -84,7 +84,7 @@ subroutine ft_parameter(arg)
   return
 end subroutine ft_parameter
 !********************************************************************
-subroutine init (ux1,uy1,uz1,ep1,phi1,gx1,gy1,gz1,phis1,hx1,hy1,hz1,phiss1)
+subroutine init (ux1,uy1,uz1,dux1,duy1,duz1,ep1,phi1,phis1,phiss1)
 
   USE decomp_2d
   USE decomp_2d_io
@@ -95,9 +95,8 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,gx1,gy1,gz1,phis1,hx1,hy1,hz1,phiss1)
   implicit none
 
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: gx1,gy1,gz1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: hx1,hy1,hz1
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1,phis1,phiss1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
 
   real(mytype) :: y,r,um,r3,x,z,h,ct
   real(mytype) :: cx0,cy0,cz0,hg,lg
@@ -148,12 +147,12 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,gx1,gy1,gz1,phis1,hx1,hy1,hz1,phiss1)
            ux1(i,j,k)=ux1(i,j,k)+bxx1(j,k)
            uy1(i,j,k)=uy1(i,j,k)+bxy1(j,k)
            uz1(i,j,k)=uz1(i,j,k)+bxz1(j,k)
-           gx1(i,j,k)=ux1(i,j,k)
-           gy1(i,j,k)=uy1(i,j,k)
-           gz1(i,j,k)=uz1(i,j,k)
-           hx1(i,j,k)=gx1(i,j,k)
-           hy1(i,j,k)=gy1(i,j,k)
-           hz1(i,j,k)=gz1(i,j,k)
+           dux1(i,j,k,1)=ux1(i,j,k)
+           duy1(i,j,k,1)=uy1(i,j,k)
+           duz1(i,j,k,1)=uz1(i,j,k)
+           dux1(i,j,k,2)=dux1(i,j,k,1)
+           duy1(i,j,k,2)=duy1(i,j,k,1)
+           duz1(i,j,k,2)=duz1(i,j,k,1)
         enddo
      enddo
   enddo
