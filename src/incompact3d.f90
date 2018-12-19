@@ -179,7 +179,7 @@ PROGRAM incompact3d
      endif
 #endif
 
-     if (mod(itime,isave).eq.0) call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,0) 
+     if (mod(itime,isave).eq.0) call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,1) 
 
      call cpu_time(trank)
 

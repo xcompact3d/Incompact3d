@@ -97,8 +97,8 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
   real(mytype) :: cx0,cy0,cz0,hg,lg
   integer :: k,j,i,ijk,fh,ierror,is,code
   integer (kind=MPI_OFFSET_KIND) :: disp
-
-  integer, dimension (67) :: seed
+  integer, dimension (:), allocatable :: seed
+  integer ::  isize
 
   if (iscalar==1) then
 
@@ -142,8 +142,10 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
         enddo
      enddo
 
-
-          call random_seed(put=seed)
+          call random_seed(size=isize)
+         allocate (seed(isize))
+        seed(:)=67
+         call random_seed(put=seed)
      !     call random_number(ux1)
      !     call random_number(uy1)
           call random_number(uz1)
