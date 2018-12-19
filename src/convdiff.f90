@@ -1,113 +1,28 @@
-subroutine convdiff(ux1,uy1,uz1,dux1,duy1,duz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
-     ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2,&
-     ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3,phi1,ep1,nut1)
+subroutine convdiff(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
 
   USE param
   USE variables
   USE decomp_2d
+  USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+  USE var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2
+  USE var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
 
   implicit none
 
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,sumphi,nut1,ep1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-  real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux2,uy2,uz2
-  real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2
-  real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: ux3,uy3,uz3
-  real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
 
   integer :: ijk,nvect1,nvect2,nvect3,i,j,k,is
 
-#ifdef ELES
-  !############################## EXPLICIT LES MODELLING #######
-
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: gxx1,gyx1,gzx1,gxy1,gyy1,gzy1,gxz1,gyz1,gzz1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: asxx1,asyy1,aszz1,asxy1,asxz1,asyz1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: sxx1,syy1,szz1,sxy1,sxz1,syz1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: srt_smag,sgsx1,sgsy1,sgsz1
-
-  sgsx1=zero; sgsy1=zero; sgsz1=zero; nut1=zero; srt_smag=zero
-
-
-     if (jLES==2) then !SMAG
-
-        call smag(ux1,uy1,uz1,gxx1,gyx1,gzx1,gxy1,gyy1,gzy1,gxz1,gyz1,gzz1,&
-             sxx1,syy1,szz1,sxy1,sxz1,syz1,srt_smag,nut1,ta2,ta3,di1,di2,di3)
-
-     elseif (jLES == 3) then !WALE
-
-        call smag(ux1,uy1,uz1,gxx1,gyx1,gzx1,gxy1,gyy1,gzy1,gxz1,gyz1,gzz1,&
-             sxx1,syy1,szz1,sxy1,sxz1,syz1,srt_smag,nut1,ta2,ta3,di1,di2,di3)
-
-        if (itime.gt.10) call wale(gxx1,gyx1,gzx1,gxy1,gyy1,gzy1,gxz1,gyz1,gzz1,srt_smag,nut1)
-
-     elseif (jLES==4) then !DSMAG
-
-        call smag(ux1,uy1,uz1,gxx1,gyx1,gzx1,gxy1,gyy1,gzy1,gxz1,gyz1,gzz1,&
-             sxx1,syy1,szz1,sxy1,sxz1,syz1,srt_smag,nut1,ta2,ta3,di1,di2,di3)
-
-        if (itime.gt.10) call dynsmag(ux1,uy1,uz1,ep1,sxx1,syy1,szz1,sxy1,sxz1,syz1,&
-                              srt_smag,nut1,di1,ta1,tb1,tc1,td1,ta2,tb2,tc2,td2,te2,tf2,&
-                              tg2,th2,ti2,di2,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3)
-     endif
-
-     call lesdiff(ux1,uy1,uz1,ep1,sxx1,syy1,szz1,sxy1,sxz1,syz1,nut1,&
-          sgsx1,sgsy1,sgsz1,ta1,td1,te1,tf1,di1,ta2,td2,te2,tf2,tj2,di2,&
-          ta3,td3,te3,tf3,di3)
-
-
-  ta1 = zero; tb1 = zero; tc1 = zero
-  td1 = zero; te1 = zero; tf1 = zero
-
-  ta2 = zero; tb2 = zero; tc2 = zero
-  td2 = zero; te2 = zero; tf2 = zero
-  tj2 = zero
-
-  ta3 = zero; tb3 = zero; tc3 = zero
-  td3 = zero; te3 = zero; tf3 = zero
-
-  !########################## ENDING EXPLIICIT LES TERMS ##################################
-#endif
-
-  nvect1 = xsize(1)*xsize(2)*xsize(3)
-  nvect2 = ysize(1)*ysize(2)*ysize(3)
-  nvect3 = zsize(1)*zsize(2)*zsize(3)
-
-  !u.rot(u)
+  !SKE SYMMETRIC FORM
   !WORK X-PENCILS
-  ! call derx (ta1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-  ! call derx (tb1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-  ! call transpose_x_to_y(ux1,ux2)
-  ! call transpose_x_to_y(uy1,uy2)
-  ! call transpose_x_to_y(uz1,uz2)
-  ! call transpose_x_to_y(ta1,ta2)
-  ! call transpose_x_to_y(tb1,tb2)
-  ! !WORK Y-PENCILS
-  ! call dery (tc2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1) 
-  ! call dery (td2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1) 
-  ! call transpose_y_to_z(ux2,ux3)
-  ! call transpose_y_to_z(uy2,uy3)
-  ! call transpose_y_to_z(uz2,uz3)
-  ! call transpose_y_to_z(ta2,ta3)
-  ! call transpose_y_to_z(tb2,tb3)
-  ! call transpose_y_to_z(tc2,tc3)
-  ! call transpose_y_to_z(td2,td3)
-  ! !WORK Z-PENCILS
-  ! call derz (te3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-  ! call derz (tf3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-  ! ta3 = uz3*(te3-tb3)-uy3*(ta3-tc3)
-  ! tb3 = ux3*(ta3-tc3)-uz3*(td3-tf3)
-  ! tc3 = uy3*(td3-tf3)-ux3*(te3-tb3)
-
-  !SKEW!
-  !WORK X-PENCILS
-  ta1 = ux1*ux1
-  tb1 = ux1*uy1
+  dux1(:,:,:,1) = ux1*ux1
+  duy1(:,:,:,1) = ux1*uy1
   tc1 = ux1*uz1
 
-  call derx (td1,ta1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-  call derx (te1,tb1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+  call derx (td1,dux1(:,:,:,1),di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+  call derx (te1,duy1(:,:,:,1),di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
   call derx (tf1,tc1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
   call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
   call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
@@ -250,15 +165,15 @@ subroutine convdiff(ux1,uy1,uz1,dux1,duy1,duz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,t
   tb1 = tb1 + te1 
   tc1 = tc1 + tf1
 
-  sumphi =  zero
+  di1 =  zero
   do is = 1, nphi
-     sumphi = sumphi  + phi1(:,:,:,is)*ri(is) !Mod. by Ricardo
+     di1 = di1  + phi1(:,:,:,is)*ri(is) !Mod. by Ricardo
   enddo
 
   !FINAL SUM: DIFF TERMS + CONV TERMS
-  dux1(:,:,:,1) = xnu*ta1(:,:,:) - tg1(:,:,:) + sumphi(:,:,:)*anglex  !+x
-  duy1(:,:,:,1) = xnu*tb1(:,:,:) - th1(:,:,:) - sumphi(:,:,:)*angley  !+y
-  duz1(:,:,:,1) = xnu*tc1(:,:,:) - ti1(:,:,:) !+- sumphi       !+z
+  dux1(:,:,:,1) = xnu*ta1(:,:,:) - tg1(:,:,:) + di1(:,:,:)*anglex  !+x
+  duy1(:,:,:,1) = xnu*tb1(:,:,:) - th1(:,:,:) - di1(:,:,:)*angley  !+y
+  duz1(:,:,:,1) = xnu*tc1(:,:,:) - ti1(:,:,:) !+- di1       !+z
 
   if (itime.lt.irotation) then
      if (nrank==0) print *,'Rotating turbulent channel!'
