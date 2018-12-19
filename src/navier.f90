@@ -1,9 +1,9 @@
 !************************************************************************
 ! Time-marching subroutine used to advance the numerical solution in time  
 !
-! output: 
+! input: dux1,duy1,duz1 
 ! 
-! input: ux, uy, uz 
+! input/output: ux, uy, uz 
 ! 
 !************************************************************************ 
 subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
@@ -145,6 +145,8 @@ end subroutine int_time_momentum
 !subroutine CORPG
 !Correction of u* by the pressure gradient to get a divergence free
 !field
+! input : px,py,pz
+! output : ux,uy,uz
 !written by SL 2018
 !********************************************************************    
 subroutine corpg (ux,uy,uz,px,py,pz)
@@ -167,6 +169,12 @@ subroutine corpg (ux,uy,uz,px,py,pz)
   return
 end subroutine corpg
 !********************************************************************
+!subroutine DIVERGENCe
+!Calculation of div u* for nlock=1 and of div u^{n+1} for nlock=2
+! input : ux1,uy1,uz1,ep1 (on velocity mesh)
+! output : pp3 (on pressure mesh)
+!written by SL 2018
+!******************************************************************** 
 subroutine divergence (ux1,uy1,uz1,ep1,pp3,nlock)
 
   USE param
@@ -274,8 +282,8 @@ end subroutine divergence
 !impose BC after correction by pressure gradient otherwise lost of
 !incompressibility--> BCs are imposed on u*
 !
-! INPUT: pp3 - pressure field (on pressure mesh)
-! OUTPUT: px1, py1, pz1 - pressure gradients (on velocity mesh)
+! input: pp3 - pressure field (on pressure mesh)
+! output: px1, py1, pz1 - pressure gradients (on velocity mesh)
 !written by SL 2018
 !********************************************************************  
 subroutine gradp(px1,py1,pz1,pp3)
@@ -684,144 +692,3 @@ subroutine body(ux1,uy1,uz1,ep1,arg)
 end subroutine body
 #endif
 !*******************************************************************
-subroutine square(ycenter,zcenter,xthick,xlenght,ux,uy,uz,esp)
-  USE param
-  USE decomp_2d
-  USE variables
-  implicit none
-  real(mytype), dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ux,uy,uz,esp
-  real(mytype) :: ycenter,zcenter,xthick,xlenght,slenght,xz1,xz2,xy1,xy2
-  integer :: j1,j2,z1,z2,iep,i,j,k,k1,k2,ilen
-
-  iep=int(xthick*ny/yly)
-  ilen=int(xlenght*ny/yly)
-
-  j1=int(ycenter*ny/yly)
-  k1=int(zcenter*nz/zlz)+ilen
-  k2=int(zcenter*nz/zlz)-ilen
-
-  do k=xstart(3),xend(3)
-    do j=xstart(2),xend(2)
-      do i=xstart(1),xend(1)
-        if ((k.ge.(k2-iep)).and.(k.le.(k1+iep))) then
-          if ((j.ge.(j1+ilen-iep)).and.(j.le.(j1+ilen+iep))) then
-            if ((i.ge.75).and.(i.le.83)) then
-              esp(i,j,k)=one
-              ux(i,j,k)=zero
-              uy(i,j,k)=zero
-              uz(i,j,k)=zero
-            endif
-          endif
-        endif
-        if ((k.ge.(k2-iep)).and.(k.le.(k1+iep))) then
-          if ((j.ge.(j1-ilen-iep)).and.(j.le.(j1-ilen+iep))) then
-            if ((i.ge.75).and.(i.le.83)) then
-              esp(i,j,k)=one
-              ux(i,j,k)=zero
-              uy(i,j,k)=zero
-              uz(i,j,k)=zero
-            endif
-          endif
-        endif
-        if ((k.ge.(k1-iep)).and.(k.le.(k1+iep))) then
-          if ((j.ge.(j1-ilen-iep)).and.(j.le.(j1+ilen+iep))) then
-            if ((i.ge.75).and.(i.le.83)) then
-              esp(i,j,k)=one
-              ux(i,j,k)=zero
-              uy(i,j,k)=zero
-              uz(i,j,k)=zero
-            endif
-          endif
-        endif
-        if ((k.ge.(k2-iep)).and.(k.le.(k2+iep))) then
-          if ((j.ge.(j1-ilen-iep)).and.(j.le.(j1+ilen+iep))) then
-            if ((i.ge.75).and.(i.le.83)) then
-              esp(i,j,k)=one
-              ux(i,j,k)=zero
-              uy(i,j,k)=zero
-              uz(i,j,k)=zero
-            endif
-          endif
-        endif
-      enddo
-    enddo
-  enddo
-
-
-  return
-end subroutine square
-!*******************************************************************
-subroutine forcage_square(ux,uy,uz,esp)
-  USE param
-  USE decomp_2d
-  USE variables
-  implicit none
-  real(mytype), dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ux,uy,uz,esp
-  real(mytype),dimension(nz) :: xx1
-  real(mytype),dimension(ny) :: yy1
-  integer :: j, i, k, np,i1 ,ii
-  real(mytype) :: ep0,ep1,ep2,ep3
-  real(mytype) :: l0,l1,l2,l3,l4
-  real(mytype), dimension(4) :: l5,l6
-  real(mytype) :: y,z
-  esp(:,:,:)=zero
-
-  ep3=two/five !0.4  Tr=8.5 grid tmin=2.1, t2=4.2, t1=8.6, tmax=17.5
-  ep2=four/five !0.8
-  ep1=nine/five!
-  ep0=seventeen/five!
-
-  l0=yly/two
-  l1=yly/four
-  l2=yly/eight
-  l3=yly/sixteen
-  l4=yly/thirytwo
-
-  !####fisrt fractal iteration##########################
-  call square(l0,l0,ep0,l1,ux,uy,uz,esp)
-  !####Second fractal iteration#########################
-  call square(l0+l1,l0+l1,ep1,l2,ux,uy,uz,esp)
-  call square(l0+l1,l1,ep1,l2,ux,uy,uz,esp)
-  call square(l1,l0+l1,ep1,l2,ux,uy,uz,esp)
-  call square(l1,l1,ep1,l2,ux,uy,uz,esp)
-  !####third fractal iteration########################
-  call square(l0-l2,l0-l2,ep2,l3,ux,uy,uz,esp)
-  call square(l0-l2,l2,ep2,l3,ux,uy,uz,esp)
-  call square(l2,l2,ep2,l3,ux,uy,uz,esp)
-  call square(l2,l0-l2,ep2,l3,ux,uy,uz,esp)
-  call square(l0+l1+l2,l0+l1+l2,ep2,l3,ux,uy,uz,esp)
-  call square(l0+l1+l2,l0+l2,ep2,l3,ux,uy,uz,esp)
-  call square(l0+l2,l0+l2,ep2,l3,ux,uy,uz,esp)
-  call square(l0+l2,l0+l1+l2,ep2,l3,ux,uy,uz,esp)
-  call square(l0+l1+l2,l2,ep2,l3,ux,uy,uz,esp)
-  call square(l0+l2,l2,ep2,l3,ux,uy,uz,esp)
-  call square(l0+l1+l2,l0-l2,ep2,l3,ux,uy,uz,esp)
-  call square(l0+l2,l0-l2,ep2,l3,ux,uy,uz,esp)
-  call square(l0-l2,l0+l2,ep2,l3,ux,uy,uz,esp)
-  call square(l0-l2,l0+l1+l2,ep2,l3,ux,uy,uz,esp)
-  call square(l2,l0+l2,ep2,l3,ux,uy,uz,esp)
-  call square(l2,l0+l1+l2,ep2,l3,ux,uy,uz,esp)
-  !###fourth fractal iteration
-  l5(1)=l3;l5(2)=-l3;l5(3)=l3;l5(4)=-l3
-  l6(1)=l3;l6(2)=l3;l6(3)=-l3;l6(4)=-l3
-  do ii=1,4
-    call square(l0-l2+l5(ii),l0-l2+l6(ii),ep3,l4,ux,uy,uz,esp)
-    call square(l0-l2+l5(ii),l2+l6(ii),ep3,l4,ux,uy,uz,esp)
-    call square(l2+l5(ii),l2+l6(ii),ep3,l4,ux,uy,uz,esp)
-    call square(l2+l5(ii),l0-l2+l6(ii),ep3,l4,ux,uy,uz,esp)
-    call square(l0+l1+l2+l5(ii),l0+l1+l2+l6(ii),ep3,l4,ux,uy,uz,esp)
-    call square(l0+l1+l2+l5(ii),l0+l2+l6(ii),ep3,l4,ux,uy,uz,esp)
-    call square(l0+l2+l5(ii),l0+l2+l6(ii),ep3,l4,ux,uy,uz,esp)
-    call square(l0+l2+l5(ii),l0+l1+l2+l6(ii),ep3,l4,ux,uy,uz,esp)
-    call square(l0+l1+l2+l5(ii),l2+l6(ii),ep3,l4,ux,uy,uz,esp)
-    call square(l0+l2+l5(ii),l2+l6(ii),ep3,l4,ux,uy,uz,esp)
-    call square(l0+l1+l2+l5(ii),l0-l2+l6(ii),ep3,l4,ux,uy,uz,esp)
-    call square(l0+l2+l5(ii),l0-l2+l6(ii),ep3,l4,ux,uy,uz,esp)
-    call square(l0-l2+l5(ii),l0+l2+l6(ii),ep3,l4,ux,uy,uz,esp)
-    call square(l0-l2+l5(ii),l0+l1+l2+l6(ii),ep3,l4,ux,uy,uz,esp)
-    call square(l2+l5(ii),l0+l2+l6(ii),ep3,l4,ux,uy,uz,esp)
-    call square(l2+l5(ii),l0+l1+l2+l6(ii),ep3,l4,ux,uy,uz,esp)
-  enddo
-
-  return
-end subroutine forcage_square
