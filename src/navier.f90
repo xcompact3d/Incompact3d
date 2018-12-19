@@ -167,15 +167,14 @@ subroutine corpg (ux,uy,uz,px,py,pz)
   return
 end subroutine corpg
 !********************************************************************
-subroutine divergence (ux1,uy1,uz1,ep1,pp3,&
-  nxmsize,nymsize,nzmsize,nlock)
+subroutine divergence (ux1,uy1,uz1,ep1,pp3,nlock)
 
   USE param
   USE decomp_2d
   USE variables
   USE var, ONLY: ta1, tb1, tc1, pp1, pgy1, pgz1, di1, &
        duxdxp2, uyp2, uzp2, duydypi2, upi2, dipp2, &
-       duxydxyp3, uzp3, po3, dipp3
+       duxydxyp3, uzp3, po3, dipp3, nxmsize, nymsize, nzmsize
   USE MPI
 
   implicit none
@@ -188,7 +187,7 @@ subroutine divergence (ux1,uy1,uz1,ep1,pp3,&
   real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: pp3
 
   integer :: ijk,nvect1,nvect2,nvect3,i,j,k,nlock
-  integer :: nxmsize,nymsize,nzmsize,code
+  integer :: code
   real(mytype) :: tmax,tmoy,tmax1,tmoy1
 
   nvect1=xsize(1)*xsize(2)*xsize(3)

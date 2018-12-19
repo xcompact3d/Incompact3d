@@ -126,7 +126,7 @@ PROGRAM incompact3d
         call boundary_conditions(ux1,uy1,uz1,phi1,ep1)
 
         !X-->Y-->Z-->Y-->X
-        call convdiff(ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
+        call convdiff(ux1,uy1,uz1,dux1,duy1,duz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,&
              ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2,&
              ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3,phi1,ep1,nut1)
 
@@ -159,8 +159,7 @@ PROGRAM incompact3d
 #endif
 
         !X-->Y-->Z
-        call divergence (ux1,uy1,uz1,ep1,pp3,&
-             nxmsize,nymsize,nzmsize,1)
+        call divergence (ux1,uy1,uz1,ep1,pp3,1)
 
         !POISSON Z-->Z
         call poisson(pp3)
@@ -173,8 +172,7 @@ PROGRAM incompact3d
 
         if (mod(itime,itest)==0) then
            !does not matter --> output=DIV U=0 (in dv3)
-           call divergence(ux1,uy1,uz1,ep1,dv3,&
-                nxmsize,nymsize,nzmsize,2)
+           call divergence(ux1,uy1,uz1,ep1,dv3,2)
 
            call test_speed_min_max(ux1,uy1,uz1)
            if (iscalar==1) call test_scalar_min_max(phi1)

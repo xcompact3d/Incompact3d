@@ -22,7 +22,7 @@
 1      #iin        # Initial condition (0: empty, 1: prescribed)
 1      #ifirst     # First iteration
 10 #000 #ilast      # Last iteration
-1      #nscheme    # Temporal scheme (1:AB2, 2:AB3, 3: RK3, 4:KN+AB3 (-DIMPLICIT flag required))
+2      #nscheme    # Temporal scheme (1:AB2, 2:AB3, 3: RK3, 4:KN+AB3 (-DIMPLICIT flag required))
 #velocity
 1      #nclx1      #Boundary condition in x=0  (0: Periodic, 1:Free-slip, 2: Dirichlet)
 1      #nclxn      #Boundary condition in x=Lx (0: Periodic, 1:Free-slip, 2: Dirichlet)
