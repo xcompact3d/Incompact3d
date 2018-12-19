@@ -99,7 +99,7 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,gx1,gy1,gz1,phis1,hx1,hy1,hz1,phiss1)
   integer :: k,j,i,ijk,fh,ierror,is,code
   integer (kind=MPI_OFFSET_KIND) :: disp
 
-  integer, dimension (:), allocatable :: seed
+  integer, dimension (67) :: seed
 
   if (iscalar==1) then
 
@@ -144,23 +144,20 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,gx1,gy1,gz1,phis1,hx1,hy1,hz1,phiss1)
      enddo
 
 
-     !     call random_seed(size=nproc)
-     !     allocate(seed(nproc))
-     !     seed=nrank+1
-     !     call random_seed(put=seed)
+          call random_seed(put=seed)
      !     call random_number(ux1)
      !     call random_number(uy1)
-     !     call random_number(uz1)
+          call random_number(uz1)
 
-     !     do k=1,xsize(3)
-     !        do j=1,xsize(2)
-     !           do i=1,xsize(1)
+          do k=1,xsize(3)
+             do j=1,xsize(2)
+                do i=1,xsize(1)
      !              ux1(i,j,k)=noise*(ux1(i,j,k)-half)
      !              uy1(i,j,k)=noise*(uy1(i,j,k)-half)
-     !              uz1(i,j,k)=noise*(uz1(i,j,k)-half)
-     !           enddo
-     !        enddo
-     !     enddo
+                   uz1(i,j,k)=0.05*(uz1(i,j,k)-half)
+                enddo
+             enddo
+          enddo
 
      !     !modulation of the random noise
      !     do k=1,xsize(3)
