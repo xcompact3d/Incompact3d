@@ -178,8 +178,9 @@ subroutine parameter()
         print *,'Error: nscheme must be specified as 1-6'
         stop
      endif
-     if (iscalar.eq.0) print *,'Scalar             : off'
-     if (iscalar.eq.1) then
+     if (iscalar.eq.0) then
+        print *,'Scalar             : off'
+     else
         print *,'Scalar             : on'
         write(*,"(' Boundary condition : (nclxS1,nclxSn)=(',I1,',',I1,')')") nclxS1,nclxSn
         write(*,"('                      (nclyS1,nclySn)=(',I1,',',I1,')')") nclyS1,nclySn
