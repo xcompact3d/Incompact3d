@@ -93,6 +93,8 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1,phis1,phiss1
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
 
+  integer :: code, ierror
+
   call debug_schemes()
   call MPI_ABORT(MPI_COMM_WORLD,code,ierror)
 
