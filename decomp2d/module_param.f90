@@ -127,18 +127,15 @@ module variables
   END INTERFACE
 
   PROCEDURE (DERIVATIVE_X) derx_00,derx_11,derx_12,derx_21,derx_22,&
-       derxx_dns_00,derxx_dns_11,derxx_dns_12,derxx_dns_21,derxx_dns_22,&
-       derxx_iles_00,derxx_iles_11,derxx_iles_12,derxx_iles_21,derxx_iles_22
+       derxx_00,derxx_11,derxx_12,derxx_21,derxx_22
   PROCEDURE (DERIVATIVE_X), POINTER :: derx,derxx,derxS,derxxS
   PROCEDURE (DERIVATIVE_Y) dery_00,dery_11,dery_12,dery_21,dery_22
   PROCEDURE (DERIVATIVE_Y), POINTER :: dery,deryS
   PROCEDURE (DERIVATIVE_YY) &
-       deryy_dns_00,deryy_dns_11,deryy_dns_12,deryy_dns_21,deryy_dns_22,&
-       deryy_iles_00,deryy_iles_11,deryy_iles_12,deryy_iles_21,deryy_iles_22
+       deryy_00,deryy_11,deryy_12,deryy_21,deryy_22
   PROCEDURE (DERIVATIVE_YY), POINTER :: deryy,deryyS
   PROCEDURE (DERIVATIVE_Z) derz_00,derz_11,derz_12,derz_21,derz_22,&
-       derzz_dns_00,derzz_dns_11,derzz_dns_12,derzz_dns_21,derzz_dns_22,&
-       derzz_iles_00,derzz_iles_11,derzz_iles_12,derzz_iles_21,derzz_iles_22
+       derzz_00,derzz_11,derzz_12,derzz_21,derzz_22
   PROCEDURE (DERIVATIVE_Z), POINTER :: derz,derzz,derzS,derzzS
 
   !O6SVV

@@ -112,7 +112,7 @@ PROGRAM incompact3d
      do itr=1,iadvance_time
 
         call boundary_conditions(ux1,uy1,uz1,phi1,ep1)
-        call convdiff(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
+        call momentum_rhs_eq(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
         call int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
         call pre_correc(ux1,uy1,uz1,ep1)
 #ifdef IBM

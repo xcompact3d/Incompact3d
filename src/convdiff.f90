@@ -1,4 +1,4 @@
-subroutine convdiff(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
+subroutine momentum_rhs_eq(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
 
   USE param
   USE variables
@@ -192,7 +192,7 @@ subroutine convdiff(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
      if (nrank == 0) print *,'TRIPPING KTH STYLE!!'
   endif
 
-end subroutine convdiff
+end subroutine momentum_rhs_eq
 !************************************************************
 subroutine scalar(ux1,uy1,uz1,phi1,phis1,phiss1,di1,ta1,tb1,tc1,td1,&
      uy2,uz2,phi2,di2,ta2,tb2,tc2,td2,uz3,phi3,di3,ta3,tb3,epsi,nut1)
