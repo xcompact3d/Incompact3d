@@ -94,6 +94,7 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
 
   call debug_schemes()
+  call MPI_ABORT(MPI_COMM_WORLD,code,ierror)
 
   return
 end subroutine init
@@ -160,6 +161,14 @@ subroutine debug_schemes()
   integer :: i,j,k
   character(len=30) :: filename
 
+ nclx1=1
+ nclxn=1
+ ncly1=1
+ nclyn=1
+ nclz1=1
+ nclzn=1
+ call schemes()
+ 
   do k=1,xsize(3)
      do j=1,xsize(2)
         do i=1,xsize(1)
@@ -178,11 +187,15 @@ subroutine debug_schemes()
      open(67,file=trim(filename),status='unknown',form='formatted')
      do i=1,xsize(1)
         x = real(i-1,mytype)*dx
-        write(67,'(5E14.6)') x,&
-             abs_prec(four*pi*cos_prec(four*pi*x)-dfdx1(i,1,1)),&
-             abs_prec(-four*pi*sin_prec(four*pi*x)-dfdxp1(i,1,1)),&
-             abs_prec(-sixteen*pi*pi*sin_prec(four*pi*x)-dfdxx1(i,1,1)),&
-             abs_prec(-sixteen*pi*pi*cos_prec(four*pi*x)-dfdxxp1(i,1,1))
+        write(67,'(9E14.6)') x,&
+             four*pi*cos_prec(four*pi*x),dfdx1(i,1,1),&
+             -four*pi*sin_prec(four*pi*x),dfdxp1(i,1,1),&
+             -sixteen*pi*pi*sin_prec(four*pi*x),dfdxx1(i,1,1),&
+             -sixteen*pi*pi*cos_prec(four*pi*x),dfdxxp1(i,1,1)
+!             abs_prec(four*pi*cos_prec(four*pi*x)-dfdx1(i,1,1)),&
+!             abs_prec(-four*pi*sin_prec(four*pi*x)-dfdxp1(i,1,1)),&
+!             abs_prec(-sixteen*pi*pi*sin_prec(four*pi*x)-dfdxx1(i,1,1)),&
+!             abs_prec(-sixteen*pi*pi*cos_prec(four*pi*x)-dfdxxp1(i,1,1))
      enddo
      close(67)
   endif
@@ -205,11 +218,15 @@ subroutine debug_schemes()
      open(67,file=trim(filename),status='unknown',form='formatted')
      do j=1,ysize(2)
         y = real(j-1,mytype)*dy
-        write(67,'(5E14.6)') y,&
-             abs_prec(four*pi*cos_prec(four*pi*y)-dfdy2(1,j,1)),&
-             abs_prec(-four*pi*sin_prec(four*pi*y)-dfdyp2(1,j,1)),&
-             abs_prec(-sixteen*pi*pi*sin_prec(four*pi*y)-dfdyy2(1,j,1)),&
-             abs_prec(-sixteen*pi*pi*cos_prec(four*pi*y)- dfdyyp2(1,j,1))
+        write(67,'(9E14.6)') y,&
+             four*pi*cos_prec(four*pi*y),dfdy2(1,j,1),&
+             -four*pi*sin_prec(four*pi*y),dfdyp2(1,j,1),&
+             -sixteen*pi*pi*sin_prec(four*pi*y),dfdyy2(1,j,1),&
+             -sixteen*pi*pi*cos_prec(four*pi*y),dfdyyp2(1,j,1)
+!             abs_prec(four*pi*cos_prec(four*pi*y)-dfdy2(1,j,1)),&
+!             abs_prec(-four*pi*sin_prec(four*pi*y)-dfdyp2(1,j,1)),&
+!             abs_prec(-sixteen*pi*pi*sin_prec(four*pi*y)-dfdyy2(1,j,1)),&
+!             abs_prec(-sixteen*pi*pi*cos_prec(four*pi*y)- dfdyyp2(1,j,1))
      enddo
      close(67)
   endif
@@ -232,14 +249,355 @@ subroutine debug_schemes()
      open(67,file=trim(filename),status='unknown',form='formatted')
      do k=1,zsize(3)
         z = real(k-1,mytype)*dz
-        write(67,'(5E14.6)') z,&
-             abs_prec(four*pi*cos_prec(four*pi*z)-dfdz3(1,1,k)),&
-             abs_prec(-four*pi*sin_prec(four*pi*z)-dfdzp3(1,1,k)),&
-             abs_prec(-sixteen*pi*pi*sin_prec(four*pi*z)-dfdzz3(1,1,k)),&
-             abs_prec(-sixteen*pi*pi*cos_prec(four*pi*z)-dfdzzp3(1,1,k))
+        write(67,'(9E14.6)') z,&
+             four*pi*cos_prec(four*pi*z),dfdz3(1,1,k),&
+             -four*pi*sin_prec(four*pi*z),dfdzp3(1,1,k),&
+             -sixteen*pi*pi*sin_prec(four*pi*z),dfdzz3(1,1,k),&
+             -sixteen*pi*pi*cos_prec(four*pi*z),dfdzzp3(1,1,k)
+!             abs_prec(four*pi*cos_prec(four*pi*z)-dfdz3(1,1,k)),&
+!             abs_prec(-four*pi*sin_prec(four*pi*z)-dfdzp3(1,1,k)),&
+!             abs_prec(-sixteen*pi*pi*sin_prec(four*pi*z)-dfdzz3(1,1,k)),&
+!             abs_prec(-sixteen*pi*pi*cos_prec(four*pi*z)-dfdzzp3(1,1,k))
      enddo
      close(67)
   endif
+
+  !###############################################################
+  !###############################################################
+  
+  nclx1=0
+  nclxn=0
+  ncly1=0
+  nclyn=0
+  nclz1=0
+  nclzn=0
+  call schemes()
+  
+  do k=1,xsize(3)
+     do j=1,xsize(2)
+        do i=1,xsize(1)
+           x = real(i-1,mytype)*dx*four*pi
+           fx1(i,j,k) = sin_prec(x)  !odd
+        enddo
+     enddo
+  enddo
+  call derx (dfdx1 ,fx1 ,di1,sx,ffx ,fsx ,fwx ,xsize(1),xsize(2),xsize(3),0)
+  call derxx (dfdxx1 ,fx1 ,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0)
+  if (nrank.eq.0) then
+     write(filename,"('schemes_x',I1.1,I1.1,I1.1,I4.4)") jLES,nclx1,nclxn,nx
+     open(67,file=trim(filename),status='unknown',form='formatted')
+     do i=1,xsize(1)
+        x = real(i-1,mytype)*dx
+        write(67,'(5E14.6)') x,&
+             four*pi*cos_prec(four*pi*x),dfdx1(i,1,1),&
+             -sixteen*pi*pi*sin_prec(four*pi*x),dfdxx1(i,1,1)
+     enddo
+     close(67)
+  endif
+
+  do k=1,ysize(3)
+     do j=1,ysize(2)
+        y = real(j-1,mytype)*dy*4*pi
+        do i=1,ysize(1)
+           fy2(i,j,k) = sin_prec(y)
+        enddo
+     enddo
+  enddo
+  call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0)
+  call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0)
+  if (nrank.eq.0) then
+     write(filename,"('schemes_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
+     open(67,file=trim(filename),status='unknown',form='formatted')
+     do j=1,ysize(2)
+        y = real(j-1,mytype)*dy
+        write(67,'(5E14.6)') y,&
+             four*pi*cos_prec(four*pi*y),dfdy2(1,j,1),&
+             -sixteen*pi*pi*sin_prec(four*pi*y),dfdyy2(1,j,1)
+     enddo
+     close(67)
+  endif
+    do k=1,zsize(3)
+     z = real(k-1,mytype)*dz*4*pi
+     do j=1,zsize(2)
+        do i=1,zsize(1)
+           fz3(i,j,k) = sin_prec(z)
+        enddo
+     enddo
+  enddo
+  call derz (dfdz3 ,fz3 ,di3,sz,ffz ,fsz ,fwz ,zsize(1),zsize(2),zsize(3),0)
+  call derzz (dfdzz3 ,fz3 ,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0)
+  if (nrank.eq.0) then
+     write(filename,"('schemes_z',I1.1,I1.1,I1.1,I4.4)") jLES,nclz1,nclzn,nz
+     open(67,file=trim(filename),status='unknown',form='formatted')
+     do k=1,zsize(3)
+        z = real(k-1,mytype)*dz
+        write(67,'(5E14.6)') z,&
+             four*pi*cos_prec(four*pi*z),dfdz3(1,1,k),&
+             -sixteen*pi*pi*sin_prec(four*pi*z),dfdzz3(1,1,k)
+     enddo
+     close(67)
+  endif
+  
+  !###############################################################
+  !###############################################################
+  
+  nclx1=2
+  nclxn=2
+  ncly1=2
+  nclyn=2
+  nclz1=2
+  nclzn=2
+  call schemes()
+  
+  do k=1,xsize(3)
+     do j=1,xsize(2)
+        do i=1,xsize(1)
+           x = real(i-1,mytype)*dx*four*pi
+           fx1(i,j,k) = sin_prec(x)  !odd
+        enddo
+     enddo
+  enddo
+  call derx (dfdx1 ,fx1 ,di1,sx,ffx ,fsx ,fwx ,xsize(1),xsize(2),xsize(3),0)
+  call derxx (dfdxx1 ,fx1 ,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0)
+  if (nrank.eq.0) then
+     write(filename,"('schemes_x',I1.1,I1.1,I1.1,I4.4)") jLES,nclx1,nclxn,nx
+     open(67,file=trim(filename),status='unknown',form='formatted')
+     do i=1,xsize(1)
+        x = real(i-1,mytype)*dx
+        write(67,'(5E14.6)') x,&
+             four*pi*cos_prec(four*pi*x),dfdx1(i,1,1),&
+             -sixteen*pi*pi*sin_prec(four*pi*x),dfdxx1(i,1,1)
+     enddo
+     close(67)
+  endif
+
+  do k=1,ysize(3)
+     do j=1,ysize(2)
+        y = real(j-1,mytype)*dy*4*pi
+        do i=1,ysize(1)
+           fy2(i,j,k) = sin_prec(y)
+        enddo
+     enddo
+  enddo
+  call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0)
+  call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0)
+  if (nrank.eq.0) then
+     write(filename,"('schemes_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
+     open(67,file=trim(filename),status='unknown',form='formatted')
+     do j=1,ysize(2)
+        y = real(j-1,mytype)*dy
+        write(67,'(5E14.6)') y,&
+             four*pi*cos_prec(four*pi*y),dfdy2(1,j,1),&
+             -sixteen*pi*pi*sin_prec(four*pi*y),dfdyy2(1,j,1)
+     enddo
+     close(67)
+  endif
+    do k=1,zsize(3)
+     z = real(k-1,mytype)*dz*4*pi
+     do j=1,zsize(2)
+        do i=1,zsize(1)
+           fz3(i,j,k) = sin_prec(z)
+        enddo
+     enddo
+  enddo
+  call derz (dfdz3 ,fz3 ,di3,sz,ffz ,fsz ,fwz ,zsize(1),zsize(2),zsize(3),0)
+  call derzz (dfdzz3 ,fz3 ,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0)
+  if (nrank.eq.0) then
+     write(filename,"('schemes_z',I1.1,I1.1,I1.1,I4.4)") jLES,nclz1,nclzn,nz
+     open(67,file=trim(filename),status='unknown',form='formatted')
+     do k=1,zsize(3)
+        z = real(k-1,mytype)*dz
+        write(67,'(5E14.6)') z,&
+             four*pi*cos_prec(four*pi*z),dfdz3(1,1,k),&
+             -sixteen*pi*pi*sin_prec(four*pi*z),dfdzz3(1,1,k)
+     enddo
+     close(67)
+  endif
+
+!###############################################################
+!###############################################################
+
+  nclx1=2
+  nclxn=1
+  ncly1=2
+  nclyn=1
+  nclz1=2
+  nclzn=1
+  call schemes()
+ 
+  do k=1,xsize(3)
+     do j=1,xsize(2)
+        do i=1,xsize(1)
+           x = real(i-1,mytype)*dx*four*pi
+           fx1(i,j,k) = sin_prec(x)  !odd
+           fxp1(i,j,k) = cos_prec(x) !even
+        enddo
+     enddo
+  enddo
+  call derx (dfdx1 ,fx1 ,di1,sx,ffx ,fsx ,fwx ,xsize(1),xsize(2),xsize(3),0)
+  call derx (dfdxp1,fxp1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+  call derxx (dfdxx1 ,fx1 ,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0)
+  call derxx (dfdxxp1,fxp1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+  if (nrank.eq.0) then
+     write(filename,"('schemes_x',I1.1,I1.1,I1.1,I4.4)") jLES,nclx1,nclxn,nx
+     open(67,file=trim(filename),status='unknown',form='formatted')
+     do i=1,xsize(1)
+        x = real(i-1,mytype)*dx
+        write(67,'(9E14.6)') x,&
+             four*pi*cos_prec(four*pi*x),dfdx1(i,1,1),&
+             -four*pi*sin_prec(four*pi*x),dfdxp1(i,1,1),&
+             -sixteen*pi*pi*sin_prec(four*pi*x),dfdxx1(i,1,1),&
+             -sixteen*pi*pi*cos_prec(four*pi*x),dfdxxp1(i,1,1)
+     enddo
+     close(67)
+  endif
+
+  do k=1,ysize(3)
+     do j=1,ysize(2)
+        y = real(j-1,mytype)*dy*4*pi
+        do i=1,ysize(1)
+           fy2(i,j,k) = sin_prec(y)
+           fyp2(i,j,k) = cos_prec(y)
+        enddo
+     enddo
+  enddo
+  call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0)
+  call dery (dfdyp2,fyp2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+  call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0)
+  call deryy (dfdyyp2,fyp2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+  if (nrank.eq.0) then
+     write(filename,"('schemes_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
+     open(67,file=trim(filename),status='unknown',form='formatted')
+     do j=1,ysize(2)
+        y = real(j-1,mytype)*dy
+        write(67,'(9E14.6)') y,&
+             four*pi*cos_prec(four*pi*y),dfdy2(1,j,1),&
+             -four*pi*sin_prec(four*pi*y),dfdyp2(1,j,1),&
+             -sixteen*pi*pi*sin_prec(four*pi*y),dfdyy2(1,j,1),&
+             -sixteen*pi*pi*cos_prec(four*pi*y),dfdyyp2(1,j,1)
+     enddo
+     close(67)
+  endif
+
+  do k=1,zsize(3)
+     z = real(k-1,mytype)*dz*4*pi
+     do j=1,zsize(2)
+        do i=1,zsize(1)
+           fz3(i,j,k) = sin_prec(z)
+           fzp3(i,j,k) = cos_prec(z)
+        enddo
+     enddo
+  enddo
+  call derz (dfdz3 ,fz3 ,di3,sz,ffz ,fsz ,fwz ,zsize(1),zsize(2),zsize(3),0)
+  call derz (dfdzp3,fzp3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+  call derzz (dfdzz3 ,fz3 ,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0)
+  call derzz (dfdzzp3,fzp3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
+  if (nrank.eq.0) then
+     write(filename,"('schemes_z',I1.1,I1.1,I1.1,I4.4)") jLES,nclz1,nclzn,nz
+     open(67,file=trim(filename),status='unknown',form='formatted')
+     do k=1,zsize(3)
+        z = real(k-1,mytype)*dz
+        write(67,'(9E14.6)') z,&
+             four*pi*cos_prec(four*pi*z),dfdz3(1,1,k),&
+             -four*pi*sin_prec(four*pi*z),dfdzp3(1,1,k),&
+             -sixteen*pi*pi*sin_prec(four*pi*z),dfdzz3(1,1,k),&
+             -sixteen*pi*pi*cos_prec(four*pi*z),dfdzzp3(1,1,k)
+     enddo
+     close(67)
+  endif
+  
+!###############################################################
+!###############################################################
+
+  nclx1=1
+  nclxn=2
+  ncly1=1
+  nclyn=2
+  nclz1=1
+  nclzn=2
+  call schemes()
+ 
+  do k=1,xsize(3)
+     do j=1,xsize(2)
+        do i=1,xsize(1)
+           x = real(i-1,mytype)*dx*four*pi
+           fx1(i,j,k) = sin_prec(x)  !odd
+           fxp1(i,j,k) = cos_prec(x) !even
+        enddo
+     enddo
+  enddo
+  call derx (dfdx1 ,fx1 ,di1,sx,ffx ,fsx ,fwx ,xsize(1),xsize(2),xsize(3),0)
+  call derx (dfdxp1,fxp1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+  call derxx (dfdxx1 ,fx1 ,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0)
+  call derxx (dfdxxp1,fxp1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+  if (nrank.eq.0) then
+     write(filename,"('schemes_x',I1.1,I1.1,I1.1,I4.4)") jLES,nclx1,nclxn,nx
+     open(67,file=trim(filename),status='unknown',form='formatted')
+     do i=1,xsize(1)
+        x = real(i-1,mytype)*dx
+        write(67,'(9E14.6)') x,&
+             four*pi*cos_prec(four*pi*x),dfdx1(i,1,1),&
+             -four*pi*sin_prec(four*pi*x),dfdxp1(i,1,1),&
+             -sixteen*pi*pi*sin_prec(four*pi*x),dfdxx1(i,1,1),&
+             -sixteen*pi*pi*cos_prec(four*pi*x),dfdxxp1(i,1,1)
+     enddo
+     close(67)
+  endif
+
+  do k=1,ysize(3)
+     do j=1,ysize(2)
+        y = real(j-1,mytype)*dy*4*pi
+        do i=1,ysize(1)
+           fy2(i,j,k) = sin_prec(y)
+           fyp2(i,j,k) = cos_prec(y)
+        enddo
+     enddo
+  enddo
+  call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0)
+  call dery (dfdyp2,fyp2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+  call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0)
+  call deryy (dfdyyp2,fyp2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+  if (nrank.eq.0) then
+     write(filename,"('schemes_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
+     open(67,file=trim(filename),status='unknown',form='formatted')
+     do j=1,ysize(2)
+        y = real(j-1,mytype)*dy
+        write(67,'(9E14.6)') y,&
+             four*pi*cos_prec(four*pi*y),dfdy2(1,j,1),&
+             -four*pi*sin_prec(four*pi*y),dfdyp2(1,j,1),&
+             -sixteen*pi*pi*sin_prec(four*pi*y),dfdyy2(1,j,1),&
+             -sixteen*pi*pi*cos_prec(four*pi*y),dfdyyp2(1,j,1)
+     enddo
+     close(67)
+  endif
+
+  do k=1,zsize(3)
+     z = real(k-1,mytype)*dz*4*pi
+     do j=1,zsize(2)
+        do i=1,zsize(1)
+           fz3(i,j,k) = sin_prec(z)
+           fzp3(i,j,k) = cos_prec(z)
+        enddo
+     enddo
+  enddo
+  call derz (dfdz3 ,fz3 ,di3,sz,ffz ,fsz ,fwz ,zsize(1),zsize(2),zsize(3),0)
+  call derz (dfdzp3,fzp3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+  call derzz (dfdzz3 ,fz3 ,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0)
+  call derzz (dfdzzp3,fzp3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
+  if (nrank.eq.0) then
+     write(filename,"('schemes_z',I1.1,I1.1,I1.1,I4.4)") jLES,nclz1,nclzn,nz
+     open(67,file=trim(filename),status='unknown',form='formatted')
+     do k=1,zsize(3)
+        z = real(k-1,mytype)*dz
+        write(67,'(9E14.6)') z,&
+             four*pi*cos_prec(four*pi*z),dfdz3(1,1,k),&
+             -four*pi*sin_prec(four*pi*z),dfdzp3(1,1,k),&
+             -sixteen*pi*pi*sin_prec(four*pi*z),dfdzz3(1,1,k),&
+             -sixteen*pi*pi*cos_prec(four*pi*z),dfdzzp3(1,1,k)
+     enddo
+     close(67)
+  endif
+
 
   stop 'stop debug_schemes'
 end subroutine debug_schemes
