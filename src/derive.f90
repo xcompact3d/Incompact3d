@@ -3737,7 +3737,7 @@ end subroutine derzz_22
 
 !********************************************************************
 !
-subroutine decx6(tx,ux,rx,sx,cfx6,csx6,cwx6,nx,nxm,ny,nz,npaire)  
+subroutine derxvp(tx,ux,rx,sx,cfx6,csx6,cwx6,nx,nxm,ny,nz,npaire)  
 !
 !********************************************************************
 
@@ -3846,11 +3846,11 @@ else
 endif
 
 return     
-end subroutine decx6
+end subroutine derxvp
 
 !********************************************************************
 !
-subroutine inter6(tx,ux,rx,sx,cifx6,cisx6,ciwx6,nx,nxm,ny,nz,npaire) 
+subroutine interxvp(tx,ux,rx,sx,cifx6,cisx6,ciwx6,nx,nxm,ny,nz,npaire) 
 !
 !********************************************************************
 
@@ -3977,11 +3977,11 @@ else
 endif
 
 return
-end subroutine inter6 
+end subroutine interxvp 
 
 !********************************************************************
 !
-subroutine deci6(tx,ux,rx,sx,cfi6,csi6,cwi6,cfx6,csx6,cwx6,nxm,nx,ny,nz,npaire) 
+subroutine derxpv(tx,ux,rx,sx,cfi6,csi6,cwi6,cfx6,csx6,cwx6,nxm,nx,ny,nz,npaire) 
 !
 !********************************************************************
 
@@ -4062,11 +4062,11 @@ else
 endif
 
 return
-end subroutine deci6 
+end subroutine derxpv 
 
 !********************************************************************
 !
-subroutine interi6(tx,ux,rx,sx,cifi6,cisi6,ciwi6,cifx6,cisx6,ciwx6,&
+subroutine interxpv(tx,ux,rx,sx,cifi6,cisi6,ciwi6,cifx6,cisx6,ciwx6,&
      nxm,nx,ny,nz,npaire) 
 !
 !********************************************************************
@@ -4201,11 +4201,11 @@ else
 endif
 
 return
-end subroutine interi6
+end subroutine interxpv
 
 !********************************************************************
 !
-subroutine intery6(ty,uy,ry,sy,cify6,cisy6,ciwy6,nx,ny,nym,nz,npaire) 
+subroutine interyvp(ty,uy,ry,sy,cify6,cisy6,ciwy6,nx,ny,nym,nz,npaire) 
 !
 !********************************************************************
   
@@ -4378,11 +4378,11 @@ else
 endif
 
 return
-end subroutine intery6
+end subroutine interyvp
 
 !********************************************************************
 !
-subroutine decy6(ty,uy,ry,sy,cfy6,csy6,cwy6,ppyi,nx,ny,nym,nz,npaire) 
+subroutine deryvp(ty,uy,ry,sy,cfy6,csy6,cwy6,ppyi,nx,ny,nym,nz,npaire) 
 !
 !********************************************************************
   
@@ -4523,11 +4523,11 @@ if (istret.ne.0) then
 endif
 
 return
-end subroutine decy6
+end subroutine deryvp
 
 !********************************************************************
 !
-subroutine interiy6(ty,uy,ry,sy,cifi6y,cisi6y,ciwi6y,cify6,cisy6,ciwy6,&
+subroutine interypv(ty,uy,ry,sy,cifi6y,cisi6y,ciwi6y,cify6,cisy6,ciwy6,&
      nx,nym,ny,nz,npaire) 
 !
 !********************************************************************
@@ -4711,11 +4711,11 @@ else
 endif
 
 return  
-end subroutine interiy6 
+end subroutine interypv 
 
 !********************************************************************
 !
-subroutine deciy6(ty,uy,ry,sy,cfi6y,csi6y,cwi6y,cfy6,csy6,cwy6,&
+subroutine derypv(ty,uy,ry,sy,cfi6y,csi6y,cwi6y,cfy6,csy6,cwy6,&
      ppy,nx,nym,ny,nz,npaire) 
 !
 !********************************************************************
@@ -4856,11 +4856,11 @@ if (istret.ne.0) then
 endif
 
 return  
-end subroutine deciy6
+end subroutine derypv
 
 !********************************************************************
 !
-subroutine decz6(tz,uz,rz,sz,cfz6,csz6,cwz6,nx,ny,nz,nzm,npaire) 
+subroutine derzvp(tz,uz,rz,sz,cfz6,csz6,cwz6,nx,ny,nz,nzm,npaire) 
 !
 !********************************************************************
   
@@ -5036,11 +5036,11 @@ else
 endif
 
 return     
-end subroutine decz6
+end subroutine derzvp
 
 !********************************************************************
 !
-subroutine interz6(tz,uz,rz,sz,cifz6,cisz6,ciwz6,nx,ny,nz,nzm,npaire) 
+subroutine interzvp(tz,uz,rz,sz,cifz6,cisz6,ciwz6,nx,ny,nz,nzm,npaire) 
 !
 !********************************************************************
   
@@ -5213,11 +5213,11 @@ else
 endif
 
 return     
-end subroutine interz6 
+end subroutine interzvp 
 
 !********************************************************************
 !
-subroutine deciz6(tz,uz,rz,sz,cfiz6,csiz6,cwiz6,cfz6,csz6,cwz6,&
+subroutine derzpv(tz,uz,rz,sz,cfiz6,csiz6,cwiz6,cfz6,csz6,cwz6,&
      nx,ny,nzm,nz,npaire) 
 !
 !********************************************************************
@@ -5347,11 +5347,11 @@ else
 endif
 
 return
-end subroutine deciz6 
+end subroutine derzpv 
 
 !********************************************************************
 !
-subroutine interiz6(tz,uz,rz,sz,cifiz6,cisiz6,ciwiz6,cifz6,cisz6,ciwz6,&
+subroutine interzpv(tz,uz,rz,sz,cifiz6,cisiz6,ciwiz6,cifz6,cisz6,ciwz6,&
      nx,ny,nzm,nz,npaire) 
 !
 !********************************************************************
@@ -5535,4 +5535,4 @@ else
 endif
 
 return
-end subroutine interiz6
+end subroutine interzpv
