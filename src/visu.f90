@@ -11,13 +11,13 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
   implicit none
 
   real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-  real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1
+  real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: temp1
   real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: temp2
   real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: temp3
 #ifdef VISUEXTRA
-  real(mytype),dimension(ysize(1),ysize(2),ysize(3),nphi) :: phi2
-  real(mytype),dimension(zsize(1),zsize(2),zsize(3),nphi) :: phi3
+  real(mytype),dimension(ysize(1),ysize(2),ysize(3),numscalar) :: phi2
+  real(mytype),dimension(zsize(1),zsize(2),zsize(3),numscalar) :: phi3
 
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,phim1
   real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,phim2,di2
@@ -85,12 +85,12 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
 
   !number of 3D fields
   n3df=save_w+save_w1+save_w2+save_w3+save_qc+save_pc+save_ux+save_uy+save_uz+&
-       save_phi*nphi+save_pre+save_dudx+save_dudy+save_dudz+&
+       save_phi*numscalar+save_pre+save_dudx+save_dudy+save_dudz+&
        save_dvdx+save_dvdy+save_dvdz+save_dwdx+save_dwdy+save_dwdz+save_V+&
-       (save_dphidx+save_dphidy+save_dphidz)*nphi
+       (save_dphidx+save_dphidy+save_dphidz)*numscalar
 
   !number of 2D fields
-  n2df=save_uxm+save_uym+save_uzm+save_phim*nphi+save_prem+save_dmap+save_utmap
+  n2df=save_uxm+save_uym+save_uzm+save_phim*numscalar+save_prem+save_dmap+save_utmap
 
   s2df=nx*ny*prec   !size of a single 2D field - value in Byte-B
   s3df=s2df*nz      !size of a single 3D field - value in Byte-B
@@ -100,16 +100,16 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
   tstart=MPI_WTIME()
 
   if (nrank.eq.0) print *,'==========================================================='
-  if (nrank.eq.0) print *,'Writing snapshot =>',itime/imodulo
-  if (nrank.eq.0) print *,'This simulation requieres',real((ttsize*int(ilast/imodulo)&
-       +(16+3*nphi)*s3df*int(ilast/isave))*1e-9,4),'GB' !1e-9 from Byte-B to Gigabyte-GB
+  if (nrank.eq.0) print *,'Writing snapshot =>',itime/ioutput
+  if (nrank.eq.0) print *,'This simulation requieres',real((ttsize*int(ilast/ioutput)&
+       +(16+3*numscalar)*s3df*int(ilast/icheckpoint))*1e-9,4),'GB' !1e-9 from Byte-B to Gigabyte-GB
 
   nvect1=xsize(1)*xsize(2)*xsize(3)
 
   if (save_ux.eq.1) then
      uvisu=0._mytype
      call fine_to_coarseV(1,ux1,uvisu)
-     write(filename,"('./data/ux',I4.4)") itime/imodulo
+     write(filename,"('./data/ux',I4.4)") itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
@@ -117,14 +117,14 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
      call transpose_x_to_y (ux1,temp2)
      call transpose_y_to_z (temp2,temp3)
      call mean_plane_z(temp3,zsize(1),zsize(2),zsize(3),temp3(:,:,1))
-     write(filename,"('./data/uxm',I4.4)") itime/imodulo
+     write(filename,"('./data/uxm',I4.4)") itime/ioutput
      call decomp_2d_write_plane(3,temp3,3,1,filename)
   endif
 
   if (save_uy.eq.1) then
      uvisu=0._mytype
      call fine_to_coarseV(1,uy1,uvisu)
-     write(filename,"('./data/uy',I4.4)") itime/imodulo
+     write(filename,"('./data/uy',I4.4)") itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
@@ -132,14 +132,14 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
      call transpose_x_to_y (uy1,temp2)
      call transpose_y_to_z (temp2,temp3)
      call mean_plane_z(temp3,zsize(1),zsize(2),zsize(3),temp3(:,:,1))
-     write(filename,"('./data/uym',I4.4)") itime/imodulo
+     write(filename,"('./data/uym',I4.4)") itime/ioutput
      call decomp_2d_write_plane(3,temp3,3,1,filename)
   endif
 
   if (save_uz.eq.1) then
      uvisu=0._mytype
      call fine_to_coarseV(1,uz1,uvisu)
-     write(filename,"('./data/uz',I4.4)") itime/imodulo
+     write(filename,"('./data/uz',I4.4)") itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
@@ -147,14 +147,14 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
      call transpose_x_to_y (uz1,temp2)
      call transpose_y_to_z (temp2,temp3)
      call mean_plane_z(temp3,zsize(1),zsize(2),zsize(3),temp3(:,:,1))
-     write(filename,"('./data/uzm',I4.4)") itime/imodulo
+     write(filename,"('./data/uzm',I4.4)") itime/ioutput
      call decomp_2d_write_plane(3,temp3,3,1,filename)
   endif
 
   if (save_V.eq.1) then
      uvisu=0._mytype
      call fine_to_coarseV(1,sqrt(ux1**2+uy1**2+uz1**2),uvisu)
-     write(filename,"('./data/V',I4.4)") itime/imodulo
+     write(filename,"('./data/V',I4.4)") itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
@@ -163,27 +163,27 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
      uvisu=0._mytype
      call fine_to_coarseV(1,ep1,uvisu)
      if (save_ibm.eq.1) write(filename,"('./data/ibm',I4.4)") 0
-     if (save_ibm.eq.2) write(filename,"('./data/ibm',I4.4)") itime/imodulo
+     if (save_ibm.eq.2) write(filename,"('./data/ibm',I4.4)") itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 #endif
 
   if (iscalar.eq.1) then
      if (save_phi.eq.1) then
-        do is=1, nphi
+        do is=1, numscalar
            uvisu=0._mytype
            call fine_to_coarseV(1,phi1(:,:,:,is),uvisu)
-           write(filename,"('./data/phi',I1.1,I4.4)") is, itime/imodulo
+           write(filename,"('./data/phi',I1.1,I4.4)") is, itime/ioutput
            call decomp_2d_write_one(1,uvisu,filename,2)
         enddo
      endif
 
      if (save_phim.eq.1) then
-        do is=1, nphi
+        do is=1, numscalar
            call transpose_x_to_y (phi1(:,:,:,is),temp2)
            call transpose_y_to_z (temp2,temp3)
            call mean_plane_z(temp3,zsize(1),zsize(2),zsize(3),temp3(:,:,1))
-           write(filename,"('./data/phim',I1.1,I4.4)") is, itime/imodulo
+           write(filename,"('./data/phim',I1.1,I4.4)") is, itime/ioutput
            call decomp_2d_write_plane(3,temp3,3,1,filename)
         enddo
      endif
@@ -230,7 +230,7 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
      enddo
      uvisu=0._mytype
      call fine_to_coarseV(1,di1,uvisu)
-     write(filename,"('./data/w',I4.4)") itime/imodulo
+     write(filename,"('./data/w',I4.4)") itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
@@ -241,7 +241,7 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
      enddo
      uvisu=0.
      call fine_to_coarseV(1,di1,uvisu)
-     write(filename,"('./data/w1',I4.4)") itime/imodulo
+     write(filename,"('./data/w1',I4.4)") itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
@@ -252,7 +252,7 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
      enddo
      uvisu=0._mytype
      call fine_to_coarseV(1,di1,uvisu)
-     write(filename,"('./data/w2',I4.4)") itime/imodulo
+     write(filename,"('./data/w2',I4.4)") itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
@@ -263,70 +263,70 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
      enddo
      uvisu=0._mytype
      call fine_to_coarseV(1,di1,uvisu)
-     write(filename,"('./data/w3',I4.4)") itime/imodulo
+     write(filename,"('./data/w3',I4.4)") itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
   if (save_dudx.eq.1) then
      uvisu=0._mytype
      call fine_to_coarseV(1,ta1,uvisu)
-     write(filename,"('./data/dudx',I4.4)") itime/imodulo
+     write(filename,"('./data/dudx',I4.4)") itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
   if (save_dudy.eq.1) then
      uvisu=0._mytype
      call fine_to_coarseV(1,td1,uvisu)
-     write(filename,"('./data/dudy',I4.4)") itime/imodulo
+     write(filename,"('./data/dudy',I4.4)") itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
   if (save_dudz.eq.1) then
      uvisu=0._mytype
      call fine_to_coarseV(1,tg1,uvisu)
-     write(filename,"('./data/dudz',I4.4)") itime/imodulo
+     write(filename,"('./data/dudz',I4.4)") itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
   if (save_dvdx.eq.1) then
      uvisu=0._mytype
      call fine_to_coarseV(1,tb1,uvisu)
-     write(filename,"('./data/dvdx',I4.4)") itime/imodulo
+     write(filename,"('./data/dvdx',I4.4)") itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
   if (save_dvdy.eq.1) then
      uvisu=0._mytype
      call fine_to_coarseV(1,te1,uvisu)
-     write(filename,"('./data/dvdy',I4.4)") itime/imodulo
+     write(filename,"('./data/dvdy',I4.4)") itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
   if (save_dvdz.eq.1) then
      uvisu=0._mytype
      call fine_to_coarseV(1,th1,uvisu)
-     write(filename,"('./data/dvdz',I4.4)") itime/imodulo
+     write(filename,"('./data/dvdz',I4.4)") itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
   if (save_dwdx.eq.1) then
      uvisu=0._mytype
      call fine_to_coarseV(1,tc1,uvisu)
-     write(filename,"('./data/dwdx',I4.4)") itime/imodulo
+     write(filename,"('./data/dwdx',I4.4)") itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
   if (save_dwdy.eq.1) then
      uvisu=0._mytype
      call fine_to_coarseV(1,tf1,uvisu)
-     write(filename,"('./data/dwdy',I4.4)") itime/imodulo
+     write(filename,"('./data/dwdy',I4.4)") itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
   if (save_dwdz.eq.1) then
      uvisu=0._mytype
      call fine_to_coarseV(1,ti1,uvisu)
-     write(filename,"('./data/dwdz',I4.4)") itime/imodulo
+     write(filename,"('./data/dwdz',I4.4)") itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
@@ -351,7 +351,7 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
      enddo
      uvisu=0._mytype
      call fine_to_coarseV(1,di1,uvisu)
-     write(filename,"('./data/pc',I4.4)") itime/imodulo
+     write(filename,"('./data/pc',I4.4)") itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
@@ -364,13 +364,13 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
      enddo
      uvisu=0._mytype
      call fine_to_coarseV(1,di1,uvisu)
-     write(filename,"('./data/qc',I4.4)") itime/imodulo
+     write(filename,"('./data/qc',I4.4)") itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
   if (save_utmap.eq.1) then
      di1=0._mytype
-     write(filename,"('./data/utmap',I4.4)") itime/imodulo
+     write(filename,"('./data/utmap',I4.4)") itime/ioutput
      do ijk=1,nvect1
         di1(ijk,1,1)=sqrt(sqrt((td1(ijk,1,1)**2)+(tf1(ijk,1,1)**2))*xnu)
      enddo
@@ -379,28 +379,28 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
 
   if (iscalar.eq.1) then
      if (save_dphidx.eq.1) then
-        do is=1, nphi
+        do is=1, numscalar
            call derxS (tb1,phi1(:,:,:,is),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1) !phi even
-           write(filename,"('./data/dphi',I1.1,'dx',I4.4)") is, itime/imodulo
+           write(filename,"('./data/dphi',I1.1,'dx',I4.4)") is, itime/ioutput
            call decomp_2d_write_one(1,tb1,filename,2)
         enddo
      endif
 
      if (save_dphidy.eq.1) then
-        do is=1, nphi
+        do is=1, numscalar
            call transpose_x_to_y(phi1(:,:,:,is),phi2(:,:,:,is))
            call deryS (tb2,phi2(:,:,:,is),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1) !phi even
-           write(filename,"('./data/dphi',I1.1,'dy',I4.4)") is, itime/imodulo
+           write(filename,"('./data/dphi',I1.1,'dy',I4.4)") is, itime/ioutput
            call decomp_2d_write_one(2,tb2,filename,2)
         enddo
      endif
 
      if (save_dphidz.eq.1) then
-        do is=1, nphi
+        do is=1, numscalar
            call transpose_x_to_y(phi1(:,:,:,is),phi2(:,:,:,is))
            call transpose_y_to_z(phi2(:,:,:,is),phi3(:,:,:,is))
            call derzS (tb3,phi3(:,:,:,is),di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1) !phi even
-           write(filename,"('./data/dphi',I1.1,'dz',I4.4)") is, itime/imodulo
+           write(filename,"('./data/dphi',I1.1,'dz',I4.4)") is, itime/ioutput
            call decomp_2d_write_one(3,tb3,filename,2)
         enddo
      endif
@@ -454,14 +454,14 @@ subroutine VISU_PRE (pp3,ta1,tb1,di1,ta2,tb2,di2,ta3,di3,nxmsize,nymsize,nzmsize
   if (save_pre.eq.1) then
     uvisu=0._mytype
     call fine_to_coarseV(1,pre1,uvisu)
-    write(filename,"('./data/pre',I4.4)") itime/imodulo
+    write(filename,"('./data/pre',I4.4)") itime/ioutput
     call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
   if (save_prem.eq.1) then
     tb1=0._mytype
     call mean_plane_z(pre1,xsize(1),xsize(2),xsize(3),tb1(:,:,1))
-    write(filename,"('./data/prem',I4.4)") itime/imodulo
+    write(filename,"('./data/prem',I4.4)") itime/ioutput
     call decomp_2d_write_plane(1,tb1,3,1,filename)
   endif
 

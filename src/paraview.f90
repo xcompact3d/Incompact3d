@@ -70,11 +70,11 @@ SUBROUTINE paraview()
   WRITE(nfil,*)'        <Time TimeType="HyperSlab">'
   WRITE(nfil,*)'            <DataItem Format="XML" NumberType="Float" Dimensions="3">'
   WRITE(nfil,*)'            <!--Start, Stride, Count-->'
-  WRITE(nfil,*)'            0.0',REAL(imodulo*dt,4)
+  WRITE(nfil,*)'            0.0',REAL(ioutput*dt,4)
   WRITE(nfil,*)'            </DataItem>'
   WRITE(nfil,*)'        </Time>'
 
-  DO ifile = 0, INT(ilast/imodulo)
+  DO ifile = 0, INT(ilast/ioutput)
      WRITE(chits, 9999) ifile
 
      WRITE(nfil,'(/)')
@@ -92,7 +92,7 @@ SUBROUTINE paraview()
         WRITE(nfil,*)'            </Attribute>'
      END IF
      IF (iscalar.EQ.1.AND.save_phi.EQ.1) THEN
-        DO is=1, nphi
+        DO is=1, numscalar
            WRITE(nfil,*)'            <Attribute Name="phi'//CHAR(48+is)//'" Center="Node">'
            WRITE(nfil,*)'               <DataItem Format="Binary" '
            WRITE(nfil,*)'                DataType="Float" Precision="'//CHAR(48+prec)//'" Endian="little" Seek="0"'
@@ -284,7 +284,7 @@ SUBROUTINE paraview()
      ENDIF
 
      IF (iscalar.EQ.1.AND.(save_dphidx.EQ.1.OR.save_dphidy.EQ.1.OR.save_dphidz.EQ.1.)) THEN
-        DO is=1, nphi
+        DO is=1, numscalar
            IF (save_dphidx.EQ.1) THEN
               WRITE(nfil,*)'            <Attribute Name="dphi'//CHAR(48+is)//'dx" Center="Node">'
               WRITE(nfil,*)'               <DataItem Format="Binary" '
@@ -370,11 +370,11 @@ SUBROUTINE paraview()
      WRITE(nfil,*)'        <Time TimeType="HyperSlab">'
      WRITE(nfil,*)'            <DataItem Format="XML" NumberType="Float" Dimensions="3">'
      WRITE(nfil,*)'           <!--Start, Stride, Count-->'
-     WRITE(nfil,*)'            0.0',REAL(imodulo*dt,4)
+     WRITE(nfil,*)'            0.0',REAL(ioutput*dt,4)
      WRITE(nfil,*)'            </DataItem>'
      WRITE(nfil,*)'        </Time>'
 
-     DO ifile = 0, INT(ilast/imodulo)
+     DO ifile = 0, INT(ilast/ioutput)
         WRITE(chits, 9999) ifile
 
         WRITE(nfil,'(/)')
@@ -383,7 +383,7 @@ SUBROUTINE paraview()
         WRITE(nfil,*)'            <Geometry Reference="/Xdmf/Domain/Geometry[1]"/>'
 
         IF (iscalar.EQ.1.AND.save_phim.EQ.1) THEN
-           DO is=1, nphi
+           DO is=1, numscalar
               WRITE(nfil,*)'            <Attribute Name="phim'//CHAR(48+is)//'" Center="Node">'
               WRITE(nfil,*)'               <DataItem Format="Binary" '
               WRITE(nfil,*)'                DataType="Float" Precision="'//CHAR(48+prec)//'" Endian="little" Seek="0"'
@@ -471,11 +471,11 @@ SUBROUTINE paraview()
      WRITE(nfil,*)'        <Time TimeType="HyperSlab">'
      WRITE(nfil,*)'            <DataItem Format="XML" NumberType="Float" Dimensions="3">'
      WRITE(nfil,*)'           <!--Start, Stride, Count-->'
-     WRITE(nfil,*)'            0.0',REAL(imodulo*dt,4)
+     WRITE(nfil,*)'            0.0',REAL(ioutput*dt,4)
      WRITE(nfil,*)'            </DataItem>'
      WRITE(nfil,*)'        </Time>'
 
-     DO ifile = 0, INT(ilast/imodulo)
+     DO ifile = 0, INT(ilast/ioutput)
         WRITE(chits, 9999) ifile
 
         WRITE(nfil,'(/)')
@@ -484,7 +484,7 @@ SUBROUTINE paraview()
         WRITE(nfil,*)'            <Geometry Reference="/Xdmf/Domain/Geometry[1]"/>'
 
         IF (iscalar.EQ.1) THEN
-           DO is=1, nphi
+           DO is=1, numscalar
 
               WRITE(nfil,*)'            <Attribute Name="phif'//CHAR(48+is)//'" Center="Node">'
               WRITE(nfil,*)'               <DataItem Format="Binary" '
@@ -791,7 +791,7 @@ SUBROUTINE paraview()
   WRITE(nfil,*)'            </DataItem>'
   WRITE(nfil,*)'        </Time>'
 
-  DO ifile = 0, INT(ilast/imodulo)
+  DO ifile = 0, INT(ilast/ioutput)
      WRITE(chits, 9999) ifile
 
      WRITE(nfil,'(/)')

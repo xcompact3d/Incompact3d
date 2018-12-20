@@ -22,7 +22,7 @@ subroutine ft_parameter(arg)
   read (10,*) nx
   read (10,*) ny
   read (10,*) nz
-  read (10,*) nphi
+  read (10,*) numscalar
   read (10,*) p_row
   read (10,*) p_col
   if (arg) then
@@ -38,7 +38,7 @@ subroutine ft_parameter(arg)
   zlz = xlx
   read (10,*) re
   read (10,*) ri
-  read (10,*) noise
+  read (10,*) init_noise
   read (10,*) dt
   read (10,*) a !
   read (10,*) a ! INCOMPACT3D Flow configuration
@@ -49,7 +49,7 @@ subroutine ft_parameter(arg)
   read (10,*) iin
   read (10,*) ifirst
   read (10,*) ilast
-  read (10,*) nscheme
+  read (10,*) itimescheme
   read (10,*) a !velocity
   read (10,*) nclx1
   read (10,*) nclxn
@@ -67,9 +67,9 @@ subroutine ft_parameter(arg)
   read (10,*) a !
   read (10,*) a ! INCOMPACT 3D File parameters
   read (10,*) a !
-  read (10,*) ilit
-  read (10,*) isave
-  read (10,*) imodulo
+  read (10,*) irestart
+  read (10,*) icheckpoint
+  read (10,*) ioutput
   read (10,*) imodulo2
   read (10,*) a !
   read (10,*) a ! NUMERICAL DISSIPATION
@@ -90,7 +90,7 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
   implicit none
 
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1,phis1,phiss1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1,phis1,phiss1
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
 
   integer :: code, ierror
@@ -110,7 +110,7 @@ subroutine boundary_conditions (ux,uy,uz,phi)
   implicit none
 
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
   return
 end subroutine boundary_conditions

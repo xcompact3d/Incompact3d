@@ -80,7 +80,7 @@ subroutine ft_parameter(arg)
   read (10,*) a ! INCOMPACT 3D File parameters
   read (10,*) a !
   read (10,*) ilit
-  read (10,*) isave
+  read (10,*) icheckpoint
   read (10,*) imodulo
   read (10,*) iprocessing
   read (10,*) a !

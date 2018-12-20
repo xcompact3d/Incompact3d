@@ -10,7 +10,7 @@ subroutine momentum_rhs_eq(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
   implicit none
 
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
 
   integer :: ijk,nvect1,nvect2,nvect3,i,j,k,is
@@ -166,7 +166,7 @@ subroutine momentum_rhs_eq(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
   tc1 = tc1 + tf1
 
   di1 =  zero
-  do is = 1, nphi
+  do is = 1, numscalar
      di1 = di1  + phi1(:,:,:,is)*ri(is) !Mod. by Ricardo
   enddo
 
@@ -204,16 +204,16 @@ subroutine scalar(ux1,uy1,uz1,phi1,phis1,phiss1,di1,ta1,tb1,tc1,td1,&
   implicit none
 
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,di1,ta1,tb1,tc1,td1,epsi,nut1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1,phis1,phiss1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1,phis1,phiss1
   real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: uy2,uz2,di2,ta2,tb2,tc2,td2
-  real(mytype),dimension(ysize(1),ysize(2),ysize(3),nphi) :: phi2
+  real(mytype),dimension(ysize(1),ysize(2),ysize(3),numscalar) :: phi2
   real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: uz3,di3,ta3,tb3
-  real(mytype),dimension(zsize(1),zsize(2),zsize(3),nphi) :: phi3
+  real(mytype),dimension(zsize(1),zsize(2),zsize(3),numscalar) :: phi3
   integer :: ijk,nvect1,nvect2,nvect3,i,j,k,is
 
 #ifdef ELES
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: kappat1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: sgsphi1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: sgsphi1
   kappat1 = nut1 / pr_t
   call lesdiff_scalar(phi1, di1, di2, di3, kappat1, sgsphi1)
 #endif
@@ -222,7 +222,7 @@ subroutine scalar(ux1,uy1,uz1,phi1,phis1,phiss1,di1,ta1,tb1,tc1,td1,&
   nvect2 = ysize(1)*ysize(2)*ysize(3)
   nvect3 = zsize(1)*zsize(2)*zsize(3)
 
-  do is = 1, nphi
+  do is = 1, numscalar
 
      !X PENCILS
      call derxS (tb1,phi1(:,:,:,is),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1)
@@ -267,15 +267,15 @@ subroutine scalar(ux1,uy1,uz1,phi1,phis1,phiss1,di1,ta1,tb1,tc1,td1,&
 
 #ifdef ELES
   if (nrank == 0) print *, "sgsphi",is,"min max= ",minval(sgsphi1(:,:,:,is)),maxval(sgsphi1(:,:,:,is))
-     ta1 = ( xnu/nsc(is) + kappat1 )*ta1 - tb1 + sgsphi1(:,:,:,is)
+     ta1 = ( xnu/sc(is) + kappat1 )*ta1 - tb1 + sgsphi1(:,:,:,is)
 #else
-     ta1 = ( xnu/nsc(is)           )*ta1 - tb1
+     ta1 = ( xnu/sc(is)           )*ta1 - tb1
 #endif
 
      !TIME ADVANCEMENT
-     if ((nscheme.eq.1).or.(nscheme.eq.3)) then !AB2 or RK3
-        if ((nscheme.eq.1.and.itime.eq.1.and.ilit.eq.0).or.&
-             (nscheme.eq.3.and.itr.eq.1)) then
+     if ((itimescheme.eq.1).or.(itimescheme.eq.3)) then !AB2 or RK3
+        if ((itimescheme.eq.1.and.itime.eq.1.and.irestart.eq.0).or.&
+             (itimescheme.eq.3.and.itr.eq.1)) then
            do ijk = 1,nvect1
               phi1(ijk,1,1,is) = gdt(itr)*ta1(ijk,1,1)+phi1(ijk,1,1,is)
               phis1(ijk,1,1,is) = ta1(ijk,1,1)
@@ -288,15 +288,15 @@ subroutine scalar(ux1,uy1,uz1,phi1,phis1,phiss1,di1,ta1,tb1,tc1,td1,&
         endif
      endif
 
-     if (nscheme.eq.2) then !AB3
-        if ((itime.eq.1).and.(ilit.eq.0)) then
+     if (itimescheme.eq.2) then !AB3
+        if ((itime.eq.1).and.(irestart.eq.0)) then
            if (nrank.eq.0) print *,'start with Euler for scalar',itime
            do ijk = 1,nvect1 !start with Euler
               phi1(ijk,1,1,is) = dt*ta1(ijk,1,1)+phi1(ijk,1,1,is)
               phis1(ijk,1,1,is) = ta1(ijk,1,1)
            enddo
         else
-           if  ((itime.eq.2).and.(ilit.eq.0)) then
+           if  ((itime.eq.2).and.(irestart.eq.0)) then
               if (nrank.eq.0) print *,'then with AB2 for scalar',itime
               do ijk = 1,nvect1
                  phi1(ijk,1,1,is) = onepfive*dt*ta1(ijk,1,1)-half*dt*phis1(ijk,1,1,is)+phi1(ijk,1,1,is)
@@ -327,6 +327,6 @@ subroutine scalar(ux1,uy1,uz1,phi1,phis1,phiss1,di1,ta1,tb1,tc1,td1,&
         enddo
      endif
 
-  end do !loop nphi
+  end do !loop numscalar
 
 end subroutine scalar

@@ -38,9 +38,6 @@ PROGRAM incompact3d
   call decomp_info_init(nxm, ny, nz, ph2)
   call decomp_info_init(nxm, nym, nz, ph3)
 
-  
-  
-
   call init_variables()
 
 #ifdef IMPLICIT
@@ -63,9 +60,11 @@ PROGRAM incompact3d
   call init_explicit_les()
 #endif
 
-  if (ilit==0) call init(ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
-
-  if (ilit==1) call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,0)
+  if (irestart==0) then
+     call init(ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
+  else
+     call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,0)
+  endif
 
 
 #ifdef IBM
@@ -79,10 +78,10 @@ PROGRAM incompact3d
 
 #ifdef FORCES
   call init_forces()
-  if (ilit==1) call restart_forces(0)
+  if (irestart==1) call restart_forces(0)
 #endif
 
-  if (ilit==0) then
+  if (irestart==0) then
      itime=0
 #ifdef VISU
      call VISU_INSTA (ux1,uy1,uz1,phi1,ep1,diss1,.false.)
@@ -143,7 +142,9 @@ PROGRAM incompact3d
 #ifdef FORCES
      call force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
           ux2,uy2,ta2,tb2,tc2,td2,di2)
-     if (mod(itime,isave).eq.0) call restart_forces(1)
+     if (mod(itime,icheckpoint).eq.0) then
+        call restart_forces(1)
+     endif
 #endif
 #ifdef POST
      call postprocessing(ux1,uy1,uz1,phi1,ep1)
@@ -152,10 +153,10 @@ PROGRAM incompact3d
 
      call cpu_time(trank)
      if (nrank==0) print *,'Time per this time step (s):',real(trank-t1)
-     if (nrank==0) print *,'Snapshot current/final ',int(itime/imodulo),int(ilast/imodulo)
+     if (nrank==0) print *,'Snapshot current/final ',int(itime/ioutput),int(ilast/ioutput)
 
 #ifdef VISU
-     if (mod(itime,imodulo).eq.0) then
+     if (mod(itime,ioutput).eq.0) then
         call VISU_INSTA (ux1,uy1,uz1,phi1,ep1,.false.)
 
         if (save_pre.eq.1.OR.save_prem.eq.1) call VISU_PRE (pp3,ta1,tb1,di1,&
@@ -179,7 +180,9 @@ PROGRAM incompact3d
      endif
 #endif
 
-     if (mod(itime,isave).eq.0) call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,1) 
+     if (mod(itime,icheckpoint).eq.0) then
+        call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,1)
+     endif
 
      call cpu_time(trank)
 
