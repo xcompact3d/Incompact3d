@@ -438,16 +438,16 @@ subroutine VISU_PRE (pp3,ta1,tb1,di1,ta2,tb2,di2,ta3,di3,nxmsize,nymsize,nzmsize
   character(len=30) filename
 
   !WORK Z-PENCILS
-  call interiz6(ta3,pp3,di3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
-  (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
+  call interzpv(ta3,pp3,di3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
+       (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
   !WORK Y-PENCILS
   call transpose_z_to_y(ta3,ta2,ph3) !nxm nym nz
-  call interiy6(tb2,ta2,di2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
-  (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
+  call interypv(tb2,ta2,di2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
+       (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
   !WORK X-PENCILS
   call transpose_y_to_x(tb2,ta1,ph2) !nxm ny nz
-  call interi6(tb1,ta1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
-  nxmsize,xsize(1),xsize(2),xsize(3),1)
+  call interxpv(tb1,ta1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
+       nxmsize,xsize(1),xsize(2),xsize(3),1)
 
   pre1=tb1
 
