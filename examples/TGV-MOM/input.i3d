@@ -5,8 +5,8 @@
 !===================
 
 ! Domain decomposition
-p_row=2               ! Row partition
-p_col=2               ! Column partition
+p_row=0               ! Row partition
+p_col=0               ! Column partition
 
 ! Mesh
 nx=103                ! X-direction nodes
@@ -46,8 +46,8 @@ iibm=0                ! Flag for immersed boundary method
 !====================
 
 ! Spatial derivatives
-ifirstder = 4         ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact)
-isecondder = 4        ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact, 5->hyperviscous 6th)
+ifirstder = 3         ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact)
+isecondder = 3        ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact, 5->hyperviscous 6th)
 
 ! Time scheme
 itimescheme = 1       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4)

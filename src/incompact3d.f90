@@ -21,7 +21,6 @@ PROGRAM incompact3d
   real(mytype) :: x,y,z,timeleft
   real(8) :: tstart,t1,trank,tranksum,ttotal,tremaining,telapsed
 
- ! TYPE(DECOMP_INFO) :: phG,ph1,ph2,ph3,ph4
   integer :: ErrFlag, nargin, FNLength, status, DecInd, output_counter
   logical :: back
   character(len=80) :: InputFN, FNBase
@@ -30,36 +29,34 @@ PROGRAM incompact3d
   ! Handle input file like a boss -- GD
   nargin=command_argument_count()
   if (nargin <1) then
-    print*, 'Incompact3d is run with the default file --> incompact3d input.i3d'
+     InputFN='input.i3d'
+     print*, 'Incompact3d is run with the default file -->', InputFN
   elseif (nargin.ge.1) then
-    print*, 'Program is run with the provided file -->', InputFN
-  endif
-
-  call get_command_argument(1,InputFN,FNLength,status)
-  back=.true.
-  FNBase=inputFN((index(InputFN,'/',back)+1):len(InputFN))
-  DecInd=index(FNBase,'.',back)
-  if (DecInd >1) then
-      FNBase=FNBase(1:(DecInd-1))
-  end if
+     print*, 'Program is run with the provided file -->', InputFN
+     
+     call get_command_argument(1,InputFN,FNLength,status)
+     back=.true.
+     FNBase=inputFN((index(InputFN,'/',back)+1):len(InputFN))
+     DecInd=index(FNBase,'.',back)
+     if (DecInd >1) then
+        FNBase=FNBase(1:(DecInd-1))
+     end if
+ endif
+ 
+ call parameter(InputFN)
   
-  call ft_parameter(.true.)
-
   call MPI_INIT(code)
+  
   call decomp_2d_init(nx,ny,nz,p_row,p_col)
   call init_coarser_mesh_statS(nstat,nstat,nstat,.true.)    !start from 1 == true
   call init_coarser_mesh_statV(nvisu,nvisu,nvisu,.true.)    !start from 1 == true
   call init_coarser_mesh_statP(nprobe,nprobe,nprobe,.true.) !start from 1 == true
-  call parameter()
  !div: nx ny nz --> nxm ny nz --> nxm nym nz --> nxm nym nzm
   call decomp_info_init(nxm, nym, nzm, ph1)
   call decomp_info_init(nxm, ny, nz, ph4)
   !gradp: nxm nym nzm -> nxm nym nz --> nxm ny nz --> nx ny nz
   call decomp_info_init(nxm, ny, nz, ph2)
   call decomp_info_init(nxm, nym, nz, ph3)
-
-  
-  
 
   call init_variables()
 
@@ -83,9 +80,11 @@ PROGRAM incompact3d
   call init_explicit_les()
 #endif
 
-  if (ilit==0) call init(ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
-
-  if (ilit==1) call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,0)
+  if (irestart==0) then
+     call init(ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
+  else
+     call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,0)
+  endif
 
 
 #ifdef IBM
@@ -99,10 +98,10 @@ PROGRAM incompact3d
 
 #ifdef FORCES
   call init_forces()
-  if (ilit==1) call restart_forces(0)
+  if (irestart==1) call restart_forces(0)
 #endif
 
-  if (ilit==0) then
+  if (irestart==0) then
      itime=0
 #ifdef VISU
      call VISU_INSTA (ux1,uy1,uz1,phi1,ep1,diss1,.false.)
@@ -163,7 +162,9 @@ PROGRAM incompact3d
 #ifdef FORCES
      call force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
           ux2,uy2,ta2,tb2,tc2,td2,di2)
-     if (mod(itime,isave).eq.0) call restart_forces(1)
+     if (mod(itime,icheckpoint).eq.0) then
+        call restart_forces(1)
+     endif
 #endif
 #ifdef POST
      call postprocessing(ux1,uy1,uz1,phi1,ep1)
@@ -172,10 +173,10 @@ PROGRAM incompact3d
 
      call cpu_time(trank)
      if (nrank==0) print *,'Time per this time step (s):',real(trank-t1)
-     if (nrank==0) print *,'Snapshot current/final ',int(itime/imodulo),int(ilast/imodulo)
+     if (nrank==0) print *,'Snapshot current/final ',int(itime/ioutput),int(ilast/ioutput)
 
 #ifdef VISU
-     if (mod(itime,imodulo).eq.0) then
+     if (mod(itime,ioutput).eq.0) then
         call VISU_INSTA (ux1,uy1,uz1,phi1,ep1,.false.)
 
         if (save_pre.eq.1.OR.save_prem.eq.1) call VISU_PRE (pp3,ta1,tb1,di1,&
@@ -199,7 +200,9 @@ PROGRAM incompact3d
      endif
 #endif
 
-     if (mod(itime,isave).eq.0) call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,1) 
+     if (mod(itime,icheckpoint).eq.0) then
+        call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,1)
+     endif
 
      call cpu_time(trank)
 

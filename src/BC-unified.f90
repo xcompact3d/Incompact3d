@@ -1,15 +1,19 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!!        FILE: BC-unified.f90
+!!      AUTHOR: Paul Bartholomew <paul.bartholomew08@imperial.ac.uk>
+!! DESCRIPTION: Template BC-*.f90 file - all flows should use a single, unified BC-*.prm
+!!              format.
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 module flow_type
   use decomp_2d, only : mytype
   
   integer :: ncil
   real(mytype) :: ra
   real(mytype),allocatable,dimension(:) :: cex,cey
-
 end module flow_type
-
-#ifdef FORCES
-#include "forces.f90"
-#endif
 
 subroutine ft_parameter(arg)
 
@@ -34,7 +38,7 @@ subroutine ft_parameter(arg)
   nclz1 = 0 !Boundary condition in z=0  (0: Periodic, 1:Free-slip, 2: Dirichlet)
   nclzn = 0 !Boundary condition in z=Lz (0: Periodic, 1:Free-slip, 2: Dirichlet)
 
-  open(10,file='BC-Cylinder.prm',status='unknown',form='formatted')
+  open(10,file='BC-unified.prm',status='unknown',form='formatted')
   read (10,*) a ! 
   read (10,*) a ! INCOMPACT 3D computational parameters
   read (10,*) a !

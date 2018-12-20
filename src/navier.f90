@@ -21,16 +21,16 @@ subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
   if (nrank .eq. 0) print *,'# intt start'
 #endif
 
-  if (nscheme.eq.1) then 
+  if (itimescheme.eq.1) then 
      !>>> Euler 
      ux1(:,:,:)=gdt(itr)*dux1(:,:,:,1)+ux1(:,:,:) 
      uy1(:,:,:)=gdt(itr)*duy1(:,:,:,1)+uy1(:,:,:)
      uz1(:,:,:)=gdt(itr)*duz1(:,:,:,1)+uz1(:,:,:)
-  elseif(nscheme.eq.2) then
+  elseif(itimescheme.eq.2) then
      !>>> Adam-Bashforth second order (AB2)
      
      ! Do first time step with Euler
-     if(itime.eq.1.and.ilit.eq.0) then
+     if(itime.eq.1.and.irestart.eq.0) then
         ux1(:,:,:)=gdt(itr)*dux1(:,:,:,1)+ux1(:,:,:) 
         uy1(:,:,:)=gdt(itr)*duy1(:,:,:,1)+uy1(:,:,:)
         uz1(:,:,:)=gdt(itr)*duz1(:,:,:,1)+uz1(:,:,:)
@@ -42,15 +42,15 @@ subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
      dux1(:,:,:,2)=dux1(:,:,:,1) 
      duy1(:,:,:,2)=duy1(:,:,:,1) 
      duz1(:,:,:,2)=duz1(:,:,:,1) 
-  elseif(nscheme.eq.3) then
+  elseif(itimescheme.eq.3) then
      !>>> Adams-Bashforth third order (AB3)
      
      ! Do first time step with Euler
-     if(itime.eq.1.and.ilit.eq.0) then
+     if(itime.eq.1.and.irestart.eq.0) then
         ux1(:,:,:)=dt*dux1(:,:,:,1)+ux1(:,:,:)
         uy1(:,:,:)=dt*duy1(:,:,:,1)+uy1(:,:,:)
         uz1(:,:,:)=dt*duz1(:,:,:,1)+uz1(:,:,:)
-     elseif(itime.eq.2.and.ilit.eq.0) then
+     elseif(itime.eq.2.and.irestart.eq.0) then
       	! Do second time step with AB2
       	ux1(:,:,:)=onepfive*dt*dux1(:,:,:,1)-half*dt*dux1(:,:,:,2)+ux1(:,:,:)
       	uy1(:,:,:)=onepfive*dt*duy1(:,:,:,1)-half*dt*duy1(:,:,:,2)+uy1(:,:,:)
@@ -70,7 +70,7 @@ subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
      dux1(:,:,:,2)=dux1(:,:,:,1) 
      duy1(:,:,:,2)=duy1(:,:,:,1) 
      duz1(:,:,:,2)=duz1(:,:,:,1) 
-  elseif(nscheme.eq.4) then
+  elseif(itimescheme.eq.4) then
      !>>> Adams-Bashforth fourth order (AB4)
      
      !if (itime.eq.1.and.ilit.eq.0) then
@@ -115,7 +115,7 @@ subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
      !gz(:,:,:)=hz(:,:,:)            
      !endif	
      !>>> Runge-Kutta (low storage) RK3
-  elseif(nscheme.eq.5) then
+  elseif(itimescheme.eq.5) then
      if(itr.eq.1) then
         ux1(:,:,:)=gdt(itr)*dux1(:,:,:,1)+ux1(:,:,:) 
         uy1(:,:,:)=gdt(itr)*duy1(:,:,:,1)+uy1(:,:,:)
@@ -129,7 +129,7 @@ subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
      duy1(:,:,:,2)=duy1(:,:,:,1) 
      duz1(:,:,:,2)=duz1(:,:,:,1) 
      !>>> Runge-Kutta (low storage) RK4
-  elseif(nscheme.eq.6) then
+  elseif(itimescheme.eq.6) then
 
   endif
 

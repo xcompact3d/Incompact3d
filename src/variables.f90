@@ -124,9 +124,9 @@ contains
     call alloc_x(pre1, opt_global=.true.) !global indices
     call alloc_x(nut1, opt_global=.true.) !global indices
 
-    allocate(phi1(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),1:nphi)) !global indices
-    allocate(phis1(xsize(1),xsize(2),xsize(3),1:nphi))
-    allocate(phiss1(xsize(1),xsize(2),xsize(3),1:nphi))
+    allocate(phi1(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),1:numscalar)) !global indices
+    allocate(phis1(xsize(1),xsize(2),xsize(3),1:numscalar))
+    allocate(phiss1(xsize(1),xsize(2),xsize(3),1:numscalar))
 
     call alloc_x(ta1);call alloc_x(tb1);call alloc_x(tc1)
     call alloc_x(td1);call alloc_x(te1);call alloc_x(tf1)

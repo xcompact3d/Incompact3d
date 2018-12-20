@@ -276,23 +276,23 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
   fb=zero;fc=zero
   
   if (ifirstder==1) then    ! Second-order central
-  alfai= zero
-  afi  = one/(two*d)
-  bfi  = zero
+     alfai= zero
+     afi  = one/(two*d)
+     bfi  = zero
   elseif(ifirstder==2) then ! Fourth-order central
-  alfai= zero
-  afi  = four/(six*d)
-  bfi  = -one/(twelve*d)
+     alfai= zero
+     afi  = four/(six*d)
+     bfi  = -one/(twelve*d)
   elseif(ifirstder==3) then ! Fourth-order compact
-  alfai= one/four
-  afi  = (three/four)/d
-  bfi  = zero 
+     alfai= one/four
+     afi  = (three/four)/d
+     bfi  = zero 
   elseif(ifirstder==4) then ! First-order compact
-  alfai= one/three
-  afi  = (seven/nine)/d
-  bfi  = (one/thirtysix)/d
+     alfai= one/three
+     afi  = (seven/nine)/d
+     bfi  = (one/thirtysix)/d
   endif
-  
+
   alfa1= two
   af1  =-(five/two)/d
   bf1  = (two)/d
@@ -398,7 +398,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
 
   use decomp_2d, only : mytype
   use param
-  use variables, only : fpi2, isecondder
+  use variables, only : fpi2
 
   implicit none
 

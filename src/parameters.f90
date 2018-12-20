@@ -1,4 +1,44 @@
-subroutine parameter()
+!################################################################################
+!This file is part of Incompact3d.
+!
+!Incompact3d
+!Copyright (c) 2012 Eric Lamballais and Sylvain Laizet
+!eric.lamballais@univ-poitiers.fr / sylvain.laizet@gmail.com
+!
+!    Incompact3d is free software: you can redistribute it and/or modify
+!    it under the terms of the GNU General Public License as published by
+!    the Free Software Foundation.
+!
+!    Incompact3d is distributed in the hope that it will be useful,
+!    but WITHOUT ANY WARRANTY; without even the implied warranty of
+!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+!    GNU General Public License for more details.
+!
+!    You should have received a copy of the GNU General Public License
+!    along with the code.  If not, see <http://www.gnu.org/licenses/>.
+!-------------------------------------------------------------------------------
+!-------------------------------------------------------------------------------
+!    We kindly request that you cite Incompact3d in your publications and 
+!    presentations. The following citations are suggested:
+!
+!    1-Laizet S. & Lamballais E., 2009, High-order compact schemes for 
+!    incompressible flows: a simple and efficient method with the quasi-spectral 
+!    accuracy, J. Comp. Phys.,  vol 228 (15), pp 5989-6015
+!
+!    2-Laizet S. & Li N., 2011, Incompact3d: a powerful tool to tackle turbulence 
+!    problems with up to 0(10^5) computational cores, Int. J. of Numerical 
+!    Methods in Fluids, vol 67 (11), pp 1735-1757
+!################################################################################
+
+!================================================================================
+!
+!  SUBROUTINE: parameter
+! DESCRIPTION: Reads the input.i3d file and sets the parameters of the
+!              simulation.
+!      AUTHOR: Paul Bartholomew <paul.bartholomew08@imperial.ac.uk>
+!
+!================================================================================
+subroutine parameter(input_i3d)
 
   USE param
   USE variables
@@ -7,9 +47,20 @@ subroutine parameter()
 
   implicit none
 
+  character(len=80), intent(in) :: input_i3d
   real(mytype) :: theta, cfl,cf2
   integer :: longueur ,impi,j, is, total
 
+  NAMELIST /BasicParam/ p_row, p_col, nx, ny, nz, istret, beta, xlx, yly, zlz, &
+       itype, iin, re, u1, u2, init_noise, inflow_noise, &
+       dt, ifirst, ilast, &
+       iturbmod, iscalar, iibm
+  NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, rxxnu, cnu
+  NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu
+  NAMELIST /Statistics/ spinup_time, nstat
+  NAMELIST /ScalarParam/ numscalar, sc
+  NAMELIST /TurbulenceModel/ iles, smagcst, walecst, iwall
+  NAMELIST /TurbulenceWallModel/ smagwalldamp
 
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter start'
@@ -20,6 +71,8 @@ subroutine parameter()
      print *,'======================Incompact3d=========================='
      print *,'===Copyright (c) 2018 Eric Lamballais and Sylvain Laizet==='
      print *,'===Modified by Felipe Schuch and Ricardo Frantz============'
+     print *,'===Modified by Paul Bartholomew, Yorgos Deskos and========='
+     print *,'===Sylvain Laizet -- 2018- ================================'
      print *,'==========================================================='
 #if defined(VERSION)
      write(*,*)'Git version        : ', VERSION
@@ -28,75 +81,28 @@ subroutine parameter()
 #endif
   endif
 
-  allocate(nsc(nphi),uset(nphi),cp(nphi),ri(nphi),group(nphi))
+  call parameter_defaults()
 
-  ro = 99999999._mytype
-  ri = zero
-  nsc = one
-  uset = zero
-  cp = 1
-  angle = zero
-  u1 = 2
-  u2 = 1
-  noise = zero
-  noise1 = zero
-  iin = 0
-  nscheme = 4
-  istret = 0
-  beta = 0
-  iscalar = 0
-  cont_phi = 0
-  filepath = './data/'
-  ilit = 0
-  datapath = './data/'
-  fpi2 = 4.
-  nraf = 10
-  nobjmax = 1
-  itrip = 0
-  wrotation = zero
-  irotation = 0
-  itest=1
-  
-  
-  save_ux = 0
-  save_uy = 0
-  save_uz = 0
-  save_phi = 0
-  save_uxm = 0
-  save_uym = 0
-  save_uzm = 0
-  save_phim = 0
-  save_w = 0
-  save_w1 = 0
-  save_w2 = 0
-  save_w3 = 0
-  save_qc = 0
-  save_pc = 0
-  save_V = 0
-  save_dudx = 0
-  save_dudy = 0
-  save_dudz = 0
-  save_dvdx = 0
-  save_dvdy = 0
-  save_dvdz = 0
-  save_dwdx = 0
-  save_dwdy = 0
-  save_dwdz = 0
-  save_dphidx = 0
-  save_dphidy = 0
-  save_dphidz = 0
-  save_pre = 0
-  save_prem = 0
-  save_dmap = 0
-  save_utmap = 0
-  save_ibm = 0
+  !! Read parameters
+  open(10, file=input_i3d)
 
-  ivirt = 0
-  ilag = 0
-  npif = 2
-  izap = 1
+  !! These are the 'essential' parameters
+  read(10, nml=BasicParam)
+  read(10, nml=NumOptions)
+  read(10, nml=InOutParam)
+  read(10, nml=Statistics)
 
-  call ft_parameter(.false.)
+  ! !! These are the 'optional'/model parameters
+  ! read(10, nml=ScalarParam)
+  ! read(10, nml=TurbulenceModel)
+  ! read(10, nml=TurbulenceWallModel)
+
+  close(10)
+
+  !! stupid imodulo2 WTF!!!!
+  imodulo2 = 1
+
+  allocate(sc(numscalar),cp(numscalar),ri(numscalar),group(numscalar))
 
   if (nclx1.eq.0.and.nclxn.eq.0) then
      nclx=.true.
@@ -158,24 +164,24 @@ subroutine parameter()
      if (jLES.eq.2) print *,'                   : Explicit Simple Smagorinsky'
      if (jLES.eq.3) print *,'                   : Explicit Wall-Adaptive LES'
      if (jLES.eq.4) print *,'                   : Explicit Dynamic Smagorinsky LES'
-     if (nscheme.eq.1) then
+     if (itimescheme.eq.1) then
         print *,'Temporal scheme    : Forwards Euler'
-     elseif (nscheme.eq.2) then
+     elseif (itimescheme.eq.2) then
         print *,'Temporal scheme    : Adams-bashforth 2'
-     elseif (nscheme.eq.3) then
+     elseif (itimescheme.eq.3) then
         print *,'Temporal scheme    : Adams-bashforth 3'
-     elseif (nscheme.eq.4) then
+     elseif (itimescheme.eq.4) then
         print *,'Temporal scheme    : Adams-bashforth 4'
         print *,'Error: Adams-bashforth 4 not implemented!'
         stop
-     elseif (nscheme.eq.5) then
+     elseif (itimescheme.eq.5) then
         print *,'Temporal scheme    : Runge-kutta 3'
-     elseif (nscheme.eq.6) then
+     elseif (itimescheme.eq.6) then
         print *,'Temporal scheme    : Runge-kutta 4'
         print *,'Error: Runge-kutta 4 not implemented!'
         stop
      else
-        print *,'Error: nscheme must be specified as 1-6'
+        print *,'Error: itimescheme must be specified as 1-6'
         stop
      endif
      if (iscalar.eq.0) then
@@ -185,12 +191,12 @@ subroutine parameter()
         write(*,"(' Boundary condition : (nclxS1,nclxSn)=(',I1,',',I1,')')") nclxS1,nclxSn
         write(*,"('                      (nclyS1,nclySn)=(',I1,',',I1,')')") nclyS1,nclySn
         write(*,"('                      (nclzS1,nclzSn)=(',I1,',',I1,')')") nclzS1,nclzSn
-        do is=1, nphi
+        do is=1, numscalar
            write (*,"(' Particle fraction  : #',I1)") is
            write (*,"(' Concentration      : ',F15.8)") cp(is)
            write (*,"(' Richardson number  : ',F15.8)") ri(is)
            write (*,"(' Settling velocity  : ',F15.8)") uset(is)
-           write (*,"(' Schmidt number     : ',F15.8)") nsc(is)
+           write (*,"(' Schmidt number     : ',F15.8)") sc(is)
         end do
      endif
      if (ivirt.eq.0) print *,'Immersed boundary  : off'
@@ -210,9 +216,9 @@ subroutine parameter()
   angley = cos(pi*angle/180._mytype)
 #endif
 
-  dx2=dx*dx
-  dy2=dy*dy
-  dz2=dz*dz
+  dx2 = dx * dx
+  dy2 = dy * dy
+  dz2 = dz * dz
 
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter done'
@@ -220,3 +226,79 @@ subroutine parameter()
 
   return
 end subroutine parameter
+
+!================================================================================
+!
+!  SUBROUTINE: parameter_defaults
+! DESCRIPTION: Sets the default simulation parameters.
+!      AUTHOR: Paul Bartholomew <paul.bartholomew08@imperial.ac.uk>
+!
+!================================================================================
+subroutine parameter_defaults()
+
+  USE param
+  USE variables
+  USE decomp_2d
+
+  ro = 99999999._mytype
+  angle = zero
+  u1 = 2
+  u2 = 1
+  noise = zero
+  noise1 = zero
+  iin = 0
+  nscheme = 4
+  istret = 0
+  beta = 0
+  iscalar = 0
+  cont_phi = 0
+  filepath = './data/'
+  ilit = 0
+  datapath = './data/'
+  fpi2 = 4.
+  nraf = 10
+  nobjmax = 1
+  itrip = 0
+  wrotation = zero
+  irotation = 0
+  itest=1
+  
+  
+  save_ux = 0
+  save_uy = 0
+  save_uz = 0
+  save_phi = 0
+  save_uxm = 0
+  save_uym = 0
+  save_uzm = 0
+  save_phim = 0
+  save_w = 0
+  save_w1 = 0
+  save_w2 = 0
+  save_w3 = 0
+  save_qc = 0
+  save_pc = 0
+  save_V = 0
+  save_dudx = 0
+  save_dudy = 0
+  save_dudz = 0
+  save_dvdx = 0
+  save_dvdy = 0
+  save_dvdz = 0
+  save_dwdx = 0
+  save_dwdy = 0
+  save_dwdz = 0
+  save_dphidx = 0
+  save_dphidy = 0
+  save_dphidz = 0
+  save_pre = 0
+  save_prem = 0
+  save_dmap = 0
+  save_utmap = 0
+  save_ibm = 0
+
+  ivirt = 0
+  ilag = 0
+  npif = 2
+  izap = 1
+end subroutine parameter_defaults
