@@ -3,7 +3,7 @@
 !
 ! input: dux1,duy1,duz1 
 ! 
-! input/output: ux, uy, uz 
+! input/output: ux1, uy1, uz1 
 ! 
 !************************************************************************ 
 subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)

@@ -185,8 +185,6 @@ subroutine debug_schemes()
   call derx (dfdxp1,fxp1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
   call derxx (dfdxx1 ,fx1 ,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0)
   call derxx (dfdxxp1,fxp1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
-  call derxvp(pp1,fx1,di1,sx,cfx6,csx6,cwx6,xsize(1),nxmsize,xsize(2),xsize(3),0)
-  call interxvp(pgy1,fx1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
   if (nrank.eq.0) then
      write(filename,"('schemes_x',I1.1,I1.1,I1.1,I4.4)") jLES,nclx1,nclxn,nx
      open(67,file=trim(filename),status='unknown',form='formatted')
@@ -199,18 +197,44 @@ subroutine debug_schemes()
              -sixteen*pi*pi*cos_prec(four*pi*x),dfdxxp1(i,1,1)
      enddo
      close(67)
-     write(filename,"('schemes_xST',I1.1,I1.1,I1.1,I4.4)") jLES,nclx1,nclxn,nx
+  endif
+  call derxvp(pp1,fx1,di1,sx,cfx6,csx6,cwx6,xsize(1),nxmsize,xsize(2),xsize(3),0)
+  call interxvp(pgy1,fxp1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+  if (nrank.eq.0) then
+     write(filename,"('schemes_xVP',I1.1,I1.1,I1.1,I4.4)") jLES,nclx1,nclxn,nx
      open(68,file=trim(filename),status='unknown',form='formatted')
      do i=1,nxmsize
         x1 = real(i-half,mytype)*dx
         write(68,'(5E14.6)') x1,&
              four*pi*cos_prec(four*pi*x1),pp1(i,1,1),&
-             sin_prec(four*pi*x1),pgy1(i,1,1)
+             cos_prec(four*pi*x1),pgy1(i,1,1)
      enddo
      close(68)
-     
   endif
-
+  do k=1,xsize(3)
+     do j=1,xsize(2)
+        do i=1,nxmsize
+           x1 = real(i-0.5,mytype)*dx*four*pi
+           pp1(i,j,k) = cos_prec(x1)
+        enddo
+     enddo
+  enddo
+  call derxpv(fx1,pp1,di1,sx,cfip6,csip6,cwip6,cfx6,csx6,cwx6,&
+       nxmsize,xsize(1),xsize(2),xsize(3),1)
+  call interxpv(fxp1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
+       nxmsize,xsize(1),xsize(2),xsize(3),1)
+  if (nrank.eq.0) then
+     write(filename,"('schemes_xPV',I1.1,I1.1,I1.1,I4.4)") jLES,nclx1,nclxn,nx
+     open(69,file=trim(filename),status='unknown',form='formatted')
+     do i=1,nxmsize
+        x = real(i-1.,mytype)*dx
+        write(69,'(5E14.6)') x,&
+             -four*pi*sin_prec(four*pi*x),fx1(i,1,1),&
+             cos_prec(four*pi*x),fxp1(i,1,1)
+     enddo
+     close(69)
+  endif
+  
   do k=1,ysize(3)
      do j=1,ysize(2)
         y = real(j-1,mytype)*dy*4*pi
@@ -347,6 +371,42 @@ subroutine debug_schemes()
              -sixteen*pi*pi*sin_prec(four*pi*z),dfdzz3(1,1,k)
      enddo
      close(67)
+  endif
+  call derxvp(pp1,fx1,di1,sx,cfx6,csx6,cwx6,xsize(1),nxmsize,xsize(2),xsize(3),0)
+  call interxvp(pgy1,fxp1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+  if (nrank.eq.0) then
+     write(filename,"('schemes_xVP',I1.1,I1.1,I1.1,I4.4)") jLES,nclx1,nclxn,nx
+     open(68,file=trim(filename),status='unknown',form='formatted')
+     do i=1,nxmsize
+        x1 = real(i-half,mytype)*dx
+        write(68,'(5E14.6)') x1,&
+             four*pi*cos_prec(four*pi*x1),pp1(i,1,1),&
+             cos_prec(four*pi*x1),pgy1(i,1,1)
+     enddo
+     close(68)
+  endif
+  do k=1,xsize(3)
+     do j=1,xsize(2)
+        do i=1,nxmsize
+           x1 = real(i-0.5,mytype)*dx*four*pi
+           pp1(i,j,k) = cos_prec(x1)
+        enddo
+     enddo
+  enddo
+  call derxpv(fx1,pp1,di1,sx,cfip6,csip6,cwip6,cfx6,csx6,cwx6,&
+       nxmsize,xsize(1),xsize(2),xsize(3),1)
+  call interxpv(fxp1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
+       nxmsize,xsize(1),xsize(2),xsize(3),1)
+  if (nrank.eq.0) then
+     write(filename,"('schemes_xPV',I1.1,I1.1,I1.1,I4.4)") jLES,nclx1,nclxn,nx
+     open(69,file=trim(filename),status='unknown',form='formatted')
+     do i=1,nxmsize
+        x = real(i-1.,mytype)*dx
+        write(69,'(5E14.6)') x,&
+             -four*pi*sin_prec(four*pi*x),fx1(i,1,1),&
+             cos_prec(four*pi*x),fxp1(i,1,1)
+     enddo
+     close(69)
   endif
   
   !###############################################################
