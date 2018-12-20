@@ -47,7 +47,7 @@ subroutine parameter(input_i3d)
 
   implicit none
 
-  character(len=*), intent(in) :: input_i3d
+  character(len=80), intent(in) :: input_i3d
   real(mytype) :: theta, cfl,cf2
   integer :: longueur ,impi,j, is, total
 
@@ -92,16 +92,17 @@ subroutine parameter(input_i3d)
   read(10, nml=InOutParam)
   read(10, nml=Statistics)
 
-  !! These are the 'optional'/model parameters
-  read(10, nml=ScalarParam)
-  read(10, nml=TurbulenceModel)
-  read(10, nml=TurbulenceWallModel)
+  ! !! These are the 'optional'/model parameters
+  ! read(10, nml=ScalarParam)
+  ! read(10, nml=TurbulenceModel)
+  ! read(10, nml=TurbulenceWallModel)
 
   close(10)
 
-  allocate(sc(numscalar),uset(numscalar),cp(numscalar),ri(numscalar),group(numscalar))
+  !! stupid imodulo2 WTF!!!!
+  imodulo2 = 1
 
-  call ft_parameter(.false.)
+  allocate(sc(numscalar),cp(numscalar),ri(numscalar),group(numscalar))
 
   if (nclx1.eq.0.and.nclxn.eq.0) then
      nclx=.true.
@@ -240,10 +241,6 @@ subroutine parameter_defaults()
   USE decomp_2d
 
   ro = 99999999._mytype
-  ri = zero
-  nsc = one
-  uset = zero
-  cp = 1
   angle = zero
   u1 = 2
   u2 = 1

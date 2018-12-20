@@ -21,16 +21,36 @@ PROGRAM incompact3d
   real(mytype) :: x,y,z,timeleft
   real(8) :: tstart,t1,trank,tranksum,ttotal,tremaining,telapsed
 
- ! TYPE(DECOMP_INFO) :: phG,ph1,ph2,ph3,ph4
+  integer :: ErrFlag, nargin, FNLength, status, DecInd, output_counter
+  logical :: back
+  character(len=80) :: InputFN, FNBase
+  character(len=20) :: filename
 
-  call ft_parameter(.true.)
-
+  ! Handle input file like a boss -- GD
+  nargin=command_argument_count()
+  if (nargin <1) then
+     InputFN='input.i3d'
+     print*, 'Incompact3d is run with the default file -->', InputFN
+  elseif (nargin.ge.1) then
+     print*, 'Program is run with the provided file -->', InputFN
+     
+     call get_command_argument(1,InputFN,FNLength,status)
+     back=.true.
+     FNBase=inputFN((index(InputFN,'/',back)+1):len(InputFN))
+     DecInd=index(FNBase,'.',back)
+     if (DecInd >1) then
+        FNBase=FNBase(1:(DecInd-1))
+     end if
+ endif
+ 
+ call parameter(InputFN)
+  
   call MPI_INIT(code)
+  
   call decomp_2d_init(nx,ny,nz,p_row,p_col)
   call init_coarser_mesh_statS(nstat,nstat,nstat,.true.)    !start from 1 == true
   call init_coarser_mesh_statV(nvisu,nvisu,nvisu,.true.)    !start from 1 == true
   call init_coarser_mesh_statP(nprobe,nprobe,nprobe,.true.) !start from 1 == true
-  call parameter()
  !div: nx ny nz --> nxm ny nz --> nxm nym nz --> nxm nym nzm
   call decomp_info_init(nxm, nym, nzm, ph1)
   call decomp_info_init(nxm, ny, nz, ph4)

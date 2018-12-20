@@ -22,7 +22,7 @@ subroutine ft_parameter(arg)
   read (10,*) nx
   ny = nx
   nz = nx
-  read (10,*) nphi
+  read (10,*) numscalar
   read (10,*) p_row
   read (10,*) p_col
   if (arg) then
@@ -38,7 +38,7 @@ subroutine ft_parameter(arg)
   zlz = xlx
   read (10,*) re
   read (10,*) ri
-  read (10,*) noise
+  read (10,*) init_noise
   read (10,*) dt
   read (10,*) a !
   read (10,*) a ! INCOMPACT3D Flow configuration
@@ -49,7 +49,7 @@ subroutine ft_parameter(arg)
   read (10,*) iin
   read (10,*) ifirst
   read (10,*) ilast
-  read (10,*) nscheme
+  read (10,*) itimescheme
   read (10,*) a !velocity
   read (10,*) nclx1
   read (10,*) nclxn
@@ -67,9 +67,9 @@ subroutine ft_parameter(arg)
   read (10,*) a !
   read (10,*) a ! INCOMPACT 3D File parameters
   read (10,*) a !
-  read (10,*) ilit
+  read (10,*) irestart
   read (10,*) icheckpoint
-  read (10,*) imodulo
+  read (10,*) ioutput
   read (10,*) imodulo2
   read (10,*) a !
   read (10,*) a ! NUMERICAL DISSIPATION
@@ -90,7 +90,7 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
   implicit none
 
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1,phis1,phiss1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1,phis1,phiss1
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
 
   real(mytype) :: y,r,um,r3,x,z,h,ct
@@ -177,7 +177,7 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
   endif
 
   if (iscalar==1) then
-     do is=1,nphi !vectorized for performance Ricardo
+     do is=1,numscalar !vectorized for performance Ricardo
         do ijk=1,xsize(1)*xsize(2)*xsize(3)
            phis1(ijk,1,1,is)=phi1(ijk,1,1,is)
            phiss1(ijk,1,1,is)=phis1(ijk,1,1,is)
@@ -222,7 +222,7 @@ subroutine boundary_conditions (ux,uy,uz,phi)
   implicit none
 
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
 
 end subroutine boundary_conditions
@@ -338,11 +338,11 @@ contains
   subroutine write_probes(ux1,uy1,uz1,phi1) !By Felipe Schuch
 
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ux1, uy1, uz1
-    real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),nphi) :: phi1
+    real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),numscalar) :: phi1
 
     integer :: i
     character(len=30) :: filename
-    FS = 1+3+nphi !Number of columns
+    FS = 1+3+numscalar !Number of columns
     write(fileformat, '( "(",I4,"(E14.6),A)" )' ) FS
     FS = FS*14+1  !Line width
 
@@ -355,7 +355,7 @@ contains
         ux1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !2
         uy1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !3
         uz1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !4
-        phi1(nxprobes(i),nyprobes(i),nzprobes(i),:),&         !nphi
+        phi1(nxprobes(i),nyprobes(i),nzprobes(i),:),&         !numscalar
         NL                                                    !+1
         close(67)
       endif
@@ -369,12 +369,12 @@ contains
     USE MPI
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,ep1,diss1
     real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2
     real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
-    real(mytype) :: mp(nphi),mps(nphi),vl,es,es1,ek,ek1,ds,ds1
+    real(mytype) :: mp(numscalar),mps(numscalar),vl,es,es1,ek,ek1,ds,ds1
 
     integer :: i,j,k,is,ijk,code,nvect1
     nvect1=xsize(1)*xsize(2)*xsize(3)
@@ -401,7 +401,7 @@ contains
 
     endif
 
-     if (mod(itime,imodulo2).eq.0) then
+    if (mod(itime,imodulo2).eq.0) then
     !x-derivatives
     call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
     call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
@@ -491,22 +491,22 @@ contains
 
     implicit none
 
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: vol1
-    real(mytype),intent(out) :: mp1(1:nphi)
+    real(mytype),intent(out) :: mp1(1:numscalar)
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: temp1
-    real(mytype) :: mp(1:nphi)
+    real(mytype) :: mp(1:numscalar)
     integer :: is,code
 
     mp=zero; mp1=zero
 
-    do is=1, nphi
+    do is=1, numscalar
        temp1 = phi1(:,:,:,is)*vol1(:,:,:)
        mp(is)= sum(temp1)
     end do
 
-    call MPI_REDUCE(mp,mp1,nphi,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
+    call MPI_REDUCE(mp,mp1,numscalar,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
 
     return
   end subroutine suspended

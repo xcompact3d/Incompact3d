@@ -274,6 +274,24 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
 
   ff=zero;fs=zero;fw=zero;ffp=zero;fsp=zero;fwp=zero
   fb=zero;fc=zero
+  
+  if (ifirstder==1) then    ! Second-order central
+     alfai= zero
+     afi  = one/(two*d)
+     bfi  = zero
+  elseif(ifirstder==2) then ! Fourth-order central
+     alfai= zero
+     afi  = four/(six*d)
+     bfi  = -one/(twelve*d)
+  elseif(ifirstder==3) then ! Fourth-order compact
+     alfai= one/four
+     afi  = (three/four)/d
+     bfi  = zero 
+  elseif(ifirstder==4) then ! First-order compact
+     alfai= one/three
+     afi  = (seven/nine)/d
+     bfi  = (one/thirtysix)/d
+  endif
 
   alfa1= two
   af1  =-(five/two)/d
@@ -290,10 +308,6 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
   dfn  = zero
   alfam= one/four
   afm  = (three/four)/d
-
-  alfai= one/three
-  afi  = (seven/nine)/d
-  bfi  = (one/thirtysix)/d
 
   if     (ncl1.eq.0) then !Periodic
      ff(1)   =alfai
@@ -373,7 +387,6 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
 end subroutine first_derivative
 
 !*******************************************************************
-!
 subroutine second_derivative(alsa1,as1,bs1,&
        cs1,ds1,alsa2,as2,alsan,asn,bsn,csn,dsn,alsam,&
        asm,alsa3,as3,bs3,alsat,ast,bst,&
@@ -381,7 +394,6 @@ subroutine second_derivative(alsa1,as1,bs1,&
        alsatt,astt,bstt,cstt,&
        alsai,asi,bsi,csi,dsi,&
        sf,ss,sw,sfp,ssp,swp,d2,n,ncl1,ncln)
-! 
 !*******************************************************************
 
   use decomp_2d, only : mytype
@@ -405,6 +417,102 @@ subroutine second_derivative(alsa1,as1,bs1,&
 
   sf=zero;ss=zero;sw=zero;sfp=zero;ssp=zero;swp=zero
 
+  ! Define coefficients based on the desired formal accuracy of the numerical schemes
+  if (isecondder==1) then    ! Second-order central
+     alsai=zero
+     asi  =one/d2  !((six-nine*alsai)/four)/d2
+     bsi  =zero !((-three+twentyfour*alsai)/five)/(four*d2)
+     csi  =zero !((two-eleven*alsai)/twenty)/(nine*d2)
+     dsi = zero
+
+     alsa4= alsai
+     as4  = asi
+     bs4  = bsi
+     cs4  = csi
+
+     alsatt = alsai
+     astt = asi
+     bstt = bsi
+     cstt = csi 
+  elseif(isecondder==2) then ! Fourth-order central
+     alsai=zero !(45._mytype*fpi2*pi*pi-272._mytype)/(two*(45._mytype*fpi2*pi*pi-208._mytype))
+     asi  = four/three/d2 !((six-nine*alsai)/four)/d2
+     bsi  = -one/three/(four*d2) !((-three+twentyfour*alsai)/five)/(four*d2)
+     csi  = zero !((two-eleven*alsai)/twenty)/(nine*d2)
+     dsi  = zero
+
+     alsa4= alsai
+     as4  = asi
+     bs4  = bsi
+     cs4  = csi
+
+     alsatt = alsai
+     astt = asi
+     bstt = bsi
+     cstt = csi 
+  elseif(isecondder==3) then ! Fourth-order compact
+     alsai= one/ten  !(45._mytype*fpi2*pi*pi-272._mytype)/(two*(45._mytype*fpi2*pi*pi-208._mytype))
+     asi  = six/five/d2 !((six-nine*alsai)/four)/d2
+     bsi  = zero !((-three+twentyfour*alsai)/five)/(four*d2)
+     csi  = zero !((two-eleven*alsai)/twenty)/(nine*d2)
+     dsi  = zero
+
+     alsa4= alsai
+     as4  = asi
+     bs4  = bsi
+     cs4  = csi
+
+     alsatt = alsai
+     astt = asi
+     bstt = bsi
+     cstt = csi  
+  elseif(isecondder==4) then ! Sixth-order compact
+     !BASE LELE
+     !alsai= 2./11.
+     !asi  = (12./11.)/d2
+     !bsi  = (3./44. )/d2
+     !csi  = 0.
+     !NUMERICAL DISSIPATION (see publications for help)
+     !      fpi2=(48./7)/(pi*pi)
+     alsai=(45._mytype*fpi2*pi*pi-272._mytype)/(two*(45._mytype*fpi2*pi*pi-208._mytype))
+     asi  =((six-nine*alsai)/four)/d2
+     bsi  =((-three+twentyfour*alsai)/five)/(four*d2)
+     csi  =((two-eleven*alsai)/twenty)/(nine*d2)
+     dsi = zero
+
+     alsa4= alsai
+     as4  = asi
+     bs4  = bsi
+     cs4  = csi
+
+     alsatt = alsai
+     astt = asi
+     bstt = bsi
+     cstt = csi 
+  elseif(isecondder==5) then ! Sixth-order Hyperviscous operator 
+     xxnu=one/fpi2
+     dpis3=two*pi/three
+     kppkc=pi*pi/xxnu+pi*pi
+     kppkm=dpis3*dpis3*exp(-((pi-dpis3)/(zpthree*pi-dpis3))**two)/xxnu+dpis3*dpis3
+     xnpi2=kppkc
+     xmpi2=kppkm
+     alsai=(405._mytype*xnpi2 - 1280._mytype*xmpi2 + 2736._mytype)/&
+          (810._mytype*xnpi2 - 1280._mytype*xmpi2 + 288._mytype)
+     asi=-(4329._mytype*xnpi2 - 256._mytype*xmpi2 - 1120._mytype*xnpi2*xmpi2 + 2288._mytype)/&
+          (3240._mytype*xnpi2 - 5120._mytype*xmpi2 + 1152._mytype)
+     asi = asi / (d2)
+     bsi=(2115._mytype*xnpi2 - 1792._mytype*xmpi2 - 280._mytype*xnpi2*xmpi2 + 1328._mytype)/&
+          (405._mytype*xnpi2 - 640._mytype*xmpi2 + 144._mytype)
+     bsi = bsi / (four*d2)
+     csi=-(nine*(855._mytype*xnpi2 + 256._mytype*xmpi2 - 160._mytype*xnpi2*xmpi2 - 2288._mytype))/&
+          (eight*(405._mytype*xnpi2 - 640._mytype*xmpi2 + 144._mytype))
+     csi = csi / (nine*d2)  
+     dsi=(198._mytype*xnpi2 + 128._mytype*xmpi2 - 40._mytype*xnpi2*xmpi2 - 736._mytype)/&
+          (405._mytype*xnpi2 - 640._mytype*xmpi2 + 144._mytype)
+     dsi = dsi / (16._mytype*d2)  
+  endif
+
+  ! Defined for the bounadies when dirichlet conditions are used
   alsa1= eleven
   as1  = (thirteen)/d2
   bs1  =-(twentyseven)/d2
@@ -441,51 +549,6 @@ subroutine second_derivative(alsa1,as1,bs1,&
   bstt = (three/fortyfour)/d2
   cstt = zero
 
-  !BASE LELE
-  !alsai= 2./11.
-  !asi  = (12./11.)/d2
-  !bsi  = (3./44. )/d2
-  !csi  = 0.
-  !NUMERICAL DISSIPATION (see publications for help)
-  !      fpi2=(48./7)/(pi*pi)
-  if (jLES.eq.1) then !iLES
-     xxnu=one/fpi2
-     dpis3=two*pi/three
-     kppkc=pi*pi/xxnu+pi*pi
-     kppkm=dpis3*dpis3*exp(-((pi-dpis3)/(zpthree*pi-dpis3))**two)/xxnu+dpis3*dpis3
-     xnpi2=kppkc
-     xmpi2=kppkm
-     alsai=(405._mytype*xnpi2 - 1280._mytype*xmpi2 + 2736._mytype)/&
-          (810._mytype*xnpi2 - 1280._mytype*xmpi2 + 288._mytype)
-     asi=-(4329._mytype*xnpi2 - 256._mytype*xmpi2 - 1120._mytype*xnpi2*xmpi2 + 2288._mytype)/&
-          (3240._mytype*xnpi2 - 5120._mytype*xmpi2 + 1152._mytype)
-     asi = asi / (d2)
-     bsi=(2115._mytype*xnpi2 - 1792._mytype*xmpi2 - 280._mytype*xnpi2*xmpi2 + 1328._mytype)/&
-          (405._mytype*xnpi2 - 640._mytype*xmpi2 + 144._mytype)
-     bsi = bsi / (four*d2)
-     csi=-(nine*(855._mytype*xnpi2 + 256._mytype*xmpi2 - 160._mytype*xnpi2*xmpi2 - 2288._mytype))/&
-          (eight*(405._mytype*xnpi2 - 640._mytype*xmpi2 + 144._mytype))
-     csi = csi / (nine*d2)  
-     dsi=(198._mytype*xnpi2 + 128._mytype*xmpi2 - 40._mytype*xnpi2*xmpi2 - 736._mytype)/&
-          (405._mytype*xnpi2 - 640._mytype*xmpi2 + 144._mytype)
-     dsi = dsi / (16._mytype*d2)  
-  else
-     alsai=(45._mytype*fpi2*pi*pi-272._mytype)/(two*(45._mytype*fpi2*pi*pi-208._mytype))
-     asi  =((six-nine*alsai)/four)/d2
-     bsi  =((-three+twentyfour*alsai)/five)/(four*d2)
-     csi  =((two-eleven*alsai)/twenty)/(nine*d2)
-     dsi = zero
-
-     alsa4= alsai
-     as4  = asi
-     bs4  = bsi
-     cs4  = csi
-
-     alsatt = alsai
-     astt = asi
-     bstt = bsi
-     cstt = csi
-  endif
 
   if     (ncl1.eq.0) then !Periodic
      sf(1)   =alsai
