@@ -153,13 +153,14 @@ subroutine debug_schemes()
   USE param
   USE variables
   USE decomp_2d
+  USE var, only : pp1,pgy1,nxmsize, nymsize, nzmsize
 
   implicit none
 
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: fx1, fxp1, dfdx1, dfdxp1, dfdxx1, dfdxxp1, di1
   real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: fy2, fyp2, dfdy2, dfdyp2, dfdyy2, dfdyyp2, di2
   real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: fz3, fzp3, dfdz3, dfdzp3, dfdzz3, dfdzzp3, di3
-  real(mytype) :: x,y,z,sin_prec,cos_prec,abs_prec
+  real(mytype) :: x,x1,y,y1,z,z1,sin_prec,cos_prec,abs_prec
   integer :: i,j,k
   character(len=30) :: filename
 
@@ -184,6 +185,8 @@ subroutine debug_schemes()
   call derx (dfdxp1,fxp1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
   call derxx (dfdxx1 ,fx1 ,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0)
   call derxx (dfdxxp1,fxp1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+  call derxvp(pp1,fx1,di1,sx,cfx6,csx6,cwx6,xsize(1),nxmsize,xsize(2),xsize(3),0)
+  call interxvp(pgy1,fx1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
   if (nrank.eq.0) then
      write(filename,"('schemes_x',I1.1,I1.1,I1.1,I4.4)") jLES,nclx1,nclxn,nx
      open(67,file=trim(filename),status='unknown',form='formatted')
@@ -194,12 +197,18 @@ subroutine debug_schemes()
              -four*pi*sin_prec(four*pi*x),dfdxp1(i,1,1),&
              -sixteen*pi*pi*sin_prec(four*pi*x),dfdxx1(i,1,1),&
              -sixteen*pi*pi*cos_prec(four*pi*x),dfdxxp1(i,1,1)
-!             abs_prec(four*pi*cos_prec(four*pi*x)-dfdx1(i,1,1)),&
-!             abs_prec(-four*pi*sin_prec(four*pi*x)-dfdxp1(i,1,1)),&
-!             abs_prec(-sixteen*pi*pi*sin_prec(four*pi*x)-dfdxx1(i,1,1)),&
-!             abs_prec(-sixteen*pi*pi*cos_prec(four*pi*x)-dfdxxp1(i,1,1))
      enddo
      close(67)
+     write(filename,"('schemes_xST',I1.1,I1.1,I1.1,I4.4)") jLES,nclx1,nclxn,nx
+     open(68,file=trim(filename),status='unknown',form='formatted')
+     do i=1,nxmsize
+        x1 = real(i-half,mytype)*dx
+        write(68,'(5E14.6)') x1,&
+             four*pi*cos_prec(four*pi*x1),pp1(i,1,1),&
+             sin_prec(four*pi*x1),pgy1(i,1,1)
+     enddo
+     close(68)
+     
   endif
 
   do k=1,ysize(3)
