@@ -22,7 +22,7 @@ module variables
 
   integer :: nx,ny,nz,nphi,p_row,p_col,nxm,nym,nzm
   integer :: nstat=1,nvisu=1,nprobe=1,nlength=1
-
+  
   real(mytype),allocatable,dimension(:) :: nsc,uset,cp,ri,group
   real(mytype) :: fpi2
 
@@ -200,6 +200,7 @@ module param
   integer :: cont_phi,itr,itime,itest,iprocessing
   integer :: ifft,ivirt,istret,iforc_entree,iturb
   integer :: itype,iin,nscheme,ifirst,ilast,iles,iimplicit
+  integer :: ifirstder, isecondder !Flags for the numerical schemes that are used
   integer :: ntime ! How many (sub)timestpeps do we need to store?
   integer :: isave,ilit,idebmod,imodulo,imodulo2,idemarre,icommence,irecord
   integer :: iscalar,nxboite,istat,iread,iadvance_time,irotation

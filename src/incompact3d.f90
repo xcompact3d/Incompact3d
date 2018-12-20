@@ -22,7 +22,27 @@ PROGRAM incompact3d
   real(8) :: tstart,t1,trank,tranksum,ttotal,tremaining,telapsed
 
  ! TYPE(DECOMP_INFO) :: phG,ph1,ph2,ph3,ph4
+  integer :: ErrFlag, nargin, FNLength, status, DecInd, output_counter
+  logical :: back
+  character(len=80) :: InputFN, FNBase
+  character(len=20) :: filename
 
+  ! Handle input file like a boss -- GD
+  nargin=command_argument_count()
+  if (nargin <1) then
+    print*, 'Incompact3d is run with the default file --> incompact3d input.i3d'
+  elseif (nargin.ge.1) then
+    print*, 'Program is run with the provided file -->', InputFN
+  endif
+
+  call get_command_argument(1,InputFN,FNLength,status)
+  back=.true.
+  FNBase=inputFN((index(InputFN,'/',back)+1):len(InputFN))
+  DecInd=index(FNBase,'.',back)
+  if (DecInd >1) then
+      FNBase=FNBase(1:(DecInd-1))
+  end if
+  
   call ft_parameter(.true.)
 
   call MPI_INIT(code)
