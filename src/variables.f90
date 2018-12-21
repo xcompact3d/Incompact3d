@@ -327,7 +327,7 @@ contains
     endif
 
     adt(:)=zero ; bdt(:)=zero ; cdt(:)=zero ; gdt(:)=zero
-    if (nscheme.eq.1) then ! Euler
+    if (itimescheme.eq.1) then ! Euler
        iadvance_time=1 
        adt(1)=1.0_mytype*dt
        bdt(1)=0.0_mytype*dt
@@ -335,7 +335,7 @@ contains
        gdt(3)=gdt(1)
 
        ntime = 1
-    elseif (nscheme.eq.2) then ! AB2
+    elseif (itimescheme.eq.2) then ! AB2
        iadvance_time=1 
        adt(1)=1.5_mytype*dt
        bdt(1)=-0.5_mytype*dt
@@ -343,7 +343,7 @@ contains
        gdt(3)=gdt(1)
 
        ntime = 2
-    elseif (nscheme.eq.3) then ! AB3
+    elseif (itimescheme.eq.3) then ! AB3
        iadvance_time=1
        adt(1)= (23._mytype/12._mytype)*dt
        bdt(1)=-(16._mytype/12._mytype)*dt
@@ -352,7 +352,7 @@ contains
        gdt(3)=gdt(1)
 
        ntime = 3
-    elseif(nschema==4) then  ! AB4
+    elseif(itimescheme==4) then  ! AB4
        iadvance_time=1 
        adt(1)=(55.0_mytype/24.0_mytype)*dt
        bdt(1)=-(59.0_mytype/24.0_mytype)*dt
@@ -362,7 +362,7 @@ contains
        gdt(3)=gdt(1)
 
        ntime = 4
-    elseif(nscheme.eq.5) then !RK3
+    elseif(itimescheme.eq.5) then !RK3
        iadvance_time=3
        adt(1)=(8._mytype/15._mytype)*dt
        bdt(1)=0._mytype
@@ -375,7 +375,7 @@ contains
        gdt(3)=adt(3)+bdt(3)
 
        ntime = 2
-    elseif(nscheme.eq.6) then !RK4 Carpenter and Kennedy
+    elseif(itimescheme.eq.6) then !RK4 Carpenter and Kennedy
        iadvance_time=5 
        adt(1)=0.0_mytype
        adt(2)=-0.4178904745_mytype

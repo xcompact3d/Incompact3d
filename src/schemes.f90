@@ -259,7 +259,7 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
 ! 
 !*******************************************************************
 
-  use decomp_2d, only : mytype
+  use decomp_2d, only : mytype, nrank
   use param
 
   implicit none
@@ -292,7 +292,9 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
      afi  = (seven/nine)/d
      bfi  = (one/thirtysix)/d
   else
-      if (nrank==0) print *, 'This is not an option. Please use iorder=1,2,3,4'
+     if (nrank==0) then
+        print *, 'This is not an option. Please use iorder=1,2,3,4'
+     endif
   endif
 
   alfa1= two
@@ -398,7 +400,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
        sf,ss,sw,sfp,ssp,swp,d2,n,ncl1,ncln)
 !*******************************************************************
 
-  use decomp_2d, only : mytype
+  use decomp_2d, only : mytype, nrank
   use param
   use variables, only : fpi2
 
@@ -513,7 +515,9 @@ subroutine second_derivative(alsa1,as1,bs1,&
           (405._mytype*xnpi2 - 640._mytype*xmpi2 + 144._mytype)
      dsi = dsi / (16._mytype*d2)  
   else
-      if (nrank==0) print *, 'This is not an option. Please use iorder=1,2,3,4 and (iorder=4,ihyper=1) for hyperviscosity'
+     if (nrank==0) then
+        print *, 'This is not an option. Please use iorder=1,2,3,4 and (iorder=4,ihyper=1) for hyperviscosity'
+     endif
   endif
 
   ! Defined for the bounadies when dirichlet conditions are used
