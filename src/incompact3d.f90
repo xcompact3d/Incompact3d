@@ -43,6 +43,7 @@ PROGRAM incompact3d
 
   call init_variables()
 
+
 #ifdef IMPLICIT
   iimplicit=1
   if (nrank==0) print *,'--SEMI IMPLICIT CODE (IN BETA)-------------------'

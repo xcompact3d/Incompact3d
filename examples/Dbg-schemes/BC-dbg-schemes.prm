@@ -1,9 +1,9 @@
 #
 # INCOMPACT 3D parameters - 3D Taylor-Green vortices problem
 #
-33      #nx
-33      #ny
-33      #nz
+32      #nx
+32      #ny
+32     #nz
 1      #nphi
 1      #p_row
 1      #p_col
@@ -20,7 +20,7 @@
 #
 0      #iscalar
 0      #cont_phi
-1      #jLES
+0      #jLES
 1      #iin        # Initial condition (0: empty, 1: prescribed)
 1      #ifirst     # First iteration
 1      #ilast      # Last iteration
@@ -28,7 +28,7 @@
 #velocity
 2      #nclx1
 2      #nclxn
-2      #ncly1
+2     #ncly1
 2      #nclyn
 2      #nclz1
 2      #nclzn

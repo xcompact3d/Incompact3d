@@ -47,7 +47,7 @@ subroutine derx_00(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   real(mytype), dimension(nx):: ffx,fsx,fwx 
 
   if(ilag.eq.1) call lagpolx(ux)
-
+  
   do k=1,nz 
      do j=1,ny 
         tx(1,j,k)=afix*(ux(2,j,k)-ux(nx,j,k))& 
@@ -5596,6 +5596,8 @@ real(mytype), dimension(nx,ny,nz) :: ux,rx
 real(mytype), dimension(ny,nz) :: sx
 real(mytype), dimension(nxm) :: cfx6,csx6,cwx6
 integer :: i,j,k,nyz
+
+
 
 nyz=ny*nz
 
