@@ -20,11 +20,12 @@ module variables
 
 !Possible n points: 3 5 7 9 11 13 17 19 21 25 31 33 37 41 49 51 55 61 65 73 81 91 97 101 109 121 129 145 151 161 163 181 193 201 217 241 251 257 271 289 301 321 325 361 385 401 433 451 481 487 501 513 541 577 601 641 649 721 751 769 801 811 865 901 961 973 1001 1025 1081 1153 1201 1251 1281 1297 1351 1441 1459 1501 1537 1601 1621 1729 1801 1921 1945 2001 2049 2161 2251 2305 2401 2431 2501 2561 2593 2701 2881 2917 3001 3073 3201 3241 3457 3601 3751 3841 3889 4001 4051 4097 4321 4375 4501 4609 4801 4861 5001 5121 5185 5401 5761 5833 6001 6145 6251 6401 6481 6751 6913 7201 7291 7501 7681 7777 8001 8101 8193 8641 8749 9001 9217 9601 9721 enough
 
-  integer :: nx,ny,nz,nphi,p_row,p_col,nxm,nym,nzm
+  integer :: nx,ny,nz,numscalar,p_row,p_col,nxm,nym,nzm
+  real :: spinup_time
   integer :: nstat=1,nvisu=1,nprobe=1,nlength=1
 
-  real(mytype),allocatable,dimension(:) :: nsc,uset,cp,ri,group
-  real(mytype) :: fpi2
+  real(mytype),allocatable,dimension(:) :: sc,uset,cp,ri,group
+  real(mytype) :: fpi2, rxxnu, cnu
 
 #ifndef DOUBLE_PREC
   integer,parameter :: prec = 4
@@ -127,18 +128,15 @@ module variables
   END INTERFACE
 
   PROCEDURE (DERIVATIVE_X) derx_00,derx_11,derx_12,derx_21,derx_22,&
-       derxx_dns_00,derxx_dns_11,derxx_dns_12,derxx_dns_21,derxx_dns_22,&
-       derxx_iles_00,derxx_iles_11,derxx_iles_12,derxx_iles_21,derxx_iles_22
+       derxx_00,derxx_11,derxx_12,derxx_21,derxx_22
   PROCEDURE (DERIVATIVE_X), POINTER :: derx,derxx,derxS,derxxS
   PROCEDURE (DERIVATIVE_Y) dery_00,dery_11,dery_12,dery_21,dery_22
   PROCEDURE (DERIVATIVE_Y), POINTER :: dery,deryS
   PROCEDURE (DERIVATIVE_YY) &
-       deryy_dns_00,deryy_dns_11,deryy_dns_12,deryy_dns_21,deryy_dns_22,&
-       deryy_iles_00,deryy_iles_11,deryy_iles_12,deryy_iles_21,deryy_iles_22
+       deryy_00,deryy_11,deryy_12,deryy_21,deryy_22
   PROCEDURE (DERIVATIVE_YY), POINTER :: deryy,deryyS
   PROCEDURE (DERIVATIVE_Z) derz_00,derz_11,derz_12,derz_21,derz_22,&
-       derzz_dns_00,derzz_dns_11,derzz_dns_12,derzz_dns_21,derzz_dns_22,&
-       derzz_iles_00,derzz_iles_11,derzz_iles_12,derzz_iles_21,derzz_iles_22
+       derzz_00,derzz_11,derzz_12,derzz_21,derzz_22
   PROCEDURE (DERIVATIVE_Z), POINTER :: derz,derzz,derzS,derzzS
 
   !O6SVV
@@ -202,14 +200,17 @@ module param
 
   integer :: cont_phi,itr,itime,itest,iprocessing
   integer :: ifft,ivirt,istret,iforc_entree,iturb
-  integer :: itype,iin,nscheme,ifirst,ilast,iles,iimplicit
+  integer :: itype,iin,itimescheme,ifirst,ilast,iles,iimplicit
   integer :: ntime ! How many (sub)timestpeps do we need to store?
-  integer :: isave,ilit,idebmod,imodulo,imodulo2,idemarre,icommence,irecord
-  integer :: iscalar,nxboite,istat,iread,iadvance_time,irotation
+  integer :: icheckpoint,irestart,idebmod,ioutput,imodulo2,idemarre,icommence,irecord
+  integer :: iscalar,nxboite,istat,iread,iadvance_time,irotation,iibm
   integer :: ilag,npif,izap
   real(mytype) :: xlx,yly,zlz,dx,dy,dz,dx2,dy2,dz2,t,xxk1,xxk2
-  real(mytype) :: dt,re,xnu,noise,noise1,u1,u2,angle,anglex,angley
+  real(mytype) :: dt,re,xnu,init_noise,inflow_noise,u1,u2,angle,anglex,angley
   real(mytype) :: wrotation,ro
+
+  !! Numerics control
+  integer :: iorder, ihyper
 
 #ifdef IMPLICIT
   real(mytype) :: xcst, xcst_pr
@@ -230,9 +231,12 @@ module param
 
 #endif
 
-
+  !! Turbulence
+  integer :: iturbmod, iwall
+  
   !LES
   integer :: jLES
+  integer :: smagwalldamp
   real(mytype) :: smagcst,walecst,FSGS,pr_t,maxdsmagcst
 
   character :: filesauve*80, filenoise*80, &

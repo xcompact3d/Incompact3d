@@ -1,0 +1,122 @@
+! -*- mode: f90 -*-
+
+!===================
+&BasicParam
+!===================
+
+! Domain decomposition
+p_row=0               ! Row partition
+p_col=0               ! Column partition
+
+! Mesh
+nx=81                 ! X-direction nodes
+ny=81                 ! Y-direction nodes
+nz=81                 ! Z-direction nodes
+istret = 0            ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
+beta = 0.3            ! Refinement parameter (beta)
+
+! Domain
+xlx = 3.14159265359   ! Lx (Size of the box in x-direction)
+yly = 3.14159265359   ! Ly (Size of the box in y-direction)
+zlz = 3.14159265359   ! Lz (Size of the box in z-direction)
+
+! Flow parameters
+itype = 8             ! Type of Flow
+iin = 1               ! Inflow conditions (1: classic, 2: turbinit)
+re = 5000.            ! nu=1/re (Kinematic Viscosity)
+u1 = 8.               ! u1 (max velocity) (for inflow condition)
+u2 = 8.               ! u2 (min velocity) (for inflow condition)
+init_noise  = 0.0     ! Turbulence intensity (1=100%) !! Initial condition
+inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
+
+! Boundary conditions
+nclx1 = 1
+nclxn = 1
+ncly1 = 1
+nclyn = 1
+nclz1 = 1
+nclzn = 1
+
+! Time stepping
+dt = 0.0005           ! Time step
+ifirst = 1            ! First iteration
+ilast = 10            ! Last iteration
+
+! Enable modelling tools
+iturbmod=1            ! if 0 then DNS
+iscalar=0             ! If iscalar=0 (no scalar), if iscalar=1 (scalar)
+iibm=0                ! Flag for immersed boundary method
+
+/End
+
+!====================
+&NumOptions
+!====================
+
+! Spatial derivatives
+iorder = 4            ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact)
+ihyper = 1            ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact, 5->hyperviscous 6th)
+
+! Time scheme
+itimescheme = 2       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4)
+
+! Dissipation control
+rxxnu = 0             ! Ratio between hyperviscosity/viscosity at nu
+cnu = 0               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
+fpi2 = 63.0           ! Controls dissipation of small scales
+
+/End
+
+!=================
+&InOutParam
+!=================
+
+! Basic I/O
+irestart = 0          ! Read initial flow field ?
+icheckpoint = 500     ! Frequency for writing backup file
+ioutput = 100         ! Frequency for visualization
+nvisu = 1             ! Size for visualisation collection
+
+/End
+
+!=================
+&Statistics
+!=================
+
+spinup_time = 5000.   ! Time after which statistics are collected (in seconds)
+nstat = 1             ! Size arrays for statistic collection
+
+/End
+
+!########################
+! OPTIONAL PARAMETERS
+!#######################
+
+!================
+&ScalarParam
+!================
+
+numscalar = 1         ! How many scalars?
+Sc = 0.2              ! Schmidt number
+
+/End
+
+!================
+&TurbulenceModel
+!================
+
+iles = 4              ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Smag, 4: iSVV, 5: dyn SEV)
+smagcst = 0.14        ! Smagorinsky constant
+walecst = 0.5         ! WALES Model Coefficient
+
+iwall = 0             ! Enable wall modeling
+
+/End
+
+!================
+&TurbulenceWallModel
+!================
+
+SmagWallDamp = 1      ! Smagorinsky damping function for ABL if 1
+
+/End

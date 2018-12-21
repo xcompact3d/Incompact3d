@@ -23,19 +23,19 @@ subroutine stabiltemp() !from Erik, adapted by Leonardo Romero Monteiro
 
   print *,'Writing stability data!'
 
-  if (nscheme==0) then !Euler (not implemented)
+  if (itimescheme==0) then !Euler (not implemented)
      am1=0; a0=1.; a1=0.; a2=0.
   endif
 
-  if (nscheme.eq.1) then !AB2
+  if (itimescheme.eq.1) then !AB2
      am1=0; a0=1.5; a1=-0.5; a2=0.; a3=0.; bm1=1.; b0=-1.; b1=0.; b2=0.; b3=0.
   endif
 
-  if (nscheme.eq.3) then !RK3
+  if (itimescheme.eq.3) then !RK3
      if (nrank==0) write(*,*) "Non implemented for RK3"
   endif
 
-  if (nscheme.eq.2) then !AB3
+  if (itimescheme.eq.2) then !AB3
      am1=0.; a0=23./12.; a1=-16./12.; a2=5./12; a0=3./2+a2; a1=-1./2-2*a2; a3=0.; bm1=1.; b0=-1.; b1=0.; b2=0.; b3=0.
   endif
 
@@ -167,8 +167,8 @@ if(nrank==0) then
 1003  format('CFL y-direction (Adv and Diff) =',F9.4,',',F9.4)
     write(*,1004) cfl_z_adv, cfl_z_diff
 1004  format('CFL z-direction (Adv and Diff) =',F9.4,',',F9.4)
-    cfl_conv_lim=sigma_conv(nscheme)/sqrt(3.0)
-    cfl_diff_lim=sigma_diff(nscheme)/6.0
+    cfl_conv_lim=sigma_conv(itimescheme)/sqrt(3.0)
+    cfl_diff_lim=sigma_diff(itimescheme)/6.0
     write(*,1005) cfl_conv_lim, cfl_diff_lim
     write(*,*) ' '
 1005  format('CFL limits (Adv and Diff) : ',F9.4,',',F9.4)
@@ -189,9 +189,9 @@ implicit none
 
 integer :: code,ierror,ijk,is
 real(mytype) :: phimax,phimin,phimax1,phimin1
-real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi
+real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
-do is=1, nphi
+do is=1, numscalar
  phimax=-1609.;phimin=1609.
  do ijk=1,xsize(1)*xsize(2)*xsize(3)
    if (phi(ijk,1,1,is).gt.phimax) phimax=phi(ijk,1,1,is)
@@ -271,7 +271,7 @@ endif
 return
 end subroutine test_speed_min_max
 !*******************************************************************
-subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,irestart)
+subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,iresflg)
 
   USE decomp_2d
   USE decomp_2d_io
@@ -281,12 +281,12 @@ subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,irestart)
 
   implicit none
 
-  integer :: i,j,k,irestart,nzmsize,fh,ierror,is,code
+  integer :: i,j,k,iresflg,nzmsize,fh,ierror,is,code
   integer :: ierror_o=0 !error to open sauve file during restart
   real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
   real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: px1,py1,pz1
   real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
-  real(mytype), dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1
+  real(mytype), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
   real(mytype), dimension(phG%zst(1):phG%zen(1),phG%zst(2):phG%zen(2),phG%zst(3):phG%zen(3)) :: pp3
   integer (kind=MPI_OFFSET_KIND) :: filesize, disp
   real(mytype) :: xdt
@@ -294,16 +294,16 @@ subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,irestart)
   logical, dimension(2) :: dummy_periods
   character(len=30) :: filename, filestart
 
-  if (irestart .eq. 1 ) then !Writing restart
+  if (iresflg .eq. 1 ) then !Writing restart
      if (nrank==0) print *,'===========================================================<<<<<'
-     if (nrank==0) print *,'Writing restart point',itime/isave
+     if (nrank==0) print *,'Writing restart point',itime/icheckpoint
      !if (nrank==0) print *,'File size',real((s3df*16.)*1e-9,4),'GB'
   end if
 
   write(filename,"('restart',I7.7)") itime
   write(filestart,"('restart',I7.7)") ifirst-1
 
-  if (irestart==1) then !write
+  if (iresflg==1) then !write
      call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
           MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
           fh, ierror)
@@ -324,7 +324,7 @@ subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,irestart)
      call decomp_2d_write_var(fh,disp,1,pz1)
      call decomp_2d_write_var(fh,disp,1,pp3,phG)
      if (iscalar==1) then
-        do is=1, nphi
+        do is=1, numscalar
            call decomp_2d_write_var(fh,disp,1,phi1(:,:,:,is))
         end do
      endif
@@ -349,7 +349,7 @@ subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,irestart)
      call decomp_2d_read_var(fh,disp,1,pz1)
      call decomp_2d_read_var(fh,disp,1,pp3,phG)
      if (iscalar==1) then
-        do is=1, nphi
+        do is=1, numscalar
            call decomp_2d_read_var(fh,disp,1,phi1(:,:,:,is))
         end do
      endif
@@ -365,12 +365,23 @@ subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,irestart)
      endif
   endif
 
-  if (irestart==0) then
+  if (iresflg==0) then
      ! reconstruction of the dp/dx, dp/dy and dp/dz from px1,py1 and pz1
-     ! Temporal scheme (1:AB2, 2:AB3, 3: RK3, 4:KN+AB3)
-     if (nscheme.eq.1) xdt=adt(1)+bdt(1)
-     if (nscheme.eq.2) xdt=adt(1)+bdt(1)+cdt(1)
-     if (nscheme.eq.3) xdt=(three/four)*dt + (-five/twelve)*dt
+     ! Temporal scheme (1:EULER, 2:AB2, 3: AB3, 4:AB4, 5:RK3, 6:RK4)
+     if (itimescheme.eq.1) then
+        xdt=gdt(1)
+     elseif (itimescheme.eq.2) then
+        xdt=gdt(1)
+     elseif (itimescheme.eq.3) then
+        xdt = gdt(1)
+     elseif (itimescheme.eq.5) then
+        xdt=gdt(3)
+     else
+        if (nrank.eq.0) then
+           print *, "Timescheme not implemented!"
+           stop
+        endif
+     endif
 
      do k=1,xsize(3)
         do j=1,xsize(2)
@@ -440,8 +451,8 @@ subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,irestart)
      if (nrank==0) print *,'reconstruction pressure gradients done!'
   endif
 
-  if (irestart .eq. 1 ) then !Writing restart
-     if (nrank==0)  print *,'Restart point',itime/isave,'saved successfully!'
+  if (iresflg .eq. 1 ) then !Writing restart
+     if (nrank==0)  print *,'Restart point',itime/icheckpoint,'saved successfully!'
      !if (nrank==0) print *,'Elapsed time (s)',real(trestart,4)
      !if (nrank==0) print *,'Aproximated writing speed (MB/s)',real(((s3df*16.)*1e-6)/trestart,4)
      if (nrank==0) print *,'If necesseary restart from:',itime+1
