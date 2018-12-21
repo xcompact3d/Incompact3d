@@ -148,14 +148,14 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
          call random_seed(put=seed)
      !     call random_number(ux1)
      !     call random_number(uy1)
-          call random_number(uz1)
+          ! call random_number(uz1)
 
           do k=1,xsize(3)
              do j=1,xsize(2)
                 do i=1,xsize(1)
      !              ux1(i,j,k)=noise*(ux1(i,j,k)-half)
      !              uy1(i,j,k)=noise*(uy1(i,j,k)-half)
-                   uz1(i,j,k)=0.05*(uz1(i,j,k)-half)
+                   ! uz1(i,j,k)=0.05*(uz1(i,j,k)-half)
                 enddo
              enddo
           enddo
