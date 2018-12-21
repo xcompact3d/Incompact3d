@@ -23,7 +23,7 @@ GIT_VERSION := $(shell git describe --tag --long --always)
 # FLOW_TYPE = Cylinder
 # FLOW_TYPE = dbg-schemes
 
-DEFS = -DDEBG -DVISU -DVISUEXTRA -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"
+DEFS = -DVISU -DVISUEXTRA -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"
 
 LCL = local# local,lad,sdu,archer
 IVER = 17# 15,16,17,18
@@ -51,7 +51,7 @@ FFLAGS = -fpp -O3 -xHost -heap-arrays -shared-intel -mcmodel=large -safe-cray-pt
 else ifeq ($(CMP),gcc)
 FC = mpif90
 #FFLAGS = -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -x f95-cpp-input
-FFLAGS = -cpp  -funroll-loops -floop-optimize -g3 -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none
+FFLAGS = -cpp  -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none
 endif
 
 

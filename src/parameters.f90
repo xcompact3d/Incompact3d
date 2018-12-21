@@ -54,8 +54,9 @@ subroutine parameter(input_i3d)
   NAMELIST /BasicParam/ p_row, p_col, nx, ny, nz, istret, beta, xlx, yly, zlz, &
        itype, iin, re, u1, u2, init_noise, inflow_noise, &
        dt, ifirst, ilast, &
-       iturbmod, iscalar, iibm
-  NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, rxxnu, cnu
+       iturbmod, iscalar, iibm, &
+       nclx1, nclxn, ncly1, nclyn, nclz1, nclzn
+  NAMELIST /NumOptions/ iorder, ihyper, itimescheme, rxxnu, cnu, fpi2
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu
   NAMELIST /Statistics/ spinup_time, nstat
   NAMELIST /ScalarParam/ numscalar, sc
@@ -68,7 +69,7 @@ subroutine parameter(input_i3d)
 
   if (nrank==0) then
      print *,'==========================================================='
-     print *,'======================Incompact3d=========================='
+     print *,'======================Xcompact3D==========================='
      print *,'===Copyright (c) 2018 Eric Lamballais and Sylvain Laizet==='
      print *,'===Modified by Felipe Schuch and Ricardo Frantz============'
      print *,'===Modified by Paul Bartholomew, Yorgos Deskos and========='
@@ -99,8 +100,12 @@ subroutine parameter(input_i3d)
 
   close(10)
 
-  !! stupid imodulo2 WTF!!!!
-  imodulo2 = 1
+! !!! BAD
+!   xlx = pi
+!   yly = pi
+  !   zlz = pi
+
+  jLES = iles
 
   allocate(sc(numscalar),cp(numscalar),ri(numscalar),group(numscalar))
 
@@ -159,11 +164,20 @@ subroutine parameter(input_i3d)
      write(*,"(' Reynolds number Re : ',F15.8)") re
      write(*,"(' Time step dt       : ',F15.8)") dt
      write (*,"(' Spatial scheme     : ',F15.8)") fpi2
-     if (jLES.eq.0) print *,'                   : DNS'
-     if (jLES.eq.1) print *,'                   : iLES'
-     if (jLES.eq.2) print *,'                   : Explicit Simple Smagorinsky'
-     if (jLES.eq.3) print *,'                   : Explicit Wall-Adaptive LES'
-     if (jLES.eq.4) print *,'                   : Explicit Dynamic Smagorinsky LES'
+     if (iturbmod.ne.0) then
+        print *,'                   : DNS'
+     else
+        if (jLES.eq.1) then
+           print *,'                   : Phys Smag'
+        else if (jLES.eq.2) then
+           print *,'                   : Phys WALE'
+        else if (jLES.eq.3) then
+           print *,'                   : Phys dyn. Smag'
+        else if (jLES.eq.4) then
+           print *,'                   : iSVV'
+        else
+        endif
+     endif
      if (itimescheme.eq.1) then
         print *,'Temporal scheme    : Forwards Euler'
      elseif (itimescheme.eq.2) then
@@ -240,29 +254,30 @@ subroutine parameter_defaults()
   USE variables
   USE decomp_2d
 
+  IMPLICIT NONE
+
   ro = 99999999._mytype
   angle = zero
   u1 = 2
   u2 = 1
-  noise = zero
-  noise1 = zero
+  init_noise = zero
+  inflow_noise = zero
   iin = 0
-  nscheme = 4
+  itimescheme = 4
   istret = 0
   beta = 0
   iscalar = 0
   cont_phi = 0
   filepath = './data/'
-  ilit = 0
+  irestart = 0
   datapath = './data/'
   fpi2 = 4.
-  nraf = 10
-  nobjmax = 1
+  ! nraf = 10
+  ! nobjmax = 1
   itrip = 0
   wrotation = zero
   irotation = 0
   itest=1
-  
   
   save_ux = 0
   save_uy = 0
@@ -301,4 +316,7 @@ subroutine parameter_defaults()
   ilag = 0
   npif = 2
   izap = 1
+
+  imodulo2 = 1
+
 end subroutine parameter_defaults

@@ -754,7 +754,7 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      cbi6(i)=alcaix6 
   enddo
 
-  if (jLES.eq.1) then
+  if (jLES.eq.4) then
      !Spectral-like dx6 v1
      ailcaix6=0.461658
      dicix6=0.00293016

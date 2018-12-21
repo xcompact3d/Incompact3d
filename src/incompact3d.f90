@@ -118,8 +118,6 @@ PROGRAM incompact3d
   tstart=zero;t1=zero;trank=zero;tranksum=zero;ttotal=zero
   call cpu_time(tstart)
 
- 
-
   do itime=ifirst,ilast
      t=itime*dt
      call cpu_time(t1)
@@ -128,6 +126,7 @@ PROGRAM incompact3d
         write(*,"(' Time step =',i7,'/',i7,', Time unit =',F9.4)") itime,ilast,t
      endif
 
+     print *, "Hi", iadvance_time
      do itr=1,iadvance_time
 
         call boundary_conditions(ux1,uy1,uz1,phi1,ep1)
