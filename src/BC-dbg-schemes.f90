@@ -160,9 +160,7 @@ subroutine debug_schemes()
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: fx1, fxp1, dfdx1, dfdxp1, dfdxx1, dfdxxp1, di1
   real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: fy2, fyp2, dfdy2, dfdyp2, dfdyy2, dfdyyp2, di2
   real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: fz3, fzp3, dfdz3, dfdzp3, dfdzz3, dfdzzp3, di3
-  real(mytype), save, allocatable, dimension(:,:,:) :: test1,test11,test2,test22
-!  real(mytype),dimension(ysize(1),nymsize,ysize(3)) :: test2,test22
-!  real(mytype),dimension(nxmsize,xsize(2),xsize(3)) :: test1,test11
+  real(mytype), save, allocatable, dimension(:,:,:) :: test1,test11,test2,test22,test3,test33
   real(mytype) :: x,x1,y,y1,z,z1,sin_prec,cos_prec,abs_prec
   integer :: i,j,k
   character(len=30) :: filename
@@ -171,6 +169,8 @@ subroutine debug_schemes()
   allocate(test11(nxmsize,xsize(2),xsize(3)))
   allocate(test2(ysize(1),nymsize,ysize(3)))
   allocate(test22(ysize(1),nymsize,ysize(3)))
+  allocate(test3(zsize(1),zsize(2),nzmsize))
+  allocate(test33(zsize(1),zsize(2),nzmsize))
   
   nclx1=1
   nclxn=1
@@ -284,7 +284,7 @@ subroutine debug_schemes()
   endif
     do k=1,ysize(3)
      do j=1,nymsize
-        y1 = real(j-0.5,mytype)*dy*4*pi
+        y1 = real(j-half,mytype)*dy*4*pi
         do i=1,ysize(1)
            test2(i,j,k) = cos_prec(y1)
         enddo
@@ -331,6 +331,41 @@ subroutine debug_schemes()
              -sixteen*pi*pi*cos_prec(four*pi*z),dfdzzp3(1,1,k)
      enddo
      close(67)
+  endif
+  call derzvp(test3,fz3,di3,sz,cfz6,csz6,cwz6,zsize(1),zsize(2),zsize(3),nzmsize,0)
+  call interzvp(test33,fzp3,di3,sz,cifzp6,ciszp6,ciwzp6,zsize(1),zsize(2),zsize(3),nzmsize,1)
+  if (nrank.eq.0) then
+     write(filename,"('schemes_zVP',I1.1,I1.1,I1.1,I4.4)") jLES,nclz1,nclzn,nz
+     open(68,file=trim(filename),status='unknown',form='formatted')
+     do k=1,nzmsize
+        z1 = real(k-half,mytype)*dz
+        write(68,'(5E14.6)') z1,&
+             four*pi*cos_prec(four*pi*z1),test3(1,1,k),&
+             cos_prec(four*pi*z1),test33(1,1,k)
+     enddo
+     close(68)
+  endif
+
+  do k=1,nzmsize
+     z1 = real(k-half,mytype)*dz*4*pi
+     do j=1,zsize(2)
+        do i=1,zsize(1)
+           test3(i,j,k) = cos_prec(z1)
+        enddo
+     enddo
+  enddo
+  call derzpv(fz3,test3,di3,sz,cfip6z,csip6z,cwip6z,cfz6,csz6,cwz6,zsize(1),zsize(2),nzmsize,zsize(3),1)
+  call interzpv(fzp3,test3,di3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,zsize(1),zsize(2),nzmsize,zsize(3),1)
+  if (nrank.eq.0) then
+     write(filename,"('schemes_zPV',I1.1,I1.1,I1.1,I4.4)") jLES,nclz1,nclzn,nz
+     open(69,file=trim(filename),status='unknown',form='formatted')
+     do k=1,zsize(3)
+        z = real(k-1,mytype)*dz
+        write(69,'(5E14.6)') z,&
+             -four*pi*sin_prec(four*pi*z),fz3(1,1,k),&
+             cos_prec(four*pi*z),fzp3(1,1,k)
+     enddo
+     close(69)
   endif
   
 !###############################################################
@@ -599,6 +634,8 @@ subroutine debug_schemes()
   deallocate(test11)
   deallocate(test2)
   deallocate(test22)
+  deallocate(test3)
+  deallocate(test33)
   nclx1=0
   nclxn=0
   ncly1=0
@@ -625,6 +662,8 @@ subroutine debug_schemes()
   allocate(test11(nxmsize,xsize(2),xsize(3)))
   allocate(test2(ysize(1),nymsize,ysize(3)))
   allocate(test22(ysize(1),nymsize,ysize(3)))
+  allocate(test3(zsize(1),zsize(2),nzmsize))
+  allocate(test33(zsize(1),zsize(2),nzmsize))
   
   do k=1,xsize(3)
      do j=1,xsize(2)
@@ -690,6 +729,7 @@ subroutine debug_schemes()
         y = real(j-1,mytype)*dy*4*pi
         do i=1,ysize(1)
            fy2(i,j,k) = sin_prec(y)
+           fyp2(i,j,k) = cos_prec(y)
         enddo
      enddo
   enddo
@@ -706,14 +746,7 @@ subroutine debug_schemes()
      enddo
      close(67)
   endif
-    do k=1,zsize(3)
-     z = real(k-1,mytype)*dz*4*pi
-     do j=1,zsize(2)
-        do i=1,zsize(1)
-           fz3(i,j,k) = sin_prec(z)
-        enddo
-     enddo
-  enddo
+
   call deryvp(test2,fy2,di2,sy,cfy6,csy6,cwy6,ppyi,ysize(1),ysize(2),nymsize,ysize(3),0)
   call interyvp(test22,fyp2,di2,sy,cifyp6,cisyp6,ciwyp6,ysize(1),ysize(2),nymsize,ysize(3),1)
   if (nrank.eq.0) then
@@ -750,6 +783,15 @@ subroutine debug_schemes()
      enddo
      close(69)
   endif
+  do k=1,zsize(3)
+     z = real(k-1,mytype)*dz*4*pi
+     do j=1,zsize(2)
+        do i=1,zsize(1)
+           fz3(i,j,k) = sin_prec(z)
+           fzp3(i,j,k) = cos_prec(z)
+        enddo
+     enddo
+  enddo
   call derz (dfdz3 ,fz3 ,di3,sz,ffz ,fsz ,fwz ,zsize(1),zsize(2),zsize(3),0)
   call derzz (dfdzz3 ,fz3 ,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0)
   if (nrank.eq.0) then
@@ -763,7 +805,41 @@ subroutine debug_schemes()
      enddo
      close(67)
   endif
+  call derzvp(test3,fz3,di3,sz,cfz6,csz6,cwz6,zsize(1),zsize(2),zsize(3),nzmsize,0)
+  call interzvp(test33,fzp3,di3,sz,cifzp6,ciszp6,ciwzp6,zsize(1),zsize(2),zsize(3),nzmsize,1)
+  if (nrank.eq.0) then
+     write(filename,"('schemes_zVP',I1.1,I1.1,I1.1,I4.4)") jLES,nclz1,nclzn,nz
+     open(68,file=trim(filename),status='unknown',form='formatted')
+     do k=1,nzmsize
+        z1 = real(k-half,mytype)*dz
+        write(68,'(5E14.6)') z1,&
+             four*pi*cos_prec(four*pi*z1),test3(1,1,k),&
+             cos_prec(four*pi*z1),test33(1,1,k)
+     enddo
+     close(68)
+  endif
 
+  do k=1,nzmsize
+     z1 = real(k-half,mytype)*dz*4*pi
+     do j=1,zsize(2)
+        do i=1,zsize(1)
+           test3(i,j,k) = cos_prec(z1)
+        enddo
+     enddo
+  enddo
+  call derzpv(fz3,test3,di3,sz,cfip6z,csip6z,cwip6z,cfz6,csz6,cwz6,zsize(1),zsize(2),nzmsize,zsize(3),1)
+  call interzpv(fzp3,test3,di3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,zsize(1),zsize(2),nzmsize,zsize(3),1)
+  if (nrank.eq.0) then
+     write(filename,"('schemes_zPV',I1.1,I1.1,I1.1,I4.4)") jLES,nclz1,nclzn,nz
+     open(69,file=trim(filename),status='unknown',form='formatted')
+     do k=1,zsize(3)
+        z = real(k-1,mytype)*dz
+        write(69,'(5E14.6)') z,&
+             -four*pi*sin_prec(four*pi*z),fz3(1,1,k),&
+             cos_prec(four*pi*z),fzp3(1,1,k)
+     enddo
+     close(69)
+  endif
 
   stop 'stop debug_schemes'
 end subroutine debug_schemes
