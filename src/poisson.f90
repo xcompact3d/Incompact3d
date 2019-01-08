@@ -236,12 +236,16 @@ contains
 
     if (bcx==0 .and. bcy==0 .and. bcz==0) then
        deallocate(cw1)
+       deallocate(a,a2,a3)
     else if (bcx==1 .and. bcy==0 .and. bcz==0) then
        deallocate(cw1,cw1b,rw1,rw1b,rw2)
+       deallocate(a,a2,a3)
     else if (bcx==0 .and. bcy==1 .and. bcz==0) then
        deallocate(cw1,cw2,cw2b,rw2,rw2b)
+       deallocate(a,a2,a3)
     else if (bcx==1 .and. bcy==1) then
        deallocate(cw1,cw1b,cw2,cw2b,rw1,rw1b,rw2,rw2b)
+       deallocate(a,a2,a3)
        if (bcz==1) then
           deallocate(rw3)
        end if
@@ -1078,7 +1082,7 @@ contains
 
     call decomp_2d_fft_3d(rhs,cw1)
 
-
+     print *,'STOPSTOP'
 
     ! normalisation
     cw1 = cw1 / real(nx, kind=mytype) /real(ny, kind=mytype) &
