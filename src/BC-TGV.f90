@@ -199,9 +199,11 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
            dux1(i,j,k,1)=ux1(i,j,k)
            duy1(i,j,k,1)=uy1(i,j,k)
            duz1(i,j,k,1)=uz1(i,j,k)
-           dux1(i,j,k,2)=dux1(i,j,k,1)
-           duy1(i,j,k,2)=duy1(i,j,k,1)
-           duz1(i,j,k,2)=duz1(i,j,k,1)
+           do is = 2, ntime
+              dux1(i,j,k,is)=dux1(i,j,k,is - 1)
+              duy1(i,j,k,is)=duy1(i,j,k,is - 1)
+              duz1(i,j,k,is)=duz1(i,j,k,is - 1)
+           enddo
         enddo
      enddo
   enddo
