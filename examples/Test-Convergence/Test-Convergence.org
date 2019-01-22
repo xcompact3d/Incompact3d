@@ -83,7 +83,49 @@ The canonical TGV test case runs to non-dimensional time $t=20$, with regards to
 a desktop, here we run to $t=10$, corresponding to $40,000$ timesteps.
 
 The template ~input.i3d~ is given for the ~s4t1b0000n256dt0.00025~ case (one is generated per case).
-#+BEGIN_SRC f90 :tangle input.i3d
+
+#+BEGIN_SRC f90 :noweb yes :tangle input.i3d
+  <<src:basic-start>>
+
+  ! Mesh
+  nx = 128              ! X-direction nodes
+  ny = 128              ! Y-direction nodes
+  nz = 8                ! Z-direction nodes
+
+  <<src:basic-mid>>
+
+  ! Boundary conditions
+  nclx1 = 0
+  nclxn = 0
+  ncly1 = 0
+  nclyn = 0
+  nclz1 = 0
+  nclzn = 0
+
+  ! Time stepping
+  dt = 0.0005           ! Time step
+  ifirst = 1            ! First iteration
+  ilast = 5000          ! Last iteration
+
+  <<src:basic-end>>
+
+  <<src:num-start>>
+  ! Spatial derivatives
+  iorder = 4            ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact)
+
+  ! Time scheme
+  itimescheme = 1       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4)
+  <<src:num-end>>
+
+  <<src:io-start>>
+  ioutput = 250         ! Frequency for visualization
+  <<src:io-end>>
+
+  <<src:stat>>
+#+END_SRC
+
+#+NAME: src:basic-start
+#+BEGIN_SRC f90 :exports none
   ! -*- mode: f90 -*-
 
   !===================
@@ -93,11 +135,10 @@ The template ~input.i3d~ is given for the ~s4t1b0000n256dt0.00025~ case (one is 
   ! Domain decomposition
   p_row = 0             ! Row partition
   p_col = 0             ! Column partition
+#+END_SRC
 
-  ! Mesh
-  nx = 128              ! X-direction nodes
-  ny = 128              ! Y-direction nodes
-  nz = 8                ! Z-direction nodes
+#+NAME: src:basic-mid
+#+BEGIN_SRC f90 :exports none
   istret = 0            ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
   beta = 0.3            ! Refinement parameter (beta)
 
@@ -114,56 +155,20 @@ The template ~input.i3d~ is given for the ~s4t1b0000n256dt0.00025~ case (one is 
   u2 = 8.               ! u2 (min velocity) (for inflow condition)
   init_noise  = 0.0     ! Turbulence intensity (1=100%) !! Initial condition
   inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
+#+END_SRC
 
-  ! Boundary conditions
-  nclx1 = 0
-  nclxn = 0
-  ncly1 = 0
-  nclyn = 0
-  nclz1 = 0
-  nclzn = 0
-
-  ! Time stepping
-  dt = 0.0005           ! Time step
-  ifirst = 1            ! First iteration
-  ilast = 5000          ! Last iteration
-
+#+NAME: src:basic-end
+#+BEGIN_SRC f90 :exports none
   ! Enable modelling tools
   iturbmod=0            ! if 0 then DNS
   iscalar=0             ! If iscalar=0 (no scalar), if iscalar=1 (scalar)
   iibm=0                ! Flag for immersed boundary method
 
   /End
+#+END_SRC
 
-  !====================
-  &NumOptions
-  !====================
-
-  ! Spatial derivatives
-  iorder = 4            ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact)
-  ihyper = 0            ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact, 5->hyperviscous 6th)
-
-  ! Time scheme
-  itimescheme = 1       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4)
-
-  ! Dissipation control
-  rxxnu = 0             ! Ratio between hyperviscosity/viscosity at nu
-  cnu = 0               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
-
-  /End
-
-  !=================
-  &InOutParam
-  !=================
-
-  ! Basic I/O
-  irestart = 0          ! Read initial flow field ?
-  icheckpoint = 50000   ! Frequency for writing backup file
-  ioutput = 250         ! Frequency for visualization
-  nvisu = 1             ! Size for visualisation collection
-
-  /End
-
+#+NAME: src:stat
+#+BEGIN_SRC f90 :exports none
   !=================
   &Statistics
   !=================
@@ -171,6 +176,35 @@ The template ~input.i3d~ is given for the ~s4t1b0000n256dt0.00025~ case (one is 
   spinup_time = 50000.  ! Time after which statistics are collected (in seconds)
   nstat = 1             ! Size arrays for statistic collection
 
+  /End
+#+END_SRC
+
+#+NAME: src:num-start
+#+BEGIN_SRC f90 :exports none
+  !====================
+  &NumOptions
+  !====================
+#+END_SRC
+
+#+NAME: src:num-end
+#+BEGIN_SRC f90 :exports none
+  /End
+#+END_SRC
+
+#+NAME: src:io-start
+#+BEGIN_SRC f90 :exports none
+  !=================
+  &InOutParam
+  !=================
+
+  ! Basic I/O
+  irestart = 0          ! Read initial flow field ?
+  icheckpoint = 50000   ! Frequency for writing backup file
+  nvisu = 1             ! Size for visualisation collection
+#+END_SRC
+
+#+NAME: src:io-end
+#+BEGIN_SRC f90 :exports none
   /End
 #+END_SRC
 
