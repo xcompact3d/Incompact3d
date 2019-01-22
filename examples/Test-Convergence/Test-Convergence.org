@@ -1,0 +1,181 @@
+#+TITLE: Xcompact3D Convergence Test
+#+AUTHOR: Paul Bartholomew
+
+#+OPTIONS: toc:nil
+
+#+LATEX_HEADER: \usepackage{fullpage}
+#+LATEX_HEADER: \hypersetup{colorlinks}
+
+#+BEGIN_abstract
+This document details and BLAH the setup, running and post-processing of the convergence test cases
+for =Xcompact3D=.
+These tests verify the spatial and temporal discretisations used by =Xcompact3D= using the 2D
+Taylor-Green Vortex (TGV) case as a benchmark, they are thus intended to run quickly on a desktop
+computer.
+#+END_abstract
+
+* Introduction
+
+=Xcompact3D= is developed to solve the Navier-Stokes equations, given for incompressible flow as
+\begin{align}
+  \frac{\partial \boldsymbol{u}}{\partial t} + \boldsymbol{u}\cdot\boldsymbol{\nabla}\boldsymbol{u}
+  &= -\frac{1}{\rho}\boldsymbol{\nabla}p + \nu \boldsymbol{\Delta} \boldsymbol{u} \ , \\
+  \boldsymbol{\nabla}\cdot\boldsymbol{u} &= 0 \ ,
+\end{align}
+where symbols have their usual meanings.
+
+The 2D Taylor-Green Vortex, given by the initial conditions
+\begin{align}
+  u \left( x, y, 0 \right) &= \sin\left(x\right) \cos\left(y\right)\ ,\\
+  v \left( x, y, 0 \right) &= -\cos\left(x\right) \sin\left(y\right)
+\end{align}
+has the solution
+\begin{align}
+  u \left( x, y, t \right) &= e^{-2\nu t} \sin\left(x\right) \cos\left(y\right) \ , \\
+  v \left( x, y, t \right) &= -e^{-2\nu t} \cos\left(x\right) \sin\left(y\right) \ .
+\end{align}
+
+By running at different spatial and temporal resolutions, the numerical results can be compared with
+the analytical one and the rate of convergence determined - to be checked with the theoretical rate
+of convergence for the chosen discretisation to confirm a correct implementation.
+This leads to a matrix of different test cases (including different boundary conditions for spatial
+convergence tests), identified by the scheme =sA-tB-bC-nDxD-dtE= for space, time, boundary conditions,
+number of mesh nodes and timestep.
+The boundary condition, mesh and timestep codes are self explanatory: =bC0012= corresponding to
+periodic in $x$, zero-flux at $y=-\pi$ and Dirichlet at $y=\pi$; =n128x128= indicates a $128\times128$ node
+mesh; and =dt0.001= indicates a timestep $\Delta{}t=10^{-3}$.
+Similarly the space and time codes correspond to the values of =iorder= and =itimescheme= as indicated
+in table\nbsp[[tab:stschem]].
+#+CAPTION: Space and time code schema
+#+NAME: tab:stschem
+| *Space code* | *Scheme*            | *Time code* | *Scheme*                |
+|------------+-------------------+-----------+-----------------------+
+| =s1=         | 2^{nd} order central | =t1=        | 1^{st} order Euler       |
+| =s2=         | 4^{th} order central | =t2=        | =AB2=                   |
+| =s3=         | 4^{th} order compact | =t3=        | =AB3=                   |
+| =s4=         | 6^{th} order compact | =t4=        | =AB4= (not implemented) |
+|            |                   | =t5=        | =RK3=                   |
+|            |                   | =t6=        | =RK4= (not implemented) |
+
+* Running the tests
+
+The same executable is used to run each test, to build this run (from the =Xcompact3D= project root
+directory):
+#+BEGIN_SRC shell :dir ~/src/fortran/Incompact3d/
+  make clean && \                               # Ensure clean build
+      make FLOW_TYPE=TGV TWOD=1 && \            # Build executable
+      mv incompact3d examples/Test-Convergence/ # Move executable
+#+END_SRC
+
+The tests are run from the case directory: ~${I3D_HOME}/examples/Test-Convergence/~ using the command
+~make run~ to run all test cases.
+To run a specific test suite you can specify the scheme (spatial or temporal) as ~make run TEST=TYPE~
+where ~TYPE~ is one of the space or time codes given in table\nbsp[[tab:stschem]].
+Additionally, the number of processors to run on (default 1) can be set by passing ~NP=X~ to the ~make~
+command.
+
+As the 2D problem is significantly smaller than the 3D problem, it is run up to a resolution of
+$256\times256$ mesh nodes to ensure we are in the asymptotic region of convergence.
+To minimise temporal error, the timestep used is $\Delta{}t=2.5\times10^{-4}$, corresponding on the finest mesh to
+$CFL\approx0.01$, it should therefore suffice to use 1^{st} order Euler as the time discretisation (this has
+the simplest code to write and can be expected to be correct).
+The canonical TGV test case runs to non-dimensional time $t=20$, with regards to running quickly on
+a desktop, here we run to $t=10$, corresponding to $40,000$ timesteps.
+
+The template ~input.i3d~ is given for the ~s4t1b0000n256dt0.00025~ case (one is generated per case).
+#+BEGIN_SRC f90 :tangle input.i3d
+  ! -*- mode: f90 -*-
+
+  !===================
+  &BasicParam
+  !===================
+
+  ! Domain decomposition
+  p_row = 0             ! Row partition
+  p_col = 0             ! Column partition
+
+  ! Mesh
+  nx = 128              ! X-direction nodes
+  ny = 128              ! Y-direction nodes
+  nz = 8                ! Z-direction nodes
+  istret = 0            ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
+  beta = 0.3            ! Refinement parameter (beta)
+
+  ! Domain
+  xlx = 6.28318530718   ! Lx (Size of the box in x-direction)
+  yly = 6.28318530718   ! Ly (Size of the boy in y-direction)
+  zlz = 6.28318530718   ! Lz (Size of the boz in z-direction)
+
+  ! Flow parameters
+  itype = 8             ! Type of Flow
+  iin = 1               ! Inflow conditions (1: classic, 2: turbinit)
+  re = 1600.            ! nu=1/re (Kinematic Viscosity)
+  u1 = 8.               ! u1 (max velocity) (for inflow condition)
+  u2 = 8.               ! u2 (min velocity) (for inflow condition)
+  init_noise  = 0.0     ! Turbulence intensity (1=100%) !! Initial condition
+  inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
+
+  ! Boundary conditions
+  nclx1 = 0
+  nclxn = 0
+  ncly1 = 0
+  nclyn = 0
+  nclz1 = 0
+  nclzn = 0
+
+  ! Time stepping
+  dt = 0.0005           ! Time step
+  ifirst = 1            ! First iteration
+  ilast = 5000          ! Last iteration
+
+  ! Enable modelling tools
+  iturbmod=0            ! if 0 then DNS
+  iscalar=0             ! If iscalar=0 (no scalar), if iscalar=1 (scalar)
+  iibm=0                ! Flag for immersed boundary method
+
+  /End
+
+  !====================
+  &NumOptions
+  !====================
+
+  ! Spatial derivatives
+  iorder = 4            ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact)
+  ihyper = 0            ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact, 5->hyperviscous 6th)
+
+  ! Time scheme
+  itimescheme = 1       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4)
+
+  ! Dissipation control
+  rxxnu = 0             ! Ratio between hyperviscosity/viscosity at nu
+  cnu = 0               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
+
+  /End
+
+  !=================
+  &InOutParam
+  !=================
+
+  ! Basic I/O
+  irestart = 0          ! Read initial flow field ?
+  icheckpoint = 50000   ! Frequency for writing backup file
+  ioutput = 250         ! Frequency for visualization
+  nvisu = 1             ! Size for visualisation collection
+
+  /End
+
+  !=================
+  &Statistics
+  !=================
+
+  spinup_time = 50000.  ! Time after which statistics are collected (in seconds)
+  nstat = 1             ! Size arrays for statistic collection
+
+  /End
+#+END_SRC
+
+* Analysing the results
+
+** Spatial order of convergence
+
+** Temporal order of convergence
