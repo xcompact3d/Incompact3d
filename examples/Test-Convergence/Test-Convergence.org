@@ -7,11 +7,11 @@
 #+LATEX_HEADER: \hypersetup{colorlinks}
 
 #+BEGIN_abstract
-This document details and BLAH the setup, running and post-processing of the convergence test cases
-for =Xcompact3D=.
+This document details the setup, running and post-processing of the convergence test cases for
+=Xcompact3D=.
 These tests verify the spatial and temporal discretisations used by =Xcompact3D= using the 2D
-Taylor-Green Vortex (TGV) case as a benchmark, they are thus intended to run quickly on a desktop
-computer.
+Taylor-Green Vortex (TGV) case as a benchmark.
+They are intended to run quickly on a desktop computer.
 #+END_abstract
 
 * Introduction
@@ -32,18 +32,19 @@ The 2D Taylor-Green Vortex, given by the initial conditions
 has the solution
 \begin{align}
   u \left( x, y, t \right) &= e^{-2\nu t} \sin\left(x\right) \cos\left(y\right) \ , \\
-  v \left( x, y, t \right) &= -e^{-2\nu t} \cos\left(x\right) \sin\left(y\right) \ .
+  v \left( x, y, t \right) &= -e^{-2\nu t} \cos\left(x\right) \sin\left(y\right) \ ,
 \end{align}
+and is simulated in the box $-\pi\leq{}x,y\leq\pi$.
 
 By running at different spatial and temporal resolutions, the numerical results can be compared with
 the analytical one and the rate of convergence determined - to be checked with the theoretical rate
 of convergence for the chosen discretisation to confirm a correct implementation.
 This leads to a matrix of different test cases (including different boundary conditions for spatial
-convergence tests), identified by the scheme =sA-tB-bC-nDxD-dtE= for space, time, boundary conditions,
+convergence tests), identified by the scheme =sA-tB-bC-nD-dtE= for space, time, boundary conditions,
 number of mesh nodes and timestep.
 The boundary condition, mesh and timestep codes are self explanatory: =bC0012= corresponding to
-periodic in $x$, zero-flux at $y=-\pi$ and Dirichlet at $y=\pi$; =n128x128= indicates a $128\times128$ node
-mesh; and =dt0.001= indicates a timestep $\Delta{}t=10^{-3}$.
+periodic in $x$, zero-flux at $y=-\pi$ and Dirichlet at $y=\pi$; =n128= indicates a $128\times128$ node mesh;
+and =dt0.001= indicates a timestep $\Delta{}t=10^{-3}$.
 Similarly the space and time codes correspond to the values of =iorder= and =itimescheme= as indicated
 in table\nbsp[[tab:stschem]].
 #+CAPTION: Space and time code schema
@@ -73,16 +74,8 @@ To run a specific test suite you can specify the scheme (spatial or temporal) as
 where ~TYPE~ is one of the space or time codes given in table\nbsp[[tab:stschem]].
 Additionally, the number of processors to run on (default 1) can be set by passing ~NP=X~ to the ~make~
 command.
-
-As the 2D problem is significantly smaller than the 3D problem, it is run up to a resolution of
-$256\times256$ mesh nodes to ensure we are in the asymptotic region of convergence.
-To minimise temporal error, the timestep used is $\Delta{}t=2.5\times10^{-4}$, corresponding on the finest mesh to
-$CFL\approx0.01$, it should therefore suffice to use 1^{st} order Euler as the time discretisation (this has
-the simplest code to write and can be expected to be correct).
-The canonical TGV test case runs to non-dimensional time $t=20$, with regards to running quickly on
-a desktop, here we run to $t=10$, corresponding to $40,000$ timesteps.
-
-The template ~input.i3d~ is given for the ~s4t1b0000n256dt0.00025~ case (one is generated per case).
+A template ~input.i3d~ is given for the ~s4t1b0000n128dt5e-4~ case (the test scripts modify this as
+needed).
 
 #+BEGIN_SRC f90 :noweb yes :tangle input.i3d
   <<src:basic-start>>
@@ -208,8 +201,74 @@ The template ~input.i3d~ is given for the ~s4t1b0000n256dt0.00025~ case (one is 
   /End
 #+END_SRC
 
+** Spatial order of convergence
+
+To test the spatial order of convergence, the mesh is systematically refined from 16^2 to 128^2 nodes.
+Each scheme should then converge to the correct solution with its theoretical order of accuracy -
+this can also be tested for different boundary conditions.
+
+To measure the errors due to spatial discretisation, we must minimise the temporal error.
+The timestep used is $\Delta{}t=5\times10^{-4}$, corresponding on the finest (128^2) mesh to $CFL\approx0.01$, it should
+therefore suffice to use 1^{st} order Euler as the time discretisation (this has the simplest code to
+write and can be expected to be correct).
+The canonical TGV test case runs to non-dimensional time $t=20$, with regards to running quickly on
+a typical desktop, here we run to $t=2.5$, corresponding to $5,000$ timesteps[fn:ntstep].
+
+The tests are run by selecting the script for the scheme you are interested in, /e.g./ ~s4.sh~ to test
+the 6^{th} order compact schemes, this cycles through each set of boundary conditions and resolution to
+test the implementation.
+
+#+BEGIN_SRC shell :tangle s4.sh :shebang #!/bin/bash
+  #
+  #        FILE: s4.sh
+  # DESCRIPTION: Runs convergence tests for 6th order compact scheme.
+  #      AUTHOR: Paul Bartholomew <paul.bartholomew08@imperial.ac.uk>
+  #
+
+  CWD=$(pwd)
+
+  MESHES=( 16 32 64 128 )
+  SSCHEME=4
+  TSCHEME=1
+  DT=5e-4
+  NSTEP=5000
+
+  for msh in "${MESHES[@]}"
+  do
+      # Setup working directory
+      cd ${CWD}
+      WORK=s${SSCHEME}/t${TSCHEME}/b0000/n${msh}/dt${DT}
+      mkdir -p ${WORK}
+      cp input.i3d ${WORK}
+      cp incompact3d ${WORK}
+      cp probes.prm ${WORK}
+      cd ${WORK}
+
+      # Modify input.i3d and run
+      sed -i "s/nx = .*/nx = ${msh} /g" input.i3d
+      sed -i "s/ny = .*/ny = ${msh} /g" input.i3d
+      sed -i "s/dt = .*/dt = ${DT} /g" input.i3d
+      sed -i "s/ilast = .*/ilast = ${NSTEP} /g" input.i3d
+      sed -i "s/iorder = .*/iorder = ${SSCHEME} /g" input.i3d
+      sed -i "s/itimescheme = .*/itimescheme = ${TSCHEME} /g" input.i3d
+  done 
+#+END_SRC
+
+** Temporal order of convergence
+
+To test the temporal order of convergence, the timestep is systematically refined in the range
+$5\times10^{-4}\leq\Delta{}t\leq8\times10^{-3}$.
+The results can be similarly compared with the analytical solution and the order of convergence
+determined.
+As we are now interested in temporal error, these tests are run on the finest (128^2) mesh.
+
 * Analysing the results
 
 ** Spatial order of convergence
 
 ** Temporal order of convergence
+
+* Footnotes
+
+[fn:ntstep] We know the solution as a function of $t$ - we only need to run for enough time to
+exercise the code.

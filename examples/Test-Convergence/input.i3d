@@ -53,13 +53,11 @@ iibm=0                ! Flag for immersed boundary method
 !====================
 &NumOptions
 !====================
-
 ! Spatial derivatives
 iorder = 4            ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact)
 
 ! Time scheme
 itimescheme = 1       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4)
-
 /End
 
 !=================
@@ -69,9 +67,8 @@ itimescheme = 1       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4
 ! Basic I/O
 irestart = 0          ! Read initial flow field ?
 icheckpoint = 50000   ! Frequency for writing backup file
-ioutput = 250         ! Frequency for visualization
 nvisu = 1             ! Size for visualisation collection
-
+ioutput = 250         ! Frequency for visualization
 /End
 
 !=================
