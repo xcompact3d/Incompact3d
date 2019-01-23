@@ -46,6 +46,7 @@ endif
 ifeq ($(TWOD), 1)
 DEFS2 += -DTWOD
 endif
+DEFS2 += -DVISU
 
 #######CMP settings###########
 ifeq ($(CMP),intel)
