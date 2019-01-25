@@ -287,7 +287,7 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
      alfai= one/four
      afi  = (three/four)/d
      bfi  = zero 
-  elseif(iorder==4) then ! First-order compact
+  elseif(iorder==4) then ! Sixth-order compact
      alfai= one/three
      afi  = (seven/nine)/d
      bfi  = (one/thirtysix)/d

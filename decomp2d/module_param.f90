@@ -36,19 +36,17 @@ module variables
   integer,parameter :: prec = 8  
 #endif
 #endif
-
   !module filter
-  real(mytype),allocatable,dimension(:) :: fifx,ficx,fibx,fiffx,fibbx,fiz1x,fiz2x
-  real(mytype),allocatable,dimension(:,:) :: filax,filaxp
-  real(mytype),allocatable,dimension(:) :: fifxp,ficxp,fibxp,fiffxp,fibbxp
-  real(mytype),allocatable,dimension(:) :: fify,ficy,fiby,fiffy,fibby,fiz1y,fiz2y
-  real(mytype),allocatable,dimension(:,:) :: filay,filayp
-  real(mytype),allocatable,dimension(:) :: fifyp,ficyp,fibyp,fiffyp,fibbyp
-  real(mytype),allocatable,dimension(:) :: fifz,ficz,fibz,fiffz,fibbz,fiz1z,fiz2z
-  real(mytype),allocatable, dimension(:,:) :: filaz,filazp
-  real(mytype),allocatable,dimension(:) :: fifzp,ficzp,fibzp,fiffzp,fibbzp
-  integer,allocatable,dimension(:) :: idata
-  real(mytype),allocatable,dimension(:) :: Cs
+  real(mytype),dimension(200) :: idata
+  real(mytype), save, allocatable, dimension(:) :: fiffx, fifcx, fifbx, fisfx, fiscx, fisbx,fifsx,fifwx,fissx,fiswx
+  real(mytype), save, allocatable, dimension(:) :: fiffxp,fifsxp,fifwxp,fisfxp,fissxp,fiswxp
+  real(mytype), save, allocatable, dimension(:) :: fiffy, fifcy, fifby, fisfy, fiscy, fisby,fifsy,fifwy,fissy,fiswy
+  real(mytype), save, allocatable, dimension(:) :: fiffyp,fifsyp,fifwyp,fisfyp,fissyp,fiswyp
+  real(mytype), save, allocatable, dimension(:) :: fiffz, fifcz, fifbz, fisfz, fiscz, fisbz,fifsz,fifwz,fissz,fiswz
+  real(mytype), save, allocatable, dimension(:) :: fiffzp,fifszp,fifwzp,fisfzp,fisszp,fiswzp
+  real(mytype), save, allocatable, dimension(:,:) :: fisx,fivx
+  real(mytype), save, allocatable, dimension(:,:) :: fisy,fivy
+  real(mytype), save, allocatable, dimension(:,:) :: fisz,fivz
 
   !module derivative
   real(mytype),allocatable,dimension(:) :: ffx,sfx,fsx,fwx,ssx,swx
@@ -410,33 +408,38 @@ module derivZ
 
 end module derivZ
 
+! Describes the parameters for the discrete filters in X-Pencil
 module parfiX
-
-  use decomp_2d, only : mytype
-
-  real(mytype) :: fia1x, fib1x, fic1x, fid1x, fie1x, fia2x, fib2x, fic2x, fid2x
-  real(mytype) :: fie2x, fia3x, fib3x, fic3x, fid3x, fie3x, fianx, fibnx, ficnx, fidnx
-  real(mytype) :: fienx, fiamx, fibmx, ficmx, fidmx, fiemx, fiapx, fibpx, ficpx, fidpx
-  real(mytype) :: fiepx, fiaix, fibix, ficix, fidix, fialx, fibex, fih1x, fih2x, fih3x,fih4x
+use decomp_2d, only : mytype
+  real(mytype) :: fia1x, fib1x, fic1x, fid1x, fie1x, fif1x, fig1x ! Coefficients for filter at boundary point 1  
+  real(mytype) :: fia2x, fib2x, fic2x, fid2x, fie2x, fif2x, fig2x ! Coefficients for filter at boundary point 2
+  real(mytype) :: fia3x, fib3x, fic3x, fid3x, fie3x, fif3x, fig3x ! Coefficients for filter at boundary point 3
+  real(mytype) :: fialx, fiaix, fibix, ficix, fidix               ! Coefficient for filter at interior points 
+  real(mytype) :: fianx, fibnx, ficnx, fidnx, fienx, fifnx, fignx ! Coefficient for filter at boundary point n 
+  real(mytype) :: fiamx, fibmx, ficmx, fidmx, fiemx, fifmx, figmx ! Coefficient for filter at boundary point m=n-1 
+  real(mytype) :: fiapx, fibpx, ficpx, fidpx, fiepx, fifpx, figpx ! Coefficient for filter at boundary point p=n-2
 end module parfiX
-
+!
 module parfiY
 
-  use decomp_2d, only : mytype
-
-  real(mytype) :: fia1y, fib1y, fic1y, fid1y, fie1y, fia2y, fib2y, fic2y, fid2y
-  real(mytype) :: fie2y, fia3y, fib3y, fic3y, fid3y, fie3y, fiany, fibny, ficny, fidny
-  real(mytype) :: fieny, fiamy, fibmy, ficmy, fidmy, fiemy, fiapy, fibpy, ficpy, fidpy
-  real(mytype) :: fiepy, fiaiy, fibiy, ficiy, fidiy, fialy, fibey, fih1y, fih2y, fih3y,fih4y
+use decomp_2d, only : mytype
+  real(mytype) :: fia1y, fib1y, fic1y, fid1y, fie1y, fif1y, fig1y ! Coefficients for filter at boundary point 1  
+  real(mytype) :: fia2y, fib2y, fic2y, fid2y, fie2y, fif2y, fig2y ! Coefficients for filter at boundary point 2
+  real(mytype) :: fia3y, fib3y, fic3y, fid3y, fie3y, fif3y, fig3y ! Coefficients for filter at boundary point 3
+  real(mytype) :: fialy, fiajy, fibjy, ficjy, fidjy               ! Coefficient for filter at interior points 
+  real(mytype) :: fiany, fibny, ficny, fidny, fieny, fifny, figny ! Coefficient for filter at boundary point n 
+  real(mytype) :: fiamy, fibmy, ficmy, fidmy, fiemy, fifmy, figmy ! Coefficient for filter at boundary point m=n-1 
+  real(mytype) :: fiapy, fibpy, ficpy, fidpy, fiepy, fifpy, figpy ! Coefficient for filter at boundary point p=n-2
 end module parfiY
 
 module parfiZ
 
-  use decomp_2d, only : mytype
-
-  real(mytype) :: fia1z, fib1z, fic1z, fid1z, fie1z, fia2z, fib2z, fic2z, fid2z
-  real(mytype) :: fie2z, fia3z, fib3z, fic3z, fid3z, fie3z, fianz, fibnz, ficnz, fidnz
-  real(mytype) :: fienz, fiamz, fibmz, ficmz, fidmz, fiemz, fiapz, fibpz, ficpz, fidpz
-  real(mytype) :: fiepz, fiaiz, fibiz, ficiz, fidiz, fialz, fibez, fih1z, fih2z, fih3z,fih4z
-
+use decomp_2d, only : mytype
+  real(mytype) :: fia1z, fib1z, fic1z, fid1z, fie1z, fif1z, fig1z ! Coefficients for filter at boundary point 1  
+  real(mytype) :: fia2z, fib2z, fic2z, fid2z, fie2z, fif2z, fig2z ! Coefficients for filter at boundary point 2
+  real(mytype) :: fia3z, fib3z, fic3z, fid3z, fie3z, fif3z, fig3z ! Coefficients for filter at boundary point 3
+  real(mytype) :: fialz, fiakz, fibkz, fickz, fidkz               ! Coefficient for filter at interior points 
+  real(mytype) :: fianz, fibnz, ficnz, fidnz, fienz, fifnz, fignz ! Coefficient for filter at boundary point n 
+  real(mytype) :: fiamz, fibmz, ficmz, fidmz, fiemz, fifmz, figmz ! Coefficient for filter at boundary point m=n-1 
+  real(mytype) :: fiapz, fibpz, ficpz, fidpz, fiepz, fifpz, figpz ! Coefficient for filter at boundary point p=n-2
 end module parfiZ
