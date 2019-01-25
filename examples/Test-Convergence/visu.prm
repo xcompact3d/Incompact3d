@@ -1,0 +1,38 @@
+#
+# INCOMPACT 3D parameters - Visualization - requires compilation flag -DVISU
+#
+1      #save_ux    # Save ux field to file?(0:no, 1:yes)
+1      #save_uy    # Save uy field to file? (0:no, 1:yes)
+0      #save_uz    # Save uz field to file? (0:no, 1:yes)
+0      #save_phi   # Save phi(1,2,3..) fields to file?(0:no, 1:yes)
+0      #save_uxm   # Save uy averaged field to file?(0:no, 1:yes)
+0      #save_uym   # Save uy averaged field to file?(0:no, 1:yes)
+0      #save_uzm   # Save uz averaged field to file?(0:no, 1:yes)
+0      #save_phim  # Save phi averaged (1,2,3..) fields to file? (0:no, 1:yes)
+0      #save_pre   # Save pressure field to file? (0:no, 1:yes)
+0      #save_prem  # Save pressure averaged field to file? (0:no, 1:yes)
+0      #save_ibm   # Save IBM field to file? (0:no, 1:yes, to save just ibm0000, 2:yes, to save every snapshot)
+#
+# Extra Visualization - requires compilation flag -DVISUEXTRA
+#
+0      #save_w     # Save vorticity field to file?(0:no, 1:yes)
+0      #save_w1    # Save vorticity 1 field to file? (0:no, 1:yes)
+0      #save_w2    # Save vorticity 2 field to file? (0:no, 1:yes)
+0      #save_w3    # Save vorticity 3 field to file? (0:no, 1:yes)
+0      #save_qc    # Save Q-criteria field to file? (0:no, 1:yes)
+0      #save_pc    # Save P-criteria field to file? (0:no, 1:yes)
+0      #save_V     # Save P-criteria field to file? (0:no, 1:yes)
+0      #save_dudx  #
+0      #save_dudy  #
+0      #save_dudz  #
+0      #save_dvdx  #
+0      #save_dvdy  #
+0      #save_dvdz  #
+0      #save_dwdx  #
+0      #save_dwdy  #
+0      #save_dwdz  #
+0      #save_dphidx#
+0      #save_dphidy#
+0      #save_dphidz#
+0      #save_dmap  # Save deposit map? (0:no, 1:yes)
+0      #save_tmap  # Save tau wall map? (0:no, 1:yes)

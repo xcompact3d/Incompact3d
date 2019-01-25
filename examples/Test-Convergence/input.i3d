@@ -1,0 +1,81 @@
+! -*- mode: f90 -*-
+
+!===================
+&BasicParam
+!===================
+
+! Domain decomposition
+p_row = 0             ! Row partition
+p_col = 0             ! Column partition
+
+! Mesh
+nx = 128              ! X-direction nodes
+ny = 128              ! Y-direction nodes
+nz = 8                ! Z-direction nodes
+
+istret = 0            ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
+beta = 0.3            ! Refinement parameter (beta)
+
+! Domain
+xlx = 6.28318530718   ! Lx (Size of the box in x-direction)
+yly = 6.28318530718   ! Ly (Size of the boy in y-direction)
+zlz = 6.28318530718   ! Lz (Size of the boz in z-direction)
+
+! Flow parameters
+itype = 8             ! Type of Flow
+iin = 1               ! Inflow conditions (1: classic, 2: turbinit)
+re = 1600.            ! nu=1/re (Kinematic Viscosity)
+u1 = 8.               ! u1 (max velocity) (for inflow condition)
+u2 = 8.               ! u2 (min velocity) (for inflow condition)
+init_noise  = 0.0     ! Turbulence intensity (1=100%) !! Initial condition
+inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
+
+! Boundary conditions
+nclx1 = 0
+nclxn = 0
+ncly1 = 0
+nclyn = 0
+nclz1 = 0
+nclzn = 0
+
+! Time stepping
+dt = 0.0005           ! Time step
+ifirst = 1            ! First iteration
+ilast = 5000          ! Last iteration
+
+! Enable modelling tools
+iturbmod=0            ! if 0 then DNS
+iscalar=0             ! If iscalar=0 (no scalar), if iscalar=1 (scalar)
+iibm=0                ! Flag for immersed boundary method
+
+/End
+
+!====================
+&NumOptions
+!====================
+! Spatial derivatives
+iorder = 4            ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact)
+
+! Time scheme
+itimescheme = 1       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4)
+/End
+
+!=================
+&InOutParam
+!=================
+
+! Basic I/O
+irestart = 0          ! Read initial flow field ?
+icheckpoint = 50000   ! Frequency for writing backup file
+nvisu = 1             ! Size for visualisation collection
+ioutput = 250         ! Frequency for visualization
+/End
+
+!=================
+&Statistics
+!=================
+
+spinup_time = 50000.  ! Time after which statistics are collected (in seconds)
+nstat = 1             ! Size arrays for statistic collection
+
+/End

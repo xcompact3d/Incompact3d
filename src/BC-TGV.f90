@@ -135,9 +135,14 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
               !uy1(i,j,k)=sin(2.*pi*y)*cos(2.*pi*x)*cos(2.*pi*z)
               !-xxk1/xxk2*sin(xxk2*y)*cos(xxk1*x)*exp(-(xxk1*xxk1+xxk2*xxk2)*xv*t)
               !uz1(i,j,k)=sin(2.*pi*z)*cos(2.*pi*x)*cos(2.*pi*y)
-          ux1(i,j,k)=+sin(x)*cos(y)*cos(z)
-          uy1(i,j,k)=-cos(x)*sin(y)*cos(z)
-          uz1(i,j,k)=zero
+#ifndef TWOD
+              ux1(i,j,k)=+sin(x)*cos(y)*cos(z)
+              uy1(i,j,k)=-cos(x)*sin(y)*cos(z)
+#else
+              ux1(i,j,k)=+sin(x)*cos(y)
+              uy1(i,j,k)=-cos(x)*sin(y)
+#endif
+              uz1(i,j,k)=zero
            enddo
         enddo
      enddo
@@ -199,9 +204,11 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
            dux1(i,j,k,1)=ux1(i,j,k)
            duy1(i,j,k,1)=uy1(i,j,k)
            duz1(i,j,k,1)=uz1(i,j,k)
-           dux1(i,j,k,2)=dux1(i,j,k,1)
-           duy1(i,j,k,2)=duy1(i,j,k,1)
-           duz1(i,j,k,2)=duz1(i,j,k,1)
+           do is = 2, ntime
+              dux1(i,j,k,is)=dux1(i,j,k,is - 1)
+              duy1(i,j,k,is)=duy1(i,j,k,is - 1)
+              duz1(i,j,k,is)=duz1(i,j,k,is - 1)
+           enddo
         enddo
      enddo
   enddo
