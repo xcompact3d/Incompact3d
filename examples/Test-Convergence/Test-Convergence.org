@@ -338,65 +338,65 @@ as computed by the following =python= code
 #+NAME: src:rms.py
 #+BEGIN_SRC python
   def calc_rms(num, an):
-          """Compute the RMS of the difference between a numerical and an analytical result.
+    """Compute the RMS of the difference between a numerical and an analytical result.
 
-          -- INPUT --
-          - num: a 3D numpy array (loaded from incompact3d).
-          - an: a 2D numpy array (generated analytically) on the 2D mesh."""
+    -- INPUT --
+    - num: a 3D numpy array (loaded from incompact3d).
+    - an: a 2D numpy array (generated analytically) on the 2D mesh."""
 
-          nx = num.shape[0]
-          ny = num.shape[1]
-          n = nx * ny
+    nx = num.shape[0]
+    ny = num.shape[1]
+    n = nx * ny
 
-          rms = 0
+    rms = 0
 
-          rms = ((num[:,:,0] - an[:,:])**2).sum()
-          rms /= n
-          rms = rms**0.5
+    rms = ((num[:,:,0] - an[:,:])**2).sum()
+    rms /= n
+    rms = rms**0.5
 
-          return rms
+    return rms
 #+END_SRC
 
 To do the comparison we need to compute the analytical solution on our grid:
 #+NAME: src:ansol.py
 #+BEGIN_SRC python
   def sol_an(nx, ny, t=2.5, Re=1600.):
-          """Compute the analytical solution of the 2D Taylor-Green vortex on a nx-by-ny grid at time t,
-          Reynolds number Re."""
+    """Compute the analytical solution of the 2D Taylor-Green vortex on a nx-by-ny
+    grid at time t, Reynolds number Re."""
 
-          u = np.zeros((nx, ny))
-          v = np.zeros((nx, ny))
-          dx = 2 * math.pi / (nx - 1)
-          dy = 2 * math.pi / (ny - 1)
+    u = np.zeros((nx, ny))
+    v = np.zeros((nx, ny))
+    dx = 2 * math.pi / (nx - 1)
+    dy = 2 * math.pi / (ny - 1)
 
-          F = math.exp(-2 * t / Re)
-          for i in range(nx):
-                  x = i * dx
-                  for j in range(ny):
-                          y = j * dy
+    F = math.exp(-2 * t / Re)
+    for i in range(nx):
+      x = i * dx
+      for j in range(ny):
+        y = j * dy
 
-                          u[i][j] = F * math.sin(x) * math.cos(y)
-                          v[i][j] = -F * math.cos(x) * math.sin(y)
+        u[i][j] = F * math.sin(x) * math.cos(y)
+        v[i][j] = -F * math.cos(x) * math.sin(y)
 
-          return u, v
+    return u, v
 #+END_SRC
 
 To load the numerical data, we use =Py4Incompact3d=
 #+BEGIN_SRC python
   def load(filepath, tstep=20, vars=["ux", "uy"]):
 
-          # Generate a control dictionary
-          gendict("input.json", filepath, vars)
+    # Generate a control dictionary
+    gendict("input.json", filepath, vars)
+	
+    postproc = Postprcess("input.json")
+    postproc.load(time=tstep)
+	
+    # Build return tuple (unpacks like regular variables)
+    ret = ()
+    for var in vars:
+      ret = ret + (postprocess.fields[var].data[t],)
 
-          postproc = Postprcess("input.json")
-          postproc.load(time=tstep)
-
-          # Build return tuple (unpacks like regular variables)
-          ret = ()
-          for var in vars:
-                  ret = ret + (postprocess.fields[var].data[t],)
-
-          return ret
+    return ret
 #+END_SRC
 
 ** Spatial order of convergence
