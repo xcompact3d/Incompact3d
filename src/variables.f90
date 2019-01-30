@@ -250,17 +250,15 @@ contains
 #endif
 
     !module filter
-    allocate(fifx(nx),ficx(nx),fibx(nx),fiffx(nx),fibbx(nx),fiz1x(nx),fiz2x(nx))
-    allocate(filax(nx,2),filaxp(nx,2))
-    allocate(fifxp(nx),ficxp(nx),fibxp(nx),fiffxp(nx),fibbxp(nx))
-    allocate(fify(ny),ficy(ny),fiby(ny),fiffy(ny),fibby(ny),fiz1y(ny),fiz2y(ny))
-    allocate(filay(ny,2),filayp(ny,2))
-    allocate(fifyp(ny),ficyp(ny),fibyp(ny),fiffyp(ny),fibbyp(ny))
-    allocate(fifz(nz),ficz(nz),fibz(nz),fiffz(nz),fibbz(nz),fiz1z(nz),fiz2z(nz))
-    allocate(filaz(nz,2),filazp(nz,2))
-    allocate(fifzp(nz),ficzp(nz),fibzp(nz),fiffzp(nz),fibbzp(nz))
-    allocate(idata(200))
-    allocate(Cs(p_col*p_row))
+    allocate(fiffx(nx), fisfx(nx), fifsx(nx), fifwx(nx), fissx(nx), fiswx(nx))
+    allocate(fiffxp(nx),fisfxp(nx),fifsxp(nx),fifwxp(nx),fissxp(nx),fiswxp(nx))
+    allocate(fiffy(ny), fisfy(ny), fifsy(ny), fifwy(ny), fissy(ny), fiswy(ny))
+    allocate(fiffyp(ny),fisfyp(ny),fifsyp(ny),fifwyp(ny),fissyp(ny),fiswyp(ny))
+    allocate(fiffz(nz), fisfz(nz), fifsz(nz), fifwz(nz), fissz(nz), fiswz(nz))
+    allocate(fiffzp(nz),fisfzp(nz),fifszp(nz),fifwzp(nz),fisszp(nz),fiswzp(nz))
+    allocate(fisx(xsize(2),xsize(3)),fivx(xsize(2),xsize(3)))
+    allocate(fisy(ysize(1),ysize(3)),fivy(ysize(1),ysize(3)))
+    allocate(fisz(zsize(1),zsize(2)),fivz(zsize(1),zsize(2)))
 
     !module derivative
 

@@ -1,9 +1,11 @@
 subroutine filter(af)
 
-USE param 
+USE decomp_2d
+USE param, only: nclx, ncly, ncly 
 USE parfiX 
 USE parfiY 
 USE parfiZ 
+USE variables
 !=================================================
 ! Discrete low-pass filter according to 
 !=================================================	
@@ -122,7 +124,17 @@ if (nclx.eq.2) then
    enddo
 endif
 ! Prepare coefficients to be used in the Thomas Algorithm
+do i=1,nx
+   fiffxp(i)=fiffx(i)
+enddo
 call prepare (fifbx,fifcx,fiffx,fifsx,fifwx,nx)
+call prepare (fifbx,fifcx,fiffxp,fifsxp,fifwxp,nx)
+if (nclx.eq.1) then
+   fiffx(1)=0.0_mytype
+   fifbx(nx-1)=0.0_mytype
+call prepare (fifbx,fifcx,fiffx,fifsx,fifwx,nx)
+endif
+
 !========================================
 ! Define filter coefficients for Y-pencil
 !========================================
@@ -180,20 +192,20 @@ if (ncly.eq.1) then
    fiffy(2)   =af
    fiffy(ny-2)=af
    fiffy(ny-1)=af
-   fiffy(ny)  =0.
-   fifcy(1)   =1.
-   fifcy(2)   =1.
-   fifcy(ny-2)=1.
-   fifcy(ny-1)=1.
-   fifcy(ny  )=1.
+   fiffy(ny)  =0.0_mytype  
+   fifcy(1)   =1.0_mytype
+   fifcy(2)   =1.0_mytype
+   fifcy(ny-2)=1.0_mytype
+   fifcy(ny-1)=1.0_mytype
+   fifcy(ny  )=1.0_mytype
    fifby(1)   =af 
    fifby(2)   =af
    fifby(ny-2)=af
    fifby(ny-1)=af+af
-   fifby(ny  )=0.
+   fifby(ny  )=0.0_mytype
    do j=3,ny-3
       fiffy(j)=af
-      fifcy(j)=1.
+      fifcy(j)=1.0_mytype
       fifby(j)=af
    enddo
 endif
@@ -202,24 +214,33 @@ if (ncly.eq.2) then
    fiffy(2)   =af
    fiffy(ny-2)=af
    fiffy(ny-1)=af
-   fiffy(ny)  =0.
-   fifcy(1)   =1.
-   fifcy(2)   =1.
-   fifcy(ny-2)=1.
-   fifcy(ny-1)=1.
-   fifcy(ny  )=1.
+   fiffy(ny)  =0.0_mytype 
+   fifcy(1)   =1.0_mytype
+   fifcy(2)   =1.0_mytype
+   fifcy(ny-2)=1.0_mytype
+   fifcy(ny-1)=1.0_mytype
+   fifcy(ny  )=1.0_mytype
    fifby(1)   =af 
    fifby(2)   =af
    fifby(ny-2)=af
    fifby(ny-1)=afn
-   fifby(ny  )=0.
+   fifby(ny  )=0.0_mytype
    do j=3,ny-3
       fiffy(j)=af
-      fifcy(j)=1.
+      fifcy(j)=1.0_mytype
       fifby(j)=af
    enddo
 endif
-call prepare(fifby,fifcy,fiffy,fifsy,fifwy,ny)
+do j=1,ny
+   fiffyp(j)=fiffy(j)
+enddo
+call prepare (fifby,fifcy,fiffy,fifsy,fifwy,ny)
+call prepare (fifby,fifcy,fiffyp,fifsyp,fifwyp,ny)
+if (ncly.eq.1) then
+   fiffy(1)=0.0_mytype
+   fifby(ny-1)=0.0_mytype
+call prepare (fifby,fifcy,fiffy,fifsy,fifwy,ny)
+endif
 !========================================
 ! Define filter coefficients for Z-pencil
 !========================================
@@ -271,13 +292,8 @@ if (nclz.eq.0) then
          fifbz(k)=af
       enddo
 endif
-! Assign values for fifps
-do i=1,nx
-
-enddo
-
 if (nclz.eq.1) then
-   fiffz(1)   =af1
+   fiffz(1)   =af+af
    fiffz(2)   =af
    fiffz(nz-2)=af
    fiffz(nz-1)=af
@@ -290,7 +306,7 @@ if (nclz.eq.1) then
    fifbz(1)   =af 
    fifbz(2)   =af
    fifbz(nz-2)=af
-   fifbz(nz-1)=afn
+   fifbz(nz-1)=af+af
    fifbz(nz  )=0.
    do k=3,nz-3
       fiffz(k)=af
@@ -320,7 +336,16 @@ if (nclz.eq.2) then
       fifbz(k)=af
    enddo
 endif
+do k=1,nz
+   fiffzp(k)=fiffz(k)
+enddo
 call prepare (fifbz,fifcz,fiffz,fifsz,fifwz,nz)
+call prepare (fifbz,fifcz,fiffzp,fifszp,fifwzp,nz)
+if (nclz.eq.1) then
+   fiffz(1)=0.0_mytype
+   fifbz(nz-1)=0.0_mytype
+call prepare (fifbz,fifcz,fiffz,fifsz,fifwz,nz)
+endif
 
 return 
 
@@ -329,7 +354,7 @@ end subroutine filter
 
 subroutine filx(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire) 
   
-USE param, only: nclx, ncly, nclz  
+USE param  
 USE parfiX 
 
 implicit none
@@ -429,8 +454,8 @@ subroutine fily(ty,uy,ry,fisy,fiffy,fifsy,fifwy,ppy,nx,ny,nz,npaire)
 !
 !********************************************************************
   
-USE param, only: ncly, istret
-USE parfiY
+USE param  
+USE parfiY 
 
 implicit none
 
@@ -553,7 +578,7 @@ if (ncly==1) then
    if (npaire==0) then 
       do k=1,nz 
       do i=1,nx 
-         ty(i,1,k)=0.
+         ty(i,1,k)=fiajy*uy(i,1,k)
          ty(i,2,k)=fiajy*uy(i,2,k)+fibjy*(uy(i,3,k)+uy(i,1,k))& 
                                   +ficjy*(uy(i,4,k)-uy(i,2,k))&
                                   +fidjy*(uy(i,5,k)-uy(i,3,k)) 
@@ -634,7 +659,7 @@ end subroutine fily
 
 subroutine filz(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire) 
   
-USE param, only: nclz  
+USE param  
 USE parfiZ 
 
 implicit none
@@ -688,7 +713,7 @@ if (nclz==0) then
       rz(i,j,nz)=fialz           
    enddo
    enddo
-   do k=2, nz
+   do k=2,nz
    do j=1,ny
    do i=1,nx
          tz(i,j,k)=tz(i,j,k)-tz(i,j,k-1)*fifsz(k) 

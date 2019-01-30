@@ -38,15 +38,16 @@ module variables
 #endif
   !module filter
   real(mytype),dimension(200) :: idata
-  real(mytype), save, allocatable, dimension(:) :: fiffx, fifcx, fifbx, fisfx, fiscx, fisbx,fifsx,fifwx,fissx,fiswx
-  real(mytype), save, allocatable, dimension(:) :: fiffxp,fifsxp,fifwxp,fisfxp,fissxp,fiswxp
-  real(mytype), save, allocatable, dimension(:) :: fiffy, fifcy, fifby, fisfy, fiscy, fisby,fifsy,fifwy,fissy,fiswy
-  real(mytype), save, allocatable, dimension(:) :: fiffyp,fifsyp,fifwyp,fisfyp,fissyp,fiswyp
-  real(mytype), save, allocatable, dimension(:) :: fiffz, fifcz, fifbz, fisfz, fiscz, fisbz,fifsz,fifwz,fissz,fiswz
-  real(mytype), save, allocatable, dimension(:) :: fiffzp,fifszp,fifwzp,fisfzp,fisszp,fiswzp
-  real(mytype), save, allocatable, dimension(:,:) :: fisx,fivx
-  real(mytype), save, allocatable, dimension(:,:) :: fisy,fivy
-  real(mytype), save, allocatable, dimension(:,:) :: fisz,fivz
+  real(mytype),allocatable,dimension(:) :: fiffx, fifcx, fifbx, fisfx, fiscx, fisbx,fifsx,fifwx,fissx,fiswx
+  real(mytype),allocatable,dimension(:) :: fiffxp,fifsxp,fifwxp,fisfxp,fissxp,fiswxp
+  real(mytype),allocatable,dimension(:) :: fiffy, fifcy, fifby, fisfy, fiscy, fisby,fifsy,fifwy,fissy,fiswy
+  real(mytype),allocatable,dimension(:) :: fiffyp,fifsyp,fifwyp,fisfyp,fissyp,fiswyp
+  real(mytype),allocatable,dimension(:) :: fiffz, fifcz, fifbz, fisfz, fiscz, fisbz,fifsz,fifwz,fissz,fiswz
+  real(mytype),allocatable,dimension(:) :: fiffzp,fifszp,fifwzp,fisfzp,fisszp,fiswzp
+  
+  real(mytype),allocatable,dimension(:,:) :: fisx,fivx
+  real(mytype),allocatable,dimension(:,:) :: fisy,fivy
+  real(mytype),allocatable,dimension(:,:) :: fisz,fivz
 
   !module derivative
   real(mytype),allocatable,dimension(:) :: ffx,sfx,fsx,fwx,ssx,swx
