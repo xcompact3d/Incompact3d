@@ -181,11 +181,6 @@ subroutine momentum_rhs_eq(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
      duy1(:,:,:,1) = duy1(:,:,:,1) + wrotation*ux1(:,:,:)
   endif
 
-#ifdef ELES
-  dux1(:,:,:,1) = dux1(:,:,:,1) + sgsx1(:,:,:) 
-  duy1(:,:,:,1) = duy1(:,:,:,1) + sgsy1(:,:,:) 
-  duz1(:,:,:,1) = duz1(:,:,:,1) + sgsz1(:,:,:) 
-#endif
 
   if (itrip == 1) then
      call tripping(tb1,td1)
