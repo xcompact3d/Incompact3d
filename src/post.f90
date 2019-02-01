@@ -113,11 +113,11 @@ PROGRAM post
            call VISU_INSTA(ux1,uy1,uz1,phi1,ep1,.True.)
         endif
      endif
-#ifdef POST
-     if (comp_post .eq. 1) then
-        call postprocessing(ux1,uy1,uz1,phi1,ep1)
+     if (ipost.ne.0) then
+        if (comp_post .eq. 1) then
+           call postprocessing(ux1,uy1,uz1,phi1,ep1)
+        endif
      endif
-#endif
      call cpu_time(trank)
 
      telapsed = (trank-tstart)/3600.

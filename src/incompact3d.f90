@@ -9,9 +9,7 @@ PROGRAM incompact3d
   USE MPI
   USE derivX
   USE derivZ
-#ifdef POST
   USE post_processing
-#endif
 #ifdef FORCES
   USE forces
 #endif
@@ -93,9 +91,9 @@ PROGRAM incompact3d
   if(ivirt.eq.1) call body(ux1,uy1,uz1,ep1,0)
 #endif
 
-#ifdef POST
-  call init_post(ep1)
-#endif
+  if (ipost.ne.0) then
+     call init_post(ep1)
+  endif
 
 #ifdef FORCES
   call init_forces()
@@ -107,9 +105,9 @@ PROGRAM incompact3d
      if (ivisu.ne.0) then
         call VISU_INSTA (ux1,uy1,uz1,phi1,ep1,diss1,.false.)
      endif
-#ifdef POST
-     call postprocessing(ux1,uy1,uz1,phi1,ep1)
-#endif
+     if (ipost.ne.0) then
+        call postprocessing(ux1,uy1,uz1,phi1,ep1)
+     endif
   endif
 
   call test_speed_min_max(ux1,uy1,uz1)
@@ -168,10 +166,12 @@ PROGRAM incompact3d
         call restart_forces(1)
      endif
 #endif
-#ifdef POST
-     call postprocessing(ux1,uy1,uz1,phi1,ep1)
-     if (nprobes.ne.0) call write_probes(ux1,uy1,uz1,phi1)
-#endif
+     if (ipost.ne.0) then
+        call postprocessing(ux1,uy1,uz1,phi1,ep1)
+        if (nprobes.ne.0) then
+           call write_probes(ux1,uy1,uz1,phi1)
+        endif
+     endif
 
      call cpu_time(trank)
      if (nrank==0) print *,'Time per this time step (s):',real(trank-t1)

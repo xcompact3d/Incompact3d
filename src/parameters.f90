@@ -56,7 +56,7 @@ subroutine parameter(input_i3d)
        dt, ifirst, ilast, &
        iturbmod, iscalar, iibm, &
        nclx1, nclxn, ncly1, nclyn, nclz1, nclzn, &
-       ivisu
+       ivisu, ipost
   NAMELIST /NumOptions/ iorder, ihyper, itimescheme, rxxnu, cnu, fpi2
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu
   NAMELIST /Statistics/ spinup_time, nstat
@@ -315,6 +315,8 @@ subroutine parameter_defaults()
   save_dmap = 0
   save_utmap = 0
   save_ibm = 0
+
+  ipost = 0
 
   ivirt = 0
   ilag = 0
