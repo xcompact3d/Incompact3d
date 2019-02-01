@@ -104,9 +104,9 @@ PROGRAM incompact3d
 
   if (irestart==0) then
      itime=0
-#ifdef VISU
-     call VISU_INSTA (ux1,uy1,uz1,phi1,ep1,diss1,.false.)
-#endif
+     if (ivisu.ne.0) then
+        call VISU_INSTA (ux1,uy1,uz1,phi1,ep1,diss1,.false.)
+     endif
 #ifdef POST
      call postprocessing(ux1,uy1,uz1,phi1,ep1)
 #endif
@@ -177,14 +177,14 @@ PROGRAM incompact3d
      if (nrank==0) print *,'Time per this time step (s):',real(trank-t1)
      if (nrank==0) print *,'Snapshot current/final ',int(itime/ioutput),int(ilast/ioutput)
 
-#ifdef VISU
-     if (mod(itime,ioutput).eq.0) then
-        call VISU_INSTA (ux1,uy1,uz1,phi1,ep1,.false.)
-
-        if (save_pre.eq.1.OR.save_prem.eq.1) call VISU_PRE (pp3,ta1,tb1,di1,&
-             ta2,tb2,di2,ta3,di3,nxmsize,nymsize,nzmsize,uvisu,pre1)
+     if (ivisu.ne.0) then
+        if (mod(itime,ioutput).eq.0) then
+           call VISU_INSTA (ux1,uy1,uz1,phi1,ep1,.false.)
+           
+           if (save_pre.eq.1.OR.save_prem.eq.1) call VISU_PRE (pp3,ta1,tb1,di1,&
+                ta2,tb2,di2,ta3,di3,nxmsize,nymsize,nzmsize,uvisu,pre1)
+        endif
      endif
-#endif
 
 #ifdef STATS
      if (t.ge.callstat) then
