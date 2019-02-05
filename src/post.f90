@@ -108,16 +108,16 @@ PROGRAM post
      endif
      call cpu_time(trend)
 
-#ifdef VISU
-     if (comp_visu .eq. 1) then
-        call VISU_INSTA(ux1,uy1,uz1,phi1,ep1,.True.)
+     if (ivisu.ne.0) then
+        if (comp_visu .eq. 1) then
+           call VISU_INSTA(ux1,uy1,uz1,phi1,ep1,.True.)
+        endif
      endif
-#endif
-#ifdef POST
-     if (comp_post .eq. 1) then
-        call postprocessing(ux1,uy1,uz1,phi1,ep1)
+     if (ipost.ne.0) then
+        if (comp_post .eq. 1) then
+           call postprocessing(ux1,uy1,uz1,phi1,ep1)
+        endif
      endif
-#endif
      call cpu_time(trank)
 
      telapsed = (trank-tstart)/3600.

@@ -1,4 +1,3 @@
-#ifdef VISU
 SUBROUTINE paraview()
 
   USE variables
@@ -822,4 +821,3 @@ SUBROUTINE paraview()
 
 #endif
 END SUBROUTINE paraview
-#endif

@@ -1,5 +1,4 @@
 !############################################################################
-#ifdef VISU
 subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
 
   USE param
@@ -468,7 +467,7 @@ subroutine VISU_PRE (pp3,ta1,tb1,di1,ta2,tb2,di2,ta3,di3,nxmsize,nymsize,nzmsize
   return
 
 end subroutine VISU_PRE
-#endif
+
 !######################################################################################
 subroutine mean_plane_x (f1,nx,ny,nz,fm1)
 

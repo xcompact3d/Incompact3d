@@ -204,6 +204,7 @@ module param
   integer :: icheckpoint,irestart,idebmod,ioutput,imodulo2,idemarre,icommence,irecord
   integer :: iscalar,nxboite,istat,iread,iadvance_time,irotation,iibm
   integer :: ilag,npif,izap
+  integer :: ivisu, ipost
   real(mytype) :: xlx,yly,zlz,dx,dy,dz,dx2,dy2,dz2,t,xxk1,xxk2
   real(mytype) :: dt,re,xnu,init_noise,inflow_noise,u1,u2,angle,anglex,angley
   real(mytype) :: wrotation,ro
