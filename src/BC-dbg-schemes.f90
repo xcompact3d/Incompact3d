@@ -843,3 +843,39 @@ subroutine debug_schemes()
 
   stop 'stop debug_schemes'
 end subroutine debug_schemes
+
+module post_processing
+
+  USE decomp_2d
+  USE variables
+  USE param
+
+  implicit none
+  
+  integer :: nprobes
+
+contains
+
+  subroutine init_post(ep1)
+
+    real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ep1
+    
+  end subroutine init_post
+  
+  subroutine postprocessing(ux1,uy1,uz1,phi1,ep1)
+    
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
+    
+  end subroutine postprocessing
+  
+  subroutine write_probes(ux1,uy1,uz1,phi1)
+    
+    real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ux1, uy1, uz1
+    real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),numscalar) :: phi1
+
+  end subroutine write_probes
+  
+end module post_processing
