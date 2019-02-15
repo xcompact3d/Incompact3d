@@ -59,7 +59,7 @@ subroutine parameter(input_i3d)
        ivisu, ipost
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, rxxnu, cnu, fpi2
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu
-  NAMELIST /Statistics/ spinup_time, nstat
+  NAMELIST /Statistics/ spinup_time, nstat, initstat
   NAMELIST /ScalarParam/ numscalar, sc
   NAMELIST /TurbulenceModel/ iles, smagcst, walecst, iwall
   NAMELIST /TurbulenceWallModel/ smagwalldamp

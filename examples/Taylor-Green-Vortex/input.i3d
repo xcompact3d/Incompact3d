@@ -20,10 +20,18 @@ xlx = 3.14            ! Lx (Size of the box in x-direction)
 yly = 3.14            ! Ly (Size of the box in y-direction)
 zlz = 3.14            ! Lz (Size of the box in z-direction)
 
+! Boundary conditions
+nclx1 = 1
+nclxn = 1
+ncly1 = 1
+nclyn = 1
+nclz1 = 1
+nclzn = 1
+
 ! Flow parameters
 itype = 8             ! Type of Flow
 iin = 1               ! Inflow conditions (1: classic, 2: turbinit)
-re  = 66667           ! nu=1/re (Kinematic Viscosity)
+re  = 1600.           ! nu=1/re (Kinematic Viscosity)
 u1  = 8.              ! u1 (max velocity) (for inflow condition)
 u2  = 8.              ! u2 (min velocity) (for inflow condition)
 init_noise  = 0.125   ! Turbulence intensity (1=100%) !! Initial condition
@@ -47,10 +55,10 @@ iibm=0                ! Flag for immersed boundary method
 
 ! Spatial derivatives
 ifirstder = 4         ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact)
-isecondder = 4        ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact, 5->hyperviscous 6th)
+isecondder = 5        ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact, 5->hyperviscous 6th)
 
 ! Time scheme
-itimescheme = 1       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4)
+itimescheme = 5       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4)
 
 ! Dissipation control
 rxxnu = 0             ! Ratio between hyperviscosity/viscosity at nu

@@ -16,9 +16,9 @@ istret = 2            ! y mesh refinement (0:no, 1:center, 2:both sides, 3:botto
 beta = 0.259065151    ! Refinement parameter (beta)
 
 ! Domain
-xlx = 3.14            ! Lx (Size of the box in x-direction)
+xlx = 12.      ! Lx (Size of the box in x-direction)
 yly = 2.            ! Ly (Size of the box in y-direction)
-zlz = 3.14            ! Lz (Size of the box in z-direction)
+zlz = 1.5            ! Lz (Size of the box in z-direction)
 
 ! Boundary conditions
 nclx1 = 0
@@ -41,7 +41,7 @@ inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
 ! Time stepping
 dt = 0.001              ! Time step
 ifirst = 1            ! First iteration
-ilast =  1000        ! Last iteration
+ilast =  15       ! Last iteration
 
 ! Enable modelling tools
 iturbmod=0            ! if 0 then DNS
@@ -63,7 +63,7 @@ itimescheme = 5       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4
 
 ! Dissipation control
 rxxnu = 0             ! Ratio between hyperviscosity/viscosity at nu
-cnu = 0               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
+ cnu = 0               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 
 /End
 
@@ -73,7 +73,7 @@ cnu = 0               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 
 ! Basic I/O
 irestart = 0          ! Read initial flow field ?
-icheckpoint = 500     ! Frequency for writing backup file
+icheckpoint = 5    ! Frequency for writing backup file
 ioutput = 100         ! Frequency for visualization
 nvisu = 1             ! Size for visualisation collection
 
@@ -83,8 +83,10 @@ nvisu = 1             ! Size for visualisation collection
 &Statistics
 !=================
 
-spinup_time = 5000.   ! Time after which statistics are collected (in seconds)
+spinup_time = 5000   ! number of time steps with a rotation to trigger turbulence
 nstat = 1             ! Size arrays for statistic collection
+initstat = 6         ! Time steps after which statistics are collected 
+
 
 /End
 

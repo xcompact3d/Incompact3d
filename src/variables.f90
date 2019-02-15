@@ -54,6 +54,7 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:) :: uxm2, uym2, phim2, prem2, dissm2
 
   !arrays for statistic collection
+  real(mytype), save, allocatable, dimension(:,:,:) :: umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean  
   real(mytype), save, allocatable, dimension(:,:,:) :: tik1,tik2,tak1,tak2
   real(mytype), save, allocatable, dimension(:,:,:) :: u1sum_tik,u1sum_tak
   real(mytype), save, allocatable, dimension(:,:,:) :: u1sum,v1sum,w1sum,u2sum,v2sum,w2sum
@@ -184,6 +185,19 @@ contains
 
     !arrays for visualization!pay attention to the size!
     allocate(uvisu(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
+
+    !arrays statistics
+    allocate (umean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    allocate (vmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    allocate (wmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    allocate (uumean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    allocate (vvmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    allocate (wwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    allocate (uvmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    allocate (uwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    allocate (vwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    allocate (tmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+
 
     !Y PENCILS
     call alloc_y(ux2);call alloc_y(uy2);call alloc_y(uz2)

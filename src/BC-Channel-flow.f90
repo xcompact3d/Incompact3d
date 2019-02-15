@@ -1,10 +1,3 @@
-module flow_type
-  use decomp_2d, only : mytype
-  integer :: initstats1,initstats2
-
-end module flow_type
-
-
 !********************************************************************
 subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
 
@@ -81,9 +74,6 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
      enddo
   enddo
 
-
-print *,'TOTO',xsize(1),xsize(2),xsize(3),ntime
-  
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# init end ok'
 #endif
@@ -118,7 +108,6 @@ module post_processing
   USE decomp_2d
   USE variables
   USE param
-  USE flow_type
 
   implicit none
   !
@@ -206,108 +195,104 @@ contains
   subroutine postprocessing(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
     USE MPI
+    USE decomp_2d
+    USE decomp_2d_io
+    USE var, only : ta1,umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-    !
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux2, uy2, uz2
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) ::  uprime, vprime, wprime
-    !
-    real(mytype),dimension(ysize(2)) :: um, vm, wm
-    real(mytype),dimension(ysize(2)) :: um1,vm1,wm1
-    real(mytype),dimension(ysize(2)) :: uum, uvm, uwm, vvm, vwm, wwm
-    real(mytype),dimension(ysize(2)) :: uum1,uvm1,uwm1,vvm1,vwm1,wwm1
-    !
-    integer :: i,j,k,code
     character(len=30) :: filename
+    
+    if (itime.ge.initstat) then
+       !umean=ux1
+       call fine_to_coarseS(1,ux1,tmean)
+       umean(:,:,:)=umean(:,:,:)+tmean(:,:,:)
+       
+       !vmean=uy1
+       call fine_to_coarseS(1,uy1,tmean)
+       vmean(:,:,:)=vmean(:,:,:)+tmean(:,:,:)
 
-    if (itime.ge.initstats1) then
+       !wmean=uz1
+       call fine_to_coarseS(1,uz1,tmean)
+       wmean(:,:,:)=wmean(:,:,:)+tmean(:,:,:)
 
-       call transpose_x_to_y(ux1,ux2)
-       call transpose_x_to_y(uy1,uy2)
-       call transpose_x_to_y(uz1,uz2)
+       !uumean=ux1*ux1
+       ta1(:,:,:)=ux1(:,:,:)*ux1(:,:,:)
+       call fine_to_coarseS(1,ta1,tmean)
+       uumean(:,:,:)=uumean(:,:,:)+tmean(:,:,:)
 
-       um = zero; vm = zero; wm = zero
-       um1= zero; vm1= zero; wm1= zero
-       do j=1,ysize(2)
-          um(j) = sum(ux2(:,j,:))
-          vm(j) = sum(uy2(:,j,:))
-          wm(j) = sum(uz2(:,j,:))
-       enddo
+       !vvmean=uy1*uy1
+       ta1(:,:,:)=uy1(:,:,:)*uy1(:,:,:)
+       call fine_to_coarseS(1,ta1,tmean)
+       vvmean(:,:,:)=vvmean(:,:,:)+tmean(:,:,:)
 
-       call MPI_ALLREDUCE(um,um1,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       call MPI_ALLREDUCE(vm,vm1,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       call MPI_ALLREDUCE(wm,wm1,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       !wwmean=uz1*uz1
+       ta1(:,:,:)=uz1(:,:,:)*uz1(:,:,:)
+       call fine_to_coarseS(1,ta1,tmean)
+       wwmean(:,:,:)=wwmean(:,:,:)+tmean(:,:,:)
 
-       usum = usum + um1/real(nx*nz,mytype)
-       vsum = vsum + vm1/real(nx*nz,mytype)
-       wsum = wsum + wm1/real(nx*nz,mytype)
+       !uvmean=ux1*uy1
+       ta1(:,:,:)=ux1(:,:,:)*uy1(:,:,:)
+       call fine_to_coarseS(1,ta1,tmean)
+       uvmean(:,:,:)=uvmean(:,:,:)+tmean(:,:,:)
 
-       ntimes1 = ntimes1 + 1
+       !uwmean=ux1*uz1
+       ta1(:,:,:)=ux1(:,:,:)*uz1(:,:,:)
+       call fine_to_coarseS(1,ta1,tmean)
+       uwmean(:,:,:)=uwmean(:,:,:)+tmean(:,:,:)
 
-       if (itime.ge.initstats2) then
+       !vwmean=uy1*uz1
+       ta1(:,:,:)=uy1(:,:,:)*uz1(:,:,:)
+       call fine_to_coarseS(1,ta1,tmean)
+       vwmean(:,:,:)=vwmean(:,:,:)+tmean(:,:,:)
 
-          do k=1,ysize(3)
-             do j=1,ysize(2)
-                do i=1,ysize(1)
-                   uprime(i,j,k) = ux2(i,j,k) - usum(j)/real(ntimes1,mytype)
-                   vprime(i,j,k) = uy2(i,j,k) - vsum(j)/real(ntimes1,mytype)
-                   wprime(i,j,k) = uz2(i,j,k) - wsum(j)/real(ntimes1,mytype)
-                enddo
-             enddo
-          enddo
-
-          uum=zero ;uvm=zero ;uwm=zero ;vvm=zero ;vwm=zero ;wwm=zero
-          uum1=zero;uvm1=zero;uwm1=zero;vvm1=zero;vwm1=zero;wwm1=zero
-          do k=1,ysize(3)
-             do j=1,ysize(2)
-                do i=1,ysize(1)
-                   uum(j) = uum(j) + uprime(i,j,k)*uprime(i,j,k)
-                   uvm(j) = uvm(j) + uprime(i,j,k)*vprime(i,j,k)
-                   uwm(j) = uwm(j) + uprime(i,j,k)*wprime(i,j,k)
-                   vvm(j) = vvm(j) + vprime(i,j,k)*vprime(i,j,k)
-                   vwm(j) = vwm(j) + vprime(i,j,k)*wprime(i,j,k)
-                   wwm(j) = wwm(j) + wprime(i,j,k)*wprime(i,j,k)
-                enddo
-             enddo
-          enddo
-
-          call MPI_ALLREDUCE(uum,uum1,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-          call MPI_ALLREDUCE(uvm,uvm1,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-          call MPI_ALLREDUCE(uwm,uwm1,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-          call MPI_ALLREDUCE(vvm,vvm1,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-          call MPI_ALLREDUCE(vwm,vwm1,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-          call MPI_ALLREDUCE(wwm,wwm1,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-
-          uusum = uusum + uum1/real(nx*nz,mytype)
-          uvsum = uvsum + uvm1/real(nx*nz,mytype)
-          uwsum = uwsum + uwm1/real(nx*nz,mytype)
-          vvsum = vvsum + vvm1/real(nx*nz,mytype)
-          vwsum = vwsum + vwm1/real(nx*nz,mytype)
-          wwsum = wwsum + wwm1/real(nx*nz,mytype)
-
-          ntimes2 = ntimes2 + 1
-       endif
-
-       if (mod(itime,ioutput).eq.0) then !write results
-          if (nrank.eq.0) then
-             write(filename,"('./out/stats',I4.4)") itime/ioutput
-             open(67,file=trim(filename),status='unknown',form='formatted')
-             do j=1,ysize(2)
-                write(67,'(10E16.8)') yp(j),&
-                     usum(j)/real(ntimes1,mytype),&
-                     vsum(j)/real(ntimes1,mytype),&
-                     wsum(j)/real(ntimes1,mytype),&
-                     uusum(j)/real(ntimes2,mytype),&
-                     uvsum(j)/real(ntimes2,mytype),&
-                     uwsum(j)/real(ntimes2,mytype),&
-                     vvsum(j)/real(ntimes2,mytype),&
-                     vwsum(j)/real(ntimes2,mytype),&
-                     wwsum(j)/real(ntimes2,mytype)
-             enddo
-             close(67)
+       if (mod(itime,icheckpoint)==0) then
+          if (nrank==0) print *,'===========================================================<<<<<'
+          if (nrank==0) print *,'Writing stat file',itime
+          write(filename,"('umean.dat',I7.7)") itime
+          call decomp_2d_write_one(1,umean,filename,1)
+          write(filename,"('vmean.dat',I7.7)") itime
+          call decomp_2d_write_one(1,vmean,filename,1)
+          write(filename,"('wmean.dat',I7.7)") itime
+          call decomp_2d_write_one(1,wmean,filename,1)
+          write(filename,"('uumean.dat',I7.7)") itime
+          call decomp_2d_write_one(1,uumean,filename,1)
+          write(filename,"('vvmean.dat',I7.7)") itime
+          call decomp_2d_write_one(1,vvmean,filename,1)
+          write(filename,"('wwmean.dat',I7.7)") itime
+          call decomp_2d_write_one(1,wwmean,filename,1)
+          write(filename,"('uvmean.dat',I7.7)") itime
+          call decomp_2d_write_one(1,uvmean,filename,1)
+          write(filename,"('uwmean.dat',I7.7)") itime
+          call decomp_2d_write_one(1,uwmean,filename,1)
+          write(filename,"('vwmean.dat',I7.7)") itime
+          call decomp_2d_write_one(1,vwmean,filename,1)  
+          if (nrank==0) print *,'write stat done!'
+          if (nrank==0) print *,'===========================================================<<<<<'
+          if (nrank==0) then
+             write(filename,"('umean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('umean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('vmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('wmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('uumean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('vvmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('wwmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('uvmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('uwmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('vwmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
           endif
        endif
+
     endif
 
     return

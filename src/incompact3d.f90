@@ -100,9 +100,6 @@ PROGRAM incompact3d
      if (ivisu.ne.0) then
         call VISU_INSTA (ux1,uy1,uz1,phi1,ep1,diss1,.false.)
      endif
-     if (ipost.ne.0) then
-        call postprocessing(ux1,uy1,uz1,phi1,ep1)
-     endif
   endif
 
   call test_speed_min_max(ux1,uy1,uz1)
@@ -150,10 +147,7 @@ PROGRAM incompact3d
 
      enddo
 
-#ifdef STATS
-     call CONVERGENCE_STATISTIC(ux1,ep1,u1sum_tik,u1sum_tak,tsum)
-     call CONVERGENCE_STATISTIC2(ux1,ep1,tik1,tik2,tak1,tak2)
-#endif
+
 #ifdef FORCES
      call force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
           ux2,uy2,ta2,tb2,tc2,td2,di2)
@@ -161,13 +155,10 @@ PROGRAM incompact3d
         call restart_forces(1)
      endif
 #endif
-     if (ipost.ne.0) then
-        call postprocessing(ux1,uy1,uz1,phi1,ep1)
-        if (nprobes.ne.0) then
-           call write_probes(ux1,uy1,uz1,phi1)
-        endif
-     endif
-
+     
+     call postprocessing(ux1,uy1,uz1,phi1,ep1)
+     
+  
      call cpu_time(trank)
      if (nrank==0) print *,'Time per this time step (s):',real(trank-t1)
      if (nrank==0) print *,'Snapshot current/final ',int(itime/ioutput),int(ilast/ioutput)
@@ -181,21 +172,7 @@ PROGRAM incompact3d
         endif
      endif
 
-#ifdef STATS
-     if (t.ge.callstat) then
-        call cpu_time(t1)
-        call OVERALL_STATISTIC(ux1,uy1,uz1,phi1,pre1,diss1,ta1,&
-             u1sum,v1sum,w1sum,u2sum,v2sum,w2sum,&
-             u3sum,v3sum,w3sum,u4sum,v4sum,w4sum,&
-             uvsum,vwsum,vwsum,disssum,tsum,&
-             psum,ppsum,upsum,vpsum,wpsum)
 
-        if (save_dudx.eq.1) call EXTRA_STAT (ux1,uy1,uz1,uvisu,tsum,dudxsum,utmapsum)
-        call cpu_time(trank)
-        if (nrank==0) print *,'Time in statistics (s):',real(trank-t1,4)
-
-     endif
-#endif
 
      if (mod(itime,icheckpoint).eq.0) then
         call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,1)

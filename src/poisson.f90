@@ -1082,8 +1082,6 @@ contains
 
     call decomp_2d_fft_3d(rhs,cw1)
 
-     print *,'STOPSTOP'
-
     ! normalisation
     cw1 = cw1 / real(nx, kind=mytype) /real(ny, kind=mytype) &
          / real(nz, kind=mytype)
