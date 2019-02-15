@@ -331,9 +331,6 @@ contains
        periodic_z = .false.
     end if
 
-    call MPI_COMM_RANK(MPI_COMM_WORLD,nrank,ierror)
-    call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,ierror)
-
     if (p_row==0 .and. p_col==0) then
        ! determine the best 2D processor grid
        call best_2d_grid(nproc, row, col)
