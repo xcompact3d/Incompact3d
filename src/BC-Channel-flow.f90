@@ -4,87 +4,9 @@ module flow_type
 
 end module flow_type
 
-subroutine ft_parameter(arg)
 
-  USE param
-  USE variables
-  USE flow_type
-  USE complex_geometry
-  USE decomp_2d, only : nrank
-  implicit none
-
-  logical,intent(in) :: arg
-  character :: a
-
-  nclx1 = 0 !Boundary condition in x=0  (0: Periodic, 1:Free-slip, 2: Dirichlet)
-  nclxn = 0 !Boundary condition in x=Lx (0: Periodic, 1:Free-slip, 2: Dirichlet)
-  ncly1 = 2 !Boundary condition in y=0  (0: Periodic, 1:Free-slip, 2: Dirichlet)
-  nclyn = 2 !Boundary condition in y=Ly (0: Periodic, 1:Free-slip, 2: Dirichlet)
-  nclz1 = 0 !Boundary condition in z=0  (0: Periodic, 1:Free-slip, 2: Dirichlet)
-  nclzn = 0 !Boundary condition in z=Lz (0: Periodic, 1:Free-slip, 2: Dirichlet)
-
-  open(10,file='BC-Channel-flow.prm',status='old',form='formatted')
-  read (10,*) a !
-  read (10,*) a ! INCOMPACT 3D computational parameters
-  read (10,*) a !
-  read (10,*) nx
-  read (10,*) ny
-  read (10,*) nz
-  read (10,*) nphi
-  read (10,*) p_row
-  read (10,*) p_col
-  if (arg) then
-    close(10)
-    return
-  endif
-  read (10,*) a !
-  read (10,*) a ! INCOMPACT 3D Flow parameters
-  read (10,*) a !
-  read (10,*) xlx
-  xlx = xlx*pi
-  read (10,*) yly
-  read (10,*) zlz
-  zlz = zlz*pi
-  read (10,*) re
-  read (10,*) noise
-  read (10,*) dt
-  read (10,*) a !
-  read (10,*) a ! INCOMPACT3D Flow configuration
-  read (10,*) a !
-  read (10,*) iin
-  read (10,*) ifirst
-  read (10,*) ilast
-  read (10,*) nscheme
-  read (10,*) istret
-  read (10,*) beta
-  read (10,*) a !
-  read (10,*) a ! INCOMPACT 3D File parameters
-  read (10,*) a !
-  read (10,*) ilit
-  read (10,*) icheckpoint
-  read (10,*) imodulo
-  read (10,*) wrotation
-  read (10,*) irotation
-  read (10,*) initstats1
-  read (10,*) initstats2
-  read (10,*) a !
-  read (10,*) a ! NUMERICAL DISSIPATION
-  read (10,*) a !
-  read (10,*) jLES
-  read (10,*) fpi2
-
-  if (nrank==0) then
-     print *,'==================Turbulent channel flow==================='
-     write(*,"(' irotation          : ',I15)") irotation
-     write(*,"(' wrotation          : ',F15.8)") wrotation
-     write(*,"(' initstats1         : ',I15)") initstats1
-     write(*,"(' initstats2         : ',I15)") initstats2
-     print *,'==========================================================='
-  endif
-  return
-end subroutine ft_parameter
 !********************************************************************
-subroutine init (ux1,uy1,uz1,dux1,duy1,duz1,ep1,phi1,phis1,phiss1)
+subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
 
   USE decomp_2d
   USE decomp_2d_io
@@ -95,7 +17,7 @@ subroutine init (ux1,uy1,uz1,dux1,duy1,duz1,ep1,phi1,phis1,phiss1)
   implicit none
 
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1,phis1,phiss1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1,phis1,phiss1
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
 
   real(mytype) :: y,r,um,r3,x,z,h,ct
@@ -133,13 +55,13 @@ subroutine init (ux1,uy1,uz1,dux1,duy1,duz1,ep1,phi1,phis1,phiss1)
         if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/two
         um=exp(-zptwo*y*y)
         do i=1,xsize(1)
-           ux1(i,j,k)=noise*um*(two*ux1(i,j,k)-one)+one-y*y
-           uy1(i,j,k)=noise*um*(two*uy1(i,j,k)-one)
-           uz1(i,j,k)=noise*um*(two*uz1(i,j,k)-one)
+           ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
+           uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
+           uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
         enddo
      enddo
   enddo
-
+  
   !INIT FOR G AND U=MEAN FLOW + NOISE
   do k=1,xsize(3)
      do j=1,xsize(2)
@@ -150,13 +72,18 @@ subroutine init (ux1,uy1,uz1,dux1,duy1,duz1,ep1,phi1,phis1,phiss1)
            dux1(i,j,k,1)=ux1(i,j,k)
            duy1(i,j,k,1)=uy1(i,j,k)
            duz1(i,j,k,1)=uz1(i,j,k)
-           dux1(i,j,k,2)=dux1(i,j,k,1)
-           duy1(i,j,k,2)=duy1(i,j,k,1)
-           duz1(i,j,k,2)=duz1(i,j,k,1)
+           do is = 2, ntime
+              dux1(i,j,k,is)=dux1(i,j,k,is - 1)
+              duy1(i,j,k,is)=duy1(i,j,k,is - 1)
+              duz1(i,j,k,is)=duz1(i,j,k,is - 1)
+           enddo
         enddo
      enddo
   enddo
 
+
+print *,'TOTO',xsize(1),xsize(2),xsize(3),ntime
+  
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# init end ok'
 #endif
@@ -173,7 +100,7 @@ subroutine boundary_conditions (ux,uy,uz,phi,ep1)
   implicit none
 
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,ep1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 !!$  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ut
 
   real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: gx
@@ -281,7 +208,7 @@ contains
     USE MPI
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     !
     real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux2, uy2, uz2
     real(mytype),dimension(ysize(1),ysize(2),ysize(3)) ::  uprime, vprime, wprime
@@ -362,9 +289,9 @@ contains
           ntimes2 = ntimes2 + 1
        endif
 
-       if (mod(itime,imodulo).eq.0) then !write results
+       if (mod(itime,ioutput).eq.0) then !write results
           if (nrank.eq.0) then
-             write(filename,"('./out/stats',I4.4)") itime/imodulo
+             write(filename,"('./out/stats',I4.4)") itime/ioutput
              open(67,file=trim(filename),status='unknown',form='formatted')
              do j=1,ysize(2)
                 write(67,'(10E16.8)') yp(j),&
@@ -389,11 +316,11 @@ contains
   subroutine write_probes(ux1,uy1,uz1,phi1) !By Felipe Schuch
 
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ux1, uy1, uz1
-    real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),nphi) :: phi1
+    real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),numscalar) :: phi1
 
     integer :: i
     character(len=30) :: filename
-    FS = 1+3+nphi !Number of columns
+    FS = 1+3+numscalar !Number of columns
     write(fileformat, '( "(",I4,"(E14.6),A)" )' ) FS
     FS = FS*14+1  !Line width
 
@@ -406,7 +333,7 @@ contains
                ux1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !2
                uy1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !3
                uz1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !4
-               phi1(nxprobes(i),nyprobes(i),nzprobes(i),:),&         !nphi
+               phi1(nxprobes(i),nyprobes(i),nzprobes(i),:),&         !numscalar
                NL                                                    !+1
           close(67)
        endif

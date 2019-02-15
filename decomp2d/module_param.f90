@@ -210,7 +210,7 @@ module param
   real(mytype) :: wrotation,ro
 
   !! Numerics control
-  integer :: iorder, ihyper
+  integer :: ifirstder,isecondder
 
 #ifdef IMPLICIT
   real(mytype) :: xcst, xcst_pr

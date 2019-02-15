@@ -28,9 +28,9 @@ PROGRAM incompact3d
   nargin=command_argument_count()
   if (nargin <1) then
      InputFN='input.i3d'
-     print*, 'Incompact3d is run with the default file -->', InputFN
+     if (nrank==0) print*, 'Incompact3d is run with the default file -->', InputFN
   elseif (nargin.ge.1) then
-     print*, 'Program is run with the provided file -->', InputFN
+     if (nrank==0) print*, 'Program is run with the provided file -->', InputFN
      
      call get_command_argument(1,InputFN,FNLength,status)
      back=.true.

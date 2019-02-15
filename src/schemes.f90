@@ -275,25 +275,25 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
   ff=zero;fs=zero;fw=zero;ffp=zero;fsp=zero;fwp=zero
   fb=zero;fc=zero
   
-  if (iorder==1) then    ! Second-order central
+  if (ifirstder==1) then    ! Second-order central
      alfai= zero
      afi  = one/(two*d)
      bfi  = zero
-  elseif(iorder==2) then ! Fourth-order central
+  elseif(ifirstder==2) then ! Fourth-order central
      alfai= zero
      afi  = four/(six*d)
      bfi  = -one/(twelve*d)
-  elseif(iorder==3) then ! Fourth-order compact
+  elseif(ifirstder==3) then ! Fourth-order compact
      alfai= one/four
      afi  = (three/four)/d
      bfi  = zero 
-  elseif(iorder==4) then ! Sixth-order compact
+  elseif(ifirstder==4) then ! Sixth-order compact
      alfai= one/three
      afi  = (seven/nine)/d
      bfi  = (one/thirtysix)/d
   else
      if (nrank==0) then
-        print *, 'This is not an option. Please use iorder=1,2,3,4'
+        print *, 'This is not an option. Please use ifirstder=1,2,3,4'
      endif
   endif
 
@@ -422,7 +422,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
   sf=zero;ss=zero;sw=zero;sfp=zero;ssp=zero;swp=zero
 
   ! Define coefficients based on the desired formal accuracy of the numerical schemes
-  if (iorder==1) then    ! Second-order central
+  if (isecondder==1) then    ! Second-order central
      alsai=zero
      asi  =one/d2  !((six-nine*alsai)/four)/d2
      bsi  =zero !((-three+twentyfour*alsai)/five)/(four*d2)
@@ -438,7 +438,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
      astt = asi
      bstt = bsi
      cstt = csi 
-  elseif(iorder==2) then ! Fourth-order central
+  elseif(isecondder==2) then ! Fourth-order central
      alsai=zero !(45._mytype*fpi2*pi*pi-272._mytype)/(two*(45._mytype*fpi2*pi*pi-208._mytype))
      asi  = four/three/d2 !((six-nine*alsai)/four)/d2
      bsi  = -one/three/(four*d2) !((-three+twentyfour*alsai)/five)/(four*d2)
@@ -454,7 +454,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
      astt = asi
      bstt = bsi
      cstt = csi 
-  elseif(iorder==3) then ! Fourth-order compact
+  elseif(isecondder==3) then ! Fourth-order compact
      alsai= one/ten  !(45._mytype*fpi2*pi*pi-272._mytype)/(two*(45._mytype*fpi2*pi*pi-208._mytype))
      asi  = six/five/d2 !((six-nine*alsai)/four)/d2
      bsi  = zero !((-three+twentyfour*alsai)/five)/(four*d2)
@@ -470,7 +470,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
      astt = asi
      bstt = bsi
      cstt = csi  
-  elseif(iorder==4) then ! Sixth-order compact
+  elseif(isecondder==4) then ! Sixth-order compact
      !BASE LELE
      !alsai= 2./11.
      !asi  = (12./11.)/d2
@@ -493,7 +493,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
      astt = asi
      bstt = bsi
      cstt = csi 
-  elseif(iorder==4.and.ihyper==1) then ! Sixth-order Hyperviscous operator 
+  elseif(isecondder==5) then ! Sixth-order Hyperviscous operator 
      xxnu=one/fpi2
      dpis3=two*pi/three
      kppkc=pi*pi/xxnu+pi*pi
@@ -516,7 +516,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
      dsi = dsi / (16._mytype*d2)  
   else
      if (nrank==0) then
-        print *, 'This is not an option. Please use iorder=1,2,3,4 and (iorder=4,ihyper=1) for hyperviscosity'
+        print *, 'This is not an option.'
      endif
   endif
 

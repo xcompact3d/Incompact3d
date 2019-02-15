@@ -57,7 +57,7 @@ subroutine parameter(input_i3d)
        iturbmod, iscalar, iibm, &
        nclx1, nclxn, ncly1, nclyn, nclz1, nclzn, &
        ivisu, ipost
-  NAMELIST /NumOptions/ iorder, ihyper, itimescheme, rxxnu, cnu, fpi2
+  NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, rxxnu, cnu, fpi2
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu
   NAMELIST /Statistics/ spinup_time, nstat
   NAMELIST /ScalarParam/ numscalar, sc
