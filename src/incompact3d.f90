@@ -24,6 +24,11 @@ PROGRAM incompact3d
   character(len=80) :: InputFN, FNBase
   character(len=20) :: filename
 
+  !! Initialise MPI
+  call MPI_INIT(code)
+  call MPI_COMM_RANK(MPI_COMM_WORLD,nrank,ierror)
+  call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,ierror)
+
   ! Handle input file like a boss -- GD
   nargin=command_argument_count()
   if (nargin <1) then
@@ -42,8 +47,6 @@ PROGRAM incompact3d
  endif
  
  call parameter(InputFN)
-  
-  call MPI_INIT(code)
   
   call decomp_2d_init(nx,ny,nz,p_row,p_col)
   call init_coarser_mesh_statS(nstat,nstat,nstat,.true.)    !start from 1 == true
