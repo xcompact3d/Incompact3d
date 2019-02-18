@@ -687,7 +687,7 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
 !*******************************************************************
 
   use decomp_2d, only : mytype
-  use param, only : jLES, zero, one, two, three, nine, ten
+  use param, only : ipinter, zero, one, two, three, nine, ten
 
   implicit none
 
@@ -754,12 +754,17 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      cbi6(i)=alcaix6 
   enddo
 
-  if (jLES.eq.4) then
-     !Spectral-like dx6 v1
+  if (ipinter.eq.1) then
+     ailcaix6=three/ten
+     dicix6=zero
+     aicix6=one/128._mytype *(75._mytype +70._mytype*ailcaix6)
+     bicix6=one/256._mytype *(126._mytype*ailcaix6-25._mytype)
+     cicix6=one/256._mytype *(-ten*ailcaix6+three)
+     dicix6=dicix6/two
+  endif
+  if (ipinter.eq.2) then
      ailcaix6=0.461658
      dicix6=0.00293016
-
-     !ORDRE 6
      aicix6=one/64._mytype *(75._mytype +70._mytype *ailcaix6-320._mytype *dicix6)
      bicix6=one/128._mytype *(126._mytype *ailcaix6-25._mytype +1152._mytype *dicix6)
      cicix6=one/128._mytype *(-ten*ailcaix6+three-640._mytype *dicix6)
@@ -767,15 +772,10 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      bicix6=bicix6/two
      cicix6=cicix6/two
      dicix6=dicix6/two
-  else
-     !Classic
-     !ailcaix6=3./10.
-     !dicix6=0.
-
-     !Crazy
+  endif
+  if (ipinter.eq.3) then   
      ailcaix6=0.49_mytype 
      dicix6=zero
-
      aicix6=one/128._mytype *(75._mytype +70._mytype*ailcaix6)
      bicix6=one/256._mytype *(126._mytype*ailcaix6-25._mytype)
      cicix6=one/256._mytype *(-ten*ailcaix6+three)

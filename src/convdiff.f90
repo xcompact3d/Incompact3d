@@ -176,7 +176,7 @@ subroutine momentum_rhs_eq(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
   duz1(:,:,:,1) = xnu*tc1(:,:,:) - ti1(:,:,:) !+- di1       !+z
 
   if (itime.lt.spinup_time) then
-     if (nrank==0) print *,'Rotating turbulent channel!'
+     if (nrank==0) print *,'Rotating turbulent channel at speed ',wrotation
      dux1(:,:,:,1) = dux1(:,:,:,1) - wrotation*uy1(:,:,:)
      duy1(:,:,:,1) = duy1(:,:,:,1) + wrotation*ux1(:,:,:)
   endif

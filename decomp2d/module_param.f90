@@ -192,7 +192,7 @@ module param
   real(mytype) :: wrotation,ro
 
   !! Numerics control
-  integer :: ifirstder,isecondder
+  integer :: ifirstder,isecondder,ipinter
 
 #ifdef IMPLICIT
   real(mytype) :: xcst, xcst_pr

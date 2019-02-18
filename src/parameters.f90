@@ -57,9 +57,9 @@ subroutine parameter(input_i3d)
        iturbmod, iscalar, iibm, &
        nclx1, nclxn, ncly1, nclyn, nclz1, nclzn, &
        ivisu, ipost
-  NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, rxxnu, cnu, fpi2
+  NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, rxxnu, cnu, fpi2, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu
-  NAMELIST /Statistics/ spinup_time, nstat, initstat
+  NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat
   NAMELIST /ScalarParam/ numscalar, sc
   NAMELIST /TurbulenceModel/ iles, smagcst, walecst, iwall
   NAMELIST /TurbulenceWallModel/ smagwalldamp
@@ -266,6 +266,7 @@ subroutine parameter_defaults()
   iin = 0
   itimescheme = 4
   istret = 0
+  ipinter=2
   beta = 0
   iscalar = 0
   cont_phi = 0

@@ -89,21 +89,10 @@ PROGRAM incompact3d
   if(ivirt.eq.1) call body(ux1,uy1,uz1,ep1,0)
 #endif
 
-  if (ipost.ne.0) then
-     call init_post(ep1)
-  endif
-
 #ifdef FORCES
   call init_forces()
   if (irestart==1) call restart_forces(0)
 #endif
-
-  if (irestart==0) then
-     itime=0
-     if (ivisu.ne.0) then
-        call VISU_INSTA (ux1,uy1,uz1,phi1,ep1,diss1,.false.)
-     endif
-  endif
 
   call test_speed_min_max(ux1,uy1,uz1)
   if (iscalar==1) call test_scalar_min_max(phi1)
@@ -165,8 +154,6 @@ PROGRAM incompact3d
      call cpu_time(trank)
      if (nrank==0) print *,'Time per this time step (s):',real(trank-t1)
      if (nrank==0) print *,'Snapshot current/final ',int(itime/ioutput),int(ilast/ioutput)
-
-
 
 
      if (mod(itime,icheckpoint).eq.0) then
