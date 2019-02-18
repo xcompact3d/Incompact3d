@@ -450,8 +450,10 @@ contains
 !    call MPI_ALLREDUCE(di1,enstrophy,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 !    enstrophy=half*enstrophy/(nx*ny*nz)
 
-    es = sum(di1*volSimps1)
+    ! es = sum(di1*volSimps1)
+    es = sum(di1)
     call MPI_REDUCE(es,es1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
+    es1 = half * es1 / nx / ny / nz
 
     ek=zero;ek1=zero
     !KINETIC ENERGY
@@ -462,15 +464,17 @@ contains
 !    call MPI_ALLREDUCE(di1,eek,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 !    eek=half*eek/(nx*ny*nz)
 
-    ek = sum(di1*volSimps1)
+    ! ek = sum(di1*volSimps1)
+    ek = sum(di1)
     call MPI_REDUCE(ek,ek1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
+    ek1 = half * ek1 / nx / ny / nz
 
     ds=zero;ds1=zero
-    !dissipation
-    di1=zero
-    call dissipation (ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1)
-    ds = sum(di1*volSimps1)
-    call MPI_REDUCE(ds,ds1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
+    ! !dissipation
+    ! di1=zero
+    ! call dissipation (ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1)
+    ! ds = sum(di1*volSimps1)
+    ! call MPI_REDUCE(ds,ds1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
 
     
     if (nrank .eq. 0) then
