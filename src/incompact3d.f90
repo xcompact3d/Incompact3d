@@ -84,10 +84,8 @@ PROGRAM incompact3d
   endif
 
 
-#ifdef IBM
-  if(ilag.eq.1)  call genepsi3d(ep1)
-  if(ivirt.eq.1) call body(ux1,uy1,uz1,ep1,0)
-#endif
+if (iibm.eq.2)  call genepsi3d(ep1)
+if (iibm.eq.1)  call body(ux1,uy1,uz1,ep1,0)
 
 #ifdef FORCES
   call init_forces()
@@ -151,7 +149,6 @@ PROGRAM incompact3d
   enddo
 
   call simu_stats(4)
-
   call decomp_2d_finalize
   CALL MPI_FINALIZE(code)
 

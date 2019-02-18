@@ -85,7 +85,7 @@ contains
     endif
   end subroutine init_forces
 
-  subroutine restart_forces(irestart)
+  subroutine restart_forces(itest1)
 
     USE decomp_2d
     USE decomp_2d_io
@@ -95,7 +95,7 @@ contains
 
     implicit none
 
-    integer :: irestart,fh,ierror,code
+    integer :: fh,ierror,code,itest1
     integer :: ierror_o=0 !error to open sauve file during restart
     character(len=30) :: filename, filestart
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
@@ -103,7 +103,7 @@ contains
     write(filename, "('sauve-forces',I7.7)") itime
     write(filestart,"('sauve-forces',I7.7)") ifirst-1
 
-    if (irestart==1) then !write
+    if (itest1==1) then !write
        call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
             MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
             fh, ierror)
@@ -152,7 +152,6 @@ subroutine force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
   USE MPI
 
   implicit none
-  TYPE(DECOMP_INFO) :: phG,ph2,ph3
   character(len=30) :: filename
   integer :: nzmsize
   integer                                             :: i, iv, j, k, kk, ijk, code

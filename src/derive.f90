@@ -46,7 +46,7 @@ subroutine derx_00(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   real(mytype), dimension(ny,nz):: sx
   real(mytype), dimension(nx):: ffx,fsx,fwx 
 
-  if(ilag.eq.1) call lagpolx(ux)
+  if(iibm.eq.2) call lagpolx(ux)
   
   do k=1,nz 
      do j=1,ny 
@@ -104,7 +104,7 @@ subroutine derx_11(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   real(mytype), dimension(ny,nz):: sx
   real(mytype), dimension(nx):: ffx,fsx,fwx 
 
-  if(ilag.eq.1) call lagpolx(ux)
+  if(iibm.eq.2) call lagpolx(ux)
 
   if (npaire==1) then 
      do k=1,nz 
@@ -174,7 +174,7 @@ subroutine derx_12(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   real(mytype), dimension(ny,nz):: sx
   real(mytype), dimension(nx):: ffx,fsx,fwx 
 
-  if(ilag.eq.1) call lagpolx(ux)
+  if(iibm.eq.2) call lagpolx(ux)
 
   if (npaire==1) then 
      do k=1,nz 
@@ -241,7 +241,7 @@ subroutine derx_21(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   real(mytype), dimension(ny,nz):: sx
   real(mytype), dimension(nx):: ffx,fsx,fwx 
 
-  if(ilag.eq.1) call lagpolx(ux)
+  if(iibm.eq.2) call lagpolx(ux)
 
   if (npaire==1) then 
      do k=1,nz 
@@ -308,7 +308,7 @@ subroutine derx_22(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   real(mytype), dimension(ny,nz):: sx
   real(mytype), dimension(nx):: ffx,fsx,fwx 
 
-  if(ilag.eq.1) call lagpolx(ux)
+  if(iibm.eq.2) call lagpolx(ux)
 
   do k=1,nz
      do j=1,ny 
@@ -350,7 +350,7 @@ subroutine dery_00(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
   real(mytype), dimension(nx,nz)  :: sy
   real(mytype), dimension(ny) :: ffy,fsy,fwy,ppy
 
-  if(ilag.eq.1) call lagpoly(uy)
+  if(iibm.eq.2) call lagpoly(uy)
 
   do k=1,nz 
      do i=1,nx 
@@ -445,7 +445,7 @@ subroutine dery_11(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
   real(mytype), dimension(nx,nz)  :: sy
   real(mytype), dimension(ny) :: ffy,fsy,fwy,ppy
 
-  if(ilag.eq.1) call lagpoly(uy)
+  if(iibm.eq.2) call lagpoly(uy)
 
   if (npaire==1) then 
      do k=1,nz 
@@ -564,7 +564,7 @@ subroutine dery_12(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
   real(mytype), dimension(nx,nz)  :: sy
   real(mytype), dimension(ny) :: ffy,fsy,fwy,ppy
 
-  if(ilag.eq.1) call lagpoly(uy)
+  if(iibm.eq.2) call lagpoly(uy)
   if (npaire==1) then 
      do k=1,nz 
         do i=1,nx 
@@ -679,7 +679,7 @@ subroutine dery_21(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
   real(mytype), dimension(nx,nz)  :: sy
   real(mytype), dimension(ny) :: ffy,fsy,fwy,ppy
 
-  if(ilag.eq.1) call lagpoly(uy)
+  if(iibm.eq.2) call lagpoly(uy)
 
   if (npaire==1) then 
      do k=1,nz 
@@ -795,7 +795,7 @@ subroutine dery_22(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
   real(mytype), dimension(nx,nz)  :: sy
   real(mytype), dimension(ny) :: ffy,fsy,fwy,ppy
 
-  if(ilag.eq.1) call lagpoly(uy)
+  if(iibm.eq.2) call lagpoly(uy)
 
   do k=1,nz 
      do i=1,nx 
@@ -866,7 +866,7 @@ subroutine derz_00(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
   real(mytype), dimension(nx,ny) :: sz 
   real(mytype), dimension(nz) :: ffz,fsz,fwz
 
-  if(ilag.eq.1) call lagpolz(uz)
+  if(iibm.eq.2) call lagpolz(uz)
 
   do j=1,ny
      do i=1,nx
@@ -951,7 +951,7 @@ subroutine derz_11(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
   real(mytype), dimension(nx,ny) :: sz 
   real(mytype), dimension(nz) :: ffz,fsz,fwz
 
-  if(ilag.eq.1) call lagpolz(uz)
+  if(iibm.eq.2) call lagpolz(uz)
 
   if (npaire==1) then
      do j=1,ny
@@ -1061,7 +1061,7 @@ subroutine derz_12(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
   real(mytype), dimension(nx,ny) :: sz 
   real(mytype), dimension(nz) :: ffz,fsz,fwz
 
-  if(ilag.eq.1) call lagpolz(uz)
+  if(iibm.eq.2) call lagpolz(uz)
 
   if (npaire==1) then
      do j=1,ny
@@ -1170,7 +1170,7 @@ subroutine derz_21(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
   real(mytype), dimension(nx,ny) :: sz 
   real(mytype), dimension(nz) :: ffz,fsz,fwz
 
-  if(ilag.eq.1) call lagpolz(uz)
+  if(iibm.eq.2) call lagpolz(uz)
 
   if (npaire==1) then
      do j=1,ny
@@ -1279,7 +1279,7 @@ subroutine derz_22(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
   real(mytype), dimension(nx,ny) :: sz 
   real(mytype), dimension(nz) :: ffz,fsz,fwz
 
-  if(ilag.eq.1) call lagpolz(uz)
+  if(iibm.eq.2) call lagpolz(uz)
 
   do j=1,ny
      do i=1,nx
@@ -1342,7 +1342,7 @@ subroutine derxx_00(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
   real(mytype), dimension(ny,nz) :: sx
   real(mytype),  dimension(nx):: sfx,ssx,swx 
 
-  if(ilag.eq.1) call lagpolx(ux)
+  if(iibm.eq.2) call lagpolx(ux)
 
   do k=1,nz
      do j=1,ny
@@ -1466,7 +1466,7 @@ subroutine derxx_11(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
   real(mytype), dimension(ny,nz) :: sx
   real(mytype),  dimension(nx):: sfx,ssx,swx 
 
-  if(ilag.eq.1) call lagpolx(ux)
+  if(iibm.eq.2) call lagpolx(ux)
 
   if (npaire==1) then
      do k=1,nz
@@ -1648,7 +1648,7 @@ subroutine derxx_12(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
   real(mytype), dimension(ny,nz) :: sx
   real(mytype),  dimension(nx):: sfx,ssx,swx 
 
-  if(ilag.eq.1) call lagpolx(ux)
+  if(iibm.eq.2) call lagpolx(ux)
 
   if (npaire==1) then
      do k=1,nz
@@ -1801,7 +1801,7 @@ subroutine derxx_21(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
   real(mytype), dimension(ny,nz) :: sx
   real(mytype),  dimension(nx):: sfx,ssx,swx 
 
-  if(ilag.eq.1) call lagpolx(ux)
+  if(iibm.eq.2) call lagpolx(ux)
 
   if (npaire==1) then
      do k=1,nz
@@ -1954,7 +1954,7 @@ subroutine derxx_22(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
   real(mytype), dimension(ny,nz) :: sx
   real(mytype),  dimension(nx):: sfx,ssx,swx 
 
-  if(ilag.eq.1) call lagpolx(ux)
+  if(iibm.eq.2) call lagpolx(ux)
 
   do k=1,nz
      do j=1,ny
@@ -2025,7 +2025,7 @@ subroutine deryy_00(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
   real(mytype), dimension(nx,nz) :: sy
   real(mytype), dimension(ny) :: sfy,ssy,swy
 
-  if(ilag.eq.1) call lagpoly(uy)
+  if(iibm.eq.2) call lagpoly(uy)
 
   do k=1,nz
      do i=1,nx
@@ -2179,7 +2179,7 @@ subroutine deryy_11(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
   real(mytype), dimension(nx,nz) :: sy
   real(mytype), dimension(ny) :: sfy,ssy,swy
 
-  if(ilag.eq.1) call lagpoly(uy)
+  if(iibm.eq.2) call lagpoly(uy)
 
   if (npaire==1) then
      do k=1,nz
@@ -2406,7 +2406,7 @@ subroutine deryy_12(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
   real(mytype), dimension(nx,nz) :: sy
   real(mytype), dimension(ny) :: sfy,ssy,swy
 
-  if(ilag.eq.1) call lagpoly(uy)
+  if(iibm.eq.2) call lagpoly(uy)
 
   if (npaire==1) then
      do k=1,nz
@@ -2605,7 +2605,7 @@ subroutine deryy_21(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
   real(mytype), dimension(nx,nz) :: sy
   real(mytype), dimension(ny) :: sfy,ssy,swy
 
-  if(ilag.eq.1) call lagpoly(uy)
+  if(iibm.eq.2) call lagpoly(uy)
 
   if (npaire==1) then
      do k=1,nz
@@ -2804,7 +2804,7 @@ subroutine deryy_22(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
   real(mytype), dimension(nx,nz) :: sy
   real(mytype), dimension(ny) :: sfy,ssy,swy
 
-  if(ilag.eq.1) call lagpoly(uy)
+  if(iibm.eq.2) call lagpoly(uy)
 
   do k=1,nz
      do i=1,nx
@@ -2897,7 +2897,7 @@ subroutine derzz_00(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
   real(mytype), dimension(nx,ny) :: sz 
   real(mytype), dimension(nz) :: sfz,ssz,swz
 
-  if(ilag.eq.1) call lagpolz(uz)
+  if(iibm.eq.2) call lagpolz(uz)
 
   do j=1,ny
      do i=1,nx
@@ -3048,7 +3048,7 @@ subroutine derzz_11(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
   real(mytype), dimension(nx,ny) :: sz 
   real(mytype), dimension(nz) :: sfz,ssz,swz
 
-  if(ilag.eq.1) call lagpolz(uz)
+  if(iibm.eq.2) call lagpolz(uz)
 
   if (npaire==1) then
      do j=1,ny
@@ -3270,7 +3270,7 @@ subroutine derzz_12(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
   real(mytype), dimension(nx,ny) :: sz 
   real(mytype), dimension(nz) :: sfz,ssz,swz
 
-  if(ilag.eq.1) call lagpolz(uz)
+  if(iibm.eq.2) call lagpolz(uz)
 
   if (npaire==1) then
      do j=1,ny
@@ -3463,7 +3463,7 @@ subroutine derzz_21(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
   real(mytype), dimension(nx,ny) :: sz 
   real(mytype), dimension(nz) :: sfz,ssz,swz
 
-  if(ilag.eq.1) call lagpolz(uz)
+  if(iibm.eq.2) call lagpolz(uz)
 
   if (npaire==1) then
      do j=1,ny
@@ -3656,7 +3656,7 @@ subroutine derzz_22(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
   real(mytype), dimension(nx,ny) :: sz 
   real(mytype), dimension(nz) :: sfz,ssz,swz
 
-  if(ilag.eq.1) call lagpolz(uz)
+  if(iibm.eq.2) call lagpolz(uz)
 
   do j=1,ny
      do i=1,nx

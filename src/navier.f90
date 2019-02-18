@@ -338,7 +338,7 @@ subroutine gradp(px1,py1,pz1,pp3)
        nxmsize,xsize(1),xsize(2),xsize(3),1)
 
 #ifdef FORCES
-  call interxpb(ppi1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
+  call interxpv(ppi1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
   nxmsize,xsize(1),xsize(2),xsize(3),1)
 #endif
   
