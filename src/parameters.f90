@@ -281,7 +281,8 @@ subroutine parameter_defaults()
   itest=1
 
   !! IO
-  ivisu = 0
+  ivisu = 1
+  ipost = 0
   
   save_ux = 0
   save_uy = 0
