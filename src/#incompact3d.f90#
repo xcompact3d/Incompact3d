@@ -167,6 +167,9 @@ PROGRAM incompact3d
      if (nrank==0) print *,'Snapshot current/final ',int(itime/ioutput),int(ilast/ioutput)
 
 
+           
+           if (save_pre.eq.1.OR.save_prem.eq.1) 
+ 
 
 
      if (mod(itime,icheckpoint).eq.0) then
