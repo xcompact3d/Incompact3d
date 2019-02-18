@@ -10,6 +10,7 @@ PROGRAM incompact3d
   USE derivX
   USE derivZ
   USE post_processing
+  USE simulation_stats
 #ifdef FORCES
   USE forces
 #endif
@@ -17,7 +18,6 @@ PROGRAM incompact3d
 
   integer :: code,nlock,i,j,k,ii,bcx,bcy,bcz,fh,ierror
   real(mytype) :: x,y,z,timeleft
-  real(8) :: tstart,t1,trank,tranksum,ttotal,tremaining,telapsed
 
   integer :: ErrFlag, nargin, FNLength, status, DecInd, output_counter
   logical :: back
@@ -97,18 +97,11 @@ PROGRAM incompact3d
   call test_speed_min_max(ux1,uy1,uz1)
   if (iscalar==1) call test_scalar_min_max(phi1)
 
-
-  tstart=zero;t1=zero;trank=zero;tranksum=zero;ttotal=zero
-  call cpu_time(tstart)
-
+  call simu_stats(1)
+  
   do itime=ifirst,ilast
      t=itime*dt
-     call cpu_time(t1)
-     if (nrank==0) then
-        print *,'-----------------------------------------------------------'
-        write(*,"(' Time step =',i7,'/',i7,', Time unit =',F9.4)") itime,ilast,t
-     endif
-
+     call simu_stats(2)
      do itr=1,iadvance_time
 
         call boundary_conditions(ux1,uy1,uz1,phi1,ep1)
@@ -139,7 +132,6 @@ PROGRAM incompact3d
 
      enddo
 
-
 #ifdef FORCES
      call force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
           ux2,uy2,ta2,tb2,tc2,td2,di2)
@@ -149,48 +141,16 @@ PROGRAM incompact3d
 #endif
      
      call postprocessing(ux1,uy1,uz1,phi1,ep1)
-     
-  
-     call cpu_time(trank)
-     if (nrank==0) print *,'Time per this time step (s):',real(trank-t1)
-     if (nrank==0) print *,'Snapshot current/final ',int(itime/ioutput),int(ilast/ioutput)
-
-
+ 
      if (mod(itime,icheckpoint).eq.0) then
         call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,1)
      endif
+     
+     call simu_stats(3)
 
-     call cpu_time(trank)
-
-     telapsed = (trank-tstart)/thirtysixthousand
-     tremaining  = telapsed*(ilast-itime)/(itime-ifirst)
-
-     if (nrank==0) then
-        write(*,"(' Remaining time:',I8,' h ',I2,' min')") int(tremaining), int((tremaining-int(tremaining))*sixty)
-        write(*,"(' Elapsed time:  ',I8,' h ',I2,' min')") int(telapsed), int((telapsed-int(telapsed))*sixty)
-     endif
   enddo
 
-  call cpu_time(trank); ttotal=trank-tstart
-
-  if (nrank==0) then
-     print *,'==========================================================='
-     print *,''
-     print *,'Good job! Incompact3d finished successfully!'
-     print *,''
-     print *,'2DECOMP with p_row*p_col=',p_row,p_col
-     print *,''
-     print *,'nx*ny*nz=',nx*ny*nz
-     print *,'nx,ny,nz=',nx,ny,nz
-     print *,'dx,dy,dz=',dx,dy,dz
-     print *,''
-     print *,'Averaged time per step (s):',real(ttotal/(ilast-ifirst),4)
-     print *,'Total wallclock (s):',real(ttotal,4)
-     print *,'Total wallclock (m):',real(ttotal/sixty,4)
-     print *,'Total wallclock (h):',real(ttotal/thirtysixthousand,4)
-     print *,'Total wallclock (d):',real(ttotal*1.1574e-5,4)
-     print *,''
-  endif
+  call simu_stats(4)
 
   call decomp_2d_finalize
   CALL MPI_FINALIZE(code)

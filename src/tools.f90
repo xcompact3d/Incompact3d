@@ -1585,3 +1585,57 @@ cx = cmplx(realpart, imaginarypart, kind=mytype)
 end function cx
 !********************************************************************
 
+subroutine simu_stats(iwhen)
+
+  USE decomp_2d
+  USE simulation_stats
+  USE var
+  USE MPI
+  
+  implicit none
+
+  integer :: iwhen
+
+  if (iwhen.eq.1) then !AT THE START OF THE SIMULATION
+     tstart=zero;time1=zero;trank=zero;tranksum=zero;ttotal=zero
+     call cpu_time(tstart)
+  endif
+  if (iwhen.eq.2) then !AT THE START OF A TIME STEP
+     call cpu_time(time1)
+     if (nrank==0) then
+        print *,'-----------------------------------------------------------'
+        write(*,"(' Time step =',i7,'/',i7,', Time unit =',F9.4)") itime,ilast,t
+     endif
+  endif
+  if (iwhen.eq.3) then !AT THE END OF A TIME STEP
+     call cpu_time(trank)
+     if (nrank==0) print *,'Time for this time step (s):',real(trank-time1)
+     telapsed = (trank-tstart)/thirtysixthousand
+     tremaining  = telapsed*(ilast-itime)/(itime-ifirst)
+     if (nrank==0) then
+        write(*,"(' Remaining time:',I8,' h ',I2,' min')") int(tremaining), int((tremaining-int(tremaining))*sixty)
+        write(*,"(' Elapsed time:  ',I8,' h ',I2,' min')") int(telapsed), int((telapsed-int(telapsed))*sixty)
+     endif
+  endif
+  if (iwhen.eq.4) then !AT THE END OF THE SIMULATION
+     call cpu_time(trank); ttotal=trank-tstart
+     if (nrank==0) then
+        print *,'==========================================================='
+        print *,''
+        print *,'Good job! Incompact3d finished successfully!'
+        print *,''
+        print *,'2DECOMP with p_row*p_col=',p_row,p_col
+        print *,''
+        print *,'nx*ny*nz=',nx*ny*nz
+        print *,'nx,ny,nz=',nx,ny,nz
+        print *,'dx,dy,dz=',dx,dy,dz
+        print *,''
+        print *,'Averaged time per step (s):',real(ttotal/(ilast-ifirst),4)
+        print *,'Total wallclock (s):',real(ttotal,4)
+        print *,'Total wallclock (m):',real(ttotal/sixty,4)
+        print *,'Total wallclock (h):',real(ttotal/thirtysixthousand,4)
+        print *,''
+     endif
+  endif
+  
+end subroutine simu_stats

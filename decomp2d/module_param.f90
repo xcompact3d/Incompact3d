@@ -428,4 +428,6 @@ use decomp_2d, only : mytype
   real(mytype) :: fiapz, fibpz, ficpz, fidpz, fiepz, fifpz, figpz ! Coefficient for filter at boundary point p=n-2
 end module parfiZ
 
-
+module simulation_stats
+  real(8) :: tstart,time1,trank,tranksum,ttotal,tremaining,telapsed      
+end module simulation_stats
