@@ -94,7 +94,9 @@ subroutine parameter(input_i3d)
   read(10, nml=NumOptions)
   read(10, nml=InOutParam)
   read(10, nml=Statistics)
-  read(10, nml=ibmstuff)
+  if (iibm.ne.0) then
+    read(10, nml=ibmstuff)
+  endif
   ! !! These are the 'optional'/model parameters
   ! read(10, nml=ScalarParam)
   ! read(10, nml=TurbulenceModel)
