@@ -101,7 +101,6 @@ subroutine parameter(input_i3d)
   ! read(10, nml=ScalarParam)
   ! read(10, nml=TurbulenceModel)
   ! read(10, nml=TurbulenceWallModel)
-
   close(10)
 
   allocate(sc(numscalar),cp(numscalar),ri(numscalar),group(numscalar))
@@ -289,8 +288,8 @@ subroutine parameter_defaults()
   fpi2 = 4.
 
   !! IBM stuff
-   nraf = 0
-   nobjmax = 0
+  nraf = 0
+  nobjmax = 0
    
   itrip = 0
   wrotation = zero

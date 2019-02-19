@@ -13,6 +13,7 @@ PROGRAM incompact3d
   USE derivZ
   USE case
   USE simulation_stats
+
 #ifdef FORCES
   USE forces
 #endif
@@ -62,7 +63,6 @@ PROGRAM incompact3d
   call decomp_info_init(nxm, nym, nz, ph3)
 
   call init_variables()
-
 
   call schemes()
 

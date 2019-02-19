@@ -1,7 +1,3 @@
-module flow_type
-  use decomp_2d, only : mytype
-
-end module flow_type
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!
 !!!        FILE: BC-dbg-schemes.f90
@@ -27,82 +23,6 @@ module dbg_schemes
   PUBLIC :: init_dbg, boundary_conditions_dbg, postprocessing_dbg
 
 contains
-
-  subroutine ft_parameter(arg)
-
-    USE param
-    USE variables
-    USE flow_type
-    USE complex_geometry
-    USE decomp_2d, only : nrank
-    implicit none
-
-    logical,intent(in) :: arg
-    character :: a
-
-    open(10,file='BC-dbg-schemes.prm',status='unknown',form='formatted')
-    read (10,*) a !
-    read (10,*) a ! INCOMPACT 3D computational parameters
-    read (10,*) a !
-    read (10,*) nx
-    read (10,*) ny
-    read (10,*) nz
-    read (10,*) numscalar
-    read (10,*) p_row
-    read (10,*) p_col
-    if (arg) then
-       close(10)
-       return
-    endif
-    read (10,*) a !
-    read (10,*) a ! INCOMPACT 3D Flow parameters
-    read (10,*) a !
-    read (10,*) xlx
-    !xlx = xlx*pi
-    yly = xlx
-    zlz = xlx
-    read (10,*) re
-    read (10,*) ri
-    read (10,*) init_noise
-    read (10,*) dt
-    read (10,*) a !
-    read (10,*) a ! INCOMPACT3D Flow configuration
-    read (10,*) a !
-    read (10,*) iscalar
-    read (10,*) cont_phi
-    read (10,*) jLES
-    read (10,*) iin
-    read (10,*) ifirst
-    read (10,*) ilast
-    read (10,*) itimescheme
-    read (10,*) a !velocity
-    read (10,*) nclx1
-    read (10,*) nclxn
-    read (10,*) ncly1
-    read (10,*) nclyn
-    read (10,*) nclz1
-    read (10,*) nclzn
-    read (10,*) a !scalar
-    read (10,*) nclxS1
-    read (10,*) nclxSn
-    read (10,*) nclyS1
-    read (10,*) nclySn
-    read (10,*) nclzS1
-    read (10,*) nclzSn
-    read (10,*) a !
-    read (10,*) a ! INCOMPACT 3D File parameters
-    read (10,*) a !
-    read (10,*) irestart
-    read (10,*) icheckpoint
-    read (10,*) ioutput
-    read (10,*) imodulo2
-    read (10,*) a !
-    read (10,*) a ! NUMERICAL DISSIPATION
-    read (10,*) a !
-    read (10,*) fpi2
-
-    return
-  end subroutine ft_parameter
   !********************************************************************
   subroutine init_dbg (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
 
