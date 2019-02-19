@@ -5,7 +5,7 @@
 !===================
 
 ! Domain decomposition
-p_row=2               ! Row partition
+p_row=2              ! Row partition
 p_col=2               ! Column partition
 
 ! Mesh
@@ -46,7 +46,7 @@ ilast =  1     ! Last iteration
 ! Enable modelling tools
 iturbmod=0            ! if 0 then DNS
 iscalar=0             ! If iscalar=0 (no scalar), if iscalar=1 (scalar)
-iibm=1                ! Flag for immersed boundary method
+iibm=2                ! Flag for immersed boundary method
 
 /End
 
@@ -130,5 +130,7 @@ SmagWallDamp = 1      ! Smagorinsky damping function for ABL if 1
 cex=5.        !when simulating a cylinder x coordinate of the center
 cey=6.        !when simulating a cylinder y coordinate of the center
 ra=0.5        !when simulating a cylinder, radius
+nraf=10       !level of refinement for iibm==2 to find the surface of the immersed object
+nobjmax=2     !number of immersed objects (DO NOT USE ZERO OBJECTS)
 
 /End

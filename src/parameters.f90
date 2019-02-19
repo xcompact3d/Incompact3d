@@ -64,7 +64,7 @@ subroutine parameter(input_i3d)
   NAMELIST /ScalarParam/ numscalar, sc
   NAMELIST /TurbulenceModel/ iles, smagcst, walecst, iwall
   NAMELIST /TurbulenceWallModel/ smagwalldamp
-  NAMELIST /ibmstuff/ cex,cey,ra
+  NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter start'
 #endif
@@ -101,8 +101,6 @@ subroutine parameter(input_i3d)
   ! read(10, nml=TurbulenceWallModel)
 
   close(10)
-
-  jLES = iles
 
   allocate(sc(numscalar),cp(numscalar),ri(numscalar),group(numscalar))
 
@@ -250,7 +248,8 @@ subroutine parameter_defaults()
   USE param
   USE variables
   USE decomp_2d
-
+  USE complex_geometry
+  
   IMPLICIT NONE
 
   ro = 99999999._mytype
@@ -270,8 +269,11 @@ subroutine parameter_defaults()
   irestart = 0
   datapath = './data/'
   fpi2 = 4.
-  ! nraf = 10
-  ! nobjmax = 1
+
+  !! IBM stuff
+   nraf = 0
+   nobjmax = 0
+   
   itrip = 0
   wrotation = zero
   irotation = 0
