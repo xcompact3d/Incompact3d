@@ -4,6 +4,7 @@ PROGRAM incompact3d
   USE decomp_2d_poisson
   use decomp_2d_io
   USE variables
+  USE transeq
   USE ibm
   USE param
   USE var
