@@ -9,7 +9,6 @@
 !=======================================================================
 module forces
   USE decomp_2d
-  USE flow_type
   implicit none
 
   integer :: nvol

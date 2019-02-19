@@ -6,21 +6,19 @@
 #   -DSAVE_SINGLE - Save 3D data in single-precision
 #   -DDEBG        - debuggin incompact3d.f90
 #   -DIBM         - enable IBM calls
-#   -DPOST        - enable statistics processing
 #   -DVISU        - enable visu.f90
 #   -DVISUEXTRA   - enable extra options visu.f90
 #   -DFORCES      - enable lift and drag computing over solid body
 #   -DELES        - enable explicit LES modelling
-#   -DSTRETCHING  - enable mesh stretching in y direction
 # generate a Git version string
 GIT_VERSION := $(shell git describe --tag --long --always)
 
 #######Select Flow Type#######
 # FLOW_TYPE = Lock-exchange
-# FLOW_TYPE = TGV
+ FLOW_TYPE = TGV
 # FLOW_TYPE = Channel-flow
 # FLOW_TYPE = Periodic-hill
- FLOW_TYPE = Cylinder
+# FLOW_TYPE = Cylinder
 # FLOW_TYPE = dbg-schemes
 
 DEFS = -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"
@@ -33,7 +31,7 @@ FFT = generic# mkl,generic,fftw3
 #######Minimum defs###########
 TWOD = 0
 ifeq ($(FLOW_TYPE),Channel-flow)
-DEFS2 = -DSTRETCHING -DPOST
+DEFS2 = -DSTRETCHING -DPOST 
 else ifeq ($(FLOW_TYPE),Cylinder)
 DEFS2 = -DIBM -DFORCES
 else ifeq ($(FLOW_TYPE),Lock-exchange)

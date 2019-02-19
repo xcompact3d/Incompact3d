@@ -101,7 +101,6 @@ subroutine boundary_conditions (ux,uy,uz,phi,ep1)
 
   return
 end subroutine boundary_conditions
-#ifdef POST
 !********************************************************************
 module post_processing
 
@@ -206,7 +205,7 @@ contains
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     character(len=30) :: filename
 
-    if (itime.ge.ioutput) then
+    if (mod(itime,ioutput)==0) then
     
        !x-derivatives
        call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
@@ -398,4 +397,3 @@ contains
   end subroutine write_probes
   !############################################################################
 end module post_processing
-#endif

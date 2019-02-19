@@ -180,12 +180,12 @@ module param
   logical :: nclx,ncly,nclz
 
   integer :: cont_phi,itr,itime,itest,iprocessing
-  integer :: ifft,ivirt,istret,iforc_entree,iturb
+  integer :: ifft,istret,iforc_entree,iturb
   integer :: itype,iin,itimescheme,ifirst,ilast,iles,iimplicit
   integer :: ntime ! How many (sub)timestpeps do we need to store?
   integer :: icheckpoint,irestart,idebmod,ioutput,imodulo2,idemarre,icommence,irecord
   integer :: iscalar,nxboite,istat,iread,iadvance_time,irotation,iibm
-  integer :: ilag,npif,izap
+  integer :: npif,izap
   integer :: ivisu, ipost, initstat
   real(mytype) :: xlx,yly,zlz,dx,dy,dz,dx2,dy2,dz2,t,xxk1,xxk2
   real(mytype) :: dt,re,xnu,init_noise,inflow_noise,u1,u2,angle,anglex,angley
@@ -431,3 +431,8 @@ end module parfiZ
 module simulation_stats
   real(8) :: tstart,time1,trank,tranksum,ttotal,tremaining,telapsed      
 end module simulation_stats
+
+module ibm
+  use decomp_2d, only : mytype
+   real(mytype) :: cex,cey,ra        
+end module ibm
