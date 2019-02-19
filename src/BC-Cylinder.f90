@@ -9,7 +9,7 @@ end module flow_type
 
 
 !********************************************************************
-subroutine geomcomplex(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
+subroutine geomcomplex_cyl(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
   use flow_type, only : cex,cey,ra,ncil
   use decomp_2d, only : mytype
   use param, only : zero, one, two
@@ -45,7 +45,7 @@ subroutine geomcomplex(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
   enddo
   !
   return
-end subroutine geomcomplex
+end subroutine geomcomplex_cyl
 !********************************************************************
 subroutine boundary_conditions (ux,uy,uz,phi,ep1)
 

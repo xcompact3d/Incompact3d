@@ -179,9 +179,18 @@ module param
   !and false otherwise
   logical :: nclx,ncly,nclz
 
+  integer :: itype
+  integer, parameter :: &
+       itype_lockexch = 1, &
+       itype_tgv = 2, &
+       itype_channel = 3, &
+       itype_hill = 4, &
+       itype_cyl = 5, &
+       itype_dbg = 6
+  
   integer :: cont_phi,itr,itime,itest,iprocessing
   integer :: ifft,ivirt,istret,iforc_entree,iturb
-  integer :: itype,iin,itimescheme,ifirst,ilast,iles,iimplicit
+  integer :: iin,itimescheme,ifirst,ilast,iles,iimplicit
   integer :: ntime ! How many (sub)timestpeps do we need to store?
   integer :: icheckpoint,irestart,idebmod,ioutput,imodulo2,idemarre,icommence,irecord
   integer :: iscalar,nxboite,istat,iread,iadvance_time,irotation,iibm

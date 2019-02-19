@@ -657,11 +657,14 @@ end subroutine corgp_IBM
 !*******************************************************************
 #ifdef IBM
 subroutine body(ux1,uy1,uz1,ep1,arg)
+  
   USE param
   USE decomp_2d
   USE decomp_2d_io
   USE variables
+  
   implicit none
+  
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
   integer :: arg,ijk,nvect1
 
@@ -669,17 +672,18 @@ subroutine body(ux1,uy1,uz1,ep1,arg)
   if (nrank .eq. 0) print *,'# body start'
 #endif
 
-
-  if (arg==0) then !First execution, initt epsi
-     ep1(:,:,:)=zero
-     call geomcomplex(ep1,xstart(1),xend(1),ny,xstart(2),xend(2),xstart(3),xend(3),dx,yp,dz,one)
-  elseif (arg==1) then  !Any other iteration
-     nvect1=xsize(1)*xsize(2)*xsize(3)
-     do ijk=1,nvect1
-        ux1(ijk,1,1)=(one-ep1(ijk,1,1))*ux1(ijk,1,1)
-        uy1(ijk,1,1)=(one-ep1(ijk,1,1))*uy1(ijk,1,1)
-        uz1(ijk,1,1)=(one-ep1(ijk,1,1))*uz1(ijk,1,1)
-     enddo
+  if (iibm.ne.0) then
+     if (arg==0) then !First execution, initt epsi
+        ep1(:,:,:)=zero
+        call geomcomplex(ep1,xstart(1),xend(1),ny,xstart(2),xend(2),xstart(3),xend(3),dx,yp,dz,one)
+     elseif (arg==1) then  !Any other iteration
+        nvect1=xsize(1)*xsize(2)*xsize(3)
+        do ijk=1,nvect1
+           ux1(ijk,1,1)=(one-ep1(ijk,1,1))*ux1(ijk,1,1)
+           uy1(ijk,1,1)=(one-ep1(ijk,1,1))*uy1(ijk,1,1)
+           uz1(ijk,1,1)=(one-ep1(ijk,1,1))*uz1(ijk,1,1)
+        enddo
+     endif
   endif
 
   !X PENCILS
@@ -692,3 +696,23 @@ subroutine body(ux1,uy1,uz1,ep1,arg)
 end subroutine body
 #endif
 !*******************************************************************
+
+SUBROUTINE geomcomplex(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
+
+  USE param, ONLY : itype, itype_cyl, itype_hill
+  USE decomp_2d, ONLY : mytype
+
+  IMPLICIT NONE
+
+  INTEGER :: nxi,nxf,ny,nyi,nyf,nzi,nzf
+  REAL(mytype),DIMENSION(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
+  REAL(mytype)               :: dx,dz
+  REAL(mytype),DIMENSION(ny) :: yp
+  REAL(mytype)               :: remp
+
+  IF (itype.EQ.itype_cyl) THEN
+     CALL geomcomplex_cyl(epsi, nxi, nxf, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
+  ELSE
+  ENDIF
+  
+END SUBROUTINE geomcomplex

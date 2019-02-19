@@ -84,8 +84,13 @@ PROGRAM incompact3d
   endif
 
 
-if (iibm.eq.2)  call genepsi3d(ep1)
-if (iibm.eq.1)  call body(ux1,uy1,uz1,ep1,0)
+#ifdef IBM
+  if (iibm.eq.2) then
+     call genepsi3d(ep1)
+  else if (iibm.eq.1) then
+     call body(ux1,uy1,uz1,ep1,0)
+  endif
+#endif
 
 #ifdef FORCES
   call init_forces()
