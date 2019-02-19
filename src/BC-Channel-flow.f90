@@ -1,20 +1,34 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!!!        FILE: BC-Channel-flow.f90
+!!!      AUTHOR: ??
+!!!    MODIFIED: Paul Bartholomew
+!!! DESCRIPTION: This module describes the channel flow.
+!!!   CHANGELOG: [2019-02-19] Making module private by default
+!!               [2019-02-19] Turning file into a module
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 module channel
 
   USE decomp_2d
   USE variables
   USE param
 
-  implicit none
-  !
+  IMPLICIT NONE
+  
   integer :: FS
   character(len=100) :: fileformat
   character(len=1),parameter :: NL=char(10) !new line character
-  !
+  
   !probes
   integer, save :: nprobes, ntimes1, ntimes2
   integer, save, allocatable, dimension(:) :: rankprobes, nxprobes, nyprobes, nzprobes
-  !
+  
   real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
+
+  PRIVATE ! All functions/subroutines private by default
+  PUBLIC :: init_channel, boundary_conditions_channel, postprocessing_channel
 
 contains
 

@@ -1,20 +1,34 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!!!        FILE: BC-Cylinder.f90
+!!!      AUTHOR: ??
+!!!    MODIFIED: Paul Bartholomew
+!!! DESCRIPTION: This module describes the flow past a cylinder.
+!!!   CHANGELOG: [2019-02-19] Making module private by default
+!!               [2019-02-19] Turning file into a module
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 module cyl
 
   USE decomp_2d
   USE variables
   USE param
 
-  implicit none
-  !
+  IMPLICIT NONE
+  
   integer :: FS
   character(len=100) :: fileformat
   character(len=1),parameter :: NL=char(10) !new line character
-  !
+  
   !probes
   integer, save :: nprobes, ntimes1, ntimes2
   integer, save, allocatable, dimension(:) :: rankprobes, nxprobes, nyprobes, nzprobes
-  !
+  
   real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
+
+  PRIVATE ! All functions/subroutines private by default
+  PUBLIC :: init_cyl, boundary_conditions_cyl, postprocessing_cyl, geomcomplex_cyl
 
 contains
 

@@ -2,6 +2,16 @@ module flow_type
   use decomp_2d, only : mytype
 
 end module flow_type
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!!!        FILE: BC-dbg-schemes.f90
+!!!      AUTHOR: Felipe Schuch
+!!!    MODIFIED: Paul Bartholomew
+!!! DESCRIPTION: This module sets up debugging for schemes.
+!!!   CHANGELOG: [2019-02-19] Making module private by default
+!!               [2019-02-19] Turning file into a module
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module dbg_schemes
 
@@ -9,12 +19,14 @@ module dbg_schemes
   USE variables
   USE param
 
-  implicit none
+  IMPLICIT NONE
   
   integer :: nprobes
 
-contains
+  PRIVATE ! All functions/subroutines private by default
+  PUBLIC :: init_dbg, boundary_conditions_dbg, postprocessing_dbg
 
+contains
 
 subroutine ft_parameter(arg)
 

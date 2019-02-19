@@ -18,6 +18,7 @@
 !! 
 !!! Change Log:
 !!
+!! [2019-02-19] Making module private by default.
 !! [2019-02-19] Created case.f90
 !! 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -40,6 +41,9 @@ MODULE case
   USE channel
 
   IMPLICIT NONE
+
+  PRIVATE ! All functions/subroutines private by default
+  PUBLIC :: init, boundary_conditions, postprocessing
 
 CONTAINS
 

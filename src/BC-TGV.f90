@@ -1,10 +1,21 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!!!        FILE: BC-TGV.f90
+!!!      AUTHOR: ??
+!!!    MODIFIED: Paul Bartholomew
+!!! DESCRIPTION: This module describes the Taylor-Green Vortex flow.
+!!!   CHANGELOG: [2019-02-19] Making module private by default
+!!               [2019-02-19] Turning file into a module
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 module tgv
 
   USE decomp_2d
   USE variables
   USE param
 
-  implicit none
+  IMPLICIT NONE
 
   real(mytype), save, allocatable, dimension(:,:,:) :: vol1,volSimps1
   integer :: FS
@@ -14,6 +25,9 @@ module tgv
   !probes !só vai funcionar se a impressão for em relação ao lapis X!
   integer :: nprobes
   integer, save, allocatable, dimension(:) :: rankprobes, nxprobes, nyprobes, nzprobes
+
+  PRIVATE ! All functions/subroutines private by default
+  PUBLIC :: init_tgv, boundary_conditions_tgv, postprocessing_tgv
 
 contains
 
