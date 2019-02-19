@@ -1,4 +1,3 @@
-#ifdef IBM
 subroutine corgp_IBM (ux,uy,uz,px,py,pz,nlock)
   USE param
   USE decomp_2d
@@ -78,6 +77,7 @@ SUBROUTINE geomcomplex(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
 
   USE param, ONLY : itype, itype_cyl, itype_hill
   USE decomp_2d, ONLY : mytype
+  USE cyl, ONLY : geomcomplex_cyl
 
   IMPLICIT NONE
 
@@ -88,7 +88,7 @@ SUBROUTINE geomcomplex(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
   REAL(mytype)               :: remp
 
   IF (itype.EQ.itype_cyl) THEN
-     CALL geomcomplex_cyl(epsi, nxi, nxf, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
+     CALL geomcomplex_cyl(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
   ELSE
   ENDIF
   
@@ -1409,5 +1409,4 @@ implicit none
    enddo
    return
 end subroutine polint
-#endif
 

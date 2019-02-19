@@ -3,6 +3,19 @@ module flow_type
 
 end module flow_type
 
+module dbg_schemes
+
+  USE decomp_2d
+  USE variables
+  USE param
+
+  implicit none
+  
+  integer :: nprobes
+
+contains
+
+
 subroutine ft_parameter(arg)
 
   USE param
@@ -79,7 +92,7 @@ subroutine ft_parameter(arg)
   return
 end subroutine ft_parameter
 !********************************************************************
-subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
+subroutine init_dbg (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
 
   USE decomp_2d
   USE decomp_2d_io
@@ -99,9 +112,9 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
   call MPI_ABORT(MPI_COMM_WORLD,code,ierror)
 
   return
-end subroutine init
+end subroutine init_dbg
 !********************************************************************
-subroutine boundary_conditions (ux,uy,uz,phi)
+subroutine boundary_conditions_dbg (ux,uy,uz,phi)
 
   USE param
   USE variables
@@ -113,7 +126,7 @@ subroutine boundary_conditions (ux,uy,uz,phi)
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
   return
-end subroutine boundary_conditions
+end subroutine boundary_conditions_dbg
 
 function sin_prec(x) result(y)
   USE decomp_2d, only : mytype
@@ -161,7 +174,7 @@ subroutine debug_schemes()
   real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: fy2, fyp2, dfdy2, dfdyp2, dfdyy2, dfdyyp2, di2
   real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: fz3, fzp3, dfdz3, dfdzp3, dfdzz3, dfdzzp3, di3
   real(mytype), save, allocatable, dimension(:,:,:) :: test1,test11,test2,test22,test3,test33
-  real(mytype) :: x,x1,y,y1,z,z1,sin_prec,cos_prec,abs_prec
+  real(mytype) :: x,x1,y,y1,z,z1
   integer :: i,j,k
   character(len=30) :: filename
 
@@ -844,32 +857,20 @@ subroutine debug_schemes()
   stop 'stop debug_schemes'
 end subroutine debug_schemes
 
-module post_processing
-
-  USE decomp_2d
-  USE variables
-  USE param
-
-  implicit none
-  
-  integer :: nprobes
-
-contains
-
   subroutine init_post(ep1)
 
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ep1
     
   end subroutine init_post
   
-  subroutine postprocessing(ux1,uy1,uz1,phi1,ep1)
+  subroutine postprocessing_dbg(ux1,uy1,uz1,phi1,ep1)
     
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
     
-  end subroutine postprocessing
+  end subroutine postprocessing_dbg
   
   subroutine write_probes(ux1,uy1,uz1,phi1)
     
@@ -878,4 +879,4 @@ contains
 
   end subroutine write_probes
   
-end module post_processing
+end module dbg_schemes

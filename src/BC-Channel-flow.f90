@@ -1,5 +1,24 @@
-!********************************************************************
-subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
+module channel
+
+  USE decomp_2d
+  USE variables
+  USE param
+
+  implicit none
+  !
+  integer :: FS
+  character(len=100) :: fileformat
+  character(len=1),parameter :: NL=char(10) !new line character
+  !
+  !probes
+  integer, save :: nprobes, ntimes1, ntimes2
+  integer, save, allocatable, dimension(:) :: rankprobes, nxprobes, nyprobes, nzprobes
+  !
+  real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
+
+contains
+
+subroutine init_channel (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
 
   USE decomp_2d
   USE decomp_2d_io
@@ -79,9 +98,9 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
 #endif
 
   return
-end subroutine init
+end subroutine init_channel
 !********************************************************************
-subroutine boundary_conditions (ux,uy,uz,phi,ep1)
+subroutine boundary_conditions_channel (ux,uy,uz,phi)
 
   USE param
   USE variables
@@ -89,38 +108,74 @@ subroutine boundary_conditions (ux,uy,uz,phi,ep1)
 
   implicit none
 
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,ep1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 !!$  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ut
 
   real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: gx
 
   call transpose_x_to_y(ux,gx)
-  call channel(gx,two/three)
+  call channel_flrt(gx,two/three)
   call transpose_y_to_x(gx,ux)
 
   return
-end subroutine boundary_conditions
+end subroutine boundary_conditions_channel
+
 !********************************************************************
-module post_processing
+!
+subroutine channel_flrt (ux,constant)
+  !
+  !********************************************************************
 
   USE decomp_2d
+  USE decomp_2d_poisson
   USE variables
   USE param
+  USE var
+  USE MPI
 
   implicit none
-  !
-  integer :: FS
-  character(len=100) :: fileformat
-  character(len=1),parameter :: NL=char(10) !new line character
-  !
-  !probes
-  integer, save :: nprobes, ntimes1, ntimes2
-  integer, save, allocatable, dimension(:) :: rankprobes, nxprobes, nyprobes, nzprobes
-  !
-  real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
 
-contains
+  real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux
+  real(mytype) :: constant
+
+  integer :: j,i,k,code
+  real(mytype) :: can,ut3,ut,ut4
+
+  ut3=zero
+  do k=1,ysize(3)
+     do i=1,ysize(1)
+        ut=zero
+        do j=1,ny-1
+        if (istret.eq.0) then
+                ut=ut+dy*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
+        else
+           ut=ut+(yp(j+1)-yp(j))*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
+        endif
+           enddo
+        ut=ut/yly
+        ut3=ut3+ut
+     enddo
+  enddo
+  ut3=ut3/(real(nx*nz,mytype))
+
+  call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+
+  can=-(constant-ut4)
+
+  if (nrank==0) print *,nrank,'UT',ut4,can
+
+  do k=1,ysize(3)
+     do i=1,ysize(1)
+        do j=2,ny-1
+           ux(i,j,k)=ux(i,j,k)-can
+        enddo
+     enddo
+  enddo
+
+  return
+end subroutine channel_flrt
+!********************************************************************
 
   !############################################################################
   subroutine init_post(ep1)
@@ -191,7 +246,7 @@ contains
 
   end subroutine init_post
   !############################################################################
-  subroutine postprocessing(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
+  subroutine postprocessing_channel(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
     USE MPI
     USE decomp_2d
@@ -366,7 +421,7 @@ contains
     endif
 
     return
-  end subroutine postprocessing
+  end subroutine postprocessing_channel
   !############################################################################
   subroutine write_probes(ux1,uy1,uz1,phi1) !By Felipe Schuch
 
@@ -396,4 +451,4 @@ contains
 
   end subroutine write_probes
   !############################################################################
-end module post_processing
+end module channel

@@ -1,5 +1,23 @@
-!********************************************************************
-subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
+module tgv
+
+  USE decomp_2d
+  USE variables
+  USE param
+
+  implicit none
+
+  real(mytype), save, allocatable, dimension(:,:,:) :: vol1,volSimps1
+  integer :: FS
+  character(len=100) :: fileformat
+  character(len=1),parameter :: NL=char(10) !new line character
+
+  !probes !só vai funcionar se a impressão for em relação ao lapis X!
+  integer :: nprobes
+  integer, save, allocatable, dimension(:) :: rankprobes, nxprobes, nyprobes, nzprobes
+
+contains
+
+subroutine init_tgv (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
 
   USE decomp_2d
   USE decomp_2d_io
@@ -138,9 +156,10 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
 #endif
 
   return
-end subroutine init
+end subroutine init_tgv
 !********************************************************************
-subroutine boundary_conditions (ux,uy,uz,phi)
+
+subroutine boundary_conditions_tgv (ux,uy,uz,phi)
 
   USE param
   USE variables
@@ -151,27 +170,24 @@ subroutine boundary_conditions (ux,uy,uz,phi)
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
+  IF (nclx1.EQ.2) THEN
+  ENDIF
+  IF (nclxn.EQ.2) THEN
+  ENDIF
 
-end subroutine boundary_conditions
+  IF (ncly1.EQ.2) THEN
+  ENDIF
+  IF (nclyn.EQ.2) THEN
+  ENDIF
+
+  IF (nclz1.EQ.2) THEN
+  ENDIF
+  IF (nclzn.EQ.2) THEN
+  ENDIF
+
+end subroutine boundary_conditions_tgv
+
 !********************************************************************
-module post_processing
-
-  USE decomp_2d
-  USE variables
-  USE param
-
-  implicit none
-
-  real(mytype), save, allocatable, dimension(:,:,:) :: vol1,volSimps1
-  integer :: FS
-  character(len=100) :: fileformat
-  character(len=1),parameter :: NL=char(10) !new line character
-
-  !probes !só vai funcionar se a impressão for em relação ao lapis X!
-  integer :: nprobes
-  integer, save, allocatable, dimension(:) :: rankprobes, nxprobes, nyprobes, nzprobes
-
-contains
 
   !############################################################################
   subroutine init_post(ep1)
@@ -290,7 +306,7 @@ contains
 
   end subroutine write_probes
   !############################################################################
-  subroutine postprocessing(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
+  subroutine postprocessing_tgv(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
     USE decomp_2d
     USE MPI
@@ -413,7 +429,7 @@ contains
 
    endif
    
-  end subroutine postprocessing
+  end subroutine postprocessing_tgv
     !############################################################################
   subroutine suspended(phi1,vol1,mp1)
 
@@ -481,4 +497,4 @@ contains
   return
 
   end subroutine dissipation
-end module post_processing
+end module tgv

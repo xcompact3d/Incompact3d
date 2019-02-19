@@ -1,42 +1,65 @@
+module cyl
 
-!********************************************************************
-subroutine geomcomplex_cyl(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
-  use decomp_2d, only : mytype
-  use param, only : zero, one, two
-  use ibm
+  USE decomp_2d
+  USE variables
+  USE param
+
   implicit none
   !
-  real(mytype),dimension(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
-  real(mytype),dimension(ny) :: yp
-  integer                    :: nxi,nxf,ny,nyi,nyf,nzi,nzf
-  real(mytype)               :: dx,dz
-  real(mytype)               :: remp
-  integer                    :: i,ic,j,k
-  real(mytype)               :: xm,ym,r
-  real(mytype)               :: zeromach
-
-  zeromach=one
-  do while ((one + zeromach / two) .gt. one)
-     zeromach = zeromach/two
-  end do
-  zeromach = 1.0e1*zeromach
-
-  do k=nzi,nzf
-     do j=nyi,nyf
-        ym=yp(j)
-        do i=nxi,nxf
-           xm=real(i-1,mytype)*dx
-           r=sqrt((xm-cex)**two+(ym-cey)**two)
-           if (r-ra .gt. zeromach) cycle
-           epsi(i,j,k)=remp
-        enddo
-     enddo
-  enddo
+  integer :: FS
+  character(len=100) :: fileformat
+  character(len=1),parameter :: NL=char(10) !new line character
   !
-  return
-end subroutine geomcomplex_cyl
+  !probes
+  integer, save :: nprobes, ntimes1, ntimes2
+  integer, save, allocatable, dimension(:) :: rankprobes, nxprobes, nyprobes, nzprobes
+  !
+  real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
+
+contains
+
+  subroutine geomcomplex_cyl(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
+    
+    use decomp_2d, only : mytype
+    use param, only : zero, one, two
+    use ibm
+
+    implicit none
+   
+    real(mytype),dimension(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
+    real(mytype),dimension(ny) :: yp
+    integer                    :: nxi,nxf,ny,nyi,nyf,nzi,nzf
+    real(mytype)               :: dx,dz
+    real(mytype)               :: remp
+    integer                    :: i,ic,j,k
+    real(mytype)               :: xm,ym,r
+    real(mytype)               :: zeromach
+
+    zeromach=one
+    do while ((one + zeromach / two) .gt. one)
+       zeromach = zeromach/two
+    end do
+    zeromach = 1.0e1*zeromach
+    
+    do k=nzi,nzf
+       do j=nyi,nyf
+          ym=yp(j)
+          do i=nxi,nxf
+             xm=real(i-1,mytype)*dx
+             r=sqrt((xm-cex)**two+(ym-cey)**two)
+             if (r-ra.gt.zeromach) then
+                cycle
+             endif
+             epsi(i,j,k)=remp
+          enddo
+       enddo
+    enddo
+  
+    return
+  end subroutine geomcomplex_cyl
+
 !********************************************************************
-subroutine boundary_conditions (ux,uy,uz,phi,ep1)
+subroutine boundary_conditions_cyl (ux,uy,uz,phi)
 
   USE param
   USE variables
@@ -51,7 +74,7 @@ subroutine boundary_conditions (ux,uy,uz,phi,ep1)
   call outflow (ux,uy,uz,phi)
 
   return
-end subroutine boundary_conditions
+end subroutine boundary_conditions_cyl
 !********************************************************************
 subroutine inflow (ux,uy,uz,phi)
 
@@ -145,7 +168,7 @@ subroutine outflow (ux,uy,uz,phi)
   return
 end subroutine outflow
 !********************************************************************
-subroutine init (ux1,uy1,uz1,ep1,phi1,phis1,phiss1)
+subroutine init_cyl (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
 
   USE decomp_2d
   USE decomp_2d_io
@@ -236,27 +259,8 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,phis1,phiss1)
 #endif
 
   return
-end subroutine init
+end subroutine init_cyl
 !********************************************************************
-module post_processing
-
-  USE decomp_2d
-  USE variables
-  USE param
-
-  implicit none
-  !
-  integer :: FS
-  character(len=100) :: fileformat
-  character(len=1),parameter :: NL=char(10) !new line character
-  !
-  !probes
-  integer, save :: nprobes, ntimes1, ntimes2
-  integer, save, allocatable, dimension(:) :: rankprobes, nxprobes, nyprobes, nzprobes
-  !
-  real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
-
-contains
 
   !############################################################################
   subroutine init_post(ep1)
@@ -327,7 +331,7 @@ contains
 
   end subroutine init_post
   !############################################################################
-  subroutine postprocessing(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
+  subroutine postprocessing_cyl(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
     USE MPI
     USE decomp_2d
@@ -502,7 +506,7 @@ contains
     endif
 
     return
-  end subroutine postprocessing
+  end subroutine postprocessing_cyl
   !############################################################################
   subroutine write_probes(ux1,uy1,uz1,phi1) !By Felipe Schuch
 
@@ -532,5 +536,5 @@ contains
 
   end subroutine write_probes
   !############################################################################
-end module post_processing
+end module cyl
 
