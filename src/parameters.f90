@@ -139,6 +139,22 @@ subroutine parameter(input_i3d)
 #endif
   if (nrank==0) then
      print *,''
+     if (itype.eq.itype_lockexch) then
+        print *,'Simulating lock-exchange'
+     elseif (itype.eq.itype_tgv) then
+        print *,'Simulating TGV'
+     elseif (itype.eq.itype_channel) then
+        print *,'Simulating channel'
+     elseif (itype.eq.itype_hill) then
+        print *,'Simulating periodic hill'
+     elseif (itype.eq.itype_cyl) then
+        print *,'Simulating cylinder'
+     elseif (itype.eq.itype_dbg) then
+        print *,'Debug schemes'
+     else
+        print *,'Unknown itype: ', itype
+        stop
+     endif
      print *,'(lx,ly,lz)=',xlx,yly,zlz
      print *,'(nx,ny,nz)=',nx,ny,nz
      print *,'(dx,dy,dz)=',dx,dy,dz

@@ -4,6 +4,9 @@
 &BasicParam
 !===================
 
+! Flow type (1=Lock-exchange, 2=TGV, 3=Channel, 4=Periodic hill, 5=Cylinder, 6=dbg-schemes)
+itype = 2
+
 ! Domain decomposition
 p_row=0               ! Row partition
 p_col=0               ! Column partition
@@ -29,7 +32,6 @@ nclz1 = 1
 nclzn = 1
 
 ! Flow parameters
-itype = 8             ! Type of Flow
 iin = 1               ! Inflow conditions (1: classic, 2: turbinit)
 re = 1600.            ! nu=1/re (Kinematic Viscosity)
 u1 = 8.               ! u1 (max velocity) (for inflow condition)
