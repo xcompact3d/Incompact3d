@@ -1,18 +1,9 @@
-module flow_type
-  use decomp_2d, only : mytype
-  
-  integer :: ncil
-  real(mytype) :: ra
-  real(mytype),allocatable,dimension(:) :: cex,cey
-
-end module flow_type
-
 
 !********************************************************************
 subroutine geomcomplex_cyl(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
-  use flow_type, only : cex,cey,ra,ncil
   use decomp_2d, only : mytype
   use param, only : zero, one, two
+  use ibm
   implicit none
   !
   real(mytype),dimension(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
@@ -30,16 +21,14 @@ subroutine geomcomplex_cyl(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
   end do
   zeromach = 1.0e1*zeromach
 
-  do ic=1, ncil
-     do k=nzi,nzf
-        do j=nyi,nyf
-           ym=yp(j)
-           do i=nxi,nxf
-              xm=real(i-1,mytype)*dx
-              r=sqrt((xm-cex(ic))**two+(ym-cey(ic))**two)
-              if (r-ra .gt. zeromach) cycle
-              epsi(i,j,k)=remp
-           enddo
+  do k=nzi,nzf
+     do j=nyi,nyf
+        ym=yp(j)
+        do i=nxi,nxf
+           xm=real(i-1,mytype)*dx
+           r=sqrt((xm-cex)**two+(ym-cey)**two)
+           if (r-ra .gt. zeromach) cycle
+           epsi(i,j,k)=remp
         enddo
      enddo
   enddo

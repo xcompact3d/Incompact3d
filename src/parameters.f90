@@ -44,6 +44,7 @@ subroutine parameter(input_i3d)
   USE variables
   USE complex_geometry
   USE decomp_2d
+  USE ibm
 
   implicit none
 
@@ -63,7 +64,7 @@ subroutine parameter(input_i3d)
   NAMELIST /ScalarParam/ numscalar, sc
   NAMELIST /TurbulenceModel/ iles, smagcst, walecst, iwall
   NAMELIST /TurbulenceWallModel/ smagwalldamp
-
+  NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter start'
 #endif
@@ -93,20 +94,13 @@ subroutine parameter(input_i3d)
   read(10, nml=NumOptions)
   read(10, nml=InOutParam)
   read(10, nml=Statistics)
-
+  read(10, nml=ibmstuff)
   ! !! These are the 'optional'/model parameters
   ! read(10, nml=ScalarParam)
   ! read(10, nml=TurbulenceModel)
   ! read(10, nml=TurbulenceWallModel)
 
   close(10)
-
-! !!! BAD
-!   xlx = pi
-!   yly = pi
-!   zlz = pi
-
-  jLES = iles
 
   allocate(sc(numscalar),cp(numscalar),ri(numscalar),group(numscalar))
 
@@ -214,9 +208,9 @@ subroutine parameter(input_i3d)
            write (*,"(' Schmidt number     : ',F15.8)") sc(is)
         end do
      endif
-     if (ivirt.eq.0) print *,'Immersed boundary  : off'
-     if (ivirt.eq.1) print *,'Immersed boundary  : old school'
-     if (ivirt.eq.2) print *,'Immersed boundary  : on with Lagrangian Poly'
+     if (iibm.eq.0) print *,'Immersed boundary  : off'
+     if (iibm.eq.1) print *,'Immersed boundary  : old school'
+     if (iibm.eq.2) print *,'Immersed boundary  : on with Lagrangian Poly'
      if (angle.ne.0.) write(*,"(' Solid rotation     : ',F6.2)") angle
      print *,''
   endif
@@ -254,7 +248,8 @@ subroutine parameter_defaults()
   USE param
   USE variables
   USE decomp_2d
-
+  USE complex_geometry
+  
   IMPLICIT NONE
 
   ro = 99999999._mytype
@@ -274,8 +269,11 @@ subroutine parameter_defaults()
   irestart = 0
   datapath = './data/'
   fpi2 = 4.
-  ! nraf = 10
-  ! nobjmax = 1
+
+  !! IBM stuff
+   nraf = 0
+   nobjmax = 0
+   
   itrip = 0
   wrotation = zero
   irotation = 0
@@ -319,9 +317,7 @@ subroutine parameter_defaults()
   save_ibm = 0
 
   ipost = 0
-
-  ivirt = 0
-  ilag = 0
+  iibm=0
   npif = 2
   izap = 1
 

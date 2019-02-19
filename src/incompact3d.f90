@@ -4,6 +4,7 @@ PROGRAM incompact3d
   USE decomp_2d_poisson
   use decomp_2d_io
   USE variables
+  USE ibm
   USE param
   USE var
   USE MPI
@@ -83,7 +84,6 @@ PROGRAM incompact3d
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,0)
   endif
 
-
 #ifdef IBM
   if (iibm.eq.2) then
      call genepsi3d(ep1)
@@ -109,14 +109,10 @@ PROGRAM incompact3d
 
         call boundary_conditions(ux1,uy1,uz1,phi1,ep1)
         call momentum_rhs_eq(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
-#ifdef TWOD
-        duz1(:,:,:,:) = zero
-#endif
         call int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
         call pre_correc(ux1,uy1,uz1,ep1)
 #ifdef IBM
-        if (ivirt==1) then !solid body old school
-           !we are in X-pencil
+        if (iibm==1) then !solid body old school
            call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,1)
            call body(ux1,uy1,uz1,ep1,1)
            call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,2)

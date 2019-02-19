@@ -202,7 +202,7 @@ subroutine divergence (ux1,uy1,uz1,ep1,pp3,nlock)
   nvect2=ysize(1)*ysize(2)*ysize(3)
   nvect3=(ph1%zen(1)-ph1%zst(1)+1)*(ph1%zen(2)-ph1%zst(2)+1)*nzmsize
 
-  if (ivirt.eq.0.and.ilag.eq.0) then
+  if (iibm.eq.0) then
      ta1(:,:,:) = ux1(:,:,:)
      tb1(:,:,:) = uy1(:,:,:)
      tc1(:,:,:) = uz1(:,:,:)
@@ -615,104 +615,3 @@ subroutine pre_correc(ux,uy,uz,ep)
   return
 end subroutine pre_correc
 !*******************************************************************
-subroutine corgp_IBM (ux,uy,uz,px,py,pz,nlock)
-  USE param
-  USE decomp_2d
-  USE variables
-  implicit none
-  integer :: ijk,nlock,nxyz
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,px,py,pz
-  nxyz=xsize(1)*xsize(2)*xsize(3)
-  if (nlock.eq.1) then
-    if (nz.gt.1) then
-      do ijk=1,nxyz
-        uy(ijk,1,1)=-py(ijk,1,1)+uy(ijk,1,1)
-        uz(ijk,1,1)=-pz(ijk,1,1)+uz(ijk,1,1)
-        ux(ijk,1,1)=-px(ijk,1,1)+ux(ijk,1,1)
-      enddo
-    else
-      do ijk=1,nxyz
-        uy(ijk,1,1)=-py(ijk,1,1)+uy(ijk,1,1)
-        ux(ijk,1,1)=-px(ijk,1,1)+ux(ijk,1,1)
-      enddo
-    endif
-  endif
-  if (nlock.eq.2) then
-    if (nz.gt.1) then
-      do ijk=1,nxyz
-        uy(ijk,1,1)=py(ijk,1,1)+uy(ijk,1,1)
-        uz(ijk,1,1)=pz(ijk,1,1)+uz(ijk,1,1)
-        ux(ijk,1,1)=px(ijk,1,1)+ux(ijk,1,1)
-      enddo
-    else
-      do ijk=1,nxyz
-        uy(ijk,1,1)=py(ijk,1,1)+uy(ijk,1,1)
-        ux(ijk,1,1)=px(ijk,1,1)+ux(ijk,1,1)
-      enddo
-    endif
-  endif
-
-  return
-end subroutine corgp_IBM
-!*******************************************************************
-#ifdef IBM
-subroutine body(ux1,uy1,uz1,ep1,arg)
-  
-  USE param
-  USE decomp_2d
-  USE decomp_2d_io
-  USE variables
-  
-  implicit none
-  
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-  integer :: arg,ijk,nvect1
-
-#ifdef DEBG
-  if (nrank .eq. 0) print *,'# body start'
-#endif
-
-  if (iibm.ne.0) then
-     if (arg==0) then !First execution, initt epsi
-        ep1(:,:,:)=zero
-        call geomcomplex(ep1,xstart(1),xend(1),ny,xstart(2),xend(2),xstart(3),xend(3),dx,yp,dz,one)
-     elseif (arg==1) then  !Any other iteration
-        nvect1=xsize(1)*xsize(2)*xsize(3)
-        do ijk=1,nvect1
-           ux1(ijk,1,1)=(one-ep1(ijk,1,1))*ux1(ijk,1,1)
-           uy1(ijk,1,1)=(one-ep1(ijk,1,1))*uy1(ijk,1,1)
-           uz1(ijk,1,1)=(one-ep1(ijk,1,1))*uz1(ijk,1,1)
-        enddo
-     endif
-  endif
-
-  !X PENCILS
-
-#ifdef DEBG
-  if (nrank .eq. 0) print *,'# body done'
-#endif
-
-  return
-end subroutine body
-#endif
-!*******************************************************************
-
-SUBROUTINE geomcomplex(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
-
-  USE param, ONLY : itype, itype_cyl, itype_hill
-  USE decomp_2d, ONLY : mytype
-
-  IMPLICIT NONE
-
-  INTEGER :: nxi,nxf,ny,nyi,nyf,nzi,nzf
-  REAL(mytype),DIMENSION(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
-  REAL(mytype)               :: dx,dz
-  REAL(mytype),DIMENSION(ny) :: yp
-  REAL(mytype)               :: remp
-
-  IF (itype.EQ.itype_cyl) THEN
-     CALL geomcomplex_cyl(epsi, nxi, nxf, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
-  ELSE
-  ENDIF
-  
-END SUBROUTINE geomcomplex
