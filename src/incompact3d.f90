@@ -11,8 +11,9 @@ PROGRAM incompact3d
   USE MPI
   USE derivX
   USE derivZ
-  USE post_processing
+  USE case
   USE simulation_stats
+
 #ifdef FORCES
   USE forces
 #endif
@@ -63,7 +64,6 @@ PROGRAM incompact3d
 
   call init_variables()
 
-
   call schemes()
 
 #ifdef ELES
@@ -85,10 +85,11 @@ PROGRAM incompact3d
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,0)
   endif
 
-#ifdef IBM
-if (iibm.eq.2)  call genepsi3d(ep1)
-if (iibm.eq.1)  call body(ux1,uy1,uz1,ep1,0)
-#endif
+  if (iibm.eq.2) then
+     call genepsi3d(ep1)
+  else if (iibm.eq.1) then
+     call body(ux1,uy1,uz1,ep1,0)
+  endif
 
 #ifdef FORCES
   call init_forces()
@@ -105,17 +106,17 @@ if (iibm.eq.1)  call body(ux1,uy1,uz1,ep1,0)
      call simu_stats(2)
      do itr=1,iadvance_time
 
-        call boundary_conditions(ux1,uy1,uz1,phi1,ep1)
+        call boundary_conditions(ux1,uy1,uz1,phi1)
         call momentum_rhs_eq(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
         call int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
         call pre_correc(ux1,uy1,uz1,ep1)
-#ifdef IBM
+        
         if (iibm==1) then !solid body old school
            call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,1)
            call body(ux1,uy1,uz1,ep1,1)
            call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,2)
         endif
-#endif
+        
         call divergence(ux1,uy1,uz1,ep1,pp3,1)
         call poisson(pp3)
         call gradp(px1,py1,pz1,pp3)

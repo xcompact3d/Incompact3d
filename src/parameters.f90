@@ -101,7 +101,6 @@ subroutine parameter(input_i3d)
   ! read(10, nml=ScalarParam)
   ! read(10, nml=TurbulenceModel)
   ! read(10, nml=TurbulenceWallModel)
-
   close(10)
 
   allocate(sc(numscalar),cp(numscalar),ri(numscalar),group(numscalar))
@@ -139,6 +138,22 @@ subroutine parameter(input_i3d)
 #endif
   if (nrank==0) then
      print *,''
+     if (itype.eq.itype_lockexch) then
+        print *,'Simulating lock-exchange'
+     elseif (itype.eq.itype_tgv) then
+        print *,'Simulating TGV'
+     elseif (itype.eq.itype_channel) then
+        print *,'Simulating channel'
+     elseif (itype.eq.itype_hill) then
+        print *,'Simulating periodic hill'
+     elseif (itype.eq.itype_cyl) then
+        print *,'Simulating cylinder'
+     elseif (itype.eq.itype_dbg) then
+        print *,'Debug schemes'
+     else
+        print *,'Unknown itype: ', itype
+        stop
+     endif
      print *,'(lx,ly,lz)=',xlx,yly,zlz
      print *,'(nx,ny,nz)=',nx,ny,nz
      print *,'(dx,dy,dz)=',dx,dy,dz
@@ -273,8 +288,8 @@ subroutine parameter_defaults()
   fpi2 = 4.
 
   !! IBM stuff
-   nraf = 0
-   nobjmax = 0
+  nraf = 0
+  nobjmax = 0
    
   itrip = 0
   wrotation = zero

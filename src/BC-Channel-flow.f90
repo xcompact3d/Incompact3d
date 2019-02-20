@@ -1,126 +1,195 @@
-!********************************************************************
-subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!!!        FILE: BC-Channel-flow.f90
+!!!      AUTHOR: ??
+!!!    MODIFIED: Paul Bartholomew
+!!! DESCRIPTION: This module describes the channel flow.
+!!!   CHANGELOG: [2019-02-19] Making module private by default
+!!               [2019-02-19] Turning file into a module
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  USE decomp_2d
-  USE decomp_2d_io
-  USE variables
-  USE param
-  USE MPI
-
-  implicit none
-
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1,phis1,phiss1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
-
-  real(mytype) :: y,r,um,r3,x,z,h,ct
-  real(mytype) :: cx0,cy0,cz0,hg,lg
-  integer :: k,j,i,ijk,fh,ierror,ii,is,code
-  integer (kind=MPI_OFFSET_KIND) :: disp
-
-  integer, dimension (:), allocatable :: seed
-
-  if (iscalar==1) then
-
-     phi1 = one !change as much as you want
-
-     !do not delete this
-     phis1=phi1
-     phiss1=phis1
-
-  endif
-  ux1=zero;uy1=zero;uz1=zero
-  if (iin.ne.0) then
-     call system_clock(count=code)
-     if (iin.eq.2) code=0
-     call random_seed(size = ii)
-     call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /))
-
-     call random_number(ux1)
-     call random_number(uy1)
-     call random_number(uz1)
-  endif
-
-  !modulation of the random noise + initial velocity profile
-  do k=1,xsize(3)
-     do j=1,xsize(2)
-        if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy-yly/two
-        if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/two
-        um=exp(-zptwo*y*y)
-        do i=1,xsize(1)
-           ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
-           uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
-           uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
-        enddo
-     enddo
-  enddo
-  
-  !INIT FOR G AND U=MEAN FLOW + NOISE
-  do k=1,xsize(3)
-     do j=1,xsize(2)
-        do i=1,xsize(1)
-           ux1(i,j,k)=ux1(i,j,k)+bxx1(j,k)
-           uy1(i,j,k)=uy1(i,j,k)+bxy1(j,k)
-           uz1(i,j,k)=uz1(i,j,k)+bxz1(j,k)
-           dux1(i,j,k,1)=ux1(i,j,k)
-           duy1(i,j,k,1)=uy1(i,j,k)
-           duz1(i,j,k,1)=uz1(i,j,k)
-           do is = 2, ntime
-              dux1(i,j,k,is)=dux1(i,j,k,is - 1)
-              duy1(i,j,k,is)=duy1(i,j,k,is - 1)
-              duz1(i,j,k,is)=duz1(i,j,k,is - 1)
-           enddo
-        enddo
-     enddo
-  enddo
-
-#ifdef DEBG
-  if (nrank .eq. 0) print *,'# init end ok'
-#endif
-
-  return
-end subroutine init
-!********************************************************************
-subroutine boundary_conditions (ux,uy,uz,phi,ep1)
-
-  USE param
-  USE variables
-  USE decomp_2d
-
-  implicit none
-
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,ep1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
-!!$  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ut
-
-  real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: gx
-
-  call transpose_x_to_y(ux,gx)
-  call channel(gx,two/three)
-  call transpose_y_to_x(gx,ux)
-
-  return
-end subroutine boundary_conditions
-!********************************************************************
-module post_processing
+module channel
 
   USE decomp_2d
   USE variables
   USE param
 
-  implicit none
-  !
+  IMPLICIT NONE
+
   integer :: FS
   character(len=100) :: fileformat
   character(len=1),parameter :: NL=char(10) !new line character
-  !
+
   !probes
   integer, save :: nprobes, ntimes1, ntimes2
   integer, save, allocatable, dimension(:) :: rankprobes, nxprobes, nyprobes, nzprobes
-  !
+
   real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
 
+  PRIVATE ! All functions/subroutines private by default
+  PUBLIC :: init_channel, boundary_conditions_channel, postprocessing_channel
+
 contains
+
+  subroutine init_channel (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
+
+    USE decomp_2d
+    USE decomp_2d_io
+    USE variables
+    USE param
+    USE MPI
+
+    implicit none
+
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1,phis1,phiss1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
+
+    real(mytype) :: y,r,um,r3,x,z,h,ct
+    real(mytype) :: cx0,cy0,cz0,hg,lg
+    integer :: k,j,i,ijk,fh,ierror,ii,is,code
+    integer (kind=MPI_OFFSET_KIND) :: disp
+
+    integer, dimension (:), allocatable :: seed
+
+    if (iscalar==1) then
+
+       phi1 = one !change as much as you want
+
+       !do not delete this
+       phis1=phi1
+       phiss1=phis1
+
+    endif
+    ux1=zero;uy1=zero;uz1=zero
+    if (iin.ne.0) then
+       call system_clock(count=code)
+       if (iin.eq.2) code=0
+       call random_seed(size = ii)
+       call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /))
+
+       call random_number(ux1)
+       call random_number(uy1)
+       call random_number(uz1)
+    endif
+
+    !modulation of the random noise + initial velocity profile
+    do k=1,xsize(3)
+       do j=1,xsize(2)
+          if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy-yly/two
+          if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/two
+          um=exp(-zptwo*y*y)
+          do i=1,xsize(1)
+             ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
+             uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
+             uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
+          enddo
+       enddo
+    enddo
+
+    !INIT FOR G AND U=MEAN FLOW + NOISE
+    do k=1,xsize(3)
+       do j=1,xsize(2)
+          do i=1,xsize(1)
+             ux1(i,j,k)=ux1(i,j,k)+bxx1(j,k)
+             uy1(i,j,k)=uy1(i,j,k)+bxy1(j,k)
+             uz1(i,j,k)=uz1(i,j,k)+bxz1(j,k)
+             dux1(i,j,k,1)=ux1(i,j,k)
+             duy1(i,j,k,1)=uy1(i,j,k)
+             duz1(i,j,k,1)=uz1(i,j,k)
+             do is = 2, ntime
+                dux1(i,j,k,is)=dux1(i,j,k,is - 1)
+                duy1(i,j,k,is)=duy1(i,j,k,is - 1)
+                duz1(i,j,k,is)=duz1(i,j,k,is - 1)
+             enddo
+          enddo
+       enddo
+    enddo
+
+#ifdef DEBG
+    if (nrank .eq. 0) print *,'# init end ok'
+#endif
+
+    return
+  end subroutine init_channel
+  !********************************************************************
+  subroutine boundary_conditions_channel (ux,uy,uz,phi)
+
+    USE param
+    USE variables
+    USE decomp_2d
+
+    implicit none
+
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
+!!$  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ut
+
+    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: gx
+
+    call transpose_x_to_y(ux,gx)
+    call channel_flrt(gx,two/three)
+    call transpose_y_to_x(gx,ux)
+
+    return
+  end subroutine boundary_conditions_channel
+
+  !********************************************************************
+  !
+  subroutine channel_flrt (ux,constant)
+    !
+    !********************************************************************
+
+    USE decomp_2d
+    USE decomp_2d_poisson
+    USE variables
+    USE param
+    USE var
+    USE MPI
+
+    implicit none
+
+    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux
+    real(mytype) :: constant
+
+    integer :: j,i,k,code
+    real(mytype) :: can,ut3,ut,ut4
+
+    ut3=zero
+    do k=1,ysize(3)
+       do i=1,ysize(1)
+          ut=zero
+          do j=1,ny-1
+             if (istret.eq.0) then
+                ut=ut+dy*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
+             else
+                ut=ut+(yp(j+1)-yp(j))*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
+             endif
+          enddo
+          ut=ut/yly
+          ut3=ut3+ut
+       enddo
+    enddo
+    ut3=ut3/(real(nx*nz,mytype))
+
+    call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+
+    can=-(constant-ut4)
+
+    if (nrank==0) print *,nrank,'UT',ut4,can
+
+    do k=1,ysize(3)
+       do i=1,ysize(1)
+          do j=2,ny-1
+             ux(i,j,k)=ux(i,j,k)-can
+          enddo
+       enddo
+    enddo
+
+    return
+  end subroutine channel_flrt
+  !********************************************************************
 
   !############################################################################
   subroutine init_post(ep1)
@@ -191,7 +260,7 @@ contains
 
   end subroutine init_post
   !############################################################################
-  subroutine postprocessing(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
+  subroutine postprocessing_channel(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
     USE MPI
     USE decomp_2d
@@ -206,7 +275,7 @@ contains
     character(len=30) :: filename
 
     if (mod(itime,ioutput)==0) then
-    
+
        !x-derivatives
        call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
        call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
@@ -272,14 +341,14 @@ contains
        !############################################################################
        !PRESSURE       
        !NOT READY
-       
- endif   
-    
+
+    endif
+
     if (itime.ge.initstat) then
        !umean=ux1
        call fine_to_coarseS(1,ux1,tmean)
        umean(:,:,:)=umean(:,:,:)+tmean(:,:,:)
-       
+
        !vmean=uy1
        call fine_to_coarseS(1,uy1,tmean)
        vmean(:,:,:)=vmean(:,:,:)+tmean(:,:,:)
@@ -366,7 +435,7 @@ contains
     endif
 
     return
-  end subroutine postprocessing
+  end subroutine postprocessing_channel
   !############################################################################
   subroutine write_probes(ux1,uy1,uz1,phi1) !By Felipe Schuch
 
@@ -396,4 +465,4 @@ contains
 
   end subroutine write_probes
   !############################################################################
-end module post_processing
+end module channel

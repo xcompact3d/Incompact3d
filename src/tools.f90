@@ -928,60 +928,6 @@ return
 
 end subroutine inversion5_v2
 
-!********************************************************************
-!
-subroutine channel (ux,constant)
-  !
-  !********************************************************************
-
-  USE decomp_2d
-  USE decomp_2d_poisson
-  USE variables
-  USE param
-  USE var
-  USE MPI
-
-  implicit none
-
-  real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux
-  real(mytype) :: constant
-
-  integer :: j,i,k,code
-  real(mytype) :: can,ut3,ut,ut4
-
-  ut3=zero
-  do k=1,ysize(3)
-     do i=1,ysize(1)
-        ut=zero
-        do j=1,ny-1
-        if (istret.eq.0) then
-                ut=ut+dy*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
-        else
-           ut=ut+(yp(j+1)-yp(j))*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
-        endif
-           enddo
-        ut=ut/yly
-        ut3=ut3+ut
-     enddo
-  enddo
-  ut3=ut3/(real(nx*nz,mytype))
-
-  call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-
-  can=-(constant-ut4)
-
-  if (nrank==0) print *,nrank,'UT',ut4,can
-
-  do k=1,ysize(3)
-     do i=1,ysize(1)
-        do j=2,ny-1
-           ux(i,j,k)=ux(i,j,k)-can
-        enddo
-     enddo
-  enddo
-
-  return
-end subroutine channel
 
 
 !********************************************************************

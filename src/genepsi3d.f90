@@ -1,4 +1,3 @@
-#ifdef IBM
 subroutine corgp_IBM (ux,uy,uz,px,py,pz,nlock)
   USE param
   USE decomp_2d
@@ -73,6 +72,27 @@ subroutine body(ux1,uy1,uz1,ep1,arg)
 
   return
 end subroutine body
+!*******************************************************************
+SUBROUTINE geomcomplex(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
+
+  USE param, ONLY : itype, itype_cyl, itype_hill
+  USE decomp_2d, ONLY : mytype
+  USE cyl, ONLY : geomcomplex_cyl
+
+  IMPLICIT NONE
+
+  INTEGER :: nxi,nxf,ny,nyi,nyf,nzi,nzf
+  REAL(mytype),DIMENSION(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
+  REAL(mytype)               :: dx,dz
+  REAL(mytype),DIMENSION(ny) :: yp
+  REAL(mytype)               :: remp
+
+  IF (itype.EQ.itype_cyl) THEN
+     CALL geomcomplex_cyl(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
+  ELSE
+  ENDIF
+  
+END SUBROUTINE geomcomplex
 !*******************************************************************
 subroutine genepsi3d(ep1)
 
@@ -1389,5 +1409,4 @@ implicit none
    enddo
    return
 end subroutine polint
-#endif
 
