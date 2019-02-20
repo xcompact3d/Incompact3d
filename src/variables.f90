@@ -35,9 +35,7 @@ module var
   use decomp_2d
   USE variables
   USE param
-#ifdef IBM
   USE complex_geometry
-#endif
 
   ! define all major arrays here
   real(mytype), save, allocatable, dimension(:,:,:) :: ux1, ux2, ux3, po3, dv3, pp3, nut1
@@ -243,25 +241,25 @@ contains
     call alloc_z(dv3,ph,.true.)
     call alloc_z(po3,ph,.true.)
 
-#ifdef IBM
-    !complex_geometry
-    nxraf=(nxm)*nraf+1;nyraf=(nym)*nraf+1;nzraf=(nzm)*nraf+1
-    allocate(nobjx(xsize(2),xsize(3)))
-    allocate(nobjy(ysize(1),ysize(3)))
-    allocate(nobjz(zsize(1),zsize(2)))
-    allocate(nxipif(0:nobjmax,xsize(2),xsize(3)))
-    allocate(nxfpif(0:nobjmax,xsize(2),xsize(3)))
-    allocate(nyipif(0:nobjmax,ysize(1),ysize(3)))
-    allocate(nyfpif(0:nobjmax,ysize(1),ysize(3)))
-    allocate(nzipif(0:nobjmax,zsize(1),zsize(2)))
-    allocate(nzfpif(0:nobjmax,zsize(1),zsize(2)))
-    allocate(xi(nobjmax,xsize(2),xsize(3)))
-    allocate(xf(nobjmax,xsize(2),xsize(3)))
-    allocate(yi(nobjmax,ysize(1),ysize(3)))
-    allocate(yf(nobjmax,ysize(1),ysize(3)))
-    allocate(zi(nobjmax,zsize(1),zsize(2)))
-    allocate(zf(nobjmax,zsize(1),zsize(2)))
-#endif
+    if (iibm.ne.0) then
+       !complex_geometry
+       nxraf=(nxm)*nraf+1;nyraf=(nym)*nraf+1;nzraf=(nzm)*nraf+1
+       allocate(nobjx(xsize(2),xsize(3)))
+       allocate(nobjy(ysize(1),ysize(3)))
+       allocate(nobjz(zsize(1),zsize(2)))
+       allocate(nxipif(0:nobjmax,xsize(2),xsize(3)))
+       allocate(nxfpif(0:nobjmax,xsize(2),xsize(3)))
+       allocate(nyipif(0:nobjmax,ysize(1),ysize(3)))
+       allocate(nyfpif(0:nobjmax,ysize(1),ysize(3)))
+       allocate(nzipif(0:nobjmax,zsize(1),zsize(2)))
+       allocate(nzfpif(0:nobjmax,zsize(1),zsize(2)))
+       allocate(xi(nobjmax,xsize(2),xsize(3)))
+       allocate(xf(nobjmax,xsize(2),xsize(3)))
+       allocate(yi(nobjmax,ysize(1),ysize(3)))
+       allocate(yf(nobjmax,ysize(1),ysize(3)))
+       allocate(zi(nobjmax,zsize(1),zsize(2)))
+       allocate(zf(nobjmax,zsize(1),zsize(2)))
+    endif
 
     !module filter
     allocate(fiffx(nx), fisfx(nx), fifsx(nx), fifwx(nx), fissx(nx), fiswx(nx))

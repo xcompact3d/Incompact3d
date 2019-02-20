@@ -5,7 +5,6 @@
 #   -DDOUBLE_PREC - use double-precision
 #   -DSAVE_SINGLE - Save 3D data in single-precision
 #   -DDEBG        - debuggin incompact3d.f90
-#   -DIBM         - enable IBM calls
 #   -DVISU        - enable visu.f90
 #   -DVISUEXTRA   - enable extra options visu.f90
 #   -DFORCES      - enable lift and drag computing over solid body
@@ -33,11 +32,11 @@ TWOD = 0
 ifeq ($(FLOW_TYPE),Channel-flow)
 DEFS2 = -DSTRETCHING -DPOST 
 else ifeq ($(FLOW_TYPE),Cylinder)
-DEFS2 = -DIBM -DFORCES
+DEFS2 = -DFORCES
 else ifeq ($(FLOW_TYPE),Lock-exchange)
 DEFS2 = -DPOST
 else ifeq ($(FLOW_TYPE),Periodic-hill)
-DEFS2 = -DIBM -DSTRETCHING -DPOST
+DEFS2 = -DSTRETCHING -DPOST
 else ifeq ($(FLOW_TYPE),TGV)
 DEFS2 = -DPOST
 endif

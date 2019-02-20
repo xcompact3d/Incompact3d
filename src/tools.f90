@@ -233,18 +233,14 @@ real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
 
 uxmax=-1609.;uymax=-1609.;uzmax=-1609.;uxmin=1609.;uymin=1609.;uzmin=1609.
 do ijk=1,xsize(1)*xsize(2)*xsize(3)
-#ifdef IBM
-    if (ep1(ijk,1,1).eq.0.) then
-#endif
-   if (ux(ijk,1,1).gt.uxmax) uxmax=ux(ijk,1,1)
-   if (uy(ijk,1,1).gt.uymax) uymax=uy(ijk,1,1)
-   if (uz(ijk,1,1).gt.uzmax) uzmax=uz(ijk,1,1)
-   if (ux(ijk,1,1).lt.uxmin) uxmin=ux(ijk,1,1)
-   if (uy(ijk,1,1).lt.uymin) uymin=uy(ijk,1,1)
-   if (uz(ijk,1,1).lt.uzmin) uzmin=uz(ijk,1,1)
-#ifdef IBM
+   if ((iibm.eq.0).or.(ep1(ijk,1,1).eq.zero)) then
+      if (ux(ijk,1,1).gt.uxmax) uxmax=ux(ijk,1,1)
+      if (uy(ijk,1,1).gt.uymax) uymax=uy(ijk,1,1)
+      if (uz(ijk,1,1).gt.uzmax) uzmax=uz(ijk,1,1)
+      if (ux(ijk,1,1).lt.uxmin) uxmin=ux(ijk,1,1)
+      if (uy(ijk,1,1).lt.uymin) uymin=uy(ijk,1,1)
+      if (uz(ijk,1,1).lt.uzmin) uzmin=uz(ijk,1,1)
    endif
-#endif
 enddo
 
 call MPI_REDUCE(uxmax,uxmax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)

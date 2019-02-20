@@ -185,11 +185,11 @@ subroutine CONVERGENCE_STATISTIC(ux1,ep1,u1sum_tik,u1sum_tak,tsum)
   real(mytype),dimension(xszS(1),xszS(2),xszS(3)) :: u1sum_tik,u1sum_tak,tsum
   character(len=30) :: filename
 
-#ifdef IBM
-  call fine_to_coarseS(1,(1-ep1)*ux1,tsum)
-#else
-  call fine_to_coarseS(1,ux1,tsum)
-#endif
+  if (iibm.ne.0) then
+     call fine_to_coarseS(1,(1-ep1)*ux1,tsum)
+  else
+     call fine_to_coarseS(1,ux1,tsum)
+  endif
 
   u1sum_tik=u1sum_tik+tsum
 
@@ -231,11 +231,11 @@ subroutine CONVERGENCE_STATISTIC2(ux1,ep1,tik1,tik2,tak1,tak2)
 
   rms1 = zero
 
-#ifdef IBM
-  call fine_to_coarseS(1,(1-ep1)*ux1,tsum)
-#else
-  call fine_to_coarseS(1,ux1,tsum)
-#endif
+  if (iibm.ne.0) then
+     call fine_to_coarseS(1,(1-ep1)*ux1,tsum)
+  else
+     call fine_to_coarseS(1,ux1,tsum)
+  endif
 
   tik1 = tik1 + tsum
   tak1 = tak1 + tsum

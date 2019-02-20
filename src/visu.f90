@@ -157,15 +157,15 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
      call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
-#ifdef IBM
-  if (save_ibm.ne.0) then
-     uvisu=0._mytype
-     call fine_to_coarseV(1,ep1,uvisu)
-     if (save_ibm.eq.1) write(filename,"('./data/ibm',I4.4)") 0
-     if (save_ibm.eq.2) write(filename,"('./data/ibm',I4.4)") itime/ioutput
-     call decomp_2d_write_one(1,uvisu,filename,2)
+  if (iibm.ne.0) then
+     if (save_ibm.ne.0) then
+        uvisu=0._mytype
+        call fine_to_coarseV(1,ep1,uvisu)
+        if (save_ibm.eq.1) write(filename,"('./data/ibm',I4.4)") 0
+        if (save_ibm.eq.2) write(filename,"('./data/ibm',I4.4)") itime/ioutput
+        call decomp_2d_write_one(1,uvisu,filename,2)
+     endif
   endif
-#endif
 
   if (iscalar.eq.1) then
      if (save_phi.eq.1) then
