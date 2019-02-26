@@ -1,7 +1,7 @@
 PROGRAM incompact3d
 
   USE decomp_2d
-  USE decomp_2d_poisson
+  USE decomp_2d_poisson, ONLY : decomp_2d_poisson_init
   use decomp_2d_io
   USE variables
   USE ibm
