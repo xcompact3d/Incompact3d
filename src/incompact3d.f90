@@ -141,8 +141,7 @@ PROGRAM incompact3d
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         !! Poisson solver and velocity correction
         !!-------------------------------------------------------------------------
-        call divergence(ux1,uy1,uz1,ep1,pp3,1)
-        call poisson(pp3)
+        call solve_poisson(pp3, ux1, uy1, uz1, ep1)
         call gradp(px1,py1,pz1,pp3)
         call corpg(ux1,uy1,uz1,px1,py1,pz1)
         !!-------------------------------------------------------------------------
@@ -220,3 +219,33 @@ SUBROUTINE calculate_transeq_rhs(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
   !! Other (LMN, ...)
   
 END SUBROUTINE calculate_transeq_rhs
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!  SUBROUTINE: solve_poisson
+!!      AUTHOR: Paul Bartholomew
+!! DESCRIPTION: Takes the intermediate momentum field as input,
+!!              computes div and solves pressure-Poisson equation.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE solve_poisson(pp3, ux1, uy1, uz1, ep1)
+
+  USE decomp_2d, ONLY : mytype, xsize, ph1
+  USE decomp_2d_poisson, ONLY : poisson
+  USE var, ONLY : nzmsize
+
+  IMPLICIT NONE
+
+  INTEGER :: nlock
+
+  !! Inputs
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ep1
+
+  !! Outputs
+  REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: pp3
+
+  nlock = 1 !! Corresponds to computing div(u*)
+  CALL divergence(ux1,uy1,uz1,ep1,pp3,nlock)
+
+  CALL poisson(pp3)
+
+END SUBROUTINE solve_poisson
