@@ -4,7 +4,6 @@ PROGRAM incompact3d
   USE decomp_2d_poisson
   use decomp_2d_io
   USE variables
-  USE transeq
   USE ibm
   USE param
   USE var
@@ -122,13 +121,7 @@ PROGRAM incompact3d
         !! End initialise timestep
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        !! Calculate transport equation rhs's
-        !!-------------------------------------------------------------------------
-        call momentum_rhs_eq(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
-        !!-------------------------------------------------------------------------
-        !! End calculate transport equation rhs's
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        CALL calculate_transeq_rhs(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
 
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         !! Time integrate transport equations
@@ -187,8 +180,6 @@ PROGRAM incompact3d
 
   enddo !! End time loop
 
-
-
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !! End simulation
   !!-------------------------------------------------------------------------------
@@ -196,4 +187,36 @@ PROGRAM incompact3d
   call decomp_2d_finalize
   CALL MPI_FINALIZE(code)
 
-end PROGRAM incompact3d
+END PROGRAM incompact3d
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!  SUBROUTINE: calculate_transeq_rhs
+!!      AUTHOR: Paul Bartholomew
+!! DESCRIPTION: Calculates the right hand sides of all transport
+!!              equations - momentum, scalar transport, etc.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE calculate_transeq_rhs(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
+
+  USE decomp_2d, ONLY : mytype, xsize
+  USE variables, ONLY : numscalar
+  USE param, ONLY : ntime
+  USE transeq, ONLY : momentum_rhs_eq
+  
+  IMPLICIT NONE
+
+  !! Inputs
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar), INTENT(IN) :: phi1
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ep1
+
+  !! Outputs
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
+  
+  !! Momentum equations
+  CALL momentum_rhs_eq(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
+
+  !! Scalar equations
+
+  !! Other (LMN, ...)
+  
+END SUBROUTINE calculate_transeq_rhs
