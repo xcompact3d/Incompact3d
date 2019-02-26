@@ -39,7 +39,7 @@ PROGRAM incompact3d
      if (nrank==0) print*, 'Incompact3d is run with the default file -->', InputFN
   elseif (nargin.ge.1) then
      if (nrank==0) print*, 'Program is run with the provided file -->', InputFN
-     
+
      call get_command_argument(1,InputFN,FNLength,status)
      back=.true.
      FNBase=inputFN((index(InputFN,'/',back)+1):len(InputFN))
@@ -47,15 +47,15 @@ PROGRAM incompact3d
      if (DecInd >1) then
         FNBase=FNBase(1:(DecInd-1))
      end if
- endif
- 
- call parameter(InputFN)
-  
+  endif
+
+  call parameter(InputFN)
+
   call decomp_2d_init(nx,ny,nz,p_row,p_col)
   call init_coarser_mesh_statS(nstat,nstat,nstat,.true.)    !start from 1 == true
   call init_coarser_mesh_statV(nvisu,nvisu,nvisu,.true.)    !start from 1 == true
   call init_coarser_mesh_statP(nprobe,nprobe,nprobe,.true.) !start from 1 == true
- !div: nx ny nz --> nxm ny nz --> nxm nym nz --> nxm nym nzm
+  !div: nx ny nz --> nxm ny nz --> nxm nym nz --> nxm nym nzm
   call decomp_info_init(nxm, nym, nzm, ph1)
   call decomp_info_init(nxm, ny, nz, ph4)
   !gradp: nxm nym nzm -> nxm nym nz --> nxm ny nz --> nx ny nz
@@ -100,7 +100,7 @@ PROGRAM incompact3d
   if (iscalar==1) call test_scalar_min_max(phi1)
 
   call simu_stats(1)
-  
+
   do itime=ifirst,ilast
      t=itime*dt
      call simu_stats(2)
@@ -110,13 +110,13 @@ PROGRAM incompact3d
         call momentum_rhs_eq(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
         call int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
         call pre_correc(ux1,uy1,uz1,ep1)
-        
+
         if (iibm==1) then !solid body old school
            call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,1)
            call body(ux1,uy1,uz1,ep1,1)
            call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,2)
         endif
-        
+
         call divergence(ux1,uy1,uz1,ep1,pp3,1)
         call poisson(pp3)
         call gradp(px1,py1,pz1,pp3)
@@ -137,13 +137,13 @@ PROGRAM incompact3d
         call restart_forces(1)
      endif
 #endif
-     
+
      call postprocessing(ux1,uy1,uz1,phi1,ep1)
- 
+
      if (mod(itime,icheckpoint).eq.0) then
         call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,1)
      endif
-     
+
      call simu_stats(3)
 
   enddo
