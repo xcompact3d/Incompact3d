@@ -27,6 +27,10 @@ PROGRAM incompact3d
   character(len=80) :: InputFN, FNBase
   character(len=20) :: filename
 
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !! Initialisation
+  !!-------------------------------------------------------------------------------
+
   !! Initialise MPI
   call MPI_INIT(code)
   call MPI_COMM_RANK(MPI_COMM_WORLD,nrank,ierror)
@@ -101,15 +105,39 @@ PROGRAM incompact3d
 
   call simu_stats(1)
 
+  !!-------------------------------------------------------------------------------
+  !! End initialisation
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
   do itime=ifirst,ilast
      t=itime*dt
      call simu_stats(2)
      do itr=1,iadvance_time
 
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !! Initialise timestep
+        !!-------------------------------------------------------------------------
         call boundary_conditions(ux1,uy1,uz1,phi1)
+        !!-------------------------------------------------------------------------
+        !! End initialise timestep
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !! Calculate transport equation rhs's
+        !!-------------------------------------------------------------------------
         call momentum_rhs_eq(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
+        !!-------------------------------------------------------------------------
+        !! End calculate transport equation rhs's
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !! Time integrate transport equations
+        !!-------------------------------------------------------------------------
         call int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
         call pre_correc(ux1,uy1,uz1,ep1)
+        !!-------------------------------------------------------------------------
+        !! End time integrate transport equations
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         if (iibm==1) then !solid body old school
            call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,1)
@@ -117,10 +145,16 @@ PROGRAM incompact3d
            call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,2)
         endif
 
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !! Poisson solver and velocity correction
+        !!-------------------------------------------------------------------------
         call divergence(ux1,uy1,uz1,ep1,pp3,1)
         call poisson(pp3)
         call gradp(px1,py1,pz1,pp3)
         call corpg(ux1,uy1,uz1,px1,py1,pz1)
+        !!-------------------------------------------------------------------------
+        !! End Poisson solver and velocity correction
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         if (mod(itime,10)==0) then
            call divergence(ux1,uy1,uz1,ep1,dv3,2)
@@ -128,8 +162,7 @@ PROGRAM incompact3d
            if (iscalar==1) call test_scalar_min_max(phi1)
         endif
 
-     enddo
-
+     enddo !! End sub timesteps
 #ifdef FORCES
      call force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
           ux2,uy2,ta2,tb2,tc2,td2,di2)
@@ -138,6 +171,9 @@ PROGRAM incompact3d
      endif
 #endif
 
+     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     !! Post-processing / IO
+     !!----------------------------------------------------------------------------
      call postprocessing(ux1,uy1,uz1,phi1,ep1)
 
      if (mod(itime,icheckpoint).eq.0) then
@@ -145,9 +181,17 @@ PROGRAM incompact3d
      endif
 
      call simu_stats(3)
+     !!----------------------------------------------------------------------------
+     !! End post-processing / IO
+     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  enddo
+  enddo !! End time loop
 
+
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !! End simulation
+  !!-------------------------------------------------------------------------------
   call simu_stats(4)
   call decomp_2d_finalize
   CALL MPI_FINALIZE(code)
