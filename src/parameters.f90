@@ -285,7 +285,7 @@ subroutine parameter_defaults()
   filepath = './data/'
   irestart = 0
   datapath = './data/'
-  fpi2 = 4.
+  fpi2 = (48._mytype / seven) / (PI**2)
 
   !! IBM stuff
   nraf = 0

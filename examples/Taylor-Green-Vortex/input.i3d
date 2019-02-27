@@ -19,9 +19,9 @@ istret = 0            ! y mesh refinement (0:no, 1:center, 2:both sides, 3:botto
 beta = 0.259065151    ! Refinement parameter (beta)
 
 ! Domain
-xlx = 3.141592653589793 ! Lx (Size of the box in x-direction)
-yly = 3.141592653589793 ! Ly (Size of the boy in y-direction)
-zlz = 3.141592653589793 ! Lz (Size of the boz in z-direction)
+xlx = 3.14159265358979 ! Lx (Size of the box in x-direction)
+yly = 3.14159265358979 ! Ly (Size of the boy in y-direction)
+zlz = 3.14159265358979 ! Lz (Size of the boz in z-direction)
 
 ! Boundary conditions
 nclx1 = 1
@@ -69,7 +69,6 @@ itimescheme = 5       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4
 ! Dissipation control
 rxxnu = 0             ! Ratio between hyperviscosity/viscosity at nu
 cnu = 0               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
-fpi2 = 4.0            ! Controls numerical dissipation
 
 /End
 
@@ -89,7 +88,7 @@ nvisu = 1             ! Size for visualisation collection
 &Statistics
 !=================
 
-spinup_time = 0.   ! Time after which statistics are collected (in seconds)
+spinup_time = 0.      ! Time after which statistics are collected (in seconds)
 nstat = 1             ! Size arrays for statistic collection
 
 /End
