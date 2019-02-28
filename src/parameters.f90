@@ -278,7 +278,7 @@ subroutine parameter_defaults()
   iin = 0
   itimescheme = 4
   istret = 0
-  ipinter=2
+  ipinter=3
   beta = 0
   iscalar = 0
   cont_phi = 0
