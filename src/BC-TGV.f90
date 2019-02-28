@@ -332,115 +332,200 @@ contains
     real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2
     real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
     real(mytype) :: mp(numscalar),mps(numscalar),vl,es,es1,ek,ek1,ds,ds1
+    real(mytype) :: temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9
+
+    real(mytype) :: eek, enst, eps, eps2
+    integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
 
     integer :: i,j,k,is,ijk,code,nvect1
     nvect1=xsize(1)*xsize(2)*xsize(3)
 
-    if (iscalar==1) then
-
-       call suspended(phi1,vol1,mp)
-       call suspended(phi1,volSimps1,mps)
-
-       if (nrank .eq. 0) write(*,*) 'TRAP SIMPS Mp Mps',mp(1),mps(1)
-
-       if (nrank .eq. 0) then
-          FS = 1+1+1 !Number of columns
-          write(fileformat, '( "(",I4,"(E14.6),A)" )' ) FS
-          FS = FS*14+1  !Line width
-          open(67,file='./out/suspended',status='unknown',form='formatted',&
-               access='direct',recl=FS)
-          write(67,fileformat,rec=itime+1) t,& !1
-               mp,&                                 !2
-               mps,&                                !3
-               NL                                   !+1
-          close(67)
-       end if
-
+    if (nclx1==1.and.xend(1)==nx) then
+       xsize1=xsize(1)-1
+    else
+       xsize1=xsize(1)
+    endif
+    if (ncly1==1.and.xend(2)==ny) then
+       xsize2=xsize(2)-1
+    else
+       xsize2=xsize(2)
+    endif
+    if (nclz1==1.and.xend(3)==nz) then
+       xsize3=xsize(3)-1
+    else
+       xsize3=xsize(3)
+    endif
+    if (nclx1==1) then
+       nxc=nxm
+    else
+       nxc=nx
+    endif
+    if (ncly1==1) then
+       nyc=nym
+    else
+       nyc=ny
+    endif
+    if (nclz1==1) then
+       nzc=nzm
+    else
+       nzc=nz
     endif
 
-    if (mod(itime,imodulo2).eq.0) then
-       !x-derivatives
-       call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
-       call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-       call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-       !y-derivatives
-       call transpose_x_to_y(ux1,td2)
-       call transpose_x_to_y(uy1,te2)
-       call transpose_x_to_y(uz1,tf2)
-       call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-       call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-       call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-       !!z-derivatives
-       call transpose_y_to_z(td2,td3)
-       call transpose_y_to_z(te2,te3)
-       call transpose_y_to_z(tf2,tf3)
-       call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-       call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-       call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
-       !!all back to x-pencils
-       call transpose_z_to_y(ta3,td2)
-       call transpose_z_to_y(tb3,te2)
-       call transpose_z_to_y(tc3,tf2)
-       call transpose_y_to_x(td2,tg1)
-       call transpose_y_to_x(te2,th1)
-       call transpose_y_to_x(tf2,ti1)
-       call transpose_y_to_x(ta2,td1)
-       call transpose_y_to_x(tb2,te1)
-       call transpose_y_to_x(tc2,tf1)
-       !du/dx=ta1 du/dy=td1 and du/dz=tg1
-       !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
-       !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
-
-       es=zero;es1=zero
-       !ENSTROPHY
-       di1=zero
-       do ijk=1,nvect1
-          di1(ijk,1,1) = (tf1(ijk,1,1)-th1(ijk,1,1))**2  + (tg1(ijk,1,1)-tc1(ijk,1,1))**2 + (tb1(ijk,1,1)-td1(ijk,1,1))**2
+    !SPATIALLY-AVERAGED TKE of velocity fields (filtered or not)
+    temp1=0.
+    temp2=0.
+    temp3=0.
+    do k=1,xsize3
+       do j=1,xsize2
+          do i=1,xsize1
+             temp1=temp1+0.5*((ux1(i,j,k))**2+(uy1(i,j,k))**2+(uz1(i,j,k))**2) 
+          enddo
        enddo
-       !    call MPI_ALLREDUCE(di1,enstrophy,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       !    enstrophy=half*enstrophy/(nx*ny*nz)
+    enddo
+    call MPI_ALLREDUCE(temp1,eek,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    eek=eek/(nxc*nyc*nzc)
+    
+    !x-derivatives
+    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    !y-derivatives
+    call transpose_x_to_y(ux1,td2)
+    call transpose_x_to_y(uy1,te2)
+    call transpose_x_to_y(uz1,tf2)
+    call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+    call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    !!z-derivatives
+    call transpose_y_to_z(td2,td3)
+    call transpose_y_to_z(te2,te3)
+    call transpose_y_to_z(tf2,tf3)
+    call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+    call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+    call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+    !!all back to x-pencils
+    call transpose_z_to_y(ta3,td2)
+    call transpose_z_to_y(tb3,te2)
+    call transpose_z_to_y(tc3,tf2)
+    call transpose_y_to_x(td2,tg1)
+    call transpose_y_to_x(te2,th1)
+    call transpose_y_to_x(tf2,ti1)
+    call transpose_y_to_x(ta2,td1)
+    call transpose_y_to_x(tb2,te1)
+    call transpose_y_to_x(tc2,tf1)
+    !du/dx=ta1 du/dy=td1 and du/dz=tg1
+    !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
+    !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
 
-       ! es = sum(di1*volSimps1)
-       es = sum(di1)
-       call MPI_REDUCE(es,es1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
-       es1 = half * es1 / nx / ny / nz
-
-       ek=zero;ek1=zero
-       !KINETIC ENERGY
-       di1=zero
-       do ijk=1,nvect1
-          di1(ijk,1,1) = ux1(ijk,1,1)**2 + uy1(ijk,1,1)**2 + uz1(ijk,1,1)**2
+    !SPATIALLY-AVERAGED ENSTROPHY
+    temp1=0.
+    do k=1,xsize3
+       do j=1,xsize2
+          do i=1,xsize1
+             temp1=temp1+0.5*((tf1(i,j,k)-th1(i,j,k))**2+&
+                  (tg1(i,j,k)-tc1(i,j,k))**2+&
+                  (tb1(i,j,k)-td1(i,j,k))**2)
+          enddo
        enddo
-       !    call MPI_ALLREDUCE(di1,eek,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       !    eek=half*eek/(nx*ny*nz)
+    enddo
+    call MPI_ALLREDUCE(temp1,enst,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    enst=enst/(nxc*nyc*nzc)
 
-       ! ek = sum(di1*volSimps1)
-       ek = sum(di1)
-       call MPI_REDUCE(ek,ek1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
-       ek1 = half * ek1 / nx / ny / nz
+    !SPATIALLY-AVERAGED ENERGY DISSIPATION
+    temp1=0.
+    do k=1,xsize3
+       do j=1,xsize2
+          do i=1,xsize1
+             temp1=temp1+0.5*xnu*((2.*ta1(i,j,k))**2+(2.*te1(i,j,k))**2+&
+                  (2.*ti1(i,j,k))**2+2.*(td1(i,j,k)+tb1(i,j,k))**2+&
+                  2.*(tg1(i,j,k)+tc1(i,j,k))**2+&
+                  2.*(th1(i,j,k)+tf1(i,j,k))**2)
+          enddo
+       enddo
+    enddo
+    call MPI_ALLREDUCE(temp1,eps,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    eps=eps/(nxc*nyc*nzc)
 
-       ds=zero;ds1=zero
-       ! !dissipation
-       ! di1=zero
-       ! call dissipation (ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1)
-       ! ds = sum(di1*volSimps1)
-       ! call MPI_REDUCE(ds,ds1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
+    !du/dx=ta1 du/dy=td1 and du/dz=tg1
+    !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
+    !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
+    !SPATIALLY-AVERAGED SQUARE VELOCITY GRADIENTS
+    temp1=0.
+    temp2=0.
+    temp3=0.
+    temp4=0.
+    temp5=0.
+    temp6=0.
+    temp7=0.
+    temp8=0.
+    temp9=0.
+    do k=1,xsize3
+       do j=1,xsize2
+          do i=1,xsize1
+             temp1=temp1+ta1(i,j,k)*ta1(i,j,k)
+             temp2=temp2+td1(i,j,k)*td1(i,j,k)
+             temp3=temp3+tg1(i,j,k)*tg1(i,j,k)
+             temp4=temp4+tb1(i,j,k)*tb1(i,j,k)
+             temp5=temp5+te1(i,j,k)*te1(i,j,k)
+             temp6=temp6+th1(i,j,k)*th1(i,j,k)
+             temp7=temp7+tc1(i,j,k)*tc1(i,j,k)
+             temp8=temp8+tf1(i,j,k)*tf1(i,j,k)
+             temp9=temp9+ti1(i,j,k)*ti1(i,j,k)
+          enddo
+       enddo
+    enddo
 
+    !!SECOND DERIVATIVES
+    !x-derivatives
+    call derxx (ta1,ux1,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0)
+    call derxx (tb1,uy1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+    call derxx (tc1,uz1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+    !y-derivatives
+    call transpose_x_to_y(ux1,td2)
+    call transpose_x_to_y(uy1,te2)
+    call transpose_x_to_y(uz1,tf2)
+    call deryy (ta2,td2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1) 
+    call deryy (tb2,te2,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0) 
+    call deryy (tc2,tf2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1) 
+    !!z-derivatives
+    call transpose_y_to_z(td2,td3)
+    call transpose_y_to_z(te2,te3)
+    call transpose_y_to_z(tf2,tf3)
+    call derzz(ta3,td3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
+    call derzz(tb3,te3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
+    call derzz(tc3,tf3,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0)
+    !!all back to x-pencils
+    call transpose_z_to_y(ta3,td2)
+    call transpose_z_to_y(tb3,te2)
+    call transpose_z_to_y(tc3,tf2)
+    call transpose_y_to_x(td2,tg1)
+    call transpose_y_to_x(te2,th1)
+    call transpose_y_to_x(tf2,ti1)
+    call transpose_y_to_x(ta2,td1)
+    call transpose_y_to_x(tb2,te1)
+    call transpose_y_to_x(tc2,tf1)
+    !d2u/dx2=ta1 d2u/dy2=td1 and d2u/dz2=tg1
+    !d2v/dx2=tb1 d2v/dy2=te1 and d2v/dz2=th1
+    !d2w/dx2=tc1 d2w/dy2=tf1 and d2w/dz2=ti1
 
-       if (nrank .eq. 0) then
-          FS = 1+1+1+1 !Number of columns
-          write(fileformat, '( "(",I4,"(E14.6),A)" )' ) FS
-          FS = FS*14+1  !Line width
-          open(67,file='./out/statistics',status='unknown',form='formatted',&
-               access='direct',recl=FS)
-          write(67,fileformat,rec=itime/imodulo2+1) t,& !1
-               es1,&                               !3
-               ek1,&                             !2
-               ds1,&
-               NL                                !+1
-          close(67)
-       end if
+    !SPATIALLY-AVERAGED ENERGY DISSIPATION WITH SECOND DERIVATIVES
+    temp1=0.
+    do k=1,xsize3
+       do j=1,xsize2
+          do i=1,xsize1
+             di1(i,j,k)=(-xnu)*(ux1(i,j,k)*(ta1(i,j,k)+td1(i,j,k)+tg1(i,j,k))+ &
+                  uy1(i,j,k)*(tb1(i,j,k)+te1(i,j,k)+th1(i,j,k))+ &
+                  uz1(i,j,k)*(tc1(i,j,k)+tf1(i,j,k)+ti1(i,j,k)))
+             temp1=temp1+di1(i,j,k)
+          enddo
+       enddo
+    enddo
+    call MPI_ALLREDUCE(temp1,eps2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    eps2=eps2/(nxc*nyc*nzc)
 
+    if (nrank==0) then
+       write(42,'(20e20.12)') (itime-1)*dt,eek,eps,enst,eps2
+       call flush(42)
     endif
 
   end subroutine postprocessing_tgv

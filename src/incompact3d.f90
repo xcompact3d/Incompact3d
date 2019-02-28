@@ -107,6 +107,10 @@ PROGRAM incompact3d
   !!-------------------------------------------------------------------------------
   !! End initialisation
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  if(nrank.eq.0)then
+     open(42,file='time_evol.dat',form='formatted')
+  endif
+  call postprocessing(ux1,uy1,uz1,phi1,ep1)
 
   do itime=ifirst,ilast
      t=itime*dt
