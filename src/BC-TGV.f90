@@ -320,7 +320,7 @@ contains
 
   end subroutine write_probes
   !############################################################################
-  subroutine postprocessing_tgv(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
+  subroutine postprocessing_tgv(ux1,uy1,uz1,phi1,ep1)
 
     USE decomp_2d
     USE MPI
