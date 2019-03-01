@@ -107,10 +107,16 @@ PROGRAM incompact3d
   !!-------------------------------------------------------------------------------
   !! End initialisation
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  if(nrank.eq.0)then
+     open(42,file='time_evol.dat',form='formatted')
+  endif
 
   do itime=ifirst,ilast
      t=itime*dt
      call simu_stats(2)
+     
+     call postprocessing(ux1,uy1,uz1,phi1,ep1)
+     
      do itr=1,iadvance_time
 
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -166,7 +172,6 @@ PROGRAM incompact3d
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      !! Post-processing / IO
      !!----------------------------------------------------------------------------
-     call postprocessing(ux1,uy1,uz1,phi1,ep1)
 
      if (mod(itime,icheckpoint).eq.0) then
         call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,1)
@@ -184,6 +189,9 @@ PROGRAM incompact3d
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !! End simulation
   !!-------------------------------------------------------------------------------
+  if(nrank.eq.0)then
+     close(42)
+  endif
   call simu_stats(4)
   call decomp_2d_finalize
   CALL MPI_FINALIZE(code)
