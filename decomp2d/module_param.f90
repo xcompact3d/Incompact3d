@@ -124,6 +124,37 @@ module variables
   real(mytype),allocatable,dimension(:) :: newsm,newtm,newsmt,newtmt
   real(mytype),allocatable,dimension(:) :: newrm,ttm,newrmt,ttmt
 
+  ABSTRACT INTERFACE
+     SUBROUTINE FILTER_X(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
+       use decomp_2d, only : mytype
+       integer :: nx,ny,nz,npaire
+       real(mytype), dimension(nx,ny,nz) :: t,u,r 
+       real(mytype), dimension(ny,nz):: s
+       real(mytype), dimension(nx):: ff,fs,fw 
+     END SUBROUTINE FILTER_X
+     SUBROUTINE FILTER_Y(t,u,r,s,ff,fs,fw,pp,nx,ny,nz,npaire)
+       use decomp_2d, only : mytype
+       integer :: nx,ny,nz,npaire
+       real(mytype), dimension(nx,ny,nz) :: t,u,r 
+       real(mytype), dimension(nx,nz):: s
+       real(mytype), dimension(ny):: ff,fs,fw,pp
+     END SUBROUTINE FILTER_Y
+     SUBROUTINE FILTER_Z(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
+       use decomp_2d, only : mytype
+       integer :: nx,ny,nz,npaire
+       real(mytype), dimension(nx,ny,nz) :: t,u,r 
+       real(mytype), dimension(nx,ny):: s
+       real(mytype), dimension(nz):: ff,fs,fw 
+     END SUBROUTINE FILTER_Z
+  END INTERFACE
+
+  PROCEDURE (FILTER_X) filx_00,fillx_22
+  PROCEDURE (FILTER_X), POINTER :: filx,filxS
+  PROCEDURE (FILTER_Y) fily_00,fily_11,fily_22
+  PROCEDURE (FILTER_Y), POINTER :: fily,filyS
+  PROCEDURE (FILTER_Z) filz_00
+  PROCEDURE (FILTER_Z), POINTER :: filz,filzS
+
   !module pressure
   real(mytype), save, allocatable, dimension(:,:) :: dpdyx1,dpdyxn,dpdzx1,dpdzxn
   real(mytype), save, allocatable, dimension(:,:) :: dpdxy1,dpdxyn,dpdzy1,dpdzyn
