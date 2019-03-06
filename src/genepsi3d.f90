@@ -78,6 +78,7 @@ SUBROUTINE geomcomplex(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
   USE param, ONLY : itype, itype_cyl, itype_hill
   USE decomp_2d, ONLY : mytype
   USE cyl, ONLY : geomcomplex_cyl
+  USE hill, ONLY : geomcomplex_hill
 
   IMPLICIT NONE
 
@@ -88,8 +89,13 @@ SUBROUTINE geomcomplex(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
   REAL(mytype)               :: remp
 
   IF (itype.EQ.itype_cyl) THEN
+     
      CALL geomcomplex_cyl(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
-  ELSE
+     
+  ELSEIF (itype.EQ.itype_hill) THEN
+     
+     CALL geomcomplex_hill(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
+     
   ENDIF
   
 END SUBROUTINE geomcomplex

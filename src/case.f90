@@ -37,6 +37,7 @@ MODULE case
   
   USE tgv
   USE cyl
+  USE hill
   USE dbg_schemes
   USE channel
 
@@ -70,11 +71,8 @@ CONTAINS
        
     ELSEIF (itype.EQ.itype_hill) THEN
 
-       IF (nrank.EQ.0) THEN
-          PRINT *, "Periodic hill case not modernised yet!"
-          STOP
-       ENDIF
-       
+       CALL  init_hill (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
+          
     ELSEIF (itype.EQ.itype_cyl) THEN
        
        CALL init_cyl (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, phis1, phiss1)
@@ -87,9 +85,9 @@ CONTAINS
 
   END SUBROUTINE init
 
-  SUBROUTINE boundary_conditions (ux,uy,uz,phi)
+  SUBROUTINE boundary_conditions (ux,uy,uz,phi,ep)
     
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
+    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,ep
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
     IF (itype.EQ.itype_lockexch) THEN
@@ -109,10 +107,7 @@ CONTAINS
        
     ELSEIF (itype.EQ.itype_hill) THEN
 
-       IF (nrank.EQ.0) THEN
-          PRINT *, "Periodic hill case not modernised yet!"
-          STOP
-       ENDIF
+       CALL boundary_conditions_hill (ux,uy,uz,phi,ep)
        
     ELSEIF (itype.EQ.itype_cyl) THEN
        
@@ -148,11 +143,8 @@ CONTAINS
        CALL postprocessing_channel (ux, uy, uz, phi, ep)
        
     ELSEIF (itype.EQ.itype_hill) THEN
-
-       IF (nrank.EQ.0) THEN
-          PRINT *, "Periodic hill case not modernised yet!"
-          STOP
-       ENDIF
+       
+       CALL postprocessing_hill(ux, uy, uz, phi, ep)
        
     ELSEIF (itype.EQ.itype_cyl) THEN
        

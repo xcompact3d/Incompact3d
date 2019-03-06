@@ -122,7 +122,7 @@ PROGRAM incompact3d
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         !! Initialise timestep
         !!-------------------------------------------------------------------------
-        call boundary_conditions(ux1,uy1,uz1,phi1)
+        call boundary_conditions(ux1,uy1,uz1,phi1,ep1)
         !!-------------------------------------------------------------------------
         !! End initialise timestep
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -154,11 +154,11 @@ PROGRAM incompact3d
         !! End Poisson solver and velocity correction
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-        if (mod(itime,10)==0) then
+!        if (mod(itime,10)==0) then
            call divergence(ux1,uy1,uz1,ep1,dv3,2)
            call test_speed_min_max(ux1,uy1,uz1)
            if (iscalar==1) call test_scalar_min_max(phi1)
-        endif
+!        endif
 
      enddo !! End sub timesteps
 #ifdef FORCES

@@ -1,114 +1,57 @@
-module flow_type
-  use decomp_2d, only : mytype
-  integer :: initstats1,initstats2
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!!!        FILE: BC-Periodic-hill.f90
+!!!      AUTHOR: ??
+!!!    MODIFIED: Paul Bartholomew
+!!! DESCRIPTION: This module describes the periodic hill flow.
+!!!   CHANGELOG: [2019-02-19] Making module private by default
+!!               [2019-02-19] Turning file into a module
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-end module flow_type
+module hill
 
-subroutine ft_parameter(arg)
-
-  USE param
+  USE decomp_2d
   USE variables
-  USE flow_type
-  USE complex_geometry
-  USE decomp_2d, only : nrank
-  implicit none
+  USE param
 
-  logical,intent(in) :: arg
-  character :: a
+  IMPLICIT NONE
 
-  nclx1 = 0 !Boundary condition in x=0  (0: Periodic, 1:Free-slip, 2: Dirichlet)
-  nclxn = 0 !Boundary condition in x=Lx (0: Periodic, 1:Free-slip, 2: Dirichlet)
-  ncly1 = 2 !Boundary condition in y=0  (0: Periodic, 1:Free-slip, 2: Dirichlet)
-  nclyn = 2 !Boundary condition in y=Ly (0: Periodic, 1:Free-slip, 2: Dirichlet)
-  nclz1 = 0 !Boundary condition in z=0  (0: Periodic, 1:Free-slip, 2: Dirichlet)
-  nclzn = 0 !Boundary condition in z=Lz (0: Periodic, 1:Free-slip, 2: Dirichlet)
+  integer :: FS
+  character(len=100) :: fileformat
+  character(len=1),parameter :: NL=char(10) !new line character
 
-  open(10,file='BC-Periodic-hill.prm',status='unknown',form='formatted')
-  read (10,*) a ! 
-  read (10,*) a ! INCOMPACT 3D computational parameters
-  read (10,*) a !
-  read (10,*) nx
-  read (10,*) ny
-  read (10,*) nz
-  read (10,*) nphi
-  read (10,*) p_row
-  read (10,*) p_col
-  if (arg) then
-     close(10)
-     return
-  endif
-  read (10,*) a ! 
-  read (10,*) a ! INCOMPACT 3D Flow parameters
-  read (10,*) a !
-  read (10,*) xlx
-  read (10,*) yly
-  read (10,*) zlz
-  read (10,*) re
-  read (10,*) noise
-  read (10,*) dt
-  read (10,*) a !
-  read (10,*) a ! INCOMPACT3D Flow configuration
-  read (10,*) a !
-  read (10,*) iin
-  read (10,*) ifirst
-  read (10,*) ilast
-  read (10,*) nscheme
-  read (10,*) istret
-  read (10,*) beta
-  read (10,*) a !
-  read (10,*) a ! INCOMPACT 3D File parameters
-  read (10,*) a !
-  read (10,*) ilit
-  read (10,*) icheckpoint
-  read (10,*) imodulo
-  read (10,*) initstats1
-  read (10,*) initstats2
-  read (10,*) a !
-  read (10,*) a ! NUMERICAL DISSIPATION
-  read (10,*) a !
-  read (10,*) jLES
-  read (10,*) fpi2
-  read (10,*) a !
-  read (10,*) a ! INCOMPACT 3D Body (old school)
-  read (10,*) a !
-  read (10,*) ivirt
-  read (10,*) a !
-  read (10,*) a ! INCOMPACT 3D Forcing with Lagrangian Polynomials
-  read (10,*) a !
-  read (10,*) ilag
-  read (10,*) npif 
-  read (10,*) izap  
-  read (10,*) nraf
-  read (10,*) nobjmax
-  close(10)
+  !probes
+  integer, save :: nprobes, ntimes1, ntimes2
+  integer, save, allocatable, dimension(:) :: rankprobes, nxprobes, nyprobes, nzprobes
 
-  if (nrank==0) then
-     print *,'=======================Periodic hill======================='
-     write(*,"(' initstats1         : ',I15)") initstats1
-     write(*,"(' initstats2         : ',I15)") initstats2
-     print *,'==========================================================='
-  endif
-  return
-end subroutine ft_parameter
-!********************************************************************
-subroutine geomcomplex(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
-  use param, only : xlx,zero,one,two,three,nine,fourteen,twenty,twentyeight
-  use decomp_2d, only : mytype
-  implicit none
-  !
-  real(mytype),dimension(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
-  real(mytype),dimension(ny) :: yp
-  integer                    :: nxi,nxf,ny,nyi,nyf,nzi,nzf
-  real(mytype)               :: dx,dz
-  real(mytype)               :: remp
-  integer                    :: i,j,k
-  real(mytype)               :: xm,ym
-  real(mytype)               :: zeromach
-  !
-  real(mytype), dimension(nxi:nxf) :: dune
-  real(mytype) :: y_bump
-  !
-  zeromach=one
+  real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
+
+  PRIVATE ! All functions/subroutines private by default
+  PUBLIC :: init_hill, boundary_conditions_hill, postprocessing_hill, geomcomplex_hill
+
+contains
+
+  subroutine geomcomplex_hill(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
+
+    use decomp_2d, only : mytype
+    use param, only : zero, one, two, three, nine, fourteen, twenty, twentyeight
+    use ibm
+
+    implicit none
+
+    real(mytype),dimension(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
+    real(mytype),dimension(ny) :: yp
+    integer                    :: nxi,nxf,ny,nyi,nyf,nzi,nzf
+    real(mytype)               :: dx,dz
+    real(mytype)               :: remp
+    integer                    :: i,ic,j,k
+    real(mytype)               :: xm,ym,r
+    real(mytype)               :: zeromach
+    real(mytype), dimension(nxi:nxf) :: dune
+    real(mytype) :: y_bump
+    
+   zeromach=one
   do while ((one + zeromach / two) .gt. one)
      zeromach = zeromach/two
   end do
@@ -159,27 +102,53 @@ subroutine geomcomplex(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
         enddo
      enddo
   enddo
-  return
-end subroutine geomcomplex
-!********************************************************************
-subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
 
-  USE decomp_2d
-  USE decomp_2d_io
-  USE variables
-  USE param
-  USE MPI
+    return
+  end subroutine geomcomplex_hill
 
-  implicit none
+  !********************************************************************
+  subroutine boundary_conditions_hill (ux,uy,uz,phi,ep1)
 
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1,phis1,phiss1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
+    USE param
+    USE variables
+    USE decomp_2d
 
-  real(mytype) :: y,r,um,r3,x,z,h,ct
-  real(mytype) :: cx0,cy0,cz0,hg,lg
-  integer :: k,j,i,ijk,fh,ierror,ii,is,code
-  integer (kind=MPI_OFFSET_KIND) :: disp
+    implicit none
+
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,ep1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
+
+     real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: gx
+     
+     ux = ux*(one-ep1)
+     call transpose_x_to_y(ux,gx)
+     call hill_flrt(gx,(two/three)*(two/yly))
+     call transpose_y_to_x(gx,ux)
+     
+    return
+  end subroutine boundary_conditions_hill
+
+  !********************************************************************
+  subroutine init_hill (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
+
+    USE decomp_2d
+    USE decomp_2d_io
+    USE variables
+    USE param
+    USE MPI
+
+    implicit none
+
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1,phis1,phiss1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
+
+    real(mytype) :: y,r,um,r3,x,z,h,ct
+    real(mytype) :: cx0,cy0,cz0,hg,lg
+    integer :: k,j,i,ijk,fh,ierror,ii,is,code
+    integer (kind=MPI_OFFSET_KIND) :: disp
+
+    integer, dimension (:), allocatable :: seed
 
   if (iscalar==1) then
 
@@ -206,9 +175,9 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
   do k=1,xsize(3)
      do j=1,xsize(2)
         do i=1,xsize(1)
-           ux1(i,j,k)=noise*(two*ux1(i,j,k)-one)
-           uy1(i,j,k)=noise*(two*uy1(i,j,k)-one)
-           uz1(i,j,k)=noise*(two*uz1(i,j,k)-one)
+           ux1(i,j,k)=init_noise*(two*ux1(i,j,k)-one)
+           uy1(i,j,k)=init_noise*(two*uy1(i,j,k)-one)
+           uz1(i,j,k)=init_noise*(two*uz1(i,j,k)-one)
         enddo
      enddo
   enddo
@@ -255,51 +224,9 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
   if (nrank .eq. 0) print *,'# init end ok'
 #endif
 
-  return
-end subroutine init
-!********************************************************************
-subroutine boundary_conditions (ux,uy,uz,phi,ep1)
-
-  USE param
-  USE variables
-  USE decomp_2d
-
-  implicit none
-
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,ep1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi
-
-  real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: gx
-
-  ux = ux*(one-ep1)
-  call transpose_x_to_y(ux,gx)
-  call channel(gx,(two/three)*(two/yly))
-  call transpose_y_to_x(gx,ux)
-
-  return
-end subroutine boundary_conditions
-#ifdef POST
-!********************************************************************
-module post_processing
-
-  USE decomp_2d
-  USE variables
-  USE param
-  USE flow_type
-
-  implicit none
-  !
-  integer :: FS
-  character(len=100) :: fileformat
-  character(len=1),parameter :: NL=char(10) !new line character
-  !
-  !probes
-  integer :: nprobes, ntimes1, ntimes2
-  integer, save, allocatable, dimension(:) :: rankprobes, nxprobes, nyprobes, nzprobes
-  !
-  real(mytype),save,allocatable,dimension(:,:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
-
-contains
+    return
+  end subroutine init_hill
+  !********************************************************************
 
   !############################################################################
   subroutine init_post(ep1)
@@ -315,9 +242,9 @@ contains
     if (nrank .eq. 0) print *,'# init_post start'
 #endif
 
-    allocate(usum(zsize(1),zsize(2)),vsum(zsize(1),zsize(2)),wsum(zsize(1),zsize(2)))
-    allocate(uusum(zsize(1),zsize(2)),uvsum(zsize(1),zsize(2)),uwsum(zsize(1),zsize(2)))
-    allocate(vvsum(zsize(1),zsize(2)),vwsum(zsize(1),zsize(2)),wwsum(zsize(1),zsize(2)))
+    allocate(usum(ysize(2)),vsum(ysize(2)),wsum(ysize(2)))
+    allocate(uusum(ysize(2)),uvsum(ysize(2)),uwsum(ysize(2)))
+    allocate(vvsum(ysize(2)),vwsum(ysize(2)),wwsum(ysize(2)))
     usum=zero;vsum=zero;wsum=zero
     uusum=zero;uvsum=zero;uwsum=zero
     vvsum=zero;vwsum=zero;wwsum=zero
@@ -370,115 +297,191 @@ contains
 
   end subroutine init_post
   !############################################################################
-  subroutine postprocessing(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
+  subroutine postprocessing_hill(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
+    USE MPI
+    USE decomp_2d
     USE decomp_2d_io
+    USE var, only : umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
+    USE var, only : uvisu
+    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1
-    !
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux2, uy2, uz2
-    real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: ux3, uy3, uz3, temp3
-    real(mytype),dimension(zsize(1),zsize(2),zsize(3)) ::  uprime, vprime, wprime
-    !
-    real(mytype),dimension(zsize(1),zsize(2)) :: um, vm, wm
-    !
-    integer :: i,j,k
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     character(len=30) :: filename
 
-    if (itime.ge.initstats1) then
+    if (itime.ge.ioutput) then
 
-       call transpose_x_to_y(ux1,ux2)
-       call transpose_x_to_y(uy1,uy2)
-       call transpose_x_to_y(uz1,uz2)
+       !x-derivatives
+       call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+       call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+       call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+       !y-derivatives
+       call transpose_x_to_y(ux1,td2)
+       call transpose_x_to_y(uy1,te2)
+       call transpose_x_to_y(uz1,tf2)
+       call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+       call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+       call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+       !!z-derivatives
+       call transpose_y_to_z(td2,td3)
+       call transpose_y_to_z(te2,te3)
+       call transpose_y_to_z(tf2,tf3)
+       call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+       call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+       call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+       !!all back to x-pencils
+       call transpose_z_to_y(ta3,td2)
+       call transpose_z_to_y(tb3,te2)
+       call transpose_z_to_y(tc3,tf2)
+       call transpose_y_to_x(td2,tg1)
+       call transpose_y_to_x(te2,th1)
+       call transpose_y_to_x(tf2,ti1)
+       call transpose_y_to_x(ta2,td1)
+       call transpose_y_to_x(tb2,te1)
+       call transpose_y_to_x(tc2,tf1)
+       !du/dx=ta1 du/dy=td1 and du/dz=tg1
+       !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
+       !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
+       !############################################################################
+       !VORTICITY
+       di1(:,:,:)=0.
+       di1(:,:,:)=sqrt((tf1(:,:,:)-th1(:,:,:))**2+(tg1(:,:,:)-tc1(:,:,:))**2+&
+            (tb1(:,:,:)-td1(:,:,:))**2)
+       uvisu=0.
+       call fine_to_coarseV(1,di1,uvisu)
+990    format('vort',I3.3)
+       write(filename, 990) itime/ioutput
+       call decomp_2d_write_one(1,uvisu,filename,2)
+       !############################################################################
 
-       call transpose_y_to_z(ux2,ux3)
-       call transpose_y_to_z(uy2,uy3)
-       call transpose_y_to_z(uz2,uz3)
+       !############################################################################
+       !VELOCITY
+       uvisu=0.
+       call fine_to_coarseV(1,ux1,uvisu)
+993    format('ux',I3.3)
+       write(filename, 993) itime/ioutput
+       call decomp_2d_write_one(1,uvisu,filename,2)
+       uvisu=0.
+       call fine_to_coarseV(1,uy1,uvisu)
+994    format('uy',I3.3)
+       write(filename, 994) itime/ioutput
+       call decomp_2d_write_one(1,uvisu,filename,2)
+       uvisu=0.
+       call fine_to_coarseV(1,uz1,uvisu)
+995    format('uz',I3.3)
+       write(filename, 995) itime/ioutput
+       call decomp_2d_write_one(1,uvisu,filename,2)
+       !############################################################################
 
-       call mean_plane_z(ux3,zsize(1),zsize(2),zsize(3),um)
-       call mean_plane_z(uy3,zsize(1),zsize(2),zsize(3),vm)
-       call mean_plane_z(uz3,zsize(1),zsize(2),zsize(3),wm)
+       !############################################################################
+       !PRESSURE       
+       !NOT READY
 
-       usum = usum + um
-       vsum = vsum + vm
-       wsum = wsum + wm
-
-       ntimes1 = ntimes1 + 1
-
-       if (itime.ge.initstats2) then
-
-          uprime = zero
-          vprime = zero
-          wprime = zero
-
-          do k=1,zsize(3)
-             do j=1,zsize(2)
-                do i=1,zsize(1)
-                   uprime(i,j,k) = ux3(i,j,k) - usum(i,j)/real(ntimes1,mytype)
-                   vprime(i,j,k) = uy3(i,j,k) - vsum(i,j)/real(ntimes1,mytype)
-                   wprime(i,j,k) = uz3(i,j,k) - wsum(i,j)/real(ntimes1,mytype)
-                enddo
-             enddo
-          enddo
-
-          do k=1,zsize(3)
-             do j=1,zsize(2)
-                do i=1,zsize(1)
-                   uusum(i,j) = uusum(i,j) + uprime(i,j,k)*uprime(i,j,k)/real(nz,mytype)
-                   uvsum(i,j) = uvsum(i,j) + uprime(i,j,k)*vprime(i,j,k)/real(nz,mytype)
-                   uwsum(i,j) = uwsum(i,j) + uprime(i,j,k)*wprime(i,j,k)/real(nz,mytype)
-                   vvsum(i,j) = vvsum(i,j) + vprime(i,j,k)*vprime(i,j,k)/real(nz,mytype)
-                   vwsum(i,j) = vwsum(i,j) + vprime(i,j,k)*wprime(i,j,k)/real(nz,mytype)
-                   wwsum(i,j) = wwsum(i,j) + wprime(i,j,k)*wprime(i,j,k)/real(nz,mytype)
-                enddo
-             enddo
-          enddo
-
-          ntimes2 = ntimes2 + 1
-       endif
-
-       if (mod(itime,imodulo).eq.0) then !write results
-          temp3(:,:,1) = usum/real(ntimes1,mytype)
-          write(filename,"('./data/usum',I4.4)") itime/imodulo
-          call decomp_2d_write_plane(3,temp3,3,1,filename)
-          temp3(:,:,1) = vsum/real(ntimes1,mytype)
-          write(filename,"('./data/vsum',I4.4)") itime/imodulo
-          call decomp_2d_write_plane(3,temp3,3,1,filename)
-          temp3(:,:,1) = wsum/real(ntimes1,mytype)
-          write(filename,"('./data/wsum',I4.4)") itime/imodulo
-          call decomp_2d_write_plane(3,temp3,3,1,filename)
-          temp3(:,:,1) = uusum/real(ntimes2,mytype)
-          write(filename,"('./data/uusum',I4.4)") itime/imodulo
-          call decomp_2d_write_plane(3,temp3,3,1,filename)
-          temp3(:,:,1) = uvsum/real(ntimes2,mytype)
-          write(filename,"('./data/uvsum',I4.4)") itime/imodulo
-          call decomp_2d_write_plane(3,temp3,3,1,filename)
-          temp3(:,:,1) = uwsum/real(ntimes2,mytype)
-          write(filename,"('./data/uwsum',I4.4)") itime/imodulo
-          call decomp_2d_write_plane(3,temp3,3,1,filename)
-          temp3(:,:,1) = vvsum/real(ntimes2,mytype)
-          write(filename,"('./data/vvsum',I4.4)") itime/imodulo
-          call decomp_2d_write_plane(3,temp3,3,1,filename)
-          temp3(:,:,1) = vwsum/real(ntimes2,mytype)
-          write(filename,"('./data/vwsum',I4.4)") itime/imodulo
-          call decomp_2d_write_plane(3,temp3,3,1,filename)
-          temp3(:,:,1) = wwsum/real(ntimes2,mytype)
-          write(filename,"('./data/wwsum',I4.4)") itime/imodulo
-          call decomp_2d_write_plane(3,temp3,3,1,filename)
-       endif
     endif
+
+    if (itime.ge.initstat) then
+       !umean=ux1
+       call fine_to_coarseS(1,ux1,tmean)
+       umean(:,:,:)=umean(:,:,:)+tmean(:,:,:)
+
+       !vmean=uy1
+       call fine_to_coarseS(1,uy1,tmean)
+       vmean(:,:,:)=vmean(:,:,:)+tmean(:,:,:)
+
+       !wmean=uz1
+       call fine_to_coarseS(1,uz1,tmean)
+       wmean(:,:,:)=wmean(:,:,:)+tmean(:,:,:)
+
+       !uumean=ux1*ux1
+       ta1(:,:,:)=ux1(:,:,:)*ux1(:,:,:)
+       call fine_to_coarseS(1,ta1,tmean)
+       uumean(:,:,:)=uumean(:,:,:)+tmean(:,:,:)
+
+       !vvmean=uy1*uy1
+       ta1(:,:,:)=uy1(:,:,:)*uy1(:,:,:)
+       call fine_to_coarseS(1,ta1,tmean)
+       vvmean(:,:,:)=vvmean(:,:,:)+tmean(:,:,:)
+
+       !wwmean=uz1*uz1
+       ta1(:,:,:)=uz1(:,:,:)*uz1(:,:,:)
+       call fine_to_coarseS(1,ta1,tmean)
+       wwmean(:,:,:)=wwmean(:,:,:)+tmean(:,:,:)
+
+       !uvmean=ux1*uy1
+       ta1(:,:,:)=ux1(:,:,:)*uy1(:,:,:)
+       call fine_to_coarseS(1,ta1,tmean)
+       uvmean(:,:,:)=uvmean(:,:,:)+tmean(:,:,:)
+
+       !uwmean=ux1*uz1
+       ta1(:,:,:)=ux1(:,:,:)*uz1(:,:,:)
+       call fine_to_coarseS(1,ta1,tmean)
+       uwmean(:,:,:)=uwmean(:,:,:)+tmean(:,:,:)
+
+       !vwmean=uy1*uz1
+       ta1(:,:,:)=uy1(:,:,:)*uz1(:,:,:)
+       call fine_to_coarseS(1,ta1,tmean)
+       vwmean(:,:,:)=vwmean(:,:,:)+tmean(:,:,:)
+
+       if (mod(itime,icheckpoint)==0) then
+          if (nrank==0) print *,'===========================================================<<<<<'
+          if (nrank==0) print *,'Writing stat file',itime
+          write(filename,"('umean.dat',I7.7)") itime
+          call decomp_2d_write_one(1,umean,filename,1)
+          write(filename,"('vmean.dat',I7.7)") itime
+          call decomp_2d_write_one(1,vmean,filename,1)
+          write(filename,"('wmean.dat',I7.7)") itime
+          call decomp_2d_write_one(1,wmean,filename,1)
+          write(filename,"('uumean.dat',I7.7)") itime
+          call decomp_2d_write_one(1,uumean,filename,1)
+          write(filename,"('vvmean.dat',I7.7)") itime
+          call decomp_2d_write_one(1,vvmean,filename,1)
+          write(filename,"('wwmean.dat',I7.7)") itime
+          call decomp_2d_write_one(1,wwmean,filename,1)
+          write(filename,"('uvmean.dat',I7.7)") itime
+          call decomp_2d_write_one(1,uvmean,filename,1)
+          write(filename,"('uwmean.dat',I7.7)") itime
+          call decomp_2d_write_one(1,uwmean,filename,1)
+          write(filename,"('vwmean.dat',I7.7)") itime
+          call decomp_2d_write_one(1,vwmean,filename,1)  
+          if (nrank==0) print *,'write stat done!'
+          if (nrank==0) print *,'===========================================================<<<<<'
+          if (nrank==0) then
+             write(filename,"('umean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('vmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('wmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('uumean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('vvmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('wwmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('uvmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('uwmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('vwmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+          endif
+       endif
+
+    endif
+
     return
-  end subroutine postprocessing
+  end subroutine postprocessing_hill
   !############################################################################
   subroutine write_probes(ux1,uy1,uz1,phi1) !By Felipe Schuch
 
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ux1, uy1, uz1
-    real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),nphi) :: phi1
+    real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),numscalar) :: phi1
 
     integer :: i
     character(len=30) :: filename
-    FS = 1+3+nphi !Number of columns
+    FS = 1+3+numscalar !Number of columns
     write(fileformat, '( "(",I4,"(E14.6),A)" )' ) FS
     FS = FS*14+1  !Line width
 
@@ -491,7 +494,7 @@ contains
                ux1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !2
                uy1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !3
                uz1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !4
-               phi1(nxprobes(i),nyprobes(i),nzprobes(i),:),&         !nphi
+               phi1(nxprobes(i),nyprobes(i),nzprobes(i),:),&         !numscalar
                NL                                                    !+1
           close(67)
        endif
@@ -499,6 +502,60 @@ contains
 
   end subroutine write_probes
   !############################################################################
-end module post_processing
-#endif
+    !********************************************************************
+  !
+  subroutine hill_flrt (ux,constant)
+    !
+    !********************************************************************
+
+    USE decomp_2d
+    USE decomp_2d_poisson
+    USE variables
+    USE param
+    USE var
+    USE MPI
+
+    implicit none
+
+    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux
+    real(mytype) :: constant
+
+    integer :: j,i,k,code
+    real(mytype) :: can,ut3,ut,ut4
+
+    ut3=zero
+    do k=1,ysize(3)
+       do i=1,ysize(1)
+          ut=zero
+          do j=1,ny-1
+             if (istret.eq.0) then
+                ut=ut+dy*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
+             else
+                ut=ut+(yp(j+1)-yp(j))*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
+             endif
+          enddo
+          ut=ut/yly
+          ut3=ut3+ut
+       enddo
+    enddo
+    ut3=ut3/(real(nx*nz,mytype))
+
+    call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+
+    can=-(constant-ut4)
+
+    if (nrank==0) print *,nrank,'UT',ut4,can
+
+    do k=1,ysize(3)
+       do i=1,ysize(1)
+          do j=2,ny-1
+             ux(i,j,k)=ux(i,j,k)-can
+          enddo
+       enddo
+    enddo
+
+    return
+  end subroutine hill_flrt
+  !********************************************************************
+end module hill
 
