@@ -1,9 +1,9 @@
 subroutine filter(af)
 
   USE param
-  USE derivX
-  USE derivY
-  USE derivZ
+  USE parfiX
+  USE parfiY
+  USE parfiZ
   USE variables
   USE var
 !=================================================
@@ -34,6 +34,19 @@ subroutine filter(af)
   if (nclz1.eq.1.and.nclzn.eq.2) filz => filz_12
   if (nclz1.eq.2.and.nclzn.eq.1) filz => filz_21
   if (nclz1.eq.2.and.nclzn.eq.2) filz => filz_22
+
+  call set_filter_coefficients(af,fial1x,fia1x,fib1x,fic1x,fid1x,fial2x,fia2x,fib2x,fic2x,fid2x,fial3x,fia3x,fib3x,fic3x,fid3x,fie3x,fif3x,&
+                                  fialnx,fianx,fibnx,ficnx,fidnx,fialmx,fiamx,fibmx,ficmx,fidmx,fialpx,fiapx,fibpx,ficpx,fidpx,fiepx,fifpx,&
+                                  fialx,fiaix,fibix,ficix,fidix,fiffx,fifsx,fifwx,fiffxp,fifsxp,fifwxp,nx,nclx1,nclxn)
+  call set_filter_coefficients(af,fialy,fia1y,fib1y,fic1y,fid1y,fial2y,fia2y,fib2y,fic2y,fid2y,fial3y,fia3y,fib3y,fic3y,fid3y,fie3y,fif3y,&
+                                  fialny,fiany,fibny,ficny,fidny,fialmy,fiamy,fibmy,ficmy,fidmy,fialpy,fiapy,fibpy,ficpy,fidpy,fiepy,fifpy,&
+                                  fialy,fiajy,fibjy,ficjy,fidjy,fiffy,fifsy,fifwy,fiffyp,fifsyp,fifwyp,ny,ncly1,nclyn)
+  call set_filter_coefficients(af,fialz,fia1z,fib1z,fic1z,fid1z,fial2z,fia2z,fib2z,fic2z,fid2z,fial3z,fia3z,fib3z,fic3z,fid3z,fie3z,fif3z,&
+                                  fialnz,fianz,fibnz,ficnz,fidnz,fialmz,fiamz,fibmz,ficmz,fidmz,fialpz,fiapz,fibpz,ficpz,fidpz,fiepz,fifpz,&
+                                  fialz,fiakz,fibkz,fickz,fidkz,fiffz,fifsz,fifwz,fiffzp,fifszp,fifwzp,nz,nclz1,nclzn)
+#ifdef DEBG 
+  if (nrank .eq. 0) print *,'# filter calculation end'
+#endif
 
 return 
 
@@ -69,12 +82,12 @@ subroutine set_filter_coefficients(af,alfa1,a1,b1,c1,d1,alfa2,a2,b2,c2,d2,alfa3,
     ! "High-order schemes for Navier-Stokes equations: Algorithm and implementation into FDL3DI"
 
   
-    alfai=af                          ! alpha_f
+    alfai=af                                       ! alpha_f
     !Interior points
-    ai=(eleven + ten*af)/sixteen     ! a
-    bi=half*(af +thirtyfour*af)/32.  ! b/2 
-    ci=half*(-three + six*af)/16.    ! c/2
-    di=half*(one - two*af)/thirtytwo ! d/2
+    ai=(eleven + ten*af)/sixteen                   ! a
+    bi=half*(fifteen*af +thirtyfour*af)/thirtytwo  ! b/2 
+    ci=half*(-three + six*af)/sixteen              ! c/2
+    di=half*(one - two*af)/thirtytwo               ! d/2
     ! Explicit third/fifth-order filters near the boundaries!
     !Boundary point 1 (no-filtering)
     alfa1=zero
@@ -84,10 +97,10 @@ subroutine set_filter_coefficients(af,alfa1,a1,b1,c1,d1,alfa2,a2,b2,c2,d2,alfa3,
     d1=zero                          ! d1=1./8.-1./8.*af 
     !Boundary point 2 (Third order)
     alfa2=af
-    a2=one/eight+three/four*af          ! a2
-    b2=five/eight+three/four*af          !  b2
-    c2=three/eight+af/four               ! c2
-    d2=-one/eight+af/four                ! d2
+    a2=one/eight+three/four*af            ! a2
+    b2=five/eight+three/four*af           ! b2
+    c2=three/eight+af/four                ! c2
+    d2=-one/eight+af/four                 ! d2
     !Boundary point 3 (Fifth order)
     alfa3=af
     a3= -one/thirtytwo+af/sixteen         ! a3
@@ -104,18 +117,18 @@ subroutine set_filter_coefficients(af,alfa1,a1,b1,c1,d1,alfa2,a2,b2,c2,d2,alfa3,
     dn=zero                               !dn = 1./8.-1./8.*af    
     !Boundary point 2 (Third order)
     alfam=af
-    am=one/eight+three/four*af          ! a2
-    bm=five/eight+three/four*af          !  b2
-    cm=three/eight+af/four               ! c2
-    dm=-one/eight+af/four                ! d2
+    am=one/eight+three/four*af            ! am
+    bm=five/eight+three/four*af           ! bm
+    cm=three/eight+af/four                ! cm
+    dm=-one/eight+af/four                 ! dm
     !Boundary point 3 (Fifth order)
     alfap=af
-    ap=-one/thirtytwo+af/sixteen         ! a3
-    bp= five/thirtytwo+eleven/sixteen*af  ! b3
-    cp= eleven/sixteen+five*af/eight      ! c3
-    dp= five/sixteen+three*af/eight       ! d3
-    ep=-five/thirtytwo+five*af/sixteen    ! e3
-    fp= one/thirtytwo-af/sixteen          ! f3
+    ap=-one/thirtytwo+af/sixteen          ! ap
+    bp= five/thirtytwo+eleven/sixteen*af  ! bp
+    cp= eleven/sixteen+five*af/eight      ! cp
+    dp= five/sixteen+three*af/eight       ! dp
+    ep=-five/thirtytwo+five*af/sixteen    ! ep
+    fp= one/thirtytwo-af/sixteen          ! fp
 
     ff=zero;fs=zero;fw=zero;ffp=zero;fsp=zero;fwp=zero
     fb=zero;fc=zero
