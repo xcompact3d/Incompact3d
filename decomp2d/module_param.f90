@@ -148,11 +148,11 @@ module variables
      END SUBROUTINE FILTER_Z
   END INTERFACE
 
-  PROCEDURE (FILTER_X) filx_00,fillx_22
+  PROCEDURE (FILTER_X) filx_00,filx_11, filx_12, filx_21, filx_22
   PROCEDURE (FILTER_X), POINTER :: filx,filxS
-  PROCEDURE (FILTER_Y) fily_00,fily_11,fily_22
+  PROCEDURE (FILTER_Y) fily_00,fily_11, fily_12, fily_21, fily_22
   PROCEDURE (FILTER_Y), POINTER :: fily,filyS
-  PROCEDURE (FILTER_Z) filz_00
+  PROCEDURE (FILTER_Z) filz_00,filz_11, filz_12, filz_21, filz_22
   PROCEDURE (FILTER_Z), POINTER :: filz,filzS
 
   !module pressure
@@ -318,7 +318,8 @@ module param
   real(mytype),parameter :: twentyseven=27._mytype
   real(mytype),parameter :: twentyeight=28._mytype
 !
-  real(mytype),parameter :: thirytwo=32._mytype
+  real(mytype),parameter :: thirtytwo=32._mytype
+  real(mytype),parameter :: thirtyfour=34._mytype
   real(mytype),parameter :: thirtysix=36._mytype
 !
   real(mytype),parameter :: fortyfour=44._mytype

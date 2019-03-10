@@ -1,356 +1,202 @@
 subroutine filter(af)
 
-USE decomp_2d
-USE param, only: nclx, ncly, ncly 
-USE parfiX 
-USE parfiY 
-USE parfiZ 
-USE variables
+  USE param
+  USE derivX
+  USE derivY
+  USE derivZ
+  USE variables
+  USE var
 !=================================================
 ! Discrete low-pass filter according to 
 !=================================================	
-implicit none
-real(mytype),intent(in) :: af 
-real(mytype) :: af1,afn
-integer ::  i,j,k
-! Set the coefficient for the discrete filter following 
-! the tridiagonal filtering of Motheau and Abraham, JCP 2016 
-! Filter should be -0.5<filax<0.5
+  implicit none
+  real(mytype),intent(in) :: af 
 
-! General Case (entire points)
-! alpha*fhat(i-1)+fhat(i)+alpha*fhat(i+1)=af(i)+b/2*[f(i+1)+f(i-1)] + ...
+#ifdef DEBG
+  if (nrank .eq. 0) print *,'# filter calculation start'
+#endif
 
-! Coefficients are calculated according to the report of Gaitonde & Visbal, 1998,
-! "High-order schemes for Navier-Stokes equations: Algorithm and implementation into FDL3DI"
-
-!========================================
-! Define filter coefficients for X-pencil
-!========================================
-fialx=af                         ! alpha_f
-!Interior points
-fiaix=(11. + 10.*af)/16.         ! a
-fibix=0.5*(15. + 34.*af)/32.     ! b/2 
-ficix=0.5*(-3. + 6.*af)/16.      ! c/2
-fidix=0.5*(1. - 2.*af)/32.       ! d/2
-! Explicit third-order filters near the boundaries!
-!Boundary point 1
-af1=0.
-fia1x=7./8.+af/8.               ! a1/2
-fib1x=3./8.+5.*af/8.            ! b1/2
-fic1x=-3./8.+3./8.*af           ! c1/2
-fid1x=1./8.-1./8.*af            ! d1/2
-!Boundary point 2
-fia2x=1./8.+3./4.*af    ! a2
-fib2x=5./8.+3./4.*af    ! b2/2
-fic2x=3./8.+af/4.    ! c2/2
-fid2x=-1./8.+af/4.   ! d2/2
-!Boundary point n
-afn=0.
-fianx=7./8.+af/8.               ! a1/2
-fibnx=3./8.+5.*af/8.            ! b1/2
-ficnx=-3./8.+3./8.*af           ! c1/2
-fidnx=1./8.-1./8.*af            ! d1/2
-!Boundary point m=n-1
-fiamx=1./8.+3./4.*af    ! a2
-fibmx=5./8.+3./4.*af    ! b2/2
-ficmx=3./8.+af/4.    ! c2/2
-fidmx=-1./8.+af/4.   ! d2/2
-! Set the coefficients for the matrix A
-! Periodic case
-if (nclx.eq.0) then
-   fiffx(1)   =af
-   fiffx(2)   =af
-   fiffx(nx-2)=af
-   fiffx(nx-1)=af
-   fiffx(nx)  =0.
-   fifcx(1)   =2.
-   fifcx(2)   =1.
-   fifcx(nx-2)=1.
-   fifcx(nx-1)=1.
-   fifcx(nx  )=1.+af*af
-   fifbx(1)   =af
-   fifbx(2)   =af
-   fifbx(nx-2)=af
-   fifbx(nx-1)=af
-   fifbx(nx  )=0.
-   do i=3,nx-3
-      fiffx(i)=af
-      fifcx(i)=1.
-      fifbx(i)=af
-   enddo   
-endif
-if (nclx.eq.1) then
-   fiffx(1)   =af1
-   fiffx(2)   =af
-   fiffx(ny-2)=af
-   fiffx(ny-1)=af
-   fiffy(ny)  =0.
-   fifcx(1)   =1.
-   fifcx(2)   =1.
-   fifcx(nx-2)=1.
-   fifcx(nx-1)=1.
-   fifcx(nx  )=1.
-   fifbx(1)   =af 
-   fifbx(2)   =af
-   fifbx(nx-2)=af
-   fifbx(nx-1)=afn
-   fifbx(nx  )=0.
-   do i=3,nx-3
-      fiffy(i)=af
-      fifcy(i)=1.
-      fifby(i)=af
-   enddo
-endif
-if (nclx.eq.2) then
-   fiffx(1)   =af1 
-   fiffx(2)   =af
-   fiffx(nx-2)=af
-   fiffx(nx-1)=af
-   fiffx(nx)  =0.
-   fifcx(1)   =1.
-   fifcx(2)   =1.
-   fifcx(nx-2)=1.
-   fifcx(nx-1)=1.
-   fifcx(nx  )=1.
-   fifbx(1)   =af 
-   fifbx(2)   =af
-   fifbx(nx-2)=af
-   fifbx(nx-1)=afn
-   fifbx(nx  )=0.
-   do i=3,nx-3
-      fiffx(i)=af
-      fifcx(i)=1.
-      fifbx(i)=af
-   enddo
-endif
-! Prepare coefficients to be used in the Thomas Algorithm
-do i=1,nx
-   fiffxp(i)=fiffx(i)
-enddo
-call prepare (fifbx,fifcx,fiffx,fifsx,fifwx,nx)
-call prepare (fifbx,fifcx,fiffxp,fifsxp,fifwxp,nx)
-if (nclx.eq.1) then
-   fiffx(1)=0.0_mytype
-   fifbx(nx-1)=0.0_mytype
-call prepare (fifbx,fifcx,fiffx,fifsx,fifwx,nx)
-endif
-
-!========================================
-! Define filter coefficients for Y-pencil
-!========================================
-fialy=af                         ! alpha_f
-!Interior points
-fiajy=(11. + 10.*af)/16.         ! a
-fibjy=0.5*(15. + 34.*af)/32.     ! b/2 
-ficjy=0.5*(-3. + 6.*af)/16.      ! c/2
-fidjy=0.5*(1. - 2.*af)/32.       ! d/2
-!Boundary point 1
-fia1y=7./8.+af/8.               ! a1/2
-fib1y=3./8.+5.*af/8.            ! b1/2
-fic1y=-3./8.+3./8.*af           ! c1/2
-fid1y=1./8.-1./8.*af            ! d1/2
-!Boundary point 2
-fia2y=1./8.+3./4.*af    ! a2
-fib2y=5./8.+3./4.*af    ! b2/2
-fic2y=3./8.+af/4.    ! c2/2
-fid2y=-1./8.+af/4.   ! d2/2
-!Boundary point n
-fiany=7./8.+af/8.               ! a1/2
-fibny=3./8.+5.*af/8.            ! b1/2
-ficny=-3./8.+3./8.*af           ! c1/2
-fidny=1./8.-1./8.*af            ! d1/2
-!Boundary point m=n-1
-fiamy=1./8.+3./4.*af    ! a2
-fibmy=5./8.+3./4.*af    ! b2/2
-ficmy=3./8.+af/4.    ! c2/2
-fidmy=-1./8.+af/4.   ! d2/2
-! Define coefficients
-if (ncly.eq.0) then
-   fiffy(1)   =af
-   fiffy(2)   =af
-   fiffy(ny-2)=af
-   fiffy(ny-1)=af
-   fiffy(ny)  =0.
-   fifcy(1)   =2.
-   fifcy(2)   =1.
-   fifcy(ny-2)=1.
-   fifcy(ny-1)=1.
-   fifcy(ny  )=1.+af*af
-   fifby(1)   =af
-   fifby(2)   =af
-   fifby(ny-2)=af
-   fifby(ny-1)=af
-   fifby(ny  )=0.
-   do j=3,ny-3
-      fiffy(j)=af
-      fifcy(j)=1.
-      fifby(j)=af
-   enddo   
-endif
-if (ncly.eq.1) then
-   fiffy(1)   =af+af
-   fiffy(2)   =af
-   fiffy(ny-2)=af
-   fiffy(ny-1)=af
-   fiffy(ny)  =0.0_mytype  
-   fifcy(1)   =1.0_mytype
-   fifcy(2)   =1.0_mytype
-   fifcy(ny-2)=1.0_mytype
-   fifcy(ny-1)=1.0_mytype
-   fifcy(ny  )=1.0_mytype
-   fifby(1)   =af 
-   fifby(2)   =af
-   fifby(ny-2)=af
-   fifby(ny-1)=af+af
-   fifby(ny  )=0.0_mytype
-   do j=3,ny-3
-      fiffy(j)=af
-      fifcy(j)=1.0_mytype
-      fifby(j)=af
-   enddo
-endif
-if (ncly.eq.2) then
-   fiffy(1)   =af1 
-   fiffy(2)   =af
-   fiffy(ny-2)=af
-   fiffy(ny-1)=af
-   fiffy(ny)  =0.0_mytype 
-   fifcy(1)   =1.0_mytype
-   fifcy(2)   =1.0_mytype
-   fifcy(ny-2)=1.0_mytype
-   fifcy(ny-1)=1.0_mytype
-   fifcy(ny  )=1.0_mytype
-   fifby(1)   =af 
-   fifby(2)   =af
-   fifby(ny-2)=af
-   fifby(ny-1)=afn
-   fifby(ny  )=0.0_mytype
-   do j=3,ny-3
-      fiffy(j)=af
-      fifcy(j)=1.0_mytype
-      fifby(j)=af
-   enddo
-endif
-do j=1,ny
-   fiffyp(j)=fiffy(j)
-enddo
-call prepare (fifby,fifcy,fiffy,fifsy,fifwy,ny)
-call prepare (fifby,fifcy,fiffyp,fifsyp,fifwyp,ny)
-if (ncly.eq.1) then
-   fiffy(1)=0.0_mytype
-   fifby(ny-1)=0.0_mytype
-call prepare (fifby,fifcy,fiffy,fifsy,fifwy,ny)
-endif
-!========================================
-! Define filter coefficients for Z-pencil
-!========================================
-fialz=af                         ! alpha_f
-!Interior points
-fiakz=(11. + 10.*af)/16.         ! a
-fibkz=0.5*(15. + 34.*af)/32.     ! b/2 
-fickz=0.5*(-3. + 6.*af)/16.      ! c/2
-fidkz=0.5*(1. - 2.*af)/32.       ! d/2
-!Boundary point 1
-fia1z=7./8.+af/8.               ! a1/2
-fib1z=3./8.+5.*af/8.            ! b1/2
-fic1z=-3./8.+3./8.*af           ! c1/2
-fid1z=1./8.-1./8.*af            ! d1/2
-!Boundary point 2
-fia2z=1./8.+3./4.*af    ! a2
-fib2z=5./8.+3./4.*af    ! b2/2
-fic2z=3./8.+af/4.    ! c2/2
-fid2z=-1./8.+af/4.   ! d2/2
-!Boundary point n
-fianz=7./8.+af/8.               ! a1/2
-fibnz=3./8.+5.*af/8.            ! b1/2
-ficnz=-3./8.+3./8.*af           ! c1/2
-fidnz=1./8.-1./8.*af            ! d1/2
-!Boundary point m=n-1
-fiamz=1./8.+3./4.*af    ! a2
-fibmz=5./8.+3./4.*af    ! b2/2
-ficmz=3./8.+af/4.    ! c2/2
-fidmz=-1./8.+af/4.   ! d2/2
-if (nclz.eq.0) then
-      fiffz(1)   =af
-      fiffz(2)   =af
-      fiffz(nz-2)=af
-      fiffz(nz-1)=af
-      fiffz(nz)  =0.
-      fifcz(1)   =2.
-      fifcz(2)   =1.
-      fifcz(nz-2)=1.
-      fifcz(nz-1)=1.
-      fifcz(nz  )=1.+af*af
-      fifbz(1)   =af
-      fifbz(2)   =af
-      fifbz(nz-2)=af
-      fifbz(nz-1)=af
-      fifbz(nz  )=0.
-      do k=3,nz-3
-         fiffz(k)=af
-         fifcz(k)=1.
-         fifbz(k)=af
-      enddo
-endif
-if (nclz.eq.1) then
-   fiffz(1)   =af+af
-   fiffz(2)   =af
-   fiffz(nz-2)=af
-   fiffz(nz-1)=af
-   fiffz(nz)  =0.
-   fifcz(1)   =1.
-   fifcz(2)   =1.
-   fifcz(nz-2)=1.
-   fifcz(nz-1)=1.
-   fifcz(nz  )=1.
-   fifbz(1)   =af 
-   fifbz(2)   =af
-   fifbz(nz-2)=af
-   fifbz(nz-1)=af+af
-   fifbz(nz  )=0.
-   do k=3,nz-3
-      fiffz(k)=af
-      fifcz(k)=1.
-      fifbz(k)=af
-   enddo
-endif
-if (nclz.eq.2) then
-   fiffz(1)   =af1
-   fiffz(2)   =af
-   fiffz(nz-2)=af
-   fiffz(nz-1)=af
-   fiffz(nz)  =0.
-   fifcz(1)   =1.
-   fifcz(2)   =1.
-   fifcz(nz-2)=1.
-   fifcz(nz-1)=1.
-   fifcz(nz  )=1.
-   fifbz(1)   =af 
-   fifbz(2)   =af
-   fifbz(nz-2)=af
-   fifbz(nz-1)=afn
-   fifbz(nz  )=0.
-   do k=3,nz-3
-      fiffz(k)=af
-      fifcz(k)=1.
-      fifbz(k)=af
-   enddo
-endif
-do k=1,nz
-   fiffzp(k)=fiffz(k)
-enddo
-call prepare (fifbz,fifcz,fiffz,fifsz,fifwz,nz)
-call prepare (fifbz,fifcz,fiffzp,fifszp,fifwzp,nz)
-if (nclz.eq.1) then
-   fiffz(1)=0.0_mytype
-   fifbz(nz-1)=0.0_mytype
-call prepare (fifbz,fifcz,fiffz,fifsz,fifwz,nz)
-endif
+  ! Filter functions
+  if (nclx1.eq.0.and.nclxn.eq.0) filx => filx_00
+  if (nclx1.eq.1.and.nclxn.eq.1) filx => filx_11
+  if (nclx1.eq.1.and.nclxn.eq.2) filx => filx_12
+  if (nclx1.eq.2.and.nclxn.eq.1) filx => filx_21
+  if (nclx1.eq.2.and.nclxn.eq.2) filx => filx_22
+  !
+  if (ncly1.eq.0.and.nclyn.eq.0) fily => fily_00
+  if (ncly1.eq.1.and.nclyn.eq.1) fily => fily_11
+  if (ncly1.eq.1.and.nclyn.eq.2) fily => fily_12
+  if (ncly1.eq.2.and.nclyn.eq.1) fily => fily_21
+  if (ncly1.eq.2.and.nclyn.eq.2) fily => fily_22
+  !
+  if (nclz1.eq.0.and.nclzn.eq.0) filz => filz_00
+  if (nclz1.eq.1.and.nclzn.eq.1) filz => filz_11
+  if (nclz1.eq.1.and.nclzn.eq.2) filz => filz_12
+  if (nclz1.eq.2.and.nclzn.eq.1) filz => filz_21
+  if (nclz1.eq.2.and.nclzn.eq.2) filz => filz_22
 
 return 
 
 end subroutine filter
 
+
+subroutine set_filter_coefficients(af,alfa1,a1,b1,c1,d1,alfa2,a2,b2,c2,d2,alfa3,a3,b3,c3,d3,e3,f3,&
+                                   alfan,an,bn,cn,dn,alfam,am,bm,cm,dm,alfap,ap,bp,cp,dp,ep,fp,&
+                                   alfai,ai,bi,ci,di,ff,fs,fw,ffp,fsp,fwp,n,ncl1,ncln)
+
+  use decomp_2d, only : mytype, nrank
+  use param
+
+  implicit none
+
+  real(mytype),intent(in) :: af
+  integer,intent(in) :: n,ncl1,ncln
+  real(mytype),dimension(n),intent(out) :: ff,fs,fw,ffp,fsp,fwp
+  real(mytype),intent(out) :: alfa1,a1,b1,c1,d1,alfa2,a2,b2,c2,d2,alfa3,a3,b3,c3,d3,e3,f3,&
+                                   alfan,an,bn,cn,dn,alfam,am,bm,cm,dm,alfap,ap,bp,cp,dp,ep,fp,&
+                                   alfai,ai,bi,ci,di
+  integer :: i
+  real(mytype),dimension(n) :: fb,fc
+
+    ! Set the coefficient for the discrete filter following 
+    ! the tridiagonal filtering of Motheau and Abraham, JCP 2016 
+    ! Filter should be -0.5<filax<0.5
+    
+    ! General Case (entire points)
+    ! alpha*fhat(i-1)+fhat(i)+alpha*fhat(i+1)=af(i)+b/2*[f(i+1)+f(i-1)] + ...
+    
+    ! Coefficients are calculated according to the report of Gaitonde & Visbal, 1998,
+    ! "High-order schemes for Navier-Stokes equations: Algorithm and implementation into FDL3DI"
+
+  
+    alfai=af                          ! alpha_f
+    !Interior points
+    ai=(eleven + ten*af)/sixteen     ! a
+    bi=half*(af +thirtyfour*af)/32.  ! b/2 
+    ci=half*(-three + six*af)/16.    ! c/2
+    di=half*(one - two*af)/thirtytwo ! d/2
+    ! Explicit third/fifth-order filters near the boundaries!
+    !Boundary point 1 (no-filtering)
+    alfa1=zero
+    a1=one                           ! a1=7./8.+af/8.! a1/2
+    b1=zero                          ! b1=3./8.+5.*af/8.  
+    c1=zero                          ! c1=-3./8.+3./8.*af 
+    d1=zero                          ! d1=1./8.-1./8.*af 
+    !Boundary point 2 (Third order)
+    alfa2=af
+    a2=one/eight+three/four*af          ! a2
+    b2=five/eight+three/four*af          !  b2
+    c2=three/eight+af/four               ! c2
+    d2=-one/eight+af/four                ! d2
+    !Boundary point 3 (Fifth order)
+    alfa3=af
+    a3= -one/thirtytwo+af/sixteen         ! a3
+    b3= five/thirtytwo+eleven/sixteen*af  ! b3
+    c3= eleven/sixteen+five*af/eight      ! c3
+    d3= five/sixteen+three*af/eight       ! d3
+    e3=-five/thirtytwo+five*af/sixteen    ! e3
+    f3= one/thirtytwo-af/sixteen          ! f3
+    !Boundary point n (no-filtering)
+    alfan=zero
+    an=one                                !an = 7./8.+af/8.! a1/2
+    bn=zero                               !bn = 3./8.+5.*af/8.
+    cn=zero                               !cn =-3./8.+3./8.*af    
+    dn=zero                               !dn = 1./8.-1./8.*af    
+    !Boundary point 2 (Third order)
+    alfam=af
+    am=one/eight+three/four*af          ! a2
+    bm=five/eight+three/four*af          !  b2
+    cm=three/eight+af/four               ! c2
+    dm=-one/eight+af/four                ! d2
+    !Boundary point 3 (Fifth order)
+    alfap=af
+    ap=-one/thirtytwo+af/sixteen         ! a3
+    bp= five/thirtytwo+eleven/sixteen*af  ! b3
+    cp= eleven/sixteen+five*af/eight      ! c3
+    dp= five/sixteen+three*af/eight       ! d3
+    ep=-five/thirtytwo+five*af/sixteen    ! e3
+    fp= one/thirtytwo-af/sixteen          ! f3
+
+    ff=zero;fs=zero;fw=zero;ffp=zero;fsp=zero;fwp=zero
+    fb=zero;fc=zero
+  
+  if     (ncl1.eq.0) then !Periodic
+     ff(1)   =alfai
+     ff(2)   =alfai
+     fc(1)   =two
+     fc(2)   =one
+     fb(1)   =alfai
+     fb(2)   =alfai
+  elseif (ncl1.eq.1) then !Free-slip
+     ff(1)   =alfai+alfai
+     ff(2)   =alfai
+     fc(1)   =one
+     fc(2)   =one
+     fb(1)   =alfai 
+     fb(2)   =alfai
+  elseif (ncl1.eq.2) then !Dirichlet
+     ff(1)   =alfa1
+     ff(2)   =alfa2
+     fc(1)   =one
+     fc(2)   =one
+     fb(1)   =alfa2 
+     fb(2)   =alfai
+  endif
+  if (ncln.eq.0) then !Periodic
+     ff(n-2)=alfai
+     ff(n-1)=alfai
+     ff(n)  =zero
+     fc(n-2)=one
+     fc(n-1)=one
+     fc(n  )=one+alfai*alfai
+     fb(n-2)=alfai
+     fb(n-1)=alfai
+     fb(n  )=zero
+  elseif (ncln.eq.1) then !Free-slip
+     ff(n-2)=alfai
+     ff(n-1)=alfai
+     ff(n)  =zero
+     fc(n-2)=one
+     fc(n-1)=one
+     fc(n  )=one
+     fb(n-2)=alfai
+     fb(n-1)=alfai+alfai
+     fb(n  )=zero
+  elseif (ncln.eq.2) then !Dirichlet
+     ff(n-2)=alfai
+     ff(n-1)=alfam
+     ff(n)  =zero
+     fc(n-2)=one
+     fc(n-1)=one
+     fc(n  )=one
+     fb(n-2)=alfam
+     fb(n-1)=alfan
+     fb(n  )=zero
+  endif
+  do i=3,n-3
+     ff(i)=alfai
+     fc(i)=one
+     fb(i)=alfai
+  enddo
+  
+  do i=1,n
+     ffp(i)=ff(i)
+  enddo
+
+  call prepare (fb,fc,ff ,fs ,fw ,n)
+
+  if (ncl1.eq.1) then
+     ffp(1)=zero
+  endif
+  if (ncln.eq.1) then
+     fb(n-1)=zero
+  endif
+
+  call prepare (fb,fc,ffp,fsp,fwp,n)
+
+  return
+
+end subroutine set_filter_coefficients
 
 subroutine filx_00(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire) 
 
@@ -421,6 +267,70 @@ return
 
 end subroutine filx_00
 
+subroutine filx_11(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire) 
+
+USE param  
+USE parfiX 
+
+implicit none
+
+integer :: nx,ny,nz,npaire,i,j,k
+real(mytype), dimension(nx,ny,nz) :: tx,ux,rx 
+real(mytype), dimension(ny,nz) :: fisx
+real(mytype), dimension(nx) :: fiffx,fifsx,fifwx
+
+   if(iibm.eq.2) call lagpolx(ux)
+
+   print *, 'Not ready yet'
+   stop
+
+   return
+
+end subroutine filx_11
+
+subroutine filx_12(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire) 
+
+USE param  
+USE parfiX 
+
+implicit none
+
+integer :: nx,ny,nz,npaire,i,j,k
+real(mytype), dimension(nx,ny,nz) :: tx,ux,rx 
+real(mytype), dimension(ny,nz) :: fisx
+real(mytype), dimension(nx) :: fiffx,fifsx,fifwx
+
+   if(iibm.eq.2) call lagpolx(ux)
+
+   print *, 'Not ready yet'
+   stop
+
+   return
+
+end subroutine filx_12
+
+subroutine filx_21(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire) 
+
+USE param  
+USE parfiX 
+
+implicit none
+
+integer :: nx,ny,nz,npaire,i,j,k
+real(mytype), dimension(nx,ny,nz) :: tx,ux,rx 
+real(mytype), dimension(ny,nz) :: fisx
+real(mytype), dimension(nx) :: fiffx,fifsx,fifwx
+
+   if(iibm.eq.2) call lagpolx(ux)
+
+   print *, 'Not ready yet'
+   stop
+
+   return
+
+end subroutine filx_21
+
+
 subroutine filx_22(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire) 
   
 USE param  
@@ -433,14 +343,16 @@ real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
 real(mytype), dimension(ny,nz) :: fisx
 real(mytype), dimension(nx) :: fiffx,fifsx,fifwx
 
-    if(iibm.eq.2) call lagpolx(ux)
+   if(iibm.eq.2) call lagpolx(ux)
 
-    do k=1,nz
-    do j=1,ny 
+   do k=1,nz
+   do j=1,ny 
       tx(1,j,k)=ux(1,j,k)
       tx(2,j,k)=fia2x*ux(1,j,k)+fib2x*ux(2,j,k)+fic2x*ux(3,j,k)+&
                 fid2x*ux(4,j,k)
-      do i=3,nx-2
+      tx(3,j,k)=fia3x*ux(1,j,k)+fib3x*ux(2,j,k)+fic3x*ux(3,j,k)+&
+                fid3x*ux(4,j,k)+fie3x*ux(5,j,k)+fif3x*ux(6,j,k)
+      do i=4,nx-3
          tx(i,j,k)=fiaix*ux(i,j,k)+fibix*(ux(i+1,j,k)+ux(i-1,j,k))& 
                                   +ficix*(ux(i+2,j,k)+ux(i-2,j,k))&
                                   +fidix*(ux(i+3,j,k)+ux(i-3,j,k)) 
@@ -448,6 +360,8 @@ real(mytype), dimension(nx) :: fiffx,fifsx,fifwx
       tx(nx,j,k)=ux(nx,j,k)
       tx(nx-1,j,k)=fiamx*ux(nx,j,k)+fibmx*ux(nx-1,j,k)+ficmx*ux(nx-2,j,k)+&
                             fidmx*ux(nx-3,j,k)
+      tx(nx-2,j,k)=fiapx*ux(nx,j,k)+fibpx*ux(nx-1,j,k)+ficpx*ux(nx-2,j,k)+&
+                fidpx*ux(nx-3,j,k)+fiepx*ux(nx-4,j,k)+fifpx*ux(nx-5,j,k)
       do i=2,nx 
          tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fifsx(i) 
       enddo
@@ -455,18 +369,13 @@ real(mytype), dimension(nx) :: fiffx,fifsx,fifwx
       do i=nx-1,1,-1
          tx(i,j,k)=(tx(i,j,k)-fiffx(i)*tx(i+1,j,k))*fifwx(i) 
       enddo
-    enddo 
-    enddo 
+   enddo 
+   enddo 
 
 return  
 end subroutine filx_22
 
-
-!********************************************************************
-!
 subroutine fily_00(ty,uy,ry,fisy,fiffy,fifsy,fifwy,ppy,nx,ny,nz,npaire) 
-!
-!********************************************************************
   
 USE param  
 USE parfiY 
@@ -687,9 +596,8 @@ return
 
 end subroutine fily_11
 
-!********************************************************************
-subroutine fily_22(ty,uy,ry,fisy,fiffy,fifsy,fifwy,ppy,nx,ny,nz,npaire) 
-!********************************************************************
+
+subroutine fily_12(ty,uy,ry,fisy,fiffy,fifsy,fifwy,ppy,nx,ny,nz,npaire) 
   
 USE param  
 USE parfiY 
@@ -702,47 +610,52 @@ real(mytype), dimension(nx,ny,nz) :: ry
 real(mytype), dimension(nx,nz)  :: fisy
 real(mytype), dimension(ny) :: fiffy,fifsy,fifwy,ppy
     
-if(iibm.eq.2) call lagpoly(uy)
+   if(iibm.eq.2) call lagpoly(uy)
+   print *, 'Not ready yet'
+   stop
 
-   do k=1,nz
-   do i=1,nx 
-      ty(i,1,k)=uy(i,1,k)
-      ty(i,2,k)=fia2y*uy(i,1,k)+fib2y*uy(i,2,k)+fic2y*uy(i,3,k)+&
-                fid2y*uy(i,4,k)
-      do j=3,ny-2
-         ty(i,j,k)=fiajy*uy(i,j,k)+fibjy*(uy(i,j+1,k)+uy(i,j-1,k))& 
-                                  +ficjy*(uy(i,j+2,k)+uy(i,j-2,k))&
-                                  +fidjy*(uy(i,j+3,k)+uy(i,j-3,k)) 
-      enddo
-      ty(i,ny,k)=uy(i,ny,k)
-      ty(i,ny-1,k)=fiamy*uy(i,ny,k)+fibmy*uy(i,ny-1,k)+ficmy*uy(i,ny-2,k)+&
-                                    fidmy*uy(i,ny-3,k)
-      do j=2,ny 
-         ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fifsy(j) 
-      enddo
-      ty(i,ny,k)=ty(i,ny,k)*fifwy(ny) 
-      do j=ny-1,1,-1
-         ty(i,j,k)=(ty(i,j,k)-fiffy(j)*ty(i,j+1,k))*fifwy(j) 
-      enddo
-   enddo 
-   enddo 
+end subroutine fily_12
+
+
+subroutine fily_21(ty,uy,ry,fisy,fiffy,fifsy,fifwy,ppy,nx,ny,nz,npaire) 
+  
+USE param  
+USE parfiY 
+
+implicit none
+
+integer :: nx,ny,nz,i,j,k,npaire
+real(mytype), dimension(nx,ny,nz) :: ty,uy 
+real(mytype), dimension(nx,ny,nz) :: ry
+real(mytype), dimension(nx,nz)  :: fisy
+real(mytype), dimension(ny) :: fiffy,fifsy,fifwy,ppy
     
-    if (istret.ne.0) then   
-        do k=1,nz 
-           do j=1,ny 
-              do i=1,nx 
-                 ty(i,j,k)=ty(i,j,k)*ppy(j) 
-              enddo
-           enddo
-        enddo
-    endif
+   if(iibm.eq.2) call lagpoly(uy)
+   print *, 'Not ready yet'
+   stop
 
-return
+end subroutine fily_21
+
+subroutine fily_22(ty,uy,ry,fisy,fiffy,fifsy,fifwy,ppy,nx,ny,nz,npaire) 
+  
+USE param  
+USE parfiY 
+
+implicit none
+
+integer :: nx,ny,nz,i,j,k,npaire
+real(mytype), dimension(nx,ny,nz) :: ty,uy 
+real(mytype), dimension(nx,ny,nz) :: ry
+real(mytype), dimension(nx,nz)  :: fisy
+real(mytype), dimension(ny) :: fiffy,fifsy,fifwy,ppy
+    
+   if(iibm.eq.2) call lagpoly(uy)
+   print *, 'Not ready yet'
+   stop
 
 end subroutine fily_22
 
-
-subroutine filz(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire) 
+subroutine filz_00(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire) 
   
 USE param  
 USE parfiZ 
@@ -836,4 +749,81 @@ real(mytype), dimension(nz) :: fiffz,fifsz,fifwz
 
 return  
 end subroutine filz_00
+
+subroutine filz_11(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire) 
+  
+USE param  
+USE parfiZ 
+
+implicit none
+
+integer :: nx,ny,nz,npaire,i,j,k
+real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
+real(mytype), dimension(nx,ny) :: fisz
+real(mytype), dimension(nz) :: fiffz,fifsz,fifwz
+
+  if(iibm.eq.2) call lagpolz(uz)
+   
+  print *, 'Not ready yet'
+  stop
+
+end subroutine filz_11
+
+subroutine filz_12(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire) 
+  
+USE param  
+USE parfiZ 
+
+implicit none
+
+integer :: nx,ny,nz,npaire,i,j,k
+real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
+real(mytype), dimension(nx,ny) :: fisz
+real(mytype), dimension(nz) :: fiffz,fifsz,fifwz
+
+  if(iibm.eq.2) call lagpolz(uz)
+   
+  print *, 'Not ready yet'
+  stop
+
+end subroutine filz_12
+
+subroutine filz_21(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire) 
+  
+USE param  
+USE parfiZ 
+
+implicit none
+
+integer :: nx,ny,nz,npaire,i,j,k
+real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
+real(mytype), dimension(nx,ny) :: fisz
+real(mytype), dimension(nz) :: fiffz,fifsz,fifwz
+
+  if(iibm.eq.2) call lagpolz(uz)
+   
+  print *, 'Not ready yet'
+  stop
+
+end subroutine filz_21
+
+
+subroutine filz_22(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire) 
+  
+USE param  
+USE parfiZ 
+
+implicit none
+
+integer :: nx,ny,nz,npaire,i,j,k
+real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
+real(mytype), dimension(nx,ny) :: fisz
+real(mytype), dimension(nz) :: fiffz,fifsz,fifwz
+
+  if(iibm.eq.2) call lagpolz(uz)
+   
+  print *, 'Not ready yet'
+  stop
+
+end subroutine filz_22
 
