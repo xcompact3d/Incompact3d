@@ -13,6 +13,7 @@ CONTAINS
     USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
     USE var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2
     USE var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
+    USE var, only : sgsx1,sgsy1,sgsz1
 
     implicit none
 
@@ -181,6 +182,21 @@ CONTAINS
     dux1(:,:,:,1) = xnu*ta1(:,:,:) - tg1(:,:,:) + di1(:,:,:)*anglex  !+x
     duy1(:,:,:,1) = xnu*tb1(:,:,:) - th1(:,:,:) - di1(:,:,:)*angley  !+y
     duz1(:,:,:,1) = xnu*tc1(:,:,:) - ti1(:,:,:) !+- di1       !+z
+
+
+    ! If LES modelling is enabled, add the SGS stresses
+    if (ilesmod.ne.0.and.jles.le.3.) then
+        ! Wall model for LES
+        if (iwall.eq.1) then 
+        call compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,1)
+        else
+        call compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,0)
+        endif
+        ! Calculate SGS stresses (conservative/non-conservative formulation)
+        dux1(:,:,:,1) = dux1(:,:,:,1) + sgsx1(:,:,:)
+        duy1(:,:,:,1) = duy1(:,:,:,1) + sgsy1(:,:,:)
+        duz1(:,:,:,1) = duz1(:,:,:,1) + sgsz1(:,:,:)
+    endif
 
     if (itime.lt.spinup_time) then
        if (nrank==0) print *,'Rotating turbulent channel at speed ',wrotation

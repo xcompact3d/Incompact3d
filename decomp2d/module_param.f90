@@ -253,8 +253,8 @@ module param
 
 #endif
 
-  !! Turbulence
-  integer :: iturbmod, iwall
+  !! LES modelling flag
+  integer :: ilesmod, iwall
   
   !LES
   integer :: jLES

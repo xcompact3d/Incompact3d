@@ -8,17 +8,16 @@
 #   -DVISU        - enable visu.f90
 #   -DVISUEXTRA   - enable extra options visu.f90
 #   -DFORCES      - enable lift and drag computing over solid body
-#   -DELES        - enable explicit LES modelling
 # generate a Git version string
 GIT_VERSION := $(shell git describe --tag --long --always)
 
 #######Select Flow Type#######
 # FLOW_TYPE = Lock-exchange
 # FLOW_TYPE = TGV
-# FLOW_TYPE = Channel-flow
+  FLOW_TYPE = Channel-flow
 # FLOW_TYPE = Periodic-hill
 # FLOW_TYPE = Cylinder
- FLOW_TYPE = dbg-schemes
+# FLOW_TYPE = dbg-schemes
 
 DEFS = -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"
 

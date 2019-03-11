@@ -55,15 +55,15 @@ subroutine parameter(input_i3d)
   NAMELIST /BasicParam/ p_row, p_col, nx, ny, nz, istret, beta, xlx, yly, zlz, &
        itype, iin, re, u1, u2, init_noise, inflow_noise, &
        dt, ifirst, ilast, &
-       iturbmod, iscalar, iibm, &
+       ilesmod, iscalar, iibm, &
        nclx1, nclxn, ncly1, nclyn, nclz1, nclzn, &
        ivisu, ipost
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, rxxnu, cnu, fpi2, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu
   NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat
   NAMELIST /ScalarParam/ numscalar, sc
-  NAMELIST /TurbulenceModel/ iles, smagcst, walecst, iwall
-  NAMELIST /TurbulenceWallModel/ smagwalldamp
+  NAMELIST /LESModel/ jles, smagcst, walecst, iwall
+  NAMELIST /WallModel/ smagwalldamp
   NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter start'
@@ -176,7 +176,7 @@ subroutine parameter(input_i3d)
      write(*,"(' Reynolds number Re : ',F15.8)") re
      write(*,"(' Time step dt       : ',F15.8)") dt
      write (*,"(' Spatial scheme     : ',F15.8)") fpi2
-     if (iturbmod.ne.0) then
+     if (ilesmod.ne.0) then
         print *,'                   : DNS'
      else
         if (jLES.eq.1) then
