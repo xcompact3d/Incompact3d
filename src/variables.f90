@@ -249,15 +249,15 @@ contains
     if(ilesmod.ne.0) then
     call alloc_x(sgsx1);call alloc_x(sgsy1); call alloc_x(sgsz1)
     call alloc_x(sxx1);call alloc_x(syy1); call alloc_x(szz1)
-    call alloc_x(sxy1);call alloc_x(sxy1); call alloc_x(syz1)
+    call alloc_x(sxy1);call alloc_x(sxz1); call alloc_x(syz1)
     call alloc_x(nut1);call alloc_x(srt_smag); call alloc_x(srt_wale)
     call alloc_y(sgsx2);call alloc_y(sgsy2); call alloc_y(sgsz2)
     call alloc_y(sxx2) ;call alloc_y(syy2);  call alloc_y(szz2)
-    call alloc_y(sxy2) ;call alloc_y(sxy2);  call alloc_y(syz2)
+    call alloc_y(sxy2) ;call alloc_y(sxz2);  call alloc_y(syz2)
     call alloc_y(nut2) ;call alloc_y(srt_smag2); call alloc_y(srt_wale2)
     call alloc_z(sgsx3);call alloc_z(sgsy3); call alloc_z(sgsz3)
     call alloc_z(sxx3) ;call alloc_z(syy3);  call alloc_z(szz3)
-    call alloc_z(sxy3) ;call alloc_z(sxy3);  call alloc_z(syz3)
+    call alloc_z(sxy3) ;call alloc_z(sxz3);  call alloc_z(syz3)
     call alloc_z(nut3)
     endif
 

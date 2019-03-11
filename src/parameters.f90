@@ -74,7 +74,7 @@ subroutine parameter(input_i3d)
      print *,'======================Xcompact3D==========================='
      print *,'===Copyright (c) 2018 Eric Lamballais and Sylvain Laizet==='
      print *,'===Modified by Felipe Schuch and Ricardo Frantz============'
-     print *,'===Modified by Paul Bartholomew, Yorgos Deskos and========='
+     print *,'===Modified by Paul Bartholomew, Georgios Deskos and======='
      print *,'===Sylvain Laizet -- 2018- ================================'
      print *,'==========================================================='
 #if defined(VERSION)
@@ -99,7 +99,7 @@ subroutine parameter(input_i3d)
   endif
   ! !! These are the 'optional'/model parameters
   ! read(10, nml=ScalarParam)
-  ! read(10, nml=TurbulenceModel)
+  if(ilesmod.ne.0) read(10, nml=LESModel)
   ! read(10, nml=TurbulenceWallModel)
   close(10)
 

@@ -8,8 +8,8 @@
 itype = 2
 
 ! Domain decomposition
-p_row=0               ! Row partition
-p_col=0               ! Column partition
+p_row=2               ! Row partition
+p_col=2               ! Column partition
 
 ! Mesh
 nx=65                 ! X-direction nodes
@@ -24,12 +24,12 @@ yly = 3.14159265358979 ! Ly (Size of the boy in y-direction)
 zlz = 3.14159265358979 ! Lz (Size of the boz in z-direction)
 
 ! Boundary conditions
-nclx1 = 1
-nclxn = 1
-ncly1 = 1
-nclyn = 1
-nclz1 = 1
-nclzn = 1
+nclx1 = 1 
+nclxn = 1 
+ncly1 = 1 
+nclyn = 1 
+nclz1 = 1 
+nclzn = 1 
 
 ! Flow parameters
 iin = 1               ! Inflow conditions (1: classic, 2: turbinit)
@@ -45,7 +45,7 @@ ifirst = 1            ! First iteration
 ilast = 20000         ! Last iteration
 
 ! Enable modelling tools
-iturbmod=0            ! if 0 then DNS
+ilesmod=1             ! if 0 then DNS
 iscalar=0             ! If iscalar=0 (no scalar), if iscalar=1 (scalar)
 iibm=0                ! Flag for immersed boundary method
 
@@ -96,3 +96,12 @@ nstat = 1             ! Size arrays for statistic collection
 !#######################
 ! OPTIONAL PARAMETERS
 !#######################
+
+!=================
+&LESModel
+!=================
+jles=1
+smagcst=0.1
+walecst=0.5 
+iwall=0
+/End

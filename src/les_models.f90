@@ -22,7 +22,6 @@ subroutine init_explicit_les
      if(jLES==1) then
         write(*, *) ' Classic Smagorinsky is used ... '
         write(*, *) ' Smagorinsky constant = ', smagcst
-        write(*, *) ' Filter Size / Grid Size = ', FSGS
      else if (jLES==2) then
         write(*, *) ' Wall-adaptive LES (WALES) is used ... '
         write(*, *) ' WALE constant = ', walecst
@@ -171,7 +170,7 @@ subroutine smag(nut1,ux1,uy1,uz1)
   do k = 1, ysize(3)
      do j = 1, ysize(2)
         do i = 1, ysize(1)
-           nut2(i, j, k) = ((smagcst * FSGS * del(j))**two) * sqrt(two * srt_smag2(i, j, k))
+           nut2(i, j, k) = ((smagcst * del(j))**two) * sqrt(two * srt_smag2(i, j, k))
         enddo
      enddo
   enddo
