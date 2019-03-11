@@ -102,9 +102,9 @@ contains
 
     implicit none
 
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: fx1, ffx1, ffxp1, fiffx1, fiffxp1, fxp1, dfdx1, dfdxp1, dfdxx1, dfdxxp1, di1
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: fy2, ffy2, ffyp2, fiffy2, fiffyp2, fyp2, dfdy2, dfdyp2, dfdyy2, dfdyyp2, di2
-    real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: fz3, ffz3, ffzp3, fiffz3, fiffzp3, fzp3, dfdz3, dfdzp3, dfdzz3, dfdzzp3, di3
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: fx1, ffx1, ffxp1, fiffx1, fiffxp1, fxp1, dfdx1, dfdxp1, dfdxx1, dfdxxp1, di1, rand1
+    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: fy2, ffy2, ffyp2, fiffy2, fiffyp2, fyp2, dfdy2, dfdyp2, dfdyy2, dfdyyp2, di2, rand2
+    real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: fz3, ffz3, ffzp3, fiffz3, fiffzp3, fzp3, dfdz3, dfdzp3, dfdzz3, dfdzzp3, di3, rand3
     real(mytype), save, allocatable, dimension(:,:,:) :: test1,test11,test2,test22,test3,test33
     real(mytype) :: x,x1,y,y1,z,z1
     integer :: i,j,k
@@ -188,9 +188,33 @@ contains
        close(69)
     endif
     
+    ! FILTER
+    call random_number(rand1)
+    call filter(0.45_mytype)
+    do k=1,xsize(3)
+       do j=1,xsize(2)
+          do i=1,xsize(1)
+             x = real(i-1,mytype)*dx*four*pi
+             ffx1(i,j,k)   = sin_prec(x)+sin_prec(ten*x)+0.25*rand1(i,j,k) !odd
+             ffxp1(i,j,k)  = cos_prec(x)+cos_prec(ten*x)+0.25*rand1(i,j,k) !even
+          enddo
+       enddo
+    enddo
+
+    call filx (fiffx1  ,ffx1  ,di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0)
+    call filx (fiffxp1 ,ffxp1 ,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1)
+    if (nrank.eq.0) then
+       write(filename,"('filter_x',I1.1,I1.1,I1.1,I4.4)") jLES,nclx1,nclxn,nx
+       open(70,file=trim(filename),status='unknown',form='formatted')
+       do i=1,xsize(2)
+          x = real(i-1,mytype)*dx
+          write(70,'(9E14.6)') x,&
+               ffx1(i,1,1),fiffx1(i,1,1),&
+               ffxp1(i,1,1),fiffxp1(i,1,1)
+       enddo
+       close(70)
+    endif
     
-
-
     do k=1,ysize(3)
        do j=1,ysize(2)
           y = real(j-1,mytype)*dy*4*pi
@@ -255,7 +279,7 @@ contains
     endif
     
     ! FILTER
-    call filter(-0.48_mytype)
+    call filter(0.45_mytype)
     do k=1,ysize(3)
        do j=1,ysize(2)
           y = real(j-1,mytype)*dy*four*pi
@@ -342,6 +366,30 @@ contains
        close(69)
     endif
     
+    ! FILTER
+    call filter(0.45_mytype)
+    do k=1,zsize(3)
+          z = real(k-1,mytype)*dz*four*pi
+       do j=1,zsize(2)
+          do i=1,zsize(1)
+             ffz3(i,j,k)  = sin_prec(z)
+             ffzp3(i,j,k) = cos_prec(z)
+          enddo
+       enddo
+    enddo
+    call filz (fiffz3  ,ffz3  ,di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0)
+    call filz (fiffzp3 ,ffzp3 ,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1)
+    if (nrank.eq.0) then
+       write(filename,"('filter_z',I1.1,I1.1,I1.1,I4.4)") jLES,nclz1,nclzn,nz
+       open(70,file=trim(filename),status='unknown',form='formatted')
+       do k=1,zsize(3)
+          z = real(k-1,mytype)*dz
+          write(70,'(9E14.6)') z,&
+               ffz3 (1,1,k),fiffz3 (1,1,k),&
+               ffzp3(1,1,k),fiffzp3(1,1,k)
+       enddo
+       close(70)
+    endif
 
     !###############################################################
     !###############################################################
@@ -375,6 +423,33 @@ contains
        enddo
        close(67)
     endif
+    
+    ! FILTER
+    call random_number(rand1)
+    call filter(-0.45_mytype)
+    do k=1,xsize(3)
+       do j=1,xsize(2)
+          do i=1,xsize(1)
+             x = real(i-1,mytype)*dx*four*pi
+             ffx1(i,j,k)   = sin_prec(x)+sin_prec(two*x)+rand1(i,j,k) !odd
+             ffxp1(i,j,k)  = cos_prec(x)+cos_prec(two*x)+rand1(i,j,k) !even
+          enddo
+       enddo
+    enddo
+
+    call filx (fiffx1  ,ffx1  ,di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0)
+    call filx (fiffxp1 ,ffxp1 ,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1)
+    if (nrank.eq.0) then
+       write(filename,"('filter_x',I1.1,I1.1,I1.1,I4.4)") jLES,nclx1,nclxn,nx
+       open(70,file=trim(filename),status='unknown',form='formatted')
+       do i=1,xsize(2)
+          x = real(i-1,mytype)*dx
+          write(70,'(9E14.6)') x,&
+               ffx1(i,1,1),fiffx1(i,1,1),&
+               ffxp1(i,1,1),fiffxp1(i,1,1)
+       enddo
+       close(70)
+    endif
 
     do k=1,ysize(3)
        do j=1,ysize(2)
@@ -397,6 +472,31 @@ contains
        enddo
        close(67)
     endif
+    ! FILTER
+    call filter(0.45_mytype)
+    do k=1,ysize(3)
+       do j=1,ysize(2)
+          y = real(j-1,mytype)*dy*four*pi
+          do i=1,ysize(1)
+             ffy2(i,j,k)  = sin_prec(y)
+             ffyp2(i,j,k) = cos_prec(y)
+          enddo
+       enddo
+    enddo
+
+    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0)
+    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    if (nrank.eq.0) then
+       write(filename,"('filter_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
+       open(70,file=trim(filename),status='unknown',form='formatted')
+       do j=1,ysize(2)
+          y = real(j-1,mytype)*dy
+          write(70,'(9E14.6)') y,&
+               ffy2(1,j,1),fiffy2(1,j,1),&
+               ffyp2(1,j,1),fiffyp2(1,j,1)
+       enddo
+       close(70)
+    endif
     do k=1,zsize(3)
        z = real(k-1,mytype)*dz*4*pi
        do j=1,zsize(2)
@@ -417,6 +517,30 @@ contains
                -sixteen*pi*pi*sin_prec(four*pi*z),dfdzz3(1,1,k)
        enddo
        close(67)
+    endif
+    ! FILTER
+    call filter(0.45_mytype)
+    do k=1,zsize(3)
+          z = real(k-1,mytype)*dz*four*pi
+       do j=1,zsize(2)
+          do i=1,zsize(1)
+             ffz3(i,j,k)  = sin_prec(z)
+             ffzp3(i,j,k) = cos_prec(z)
+          enddo
+       enddo
+    enddo
+    call filz (fiffz3  ,ffz3  ,di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0)
+    call filz (fiffzp3 ,ffzp3 ,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1)
+    if (nrank.eq.0) then
+       write(filename,"('filter_z',I1.1,I1.1,I1.1,I4.4)") jLES,nclz1,nclzn,nz
+       open(70,file=trim(filename),status='unknown',form='formatted')
+       do k=1,zsize(3)
+          z = real(k-1,mytype)*dz
+          write(70,'(9E14.6)') z,&
+               ffz3 (1,1,k),fiffz3 (1,1,k),&
+               ffzp3(1,1,k),fiffzp3(1,1,k)
+       enddo
+       close(70)
     endif
 
     !###############################################################
@@ -456,6 +580,32 @@ contains
        enddo
        close(67)
     endif
+    ! FILTER
+    call random_number(rand1)
+    call filter(0.45_mytype)
+    do k=1,xsize(3)
+       do j=1,xsize(2)
+          do i=1,xsize(1)
+             x = real(i-1,mytype)*dx*four*pi
+             ffx1(i,j,k)   = sin_prec(x)+sin_prec(ten*x)+0.25*rand1(i,j,k) !odd
+             ffxp1(i,j,k)  = cos_prec(x)+cos_prec(ten*x)+0.25*rand1(i,j,k) !even
+          enddo
+       enddo
+    enddo
+
+    call filx (fiffx1  ,ffx1  ,di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0)
+    call filx (fiffxp1 ,ffxp1 ,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1)
+    if (nrank.eq.0) then
+       write(filename,"('filter_x',I1.1,I1.1,I1.1,I4.4)") jLES,nclx1,nclxn,nx
+       open(70,file=trim(filename),status='unknown',form='formatted')
+       do i=1,xsize(2)
+          x = real(i-1,mytype)*dx
+          write(70,'(9E14.6)') x,&
+               ffx1(i,1,1),fiffx1(i,1,1),&
+               ffxp1(i,1,1),fiffxp1(i,1,1)
+       enddo
+       close(70)
+    endif
 
     do k=1,ysize(3)
        do j=1,ysize(2)
@@ -483,6 +633,31 @@ contains
        enddo
        close(67)
     endif
+    ! FILTER
+    call filter(0.45_mytype)
+    do k=1,ysize(3)
+       do j=1,ysize(2)
+          y = real(j-1,mytype)*dy*four*pi
+          do i=1,ysize(1)
+             ffy2(i,j,k)  = sin_prec(y)
+             ffyp2(i,j,k) = cos_prec(y)
+          enddo
+       enddo
+    enddo
+
+    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0)
+    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    if (nrank.eq.0) then
+       write(filename,"('filter_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
+       open(70,file=trim(filename),status='unknown',form='formatted')
+       do j=1,ysize(2)
+          y = real(j-1,mytype)*dy
+          write(70,'(9E14.6)') y,&
+               ffy2(1,j,1),fiffy2(1,j,1),&
+               ffyp2(1,j,1),fiffyp2(1,j,1)
+       enddo
+       close(70)
+    endif
 
     do k=1,zsize(3)
        z = real(k-1,mytype)*dz*4*pi
@@ -509,6 +684,30 @@ contains
                -sixteen*pi*pi*cos_prec(four*pi*z),dfdzzp3(1,1,k)
        enddo
        close(67)
+    endif
+    ! FILTER
+    call filter(0.45_mytype)
+    do k=1,zsize(3)
+          z = real(k-1,mytype)*dz*four*pi
+       do j=1,zsize(2)
+          do i=1,zsize(1)
+             ffz3(i,j,k)  = sin_prec(z)
+             ffzp3(i,j,k) = cos_prec(z)
+          enddo
+       enddo
+    enddo
+    call filz (fiffz3  ,ffz3  ,di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0)
+    call filz (fiffzp3 ,ffzp3 ,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1)
+    if (nrank.eq.0) then
+       write(filename,"('filter_z',I1.1,I1.1,I1.1,I4.4)") jLES,nclz1,nclzn,nz
+       open(70,file=trim(filename),status='unknown',form='formatted')
+       do k=1,zsize(3)
+          z = real(k-1,mytype)*dz
+          write(70,'(9E14.6)') z,&
+               ffz3 (1,1,k),fiffz3 (1,1,k),&
+               ffzp3(1,1,k),fiffzp3(1,1,k)
+       enddo
+       close(70)
     endif
 
     !###############################################################
@@ -548,6 +747,32 @@ contains
        enddo
        close(67)
     endif
+    ! FILTER
+    call random_number(rand1)
+    call filter(0.45_mytype)
+    do k=1,xsize(3)
+       do j=1,xsize(2)
+          do i=1,xsize(1)
+             x = real(i-1,mytype)*dx*four*pi
+             ffx1(i,j,k)   = sin_prec(x)!+sin_prec(ten*x)+0.25*rand1(i,j,k) !odd
+             ffxp1(i,j,k)  = cos_prec(x)!+cos_prec(ten*x)+0.25*rand1(i,j,k) !even
+          enddo
+       enddo
+    enddo
+
+    call filx (fiffx1  ,ffx1  ,di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0)
+    call filx (fiffxp1 ,ffxp1 ,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1)
+    if (nrank.eq.0) then
+       write(filename,"('filter_x',I1.1,I1.1,I1.1,I4.4)") jLES,nclx1,nclxn,nx
+       open(70,file=trim(filename),status='unknown',form='formatted')
+       do i=1,xsize(2)
+          x = real(i-1,mytype)*dx
+          write(70,'(9E14.6)') x,&
+               ffx1(i,1,1),fiffx1(i,1,1),&
+               ffxp1(i,1,1),fiffxp1(i,1,1)
+       enddo
+       close(70)
+    endif
 
     do k=1,ysize(3)
        do j=1,ysize(2)
@@ -575,6 +800,31 @@ contains
        enddo
        close(67)
     endif
+    ! FILTER
+    call filter(0.45_mytype)
+    do k=1,ysize(3)
+       do j=1,ysize(2)
+          y = real(j-1,mytype)*dy*four*pi
+          do i=1,ysize(1)
+             ffy2(i,j,k)  = sin_prec(y)
+             ffyp2(i,j,k) = cos_prec(y)
+          enddo
+       enddo
+    enddo
+
+    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0)
+    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    if (nrank.eq.0) then
+       write(filename,"('filter_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
+       open(70,file=trim(filename),status='unknown',form='formatted')
+       do j=1,ysize(2)
+          y = real(j-1,mytype)*dy
+          write(70,'(9E14.6)') y,&
+               ffy2(1,j,1),fiffy2(1,j,1),&
+               ffyp2(1,j,1),fiffyp2(1,j,1)
+       enddo
+       close(70)
+    endif
 
     do k=1,zsize(3)
        z = real(k-1,mytype)*dz*4*pi
@@ -601,6 +851,30 @@ contains
                -sixteen*pi*pi*cos_prec(four*pi*z),dfdzzp3(1,1,k)
        enddo
        close(67)
+    endif
+    ! FILTER
+    call filter(0.45_mytype)
+    do k=1,zsize(3)
+          z = real(k-1,mytype)*dz*four*pi
+       do j=1,zsize(2)
+          do i=1,zsize(1)
+             ffz3(i,j,k)  = sin_prec(z)
+             ffzp3(i,j,k) = cos_prec(z)
+          enddo
+       enddo
+    enddo
+    call filz (fiffz3  ,ffz3  ,di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0)
+    call filz (fiffzp3 ,ffzp3 ,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1)
+    if (nrank.eq.0) then
+       write(filename,"('filter_z',I1.1,I1.1,I1.1,I4.4)") jLES,nclz1,nclzn,nz
+       open(70,file=trim(filename),status='unknown',form='formatted')
+       do k=1,zsize(3)
+          z = real(k-1,mytype)*dz
+          write(70,'(9E14.6)') z,&
+               ffz3 (1,1,k),fiffz3 (1,1,k),&
+               ffzp3(1,1,k),fiffzp3(1,1,k)
+       enddo
+       close(70)
     endif
 
     !###############################################################
@@ -698,6 +972,33 @@ contains
        enddo
        close(69)
     endif
+    
+    ! FILTER
+    call random_number(rand1)
+    call filter(-0.45_mytype)
+    do k=1,xsize(3)
+       do j=1,xsize(2)
+          do i=1,xsize(1)
+             x = real(i-1,mytype)*dx*four*pi
+             ffx1(i,j,k)   = sin_prec(x)+sin_prec(ten*x)+rand1(i,j,k) !odd
+             ffxp1(i,j,k)  = cos_prec(x)+cos_prec(ten*x)+rand1(i,j,k) !even
+          enddo
+       enddo
+    enddo
+
+    call filx (fiffx1  ,ffx1  ,di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0)
+    call filx (fiffxp1 ,ffxp1 ,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1)
+    if (nrank.eq.0) then
+       write(filename,"('filter_x',I1.1,I1.1,I1.1,I4.4)") jLES,nclx1,nclxn,nx
+       open(70,file=trim(filename),status='unknown',form='formatted')
+       do i=1,xsize(2)
+          x = real(i-1,mytype)*dx
+          write(70,'(9E14.6)') x,&
+               ffx1(i,1,1),fiffx1(i,1,1),&
+               ffxp1(i,1,1),fiffxp1(i,1,1)
+       enddo
+       close(70)
+    endif
 
     do k=1,ysize(3)
        do j=1,ysize(2)
@@ -758,6 +1059,31 @@ contains
        enddo
        close(69)
     endif
+    ! FILTER
+    call filter(0.45_mytype)
+    do k=1,ysize(3)
+       do j=1,ysize(2)
+          y = real(j-1,mytype)*dy*four*pi
+          do i=1,ysize(1)
+             ffy2(i,j,k)  = sin_prec(y)
+             ffyp2(i,j,k) = cos_prec(y)
+          enddo
+       enddo
+    enddo
+
+    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0)
+    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    if (nrank.eq.0) then
+       write(filename,"('filter_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
+       open(70,file=trim(filename),status='unknown',form='formatted')
+       do j=1,ysize(2)
+          y = real(j-1,mytype)*dy
+          write(70,'(9E14.6)') y,&
+               ffy2(1,j,1),fiffy2(1,j,1),&
+               ffyp2(1,j,1),fiffyp2(1,j,1)
+       enddo
+       close(70)
+    endif
     do k=1,zsize(3)
        z = real(k-1,mytype)*dz*4*pi
        do j=1,zsize(2)
@@ -814,6 +1140,30 @@ contains
                cos_prec(four*pi*z),fzp3(1,1,k)
        enddo
        close(69)
+    endif
+    ! FILTER
+    call filter(0.45_mytype)
+    do k=1,zsize(3)
+          z = real(k-1,mytype)*dz*four*pi
+       do j=1,zsize(2)
+          do i=1,zsize(1)
+             ffz3(i,j,k)  = sin_prec(z)
+             ffzp3(i,j,k) = cos_prec(z)
+          enddo
+       enddo
+    enddo
+    call filz (fiffz3  ,ffz3  ,di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0)
+    call filz (fiffzp3 ,ffzp3 ,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1)
+    if (nrank.eq.0) then
+       write(filename,"('filter_z',I1.1,I1.1,I1.1,I4.4)") jLES,nclz1,nclzn,nz
+       open(70,file=trim(filename),status='unknown',form='formatted')
+       do k=1,zsize(3)
+          z = real(k-1,mytype)*dz
+          write(70,'(9E14.6)') z,&
+               ffz3 (1,1,k),fiffz3 (1,1,k),&
+               ffzp3(1,1,k),fiffzp3(1,1,k)
+       enddo
+       close(70)
     endif
 
     stop 'stop debug_schemes'
