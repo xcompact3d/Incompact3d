@@ -102,9 +102,9 @@ contains
 
     implicit none
 
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: fx1, fxp1, dfdx1, dfdxp1, dfdxx1, dfdxxp1, di1
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: fy2, fyp2, dfdy2, dfdyp2, dfdyy2, dfdyyp2, di2
-    real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: fz3, fzp3, dfdz3, dfdzp3, dfdzz3, dfdzzp3, di3
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: fx1, ffx1, ffxp1, fiffx1, fiffxp1, fxp1, dfdx1, dfdxp1, dfdxx1, dfdxxp1, di1
+    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: fy2, ffy2, ffyp2, fiffy2, fiffyp2, fyp2, dfdy2, dfdyp2, dfdyy2, dfdyyp2, di2
+    real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: fz3, ffz3, ffzp3, fiffz3, fiffzp3, fzp3, dfdz3, dfdzp3, dfdzz3, dfdzzp3, di3
     real(mytype), save, allocatable, dimension(:,:,:) :: test1,test11,test2,test22,test3,test33
     real(mytype) :: x,x1,y,y1,z,z1
     integer :: i,j,k
@@ -129,8 +129,8 @@ contains
        do j=1,xsize(2)
           do i=1,xsize(1)
              x = real(i-1,mytype)*dx*four*pi
-             fx1(i,j,k) = sin_prec(x)  !odd
-             fxp1(i,j,k) = cos_prec(x) !even
+             fx1(i,j,k)   = sin_prec(x)  !odd
+             fxp1(i,j,k)  = cos_prec(x) !even
           enddo
        enddo
     enddo
@@ -187,6 +187,9 @@ contains
        enddo
        close(69)
     endif
+    
+    
+
 
     do k=1,ysize(3)
        do j=1,ysize(2)
@@ -250,6 +253,32 @@ contains
        enddo
        close(69)
     endif
+    
+    ! FILTER
+    call filter(-0.48_mytype)
+    do k=1,ysize(3)
+       do j=1,ysize(2)
+          y = real(j-1,mytype)*dy*four*pi
+          do i=1,ysize(1)
+             ffy2(i,j,k)  = sin_prec(y)
+             ffyp2(i,j,k) = cos_prec(y)
+          enddo
+       enddo
+    enddo
+
+    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0)
+    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    if (nrank.eq.0) then
+       write(filename,"('filter_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
+       open(70,file=trim(filename),status='unknown',form='formatted')
+       do j=1,ysize(2)
+          y = real(j-1,mytype)*dy
+          write(70,'(9E14.6)') y,&
+               ffy2(1,j,1),fiffy2(1,j,1),&
+               ffyp2(1,j,1),fiffyp2(1,j,1)
+       enddo
+       close(70)
+    endif
 
     do k=1,zsize(3)
        z = real(k-1,mytype)*dz*4*pi
@@ -312,6 +341,7 @@ contains
        enddo
        close(69)
     endif
+    
 
     !###############################################################
     !###############################################################
