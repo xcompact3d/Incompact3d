@@ -26,7 +26,7 @@ subroutine ft_parameter(arg)
   read (10,*) nx
   read (10,*) ny
   read (10,*) nz
-  read (10,*) nphi
+  read (10,*) numscalar
   read (10,*) p_row
   read (10,*) p_col
   if (arg) then
@@ -41,7 +41,7 @@ subroutine ft_parameter(arg)
   read (10,*) zlz
   read (10,*) re
   read (10,*) pfront  
-  do is=1,nphi
+  do is=1,numscalar
      read (10,*) a
      read (10,*) ri(is)
      read (10,*) nsc(is)
@@ -110,11 +110,11 @@ subroutine boundary_conditions (ux1,uy1,uz1,phi1,ep1)
 
   integer  :: i,j,k,is
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
   real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: phi2
 
 
-  do is=1, nphi
+  do is=1, numscalar
      if (uset(is) .eq. 0.) cycle
      call transpose_x_to_y(phi1(:,:,:,is),phi2)
 
@@ -150,7 +150,7 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
   implicit none
 
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1,phis1,phiss1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1,phis1,phiss1
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
 
   real(mytype) :: y,r,um,r1,r2,r3,x,z,h
@@ -161,7 +161,7 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
 
      !lock-exchange
 
-     do is=1,nphi
+     do is=1,numscalar
         do k=1,xsize(3)
            do j=1,xsize(2)
               do i=1,xsize(1)
@@ -176,7 +176,7 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
         enddo
      enddo
 
-     do is=1,nphi
+     do is=1,numscalar
         do ijk=1,xsize(1)*xsize(2)*xsize(3)
            phis1(ijk,1,1,is)=phi1(ijk,1,1,is)
            phiss1(ijk,1,1,is)=phis1(ijk,1,1,is)
@@ -351,23 +351,23 @@ contains
   subroutine postprocessing(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3),nphi) :: phi2
-    real(mytype),dimension(zsize(1),zsize(2),zsize(3),nphi) :: phi3
-    real(mytype),dimension(ysize(1),ysize(3),nphi) :: dep2
+    real(mytype),dimension(ysize(1),ysize(2),ysize(3),numscalar) :: phi2
+    real(mytype),dimension(zsize(1),zsize(2),zsize(3),numscalar) :: phi3
+    real(mytype),dimension(ysize(1),ysize(3),numscalar) :: dep2
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: phisum1
-    real(mytype),dimension(zsize(1),zsize(2),nphi) :: phim3
+    real(mytype),dimension(zsize(1),zsize(2),numscalar) :: phim3
     integer :: i,j,k,is
 
-    real(mytype) :: mp(nphi),dms(nphi),xf(1:2,1:3),xf2d(1:2,1:2)
+    real(mytype) :: mp(numscalar),dms(numscalar),xf(1:2,1:3),xf2d(1:2,1:2)
 
     if (mod(itime,iprocessing).ne.0) return
 
     mp=zero; dms=zero; xf=zero; xf2d=zero
 
     phisum1=zero
-    do is=1, nphi
+    do is=1, numscalar
        do k=1,xsize(3)
           do j=1,xsize(2)
              do i=1,xsize(1)
@@ -388,14 +388,14 @@ contains
     call front2d(phim3,xf2d)
 
     if (nrank .eq. 0) then
-       FS = 1+nphi+nphi+3+2 !Number of columns
+       FS = 1+numscalar+numscalar+3+2 !Number of columns
        write(fileformat, '( "(",I4,"(E14.6),A)" )' ) FS
        FS = FS*14+1  !Line width
        open(67,file='./out/statistics',status='unknown',form='formatted',&
             access='direct',recl=FS)
        write(67,fileformat,rec=itime/iprocessing+1) t,& !1
-            mp,&                                    !nphi
-            dms,&                                   !nphi
+            mp,&                                    !numscalar
+            dms,&                                   !numscalar
             xf(1,:),&                               !3
             xf2d(1,:),&                             !2
             NL                                      !+1
@@ -407,11 +407,11 @@ contains
   subroutine write_probes(ux1,uy1,uz1,phi1) !By Felipe Schuch
 
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ux1, uy1, uz1
-    real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),nphi) :: phi1
+    real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),numscalar) :: phi1
 
     integer :: i
     character(len=30) :: filename
-    FS = 1+3+nphi !Number of columns
+    FS = 1+3+numscalar !Number of columns
     write(fileformat, '( "(",I4,"(E14.6),A)" )' ) FS
     FS = FS*14+1  !Line width
 
@@ -424,7 +424,7 @@ contains
                ux1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !2
                uy1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !3
                uz1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !4
-               phi1(nxprobes(i),nyprobes(i),nzprobes(i),:),&         !nphi
+               phi1(nxprobes(i),nyprobes(i),nzprobes(i),:),&         !numscalar
                NL                                                    !+1
           close(67)
        endif
@@ -439,22 +439,22 @@ contains
 
     implicit none
 
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: vol1
-    real(mytype),intent(out) :: mp1(1:nphi)
+    real(mytype),intent(out) :: mp1(1:numscalar)
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: temp1
-    real(mytype) :: mp(1:nphi)
+    real(mytype) :: mp(1:numscalar)
     integer :: is,code
 
     mp=zero; mp1=zero
 
-    do is=1, nphi
+    do is=1, numscalar
        temp1 = phi1(:,:,:,is)*vol1(:,:,:)
        mp(is)= sum(temp1)
     end do
 
-    call MPI_REDUCE(mp,mp1,nphi,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
+    call MPI_REDUCE(mp,mp1,numscalar,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
 
     return
   end subroutine suspended
@@ -495,7 +495,7 @@ contains
     USE decomp_2d_io
     USE MPI
 
-    real(mytype),intent(in),dimension(zstart(1):zend(1),zstart(2):zend(2),1:nphi) :: phim3
+    real(mytype),intent(in),dimension(zstart(1):zend(1),zstart(2):zend(2),1:numscalar) :: phim3
     real(mytype),intent(out) :: xp(1:2,1:2)
     real(mytype) :: xp1(1:2),y
     integer :: is, i, j, code
@@ -524,17 +524,17 @@ contains
     USE decomp_2d_io
     USE MPI
 
-    real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),nphi) :: phi1
-    real(mytype),intent(out),dimension(ystart(1):yend(1),ystart(3):yend(3),nphi) :: dep2
+    real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),numscalar) :: phi1
+    real(mytype),intent(out),dimension(ystart(1):yend(1),ystart(3):yend(3),numscalar) :: dep2
 
-    real(mytype),dimension(ystart(1):yend(1),ystart(2):yend(2),ystart(3):yend(3),nphi) :: tempdep2
-    real(mytype),dimension(ystart(1):yend(1),ystart(2):yend(2),ystart(3):yend(3),nphi) :: phi2
+    real(mytype),dimension(ystart(1):yend(1),ystart(2):yend(2),ystart(3):yend(3),numscalar) :: tempdep2
+    real(mytype),dimension(ystart(1):yend(1),ystart(2):yend(2),ystart(3):yend(3),numscalar) :: phi2
 
     integer :: i, j, k, is
     character(len=30) :: filename
 
     dep2 = zero
-    do is=1, nphi
+    do is=1, numscalar
        if (uset(is) .eq. 0.) cycle
        call transpose_x_to_y(phi1(:,:,:,is),phi2(:,:,:,is))
 
@@ -559,14 +559,14 @@ contains
     USE decomp_2d_io
     USE MPI
 
-    real(mytype),intent(in),dimension(ystart(1):yend(1),ystart(3):yend(3),nphi) :: dep2
-    real(mytype),intent(out) :: dms1(nphi)
+    real(mytype),intent(in),dimension(ystart(1):yend(1),ystart(3):yend(3),numscalar) :: dep2
+    real(mytype),intent(out) :: dms1(numscalar)
 
-    real(mytype) :: dms(nphi)
+    real(mytype) :: dms(numscalar)
     integer :: i,k,is,code
 
     dms=zero; dms1=zero
-    do is=1, nphi
+    do is=1, numscalar
        if (uset(is) .eq. 0.) cycle
        do k=ystart(3),yend(3)
           do i=ystart(1),yend(1)
@@ -575,7 +575,7 @@ contains
        end do
     enddo
 
-    call MPI_REDUCE(dms,dms1,nphi,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
+    call MPI_REDUCE(dms,dms1,numscalar,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
 
   end subroutine depositrate
   !############################################################################
@@ -588,7 +588,7 @@ contains
     implicit none
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,vol1
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: diss1,dphiy1, dphixx1, dphiyy1, dphizz1, ddphi1, di1, temp1
     real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: phi2, dphiy2, dphixx2, dphiyy2, dphizz2, ddphi2, di2, vol2, temp2
@@ -670,7 +670,7 @@ contains
     if (ivirt==2) then
        ilag=0
     endif
-    do is=1, nphi
+    do is=1, numscalar
        if (ri(is) .eq. 0.) cycle
        call derxxS (dphixx1,phi1(:,:,:,is),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1)
 

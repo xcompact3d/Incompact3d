@@ -1056,7 +1056,7 @@ subroutine lesdiff_scalar(phi1, di1, di2, di3, kappat1, sgsphi1)
 
   implicit none
 
-  real(mytype), dimension(xsize(1), xsize(2), xsize(3), nphi) :: phi1, sgsphi1
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1, sgsphi1
   real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: phi2, sgsphi2
   real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: phi3, sgsphi3
 
@@ -1078,7 +1078,7 @@ subroutine lesdiff_scalar(phi1, di1, di2, di3, kappat1, sgsphi1)
   call transpose_y_to_z(kappat2, kappat3)
   call derzS (dkappat3, kappat3, di3, sz, ffzpS, fszpS, fwzpS, zsize(1), zsize(2), zsize(3), 1)
 
-  do is = 1, nphi
+  do is = 1, numscalar
      call derxS (tb1, phi1(:, :, :, is), di1, sx, ffxpS, fsxpS, fwxpS, xsize(1), xsize(2), xsize(3), 1)
      sgsphi1(:, :, :, is) = tb1 * dkappat1 !d(phi)/dx * d(kappa_t)/dx
 

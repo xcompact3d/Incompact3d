@@ -45,7 +45,7 @@ subroutine ft_parameter(arg)
   read (10,*) nx
   read (10,*) ny
   read (10,*) nz
-  read (10,*) nphi
+  read (10,*) numscalar
   read (10,*) p_row
   read (10,*) p_col
   if (arg) then
@@ -173,7 +173,7 @@ subroutine boundary_conditions (ux,uy,uz,phi,ep1)
   implicit none
 
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,ep1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
   call inflow (ux,uy,uz,phi)
   call outflow (ux,uy,uz,phi)
@@ -191,7 +191,7 @@ subroutine inflow (ux,uy,uz,phi)
 
   integer  :: j,k,is
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
   call random_number(bxo)
   call random_number(byo)
@@ -205,7 +205,7 @@ subroutine inflow (ux,uy,uz,phi)
   enddo
 
   if (iscalar.eq.1) then
-     do is=1, nphi
+     do is=1, numscalar
         do k=1,xsize(3)
            do j=1,xsize(2)
               phi(1,j,k,is)=cp(is)
@@ -228,7 +228,7 @@ subroutine outflow (ux,uy,uz,phi)
 
   integer :: i,j,k,is,code
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
   real(mytype) :: udx,udy,udz,uddx,uddy,uddz,cx,cz,uxmin,uxmax,uxmin1,uxmax1
 
   udx=one/dx; udy=one/dy; udz=one/dz; uddx=half/dx; uddy=half/dy; uddz=half/dz
@@ -284,7 +284,7 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,phis1,phiss1)
   implicit none
 
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1,phis1,phiss1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1,phis1,phiss1
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
 
   real(mytype) :: y,r,um,r3,x,z,h,ct
