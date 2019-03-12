@@ -73,7 +73,7 @@ PROGRAM post
 
   call init_post(ep1)
 
-  ttsize=(read_phi*nphi+read_u*3)*nx*ny*nz
+  ttsize=(read_phi*numscalar+read_u*3)*nx*ny*nz
   tstart=0.;t1=0.;trank=0.;tranksum=0.;ttotal=0.
   call cpu_time(tstart)
   
@@ -91,7 +91,7 @@ PROGRAM post
      !READ DATA
      call cpu_time(trstart)
      if ( read_phi .eq. 1 ) then
-        do is=1, nphi
+        do is=1, numscalar
            write(filename,"('./data/phi',I1.1,I4.4)") is, ifile
            call decomp_2d_read_one(1,phi1(:,:,:,is),filename)
         enddo

@@ -12,7 +12,7 @@ subroutine OVERALL_STATISTIC(ux1,uy1,uz1,phi1,pre1,diss1,ta1,&
   implicit none
 
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,pre1,diss1,ta1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nphi) :: phi1 
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1 
 
   real(mytype),dimension(xszS(1),xszS(2),xszS(3)) :: u1sum,v1sum,w1sum !first
   real(mytype),dimension(xszS(1),xszS(2),xszS(3)) :: u2sum,v2sum,w2sum !second
@@ -21,8 +21,8 @@ subroutine OVERALL_STATISTIC(ux1,uy1,uz1,phi1,pre1,diss1,ta1,&
   real(mytype),dimension(xszS(1),xszS(2),xszS(3)) :: uvsum,uwsum,vwsum !tensors
   real(mytype),dimension(xszS(1),xszS(2),xszS(3)) :: disssum,presum,tsum !diss, pressure and auxiliary variable
 
-  real(mytype),dimension(xszS(1),xszS(2),xszS(3),nphi) :: psum,ppsum
-  real(mytype),dimension(xszS(1),xszS(2),xszS(3),nphi) :: upsum,vpsum,wpsum
+  real(mytype),dimension(xszS(1),xszS(2),xszS(3),numscalar) :: psum,ppsum
+  real(mytype),dimension(xszS(1),xszS(2),xszS(3),numscalar) :: upsum,vpsum,wpsum
   integer :: is
 
 
@@ -103,7 +103,7 @@ subroutine OVERALL_STATISTIC(ux1,uy1,uz1,phi1,pre1,diss1,ta1,&
   vwsum=vwsum+tsum
 
   if (iscalar==1) then
-     do is=1, nphi
+     do is=1, numscalar
 
         !psum=phi1
         call fine_to_coarseS(1,phi1(:,:,:,is),tsum)
@@ -159,7 +159,7 @@ subroutine OVERALL_STATISTIC(ux1,uy1,uz1,phi1,pre1,diss1,ta1,&
 
      if (save_phi==1) then
         if (iscalar==1) then
-           do is=1, nphi
+           do is=1, numscalar
               call decomp_2d_write_one(1, psum(:,:,:,is), 'stats/c'//char(48+is)//'.sum',1)
               call decomp_2d_write_one(1,ppsum(:,:,:,is),'stats/c'//char(48+is)//'c'//char(48+is)//'.sum',1)
               call decomp_2d_write_one(1,upsum(:,:,:,is),'stats/uc'//char(48+is)//'.sum',1)
