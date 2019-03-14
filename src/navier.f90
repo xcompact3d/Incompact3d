@@ -1,12 +1,12 @@
 !************************************************************************
 ! Time-marching subroutine used to advance the numerical solution in time  
 !
-! input: dux1,duy1,duz1 
+! input: dvar1 
 ! 
-! input/output: ux1, uy1, uz1 
+! input/output: var1
 ! 
 !************************************************************************ 
-subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
+subroutine  int_time(var1,dvar1)
 
   USE param
   USE variables
@@ -16,10 +16,10 @@ subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
   integer :: ijk,nxyz
 
   !! INPUTS
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: var1
 
   !! OUTPUTS
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dvar1
 
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# intt start'
@@ -27,65 +27,45 @@ subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
 
   if (itimescheme.eq.1) then 
      !>>> Euler 
-     ux1(:,:,:)=gdt(itr)*dux1(:,:,:,1)+ux1(:,:,:) 
-     uy1(:,:,:)=gdt(itr)*duy1(:,:,:,1)+uy1(:,:,:)
-     uz1(:,:,:)=gdt(itr)*duz1(:,:,:,1)+uz1(:,:,:)
+     var1(:,:,:)=gdt(itr)*dvar1(:,:,:,1)+var1(:,:,:) 
   elseif(itimescheme.eq.2) then
      !>>> Adam-Bashforth second order (AB2)
      
      ! Do first time step with Euler
      if(itime.eq.1.and.irestart.eq.0) then
-        ux1(:,:,:)=gdt(itr)*dux1(:,:,:,1)+ux1(:,:,:) 
-        uy1(:,:,:)=gdt(itr)*duy1(:,:,:,1)+uy1(:,:,:)
-        uz1(:,:,:)=gdt(itr)*duz1(:,:,:,1)+uz1(:,:,:)
+        var1(:,:,:)=gdt(itr)*dvar1(:,:,:,1)+var1(:,:,:) 
      else
-        ux1(:,:,:)=adt(itr)*dux1(:,:,:,1)+bdt(itr)*dux1(:,:,:,2)+ux1(:,:,:)
-        uy1(:,:,:)=adt(itr)*duy1(:,:,:,1)+bdt(itr)*duy1(:,:,:,2)+uy1(:,:,:)
-        uz1(:,:,:)=adt(itr)*duz1(:,:,:,1)+bdt(itr)*duz1(:,:,:,2)+uz1(:,:,:)
+        var1(:,:,:)=adt(itr)*dvar1(:,:,:,1)+bdt(itr)*dvar1(:,:,:,2)+var1(:,:,:)
      endif
-     dux1(:,:,:,2)=dux1(:,:,:,1) 
-     duy1(:,:,:,2)=duy1(:,:,:,1) 
-     duz1(:,:,:,2)=duz1(:,:,:,1) 
+     dvar1(:,:,:,2)=dvar1(:,:,:,1) 
   elseif(itimescheme.eq.3) then
      !>>> Adams-Bashforth third order (AB3)
      
      ! Do first time step with Euler
      if(itime.eq.1.and.irestart.eq.0) then
-        ux1(:,:,:)=dt*dux1(:,:,:,1)+ux1(:,:,:)
-        uy1(:,:,:)=dt*duy1(:,:,:,1)+uy1(:,:,:)
-        uz1(:,:,:)=dt*duz1(:,:,:,1)+uz1(:,:,:)
+        var1(:,:,:)=dt*dvar1(:,:,:,1)+var1(:,:,:)
      elseif(itime.eq.2.and.irestart.eq.0) then
       	! Do second time step with AB2
-      	ux1(:,:,:)=onepfive*dt*dux1(:,:,:,1)-half*dt*dux1(:,:,:,2)+ux1(:,:,:)
-      	uy1(:,:,:)=onepfive*dt*duy1(:,:,:,1)-half*dt*duy1(:,:,:,2)+uy1(:,:,:)
-      	uz1(:,:,:)=onepfive*dt*duz1(:,:,:,1)-half*dt*duz1(:,:,:,2)+uz1(:,:,:)
-        dux1(:,:,:,3)=dux1(:,:,:,2) 
-        duy1(:,:,:,3)=duy1(:,:,:,2) 
-        duz1(:,:,:,3)=duz1(:,:,:,2) 
+      	var1(:,:,:)=onepfive*dt*dvar1(:,:,:,1)-half*dt*dvar1(:,:,:,2)+var1(:,:,:)
+        dvar1(:,:,:,3)=dvar1(:,:,:,2) 
      else
       	! Finally using AB3
-      	ux1(:,:,:)=adt(itr)*dux1(:,:,:,1)+bdt(itr)*dux1(:,:,:,2)+cdt(itr)*dux1(:,:,:,3)+ux1(:,:,:)
-      	uy1(:,:,:)=adt(itr)*duy1(:,:,:,1)+bdt(itr)*duy1(:,:,:,2)+cdt(itr)*duy1(:,:,:,3)+uy1(:,:,:)
-      	uz1(:,:,:)=adt(itr)*duz1(:,:,:,1)+bdt(itr)*duz1(:,:,:,2)+cdt(itr)*duz1(:,:,:,3)+uz1(:,:,:)
-        dux1(:,:,:,3)=dux1(:,:,:,2) 
-        duy1(:,:,:,3)=duy1(:,:,:,2) 
-        duz1(:,:,:,3)=duz1(:,:,:,2) 
+      	var1(:,:,:)=adt(itr)*dvar1(:,:,:,1)+bdt(itr)*dvar1(:,:,:,2)+cdt(itr)*dvar1(:,:,:,3)+var1(:,:,:)
+        dvar1(:,:,:,3)=dvar1(:,:,:,2) 
      endif
-     dux1(:,:,:,2)=dux1(:,:,:,1) 
-     duy1(:,:,:,2)=duy1(:,:,:,1) 
-     duz1(:,:,:,2)=duz1(:,:,:,1) 
+     dvar1(:,:,:,2)=dvar1(:,:,:,1) 
   elseif(itimescheme.eq.4) then
      !>>> Adams-Bashforth fourth order (AB4)
      
      !if (itime.eq.1.and.ilit.eq.0) then
-     !ux(:,:,:)=gdt(itr)*hx(:,:,:)+ux(:,:,:)
+     !var(:,:,:)=gdt(itr)*hx(:,:,:)+var(:,:,:)
      !uy(:,:,:)=gdt(itr)*hy(:,:,:)+uy(:,:,:) 
      !uz(:,:,:)=gdt(itr)*hz(:,:,:)+uz(:,:,:)
      !gx(:,:,:)=hx(:,:,:)
      !gy(:,:,:)=hy(:,:,:)
      !gz(:,:,:)=hz(:,:,:)            
      !elseif (itime.eq.2.and.ilit.eq.0) then 	   
-     !ux(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+ux(:,:,:)
+     !var(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+var(:,:,:)
      !uy(:,:,:)=adt(itr)*hy(:,:,:)+bdt(itr)*gy(:,:,:)+uy(:,:,:)   
      !uz(:,:,:)=adt(itr)*hz(:,:,:)+bdt(itr)*gz(:,:,:)+uz(:,:,:)
      !gox(:,:,:)=gx(:,:,:)
@@ -95,7 +75,7 @@ subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
      !gy(:,:,:)=hy(:,:,:)
      !gz(:,:,:)=hz(:,:,:)            
      !elseif (itime.eq.3.and.ilit.eq.0) then 
-     !ux(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+cdt(itr)*gox(:,:,:)+ux(:,:,:)
+     !var(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+cdt(itr)*gox(:,:,:)+var(:,:,:)
      !uy(:,:,:)=adt(itr)*hy(:,:,:)+bdt(itr)*gy(:,:,:)+cdt(itr)*goy(:,:,:)+uy(:,:,:)   
      !uz(:,:,:)=adt(itr)*hz(:,:,:)+bdt(itr)*gz(:,:,:)+cdt(itr)*goz(:,:,:)+uz(:,:,:)
      !gox(:,:,:)=gx(:,:,:)
@@ -105,7 +85,7 @@ subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
      !gy(:,:,:)=hy(:,:,:)
      !gz(:,:,:)=hz(:,:,:)            
      !else 
-     !ux(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+cdt(itr)*gox(:,:,:)+ddt(itr)*gax(:,:,:)+ux(:,:,:)
+     !var(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+cdt(itr)*gox(:,:,:)+ddt(itr)*gax(:,:,:)+var(:,:,:)
      !uy(:,:,:)=adt(itr)*hy(:,:,:)+bdt(itr)*gy(:,:,:)+cdt(itr)*goy(:,:,:)+ddt(itr)*gay(:,:,:)+uy(:,:,:)   
      !uz(:,:,:)=adt(itr)*hz(:,:,:)+bdt(itr)*gz(:,:,:)+cdt(itr)*goz(:,:,:)+ddt(itr)*gaz(:,:,:)+uz(:,:,:)
      !gax(:,:,:)=gox(:,:,:)
@@ -121,17 +101,11 @@ subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
      !>>> Runge-Kutta (low storage) RK3
   elseif(itimescheme.eq.5) then
      if(itr.eq.1) then
-        ux1(:,:,:)=gdt(itr)*dux1(:,:,:,1)+ux1(:,:,:) 
-        uy1(:,:,:)=gdt(itr)*duy1(:,:,:,1)+uy1(:,:,:)
-        uz1(:,:,:)=gdt(itr)*duz1(:,:,:,1)+uz1(:,:,:)
+        var1(:,:,:)=gdt(itr)*dvar1(:,:,:,1)+var1(:,:,:) 
      else
-        ux1(:,:,:)=adt(itr)*dux1(:,:,:,1)+bdt(itr)*dux1(:,:,:,2)+ux1(:,:,:)
-        uy1(:,:,:)=adt(itr)*duy1(:,:,:,1)+bdt(itr)*duy1(:,:,:,2)+uy1(:,:,:)
-        uz1(:,:,:)=adt(itr)*duz1(:,:,:,1)+bdt(itr)*duz1(:,:,:,2)+uz1(:,:,:)
+        var1(:,:,:)=adt(itr)*dvar1(:,:,:,1)+bdt(itr)*dvar1(:,:,:,2)+var1(:,:,:)
      endif
-     dux1(:,:,:,2)=dux1(:,:,:,1) 
-     duy1(:,:,:,2)=duy1(:,:,:,1) 
-     duz1(:,:,:,2)=duz1(:,:,:,1) 
+     dvar1(:,:,:,2)=dvar1(:,:,:,1) 
      !>>> Runge-Kutta (low storage) RK4
   elseif(itimescheme.eq.6) then
 
@@ -143,7 +117,53 @@ subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
 
   return
 
-end subroutine int_time_momentum
+end subroutine int_time
+
+subroutine int_time_momentum(ux1, uy1, uz1, dux1, duy1, duz1)
+
+  USE param
+  USE variables
+  USE decomp_2d
+
+  implicit none
+
+  !! INPUTS
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1
+
+  !! OUTPUTS
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1, duy1, duz1
+
+  call int_time(ux1, dux1)
+  call int_time(uy1, duy1)
+  call int_time(uz1, duz1)
+  
+endsubroutine int_time_momentum
+
+subroutine int_time_continuity(rho1, drho1)
+
+  USE param
+  USE variables
+  USE decomp_2d
+  
+  implicit none
+
+  integer :: it
+
+  !! INPUTS
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: rho1
+
+  !! OUTPUTS
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
+
+  !! First, update old density
+  do it = ntime, 2, -1
+     rho1(:,:,:,it) = rho1(:,:,:,it-1)
+  enddo
+
+  !! Now we can update current density
+  call int_time(rho1(:,:,:,1), drho1)
+  
+endsubroutine int_time_continuity
 
 !********************************************************************
 !subroutine CORPG

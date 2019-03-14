@@ -140,7 +140,7 @@ PROGRAM incompact3d
            call primary_to_conserved(rho1, uz1)
         endif
         
-        call int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
+        call intt(rho1,ux1,uy1,uz1,drho1,dux1,duy1,duz1)
         call pre_correc(ux1,uy1,uz1,ep1)
         !!-------------------------------------------------------------------------
         !! End time integrate transport equations
@@ -338,3 +338,25 @@ SUBROUTINE visu(rho1, ux1, uy1, uz1, itime)
      ENDIF
   ENDIF
 END SUBROUTINE visu
+
+SUBROUTINE intt(rho1, ux1, uy1, uz1, drho1, dux1, duy1, duz1)
+
+  USE decomp_2d, ONLY : mytype, xsize
+  USE param, ONLY : ntime, ilmn
+
+  IMPLICIT NONE
+
+  !! INPUT/OUTPUT
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1, dux1, duy1, duz1
+
+  !! OUTPUT
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: rho1
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+  
+  CALL int_time_momentum(ux1, uy1, uz1, dux1, duy1, duz1)
+
+  IF (ilmn) THEN
+     CALL int_time_continuity(rho1, drho1)
+  ENDIF
+  
+ENDSUBROUTINE intt
