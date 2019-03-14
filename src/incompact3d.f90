@@ -157,7 +157,7 @@ PROGRAM incompact3d
         !! Poisson solver and velocity correction
         !!-------------------------------------------------------------------------
         call calc_divu_constraint(divu3, rho1)
-        call solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1)
+        call solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
         call gradp(px1,py1,pz1,pp3)
         call corpg(ux1,uy1,uz1,px1,py1,pz1)
 
@@ -172,7 +172,7 @@ PROGRAM incompact3d
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         if (mod(itime,10)==0) then
-           call divergence(dv3,rho1,ux1,uy1,uz1,ep1,drho1,2)
+           call divergence(dv3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,2)
            call test_speed_min_max(ux1,uy1,uz1)
            if (iscalar==1) call test_scalar_min_max(phi1)
         endif
@@ -259,9 +259,9 @@ END SUBROUTINE calculate_transeq_rhs
 !! DESCRIPTION: Takes the intermediate momentum field as input,
 !!              computes div and solves pressure-Poisson equation.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1)
+SUBROUTINE solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
 
-  USE decomp_2d, ONLY : mytype, xsize, ph1
+  USE decomp_2d, ONLY : mytype, xsize, zsize, ph1
   USE decomp_2d_poisson, ONLY : poisson
   USE var, ONLY : nzmsize
   USE param, ONLY : ntime, nrhotime
@@ -275,12 +275,13 @@ SUBROUTINE solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1)
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ep1
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime), INTENT(IN) :: rho1
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime), INTENT(IN) :: drho1
+  REAL(mytype), DIMENSION(zsize(1), zsize(2), zsize(3)), INTENT(IN) :: divu3
 
   !! Outputs
   REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: pp3
 
   nlock = 1 !! Corresponds to computing div(u*)
-  CALL divergence(pp3,rho1,ux1,uy1,uz1,ep1,drho1,nlock)
+  CALL divergence(pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
 
   CALL poisson(pp3)
 

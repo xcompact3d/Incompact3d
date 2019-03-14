@@ -215,13 +215,13 @@ end subroutine corpg
 ! output : pp3 (on pressure mesh)
 !written by SL 2018
 !******************************************************************** 
-subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,nlock)
+subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
 
   USE param
   USE decomp_2d
   USE variables
   USE var, ONLY: ta1, tb1, tc1, pp1, pgy1, pgz1, di1, &
-       duxdxp2, uyp2, uzp2, duydypi2, upi2, dipp2, &
+       duxdxp2, uyp2, uzp2, duydypi2, upi2, ta2, dipp2, &
        duxydxyp3, uzp3, po3, dipp3, nxmsize, nymsize, nzmsize
   USE MPI
 
@@ -234,6 +234,7 @@ subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,nlock)
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime),intent(in) :: drho1
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime),intent(in) :: rho1
   !Z PENCILS NXM NYM NZ  -->NXM NYM NZM
+  real(mytype),dimension(zsize(1),zsize(2),zsize(3)),intent(in) :: divu3
   real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: pp3
 
   integer :: ijk,nvect1,nvect2,nvect3,i,j,k,nlock
@@ -261,6 +262,14 @@ subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,nlock)
      call extrapol_drhodt(ta1, rho1, drho1)
      call interxvp(pgy1,ta1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
      pp1(:,:,:) = pp1(:,:,:) + pgy1(:,:,:)
+  endif
+
+  if (ilmn.and.(nlock.eq.2)) then
+     !! Need to check our error against divu constraint
+     call transpose_z_to_y(divu3, ta2)
+     call transpose_y_to_x(ta2, ta1)
+     call interxvp(pgy1,ta1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+     pp1(:,:,:) = pp1(:,:,:) - pgy1(:,:,:)
   endif
 
   call interxvp(pgy1,tb1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
