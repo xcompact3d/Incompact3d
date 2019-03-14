@@ -23,7 +23,8 @@ contains
 
     USE decomp_2d, ONLY : mytype, xsize
     USE param, ONLY : u1, u2, dens1, dens2
-    USE param, ONLY : half
+    USE param, ONLY : half, one, two, four, eight, sixteen
+    USE param, ONLY : ntime
     USE MPI
 
     implicit none
@@ -38,8 +39,6 @@ contains
     real(mytype) :: M, rspech, heatcap
     real(mytype) :: T1, T2, rhomin, rhomax
     real(mytype) :: disturb_decay, u_disturb, v_disturb
-
-    integer, dimension (:), allocatable :: seed
 
     if (iin.eq.0) then !empty domain
        if (nrank==0) then
