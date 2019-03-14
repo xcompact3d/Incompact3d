@@ -296,6 +296,9 @@ subroutine parameter_defaults()
   irotation = 0
   itest=1
 
+  !! LMN stuff
+  ilmn = .FALSE.
+
   !! IO
   ivisu = 1
   ipost = 0
