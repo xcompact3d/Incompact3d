@@ -155,10 +155,21 @@ subroutine int_time_continuity(rho1, drho1)
   !! OUTPUTS
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
 
-  !! First, update old density
-  do it = ntime, 2, -1
-     rho1(:,:,:,it) = rho1(:,:,:,it-1)
-  enddo
+  !! First, update old density / store old transients depending on scheme
+  if (itimescheme.lt.5) then
+     !! Euler/AB - Store old density values
+     do it = ntime, 2, -1
+        rho1(:,:,:,it) = rho1(:,:,:,it-1)
+     enddo
+  elseif (itimescheme.eq.5) then
+     !! RK3 - Stores old transients
+     rho1(:,:,:,2) = drho1(:,:,:,1)
+  else
+     if (nrank.eq.0) then
+        print *, "int_time_continuity not implemented for itimescheme", itimescheme
+        stop
+     endif
+  endif
 
   !! Now we can update current density
   call int_time(rho1(:,:,:,1), drho1)
@@ -199,7 +210,7 @@ end subroutine corpg
 ! output : pp3 (on pressure mesh)
 !written by SL 2018
 !******************************************************************** 
-subroutine divergence (ux1,uy1,uz1,ep1,pp3,nlock)
+subroutine divergence (rho1,ux1,uy1,uz1,ep1,pp3,drho1,nlock)
 
   USE param
   USE decomp_2d
@@ -215,6 +226,7 @@ subroutine divergence (ux1,uy1,uz1,ep1,pp3,nlock)
 
   !X PENCILS NX NY NZ  -->NXM NY NZ
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1,uy1,uz1,ep1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime),intent(in) :: rho1, drho1
   !Z PENCILS NXM NYM NZ  -->NXM NYM NZM
   real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: pp3
 
@@ -238,6 +250,13 @@ subroutine divergence (ux1,uy1,uz1,ep1,pp3,nlock)
 
   !WORK X-PENCILS
   call derxvp(pp1,ta1,di1,sx,cfx6,csx6,cwx6,xsize(1),nxmsize,xsize(2),xsize(3),0)
+
+  if (ilmn.and.(nlock.eq.1)) then
+     call extrapol_drhodt(ta1, rho1, drho1)
+     call interxvp(pgy1,ta1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+     pp1(:,:,:) = pp1(:,:,:) + pgy1(:,:,:)
+  endif
+
   call interxvp(pgy1,tb1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
   call interxvp(pgz1,tc1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
 
@@ -719,4 +738,52 @@ SUBROUTINE calc_divu_constraint(divu3, rho1)
   ENDIF
 
 ENDSUBROUTINE calc_divu_constraint
+
+SUBROUTINE extrapol_drhodt(drhodt1_next, rho1, drho1)
+
+  USE decomp_2d, ONLY : mytype, xsize, nrank
+  USE param, ONLY : ntime, itime, itimescheme, itr, dt, gdt, irestart
+  USE param, ONLY : half, three, four
+  
+  IMPLICIT NONE
+
+  INTEGER :: subitr
+  
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: rho1, drho1
+  REAL(mytype), INTENT(OUT), DIMENSION(xsize(1), xsize(2), xsize(3)) :: drhodt1_next
+
+  IF (itimescheme.EQ.1) THEN
+     !! EULER
+     drhodt1_next(:,:,:) = (rho1(:,:,:,1) - rho1(:,:,:,2)) / dt
+  ELSEIF (itimescheme.EQ.2) THEN
+     !! AB2
+     IF ((itime.EQ.1).AND.(irestart.EQ.0)) THEN
+        drhodt1_next(:,:,:) = (rho1(:,:,:,1) - rho1(:,:,:,2)) / dt
+     ELSE
+        drhodt1_next(:,:,:) = three * rho1(:,:,:,1) - four * rho1(:,:,:,2) + rho1(:,:,:,3)
+        drhodt1_next(:,:,:) = half * drhodt1_next(:,:,:) / dt
+     ENDIF
+  ! ELSEIF (itimescheme.EQ.3) THEN
+  !    !! AB3
+  ! ELSEIF (itimescheme.EQ.4) THEN
+  !    !! AB4
+  ELSEIF (itimescheme.EQ.5) THEN
+     !! RK3
+     IF (itime.GT.1) THEN
+        drhodt1_next(:,:,:) = rho1(:,:,:,2)
+        DO subitr = 1, itr
+           drhodt1_next(:,:,:) = drhodt1_next(:,:,:) + (gdt(subitr) / dt) &
+                * (rho1(:,:,:,2) - rho1(:,:,:,3))
+        ENDDO
+     ELSE
+        drhodt1_next(:,:,:) = drho1(:,:,:,1)
+     ENDIF
+  ELSE
+     IF (nrank.EQ.0) THEN
+        PRINT *, "Extrapolating drhodt not implemented for timescheme:", itimescheme
+        STOP
+     ENDIF
+  ENDIF
+  
+ENDSUBROUTINE extrapol_drhodt
 
