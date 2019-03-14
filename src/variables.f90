@@ -264,13 +264,6 @@ contains
        allocate(zf(nobjmax,zsize(1),zsize(2)))
     endif
 
-    !! LMN
-    allocate(rho1(xsize(1),xsize(2),xsize(3),ntime)) !Need to store old density values to extrapolate drhodt
-    call alloc_y(rho2, opt_global=.true.) !global indices
-    call alloc_z(rho3, opt_global=.true.) !global indices
-    allocate(drho1(xsize(1),xsize(2),xsize(3),ntime))
-    call alloc_z(divu3, opt_global=.true.) !global indices
-
     !module filter
     allocate(fiffx(nx), fisfx(nx), fifsx(nx), fifwx(nx), fissx(nx), fiswx(nx))
     allocate(fiffxp(nx),fisfxp(nx),fifsxp(nx),fifwxp(nx),fissxp(nx),fiswxp(nx))
@@ -418,6 +411,14 @@ contains
     allocate(dux1(xsize(1),xsize(2),xsize(3),ntime))
     allocate(duy1(xsize(1),xsize(2),xsize(3),ntime))
     allocate(duz1(xsize(1),xsize(2),xsize(3),ntime))
+
+    !! LMN
+    allocate(rho1(xsize(1),xsize(2),xsize(3),ntime)) !Need to store old density values to extrapolate drhodt
+    call alloc_y(rho2, opt_global=.true.) !global indices
+    call alloc_z(rho3, opt_global=.true.) !global indices
+    allocate(drho1(xsize(1),xsize(2),xsize(3),ntime))
+
+    call alloc_z(divu3, opt_global=.true.) !global indices
 
     !TRIPPING PARAMES LOST HERE
     z_modes=int(zlz /zs_tr)
