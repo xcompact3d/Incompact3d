@@ -263,19 +263,11 @@ contains
        allocate(zf(nobjmax,zsize(1),zsize(2)))
     endif
 
-    if (ilmn) then
-       allocate(rho1(xsize(1),xsize(2),xsize(3),ntime)) !Need to store old density values to extrapolate drhodt
-       call alloc_y(rho2, opt_global=.true.) !global indices
-       call alloc_z(rho3, opt_global=.true.) !global indices
-       
-       allocate(drho1(xsize(1),xsize(2),xsize(3),ntime))
-    else
-       allocate(rho1(1, 1, 1, 1))
-       allocate(rho2(1, 1, 1))
-       allocate(rho3(1, 1, 1))
-       
-       allocate(drho1(1, 1, 1, 1))
-    endif
+    !! LMN
+    allocate(rho1(xsize(1),xsize(2),xsize(3),ntime)) !Need to store old density values to extrapolate drhodt
+    call alloc_y(rho2, opt_global=.true.) !global indices
+    call alloc_z(rho3, opt_global=.true.) !global indices
+    allocate(drho1(xsize(1),xsize(2),xsize(3),ntime))
 
     !module filter
     allocate(fiffx(nx), fisfx(nx), fifsx(nx), fifwx(nx), fissx(nx), fiswx(nx))
