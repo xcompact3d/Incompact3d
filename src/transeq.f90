@@ -5,7 +5,7 @@ MODULE transeq
   
 CONTAINS
 
-  subroutine momentum_rhs_eq(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1)
+  subroutine momentum_rhs_eq(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
     USE param
     USE variables
@@ -20,6 +20,7 @@ CONTAINS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),ntime) :: rho1
+    real(mytype),intent(in),dimension(zsize(1),zsize(2),zsize(3)) :: divu3
 
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
@@ -123,6 +124,11 @@ CONTAINS
        ta3(:,:,:) = ta3(:,:,:) + half * ux3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
        tb3(:,:,:) = tb3(:,:,:) + half * uy3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
        tc3(:,:,:) = tc3(:,:,:) + half * uz3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
+
+       !! Add the additional divu terms
+       ta3(:,:,:) = ta3(:,:,:) + half * rho3(:,:,:) * ux3(:,:,:) * divu3(:,:,:)
+       tb3(:,:,:) = tb3(:,:,:) + half * rho3(:,:,:) * uy3(:,:,:) * divu3(:,:,:)
+       tc3(:,:,:) = tc3(:,:,:) + half * rho3(:,:,:) * uz3(:,:,:) * divu3(:,:,:)
     endif
 
     !ALL THE CONVECTIVE TERMS ARE IN TA3, TB3 and TC3

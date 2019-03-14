@@ -240,7 +240,7 @@ SUBROUTINE calculate_transeq_rhs(drho1,dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1
   
   !! Momentum equations
-  CALL momentum_rhs_eq(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1)
+  CALL momentum_rhs_eq(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
   !! Scalar equations
 
