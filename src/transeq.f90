@@ -1,7 +1,7 @@
 MODULE transeq
 
   PRIVATE
-  PUBLIC :: momentum_rhs_eq
+  PUBLIC :: momentum_rhs_eq, continuity_rhs_eq
   
 CONTAINS
 
@@ -372,5 +372,38 @@ CONTAINS
     end do !loop numscalar
 
   end subroutine scalar
+
+  SUBROUTINE continuity_rhs_eq(drho1, rho1, ux1, uy1, uz1)
+
+    USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
+    USE decomp_2d, ONLY : transpose_z_to_y, transpose_y_to_x
+    USE param, ONLY : ntime
+    USE variables
+
+    USE var, ONLY : ta1, di1
+    USE var, ONLY : rho2, uy2, ta2, tb2, di2
+    USE var, ONLY : rho3, uz3, ta3, di3
+    
+    IMPLICIT NONE
+
+    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: rho1
+    
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1
+
+    !! XXX All variables up to date - no need to transpose
+
+    CALL derz (ta3,rho3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+    ta3(:,:,:) = -uz3(:,:,:) * ta3(:,:,:)
+    
+    CALL transpose_z_to_y(ta3, tb2)
+    CALL dery (ta2,rho2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    ta2(:,:,:) = -uy2(:,:,:) * ta2(:,:,:) + tb2(:,:,:)
+
+    CALL transpose_y_to_x(ta2, ta1)
+    CALL derx (drho1(:,:,:,1),rho1(:,:,:,1),di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    drho1(:,:,:,1) = -ux1(:,:,:) * drho1(:,:,:,1) + ta1(:,:,:)
+
+  ENDSUBROUTINE continuity_rhs_eq
   
 END MODULE transeq
