@@ -699,7 +699,7 @@ SUBROUTINE calc_divu_constraint(divu3, rho1)
   USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
   USE decomp_2d, ONLY : transpose_x_to_y, transpose_y_to_z
   USE param, ONLY : nrhotime, zero, ilmn, pressure0
-  USE param, ONLY : xnu
+  USE param, ONLY : xnu, prandtl
   USE variables
 
   USE var, ONLY : ta1, tb1, di1
@@ -709,12 +709,9 @@ SUBROUTINE calc_divu_constraint(divu3, rho1)
   IMPLICIT NONE
 
   INTEGER :: i, j, k
-  REAL(mytype) :: prandtl
 
   REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
   REAL(mytype), INTENT(OUT), DIMENSION(zsize(1), zsize(2), zsize(3)) :: divu3
-
-  prandtl = 0.7_mytype
 
   IF (ilmn) THEN
      !!------------------------------------------------------------------------------

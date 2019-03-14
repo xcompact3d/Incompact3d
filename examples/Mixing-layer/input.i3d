@@ -101,6 +101,8 @@ nstat = 1             ! Size arrays for statistic collection
 dens1 = 0.5           ! Density of 'cold' stream (y > 0)
 dens2 = 1.0           ! Density of 'hot' stream (y < 0)
 
+prandtl = 0.75        ! Prandtl number
+
 /End
 
 !#######################

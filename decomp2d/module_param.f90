@@ -234,7 +234,7 @@ module param
 
   !! LMN
   logical :: ilmn
-  real(mytype) :: pressure0
+  real(mytype) :: pressure0, prandtl
   integer :: nrhotime
 
   character :: filesauve*80, filenoise*80, &

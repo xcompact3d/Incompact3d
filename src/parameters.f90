@@ -65,7 +65,7 @@ subroutine parameter(input_i3d)
   NAMELIST /TurbulenceModel/ iles, smagcst, walecst, iwall
   NAMELIST /TurbulenceWallModel/ smagwalldamp
   NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf
-  NAMELIST /LMN/ dens1, dens2
+  NAMELIST /LMN/ dens1, dens2, prandtl
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter start'
 #endif
@@ -183,6 +183,7 @@ subroutine parameter(input_i3d)
      if (ilmn) then
         print *, "LMN                : Enabled"
         write(*,"(' dens1 and dens2    : ',F6.2' ',F6.2)") dens1, dens2
+        write(*,"(' Prandtl number Re  : ',F15.8)") prandtl
      endif
      write(*,"(' Time step dt       : ',F15.8)") dt
      write (*,"(' Spatial scheme     : ',F15.8)") fpi2
@@ -312,6 +313,8 @@ subroutine parameter_defaults()
 
   !! LMN stuff
   ilmn = .FALSE.
+  pressure0 = one
+  prandtl = one
 
   !! IO
   ivisu = 1
