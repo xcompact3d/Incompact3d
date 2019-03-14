@@ -55,7 +55,8 @@ CONTAINS
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),numscalar) :: phi1,phis1,phiss1
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
 
-    !! Default density to one
+    !! Default density and pressure0 to one
+    pressure0 = one
     rho1(:,:,:,:) = one
 
     IF (itype.EQ.itype_lockexch) THEN

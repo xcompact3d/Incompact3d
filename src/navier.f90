@@ -648,3 +648,55 @@ SUBROUTINE conserved_to_primary(rho1, var1)
 
 ENDSUBROUTINE conserved_to_primary
 
+!! Calculate velocity-divergence constraint
+SUBROUTINE calc_divu_constraint(divu3, rho1)
+
+  USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
+  USE decomp_2d, ONLY : transpose_x_to_y, transpose_y_to_z
+  USE param, ONLY : ntime, zero, ilmn, pressure0
+  USE variables
+
+  USE var, ONLY : ta1, tb1, di1
+  USE var, ONLY : ta2, tb2, tc2, td2, di2
+  USE var, ONLY : ta3, tb3, di3
+  
+  IMPLICIT NONE
+
+  INTEGER :: i, j, k
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: rho1
+  REAL(mytype), INTENT(OUT), DIMENSION(zsize(1), zsize(2), zsize(3)) :: divu3
+
+  IF (ilmn) THEN
+     !!------------------------------------------------------------------------------
+     !! X-pencil
+     
+     !! We need temperature
+     ta1(:,:,:) = pressure0 / rho1(:,:,:,1)
+     
+     CALL derxx (tb1, ta1, di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1)
+     
+     CALL transpose_x_to_y(ta1, ta2)
+     CALL transpose_x_to_y(tb1, tb2)
+     
+     !!------------------------------------------------------------------------------
+     !! Y-pencil
+     CALL deryy (tc2, ta2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
+
+     tb2(:,:,:) = tb2(:,:,:) + tc2(:,:,:)
+
+     CALL transpose_y_to_z(ta2, ta3)
+     CALL transpose_y_to_z(tb2, tb3)
+     
+     !!------------------------------------------------------------------------------
+     !! Z-pencil
+     CALL derzz (divu3, ta3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
+
+     divu3(:,:,:) = divu3(:,:,:) + tb3(:,:,:)
+
+     divu3(:,:,:) = divu3(:,:,:) / pressure0
+  ELSE
+     divu3(:,:,:) = zero
+  ENDIF
+
+ENDSUBROUTINE calc_divu_constraint
+
