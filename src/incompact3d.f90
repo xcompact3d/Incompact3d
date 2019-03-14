@@ -170,11 +170,11 @@ PROGRAM incompact3d
         !! End Poisson solver and velocity correction
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-!        if (mod(itime,10)==0) then
+        if (mod(itime,10)==0) then
            call divergence(dv3,rho1,ux1,uy1,uz1,ep1,drho1,2)
            call test_speed_min_max(ux1,uy1,uz1)
            if (iscalar==1) call test_scalar_min_max(phi1)
-!        endif
+        endif
 
      enddo !! End sub timesteps
 #ifdef FORCES
@@ -224,14 +224,14 @@ SUBROUTINE calculate_transeq_rhs(drho1,dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,
 
   USE decomp_2d, ONLY : mytype, xsize, zsize
   USE variables, ONLY : numscalar
-  USE param, ONLY : ntime, ilmn
+  USE param, ONLY : ntime, ilmn, nrhotime
   USE transeq, ONLY : momentum_rhs_eq, continuity_rhs_eq
   
   IMPLICIT NONE
 
   !! Inputs
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime), INTENT(IN) :: rho1
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime), INTENT(IN) :: rho1
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar), INTENT(IN) :: phi1
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ep1
   REAL(mytype), DIMENSION(zsize(1), zsize(2), zsize(3)), INTENT(IN) :: divu3
@@ -263,7 +263,7 @@ SUBROUTINE solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1)
   USE decomp_2d, ONLY : mytype, xsize, ph1
   USE decomp_2d_poisson, ONLY : poisson
   USE var, ONLY : nzmsize
-  USE param, ONLY : ntime
+  USE param, ONLY : ntime, nrhotime
 
   IMPLICIT NONE
 
@@ -272,7 +272,8 @@ SUBROUTINE solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1)
   !! Inputs
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ep1
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime), INTENT(IN) :: rho1, drho1
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime), INTENT(IN) :: rho1
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime), INTENT(IN) :: drho1
 
   !! Outputs
   REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: pp3
@@ -290,7 +291,7 @@ SUBROUTINE visu(rho1, ux1, uy1, uz1, itime)
   USE decomp_2d, ONLY : fine_to_coarseV, transpose_x_to_y, transpose_y_to_z, &
        transpose_z_to_y, transpose_y_to_x
   USE decomp_2d_io, ONLY : decomp_2d_write_one
-  USE param, ONLY : ivisu, ioutput, ntime, ilmn
+  USE param, ONLY : ivisu, ioutput, nrhotime, ilmn
   USE variables, ONLY : sx, ffx, fsx, fwx, ffxp, fsxp, fwxp
   USE variables, ONLY : sy, ffy, fsy, fwy, ffyp, fsyp, fwyp, ppy
   USE variables, ONLY : sz, ffz, fsz, fwz, ffzp, fszp, fwzp
@@ -305,7 +306,7 @@ SUBROUTINE visu(rho1, ux1, uy1, uz1, itime)
   
   !! Inputs
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime), INTENT(IN) :: rho1
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime), INTENT(IN) :: rho1
   INTEGER, INTENT(IN) :: itime
 
   IF ((ivisu.NE.0).AND.(MOD(itime, ioutput).EQ.0)) THEN
@@ -344,7 +345,7 @@ END SUBROUTINE visu
 SUBROUTINE intt(rho1, ux1, uy1, uz1, drho1, dux1, duy1, duz1)
 
   USE decomp_2d, ONLY : mytype, xsize
-  USE param, ONLY : ntime, ilmn
+  USE param, ONLY : ntime, nrhotime, ilmn
 
   IMPLICIT NONE
 
@@ -352,7 +353,7 @@ SUBROUTINE intt(rho1, ux1, uy1, uz1, drho1, dux1, duy1, duz1)
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1, dux1, duy1, duz1
 
   !! OUTPUT
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: rho1
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
   
   CALL int_time_momentum(ux1, uy1, uz1, dux1, duy1, duz1)

@@ -150,7 +150,7 @@ subroutine int_time_continuity(rho1, drho1)
   integer :: it
 
   !! INPUTS
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: rho1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
 
   !! OUTPUTS
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
@@ -158,13 +158,13 @@ subroutine int_time_continuity(rho1, drho1)
   !! First, update old density / store old transients depending on scheme
   if (itimescheme.lt.5) then
      !! Euler/AB - Store old density values
-     do it = ntime, 2, -1
+     do it = nrhotime, 2, -1
         rho1(:,:,:,it) = rho1(:,:,:,it-1)
      enddo
   elseif (itimescheme.eq.5) then
      !! RK3 - Stores old transients
      if (itr.eq.1) then
-        do it = ntime, 2, -1
+        do it = nrhotime, 2, -1
            rho1(:,:,:,it) = rho1(:,:,:,it-1)
         enddo
         rho1(:,:,:,2) = drho1(:,:,:,1)
@@ -231,7 +231,8 @@ subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,nlock)
 
   !X PENCILS NX NY NZ  -->NXM NY NZ
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1,uy1,uz1,ep1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime),intent(in) :: rho1, drho1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime),intent(in) :: drho1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime),intent(in) :: rho1
   !Z PENCILS NXM NYM NZ  -->NXM NYM NZM
   real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: pp3
 
@@ -668,11 +669,11 @@ end subroutine pre_correc
 SUBROUTINE primary_to_conserved(rho1, var1)
 
   USE decomp_2d, ONLY : mytype, xsize
-  USE param, ONLY : ntime
+  USE param, ONLY : nrhotime
   
   IMPLICIT NONE
 
-  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: rho1
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: var1
 
   var1(:,:,:) = rho1(:,:,:,1) * var1(:,:,:)
@@ -681,11 +682,11 @@ ENDSUBROUTINE primary_to_conserved
 SUBROUTINE conserved_to_primary(rho1, var1)
 
   USE decomp_2d, ONLY : mytype, xsize
-  USE param, ONLY : ntime
+  USE param, ONLY : nrhotime
   
   IMPLICIT NONE
 
-  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: rho1
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: var1
 
   var1(:,:,:) = var1(:,:,:) / rho1(:,:,:,1)
@@ -697,7 +698,7 @@ SUBROUTINE calc_divu_constraint(divu3, rho1)
 
   USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
   USE decomp_2d, ONLY : transpose_x_to_y, transpose_y_to_z
-  USE param, ONLY : ntime, zero, ilmn, pressure0
+  USE param, ONLY : nrhotime, zero, ilmn, pressure0
   USE variables
 
   USE var, ONLY : ta1, tb1, di1
@@ -707,7 +708,7 @@ SUBROUTINE calc_divu_constraint(divu3, rho1)
   IMPLICIT NONE
 
   INTEGER :: i, j, k
-  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: rho1
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
   REAL(mytype), INTENT(OUT), DIMENSION(zsize(1), zsize(2), zsize(3)) :: divu3
 
   IF (ilmn) THEN
@@ -747,14 +748,15 @@ ENDSUBROUTINE calc_divu_constraint
 SUBROUTINE extrapol_drhodt(drhodt1_next, rho1, drho1)
 
   USE decomp_2d, ONLY : mytype, xsize, nrank
-  USE param, ONLY : ntime, itime, itimescheme, itr, dt, gdt, irestart
+  USE param, ONLY : ntime, nrhotime, itime, itimescheme, itr, dt, gdt, irestart
   USE param, ONLY : half, three, four
   
   IMPLICIT NONE
 
   INTEGER :: subitr
   
-  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: rho1, drho1
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
   REAL(mytype), INTENT(OUT), DIMENSION(xsize(1), xsize(2), xsize(3)) :: drhodt1_next
 
   IF (itimescheme.EQ.1) THEN

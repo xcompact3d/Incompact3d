@@ -19,7 +19,7 @@ CONTAINS
     !! INPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),ntime) :: rho1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
     real(mytype),intent(in),dimension(zsize(1),zsize(2),zsize(3)) :: divu3
 
     !! OUTPUTS
@@ -383,7 +383,7 @@ CONTAINS
 
     USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
     USE decomp_2d, ONLY : transpose_z_to_y, transpose_y_to_x
-    USE param, ONLY : ntime
+    USE param, ONLY : ntime, nrhotime
     USE variables
 
     USE var, ONLY : ta1, di1
@@ -393,7 +393,7 @@ CONTAINS
     IMPLICIT NONE
 
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
-    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: rho1
+    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
     REAL(mytype), INTENT(IN), DIMENSION(zsize(1), zsize(2), zsize(3)) :: divu3
     
     REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1

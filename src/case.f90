@@ -52,9 +52,9 @@ CONTAINS
   SUBROUTINE init (rho1, ux1, uy1, uz1, ep1, phi1, drho1, dux1, duy1, duz1, phis1, phiss1)
 
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),ntime) :: rho1, drho1
+    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),numscalar) :: phi1,phis1,phiss1
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
+    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1, drho1
 
     !! Default density and pressure0 to one
     pressure0 = one

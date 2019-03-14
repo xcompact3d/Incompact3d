@@ -235,6 +235,7 @@ module param
   !! LMN
   logical :: ilmn
   real(mytype) :: pressure0
+  integer :: nrhotime
 
   character :: filesauve*80, filenoise*80, &
   nchamp*80,filepath*80, fileturb*80, filevisu*80, datapath*80
