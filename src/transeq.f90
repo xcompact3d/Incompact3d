@@ -26,6 +26,9 @@ CONTAINS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
 
     integer :: ijk,nvect1,nvect2,nvect3,i,j,k,is
+    real(mytype) :: one_third
+
+    one_third = one / three
 
     !SKEW SYMMETRIC FORM
     !WORK X-PENCILS
@@ -217,6 +220,34 @@ CONTAINS
     ta1 = ta1 + td1 
     tb1 = tb1 + te1 
     tc1 = tc1 + tf1
+
+    if (ilmn) then
+       call derzz (tc3,divu3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
+       call transpose_z_to_y(tc3, tc2)
+       call transpose_z_to_y(divu3, ta2)
+
+       call deryy (tb2,ta2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+       if (istret.ne.0) then
+          call dery (tj2,ta2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+          do k = 1,ysize(3)
+             do j = 1,ysize(2)
+                do i = 1,ysize(1)
+                   tb2(i,j,k) = tb2(i,j,k)*pp2y(j)-pp4y(j)*tj2(i,j,k)
+                enddo
+             enddo
+          enddo
+       endif
+
+       call transpose_y_to_x(tb2, th1)
+       call transpose_y_to_x(tc2, ti1)
+       call transpose_y_to_x(ta2, tf1)
+
+       call derxx (tg1,tf1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+
+       ta1(:,:,:) = ta1(:,:,:) + one_third * tg1(:,:,:)
+       tb1(:,:,:) = tb1(:,:,:) + one_third * th1(:,:,:)
+       tc1(:,:,:) = tc1(:,:,:) + one_third * ti1(:,:,:)
+    endif
 
     di1 =  zero
     do is = 1, numscalar
