@@ -22,14 +22,14 @@ CONTAINS
 
     integer :: ijk,nvect1,nvect2,nvect3,i,j,k,is
 
-    !SKE SYMMETRIC FORM
+    !SKEW SYMMETRIC FORM
     !WORK X-PENCILS
-    dux1(:,:,:,1) = ux1*ux1
-    duy1(:,:,:,1) = ux1*uy1
+    ta1 = ux1*ux1
+    tb1 = ux1*uy1
     tc1 = ux1*uz1
 
-    call derx (td1,dux1(:,:,:,1),di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-    call derx (te1,duy1(:,:,:,1),di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+    call derx (td1,ta1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    call derx (te1,tb1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
     call derx (tf1,tc1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
     call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
     call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
