@@ -41,6 +41,8 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:) :: ux1, ux2, ux3, po3, dv3, pp3, nut1
   real(mytype), save, allocatable, dimension(:,:,:) :: uy1, uy2, uy3
   real(mytype), save, allocatable, dimension(:,:,:) :: uz1, uz2, uz3
+  real(mytype), save, allocatable, dimension(:,:,:,:) :: rho1, drho1
+  real(mytype), save, allocatable, dimension(:,:,:) :: rho2, rho3
   real(mytype), save, allocatable, dimension(:,:,:,:) :: phi1, phi2, phi3, phis1, phiss1
   real(mytype), save, allocatable, dimension(:,:,:) :: px1, py1, pz1
   real(mytype), save, allocatable, dimension(:,:,:) :: ep1, diss1, pre1, depo, depof, kine
@@ -259,6 +261,20 @@ contains
        allocate(yf(nobjmax,ysize(1),ysize(3)))
        allocate(zi(nobjmax,zsize(1),zsize(2)))
        allocate(zf(nobjmax,zsize(1),zsize(2)))
+    endif
+
+    if (ilmn) then
+       allocate(rho1(xsize(1),xsize(2),xsize(3),ntime)) !Need to store old density values to extrapolate drhodt
+       call alloc_y(rho2, opt_global=.true.) !global indices
+       call alloc_z(rho3, opt_global=.true.) !global indices
+       
+       allocate(drho1(xsize(1),xsize(2),xsize(3),ntime))
+    else
+       allocate(rho1(1, 1, 1, 1))
+       allocate(rho2(1, 1, 1))
+       allocate(rho3(1, 1, 1))
+       
+       allocate(drho1(1, 1, 1, 1))
     endif
 
     !module filter
