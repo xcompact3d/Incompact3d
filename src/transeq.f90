@@ -373,7 +373,7 @@ CONTAINS
 
   end subroutine scalar
 
-  SUBROUTINE continuity_rhs_eq(drho1, rho1, ux1, uy1, uz1)
+  SUBROUTINE continuity_rhs_eq(drho1, rho1, ux1, uy1, uz1, divu3)
 
     USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
     USE decomp_2d, ONLY : transpose_z_to_y, transpose_y_to_x
@@ -388,13 +388,14 @@ CONTAINS
 
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: rho1
+    REAL(mytype), INTENT(IN), DIMENSION(zsize(1), zsize(2), zsize(3)) :: divu3
     
     REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1
 
     !! XXX All variables up to date - no need to transpose
 
     CALL derz (ta3,rho3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    ta3(:,:,:) = -uz3(:,:,:) * ta3(:,:,:)
+    ta3(:,:,:) = -(uz3(:,:,:) * ta3(:,:,:) - rho3(:,:,:) * divu3(:,:,:))
     
     CALL transpose_z_to_y(ta3, tb2)
     CALL dery (ta2,rho2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)

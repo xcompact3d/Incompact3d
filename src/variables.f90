@@ -43,6 +43,7 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:) :: uz1, uz2, uz3
   real(mytype), save, allocatable, dimension(:,:,:,:) :: rho1, drho1
   real(mytype), save, allocatable, dimension(:,:,:) :: rho2, rho3
+  real(mytype), save, allocatable, dimension(:,:,:) :: divu3
   real(mytype), save, allocatable, dimension(:,:,:,:) :: phi1, phi2, phi3, phis1, phiss1
   real(mytype), save, allocatable, dimension(:,:,:) :: px1, py1, pz1
   real(mytype), save, allocatable, dimension(:,:,:) :: ep1, diss1, pre1, depo, depof, kine
@@ -268,6 +269,7 @@ contains
     call alloc_y(rho2, opt_global=.true.) !global indices
     call alloc_z(rho3, opt_global=.true.) !global indices
     allocate(drho1(xsize(1),xsize(2),xsize(3),ntime))
+    call alloc_z(divu3, opt_global=.true.) !global indices
 
     !module filter
     allocate(fiffx(nx), fisfx(nx), fifsx(nx), fifwx(nx), fissx(nx), fiswx(nx))

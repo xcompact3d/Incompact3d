@@ -128,7 +128,7 @@ PROGRAM incompact3d
         !! End initialise timestep
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-        CALL calculate_transeq_rhs(drho1,dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1)
+        CALL calculate_transeq_rhs(drho1,dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         !! Time integrate transport equations
@@ -219,9 +219,9 @@ END PROGRAM incompact3d
 !! DESCRIPTION: Calculates the right hand sides of all transport
 !!              equations - momentum, scalar transport, etc.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE calculate_transeq_rhs(drho1,dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1)
+SUBROUTINE calculate_transeq_rhs(drho1,dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
-  USE decomp_2d, ONLY : mytype, xsize
+  USE decomp_2d, ONLY : mytype, xsize, zsize
   USE variables, ONLY : numscalar
   USE param, ONLY : ntime, ilmn
   USE transeq, ONLY : momentum_rhs_eq, continuity_rhs_eq
@@ -233,6 +233,7 @@ SUBROUTINE calculate_transeq_rhs(drho1,dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1)
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime), INTENT(IN) :: rho1
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar), INTENT(IN) :: phi1
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ep1
+  REAL(mytype), DIMENSION(zsize(1), zsize(2), zsize(3)), INTENT(IN) :: divu3
 
   !! Outputs
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
@@ -245,7 +246,7 @@ SUBROUTINE calculate_transeq_rhs(drho1,dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1)
 
   !! Other (LMN, ...)
   IF (ilmn) THEN
-     CALL continuity_rhs_eq(drho1, rho1, ux1, uy1, uz1)
+     CALL continuity_rhs_eq(drho1, rho1, ux1, uy1, uz1, divu3)
   ENDIF
   
 END SUBROUTINE calculate_transeq_rhs
