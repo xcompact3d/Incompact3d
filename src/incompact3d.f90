@@ -84,6 +84,7 @@ PROGRAM incompact3d
 
   if (irestart==0) then
      call init(ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
+     CALL visu(ux1, uy1, uz1, 0)
   else
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,0)
   endif
