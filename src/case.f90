@@ -48,11 +48,15 @@ MODULE case
 
 CONTAINS
 
-  SUBROUTINE init (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, phis1, phiss1)
+  SUBROUTINE init (rho1, ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, phis1, phiss1)
 
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
+    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),ntime) :: rho1
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),numscalar) :: phi1,phis1,phiss1
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
+
+    !! Default density to one
+    rho1(:,:,:,:) = one
 
     IF (itype.EQ.itype_lockexch) THEN
 

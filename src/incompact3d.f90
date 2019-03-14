@@ -83,8 +83,8 @@ PROGRAM incompact3d
 #endif
 
   if (irestart==0) then
-     call init(ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
-     CALL visu(ux1, uy1, uz1, 0)
+     call init(rho1,ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
+     CALL visu(rho1, ux1, uy1, uz1, 0)
   else
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,0)
   endif
@@ -128,11 +128,18 @@ PROGRAM incompact3d
         !! End initialise timestep
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-        CALL calculate_transeq_rhs(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
+        CALL calculate_transeq_rhs(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1)
 
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         !! Time integrate transport equations
         !!-------------------------------------------------------------------------
+        if (ilmn) then
+           !! XXX N.B. from this point, X-pencil velocity arrays contain momentum.
+           call primary_to_conserved(rho1, ux1)
+           call primary_to_conserved(rho1, uy1)
+           call primary_to_conserved(rho1, uz1)
+        endif
+        
         call int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
         call pre_correc(ux1,uy1,uz1,ep1)
         !!-------------------------------------------------------------------------
@@ -151,6 +158,13 @@ PROGRAM incompact3d
         call solve_poisson(pp3, ux1, uy1, uz1, ep1)
         call gradp(px1,py1,pz1,pp3)
         call corpg(ux1,uy1,uz1,px1,py1,pz1)
+
+        if (ilmn) then
+           !! XXX N.B. from this point, X-pencil velocity arrays contain velocity.
+           call conserved_to_primary(rho1, ux1)
+           call conserved_to_primary(rho1, uy1)
+           call conserved_to_primary(rho1, uz1)
+        endif
         !!-------------------------------------------------------------------------
         !! End Poisson solver and velocity correction
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -180,7 +194,7 @@ PROGRAM incompact3d
 
      call simu_stats(3)
 
-     CALL visu(ux1, uy1, uz1, itime)
+     CALL visu(rho1, ux1, uy1, uz1, itime)
      !!----------------------------------------------------------------------------
      !! End post-processing / IO
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -205,7 +219,7 @@ END PROGRAM incompact3d
 !! DESCRIPTION: Calculates the right hand sides of all transport
 !!              equations - momentum, scalar transport, etc.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE calculate_transeq_rhs(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
+SUBROUTINE calculate_transeq_rhs(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1)
 
   USE decomp_2d, ONLY : mytype, xsize
   USE variables, ONLY : numscalar
@@ -216,6 +230,7 @@ SUBROUTINE calculate_transeq_rhs(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
 
   !! Inputs
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime), INTENT(IN) :: rho1
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar), INTENT(IN) :: phi1
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ep1
 
@@ -223,7 +238,7 @@ SUBROUTINE calculate_transeq_rhs(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
   
   !! Momentum equations
-  CALL momentum_rhs_eq(dux1,duy1,duz1,ux1,uy1,uz1,ep1,phi1)
+  CALL momentum_rhs_eq(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1)
 
   !! Scalar equations
 
@@ -261,13 +276,13 @@ SUBROUTINE solve_poisson(pp3, ux1, uy1, uz1, ep1)
 
 END SUBROUTINE solve_poisson
 
-SUBROUTINE visu(ux1, uy1, uz1, itime)
+SUBROUTINE visu(rho1, ux1, uy1, uz1, itime)
 
   USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
   USE decomp_2d, ONLY : fine_to_coarseV, transpose_x_to_y, transpose_y_to_z, &
        transpose_z_to_y, transpose_y_to_x
   USE decomp_2d_io, ONLY : decomp_2d_write_one
-  USE param, ONLY : ivisu, ioutput
+  USE param, ONLY : ivisu, ioutput, ntime, ilmn
   USE variables, ONLY : sx, ffx, fsx, fwx, ffxp, fsxp, fwxp
   USE variables, ONLY : sy, ffy, fsy, fwy, ffyp, fsyp, fwyp, ppy
   USE variables, ONLY : sz, ffz, fsz, fwz, ffzp, fszp, fwzp
@@ -282,6 +297,7 @@ SUBROUTINE visu(ux1, uy1, uz1, itime)
   
   !! Inputs
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime), INTENT(IN) :: rho1
   INTEGER, INTENT(IN) :: itime
 
   IF ((ivisu.NE.0).AND.(MOD(itime, ioutput).EQ.0)) THEN
@@ -305,5 +321,14 @@ SUBROUTINE visu(ux1, uy1, uz1, itime)
      call decomp_2d_write_one(1,uvisu,filename,2)
 
      !! TODO Write pressure
+
+     !! LMN - write out density
+     IF (ilmn) THEN
+        uvisu=0.
+        call fine_to_coarseV(1,rho1(:,:,:,1),uvisu)
+994     format('rho',I3.3)
+        write(filename, 994) itime/ioutput
+        call decomp_2d_write_one(1,uvisu,filename,2)
+     ENDIF
   ENDIF
 END SUBROUTINE visu
