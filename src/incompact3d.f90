@@ -171,7 +171,7 @@ PROGRAM incompact3d
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !        if (mod(itime,10)==0) then
-           call divergence(rho1,ux1,uy1,uz1,ep1,dv3,drho1,2)
+           call divergence(dv3,rho1,ux1,uy1,uz1,ep1,drho1,2)
            call test_speed_min_max(ux1,uy1,uz1)
            if (iscalar==1) call test_scalar_min_max(phi1)
 !        endif
@@ -278,7 +278,7 @@ SUBROUTINE solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1)
   REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: pp3
 
   nlock = 1 !! Corresponds to computing div(u*)
-  CALL divergence(rho1,ux1,uy1,uz1,ep1,pp3,drho1,nlock)
+  CALL divergence(pp3,rho1,ux1,uy1,uz1,ep1,drho1,nlock)
 
   CALL poisson(pp3)
 

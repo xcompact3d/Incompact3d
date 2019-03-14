@@ -215,7 +215,7 @@ end subroutine corpg
 ! output : pp3 (on pressure mesh)
 !written by SL 2018
 !******************************************************************** 
-subroutine divergence (rho1,ux1,uy1,uz1,ep1,pp3,drho1,nlock)
+subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,nlock)
 
   USE param
   USE decomp_2d
