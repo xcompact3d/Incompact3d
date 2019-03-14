@@ -186,7 +186,8 @@ module param
        itype_channel = 3, &
        itype_hill = 4, &
        itype_cyl = 5, &
-       itype_dbg = 6
+       itype_dbg = 6, &
+       itype_mixlayer = 7
   
   integer :: cont_phi,itr,itime,itest,iprocessing
   integer :: ifft,istret,iforc_entree,iturb
@@ -199,6 +200,7 @@ module param
   real(mytype) :: xlx,yly,zlz,dx,dy,dz,dx2,dy2,dz2,t,xxk1,xxk2
   real(mytype) :: dt,re,xnu,init_noise,inflow_noise,u1,u2,angle,anglex,angley
   real(mytype) :: wrotation,ro
+  real(mytype) :: dens1, dens2
 
   !! Numerics control
   integer :: ifirstder,isecondder,ipinter

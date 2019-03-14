@@ -163,7 +163,12 @@ subroutine int_time_continuity(rho1, drho1)
      enddo
   elseif (itimescheme.eq.5) then
      !! RK3 - Stores old transients
-     rho1(:,:,:,2) = drho1(:,:,:,1)
+     if (itr.eq.1) then
+        do it = ntime, 2, -1
+           rho1(:,:,:,it) = rho1(:,:,:,it-1)
+        enddo
+        rho1(:,:,:,2) = drho1(:,:,:,1)
+     endif
   else
      if (nrank.eq.0) then
         print *, "int_time_continuity not implemented for itimescheme", itimescheme
