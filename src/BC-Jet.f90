@@ -79,21 +79,33 @@ contains
     call boundary_conditions_jet (ux1,uy1,uz1,phi1)
 
     !INIT FOR G AND U=MEAN FLOW + NOISE
+    if (xstart(2)==1) then
+      do k = 1, xsize(3)
+        do j = 1, xsize(2)
+          do i = 1, xsize(1)
+            ux1(i, j, k) = byx1(i, k)
+            uy1(i, j, k) = byy1(i, k)
+            uz1(i, j, k) = byz1(i, k)
+          enddo
+        enddo
+      enddo
+    endif
     call transpose_x_to_y(ux1, ta2)
     call transpose_x_to_y(uy1, tb2)
     call transpose_x_to_y(uz1, tc2)
     do k=1,ysize(3)
-       do j=1,ysize(2)
+       do j=2,ysize(2)
           do i=1,ysize(1)
-             ta2(i,j,k)=ta2(i,j,k)+byx1(i,k)
-             tb2(i,j,k)=tb2(i,j,k)+byy1(i,k)
-             tc2(i,j,k)=tc2(i,j,k)+byz1(i,k)
+             ta2(i,j,k)=ta2(i,1,k)
+             tb2(i,j,k)=tb2(i,1,k)
+             tc2(i,j,k)=tc2(i,1,k)
           enddo
        enddo
     enddo
     call transpose_y_to_x(ta2, ux1)
     call transpose_y_to_x(tb2, uy1)
     call transpose_y_to_x(tc2, uz1)
+
     do k=1,xsize(3)
        do j=1,xsize(2)
           do i=1,xsize(1)
@@ -129,11 +141,19 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
-    integer :: i, j, k, ierr
+    integer :: i, j, k
     real(mytype) :: D, r, x, z
+    real(mytype) :: inflow, outflow, perturbation
     real(mytype) :: timeswitch
 
+    integer :: ierr
+    integer, dimension(2) :: dims, dummy_coords
+    logical, dimension(2) :: dummy_periods
+
+    call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, dims, dummy_periods, dummy_coords, ierr)
+
     D = one
+    perturbation = zero
 
     if (t.lt.one) then
        timeswitch = sin(t * pi / two)
@@ -143,30 +163,56 @@ contains
     timeswitch = one
 
     !! Set inflow
-    do k = 1, ysize(3)
-       z = real(k + ystart(3) - 2, mytype) * dz - half * zlz
-       do i = 1, ysize(1)
-          x = real(i + ystart(1) - 2, mytype) * dx - half * xlx
+    inflow = zero
+    if (xstart(2) == 1) then
+      do k = 1, xsize(3)
+        z = real(k + xstart(3) - 2, mytype) * dz - half * zlz
+        do i = 1, xsize(1)
+          x = real(i + xstart(1) - 2, mytype) * dx - half * xlx
           r = sqrt(x**2 + z**2) + 1.e-16_mytype
+
+          !! Set mean inflow
           byx1(i, k) = zero
           byy1(i, k) = (u1 - u2) * half * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D))) + u2
-          byy1(i, k) = timeswitch * byy1(i, k)
           byz1(i, k) = zero
-       enddo
-    enddo
+
+          !! Apply transient behaviour
+          if (r.lt.D/two) then
+            perturbation = inflow_noise * sin(r * x * z * t)
+          else
+            perturbation = zero
+          endif
+          byy1(i, k) = byy1(i, k) + perturbation
+          byy1(i, k) = timeswitch * byy1(i, k)
+
+          !! Sum up total flux
+          inflow = inflow + byy1(i, k)
+        enddo
+      enddo
+    endif
 
     !! Compute outflow
-    call transpose_x_to_y(ux, ta2)
-    call transpose_x_to_y(uy, tb2)
-    call transpose_x_to_y(uz, tc2)
-    j = ysize(2) - 1
-    do k = 1, ysize(3)
-       do i = 1, ysize(1)
-          byxn(i, k) = ta2(i, j, k)
-          byyn(i, k) = tb2(i, j, k)
-          byzn(i, k) = tc2(i, j, k)
-       enddo
-    enddo
+    call MPI_ALLREDUCE(inflow,outflow,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
+    outflow = outflow / nx / nz
+    if (dims(1)==1) then
+      j = xsize(2)
+      do k = 1, xsize(3)
+         do i = 1, xsize(1)
+            byxn(i, k) = ux(i, j, k) - dt * outflow * (ux(i, j, k) - ux(i, j - 1, k))
+            byyn(i, k) = uy(i, j, k) - dt * outflow * (uy(i, j, k) - uy(i, j - 1, k))
+            byzn(i, k) = uz(i, j, k) - dt * outflow * (uz(i, j, k) - uz(i, j - 1, k))
+         enddo
+      enddo
+    elseif (ny - (nym / dims(1)) == xstart(2)) then
+      j = xsize(2) - 1
+      do k = 1, xsize(3)
+         do i = 1, xsize(1)
+           byxn(i, k) = ux(i, j, k) - dt * outflow * (ux(i, j, k) - ux(i, j - 1, k))
+           byyn(i, k) = uy(i, j, k) - dt * outflow * (uy(i, j, k) - uy(i, j - 1, k))
+           byzn(i, k) = uz(i, j, k) - dt * outflow * (uz(i, j, k) - uz(i, j - 1, k))
+         enddo
+      enddo
+    endif
 
     return
   end subroutine boundary_conditions_jet

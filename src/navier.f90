@@ -501,9 +501,14 @@ subroutine pre_correc(ux,uy,uz,ep)
   implicit none
 
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,ep
-  integer :: i,j,k,code,is
+  integer :: i,j,k,is
   real(mytype) :: ut,ut1,utt,ut11
 
+  integer :: code
+  integer, dimension(2) :: dims, dummy_coords
+  logical, dimension(2) :: dummy_periods
+
+  call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, dims, dummy_periods, dummy_coords, code)
 
   !********NCLX==2*************************************
   !we are in X pencils:
@@ -610,6 +615,8 @@ subroutine pre_correc(ux,uy,uz,ep)
               dpdzyn(i,k)=dpdzyn(i,k)*gdt(itr)
            enddo
         enddo
+      endif
+      if (dims(1)==1) then
         do k=1,xsize(3)
            do i=1,xsize(1)
               ux(i,xsize(2),k)=byxn(i,k)+dpdxyn(i,k)
@@ -617,6 +624,14 @@ subroutine pre_correc(ux,uy,uz,ep)
               uz(i,xsize(2),k)=byzn(i,k)+dpdzyn(i,k)
            enddo
         enddo
+     elseif (ny - (nym / dims(1)) == xstart(2)) then
+       do k=1,xsize(3)
+          do i=1,xsize(1)
+             ux(i,xsize(2),k)=byxn(i,k)+dpdxyn(i,k)
+             uy(i,xsize(2),k)=byyn(i,k)
+             uz(i,xsize(2),k)=byzn(i,k)+dpdzyn(i,k)
+          enddo
+       enddo
      endif
   endif
 
