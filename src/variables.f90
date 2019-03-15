@@ -419,6 +419,9 @@ contains
     allocate(duz1(xsize(1),xsize(2),xsize(3),ntime))
 
     !! LMN
+    if (.not.ilmn) then
+       nrhotime = 1 !! Save some space
+    endif
     allocate(rho1(xsize(1),xsize(2),xsize(3),nrhotime)) !Need to store old density values to extrapolate drhodt
     call alloc_y(rho2, opt_global=.true.) !global indices
     call alloc_z(rho3, opt_global=.true.) !global indices
