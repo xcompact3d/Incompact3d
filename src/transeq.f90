@@ -43,16 +43,16 @@ CONTAINS
     call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
     call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
 
-    ta1(:,:,:) = half * td1(:,:,:) + half * rho1(:,:,:,1) * ux1(:,:,:) * ta1(:,:,:)
-    tb1(:,:,:) = half * te1(:,:,:) + half * rho1(:,:,:,1) * ux1(:,:,:) * tb1(:,:,:)
-    tc1(:,:,:) = half * tf1(:,:,:) + half * rho1(:,:,:,1) * ux1(:,:,:) * tc1(:,:,:)
+    ta1(:,:,:) = td1(:,:,:) + rho1(:,:,:,1) * ux1(:,:,:) * ta1(:,:,:)
+    tb1(:,:,:) = te1(:,:,:) + rho1(:,:,:,1) * ux1(:,:,:) * tb1(:,:,:)
+    tc1(:,:,:) = tf1(:,:,:) + rho1(:,:,:,1) * ux1(:,:,:) * tc1(:,:,:)
 
     if (ilmn) then
        !! Quasi-skew symmetric terms
        call derx (td1,rho1(:,:,:,1),di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-       ta1(:,:,:) = ta1(:,:,:) + half * ux1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
-       tb1(:,:,:) = tb1(:,:,:) + half * uy1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
-       tc1(:,:,:) = tc1(:,:,:) + half * uz1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
+       ta1(:,:,:) = ta1(:,:,:) + ux1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
+       tb1(:,:,:) = tb1(:,:,:) + uy1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
+       tc1(:,:,:) = tc1(:,:,:) + uz1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
     endif
 
     call transpose_x_to_y(ux1,ux2)
@@ -80,16 +80,16 @@ CONTAINS
     call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
     call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
 
-    ta2(:,:,:) = ta2(:,:,:) + half * tg2(:,:,:) + half * rho2(:,:,:) * uy2(:,:,:) * td2(:,:,:)
-    tb2(:,:,:) = tb2(:,:,:) + half * th2(:,:,:) + half * rho2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
-    tc2(:,:,:) = tc2(:,:,:) + half * ti2(:,:,:) + half * rho2(:,:,:) * uy2(:,:,:) * tf2(:,:,:)
+    ta2(:,:,:) = ta2(:,:,:) + tg2(:,:,:) + rho2(:,:,:) * uy2(:,:,:) * td2(:,:,:)
+    tb2(:,:,:) = tb2(:,:,:) + th2(:,:,:) + rho2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
+    tc2(:,:,:) = tc2(:,:,:) + ti2(:,:,:) + rho2(:,:,:) * uy2(:,:,:) * tf2(:,:,:)
 
     if (ilmn) then
        !! Quasi-skew symmetric terms
        call dery (te2,rho2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-       ta2(:,:,:) = ta2(:,:,:) + half * ux2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
-       tb2(:,:,:) = tb2(:,:,:) + half * uy2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
-       tc2(:,:,:) = tc2(:,:,:) + half * uz2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
+       ta2(:,:,:) = ta2(:,:,:) + ux2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
+       tb2(:,:,:) = tb2(:,:,:) + uy2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
+       tc2(:,:,:) = tc2(:,:,:) + uz2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
     endif
 
     call transpose_y_to_z(ux2,ux3)
@@ -117,22 +117,27 @@ CONTAINS
     call derz (te3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
     call derz (tf3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
 
-    ta3(:,:,:) = ta3(:,:,:) + half * tg3(:,:,:) + half * rho3(:,:,:) * uz3(:,:,:) * td3(:,:,:)
-    tb3(:,:,:) = tb3(:,:,:) + half * th3(:,:,:) + half * rho3(:,:,:) * uz3(:,:,:) * te3(:,:,:)
-    tc3(:,:,:) = tc3(:,:,:) + half * ti3(:,:,:) + half * rho3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
+    ta3(:,:,:) = ta3(:,:,:) + tg3(:,:,:) + rho3(:,:,:) * uz3(:,:,:) * td3(:,:,:)
+    tb3(:,:,:) = tb3(:,:,:) + th3(:,:,:) + rho3(:,:,:) * uz3(:,:,:) * te3(:,:,:)
+    tc3(:,:,:) = tc3(:,:,:) + ti3(:,:,:) + rho3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
 
     if (ilmn) then
        !! Quasi-skew symmetric terms
        call derz (tf3,rho3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-       ta3(:,:,:) = ta3(:,:,:) + half * ux3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
-       tb3(:,:,:) = tb3(:,:,:) + half * uy3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
-       tc3(:,:,:) = tc3(:,:,:) + half * uz3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
+       ta3(:,:,:) = ta3(:,:,:) + ux3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
+       tb3(:,:,:) = tb3(:,:,:) + uy3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
+       tc3(:,:,:) = tc3(:,:,:) + uz3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
 
        !! Add the additional divu terms
-       ta3(:,:,:) = ta3(:,:,:) + half * rho3(:,:,:) * ux3(:,:,:) * divu3(:,:,:)
-       tb3(:,:,:) = tb3(:,:,:) + half * rho3(:,:,:) * uy3(:,:,:) * divu3(:,:,:)
-       tc3(:,:,:) = tc3(:,:,:) + half * rho3(:,:,:) * uz3(:,:,:) * divu3(:,:,:)
+       ta3(:,:,:) = ta3(:,:,:) + rho3(:,:,:) * ux3(:,:,:) * divu3(:,:,:)
+       tb3(:,:,:) = tb3(:,:,:) + rho3(:,:,:) * uy3(:,:,:) * divu3(:,:,:)
+       tc3(:,:,:) = tc3(:,:,:) + rho3(:,:,:) * uz3(:,:,:) * divu3(:,:,:)
     endif
+
+    !! Skew symmetric - need to multiply by half
+    ta3(:,:,:) = half * ta3(:,:,:)
+    tb3(:,:,:) = half * tb3(:,:,:)
+    tc3(:,:,:) = half * tc3(:,:,:)
 
     !ALL THE CONVECTIVE TERMS ARE IN TA3, TB3 and TC3
     td3 = ta3 
