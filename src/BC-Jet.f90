@@ -65,9 +65,10 @@ contains
     !modulation of the random noise + initial velocity profile
     do k=1,xsize(3)
        do j=1,xsize(2)
-          if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy-yly/two
-          if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/two
+          if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy
+          if (istret.ne.0) y=yp(j+xstart(2)-1)
           um=exp(-y**2)
+          um = one
           do i=1,xsize(1)
              ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)
              uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
@@ -80,13 +81,12 @@ contains
 
     !INIT FOR G AND U=MEAN FLOW + NOISE
     if (xstart(2)==1) then
+      j = 1
       do k = 1, xsize(3)
-        do j = 1, xsize(2)
-          do i = 1, xsize(1)
-            ux1(i, j, k) = byx1(i, k)
-            uy1(i, j, k) = byy1(i, k)
-            uz1(i, j, k) = byz1(i, k)
-          enddo
+        do i = 1, xsize(1)
+          ux1(i, j, k) = byx1(i, k)
+          uy1(i, j, k) = byy1(i, k)
+          uz1(i, j, k) = byz1(i, k)
         enddo
       enddo
     endif
@@ -96,9 +96,13 @@ contains
     do k=1,ysize(3)
        do j=2,ysize(2)
           do i=1,ysize(1)
-             ta2(i,j,k)=ta2(i,1,k)
-             tb2(i,j,k)=tb2(i,1,k)
-             tc2(i,j,k)=tc2(i,1,k)
+             ta2(i,j,k)=ta2(i,j,k)+ta2(i,1,k)
+             if (tb2(i,1,k) > 0.5) then
+               print*, tb2(i,j,k), tb2(i,1,k), j
+             endif
+
+             tb2(i,j,k)=tb2(i,j,k)+tb2(i,1,k)
+             tc2(i,j,k)=tc2(i,j,k)+tc2(i,1,k)
           enddo
        enddo
     enddo
