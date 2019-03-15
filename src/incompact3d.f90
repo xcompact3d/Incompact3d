@@ -84,7 +84,7 @@ PROGRAM incompact3d
 
   if (irestart==0) then
      call init(ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
-     CALL visu(ux1, uy1, uz1, 0)
+     CALL visu(ux1, uy1, uz1, pp3, 0)
   else
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,0)
   endif
@@ -180,7 +180,7 @@ PROGRAM incompact3d
 
      call simu_stats(3)
 
-     CALL visu(ux1, uy1, uz1, itime)
+     CALL visu(ux1, uy1, uz1, pp3, itime)
      !!----------------------------------------------------------------------------
      !! End post-processing / IO
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -261,20 +261,19 @@ SUBROUTINE solve_poisson(pp3, ux1, uy1, uz1, ep1)
 
 END SUBROUTINE solve_poisson
 
-SUBROUTINE visu(ux1, uy1, uz1, itime)
+SUBROUTINE visu(ux1, uy1, uz1, pp3, itime)
 
   USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
-  USE decomp_2d, ONLY : fine_to_coarseV, transpose_x_to_y, transpose_y_to_z, &
-       transpose_z_to_y, transpose_y_to_x
+  USE decomp_2d, ONLY : fine_to_coarseV, transpose_z_to_y, transpose_y_to_x
   USE decomp_2d_io, ONLY : decomp_2d_write_one
   USE param, ONLY : ivisu, ioutput
-  USE variables, ONLY : sx, ffx, fsx, fwx, ffxp, fsxp, fwxp
-  USE variables, ONLY : sy, ffy, fsy, fwy, ffyp, fsyp, fwyp, ppy
-  USE variables, ONLY : sz, ffz, fsz, fwz, ffzp, fszp, fwzp
-  USE variables, ONLY : derx, dery, derz
+  USE variables, ONLY : sx, cifip6, cisip6, ciwip6, cifx6, cisx6, ciwx6
+  USE variables, ONLY : sy, cifip6y, cisip6y, ciwip6y, cify6, cisy6, ciwy6
+  USE variables, ONLY : sz, cifip6z, cisip6z, ciwip6z, cifz6, cisz6, ciwz6
   USE var, ONLY : uvisu
-  USE var, ONLY : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-  USE var, ONLY : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+  USE var, ONLY : ta1, tb1, di1, nxmsize
+  USE var, ONLY : ta2, tb2, di2, ph2, nymsize
+  USE var, ONLY : ta3, di3, ph3, nzmsize
 
   IMPLICIT NONE
 
@@ -282,6 +281,7 @@ SUBROUTINE visu(ux1, uy1, uz1, itime)
   
   !! Inputs
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
+  REAL(mytype), DIMENSION(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize), INTENT(IN) :: pp3
   INTEGER, INTENT(IN) :: itime
 
   IF ((ivisu.NE.0).AND.(MOD(itime, ioutput).EQ.0)) THEN
@@ -305,5 +305,23 @@ SUBROUTINE visu(ux1, uy1, uz1, itime)
      call decomp_2d_write_one(1,uvisu,filename,2)
 
      !! TODO Write pressure
+
+     !WORK Z-PENCILS
+     call interzpv(ta3,pp3,di3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
+          (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
+     !WORK Y-PENCILS
+     call transpose_z_to_y(ta3,ta2,ph3) !nxm nym nz
+     call interypv(tb2,ta2,di2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
+          (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
+     !WORK X-PENCILS
+     call transpose_y_to_x(tb2,ta1,ph2) !nxm ny nz
+     call interxpv(tb1,ta1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
+          nxmsize,xsize(1),xsize(2),xsize(3),1)
+
+     uvisu=0._mytype
+     call fine_to_coarseV(1,tb1,uvisu)
+993  format('pp',I3.3)
+     write(filename, 993) itime/ioutput
+     call decomp_2d_write_one(1,uvisu,filename,2)
   ENDIF
 END SUBROUTINE visu
