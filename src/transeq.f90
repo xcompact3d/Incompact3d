@@ -432,7 +432,7 @@ CONTAINS
     !! XXX All variables up to date - no need to transpose
 
     CALL derz (ta3, rho3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
-    ta3(:,:,:) = -(uz3(:,:,:) * ta3(:,:,:) - rho3(:,:,:) * divu3(:,:,:))
+    ta3(:,:,:) = -(uz3(:,:,:) * ta3(:,:,:) + rho3(:,:,:) * divu3(:,:,:))
     
     CALL transpose_z_to_y(ta3,  tb2)
     CALL dery (ta2, rho2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
