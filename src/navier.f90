@@ -280,22 +280,25 @@ subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
   endif
 
   !WORK X-PENCILS
+
+  if (ilmn) then
+     if (nlock.eq.1) then
+        !! Approximate -div(rho u) using ddt(rho)
+        call extrapol_drhodt(ta1, rho1, drho1)
+        call interxvp(pgy1,ta1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+     elseif (nlock.eq.2) then
+        !! Need to check our error against divu constraint
+        call transpose_z_to_y(divu3, ta2)
+        call transpose_y_to_x(ta2, ta1)
+        call interxvp(pgy1,ta1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+        pgy1(:,:,:) = -pgy1(:,:,:)
+     endif
+  else
+     pgy1(:,:,:) = zero
+  endif
+
   call derxvp(pp1,ta1,di1,sx,cfx6,csx6,cwx6,xsize(1),nxmsize,xsize(2),xsize(3),0)
-
-  if (ilmn.and.(nlock.eq.1)) then
-     call extrapol_drhodt(ta1, rho1, drho1)
-     call interxvp(pgy1,ta1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
-     pp1(:,:,:) = pp1(:,:,:) + pgy1(:,:,:)
-  endif
-
-  if (ilmn.and.(nlock.eq.2)) then
-     !! Need to check our error against divu constraint
-     call transpose_z_to_y(divu3, ta2)
-     call transpose_y_to_x(ta2, ta1)
-     call interxvp(pgy1,ta1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
-     pp1(:,:,:) = pp1(:,:,:) - pgy1(:,:,:)
-  endif
-
+  pp1(:,:,:) = pp1(:,:,:) + pgy1(:,:,:) !! pgy1 is a contribution from LMN, zero otherwise
   call interxvp(pgy1,tb1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
   call interxvp(pgz1,tc1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
 
