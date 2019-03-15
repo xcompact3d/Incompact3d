@@ -36,7 +36,7 @@ contains
     USE decomp_2d_io
     USE variables
     USE param
-    USE MPI
+    USE var, ONLY : ta2, tb2, tc2
 
     implicit none
 
@@ -44,22 +44,12 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1,phis1,phiss1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
 
-    real(mytype) :: y,r,um,r3,x,z,h,ct
-    real(mytype) :: cx0,cy0,cz0,hg,lg
-    integer :: k,j,i,ijk,fh,ierror,ii,is,code
-    integer (kind=MPI_OFFSET_KIND) :: disp
+    real(mytype) :: y
+    integer :: i, j, k, ii, is, code
+    real(mytype) :: um
 
     integer, dimension (:), allocatable :: seed
 
-    if (iscalar==1) then
-
-       phi1 = one !change as much as you want
-
-       !do not delete this
-       phis1=phi1
-       phiss1=phis1
-
-    endif
     ux1=zero;uy1=zero;uz1=zero
     if (iin.ne.0) then
        call system_clock(count=code)
@@ -77,22 +67,36 @@ contains
        do j=1,xsize(2)
           if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy-yly/two
           if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/two
-          um=exp(-zptwo*y*y)
+          um=exp(-y**2)
           do i=1,xsize(1)
-             ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
+             ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)
              uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
              uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
           enddo
        enddo
     enddo
 
+    call boundary_conditions_jet (ux1,uy1,uz1,phi1)
+
     !INIT FOR G AND U=MEAN FLOW + NOISE
+    call transpose_x_to_y(ux1, ta2)
+    call transpose_x_to_y(uy1, tb2)
+    call transpose_x_to_y(uz1, tc2)
+    do k=1,ysize(3)
+       do j=1,ysize(2)
+          do i=1,ysize(1)
+             ta2(i,j,k)=ta2(i,j,k)+byx1(i,k)
+             tb2(i,j,k)=tb2(i,j,k)+byy1(i,k)
+             tc2(i,j,k)=tc2(i,j,k)+byz1(i,k)
+          enddo
+       enddo
+    enddo
+    call transpose_y_to_x(ta2, ux1)
+    call transpose_y_to_x(tb2, uy1)
+    call transpose_y_to_x(tc2, uz1)
     do k=1,xsize(3)
        do j=1,xsize(2)
           do i=1,xsize(1)
-             ux1(i,j,k)=ux1(i,j,k)+bxx1(j,k)
-             uy1(i,j,k)=uy1(i,j,k)+bxy1(j,k)
-             uz1(i,j,k)=uz1(i,j,k)+bxz1(j,k)
              dux1(i,j,k,1)=ux1(i,j,k)
              duy1(i,j,k,1)=uy1(i,j,k)
              duz1(i,j,k,1)=uz1(i,j,k)
@@ -114,21 +118,55 @@ contains
   !********************************************************************
   subroutine boundary_conditions_jet (ux,uy,uz,phi)
 
+    USE MPI
     USE param
     USE variables
     USE decomp_2d
+    USE var
 
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
-!!$  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ut
 
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: gx
+    integer :: i, j, k, ierr
+    real(mytype) :: D, r, x, z
+    real(mytype) :: timeswitch
 
-    call transpose_x_to_y(ux,gx)
-    call jet_flrt(gx,two/three)
-    call transpose_y_to_x(gx,ux)
+    D = one
+
+    if (t.lt.one) then
+       timeswitch = sin(t * pi / two)
+    else
+       timeswitch = one
+    endif
+    timeswitch = one
+
+    !! Set inflow
+    do k = 1, ysize(3)
+       z = real(k + ystart(3) - 2, mytype) * dz - half * zlz
+       do i = 1, ysize(1)
+          x = real(i + ystart(1) - 2, mytype) * dx - half * xlx
+          r = sqrt(x**2 + z**2) + 1.e-16_mytype
+          byx1(i, k) = zero
+          byy1(i, k) = (u1 - u2) * half * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D))) + u2
+          byy1(i, k) = timeswitch * byy1(i, k)
+          byz1(i, k) = zero
+       enddo
+    enddo
+
+    !! Compute outflow
+    call transpose_x_to_y(ux, ta2)
+    call transpose_x_to_y(uy, tb2)
+    call transpose_x_to_y(uz, tc2)
+    j = ysize(2) - 1
+    do k = 1, ysize(3)
+       do i = 1, ysize(1)
+          byxn(i, k) = ta2(i, j, k)
+          byyn(i, k) = tb2(i, j, k)
+          byzn(i, k) = tc2(i, j, k)
+       enddo
+    enddo
 
     return
   end subroutine boundary_conditions_jet
