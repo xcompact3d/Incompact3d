@@ -1,9 +1,12 @@
 !************************************************************************
 ! Time-marching subroutine used to advance the numerical solution in time  
 !
-! input: dvar1 
+!        input: dvar1
 ! 
 ! input/output: var1
+!
+!       Author: Yorgos
+!     Modified: Paul
 ! 
 !************************************************************************ 
 subroutine  int_time(var1,dvar1)
@@ -119,6 +122,17 @@ subroutine  int_time(var1,dvar1)
 
 end subroutine int_time
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!!  SUBROUTINE: int_time_momentum
+!! DESCRIPTION: Integrates the momentum equations in time by calling time
+!!              integrator.
+!!      INPUTS: dux1, duy1, duz1 - the RHS(s) of the momentum equations
+!!     OUTPUTS: ux1,   uy1,  uz1 - the intermediate momentum state.
+!!       NOTES: This is integrating the MOMENTUM in time (!= velocity)
+!!      AUTHOR: Paul Bartholomew
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 subroutine int_time_momentum(ux1, uy1, uz1, dux1, duy1, duz1)
 
   USE param
@@ -139,6 +153,16 @@ subroutine int_time_momentum(ux1, uy1, uz1, dux1, duy1, duz1)
   
 endsubroutine int_time_momentum
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!!  SUBROUTINE: int_time_continuity
+!! DESCRIPTION: Integrates the continuity (aka density transport) equation in
+!!              time
+!!      INPUTS: drho1 - the RHS(s) of the continuity equation.
+!!     OUTPUTS:  rho1 - the density at new time.
+!!      AUTHOR: Paul Bartholomew
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 subroutine int_time_continuity(rho1, drho1)
 
   USE param
