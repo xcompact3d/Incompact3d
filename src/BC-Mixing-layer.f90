@@ -24,14 +24,15 @@ contains
     USE decomp_2d, ONLY : mytype, xsize
     USE param, ONLY : u1, u2, dens1, dens2
     USE param, ONLY : half, one, two, four, eight, sixteen
-    USE param, ONLY : ntime
+    USE param, ONLY : ntime, nrhotime
     USE MPI
 
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: rho1, drho1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
 
     integer :: i, j, k, is
     real(mytype) :: x, y, z
@@ -129,8 +130,11 @@ contains
     
     drho1(:,:,:,1)=rho1(:,:,:,1)
     do is = 2, ntime
-       rho1(:,:,:,is)=rho1(:,:,:,is - 1)
        drho1(:,:,:,is)=drho1(:,:,:,is - 1)
+    enddo
+
+    do is = 2, nrhotime
+       rho1(:,:,:,is) = rho1(:,:,:,is - 1)
     enddo
 
 #ifdef DEBG
