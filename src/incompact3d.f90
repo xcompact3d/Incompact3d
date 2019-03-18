@@ -297,9 +297,9 @@ SUBROUTINE visu(rho1, ux1, uy1, uz1, pp3, itime)
   USE variables, ONLY : sy, cifip6y, cisip6y, ciwip6y, cify6, cisy6, ciwy6
   USE variables, ONLY : sz, cifip6z, cisip6z, ciwip6z, cifz6, cisz6, ciwz6
   USE var, ONLY : uvisu
-  USE var, ONLY : ta1, tb1, di1, nxmsize
-  USE var, ONLY : ta2, tb2, di2, ph2, nymsize
-  USE var, ONLY : ta3, di3, ph3, nzmsize
+  USE var, ONLY : pp1, ta1, di1, nxmsize
+  USE var, ONLY : pp2, ppi2, dip2, ph2, nymsize
+  USE var, ONLY : ppi3, dip3, ph3, nzmsize
 
   IMPLICIT NONE
 
@@ -332,19 +332,19 @@ SUBROUTINE visu(rho1, ux1, uy1, uz1, pp3, itime)
      call decomp_2d_write_one(1,uvisu,filename,2)
 
      !WORK Z-PENCILS
-     call interzpv(ta3,pp3,di3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
+     call interzpv(ppi3,pp3,dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
           (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
      !WORK Y-PENCILS
-     call transpose_z_to_y(ta3,ta2,ph3) !nxm nym nz
-     call interypv(tb2,ta2,di2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
+     call transpose_z_to_y(ppi3,pp2,ph3) !nxm nym nz
+     call interypv(ppi2,pp2,dip2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
           (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
      !WORK X-PENCILS
-     call transpose_y_to_x(tb2,ta1,ph2) !nxm ny nz
-     call interxpv(tb1,ta1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
+     call transpose_y_to_x(ppi2,pp1,ph2) !nxm ny nz
+     call interxpv(ta1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
           nxmsize,xsize(1),xsize(2),xsize(3),1)
 
      uvisu=0._mytype
-     call fine_to_coarseV(1,tb1,uvisu)
+     call fine_to_coarseV(1,ta1,uvisu)
 993  format('pp',I3.3)
      write(filename, 993) itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
