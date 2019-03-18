@@ -298,14 +298,12 @@ subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
      if (nlock.eq.1) then
         !! Approximate -div(rho u) using ddt(rho)
         call extrapol_drhodt(ta1, rho1, drho1)
-        call interxvp(pgy1,ta1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
      elseif (nlock.eq.2) then
         !! Need to check our error against divu constraint
-        call transpose_z_to_y(divu3, ta2)
+        call transpose_z_to_y(-divu3, ta2)
         call transpose_y_to_x(ta2, ta1)
-        call interxvp(pgy1,ta1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
-        pgy1(:,:,:) = -pgy1(:,:,:)
      endif
+     call interxvp(pgy1,ta1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
   else
      pgy1(:,:,:) = zero
   endif
