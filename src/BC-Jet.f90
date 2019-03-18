@@ -156,6 +156,7 @@ contains
 
     call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, dims, dummy_periods, dummy_coords, ierr)
 
+
     D = one
     perturbation = zero
 
@@ -194,6 +195,20 @@ contains
         enddo
       enddo
     endif
+
+    call random_number(bxo)
+    call random_number(byo)
+    call random_number(bzo)
+    bxo(:,:) = two * bxo(:,:) - one
+    byo(:,:) = two * byo(:,:) - one
+    bzo(:,:) = two * bzo(:,:) - one
+    do k=1,xsize(3)
+      do j=1,xsize(2)
+        bxx1(j,k)=bxo(j,k)*inflow_noise
+        bxy1(j,k)=byo(j,k)*inflow_noise
+        bxz1(j,k)=bzo(j,k)*inflow_noise
+      enddo
+    enddo
 
     !! Compute outflow
     call MPI_ALLREDUCE(inflow,outflow,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
