@@ -164,7 +164,7 @@ contains
     else
        timeswitch = one
     endif
-    timeswitch = one
+    !timeswitch = one
 
     !! Set inflow
     inflow = zero
@@ -181,12 +181,12 @@ contains
           byz1(i, k) = zero
 
           !! Apply transient behaviour
-          if (r.lt.D/two) then
-            perturbation = inflow_noise * sin(r * x * z * t)
-          else
-            perturbation = zero
-          endif
-          byy1(i, k) = byy1(i, k) + perturbation
+          ! if (r.lt.D/two) then
+          !   perturbation = inflow_noise * sin(r * x * z * t)
+          ! else
+          !   perturbation = zero
+          ! endif
+          ! byy1(i, k) = byy1(i, k) + perturbation
           byy1(i, k) = timeswitch * byy1(i, k)
 
           !! Sum up total flux
