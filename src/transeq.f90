@@ -477,16 +477,16 @@ CONTAINS
     !! XXX All variables up to date - no need to transpose
 
     CALL derz (ta3, rho3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
-    ta3(:,:,:) = -(uz3(:,:,:) * ta3(:,:,:) + rho3(:,:,:) * divu3(:,:,:))
+    ta3(:,:,:) = uz3(:,:,:) * ta3(:,:,:) + rho3(:,:,:) * divu3(:,:,:)
     
-    CALL transpose_z_to_y(ta3,  tb2)
+    CALL transpose_z_to_y(ta3, tb2)
     CALL dery (ta2, rho2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
-    ta2(:,:,:) = -uy2(:,:,:) * ta2(:,:,:) + tb2(:,:,:)
+    ta2(:,:,:) = uy2(:,:,:) * ta2(:,:,:) + tb2(:,:,:)
 
-    CALL transpose_y_to_x(ta2,  ta1)
+    CALL transpose_y_to_x(ta2, ta1)
     CALL derx (drho1(:,:,:,1), rho1(:,:,:,1), &
          di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1)
-    drho1(:,:,:,1) = -ux1(:,:,:) * drho1(:,:,:,1) + ta1(:,:,:)
+    drho1(:,:,:,1) = -(ux1(:,:,:) * drho1(:,:,:,1) + ta1(:,:,:))
 
   ENDSUBROUTINE continuity_rhs_eq
   
