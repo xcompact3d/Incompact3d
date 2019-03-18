@@ -171,7 +171,8 @@ subroutine int_time_continuity(rho1, drho1)
   
   implicit none
 
-  integer :: it
+  integer :: it, i, j, k
+  real(mytype) :: rhomin, rhomax
 
   !! INPUTS
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
@@ -202,6 +203,18 @@ subroutine int_time_continuity(rho1, drho1)
 
   !! Now we can update current density
   call int_time(rho1(:,:,:,1), drho1)
+
+  !! Enforce boundedness on density
+  rhomin = min(dens1, dens2)
+  rhomax = max(dens1, dens2)
+  do k = 1, xsize(3)
+     do j = 1, xsize(2)
+        do i = 1, xsize(1)
+           rho1(i, j, k, 1) = max(rho1(i, j, k, 1), rhomin)
+           rho1(i, j, k, 1) = min(rho1(i, j, k, 1), rhomax)
+        enddo
+     enddo
+  enddo
   
 endsubroutine int_time_continuity
 
