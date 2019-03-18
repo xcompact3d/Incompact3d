@@ -34,8 +34,6 @@ nclzn = 0
 ! Flow parameters
 iin = 1               ! Inflow conditions (1: classic, 2: turbinit)
 re = 400.             ! nu=1/re (Kinematic Viscosity)
-u1 = 8.               ! u1 (max velocity) (for inflow condition)
-u2 = 8.               ! u2 (min velocity) (for inflow condition)
 init_noise = 0.0      ! Turbulence intensity (1=100%) !! Initial condition
 inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
 
