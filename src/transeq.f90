@@ -26,9 +26,6 @@ CONTAINS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
 
     integer :: ijk,nvect1,nvect2,nvect3,i,j,k,is
-    real(mytype) :: one_third
-
-    one_third = one / three
 
     !SKEW SYMMETRIC FORM
     !WORK X-PENCILS
@@ -227,31 +224,7 @@ CONTAINS
     tc1 = tc1 + tf1
 
     if (ilmn) then
-       call derzz (tc3,divu3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
-       call transpose_z_to_y(tc3, tc2)
-       call transpose_z_to_y(divu3, ta2)
-
-       call deryy (tb2,ta2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
-       if (istret.ne.0) then
-          call dery (tj2,ta2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-          do k = 1,ysize(3)
-             do j = 1,ysize(2)
-                do i = 1,ysize(1)
-                   tb2(i,j,k) = tb2(i,j,k)*pp2y(j)-pp4y(j)*tj2(i,j,k)
-                enddo
-             enddo
-          enddo
-       endif
-
-       call transpose_y_to_x(tb2, th1)
-       call transpose_y_to_x(tc2, ti1)
-       call transpose_y_to_x(ta2, tf1)
-
-       call derxx (tg1,tf1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
-
-       ta1(:,:,:) = ta1(:,:,:) + one_third * tg1(:,:,:)
-       tb1(:,:,:) = tb1(:,:,:) + one_third * th1(:,:,:)
-       tc1(:,:,:) = tc1(:,:,:) + one_third * ti1(:,:,:)
+       call momentum_full_viscstress_tensor(ta1, tb1, tc1, divu3)
     endif
 
     di1 =  zero
@@ -277,6 +250,73 @@ CONTAINS
     endif
 
   end subroutine momentum_rhs_eq
+  !************************************************************
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!
+  !!  SUBROUTINE: momentum_full_viscstress_tensor
+  !!      AUTHOR: Paul Bartholomew
+  !! DESCRIPTION: In an incompressible flow the viscous stress
+  !!              tensor reduces to
+  !!                d2u^j / {dx^i}^2
+  !!              however if div(u) != 0 we have
+  !!                d2u^j / {dx^i}^2 + 1/3 d/dx^j div(u)
+  !!              and further if \mu != const.
+  !!                \mu (d2u^j / {dx^i}^2 + 1/3 d/dx^j div(u))
+  !!                  + d\mu/dx^i (du^j/dx^i + du^i/dx^j
+  !!                  - 2/3 div(u) \delta^{ij})
+  !!              This subroutine computes the additional
+  !!              contributions not accounted for in the
+  !!              incompressible solver.
+  !!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine momentum_full_viscstress_tensor(ta1, tb1, tc1, divu3)
+
+    USE param
+    USE variables
+    USE decomp_2d
+    USE var, only : td1,te1,tf1,tg1,di1
+    USE var, only : ta2,tb2,tc2,td2,di2
+    USE var, only : tc3,di3
+
+    IMPLICIT NONE
+
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ta1, tb1, tc1
+    REAL(mytype), DIMENSION(zsize(1), zsize(2), zsize(3)), INTENT(IN) :: divu3
+
+    INTEGER :: i, j, k
+    REAL(mytype) :: one_third
+
+    one_third = one / three
+    
+    call derzz (tc3,divu3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
+    call transpose_z_to_y(tc3, tc2)
+    call transpose_z_to_y(divu3, ta2)
+    
+    call deryy (tb2,ta2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+    if (istret.ne.0) then
+       call dery (td2,ta2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+       do k = 1,ysize(3)
+          do j = 1,ysize(2)
+             do i = 1,ysize(1)
+                tb2(i,j,k) = tb2(i,j,k)*pp2y(j)-pp4y(j)*td2(i,j,k)
+             enddo
+          enddo
+       enddo
+    endif
+    
+    call transpose_y_to_x(tb2, te1)
+    call transpose_y_to_x(tc2, tf1)
+    call transpose_y_to_x(ta2, tg1)
+
+    call derxx (td1,tg1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+
+    ta1(:,:,:) = ta1(:,:,:) + one_third * td1(:,:,:)
+    tb1(:,:,:) = tb1(:,:,:) + one_third * te1(:,:,:)
+    tc1(:,:,:) = tc1(:,:,:) + one_third * tf1(:,:,:)
+
+  end subroutine momentum_full_viscstress_tensor
+  
   !************************************************************
   subroutine scalar(ux1,uy1,uz1,phi1,phis1,phiss1,di1,ta1,tb1,tc1,td1,&
        uy2,uz2,phi2,di2,ta2,tb2,tc2,td2,uz3,phi3,di3,ta3,tb3,epsi,nut1)
