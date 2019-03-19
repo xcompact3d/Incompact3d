@@ -80,7 +80,7 @@ contains
           do j=1,xsize(2)
              y=real((j+xstart(2)-2),mytype)*dy - half * yly
              do i=1,xsize(1)
-                x=real(i-1,mytype)*dx
+                x=real(i+xstart(1)-2,mytype)*dx
 
                 !! Set mean field
                 ux1(i, j, k) = ux1(i, j, k) + half * (u1 + u2) &
