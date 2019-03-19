@@ -289,27 +289,16 @@ CONTAINS
 
     one_third = one / three
     
-    call derzz (tc3,divu3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
+    call derz (tc3,divu3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
     call transpose_z_to_y(tc3, tc2)
     call transpose_z_to_y(divu3, ta2)
-    
-    call deryy (tb2,ta2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
-    if (istret.ne.0) then
-       call dery (td2,ta2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-       do k = 1,ysize(3)
-          do j = 1,ysize(2)
-             do i = 1,ysize(1)
-                tb2(i,j,k) = tb2(i,j,k)*pp2y(j)-pp4y(j)*td2(i,j,k)
-             enddo
-          enddo
-       enddo
-    endif
-    
+
+    call dery(tb2,ta2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
     call transpose_y_to_x(tb2, te1)
     call transpose_y_to_x(tc2, tf1)
     call transpose_y_to_x(ta2, tg1)
 
-    call derxx (td1,tg1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+    call derx(td1,tg1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
 
     ta1(:,:,:) = ta1(:,:,:) + one_third * td1(:,:,:)
     tb1(:,:,:) = tb1(:,:,:) + one_third * te1(:,:,:)
