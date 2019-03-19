@@ -294,6 +294,7 @@ subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
 
   !WORK X-PENCILS
 
+  call derxvp(pp1,ta1,di1,sx,cfx6,csx6,cwx6,xsize(1),nxmsize,xsize(2),xsize(3),0)
   if (ilmn) then
      if (nlock.eq.1) then
         !! Approximate -div(rho u) using ddt(rho)
@@ -308,7 +309,6 @@ subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
      pgy1(:,:,:) = zero
   endif
 
-  call derxvp(pp1,ta1,di1,sx,cfx6,csx6,cwx6,xsize(1),nxmsize,xsize(2),xsize(3),0)
   pp1(:,:,:) = pp1(:,:,:) + pgy1(:,:,:) !! pgy1 is a contribution from LMN, zero otherwise
   call interxvp(pgy1,tb1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
   call interxvp(pgz1,tc1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
