@@ -278,8 +278,6 @@ subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
   integer :: code
   real(mytype) :: tmax,tmoy,tmax1,tmoy1
 
-  nvect1=xsize(1)*xsize(2)*xsize(3)
-  nvect2=ysize(1)*ysize(2)*ysize(3)
   nvect3=(ph1%zen(1)-ph1%zst(1)+1)*(ph1%zen(2)-ph1%zst(2)+1)*nzmsize
 
   if (iibm.eq.0) then
