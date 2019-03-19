@@ -762,12 +762,12 @@ SUBROUTINE calc_divu_constraint(divu3, rho1)
      !! X-pencil
      
      !! We need temperature
-     ta1(:,:,:) = pressure0 / rho1(:,:,:,1)
+     ta1(:,:,:) = pressure0 / rho1(:,:,:,1) !! Temperature
      
      CALL derxx (tb1, ta1, di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1)
      
-     CALL transpose_x_to_y(ta1, ta2)
-     CALL transpose_x_to_y(tb1, tb2)
+     CALL transpose_x_to_y(ta1, ta2)        !! Temperature
+     CALL transpose_x_to_y(tb1, tb2)        !! d2Tdx2
      
      !!------------------------------------------------------------------------------
      !! Y-pencil
@@ -775,8 +775,8 @@ SUBROUTINE calc_divu_constraint(divu3, rho1)
 
      tb2(:,:,:) = tb2(:,:,:) + tc2(:,:,:)
 
-     CALL transpose_y_to_z(ta2, ta3)
-     CALL transpose_y_to_z(tb2, tb3)
+     CALL transpose_y_to_z(ta2, ta3)        !! Temperature
+     CALL transpose_y_to_z(tb2, tb3)        !! d2Tdx2 + d2Tdy2
      
      !!------------------------------------------------------------------------------
      !! Z-pencil
