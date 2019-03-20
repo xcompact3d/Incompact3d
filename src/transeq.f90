@@ -77,9 +77,9 @@ CONTAINS
     call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
     call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
 
-    ta2(:,:,:) = ta2(:,:,:) + tg2(:,:,:) + rho2(:,:,:) * uy2(:,:,:) * td2(:,:,:)
-    tb2(:,:,:) = tb2(:,:,:) + th2(:,:,:) + rho2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
-    tc2(:,:,:) = tc2(:,:,:) + ti2(:,:,:) + rho2(:,:,:) * uy2(:,:,:) * tf2(:,:,:)
+    ta2(:,:,:) = ta2(:,:,:) + (tg2(:,:,:) + rho2(:,:,:) * uy2(:,:,:) * td2(:,:,:))
+    tb2(:,:,:) = tb2(:,:,:) + (th2(:,:,:) + rho2(:,:,:) * uy2(:,:,:) * te2(:,:,:))
+    tc2(:,:,:) = tc2(:,:,:) + (ti2(:,:,:) + rho2(:,:,:) * uy2(:,:,:) * tf2(:,:,:))
 
     if (ilmn) then
        !! Quasi-skew symmetric terms
@@ -114,9 +114,9 @@ CONTAINS
     call derz (te3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
     call derz (tf3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
 
-    ta3(:,:,:) = ta3(:,:,:) + tg3(:,:,:) + rho3(:,:,:) * uz3(:,:,:) * td3(:,:,:)
-    tb3(:,:,:) = tb3(:,:,:) + th3(:,:,:) + rho3(:,:,:) * uz3(:,:,:) * te3(:,:,:)
-    tc3(:,:,:) = tc3(:,:,:) + ti3(:,:,:) + rho3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
+    ta3(:,:,:) = ta3(:,:,:) + (tg3(:,:,:) + rho3(:,:,:) * uz3(:,:,:) * td3(:,:,:))
+    tb3(:,:,:) = tb3(:,:,:) + (th3(:,:,:) + rho3(:,:,:) * uz3(:,:,:) * te3(:,:,:))
+    tc3(:,:,:) = tc3(:,:,:) + (ti3(:,:,:) + rho3(:,:,:) * uz3(:,:,:) * tf3(:,:,:))
 
     if (ilmn) then
        !! Quasi-skew symmetric terms
@@ -242,7 +242,6 @@ CONTAINS
        dux1(:,:,:,1) = dux1(:,:,:,1) - wrotation*uy1(:,:,:)
        duy1(:,:,:,1) = duy1(:,:,:,1) + wrotation*ux1(:,:,:)
     endif
-
 
     if (itrip == 1) then
        call tripping(tb1,td1)
