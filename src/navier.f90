@@ -59,6 +59,11 @@ subroutine  int_time(var1,dvar1)
      dvar1(:,:,:,2)=dvar1(:,:,:,1) 
   elseif(itimescheme.eq.4) then
      !>>> Adams-Bashforth fourth order (AB4)
+
+     if (nrank.eq.0) then
+        print *, "AB4 not implemented!"
+        STOP
+     endif
      
      !if (itime.eq.1.and.ilit.eq.0) then
      !var(:,:,:)=gdt(itr)*hx(:,:,:)+var(:,:,:)
@@ -111,6 +116,18 @@ subroutine  int_time(var1,dvar1)
      dvar1(:,:,:,2)=dvar1(:,:,:,1) 
      !>>> Runge-Kutta (low storage) RK4
   elseif(itimescheme.eq.6) then
+
+     if (nrank.eq.0) then
+        print *, "RK4 not implemented!"
+        STOP
+     endif
+
+  else
+
+     if (nrank.eq.0) then
+        print *, "Unrecognised itimescheme: ", itimescheme
+        STOP
+     endif
 
   endif
 
