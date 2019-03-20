@@ -94,16 +94,17 @@ CONTAINS
 
     ELSEIF (itype.EQ.itype_jet) THEN
 
-       CALL init_jet(ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, phis1, phiss1)
+       CALL init_jet(rho1, ux1, uy1, uz1, ep1, phi1, drho1, dux1, duy1, duz1, phis1, phiss1)
 
     ENDIF
 
   END SUBROUTINE init
 
-  SUBROUTINE boundary_conditions (ux,uy,uz,phi,ep)
+  SUBROUTINE boundary_conditions (rho,ux,uy,uz,phi,ep)
 
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,ep
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),numscalar) :: phi
+    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),nrhotime) :: rho
 
     IF (itype.EQ.itype_lockexch) THEN
 
@@ -134,7 +135,7 @@ CONTAINS
 
     ELSEIF (itype.EQ.itype_jet) THEN
 
-       CALL boundary_conditions_jet (ux,uy,uz,phi)
+       CALL boundary_conditions_jet (rho,ux,uy,uz,phi)
 
     ENDIF
 

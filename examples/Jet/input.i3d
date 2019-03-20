@@ -48,7 +48,7 @@ ilast = 18000         ! Last iteration
 iturbmod=0            ! if 0 then DNS
 iscalar=0             ! If iscalar=0 (no scalar), if iscalar=1 (scalar)
 iibm=0                ! Flag for immersed boundary method
-ilmn=.FALSE.           ! Flag for Low Mach Number flow
+ilmn=.TRUE.           ! Flag for Low Mach Number flow
 
 ! Enable io
 ivisu=1               ! Store snapshots
@@ -98,8 +98,8 @@ nstat = 1             ! Size arrays for statistic collection
 &LMN
 !=================
 
-dens1 = 0.5           ! Density of 'cold' stream (y > 0)
-dens2 = 1.0           ! Density of 'hot' stream (y < 0)
+dens1 = 1.0           ! Density of jet
+dens2 = 0.25          ! Ambient density
 
 prandtl = 0.75        ! Prandtl number
 

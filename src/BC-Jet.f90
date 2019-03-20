@@ -30,19 +30,20 @@ module jet
 
 contains
 
-  subroutine init_jet (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
+  subroutine init_jet (rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,phis1,phiss1)
 
     USE decomp_2d
     USE decomp_2d_io
     USE variables
     USE param
-    USE var, ONLY : ta2, tb2, tc2
+    USE var, ONLY : ta2, tb2, tc2, td2
 
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1,phis1,phiss1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1,drho1
 
     real(mytype) :: y
     integer :: i, j, k, ii, is, code
@@ -77,7 +78,7 @@ contains
        enddo
     enddo
 
-    call boundary_conditions_jet (ux1,uy1,uz1,phi1)
+    call boundary_conditions_jet (rho1,ux1,uy1,uz1,phi1)
 
     !INIT FOR G AND U=MEAN FLOW + NOISE
     if (xstart(2)==1) then
@@ -93,33 +94,36 @@ contains
     call transpose_x_to_y(ux1, ta2)
     call transpose_x_to_y(uy1, tb2)
     call transpose_x_to_y(uz1, tc2)
+    call transpose_x_to_y(rho1(:,:,:,1), td2)
     do k=1,ysize(3)
        do j=2,ysize(2)
           do i=1,ysize(1)
              ta2(i,j,k)=ta2(i,j,k)+ta2(i,1,k)
-             if (tb2(i,1,k) > 0.5) then
-               print*, tb2(i,j,k), tb2(i,1,k), j
-             endif
-
              tb2(i,j,k)=tb2(i,j,k)+tb2(i,1,k)
              tc2(i,j,k)=tc2(i,j,k)+tc2(i,1,k)
+
+             td2(i,j,k)=td2(i,1,k)
           enddo
        enddo
     enddo
     call transpose_y_to_x(ta2, ux1)
     call transpose_y_to_x(tb2, uy1)
     call transpose_y_to_x(tc2, uz1)
-
+    call transpose_y_to_x(td2, rho1(:,:,:,1))
     do k=1,xsize(3)
        do j=1,xsize(2)
           do i=1,xsize(1)
              dux1(i,j,k,1)=ux1(i,j,k)
              duy1(i,j,k,1)=uy1(i,j,k)
              duz1(i,j,k,1)=uz1(i,j,k)
+
+             drho1(i,j,k,1) = rho1(i,j,k,1)
              do is = 2, ntime
                 dux1(i,j,k,is)=dux1(i,j,k,is - 1)
                 duy1(i,j,k,is)=duy1(i,j,k,is - 1)
                 duz1(i,j,k,is)=duz1(i,j,k,is - 1)
+
+                drho1(i,j,k,is) = drho1(i,j,k,is - 1)
              enddo
           enddo
        enddo
@@ -132,7 +136,7 @@ contains
     return
   end subroutine init_jet
   !********************************************************************
-  subroutine boundary_conditions_jet (ux,uy,uz,phi)
+  subroutine boundary_conditions_jet (rho,ux,uy,uz,phi)
 
     USE MPI
     USE param
@@ -144,6 +148,7 @@ contains
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho
 
     integer :: i, j, k
     real(mytype) :: D, r, x, z
@@ -165,21 +170,26 @@ contains
     else
        timeswitch = one
     endif
-    !timeswitch = one
+    timeswitch = one !! Nichols starts with a jet 'column'
 
     !! Set inflow
     inflow = zero
+    j = 1
     if (xstart(2) == 1) then
       do k = 1, xsize(3)
         z = real(k + xstart(3) - 2, mytype) * dz - half * zlz
         do i = 1, xsize(1)
           x = real(i + xstart(1) - 2, mytype) * dx - half * xlx
-          r = sqrt(x**2 + z**2) + 1.e-16_mytype
+          r = sqrt(x**2 + z**2) + 1.e-16_mytype !! Can't divide by zero!
 
           !! Set mean inflow
           byx1(i, k) = zero
-          byy1(i, k) = (u1 - u2) * half * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D))) + u2
+          byy1(i, k) = (u1 - u2) * half &
+               * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D))) + u2
           byz1(i, k) = zero
+
+          rho1(i, 1, k, 1) = (dens1 - dens2) * half &
+               * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D))) + dens2
 
           !! Apply transient behaviour
           ! if (r.lt.D/two) then
@@ -220,17 +230,23 @@ contains
             byxn(i, k) = ux(i, j, k) - dt * outflow * (ux(i, j, k) - ux(i, j - 1, k))
             byyn(i, k) = uy(i, j, k) - dt * outflow * (uy(i, j, k) - uy(i, j - 1, k))
             byzn(i, k) = uz(i, j, k) - dt * outflow * (uz(i, j, k) - uz(i, j - 1, k))
+
+            rho(i, j, k, 1) = rho(i, j, k, 1) &
+                 - dt * outflow * (rho(i, j, k, 1) - rho(i, j - 1, k, 1))
          enddo
       enddo
     elseif (ny - (nym / dims(1)) == xstart(2)) then
-      j = xsize(2) - 1
-      do k = 1, xsize(3)
-         do i = 1, xsize(1)
-           byxn(i, k) = ux(i, j, k) - dt * outflow * (ux(i, j, k) - ux(i, j - 1, k))
-           byyn(i, k) = uy(i, j, k) - dt * outflow * (uy(i, j, k) - uy(i, j - 1, k))
-           byzn(i, k) = uz(i, j, k) - dt * outflow * (uz(i, j, k) - uz(i, j - 1, k))
-         enddo
-      enddo
+       j = xsize(2) - 1
+       do k = 1, xsize(3)
+          do i = 1, xsize(1)
+             byxn(i, k) = ux(i, j, k) - dt * outflow * (ux(i, j, k) - ux(i, j - 1, k))
+             byyn(i, k) = uy(i, j, k) - dt * outflow * (uy(i, j, k) - uy(i, j - 1, k))
+             byzn(i, k) = uz(i, j, k) - dt * outflow * (uz(i, j, k) - uz(i, j - 1, k))
+             
+             rho(i, j, k, 1) = rho(i, j, k, 1) &
+                  - dt * outflow * (rho(i, j, k, 1) - rho(i, j - 1, k, 1))
+          enddo
+       enddo
     endif
 
     return
