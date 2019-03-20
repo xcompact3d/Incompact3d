@@ -1,12 +1,15 @@
 !************************************************************************
 ! Time-marching subroutine used to advance the numerical solution in time  
 !
-! input: dux1,duy1,duz1 
+!        input: dvar1
 ! 
-! input/output: ux1, uy1, uz1 
+! input/output: var1
+!
+!       Author: Yorgos
+!     Modified: Paul
 ! 
 !************************************************************************ 
-subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
+subroutine  int_time(var1,dvar1)
 
   USE param
   USE variables
@@ -14,8 +17,12 @@ subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
   implicit none
 
   integer :: ijk,nxyz
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
+
+  !! INPUTS
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: var1
+
+  !! OUTPUTS
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dvar1
 
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# intt start'
@@ -23,65 +30,50 @@ subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
 
   if (itimescheme.eq.1) then 
      !>>> Euler 
-     ux1(:,:,:)=gdt(itr)*dux1(:,:,:,1)+ux1(:,:,:) 
-     uy1(:,:,:)=gdt(itr)*duy1(:,:,:,1)+uy1(:,:,:)
-     uz1(:,:,:)=gdt(itr)*duz1(:,:,:,1)+uz1(:,:,:)
+     var1(:,:,:)=gdt(itr)*dvar1(:,:,:,1)+var1(:,:,:) 
   elseif(itimescheme.eq.2) then
      !>>> Adam-Bashforth second order (AB2)
      
      ! Do first time step with Euler
      if(itime.eq.1.and.irestart.eq.0) then
-        ux1(:,:,:)=gdt(itr)*dux1(:,:,:,1)+ux1(:,:,:) 
-        uy1(:,:,:)=gdt(itr)*duy1(:,:,:,1)+uy1(:,:,:)
-        uz1(:,:,:)=gdt(itr)*duz1(:,:,:,1)+uz1(:,:,:)
+        var1(:,:,:)=gdt(itr)*dvar1(:,:,:,1)+var1(:,:,:) 
      else
-        ux1(:,:,:)=adt(itr)*dux1(:,:,:,1)+bdt(itr)*dux1(:,:,:,2)+ux1(:,:,:)
-        uy1(:,:,:)=adt(itr)*duy1(:,:,:,1)+bdt(itr)*duy1(:,:,:,2)+uy1(:,:,:)
-        uz1(:,:,:)=adt(itr)*duz1(:,:,:,1)+bdt(itr)*duz1(:,:,:,2)+uz1(:,:,:)
+        var1(:,:,:)=adt(itr)*dvar1(:,:,:,1)+bdt(itr)*dvar1(:,:,:,2)+var1(:,:,:)
      endif
-     dux1(:,:,:,2)=dux1(:,:,:,1) 
-     duy1(:,:,:,2)=duy1(:,:,:,1) 
-     duz1(:,:,:,2)=duz1(:,:,:,1) 
+     dvar1(:,:,:,2)=dvar1(:,:,:,1) 
   elseif(itimescheme.eq.3) then
      !>>> Adams-Bashforth third order (AB3)
      
      ! Do first time step with Euler
      if(itime.eq.1.and.irestart.eq.0) then
-        ux1(:,:,:)=dt*dux1(:,:,:,1)+ux1(:,:,:)
-        uy1(:,:,:)=dt*duy1(:,:,:,1)+uy1(:,:,:)
-        uz1(:,:,:)=dt*duz1(:,:,:,1)+uz1(:,:,:)
+        var1(:,:,:)=dt*dvar1(:,:,:,1)+var1(:,:,:)
      elseif(itime.eq.2.and.irestart.eq.0) then
       	! Do second time step with AB2
-      	ux1(:,:,:)=onepfive*dt*dux1(:,:,:,1)-half*dt*dux1(:,:,:,2)+ux1(:,:,:)
-      	uy1(:,:,:)=onepfive*dt*duy1(:,:,:,1)-half*dt*duy1(:,:,:,2)+uy1(:,:,:)
-      	uz1(:,:,:)=onepfive*dt*duz1(:,:,:,1)-half*dt*duz1(:,:,:,2)+uz1(:,:,:)
-        dux1(:,:,:,3)=dux1(:,:,:,2) 
-        duy1(:,:,:,3)=duy1(:,:,:,2) 
-        duz1(:,:,:,3)=duz1(:,:,:,2) 
+      	var1(:,:,:)=onepfive*dt*dvar1(:,:,:,1)-half*dt*dvar1(:,:,:,2)+var1(:,:,:)
+        dvar1(:,:,:,3)=dvar1(:,:,:,2) 
      else
       	! Finally using AB3
-      	ux1(:,:,:)=adt(itr)*dux1(:,:,:,1)+bdt(itr)*dux1(:,:,:,2)+cdt(itr)*dux1(:,:,:,3)+ux1(:,:,:)
-      	uy1(:,:,:)=adt(itr)*duy1(:,:,:,1)+bdt(itr)*duy1(:,:,:,2)+cdt(itr)*duy1(:,:,:,3)+uy1(:,:,:)
-      	uz1(:,:,:)=adt(itr)*duz1(:,:,:,1)+bdt(itr)*duz1(:,:,:,2)+cdt(itr)*duz1(:,:,:,3)+uz1(:,:,:)
-        dux1(:,:,:,3)=dux1(:,:,:,2) 
-        duy1(:,:,:,3)=duy1(:,:,:,2) 
-        duz1(:,:,:,3)=duz1(:,:,:,2) 
+      	var1(:,:,:)=adt(itr)*dvar1(:,:,:,1)+bdt(itr)*dvar1(:,:,:,2)+cdt(itr)*dvar1(:,:,:,3)+var1(:,:,:)
+        dvar1(:,:,:,3)=dvar1(:,:,:,2) 
      endif
-     dux1(:,:,:,2)=dux1(:,:,:,1) 
-     duy1(:,:,:,2)=duy1(:,:,:,1) 
-     duz1(:,:,:,2)=duz1(:,:,:,1) 
+     dvar1(:,:,:,2)=dvar1(:,:,:,1) 
   elseif(itimescheme.eq.4) then
      !>>> Adams-Bashforth fourth order (AB4)
+
+     if (nrank.eq.0) then
+        print *, "AB4 not implemented!"
+        STOP
+     endif
      
      !if (itime.eq.1.and.ilit.eq.0) then
-     !ux(:,:,:)=gdt(itr)*hx(:,:,:)+ux(:,:,:)
+     !var(:,:,:)=gdt(itr)*hx(:,:,:)+var(:,:,:)
      !uy(:,:,:)=gdt(itr)*hy(:,:,:)+uy(:,:,:) 
      !uz(:,:,:)=gdt(itr)*hz(:,:,:)+uz(:,:,:)
      !gx(:,:,:)=hx(:,:,:)
      !gy(:,:,:)=hy(:,:,:)
      !gz(:,:,:)=hz(:,:,:)            
      !elseif (itime.eq.2.and.ilit.eq.0) then 	   
-     !ux(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+ux(:,:,:)
+     !var(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+var(:,:,:)
      !uy(:,:,:)=adt(itr)*hy(:,:,:)+bdt(itr)*gy(:,:,:)+uy(:,:,:)   
      !uz(:,:,:)=adt(itr)*hz(:,:,:)+bdt(itr)*gz(:,:,:)+uz(:,:,:)
      !gox(:,:,:)=gx(:,:,:)
@@ -91,7 +83,7 @@ subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
      !gy(:,:,:)=hy(:,:,:)
      !gz(:,:,:)=hz(:,:,:)            
      !elseif (itime.eq.3.and.ilit.eq.0) then 
-     !ux(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+cdt(itr)*gox(:,:,:)+ux(:,:,:)
+     !var(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+cdt(itr)*gox(:,:,:)+var(:,:,:)
      !uy(:,:,:)=adt(itr)*hy(:,:,:)+bdt(itr)*gy(:,:,:)+cdt(itr)*goy(:,:,:)+uy(:,:,:)   
      !uz(:,:,:)=adt(itr)*hz(:,:,:)+bdt(itr)*gz(:,:,:)+cdt(itr)*goz(:,:,:)+uz(:,:,:)
      !gox(:,:,:)=gx(:,:,:)
@@ -101,7 +93,7 @@ subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
      !gy(:,:,:)=hy(:,:,:)
      !gz(:,:,:)=hz(:,:,:)            
      !else 
-     !ux(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+cdt(itr)*gox(:,:,:)+ddt(itr)*gax(:,:,:)+ux(:,:,:)
+     !var(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+cdt(itr)*gox(:,:,:)+ddt(itr)*gax(:,:,:)+var(:,:,:)
      !uy(:,:,:)=adt(itr)*hy(:,:,:)+bdt(itr)*gy(:,:,:)+cdt(itr)*goy(:,:,:)+ddt(itr)*gay(:,:,:)+uy(:,:,:)   
      !uz(:,:,:)=adt(itr)*hz(:,:,:)+bdt(itr)*gz(:,:,:)+cdt(itr)*goz(:,:,:)+ddt(itr)*gaz(:,:,:)+uz(:,:,:)
      !gax(:,:,:)=gox(:,:,:)
@@ -117,19 +109,25 @@ subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
      !>>> Runge-Kutta (low storage) RK3
   elseif(itimescheme.eq.5) then
      if(itr.eq.1) then
-        ux1(:,:,:)=gdt(itr)*dux1(:,:,:,1)+ux1(:,:,:) 
-        uy1(:,:,:)=gdt(itr)*duy1(:,:,:,1)+uy1(:,:,:)
-        uz1(:,:,:)=gdt(itr)*duz1(:,:,:,1)+uz1(:,:,:)
+        var1(:,:,:)=gdt(itr)*dvar1(:,:,:,1)+var1(:,:,:) 
      else
-        ux1(:,:,:)=adt(itr)*dux1(:,:,:,1)+bdt(itr)*dux1(:,:,:,2)+ux1(:,:,:)
-        uy1(:,:,:)=adt(itr)*duy1(:,:,:,1)+bdt(itr)*duy1(:,:,:,2)+uy1(:,:,:)
-        uz1(:,:,:)=adt(itr)*duz1(:,:,:,1)+bdt(itr)*duz1(:,:,:,2)+uz1(:,:,:)
+        var1(:,:,:)=adt(itr)*dvar1(:,:,:,1)+bdt(itr)*dvar1(:,:,:,2)+var1(:,:,:)
      endif
-     dux1(:,:,:,2)=dux1(:,:,:,1) 
-     duy1(:,:,:,2)=duy1(:,:,:,1) 
-     duz1(:,:,:,2)=duz1(:,:,:,1) 
+     dvar1(:,:,:,2)=dvar1(:,:,:,1) 
      !>>> Runge-Kutta (low storage) RK4
   elseif(itimescheme.eq.6) then
+
+     if (nrank.eq.0) then
+        print *, "RK4 not implemented!"
+        STOP
+     endif
+
+  else
+
+     if (nrank.eq.0) then
+        print *, "Unrecognised itimescheme: ", itimescheme
+        STOP
+     endif
 
   endif
 
@@ -139,7 +137,105 @@ subroutine  int_time_momentum(ux1,uy1,uz1,dux1,duy1,duz1)
 
   return
 
-end subroutine int_time_momentum
+end subroutine int_time
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!!  SUBROUTINE: int_time_momentum
+!! DESCRIPTION: Integrates the momentum equations in time by calling time
+!!              integrator.
+!!      INPUTS: dux1, duy1, duz1 - the RHS(s) of the momentum equations
+!!     OUTPUTS: ux1,   uy1,  uz1 - the intermediate momentum state.
+!!       NOTES: This is integrating the MOMENTUM in time (!= velocity)
+!!      AUTHOR: Paul Bartholomew
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine int_time_momentum(ux1, uy1, uz1, dux1, duy1, duz1)
+
+  USE param
+  USE variables
+  USE decomp_2d
+
+  implicit none
+
+  !! INPUTS
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1
+
+  !! OUTPUTS
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1, duy1, duz1
+
+  call int_time(ux1, dux1)
+  call int_time(uy1, duy1)
+  call int_time(uz1, duz1)
+  
+endsubroutine int_time_momentum
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!!  SUBROUTINE: int_time_continuity
+!! DESCRIPTION: Integrates the continuity (aka density transport) equation in
+!!              time
+!!      INPUTS: drho1 - the RHS(s) of the continuity equation.
+!!     OUTPUTS:  rho1 - the density at new time.
+!!      AUTHOR: Paul Bartholomew
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine int_time_continuity(rho1, drho1)
+
+  USE param
+  USE variables
+  USE decomp_2d
+  
+  implicit none
+
+  integer :: it, i, j, k
+  real(mytype) :: rhomin, rhomax
+
+  !! INPUTS
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
+
+  !! OUTPUTS
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
+
+  !! First, update old density / store old transients depending on scheme
+  if (itimescheme.lt.5) then
+     !! Euler/AB - Store old density values
+     do it = nrhotime, 2, -1
+        rho1(:,:,:,it) = rho1(:,:,:,it-1)
+     enddo
+  elseif (itimescheme.eq.5) then
+     !! RK3 - Stores old transients
+     if (itr.eq.1) then
+        do it = nrhotime, 2, -1
+           rho1(:,:,:,it) = rho1(:,:,:,it-1)
+        enddo
+        rho1(:,:,:,2) = drho1(:,:,:,1)
+     endif
+  else
+     if (nrank.eq.0) then
+        print *, "int_time_continuity not implemented for itimescheme", itimescheme
+        stop
+     endif
+  endif
+
+  !! Now we can update current density
+  call int_time(rho1(:,:,:,1), drho1)
+
+  !! Enforce boundedness on density
+  if (ilmn_bound) then
+     rhomin = min(dens1, dens2)
+     rhomax = max(dens1, dens2)
+     do k = 1, xsize(3)
+        do j = 1, xsize(2)
+           do i = 1, xsize(1)
+              rho1(i, j, k, 1) = max(rho1(i, j, k, 1), rhomin)
+              rho1(i, j, k, 1) = min(rho1(i, j, k, 1), rhomax)
+           enddo
+        enddo
+     enddo
+  endif
+  
+endsubroutine int_time_continuity
 
 !********************************************************************
 !subroutine CORPG
@@ -154,17 +250,16 @@ subroutine corpg (ux,uy,uz,px,py,pz)
   USE decomp_2d
   USE variables
   USE param
-  USE var, only: ta2
-  USE MPI
   
   implicit none
 
   integer :: ijk,nxyz
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,px,py,pz
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: px,py,pz
 
-  ux(:,:,:)=-px(:,:,:)+ux(:,:,:)
-  uy(:,:,:)=-py(:,:,:)+uy(:,:,:)
-  uz(:,:,:)=-pz(:,:,:)+uz(:,:,:)
+  ux(:,:,:)=ux(:,:,:)-px(:,:,:)
+  uy(:,:,:)=uy(:,:,:)-py(:,:,:)
+  uz(:,:,:)=uz(:,:,:)-pz(:,:,:)
   
   return
 end subroutine corpg
@@ -175,13 +270,13 @@ end subroutine corpg
 ! output : pp3 (on pressure mesh)
 !written by SL 2018
 !******************************************************************** 
-subroutine divergence (ux1,uy1,uz1,ep1,pp3,nlock)
+subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
 
   USE param
   USE decomp_2d
   USE variables
   USE var, ONLY: ta1, tb1, tc1, pp1, pgy1, pgz1, di1, &
-       duxdxp2, uyp2, uzp2, duydypi2, upi2, dipp2, &
+       duxdxp2, uyp2, uzp2, duydypi2, upi2, ta2, dipp2, &
        duxydxyp3, uzp3, po3, dipp3, nxmsize, nymsize, nzmsize
   USE MPI
 
@@ -191,15 +286,16 @@ subroutine divergence (ux1,uy1,uz1,ep1,pp3,nlock)
 
   !X PENCILS NX NY NZ  -->NXM NY NZ
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1,uy1,uz1,ep1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime),intent(in) :: drho1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime),intent(in) :: rho1
   !Z PENCILS NXM NYM NZ  -->NXM NYM NZM
+  real(mytype),dimension(zsize(1),zsize(2),zsize(3)),intent(in) :: divu3
   real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: pp3
 
   integer :: ijk,nvect1,nvect2,nvect3,i,j,k,nlock
   integer :: code
   real(mytype) :: tmax,tmoy,tmax1,tmoy1
 
-  nvect1=xsize(1)*xsize(2)*xsize(3)
-  nvect2=ysize(1)*ysize(2)*ysize(3)
   nvect3=(ph1%zen(1)-ph1%zst(1)+1)*(ph1%zen(2)-ph1%zst(2)+1)*nzmsize
 
   if (iibm.eq.0) then
@@ -213,7 +309,22 @@ subroutine divergence (ux1,uy1,uz1,ep1,pp3,nlock)
   endif
 
   !WORK X-PENCILS
+
   call derxvp(pp1,ta1,di1,sx,cfx6,csx6,cwx6,xsize(1),nxmsize,xsize(2),xsize(3),0)
+
+  if (ilmn) then
+     if (nlock.eq.1) then
+        !! Approximate -div(rho u) using ddt(rho)
+        call extrapol_drhodt(ta1, rho1, drho1)
+     elseif (nlock.eq.2) then
+        !! Need to check our error against divu constraint
+        call transpose_z_to_y(-divu3, ta2)
+        call transpose_y_to_x(ta2, ta1)
+     endif
+     call interxvp(pgy1,ta1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+     pp1(:,:,:) = pp1(:,:,:) + pgy1(:,:,:)
+  endif
+
   call interxvp(pgy1,tb1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
   call interxvp(pgz1,tc1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
 
@@ -615,3 +726,136 @@ subroutine pre_correc(ux,uy,uz,ep)
   return
 end subroutine pre_correc
 !*******************************************************************
+
+!! Convert to/from conserved/primary variables
+SUBROUTINE primary_to_conserved(rho1, var1)
+
+  USE decomp_2d, ONLY : mytype, xsize
+  USE param, ONLY : nrhotime
+  
+  IMPLICIT NONE
+
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: var1
+
+  var1(:,:,:) = rho1(:,:,:,1) * var1(:,:,:)
+
+ENDSUBROUTINE primary_to_conserved
+SUBROUTINE conserved_to_primary(rho1, var1)
+
+  USE decomp_2d, ONLY : mytype, xsize
+  USE param, ONLY : nrhotime
+  
+  IMPLICIT NONE
+
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: var1
+
+  var1(:,:,:) = var1(:,:,:) / rho1(:,:,:,1)
+
+ENDSUBROUTINE conserved_to_primary
+
+!! Calculate velocity-divergence constraint
+SUBROUTINE calc_divu_constraint(divu3, rho1)
+
+  USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
+  USE decomp_2d, ONLY : transpose_x_to_y, transpose_y_to_z
+  USE param, ONLY : nrhotime, zero, ilmn, pressure0
+  USE param, ONLY : xnu, prandtl
+  USE variables
+
+  USE var, ONLY : ta1, tb1, di1
+  USE var, ONLY : ta2, tb2, tc2, td2, di2
+  USE var, ONLY : ta3, tb3, di3
+  
+  IMPLICIT NONE
+
+  INTEGER :: i, j, k
+
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
+  REAL(mytype), INTENT(OUT), DIMENSION(zsize(1), zsize(2), zsize(3)) :: divu3
+
+  IF (ilmn) THEN
+     !!------------------------------------------------------------------------------
+     !! X-pencil
+     
+     !! We need temperature
+     ta1(:,:,:) = pressure0 / rho1(:,:,:,1) !! Temperature
+     
+     CALL derxx (tb1, ta1, di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1)
+     
+     CALL transpose_x_to_y(ta1, ta2)        !! Temperature
+     CALL transpose_x_to_y(tb1, tb2)        !! d2Tdx2
+     
+     !!------------------------------------------------------------------------------
+     !! Y-pencil
+     CALL deryy (tc2, ta2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
+
+     tb2(:,:,:) = tb2(:,:,:) + tc2(:,:,:)
+
+     CALL transpose_y_to_z(ta2, ta3)        !! Temperature
+     CALL transpose_y_to_z(tb2, tb3)        !! d2Tdx2 + d2Tdy2
+     
+     !!------------------------------------------------------------------------------
+     !! Z-pencil
+     CALL derzz (divu3, ta3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
+
+     divu3(:,:,:) = divu3(:,:,:) + tb3(:,:,:)
+     divu3(:,:,:) = (xnu / prandtl) * divu3(:,:,:)
+
+     divu3(:,:,:) = divu3(:,:,:) / pressure0
+  ELSE
+     divu3(:,:,:) = zero
+  ENDIF
+
+ENDSUBROUTINE calc_divu_constraint
+
+SUBROUTINE extrapol_drhodt(drhodt1_next, rho1, drho1)
+
+  USE decomp_2d, ONLY : mytype, xsize, nrank
+  USE param, ONLY : ntime, nrhotime, itime, itimescheme, itr, dt, gdt, irestart
+  USE param, ONLY : half, three, four
+  
+  IMPLICIT NONE
+
+  INTEGER :: subitr
+  
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
+  REAL(mytype), INTENT(OUT), DIMENSION(xsize(1), xsize(2), xsize(3)) :: drhodt1_next
+
+  IF (itimescheme.EQ.1) THEN
+     !! EULER
+     drhodt1_next(:,:,:) = (rho1(:,:,:,1) - rho1(:,:,:,2)) / dt
+  ELSEIF (itimescheme.EQ.2) THEN
+     !! AB2
+     IF ((itime.EQ.1).AND.(irestart.EQ.0)) THEN
+        drhodt1_next(:,:,:) = (rho1(:,:,:,1) - rho1(:,:,:,2)) / dt
+     ELSE
+        drhodt1_next(:,:,:) = three * rho1(:,:,:,1) - four * rho1(:,:,:,2) + rho1(:,:,:,3)
+        drhodt1_next(:,:,:) = half * drhodt1_next(:,:,:) / dt
+     ENDIF
+  ! ELSEIF (itimescheme.EQ.3) THEN
+  !    !! AB3
+  ! ELSEIF (itimescheme.EQ.4) THEN
+  !    !! AB4
+  ELSEIF (itimescheme.EQ.5) THEN
+     !! RK3
+     IF (itime.GT.1) THEN
+        drhodt1_next(:,:,:) = rho1(:,:,:,2)
+        DO subitr = 1, itr
+           drhodt1_next(:,:,:) = drhodt1_next(:,:,:) + (gdt(subitr) / dt) &
+                * (rho1(:,:,:,2) - rho1(:,:,:,3))
+        ENDDO
+     ELSE
+        drhodt1_next(:,:,:) = drho1(:,:,:,1)
+     ENDIF
+  ELSE
+     IF (nrank.EQ.0) THEN
+        PRINT *, "Extrapolating drhodt not implemented for timescheme:", itimescheme
+        STOP
+     ENDIF
+  ENDIF
+  
+ENDSUBROUTINE extrapol_drhodt
+

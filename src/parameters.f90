@@ -55,7 +55,7 @@ subroutine parameter(input_i3d)
   NAMELIST /BasicParam/ p_row, p_col, nx, ny, nz, istret, beta, xlx, yly, zlz, &
        itype, iin, re, u1, u2, init_noise, inflow_noise, &
        dt, ifirst, ilast, &
-       iturbmod, iscalar, iibm, &
+       iturbmod, iscalar, iibm, ilmn, &
        nclx1, nclxn, ncly1, nclyn, nclz1, nclzn, &
        ivisu, ipost
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, rxxnu, cnu, fpi2, ipinter
@@ -65,6 +65,7 @@ subroutine parameter(input_i3d)
   NAMELIST /TurbulenceModel/ iles, smagcst, walecst, iwall
   NAMELIST /TurbulenceWallModel/ smagwalldamp
   NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf
+  NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter start'
 #endif
@@ -95,7 +96,10 @@ subroutine parameter(input_i3d)
   read(10, nml=InOutParam)
   read(10, nml=Statistics)
   if (iibm.ne.0) then
-    read(10, nml=ibmstuff)
+     read(10, nml=ibmstuff)
+  endif
+  if (ilmn) then
+     read(10, nml=LMN)
   endif
   ! !! These are the 'optional'/model parameters
   ! read(10, nml=ScalarParam)
@@ -150,6 +154,8 @@ subroutine parameter(input_i3d)
         print *,'Simulating cylinder'
      elseif (itype.eq.itype_dbg) then
         print *,'Debug schemes'
+     elseif (itype.eq.itype_mixlayer) then
+        print *,'Mixing layer'
      else
         print *,'Unknown itype: ', itype
         stop
@@ -174,6 +180,16 @@ subroutine parameter(input_i3d)
      write(*,"('                      (nclz1 ,nclzn )=(',I1,',',I1,')')") nclz1,nclzn
      write(*,"(' High and low speed : u1=',F6.2,' and u2=',F6.2)") u1,u2
      write(*,"(' Reynolds number Re : ',F15.8)") re
+     if (ilmn) then
+        print *, "LMN                : Enabled"
+        if (ilmn_bound) then
+           print *, "LMN boundedness    : Enforced"
+        else
+           print *, "LMN boundedness    : Not enforced"
+        endif
+        write(*,"(' dens1 and dens2    : ',F6.2' ',F6.2)") dens1, dens2
+        write(*,"(' Prandtl number Re  : ',F15.8)") prandtl
+     endif
      write(*,"(' Time step dt       : ',F15.8)") dt
      write (*,"(' Spatial scheme     : ',F15.8)") fpi2
      if (iturbmod.ne.0) then
@@ -225,9 +241,13 @@ subroutine parameter(input_i3d)
            write (*,"(' Schmidt number     : ',F15.8)") sc(is)
         end do
      endif
-     if (iibm.eq.0) print *,'Immersed boundary  : off'
-     if (iibm.eq.1) print *,'Immersed boundary  : old school'
-     if (iibm.eq.2) print *,'Immersed boundary  : on with Lagrangian Poly'
+     if (iibm.eq.0) then
+        print *,'Immersed boundary  : off'
+     elseif (iibm.eq.1) then
+        print *,'Immersed boundary  : old school'
+     elseif (iibm.eq.2) then
+        print *,'Immersed boundary  : on with Lagrangian Poly'
+     endif
      if (angle.ne.0.) write(*,"(' Solid rotation     : ',F6.2)") angle
      print *,''
   endif
@@ -295,6 +315,14 @@ subroutine parameter_defaults()
   wrotation = zero
   irotation = 0
   itest=1
+
+  !! LMN stuff
+  ilmn = .FALSE.
+  ilmn_bound = .TRUE.
+  pressure0 = one
+  prandtl = one
+  dens1 = one
+  dens2 = one
 
   !! IO
   ivisu = 1

@@ -41,6 +41,9 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:) :: ux1, ux2, ux3, po3, dv3, pp3, nut1
   real(mytype), save, allocatable, dimension(:,:,:) :: uy1, uy2, uy3
   real(mytype), save, allocatable, dimension(:,:,:) :: uz1, uz2, uz3
+  real(mytype), save, allocatable, dimension(:,:,:,:) :: rho1, drho1
+  real(mytype), save, allocatable, dimension(:,:,:) :: rho2, rho3
+  real(mytype), save, allocatable, dimension(:,:,:) :: divu3
   real(mytype), save, allocatable, dimension(:,:,:,:) :: phi1, phi2, phi3, phis1, phiss1
   real(mytype), save, allocatable, dimension(:,:,:) :: px1, py1, pz1
   real(mytype), save, allocatable, dimension(:,:,:) :: ep1, diss1, pre1, depo, depof, kine
@@ -345,6 +348,7 @@ contains
        gdt(3)=gdt(1)
 
        ntime = 1
+       nrhotime = 2
     elseif (itimescheme.eq.2) then ! AB2
        iadvance_time=1 
        adt(1)=1.5_mytype*dt
@@ -353,6 +357,7 @@ contains
        gdt(3)=gdt(1)
 
        ntime = 2
+       nrhotime = 3
     elseif (itimescheme.eq.3) then ! AB3
        iadvance_time=1
        adt(1)= (23._mytype/12._mytype)*dt
@@ -362,6 +367,7 @@ contains
        gdt(3)=gdt(1)
 
        ntime = 3
+       nrhotime = 4
     elseif(itimescheme==4) then  ! AB4
        iadvance_time=1 
        adt(1)=(55.0_mytype/24.0_mytype)*dt
@@ -372,6 +378,7 @@ contains
        gdt(3)=gdt(1)
 
        ntime = 4
+       nrhotime = 5
     elseif(itimescheme.eq.5) then !RK3
        iadvance_time=3
        adt(1)=(8._mytype/15._mytype)*dt
@@ -385,6 +392,7 @@ contains
        gdt(3)=adt(3)+bdt(3)
 
        ntime = 2
+       nrhotime = 3
     elseif(itimescheme.eq.6) then !RK4 Carpenter and Kennedy
        iadvance_time=5 
        adt(1)=0.0_mytype
@@ -404,10 +412,22 @@ contains
        gdt(5)=0.041717869325_mytype*dt
 
        ntime = 2
+       nrhotime = 5 ! (A guess)
     endif
     allocate(dux1(xsize(1),xsize(2),xsize(3),ntime))
     allocate(duy1(xsize(1),xsize(2),xsize(3),ntime))
     allocate(duz1(xsize(1),xsize(2),xsize(3),ntime))
+
+    !! LMN
+    if (.not.ilmn) then
+       nrhotime = 1 !! Save some space
+    endif
+    allocate(rho1(xsize(1),xsize(2),xsize(3),nrhotime)) !Need to store old density values to extrapolate drhodt
+    call alloc_y(rho2, opt_global=.true.) !global indices
+    call alloc_z(rho3, opt_global=.true.) !global indices
+    allocate(drho1(xsize(1),xsize(2),xsize(3),ntime))
+
+    call alloc_z(divu3, opt_global=.true.) !global indices
 
     !TRIPPING PARAMES LOST HERE
     z_modes=int(zlz /zs_tr)
