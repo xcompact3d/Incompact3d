@@ -65,7 +65,7 @@ subroutine parameter(input_i3d)
   NAMELIST /TurbulenceModel/ iles, smagcst, walecst, iwall
   NAMELIST /TurbulenceWallModel/ smagwalldamp
   NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf
-  NAMELIST /LMN/ dens1, dens2, prandtl
+  NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter start'
 #endif
@@ -182,6 +182,11 @@ subroutine parameter(input_i3d)
      write(*,"(' Reynolds number Re : ',F15.8)") re
      if (ilmn) then
         print *, "LMN                : Enabled"
+        if (ilmn_bound) then
+           print *, "LMN boundedness    : Enforced"
+        else
+           print *, "LMN boundedness    : Not enforced"
+        endif
         write(*,"(' dens1 and dens2    : ',F6.2' ',F6.2)") dens1, dens2
         write(*,"(' Prandtl number Re  : ',F15.8)") prandtl
      endif
@@ -313,6 +318,7 @@ subroutine parameter_defaults()
 
   !! LMN stuff
   ilmn = .FALSE.
+  ilmn_bound = .TRUE.
   pressure0 = one
   prandtl = one
   dens1 = one
