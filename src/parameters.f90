@@ -315,6 +315,8 @@ subroutine parameter_defaults()
   ilmn = .FALSE.
   pressure0 = one
   prandtl = one
+  dens1 = one
+  dens2 = one
 
   !! IO
   ivisu = 1
