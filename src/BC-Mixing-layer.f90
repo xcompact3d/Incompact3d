@@ -57,24 +57,15 @@ contains
        ux1=zero; uy1=zero; uz1=zero
 
        !! Compute flow for zero convective velocity
-       if (ilmn) then
-          rhomin = MIN(dens1, dens2)
-          rhomax = MAX(dens1, dens2)
-          T1 = one / dens1
-          T2 = one / dens2
-          u1 = SQRT(dens2 / dens1) / (SQRT(dens2 / dens1) + one)
-          u2 = -SQRT(dens1 / dens2) / (one + SQRT(dens1 / dens2))
-          M = 0.2_mytype
-          rspech = 1.4_mytype
-          heatcap = (one / (T2 * (rspech - one))) * ((u1 - u2) / M)**2
-       else
-          T1 = one
-          T2 = one
-          u1 = half
-          u2 = -half
-          rhomin = one
-          rhomax = one
-       endif
+       rhomin = MIN(dens1, dens2)
+       rhomax = MAX(dens1, dens2)
+       T1 = pressure0 / dens1
+       T2 = pressure0 / dens2
+       u1 = SQRT(dens2 / dens1) / (SQRT(dens2 / dens1) + one)
+       u2 = -SQRT(dens1 / dens2) / (one + SQRT(dens1 / dens2))
+       M = 0.2_mytype
+       rspech = 1.4_mytype
+       heatcap = (one / (T2 * (rspech - one))) * ((u1 - u2) / M)**2
 
        do k=1,xsize(3)
           do j=1,xsize(2)
@@ -97,7 +88,6 @@ contains
                 rho1(i, j, k, 1) = MIN(rho1(i, j, k, 1), rhomax)
 
                 ! Calculate disturbance field (as given in Fortune2004)
-                ! NB x and y are swapped relative to Fortune2004
                 disturb_decay = 0.025_mytype * (u1 - u2) * EXP(-0.05_mytype * (y**2))
                 u_disturb = disturb_decay * (SIN(eight * PI * x / xlx) &
                      + SIN(four * PI * x / xlx) / eight &
