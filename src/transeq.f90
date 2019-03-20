@@ -223,10 +223,6 @@ CONTAINS
     tb1 = tb1 + te1 
     tc1 = tc1 + tf1
 
-    if (ilmn) then
-       call momentum_full_viscstress_tensor(ta1, tb1, tc1, divu3)
-    endif
-
     di1 =  zero
     do is = 1, numscalar
        di1 = di1  + phi1(:,:,:,is)*ri(is) !Mod. by Ricardo
@@ -236,6 +232,10 @@ CONTAINS
     dux1(:,:,:,1) = xnu*ta1(:,:,:) - tg1(:,:,:) + di1(:,:,:)*anglex  !+x
     duy1(:,:,:,1) = xnu*tb1(:,:,:) - th1(:,:,:) - di1(:,:,:)*angley  !+y
     duz1(:,:,:,1) = xnu*tc1(:,:,:) - ti1(:,:,:) !+- di1       !+z
+
+    if (ilmn) then
+       call momentum_full_viscstress_tensor(dux1(:,:,:,1), duy1(:,:,:,1), duz1(:,:,:,1), divu3)
+    endif
 
     if (itime.lt.spinup_time) then
        if (nrank==0) print *,'Rotating turbulent channel at speed ',wrotation
@@ -299,9 +299,9 @@ CONTAINS
 
     call derx(td1,tg1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
 
-    ta1(:,:,:) = ta1(:,:,:) + one_third * td1(:,:,:)
-    tb1(:,:,:) = tb1(:,:,:) + one_third * te1(:,:,:)
-    tc1(:,:,:) = tc1(:,:,:) + one_third * tf1(:,:,:)
+    ta1(:,:,:) = ta1(:,:,:) + one_third * xnu * td1(:,:,:)
+    tb1(:,:,:) = tb1(:,:,:) + one_third * xnu * te1(:,:,:)
+    tc1(:,:,:) = tc1(:,:,:) + one_third * xnu * tf1(:,:,:)
 
   end subroutine momentum_full_viscstress_tensor
   
