@@ -231,17 +231,16 @@ subroutine corpg (ux,uy,uz,px,py,pz)
   USE decomp_2d
   USE variables
   USE param
-  USE var, only: ta2
-  USE MPI
   
   implicit none
 
   integer :: ijk,nxyz
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,px,py,pz
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: px,py,pz
 
-  ux(:,:,:)=-px(:,:,:)+ux(:,:,:)
-  uy(:,:,:)=-py(:,:,:)+uy(:,:,:)
-  uz(:,:,:)=-pz(:,:,:)+uz(:,:,:)
+  ux(:,:,:)=ux(:,:,:)-px(:,:,:)
+  uy(:,:,:)=uy(:,:,:)-py(:,:,:)
+  uz(:,:,:)=uz(:,:,:)-pz(:,:,:)
   
   return
 end subroutine corpg
