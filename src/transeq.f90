@@ -26,9 +26,6 @@ CONTAINS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
 
     integer :: ijk,nvect1,nvect2,nvect3,i,j,k,is
-    real(mytype) :: one_third
-
-    one_third = one / three
 
     !SKEW SYMMETRIC FORM
     !WORK X-PENCILS
@@ -43,16 +40,16 @@ CONTAINS
     call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
     call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
 
-    ta1(:,:,:) = half * td1(:,:,:) + half * rho1(:,:,:,1) * ux1(:,:,:) * ta1(:,:,:)
-    tb1(:,:,:) = half * te1(:,:,:) + half * rho1(:,:,:,1) * ux1(:,:,:) * tb1(:,:,:)
-    tc1(:,:,:) = half * tf1(:,:,:) + half * rho1(:,:,:,1) * ux1(:,:,:) * tc1(:,:,:)
+    ta1(:,:,:) = td1(:,:,:) + rho1(:,:,:,1) * ux1(:,:,:) * ta1(:,:,:)
+    tb1(:,:,:) = te1(:,:,:) + rho1(:,:,:,1) * ux1(:,:,:) * tb1(:,:,:)
+    tc1(:,:,:) = tf1(:,:,:) + rho1(:,:,:,1) * ux1(:,:,:) * tc1(:,:,:)
 
     if (ilmn) then
        !! Quasi-skew symmetric terms
        call derx (td1,rho1(:,:,:,1),di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-       ta1(:,:,:) = ta1(:,:,:) + half * ux1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
-       tb1(:,:,:) = tb1(:,:,:) + half * uy1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
-       tc1(:,:,:) = tc1(:,:,:) + half * uz1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
+       ta1(:,:,:) = ta1(:,:,:) + ux1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
+       tb1(:,:,:) = tb1(:,:,:) + uy1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
+       tc1(:,:,:) = tc1(:,:,:) + uz1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
     endif
 
     call transpose_x_to_y(ux1,ux2)
@@ -80,16 +77,16 @@ CONTAINS
     call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
     call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
 
-    ta2(:,:,:) = ta2(:,:,:) + half * tg2(:,:,:) + half * rho2(:,:,:) * uy2(:,:,:) * td2(:,:,:)
-    tb2(:,:,:) = tb2(:,:,:) + half * th2(:,:,:) + half * rho2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
-    tc2(:,:,:) = tc2(:,:,:) + half * ti2(:,:,:) + half * rho2(:,:,:) * uy2(:,:,:) * tf2(:,:,:)
+    ta2(:,:,:) = ta2(:,:,:) + (tg2(:,:,:) + rho2(:,:,:) * uy2(:,:,:) * td2(:,:,:))
+    tb2(:,:,:) = tb2(:,:,:) + (th2(:,:,:) + rho2(:,:,:) * uy2(:,:,:) * te2(:,:,:))
+    tc2(:,:,:) = tc2(:,:,:) + (ti2(:,:,:) + rho2(:,:,:) * uy2(:,:,:) * tf2(:,:,:))
 
     if (ilmn) then
        !! Quasi-skew symmetric terms
        call dery (te2,rho2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-       ta2(:,:,:) = ta2(:,:,:) + half * ux2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
-       tb2(:,:,:) = tb2(:,:,:) + half * uy2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
-       tc2(:,:,:) = tc2(:,:,:) + half * uz2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
+       ta2(:,:,:) = ta2(:,:,:) + ux2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
+       tb2(:,:,:) = tb2(:,:,:) + uy2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
+       tc2(:,:,:) = tc2(:,:,:) + uz2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
     endif
 
     call transpose_y_to_z(ux2,ux3)
@@ -117,22 +114,27 @@ CONTAINS
     call derz (te3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
     call derz (tf3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
 
-    ta3(:,:,:) = ta3(:,:,:) + half * tg3(:,:,:) + half * rho3(:,:,:) * uz3(:,:,:) * td3(:,:,:)
-    tb3(:,:,:) = tb3(:,:,:) + half * th3(:,:,:) + half * rho3(:,:,:) * uz3(:,:,:) * te3(:,:,:)
-    tc3(:,:,:) = tc3(:,:,:) + half * ti3(:,:,:) + half * rho3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
+    ta3(:,:,:) = ta3(:,:,:) + (tg3(:,:,:) + rho3(:,:,:) * uz3(:,:,:) * td3(:,:,:))
+    tb3(:,:,:) = tb3(:,:,:) + (th3(:,:,:) + rho3(:,:,:) * uz3(:,:,:) * te3(:,:,:))
+    tc3(:,:,:) = tc3(:,:,:) + (ti3(:,:,:) + rho3(:,:,:) * uz3(:,:,:) * tf3(:,:,:))
 
     if (ilmn) then
        !! Quasi-skew symmetric terms
        call derz (tf3,rho3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-       ta3(:,:,:) = ta3(:,:,:) + half * ux3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
-       tb3(:,:,:) = tb3(:,:,:) + half * uy3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
-       tc3(:,:,:) = tc3(:,:,:) + half * uz3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
+       ta3(:,:,:) = ta3(:,:,:) + ux3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
+       tb3(:,:,:) = tb3(:,:,:) + uy3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
+       tc3(:,:,:) = tc3(:,:,:) + uz3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
 
        !! Add the additional divu terms
-       ta3(:,:,:) = ta3(:,:,:) + half * rho3(:,:,:) * ux3(:,:,:) * divu3(:,:,:)
-       tb3(:,:,:) = tb3(:,:,:) + half * rho3(:,:,:) * uy3(:,:,:) * divu3(:,:,:)
-       tc3(:,:,:) = tc3(:,:,:) + half * rho3(:,:,:) * uz3(:,:,:) * divu3(:,:,:)
+       ta3(:,:,:) = ta3(:,:,:) + rho3(:,:,:) * ux3(:,:,:) * divu3(:,:,:)
+       tb3(:,:,:) = tb3(:,:,:) + rho3(:,:,:) * uy3(:,:,:) * divu3(:,:,:)
+       tc3(:,:,:) = tc3(:,:,:) + rho3(:,:,:) * uz3(:,:,:) * divu3(:,:,:)
     endif
+
+    !! Skew symmetric - need to multiply by half
+    ta3(:,:,:) = half * ta3(:,:,:)
+    tb3(:,:,:) = half * tb3(:,:,:)
+    tc3(:,:,:) = half * tc3(:,:,:)
 
     !ALL THE CONVECTIVE TERMS ARE IN TA3, TB3 and TC3
     td3 = ta3 
@@ -221,34 +223,6 @@ CONTAINS
     tb1 = tb1 + te1 
     tc1 = tc1 + tf1
 
-    if (ilmn) then
-       call derzz (tc3,divu3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
-       call transpose_z_to_y(tc3, tc2)
-       call transpose_z_to_y(divu3, ta2)
-
-       call deryy (tb2,ta2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
-       if (istret.ne.0) then
-          call dery (tj2,ta2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-          do k = 1,ysize(3)
-             do j = 1,ysize(2)
-                do i = 1,ysize(1)
-                   tb2(i,j,k) = tb2(i,j,k)*pp2y(j)-pp4y(j)*tj2(i,j,k)
-                enddo
-             enddo
-          enddo
-       endif
-
-       call transpose_y_to_x(tb2, th1)
-       call transpose_y_to_x(tc2, ti1)
-       call transpose_y_to_x(ta2, tf1)
-
-       call derxx (tg1,tf1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
-
-       ta1(:,:,:) = ta1(:,:,:) + one_third * tg1(:,:,:)
-       tb1(:,:,:) = tb1(:,:,:) + one_third * th1(:,:,:)
-       tc1(:,:,:) = tc1(:,:,:) + one_third * ti1(:,:,:)
-    endif
-
     di1 =  zero
     do is = 1, numscalar
        di1 = di1  + phi1(:,:,:,is)*ri(is) !Mod. by Ricardo
@@ -259,12 +233,15 @@ CONTAINS
     duy1(:,:,:,1) = xnu*tb1(:,:,:) - th1(:,:,:) - di1(:,:,:)*angley  !+y
     duz1(:,:,:,1) = xnu*tc1(:,:,:) - ti1(:,:,:) !+- di1       !+z
 
+    if (ilmn) then
+       call momentum_full_viscstress_tensor(dux1(:,:,:,1), duy1(:,:,:,1), duz1(:,:,:,1), divu3)
+    endif
+
     if (itime.lt.spinup_time) then
        if (nrank==0) print *,'Rotating turbulent channel at speed ',wrotation
        dux1(:,:,:,1) = dux1(:,:,:,1) - wrotation*uy1(:,:,:)
        duy1(:,:,:,1) = duy1(:,:,:,1) + wrotation*ux1(:,:,:)
     endif
-
 
     if (itrip == 1) then
        call tripping(tb1,td1)
@@ -272,6 +249,62 @@ CONTAINS
     endif
 
   end subroutine momentum_rhs_eq
+  !************************************************************
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!
+  !!  SUBROUTINE: momentum_full_viscstress_tensor
+  !!      AUTHOR: Paul Bartholomew
+  !! DESCRIPTION: In an incompressible flow the viscous stress
+  !!              tensor reduces to
+  !!                d2u^j / {dx^i}^2
+  !!              however if div(u) != 0 we have
+  !!                d2u^j / {dx^i}^2 + 1/3 d/dx^j div(u)
+  !!              and further if \mu != const.
+  !!                \mu (d2u^j / {dx^i}^2 + 1/3 d/dx^j div(u))
+  !!                  + d\mu/dx^i (du^j/dx^i + du^i/dx^j
+  !!                  - 2/3 div(u) \delta^{ij})
+  !!              This subroutine computes the additional
+  !!              contributions not accounted for in the
+  !!              incompressible solver.
+  !!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine momentum_full_viscstress_tensor(ta1, tb1, tc1, divu3)
+
+    USE param
+    USE variables
+    USE decomp_2d
+    USE var, only : td1,te1,tf1,tg1,di1
+    USE var, only : ta2,tb2,tc2,td2,di2
+    USE var, only : tc3,di3
+
+    IMPLICIT NONE
+
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ta1, tb1, tc1
+    REAL(mytype), DIMENSION(zsize(1), zsize(2), zsize(3)), INTENT(IN) :: divu3
+
+    INTEGER :: i, j, k
+    REAL(mytype) :: one_third
+
+    one_third = one / three
+    
+    call derz (tc3,divu3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+    call transpose_z_to_y(tc3, tc2)
+    call transpose_z_to_y(divu3, ta2)
+
+    call dery(tb2,ta2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+    call transpose_y_to_x(tb2, te1)
+    call transpose_y_to_x(tc2, tf1)
+    call transpose_y_to_x(ta2, tg1)
+
+    call derx(td1,tg1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+
+    ta1(:,:,:) = ta1(:,:,:) + one_third * xnu * td1(:,:,:)
+    tb1(:,:,:) = tb1(:,:,:) + one_third * xnu * te1(:,:,:)
+    tc1(:,:,:) = tc1(:,:,:) + one_third * xnu * tf1(:,:,:)
+
+  end subroutine momentum_full_viscstress_tensor
+  
   !************************************************************
   subroutine scalar(ux1,uy1,uz1,phi1,phis1,phiss1,di1,ta1,tb1,tc1,td1,&
        uy2,uz2,phi2,di2,ta2,tb2,tc2,td2,uz3,phi3,di3,ta3,tb3,epsi,nut1)
@@ -432,16 +465,16 @@ CONTAINS
     !! XXX All variables up to date - no need to transpose
 
     CALL derz (ta3, rho3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
-    ta3(:,:,:) = -(uz3(:,:,:) * ta3(:,:,:) - rho3(:,:,:) * divu3(:,:,:))
+    ta3(:,:,:) = uz3(:,:,:) * ta3(:,:,:) + rho3(:,:,:) * divu3(:,:,:)
     
-    CALL transpose_z_to_y(ta3,  tb2)
+    CALL transpose_z_to_y(ta3, tb2)
     CALL dery (ta2, rho2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
-    ta2(:,:,:) = -uy2(:,:,:) * ta2(:,:,:) + tb2(:,:,:)
+    ta2(:,:,:) = uy2(:,:,:) * ta2(:,:,:) + tb2(:,:,:)
 
-    CALL transpose_y_to_x(ta2,  ta1)
+    CALL transpose_y_to_x(ta2, ta1)
     CALL derx (drho1(:,:,:,1), rho1(:,:,:,1), &
          di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1)
-    drho1(:,:,:,1) = -ux1(:,:,:) * drho1(:,:,:,1) + ta1(:,:,:)
+    drho1(:,:,:,1) = -(ux1(:,:,:) * drho1(:,:,:,1) + ta1(:,:,:))
 
   ENDSUBROUTINE continuity_rhs_eq
   
