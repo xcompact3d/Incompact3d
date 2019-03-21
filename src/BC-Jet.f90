@@ -547,7 +547,7 @@ contains
           ENDIF
 
           IF (y.GT.yfringe) THEN
-             f = SIN(((y - yfringe) / (yly - yfringe)) * (half * PI))
+             f = SIN(((y - yfringe) / (yly - yfringe + 1.0e-16_mytype)) * (half * PI))
              DO i = 1, xsize(1)
 
                 !! uy -> mean influx = outflow
