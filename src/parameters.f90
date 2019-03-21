@@ -63,7 +63,7 @@ subroutine parameter(input_i3d)
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, rxxnu, cnu, fpi2, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu
   NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat
-  NAMELIST /ScalarParam/ sc
+  NAMELIST /ScalarParam/ sc, nclxS1, nclxSn, nclyS1, nclySn, nclzS1, nclzSn
   NAMELIST /TurbulenceModel/ iles, smagcst, walecst, iwall
   NAMELIST /TurbulenceWallModel/ smagwalldamp
   NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf
@@ -105,6 +105,10 @@ subroutine parameter(input_i3d)
   endif
   if (numscalar.ne.0) then
      iscalar = 1
+     !! Set Scalar BCs same as fluid (may be overridden)
+     nclxS1 = nclx1; nclxSn = nclxn
+     nclyS1 = ncly1; nclySn = nclyn
+     nclzS1 = nclz1; nclzSn = nclzn
      allocate(sc(numscalar))
      read(10, nml=ScalarParam)
   endif

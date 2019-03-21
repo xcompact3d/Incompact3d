@@ -102,6 +102,13 @@ initstat = 6         ! Time steps after which statistics are collected
 
 Sc(1) = 1.0           ! Schmidt number
 
+nclxS1 = 2
+nclxSn = 2
+nclyS1 = 2
+nclySn = 1
+nclzS1 = 1
+nclzSn = 1
+
 /End
 
 !================

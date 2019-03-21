@@ -139,11 +139,20 @@ contains
     call transpose_y_to_x(gx,ux)
 
     if (iscalar.ne.0) then
-       if (xstart(2).eq.1) then
+       if (nclxS1.eq.2) then
+          i = 1
+          phi(i,:,:,:) = zero
+       endif
+       if (nclxSn.eq.2) then
+          i = xsize(1)
+          phi(i,:,:,:) = phi(i - 1,:,:,:)
+       endif
+       
+       if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
           !! Generate a hot patch on bottom boundary
           do k = 1, xsize(3)
              z = real(k + xstart(3) - 2, mytype) * dz - half * zlz
-             if (abs(z).lt.half*zlz) then
+             if (abs(z).lt.zlz/four) then
                 j = 1
                 do i = 1, xsize(1)
                    x = real(i + xstart(1) - 2, mytype) * dx
