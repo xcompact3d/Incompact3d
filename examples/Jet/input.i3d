@@ -36,7 +36,7 @@ iin = 1               ! Inflow conditions (1: classic, 2: turbinit)
 re = 1000.             ! nu=1/re (Kinematic Viscosity)
 u1 = 1.               ! u1 (max velocity) (for inflow condition)
 u2 = 0.02               ! u2 (min velocity) (for inflow condition)
-init_noise = 0.01     ! Turbulence intensity (1=100%) !! Initial condition
+init_noise = 0.05     ! Turbulence intensity (1=100%) !! Initial condition
 inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
 
 ! Time stepping
