@@ -45,7 +45,7 @@ MODULE case
   IMPLICIT NONE
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init, boundary_conditions, postprocessing
+  PUBLIC :: init, boundary_conditions, postprocessing, momentum_forcing
 
 CONTAINS
 
@@ -166,6 +166,30 @@ CONTAINS
        
     ENDIF
   END SUBROUTINE postprocessing
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!
+  !!  SUBROUTINE: momentum_forcing
+  !!      AUTHOR: Paul Bartholomew
+  !! DESCRIPTION: Calls case-specific forcing functions for the
+  !!              momentum equations.
+  !!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  SUBROUTINE momentum_forcing(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
+
+    IMPLICIT NONE
+
+    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
+
+    IF (itype.EQ.itype_channel) THEN
+
+       CALL momentum_forcing_channel(dux1, duy1, ux1, uy1)
+
+    ENDIF
+
+  ENDSUBROUTINE momentum_forcing
   
 END MODULE case
 
