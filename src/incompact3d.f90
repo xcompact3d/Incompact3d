@@ -280,22 +280,46 @@ SUBROUTINE solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
   REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: pp3
 
   !! Locals
-  INTEGER :: nlock
+  INTEGER :: nlock, poissiter
   LOGICAL :: converged
 
   nlock = 1 !! Corresponds to computing div(u*)
   converged = .FALSE.
+  poissiter = 0
+
+  IF (ilmn.AND.ivarcoeff) THEN
+     !! Variable-coefficient Poisson solver works on div(u), not div(rho u)
+     CALL conserved_to_primary(rho1, ux1)
+     CALL conserved_to_primary(rho1, uy1)
+     CALL conserved_to_primary(rho1, uz1)
+  ENDIF
+  
+  CALL divergence(pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
 
   DO WHILE(.NOT.converged)
-     CALL divergence(pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
-
-     CALL poisson(pp3)
-
-     IF ((.NOT.ilmn).OR.(.NOT.ivarcoeff)) THEN
-        !! Once-through solver
-        converged = .TRUE.
+     IF (ivarcoeff) THEN
+        !! Test convergence
+        !! Evaluate additional RHS terms
      ENDIF
+
+     IF (.NOT.converged) THEN
+        CALL poisson(pp3)
+        
+        IF ((.NOT.ilmn).OR.(.NOT.ivarcoeff)) THEN
+           !! Once-through solver
+           converged = .TRUE.
+        ENDIF
+     ENDIF
+
+     poissiter = poissiter + 1
   ENDDO
+
+  IF (ilmn.AND.ivarcoeff) THEN
+     !! Variable-coefficient Poisson solver works on div(u), not div(rho u)
+     CALL primary_to_conserved(rho1, ux1)
+     CALL primary_to_conserved(rho1, uy1)
+     CALL primary_to_conserved(rho1, uz1)
+  ENDIF
 
 END SUBROUTINE solve_poisson
 

@@ -313,11 +313,12 @@ subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
   call derxvp(pp1,ta1,di1,sx,cfx6,csx6,cwx6,xsize(1),nxmsize,xsize(2),xsize(3),0)
 
   if (ilmn) then
-     if (nlock.eq.1) then
+     if ((nlock.eq.1).and.(.not.ivarcoeff)) then
         !! Approximate -div(rho u) using ddt(rho)
         call extrapol_drhodt(ta1, rho1, drho1)
-     elseif (nlock.eq.2) then
+     elseif ((nlock.eq.2).or.ivarcoeff) then
         !! Need to check our error against divu constraint
+        !! Or else we are solving the variable-coefficient Poisson equation
         call transpose_z_to_y(-divu3, ta2)
         call transpose_y_to_x(ta2, ta1)
      endif
