@@ -99,9 +99,9 @@ nstat = 1             ! Size arrays for statistic collection
 !=================
 
 dens1 = 1.0           ! Density of jet
-dens2 = 0.25          ! Ambient density
+dens2 = 4.0           ! Ambient density
 
-prandtl = 0.75        ! Prandtl number
+prandtl = 0.7         ! Prandtl number
 
 /End
 
