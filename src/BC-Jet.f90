@@ -532,6 +532,7 @@ contains
 
     INTEGER :: i, j, k
     REAL(mytype) :: y, yfringe
+    REAL(mytype) :: f
 
     !! Set fringe height
     !! Fringe forcing will be applied for y > yfringe
@@ -546,14 +547,15 @@ contains
           ENDIF
 
           IF (y.GT.yfringe) THEN
+             f = SIN(((y - yfringe) / (yly - yfringe)) * (half * PI))
              DO i = 1, xsize(1)
 
                 !! uy -> mean influx = outflow
-                duy1(i, j, k, 1) = duy1(i, j, k, 1) + rho1(i, j, k, 1) * (outflow - uy1(i, j, k))
+                duy1(i, j, k, 1) = duy1(i, j, k, 1) + f * rho1(i, j, k, 1) * (outflow - uy1(i, j, k))
 
                 !! ux,uz -> zero
-                dux1(i, j, k, 1) = dux1(i, j, k, 1) + rho1(i, j, k, 1) * (zero - ux1(i, j, k))
-                duz1(i, j, k, 1) = duz1(i, j, k, 1) + rho1(i, j, k, 1) * (zero - uz1(i, j, k))
+                dux1(i, j, k, 1) = dux1(i, j, k, 1) + f * rho1(i, j, k, 1) * (zero - ux1(i, j, k))
+                duz1(i, j, k, 1) = duz1(i, j, k, 1) + f * rho1(i, j, k, 1) * (zero - uz1(i, j, k))
 
              ENDDO
           ENDIF
