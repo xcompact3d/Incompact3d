@@ -283,10 +283,14 @@ SUBROUTINE solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
   !! Locals
   INTEGER :: nlock, poissiter
   LOGICAL :: converged
+  REAL(mytype) :: atol, rtol
 
   nlock = 1 !! Corresponds to computing div(u*)
   converged = .FALSE.
   poissiter = 0
+
+  atol = 1.0e-14_mytype !! Absolute tolerance for Poisson solver
+  rtol = 1.0e-14_mytype !! Relative tolerance for Poisson solver
 
   IF (ilmn.AND.ivarcoeff) THEN
      !! Variable-coefficient Poisson solver works on div(u), not div(rho u)
@@ -304,6 +308,7 @@ SUBROUTINE solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
   DO WHILE(.NOT.converged)
      IF (ivarcoeff) THEN
         !! Test convergence
+        CALL test_varcoeff(converged, pp3, dv3, atol, rtol)
 
         IF (.NOT.converged) THEN
            pp3(:,:,:,2) = pp3(:,:,:,1)

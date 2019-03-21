@@ -860,3 +860,30 @@ SUBROUTINE extrapol_drhodt(drhodt1_next, rho1, drho1)
   
 ENDSUBROUTINE extrapol_drhodt
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!!  SUBROUTINE: test_varcoeff
+!!      AUTHOR: Paul Bartholomew
+!! DESCRIPTION: Tests convergence of the variable-coefficient Poisson solver
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE test_varcoeff(converged, pp3, dv3, atol, rtol)
+
+  USE decomp_2d, ONLY: mytype, ph1
+  USE var, ONLY : nzmsize
+  USE param, ONLY : npress
+
+  IMPLICIT NONE
+
+  !! INPUTS
+  REAL(mytype), INTENT(IN), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
+  REAL(mytype), INTENT(IN), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: dv3
+  REAL(mytype), INTENT(IN) :: atol, rtol
+
+  !! OUTPUTS
+  LOGICAL, INTENT(OUT) :: converged
+
+  !! LOCALS
+  
+ENDSUBROUTINE test_varcoeff
+
