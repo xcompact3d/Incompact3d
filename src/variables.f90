@@ -128,7 +128,6 @@ contains
     call alloc_x(nut1, opt_global=.true.) !global indices
 
     allocate(phi1(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),1:numscalar)) !global indices
-    allocate(dphi1(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),ntime,1:numscalar)) !global indices
 
     call alloc_x(ta1);call alloc_x(tb1);call alloc_x(tc1)
     call alloc_x(td1);call alloc_x(te1);call alloc_x(tf1)
@@ -417,6 +416,9 @@ contains
     allocate(dux1(xsize(1),xsize(2),xsize(3),ntime))
     allocate(duy1(xsize(1),xsize(2),xsize(3),ntime))
     allocate(duz1(xsize(1),xsize(2),xsize(3),ntime))
+
+    !! Scalar
+    allocate(dphi1(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),ntime,1:numscalar)) !global indices
 
     !! LMN
     if (.not.ilmn) then

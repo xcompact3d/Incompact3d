@@ -49,7 +49,7 @@ contains
 
     real(mytype) :: y,r,um,r3,x,z,h,ct
     real(mytype) :: cx0,cy0,cz0,hg,lg
-    integer :: k,j,i,ijk,fh,ierror,ii,is,code
+    integer :: k,j,i,ijk,fh,ierror,ii,is,it,code
     integer (kind=MPI_OFFSET_KIND) :: disp
 
     integer, dimension (:), allocatable :: seed
@@ -58,9 +58,11 @@ contains
 
        phi1(:,:,:,:) = zero !change as much as you want
 
-       dphi1(:,:,:,1,:) = phi1(:,:,:,:)
-       do is = 2, ntime
-          dphi1(:,:,:,is,:) = dphi1(:,:,:,is - 1,:)
+       do is = 1, numscalar
+          dphi1(:,:,:,1,is) = phi1(:,:,:,is)
+          do it = 2, ntime
+             dphi1(:,:,:,it,is) = dphi1(:,:,:,it - 1,is)
+          enddo
        enddo
 
     endif
@@ -129,10 +131,36 @@ contains
 !!$  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ut
 
     real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: gx
+    real(mytype) :: x, y, z
+    integer :: i, j, k, is
 
     call transpose_x_to_y(ux,gx)
     call channel_flrt(gx,two/three)
     call transpose_y_to_x(gx,ux)
+
+    if (iscalar.ne.0) then
+       if (xstart(2).eq.1) then
+          !! Generate a hot patch on bottom boundary
+          do k = 1, xsize(3)
+             z = real(k + xstart(3) - 2, mytype) * dz - half * zlz
+             if (abs(z).lt.half*zlz) then
+                j = 1
+                do i = 1, xsize(1)
+                   x = real(i + xstart(1) - 2, mytype) * dx
+                   if ((x.gt.0.1*xlx).and.(x.lt.0.3*xlx)) then
+                      do is = 1, numscalar
+                         phi(i, j, k, is) = one
+                      enddo
+                   else
+                      do is = 1, numscalar
+                         phi(i, j, k, is) = zero
+                      enddo
+                   endif
+                enddo
+             endif
+          enddo
+       endif
+    endif
 
     return
   end subroutine boundary_conditions_channel
