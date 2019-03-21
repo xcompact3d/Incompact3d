@@ -101,13 +101,15 @@ subroutine parameter(input_i3d)
   if (ilmn) then
      read(10, nml=LMN)
   endif
+  if (iscalar.ne.0) then
+     read(10, nml=ScalarParam)
+  endif
   ! !! These are the 'optional'/model parameters
-  ! read(10, nml=ScalarParam)
   ! read(10, nml=TurbulenceModel)
   ! read(10, nml=TurbulenceWallModel)
   close(10)
 
-  allocate(sc(numscalar),cp(numscalar),ri(numscalar),group(numscalar))
+  ! allocate(sc(numscalar),cp(numscalar),ri(numscalar),group(numscalar))
 
   if (nclx1.eq.0.and.nclxn.eq.0) then
      nclx=.true.
