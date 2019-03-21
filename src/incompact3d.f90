@@ -265,10 +265,9 @@ SUBROUTINE solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
   USE decomp_2d_poisson, ONLY : poisson
   USE var, ONLY : nzmsize
   USE param, ONLY : ntime, nrhotime
+  USE param, ONLY : ilmn, ivarcoeff
 
   IMPLICIT NONE
-
-  INTEGER :: nlock
 
   !! Inputs
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
@@ -280,10 +279,23 @@ SUBROUTINE solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
   !! Outputs
   REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: pp3
 
-  nlock = 1 !! Corresponds to computing div(u*)
-  CALL divergence(pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
+  !! Locals
+  INTEGER :: nlock
+  LOGICAL :: converged
 
-  CALL poisson(pp3)
+  nlock = 1 !! Corresponds to computing div(u*)
+  converged = .FALSE.
+
+  DO WHILE(.NOT.converged)
+     CALL divergence(pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
+
+     CALL poisson(pp3)
+
+     IF ((.NOT.ilmn).OR.(.NOT.ivarcoeff)) THEN
+        !! Once-through solver
+        converged = .TRUE.
+     ENDIF
+  ENDDO
 
 END SUBROUTINE solve_poisson
 

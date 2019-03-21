@@ -236,6 +236,7 @@ module param
   logical :: ilmn, ilmn_bound
   real(mytype) :: pressure0, prandtl
   integer :: nrhotime
+  logical :: ivarcoeff
 
   character :: filesauve*80, filenoise*80, &
   nchamp*80,filepath*80, fileturb*80, filevisu*80, datapath*80
