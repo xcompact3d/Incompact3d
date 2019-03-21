@@ -49,12 +49,13 @@ MODULE case
 
 CONTAINS
 
-  SUBROUTINE init (rho1, ux1, uy1, uz1, ep1, phi1, drho1, dux1, duy1, duz1, phis1, phiss1)
+  SUBROUTINE init (rho1, ux1, uy1, uz1, ep1, phi1, drho1, dux1, duy1, duz1, dphi1)
 
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),numscalar) :: phi1,phis1,phiss1
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1, drho1
+    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1,drho1
+    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
 
     !! Default density and pressure0 to one
     pressure0 = one
@@ -69,23 +70,23 @@ CONTAINS
        
     ELSEIF (itype.EQ.itype_tgv) THEN
        
-       CALL init_tgv (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, phis1, phiss1)
+       CALL init_tgv (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, dphi1)
        
     ELSEIF (itype.EQ.itype_channel) THEN
        
-       CALL init_channel (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, phis1, phiss1)
+       CALL init_channel (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, dphi1)
        
     ELSEIF (itype.EQ.itype_hill) THEN
 
-       CALL  init_hill (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
+       CALL  init_hill (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,dphi1)
           
     ELSEIF (itype.EQ.itype_cyl) THEN
        
-       CALL init_cyl (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, phis1, phiss1)
+       CALL init_cyl (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, dphi1)
        
     ELSEIF (itype.EQ.itype_dbg) THEN
        
-       CALL init_dbg (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, phis1, phiss1)
+       CALL init_dbg (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, dphi1)
 
     ELSEIF (itype.EQ.itype_mixlayer) THEN
 
