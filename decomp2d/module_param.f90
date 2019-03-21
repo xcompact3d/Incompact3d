@@ -235,7 +235,7 @@ module param
   !! LMN
   logical :: ilmn, ilmn_bound
   real(mytype) :: pressure0, prandtl
-  integer :: nrhotime
+  integer :: nrhotime, npress
   logical :: ivarcoeff
 
   character :: filesauve*80, filenoise*80, &

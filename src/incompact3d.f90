@@ -84,9 +84,9 @@ PROGRAM incompact3d
 
   if (irestart==0) then
      call init(rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,phis1,phiss1)
-     CALL visu(rho1, ux1, uy1, uz1, pp3, 0)
+     CALL visu(rho1, ux1, uy1, uz1, pp3(:,:,:,1), 0)
   else
-     call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,0)
+     call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,px1,py1,pz1,0)
   endif
 
   if (iibm.eq.2) then
@@ -158,7 +158,7 @@ PROGRAM incompact3d
         !!-------------------------------------------------------------------------
         call calc_divu_constraint(divu3, rho1)
         call solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
-        call gradp(px1,py1,pz1,pp3)
+        call gradp(px1,py1,pz1,pp3(:,:,:,1))
         call corpg(ux1,uy1,uz1,px1,py1,pz1)
 
         if (ilmn) then
@@ -191,12 +191,12 @@ PROGRAM incompact3d
      !!----------------------------------------------------------------------------
 
      if (mod(itime,icheckpoint).eq.0) then
-        call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,1)
+        call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,px1,py1,pz1,1)
      endif
 
      call simu_stats(3)
 
-     CALL visu(rho1, ux1, uy1, uz1, pp3, itime)
+     CALL visu(rho1, ux1, uy1, uz1, pp3(:,:,:,1), itime)
      !!----------------------------------------------------------------------------
      !! End post-processing / IO
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -264,7 +264,8 @@ SUBROUTINE solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
   USE decomp_2d, ONLY : mytype, xsize, zsize, ph1
   USE decomp_2d_poisson, ONLY : poisson
   USE var, ONLY : nzmsize
-  USE param, ONLY : ntime, nrhotime
+  USE var, ONLY : dv3
+  USE param, ONLY : ntime, nrhotime, npress
   USE param, ONLY : ilmn, ivarcoeff
 
   IMPLICIT NONE
@@ -277,7 +278,7 @@ SUBROUTINE solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
   REAL(mytype), DIMENSION(zsize(1), zsize(2), zsize(3)), INTENT(IN) :: divu3
 
   !! Outputs
-  REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: pp3
+  REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
 
   !! Locals
   INTEGER :: nlock, poissiter
@@ -289,24 +290,35 @@ SUBROUTINE solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
 
   IF (ilmn.AND.ivarcoeff) THEN
      !! Variable-coefficient Poisson solver works on div(u), not div(rho u)
+     !! rho u -> u
      CALL conserved_to_primary(rho1, ux1)
      CALL conserved_to_primary(rho1, uy1)
      CALL conserved_to_primary(rho1, uz1)
   ENDIF
   
-  CALL divergence(pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
+  CALL divergence(pp3(:,:,:,1),rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
+  IF (ilmn.AND.ivarcoeff) THEN
+     dv3(:,:,:) = pp3(:,:,:,1)
+  ENDIF
 
   DO WHILE(.NOT.converged)
      IF (ivarcoeff) THEN
         !! Test convergence
-        !! Evaluate additional RHS terms
+
+        IF (.NOT.converged) THEN
+           pp3(:,:,:,2) = pp3(:,:,:,1)
+           
+           !! Evaluate additional RHS terms
+        ENDIF
      ENDIF
 
      IF (.NOT.converged) THEN
-        CALL poisson(pp3)
+        CALL poisson(pp3(:,:,:,1))
         
         IF ((.NOT.ilmn).OR.(.NOT.ivarcoeff)) THEN
            !! Once-through solver
+           !! - Incompressible flow
+           !! - LMN - constant-coefficient solver
            converged = .TRUE.
         ENDIF
      ENDIF
@@ -316,6 +328,7 @@ SUBROUTINE solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
 
   IF (ilmn.AND.ivarcoeff) THEN
      !! Variable-coefficient Poisson solver works on div(u), not div(rho u)
+     !! u -> rho u
      CALL primary_to_conserved(rho1, ux1)
      CALL primary_to_conserved(rho1, uy1)
      CALL primary_to_conserved(rho1, uz1)

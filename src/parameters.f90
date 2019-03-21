@@ -259,6 +259,12 @@ subroutine parameter(input_i3d)
 
   xnu=one/re
 
+  if (ilmn) then
+     if (ivarcoeff) then
+        npress = 2 !! Need current pressure and previous iterate
+     endif
+  endif
+
 #ifdef DOUBLE_PREC
   anglex = dsin(pi*angle/180._mytype)
   angley = dcos(pi*angle/180._mytype)
@@ -329,6 +335,7 @@ subroutine parameter_defaults()
   dens1 = one
   dens2 = one
   ivarcoeff = .FALSE.
+  npress = 1 !! By default people only need one pressure field
 
   !! IO
   ivisu = 1
