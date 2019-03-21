@@ -225,15 +225,15 @@ CONTAINS
     tb1 = tb1 + te1 
     tc1 = tc1 + tf1
 
-    di1 =  zero
-    do is = 1, numscalar
-       di1 = di1  + phi1(:,:,:,is)*ri(is) !Mod. by Ricardo
-    enddo
+    ! di1 =  zero
+    ! do is = 1, numscalar
+    !    di1 = di1  + phi1(:,:,:,is)*ri(is) !Mod. by Ricardo
+    ! enddo
 
     !FINAL SUM: DIFF TERMS + CONV TERMS
-    dux1(:,:,:,1) = xnu*ta1(:,:,:) - tg1(:,:,:) + di1(:,:,:)*anglex  !+x
-    duy1(:,:,:,1) = xnu*tb1(:,:,:) - th1(:,:,:) - di1(:,:,:)*angley  !+y
-    duz1(:,:,:,1) = xnu*tc1(:,:,:) - ti1(:,:,:) !+- di1       !+z
+    dux1(:,:,:,1) = xnu*ta1(:,:,:) - tg1(:,:,:) ! + di1(:,:,:)*anglex  !+x
+    duy1(:,:,:,1) = xnu*tb1(:,:,:) - th1(:,:,:) ! - di1(:,:,:)*angley  !+y
+    duz1(:,:,:,1) = xnu*tc1(:,:,:) - ti1(:,:,:) ! !+- di1       !+z
 
     if (ilmn) then
        call momentum_full_viscstress_tensor(dux1(:,:,:,1), duy1(:,:,:,1), duz1(:,:,:,1), divu3)
