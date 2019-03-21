@@ -153,7 +153,7 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho
 
     integer :: i, j, k
-    real(mytype) :: D, r, x, z
+    real(mytype) :: D, r, x, z, r1, r2, x1, z1
     real(mytype) :: inflow, perturbation
     real(mytype) :: timeswitch
 
@@ -174,6 +174,7 @@ contains
     endif
     timeswitch = one !! Nichols starts with a jet 'column'
 
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !! Set inflow
     inflow = zero
     j = 1
@@ -222,6 +223,76 @@ contains
       enddo
     enddo
 
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !! Apply lateral boundary conditions
+    !! XXX Assume purely radial flow
+    !! XXX In X-pencils
+
+    !! X-BC
+    IF (nclx1.EQ.2) THEN
+       i = 1
+       x = REAL(i + xstart(1) - 2, mytype) * dx - half * xlx
+       DO k = 1, xsize(3)
+          z = REAL(k + xstart(3) - 2, mytype) * dz - half * zlz
+          r2 = SQRT(x**2 + z**2)
+
+          IF (z.GT.0) THEN
+             DO j = 1, xsize(2)
+             ENDDO
+          ELSEIF (z.LT.0) THEN
+             DO j = 1, xsize(2)
+             ENDDO
+          ELSE
+             DO j = 1, xsize(2)
+             ENDDO
+          ENDIF
+       ENDDO
+    ENDIF
+
+    IF (nclxn.EQ.2) THEN
+       i = xsize(1)
+       x = REAL(i + xstart(1) - 2, mytype) * dx - half * xlx
+       DO k = 1, xsize(3)
+          z = REAL(k + xstart(3) - 2, mytype) * dz - half * zlz
+          r2 = SQRT(x**2 + z**2)
+
+          IF (z.GT.0) THEN
+             DO j = 1, xsize(2)
+             ENDDO
+          ELSEIF (z.LT.0) THEN
+             DO j = 1, xsize(2)
+             ENDDO
+          ELSE
+             DO j = 1, xsize(2)
+             ENDDO
+          ENDIF
+       ENDDO
+    ENDIF
+    
+    !! Z-BC
+    IF ((nclz1.EQ.2).AND.(xstart(3).EQ.1)) THEN
+       k = 1
+       z = REAL(k + xstart(3) - 2, mytype) * dz - half * zlz
+       DO j = 1, xsize(2)
+          DO i = 1, xsize(1)
+             x = REAL(i + xstart(1) - 2, mytype) * dx - half * xlx
+             r2 = SQRT(x**2 + z**2)
+          ENDDO
+       ENDDO
+    ENDIF
+
+    IF ((nclzn.EQ.2).AND.(xend(3).EQ.nz)) THEN
+       k = xsize(3)
+       z = REAL(k + xstart(3) - 2, mytype) * dz - half * zlz
+       DO j = 1, xsize(2)
+          DO i = 1, xsize(1)
+             x = REAL(i + xstart(1) - 2, mytype) * dx - half * xlx
+             r2 = SQRT(x**2 + z**2)
+          ENDDO
+       ENDDO
+    ENDIF
+    
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !! Compute outflow
     call MPI_ALLREDUCE(inflow,outflow,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
     outflow = outflow / nx / nz
