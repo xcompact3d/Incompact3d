@@ -28,7 +28,7 @@ module channel
   real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_channel, boundary_conditions_channel, postprocessing_channel
+  PUBLIC :: init_channel, boundary_conditions_channel, postprocessing_channel, momentum_forcing_channel
 
 contains
 
@@ -395,4 +395,27 @@ contains
 
   end subroutine write_probes
   !############################################################################
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!
+  !!  SUBROUTINE: momentum_forcing
+  !!      AUTHOR: Paul Bartholomew
+  !! DESCRIPTION: Applies rotation for t < spinup_time.
+  !!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  SUBROUTINE momentum_forcing_channel(dux1, duy1, ux1, uy1)
+
+    IMPLICIT NONE
+
+    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1
+
+    if (itime.lt.spinup_time) then
+       if (nrank==0) print *,'Rotating turbulent channel at speed ',wrotation
+       dux1(:,:,:,1) = dux1(:,:,:,1) - wrotation*uy1(:,:,:)
+       duy1(:,:,:,1) = duy1(:,:,:,1) + wrotation*ux1(:,:,:)
+    endif
+
+  ENDSUBROUTINE momentum_forcing_channel
+
 end module channel

@@ -14,6 +14,8 @@ CONTAINS
     USE var, only : rho2,ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2
     USE var, only : rho3,ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
 
+    USE case, ONLY : momentum_forcing
+
     implicit none
 
     !! INPUTS
@@ -237,11 +239,7 @@ CONTAINS
        call momentum_full_viscstress_tensor(dux1(:,:,:,1), duy1(:,:,:,1), duz1(:,:,:,1), divu3)
     endif
 
-    if (itime.lt.spinup_time) then
-       if (nrank==0) print *,'Rotating turbulent channel at speed ',wrotation
-       dux1(:,:,:,1) = dux1(:,:,:,1) - wrotation*uy1(:,:,:)
-       duy1(:,:,:,1) = duy1(:,:,:,1) + wrotation*ux1(:,:,:)
-    endif
+    call momentum_forcing(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
 
     if (itrip == 1) then
        call tripping(tb1,td1)
