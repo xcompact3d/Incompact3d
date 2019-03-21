@@ -25,8 +25,10 @@ module jet
 
   real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
 
+  REAL(mytype) :: outflow
+
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_jet, boundary_conditions_jet, postprocessing_jet
+  PUBLIC :: init_jet, boundary_conditions_jet, postprocessing_jet, momentum_forcing_jet
 
 contains
 
@@ -152,7 +154,7 @@ contains
 
     integer :: i, j, k
     real(mytype) :: D, r, x, z
-    real(mytype) :: inflow, outflow, perturbation
+    real(mytype) :: inflow, perturbation
     real(mytype) :: timeswitch
 
     integer :: ierr
@@ -512,4 +514,52 @@ contains
 
   end subroutine write_probes
   !############################################################################
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!
+  !!  SUBROUTINE: momentum_forcing_jet
+  !!      AUTHOR: Paul Bartholomew
+  !! DESCRIPTION: Applies a fringe/sponge region at the outlet.
+  !!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  SUBROUTINE momentum_forcing_jet(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
+
+    IMPLICIT NONE
+
+    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
+    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
+
+    INTEGER :: i, j, k
+    REAL(mytype) :: y, yfringe
+
+    !! Set fringe height
+    !! Fringe forcing will be applied for y > yfringe
+    yfringe = 0.9_mytype * yly
+
+    DO k = 1, xsize(3)
+       DO j = 1, xsize(2)
+          IF (istret.EQ.0) THEN
+             y=REAL(j+xstart(2)-1-1,mytype)*dy
+          ELSE
+             y=yp(j+xstart(2)-1)
+          ENDIF
+
+          IF (y.GT.yfringe) THEN
+             DO i = 1, xsize(1)
+
+                !! uy -> mean influx = outflow
+                duy1(i, j, k, 1) = duy1(i, j, k, 1) + rho1(i, j, k, 1) * (outflow - uy1(i, j, k))
+
+                !! ux,uz -> zero
+                dux1(i, j, k, 1) = dux1(i, j, k, 1) + rho1(i, j, k, 1) * (zero - ux1(i, j, k))
+                duz1(i, j, k, 1) = duz1(i, j, k, 1) + rho1(i, j, k, 1) * (zero - uz1(i, j, k))
+
+             ENDDO
+          ENDIF
+       ENDDO
+    ENDDO
+
+  ENDSUBROUTINE momentum_forcing_jet
+
 end module jet

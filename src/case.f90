@@ -201,6 +201,10 @@ CONTAINS
 
        CALL momentum_forcing_channel(dux1, duy1, ux1, uy1)
 
+    ELSEIF (itype.EQ.itype_jet) THEN
+
+       CALL momentum_forcing_jet(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
+
     ENDIF
 
   ENDSUBROUTINE momentum_forcing
