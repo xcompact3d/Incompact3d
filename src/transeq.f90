@@ -2,7 +2,7 @@ MODULE transeq
 
   PRIVATE
   PUBLIC :: momentum_rhs_eq, continuity_rhs_eq, scalar
-  
+
 CONTAINS
 
   subroutine momentum_rhs_eq(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
@@ -66,7 +66,7 @@ CONTAINS
     else
        rho2(:,:,:) = one
     endif
-    
+
     !WORK Y-PENCILS
     td2(:,:,:) = rho2(:,:,:) * ux2(:,:,:) * uy2(:,:,:)
     te2(:,:,:) = rho2(:,:,:) * uy2(:,:,:) * uy2(:,:,:)
@@ -139,9 +139,9 @@ CONTAINS
     tc3(:,:,:) = half * tc3(:,:,:)
 
     !ALL THE CONVECTIVE TERMS ARE IN TA3, TB3 and TC3
-    td3 = ta3 
-    te3 = tb3 
-    tf3 = tc3 
+    td3 = ta3
+    te3 = tb3
+    tf3 = tc3
 
     !DIFFUSIVE TERMS IN Z
     call derzz (ta3,ux3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
@@ -156,9 +156,9 @@ CONTAINS
     call transpose_z_to_y(te3,te2)
     call transpose_z_to_y(tf3,tf2)
 
-    tg2 = td2 
-    th2 = te2 
-    ti2 = tf2 
+    tg2 = td2
+    th2 = te2
+    ti2 = tf2
 
     !DIFFUSIVE TERMS IN Y
     !-->for ux
@@ -200,9 +200,9 @@ CONTAINS
        enddo
     endif
 
-    ta2 = ta2 + td2 
-    tb2 = tb2 + te2 
-    tc2 = tc2 + tf2 
+    ta2 = ta2 + td2
+    tb2 = tb2 + te2
+    tc2 = tc2 + tf2
 
     !WORK X-PENCILS
     call transpose_y_to_x(ta2,ta1)
@@ -212,17 +212,17 @@ CONTAINS
     call transpose_y_to_x(th2,te1)
     call transpose_y_to_x(ti2,tf1) !conv
 
-    tg1 = td1 
-    th1 = te1 
-    ti1 = tf1 
+    tg1 = td1
+    th1 = te1
+    ti1 = tf1
 
     !DIFFUSIVE TERMS IN X
     call derxx (td1,ux1,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0)
     call derxx (te1,uy1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
     call derxx (tf1,uz1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
 
-    ta1 = ta1 + td1 
-    tb1 = tb1 + te1 
+    ta1 = ta1 + td1
+    tb1 = tb1 + te1
     tc1 = tc1 + tf1
 
     ! di1 =  zero
@@ -285,7 +285,7 @@ CONTAINS
     REAL(mytype) :: one_third
 
     one_third = one / three
-    
+
     call derz (tc3,divu3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
     call transpose_z_to_y(tc3, tc2)
     call transpose_z_to_y(divu3, ta2)
@@ -302,23 +302,24 @@ CONTAINS
     tc1(:,:,:) = tc1(:,:,:) + one_third * xnu * tf1(:,:,:)
 
   end subroutine momentum_full_viscstress_tensor
-  
+
   !************************************************************
-  subroutine scalar(dphi1, ux1, uy1, uz1, phi1)
+  subroutine scalar(dphi1, rho1, ux1, uy1, uz1, phi1)
 
     USE param
     USE variables
     USE decomp_2d
-    
+
     USE var, ONLY : ta1,tb1,tc1,td1,di1
-    USE var, ONLY : uy2,phi2,ta2,tb2,tc2,td2,di2
-    USE var, ONLY : uz3,phi3,ta3,tb3,di3
+    USE var, ONLY : rho2,uy2,phi2,ta2,tb2,tc2,td2,di2
+    USE var, ONLY : rho3,uz3,phi3,ta3,tb3,di3
 
     implicit none
 
     !! INPUTS
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
 
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
@@ -333,13 +334,13 @@ CONTAINS
 
        !X PENCILS
        call derxS (tb1,phi1(:,:,:,is),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1)
-       tb1(:,:,:) = ux1(:,:,:) * tb1(:,:,:)
+       tb1(:,:,:) = rho1(:,:,:,1) * ux1(:,:,:) * tb1(:,:,:)
        call derxxS (ta1,phi1(:,:,:,is),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1)
        call transpose_x_to_y(phi1(:,:,:,is),phi2(:,:,:,is))
 
        !Y PENCILS
        call deryS (tb2,phi2(:,:,:,is),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
-       tb2(:,:,:) = uy2(:,:,:) * tb2(:,:,:)
+       tb2(:,:,:) = rho2(:,:,:) * uy2(:,:,:) * tb2(:,:,:)
        call deryyS (ta2,phi2(:,:,:,is),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
        if (istret.ne.0) then
           call deryS (tc2,phi2(:,:,:,is),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
@@ -355,7 +356,7 @@ CONTAINS
 
        !Z PENCILS
        call derzS (tb3,phi3(:,:,:,is),di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1)
-       tb3 = tb3*uz3
+       tb3(:,:,:) = rho2(:,:,:) * uz3(:,:,:) * tb3(:,:,:)
        call derzzS (ta3,phi3(:,:,:,is),di3,sz,sfzpS,sszpS,swzpS,zsize(1),zsize(2),zsize(3),1)
 
        call transpose_z_to_y(ta3,tc2)
@@ -374,6 +375,9 @@ CONTAINS
 
        dphi1(:,:,:,1,is) = (xnu/sc(is))*ta1(:,:,:) - tb1(:,:,:)
 
+       !! XXX We have computed rho dphidt, want dphidt
+       dphi1(:,:,:,1,is) = dphi1(:,:,:,1,is) / rho1(:,:,:,1)
+
     end do !loop numscalar
 
   end subroutine scalar
@@ -388,20 +392,20 @@ CONTAINS
     USE var, ONLY : ta1, di1
     USE var, ONLY : rho2, uy2, ta2, tb2, di2
     USE var, ONLY : rho3, uz3, ta3, di3
-    
+
     IMPLICIT NONE
 
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
     REAL(mytype), INTENT(IN), DIMENSION(zsize(1), zsize(2), zsize(3)) :: divu3
-    
+
     REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1
 
     !! XXX All variables up to date - no need to transpose
 
     CALL derz (ta3, rho3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
     ta3(:,:,:) = uz3(:,:,:) * ta3(:,:,:) + rho3(:,:,:) * divu3(:,:,:)
-    
+
     CALL transpose_z_to_y(ta3, tb2)
     CALL dery (ta2, rho2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
     ta2(:,:,:) = uy2(:,:,:) * ta2(:,:,:) + tb2(:,:,:)
@@ -412,5 +416,5 @@ CONTAINS
     drho1(:,:,:,1) = -(ux1(:,:,:) * drho1(:,:,:,1) + ta1(:,:,:))
 
   ENDSUBROUTINE continuity_rhs_eq
-  
+
 END MODULE transeq

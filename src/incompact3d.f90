@@ -116,9 +116,9 @@ PROGRAM incompact3d
   do itime=ifirst,ilast
      t=itime*dt
      call simu_stats(2)
-     
+
      call postprocessing(ux1,uy1,uz1,phi1,ep1)
-     
+
      do itr=1,iadvance_time
 
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -140,7 +140,7 @@ PROGRAM incompact3d
            call primary_to_conserved(rho1, uy1)
            call primary_to_conserved(rho1, uz1)
         endif
-        
+
         call intt(rho1,ux1,uy1,uz1,phi1,drho1,dux1,duy1,duz1,dphi1)
         call pre_correc(ux1,uy1,uz1,ep1)
         !!-------------------------------------------------------------------------
@@ -227,7 +227,7 @@ SUBROUTINE calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1
   USE variables, ONLY : numscalar
   USE param, ONLY : ntime, ilmn, nrhotime
   USE transeq, ONLY : momentum_rhs_eq, continuity_rhs_eq, scalar
-  
+
   IMPLICIT NONE
 
   !! Inputs
@@ -241,19 +241,19 @@ SUBROUTINE calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime, numscalar) :: dphi1
-  
+
   !! Momentum equations
   CALL momentum_rhs_eq(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
   !! Scalar equations
   !! XXX Not yet LMN!!!
-  CALL scalar(dphi1, ux1, uy1, uz1, phi1)
+  CALL scalar(dphi1, rho1, ux1, uy1, uz1, phi1)
 
   !! Other (LMN, ...)
   IF (ilmn) THEN
      CALL continuity_rhs_eq(drho1, rho1, ux1, uy1, uz1, divu3)
   ENDIF
-  
+
 END SUBROUTINE calculate_transeq_rhs
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -320,7 +320,7 @@ SUBROUTINE visu(rho1, ux1, uy1, uz1, pp3, phi1, itime)
   IMPLICIT NONE
 
   CHARACTER(len=30) :: filename
-  
+
   !! Inputs
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime), INTENT(IN) :: rho1
@@ -337,13 +337,13 @@ SUBROUTINE visu(rho1, ux1, uy1, uz1, pp3, phi1, itime)
 990  format('ux',I3.3)
      write(filename, 990) itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
-     
+
      uvisu=0.
      call fine_to_coarseV(1,uy1,uvisu)
 991  format('uy',I3.3)
      write(filename, 991) itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
-     
+
      uvisu=0.
      call fine_to_coarseV(1,uz1,uvisu)
 992  format('uz',I3.3)
@@ -409,7 +409,7 @@ SUBROUTINE intt(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
 
   !! LOCAL
   INTEGER :: is
-  
+
   CALL int_time_momentum(ux1, uy1, uz1, dux1, duy1, duz1)
 
   IF (iscalar.NE.0) THEN
@@ -421,5 +421,5 @@ SUBROUTINE intt(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
   IF (ilmn) THEN
      CALL int_time_continuity(rho1, drho1)
   ENDIF
-  
+
 ENDSUBROUTINE intt
