@@ -46,6 +46,8 @@ subroutine parameter(input_i3d)
   USE decomp_2d
   USE ibm
 
+  USE var, ONLY : dphi1
+
   implicit none
 
   character(len=80), intent(in) :: input_i3d
@@ -55,13 +57,13 @@ subroutine parameter(input_i3d)
   NAMELIST /BasicParam/ p_row, p_col, nx, ny, nz, istret, beta, xlx, yly, zlz, &
        itype, iin, re, u1, u2, init_noise, inflow_noise, &
        dt, ifirst, ilast, &
-       iturbmod, iscalar, iibm, ilmn, &
+       iturbmod, numscalar, iibm, ilmn, &
        nclx1, nclxn, ncly1, nclyn, nclz1, nclzn, &
        ivisu, ipost
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, rxxnu, cnu, fpi2, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu
   NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat
-  NAMELIST /ScalarParam/ numscalar, sc
+  NAMELIST /ScalarParam/ sc, nclxS1, nclxSn, nclyS1, nclySn, nclzS1, nclzSn
   NAMELIST /TurbulenceModel/ iles, smagcst, walecst, iwall
   NAMELIST /TurbulenceWallModel/ smagwalldamp
   NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf
@@ -101,13 +103,21 @@ subroutine parameter(input_i3d)
   if (ilmn) then
      read(10, nml=LMN)
   endif
+  if (numscalar.ne.0) then
+     iscalar = 1
+     !! Set Scalar BCs same as fluid (may be overridden)
+     nclxS1 = nclx1; nclxSn = nclxn
+     nclyS1 = ncly1; nclySn = nclyn
+     nclzS1 = nclz1; nclzSn = nclzn
+     allocate(sc(numscalar))
+     read(10, nml=ScalarParam)
+  endif
   ! !! These are the 'optional'/model parameters
-  ! read(10, nml=ScalarParam)
   ! read(10, nml=TurbulenceModel)
   ! read(10, nml=TurbulenceWallModel)
   close(10)
 
-  allocate(sc(numscalar),cp(numscalar),ri(numscalar),group(numscalar))
+  ! allocate(sc(numscalar),cp(numscalar),ri(numscalar),group(numscalar))
 
   if (nclx1.eq.0.and.nclxn.eq.0) then
      nclx=.true.
@@ -239,10 +249,7 @@ subroutine parameter(input_i3d)
         write(*,"('                      (nclyS1,nclySn)=(',I1,',',I1,')')") nclyS1,nclySn
         write(*,"('                      (nclzS1,nclzSn)=(',I1,',',I1,')')") nclzS1,nclzSn
         do is=1, numscalar
-           write (*,"(' Particle fraction  : #',I1)") is
-           write (*,"(' Concentration      : ',F15.8)") cp(is)
-           write (*,"(' Richardson number  : ',F15.8)") ri(is)
-           write (*,"(' Settling velocity  : ',F15.8)") uset(is)
+           write (*,"(' Scalar             : #',I1)") is
            write (*,"(' Schmidt number     : ',F15.8)") sc(is)
         end do
      endif

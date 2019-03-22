@@ -1,7 +1,7 @@
 MODULE transeq
 
   PRIVATE
-  PUBLIC :: momentum_rhs_eq, continuity_rhs_eq
+  PUBLIC :: momentum_rhs_eq, continuity_rhs_eq, scalar
   
 CONTAINS
 
@@ -225,15 +225,15 @@ CONTAINS
     tb1 = tb1 + te1 
     tc1 = tc1 + tf1
 
-    di1 =  zero
-    do is = 1, numscalar
-       di1 = di1  + phi1(:,:,:,is)*ri(is) !Mod. by Ricardo
-    enddo
+    ! di1 =  zero
+    ! do is = 1, numscalar
+    !    di1 = di1  + phi1(:,:,:,is)*ri(is) !Mod. by Ricardo
+    ! enddo
 
     !FINAL SUM: DIFF TERMS + CONV TERMS
-    dux1(:,:,:,1) = xnu*ta1(:,:,:) - tg1(:,:,:) + di1(:,:,:)*anglex  !+x
-    duy1(:,:,:,1) = xnu*tb1(:,:,:) - th1(:,:,:) - di1(:,:,:)*angley  !+y
-    duz1(:,:,:,1) = xnu*tc1(:,:,:) - ti1(:,:,:) !+- di1       !+z
+    dux1(:,:,:,1) = xnu*ta1(:,:,:) - tg1(:,:,:) ! + di1(:,:,:)*anglex  !+x
+    duy1(:,:,:,1) = xnu*tb1(:,:,:) - th1(:,:,:) ! - di1(:,:,:)*angley  !+y
+    duz1(:,:,:,1) = xnu*tc1(:,:,:) - ti1(:,:,:) ! !+- di1       !+z
 
     if (ilmn) then
        call momentum_full_viscstress_tensor(dux1(:,:,:,1), duy1(:,:,:,1), duz1(:,:,:,1), divu3)
@@ -304,45 +304,40 @@ CONTAINS
   end subroutine momentum_full_viscstress_tensor
   
   !************************************************************
-  subroutine scalar(ux1,uy1,uz1,phi1,phis1,phiss1,di1,ta1,tb1,tc1,td1,&
-       uy2,uz2,phi2,di2,ta2,tb2,tc2,td2,uz3,phi3,di3,ta3,tb3,epsi,nut1)
+  subroutine scalar(dphi1, ux1, uy1, uz1, phi1)
 
     USE param
     USE variables
     USE decomp_2d
+    
+    USE var, ONLY : ta1,tb1,tc1,td1,di1
+    USE var, ONLY : uy2,phi2,ta2,tb2,tc2,td2,di2
+    USE var, ONLY : uz3,phi3,ta3,tb3,di3
 
     implicit none
 
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,di1,ta1,tb1,tc1,td1,epsi,nut1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1,phis1,phiss1
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: uy2,uz2,di2,ta2,tb2,tc2,td2
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3),numscalar) :: phi2
-    real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: uz3,di3,ta3,tb3
-    real(mytype),dimension(zsize(1),zsize(2),zsize(3),numscalar) :: phi3
-    integer :: ijk,nvect1,nvect2,nvect3,i,j,k,is
+    !! INPUTS
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
-#ifdef ELES
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: kappat1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: sgsphi1
-    kappat1 = nut1 / pr_t
-    call lesdiff_scalar(phi1, di1, di2, di3, kappat1, sgsphi1)
-#endif
+    !! OUTPUTS
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
 
-    nvect1 = xsize(1)*xsize(2)*xsize(3)
-    nvect2 = ysize(1)*ysize(2)*ysize(3)
-    nvect3 = zsize(1)*zsize(2)*zsize(3)
+    !! LOCALS
+    integer :: i, j, k, is
 
+    !!=====================================================================
+    !! XXX It is assumed that ux,uy,uz are already updated in all pencils!
+    !!=====================================================================
     do is = 1, numscalar
 
        !X PENCILS
        call derxS (tb1,phi1(:,:,:,is),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1)
-       tb1 = tb1*(ux1+uset(is)*anglex)
        call derxxS (ta1,phi1(:,:,:,is),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1)
        call transpose_x_to_y(phi1(:,:,:,is),phi2(:,:,:,is))
 
        !Y PENCILS
        call deryS (tb2,phi2(:,:,:,is),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
-       tb2 = tb2*(uy2-uset(is)*angley)
        call deryyS (ta2,phi2(:,:,:,is),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
        if (istret.ne.0) then
           call deryS (tc2,phi2(:,:,:,is),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
@@ -375,67 +370,7 @@ CONTAINS
        ta1 = ta1+tc1 !SECOND DERIVATIVE
        tb1 = tb1+td1 !FIRST DERIVATIVE
 
-#ifdef ELES
-       if (nrank == 0) print *, "sgsphi",is,"min max= ",minval(sgsphi1(:,:,:,is)),maxval(sgsphi1(:,:,:,is))
-       ta1 = ( xnu/sc(is) + kappat1 )*ta1 - tb1 + sgsphi1(:,:,:,is)
-#else
-       ta1 = ( xnu/sc(is)           )*ta1 - tb1
-#endif
-
-       !TIME ADVANCEMENT
-       if ((itimescheme.eq.1).or.(itimescheme.eq.3)) then !AB2 or RK3
-          if ((itimescheme.eq.1.and.itime.eq.1.and.irestart.eq.0).or.&
-               (itimescheme.eq.3.and.itr.eq.1)) then
-             do ijk = 1,nvect1
-                phi1(ijk,1,1,is) = gdt(itr)*ta1(ijk,1,1)+phi1(ijk,1,1,is)
-                phis1(ijk,1,1,is) = ta1(ijk,1,1)
-             enddo
-          else
-             do ijk = 1,nvect1
-                phi1(ijk,1,1,is) = adt(itr)*ta1(ijk,1,1)+bdt(itr)*phis1(ijk,1,1,is)+phi1(ijk,1,1,is)
-                phis1(ijk,1,1,is) = ta1(ijk,1,1)
-             enddo
-          endif
-       endif
-
-       if (itimescheme.eq.2) then !AB3
-          if ((itime.eq.1).and.(irestart.eq.0)) then
-             if (nrank.eq.0) print *,'start with Euler for scalar',itime
-             do ijk = 1,nvect1 !start with Euler
-                phi1(ijk,1,1,is) = dt*ta1(ijk,1,1)+phi1(ijk,1,1,is)
-                phis1(ijk,1,1,is) = ta1(ijk,1,1)
-             enddo
-          else
-             if  ((itime.eq.2).and.(irestart.eq.0)) then
-                if (nrank.eq.0) print *,'then with AB2 for scalar',itime
-                do ijk = 1,nvect1
-                   phi1(ijk,1,1,is) = onepfive*dt*ta1(ijk,1,1)-half*dt*phis1(ijk,1,1,is)+phi1(ijk,1,1,is)
-                   phiss1(ijk,1,1,is) = phis1(ijk,1,1,is)
-                   phis1(ijk,1,1,is) = ta1(ijk,1,1)
-                enddo
-             else
-                do ijk = 1,nvect1
-                   phi1(ijk,1,1,is) = adt(itr)*ta1(ijk,1,1)+bdt(itr)*phis1(ijk,1,1,is)+&
-                        cdt(itr)*phiss1(ijk,1,1,is)+phi1(ijk,1,1,is)
-                   phiss1(ijk,1,1,is) = phis1(ijk,1,1,is)
-                   phis1(ijk,1,1,is) = ta1(ijk,1,1)
-                enddo
-             endif
-          endif
-       endif
-
-       if (cont_phi.eq.1) then  !Controle de phi. Ativa no prm.
-          do ijk = 1,nvect1
-             if (phi1(ijk,1,1,is).lt.zero) phi1(ijk,1,1,is) = zero
-          enddo
-       endif
-
-       if (cont_phi.eq.2) then  !Controle de phi. Ativa no prm.
-          do ijk = 1,nvect1
-             if (phi1(ijk,1,1,is).gt.cp(is)) phi1(ijk,1,1,is) = cp(is)
-             if (phi1(ijk,1,1,is).lt.zero) phi1(ijk,1,1,is) = zero
-          enddo
-       endif
+       dphi1(:,:,:,1,is) = (xnu/sc(is))*ta1(:,:,:) - tb1(:,:,:)
 
     end do !loop numscalar
 

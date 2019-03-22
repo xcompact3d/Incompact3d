@@ -31,7 +31,7 @@ module tgv
 
 contains
 
-  subroutine init_tgv (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
+  subroutine init_tgv (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,dphi1)
 
     USE decomp_2d
     USE decomp_2d_io
@@ -42,8 +42,9 @@ contains
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1,phis1,phiss1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
 
     real(mytype) :: y,r,um,r3,x,z,h,ct
     real(mytype) :: cx0,cy0,cz0,hg,lg
@@ -54,8 +55,11 @@ contains
 
     if (iscalar==1) then
 
-       phi1 = one
-
+       phi1(:,:,:,:) = zero
+       dphi1(:,:,:,1,:) = phi1(:,:,:,:)
+       do is = 2,ntime
+          dphi1(:,:,:,is,:) = dphi1(:,:,:,is - 1,:)
+       enddo
     endif
 
     if (iin.eq.0) then !empty domain
@@ -131,15 +135,6 @@ contains
        !        enddo
        !     enddo
 
-    endif
-
-    if (iscalar==1) then
-       do is=1,numscalar !vectorized for performance Ricardo
-          do ijk=1,xsize(1)*xsize(2)*xsize(3)
-             phis1(ijk,1,1,is)=phi1(ijk,1,1,is)
-             phiss1(ijk,1,1,is)=phis1(ijk,1,1,is)
-          enddo
-       enddo
     endif
 
     !  bxx1(j,k)=zero
