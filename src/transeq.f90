@@ -333,11 +333,13 @@ CONTAINS
 
        !X PENCILS
        call derxS (tb1,phi1(:,:,:,is),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1)
+       tb1(:,:,:) = ux1(:,:,:) * tb1(:,:,:)
        call derxxS (ta1,phi1(:,:,:,is),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1)
        call transpose_x_to_y(phi1(:,:,:,is),phi2(:,:,:,is))
 
        !Y PENCILS
        call deryS (tb2,phi2(:,:,:,is),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
+       tb2(:,:,:) = uy2(:,:,:) * tb2(:,:,:)
        call deryyS (ta2,phi2(:,:,:,is),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
        if (istret.ne.0) then
           call deryS (tc2,phi2(:,:,:,is),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
