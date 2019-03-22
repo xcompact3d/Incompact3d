@@ -867,10 +867,10 @@ ENDSUBROUTINE extrapol_drhodt
 !! DESCRIPTION: Tests convergence of the variable-coefficient Poisson solver
 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE test_varcoeff(converged, pp3, dv3, atol, rtol)
+SUBROUTINE test_varcoeff(converged, pp3, dv3, atol, rtol, poissiter)
   
   USE MPI
-  USE decomp_2d, ONLY: mytype, ph1, real_type
+  USE decomp_2d, ONLY: mytype, ph1, real_type, nrank
   USE var, ONLY : nzmsize
   USE param, ONLY : npress
   USE variables, ONLY : nxm, nym, nzm
@@ -881,22 +881,52 @@ SUBROUTINE test_varcoeff(converged, pp3, dv3, atol, rtol)
   REAL(mytype), INTENT(INOUT), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
   REAL(mytype), INTENT(IN), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: dv3
   REAL(mytype), INTENT(IN) :: atol, rtol
+  INTEGER, INTENT(IN) :: poissiter
 
   !! OUTPUTS
   LOGICAL, INTENT(OUT) :: converged
 
   !! LOCALS
   INTEGER :: ierr
-  REAL(mytype) :: errloc, errglob
-
-  !! Compute RMS relative change
-  errloc = SUM((pp3(:,:,:,1) - pp3(:,:,:,2))**2)
-  CALL MPI_ALLREDUCE(errloc,errglob,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
-  errglob = SQRT(errglob / nxm / nym / nzm)
-  IF (errglob.LE.atol) THEN
-     converged = .TRUE.
+  REAL(mytype) :: errloc, errglob, divup3norm
+     
+  IF (poissiter.EQ.0) THEN
+     errloc = SUM(dv3**2)
+     CALL MPI_ALLREDUCE(errloc,divup3norm,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
+     divup3norm = SQRT(divup3norm / nxm / nym / nzm)
+  
+     IF (nrank.EQ.0) THEN
+        PRINT *, "Solving variable-coefficient Poisson equation:"
+        PRINT *, "+ RMS div(u*) - div(u): ", divup3norm
+     ENDIF
   ELSE
-     pp3(:,:,:,2) = pp3(:,:,:,1)
+     !! Compute RMS change
+     errloc = SUM((pp3(:,:,:,1) - pp3(:,:,:,2))**2)
+     CALL MPI_ALLREDUCE(errloc,errglob,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
+     errglob = SQRT(errglob / nxm / nym / nzm)
+
+     IF (nrank.EQ.0) THEN
+        PRINT *, "+ RMS change in pressure: ", errglob
+     ENDIF
+
+     IF (errglob.LE.atol) THEN
+        converged = .TRUE.
+        IF (nrank.EQ.0) THEN
+           PRINT *, "- Converged: atol"
+        ENDIF
+     ENDIF
+
+     !! Compare RMS change to size of |div(u*) - div(u)|
+     IF (errglob.LT.(rtol * divup3norm)) THEN
+        converged = .TRUE.
+        IF (nrank.EQ.0) THEN
+           PRINT *, "- Converged: rtol"
+        ENDIF
+     ENDIF
+
+     IF (.NOT.converged) THEN
+        pp3(:,:,:,2) = pp3(:,:,:,1)
+     ENDIF
   ENDIF
   
 ENDSUBROUTINE test_varcoeff

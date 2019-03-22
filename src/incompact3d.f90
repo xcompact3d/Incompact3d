@@ -307,8 +307,9 @@ SUBROUTINE solve_poisson(pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, di
 
   DO WHILE(.NOT.converged)
      IF (ivarcoeff) THEN
+        
         !! Test convergence
-        CALL test_varcoeff(converged, pp3, dv3, atol, rtol)
+        CALL test_varcoeff(converged, pp3, dv3, atol, rtol, poissiter)
 
         IF (.NOT.converged) THEN
            !! Evaluate additional RHS terms
