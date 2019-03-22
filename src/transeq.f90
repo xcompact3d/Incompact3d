@@ -303,8 +303,7 @@ CONTAINS
 
   end subroutine momentum_full_viscstress_tensor
 
-  !************************************************************
-  subroutine scalar(dphi1, rho1, ux1, uy1, uz1, phi1)
+  subroutine scalar_transport_eq(dphi1, rho1, ux1, uy1, uz1, phi1)
 
     USE param
     USE variables
@@ -313,6 +312,74 @@ CONTAINS
     USE var, ONLY : ta1,tb1,tc1,td1,di1
     USE var, ONLY : rho2,uy2,phi2,ta2,tb2,tc2,td2,di2
     USE var, ONLY : rho3,uz3,phi3,ta3,tb3,di3
+
+    implicit none
+
+    !! INPUTS
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: phi1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
+
+    !! OUTPUTS
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dphi1
+
+    !! LOCALS
+    integer :: i, j, k
+
+    !X PENCILS
+    call derxS (tb1,phi1(:,:,:),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1)
+    tb1(:,:,:) = rho1(:,:,:,1) * ux1(:,:,:) * tb1(:,:,:)
+    call derxxS (ta1,phi1(:,:,:),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1)
+    call transpose_x_to_y(phi1(:,:,:),phi2(:,:,:))
+
+    !Y PENCILS
+    call deryS (tb2,phi2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
+    tb2(:,:,:) = rho2(:,:,:) * uy2(:,:,:) * tb2(:,:,:)
+    call deryyS (ta2,phi2(:,:,:),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
+    if (istret.ne.0) then
+       call deryS (tc2,phi2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
+       do k = 1,ysize(3)
+          do j = 1,ysize(2)
+             do i = 1,ysize(1)
+                ta2(i,j,k) = ta2(i,j,k)*pp2y(j)-pp4y(j)*tc2(i,j,k)
+             enddo
+          enddo
+       enddo
+    endif
+    call transpose_y_to_z(phi2(:,:,:),phi3(:,:,:,is))
+
+    !Z PENCILS
+    call derzS (tb3,phi3(:,:,:),di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1)
+    tb3(:,:,:) = rho2(:,:,:) * uz3(:,:,:) * tb3(:,:,:)
+    call derzzS (ta3,phi3(:,:,:),di3,sz,sfzpS,sszpS,swzpS,zsize(1),zsize(2),zsize(3),1)
+
+    call transpose_z_to_y(ta3,tc2)
+    call transpose_z_to_y(tb3,td2)
+
+    !Y PENCILS ADD TERMS
+    tc2 = tc2+ta2
+    td2 = td2+tb2
+
+    call transpose_y_to_x(tc2,tc1)
+    call transpose_y_to_x(td2,td1)
+
+    !X PENCILS ADD TERMS
+    ta1 = ta1+tc1 !SECOND DERIVATIVE
+    tb1 = tb1+td1 !FIRST DERIVATIVE
+
+    dphi1(:,:,:,1) = (xnu/sc(is))*ta1(:,:,:) - tb1(:,:,:)
+
+    !! XXX We have computed rho dphidt, want dphidt
+    dphi1(:,:,:,1) = dphi1(:,:,:,1) / rho1(:,:,:,1)
+
+  endsubroutine scalar_transport_eq
+
+  !************************************************************
+  subroutine scalar(dphi1, rho1, ux1, uy1, uz1, phi1)
+
+    USE param
+    USE variables
+    USE decomp_2d
 
     implicit none
 
@@ -332,55 +399,42 @@ CONTAINS
     !!=====================================================================
     do is = 1, numscalar
 
-       !X PENCILS
-       call derxS (tb1,phi1(:,:,:,is),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1)
-       tb1(:,:,:) = rho1(:,:,:,1) * ux1(:,:,:) * tb1(:,:,:)
-       call derxxS (ta1,phi1(:,:,:,is),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1)
-       call transpose_x_to_y(phi1(:,:,:,is),phi2(:,:,:,is))
-
-       !Y PENCILS
-       call deryS (tb2,phi2(:,:,:,is),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
-       tb2(:,:,:) = rho2(:,:,:) * uy2(:,:,:) * tb2(:,:,:)
-       call deryyS (ta2,phi2(:,:,:,is),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
-       if (istret.ne.0) then
-          call deryS (tc2,phi2(:,:,:,is),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
-          do k = 1,ysize(3)
-             do j = 1,ysize(2)
-                do i = 1,ysize(1)
-                   ta2(i,j,k) = ta2(i,j,k)*pp2y(j)-pp4y(j)*tc2(i,j,k)
-                enddo
-             enddo
-          enddo
-       endif
-       call transpose_y_to_z(phi2(:,:,:,is),phi3(:,:,:,is))
-
-       !Z PENCILS
-       call derzS (tb3,phi3(:,:,:,is),di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1)
-       tb3(:,:,:) = rho2(:,:,:) * uz3(:,:,:) * tb3(:,:,:)
-       call derzzS (ta3,phi3(:,:,:,is),di3,sz,sfzpS,sszpS,swzpS,zsize(1),zsize(2),zsize(3),1)
-
-       call transpose_z_to_y(ta3,tc2)
-       call transpose_z_to_y(tb3,td2)
-
-       !Y PENCILS ADD TERMS
-       tc2 = tc2+ta2
-       td2 = td2+tb2
-
-       call transpose_y_to_x(tc2,tc1)
-       call transpose_y_to_x(td2,td1)
-
-       !X PENCILS ADD TERMS
-       ta1 = ta1+tc1 !SECOND DERIVATIVE
-       tb1 = tb1+td1 !FIRST DERIVATIVE
-
-       dphi1(:,:,:,1,is) = (xnu/sc(is))*ta1(:,:,:) - tb1(:,:,:)
-
-       !! XXX We have computed rho dphidt, want dphidt
-       dphi1(:,:,:,1,is) = dphi1(:,:,:,1,is) / rho1(:,:,:,1)
+       scalar_transport_eq(dphi1(:,:,:,:,is), rho1, ux1, uy1, uz1, phi1(:,:,:,:,is))
 
     end do !loop numscalar
 
   end subroutine scalar
+
+  subroutine temperature_rhs_eq(drho1, rho1, ux1, uy1, uz1)
+
+    USE param
+    USE variables
+    USE decomp_2d
+
+    USE var, ONLY : ta1
+
+    implicit none
+
+    !! INPUTS
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
+
+    !! OUTPUTS
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
+
+    !! LOCALS
+    integer :: i, j, k
+
+    !! Get temperature
+    ta1(:,:,:) = pressure0 / rho1(:,:,:,1)
+
+    !!=====================================================================
+    !! XXX It is assumed that ux,uy,uz are already updated in all pencils!
+    !!=====================================================================
+    scalar_transport_eq(drho1, rho1, ux1, uy1, uz1, ta1)
+
+  end subroutine temperature_rhs_eq
+
 
   SUBROUTINE continuity_rhs_eq(drho1, rho1, ux1, uy1, uz1, divu3)
 

@@ -419,7 +419,10 @@ SUBROUTINE intt(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
   ENDIF
 
   IF (ilmn) THEN
-     CALL int_time_continuity(rho1, drho1)
+     IF (ilmn_solve_temp) THEN
+     ELSE
+        CALL int_time_continuity(rho1, drho1)
+     ENDIF
   ENDIF
 
 ENDSUBROUTINE intt

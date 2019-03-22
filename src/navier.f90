@@ -1,14 +1,14 @@
 !************************************************************************
-! Time-marching subroutine used to advance the numerical solution in time  
+! Time-marching subroutine used to advance the numerical solution in time
 !
 !        input: dvar1
-! 
+!
 ! input/output: var1
 !
 !       Author: Yorgos
 !     Modified: Paul
-! 
-!************************************************************************ 
+!
+!************************************************************************
 subroutine  int_time(var1,dvar1)
 
   USE param
@@ -28,35 +28,35 @@ subroutine  int_time(var1,dvar1)
   if (nrank .eq. 0) print *,'# intt start'
 #endif
 
-  if (itimescheme.eq.1) then 
-     !>>> Euler 
-     var1(:,:,:)=gdt(itr)*dvar1(:,:,:,1)+var1(:,:,:) 
+  if (itimescheme.eq.1) then
+     !>>> Euler
+     var1(:,:,:)=gdt(itr)*dvar1(:,:,:,1)+var1(:,:,:)
   elseif(itimescheme.eq.2) then
      !>>> Adam-Bashforth second order (AB2)
-     
+
      ! Do first time step with Euler
      if(itime.eq.1.and.irestart.eq.0) then
-        var1(:,:,:)=gdt(itr)*dvar1(:,:,:,1)+var1(:,:,:) 
+        var1(:,:,:)=gdt(itr)*dvar1(:,:,:,1)+var1(:,:,:)
      else
         var1(:,:,:)=adt(itr)*dvar1(:,:,:,1)+bdt(itr)*dvar1(:,:,:,2)+var1(:,:,:)
      endif
-     dvar1(:,:,:,2)=dvar1(:,:,:,1) 
+     dvar1(:,:,:,2)=dvar1(:,:,:,1)
   elseif(itimescheme.eq.3) then
      !>>> Adams-Bashforth third order (AB3)
-     
+
      ! Do first time step with Euler
      if(itime.eq.1.and.irestart.eq.0) then
         var1(:,:,:)=dt*dvar1(:,:,:,1)+var1(:,:,:)
      elseif(itime.eq.2.and.irestart.eq.0) then
       	! Do second time step with AB2
       	var1(:,:,:)=onepfive*dt*dvar1(:,:,:,1)-half*dt*dvar1(:,:,:,2)+var1(:,:,:)
-        dvar1(:,:,:,3)=dvar1(:,:,:,2) 
+        dvar1(:,:,:,3)=dvar1(:,:,:,2)
      else
       	! Finally using AB3
       	var1(:,:,:)=adt(itr)*dvar1(:,:,:,1)+bdt(itr)*dvar1(:,:,:,2)+cdt(itr)*dvar1(:,:,:,3)+var1(:,:,:)
-        dvar1(:,:,:,3)=dvar1(:,:,:,2) 
+        dvar1(:,:,:,3)=dvar1(:,:,:,2)
      endif
-     dvar1(:,:,:,2)=dvar1(:,:,:,1) 
+     dvar1(:,:,:,2)=dvar1(:,:,:,1)
   elseif(itimescheme.eq.4) then
      !>>> Adams-Bashforth fourth order (AB4)
 
@@ -64,56 +64,56 @@ subroutine  int_time(var1,dvar1)
         print *, "AB4 not implemented!"
         STOP
      endif
-     
+
      !if (itime.eq.1.and.ilit.eq.0) then
      !var(:,:,:)=gdt(itr)*hx(:,:,:)+var(:,:,:)
-     !uy(:,:,:)=gdt(itr)*hy(:,:,:)+uy(:,:,:) 
+     !uy(:,:,:)=gdt(itr)*hy(:,:,:)+uy(:,:,:)
      !uz(:,:,:)=gdt(itr)*hz(:,:,:)+uz(:,:,:)
      !gx(:,:,:)=hx(:,:,:)
      !gy(:,:,:)=hy(:,:,:)
-     !gz(:,:,:)=hz(:,:,:)            
-     !elseif (itime.eq.2.and.ilit.eq.0) then 	   
+     !gz(:,:,:)=hz(:,:,:)
+     !elseif (itime.eq.2.and.ilit.eq.0) then
      !var(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+var(:,:,:)
-     !uy(:,:,:)=adt(itr)*hy(:,:,:)+bdt(itr)*gy(:,:,:)+uy(:,:,:)   
+     !uy(:,:,:)=adt(itr)*hy(:,:,:)+bdt(itr)*gy(:,:,:)+uy(:,:,:)
      !uz(:,:,:)=adt(itr)*hz(:,:,:)+bdt(itr)*gz(:,:,:)+uz(:,:,:)
      !gox(:,:,:)=gx(:,:,:)
      !goy(:,:,:)=gy(:,:,:)
      !goz(:,:,:)=gz(:,:,:)
      !gx(:,:,:)=hx(:,:,:)
      !gy(:,:,:)=hy(:,:,:)
-     !gz(:,:,:)=hz(:,:,:)            
-     !elseif (itime.eq.3.and.ilit.eq.0) then 
+     !gz(:,:,:)=hz(:,:,:)
+     !elseif (itime.eq.3.and.ilit.eq.0) then
      !var(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+cdt(itr)*gox(:,:,:)+var(:,:,:)
-     !uy(:,:,:)=adt(itr)*hy(:,:,:)+bdt(itr)*gy(:,:,:)+cdt(itr)*goy(:,:,:)+uy(:,:,:)   
+     !uy(:,:,:)=adt(itr)*hy(:,:,:)+bdt(itr)*gy(:,:,:)+cdt(itr)*goy(:,:,:)+uy(:,:,:)
      !uz(:,:,:)=adt(itr)*hz(:,:,:)+bdt(itr)*gz(:,:,:)+cdt(itr)*goz(:,:,:)+uz(:,:,:)
      !gox(:,:,:)=gx(:,:,:)
      !goy(:,:,:)=gy(:,:,:)
      !goz(:,:,:)=gz(:,:,:)
      !gx(:,:,:)=hx(:,:,:)
      !gy(:,:,:)=hy(:,:,:)
-     !gz(:,:,:)=hz(:,:,:)            
-     !else 
+     !gz(:,:,:)=hz(:,:,:)
+     !else
      !var(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+cdt(itr)*gox(:,:,:)+ddt(itr)*gax(:,:,:)+var(:,:,:)
-     !uy(:,:,:)=adt(itr)*hy(:,:,:)+bdt(itr)*gy(:,:,:)+cdt(itr)*goy(:,:,:)+ddt(itr)*gay(:,:,:)+uy(:,:,:)   
+     !uy(:,:,:)=adt(itr)*hy(:,:,:)+bdt(itr)*gy(:,:,:)+cdt(itr)*goy(:,:,:)+ddt(itr)*gay(:,:,:)+uy(:,:,:)
      !uz(:,:,:)=adt(itr)*hz(:,:,:)+bdt(itr)*gz(:,:,:)+cdt(itr)*goz(:,:,:)+ddt(itr)*gaz(:,:,:)+uz(:,:,:)
      !gax(:,:,:)=gox(:,:,:)
      !gay(:,:,:)=goy(:,:,:)
-     !gaz(:,:,:)=goz(:,:,:)		     
+     !gaz(:,:,:)=goz(:,:,:)
      !gox(:,:,:)=gx(:,:,:)
      !goy(:,:,:)=gy(:,:,:)
      !goz(:,:,:)=gz(:,:,:)
      !gx(:,:,:)=hx(:,:,:)
      !gy(:,:,:)=hy(:,:,:)
-     !gz(:,:,:)=hz(:,:,:)            
-     !endif	
+     !gz(:,:,:)=hz(:,:,:)
+     !endif
      !>>> Runge-Kutta (low storage) RK3
   elseif(itimescheme.eq.5) then
      if(itr.eq.1) then
-        var1(:,:,:)=gdt(itr)*dvar1(:,:,:,1)+var1(:,:,:) 
+        var1(:,:,:)=gdt(itr)*dvar1(:,:,:,1)+var1(:,:,:)
      else
         var1(:,:,:)=adt(itr)*dvar1(:,:,:,1)+bdt(itr)*dvar1(:,:,:,2)+var1(:,:,:)
      endif
-     dvar1(:,:,:,2)=dvar1(:,:,:,1) 
+     dvar1(:,:,:,2)=dvar1(:,:,:,1)
      !>>> Runge-Kutta (low storage) RK4
   elseif(itimescheme.eq.6) then
 
@@ -167,7 +167,7 @@ subroutine int_time_momentum(ux1, uy1, uz1, dux1, duy1, duz1)
   call int_time(ux1, dux1)
   call int_time(uy1, duy1)
   call int_time(uz1, duz1)
-  
+
 endsubroutine int_time_momentum
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -185,7 +185,7 @@ subroutine int_time_continuity(rho1, drho1)
   USE param
   USE variables
   USE decomp_2d
-  
+
   implicit none
 
   integer :: it, i, j, k
@@ -234,8 +234,85 @@ subroutine int_time_continuity(rho1, drho1)
         enddo
      enddo
   endif
-  
+
 endsubroutine int_time_continuity
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!!  SUBROUTINE: int_time_temperature
+!! DESCRIPTION: Integrates the temperature equation in time
+!!      INPUTS: drho1 - the RHS(s) of the temperature equation.
+!!     OUTPUTS:  rho1 - the density at new time.
+!!      AUTHOR: Paul Bartholomew
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine int_time_temperature(rho1, drho1)
+
+  USE param
+  USE variables
+  USE decomp_2d
+
+  implicit none
+
+  integer :: it, i, j, k
+  real(mytype) :: rhomin, rhomax
+
+  !! INPUTS
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
+
+  !! OUTPUTS
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
+
+  !! First, update old density / store old transients depending on scheme
+  if (itimescheme.lt.5) then
+     !! Euler/AB - Store old density values
+     do it = nrhotime, 2, -1
+        rho1(:,:,:,it) = rho1(:,:,:,it-1)
+     enddo
+  elseif (itimescheme.eq.5) then
+     !! RK3 - Stores old transients
+     if (itr.eq.1) then
+        do it = nrhotime, 2, -1
+           rho1(:,:,:,it) = rho1(:,:,:,it-1)
+        enddo
+        rho1(:,:,:,2) = drho1(:,:,:,1)
+     endif
+  else
+     if (nrank.eq.0) then
+        print *, "int_time_continuity not implemented for itimescheme", itimescheme
+        stop
+     endif
+  endif
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !! XXX We are integrating the temperature equation - get temperature
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ta1(:,:,:) = pressure0 / rho1(:,:,:,1)
+
+  !! Now we can update current density
+  call int_time(ta1, drho1)
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !! XXX We are integrating the temperature equation - get back to rho
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  rho1(:,:,:,1) = pressure0 / ta1(:,:,:)
+
+  !! Enforce boundedness on density
+  if (ilmn_bound) then
+     rhomin = min(dens1, dens2)
+     rhomax = max(dens1, dens2)
+     do k = 1, xsize(3)
+        do j = 1, xsize(2)
+           do i = 1, xsize(1)
+              rho1(i, j, k, 1) = max(rho1(i, j, k, 1), rhomin)
+              rho1(i, j, k, 1) = min(rho1(i, j, k, 1), rhomax)
+           enddo
+        enddo
+     enddo
+  endif
+
+endsubroutine int_time_temperature
+
 
 !********************************************************************
 !subroutine CORPG
@@ -244,13 +321,13 @@ endsubroutine int_time_continuity
 ! input : px,py,pz
 ! output : ux,uy,uz
 !written by SL 2018
-!********************************************************************    
+!********************************************************************
 subroutine corpg (ux,uy,uz,px,py,pz)
-  
+
   USE decomp_2d
   USE variables
   USE param
-  
+
   implicit none
 
   integer :: ijk,nxyz
@@ -260,7 +337,7 @@ subroutine corpg (ux,uy,uz,px,py,pz)
   ux(:,:,:)=ux(:,:,:)-px(:,:,:)
   uy(:,:,:)=uy(:,:,:)-py(:,:,:)
   uz(:,:,:)=uz(:,:,:)-pz(:,:,:)
-  
+
   return
 end subroutine corpg
 !********************************************************************
@@ -269,7 +346,7 @@ end subroutine corpg
 ! input : ux1,uy1,uz1,ep1 (on velocity mesh)
 ! output : pp3 (on pressure mesh)
 !written by SL 2018
-!******************************************************************** 
+!********************************************************************
 subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
 
   USE param
@@ -340,7 +417,7 @@ subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
   duydypi2(:,:,:) = duydypi2(:,:,:) + upi2(:,:,:)
 
   call interyvp(upi2,uzp2,dipp2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
-  
+
   call transpose_y_to_z(duydypi2,duxydxyp3,ph3)!->NXM NYM NZ
   call transpose_y_to_z(upi2,uzp3,ph3)
 
@@ -396,7 +473,7 @@ end subroutine divergence
 ! input: pp3 - pressure field (on pressure mesh)
 ! output: px1, py1, pz1 - pressure gradients (on velocity mesh)
 !written by SL 2018
-!********************************************************************  
+!********************************************************************
 subroutine gradp(px1,py1,pz1,pp3)
 
   USE param
@@ -408,7 +485,7 @@ subroutine gradp(px1,py1,pz1,pp3)
 #ifdef FORCES
   USE forces, only : ppi1
 #endif
-  
+
   implicit none
 
   integer :: i,j,k,code
@@ -452,7 +529,7 @@ subroutine gradp(px1,py1,pz1,pp3)
   call interxpv(ppi1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
   nxmsize,xsize(1),xsize(2),xsize(3),1)
 #endif
-  
+
   !we are in X pencils:
   if (nclx1.eq.2) then
     do k=1,xsize(3)
@@ -550,7 +627,7 @@ subroutine pre_correc(ux,uy,uz,ep)
   endif
 
   if (nclzn==2) then
-     if (xend(3)==nz) then   
+     if (xend(3)==nz) then
         do j=1,xsize(2)
            do i=1,xsize(1)
               dpdxzn(i,j)=dpdxzn(i,j)*gdt(itr)
@@ -732,7 +809,7 @@ SUBROUTINE primary_to_conserved(rho1, var1)
 
   USE decomp_2d, ONLY : mytype, xsize
   USE param, ONLY : nrhotime
-  
+
   IMPLICIT NONE
 
   REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
@@ -745,7 +822,7 @@ SUBROUTINE conserved_to_primary(rho1, var1)
 
   USE decomp_2d, ONLY : mytype, xsize
   USE param, ONLY : nrhotime
-  
+
   IMPLICIT NONE
 
   REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
@@ -767,7 +844,7 @@ SUBROUTINE calc_divu_constraint(divu3, rho1)
   USE var, ONLY : ta1, tb1, di1
   USE var, ONLY : ta2, tb2, tc2, td2, di2
   USE var, ONLY : ta3, tb3, di3
-  
+
   IMPLICIT NONE
 
   INTEGER :: i, j, k
@@ -778,15 +855,15 @@ SUBROUTINE calc_divu_constraint(divu3, rho1)
   IF (ilmn) THEN
      !!------------------------------------------------------------------------------
      !! X-pencil
-     
+
      !! We need temperature
      ta1(:,:,:) = pressure0 / rho1(:,:,:,1) !! Temperature
-     
+
      CALL derxx (tb1, ta1, di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1)
-     
+
      CALL transpose_x_to_y(ta1, ta2)        !! Temperature
      CALL transpose_x_to_y(tb1, tb2)        !! d2Tdx2
-     
+
      !!------------------------------------------------------------------------------
      !! Y-pencil
      CALL deryy (tc2, ta2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
@@ -795,7 +872,7 @@ SUBROUTINE calc_divu_constraint(divu3, rho1)
 
      CALL transpose_y_to_z(ta2, ta3)        !! Temperature
      CALL transpose_y_to_z(tb2, tb3)        !! d2Tdx2 + d2Tdy2
-     
+
      !!------------------------------------------------------------------------------
      !! Z-pencil
      CALL derzz (divu3, ta3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
@@ -815,11 +892,11 @@ SUBROUTINE extrapol_drhodt(drhodt1_next, rho1, drho1)
   USE decomp_2d, ONLY : mytype, xsize, nrank
   USE param, ONLY : ntime, nrhotime, itime, itimescheme, itr, dt, gdt, irestart
   USE param, ONLY : half, three, four
-  
+
   IMPLICIT NONE
 
   INTEGER :: subitr
-  
+
   REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1
   REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
   REAL(mytype), INTENT(OUT), DIMENSION(xsize(1), xsize(2), xsize(3)) :: drhodt1_next
@@ -856,6 +933,5 @@ SUBROUTINE extrapol_drhodt(drhodt1_next, rho1, drho1)
         STOP
      ENDIF
   ENDIF
-  
-ENDSUBROUTINE extrapol_drhodt
 
+ENDSUBROUTINE extrapol_drhodt
