@@ -312,7 +312,7 @@ subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
 
   call derxvp(pp1,ta1,di1,sx,cfx6,csx6,cwx6,xsize(1),nxmsize,xsize(2),xsize(3),0)
 
-  if (ilmn) then
+  if (ilmn.and.(nlock.gt.0)) then
      if ((nlock.eq.1).and.(.not.ivarcoeff)) then
         !! Approximate -div(rho u) using ddt(rho)
         call extrapol_drhodt(ta1, rho1, drho1)
@@ -373,7 +373,7 @@ subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
   call MPI_REDUCE(tmax,tmax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
   call MPI_REDUCE(tmoy,tmoy1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
 
-  if (nrank==0) then
+  if ((nrank==0).and.(nlock.gt.0)) then
     if (nlock==2) then
       print *,'DIV U  max mean=',real(tmax1,4),real(tmoy1/real(nproc),4)
     else
@@ -868,7 +868,7 @@ ENDSUBROUTINE extrapol_drhodt
 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE test_varcoeff(converged, pp3, dv3, atol, rtol)
-
+  
   USE MPI
   USE decomp_2d, ONLY: mytype, ph1, real_type
   USE var, ONLY : nzmsize
@@ -901,3 +901,59 @@ SUBROUTINE test_varcoeff(converged, pp3, dv3, atol, rtol)
   
 ENDSUBROUTINE test_varcoeff
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!!  SUBROUTINE: calc_varcoeff_rhs
+!!      AUTHOR: Paul Bartholomew
+!! DESCRIPTION: Computes RHS of the variable-coefficient Poisson solver
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE calc_varcoeff_rhs(pp3, rho1, px1, py1, pz1, dv3, drho1, ep1, divu3, poissiter)
+
+  USE MPI
+  
+  USE decomp_2d
+
+  USE param, ONLY : nrhotime, ntime
+  USE param, ONLY : one
+
+  USE var, ONLY : ta1, tb1, tc1
+  USE var, ONLY : nzmsize
+  
+  IMPLICIT NONE
+
+  !! INPUTS
+  INTEGER, INTENT(IN) :: poissiter
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: px1, py1, pz1
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ep1
+  REAL(mytype), INTENT(IN), DIMENSION(zsize(1), zsize(2), zsize(3)) :: divu3
+  REAL(mytype), INTENT(IN), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: dv3
+
+  !! OUTPUTS
+  REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: pp3
+
+  !! LOCALS
+  INTEGER :: nlock, ierr
+  REAL(mytype) :: rhomin, rho0
+
+  IF (poissiter.EQ.0) THEN
+     !! Compute rho0
+     rhomin = MINVAL(rho1)
+
+     CALL MPI_ALLREDUCE(rhomin,rho0,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
+  ENDIF
+
+  ta1(:,:,:) = (one - rho0 / rho1(:,:,:,1)) * px1(:,:,:)
+  tb1(:,:,:) = (one - rho0 / rho1(:,:,:,1)) * py1(:,:,:)
+  tc1(:,:,:) = (one - rho0 / rho1(:,:,:,1)) * pz1(:,:,:)
+
+  nlock = -1 !! Don't do any funny business with LMN
+  CALL divergence(pp3,rho1,ta1,tb1,tc1,ep1,drho1,divu3,nlock)
+
+  !! lapl(p) = div((1 - rho0/rho) grad(p)) + rho0(div(u*) - div(u))
+  !! dv3 contains div(u*) - div(u)
+  pp3(:,:,:) = pp3(:,:,:) + rho0 * dv3(:,:,:)
+
+ENDSUBROUTINE calc_varcoeff_rhs
