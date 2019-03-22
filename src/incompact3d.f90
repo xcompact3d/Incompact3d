@@ -157,8 +157,7 @@ PROGRAM incompact3d
         !! Poisson solver and velocity correction
         !!-------------------------------------------------------------------------
         call calc_divu_constraint(divu3, rho1)
-        call solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
-        call gradp(px1,py1,pz1,pp3(:,:,:,1))
+        call solve_poisson(pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
         call corpg(ux1,uy1,uz1,px1,py1,pz1)
 
         if (ilmn) then
@@ -259,7 +258,7 @@ END SUBROUTINE calculate_transeq_rhs
 !! DESCRIPTION: Takes the intermediate momentum field as input,
 !!              computes div and solves pressure-Poisson equation.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
+SUBROUTINE solve_poisson(pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
 
   USE decomp_2d, ONLY : mytype, xsize, zsize, ph1
   USE decomp_2d_poisson, ONLY : poisson
@@ -279,6 +278,7 @@ SUBROUTINE solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
 
   !! Outputs
   REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: px1, py1, pz1
 
   !! Locals
   INTEGER :: nlock, poissiter
@@ -317,6 +317,9 @@ SUBROUTINE solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
 
      IF (.NOT.converged) THEN
         CALL poisson(pp3(:,:,:,1))
+
+        !! Need to update pressure gradient here for varcoeff
+        CALL gradp(px1,py1,pz1,pp3(:,:,:,1))
         
         IF ((.NOT.ilmn).OR.(.NOT.ivarcoeff)) THEN
            !! Once-through solver
