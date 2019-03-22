@@ -225,8 +225,8 @@ SUBROUTINE calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1
 
   USE decomp_2d, ONLY : mytype, xsize, zsize
   USE variables, ONLY : numscalar
-  USE param, ONLY : ntime, ilmn, nrhotime
-  USE transeq, ONLY : momentum_rhs_eq, continuity_rhs_eq, scalar
+  USE param, ONLY : ntime, ilmn, nrhotime, ilmn_solve_temp
+  USE transeq, ONLY : momentum_rhs_eq, continuity_rhs_eq, scalar, temperature_rhs_eq
 
   IMPLICIT NONE
 
@@ -251,7 +251,11 @@ SUBROUTINE calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1
 
   !! Other (LMN, ...)
   IF (ilmn) THEN
-     CALL continuity_rhs_eq(drho1, rho1, ux1, uy1, uz1, divu3)
+     IF (ilmn_solve_temp) THEN
+        CALL temperature_rhs_eq(drho1, rho1, ux1, uy1, uz1)
+     ELSE
+        CALL continuity_rhs_eq(drho1, rho1, ux1, uy1, uz1, divu3)
+     ENDIF
   ENDIF
 
 END SUBROUTINE calculate_transeq_rhs
@@ -393,7 +397,7 @@ END SUBROUTINE visu
 SUBROUTINE intt(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
 
   USE decomp_2d, ONLY : mytype, xsize
-  USE param, ONLY : ntime, nrhotime, ilmn, iscalar
+  USE param, ONLY : ntime, nrhotime, ilmn, iscalar, ilmn_solve_temp
   USE variables, ONLY : numscalar
 
   IMPLICIT NONE

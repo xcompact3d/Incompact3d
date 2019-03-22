@@ -67,7 +67,7 @@ subroutine parameter(input_i3d)
   NAMELIST /TurbulenceModel/ iles, smagcst, walecst, iwall
   NAMELIST /TurbulenceWallModel/ smagwalldamp
   NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf
-  NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff
+  NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter start'
 #endif
@@ -336,6 +336,7 @@ subroutine parameter_defaults()
   dens1 = one
   dens2 = one
   ivarcoeff = .FALSE.
+  ilmn_solve_temp = .FALSE.
 
   !! IO
   ivisu = 1

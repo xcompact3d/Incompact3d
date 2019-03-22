@@ -252,6 +252,8 @@ subroutine int_time_temperature(rho1, drho1)
   USE variables
   USE decomp_2d
 
+  USE var, ONLY : ta1
+
   implicit none
 
   integer :: it, i, j, k

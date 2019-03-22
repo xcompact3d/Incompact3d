@@ -400,13 +400,13 @@ CONTAINS
     !!=====================================================================
     do is = 1, numscalar
 
-       call scalar_transport_eq(dphi1(:,:,:,:,is), rho1, ux1, uy1, uz1, phi1(:,:,:,:,is), sc)
+       call scalar_transport_eq(dphi1(:,:,:,:,is), rho1, ux1, uy1, uz1, phi1(:,:,:,is), sc(is))
 
     end do !loop numscalar
 
   end subroutine scalar
 
-  subroutine temperature_rhs_eq(drho1, rho1, ux1, uy1, uz1, ta1, prandtl)
+  subroutine temperature_rhs_eq(drho1, rho1, ux1, uy1, uz1)
 
     USE param
     USE variables
@@ -419,7 +419,6 @@ CONTAINS
     !! INPUTS
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
-    REAL(mytype), INTENT(IN) :: prandtl
 
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
