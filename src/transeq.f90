@@ -1,7 +1,7 @@
 MODULE transeq
 
   PRIVATE
-  PUBLIC :: momentum_rhs_eq, continuity_rhs_eq, scalar
+  PUBLIC :: momentum_rhs_eq, continuity_rhs_eq, scalar, temperature_rhs_eq, scalar_transport_eq
 
 CONTAINS
 
@@ -303,7 +303,7 @@ CONTAINS
 
   end subroutine momentum_full_viscstress_tensor
 
-  subroutine scalar_transport_eq(dphi1, rho1, ux1, uy1, uz1, phi1)
+  subroutine scalar_transport_eq(dphi1, rho1, ux1, uy1, uz1, phi1, schmidt)
 
     USE param
     USE variables
@@ -311,7 +311,7 @@ CONTAINS
 
     USE var, ONLY : ta1,tb1,tc1,td1,di1
     USE var, ONLY : rho2,uy2,phi2,ta2,tb2,tc2,td2,di2
-    USE var, ONLY : rho3,uz3,phi3,ta3,tb3,di3
+    USE var, ONLY : rho3,uz3,phi3,ta3,tb3,td3,di3
 
     implicit none
 
@@ -319,6 +319,7 @@ CONTAINS
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: phi1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
+    REAL(mytype), INTENT(IN) :: schmidt
 
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dphi1
@@ -330,14 +331,14 @@ CONTAINS
     call derxS (tb1,phi1(:,:,:),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1)
     tb1(:,:,:) = rho1(:,:,:,1) * ux1(:,:,:) * tb1(:,:,:)
     call derxxS (ta1,phi1(:,:,:),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1)
-    call transpose_x_to_y(phi1(:,:,:),phi2(:,:,:))
+    call transpose_x_to_y(phi1(:,:,:),td2(:,:,:))
 
     !Y PENCILS
-    call deryS (tb2,phi2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
+    call deryS (tb2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
     tb2(:,:,:) = rho2(:,:,:) * uy2(:,:,:) * tb2(:,:,:)
-    call deryyS (ta2,phi2(:,:,:),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
+    call deryyS (ta2,td2(:,:,:),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
     if (istret.ne.0) then
-       call deryS (tc2,phi2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
+       call deryS (tc2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
        do k = 1,ysize(3)
           do j = 1,ysize(2)
              do i = 1,ysize(1)
@@ -346,12 +347,12 @@ CONTAINS
           enddo
        enddo
     endif
-    call transpose_y_to_z(phi2(:,:,:),phi3(:,:,:,is))
+    call transpose_y_to_z(td2(:,:,:),td3(:,:,:))
 
     !Z PENCILS
-    call derzS (tb3,phi3(:,:,:),di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1)
+    call derzS (tb3,td3(:,:,:),di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1)
     tb3(:,:,:) = rho2(:,:,:) * uz3(:,:,:) * tb3(:,:,:)
-    call derzzS (ta3,phi3(:,:,:),di3,sz,sfzpS,sszpS,swzpS,zsize(1),zsize(2),zsize(3),1)
+    call derzzS (ta3,td3(:,:,:),di3,sz,sfzpS,sszpS,swzpS,zsize(1),zsize(2),zsize(3),1)
 
     call transpose_z_to_y(ta3,tc2)
     call transpose_z_to_y(tb3,td2)
@@ -367,7 +368,7 @@ CONTAINS
     ta1 = ta1+tc1 !SECOND DERIVATIVE
     tb1 = tb1+td1 !FIRST DERIVATIVE
 
-    dphi1(:,:,:,1) = (xnu/sc(is))*ta1(:,:,:) - tb1(:,:,:)
+    dphi1(:,:,:,1) = (xnu/schmidt)*ta1(:,:,:) - tb1(:,:,:)
 
     !! XXX We have computed rho dphidt, want dphidt
     dphi1(:,:,:,1) = dphi1(:,:,:,1) / rho1(:,:,:,1)
@@ -399,13 +400,13 @@ CONTAINS
     !!=====================================================================
     do is = 1, numscalar
 
-       scalar_transport_eq(dphi1(:,:,:,:,is), rho1, ux1, uy1, uz1, phi1(:,:,:,:,is))
+       call scalar_transport_eq(dphi1(:,:,:,:,is), rho1, ux1, uy1, uz1, phi1(:,:,:,:,is), sc)
 
     end do !loop numscalar
 
   end subroutine scalar
 
-  subroutine temperature_rhs_eq(drho1, rho1, ux1, uy1, uz1)
+  subroutine temperature_rhs_eq(drho1, rho1, ux1, uy1, uz1, ta1, prandtl)
 
     USE param
     USE variables
@@ -418,6 +419,7 @@ CONTAINS
     !! INPUTS
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
+    REAL(mytype), INTENT(IN) :: prandtl
 
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
@@ -431,7 +433,7 @@ CONTAINS
     !!=====================================================================
     !! XXX It is assumed that ux,uy,uz are already updated in all pencils!
     !!=====================================================================
-    scalar_transport_eq(drho1, rho1, ux1, uy1, uz1, ta1)
+    call scalar_transport_eq(drho1, rho1, ux1, uy1, uz1, ta1, prandtl)
 
   end subroutine temperature_rhs_eq
 

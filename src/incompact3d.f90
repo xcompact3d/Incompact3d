@@ -420,6 +420,7 @@ SUBROUTINE intt(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
 
   IF (ilmn) THEN
      IF (ilmn_solve_temp) THEN
+        CALL int_time_temperature(rho1, drho1)
      ELSE
         CALL int_time_continuity(rho1, drho1)
      ENDIF
