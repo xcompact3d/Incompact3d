@@ -869,14 +869,16 @@ ENDSUBROUTINE extrapol_drhodt
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE test_varcoeff(converged, pp3, dv3, atol, rtol)
 
-  USE decomp_2d, ONLY: mytype, ph1
+  USE MPI
+  USE decomp_2d, ONLY: mytype, ph1, real_type
   USE var, ONLY : nzmsize
   USE param, ONLY : npress
+  USE variables, ONLY : nxm, nym, nzm
 
   IMPLICIT NONE
 
   !! INPUTS
-  REAL(mytype), INTENT(IN), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
+  REAL(mytype), INTENT(INOUT), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
   REAL(mytype), INTENT(IN), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: dv3
   REAL(mytype), INTENT(IN) :: atol, rtol
 
@@ -884,6 +886,18 @@ SUBROUTINE test_varcoeff(converged, pp3, dv3, atol, rtol)
   LOGICAL, INTENT(OUT) :: converged
 
   !! LOCALS
+  INTEGER :: ierr
+  REAL(mytype) :: errloc, errglob
+
+  !! Compute RMS relative change
+  errloc = SUM((pp3(:,:,:,1) - pp3(:,:,:,2))**2)
+  CALL MPI_ALLREDUCE(errloc,errglob,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
+  errglob = SQRT(errglob / nxm / nym / nzm)
+  IF (errglob.LE.atol) THEN
+     converged = .TRUE.
+  ELSE
+     pp3(:,:,:,2) = pp3(:,:,:,1)
+  ENDIF
   
 ENDSUBROUTINE test_varcoeff
 

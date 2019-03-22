@@ -311,8 +311,6 @@ SUBROUTINE solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
         CALL test_varcoeff(converged, pp3, dv3, atol, rtol)
 
         IF (.NOT.converged) THEN
-           pp3(:,:,:,2) = pp3(:,:,:,1)
-           
            !! Evaluate additional RHS terms
         ENDIF
      ENDIF
