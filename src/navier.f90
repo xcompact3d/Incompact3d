@@ -277,7 +277,9 @@ subroutine int_time_temperature(rho1, drho1)
         do it = nrhotime, 2, -1
            rho1(:,:,:,it) = rho1(:,:,:,it-1)
         enddo
-        rho1(:,:,:,2) = drho1(:,:,:,1)
+
+        !! Convert temperature transient to density transient and store it.
+        call lmn_t_to_rho_trans(rho1(:,:,:,2), drho1(:,:,:,1), rho1(:,:,:,1))
      endif
   else
      if (nrank.eq.0) then
@@ -315,6 +317,31 @@ subroutine int_time_temperature(rho1, drho1)
 
 endsubroutine int_time_temperature
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!!  SUBROUTINE: lmn_t_to_rho_trans
+!! DESCRIPTION: Converts the temperature transient to the density transient
+!!              term. This is achieved by application of EOS and chain rule.
+!!      INPUTS: dtemp1 - the RHS of the temperature equation.
+!!                rho1 - the density field.
+!!     OUTPUTS:  drho1 - the RHS of the density equation.
+!!      AUTHOR: Paul Bartholomew
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE lmn_t_to_rho_trans(drho1, dtemp1, rho1)
+
+  USE decomp_2d
+  USE param, ONLY : pressure0
+  
+  IMPLICIT NONE
+
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: dtemp1, rho1
+  REAL(mytype), INTENT(OUT), DIMENSION(xsize(1), xsize(2), xsize(3)) :: drho1
+
+  !! This assumes dp0/dt = 0
+  drho1(:,:,:) = -(pressure0 / rho1(:,:,:)**2) * dtemp1(:,:,:)
+  
+ENDSUBROUTINE lmn_t_to_rho_trans
 
 !********************************************************************
 !subroutine CORPG
