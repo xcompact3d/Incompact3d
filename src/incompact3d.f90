@@ -462,18 +462,18 @@ SUBROUTINE intt(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
 
   CALL int_time_momentum(ux1, uy1, uz1, dux1, duy1, duz1)
 
+  IF (ilmn) THEN
+     IF (ilmn_solve_temp) THEN
+        CALL int_time_temperature(rho1, drho1, dphi1, phi1)
+     ELSE
+        CALL int_time_continuity(rho1, drho1)
+     ENDIF
+  ENDIF
+
   IF (iscalar.NE.0) THEN
      DO is = 1, numscalar
         CALL int_time(phi1(:,:,:,is), dphi1(:,:,:,:,is))
      ENDDO
-  ENDIF
-
-  IF (ilmn) THEN
-     IF (ilmn_solve_temp) THEN
-        CALL int_time_temperature(rho1, drho1)
-     ELSE
-        CALL int_time_continuity(rho1, drho1)
-     ENDIF
   ENDIF
 
 ENDSUBROUTINE intt

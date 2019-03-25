@@ -246,13 +246,13 @@ endsubroutine int_time_continuity
 !!      AUTHOR: Paul Bartholomew
 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine int_time_temperature(rho1, drho1)
+subroutine int_time_temperature(rho1, drho1, dphi1, phi1)
 
   USE param
   USE variables
   USE decomp_2d
 
-  USE var, ONLY : ta1
+  USE var, ONLY : tc1, tb1
 
   implicit none
 
@@ -261,9 +261,14 @@ subroutine int_time_temperature(rho1, drho1)
 
   !! INPUTS
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
 
   !! OUTPUTS
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
+
+  !! LOCALS
+  INTEGER :: is
 
   !! First, update old density / store old transients depending on scheme
   if (itimescheme.lt.5) then
@@ -279,7 +284,7 @@ subroutine int_time_temperature(rho1, drho1)
         enddo
 
         !! Convert temperature transient to density transient and store it.
-        call lmn_t_to_rho_trans(rho1(:,:,:,2), drho1(:,:,:,1), rho1(:,:,:,1))
+        call lmn_t_to_rho_trans(rho1(:,:,:,2), drho1(:,:,:,1), rho1(:,:,:,1), dphi1, phi1)
      endif
   else
      if (nrank.eq.0) then
@@ -291,15 +296,33 @@ subroutine int_time_temperature(rho1, drho1)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !! XXX We are integrating the temperature equation - get temperature
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ta1(:,:,:) = pressure0 / rho1(:,:,:,1)
+  tc1(:,:,:) = pressure0 / rho1(:,:,:,1)
+  IF (imultispecies) THEN
+     tb1(:,:,:) = zero
+     DO is = 1, numscalar
+        IF (massfrac(is)) THEN
+           tb1(:,:,:) = tb1(:,:,:) + phi1(:,:,:,is) / mol_weight(is)
+        ENDIF
+     ENDDO
+     tc1(:,:,:) = tc1(:,:,:) / tb1(:,:,:)
+  ENDIF
 
   !! Now we can update current density
-  call int_time(ta1, drho1)
+  call int_time(tc1, drho1)
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !! XXX We are integrating the temperature equation - get back to rho
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  rho1(:,:,:,1) = pressure0 / ta1(:,:,:)
+  rho1(:,:,:,1) = pressure0 / tc1(:,:,:)
+  IF (imultispecies) THEN
+     tb1(:,:,:) = zero
+     DO is = 1, numscalar
+        IF (massfrac(is)) THEN
+           tb1(:,:,:) = tb1(:,:,:) + phi1(:,:,:,is) / mol_weight(is)
+        ENDIF
+     ENDDO
+     tc1(:,:,:) = tc1(:,:,:) / tb1(:,:,:)
+  ENDIF
 
   !! Enforce boundedness on density
   if (ilmn_bound) then
@@ -328,18 +351,52 @@ endsubroutine int_time_temperature
 !!      AUTHOR: Paul Bartholomew
 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE lmn_t_to_rho_trans(drho1, dtemp1, rho1)
+SUBROUTINE lmn_t_to_rho_trans(drho1, dtemp1, rho1, dphi1, phi1)
 
   USE decomp_2d
+  USE param, ONLY : zero
   USE param, ONLY : pressure0
+  USE param, ONLY : imultispecies, massfrac, mol_weight
+  USE param, ONLY : ntime
+  USE var, ONLY : numscalar
+  USE var, ONLY : ta1, tb1
   
   IMPLICIT NONE
 
+  !! INPUTS
   REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: dtemp1, rho1
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), ntime, numscalar) :: dphi1
+
+  !! OUTPUTS
   REAL(mytype), INTENT(OUT), DIMENSION(xsize(1), xsize(2), xsize(3)) :: drho1
 
-  !! This assumes dp0/dt = 0
-  drho1(:,:,:) = -(pressure0 / rho1(:,:,:)**2) * dtemp1(:,:,:)
+  !! LOCALS
+  INTEGER :: is
+
+  drho1(:,:,:) = -dtemp1(:,:,:)
+  
+  IF (imultispecies) THEN
+     ta1(:,:,:) = zero
+     tb1(:,:,:) = zero
+     DO is = 1, numscalar
+        IF (massfrac(is)) THEN
+           ta1(:,:,:) = ta1(:,:,:) + dphi1(:,:,:,1,is) / mol_weight(is)
+           tb1(:,:,:) = tb1(:,:,:) + phi1(:,:,:,is)
+        ENDIF
+     ENDDO
+     drho1(:,:,:) = drho1(:,:,:) + rho1(:,:,:) * ta1(:,:,:) / tb1(:,:,:)**2
+     
+     ta1(:,:,:) = zero !! Mean molecular weight
+     DO is = 1, numscalar
+        IF (massfrac(is)) THEN
+           ta1(:,:,:) = ta1(:,:,:) + phi1(:,:,:,is) / mol_weight(is)
+        ENDIF
+     ENDDO
+     drho1(:,:,:) = ta1(:,:,:) * drho1(:,:,:)
+  ENDIF
+  
+  drho1(:,:,:) = (rho1(:,:,:)**2 / pressure0) * drho1(:,:,:)
   
 ENDSUBROUTINE lmn_t_to_rho_trans
 
