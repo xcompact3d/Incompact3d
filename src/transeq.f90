@@ -406,28 +406,38 @@ CONTAINS
 
   end subroutine scalar
 
-  subroutine temperature_rhs_eq(drho1, rho1, ux1, uy1, uz1)
+  subroutine temperature_rhs_eq(drho1, rho1, ux1, uy1, uz1, phi1)
 
     USE param
     USE variables
     USE decomp_2d
 
-    USE var, ONLY : ta1
+    USE var, ONLY : ta1, tb1
 
     implicit none
 
     !! INPUTS
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
 
     !! LOCALS
-    integer :: i, j, k
+    integer :: is
 
     !! Get temperature
     ta1(:,:,:) = pressure0 / rho1(:,:,:,1)
+    IF (imultispecies) THEN
+       tb1(:,:,:) = zero !! Mean molecular weight
+       DO is = 1, numscalar
+          IF (massfrac(is)) THEN
+             tb1(:,:,:) = tb1(:,:,:) + phi1(:,:,:,is) / mol_weight(is)
+          ENDIF
+       ENDDO
+       ta1(:,:,:) = ta1(:,:,:) / tb1(:,:,:)
+    ENDIF
 
     !!=====================================================================
     !! XXX It is assumed that ux,uy,uz are already updated in all pencils!

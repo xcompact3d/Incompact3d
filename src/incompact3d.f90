@@ -251,7 +251,7 @@ SUBROUTINE calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1
   !! Other (LMN, ...)
   IF (ilmn) THEN
      IF (ilmn_solve_temp) THEN
-        CALL temperature_rhs_eq(drho1, rho1, ux1, uy1, uz1)
+        CALL temperature_rhs_eq(drho1, rho1, ux1, uy1, uz1, phi1)
      ELSE
         CALL continuity_rhs_eq(drho1, rho1, ux1, uy1, uz1, divu3)
      ENDIF
