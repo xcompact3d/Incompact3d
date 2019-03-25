@@ -67,7 +67,7 @@ subroutine parameter(input_i3d)
   NAMELIST /TurbulenceModel/ iles, smagcst, walecst, iwall
   NAMELIST /TurbulenceWallModel/ smagwalldamp
   NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf
-  NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp
+  NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, massfrac, mol_weight, imultispecies
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter start'
 #endif
@@ -101,7 +101,19 @@ subroutine parameter(input_i3d)
      read(10, nml=ibmstuff)
   endif
   if (ilmn) then
+     if (numscalar.ne.0) then
+        allocate(massfrac(numscalar))
+        allocate(mol_weight(numscalar))
+        massfrac(:) = .FALSE.
+        mol_weight(:) = one
+     endif
      read(10, nml=LMN)
+
+     do is = 1, numscalar
+        if (massfrac(is)) then
+           imultispecies = .TRUE.
+        endif
+     enddo
   endif
   if (numscalar.ne.0) then
      iscalar = 1
@@ -344,6 +356,7 @@ subroutine parameter_defaults()
   ivarcoeff = .FALSE.
   npress = 1 !! By default people only need one pressure field
   ilmn_solve_temp = .FALSE.
+  imultispecies = .FALSE.
 
   !! IO
   ivisu = 1
