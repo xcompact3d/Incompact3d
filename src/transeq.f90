@@ -428,16 +428,7 @@ CONTAINS
     integer :: is
 
     !! Get temperature
-    ta1(:,:,:) = pressure0 / rho1(:,:,:,1)
-    IF (imultispecies) THEN
-       tb1(:,:,:) = zero !! Mean molecular weight
-       DO is = 1, numscalar
-          IF (massfrac(is)) THEN
-             tb1(:,:,:) = tb1(:,:,:) + phi1(:,:,:,is) / mol_weight(is)
-          ENDIF
-       ENDDO
-       ta1(:,:,:) = ta1(:,:,:) / tb1(:,:,:)
-    ENDIF
+    CALL calc_temp_eos(ta1, rho1(:,:,:,1), phi1, tb1, xsize(1), xsize(2), xsize(3))
 
     !!=====================================================================
     !! XXX It is assumed that ux,uy,uz are already updated in all pencils!

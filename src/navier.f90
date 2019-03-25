@@ -296,16 +296,7 @@ subroutine int_time_temperature(rho1, drho1, dphi1, phi1)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !! XXX We are integrating the temperature equation - get temperature
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  tc1(:,:,:) = pressure0 / rho1(:,:,:,1)
-  IF (imultispecies) THEN
-     tb1(:,:,:) = zero
-     DO is = 1, numscalar
-        IF (massfrac(is)) THEN
-           tb1(:,:,:) = tb1(:,:,:) + phi1(:,:,:,is) / mol_weight(is)
-        ENDIF
-     ENDDO
-     tc1(:,:,:) = tc1(:,:,:) / tb1(:,:,:)
-  ENDIF
+  call calc_temp_eos(tc1, rho1(:,:,:,1), phi1, tb1, xsize(1), xsize(2), xsize(3))
 
   !! Now we can update current density
   call int_time(tc1, drho1)
@@ -313,16 +304,7 @@ subroutine int_time_temperature(rho1, drho1, dphi1, phi1)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !! XXX We are integrating the temperature equation - get back to rho
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  rho1(:,:,:,1) = pressure0 / tc1(:,:,:)
-  IF (imultispecies) THEN
-     tb1(:,:,:) = zero
-     DO is = 1, numscalar
-        IF (massfrac(is)) THEN
-           tb1(:,:,:) = tb1(:,:,:) + phi1(:,:,:,is) / mol_weight(is)
-        ENDIF
-     ENDDO
-     tc1(:,:,:) = tc1(:,:,:) / tb1(:,:,:)
-  ENDIF
+  call calc_rho_eos(rho1(:,:,:,1), tc1, phi1, tb1, xsize(1), xsize(2), xsize(3))
 
   !! Enforce boundedness on density
   if (ilmn_bound) then
@@ -920,7 +902,7 @@ SUBROUTINE conserved_to_primary(rho1, var1)
 ENDSUBROUTINE conserved_to_primary
 
 !! Calculate velocity-divergence constraint
-SUBROUTINE calc_divu_constraint(divu3, rho1)
+SUBROUTINE calc_divu_constraint(divu3, rho1, phi1)
 
   USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
   USE decomp_2d, ONLY : transpose_x_to_y, transpose_y_to_z
@@ -937,6 +919,7 @@ SUBROUTINE calc_divu_constraint(divu3, rho1)
   INTEGER :: i, j, k
 
   REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
   REAL(mytype), INTENT(OUT), DIMENSION(zsize(1), zsize(2), zsize(3)) :: divu3
 
   IF (ilmn) THEN
@@ -944,7 +927,7 @@ SUBROUTINE calc_divu_constraint(divu3, rho1)
      !! X-pencil
 
      !! We need temperature
-     ta1(:,:,:) = pressure0 / rho1(:,:,:,1) !! Temperature
+     CALL calc_temp_eos(ta1, rho1(:,:,:,1), phi1, tb1, xsize(1), xsize(2), xsize(3))
 
      CALL derxx (tb1, ta1, di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1)
 

@@ -105,7 +105,7 @@ PROGRAM incompact3d
 
   call simu_stats(1)
 
-  call calc_divu_constraint(divu3, rho1)
+  call calc_divu_constraint(divu3, rho1, phi1)
   !!-------------------------------------------------------------------------------
   !! End initialisation
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -156,7 +156,7 @@ PROGRAM incompact3d
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         !! Poisson solver and velocity correction
         !!-------------------------------------------------------------------------
-        call calc_divu_constraint(divu3, rho1)
+        call calc_divu_constraint(divu3, rho1, phi1)
         call solve_poisson(pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
         call corpg(ux1,uy1,uz1,px1,py1,pz1)
 
