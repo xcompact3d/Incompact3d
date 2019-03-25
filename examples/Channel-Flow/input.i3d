@@ -31,7 +31,6 @@ nclyn = 2
 nclz1 = 0
 nclzn = 0
 
-
 ! Flow parameters
 iin = 1               ! Inflow conditions (1: classic, 2: turbinit)
 re  = 4200. ! nu=1/re (Kinematic Viscosity)
@@ -47,7 +46,7 @@ ilast =  15000       ! Last iteration
 
 ! Enable modelling tools
 iturbmod=0            ! if 0 then DNS
-iscalar=0             ! If iscalar=0 (no scalar), if iscalar=1 (scalar)
+numscalar = 0         ! How many scalars? (Set to zero to disable scalars)
 iibm=0                ! Flag for immersed boundary method
 
 /End
@@ -66,7 +65,7 @@ itimescheme = 5       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4
 
 ! Dissipation control
 rxxnu = 0             ! Ratio between hyperviscosity/viscosity at nu
- cnu = 0               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
+cnu = 0               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 
 /End
 
@@ -91,7 +90,6 @@ spinup_time = 5000   ! number of time steps with a rotation to trigger turbulenc
 nstat = 1             ! Size arrays for statistic collection
 initstat = 6         ! Time steps after which statistics are collected 
 
-
 /End
 
 !########################
@@ -102,8 +100,14 @@ initstat = 6         ! Time steps after which statistics are collected
 &ScalarParam
 !================
 
-numscalar = 0         ! How many scalars?
-Sc = 0.2              ! Schmidt number
+Sc(1) = 1.0           ! Schmidt number
+
+nclxS1 = 2
+nclxSn = 2
+nclyS1 = 2
+nclySn = 1
+nclzS1 = 1
+nclzSn = 1
 
 /End
 

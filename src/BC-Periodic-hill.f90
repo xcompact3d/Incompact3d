@@ -129,7 +129,7 @@ contains
   end subroutine boundary_conditions_hill
 
   !********************************************************************
-  subroutine init_hill (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
+  subroutine init_hill (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,dphi1)
 
     USE decomp_2d
     USE decomp_2d_io
@@ -140,8 +140,9 @@ contains
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1,phis1,phiss1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
 
     real(mytype) :: y,r,um,r3,x,z,h,ct
     real(mytype) :: cx0,cy0,cz0,hg,lg
@@ -152,11 +153,13 @@ contains
 
   if (iscalar==1) then
 
-     phi1 = one !change as much as you want
+     phi1(:,:,:,:) = zero !change as much as you want
 
      !do not delete this
-     phis1=phi1
-     phiss1=phis1
+     dphi1(:,:,:,1,:) = phi1(:,:,:,:)
+     do is = 2, ntime
+        dphi1(:,:,:,is,:) = dphi1(:,:,:,is - 1,:)
+     enddo
 
   endif
   ux1=zero;uy1=zero;uz1=zero

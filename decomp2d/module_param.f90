@@ -233,7 +233,7 @@ module param
   real(mytype) :: smagcst,walecst,FSGS,pr_t,maxdsmagcst
 
   !! LMN
-  logical :: ilmn, ilmn_bound
+  logical :: ilmn, ilmn_bound, ilmn_solve_temp
   real(mytype) :: pressure0, prandtl
   integer :: nrhotime, npress
   logical :: ivarcoeff
