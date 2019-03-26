@@ -67,7 +67,7 @@ subroutine parameter(input_i3d)
   NAMELIST /TurbulenceModel/ iles, smagcst, walecst, iwall
   NAMELIST /TurbulenceWallModel/ smagwalldamp
   NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf
-  NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, massfrac, mol_weight, imultispecies
+  NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, massfrac, mol_weight, imultispecies, primary_species
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter start'
 #endif
@@ -114,6 +114,20 @@ subroutine parameter(input_i3d)
            imultispecies = .TRUE.
         endif
      enddo
+
+     if (imultispecies) then
+        if (primary_species.lt.1) then
+           if (nrank.eq.0) then
+              print *, "Error: you must set a primary species for multispecies flow"
+              print *, "       solver will enforce Y_p = 1 - sum_s Y_s, s != p."
+              stop
+           endif
+        else if (.not.massfrac(primary_species)) then
+           if (nrank.eq.0) then
+              print *, "Error: primary species must be a massfraction!"
+           endif
+        endif
+     endif
   endif
   if (numscalar.ne.0) then
      iscalar = 1
@@ -357,6 +371,8 @@ subroutine parameter_defaults()
   npress = 1 !! By default people only need one pressure field
   ilmn_solve_temp = .FALSE.
   imultispecies = .FALSE.
+
+  primary_species = -1
 
   !! IO
   ivisu = 1

@@ -241,6 +241,7 @@ module param
   logical :: imultispecies
   logical, allocatable, dimension(:) :: massfrac
   real(mytype), allocatable, dimension(:) :: mol_weight
+  integer :: primary_species
 
   character :: filesauve*80, filenoise*80, &
   nchamp*80,filepath*80, fileturb*80, filevisu*80, datapath*80

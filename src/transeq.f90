@@ -400,9 +400,23 @@ CONTAINS
     !!=====================================================================
     do is = 1, numscalar
 
-       call scalar_transport_eq(dphi1(:,:,:,:,is), rho1, ux1, uy1, uz1, phi1(:,:,:,is), sc(is))
+       if (is.ne.primary_species) then
+          !! For mass fractions enforce primary species Y_p = 1 - sum_s Y_s
+          !! So don't solve a transport equation
+          call scalar_transport_eq(dphi1(:,:,:,:,is), rho1, ux1, uy1, uz1, phi1(:,:,:,is), sc(is))
+       endif
 
     end do !loop numscalar
+
+    if (primary_species.ge.1) then
+       !! Compute rate of change of primary species
+       dphi1(:,:,:,1,primary_species) = zero
+       do is = 1, numscalar
+          if (is.ne.primary_species) then
+             dphi1(:,:,:,1,primary_species) = dphi1(:,:,:,1,primary_species) - dphi1(:,:,:,1,is)
+          endif
+       enddo
+    endif
 
   end subroutine scalar
 

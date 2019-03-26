@@ -443,7 +443,9 @@ END SUBROUTINE visu
 SUBROUTINE intt(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
 
   USE decomp_2d, ONLY : mytype, xsize
+  USE param, ONLY : one
   USE param, ONLY : ntime, nrhotime, ilmn, iscalar, ilmn_solve_temp
+  USE param, ONLY : primary_species, massfrac
   USE variables, ONLY : numscalar
 
   IMPLICIT NONE
@@ -472,8 +474,19 @@ SUBROUTINE intt(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
 
   IF (iscalar.NE.0) THEN
      DO is = 1, numscalar
-        CALL int_time(phi1(:,:,:,is), dphi1(:,:,:,:,is))
+        IF (is.NE.primary_species) THEN
+           CALL int_time(phi1(:,:,:,is), dphi1(:,:,:,:,is))
+        ENDIF
      ENDDO
+     
+     IF (primary_species.GE.1) THEN
+        phi1(:,:,:,primary_species) = one
+        DO is = 1, numscalar
+           IF ((is.NE.primary_species).AND.massfrac(is)) THEN
+              phi1(:,:,:,primary_species) = phi1(:,:,:,primary_species) - phi1(:,:,:,is)
+           ENDIF
+        ENDDO
+     ENDIF
   ENDIF
 
 ENDSUBROUTINE intt
