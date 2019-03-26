@@ -458,9 +458,9 @@ contains
     if(nclz1.eq.2)then
        xc=xlx/2.
        zc=zlz/2.
-       if(xstart(1).eq.1)then!
+       if(xstart(3).eq.1)then!
           y=-yc
-          do i=1,zsize(1)
+          do i=1,xsize(1)
              x=dx*(i-1)-xc
              x2=z
              y2=x
@@ -522,7 +522,7 @@ contains
      endif
 
      if (nclzn.eq.2) then
-       if(xend(1).eq.nx)then
+       if(xend(3).eq.nz)then
           x=xc
           k = xsize(3)
           do i=1,xsize(1)
