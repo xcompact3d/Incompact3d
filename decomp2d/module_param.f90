@@ -181,6 +181,7 @@ module param
 
   integer :: itype
   integer, parameter :: &
+       itype_user = 0, &
        itype_lockexch = 1, &
        itype_tgv = 2, &
        itype_channel = 3, &
