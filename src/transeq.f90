@@ -240,11 +240,6 @@ CONTAINS
        call momentum_full_viscstress_tensor(dux1(:,:,:,1), duy1(:,:,:,1), duz1(:,:,:,1), divu3)
     endif
 
-    dux1(:,:,:,1) = xnu*ta1(:,:,:) - tg1(:,:,:) + di1(:,:,:)*anglex  !+x
-    duy1(:,:,:,1) = xnu*tb1(:,:,:) - th1(:,:,:) - di1(:,:,:)*angley  !+y
-    duz1(:,:,:,1) = xnu*tc1(:,:,:) - ti1(:,:,:) !+- di1       !+z
-
-
     ! If LES modelling is enabled, add the SGS stresses
     if (ilesmod.ne.0.and.jles.le.3.) then
         ! Wall model for LES
