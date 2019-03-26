@@ -162,7 +162,7 @@ contains
     integer, dimension(2) :: dims, dummy_coords
     logical, dimension(2) :: dummy_periods
 
-    real(mytype) :: uu1,uv1,uw1,x1,x2,y1,y2,ya,y,r1,r2,xc,zc,yc
+    real(mytype) :: uu1,uv1,uw1,x2,y1,y2,ya,y,xc,zc,yc
 
     call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, dims, dummy_periods, dummy_coords, ierr)
 
@@ -271,7 +271,7 @@ contains
           ENDIF
        ENDDO
     ENDIF
-    
+
     !! Z-BC
     IF ((nclz1.EQ.2).AND.(xstart(3).EQ.1)) THEN
        k = 1
@@ -294,7 +294,7 @@ contains
           ENDDO
        ENDDO
     ENDIF
-    
+
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !! Compute outflow
     call MPI_ALLREDUCE(inflow,outflow,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
@@ -318,14 +318,14 @@ contains
              byxn(i, k) = ux(i, j, k) - dt * outflow * (ux(i, j, k) - ux(i, j - 1, k))
              byyn(i, k) = uy(i, j, k) - dt * outflow * (uy(i, j, k) - uy(i, j - 1, k))
              byzn(i, k) = uz(i, j, k) - dt * outflow * (uz(i, j, k) - uz(i, j - 1, k))
-             
+
              rho(i, j, k, 1) = rho(i, j, k, 1) &
                   - dt * outflow * (rho(i, j, k, 1) - rho(i, j - 1, k, 1))
           enddo
        enddo
     endif
 
-    !! Compute side outflow boundaries
+    !! Compute side entrainmen boundaries
     !! X normal
  if(nclx1.eq.2)then
     xc=xlx/2.
@@ -453,6 +453,143 @@ contains
        enddo
     endif
  endif
+
+    !! Z normal
+    if(nclz1.eq.2)then
+       xc=xlx/2.
+       zc=zlz/2.
+       if(xstart(1).eq.1)then!
+          y=-yc
+          do i=1,zsize(1)
+             x=dx*(i-1)-xc
+             x2=z
+             y2=x
+             x1=z+dz
+             y1=y2*x1/x2
+             r1=sqrt(x1**2+y1**2)
+             r2=sqrt(x2**2+y2**2)
+             if(r1.gt.r2)print*,'bug CL'
+             if(i.eq.1)then!cas premier point
+                do j=1,xsize(2)
+
+                   bzx1(i,j)=r1*ux(i+1,j,2)/r2
+                   bzy1(i,j)=   uy(i+1,j,2)
+                   bzz1(i,j)=r1*uz(i+1,j,2)/r2
+                enddo
+             elseif(i.eq.(nx-1)/2+1)then!cas point du milieu
+                do j=1,xsize(2)
+
+                   bzx1(i,j)=r1*ux(i,j,2)/r2
+                   bzy1(i,j)=   uy(i,j,2)
+                   bzz1(i,j)=r1*uz(i,j,2)/r2
+                enddo
+             elseif(i.eq.nx)then!cas dernier point
+                do j=1,xsize(2)
+
+                   bzx1(i,j)=r1*ux(i-1,j,2)/r2
+                   bzy1(i,j)=   uy(i-1,j,2)
+                   bzz1(i,j)=r1*uz(i-1,j,2)/r2
+                enddo
+             else!cas general
+                if    (x.gt.0.)then
+                   ya=y2-dx
+                   do j=1,xsize(2)
+
+                      uu1=(ux(i,j,2)-ux(i-1,j,2))*(y1-ya)/(y2-ya)+ux(i-1,j,2)
+                      uv1=(uy(i,j,2)-uy(i-1,j,2))*(y1-ya)/(y2-ya)+uy(i-1,j,2)
+                      uw1=(uz(i,j,2)-uz(i-1,j,2))*(y1-ya)/(y2-ya)+uz(i-1,j,2)
+
+                      bzx1(i,j)=r1*uu1/r2
+                      bzy1(i,j)= uv1
+                      bzz1(i,j)=r1*uw1/r2
+                   enddo
+                elseif(x.lt.0.)then
+                   ya=y2+dx
+                   do j=1,xsize(2)
+
+                      uu1=(ux(i+1,j,2)-ux(i,j,2))*(y1-ya)/(ya-y2)+ux(i+1,j,2)
+                      uv1=(uy(i+1,j,2)-uy(i,j,2))*(y1-ya)/(ya-y2)+uy(i+1,j,2)
+                      uw1=(uz(i+1,j,2)-uz(i,j,2))*(y1-ya)/(ya-y2)+uz(i+1,j,2)
+
+                      bzx1(i,j)=r1*uu1/r2
+                      bzy1(i,j)=   uv1
+                      bzz1(i,j)=r1*uw1/r2
+                   enddo
+                endif
+             endif
+          enddo
+       endif
+     endif
+
+     if (nclzn.eq.2) then
+       if(xend(1).eq.nx)then
+          x=xc
+          k = xsize(3)
+          do i=1,xsize(1)
+             x=dx*(i-1)-xc
+             x2=z
+             y2=x
+             x1=z-dz
+             y1=y2*x1/x2
+             r1=sqrt(x1**2+y1**2)
+             r2=sqrt(x2**2+y2**2)
+             if(r1.gt.r2)print*,'bug CL'
+             if(i.eq.1)then!cas premier point
+                do j=1,xsize(2)
+
+                   bzxn(i,j)=r1*ux(i+1,j,k-1)/r2
+                   bzyn(i,j)=   uy(i+1,j,k-1)
+                   bxzn(i,j)=r1*uz(i+1,j,k-1)/r2
+                enddo
+             elseif(i.eq.(nx-1)/2+1)then!cas point du milieu
+                do j=1,xsize(2)
+
+                   bzxn(i,j)=r1*ux(i,j,k-1)/r2
+                   bzyn(i,j)=   uy(i,j,k-1)
+                   bzzn(i,j)=r1*uz(i,j,k-1)/r2
+                enddo
+             elseif(i.eq.nx)then!cas dernier point
+                do j=1,xsize(2)
+
+                   bzxn(i,k)=r1*ux(i-1,j,k-1)/r2
+                   bzyn(i,k)=   uy(i-1,j,k-1)
+                   bzzn(i,k)=r1*uz(i-1,j,k-1)/r2
+                enddo
+             else !cas general
+                if (i.gt.0.) then
+                   ya=y2-dx
+                   do j=1,xsize(2)
+
+                      uu1=(ux(i,j,k-1)-ux(i-1,j,k-1))*(y1-ya)/(y2-ya)+ux(i-1,j,k-1)
+                      uv1=(uy(i,j,k-1)-uy(i-1,j,k-1))*(y1-ya)/(y2-ya)+uy(i-1,j,k-1)
+                      uw1=(uz(i,j,k-1)-uz(i-1,j,k-1))*(y1-ya)/(y2-ya)+uz(i-1,j,k-1)
+
+                      bzxn(i,k)=r1*uu1/r2
+                      bzyn(i,k)=   uv1
+                      bzzn(i,k)=r1*uw1/r2
+                   enddo
+                elseif(i.lt.0.)then
+                   ya=y2+dx
+                   do j=1,xsize(2)
+                      uu1=(ux(i-1,j,k+1)-ux(i-1,j,k))*(y1-ya)/(ya-y2)+ux(i-1,j,k+1)
+                      uv1=(uy(i-1,j,k+1)-uy(i-1,j,k))*(y1-ya)/(ya-y2)+uy(i-1,j,k+1)
+                      uw1=(uz(i-1,j,k+1)-uz(i-1,j,k))*(y1-ya)/(ya-y2)+uz(i-1,j,k+1)
+
+                      uu1=(ux(i+1,j,k-1)-ux(i,j,k-1))*(y1-ya)/(ya-y2)+ux(i+1,j,k-1)
+                      uv1=(uy(i+1,j,k-1)-uy(i,j,k-1))*(y1-ya)/(ya-y2)+uy(i+1,j,k-1)
+                      uw1=(uz(i+1,j,k-1)-uz(i,j,k-1))*(y1-ya)/(ya-y2)+uz(i+1,j,k-1)
+
+                      bzxn(j,k)=r1*uu1/r2
+                      bzyn(j,k)=   uv1
+                      bzzn(j,k)=r1*uw1/r2
+                   enddo
+                endif
+             endif
+          enddo
+       endif
+    endif
+
+
     return
   end subroutine boundary_conditions_jet
 
