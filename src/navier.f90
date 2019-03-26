@@ -355,19 +355,15 @@ SUBROUTINE lmn_t_to_rho_trans(drho1, dtemp1, rho1, dphi1, phi1)
 
   !! LOCALS
   INTEGER :: is
-
-  drho1(:,:,:) = -dtemp1(:,:,:)
+  
+  drho1(:,:,:) = zero
   
   IF (imultispecies) THEN
-     ta1(:,:,:) = zero
-     tb1(:,:,:) = zero
      DO is = 1, numscalar
         IF (massfrac(is)) THEN
-           ta1(:,:,:) = ta1(:,:,:) + dphi1(:,:,:,1,is) / mol_weight(is)
-           tb1(:,:,:) = tb1(:,:,:) + phi1(:,:,:,is)
+           drho1(:,:,:) = drho1(:,:,:) - dphi1(:,:,:,1,is) / mol_weight(is)
         ENDIF
      ENDDO
-     drho1(:,:,:) = drho1(:,:,:) + rho1(:,:,:) * ta1(:,:,:) / tb1(:,:,:)**2
      
      ta1(:,:,:) = zero !! Mean molecular weight
      DO is = 1, numscalar
@@ -377,8 +373,11 @@ SUBROUTINE lmn_t_to_rho_trans(drho1, dtemp1, rho1, dphi1, phi1)
      ENDDO
      drho1(:,:,:) = ta1(:,:,:) * drho1(:,:,:)
   ENDIF
+
+  CALL calc_temp_eos(ta1, rho1, phi1, tb1, xsize(1), xsize(2), xsize(3))
+  drho1(:,:,:) = drho1(:,:,:) - dtemp1(:,:,:) / ta1(:,:,:)
   
-  drho1(:,:,:) = (rho1(:,:,:)**2 / pressure0) * drho1(:,:,:)
+  drho1(:,:,:) = rho1(:,:,:) * drho1(:,:,:)
   
 ENDSUBROUTINE lmn_t_to_rho_trans
 
