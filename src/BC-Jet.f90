@@ -138,12 +138,13 @@ contains
     USE param
     USE variables
     USE decomp_2d
-    USE var
+    !USE var
 
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
+
 
     integer :: i, j, k
     real(mytype) :: D, r, x, z
@@ -153,6 +154,8 @@ contains
     integer :: ierr
     integer, dimension(2) :: dims, dummy_coords
     logical, dimension(2) :: dummy_periods
+
+    real(mytype) :: uu1,uv1,uw1,x1,x2,y1,y2,ya,y,r1,r2,xc,zc,yc
 
     call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, dims, dummy_periods, dummy_coords, ierr)
 
@@ -233,6 +236,134 @@ contains
       enddo
     endif
 
+    !! Compute side outflow boundaries
+    !! X normal
+ if(nclx1.eq.2)then
+    xc=xlx/2.
+    zc=zlz/2.
+    if(xstart(1).eq.1)then!
+       y=-yc
+       do k=1,zsize(3)
+          z=dz*(k-1)-zc
+          x2=x
+          y2=z
+          x1=x+dx
+          y1=y2*x1/x2
+          r1=sqrt(x1**2+y1**2)
+          r2=sqrt(x2**2+y2**2)
+          if(r1.gt.r2)print*,'bug CL'
+          if(k.eq.1)then!cas premier point
+             do j=1,xsize(2)
+
+                bxx1(j,k)=r1*ux(2,j,k+1)/r2
+                bxy1(j,k)=   uy(2,j,k+1)
+                bxz1(j,k)=r1*uz(2,j,k+1)/r2
+             enddo
+          elseif(k.eq.(nz-1)/2+1)then!cas point du milieu
+             do j=1,xsize(2)
+
+                bxx1(j,k)=r1*ux(2,j,k)/r2
+                bxy1(j,k)=   uy(2,j,k)
+                bxz1(j,k)=r1*uz(2,j,k)/r2
+             enddo
+          elseif(k.eq.nx)then!cas dernier point
+             do j=1,xsize(2)
+
+                bxx1(j,k)=r1*ux(2,j,k-1)/r2
+                bxy1(j,k)=   uy(2,j,k-1)
+                bxz1(j,k)=r1*uz(2,j,k-1)/r2
+             enddo
+          else!cas general
+             if    (z.gt.0.)then
+                ya=y2-dz
+                do j=1,xsize(2)
+                   uu1=(ux(2,j,k)-ux(2,j,k-1))*(y1-ya)/(y2-ya)+ux(2,j,k-1)
+                   uv1=(uy(2,j,k)-uy(2,j,k-1))*(y1-ya)/(y2-ya)+uy(2,j,k-1)
+                   uw1=(uz(2,j,k)-uz(2,j,k-1))*(y1-ya)/(y2-ya)+uz(2,j,k-1)
+
+                   bxx1(j,k)=r1*uu1/r2
+                   bxy1(j,k)= uv1
+                   bxz1(j,k)=r1*uw1/r2
+                enddo
+             elseif(z.lt.0.)then
+                ya=y2+dz
+                do j=1,xsize(2)
+                   uu1=(ux(2,j,k+1)-ux(2,j,k))*(y1-ya)/(ya-y2)+ux(2,j,k+1)
+                   uv1=(uy(2,j,k+1)-uy(2,j,k))*(y1-ya)/(ya-y2)+uy(2,j,k+1)
+                   uw1=(uz(2,j,k+1)-uz(2,j,k))*(y1-ya)/(ya-y2)+uz(2,j,k+1)
+
+                   bxx1(j,k)=r1*uu1/r2
+                   bxy1(j,k)=   uv1
+                   bxz1(j,k)=r1*uw1/r2
+                enddo
+             endif
+          endif
+       enddo
+    endif
+  endif
+
+  if (nclxn.eq.2) then
+    if(xend(1).eq.nx)then
+       x=xc
+       i = xsize(1)
+       do k=1,xsize(3)
+          z=dz*(k-1)-zc
+          x2=x
+          y2=z
+          x1=x-dx
+          y1=y2*x1/x2
+          r1=sqrt(x1**2+y1**2)
+          r2=sqrt(x2**2+y2**2)
+          if(r1.gt.r2)print*,'bug CL'
+          if(k.eq.1)then!cas premier point
+             do j=1,xsize(2)
+
+                bxxn(j,k)=r1*ux(i-1,j,k+1)/r2
+                bxyn(j,k)=   uy(i-1,j,k+1)
+                bxzn(j,k)=r1*uz(i-1,j,k+1)/r2
+             enddo
+          elseif(k.eq.(nz-1)/2+1)then!cas point du milieu
+             do j=1,xsize(2)
+
+                bxxn(j,k)=r1*ux(i-1,j,k)/r2
+                bxyn(j,k)=   uy(i-1,j,k)
+                bxzn(j,k)=r1*uz(i-1,j,k)/r2
+             enddo
+          elseif(k.eq.nz)then!cas dernier point
+             do j=1,xsize(2)
+
+                bxxn(j,k)=r1*ux(i-1,j,k-1)/r2
+                bxyn(j,k)=   uy(i-1,j,k-1)
+                bxzn(j,k)=r1*uz(i-1,j,k-1)/r2
+             enddo
+          else !cas general
+             if (z.gt.0.) then
+                ya=y2-dz
+                do j=1,xsize(2)
+                   uu1=(ux(i-1,j,k)-ux(i-1,j,k-1))*(y1-ya)/(y2-ya)+ux(i-1,j,k-1)
+                   uv1=(uy(i-1,j,k)-uy(i-1,j,k-1))*(y1-ya)/(y2-ya)+uy(i-1,j,k-1)
+                   uw1=(uz(i-1,j,k)-uz(i-1,j,k-1))*(y1-ya)/(y2-ya)+uz(i-1,j,k-1)
+
+                   bxxn(j,k)=r1*uu1/r2
+                   bxyn(j,k)=   uv1
+                   bxzn(j,k)=r1*uw1/r2
+                enddo
+             elseif(z.lt.0.)then
+                ya=y2+dz
+                do j=1,xsize(2)
+                   uu1=(ux(i-1,j,k+1)-ux(i-1,j,k))*(y1-ya)/(ya-y2)+ux(i-1,j,k+1)
+                   uv1=(uy(i-1,j,k+1)-uy(i-1,j,k))*(y1-ya)/(ya-y2)+uy(i-1,j,k+1)
+                   uw1=(uz(i-1,j,k+1)-uz(i-1,j,k))*(y1-ya)/(ya-y2)+uz(i-1,j,k+1)
+
+                   bxxn(j,k)=r1*uu1/r2
+                   bxyn(j,k)=   uv1
+                   bxzn(j,k)=r1*uw1/r2
+                enddo
+             endif
+          endif
+       enddo
+    endif
+ endif
     return
   end subroutine boundary_conditions_jet
 
