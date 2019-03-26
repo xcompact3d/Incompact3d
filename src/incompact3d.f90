@@ -69,18 +69,17 @@ PROGRAM incompact3d
 
   call schemes()
 
-#ifdef ELES
-  call filter()
-#endif
 
   !if (nrank==0) call stabiltemp()
 
   call decomp_2d_poisson_init()
   call decomp_info_init(nxm,nym,nzm,phG)
 
-#ifdef ELES
-  call init_explicit_les()
-#endif
+
+  if (ilesmod.ne.0) then
+     call filter(0.45_mytype)
+     if (jles.le.3)  call init_explicit_les()
+  endif
 
   if (irestart==0) then
      call init(rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,dphi1)

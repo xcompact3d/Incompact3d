@@ -38,7 +38,7 @@ module var
   USE complex_geometry
 
   ! define all major arrays here
-  real(mytype), save, allocatable, dimension(:,:,:) :: ux1, ux2, ux3, po3, dv3, pp3, nut1
+  real(mytype), save, allocatable, dimension(:,:,:) :: ux1, ux2, ux3, po3, dv3, pp3
   real(mytype), save, allocatable, dimension(:,:,:) :: uy1, uy2, uy3
   real(mytype), save, allocatable, dimension(:,:,:) :: uz1, uz2, uz3
   real(mytype), save, allocatable, dimension(:,:,:,:) :: rho1, drho1
@@ -83,6 +83,12 @@ module var
 
   integer, save :: nxmsize, nymsize, nzmsize
 
+  ! working arrays for LES
+  real(mytype), save, allocatable, dimension(:,:,:) :: sgsx1,sgsy1,sgsz1,nut1,sxx1,syy1,szz1,sxy1,sxz1,syz1
+  real(mytype), save, allocatable, dimension(:,:,:) :: sgsx2,sgsy2,sgsz2,nut2,sxx2,syy2,szz2,sxy2,sxz2,syz2 
+  real(mytype), save, allocatable, dimension(:,:,:) :: sgsx3,sgsy3,sgsz3,nut3,sxx3,syy3,szz3,sxy3,sxz3,syz3 
+  real(mytype), save, allocatable, dimension(:,:,:) :: srt_smag, srt_smag2, srt_wale, srt_wale2 
+
 contains
 
   subroutine init_variables
@@ -125,7 +131,6 @@ contains
     call alloc_x(py1, opt_global=.true.) !global indices
     call alloc_x(diss1, opt_global=.true.) !global indices
     call alloc_x(pre1, opt_global=.true.) !global indices
-    call alloc_x(nut1, opt_global=.true.) !global indices
 
     allocate(phi1(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),1:numscalar)) !global indices
 
@@ -133,7 +138,7 @@ contains
     call alloc_x(td1);call alloc_x(te1);call alloc_x(tf1)
     call alloc_x(tg1);call alloc_x(th1);call alloc_x(ti1)
     call alloc_x(di1);call alloc_x(ep1)
-    
+
     allocate(pp1(nxmsize,xsize(2),xsize(3)))
     allocate(pgy1(nxmsize,xsize(2),xsize(3)))
     allocate(pgz1(nxmsize,xsize(2),xsize(3)))
@@ -242,6 +247,22 @@ contains
     call alloc_z(pp3,ph,.true.)
     call alloc_z(dv3,ph,.true.)
     call alloc_z(po3,ph,.true.)
+
+    if(ilesmod.ne.0) then
+    call alloc_x(sgsx1);call alloc_x(sgsy1); call alloc_x(sgsz1)
+    call alloc_x(sxx1);call alloc_x(syy1); call alloc_x(szz1)
+    call alloc_x(sxy1);call alloc_x(sxz1); call alloc_x(syz1)
+    call alloc_x(nut1);call alloc_x(srt_smag); call alloc_x(srt_wale)
+    call alloc_y(sgsx2);call alloc_y(sgsy2); call alloc_y(sgsz2)
+    call alloc_y(sxx2) ;call alloc_y(syy2);  call alloc_y(szz2)
+    call alloc_y(sxy2) ;call alloc_y(sxz2);  call alloc_y(syz2)
+    call alloc_y(nut2) ;call alloc_y(srt_smag2); call alloc_y(srt_wale2)
+    call alloc_z(sgsx3);call alloc_z(sgsy3); call alloc_z(sgsz3)
+    call alloc_z(sxx3) ;call alloc_z(syy3);  call alloc_z(szz3)
+    call alloc_z(sxy3) ;call alloc_z(sxz3);  call alloc_z(syz3)
+    call alloc_z(nut3)
+    endif
+
 
     if (iibm.ne.0) then
        !complex_geometry

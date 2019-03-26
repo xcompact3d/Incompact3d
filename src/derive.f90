@@ -175,7 +175,7 @@ subroutine derx_12(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   real(mytype), dimension(nx):: ffx,fsx,fwx
   
   if(iibm.eq.2) call lagpolx(ux)
-
+    
   if (npaire==1) then 
      do k=1,nz 
         do j=1,ny 

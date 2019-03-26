@@ -57,15 +57,17 @@ subroutine parameter(input_i3d)
   NAMELIST /BasicParam/ p_row, p_col, nx, ny, nz, istret, beta, xlx, yly, zlz, &
        itype, iin, re, u1, u2, init_noise, inflow_noise, &
        dt, ifirst, ilast, &
-       iturbmod, numscalar, iibm, ilmn, &
+       ilesmod, numscalar, iibm, ilmn, &
+       ilesmod, iscalar, iibm, &
        nclx1, nclxn, ncly1, nclyn, nclz1, nclzn, &
        ivisu, ipost
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, rxxnu, cnu, fpi2, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu
   NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat
   NAMELIST /ScalarParam/ sc, nclxS1, nclxSn, nclyS1, nclySn, nclzS1, nclzSn
-  NAMELIST /TurbulenceModel/ iles, smagcst, walecst, iwall
-  NAMELIST /TurbulenceWallModel/ smagwalldamp
+  NAMELIST /LESModel/ jles, smagcst, walecst, iwall
+  NAMELIST /WallModel/ smagwalldamp
+
   NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf
   NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound
 #ifdef DEBG
@@ -77,7 +79,7 @@ subroutine parameter(input_i3d)
      print *,'======================Xcompact3D==========================='
      print *,'===Copyright (c) 2018 Eric Lamballais and Sylvain Laizet==='
      print *,'===Modified by Felipe Schuch and Ricardo Frantz============'
-     print *,'===Modified by Paul Bartholomew, Yorgos Deskos and========='
+     print *,'===Modified by Paul Bartholomew, Georgios Deskos and======='
      print *,'===Sylvain Laizet -- 2018- ================================'
      print *,'==========================================================='
 #if defined(VERSION)
@@ -113,7 +115,8 @@ subroutine parameter(input_i3d)
      read(10, nml=ScalarParam)
   endif
   ! !! These are the 'optional'/model parameters
-  ! read(10, nml=TurbulenceModel)
+  ! read(10, nml=ScalarParam)
+  if(ilesmod.ne.0) read(10, nml=LESModel)
   ! read(10, nml=TurbulenceWallModel)
   close(10)
 
@@ -204,7 +207,7 @@ subroutine parameter(input_i3d)
      endif
      write(*,"(' Time step dt       : ',F15.8)") dt
      write (*,"(' Spatial scheme     : ',F15.8)") fpi2
-     if (iturbmod.ne.0) then
+     if (ilesmod.ne.0) then
         print *,'                   : DNS'
      else
         if (jLES.eq.1) then
