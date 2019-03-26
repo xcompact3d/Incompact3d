@@ -906,17 +906,18 @@ SUBROUTINE calc_divu_constraint(divu3, rho1, phi1)
 
   USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
   USE decomp_2d, ONLY : transpose_x_to_y, transpose_y_to_z
-  USE param, ONLY : nrhotime, zero, ilmn, pressure0
+  USE param, ONLY : nrhotime, zero, ilmn, pressure0, imultispecies, massfrac, mol_weight
   USE param, ONLY : xnu, prandtl
+  USE param, ONLY : one
   USE variables
 
-  USE var, ONLY : ta1, tb1, di1
-  USE var, ONLY : ta2, tb2, tc2, td2, di2
-  USE var, ONLY : ta3, tb3, di3
+  USE var, ONLY : ta1, tb1, tc1, td1, di1
+  USE var, ONLY : phi2, ta2, tb2, tc2, td2, te2, di2
+  USE var, ONLY : phi3, ta3, tb3, tc3, td3, rho3, di3
 
   IMPLICIT NONE
 
-  INTEGER :: i, j, k
+  INTEGER :: i, j, k, is
 
   REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
   REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
@@ -930,27 +931,101 @@ SUBROUTINE calc_divu_constraint(divu3, rho1, phi1)
      CALL calc_temp_eos(ta1, rho1(:,:,:,1), phi1, tb1, xsize(1), xsize(2), xsize(3))
 
      CALL derxx (tb1, ta1, di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1)
+     IF (imultispecies) THEN
+        tb1(:,:,:) = (xnu / prandtl) * tb1(:,:,:) / ta1(:,:,:)
+
+        !! Calc mean molecular weight
+        td1(:,:,:) = zero
+        DO is = 1, numscalar
+           IF (massfrac(is)) THEN
+              td1(:,:,:) = td1(:,:,:) + phi1(:,:,:,is) / mol_weight(is)
+           ENDIF
+        ENDDO
+        td1(:,:,:) = one / td1(:,:,:)
+        
+        DO is = 1, numscalar
+           IF (massfrac(is)) THEN
+              CALL derxx (tc1, phi1(:,:,:,is), di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1)
+              tb1(:,:,:) = tb1(:,:,:) + (xnu / sc(is)) * (td1(:,:,:) / mol_weight(is)) * tc1(:,:,:)
+           ENDIF
+        ENDDO
+     ENDIF
 
      CALL transpose_x_to_y(ta1, ta2)        !! Temperature
      CALL transpose_x_to_y(tb1, tb2)        !! d2Tdx2
+     IF (imultispecies) THEN
+        DO is = 1, numscalar
+           IF (massfrac(is)) THEN
+              CALL transpose_x_to_y(phi1(:,:,:,is), phi2(:,:,:,is))
+           ENDIF
+        ENDDO
+     ENDIF
 
      !!------------------------------------------------------------------------------
      !! Y-pencil
      CALL deryy (tc2, ta2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
+     IF (imultispecies) THEN
+        tc2(:,:,:) = (xnu / prandtl) * tc2(:,:,:) / ta2(:,:,:)
 
+        !! Calc mean molecular weight
+        te2(:,:,:) = zero
+        DO is = 1, numscalar
+           IF (massfrac(is)) THEN
+              te2(:,:,:) = te2(:,:,:) + phi2(:,:,:,is) / mol_weight(is)
+           ENDIF
+        ENDDO
+        te2(:,:,:) = one / te2(:,:,:)
+
+        DO is = 1, numscalar
+           IF (massfrac(is)) THEN
+              CALL deryy (td2, phi2(:,:,:,is), di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
+              tc2(:,:,:) = tc2(:,:,:) + (xnu / sc(is)) * (te2(:,:,:) / mol_weight(is)) * td2(:,:,:)
+           ENDIF
+        ENDDO
+     ENDIF
      tb2(:,:,:) = tb2(:,:,:) + tc2(:,:,:)
 
      CALL transpose_y_to_z(ta2, ta3)        !! Temperature
      CALL transpose_y_to_z(tb2, tb3)        !! d2Tdx2 + d2Tdy2
+     IF (imultispecies) THEN
+        DO is = 1, numscalar
+           IF (massfrac(is)) THEN
+              CALL transpose_y_to_z(phi2(:,:,:,is), phi3(:,:,:,is))
+           ENDIF
+        ENDDO
+     ENDIF
 
      !!------------------------------------------------------------------------------
      !! Z-pencil
      CALL derzz (divu3, ta3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
+     IF (imultispecies) THEN
+        divu3(:,:,:) = (xnu / prandtl) * divu3(:,:,:) / ta3(:,:,:)
 
+        !! Calc mean molecular weight
+        td3(:,:,:) = zero
+        DO is = 1, numscalar
+           IF (massfrac(is)) THEN
+              td3(:,:,:) = td3(:,:,:) + phi3(:,:,:,is) / mol_weight(is)
+           ENDIF
+        ENDDO
+        td3(:,:,:) = one / td3(:,:,:)
+
+        DO is = 1, numscalar
+           IF (massfrac(is)) THEN
+              CALL derzz (tc3, phi3(:,:,:,is), di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
+              divu3(:,:,:) = divu3(:,:,:) + (xnu / sc(is)) * (td3(:,:,:) / mol_weight(is)) * tc3(:,:,:)
+           ENDIF
+        ENDDO
+     ENDIF
      divu3(:,:,:) = divu3(:,:,:) + tb3(:,:,:)
-     divu3(:,:,:) = (xnu / prandtl) * divu3(:,:,:)
 
-     divu3(:,:,:) = divu3(:,:,:) / pressure0
+     IF (imultispecies) THEN
+        !! Thus far we have computed rho * divu, want divu
+        CALL calc_rho_eos(rho3, ta3, phi3, tb3, zsize(1), zsize(2), zsize(3))
+        divu3(:,:,:) = divu3(:,:,:) / rho3(:,:,:)
+     ELSE
+        divu3(:,:,:) = (xnu / prandtl) * divu3(:,:,:) / pressure0
+     ENDIF
   ELSE
      divu3(:,:,:) = zero
   ENDIF
