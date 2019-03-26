@@ -46,7 +46,7 @@ MODULE case
   IMPLICIT NONE
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init, boundary_conditions, postprocessing
+  PUBLIC :: init, boundary_conditions, postprocessing, momentum_forcing
 
 CONTAINS
 
@@ -94,16 +94,17 @@ CONTAINS
 
     ELSEIF (itype.EQ.itype_jet) THEN
 
-       CALL init_jet(ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, phis1, phiss1)
+       CALL init_jet(rho1, ux1, uy1, uz1, ep1, phi1, drho1, dux1, duy1, duz1, phis1, phiss1)
 
     ENDIF
 
   END SUBROUTINE init
 
-  SUBROUTINE boundary_conditions (ux,uy,uz,phi,ep)
+  SUBROUTINE boundary_conditions (rho,ux,uy,uz,phi,ep)
 
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,ep
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),numscalar) :: phi
+    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),nrhotime) :: rho
 
     IF (itype.EQ.itype_lockexch) THEN
 
@@ -134,7 +135,7 @@ CONTAINS
 
     ELSEIF (itype.EQ.itype_jet) THEN
 
-       CALL boundary_conditions_jet (ux,uy,uz,phi)
+       CALL boundary_conditions_jet (rho,ux,uy,uz,phi)
 
     ENDIF
 
@@ -179,6 +180,34 @@ CONTAINS
 
     ENDIF
   END SUBROUTINE postprocessing
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!
+  !!  SUBROUTINE: momentum_forcing
+  !!      AUTHOR: Paul Bartholomew
+  !! DESCRIPTION: Calls case-specific forcing functions for the
+  !!              momentum equations.
+  !!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  SUBROUTINE momentum_forcing(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
+
+    IMPLICIT NONE
+
+    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
+
+    IF (itype.EQ.itype_channel) THEN
+
+       CALL momentum_forcing_channel(dux1, duy1, ux1, uy1)
+
+    ELSEIF (itype.EQ.itype_jet) THEN
+
+       CALL momentum_forcing_jet(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
+
+    ENDIF
+
+  ENDSUBROUTINE momentum_forcing
 
 END MODULE case
 

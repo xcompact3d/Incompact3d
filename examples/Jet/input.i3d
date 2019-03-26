@@ -36,7 +36,7 @@ iin = 1               ! Inflow conditions (1: classic, 2: turbinit)
 re = 1000.             ! nu=1/re (Kinematic Viscosity)
 u1 = 1.               ! u1 (max velocity) (for inflow condition)
 u2 = 0.02               ! u2 (min velocity) (for inflow condition)
-init_noise = 0.01     ! Turbulence intensity (1=100%) !! Initial condition
+init_noise = 0.05     ! Turbulence intensity (1=100%) !! Initial condition
 inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
 
 ! Time stepping
@@ -48,7 +48,7 @@ ilast = 18000         ! Last iteration
 iturbmod=0            ! if 0 then DNS
 iscalar=0             ! If iscalar=0 (no scalar), if iscalar=1 (scalar)
 iibm=0                ! Flag for immersed boundary method
-ilmn=.FALSE.           ! Flag for Low Mach Number flow
+ilmn=.TRUE.           ! Flag for Low Mach Number flow
 
 ! Enable io
 ivisu=1               ! Store snapshots
@@ -98,10 +98,10 @@ nstat = 1             ! Size arrays for statistic collection
 &LMN
 !=================
 
-dens1 = 0.5           ! Density of 'cold' stream (y > 0)
-dens2 = 1.0           ! Density of 'hot' stream (y < 0)
+dens1 = 1.0           ! Density of jet
+dens2 = 4.0           ! Ambient density
 
-prandtl = 0.75        ! Prandtl number
+prandtl = 0.7         ! Prandtl number
 
 /End
 

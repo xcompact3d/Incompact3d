@@ -60,6 +60,11 @@ subroutine  int_time(var1,dvar1)
   elseif(itimescheme.eq.4) then
      !>>> Adams-Bashforth fourth order (AB4)
 
+     if (nrank.eq.0) then
+        print *, "AB4 not implemented!"
+        STOP
+     endif
+     
      !if (itime.eq.1.and.ilit.eq.0) then
      !var(:,:,:)=gdt(itr)*hx(:,:,:)+var(:,:,:)
      !uy(:,:,:)=gdt(itr)*hy(:,:,:)+uy(:,:,:)
@@ -111,6 +116,18 @@ subroutine  int_time(var1,dvar1)
      dvar1(:,:,:,2)=dvar1(:,:,:,1)
      !>>> Runge-Kutta (low storage) RK4
   elseif(itimescheme.eq.6) then
+
+     if (nrank.eq.0) then
+        print *, "RK4 not implemented!"
+        STOP
+     endif
+
+  else
+
+     if (nrank.eq.0) then
+        print *, "Unrecognised itimescheme: ", itimescheme
+        STOP
+     endif
 
   endif
 
@@ -171,7 +188,8 @@ subroutine int_time_continuity(rho1, drho1)
 
   implicit none
 
-  integer :: it
+  integer :: it, i, j, k
+  real(mytype) :: rhomin, rhomax
 
   !! INPUTS
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
@@ -203,6 +221,20 @@ subroutine int_time_continuity(rho1, drho1)
   !! Now we can update current density
   call int_time(rho1(:,:,:,1), drho1)
 
+  !! Enforce boundedness on density
+  if (ilmn_bound) then
+     rhomin = min(dens1, dens2)
+     rhomax = max(dens1, dens2)
+     do k = 1, xsize(3)
+        do j = 1, xsize(2)
+           do i = 1, xsize(1)
+              rho1(i, j, k, 1) = max(rho1(i, j, k, 1), rhomin)
+              rho1(i, j, k, 1) = min(rho1(i, j, k, 1), rhomax)
+           enddo
+        enddo
+     enddo
+  endif
+  
 endsubroutine int_time_continuity
 
 !********************************************************************
@@ -218,18 +250,17 @@ subroutine corpg (ux,uy,uz,px,py,pz)
   USE decomp_2d
   USE variables
   USE param
-  USE var, only: ta2
-  USE MPI
-
+  
   implicit none
 
   integer :: ijk,nxyz
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,px,py,pz
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: px,py,pz
 
-  ux(:,:,:)=-px(:,:,:)+ux(:,:,:)
-  uy(:,:,:)=-py(:,:,:)+uy(:,:,:)
-  uz(:,:,:)=-pz(:,:,:)+uz(:,:,:)
-
+  ux(:,:,:)=ux(:,:,:)-px(:,:,:)
+  uy(:,:,:)=uy(:,:,:)-py(:,:,:)
+  uz(:,:,:)=uz(:,:,:)-pz(:,:,:)
+  
   return
 end subroutine corpg
 !********************************************************************
@@ -265,8 +296,6 @@ subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
   integer :: code
   real(mytype) :: tmax,tmoy,tmax1,tmoy1
 
-  nvect1=xsize(1)*xsize(2)*xsize(3)
-  nvect2=ysize(1)*ysize(2)*ysize(3)
   nvect3=(ph1%zen(1)-ph1%zst(1)+1)*(ph1%zen(2)-ph1%zst(2)+1)*nzmsize
 
   if (iibm.eq.0) then
@@ -281,24 +310,21 @@ subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
 
   !WORK X-PENCILS
 
+  call derxvp(pp1,ta1,di1,sx,cfx6,csx6,cwx6,xsize(1),nxmsize,xsize(2),xsize(3),0)
+
   if (ilmn) then
      if (nlock.eq.1) then
         !! Approximate -div(rho u) using ddt(rho)
         call extrapol_drhodt(ta1, rho1, drho1)
-        call interxvp(pgy1,ta1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
      elseif (nlock.eq.2) then
         !! Need to check our error against divu constraint
-        call transpose_z_to_y(divu3, ta2)
+        call transpose_z_to_y(-divu3, ta2)
         call transpose_y_to_x(ta2, ta1)
-        call interxvp(pgy1,ta1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
-        pgy1(:,:,:) = -pgy1(:,:,:)
      endif
-  else
-     pgy1(:,:,:) = zero
+     call interxvp(pgy1,ta1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+     pp1(:,:,:) = pp1(:,:,:) + pgy1(:,:,:)
   endif
 
-  call derxvp(pp1,ta1,di1,sx,cfx6,csx6,cwx6,xsize(1),nxmsize,xsize(2),xsize(3),0)
-  pp1(:,:,:) = pp1(:,:,:) + pgy1(:,:,:) !! pgy1 is a contribution from LMN, zero otherwise
   call interxvp(pgy1,tb1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
   call interxvp(pgz1,tc1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
 
@@ -771,22 +797,22 @@ SUBROUTINE calc_divu_constraint(divu3, rho1)
      !! X-pencil
 
      !! We need temperature
-     ta1(:,:,:) = pressure0 / rho1(:,:,:,1)
-
+     ta1(:,:,:) = pressure0 / rho1(:,:,:,1) !! Temperature
+     
      CALL derxx (tb1, ta1, di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1)
-
-     CALL transpose_x_to_y(ta1, ta2)
-     CALL transpose_x_to_y(tb1, tb2)
-
+     
+     CALL transpose_x_to_y(ta1, ta2)        !! Temperature
+     CALL transpose_x_to_y(tb1, tb2)        !! d2Tdx2
+     
      !!------------------------------------------------------------------------------
      !! Y-pencil
      CALL deryy (tc2, ta2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
 
      tb2(:,:,:) = tb2(:,:,:) + tc2(:,:,:)
 
-     CALL transpose_y_to_z(ta2, ta3)
-     CALL transpose_y_to_z(tb2, tb3)
-
+     CALL transpose_y_to_z(ta2, ta3)        !! Temperature
+     CALL transpose_y_to_z(tb2, tb3)        !! d2Tdx2 + d2Tdy2
+     
      !!------------------------------------------------------------------------------
      !! Z-pencil
      CALL derzz (divu3, ta3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
