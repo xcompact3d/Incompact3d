@@ -32,7 +32,7 @@ module channel
 
 contains
 
-  subroutine init_channel (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
+  subroutine init_channel (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,dphi1)
 
     USE decomp_2d
     USE decomp_2d_io
@@ -43,23 +43,27 @@ contains
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1,phis1,phiss1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
 
     real(mytype) :: y,r,um,r3,x,z,h,ct
     real(mytype) :: cx0,cy0,cz0,hg,lg
-    integer :: k,j,i,ijk,fh,ierror,ii,is,code
+    integer :: k,j,i,ijk,fh,ierror,ii,is,it,code
     integer (kind=MPI_OFFSET_KIND) :: disp
 
     integer, dimension (:), allocatable :: seed
 
     if (iscalar==1) then
 
-       phi1 = one !change as much as you want
+       phi1(:,:,:,:) = zero !change as much as you want
 
-       !do not delete this
-       phis1=phi1
-       phiss1=phis1
+       do is = 1, numscalar
+          dphi1(:,:,:,1,is) = phi1(:,:,:,is)
+          do it = 2, ntime
+             dphi1(:,:,:,it,is) = dphi1(:,:,:,it - 1,is)
+          enddo
+       enddo
 
     endif
     ux1=zero;uy1=zero;uz1=zero
@@ -127,10 +131,45 @@ contains
 !!$  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ut
 
     real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: gx
+    real(mytype) :: x, y, z
+    integer :: i, j, k, is
 
     call transpose_x_to_y(ux,gx)
     call channel_flrt(gx,two/three)
     call transpose_y_to_x(gx,ux)
+
+    if (iscalar.ne.0) then
+       if (nclxS1.eq.2) then
+          i = 1
+          phi(i,:,:,:) = zero
+       endif
+       if (nclxSn.eq.2) then
+          i = xsize(1)
+          phi(i,:,:,:) = phi(i - 1,:,:,:)
+       endif
+       
+       if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
+          !! Generate a hot patch on bottom boundary
+          do k = 1, xsize(3)
+             z = real(k + xstart(3) - 2, mytype) * dz - half * zlz
+             if (abs(z).lt.zlz/four) then
+                j = 1
+                do i = 1, xsize(1)
+                   x = real(i + xstart(1) - 2, mytype) * dx
+                   if ((x.gt.0.1*xlx).and.(x.lt.0.3*xlx)) then
+                      do is = 1, numscalar
+                         phi(i, j, k, is) = one
+                      enddo
+                   else
+                      do is = 1, numscalar
+                         phi(i, j, k, is) = zero
+                      enddo
+                   endif
+                enddo
+             endif
+          enddo
+       endif
+    endif
 
     return
   end subroutine boundary_conditions_channel

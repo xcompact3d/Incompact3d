@@ -32,7 +32,7 @@ module jet
 
 contains
 
-  subroutine init_jet (rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,phis1,phiss1)
+  subroutine init_jet (rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,dphi1)
 
     USE decomp_2d
     USE decomp_2d_io
@@ -44,11 +44,12 @@ contains
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1,phis1,phiss1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1,drho1
+    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
 
     real(mytype) :: y
-    integer :: i, j, k, ii, is, code
+    integer :: i, j, k, ii, is, it, code
     real(mytype) :: um
 
     integer, dimension (:), allocatable :: seed
@@ -126,6 +127,13 @@ contains
                 duz1(i,j,k,is)=duz1(i,j,k,is - 1)
 
                 drho1(i,j,k,is) = drho1(i,j,k,is - 1)
+             enddo
+
+             do is = 1, numscalar
+                dphi1(:,:,:,1,is) = phi1(:,:,:,is)
+                do it = 2, ntime
+                   dphi1(:,:,:,it,is) = dphi1(:,:,:,it - 1,is)
+                enddo
              enddo
           enddo
        enddo

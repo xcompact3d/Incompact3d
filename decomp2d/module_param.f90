@@ -234,9 +234,15 @@ module param
   real(mytype) :: smagcst,walecst,FSGS,pr_t,maxdsmagcst
 
   !! LMN
-  logical :: ilmn, ilmn_bound
+  logical :: ilmn, ilmn_bound, ilmn_solve_temp
   real(mytype) :: pressure0, prandtl
-  integer :: nrhotime
+  integer :: nrhotime, npress
+  logical :: ivarcoeff
+
+  logical :: imultispecies
+  logical, allocatable, dimension(:) :: massfrac
+  real(mytype), allocatable, dimension(:) :: mol_weight
+  integer :: primary_species
 
   character :: filesauve*80, filenoise*80, &
   nchamp*80,filepath*80, fileturb*80, filevisu*80, datapath*80

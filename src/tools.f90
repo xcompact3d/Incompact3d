@@ -267,7 +267,7 @@ endif
 return
 end subroutine test_speed_min_max
 !*******************************************************************
-subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,iresflg)
+subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1,iresflg)
 
   USE decomp_2d
   USE decomp_2d_io
@@ -277,12 +277,13 @@ subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,iresflg)
 
   implicit none
 
-  integer :: i,j,k,iresflg,nzmsize,fh,ierror,is,code
+  integer :: i,j,k,iresflg,nzmsize,fh,ierror,is,it,code
   integer :: ierror_o=0 !error to open sauve file during restart
   real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
   real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: px1,py1,pz1
   real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
   real(mytype), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+  real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
   real(mytype), dimension(phG%zst(1):phG%zen(1),phG%zst(2):phG%zen(2),phG%zst(3):phG%zen(3)) :: pp3
   integer (kind=MPI_OFFSET_KIND) :: filesize, disp
   real(mytype) :: xdt
@@ -322,6 +323,9 @@ subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,iresflg)
      if (iscalar==1) then
         do is=1, numscalar
            call decomp_2d_write_var(fh,disp,1,phi1(:,:,:,is))
+           do it = 1, ntime
+              call decomp_2d_write_var(fh,disp,1,dphi1(:,:,:,it,is))
+           enddo
         end do
      endif
      call MPI_FILE_CLOSE(fh,ierror)
@@ -347,6 +351,9 @@ subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,iresflg)
      if (iscalar==1) then
         do is=1, numscalar
            call decomp_2d_read_var(fh,disp,1,phi1(:,:,:,is))
+           do it = 1, ntime
+              call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,it,is))
+           enddo
         end do
      endif
      call MPI_FILE_CLOSE(fh,ierror_o)
@@ -1138,3 +1145,82 @@ subroutine simu_stats(iwhen)
   endif
   
 end subroutine simu_stats
+
+SUBROUTINE calc_temp_eos(temp, rho, phi, mweight, xlen, ylen, zlen)
+
+  USE decomp_2d
+  USE param, ONLY : pressure0, imultispecies
+  USE var, ONLY : numscalar
+
+  IMPLICIT NONE
+
+  !! INPUTS
+  INTEGER, INTENT(IN) :: xlen, ylen, zlen
+  REAL(mytype), INTENT(IN), DIMENSION(xlen, ylen, zlen) :: rho
+  REAL(mytype), INTENT(IN), DIMENSION(xlen, ylen, zlen, numscalar) :: phi
+
+  !! OUTPUTS
+  REAL(mytype), INTENT(OUT), DIMENSION(xlen, ylen, zlen) :: temp
+
+  !! LOCALS
+  REAL(mytype), DIMENSION(xlen, ylen, zlen) :: mweight
+
+  temp(:,:,:) = pressure0 / rho(:,:,:)
+  IF (imultispecies) THEN
+     CALL calc_mweight(mweight, phi, xlen, ylen, zlen)
+     temp(:,:,:) = temp(:,:,:) / mweight(:,:,:)
+  ENDIF
+  
+ENDSUBROUTINE calc_temp_eos
+
+SUBROUTINE calc_rho_eos(rho, temp, phi, mweight, xlen, ylen, zlen)
+
+  USE decomp_2d
+  USE param, ONLY : pressure0, imultispecies
+  USE var, ONLY : numscalar
+
+  IMPLICIT NONE
+
+  !! INPUTS
+  INTEGER, INTENT(IN) :: xlen, ylen, zlen
+  REAL(mytype), INTENT(IN), DIMENSION(xlen, ylen, zlen) :: temp
+  REAL(mytype), INTENT(IN), DIMENSION(xlen, ylen, zlen, numscalar) :: phi
+
+  !! OUTPUTS
+  REAL(mytype), INTENT(OUT), DIMENSION(xlen, ylen, zlen) :: rho
+
+  !! LOCALS
+  REAL(mytype), DIMENSION(xlen, ylen, zlen) :: mweight
+
+  rho(:,:,:) = pressure0 / temp(:,:,:)
+  IF (imultispecies) THEN
+     CALL calc_mweight(mweight, phi, xlen, ylen, zlen)
+     rho(:,:,:) = rho(:,:,:) / mweight(:,:,:)
+  ENDIF
+  
+ENDSUBROUTINE calc_rho_eos
+
+SUBROUTINE calc_mweight(mweight, phi, xlen, ylen, zlen)
+
+  USE decomp_2d
+  USE param, ONLY : zero
+  USE param, ONLY : massfrac, mol_weight
+  USE var, ONLY : numscalar
+
+  IMPLICIT NONE
+  
+  INTEGER, INTENT(IN) :: xlen, ylen, zlen
+  REAL(mytype), INTENT(IN), DIMENSION(xlen, ylen, zlen, numscalar) :: phi
+  
+  !! LOCALS
+  REAL(mytype), DIMENSION(xlen, ylen, zlen) :: mweight
+  INTEGER :: is
+  
+  mweight(:,:,:) = zero
+  DO is = 1, numscalar
+     IF (massfrac(is)) THEN
+        mweight(:,:,:) = mweight(:,:,:) + phi(:,:,:,is) / mol_weight(is)
+     ENDIF
+  ENDDO
+  
+ENDSUBROUTINE calc_mweight

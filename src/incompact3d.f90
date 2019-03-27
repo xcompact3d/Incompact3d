@@ -83,10 +83,10 @@ PROGRAM incompact3d
 #endif
 
   if (irestart==0) then
-     call init(rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,phis1,phiss1)
-     CALL visu(rho1, ux1, uy1, uz1, pp3, 0)
+     call init(rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,dphi1)
+     CALL visu(rho1, ux1, uy1, uz1, pp3(:,:,:,1),phi1, 0)
   else
-     call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,0)
+     call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,0)
   endif
 
   if (iibm.eq.2) then
@@ -105,7 +105,7 @@ PROGRAM incompact3d
 
   call simu_stats(1)
 
-  call calc_divu_constraint(divu3, rho1)
+  call calc_divu_constraint(divu3, rho1, phi1)
   !!-------------------------------------------------------------------------------
   !! End initialisation
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -116,9 +116,9 @@ PROGRAM incompact3d
   do itime=ifirst,ilast
      t=itime*dt
      call simu_stats(2)
-     
+
      call postprocessing(ux1,uy1,uz1,phi1,ep1)
-     
+
      do itr=1,iadvance_time
 
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -129,7 +129,7 @@ PROGRAM incompact3d
         !! End initialise timestep
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-        CALL calculate_transeq_rhs(drho1,dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
+        CALL calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         !! Time integrate transport equations
@@ -140,8 +140,8 @@ PROGRAM incompact3d
            call primary_to_conserved(rho1, uy1)
            call primary_to_conserved(rho1, uz1)
         endif
-        
-        call intt(rho1,ux1,uy1,uz1,drho1,dux1,duy1,duz1)
+
+        call intt(rho1,ux1,uy1,uz1,phi1,drho1,dux1,duy1,duz1,dphi1)
         call pre_correc(ux1,uy1,uz1,ep1)
         !!-------------------------------------------------------------------------
         !! End time integrate transport equations
@@ -156,9 +156,8 @@ PROGRAM incompact3d
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         !! Poisson solver and velocity correction
         !!-------------------------------------------------------------------------
-        call calc_divu_constraint(divu3, rho1)
-        call solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
-        call gradp(px1,py1,pz1,pp3)
+        call calc_divu_constraint(divu3, rho1, phi1)
+        call solve_poisson(pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
         call corpg(ux1,uy1,uz1,px1,py1,pz1)
 
         if (ilmn) then
@@ -191,12 +190,12 @@ PROGRAM incompact3d
      !!----------------------------------------------------------------------------
 
      if (mod(itime,icheckpoint).eq.0) then
-        call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,px1,py1,pz1,1)
+        call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,1)
      endif
 
      call simu_stats(3)
 
-     CALL visu(rho1, ux1, uy1, uz1, pp3, itime)
+     CALL visu(rho1, ux1, uy1, uz1, pp3(:,:,:,1), phi1, itime)
      !!----------------------------------------------------------------------------
      !! End post-processing / IO
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -221,13 +220,13 @@ END PROGRAM incompact3d
 !! DESCRIPTION: Calculates the right hand sides of all transport
 !!              equations - momentum, scalar transport, etc.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE calculate_transeq_rhs(drho1,dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
+SUBROUTINE calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
   USE decomp_2d, ONLY : mytype, xsize, zsize
   USE variables, ONLY : numscalar
-  USE param, ONLY : ntime, ilmn, nrhotime
-  USE transeq, ONLY : momentum_rhs_eq, continuity_rhs_eq
-  
+  USE param, ONLY : ntime, ilmn, nrhotime, ilmn_solve_temp
+  USE transeq, ONLY : momentum_rhs_eq, continuity_rhs_eq, scalar, temperature_rhs_eq
+
   IMPLICIT NONE
 
   !! Inputs
@@ -240,17 +239,24 @@ SUBROUTINE calculate_transeq_rhs(drho1,dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,
   !! Outputs
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1
-  
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime, numscalar) :: dphi1
+
   !! Momentum equations
   CALL momentum_rhs_eq(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
   !! Scalar equations
+  !! XXX Not yet LMN!!!
+  CALL scalar(dphi1, rho1, ux1, uy1, uz1, phi1)
 
   !! Other (LMN, ...)
   IF (ilmn) THEN
-     CALL continuity_rhs_eq(drho1, rho1, ux1, uy1, uz1, divu3)
+     IF (ilmn_solve_temp) THEN
+        CALL temperature_rhs_eq(drho1, rho1, ux1, uy1, uz1, phi1)
+     ELSE
+        CALL continuity_rhs_eq(drho1, rho1, ux1, uy1, uz1, divu3)
+     ENDIF
   ENDIF
-  
+
 END SUBROUTINE calculate_transeq_rhs
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -259,16 +265,16 @@ END SUBROUTINE calculate_transeq_rhs
 !! DESCRIPTION: Takes the intermediate momentum field as input,
 !!              computes div and solves pressure-Poisson equation.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
+SUBROUTINE solve_poisson(pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
 
   USE decomp_2d, ONLY : mytype, xsize, zsize, ph1
   USE decomp_2d_poisson, ONLY : poisson
   USE var, ONLY : nzmsize
-  USE param, ONLY : ntime, nrhotime
+  USE var, ONLY : dv3
+  USE param, ONLY : ntime, nrhotime, npress
+  USE param, ONLY : ilmn, ivarcoeff
 
   IMPLICIT NONE
-
-  INTEGER :: nlock
 
   !! Inputs
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
@@ -278,24 +284,84 @@ SUBROUTINE solve_poisson(pp3, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
   REAL(mytype), DIMENSION(zsize(1), zsize(2), zsize(3)), INTENT(IN) :: divu3
 
   !! Outputs
-  REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: pp3
+  REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: px1, py1, pz1
+
+  !! Locals
+  INTEGER :: nlock, poissiter
+  LOGICAL :: converged
+  REAL(mytype) :: atol, rtol
 
   nlock = 1 !! Corresponds to computing div(u*)
-  CALL divergence(pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
+  converged = .FALSE.
+  poissiter = 0
 
-  CALL poisson(pp3)
+  atol = 1.0e-14_mytype !! Absolute tolerance for Poisson solver
+  rtol = 1.0e-14_mytype !! Relative tolerance for Poisson solver
+
+  IF (ilmn.AND.ivarcoeff) THEN
+     !! Variable-coefficient Poisson solver works on div(u), not div(rho u)
+     !! rho u -> u
+     CALL conserved_to_primary(rho1, ux1)
+     CALL conserved_to_primary(rho1, uy1)
+     CALL conserved_to_primary(rho1, uz1)
+  ENDIF
+  
+  CALL divergence(pp3(:,:,:,1),rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
+  IF (ilmn.AND.ivarcoeff) THEN
+     dv3(:,:,:) = pp3(:,:,:,1)
+  ENDIF
+
+  DO WHILE(.NOT.converged)
+     IF (ivarcoeff) THEN
+        
+        !! Test convergence
+        CALL test_varcoeff(converged, pp3, dv3, atol, rtol, poissiter)
+
+        IF (.NOT.converged) THEN
+           !! Evaluate additional RHS terms
+           CALL calc_varcoeff_rhs(pp3(:,:,:,1), rho1, px1, py1, pz1, dv3, drho1, ep1, divu3, &
+                poissiter)
+        ENDIF
+     ENDIF
+
+     IF (.NOT.converged) THEN
+        CALL poisson(pp3(:,:,:,1))
+
+        !! Need to update pressure gradient here for varcoeff
+        CALL gradp(px1,py1,pz1,pp3(:,:,:,1))
+        
+        IF ((.NOT.ilmn).OR.(.NOT.ivarcoeff)) THEN
+           !! Once-through solver
+           !! - Incompressible flow
+           !! - LMN - constant-coefficient solver
+           converged = .TRUE.
+        ENDIF
+     ENDIF
+
+     poissiter = poissiter + 1
+  ENDDO
+
+  IF (ilmn.AND.ivarcoeff) THEN
+     !! Variable-coefficient Poisson solver works on div(u), not div(rho u)
+     !! u -> rho u
+     CALL primary_to_conserved(rho1, ux1)
+     CALL primary_to_conserved(rho1, uy1)
+     CALL primary_to_conserved(rho1, uz1)
+  ENDIF
 
 END SUBROUTINE solve_poisson
 
-SUBROUTINE visu(rho1, ux1, uy1, uz1, pp3, itime)
+SUBROUTINE visu(rho1, ux1, uy1, uz1, pp3, phi1, itime)
 
   USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
   USE decomp_2d, ONLY : fine_to_coarseV, transpose_z_to_y, transpose_y_to_x
   USE decomp_2d_io, ONLY : decomp_2d_write_one
-  USE param, ONLY : ivisu, ioutput, nrhotime, ilmn
+  USE param, ONLY : ivisu, ioutput, nrhotime, ilmn, iscalar
   USE variables, ONLY : sx, cifip6, cisip6, ciwip6, cifx6, cisx6, ciwx6
   USE variables, ONLY : sy, cifip6y, cisip6y, ciwip6y, cify6, cisy6, ciwy6
   USE variables, ONLY : sz, cifip6z, cisip6z, ciwip6z, cifz6, cisz6, ciwz6
+  USE variables, ONLY : numscalar
   USE var, ONLY : uvisu
   USE var, ONLY : pp1, ta1, di1, nxmsize
   USE var, ONLY : pp2, ppi2, dip2, ph2, nymsize
@@ -304,12 +370,15 @@ SUBROUTINE visu(rho1, ux1, uy1, uz1, pp3, itime)
   IMPLICIT NONE
 
   CHARACTER(len=30) :: filename
-  
+
   !! Inputs
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime), INTENT(IN) :: rho1
   REAL(mytype), DIMENSION(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize), INTENT(IN) :: pp3
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar), INTENT(IN) :: phi1
   INTEGER, INTENT(IN) :: itime
+
+  INTEGER :: is
 
   IF ((ivisu.NE.0).AND.(MOD(itime, ioutput).EQ.0)) THEN
      !! Write velocity
@@ -318,13 +387,13 @@ SUBROUTINE visu(rho1, ux1, uy1, uz1, pp3, itime)
 990  format('ux',I3.3)
      write(filename, 990) itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
-     
+
      uvisu=0.
      call fine_to_coarseV(1,uy1,uvisu)
 991  format('uy',I3.3)
      write(filename, 991) itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
-     
+
      uvisu=0.
      call fine_to_coarseV(1,uz1,uvisu)
 992  format('uz',I3.3)
@@ -357,27 +426,67 @@ SUBROUTINE visu(rho1, ux1, uy1, uz1, pp3, itime)
         write(filename, 994) itime/ioutput
         call decomp_2d_write_one(1,uvisu,filename,2)
      ENDIF
+
+     !! Scalars
+     IF (iscalar.NE.0) THEN
+995     format('phi',I1.1,I3.3)
+        DO is = 1, numscalar
+           uvisu=0.
+           call fine_to_coarseV(1,phi1(:,:,:,is),uvisu)
+           write(filename, 995) is, itime/ioutput
+           call decomp_2d_write_one(1,uvisu,filename,2)
+        ENDDO
+     ENDIF
   ENDIF
 END SUBROUTINE visu
 
-SUBROUTINE intt(rho1, ux1, uy1, uz1, drho1, dux1, duy1, duz1)
+SUBROUTINE intt(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
 
   USE decomp_2d, ONLY : mytype, xsize
-  USE param, ONLY : ntime, nrhotime, ilmn
+  USE param, ONLY : one
+  USE param, ONLY : ntime, nrhotime, ilmn, iscalar, ilmn_solve_temp
+  USE param, ONLY : primary_species, massfrac
+  USE variables, ONLY : numscalar
 
   IMPLICIT NONE
 
   !! INPUT/OUTPUT
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1, dux1, duy1, duz1
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime, numscalar) :: dphi1
 
   !! OUTPUT
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
-  
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
+
+  !! LOCAL
+  INTEGER :: is
+
   CALL int_time_momentum(ux1, uy1, uz1, dux1, duy1, duz1)
 
   IF (ilmn) THEN
-     CALL int_time_continuity(rho1, drho1)
+     IF (ilmn_solve_temp) THEN
+        CALL int_time_temperature(rho1, drho1, dphi1, phi1)
+     ELSE
+        CALL int_time_continuity(rho1, drho1)
+     ENDIF
   ENDIF
-  
+
+  IF (iscalar.NE.0) THEN
+     DO is = 1, numscalar
+        IF (is.NE.primary_species) THEN
+           CALL int_time(phi1(:,:,:,is), dphi1(:,:,:,:,is))
+        ENDIF
+     ENDDO
+     
+     IF (primary_species.GE.1) THEN
+        phi1(:,:,:,primary_species) = one
+        DO is = 1, numscalar
+           IF ((is.NE.primary_species).AND.massfrac(is)) THEN
+              phi1(:,:,:,primary_species) = phi1(:,:,:,primary_species) - phi1(:,:,:,is)
+           ENDIF
+        ENDDO
+     ENDIF
+  ENDIF
+
 ENDSUBROUTINE intt

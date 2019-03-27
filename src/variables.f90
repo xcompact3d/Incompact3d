@@ -38,16 +38,18 @@ module var
   USE complex_geometry
 
   ! define all major arrays here
-  real(mytype), save, allocatable, dimension(:,:,:) :: ux1, ux2, ux3, po3, dv3, pp3, nut1
+  real(mytype), save, allocatable, dimension(:,:,:) :: ux1, ux2, ux3, po3, dv3, nut1
+  real(mytype), save, allocatable, dimension(:,:,:,:) :: pp3
   real(mytype), save, allocatable, dimension(:,:,:) :: uy1, uy2, uy3
   real(mytype), save, allocatable, dimension(:,:,:) :: uz1, uz2, uz3
   real(mytype), save, allocatable, dimension(:,:,:,:) :: rho1, drho1
   real(mytype), save, allocatable, dimension(:,:,:) :: rho2, rho3
   real(mytype), save, allocatable, dimension(:,:,:) :: divu3
-  real(mytype), save, allocatable, dimension(:,:,:,:) :: phi1, phi2, phi3, phis1, phiss1
+  real(mytype), save, allocatable, dimension(:,:,:,:) :: phi1, phi2, phi3
   real(mytype), save, allocatable, dimension(:,:,:) :: px1, py1, pz1
   real(mytype), save, allocatable, dimension(:,:,:) :: ep1, diss1, pre1, depo, depof, kine
   real(mytype), save, allocatable, dimension(:,:,:,:) :: dux1,duy1,duz1  ! Output of convdiff
+  real(mytype), save, allocatable, dimension(:,:,:,:,:) :: dphi1
   
   !arrays for post processing
   real(mytype), save, allocatable, dimension(:,:,:) :: f1,fm1
@@ -127,8 +129,6 @@ contains
     call alloc_x(nut1, opt_global=.true.) !global indices
 
     allocate(phi1(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),1:numscalar)) !global indices
-    allocate(phis1(xsize(1),xsize(2),xsize(3),1:numscalar))
-    allocate(phiss1(xsize(1),xsize(2),xsize(3),1:numscalar))
 
     call alloc_x(ta1);call alloc_x(tb1);call alloc_x(tc1)
     call alloc_x(td1);call alloc_x(te1);call alloc_x(tf1)
@@ -240,7 +240,7 @@ contains
     !   allocate (pp3(ph%zst(1):ph%zen(1),ph%zst(2):ph%zen(2),ph%zst(3):ph%zen(3)))
     !   allocate (dv3(ph%zst(1):ph%zen(1),ph%zst(2):ph%zen(2),ph%zst(3):ph%zen(3)))
     !   allocate (po3(ph%zst(1):ph%zen(1),ph%zst(2):ph%zen(2),ph%zst(3):ph%zen(3)))
-    call alloc_z(pp3,ph,.true.)
+    allocate(pp3(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress))
     call alloc_z(dv3,ph,.true.)
     call alloc_z(po3,ph,.true.)
 
@@ -417,6 +417,9 @@ contains
     allocate(dux1(xsize(1),xsize(2),xsize(3),ntime))
     allocate(duy1(xsize(1),xsize(2),xsize(3),ntime))
     allocate(duz1(xsize(1),xsize(2),xsize(3),ntime))
+
+    !! Scalar
+    allocate(dphi1(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),ntime,1:numscalar)) !global indices
 
     !! LMN
     if (.not.ilmn) then
