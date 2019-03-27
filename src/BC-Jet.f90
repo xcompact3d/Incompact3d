@@ -194,7 +194,7 @@ contains
                * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D))) + u2
           byz1(i, k) = zero
 
-          rho1(i, 1, k, 1) = (dens1 - dens2) * half &
+          rho(i, 1, k, 1) = (dens1 - dens2) * half &
                * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D))) + dens2
 
           !! Apply transient behaviour
@@ -230,69 +230,265 @@ contains
     !! Apply lateral boundary conditions
     !! XXX Assume purely radial flow
     !! XXX In X-pencils
+    
+    xc=half*xlx
+    zc=half*xlx
 
     !! X-BC
     IF (nclx1.EQ.2) THEN
-       i = 1
-       x = REAL(i + xstart(1) - 2, mytype) * dx - half * xlx
-       DO k = 1, xsize(3)
-          z = REAL(k + xstart(3) - 2, mytype) * dz - half * zlz
-          r2 = SQRT(x**2 + z**2)
+       if(xstart(1).eq.1)then!
+          x = -xc
+          i = 1
+          do k=1,xsize(3)
+             z=real(k + xstart(3) - 2,mytype)*dz-zc
+             x2=x
+             y2=z
+             x1=x+dx
+             y1=y2*x1/x2
+             r1=sqrt(x1**2+y1**2)
+             r2=sqrt(x2**2+y2**2)
+             if(r1.gt.r2)print*,'bug CL'
+             if(k.eq.1)then!cas premier point
+                do j=1,xsize(2)
 
-          IF (z.GT.0) THEN
-             DO j = 1, xsize(2)
-             ENDDO
-          ELSEIF (z.LT.0) THEN
-             DO j = 1, xsize(2)
-             ENDDO
-          ELSE
-             DO j = 1, xsize(2)
-             ENDDO
-          ENDIF
-       ENDDO
+                   bxx1(j,k)=r1*ux(i + 1,j,k+1)/r2
+                   bxy1(j,k)=   uy(i + 1,j,k+1)
+                   bxz1(j,k)=r1*uz(i + 1,j,k+1)/r2
+                enddo
+             elseif(k.eq.(nz-1)/2+1)then!cas point du milieu
+                do j=1,xsize(2)
+
+                   bxx1(j,k)=r1*ux(i+1,j,k)/r2
+                   bxy1(j,k)=   uy(i+1,j,k)
+                   bxz1(j,k)=r1*uz(i+1,j,k)/r2
+                enddo
+             elseif(k.eq.nx)then!cas dernier point
+                do j=1,xsize(2)
+
+                   bxx1(j,k)=r1*ux(i+1,j,k-1)/r2
+                   bxy1(j,k)=   uy(i+1,j,k-1)
+                   bxz1(j,k)=r1*uz(i+1,j,k-1)/r2
+                enddo
+             else!cas general
+                if    (z.gt.0.)then
+                   ya=y2-dz
+                   do j=1,xsize(2)
+                      uu1=(ux(i+1,j,k)-ux(i+1,j,k-1))*(y1-ya)/(y2-ya)+ux(i+1,j,k-1)
+                      uv1=(uy(i+1,j,k)-uy(i+1,j,k-1))*(y1-ya)/(y2-ya)+uy(i+1,j,k-1)
+                      uw1=(uz(i+1,j,k)-uz(i+1,j,k-1))*(y1-ya)/(y2-ya)+uz(i+1,j,k-1)
+
+                      bxx1(j,k)=r1*uu1/r2
+                      bxy1(j,k)=   uv1
+                      bxz1(j,k)=r1*uw1/r2
+                   enddo
+                elseif(z.lt.0.)then
+                   ya=y2+dz
+                   do j=1,xsize(2)
+                      uu1=(ux(i+1,j,k+1)-ux(2,j,k))*(y1-ya)/(ya-y2)+ux(i+1,j,k+1)
+                      uv1=(uy(i+1,j,k+1)-uy(2,j,k))*(y1-ya)/(ya-y2)+uy(i+1,j,k+1)
+                      uw1=(uz(i+1,j,k+1)-uz(2,j,k))*(y1-ya)/(ya-y2)+uz(i+1,j,k+1)
+
+                      bxx1(j,k)=r1*uu1/r2
+                      bxy1(j,k)=   uv1
+                      bxz1(j,k)=r1*uw1/r2
+                   enddo
+                endif
+             endif
+          enddo
+       endif
     ENDIF
 
     IF (nclxn.EQ.2) THEN
-       i = xsize(1)
-       x = REAL(i + xstart(1) - 2, mytype) * dx - half * xlx
-       DO k = 1, xsize(3)
-          z = REAL(k + xstart(3) - 2, mytype) * dz - half * zlz
-          r2 = SQRT(x**2 + z**2)
+       if(xend(1).eq.nx)then
+          x=xc
+          i = xsize(1)
+          do k=1,xsize(3)
+             z=real(k + xstart(3) - 2)*dz-zc
+             x2=x
+             y2=z
+             x1=x-dx
+             y1=y2*x1/x2
+             r1=sqrt(x1**2+y1**2)
+             r2=sqrt(x2**2+y2**2)
+             if(r1.gt.r2)print*,'bug CL'
+             if(k.eq.1)then!cas premier point
+                do j=1,xsize(2)
 
-          IF (z.GT.0) THEN
-             DO j = 1, xsize(2)
-             ENDDO
-          ELSEIF (z.LT.0) THEN
-             DO j = 1, xsize(2)
-             ENDDO
-          ELSE
-             DO j = 1, xsize(2)
-             ENDDO
-          ENDIF
-       ENDDO
+                   bxxn(j,k)=r1*ux(i-1,j,k+1)/r2
+                   bxyn(j,k)=   uy(i-1,j,k+1)
+                   bxzn(j,k)=r1*uz(i-1,j,k+1)/r2
+                enddo
+             elseif(k.eq.(nz-1)/2+1)then!cas point du milieu
+                do j=1,xsize(2)
+
+                   bxxn(j,k)=r1*ux(i-1,j,k)/r2
+                   bxyn(j,k)=   uy(i-1,j,k)
+                   bxzn(j,k)=r1*uz(i-1,j,k)/r2
+                enddo
+             elseif(k.eq.nz)then!cas dernier point
+                do j=1,xsize(2)
+
+                   bxxn(j,k)=r1*ux(i-1,j,k-1)/r2
+                   bxyn(j,k)=   uy(i-1,j,k-1)
+                   bxzn(j,k)=r1*uz(i-1,j,k-1)/r2
+                enddo
+             else !cas general
+                if (z.gt.0.) then
+                   ya=y2-dz
+                   do j=1,xsize(2)
+                      uu1=(ux(i-1,j,k)-ux(i-1,j,k-1))*(y1-ya)/(y2-ya)+ux(i-1,j,k-1)
+                      uv1=(uy(i-1,j,k)-uy(i-1,j,k-1))*(y1-ya)/(y2-ya)+uy(i-1,j,k-1)
+                      uw1=(uz(i-1,j,k)-uz(i-1,j,k-1))*(y1-ya)/(y2-ya)+uz(i-1,j,k-1)
+
+                      bxxn(j,k)=r1*uu1/r2
+                      bxyn(j,k)=   uv1
+                      bxzn(j,k)=r1*uw1/r2
+                   enddo
+                elseif(z.lt.0.)then
+                   ya=y2+dz
+                   do j=1,xsize(2)
+                      uu1=(ux(i-1,j,k+1)-ux(i-1,j,k))*(y1-ya)/(ya-y2)+ux(i-1,j,k+1)
+                      uv1=(uy(i-1,j,k+1)-uy(i-1,j,k))*(y1-ya)/(ya-y2)+uy(i-1,j,k+1)
+                      uw1=(uz(i-1,j,k+1)-uz(i-1,j,k))*(y1-ya)/(ya-y2)+uz(i-1,j,k+1)
+
+                      bxxn(j,k)=r1*uu1/r2
+                      bxyn(j,k)=   uv1
+                      bxzn(j,k)=r1*uw1/r2
+                   enddo
+                endif
+             endif
+          enddo
+       endif
     ENDIF
 
     !! Z-BC
     IF ((nclz1.EQ.2).AND.(xstart(3).EQ.1)) THEN
        k = 1
-       z = REAL(k + xstart(3) - 2, mytype) * dz - half * zlz
-       DO j = 1, xsize(2)
-          DO i = 1, xsize(1)
-             x = REAL(i + xstart(1) - 2, mytype) * dx - half * xlx
-             r2 = SQRT(x**2 + z**2)
-          ENDDO
-       ENDDO
+       z = -zc
+       do i=1,xsize(1)
+          x=real(i + xstart(1) - 2, mytype) * dx - xc
+          x2=z
+          y2=x
+          x1=z+dz
+          y1=y2*x1/x2
+          r1=sqrt(x1**2+y1**2)
+          r2=sqrt(x2**2+y2**2)
+          if(r1.gt.r2)print*,'bug CL'
+          if(i.eq.1)then!cas premier point
+             do j=1,xsize(2)
+
+                bzx1(i,j)=r1*ux(i+1,j,k + 1)/r2
+                bzy1(i,j)=   uy(i+1,j,k + 1)
+                bzz1(i,j)=r1*uz(i+1,j,k + 1)/r2
+             enddo
+          elseif(i.eq.(nx-1)/2+1)then!cas point du milieu
+             do j=1,xsize(2)
+
+                bzx1(i,j)=r1*ux(i,j,k + 1)/r2
+                bzy1(i,j)=   uy(i,j,k + 1)
+                bzz1(i,j)=r1*uz(i,j,k + 1)/r2
+             enddo
+          elseif(i.eq.nx)then!cas dernier point
+             do j=1,xsize(2)
+
+                bzx1(i,j)=r1*ux(i-1,j,k + 1)/r2
+                bzy1(i,j)=   uy(i-1,j,k + 1)
+                bzz1(i,j)=r1*uz(i-1,j,k + 1)/r2
+             enddo
+          else!cas general
+             if    (x.gt.0.)then
+                ya=y2-dx
+                do j=1,xsize(2)
+
+                   uu1=(ux(i,j,k + 1)-ux(i-1,j,k + 1))*(y1-ya)/(y2-ya)+ux(i-1,j,k + 1)
+                   uv1=(uy(i,j,k + 1)-uy(i-1,j,k + 1))*(y1-ya)/(y2-ya)+uy(i-1,j,k + 1)
+                   uw1=(uz(i,j,k + 1)-uz(i-1,j,k + 1))*(y1-ya)/(y2-ya)+uz(i-1,j,k + 1)
+
+                   bzx1(i,j)=r1*uu1/r2
+                   bzy1(i,j)=   uv1
+                   bzz1(i,j)=r1*uw1/r2
+                enddo
+             elseif(x.lt.0.)then
+                ya=y2+dx
+                do j=1,xsize(2)
+
+                   uu1=(ux(i+1,j,k + 1)-ux(i,j,k + 1))*(y1-ya)/(ya-y2)+ux(i+1,j,k + 1)
+                   uv1=(uy(i+1,j,k + 1)-uy(i,j,k + 1))*(y1-ya)/(ya-y2)+uy(i+1,j,k + 1)
+                   uw1=(uz(i+1,j,k + 1)-uz(i,j,k + 1))*(y1-ya)/(ya-y2)+uz(i+1,j,k + 1)
+
+                   bzx1(i,j)=r1*uu1/r2
+                   bzy1(i,j)=   uv1
+                   bzz1(i,j)=r1*uw1/r2
+                enddo
+             endif
+          endif
+       enddo
     ENDIF
 
     IF ((nclzn.EQ.2).AND.(xend(3).EQ.nz)) THEN
+       z=zc
        k = xsize(3)
-       z = REAL(k + xstart(3) - 2, mytype) * dz - half * zlz
-       DO j = 1, xsize(2)
-          DO i = 1, xsize(1)
-             x = REAL(i + xstart(1) - 2, mytype) * dx - half * xlx
-             r2 = SQRT(x**2 + z**2)
-          ENDDO
-       ENDDO
+       do i=1,xsize(1)
+          x=real(i + xstart(1) - 2, mytype)*dx-xc
+          x2=z
+          y2=x
+          x1=z-dz
+          y1=y2*x1/x2
+          r1=sqrt(x1**2+y1**2)
+          r2=sqrt(x2**2+y2**2)
+          if(r1.gt.r2)print*,'bug CL'
+          if(i.eq.1)then!cas premier point
+             do j=1,xsize(2)
+
+                bzxn(i,j)=r1*ux(i+1,j,k-1)/r2
+                bzyn(i,j)=   uy(i+1,j,k-1)
+                bxzn(i,j)=r1*uz(i+1,j,k-1)/r2
+             enddo
+          elseif(i.eq.(nx-1)/2+1)then!cas point du milieu
+             do j=1,xsize(2)
+
+                bzxn(i,j)=r1*ux(i,j,k-1)/r2
+                bzyn(i,j)=   uy(i,j,k-1)
+                bzzn(i,j)=r1*uz(i,j,k-1)/r2
+             enddo
+          elseif(i.eq.nx)then!cas dernier point
+             do j=1,xsize(2)
+
+                bzxn(i,k)=r1*ux(i-1,j,k-1)/r2
+                bzyn(i,k)=   uy(i-1,j,k-1)
+                bzzn(i,k)=r1*uz(i-1,j,k-1)/r2
+             enddo
+          else !cas general
+             if (x.gt.0.) then
+                ya=y2-dx
+                do j=1,xsize(2)
+
+                   uu1=(ux(i,j,k-1)-ux(i-1,j,k-1))*(y1-ya)/(y2-ya)+ux(i-1,j,k-1)
+                   uv1=(uy(i,j,k-1)-uy(i-1,j,k-1))*(y1-ya)/(y2-ya)+uy(i-1,j,k-1)
+                   uw1=(uz(i,j,k-1)-uz(i-1,j,k-1))*(y1-ya)/(y2-ya)+uz(i-1,j,k-1)
+
+                   bzxn(i,k)=r1*uu1/r2
+                   bzyn(i,k)=   uv1
+                   bzzn(i,k)=r1*uw1/r2
+                enddo
+             elseif(x.lt.0.)then
+                ya=y2+dx
+                do j=1,xsize(2)
+                   uu1=(ux(i-1,j,k+1)-ux(i-1,j,k))*(y1-ya)/(ya-y2)+ux(i-1,j,k+1)
+                   uv1=(uy(i-1,j,k+1)-uy(i-1,j,k))*(y1-ya)/(ya-y2)+uy(i-1,j,k+1)
+                   uw1=(uz(i-1,j,k+1)-uz(i-1,j,k))*(y1-ya)/(ya-y2)+uz(i-1,j,k+1)
+
+                   uu1=(ux(i+1,j,k-1)-ux(i,j,k-1))*(y1-ya)/(ya-y2)+ux(i+1,j,k-1)
+                   uv1=(uy(i+1,j,k-1)-uy(i,j,k-1))*(y1-ya)/(ya-y2)+uy(i+1,j,k-1)
+                   uw1=(uz(i+1,j,k-1)-uz(i,j,k-1))*(y1-ya)/(ya-y2)+uz(i+1,j,k-1)
+
+                   bzxn(j,k)=r1*uu1/r2
+                   bzyn(j,k)=   uv1
+                   bzzn(j,k)=r1*uw1/r2
+                enddo
+             endif
+          endif
+       enddo
     ENDIF
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -324,271 +520,6 @@ contains
           enddo
        enddo
     endif
-
-    !! Compute side entrainmen boundaries
-    !! X normal
- if(nclx1.eq.2)then
-    xc=xlx/2.
-    zc=zlz/2.
-    if(xstart(1).eq.1)then!
-       y=-yc
-       do k=1,zsize(3)
-          z=dz*(k-1)-zc
-          x2=x
-          y2=z
-          x1=x+dx
-          y1=y2*x1/x2
-          r1=sqrt(x1**2+y1**2)
-          r2=sqrt(x2**2+y2**2)
-          if(r1.gt.r2)print*,'bug CL'
-          if(k.eq.1)then!cas premier point
-             do j=1,xsize(2)
-
-                bxx1(j,k)=r1*ux(2,j,k+1)/r2
-                bxy1(j,k)=   uy(2,j,k+1)
-                bxz1(j,k)=r1*uz(2,j,k+1)/r2
-             enddo
-          elseif(k.eq.(nz-1)/2+1)then!cas point du milieu
-             do j=1,xsize(2)
-
-                bxx1(j,k)=r1*ux(2,j,k)/r2
-                bxy1(j,k)=   uy(2,j,k)
-                bxz1(j,k)=r1*uz(2,j,k)/r2
-             enddo
-          elseif(k.eq.nx)then!cas dernier point
-             do j=1,xsize(2)
-
-                bxx1(j,k)=r1*ux(2,j,k-1)/r2
-                bxy1(j,k)=   uy(2,j,k-1)
-                bxz1(j,k)=r1*uz(2,j,k-1)/r2
-             enddo
-          else!cas general
-             if    (z.gt.0.)then
-                ya=y2-dz
-                do j=1,xsize(2)
-                   uu1=(ux(2,j,k)-ux(2,j,k-1))*(y1-ya)/(y2-ya)+ux(2,j,k-1)
-                   uv1=(uy(2,j,k)-uy(2,j,k-1))*(y1-ya)/(y2-ya)+uy(2,j,k-1)
-                   uw1=(uz(2,j,k)-uz(2,j,k-1))*(y1-ya)/(y2-ya)+uz(2,j,k-1)
-
-                   bxx1(j,k)=r1*uu1/r2
-                   bxy1(j,k)= uv1
-                   bxz1(j,k)=r1*uw1/r2
-                enddo
-             elseif(z.lt.0.)then
-                ya=y2+dz
-                do j=1,xsize(2)
-                   uu1=(ux(2,j,k+1)-ux(2,j,k))*(y1-ya)/(ya-y2)+ux(2,j,k+1)
-                   uv1=(uy(2,j,k+1)-uy(2,j,k))*(y1-ya)/(ya-y2)+uy(2,j,k+1)
-                   uw1=(uz(2,j,k+1)-uz(2,j,k))*(y1-ya)/(ya-y2)+uz(2,j,k+1)
-
-                   bxx1(j,k)=r1*uu1/r2
-                   bxy1(j,k)=   uv1
-                   bxz1(j,k)=r1*uw1/r2
-                enddo
-             endif
-          endif
-       enddo
-    endif
-  endif
-
-  if (nclxn.eq.2) then
-    if(xend(1).eq.nx)then
-       x=xc
-       i = xsize(1)
-       do k=1,xsize(3)
-          z=dz*(k-1)-zc
-          x2=x
-          y2=z
-          x1=x-dx
-          y1=y2*x1/x2
-          r1=sqrt(x1**2+y1**2)
-          r2=sqrt(x2**2+y2**2)
-          if(r1.gt.r2)print*,'bug CL'
-          if(k.eq.1)then!cas premier point
-             do j=1,xsize(2)
-
-                bxxn(j,k)=r1*ux(i-1,j,k+1)/r2
-                bxyn(j,k)=   uy(i-1,j,k+1)
-                bxzn(j,k)=r1*uz(i-1,j,k+1)/r2
-             enddo
-          elseif(k.eq.(nz-1)/2+1)then!cas point du milieu
-             do j=1,xsize(2)
-
-                bxxn(j,k)=r1*ux(i-1,j,k)/r2
-                bxyn(j,k)=   uy(i-1,j,k)
-                bxzn(j,k)=r1*uz(i-1,j,k)/r2
-             enddo
-          elseif(k.eq.nz)then!cas dernier point
-             do j=1,xsize(2)
-
-                bxxn(j,k)=r1*ux(i-1,j,k-1)/r2
-                bxyn(j,k)=   uy(i-1,j,k-1)
-                bxzn(j,k)=r1*uz(i-1,j,k-1)/r2
-             enddo
-          else !cas general
-             if (z.gt.0.) then
-                ya=y2-dz
-                do j=1,xsize(2)
-                   uu1=(ux(i-1,j,k)-ux(i-1,j,k-1))*(y1-ya)/(y2-ya)+ux(i-1,j,k-1)
-                   uv1=(uy(i-1,j,k)-uy(i-1,j,k-1))*(y1-ya)/(y2-ya)+uy(i-1,j,k-1)
-                   uw1=(uz(i-1,j,k)-uz(i-1,j,k-1))*(y1-ya)/(y2-ya)+uz(i-1,j,k-1)
-
-                   bxxn(j,k)=r1*uu1/r2
-                   bxyn(j,k)=   uv1
-                   bxzn(j,k)=r1*uw1/r2
-                enddo
-             elseif(z.lt.0.)then
-                ya=y2+dz
-                do j=1,xsize(2)
-                   uu1=(ux(i-1,j,k+1)-ux(i-1,j,k))*(y1-ya)/(ya-y2)+ux(i-1,j,k+1)
-                   uv1=(uy(i-1,j,k+1)-uy(i-1,j,k))*(y1-ya)/(ya-y2)+uy(i-1,j,k+1)
-                   uw1=(uz(i-1,j,k+1)-uz(i-1,j,k))*(y1-ya)/(ya-y2)+uz(i-1,j,k+1)
-
-                   bxxn(j,k)=r1*uu1/r2
-                   bxyn(j,k)=   uv1
-                   bxzn(j,k)=r1*uw1/r2
-                enddo
-             endif
-          endif
-       enddo
-    endif
- endif
-
-    !! Z normal
-    if(nclz1.eq.2)then
-       xc=xlx/2.
-       zc=zlz/2.
-       if(xstart(3).eq.1)then!
-          y=-yc
-          do i=1,xsize(1)
-             x=dx*(i-1)-xc
-             x2=z
-             y2=x
-             x1=z+dz
-             y1=y2*x1/x2
-             r1=sqrt(x1**2+y1**2)
-             r2=sqrt(x2**2+y2**2)
-             if(r1.gt.r2)print*,'bug CL'
-             if(i.eq.1)then!cas premier point
-                do j=1,xsize(2)
-
-                   bzx1(i,j)=r1*ux(i+1,j,2)/r2
-                   bzy1(i,j)=   uy(i+1,j,2)
-                   bzz1(i,j)=r1*uz(i+1,j,2)/r2
-                enddo
-             elseif(i.eq.(nx-1)/2+1)then!cas point du milieu
-                do j=1,xsize(2)
-
-                   bzx1(i,j)=r1*ux(i,j,2)/r2
-                   bzy1(i,j)=   uy(i,j,2)
-                   bzz1(i,j)=r1*uz(i,j,2)/r2
-                enddo
-             elseif(i.eq.nx)then!cas dernier point
-                do j=1,xsize(2)
-
-                   bzx1(i,j)=r1*ux(i-1,j,2)/r2
-                   bzy1(i,j)=   uy(i-1,j,2)
-                   bzz1(i,j)=r1*uz(i-1,j,2)/r2
-                enddo
-             else!cas general
-                if    (x.gt.0.)then
-                   ya=y2-dx
-                   do j=1,xsize(2)
-
-                      uu1=(ux(i,j,2)-ux(i-1,j,2))*(y1-ya)/(y2-ya)+ux(i-1,j,2)
-                      uv1=(uy(i,j,2)-uy(i-1,j,2))*(y1-ya)/(y2-ya)+uy(i-1,j,2)
-                      uw1=(uz(i,j,2)-uz(i-1,j,2))*(y1-ya)/(y2-ya)+uz(i-1,j,2)
-
-                      bzx1(i,j)=r1*uu1/r2
-                      bzy1(i,j)= uv1
-                      bzz1(i,j)=r1*uw1/r2
-                   enddo
-                elseif(x.lt.0.)then
-                   ya=y2+dx
-                   do j=1,xsize(2)
-
-                      uu1=(ux(i+1,j,2)-ux(i,j,2))*(y1-ya)/(ya-y2)+ux(i+1,j,2)
-                      uv1=(uy(i+1,j,2)-uy(i,j,2))*(y1-ya)/(ya-y2)+uy(i+1,j,2)
-                      uw1=(uz(i+1,j,2)-uz(i,j,2))*(y1-ya)/(ya-y2)+uz(i+1,j,2)
-
-                      bzx1(i,j)=r1*uu1/r2
-                      bzy1(i,j)=   uv1
-                      bzz1(i,j)=r1*uw1/r2
-                   enddo
-                endif
-             endif
-          enddo
-       endif
-     endif
-
-     if (nclzn.eq.2) then
-       if(xend(3).eq.nz)then
-          x=xc
-          k = xsize(3)
-          do i=1,xsize(1)
-             x=dx*(i-1)-xc
-             x2=z
-             y2=x
-             x1=z-dz
-             y1=y2*x1/x2
-             r1=sqrt(x1**2+y1**2)
-             r2=sqrt(x2**2+y2**2)
-             if(r1.gt.r2)print*,'bug CL'
-             if(i.eq.1)then!cas premier point
-                do j=1,xsize(2)
-
-                   bzxn(i,j)=r1*ux(i+1,j,k-1)/r2
-                   bzyn(i,j)=   uy(i+1,j,k-1)
-                   bxzn(i,j)=r1*uz(i+1,j,k-1)/r2
-                enddo
-             elseif(i.eq.(nx-1)/2+1)then!cas point du milieu
-                do j=1,xsize(2)
-
-                   bzxn(i,j)=r1*ux(i,j,k-1)/r2
-                   bzyn(i,j)=   uy(i,j,k-1)
-                   bzzn(i,j)=r1*uz(i,j,k-1)/r2
-                enddo
-             elseif(i.eq.nx)then!cas dernier point
-                do j=1,xsize(2)
-
-                   bzxn(i,k)=r1*ux(i-1,j,k-1)/r2
-                   bzyn(i,k)=   uy(i-1,j,k-1)
-                   bzzn(i,k)=r1*uz(i-1,j,k-1)/r2
-                enddo
-             else !cas general
-                if (i.gt.0.) then
-                   ya=y2-dx
-                   do j=1,xsize(2)
-
-                      uu1=(ux(i,j,k-1)-ux(i-1,j,k-1))*(y1-ya)/(y2-ya)+ux(i-1,j,k-1)
-                      uv1=(uy(i,j,k-1)-uy(i-1,j,k-1))*(y1-ya)/(y2-ya)+uy(i-1,j,k-1)
-                      uw1=(uz(i,j,k-1)-uz(i-1,j,k-1))*(y1-ya)/(y2-ya)+uz(i-1,j,k-1)
-
-                      bzxn(i,k)=r1*uu1/r2
-                      bzyn(i,k)=   uv1
-                      bzzn(i,k)=r1*uw1/r2
-                   enddo
-                elseif(i.lt.0.)then
-                   ya=y2+dx
-                   do j=1,xsize(2)
-                      uu1=(ux(i-1,j,k+1)-ux(i-1,j,k))*(y1-ya)/(ya-y2)+ux(i-1,j,k+1)
-                      uv1=(uy(i-1,j,k+1)-uy(i-1,j,k))*(y1-ya)/(ya-y2)+uy(i-1,j,k+1)
-                      uw1=(uz(i-1,j,k+1)-uz(i-1,j,k))*(y1-ya)/(ya-y2)+uz(i-1,j,k+1)
-
-                      uu1=(ux(i+1,j,k-1)-ux(i,j,k-1))*(y1-ya)/(ya-y2)+ux(i+1,j,k-1)
-                      uv1=(uy(i+1,j,k-1)-uy(i,j,k-1))*(y1-ya)/(ya-y2)+uy(i+1,j,k-1)
-                      uw1=(uz(i+1,j,k-1)-uz(i,j,k-1))*(y1-ya)/(ya-y2)+uz(i+1,j,k-1)
-
-                      bzxn(j,k)=r1*uu1/r2
-                      bzyn(j,k)=   uv1
-                      bzzn(j,k)=r1*uw1/r2
-                   enddo
-                endif
-             endif
-          enddo
-       endif
-    endif
-
 
     return
   end subroutine boundary_conditions_jet
