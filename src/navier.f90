@@ -683,7 +683,7 @@ subroutine pre_correc(ux,uy,uz,ep)
 
   !********NCLX==2*************************************
   !we are in X pencils:
-  if (nclx1==2.and.nclxn==2) then
+  if ((itype.eq.itype_channel).and.(nclx1==2.and.nclxn==2)) then
 
      !Computatation of the flow rate Inflow/Outflow
      ut1=zero
