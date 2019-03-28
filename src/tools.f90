@@ -1168,7 +1168,7 @@ SUBROUTINE calc_temp_eos(temp, rho, phi, mweight, xlen, ylen, zlen)
   temp(:,:,:) = pressure0 / rho(:,:,:)
   IF (imultispecies) THEN
      CALL calc_mweight(mweight, phi, xlen, ylen, zlen)
-     temp(:,:,:) = temp(:,:,:) / mweight(:,:,:)
+     temp(:,:,:) = temp(:,:,:) * mweight(:,:,:)
   ENDIF
   
 ENDSUBROUTINE calc_temp_eos
@@ -1195,7 +1195,7 @@ SUBROUTINE calc_rho_eos(rho, temp, phi, mweight, xlen, ylen, zlen)
   rho(:,:,:) = pressure0 / temp(:,:,:)
   IF (imultispecies) THEN
      CALL calc_mweight(mweight, phi, xlen, ylen, zlen)
-     rho(:,:,:) = rho(:,:,:) / mweight(:,:,:)
+     rho(:,:,:) = rho(:,:,:) * mweight(:,:,:)
   ENDIF
   
 ENDSUBROUTINE calc_rho_eos

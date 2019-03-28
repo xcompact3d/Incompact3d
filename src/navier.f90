@@ -371,7 +371,7 @@ SUBROUTINE lmn_t_to_rho_trans(drho1, dtemp1, rho1, dphi1, phi1)
            ta1(:,:,:) = ta1(:,:,:) + phi1(:,:,:,is) / mol_weight(is)
         ENDIF
      ENDDO
-     drho1(:,:,:) = ta1(:,:,:) * drho1(:,:,:)
+     drho1(:,:,:) = ta1(:,:,:) * drho1(:,:,:) !! XXX ta1 is the inverse molecular weight
   ENDIF
 
   CALL calc_temp_eos(ta1, rho1, phi1, tb1, xsize(1), xsize(2), xsize(3))
