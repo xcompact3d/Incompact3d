@@ -426,16 +426,16 @@ contains
        nrhotime = 1 !! Save some space
     endif
     allocate(rho1(xsize(1),xsize(2),xsize(3),nrhotime)) !Need to store old density values to extrapolate drhodt
-    call alloc_y(rho2, opt_global=.true.) !global indices
-    call alloc_z(rho3, opt_global=.true.) !global indices
+    call alloc_y(rho2)
+    call alloc_z(rho3)
     allocate(drho1(xsize(1),xsize(2),xsize(3),ntime))
 
     call alloc_z(divu3, opt_global=.true.) !global indices
 
-    !TRIPPING PARAMES LOST HERE
-    z_modes=int(zlz /zs_tr)
-    allocate(h_coeff(z_modes))
-    allocate(h_nxt(xsize(3)), h_i(xsize(3)))
+    ! !TRIPPING PARAMES LOST HERE
+    ! z_modes=int(zlz / zs_tr)
+    ! allocate(h_coeff(z_modes))
+    ! allocate(h_nxt(xsize(3)), h_i(xsize(3)))
 
 #ifdef DEBG
     if (nrank .eq. 0) print *,'# init_variables done'

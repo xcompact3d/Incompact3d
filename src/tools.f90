@@ -1113,7 +1113,7 @@ subroutine simu_stats(iwhen)
         write(*,"(' Time step =',i7,'/',i7,', Time unit =',F9.4)") itime,ilast,t
      endif
   endif
-  if (iwhen.eq.3) then !AT THE END OF A TIME STEP
+  if ((iwhen.eq.3).and.(itime.gt.ifirst)) then !AT THE END OF A TIME STEP
      call cpu_time(trank)
      if (nrank==0) print *,'Time for this time step (s):',real(trank-time1)
      telapsed = (trank-tstart)/thirtysixthousand
@@ -1168,7 +1168,7 @@ SUBROUTINE calc_temp_eos(temp, rho, phi, mweight, xlen, ylen, zlen)
   temp(:,:,:) = pressure0 / rho(:,:,:)
   IF (imultispecies) THEN
      CALL calc_mweight(mweight, phi, xlen, ylen, zlen)
-     temp(:,:,:) = temp(:,:,:) / mweight(:,:,:)
+     temp(:,:,:) = temp(:,:,:) * mweight(:,:,:)
   ENDIF
   
 ENDSUBROUTINE calc_temp_eos
@@ -1195,7 +1195,7 @@ SUBROUTINE calc_rho_eos(rho, temp, phi, mweight, xlen, ylen, zlen)
   rho(:,:,:) = pressure0 / temp(:,:,:)
   IF (imultispecies) THEN
      CALL calc_mweight(mweight, phi, xlen, ylen, zlen)
-     rho(:,:,:) = rho(:,:,:) / mweight(:,:,:)
+     rho(:,:,:) = rho(:,:,:) * mweight(:,:,:)
   ENDIF
   
 ENDSUBROUTINE calc_rho_eos
@@ -1203,7 +1203,7 @@ ENDSUBROUTINE calc_rho_eos
 SUBROUTINE calc_mweight(mweight, phi, xlen, ylen, zlen)
 
   USE decomp_2d
-  USE param, ONLY : zero
+  USE param, ONLY : zero, one
   USE param, ONLY : massfrac, mol_weight
   USE var, ONLY : numscalar
 
@@ -1222,5 +1222,6 @@ SUBROUTINE calc_mweight(mweight, phi, xlen, ylen, zlen)
         mweight(:,:,:) = mweight(:,:,:) + phi(:,:,:,is) / mol_weight(is)
      ENDIF
   ENDDO
+  mweight(:,:,:) = one / mweight(:,:,:)
   
 ENDSUBROUTINE calc_mweight

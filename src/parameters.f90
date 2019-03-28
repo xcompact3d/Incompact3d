@@ -192,6 +192,8 @@ subroutine parameter(input_i3d)
         print *,'Debug schemes'
      elseif (itype.eq.itype_mixlayer) then
         print *,'Mixing layer'
+     elseif (itype.eq.itype_jet) then
+        print *,'Jet'
      else
         print *,'Unknown itype: ', itype
         stop

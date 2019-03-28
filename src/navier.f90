@@ -298,27 +298,22 @@ subroutine int_time_temperature(rho1, drho1, dphi1, phi1)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   call calc_temp_eos(tc1, rho1(:,:,:,1), phi1, tb1, xsize(1), xsize(2), xsize(3))
 
-  !! Now we can update current density
+  !! Now we can update current temperature
   call int_time(tc1, drho1)
+
+  !! Temperature >= 0
+  do k = 1, xsize(3)
+     do j = 1, xsize(2)
+        do i = 1, xsize(1)
+           tc1(i,j,k) = max(tc1(i,j,k), zero)
+        enddo
+     enddo
+  enddo
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !! XXX We are integrating the temperature equation - get back to rho
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   call calc_rho_eos(rho1(:,:,:,1), tc1, phi1, tb1, xsize(1), xsize(2), xsize(3))
-
-  !! Enforce boundedness on density
-  if (ilmn_bound) then
-     rhomin = min(dens1, dens2)
-     rhomax = max(dens1, dens2)
-     do k = 1, xsize(3)
-        do j = 1, xsize(2)
-           do i = 1, xsize(1)
-              rho1(i, j, k, 1) = max(rho1(i, j, k, 1), rhomin)
-              rho1(i, j, k, 1) = min(rho1(i, j, k, 1), rhomax)
-           enddo
-        enddo
-     enddo
-  endif
 
 endsubroutine int_time_temperature
 
@@ -371,7 +366,7 @@ SUBROUTINE lmn_t_to_rho_trans(drho1, dtemp1, rho1, dphi1, phi1)
            ta1(:,:,:) = ta1(:,:,:) + phi1(:,:,:,is) / mol_weight(is)
         ENDIF
      ENDDO
-     drho1(:,:,:) = ta1(:,:,:) * drho1(:,:,:)
+     drho1(:,:,:) = ta1(:,:,:) * drho1(:,:,:) !! XXX ta1 is the inverse molecular weight
   ENDIF
 
   CALL calc_temp_eos(ta1, rho1, phi1, tb1, xsize(1), xsize(2), xsize(3))
@@ -672,69 +667,18 @@ subroutine pre_correc(ux,uy,uz,ep)
   implicit none
 
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,ep
-  integer :: i,j,k,code,is
+  integer :: i,j,k,is
   real(mytype) :: ut,ut1,utt,ut11
 
-  !********NCLZ==2*************************************
-  if (nclz1==2) then
-     if (xstart(3)==1) then
-        do j=1,xsize(2)
-           do i=1,xsize(1)
-              dpdxz1(i,j)=dpdxz1(i,j)*gdt(itr)
-              dpdyz1(i,j)=dpdyz1(i,j)*gdt(itr)
-           enddo
-        enddo
-        do j=1,xsize(2)
-           do i=1,xsize(1)
-              ux(i,j,1)=bzx1(i,j)+dpdxz1(i,j)
-              uy(i,j,1)=bzy1(i,j)+dpdyz1(i,j)
-              uz(i,j,1)=bzz1(i,j)
-           enddo
-        enddo
-     endif
-  endif
+  integer :: code
+  integer, dimension(2) :: dims, dummy_coords
+  logical, dimension(2) :: dummy_periods
 
-  if (nclzn==2) then
-     if (xend(3)==nz) then
-        do j=1,xsize(2)
-           do i=1,xsize(1)
-              dpdxzn(i,j)=dpdxzn(i,j)*gdt(itr)
-              dpdyzn(i,j)=dpdyzn(i,j)*gdt(itr)
-           enddo
-        enddo
-        do j=1,xsize(2)
-           do i=1,xsize(1)
-              ux(i,j,xsize(3))=bzxn(i,j)+dpdxzn(i,j)
-              uy(i,j,xsize(3))=bzyn(i,j)+dpdyzn(i,j)
-              uz(i,j,xsize(3))=bzzn(i,j)
-           enddo
-        enddo
-     endif
-  endif
-  !********NCLZ==1************************************* !just to reforce free-slip condition
-  if (nclz1==1) then
-     if (xstart(3)==1) then
-        do j=1,xsize(2)
-           do i=1,xsize(1)
-              uz(i,j,1)=zero
-           enddo
-        enddo
-     endif
-  endif
-
-  if (nclzn==1) then
-     if (xend(3)==nz) then
-        do j=1,xsize(2)
-           do i=1,xsize(1)
-              uz(i,j,xsize(3))=zero
-           enddo
-        enddo
-     endif
-  endif
+  call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, dims, dummy_periods, dummy_coords, code)
 
   !********NCLX==2*************************************
   !we are in X pencils:
-  if (nclx1==2.and.nclxn==2) then
+  if ((itype.eq.itype_channel).and.(nclx1==2.and.nclxn==2)) then
 
      !Computatation of the flow rate Inflow/Outflow
      ut1=zero
@@ -837,6 +781,8 @@ subroutine pre_correc(ux,uy,uz,ep)
               dpdzyn(i,k)=dpdzyn(i,k)*gdt(itr)
            enddo
         enddo
+      endif
+      if (dims(1)==1) then
         do k=1,xsize(3)
            do i=1,xsize(1)
               ux(i,xsize(2),k)=byxn(i,k)+dpdxyn(i,k)
@@ -844,6 +790,14 @@ subroutine pre_correc(ux,uy,uz,ep)
               uz(i,xsize(2),k)=byzn(i,k)+dpdzyn(i,k)
            enddo
         enddo
+     elseif (ny - (nym / dims(1)) == xstart(2)) then
+       do k=1,xsize(3)
+          do i=1,xsize(1)
+             ux(i,xsize(2),k)=byxn(i,k)+dpdxyn(i,k)
+             uy(i,xsize(2),k)=byyn(i,k)
+             uz(i,xsize(2),k)=byzn(i,k)+dpdzyn(i,k)
+          enddo
+       enddo
      endif
   endif
 
@@ -867,6 +821,64 @@ subroutine pre_correc(ux,uy,uz,ep)
         enddo
      endif
   endif
+
+
+    !********NCLZ==2*************************************
+    if (nclz1==2) then
+       if (xstart(3)==1) then
+          do j=1,xsize(2)
+             do i=1,xsize(1)
+                dpdxz1(i,j)=dpdxz1(i,j)*gdt(itr)
+                dpdyz1(i,j)=dpdyz1(i,j)*gdt(itr)
+             enddo
+          enddo
+          do j=1,xsize(2)
+             do i=1,xsize(1)
+                ux(i,j,1)=bzx1(i,j)+dpdxz1(i,j)
+                uy(i,j,1)=bzy1(i,j)+dpdyz1(i,j)
+                uz(i,j,1)=bzz1(i,j)
+             enddo
+          enddo
+       endif
+    endif
+
+    if (nclzn==2) then
+       if (xend(3)==nz) then
+          do j=1,xsize(2)
+             do i=1,xsize(1)
+                dpdxzn(i,j)=dpdxzn(i,j)*gdt(itr)
+                dpdyzn(i,j)=dpdyzn(i,j)*gdt(itr)
+             enddo
+          enddo
+          do j=1,xsize(2)
+             do i=1,xsize(1)
+                ux(i,j,xsize(3))=bzxn(i,j)+dpdxzn(i,j)
+                uy(i,j,xsize(3))=bzyn(i,j)+dpdyzn(i,j)
+                uz(i,j,xsize(3))=bzzn(i,j)
+             enddo
+          enddo
+       endif
+    endif
+    !********NCLZ==1************************************* !just to reforce free-slip condition
+    if (nclz1==1) then
+       if (xstart(3)==1) then
+          do j=1,xsize(2)
+             do i=1,xsize(1)
+                uz(i,j,1)=zero
+             enddo
+          enddo
+       endif
+    endif
+
+    if (nclzn==1) then
+       if (xend(3)==nz) then
+          do j=1,xsize(2)
+             do i=1,xsize(1)
+                uz(i,j,xsize(3))=zero
+             enddo
+          enddo
+       endif
+    endif
 
   return
 end subroutine pre_correc
