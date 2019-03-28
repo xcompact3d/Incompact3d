@@ -426,7 +426,7 @@ CONTAINS
     USE variables
     USE decomp_2d
 
-    USE var, ONLY : ta1, tb1
+    USE var, ONLY : te1, tb1
 
     implicit none
 
@@ -442,12 +442,12 @@ CONTAINS
     integer :: is
 
     !! Get temperature
-    CALL calc_temp_eos(ta1, rho1(:,:,:,1), phi1, tb1, xsize(1), xsize(2), xsize(3))
+    CALL calc_temp_eos(te1, rho1(:,:,:,1), phi1, tb1, xsize(1), xsize(2), xsize(3))
 
     !!=====================================================================
     !! XXX It is assumed that ux,uy,uz are already updated in all pencils!
     !!=====================================================================
-    call scalar_transport_eq(drho1, rho1, ux1, uy1, uz1, ta1, prandtl)
+    call scalar_transport_eq(drho1, rho1, ux1, uy1, uz1, te1, prandtl)
 
   end subroutine temperature_rhs_eq
 
