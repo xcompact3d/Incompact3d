@@ -1113,7 +1113,7 @@ subroutine simu_stats(iwhen)
         write(*,"(' Time step =',i7,'/',i7,', Time unit =',F9.4)") itime,ilast,t
      endif
   endif
-  if (iwhen.eq.3) then !AT THE END OF A TIME STEP
+  if ((iwhen.eq.3).and.(itime.gt.ifirst)) then !AT THE END OF A TIME STEP
      call cpu_time(trank)
      if (nrank==0) print *,'Time for this time step (s):',real(trank-time1)
      telapsed = (trank-tstart)/thirtysixthousand
