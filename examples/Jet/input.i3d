@@ -12,9 +12,9 @@ p_row=0               ! Row partition
 p_col=0               ! Column partition
 
 ! Mesh
-nx=65                 ! X-direction nodes
-ny=129                ! Y-direction nodes
-nz=65                 ! Z-direction nodes
+nx=129                 ! X-direction nodes
+ny=257                ! Y-direction nodes
+nz=129                 ! Z-direction nodes
 istret = 0            ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
 beta = 0.259065151    ! Refinement parameter (beta)
 
@@ -102,13 +102,13 @@ ilmn_solve_temp = .TRUE. ! Solve for temperature instead of density
 prandtl = 0.7         ! Prandtl number
 
 !! Set species
-! primary_species = 1
+primary_species = 1
 
-! massfrac(1) = .TRUE.
-! massfrac(2) = .TRUE.
+massfrac(1) = .TRUE.
+massfrac(2) = .TRUE.
 
-! mol_weight(1) = 1.0
-! mol_weight(2) = 4.0
+mol_weight(1) = 1.0
+mol_weight(2) = 2.0
 
 /End
 
