@@ -38,7 +38,7 @@ contains
     USE decomp_2d_io
     USE variables
     USE param
-    USE var, ONLY : ta2, tb2, tc2, td2
+    USE var, ONLY : rho2, phi2, ta2, tb2, tc2, td2
 
     implicit none
 
@@ -97,7 +97,18 @@ contains
     call transpose_x_to_y(ux1, ta2)
     call transpose_x_to_y(uy1, tb2)
     call transpose_x_to_y(uz1, tc2)
-    call transpose_x_to_y(rho1(:,:,:,1), td2)
+    call transpose_x_to_y(rho1(:,:,:,1), rho2)
+    do is = 1, numscalar
+       call transpose_x_to_y(phi1(:,:,:,is), phi2(:,:,:,is))
+    enddo
+    print *, "2a", minval(rho2), maxval(rho2), nrank
+    if (nrank.eq.1) then
+       do k = 1, ysize(3)
+          do i = 1, ysize(1)
+             print *, rho2(i,1,k)
+          enddo
+       enddo
+    endif
     do k=1,ysize(3)
        do j=2,ysize(2)
           do i=1,ysize(1)
@@ -105,37 +116,39 @@ contains
              tb2(i,j,k)=tb2(i,j,k)+tb2(i,1,k)
              tc2(i,j,k)=tc2(i,j,k)+tc2(i,1,k)
 
-             td2(i,j,k)=td2(i,1,k)
+             rho2(i,j,k)=rho2(i,1,k)
+             phi2(i,j,k,:) = phi2(i,1,k,:)
           enddo
        enddo
     enddo
+    print *, "2b", minval(rho2), maxval(rho2)
     call transpose_y_to_x(ta2, ux1)
     call transpose_y_to_x(tb2, uy1)
     call transpose_y_to_x(tc2, uz1)
-    call transpose_y_to_x(td2, rho1(:,:,:,1))
-    do k=1,xsize(3)
-       do j=1,xsize(2)
-          do i=1,xsize(1)
-             dux1(i,j,k,1)=ux1(i,j,k)
-             duy1(i,j,k,1)=uy1(i,j,k)
-             duz1(i,j,k,1)=uz1(i,j,k)
+    call transpose_y_to_x(rho2, rho1(:,:,:,1))
+    do is = 1, numscalar
+       call transpose_y_to_x(phi2(:,:,:,is), phi1(:,:,:,is))
+    enddo
 
-             drho1(i,j,k,1) = rho1(i,j,k,1)
-             do is = 2, ntime
-                dux1(i,j,k,is)=dux1(i,j,k,is - 1)
-                duy1(i,j,k,is)=duy1(i,j,k,is - 1)
-                duz1(i,j,k,is)=duz1(i,j,k,is - 1)
+    print *, "1", minval(rho1(:,:,:,1)), maxval(rho1(:,:,:,1))
 
-                drho1(i,j,k,is) = drho1(i,j,k,is - 1)
-             enddo
+    dux1(:,:,:,1)=ux1(:,:,:)
+    duy1(:,:,:,1)=uy1(:,:,:)
+    duz1(:,:,:,1)=uz1(:,:,:)
+    
+    drho1(:,:,:,1) = rho1(:,:,:,1)
+    do is = 2, ntime
+       dux1(:,:,:,is)=dux1(:,:,:,is - 1)
+       duy1(:,:,:,is)=duy1(:,:,:,is - 1)
+       duz1(:,:,:,is)=duz1(:,:,:,is - 1)
+       
+       drho1(:,:,:,is) = drho1(:,:,:,is - 1)
+    enddo
 
-             do is = 1, numscalar
-                dphi1(:,:,:,1,is) = phi1(:,:,:,is)
-                do it = 2, ntime
-                   dphi1(:,:,:,it,is) = dphi1(:,:,:,it - 1,is)
-                enddo
-             enddo
-          enddo
+    do is = 1, numscalar
+       dphi1(:,:,:,1,is) = phi1(:,:,:,is)
+       do it = 2, ntime
+          dphi1(:,:,:,it,is) = dphi1(:,:,:,it - 1,is)
        enddo
     enddo
 
@@ -152,7 +165,7 @@ contains
     USE param
     USE variables
     USE decomp_2d
-    !USE var
+    USE var, ONLY : ta1, tb1
 
     implicit none
 
@@ -160,8 +173,7 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho
 
-
-    integer :: i, j, k
+    integer :: i, j, k, is
     real(mytype) :: D, r, x, z, r1, r2, x1, z1
     real(mytype) :: inflow, perturbation
     real(mytype) :: timeswitch
@@ -173,7 +185,6 @@ contains
     real(mytype) :: uu1,uv1,uw1,x2,y1,y2,ya,y,xc,zc,yc
 
     call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, dims, dummy_periods, dummy_coords, ierr)
-
 
     D = one
     perturbation = zero
@@ -189,35 +200,73 @@ contains
     !! Set inflow
     inflow = zero
     j = 1
+
+    if (ilmn.and.(ilmn_solve_temp)) then
+       CALL calc_temp_eos(ta1(:,1,:), rho(:,1,:,1), phi(:,1,:,:), tb1(:,1,:), xsize(1), 1, xsize(3))
+    endif
+    
     if (xstart(2) == 1) then
-      do k = 1, xsize(3)
-        z = real(k + xstart(3) - 2, mytype) * dz - half * zlz
-        do i = 1, xsize(1)
-          x = real(i + xstart(1) - 2, mytype) * dx - half * xlx
-          r = sqrt(x**2 + z**2) + 1.e-16_mytype !! Can't divide by zero!
+       do k = 1, xsize(3)
+          z = real(k + xstart(3) - 2, mytype) * dz - half * zlz
+          do i = 1, xsize(1)
+             x = real(i + xstart(1) - 2, mytype) * dx - half * xlx
+             r = sqrt(x**2 + z**2) + 1.e-16_mytype !! Can't divide by zero!
 
-          !! Set mean inflow
-          byx1(i, k) = zero
-          byy1(i, k) = (u1 - u2) * half &
-               * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D))) + u2
-          byz1(i, k) = zero
+             !! Set mean inflow
+             byx1(i, k) = zero
+             byy1(i, k) = (u1 - u2) * half &
+                  * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D))) + u2
+             byz1(i, k) = zero
 
-          rho(i, 1, k, 1) = (dens1 - dens2) * half &
-               * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D))) + dens2
+             if (ilmn) then
+                if (.not.ilmn_solve_temp) then
+                   rho(i, 1, k, 1) = (dens1 - dens2) * half &
+                        * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D))) + dens2
+                else
+                   ta1(i,1,k) = one !! Could set variable temperature inlet here
+                endif
+             else
+                rho(i, 1, k, 1) = one
+             endif
 
-          !! Apply transient behaviour
-          ! if (r.lt.D/two) then
-          !   perturbation = inflow_noise * sin(r * x * z * t)
-          ! else
-          !   perturbation = zero
-          ! endif
-          ! byy1(i, k) = byy1(i, k) + perturbation
-          byy1(i, k) = timeswitch * byy1(i, k)
+             if (iscalar.ne.0) then
+                do is = 1, numscalar
+                   if (.not.massfrac(is)) then
+                      phi(i, 1, k, is) = half * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D)))
+                   else if (is.ne.primary_species) then
+                      phi(i, 1, k, is) = one - half * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D)))
+                   endif
+                enddo
+                
+                if (primary_species.gt.0) then
+                   phi(i, 1, k, primary_species) = one
 
-          !! Sum up total flux
-          inflow = inflow + byy1(i, k)
-        enddo
-      enddo
+                   do is = 1, numscalar
+                      if (massfrac(is).and.(is.ne.primary_species)) then
+                         phi(i, 1, k, primary_species) = phi(i, 1, k, primary_species) - phi(i, 1, k, is)
+                      endif
+                   enddo
+                endif
+             endif
+                
+             !! Apply transient behaviour
+             ! if (r.lt.D/two) then
+             !   perturbation = inflow_noise * sin(r * x * z * t)
+             ! else
+             !   perturbation = zero
+             ! endif
+             ! byy1(i, k) = byy1(i, k) + perturbation
+             byy1(i, k) = timeswitch * byy1(i, k)
+
+             !! Sum up total flux
+             inflow = inflow + byy1(i, k)
+          enddo
+       enddo
+
+       if (ilmn.and.ilmn_solve_temp) then
+          !! Need to compute rho (on boundary)
+          CALL calc_rho_eos(rho(:,1,:,1), ta1(:,1,:), phi(:,1,:,:), tb1(:,1,:), xsize(1), 1, xsize(3))
+       endif
     endif
 
     call random_number(bxo)
@@ -303,6 +352,27 @@ contains
                 endif
              endif
           enddo
+
+          if (iscalar.ne.0) then
+             do is = 1, numscalar
+                if (is.ne.primary_species) then
+                   phi(i,:,:,is) = one
+                else
+                   phi(i,:,:,is) = zero
+                endif
+             enddo
+          endif
+
+          if (ilmn) then
+             if (.not.ilmn_solve_temp) then
+                rho(i,:,:,1) = dens1
+             else
+                ta1(i,:,:) = one
+
+                !! Need to compute rho (on boundary)
+                CALL calc_rho_eos(rho(i,:,:,1), ta1(i,:,:), phi(i,:,:,:), tb1(i,:,:), 1, xsize(2), xsize(3))
+             endif
+          endif
        endif
     ENDIF
 
@@ -366,6 +436,27 @@ contains
                 endif
              endif
           enddo
+
+          if (iscalar.ne.0) then
+             do is = 1, numscalar
+                if (is.ne.primary_species) then
+                   phi(i,:,:,is) = one
+                else
+                   phi(i,:,:,is) = zero
+                endif
+             enddo
+          endif
+
+          if (ilmn) then
+             if (.not.ilmn_solve_temp) then
+                rho(i,:,:,1) = dens1
+             else
+                ta1(i,:,:) = one
+
+                !! Need to compute rho (on boundary)
+                CALL calc_rho_eos(rho(i,:,:,1), ta1(i,:,:), phi(i,:,:,:), tb1(i,:,:), 1, xsize(2), xsize(3))
+             endif
+          endif
        endif
     ENDIF
 
@@ -431,6 +522,27 @@ contains
              endif
           endif
        enddo
+       
+       if (iscalar.ne.0) then
+          do is = 1, numscalar
+             if (is.ne.primary_species) then
+                phi(:,:,k,is) = one
+             else
+                phi(:,:,k,is) = zero
+             endif
+          enddo
+       endif
+       
+       if (ilmn) then
+          if (.not.ilmn_solve_temp) then
+             rho(:,:,k,1) = dens1
+          else
+             ta1(:,:,k) = one
+             
+             !! Need to compute rho (on boundary)
+             CALL calc_rho_eos(rho(:,:,k,1), ta1(:,:,k), phi(:,:,k,:), tb1(:,:,k), xsize(1), xsize(2), 1)
+          endif
+       endif
     ENDIF
 
     IF ((nclzn.EQ.2).AND.(xend(3).EQ.nz)) THEN
@@ -497,36 +609,70 @@ contains
              endif
           endif
        enddo
+
+       if (iscalar.ne.0) then
+          do is = 1, numscalar
+             if (is.ne.primary_species) then
+                phi(:,:,k,is) = one
+             else
+                phi(:,:,k,is) = zero
+             endif
+          enddo
+       endif
+       
+       if (ilmn) then
+          if (.not.ilmn_solve_temp) then
+             rho(:,:,k,1) = dens1
+          else
+             ta1(:,:,k) = one
+             
+             !! Need to compute rho (on boundary)
+             CALL calc_rho_eos(rho(:,:,k,1), ta1(:,:,k), phi(:,:,k,:), tb1(:,:,k), xsize(1), xsize(2), 1)
+          endif
+       endif
     ENDIF
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !! Compute outflow
     call MPI_ALLREDUCE(inflow,outflow,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
     outflow = outflow / nx / nz
-    if (dims(1)==1) then
-      j = xsize(2)
-      do k = 1, xsize(3)
-         do i = 1, xsize(1)
-            byxn(i, k) = ux(i, j, k) - dt * outflow * (ux(i, j, k) - ux(i, j - 1, k))
-            byyn(i, k) = uy(i, j, k) - dt * outflow * (uy(i, j, k) - uy(i, j - 1, k))
-            byzn(i, k) = uz(i, j, k) - dt * outflow * (uz(i, j, k) - uz(i, j - 1, k))
-
-            rho(i, j, k, 1) = rho(i, j, k, 1) &
-                 - dt * outflow * (rho(i, j, k, 1) - rho(i, j - 1, k, 1))
-         enddo
-      enddo
-    elseif (ny - (nym / dims(1)) == xstart(2)) then
-       j = xsize(2) - 1
+    if (xend(2).eq.ny) then
+       j = xsize(2)
        do k = 1, xsize(3)
           do i = 1, xsize(1)
              byxn(i, k) = ux(i, j, k) - dt * outflow * (ux(i, j, k) - ux(i, j - 1, k))
              byyn(i, k) = uy(i, j, k) - dt * outflow * (uy(i, j, k) - uy(i, j - 1, k))
              byzn(i, k) = uz(i, j, k) - dt * outflow * (uz(i, j, k) - uz(i, j - 1, k))
-
-             rho(i, j, k, 1) = rho(i, j, k, 1) &
-                  - dt * outflow * (rho(i, j, k, 1) - rho(i, j - 1, k, 1))
           enddo
        enddo
+
+       if (iscalar.ne.0) then
+          phi(:,j,:,:) = phi(:,j,:,:) - dt * outflow * (phi(:,j,:,:) - phi(:,j - 1,:,:))
+
+          if (primary_species.gt.0) then
+             phi(:,j,:,primary_species) = one
+             do is = 1, numscalar
+                if (massfrac(is).and.(is.ne.primary_species)) then
+                   phi(:,j,:,primary_species) = phi(:,j,:,primary_species) - phi(:,j,:,is)
+                endif
+             enddo
+          endif
+       endif
+       
+       if (ilmn) then
+          if (.not.ilmn_solve_temp) then
+             rho(:, j, :, 1) = rho(:, j, :, 1) &
+                  - dt * outflow * (rho(:, j, :, 1) - rho(:, j - 1, :, 1))
+          else
+             !! Compute temperature at j-1:j to form advection equation
+             CALL calc_temp_eos(ta1(:,j-1:j,:), rho(:,j-1:j,:,1), phi(:,j-1:j,:,:), tb1(:,j-1:j,:), xsize(1), 2, xsize(3))
+
+             ta1(:,j,:) = ta1(:,j,:) - dt * outflow * (ta1(:,j,:) - ta1(:,j-1,:))
+             
+             !! Need to compute rho (on boundary)
+             CALL calc_rho_eos(rho(:,j,:,1), ta1(:,j,:), phi(:,j,:,:), tb1(:,j,:), xsize(1), 1, xsize(3))
+          endif
+       endif
     endif
 
     return
