@@ -298,27 +298,22 @@ subroutine int_time_temperature(rho1, drho1, dphi1, phi1)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   call calc_temp_eos(tc1, rho1(:,:,:,1), phi1, tb1, xsize(1), xsize(2), xsize(3))
 
-  !! Now we can update current density
+  !! Now we can update current temperature
   call int_time(tc1, drho1)
+
+  !! Temperature >= 0
+  do k = 1, xsize(3)
+     do j = 1, xsize(2)
+        do i = 1, xsize(1)
+           tc1(i,j,k) = max(tc1(i,j,k), zero)
+        enddo
+     enddo
+  enddo
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !! XXX We are integrating the temperature equation - get back to rho
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   call calc_rho_eos(rho1(:,:,:,1), tc1, phi1, tb1, xsize(1), xsize(2), xsize(3))
-
-  !! Enforce boundedness on density
-  if (ilmn_bound) then
-     rhomin = min(dens1, dens2)
-     rhomax = max(dens1, dens2)
-     do k = 1, xsize(3)
-        do j = 1, xsize(2)
-           do i = 1, xsize(1)
-              rho1(i, j, k, 1) = max(rho1(i, j, k, 1), rhomin)
-              rho1(i, j, k, 1) = min(rho1(i, j, k, 1), rhomax)
-           enddo
-        enddo
-     enddo
-  endif
 
 endsubroutine int_time_temperature
 
