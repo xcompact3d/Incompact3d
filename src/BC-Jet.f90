@@ -562,7 +562,7 @@ contains
 
                 bzxn(i,j)=r1*ux(i+1,j,k-1)/r2
                 bzyn(i,j)=   uy(i+1,j,k-1)
-                bxzn(i,j)=r1*uz(i+1,j,k-1)/r2
+                bzzn(i,j)=r1*uz(i+1,j,k-1)/r2
              enddo
           elseif(i.eq.(nx-1)/2+1)then!cas point du milieu
              do j=1,xsize(2)
@@ -594,10 +594,6 @@ contains
              elseif(x.lt.0.)then
                 ya=y2+dx
                 do j=1,xsize(2)
-                   uu1=(ux(i-1,j,k+1)-ux(i-1,j,k))*(y1-ya)/(ya-y2)+ux(i-1,j,k+1)
-                   uv1=(uy(i-1,j,k+1)-uy(i-1,j,k))*(y1-ya)/(ya-y2)+uy(i-1,j,k+1)
-                   uw1=(uz(i-1,j,k+1)-uz(i-1,j,k))*(y1-ya)/(ya-y2)+uz(i-1,j,k+1)
-
                    uu1=(ux(i+1,j,k-1)-ux(i,j,k-1))*(y1-ya)/(ya-y2)+ux(i+1,j,k-1)
                    uv1=(uy(i+1,j,k-1)-uy(i,j,k-1))*(y1-ya)/(ya-y2)+uy(i+1,j,k-1)
                    uw1=(uz(i+1,j,k-1)-uz(i,j,k-1))*(y1-ya)/(ya-y2)+uz(i+1,j,k-1)
