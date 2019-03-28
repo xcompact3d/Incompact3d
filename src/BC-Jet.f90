@@ -101,14 +101,6 @@ contains
     do is = 1, numscalar
        call transpose_x_to_y(phi1(:,:,:,is), phi2(:,:,:,is))
     enddo
-    print *, "2a", minval(rho2), maxval(rho2), nrank
-    if (nrank.eq.1) then
-       do k = 1, ysize(3)
-          do i = 1, ysize(1)
-             print *, rho2(i,1,k)
-          enddo
-       enddo
-    endif
     do k=1,ysize(3)
        do j=2,ysize(2)
           do i=1,ysize(1)
@@ -121,7 +113,6 @@ contains
           enddo
        enddo
     enddo
-    print *, "2b", minval(rho2), maxval(rho2)
     call transpose_y_to_x(ta2, ux1)
     call transpose_y_to_x(tb2, uy1)
     call transpose_y_to_x(tc2, uz1)
@@ -129,8 +120,6 @@ contains
     do is = 1, numscalar
        call transpose_y_to_x(phi2(:,:,:,is), phi1(:,:,:,is))
     enddo
-
-    print *, "1", minval(rho1(:,:,:,1)), maxval(rho1(:,:,:,1))
 
     dux1(:,:,:,1)=ux1(:,:,:)
     duy1(:,:,:,1)=uy1(:,:,:)
