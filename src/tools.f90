@@ -1203,7 +1203,7 @@ ENDSUBROUTINE calc_rho_eos
 SUBROUTINE calc_mweight(mweight, phi, xlen, ylen, zlen)
 
   USE decomp_2d
-  USE param, ONLY : zero
+  USE param, ONLY : zero, one
   USE param, ONLY : massfrac, mol_weight
   USE var, ONLY : numscalar
 
@@ -1222,5 +1222,6 @@ SUBROUTINE calc_mweight(mweight, phi, xlen, ylen, zlen)
         mweight(:,:,:) = mweight(:,:,:) + phi(:,:,:,is) / mol_weight(is)
      ENDIF
   ENDDO
+  mweight(:,:,:) = one / mweight(:,:,:)
   
 ENDSUBROUTINE calc_mweight
