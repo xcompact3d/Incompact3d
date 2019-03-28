@@ -432,10 +432,10 @@ contains
 
     call alloc_z(divu3, opt_global=.true.) !global indices
 
-    !TRIPPING PARAMES LOST HERE
-    z_modes=int(zlz /zs_tr)
-    allocate(h_coeff(z_modes))
-    allocate(h_nxt(xsize(3)), h_i(xsize(3)))
+    ! !TRIPPING PARAMES LOST HERE
+    ! z_modes=int(zlz / zs_tr)
+    ! allocate(h_coeff(z_modes))
+    ! allocate(h_nxt(xsize(3)), h_i(xsize(3)))
 
 #ifdef DEBG
     if (nrank .eq. 0) print *,'# init_variables done'
