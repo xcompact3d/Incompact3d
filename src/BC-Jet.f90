@@ -27,6 +27,8 @@ module jet
 
   REAL(mytype) :: outflow
 
+  LOGICAL :: initialising
+
   PRIVATE ! All functions/subroutines private by default
   PUBLIC :: init_jet, boundary_conditions_jet, postprocessing_jet, momentum_forcing_jet
 
@@ -81,7 +83,9 @@ contains
        enddo
     enddo
 
+    initialising = .TRUE.
     call boundary_conditions_jet (rho1,ux1,uy1,uz1,phi1)
+    initialising = .FALSE.
 
     !INIT FOR G AND U=MEAN FLOW + NOISE
     if (xstart(2)==1) then
@@ -189,10 +193,6 @@ contains
     !! Set inflow
     inflow = zero
     j = 1
-
-    if (ilmn.and.(ilmn_solve_temp)) then
-       CALL calc_temp_eos(ta1(:,1,:), rho(:,1,:,1), phi(:,1,:,:), tb1(:,1,:), xsize(1), 1, xsize(3))
-    endif
     
     if (xstart(2) == 1) then
        do k = 1, xsize(3)
@@ -270,7 +270,11 @@ contains
         bxy1(j,k)=byo(j,k)*inflow_noise
         bxz1(j,k)=bzo(j,k)*inflow_noise
       enddo
-    enddo
+   enddo
+
+   if (initialising) then !! we can stop here
+      return
+   endif
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !! Apply lateral boundary conditions
