@@ -1,5 +1,3 @@
-#ifdef ELES
-
 subroutine init_explicit_les
 
   USE param
@@ -21,14 +19,13 @@ subroutine init_explicit_les
      write(*, *) ' '
      write(*, *) '++++++++++++++++++++++++++++++++'
      write(*, *) 'Initializing explicit LES Filter'
-     if(jLES==2) then
+     if(jLES==1) then
         write(*, *) ' Classic Smagorinsky is used ... '
         write(*, *) ' Smagorinsky constant = ', smagcst
-        write(*, *) ' Filter Size / Grid Size = ', FSGS
-     else if (jLES==3) then
+     else if (jLES==2) then
         write(*, *) ' Wall-adaptive LES (WALES) is used ... '
         write(*, *) ' WALE constant = ', walecst
-     else if (jLES==4) then
+     else if (jLES==3) then
         write(*, *) ' Dynamic Smagorinsky is used ... '
         write(*, *) ' Max value for the dynamic constant field = ', maxdsmagcst
      endif
@@ -40,76 +37,115 @@ subroutine init_explicit_les
 
 end subroutine init_explicit_les
 !************************************************************
-subroutine smag(ux1, uy1, uz1, gxx1, gyx1, gzx1, gxy1, gyy1, gzy1, gxz1, gyz1, gzz1, &
-     sxx1, syy1, szz1, sxy1, sxz1, syz1, srt_smag, nut1, ta2, ta3, di1, di2, di3)
+subroutine Compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,iconservative)
+    
+  USE param
+  USE variables
+  USE decomp_2d
+  USE decomp_2d_io
+  use var, only: nut1
+  implicit none
+
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, ep1
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sgsx1, sgsy1, sgsz1
+  integer :: iconservative
+
+    ! Calculate eddy-viscosity
+    if(jLES.eq.1) then ! Smagorinsky
+
+        call smag(nut1,ux1,uy1,uz1)
+    
+    elseif(jLES.eq.2) then !WALE
+        
+        call smag(nut1,ux1,uy1,uz1)
+  
+    elseif(jLES.eq.3) then ! Lilly-style Dynamic Smagorinsky
+
+    endif
+
+    if(iconservative.eq.0) then ! Non-conservative form for calculating the divergence of the SGS stresses
+   
+        call les_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
+
+    elseif (iconservative.eq.1) then ! Conservative form for calculating the divergence of the SGS stresses (used with wall functions)
+
+        ! Call les_conservative
+
+    endif
+
+  return
+
+end subroutine Compute_SGS
+
+
+subroutine smag(nut1,ux1,uy1,uz1)
 
   USE param
   USE variables
   USE decomp_2d
   USE decomp_2d_io
+  USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+  USE var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,di2
+  USE var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
+  USE var, only : sxx1,syy1,szz1,sxy1,sxz1,syz1,srt_smag
+  USE var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2,srt_smag2,nut2
+  USE var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
 
   implicit none
 
   real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
-  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ux2, uy2, uz2
-  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: ux3, uy3, uz3
-
-  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: di1
-  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ta2, di2
-  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: ta3, di3
-
-  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sxx1, syy1, szz1, sxy1, sxz1, syz1
-  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: gxx1, gyx1, gzx1, gxy1, gyy1, gzy1, gxz1, gyz1, gzz1
-  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: srt_smag, nut1
-
-  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: syy2, szz2, sxy2, syz2, srt_smag2, nut2
-  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: gxy2, gyy2, gzy2, gxz2, gyz2, gzz2
-
-  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: szz3, syz3
-  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: gxz3, gyz3, gzz3
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1
 
   integer :: i, j, k
   character(len = 30) :: filename
 
-  call derx (gxx1, ux1, di1, sx, ffx, fsx, fwx, xsize(1), xsize(2), xsize(3), 0)
-  call derx (gyx1, uy1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1)
-  call derx (gzx1, uz1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1)
 
-  sxx1 = gxx1
+  ! INFO about the auxillary arrays
+  !--------------------------------------------------------
+  ! ta= dux/dx; tb=duy/dx; tc=duz/dx; 
+  ! td= dux/dy; te=duy/dy; tf=duz/dy;
+  ! tg= dux/dz; th=duy/dz; ti=duz/dz
+
+  call derx (ta1, ux1, di1, sx, ffx,  fsx,  fwx,  xsize(1), xsize(2), xsize(3), 0)
+  call derx (tb1, uy1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1)
+  call derx (tc1, uz1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1)
+
+  sxx1 = ta1                ! Sxx1
 
   !WORK Y-PENCILS
   call transpose_x_to_y(ux1, ux2)
   call transpose_x_to_y(uy1, uy2)
   call transpose_x_to_y(uz1, uz2)
-  call transpose_x_to_y(gyx1, ta2)
+  call transpose_x_to_y(tb1, tb2)
 
-  call dery (gxy2, ux2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
-  call dery (gyy2, uy2, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0)
-  call dery (gzy2, uz2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
+  call dery (td2, ux2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
+  call dery (te2, uy2, di2, sy, ffy , fsy , fwy , ppy, ysize(1), ysize(2), ysize(3), 0)
+  call dery (tf2, uz2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
 
-  sxy2 = half * (gxy2 + ta2)
-  syy2 = gyy2
+  sxy2 = half * (td2 + tb2) ! Sxy2
+  syy2 = te2                ! duz2/dy2
 
   !WORK Z-PENCILS
   call transpose_y_to_z(ux2, ux3)
   call transpose_y_to_z(uy2, uy3)
   call transpose_y_to_z(uz2, uz3)
-  call transpose_y_to_z(gzy2, ta3)
+  call transpose_y_to_z(tf2, tf3)
 
-  call derz(gxz3, ux3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
-  call derz(gyz3, uy3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
-  call derz(gzz3, uz3, di3, sz, ffz, fsz, fwz, zsize(1), zsize(2), zsize(3), 0)
+  call derz(tg3, ux3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
+  call derz(th3, uy3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
+  call derz(ti3, uz3, di3, sz, ffz,  fsz,  fwz,  zsize(1), zsize(2), zsize(3), 0)
 
-  szz3 = gzz3
-  syz3 = half * (gyz3 + ta3)
+  szz3 = ti3                ! Szz3
+  syz3 = half * (th3 + ti3) ! Syz2
 
+  ! 
   !WORK Y-PENCILS
-  call transpose_z_to_y(syz3, syz2)
-  call transpose_z_to_y(szz3, szz2)
+  call transpose_z_to_y(syz3,  syz2)
+  call transpose_z_to_y(szz3,  szz2)
 
-  call transpose_z_to_y(gxz3, gxz2)
-  call transpose_z_to_y(gyz3, gyz2)
-  call transpose_z_to_y(gzz3, gzz2)
+  call transpose_z_to_y(tg3, tg2)
+  call transpose_z_to_y(th3, th2)
+  call transpose_z_to_y(ti3, ti2)
 
   !WORK X-PENCILS
   call transpose_y_to_x(sxy2, sxy1)
@@ -117,14 +153,14 @@ subroutine smag(ux1, uy1, uz1, gxx1, gyx1, gzx1, gxy1, gyy1, gzy1, gxz1, gyz1, g
   call transpose_y_to_x(syz2, syz1)
   call transpose_y_to_x(szz2, szz1)
 
-  call transpose_y_to_x(gxy2, gxy1)
-  call transpose_y_to_x(gyy2, gyy1)
-  call transpose_y_to_x(gzy2, gzy1)
-  call transpose_y_to_x(gxz2, gxz1)
-  call transpose_y_to_x(gyz2, gyz1)
-  call transpose_y_to_x(gzz2, gzz1)
+  call transpose_y_to_x(td2, td1)
+  call transpose_y_to_x(te2, te1)
+  call transpose_y_to_x(tf2, tf1)
+  call transpose_y_to_x(tg2, tg1)
+  call transpose_y_to_x(th2, th1)
+  call transpose_y_to_x(ti2, ti1)
 
-  sxz1 = half * (gzx1 + gxz1)
+  sxz1 = half * (tg1 + tc1)
 
   srt_smag = zero
   srt_smag = sxx1 * sxx1 + syy1 * syy1 + szz1 * szz1 + two * sxy1 * sxy1 + two * sxz1 * sxz1 + two * syz1 * syz1
@@ -134,7 +170,7 @@ subroutine smag(ux1, uy1, uz1, gxx1, gyx1, gzx1, gxy1, gyy1, gzy1, gxz1, gyz1, g
   do k = 1, ysize(3)
      do j = 1, ysize(2)
         do i = 1, ysize(1)
-           nut2(i, j, k) = ((smagcst * FSGS * del(j))**two) * sqrt(two * srt_smag2(i, j, k))
+           nut2(i, j, k) = ((smagcst * del(j))**two) * sqrt(two * srt_smag2(i, j, k))
         enddo
      enddo
   enddo
@@ -143,12 +179,9 @@ subroutine smag(ux1, uy1, uz1, gxx1, gyx1, gzx1, gxy1, gyy1, gzy1, gxz1, gyz1, g
   if (nrank==0) print *, "smag srt_smag min max= ", minval(srt_smag), maxval(srt_smag)
   if (nrank==0) print *, "smag nut1     min max= ", minval(nut1), maxval(nut1)
 
-  if (mod(itime, imodulo).eq.0) then
+  if (mod(itime, ioutput).eq.0) then
 
-     write(filename, "('./data/srt_smag',I4.4)") itime / imodulo
-     call decomp_2d_write_one(1, srt_smag, filename, 2)
-
-     write(filename, "('./data/nut_smag',I4.4)") itime / imodulo
+     write(filename, "('./data/nut_smag',I4.4)") itime / ioutput
      call decomp_2d_write_one(1, nut1, filename, 2)
 
   endif
@@ -200,12 +233,12 @@ subroutine wale(gxx1, gyx1, gzx1, gxy1, gyy1, gzy1, gxz1, gyz1, gzz1, srt_smag, 
   if (nrank==0) print *, "wale srt_wale min max= ", minval(srt_wale), maxval(srt_wale)
   if (nrank==0) print *, "wale nut1     min max= ", minval(nut1), maxval(nut1)
 
-  if (mod(itime, imodulo).eq.0) then
+  if (mod(itime, ioutput).eq.0) then
 
-     write(filename, "('./data/srt_wale',I4.4)") itime / imodulo
+     write(filename, "('./data/srt_wale',I4.4)") itime / ioutput
      call decomp_2d_write_one(1, srt_wale, filename, 2)
 
-     write(filename, "('./data/nut_wale',I4.4)") itime / imodulo
+     write(filename, "('./data/nut_wale',I4.4)") itime / ioutput
      call decomp_2d_write_one(1, nut1, filename, 2)
 
   endif
@@ -868,30 +901,23 @@ end subroutine wale
 !
 !end subroutine dynsmag
 !************************************************************
-subroutine lesdiff(ux1, uy1, uz1, ep1, sxx1, syy1, szz1, sxy1, sxz1, syz1, nut1, &
-     sgsx1, sgsy1, sgsz1, ta1, td1, te1, tf1, di1, ta2, td2, te2, tf2, tj2, di2, &
-     ta3, td3, te3, tf3, di3)
+
+subroutine les_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
 
   USE param
   USE variables
   USE decomp_2d
+  USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+  USE var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2
+  USE var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
+  USE var, only : sxx1,syy1,szz1,sxy1,sxz1,syz1 
+  USE var, only : sgsx2,sgsy2,sgsz2,sxx2,syy2,szz2,sxy2,sxz2,syz2,nut2
+  USE var, only : sgsx3,sgsy3,sgsz3,sxx3,syy3,szz3,sxy3,sxz3,syz3,nut3
 
   implicit none
 
   real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, nut1, ep1
-  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ux2, uy2, uz2, nut2
-  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: ux3, uy3, uz3, nut3
-  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ta1, td1, te1, tf1, di1
-  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ta2, td2, te2, tf2, di2, tj2
-  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: ta3, td3, te3, tf3, di3
-
   real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sgsx1, sgsy1, sgsz1
-  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: sgsx2, sgsy2, sgsz2
-  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: sgsx3, sgsy3, sgsz3
-
-  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sxx1, syy1, szz1, sxy1, sxz1, syz1
-  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: syy2, szz2, sxy2, sxz2, syz2
-  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: szz3, sxz3, syz3
 
   integer :: i, j, k, ijk, nvect1
 
@@ -1045,59 +1071,57 @@ subroutine lesdiff(ux1, uy1, uz1, ep1, sxx1, syy1, szz1, sxy1, sxz1, syz1, nut1,
   !call transpose_y_to_x(sgsy2,sgsy1)
   !call transpose_y_to_x(sgsz2,sgsz1)
 
-end subroutine lesdiff
+end subroutine les_nonconservative
 
 !************************************************************
-subroutine lesdiff_scalar(phi1, di1, di2, di3, kappat1, sgsphi1)
-
-  USE param
-  USE variables
-  USE decomp_2d
-
-  implicit none
-
-  real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1, sgsphi1
-  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: phi2, sgsphi2
-  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: phi3, sgsphi3
-
-  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: di1, tb1
-  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: di2, tb2
-  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: di3, tb3
-
-  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: kappat1, dkappat1
-  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: kappat2, dkappat2
-  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: kappat3, dkappat3
-
-  integer :: is
-
-  sgsphi1 = zero; sgsphi2 = zero; sgsphi3 = zero
-
-  call derxS (dkappat1, kappat1, di1, sx, ffxpS, fsxpS, fwxpS, xsize(1), xsize(2), xsize(3), 1)
-  call transpose_x_to_y(kappat1, kappat2)
-  call deryS (dkappat2, kappat2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1)
-  call transpose_y_to_z(kappat2, kappat3)
-  call derzS (dkappat3, kappat3, di3, sz, ffzpS, fszpS, fwzpS, zsize(1), zsize(2), zsize(3), 1)
-
-  do is = 1, numscalar
-     call derxS (tb1, phi1(:, :, :, is), di1, sx, ffxpS, fsxpS, fwxpS, xsize(1), xsize(2), xsize(3), 1)
-     sgsphi1(:, :, :, is) = tb1 * dkappat1 !d(phi)/dx * d(kappa_t)/dx
-
-     call transpose_x_to_y(phi1(:, :, :, is), phi2)
-     call transpose_x_to_y(sgsphi1(:, :, :, is),sgsphi2)
-
-     call deryS (tb2, phi2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1)
-     sgsphi2 = sgsphi2 + tb2 * dkappat2 !d(phi)/dy * d(kappa_t)/dy
-
-     call transpose_y_to_z(phi2, phi3)
-     call transpose_y_to_z(sgsphi2, sgsphi3)
-
-     call derzS (tb3, phi3, di3, sz, ffzpS, fszpS, fwzpS, zsize(1), zsize(2), zsize(3), 1)
-     sgsphi3 = sgsphi3 + tb3 * dkappat3 !d(phi)/dz * d(kappa_t)/dz
-
-     call transpose_z_to_y(sgsphi3, sgsphi2)
-     call transpose_y_to_x(sgsphi2, sgsphi1(:, :, :, is))
-  end do
-
-end subroutine lesdiff_scalar
-
-#endif
+!subroutine lesdiff_scalar(phi1, di1, di2, di3, kappat1, sgsphi1)
+!
+!  USE param
+!  USE variables
+!  USE decomp_2d
+!
+!  implicit none
+!
+!  real(mytype), dimension(xsize(1), xsize(2), xsize(3), nphi) :: phi1, sgsphi1
+!  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: phi2, sgsphi2
+!  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: phi3, sgsphi3
+!
+!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: di1, tb1
+!  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: di2, tb2
+!  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: di3, tb3
+!
+!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: kappat1, dkappat1
+!  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: kappat2, dkappat2
+!  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: kappat3, dkappat3
+!
+!  integer :: is
+!
+!  sgsphi1 = zero; sgsphi2 = zero; sgsphi3 = zero
+!
+!  call derxS (dkappat1, kappat1, di1, sx, ffxpS, fsxpS, fwxpS, xsize(1), xsize(2), xsize(3), 1)
+!  call transpose_x_to_y(kappat1, kappat2)KARONIAMEKIMA
+!  call deryS (dkappat2, kappat2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1)
+!  call transpose_y_to_z(kappat2, kappat3)
+!  call derzS (dkappat3, kappat3, di3, sz, ffzpS, fszpS, fwzpS, zsize(1), zsize(2), zsize(3), 1)
+!
+!  do is = 1, nphi
+!     call derxS (tb1, phi1(:, :, :, is), di1, sx, ffxpS, fsxpS, fwxpS, xsize(1), xsize(2), xsize(3), 1)
+!     sgsphi1(:, :, :, is) = tb1 * dkappat1 !d(phi)/dx * d(kappa_t)/dx
+!
+!     call transpose_x_to_y(phi1(:, :, :, is), phi2)
+!     call transpose_x_to_y(sgsphi1(:, :, :, is),sgsphi2)
+!
+!     call deryS (tb2, phi2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1)
+!     sgsphi2 = sgsphi2 + tb2 * dkappat2 !d(phi)/dy * d(kappa_t)/dy
+!
+!     call transpose_y_to_z(phi2, phi3)
+!     call transpose_y_to_z(sgsphi2, sgsphi3)
+!
+!     call derzS (tb3, phi3, di3, sz, ffzpS, fszpS, fwzpS, zsize(1), zsize(2), zsize(3), 1)
+!     sgsphi3 = sgsphi3 + tb3 * dkappat3 !d(phi)/dz * d(kappa_t)/dz
+!
+!     call transpose_z_to_y(sgsphi3, sgsphi2)
+!     call transpose_y_to_x(sgsphi2, sgsphi1(:, :, :, is))
+!  end do
+!
+!end subroutine lesdiff_scalar

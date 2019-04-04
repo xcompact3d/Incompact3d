@@ -35,6 +35,7 @@ MODULE case
   USE decomp_2d
   USE variables
 
+  USE user_sim
   USE tgv
   USE cyl
   USE hill
@@ -62,7 +63,11 @@ CONTAINS
     pressure0 = one
     rho1(:,:,:,:) = one
 
-    IF (itype.EQ.itype_lockexch) THEN
+    IF (itype.EQ.itype_user) THEN
+       
+       CALL init_user (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, dphi1)
+       
+    ELSEIF (itype.EQ.itype_lockexch) THEN
 
        IF (nrank.EQ.0) THEN
           PRINT *, "Lock-exchange case not modernised yet!"
@@ -107,7 +112,11 @@ CONTAINS
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),numscalar) :: phi
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),nrhotime) :: rho
 
-    IF (itype.EQ.itype_lockexch) THEN
+    IF (itype.EQ.itype_user) THEN
+
+       CALL boundary_conditions_user (ux,uy,uz,phi,ep)
+       
+    ELSEIF (itype.EQ.itype_lockexch) THEN
 
        IF (nrank.EQ.0) THEN
           PRINT *, "Lock-exchange case not modernised yet!"
@@ -148,7 +157,11 @@ CONTAINS
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),numscalar) :: phi
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)) :: ep
 
-    IF (itype.EQ.itype_lockexch) THEN
+    IF (itype.EQ.itype_user) THEN
+       
+       CALL postprocessing_user (ux, uy, uz, phi, ep)
+       
+    ELSEIF (itype.EQ.itype_lockexch) THEN
 
        IF (nrank.EQ.0) THEN
           PRINT *, "Lock-exchange case not modernised yet!"

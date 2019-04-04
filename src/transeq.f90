@@ -13,6 +13,7 @@ CONTAINS
     USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
     USE var, only : rho2,ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2
     USE var, only : rho3,ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
+    USE var, only : sgsx1,sgsy1,sgsz1
 
     USE case, ONLY : momentum_forcing
 
@@ -237,6 +238,20 @@ CONTAINS
 
     if (ilmn) then
        call momentum_full_viscstress_tensor(dux1(:,:,:,1), duy1(:,:,:,1), duz1(:,:,:,1), divu3)
+    endif
+
+    ! If LES modelling is enabled, add the SGS stresses
+    if (ilesmod.ne.0.and.jles.le.3.) then
+        ! Wall model for LES
+        if (iwall.eq.1) then 
+        call compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,1)
+        else
+        call compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,0)
+        endif
+        ! Calculate SGS stresses (conservative/non-conservative formulation)
+        dux1(:,:,:,1) = dux1(:,:,:,1) + sgsx1(:,:,:)
+        duy1(:,:,:,1) = duy1(:,:,:,1) + sgsy1(:,:,:)
+        duz1(:,:,:,1) = duz1(:,:,:,1) + sgsz1(:,:,:)
     endif
 
     call momentum_forcing(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
