@@ -254,6 +254,13 @@ CONTAINS
         duz1(:,:,:,1) = duz1(:,:,:,1) + sgsz1(:,:,:)
     endif
 
+    !! Gravity
+    call momentum_gravity(dux1, duy1, duz1, rho1(:,:,:,1) - one, zero)
+    do is = 1, numscalar
+       call momentum_gravity(dux1, duy1, duz1, phi1(:,:,:,is), ri(is))
+    enddo
+
+    !! Additional forcing
     call momentum_forcing(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
 
     if (itrip == 1) then
@@ -317,6 +324,144 @@ CONTAINS
     tc1(:,:,:) = tc1(:,:,:) + one_third * xnu * tf1(:,:,:)
 
   end subroutine momentum_full_viscstress_tensor
+
+  subroutine momentum_gravity(dux1, duy1, duz1, peculiar_density1, richardson)
+
+    use decomp_2d
+    use param
+    use variables
+    
+    implicit none
+
+    !! Inputs
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: peculiar_density1
+    real(mytype), intent(in) :: richardson
+    
+    !! InOut
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
+    
+    !! Locals
+    integer :: istart, jstart, kstart
+    integer :: iend, jend, kend
+    integer :: i, j, k, is
+
+    !! X-gravity
+    if ((nclx1.eq.0).and.(nclxn.eq.0)) then
+       istart = 1
+       iend = xsize(1)
+    else
+       istart = 2
+       iend = xsize(1) - 1
+    endif
+    if ((xstart(2).eq.1).and.(ncly1.eq.2)) then
+       jstart = 2
+    else
+       jstart = 1
+    endif
+    if ((xend(2).eq.ny).and.(nclyn.eq.2)) then
+       jend = xsize(2) - 1
+    else
+       jend = xsize(2)
+    endif
+    if ((xstart(3).eq.1).and.(nclz1.eq.2)) then
+       kstart = 2
+    else
+       kstart = 1
+    endif
+    if ((xend(3).eq.nz).and.(nclzn.eq.2)) then
+       kend = xsize(3) - 1
+    else
+       kend = xsize(3)
+    endif
+    
+    do k = kstart, kend
+       do j = jstart, jend
+          do i = istart, iend
+             dux1(i, j, k, 1) = dux1(i, j, k, 1) + peculiar_density1(i, j, k) * richardson * gravx
+          enddo
+       enddo
+    enddo
+    
+    !! Y-gravity
+    if (nclx1.eq.2) then
+       istart = 2
+    else
+       istart = 1
+    endif
+    if (nclxn.eq.2) then
+       iend = xsize(1) - 1
+    else
+       iend = xsize(2)
+    endif
+    if ((xstart(2).eq.1).and.(ncly1.eq.0)) then
+       jstart = 1
+    else
+       jstart = 2
+    endif
+    if ((xend(2).eq.ny).and.(nclyn.eq.0)) then
+       jend = xsize(2)
+    else
+       jend = xsize(2) - 1
+    endif
+    if ((xstart(3).eq.1).and.(nclz1.eq.2)) then
+       kstart = 2
+    else
+       kstart = 1
+    endif
+    if ((xend(3).eq.nz).and.(nclzn.eq.2)) then
+       kend = xsize(3) - 1
+    else
+       kend = xsize(3)
+    endif
+    do k = kstart, kend
+       do j = jstart, jend
+          do i = istart, iend
+             duy1(i, j, k, 1) = duy1(i, j, k, 1) + peculiar_density1(i, j, k) * richardson * gravy
+          enddo
+       enddo
+    enddo
+    
+    !! Z-gravity
+    if (nclx1.eq.2) then
+       istart = 2
+    else
+       istart = 1
+    endif
+    if (nclxn.eq.2) then
+       iend = xsize(1) - 1
+    else
+       iend = xsize(2)
+    endif
+    if ((xstart(2).eq.1).and.(ncly1.eq.2)) then
+       jstart = 2
+    else
+       jstart = 1
+    endif
+    if ((xend(2).eq.ny).and.(nclyn.eq.2)) then
+       jend = xsize(2) - 1
+    else
+       jend = xsize(2)
+    endif
+    if ((xstart(3).eq.1).and.(nclz1.eq.0)) then
+       kstart = 1
+    else
+       kstart = 2
+    endif
+    if ((xend(3).eq.nz).and.(nclzn.eq.0)) then
+       kend = xsize(3)
+    else
+       kend = xsize(3) - 1
+    endif
+    do k = kstart, kend
+       do j = jstart, jend
+          do i = istart, iend
+             duz1(i, j, k, 1) = duz1(i, j, k, 1) + peculiar_density1(i, j, k) * richardson * gravz
+          enddo
+       enddo
+    enddo
+    
+    
+  end subroutine momentum_gravity
 
   subroutine scalar_transport_eq(dphi1, rho1, ux1, uy1, uz1, phi1, schmidt)
 
