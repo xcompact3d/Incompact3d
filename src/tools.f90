@@ -1113,7 +1113,7 @@ subroutine simu_stats(iwhen)
         write(*,"(' Time step =',i7,'/',i7,', Time unit =',F9.4)") itime,ilast,t
      endif
   endif
-  if (iwhen.eq.3) then !AT THE END OF A TIME STEP
+  if ((iwhen.eq.3).and.(itime.gt.ifirst)) then !AT THE END OF A TIME STEP
      call cpu_time(trank)
      if (nrank==0) print *,'Time for this time step (s):',real(trank-time1)
      telapsed = (trank-tstart)/thirtysixthousand
@@ -1145,3 +1145,83 @@ subroutine simu_stats(iwhen)
   endif
   
 end subroutine simu_stats
+
+SUBROUTINE calc_temp_eos(temp, rho, phi, mweight, xlen, ylen, zlen)
+
+  USE decomp_2d
+  USE param, ONLY : pressure0, imultispecies
+  USE var, ONLY : numscalar
+
+  IMPLICIT NONE
+
+  !! INPUTS
+  INTEGER, INTENT(IN) :: xlen, ylen, zlen
+  REAL(mytype), INTENT(IN), DIMENSION(xlen, ylen, zlen) :: rho
+  REAL(mytype), INTENT(IN), DIMENSION(xlen, ylen, zlen, numscalar) :: phi
+
+  !! OUTPUTS
+  REAL(mytype), INTENT(OUT), DIMENSION(xlen, ylen, zlen) :: temp
+
+  !! LOCALS
+  REAL(mytype), DIMENSION(xlen, ylen, zlen) :: mweight
+
+  temp(:,:,:) = pressure0 / rho(:,:,:)
+  IF (imultispecies) THEN
+     CALL calc_mweight(mweight, phi, xlen, ylen, zlen)
+     temp(:,:,:) = temp(:,:,:) * mweight(:,:,:)
+  ENDIF
+  
+ENDSUBROUTINE calc_temp_eos
+
+SUBROUTINE calc_rho_eos(rho, temp, phi, mweight, xlen, ylen, zlen)
+
+  USE decomp_2d
+  USE param, ONLY : pressure0, imultispecies
+  USE var, ONLY : numscalar
+
+  IMPLICIT NONE
+
+  !! INPUTS
+  INTEGER, INTENT(IN) :: xlen, ylen, zlen
+  REAL(mytype), INTENT(IN), DIMENSION(xlen, ylen, zlen) :: temp
+  REAL(mytype), INTENT(IN), DIMENSION(xlen, ylen, zlen, numscalar) :: phi
+
+  !! OUTPUTS
+  REAL(mytype), INTENT(OUT), DIMENSION(xlen, ylen, zlen) :: rho
+
+  !! LOCALS
+  REAL(mytype), DIMENSION(xlen, ylen, zlen) :: mweight
+
+  rho(:,:,:) = pressure0 / temp(:,:,:)
+  IF (imultispecies) THEN
+     CALL calc_mweight(mweight, phi, xlen, ylen, zlen)
+     rho(:,:,:) = rho(:,:,:) * mweight(:,:,:)
+  ENDIF
+  
+ENDSUBROUTINE calc_rho_eos
+
+SUBROUTINE calc_mweight(mweight, phi, xlen, ylen, zlen)
+
+  USE decomp_2d
+  USE param, ONLY : zero, one
+  USE param, ONLY : massfrac, mol_weight
+  USE var, ONLY : numscalar
+
+  IMPLICIT NONE
+  
+  INTEGER, INTENT(IN) :: xlen, ylen, zlen
+  REAL(mytype), INTENT(IN), DIMENSION(xlen, ylen, zlen, numscalar) :: phi
+  
+  !! LOCALS
+  REAL(mytype), DIMENSION(xlen, ylen, zlen) :: mweight
+  INTEGER :: is
+  
+  mweight(:,:,:) = zero
+  DO is = 1, numscalar
+     IF (massfrac(is)) THEN
+        mweight(:,:,:) = mweight(:,:,:) + phi(:,:,:,is) / mol_weight(is)
+     ENDIF
+  ENDDO
+  mweight(:,:,:) = one / mweight(:,:,:)
+  
+ENDSUBROUTINE calc_mweight

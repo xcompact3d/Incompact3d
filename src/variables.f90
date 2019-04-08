@@ -38,7 +38,8 @@ module var
   USE complex_geometry
 
   ! define all major arrays here
-  real(mytype), save, allocatable, dimension(:,:,:) :: ux1, ux2, ux3, po3, dv3, pp3
+  real(mytype), save, allocatable, dimension(:,:,:) :: ux1, ux2, ux3, po3, dv3
+  real(mytype), save, allocatable, dimension(:,:,:,:) :: pp3
   real(mytype), save, allocatable, dimension(:,:,:) :: uy1, uy2, uy3
   real(mytype), save, allocatable, dimension(:,:,:) :: uz1, uz2, uz3
   real(mytype), save, allocatable, dimension(:,:,:,:) :: rho1, drho1
@@ -244,7 +245,7 @@ contains
     !   allocate (pp3(ph%zst(1):ph%zen(1),ph%zst(2):ph%zen(2),ph%zst(3):ph%zen(3)))
     !   allocate (dv3(ph%zst(1):ph%zen(1),ph%zst(2):ph%zen(2),ph%zst(3):ph%zen(3)))
     !   allocate (po3(ph%zst(1):ph%zen(1),ph%zst(2):ph%zen(2),ph%zst(3):ph%zen(3)))
-    call alloc_z(pp3,ph,.true.)
+    allocate(pp3(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress))
     call alloc_z(dv3,ph,.true.)
     call alloc_z(po3,ph,.true.)
 
@@ -446,16 +447,16 @@ contains
        nrhotime = 1 !! Save some space
     endif
     allocate(rho1(xsize(1),xsize(2),xsize(3),nrhotime)) !Need to store old density values to extrapolate drhodt
-    call alloc_y(rho2, opt_global=.true.) !global indices
-    call alloc_z(rho3, opt_global=.true.) !global indices
+    call alloc_y(rho2)
+    call alloc_z(rho3)
     allocate(drho1(xsize(1),xsize(2),xsize(3),ntime))
 
     call alloc_z(divu3, opt_global=.true.) !global indices
 
-    !TRIPPING PARAMES LOST HERE
-    z_modes=int(zlz /zs_tr)
-    allocate(h_coeff(z_modes))
-    allocate(h_nxt(xsize(3)), h_i(xsize(3)))
+    ! !TRIPPING PARAMES LOST HERE
+    ! z_modes=int(zlz / zs_tr)
+    ! allocate(h_coeff(z_modes))
+    ! allocate(h_nxt(xsize(3)), h_i(xsize(3)))
 
 #ifdef DEBG
     if (nrank .eq. 0) print *,'# init_variables done'

@@ -33,7 +33,7 @@ module variables
 #ifdef SAVE_SINGLE
   integer,parameter :: prec = 4
 #else
-  integer,parameter :: prec = 8  
+  integer,parameter :: prec = 8
 #endif
 #endif
   !module filter
@@ -44,7 +44,7 @@ module variables
   real(mytype),allocatable,dimension(:) :: fiffyp,fifsyp,fifwyp,fisfyp,fissyp,fiswyp
   real(mytype),allocatable,dimension(:) :: fiffz, fifcz, fifbz, fisfz, fiscz, fisbz,fifsz,fifwz,fissz,fiswz
   real(mytype),allocatable,dimension(:) :: fiffzp,fifszp,fifwzp,fisfzp,fisszp,fiswzp
-  
+
   real(mytype),allocatable,dimension(:,:) :: fisx,fivx
   real(mytype),allocatable,dimension(:,:) :: fisy,fivy
   real(mytype),allocatable,dimension(:,:) :: fisz,fivz
@@ -81,30 +81,30 @@ module variables
      SUBROUTINE DERIVATIVE_X(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
        use decomp_2d, only : mytype
        integer :: nx,ny,nz,npaire
-       real(mytype), dimension(nx,ny,nz) :: t,u,r 
+       real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(ny,nz):: s
-       real(mytype), dimension(nx):: ff,fs,fw 
+       real(mytype), dimension(nx):: ff,fs,fw
      END SUBROUTINE DERIVATIVE_X
      SUBROUTINE DERIVATIVE_Y(t,u,r,s,ff,fs,fw,pp,nx,ny,nz,npaire)
        use decomp_2d, only : mytype
        integer :: nx,ny,nz,npaire
-       real(mytype), dimension(nx,ny,nz) :: t,u,r 
+       real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,nz):: s
        real(mytype), dimension(ny):: ff,fs,fw,pp
      END SUBROUTINE DERIVATIVE_Y
      SUBROUTINE DERIVATIVE_YY(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
        use decomp_2d, only : mytype
        integer :: nx,ny,nz,npaire
-       real(mytype), dimension(nx,ny,nz) :: t,u,r 
+       real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,nz):: s
        real(mytype), dimension(ny):: ff,fs,fw
      END SUBROUTINE DERIVATIVE_YY
      SUBROUTINE DERIVATIVE_Z(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
        use decomp_2d, only : mytype
        integer :: nx,ny,nz,npaire
-       real(mytype), dimension(nx,ny,nz) :: t,u,r 
+       real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,ny):: s
-       real(mytype), dimension(nz):: ff,fs,fw 
+       real(mytype), dimension(nz):: ff,fs,fw
      END SUBROUTINE DERIVATIVE_Z
   END INTERFACE
 
@@ -219,8 +219,9 @@ module param
        itype_hill = 4, &
        itype_cyl = 5, &
        itype_dbg = 6, &
-       itype_mixlayer = 7
-  
+       itype_mixlayer = 7, &
+       itype_jet = 8
+
   integer :: cont_phi,itr,itime,itest,iprocessing
   integer :: ifft,istret,iforc_entree,iturb
   integer :: iin,itimescheme,ifirst,ilast,iles,iimplicit
@@ -245,7 +246,7 @@ module param
   !! alpha * T + beta * dT/dn = g
   !! alpha=1, beta=0 is dirichlet
   !! alpha=0, beta=1 is neumann
-  !! 
+  !!
   !! WARNING ATTENTION ACHTUNG WARNING ATTENTION ACHTUNG
   !!
   !! beta is the coefficient for NORMAL derivative :
@@ -264,10 +265,19 @@ module param
   integer :: smagwalldamp
   real(mytype) :: smagcst,walecst,FSGS,pr_t,maxdsmagcst
 
+  !! Gravity field (vector components)
+  real(mytype) :: gravx, gravy, gravz
+
   !! LMN
-  logical :: ilmn, ilmn_bound
+  logical :: ilmn, ilmn_bound, ilmn_solve_temp
   real(mytype) :: pressure0, prandtl
-  integer :: nrhotime
+  integer :: nrhotime, npress
+  logical :: ivarcoeff
+
+  logical :: imultispecies
+  logical, allocatable, dimension(:) :: massfrac
+  real(mytype), allocatable, dimension(:) :: mol_weight
+  integer :: primary_species
 
   character :: filesauve*80, filenoise*80, &
   nchamp*80,filepath*80, fileturb*80, filevisu*80, datapath*80
@@ -287,7 +297,7 @@ module param
   real(mytype), allocatable, dimension(:) :: h_coeff, h_nxt,h_i
 
   !numbers
-  
+
   real(mytype),parameter :: zpone=0.1_mytype
   real(mytype),parameter :: zptwo=0.2_mytype
   real(mytype),parameter :: zpthree=0.3_mytype
@@ -353,12 +363,12 @@ module param
   real(mytype),parameter :: thirtysixthousand=3600._mytype
 
 
-#ifdef DOUBLE_PREC 
-  real(mytype),parameter :: pi=dacos(-one) 
-  real(mytype),parameter :: twopi=two*dacos(-one) 
+#ifdef DOUBLE_PREC
+  real(mytype),parameter :: pi=dacos(-one)
+  real(mytype),parameter :: twopi=two*dacos(-one)
 #else
   real(mytype),parameter :: pi=acos(-one)
-  real(mytype),parameter :: twopi=two*acos(-one) 
+  real(mytype),parameter :: twopi=two*acos(-one)
 #endif
 
 end module param
@@ -391,7 +401,7 @@ module derivX
   real(mytype) :: alsaix,asix,bsix,csix,dsix
 
 #ifdef IMPLICIT
-  !implicit 
+  !implicit
   real(mytype) :: alsaixt,asixt,bsixt,csixt
 #endif
 end module derivX
@@ -413,7 +423,7 @@ module derivY
   real(mytype) :: alsajy,asjy,bsjy,csjy,dsjy
 
 #ifdef IMPLICIT
-  !implicit 
+  !implicit
   real(mytype) :: alsajyt,asjyt,bsjyt,csjyt
 #endif
 end module derivY
@@ -435,7 +445,7 @@ module derivZ
   real(mytype) :: alsakz,askz,bskz,cskz,dskz
 
 #ifdef IMPLICIT
-  !implicit 
+  !implicit
   real(mytype) :: alsakzt,askzt,bskzt,cskzt
 #endif
 
@@ -443,7 +453,7 @@ end module derivZ
 
 ! Describes the parameters for the discrete filters in X-Pencil
 module parfiX
-use decomp_2d, only : mytype
+  use decomp_2d, only : mytype
   real(mytype) :: fial1x, fia1x, fib1x, fic1x, fid1x, fie1x, fif1x  ! Coefficients for filter at boundary point 1  
   real(mytype) :: fial2x, fia2x, fib2x, fic2x, fid2x, fie2x, fif2x  ! Coefficients for filter at boundary point 2
   real(mytype) :: fial3x, fia3x, fib3x, fic3x, fid3x, fie3x, fif3x  ! Coefficients for filter at boundary point 3
@@ -478,10 +488,10 @@ use decomp_2d, only : mytype
 end module parfiZ
 
 module simulation_stats
-  real(8) :: tstart,time1,trank,tranksum,ttotal,tremaining,telapsed      
+  real(8) :: tstart,time1,trank,tranksum,ttotal,tremaining,telapsed
 end module simulation_stats
 
 module ibm
   use decomp_2d, only : mytype
-   real(mytype) :: cex,cey,ra        
+   real(mytype) :: cex,cey,ra
 end module ibm
