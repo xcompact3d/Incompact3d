@@ -334,7 +334,7 @@ CONTAINS
     implicit none
 
     !! Inputs
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), nrhotime) :: peculiar_density1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: peculiar_density1
     
     !! InOut
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
@@ -345,28 +345,116 @@ CONTAINS
     integer :: i, j, k, is
 
     !! X-gravity
+    if ((nclx1.eq.0).and.(nclxn.eq.0)) then
+       istart = 1
+       iend = xsize(1)
+    else
+       istart = 2
+       iend = xsize(1) - 1
+    endif
+    if ((xstart(2).eq.1).and.(ncly1.eq.2)) then
+       jstart = 2
+    else
+       jstart = 1
+    endif
+    if ((xend(2).eq.ny).and.(nclyn.eq.2)) then
+       jend = xsize(2) - 1
+    else
+       jend = xsize(2)
+    endif
+    if ((xstart(3).eq.1).and.(nclz1.eq.2)) then
+       kstart = 2
+    else
+       kstart = 1
+    endif
+    if ((xend(3).eq.nz).and.(nclzn.eq.2)) then
+       kend = xsize(3) - 1
+    else
+       kend = xsize(3)
+    endif
+    
     do k = kstart, kend
        do j = jstart, jend
           do i = istart, iend
-
+             dux1(i, j, k, 1) = dux1(i, j, k, 1) + peculiar_density1(i, j, k) * gravx
           enddo
        enddo
     enddo
     
     !! Y-gravity
+    if (nclx1.eq.2) then
+       istart = 2
+    else
+       istart = 1
+    endif
+    if (nclxn.eq.2) then
+       iend = xsize(1) - 1
+    else
+       iend = xsize(2)
+    endif
+    if ((xstart(2).eq.1).and.(ncly1.eq.0)) then
+       jstart = 1
+    else
+       jstart = 2
+    endif
+    if ((xend(2).eq.ny).and.(nclyn.eq.0)) then
+       jend = xsize(2)
+    else
+       jend = xsize(2) - 1
+    endif
+    if ((xstart(3).eq.1).and.(nclz1.eq.2)) then
+       kstart = 2
+    else
+       kstart = 1
+    endif
+    if ((xend(3).eq.nz).and.(nclzn.eq.2)) then
+       kend = xsize(3) - 1
+    else
+       kend = xsize(3)
+    endif
     do k = kstart, kend
        do j = jstart, jend
           do i = istart, iend
-
+             duy1(i, j, k, 1) = duy1(i, j, k, 1) + peculiar_density1(i, j, k) * gravy
           enddo
        enddo
     enddo
     
     !! Z-gravity
+    if (nclx1.eq.2) then
+       istart = 2
+    else
+       istart = 1
+    endif
+    if (nclxn.eq.2) then
+       iend = xsize(1) - 1
+    else
+       iend = xsize(2)
+    endif
+    if ((xstart(2).eq.1).and.(ncly1.eq.2)) then
+       jstart = 2
+    else
+       jstart = 1
+    endif
+    if ((xend(2).eq.ny).and.(nclyn.eq.2)) then
+       jend = xsize(2) - 1
+    else
+       jend = xsize(2)
+    endif
+    if ((xstart(3).eq.1).and.(nclz1.eq.0)) then
+       kstart = 1
+    else
+       kstart = 2
+    endif
+    if ((xend(3).eq.nz).and.(nclzn.eq.0)) then
+       kend = xsize(3)
+    else
+       kend = xsize(3) - 1
+    endif
     do k = kstart, kend
        do j = jstart, jend
           do i = istart, iend
-
+             duz1(i, j, k, 1) = duz1(i, j, k, 1) + peculiar_density1(i, j, k) * gravz
           enddo
        enddo
     enddo

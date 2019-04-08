@@ -265,6 +265,9 @@ module param
   integer :: smagwalldamp
   real(mytype) :: smagcst,walecst,FSGS,pr_t,maxdsmagcst
 
+  !! Gravity field (vector components)
+  real(mytype) :: gravx, gravy, gravz
+
   !! LMN
   logical :: ilmn, ilmn_bound, ilmn_solve_temp
   real(mytype) :: pressure0, prandtl

@@ -367,6 +367,11 @@ subroutine parameter_defaults()
   irotation = 0
   itest=1
 
+  !! Gravity field
+  gravx = zero
+  gravy = zero
+  gravz = zero
+
   !! LMN stuff
   ilmn = .FALSE.
   ilmn_bound = .TRUE.
