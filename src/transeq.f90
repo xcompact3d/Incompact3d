@@ -254,6 +254,13 @@ CONTAINS
         duz1(:,:,:,1) = duz1(:,:,:,1) + sgsz1(:,:,:)
     endif
 
+    !! Gravity
+    call momentum_gravity(dux1, duy1, duz1, rho1(:,:,:,1) - one)
+    do is = 1, numscalar
+       call momentum_gravity(dux1, duy1, duz1, phi1(:,:,:,is))
+    enddo
+
+    !! Additional forcing
     call momentum_forcing(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
 
     if (itrip == 1) then
@@ -317,6 +324,55 @@ CONTAINS
     tc1(:,:,:) = tc1(:,:,:) + one_third * xnu * tf1(:,:,:)
 
   end subroutine momentum_full_viscstress_tensor
+
+  subroutine momentum_gravity(dux1, duy1, duz1, peculiar_density1)
+
+    use decomp_2d
+    use param
+    use variables
+    
+    implicit none
+
+    !! Inputs
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), nrhotime) :: peculiar_density1
+    
+    !! InOut
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
+    
+    !! Locals
+    integer :: istart, jstart, kstart
+    integer :: iend, jend, kend
+    integer :: i, j, k, is
+
+    !! X-gravity
+    do k = kstart, kend
+       do j = jstart, jend
+          do i = istart, iend
+
+          enddo
+       enddo
+    enddo
+    
+    !! Y-gravity
+    do k = kstart, kend
+       do j = jstart, jend
+          do i = istart, iend
+
+          enddo
+       enddo
+    enddo
+    
+    !! Z-gravity
+    do k = kstart, kend
+       do j = jstart, jend
+          do i = istart, iend
+
+          enddo
+       enddo
+    enddo
+    
+    
+  end subroutine momentum_gravity
 
   subroutine scalar_transport_eq(dphi1, rho1, ux1, uy1, uz1, phi1, schmidt)
 
