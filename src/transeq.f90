@@ -255,9 +255,9 @@ CONTAINS
     endif
 
     !! Gravity
-    call momentum_gravity(dux1, duy1, duz1, rho1(:,:,:,1) - one)
+    call momentum_gravity(dux1, duy1, duz1, rho1(:,:,:,1) - one, zero)
     do is = 1, numscalar
-       call momentum_gravity(dux1, duy1, duz1, phi1(:,:,:,is))
+       call momentum_gravity(dux1, duy1, duz1, phi1(:,:,:,is), ri(is))
     enddo
 
     !! Additional forcing
@@ -325,7 +325,7 @@ CONTAINS
 
   end subroutine momentum_full_viscstress_tensor
 
-  subroutine momentum_gravity(dux1, duy1, duz1, peculiar_density1)
+  subroutine momentum_gravity(dux1, duy1, duz1, peculiar_density1, richardson)
 
     use decomp_2d
     use param
@@ -334,7 +334,8 @@ CONTAINS
     implicit none
 
     !! Inputs
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: peculiar_density1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: peculiar_density1
+    real(mytype), intent(in) :: richardson
     
     !! InOut
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
@@ -376,7 +377,7 @@ CONTAINS
     do k = kstart, kend
        do j = jstart, jend
           do i = istart, iend
-             dux1(i, j, k, 1) = dux1(i, j, k, 1) + peculiar_density1(i, j, k) * gravx
+             dux1(i, j, k, 1) = dux1(i, j, k, 1) + peculiar_density1(i, j, k) * richardson * gravx
           enddo
        enddo
     enddo
@@ -415,7 +416,7 @@ CONTAINS
     do k = kstart, kend
        do j = jstart, jend
           do i = istart, iend
-             duy1(i, j, k, 1) = duy1(i, j, k, 1) + peculiar_density1(i, j, k) * gravy
+             duy1(i, j, k, 1) = duy1(i, j, k, 1) + peculiar_density1(i, j, k) * richardson * gravy
           enddo
        enddo
     enddo
@@ -454,7 +455,7 @@ CONTAINS
     do k = kstart, kend
        do j = jstart, jend
           do i = istart, iend
-             duz1(i, j, k, 1) = duz1(i, j, k, 1) + peculiar_density1(i, j, k) * gravz
+             duz1(i, j, k, 1) = duz1(i, j, k, 1) + peculiar_density1(i, j, k) * richardson * gravz
           enddo
        enddo
     enddo

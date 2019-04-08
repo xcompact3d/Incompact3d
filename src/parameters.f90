@@ -60,11 +60,13 @@ subroutine parameter(input_i3d)
        ilesmod, numscalar, iibm, ilmn, &
        ilesmod, iscalar, iibm, &
        nclx1, nclxn, ncly1, nclyn, nclz1, nclzn, &
-       ivisu, ipost
+       ivisu, ipost, &
+       gravx, gravy, gravz
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, rxxnu, cnu, fpi2, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu
   NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat
-  NAMELIST /ScalarParam/ sc, nclxS1, nclxSn, nclyS1, nclySn, nclzS1, nclzSn
+  NAMELIST /ScalarParam/ sc, ri, &
+       nclxS1, nclxSn, nclyS1, nclySn, nclzS1, nclzSn
   NAMELIST /LESModel/ jles, smagcst, walecst, iwall
   NAMELIST /WallModel/ smagwalldamp
 
@@ -137,7 +139,8 @@ subroutine parameter(input_i3d)
      nclxS1 = nclx1; nclxSn = nclxn
      nclyS1 = ncly1; nclySn = nclyn
      nclzS1 = nclz1; nclzSn = nclzn
-     allocate(sc(numscalar))
+     allocate(sc(numscalar), ri(numscalar))
+     ri(:) = zero
      read(10, nml=ScalarParam)
   endif
   ! !! These are the 'optional'/model parameters
@@ -223,6 +226,7 @@ subroutine parameter(input_i3d)
      write(*,"('                      (nclz1 ,nclzn )=(',I1,',',I1,')')") nclz1,nclzn
      write(*,"(' High and low speed : u1=',F6.2,' and u2=',F6.2)") u1,u2
      write(*,"(' Reynolds number Re : ',F15.8)") re
+     write(*,"(' Gravity vector     : (gx, gy, gz)=(',F15.8,',',F15.8,',',F15.8,')')") gravx, gravy, gravz
      if (ilmn) then
         print *, "LMN                : Enabled"
         if (ivarcoeff) then
@@ -284,6 +288,7 @@ subroutine parameter(input_i3d)
         do is=1, numscalar
            write (*,"(' Scalar             : #',I1)") is
            write (*,"(' Schmidt number     : ',F15.8)") sc(is)
+           write (*,"(' Richardson number  : ',F15.8)") ri(is)
         end do
      endif
      if (iibm.eq.0) then
