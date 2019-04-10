@@ -28,7 +28,7 @@ CONTAINS
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
 
-    integer :: ijk,nvect1,nvect2,nvect3,i,j,k,is
+    integer :: i,j,k,is
 
     !SKEW SYMMETRIC FORM
     !WORK X-PENCILS
@@ -295,7 +295,7 @@ CONTAINS
     USE variables
     USE decomp_2d
     USE var, only : td1,te1,tf1,tg1,di1
-    USE var, only : ta2,tb2,tc2,td2,di2
+    USE var, only : ta2,tb2,tc2,di2
     USE var, only : tc3,di3
 
     IMPLICIT NONE
@@ -303,7 +303,6 @@ CONTAINS
     REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ta1, tb1, tc1
     REAL(mytype), DIMENSION(zsize(1), zsize(2), zsize(3)), INTENT(IN) :: divu3
 
-    INTEGER :: i, j, k
     REAL(mytype) :: one_third
 
     one_third = one / three
@@ -343,7 +342,7 @@ CONTAINS
     !! Locals
     integer :: istart, jstart, kstart
     integer :: iend, jend, kend
-    integer :: i, j, k, is
+    integer :: i, j, k
 
     !! X-gravity
     if ((nclx1.eq.0).and.(nclxn.eq.0)) then
@@ -463,7 +462,7 @@ CONTAINS
 
   end subroutine momentum_gravity
 
-  subroutine scalar_transport_eq(dphi1, rho1, ux1, uy1, uz1, phi1, schmidt)
+  subroutine scalar_transport_eq(dphi1, rho1, ux1, phi1, schmidt)
 
     USE param
     USE variables
@@ -476,7 +475,7 @@ CONTAINS
     implicit none
 
     !! INPUTS
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: phi1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
     REAL(mytype), INTENT(IN) :: schmidt
@@ -536,7 +535,7 @@ CONTAINS
   endsubroutine scalar_transport_eq
 
   !************************************************************
-  subroutine scalar(dphi1, rho1, ux1, uy1, uz1, phi1)
+  subroutine scalar(dphi1, rho1, ux1, phi1)
 
     USE param
     USE variables
@@ -545,7 +544,7 @@ CONTAINS
     implicit none
 
     !! INPUTS
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
 
@@ -553,7 +552,7 @@ CONTAINS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
 
     !! LOCALS
-    integer :: i, j, k, is
+    integer :: is
 
     !!=====================================================================
     !! XXX It is assumed that ux,uy,uz are already updated in all pencils!
@@ -563,7 +562,7 @@ CONTAINS
        if (is.ne.primary_species) then
           !! For mass fractions enforce primary species Y_p = 1 - sum_s Y_s
           !! So don't solve a transport equation
-          call scalar_transport_eq(dphi1(:,:,:,:,is), rho1, ux1, uy1, uz1, phi1(:,:,:,is), sc(is))
+          call scalar_transport_eq(dphi1(:,:,:,:,is), rho1, ux1, phi1(:,:,:,is), sc(is))
        endif
 
     end do !loop numscalar
@@ -580,7 +579,7 @@ CONTAINS
 
   end subroutine scalar
 
-  subroutine temperature_rhs_eq(drho1, rho1, ux1, uy1, uz1, phi1)
+  subroutine temperature_rhs_eq(drho1, rho1, ux1, phi1)
 
     USE param
     USE variables
@@ -591,15 +590,12 @@ CONTAINS
     implicit none
 
     !! INPUTS
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
-
-    !! LOCALS
-    integer :: is
 
     !! Get temperature
     CALL calc_temp_eos(te1, rho1(:,:,:,1), phi1, tb1, xsize(1), xsize(2), xsize(3))
@@ -607,12 +603,12 @@ CONTAINS
     !!=====================================================================
     !! XXX It is assumed that ux,uy,uz are already updated in all pencils!
     !!=====================================================================
-    call scalar_transport_eq(drho1, rho1, ux1, uy1, uz1, te1, prandtl)
+    call scalar_transport_eq(drho1, rho1, ux1, te1, prandtl)
 
   end subroutine temperature_rhs_eq
 
 
-  SUBROUTINE continuity_rhs_eq(drho1, rho1, ux1, uy1, uz1, divu3)
+  SUBROUTINE continuity_rhs_eq(drho1, rho1, ux1, divu3)
 
     USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
     USE decomp_2d, ONLY : transpose_z_to_y, transpose_y_to_x
@@ -625,7 +621,7 @@ CONTAINS
 
     IMPLICIT NONE
 
-    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
     REAL(mytype), INTENT(IN), DIMENSION(zsize(1), zsize(2), zsize(3)) :: divu3
 

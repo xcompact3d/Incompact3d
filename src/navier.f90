@@ -16,8 +16,6 @@ subroutine  int_time(var1,dvar1)
   USE decomp_2d
   implicit none
 
-  integer :: ijk,nxyz
-
   !! INPUTS
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: var1
 
@@ -49,11 +47,11 @@ subroutine  int_time(var1,dvar1)
         var1(:,:,:)=dt*dvar1(:,:,:,1)+var1(:,:,:)
      elseif(itime.eq.2.and.irestart.eq.0) then
       	! Do second time step with AB2
-      	var1(:,:,:)=onepfive*dt*dvar1(:,:,:,1)-half*dt*dvar1(:,:,:,2)+var1(:,:,:)
+        var1(:,:,:)=onepfive*dt*dvar1(:,:,:,1)-half*dt*dvar1(:,:,:,2)+var1(:,:,:)
         dvar1(:,:,:,3)=dvar1(:,:,:,2)
      else
       	! Finally using AB3
-      	var1(:,:,:)=adt(itr)*dvar1(:,:,:,1)+bdt(itr)*dvar1(:,:,:,2)+cdt(itr)*dvar1(:,:,:,3)+var1(:,:,:)
+        var1(:,:,:)=adt(itr)*dvar1(:,:,:,1)+bdt(itr)*dvar1(:,:,:,2)+cdt(itr)*dvar1(:,:,:,3)+var1(:,:,:)
         dvar1(:,:,:,3)=dvar1(:,:,:,2)
      endif
      dvar1(:,:,:,2)=dvar1(:,:,:,1)
@@ -257,7 +255,6 @@ subroutine int_time_temperature(rho1, drho1, dphi1, phi1)
   implicit none
 
   integer :: it, i, j, k
-  real(mytype) :: rhomin, rhomax
 
   !! INPUTS
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
@@ -266,9 +263,6 @@ subroutine int_time_temperature(rho1, drho1, dphi1, phi1)
 
   !! OUTPUTS
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
-
-  !! LOCALS
-  INTEGER :: is
 
   !! First, update old density / store old transients depending on scheme
   if (itimescheme.lt.5) then
@@ -332,7 +326,6 @@ SUBROUTINE lmn_t_to_rho_trans(drho1, dtemp1, rho1, dphi1, phi1)
 
   USE decomp_2d
   USE param, ONLY : zero
-  USE param, ONLY : pressure0
   USE param, ONLY : imultispecies, massfrac, mol_weight
   USE param, ONLY : ntime
   USE var, ONLY : numscalar
@@ -392,7 +385,6 @@ subroutine corpg (ux,uy,uz,px,py,pz)
 
   implicit none
 
-  integer :: ijk,nxyz
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: px,py,pz
 
@@ -431,7 +423,7 @@ subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
   real(mytype),dimension(zsize(1),zsize(2),zsize(3)),intent(in) :: divu3
   real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: pp3
 
-  integer :: ijk,nvect1,nvect2,nvect3,i,j,k,nlock
+  integer :: nvect3,i,j,k,nlock
   integer :: code
   real(mytype) :: tmax,tmoy,tmax1,tmoy1
 
@@ -551,9 +543,7 @@ subroutine gradp(px1,py1,pz1,pp3)
 
   implicit none
 
-  integer :: i,j,k,code
-  integer, dimension(2) :: dims, dummy_coords
-  logical, dimension(2) :: dummy_periods
+  integer :: i,j,k
 
   real(mytype),dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize) :: pp3
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: px1,py1,pz1
@@ -928,7 +918,7 @@ SUBROUTINE calc_divu_constraint(divu3, rho1, phi1)
 
   IMPLICIT NONE
 
-  INTEGER :: i, j, k, is
+  INTEGER :: is
 
   REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
   REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar) :: phi1

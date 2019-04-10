@@ -18,22 +18,20 @@ PROGRAM incompact3d
 #endif
   implicit none
 
-  integer :: code,nlock,i,j,k,ii,bcx,bcy,bcz,fh,ierror
-  real(mytype) :: x,y,z,timeleft
+  integer :: ierr
 
-  integer :: ErrFlag, nargin, FNLength, status, DecInd, output_counter
+  integer :: nargin, FNLength, status, DecInd
   logical :: back
   character(len=80) :: InputFN, FNBase
-  character(len=20) :: filename
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!-------------------------------------------------------------------------------
   !! Initialisation
   !!-------------------------------------------------------------------------------
 
   !! Initialise MPI
-  call MPI_INIT(code)
-  call MPI_COMM_RANK(MPI_COMM_WORLD,nrank,ierror)
-  call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,ierror)
+  call MPI_INIT(ierr)
+  call MPI_COMM_RANK(MPI_COMM_WORLD,nrank,ierr)
+  call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,ierr)
 
   ! Handle input file like a boss -- GD
   nargin=command_argument_count()
@@ -107,7 +105,7 @@ PROGRAM incompact3d
   call calc_divu_constraint(divu3, rho1, phi1)
   !!-------------------------------------------------------------------------------
   !! End initialisation
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!-------------------------------------------------------------------------------
   if(nrank.eq.0)then
      open(42,file='time_evol.dat',form='formatted')
   endif
@@ -120,17 +118,17 @@ PROGRAM incompact3d
 
      do itr=1,iadvance_time
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !!-------------------------------------------------------------------------
         !! Initialise timestep
         !!-------------------------------------------------------------------------
         call boundary_conditions(rho1,ux1,uy1,uz1,phi1,ep1)
         !!-------------------------------------------------------------------------
         !! End initialise timestep
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !!-------------------------------------------------------------------------
 
         CALL calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !!-------------------------------------------------------------------------
         !! Time integrate transport equations
         !!-------------------------------------------------------------------------
         if (ilmn) then
@@ -144,7 +142,7 @@ PROGRAM incompact3d
         call pre_correc(ux1,uy1,uz1,ep1)
         !!-------------------------------------------------------------------------
         !! End time integrate transport equations
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !!-------------------------------------------------------------------------
 
         if (iibm==1) then !solid body old school
            call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,1)
@@ -152,7 +150,7 @@ PROGRAM incompact3d
            call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,2)
         endif
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !!-------------------------------------------------------------------------
         !! Poisson solver and velocity correction
         !!-------------------------------------------------------------------------
         call calc_divu_constraint(divu3, rho1, phi1)
@@ -167,7 +165,7 @@ PROGRAM incompact3d
         endif
         !!-------------------------------------------------------------------------
         !! End Poisson solver and velocity correction
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !!-------------------------------------------------------------------------
 
         if (mod(itime,10)==0) then
            call divergence(dv3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,2)
@@ -184,7 +182,7 @@ PROGRAM incompact3d
      endif
 #endif
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     !!----------------------------------------------------------------------------
      !! Post-processing / IO
      !!----------------------------------------------------------------------------
 
@@ -197,11 +195,11 @@ PROGRAM incompact3d
      CALL visu(rho1, ux1, uy1, uz1, pp3(:,:,:,1), phi1, itime)
      !!----------------------------------------------------------------------------
      !! End post-processing / IO
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     !!----------------------------------------------------------------------------
 
   enddo !! End time loop
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!-------------------------------------------------------------------------------
   !! End simulation
   !!-------------------------------------------------------------------------------
   if(nrank.eq.0)then
@@ -209,7 +207,7 @@ PROGRAM incompact3d
   endif
   call simu_stats(4)
   call decomp_2d_finalize
-  CALL MPI_FINALIZE(code)
+  CALL MPI_FINALIZE(ierr)
 
 END PROGRAM incompact3d
 
@@ -245,14 +243,14 @@ SUBROUTINE calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1
 
   !! Scalar equations
   !! XXX Not yet LMN!!!
-  CALL scalar(dphi1, rho1, ux1, uy1, uz1, phi1)
+  CALL scalar(dphi1, rho1, ux1, phi1)
 
   !! Other (LMN, ...)
   IF (ilmn) THEN
      IF (ilmn_solve_temp) THEN
-        CALL temperature_rhs_eq(drho1, rho1, ux1, uy1, uz1, phi1)
+        CALL temperature_rhs_eq(drho1, rho1, ux1, phi1)
      ELSE
-        CALL continuity_rhs_eq(drho1, rho1, ux1, uy1, uz1, divu3)
+        CALL continuity_rhs_eq(drho1, rho1, ux1, divu3)
      ENDIF
   ENDIF
 
