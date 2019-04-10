@@ -11,72 +11,72 @@
 
 ! A few utility routines to find factors of integer numbers
 
-  subroutine findfactor(num, factors, nfact)
-    
-    implicit none
+subroutine findfactor(num, factors, nfact)
 
-    integer, intent(IN) :: num
-    integer, intent(OUT), dimension(*) :: factors
-    integer, intent(OUT) :: nfact
-    integer :: i, m
+implicit none
 
-    ! find the factors <= sqrt(num)
-    m = int(sqrt(real(num)))
-    nfact = 1
-    do i=1,m
-       if (num/i*i == num) then
-          factors(nfact) = i
-          nfact = nfact + 1
-       end if
-    end do
-    nfact = nfact - 1
+integer, intent(IN) :: num
+integer, intent(OUT), dimension(*) :: factors
+integer, intent(OUT) :: nfact
+integer :: i, m
 
-    ! derive those > sqrt(num)
-    if (factors(nfact)**2/=num) then
-       do i=nfact+1, 2*nfact
-          factors(i) = num / factors(2*nfact-i+1)
-       end do
-       nfact = nfact * 2
-    else
-       do i=nfact+1, 2*nfact-1
-          factors(i) = num / factors(2*nfact-i)
-       end do
-       nfact = nfact * 2 - 1
-    endif
-       
-    return
+! find the factors <= sqrt(num)
+m = int(sqrt(real(num)))
+nfact = 1
+do i=1,m
+if (num/i*i == num) then
+factors(nfact) = i
+nfact = nfact + 1
+end if
+end do
+nfact = nfact - 1
 
-  end subroutine findfactor
+! derive those > sqrt(num)
+if (factors(nfact)**2/=num) then
+do i=nfact+1, 2*nfact
+factors(i) = num / factors(2*nfact-i+1)
+end do
+nfact = nfact * 2
+else
+do i=nfact+1, 2*nfact-1
+factors(i) = num / factors(2*nfact-i)
+end do
+nfact = nfact * 2 - 1
+endif
+
+return
+
+end subroutine findfactor
 
 
-  subroutine primefactors(num, factors, nfact)
+subroutine primefactors(num, factors, nfact)
 
-    implicit none
-  
-    integer, intent(IN) :: num
-    integer, intent(OUT), dimension(*) :: factors
-    integer, intent(INOUT) :: nfact
+implicit none
 
-    integer :: i, n
-    
-    i = 2  
-    nfact = 1
-    n = num 
-    do
-       if (mod(n,i) == 0) then
-          factors(nfact) = i
-          nfact = nfact + 1
-          n = n / i
-       else
-          i = i + 1
-       end if
-       if (n == 1) then
-          nfact = nfact - 1
-          exit
-       end if
-    end do
-    
-    return
+integer, intent(IN) :: num
+integer, intent(OUT), dimension(*) :: factors
+integer, intent(INOUT) :: nfact
 
-  end subroutine primefactors
-  
+integer :: i, n
+
+i = 2  
+nfact = 1
+n = num 
+do
+if (mod(n,i) == 0) then
+factors(nfact) = i
+nfact = nfact + 1
+n = n / i
+else
+i = i + 1
+end if
+if (n == 1) then
+nfact = nfact - 1
+exit
+end if
+end do
+
+return
+
+end subroutine primefactors
+

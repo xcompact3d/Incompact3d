@@ -71,27 +71,27 @@ module decomp_2d_io
   interface decomp_2d_write_plane
      module procedure write_plane_3d_real
      module procedure write_plane_3d_complex
-!     module procedure write_plane_2d
+     !     module procedure write_plane_2d
   end interface decomp_2d_write_plane
 
   interface decomp_2d_write_every
      module procedure write_every_real
      module procedure write_every_complex
   end interface decomp_2d_write_every
-  
+
   interface decomp_2d_write_subdomain
      module procedure write_subdomain
   end interface decomp_2d_write_subdomain
 
 contains
-  
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Using MPI-IO library to write a single 3D array to a file
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine write_one_real(ipencil,var,filename,opt_decomp)
-    
+
     implicit none
-    
+
     integer, intent(IN) :: ipencil
     real(mytype), dimension(:,:,:), intent(IN) :: var
     character(len=*), intent(IN) :: filename
@@ -111,9 +111,9 @@ contains
 
 
   subroutine write_one_complex(ipencil,var,filename,opt_decomp)
-    
+
     implicit none
-    
+
     integer, intent(IN) :: ipencil
     complex(mytype), dimension(:,:,:), intent(IN) :: var
     character(len=*), intent(IN) :: filename
@@ -127,18 +127,18 @@ contains
     data_type = complex_type
 
 #include "io_write_one.inc"
-    
+
     return
   end subroutine write_one_complex
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Using MPI-IO library to read from a file a single 3D array
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine read_one_real(ipencil,var,filename,opt_decomp)
-    
+
     implicit none
-    
+
     integer, intent(IN) :: ipencil
     real(mytype), dimension(:,:,:), intent(INOUT) :: var
     character(len=*), intent(IN) :: filename
@@ -152,18 +152,18 @@ contains
 
     data_type = real_type_single
     allocate (varsingle(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
-    
+
     if (present(opt_decomp)) then
        decomp = opt_decomp
     else
        call get_decomp_info(decomp)
     end if
-    
+
     ! determine subarray parameters
     sizes(1) = decomp%xsz(1)
     sizes(2) = decomp%ysz(2)
     sizes(3) = decomp%zsz(3)
-    
+
     if (ipencil == 1) then
        subsizes(1) = decomp%xsz(1)
        subsizes(2) = decomp%xsz(2)
@@ -186,7 +186,7 @@ contains
        starts(2) = decomp%zst(2)-1
        starts(3) = decomp%zst(3)-1
     endif
-    
+
     call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
          MPI_ORDER_FORTRAN, data_type, newtype, ierror)
     call MPI_TYPE_COMMIT(newtype,ierror)
@@ -203,15 +203,15 @@ contains
     call MPI_TYPE_FREE(newtype,ierror)
     var = real(varsingle,mytype)
     deallocate(varsingle)
-    
+
     return
   end subroutine read_one_real
 
 
   subroutine read_one_complex(ipencil,var,filename,opt_decomp)
-    
+
     implicit none
-    
+
     integer, intent(IN) :: ipencil
     complex(mytype), dimension(:,:,:), intent(INOUT) :: var
     character(len=*), intent(IN) :: filename
@@ -221,20 +221,20 @@ contains
     integer(kind=MPI_OFFSET_KIND) :: disp
     integer, dimension(3) :: sizes, subsizes, starts
     integer :: ierror, newtype, fh, data_type
-    
+
     data_type = complex_type
 
 #include "io_read_one.inc"
-    
+
     return
   end subroutine read_one_complex
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Write a 3D array as part of a big MPI-IO file, starting from 
   !  displacement 'disp'; 'disp' will be updated after the writing
   !  operation to prepare the writing of next chunk of data.
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine write_var_real(fh,disp,ipencil,var,opt_decomp)
 
     implicit none
@@ -279,11 +279,11 @@ contains
   end subroutine write_var_complex
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Read a 3D array as part of a big MPI-IO file, starting from 
   !  displacement 'disp'; 'disp' will be updated after the reading
   !  operation to prepare the reading of next chunk of data.
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine read_var_real(fh,disp,ipencil,var,opt_decomp)
 
     implicit none
@@ -327,12 +327,12 @@ contains
     return
   end subroutine read_var_complex
 
-  
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Write scalar variables as part of a big MPI-IO file, starting from 
   !  displacement 'disp'; 'disp' will be updated after the reading
   !  operation to prepare the reading of next chunk of data.
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine write_scalar_real(fh,disp,n,var)
 
     implicit none
@@ -441,11 +441,11 @@ contains
   end subroutine write_scalar_logical
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Read scalar variables as part of a big MPI-IO file, starting from 
   !  displacement 'disp'; 'disp' will be updated after the reading
   !  operation to prepare the reading of next chunk of data.
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine read_scalar_real(fh,disp,n,var)
 
     implicit none
@@ -467,7 +467,7 @@ contains
 
     return
   end subroutine read_scalar_real
-  
+
 
   subroutine read_scalar_complex(fh,disp,n,var)
 
@@ -534,9 +534,9 @@ contains
   end subroutine read_scalar_logical
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Write a 2D slice of the 3D data to a file
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine write_plane_3d_real(ipencil,var,iplane,n,filename, &
        opt_decomp)
 
@@ -591,32 +591,32 @@ contains
   end subroutine write_plane_3d_complex
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Write a 2D array to a file
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !************** TO DO ***************
   !* Consider handling distributed 2D data set
-!  subroutine write_plane_2d(ipencil,var,filename)
-!    integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
-!    real(mytype), dimension(:,:), intent(IN) :: var ! 2D array
-!    character(len=*), intent(IN) :: filename
-!
-!    if (ipencil==1) then
-!       ! var should be defined as var(xsize(2)
-!
-!    else if (ipencil==2) then
-!
-!    else if (ipencil==3) then
-!
-!    end if
-!
-!    return
-!  end subroutine write_plane_2d
+  !  subroutine write_plane_2d(ipencil,var,filename)
+  !    integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
+  !    real(mytype), dimension(:,:), intent(IN) :: var ! 2D array
+  !    character(len=*), intent(IN) :: filename
+  !
+  !    if (ipencil==1) then
+  !       ! var should be defined as var(xsize(2)
+  !
+  !    else if (ipencil==2) then
+  !
+  !    else if (ipencil==3) then
+  !
+  !    end if
+  !
+  !    return
+  !  end subroutine write_plane_2d
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Write 3D array data for every specified mesh point
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine write_every_real(ipencil,var,iskip,jskip,kskip, &
        filename, from1)
 
@@ -627,7 +627,7 @@ contains
     integer, intent(IN) :: iskip,jskip,kskip 
     character(len=*), intent(IN) :: filename
     logical, intent(IN) :: from1  ! .true.  - save 1,n+1,2n+1...
-                                  ! .false. - save n,2n,3n...
+    ! .false. - save n,2n,3n...
 
     real(mytype), allocatable, dimension(:,:,:) :: wk, wk2
     integer(kind=MPI_OFFSET_KIND) :: filesize, disp
@@ -638,7 +638,7 @@ contains
     data_type = real_type
 
 #include "io_write_every.inc"
-    
+
     return
   end subroutine write_every_real
 
@@ -653,7 +653,7 @@ contains
     integer, intent(IN) :: iskip,jskip,kskip 
     character(len=*), intent(IN) :: filename
     logical, intent(IN) :: from1  ! .true.  - save 1,n+1,2n+1...
-                                  ! .false. - save n,2n,3n...
+    ! .false. - save n,2n,3n...
 
     complex(mytype), allocatable, dimension(:,:,:) :: wk, wk2
     integer(kind=MPI_OFFSET_KIND) :: filesize, disp
@@ -664,24 +664,24 @@ contains
     data_type = complex_type
 
 #include "io_write_every.inc"
-    
+
     return
   end subroutine write_every_complex
 
 
   subroutine mpiio_write_real_coarse(ipencil,var,filename,icoarse)
-    
+
     USE param
     USE variables
 
     implicit none
-    
+
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
     integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
     real(mytype), dimension(:,:,:), intent(IN) :: var
     real(mytype_single), allocatable, dimension(:,:,:) :: varsingle
     character(len=*) :: filename
-    
+
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
     integer :: i,j,k, ierror, newtype, fh
@@ -690,7 +690,7 @@ contains
        sizes(1) = xszS(1)
        sizes(2) = yszS(2)
        sizes(3) = zszS(3)
-       
+
        if (ipencil == 1) then
           subsizes(1) = xszS(1)
           subsizes(2) = xszS(2)
@@ -719,7 +719,7 @@ contains
        sizes(1) = xszV(1)
        sizes(2) = yszV(2)
        sizes(3) = zszV(3)
-       
+
        if (ipencil == 1) then
           subsizes(1) = xszV(1)
           subsizes(2) = xszV(2)
@@ -763,27 +763,27 @@ contains
     call MPI_FILE_CLOSE(fh,ierror)
     call MPI_TYPE_FREE(newtype,ierror)
     deallocate(varsingle)
-    
+
     return
   end subroutine mpiio_write_real_coarse
 
   subroutine mpiio_write_real_probe(ipencil,var,filename)
-    
+
     USE param
     USE variables
 
     implicit none
-    
+
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
     real(mytype), dimension(:,:,:,:), intent(IN) :: var
-  
+
     character(len=*) :: filename
-    
+
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(4) :: sizes, subsizes, starts
     integer :: i,j,k, ierror, newtype, fh
 
-    
+
     sizes(1) = xszP(1)
     sizes(2) = yszP(2)
     sizes(3) = zszP(3)
@@ -812,7 +812,7 @@ contains
        starts(2) = zstP(2)-1
        starts(3) = zstP(3)-1
     endif
-!   print *,nrank,starts(1),starts(2),starts(3),starts(4)
+    !   print *,nrank,starts(1),starts(2),starts(3),starts(4)
     call MPI_TYPE_CREATE_SUBARRAY(4, sizes, subsizes, starts,  &
          MPI_ORDER_FORTRAN, real_type, newtype, ierror)
     call MPI_TYPE_COMMIT(newtype,ierror)
@@ -829,18 +829,18 @@ contains
          real_type, MPI_STATUS_IGNORE, ierror)
     call MPI_FILE_CLOSE(fh,ierror)
     call MPI_TYPE_FREE(newtype,ierror)
-    
-    
+
+
     return
   end subroutine mpiio_write_real_probe
-  
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Write a 3D data set covering a smaller sub-domain only
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine write_subdomain(ipencil,var,is,ie,js,je,ks,ke,filename)
 
     implicit none
-    
+
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
     real(mytype), dimension(:,:,:), intent(IN) :: var
     integer, intent(IN) :: is, ie, js, je, ks, ke
@@ -883,9 +883,9 @@ contains
        end if
     end if
     call MPI_COMM_SPLIT(MPI_COMM_WORLD,color,key,newcomm,ierror)
-    
+
     if (color==1) then ! only ranks in this group do IO collectively
-       
+
        ! generate MPI-IO subarray information
 
        ! global size of the sub-domain to write
@@ -930,7 +930,7 @@ contains
           else if (xend(3)>ke) then
              subsizes(3) = ke - xstart(3) + 1
           end if
-          
+
        else if (ipencil==2) then
 
           ! TODO 
@@ -945,7 +945,7 @@ contains
        ! copy data from orginal to a temp array
        ! pay attention to blocks only partially cover the sub-domain
        if (ipencil==1) then
-          
+
           if (xend(1)>ie .AND. xstart(1)<is) then
              i1 = is
              i2 = ie
@@ -998,13 +998,13 @@ contains
                 end do
              end do
           end do
-          
+
        else if (ipencil==2) then
 
           ! TODO
 
        else if (ipencil==3) then
-          
+
           ! TODO
 
        end if
@@ -1035,6 +1035,6 @@ contains
 
     return
   end subroutine write_subdomain
-    
+
 
 end module decomp_2d_io

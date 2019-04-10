@@ -89,14 +89,14 @@ contains
 
     !INIT FOR G AND U=MEAN FLOW + NOISE
     if (xstart(2)==1) then
-      j = 1
-      do k = 1, xsize(3)
-        do i = 1, xsize(1)
-          ux1(i, j, k) = byx1(i, k)
-          uy1(i, j, k) = byy1(i, k)
-          uz1(i, j, k) = byz1(i, k)
-        enddo
-      enddo
+       j = 1
+       do k = 1, xsize(3)
+          do i = 1, xsize(1)
+             ux1(i, j, k) = byx1(i, k)
+             uy1(i, j, k) = byy1(i, k)
+             uz1(i, j, k) = byz1(i, k)
+          enddo
+       enddo
     endif
     call transpose_x_to_y(ux1, ta2)
     call transpose_x_to_y(uy1, tb2)
@@ -128,13 +128,13 @@ contains
     dux1(:,:,:,1)=ux1(:,:,:)
     duy1(:,:,:,1)=uy1(:,:,:)
     duz1(:,:,:,1)=uz1(:,:,:)
-    
+
     drho1(:,:,:,1) = rho1(:,:,:,1)
     do is = 2, ntime
        dux1(:,:,:,is)=dux1(:,:,:,is - 1)
        duy1(:,:,:,is)=duy1(:,:,:,is - 1)
        duz1(:,:,:,is)=duz1(:,:,:,is - 1)
-       
+
        drho1(:,:,:,is) = drho1(:,:,:,is - 1)
     enddo
 
@@ -189,11 +189,11 @@ contains
     endif
     timeswitch = one !! Nichols starts with a jet 'column'
 
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !! Set inflow
     inflow = zero
     j = 1
-    
+
     if (xstart(2) == 1) then
        do k = 1, xsize(3)
           z = real(k + xstart(3) - 2, mytype) * dz - half * zlz
@@ -226,7 +226,7 @@ contains
                       phi(i, 1, k, is) = one - half * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D)))
                    endif
                 enddo
-                
+
                 if (primary_species.gt.0) then
                    phi(i, 1, k, primary_species) = one
 
@@ -237,7 +237,7 @@ contains
                    enddo
                 endif
              endif
-                
+
              !! Apply transient behaviour
              ! if (r.lt.D/two) then
              !   perturbation = inflow_noise * sin(r * x * z * t)
@@ -265,22 +265,22 @@ contains
     byo(:,:) = two * byo(:,:) - one
     bzo(:,:) = two * bzo(:,:) - one
     do k=1,xsize(3)
-      do j=1,xsize(2)
-        bxx1(j,k)=bxo(j,k)*inflow_noise
-        bxy1(j,k)=byo(j,k)*inflow_noise
-        bxz1(j,k)=bzo(j,k)*inflow_noise
-      enddo
-   enddo
+       do j=1,xsize(2)
+          bxx1(j,k)=bxo(j,k)*inflow_noise
+          bxy1(j,k)=byo(j,k)*inflow_noise
+          bxz1(j,k)=bzo(j,k)*inflow_noise
+       enddo
+    enddo
 
-   if (initialising) then !! we can stop here
-      return
-   endif
+    if (initialising) then !! we can stop here
+       return
+    endif
 
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !! Apply lateral boundary conditions
     !! XXX Assume purely radial flow
     !! XXX In X-pencils
-    
+
     xc=half*xlx
     zc=half*xlx
 
@@ -515,7 +515,7 @@ contains
              endif
           endif
        enddo
-       
+
        if (iscalar.ne.0) then
           do is = 1, numscalar
              if (is.ne.primary_species) then
@@ -525,13 +525,13 @@ contains
              endif
           enddo
        endif
-       
+
        if (ilmn) then
           if (.not.ilmn_solve_temp) then
              rho(:,:,k,1) = dens1
           else
              ta1(:,:,k) = one
-             
+
              !! Need to compute rho (on boundary)
              CALL calc_rho_eos(rho(:,:,k,1), ta1(:,:,k), phi(:,:,k,:), tb1(:,:,k), xsize(1), xsize(2), 1)
           endif
@@ -608,20 +608,20 @@ contains
              endif
           enddo
        endif
-       
+
        if (ilmn) then
           if (.not.ilmn_solve_temp) then
              rho(:,:,k,1) = dens1
           else
              ta1(:,:,k) = one
-             
+
              !! Need to compute rho (on boundary)
              CALL calc_rho_eos(rho(:,:,k,1), ta1(:,:,k), phi(:,:,k,:), tb1(:,:,k), xsize(1), xsize(2), 1)
           endif
        endif
     ENDIF
 
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !! Compute outflow
     call MPI_ALLREDUCE(inflow,outflow,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
     outflow = outflow / nx / nz
@@ -647,7 +647,7 @@ contains
              enddo
           endif
        endif
-       
+
        if (ilmn) then
           if (.not.ilmn_solve_temp) then
              rho(:, j, :, 1) = rho(:, j, :, 1) &
@@ -657,7 +657,7 @@ contains
              CALL calc_temp_eos(ta1(:,j-1:j,:), rho(:,j-1:j,:,1), phi(:,j-1:j,:,:), tb1(:,j-1:j,:), xsize(1), 2, xsize(3))
 
              ta1(:,j,:) = ta1(:,j,:) - dt * outflow * (ta1(:,j,:) - ta1(:,j-1,:))
-             
+
              !! Need to compute rho (on boundary)
              CALL calc_rho_eos(rho(:,j,:,1), ta1(:,j,:), phi(:,j,:,:), tb1(:,j,:), xsize(1), 1, xsize(3))
           endif
@@ -928,13 +928,13 @@ contains
   end subroutine write_probes
   !############################################################################
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!
   !!  SUBROUTINE: momentum_forcing_jet
   !!      AUTHOR: Paul Bartholomew
   !! DESCRIPTION: Applies a fringe/sponge region at the outlet.
   !!
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE momentum_forcing_jet(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
 
     IMPLICIT NONE

@@ -20,7 +20,7 @@ module glassman
 
 contains
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Following is a FFT implementation based on algorithm proposed by
   ! Glassman, a general FFT algorithm supporting arbitrary input length.
   !
@@ -33,21 +33,21 @@ contains
   ! Updated  
   !  -  to handle double-precision as well
   !  -  unnecessary scaling code removed
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   SUBROUTINE SPCFFT(U,N,ISIGN,WORK)
-    
+
     IMPLICIT NONE
-    
+
     LOGICAL :: INU
     INTEGER :: A,B,C,N,I,ISIGN
     COMPLEX(mytype) :: U(*),WORK(*)
-    
+
     A = 1
     B = N
     C = 1
     INU = .TRUE.
-    
+
     DO WHILE ( B .GT. 1 )
        A = C * A
        C = 2
@@ -62,36 +62,36 @@ contains
        END IF
        INU = ( .NOT. INU )
     END DO
-    
+
     IF ( .NOT. INU ) THEN
        DO I = 1, N
           U(I) = WORK(I)
        END DO
     END IF
-    
+
     RETURN
   END SUBROUTINE SPCFFT
-  
-  
+
+
   SUBROUTINE SPCPFT( A, B, C, UIN, UOUT, ISIGN )
-    
+
     IMPLICIT NONE
-    
+
     INTEGER :: ISIGN,A,B,C,IA,IB,IC,JCR,JC
-    
+
     DOUBLE PRECISION :: ANGLE
-    
+
     COMPLEX(mytype) :: UIN(B,C,A),UOUT(B,A,C),DELTA,OMEGA,SUM
-    
+
     ANGLE = 6.28318530717958_mytype / REAL( A * C, kind=mytype )
     OMEGA = CMPLX( 1.0, 0.0, kind=mytype )
-    
+
     IF( ISIGN .EQ. 1 ) THEN
        DELTA = CMPLX( DCOS(ANGLE), DSIN(ANGLE), kind=mytype )
     ELSE
        DELTA = CMPLX( DCOS(ANGLE), -DSIN(ANGLE), kind=mytype )
     END IF
-    
+
     DO IC = 1, C
        DO IA = 1, A
           DO IB = 1, B
@@ -105,32 +105,32 @@ contains
           OMEGA = DELTA * OMEGA
        END DO
     END DO
-    
+
     RETURN
   END SUBROUTINE SPCPFT
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! A 3D real-to-complex routine implemented using the 1D FFT above
   !   Input:   nx*ny*nz real numbers
   !   Output:  (nx/2+1)*ny*nz complex numbers
   ! Just like big FFT libraries (such as FFTW) do
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine glassman_3d_r2c(in_r,nx,ny,nz,out_c)
 
     implicit none
-    
+
     integer, intent(IN) :: nx,ny,nz
     real(mytype), dimension(nx,ny,nz) :: in_r
     complex(mytype), dimension(nx/2+1,ny,nz) :: out_c
-    
+
     complex(mytype), allocatable, dimension(:) :: buf, scratch
     integer :: maxsize, i,j,k
-    
+
     maxsize = max(nx, max(ny,nz))
     allocate(buf(maxsize))
     allocate(scratch(maxsize))
-    
+
     ! ===== 1D FFTs in X =====
     do k=1,nz
        do j=1,ny
@@ -147,7 +147,7 @@ contains
           end do
        end do
     end do
-    
+
     ! ===== 1D FFTs in Y =====
     do k=1,nz
        do i=1,nx/2+1
@@ -160,7 +160,7 @@ contains
           end do
        end do
     end do
-    
+
     ! ===== 1D FFTs in Z =====
     do j=1,ny
        do i=1,nx/2+1
@@ -173,9 +173,9 @@ contains
           end do
        end do
     end do
-    
+
     deallocate(buf,scratch)
-    
+
     return
   end subroutine glassman_3d_r2c
 

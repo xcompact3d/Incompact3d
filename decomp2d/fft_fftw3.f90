@@ -12,13 +12,13 @@
 ! This is the FFTW (version 3.x) implementation of the FFT library
 
 module decomp_2d_fft
-  
+
   use decomp_2d  ! 2D decomposition module
-  
+
   implicit none
 
   include "fftw3.f"
-  
+
   private        ! Make everything private unless declared public
 
   ! engine-specific global variables
@@ -256,9 +256,9 @@ module decomp_2d_fft
   end subroutine c2r_1m_z_plan
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !  This routine performs one-time initialisations for the FFT engine
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine init_fft_engine
 
     implicit none
@@ -278,7 +278,7 @@ module decomp_2d_fft
        call c2c_1m_z_plan(plan( 1,3), ph, FFTW_BACKWARD)
        call c2c_1m_y_plan(plan( 1,2), ph, FFTW_BACKWARD)
        call c2c_1m_x_plan(plan( 1,1), ph, FFTW_BACKWARD)
-       
+
        ! For R2C/C2R tranforms
        call r2c_1m_x_plan(plan(0,1), ph, sp)
        call c2c_1m_y_plan(plan(0,2), sp, FFTW_FORWARD )
@@ -296,7 +296,7 @@ module decomp_2d_fft
        call c2c_1m_x_plan(plan( 1,1), ph, FFTW_BACKWARD)
        call c2c_1m_y_plan(plan( 1,2), ph, FFTW_BACKWARD)
        call c2c_1m_z_plan(plan( 1,3), ph, FFTW_BACKWARD)
-       
+
        ! For R2C/C2R tranforms
        call r2c_1m_z_plan(plan(0,3), ph, sp)
        call c2c_1m_y_plan(plan(0,2), sp, FFTW_FORWARD )
@@ -304,22 +304,22 @@ module decomp_2d_fft
        call c2c_1m_x_plan(plan(2,1), sp, FFTW_BACKWARD)
        call c2c_1m_y_plan(plan(2,2), sp, FFTW_BACKWARD)
        call c2r_1m_z_plan(plan(2,3), sp, ph)
-       
+
     end if
 
     return
   end subroutine init_fft_engine
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !  This routine performs one-time finalisations for the FFT engine
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine finalize_fft_engine
 
     implicit none
 
     integer :: i,j
-    
+
     do j=1,3
        do i=-1,2
 #ifdef DOUBLE_PREC
@@ -390,9 +390,9 @@ module decomp_2d_fft
     integer*8, intent(IN) :: plan1
 
 #ifdef DOUBLE_PREC
-       call dfftw_execute_dft(plan1, inout, inout)
+    call dfftw_execute_dft(plan1, inout, inout)
 #else
-       call sfftw_execute_dft(plan1, inout, inout)
+    call sfftw_execute_dft(plan1, inout, inout)
 #endif
 
     return
@@ -472,13 +472,13 @@ module decomp_2d_fft
 
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! 3D FFT - complex to complex
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine fft_3d_c2c(in, out, isign)
-    
+
     implicit none
-    
+
     complex(mytype), dimension(:,:,:), intent(INOUT) :: in
     complex(mytype), dimension(:,:,:), intent(OUT) :: out
     integer, intent(IN) :: isign
@@ -489,7 +489,7 @@ module decomp_2d_fft
 
     if (format==PHYSICAL_IN_X .AND. isign==DECOMP_2D_FFT_FORWARD .OR.  &
          format==PHYSICAL_IN_Z .AND. isign==DECOMP_2D_FFT_BACKWARD) then
-       
+
        ! ===== 1D FFTs in X =====
 #ifdef OVERWRITE
        call c2c_1m_x(in,isign,plan(isign,1))
@@ -563,7 +563,7 @@ module decomp_2d_fft
           call transpose_y_to_x(wk2_c2c,out,ph)
        end if
        call c2c_1m_x(out,isign,plan(isign,1))
-       
+
     end if
 
 #ifndef OVERWRITE
@@ -573,14 +573,14 @@ module decomp_2d_fft
     return
   end subroutine fft_3d_c2c
 
-  
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! 3D forward FFT - real to complex
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine fft_3d_r2c(in_r, out_c)
-    
+
     implicit none
-    
+
     real(mytype), dimension(:,:,:), intent(IN) :: in_r
     complex(mytype), dimension(:,:,:), intent(OUT) :: out_c
 
@@ -604,7 +604,7 @@ module decomp_2d_fft
           call transpose_y_to_z(wk13,out_c,sp)
        end if
        call c2c_1m_z(out_c,-1,plan(0,3))
-                
+
     else if (format==PHYSICAL_IN_Z) then
 
        ! ===== 1D FFTs in Z =====
@@ -626,18 +626,18 @@ module decomp_2d_fft
        call c2c_1m_x(out_c,-1,plan(0,1))
 
     end if
-    
+
     return
   end subroutine fft_3d_r2c
-  
-  
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! 3D inverse FFT - complex to real
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine fft_3d_c2r(in_c, out_r)
-    
+
     implicit none
-    
+
     complex(mytype), dimension(:,:,:), intent(INOUT) :: in_c
     real(mytype), dimension(:,:,:), intent(OUT) :: out_r
 
@@ -720,5 +720,5 @@ module decomp_2d_fft
     return
   end subroutine fft_3d_c2r
 
-  
+
 end module decomp_2d_fft

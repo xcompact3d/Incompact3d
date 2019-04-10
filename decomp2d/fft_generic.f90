@@ -12,12 +12,12 @@
 ! This is the 'generic' implementation of the FFT library
 
 module decomp_2d_fft
-  
+
   use decomp_2d  ! 2D decomposition module
   use glassman
-  
+
   implicit none
-  
+
   private        ! Make everything private unless declared public
 
   ! engine-specific global variables
@@ -27,9 +27,9 @@ module decomp_2d_fft
   ! generic interface definitions and several subroutines
 #include "fft_common.inc"
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !  This routine performs one-time initialisations for the FFT engine
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine init_fft_engine
 
     implicit none
@@ -51,9 +51,9 @@ module decomp_2d_fft
   end subroutine init_fft_engine
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !  This routine performs one-time finalisations for the FFT engine
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine finalize_fft_engine
 
     implicit none
@@ -77,7 +77,7 @@ module decomp_2d_fft
     TYPE(DECOMP_INFO), intent(IN) :: decomp
 
     integer :: i,j,k
-    
+
     do k=1,decomp%xsz(3)
        do j=1,decomp%xsz(2)
           do i=1,decomp%xsz(1)
@@ -299,5 +299,5 @@ module decomp_2d_fft
 
 #include "fft_common_3d.inc"
 
-  
+
 end module decomp_2d_fft

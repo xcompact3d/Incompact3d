@@ -78,7 +78,7 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
   if (nrank .eq. 0) call paraview()
 
   if (protection) then !Files that must be protected from rewriting
-                       !when visu runs from post-processing
+     !when visu runs from post-processing
      save_ux=0; save_uy=0; save_uz=0; save_ibm=0; save_phi=0; save_pre=0
   endif
 
@@ -451,17 +451,17 @@ subroutine VISU_PRE (pp3,ta1,tb1,di1,ta2,tb2,di2,ta3,di3,nxmsize,nymsize,nzmsize
   pre1=tb1
 
   if (save_pre.eq.1) then
-    uvisu=0._mytype
-    call fine_to_coarseV(1,pre1,uvisu)
-    write(filename,"('./data/pre',I4.4)") itime/ioutput
-    call decomp_2d_write_one(1,uvisu,filename,2)
+     uvisu=0._mytype
+     call fine_to_coarseV(1,pre1,uvisu)
+     write(filename,"('./data/pre',I4.4)") itime/ioutput
+     call decomp_2d_write_one(1,uvisu,filename,2)
   endif
 
   if (save_prem.eq.1) then
-    tb1=0._mytype
-    call mean_plane_z(pre1,xsize(1),xsize(2),xsize(3),tb1(:,:,1))
-    write(filename,"('./data/prem',I4.4)") itime/ioutput
-    call decomp_2d_write_plane(1,tb1,3,1,filename)
+     tb1=0._mytype
+     call mean_plane_z(pre1,xsize(1),xsize(2),xsize(3),tb1(:,:,1))
+     write(filename,"('./data/prem',I4.4)") itime/ioutput
+     call decomp_2d_write_plane(1,tb1,3,1,filename)
   endif
 
   return

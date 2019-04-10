@@ -172,7 +172,7 @@ subroutine init (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,phis1,phiss1)
         enddo
         do ijk = 1,xsize(1)*xsize(2)*xsize(3)
            if (phi1(ijk,1,1,is).gt.cp(is)) phi1(ijk,1,1,is) =  cp(is)
-            if (phi1(ijk,1,1,is).lt.zero) phi1(ijk,1,1,is) =  zero
+           if (phi1(ijk,1,1,is).lt.zero) phi1(ijk,1,1,is) =  zero
         enddo
      enddo
 
@@ -600,7 +600,7 @@ contains
     real(mytype),dimension(3,3,xsize(1),xsize(2),xsize(3)) :: A
 
     real(mytype),dimension(xszV(1),xszV(2),xszV(3)) :: uvisu
-  
+
     real(8) :: ek,ek1,dek,dek1,ep,ep1,dep,dep1,xvol
     integer :: ijk,i,j,k,l,m,is,code
     character(len=30) :: filename
@@ -719,20 +719,20 @@ contains
     end if
 
     if (mod(itime,imodulo).eq.0) then
-     !if (save_diss.eq.1) then
-        uvisu=zero
-        call fine_to_coarseV(1,diss1,uvisu)
-        write(filename,"('./data/diss',I4.4)") itime/imodulo
-        call decomp_2d_write_one(1,uvisu,filename,2)
-     !endif
+       !if (save_diss.eq.1) then
+       uvisu=zero
+       call fine_to_coarseV(1,diss1,uvisu)
+       write(filename,"('./data/diss',I4.4)") itime/imodulo
+       call decomp_2d_write_one(1,uvisu,filename,2)
+       !endif
 
-     !if (save_dissm.eq.1) then
-        call transpose_x_to_y (diss1,temp2)
-        call transpose_y_to_z (temp2,temp3)
-        call mean_plane_z(temp3,zsize(1),zsize(2),zsize(3),temp3(:,:,1))
-        write(filename,"('./data/dissm',I4.4)") itime/imodulo
-        call decomp_2d_write_plane(3,temp3,3,1,filename)
-     !endif
+       !if (save_dissm.eq.1) then
+       call transpose_x_to_y (diss1,temp2)
+       call transpose_y_to_z (temp2,temp3)
+       call mean_plane_z(temp3,zsize(1),zsize(2),zsize(3),temp3(:,:,1))
+       write(filename,"('./data/dissm',I4.4)") itime/imodulo
+       call decomp_2d_write_plane(3,temp3,3,1,filename)
+       !endif
     endif
 
   end subroutine budget

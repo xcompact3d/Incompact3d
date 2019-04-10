@@ -87,7 +87,7 @@ subroutine schemes()
   if (nclz1.eq.1.and.nclzn.eq.2) derzz => derzz_12
   if (nclz1.eq.2.and.nclzn.eq.1) derzz => derzz_21
   if (nclz1.eq.2.and.nclzn.eq.2) derzz => derzz_22
-  
+
   call first_derivative(alfa1x,af1x,bf1x,cf1x,df1x,alfa2x,af2x,alfanx,afnx,bfnx,&
        cfnx,dfnx,alfamx,afmx,alfaix,afix,bfix,&
        ffx,fsx,fwx,ffxp,fsxp,fwxp,dx,nx,nclx1,nclxn)
@@ -226,38 +226,38 @@ end subroutine schemes
 !*******************************************************************
 !
 subroutine prepare (b,c,f,s,w,n)
-! 
-!*******************************************************************
+  ! 
+  !*******************************************************************
 
-use decomp_2d, only : mytype
-use param, only : one
+  use decomp_2d, only : mytype
+  use param, only : one
 
-implicit none
+  implicit none
 
-integer :: i,n
-real(mytype), dimension(n) :: b,c,f,s,w
+  integer :: i,n
+  real(mytype), dimension(n) :: b,c,f,s,w
 
-do i=1,n
-   w(i)=c(i)
-enddo
-do i=2,n
-   s(i)=b(i-1)/w(i-1)
-   w(i)=w(i)-f(i-1)*s(i)
-enddo
-do i=1,n
-   w(i)=one/w(i)
-enddo
+  do i=1,n
+     w(i)=c(i)
+  enddo
+  do i=2,n
+     s(i)=b(i-1)/w(i-1)
+     w(i)=w(i)-f(i-1)*s(i)
+  enddo
+  do i=1,n
+     w(i)=one/w(i)
+  enddo
 
-return
+  return
 end subroutine prepare
 
 !*******************************************************************
 !
 subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
-       cfn,dfn,alfam,afm,alfai,afi,bfi,&
-       ff,fs,fw,ffp,fsp,fwp,d,n,ncl1,ncln)
-! 
-!*******************************************************************
+     cfn,dfn,alfam,afm,alfai,afi,bfi,&
+     ff,fs,fw,ffp,fsp,fwp,d,n,ncl1,ncln)
+  ! 
+  !*******************************************************************
 
   use decomp_2d, only : mytype, nrank
   use param
@@ -274,7 +274,7 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
 
   ff=zero;fs=zero;fw=zero;ffp=zero;fsp=zero;fwp=zero
   fb=zero;fc=zero
-  
+
   if (ifirstder==1) then    ! Second-order central
      alfai= zero
      afi  = one/(two*d)
@@ -392,13 +392,13 @@ end subroutine first_derivative
 
 !*******************************************************************
 subroutine second_derivative(alsa1,as1,bs1,&
-       cs1,ds1,alsa2,as2,alsan,asn,bsn,csn,dsn,alsam,&
-       asm,alsa3,as3,bs3,alsat,ast,bst,&
-       alsa4,as4,bs4,cs4,&
-       alsatt,astt,bstt,cstt,&
-       alsai,asi,bsi,csi,dsi,&
-       sf,ss,sw,sfp,ssp,swp,d2,n,ncl1,ncln)
-!*******************************************************************
+     cs1,ds1,alsa2,as2,alsan,asn,bsn,csn,dsn,alsam,&
+     asm,alsa3,as3,bs3,alsat,ast,bst,&
+     alsa4,as4,bs4,cs4,&
+     alsatt,astt,bstt,cstt,&
+     alsai,asi,bsi,csi,dsi,&
+     sf,ss,sw,sfp,ssp,swp,d2,n,ncl1,ncln)
+  !*******************************************************************
 
   use decomp_2d, only : mytype, nrank
   use param
@@ -683,8 +683,8 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      cfi6,cci6,cbi6,cfip6,csip6,cwip6,csi6,&
      cwi6,cifi6,cici6,cibi6,cifip6,&
      cisip6,ciwip6,cisi6,ciwi6)
-! 
-!*******************************************************************
+  ! 
+  !*******************************************************************
 
   use decomp_2d, only : mytype
   use param, only : ipinter, zero, one, two, three, nine, ten
@@ -696,10 +696,10 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
   real(mytype) :: alcaix6,acix6,bcix6
   real(mytype) :: ailcaix6,aicix6,bicix6,cicix6,dicix6
   real(mytype),dimension(nxm) :: cfx6,ccx6,cbx6,cfxp6,ciwxp6,csxp6,&
-  cwxp6,csx6,cwx6,cifx6,cicx6,cisx6
+       cwxp6,csx6,cwx6,cifx6,cicx6,cisx6
   real(mytype),dimension(nxm) :: cibx6,cifxp6,cisxp6,ciwx6
   real(mytype),dimension(nx) :: cfi6,cci6,cbi6,cfip6,csip6,cwip6,csi6,&
-  cwi6,cifi6,cici6,cibi6,cifip6
+       cwi6,cifi6,cici6,cibi6,cifip6
   real(mytype),dimension(nx) :: cisip6,ciwip6,cisi6,ciwi6
 
   integer :: i

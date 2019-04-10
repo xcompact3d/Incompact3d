@@ -64,9 +64,9 @@ CONTAINS
     rho1(:,:,:,:) = one
 
     IF (itype.EQ.itype_user) THEN
-       
+
        CALL init_user (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, dphi1)
-       
+
     ELSEIF (itype.EQ.itype_lockexch) THEN
 
        IF (nrank.EQ.0) THEN
@@ -75,23 +75,23 @@ CONTAINS
        ENDIF
 
     ELSEIF (itype.EQ.itype_tgv) THEN
-       
+
        CALL init_tgv (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, dphi1)
-       
+
     ELSEIF (itype.EQ.itype_channel) THEN
-       
+
        CALL init_channel (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, dphi1)
-       
+
     ELSEIF (itype.EQ.itype_hill) THEN
 
        CALL  init_hill (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,dphi1)
-          
+
     ELSEIF (itype.EQ.itype_cyl) THEN
-       
+
        CALL init_cyl (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, dphi1)
-       
+
     ELSEIF (itype.EQ.itype_dbg) THEN
-       
+
        CALL init_dbg (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, dphi1)
 
     ELSEIF (itype.EQ.itype_mixlayer) THEN
@@ -115,7 +115,7 @@ CONTAINS
     IF (itype.EQ.itype_user) THEN
 
        CALL boundary_conditions_user (ux,uy,uz,phi,ep)
-       
+
     ELSEIF (itype.EQ.itype_lockexch) THEN
 
        IF (nrank.EQ.0) THEN
@@ -158,9 +158,9 @@ CONTAINS
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)) :: ep
 
     IF (itype.EQ.itype_user) THEN
-       
+
        CALL postprocessing_user (ux, uy, uz, phi, ep)
-       
+
     ELSEIF (itype.EQ.itype_lockexch) THEN
 
        IF (nrank.EQ.0) THEN
@@ -195,14 +195,14 @@ CONTAINS
     ENDIF
   END SUBROUTINE postprocessing
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!
   !!  SUBROUTINE: momentum_forcing
   !!      AUTHOR: Paul Bartholomew
   !! DESCRIPTION: Calls case-specific forcing functions for the
   !!              momentum equations.
   !!
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE momentum_forcing(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
 
     IMPLICIT NONE

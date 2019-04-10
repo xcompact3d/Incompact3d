@@ -18,7 +18,7 @@ module variables
   !nvisu = size for visualization collection
   !nprobe =  size for probe collection (energy spectra)
 
-!Possible n points: 3 5 7 9 11 13 17 19 21 25 31 33 37 41 49 51 55 61 65 73 81 91 97 101 109 121 129 145 151 161 163 181 193 201 217 241 251 257 271 289 301 321 325 361 385 401 433 451 481 487 501 513 541 577 601 641 649 721 751 769 801 811 865 901 961 973 1001 1025 1081 1153 1201 1251 1281 1297 1351 1441 1459 1501 1537 1601 1621 1729 1801 1921 1945 2001 2049 2161 2251 2305 2401 2431 2501 2561 2593 2701 2881 2917 3001 3073 3201 3241 3457 3601 3751 3841 3889 4001 4051 4097 4321 4375 4501 4609 4801 4861 5001 5121 5185 5401 5761 5833 6001 6145 6251 6401 6481 6751 6913 7201 7291 7501 7681 7777 8001 8101 8193 8641 8749 9001 9217 9601 9721 enough
+  !Possible n points: 3 5 7 9 11 13 17 19 21 25 31 33 37 41 49 51 55 61 65 73 81 91 97 101 109 121 129 145 151 161 163 181 193 201 217 241 251 257 271 289 301 321 325 361 385 401 433 451 481 487 501 513 541 577 601 641 649 721 751 769 801 811 865 901 961 973 1001 1025 1081 1153 1201 1251 1281 1297 1351 1441 1459 1501 1537 1601 1621 1729 1801 1921 1945 2001 2049 2161 2251 2305 2401 2431 2501 2561 2593 2701 2881 2917 3001 3073 3201 3241 3457 3601 3751 3841 3889 4001 4051 4097 4321 4375 4501 4609 4801 4861 5001 5121 5185 5401 5761 5833 6001 6145 6251 6401 6481 6751 6913 7201 7291 7501 7681 7777 8001 8101 8193 8641 8749 9001 9217 9601 9721 enough
 
   integer :: nx,ny,nz,numscalar,p_row,p_col,nxm,nym,nzm
   real :: spinup_time
@@ -259,7 +259,7 @@ module param
 
   !! LES modelling flag
   integer :: ilesmod, iwall
-  
+
   !LES
   integer :: jLES
   integer :: smagwalldamp
@@ -280,7 +280,7 @@ module param
   integer :: primary_species
 
   character :: filesauve*80, filenoise*80, &
-  nchamp*80,filepath*80, fileturb*80, filevisu*80, datapath*80
+       nchamp*80,filepath*80, fileturb*80, filevisu*80, datapath*80
   real(mytype), dimension(5) :: adt,bdt,cdt,ddt,gdt
 
   !VISU
@@ -335,30 +335,30 @@ module param
   real(mytype),parameter :: twentyfive=25._mytype
   real(mytype),parameter :: twentyseven=27._mytype
   real(mytype),parameter :: twentyeight=28._mytype
-!
+  !
   real(mytype),parameter :: thirtytwo=32._mytype
   real(mytype),parameter :: thirtyfour=34._mytype
   real(mytype),parameter :: thirtysix=36._mytype
-!
+  !
   real(mytype),parameter :: fortyfour=44._mytype
   real(mytype),parameter :: fortyfive=45._mytype
   real(mytype),parameter :: fortyeight=48._mytype
-!
+  !
   real(mytype),parameter :: sixty=60._mytype
   real(mytype),parameter :: sixtytwo=62._mytype
   real(mytype),parameter :: sixtythree=63._mytype
-!
+  !
   real(mytype),parameter :: seventy=70._mytype
   real(mytype),parameter :: seventyfive=75._mytype
-!
+  !
   real(mytype),parameter :: onehundredtwentysix=126._mytype
   real(mytype),parameter :: onehundredtwentyeight=128._mytype
-!
+  !
   real(mytype),parameter :: twohundredsix=206._mytype
   real(mytype),parameter :: twohundredeight=208._mytype
   real(mytype),parameter :: twohundredfiftysix=256._mytype
   real(mytype),parameter :: twohundredseventytwo=272._mytype
-!
+  !
   real(mytype),parameter :: twothousand=2000._mytype
   real(mytype),parameter :: thirtysixthousand=3600._mytype
 
@@ -375,8 +375,8 @@ end module param
 
 module complex_geometry
 
-use decomp_2d,only : mytype
-use variables,only : nx,ny,nz,nxm,nym,nzm
+  use decomp_2d,only : mytype
+  use variables,only : nx,ny,nz,nxm,nym,nzm
 
   integer     ,allocatable,dimension(:,:)   :: nobjx,nobjy,nobjz
   integer     ,allocatable,dimension(:,:,:) :: nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif
@@ -465,7 +465,7 @@ end module parfiX
 !
 module parfiY
 
-use decomp_2d, only : mytype
+  use decomp_2d, only : mytype
   real(mytype) :: fial1y, fia1y, fib1y, fic1y, fid1y, fie1y, fif1y ! Coefficients for filter at boundary point 1  
   real(mytype) :: fial2y, fia2y, fib2y, fic2y, fid2y, fie2y, fif2y ! Coefficients for filter at boundary point 2
   real(mytype) :: fial3y, fia3y, fib3y, fic3y, fid3y, fie3y, fif3y ! Coefficients for filter at boundary point 3
@@ -477,7 +477,7 @@ end module parfiY
 
 module parfiZ
 
-use decomp_2d, only : mytype
+  use decomp_2d, only : mytype
   real(mytype) :: fial1z, fia1z, fib1z, fic1z, fid1z, fie1z, fif1z ! Coefficients for filter at boundary point 1  
   real(mytype) :: fial2z, fia2z, fib2z, fic2z, fid2z, fie2z, fif2z ! Coefficients for filter at boundary point 2
   real(mytype) :: fial3z, fia3z, fib3z, fic3z, fid3z, fie3z, fif3z ! Coefficients for filter at boundary point 3
@@ -493,5 +493,5 @@ end module simulation_stats
 
 module ibm
   use decomp_2d, only : mytype
-   real(mytype) :: cex,cey,ra
+  real(mytype) :: cex,cey,ra
 end module ibm

@@ -38,7 +38,7 @@ PROGRAM post
   phi1=zero; phim1=zero
   diss1=zero; dissm1=zero
   pre1=zero; prem1=zero
-  
+
   read_phi=0; read_u=0; read_ibm=0
   open(10,file='post.prm',status='unknown',form='formatted')
   read (10,'(A1)') a
@@ -76,7 +76,7 @@ PROGRAM post
   ttsize=(read_phi*numscalar+read_u*3)*nx*ny*nz
   tstart=0.;t1=0.;trank=0.;tranksum=0.;ttotal=0.
   call cpu_time(tstart)
-  
+
   do ii=1, nt
      call cpu_time(t1)
      ifile = (ii-1)*icrfile+file1

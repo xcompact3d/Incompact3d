@@ -242,16 +242,16 @@ CONTAINS
 
     ! If LES modelling is enabled, add the SGS stresses
     if (ilesmod.ne.0.and.jles.le.3.) then
-        ! Wall model for LES
-        if (iwall.eq.1) then 
-        call compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,1)
-        else
-        call compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,0)
-        endif
-        ! Calculate SGS stresses (conservative/non-conservative formulation)
-        dux1(:,:,:,1) = dux1(:,:,:,1) + sgsx1(:,:,:)
-        duy1(:,:,:,1) = duy1(:,:,:,1) + sgsy1(:,:,:)
-        duz1(:,:,:,1) = duz1(:,:,:,1) + sgsz1(:,:,:)
+       ! Wall model for LES
+       if (iwall.eq.1) then 
+          call compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,1)
+       else
+          call compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,0)
+       endif
+       ! Calculate SGS stresses (conservative/non-conservative formulation)
+       dux1(:,:,:,1) = dux1(:,:,:,1) + sgsx1(:,:,:)
+       duy1(:,:,:,1) = duy1(:,:,:,1) + sgsy1(:,:,:)
+       duz1(:,:,:,1) = duz1(:,:,:,1) + sgsz1(:,:,:)
     endif
 
     !! Gravity
@@ -271,7 +271,7 @@ CONTAINS
   end subroutine momentum_rhs_eq
   !************************************************************
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!
   !!  SUBROUTINE: momentum_full_viscstress_tensor
   !!      AUTHOR: Paul Bartholomew
@@ -288,7 +288,7 @@ CONTAINS
   !!              contributions not accounted for in the
   !!              incompressible solver.
   !!
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine momentum_full_viscstress_tensor(ta1, tb1, tc1, divu3)
 
     USE param
@@ -330,16 +330,16 @@ CONTAINS
     use decomp_2d
     use param
     use variables
-    
+
     implicit none
 
     !! Inputs
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: peculiar_density1
     real(mytype), intent(in) :: richardson
-    
+
     !! InOut
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
-    
+
     !! Locals
     integer :: istart, jstart, kstart
     integer :: iend, jend, kend
@@ -373,7 +373,7 @@ CONTAINS
     else
        kend = xsize(3)
     endif
-    
+
     do k = kstart, kend
        do j = jstart, jend
           do i = istart, iend
@@ -381,7 +381,7 @@ CONTAINS
           enddo
        enddo
     enddo
-    
+
     !! Y-gravity
     if (nclx1.eq.2) then
        istart = 2
@@ -420,7 +420,7 @@ CONTAINS
           enddo
        enddo
     enddo
-    
+
     !! Z-gravity
     if (nclx1.eq.2) then
        istart = 2
@@ -459,8 +459,8 @@ CONTAINS
           enddo
        enddo
     enddo
-    
-    
+
+
   end subroutine momentum_gravity
 
   subroutine scalar_transport_eq(dphi1, rho1, ux1, uy1, uz1, phi1, schmidt)

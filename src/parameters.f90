@@ -342,7 +342,7 @@ subroutine parameter_defaults()
   USE variables
   USE decomp_2d
   USE complex_geometry
-  
+
   IMPLICIT NONE
 
   ro = 99999999._mytype
@@ -366,7 +366,7 @@ subroutine parameter_defaults()
   !! IBM stuff
   nraf = 0
   nobjmax = 0
-   
+
   itrip = 0
   wrotation = zero
   irotation = 0
@@ -394,7 +394,7 @@ subroutine parameter_defaults()
   !! IO
   ivisu = 1
   ipost = 0
-  
+
   save_ux = 0
   save_uy = 0
   save_uz = 0
