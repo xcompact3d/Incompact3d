@@ -38,7 +38,8 @@ module var
   USE complex_geometry
 
   ! define all major arrays here
-  real(mytype), save, allocatable, dimension(:,:,:) :: ux1, ux2, ux3, po3, dv3, pp3
+  real(mytype), save, allocatable, dimension(:,:,:) :: ux1, ux2, ux3, po3, dv3
+  real(mytype), save, allocatable, dimension(:,:,:,:) :: pp3
   real(mytype), save, allocatable, dimension(:,:,:) :: uy1, uy2, uy3
   real(mytype), save, allocatable, dimension(:,:,:) :: uz1, uz2, uz3
   real(mytype), save, allocatable, dimension(:,:,:,:) :: rho1, drho1
@@ -49,7 +50,7 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:) :: ep1, diss1, pre1, depo, depof, kine
   real(mytype), save, allocatable, dimension(:,:,:,:) :: dux1,duy1,duz1  ! Output of convdiff
   real(mytype), save, allocatable, dimension(:,:,:,:,:) :: dphi1
-  
+
   !arrays for post processing
   real(mytype), save, allocatable, dimension(:,:,:) :: f1,fm1
   real(mytype), save, allocatable, dimension(:,:,:) :: uxm1, uym1, phim1, prem1, dissm1
@@ -63,7 +64,7 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:) :: u3sum,v3sum,w3sum,u4sum,v4sum,w4sum
   real(mytype), save, allocatable, dimension(:,:,:) :: uvsum,uwsum,vwsum,disssum,presum,tsum
   real(mytype), save, allocatable, dimension(:,:,:,:) :: psum,ppsum,upsum,vpsum,wpsum
-  
+
   !arrays for extra statistics collection
   real(mytype), save, allocatable, dimension(:,:,:) :: dudxsum,utmapsum
 
@@ -72,13 +73,13 @@ module var
 
   ! define all work arrays here
   real(mytype), save, allocatable, dimension(:,:,:) :: ta1,tb1,tc1,td1,&
-  te1,tf1,tg1,th1,ti1,di1
+       te1,tf1,tg1,th1,ti1,di1
   real(mytype), save, allocatable, dimension(:,:,:) :: pp1,pgy1,pgz1
   real(mytype), save, allocatable, dimension(:,:,:) :: ta2,tb2,tc2,td2,&
-  te2,tf2,tg2,th2,ti2,tj2,di2
+       te2,tf2,tg2,th2,ti2,tj2,di2
   real(mytype), save, allocatable, dimension(:,:,:) :: pp2,ppi2,pgy2,pgz2,pgzi2,dip2,dipp2,duxdxp2,uyp2,uzp2,upi2,duydypi2
   real(mytype), save, allocatable, dimension(:,:,:) :: ta3,tb3,tc3,td3,&
-  te3,tf3,tg3,th3,ti3,di3
+       te3,tf3,tg3,th3,ti3,di3
   real(mytype), save, allocatable, dimension(:,:,:) :: pgz3,ppi3,dip3,dipp3,duxydxyp3,uzp3
 
   integer, save :: nxmsize, nymsize, nzmsize
@@ -102,17 +103,17 @@ contains
     if (nrank==0) print *,'Initializing variables...'
 
     if (nclx) then
-      nxmsize = xsize(1)
+       nxmsize = xsize(1)
     else
        nxmsize = xsize(1) -1
     endif
     if (ncly) then
-      nymsize = ysize(2)
+       nymsize = ysize(2)
     else
        nymsize = ysize(2) -1
     endif
     if (nclz) then
-      nzmsize = zsize(3)
+       nzmsize = zsize(3)
     else
        nzmsize = zsize(3) -1
     endif
@@ -239,28 +240,28 @@ contains
     allocate(duxydxyp3(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),zsize(3)))
     allocate(uzp3(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),zsize(3)))
     allocate(dipp3(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),zsize(3)))
-    
+
     ! if all periodic
     !   allocate (pp3(ph%zst(1):ph%zen(1),ph%zst(2):ph%zen(2),ph%zst(3):ph%zen(3)))
     !   allocate (dv3(ph%zst(1):ph%zen(1),ph%zst(2):ph%zen(2),ph%zst(3):ph%zen(3)))
     !   allocate (po3(ph%zst(1):ph%zen(1),ph%zst(2):ph%zen(2),ph%zst(3):ph%zen(3)))
-    call alloc_z(pp3,ph,.true.)
+    allocate(pp3(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress))
     call alloc_z(dv3,ph,.true.)
     call alloc_z(po3,ph,.true.)
 
     if(ilesmod.ne.0) then
-    call alloc_x(sgsx1);call alloc_x(sgsy1); call alloc_x(sgsz1)
-    call alloc_x(sxx1);call alloc_x(syy1); call alloc_x(szz1)
-    call alloc_x(sxy1);call alloc_x(sxz1); call alloc_x(syz1)
-    call alloc_x(nut1);call alloc_x(srt_smag); call alloc_x(srt_wale)
-    call alloc_y(sgsx2);call alloc_y(sgsy2); call alloc_y(sgsz2)
-    call alloc_y(sxx2) ;call alloc_y(syy2);  call alloc_y(szz2)
-    call alloc_y(sxy2) ;call alloc_y(sxz2);  call alloc_y(syz2)
-    call alloc_y(nut2) ;call alloc_y(srt_smag2); call alloc_y(srt_wale2)
-    call alloc_z(sgsx3);call alloc_z(sgsy3); call alloc_z(sgsz3)
-    call alloc_z(sxx3) ;call alloc_z(syy3);  call alloc_z(szz3)
-    call alloc_z(sxy3) ;call alloc_z(sxz3);  call alloc_z(syz3)
-    call alloc_z(nut3)
+       call alloc_x(sgsx1);call alloc_x(sgsy1); call alloc_x(sgsz1)
+       call alloc_x(sxx1);call alloc_x(syy1); call alloc_x(szz1)
+       call alloc_x(sxy1);call alloc_x(sxz1); call alloc_x(syz1)
+       call alloc_x(nut1);call alloc_x(srt_smag); call alloc_x(srt_wale)
+       call alloc_y(sgsx2);call alloc_y(sgsy2); call alloc_y(sgsz2)
+       call alloc_y(sxx2) ;call alloc_y(syy2);  call alloc_y(szz2)
+       call alloc_y(sxy2) ;call alloc_y(sxz2);  call alloc_y(syz2)
+       call alloc_y(nut2) ;call alloc_y(srt_smag2); call alloc_y(srt_wale2)
+       call alloc_z(sgsx3);call alloc_z(sgsy3); call alloc_z(sgsz3)
+       call alloc_z(sxx3) ;call alloc_z(syy3);  call alloc_z(szz3)
+       call alloc_z(sxy3) ;call alloc_z(sxz3);  call alloc_z(syz3)
+       call alloc_z(nut3)
     endif
 
 
@@ -446,16 +447,16 @@ contains
        nrhotime = 1 !! Save some space
     endif
     allocate(rho1(xsize(1),xsize(2),xsize(3),nrhotime)) !Need to store old density values to extrapolate drhodt
-    call alloc_y(rho2, opt_global=.true.) !global indices
-    call alloc_z(rho3, opt_global=.true.) !global indices
+    call alloc_y(rho2)
+    call alloc_z(rho3)
     allocate(drho1(xsize(1),xsize(2),xsize(3),ntime))
 
     call alloc_z(divu3, opt_global=.true.) !global indices
 
-    !TRIPPING PARAMES LOST HERE
-    z_modes=int(zlz /zs_tr)
-    allocate(h_coeff(z_modes))
-    allocate(h_nxt(xsize(3)), h_i(xsize(3)))
+    ! !TRIPPING PARAMES LOST HERE
+    ! z_modes=int(zlz / zs_tr)
+    ! allocate(h_coeff(z_modes))
+    ! allocate(h_nxt(xsize(3)), h_i(xsize(3)))
 
 #ifdef DEBG
     if (nrank .eq. 0) print *,'# init_variables done'

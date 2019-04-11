@@ -260,14 +260,14 @@ subroutine CONVERGENCE_STATISTIC2(ux1,ep1,tik1,tik2,tak1,tak2)
 
         if (nrank .eq. 0) then
 
-          print *,'RMS=',rms1
+           print *,'RMS=',rms1
 
-          write(filename,"('stats/rms',I8.8)") itime
-          open(67,file=trim(filename),status='unknown',form='formatted')
-          write(67,"(2E14.6,I14)") t,rms1,itime
-          close(67)
+           write(filename,"('stats/rms',I8.8)") itime
+           open(67,file=trim(filename),status='unknown',form='formatted')
+           write(67,"(2E14.6,I14)") t,rms1,itime
+           close(67)
 
-	  rms1=zero
+           rms1=zero
 
         end if
      endif

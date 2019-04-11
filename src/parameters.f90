@@ -60,16 +60,18 @@ subroutine parameter(input_i3d)
        ilesmod, numscalar, iibm, ilmn, &
        ilesmod, iscalar, iibm, &
        nclx1, nclxn, ncly1, nclyn, nclz1, nclzn, &
-       ivisu, ipost
+       ivisu, ipost, &
+       gravx, gravy, gravz
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, rxxnu, cnu, fpi2, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu
   NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat
-  NAMELIST /ScalarParam/ sc, nclxS1, nclxSn, nclyS1, nclySn, nclzS1, nclzSn
+  NAMELIST /ScalarParam/ sc, ri, &
+       nclxS1, nclxSn, nclyS1, nclySn, nclzS1, nclzSn
   NAMELIST /LESModel/ jles, smagcst, walecst, iwall
   NAMELIST /WallModel/ smagwalldamp
 
   NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf
-  NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound
+  NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, massfrac, mol_weight, imultispecies, primary_species
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter start'
 #endif
@@ -103,7 +105,33 @@ subroutine parameter(input_i3d)
      read(10, nml=ibmstuff)
   endif
   if (ilmn) then
+     if (numscalar.ne.0) then
+        allocate(massfrac(numscalar))
+        allocate(mol_weight(numscalar))
+        massfrac(:) = .FALSE.
+        mol_weight(:) = one
+     endif
      read(10, nml=LMN)
+
+     do is = 1, numscalar
+        if (massfrac(is)) then
+           imultispecies = .TRUE.
+        endif
+     enddo
+
+     if (imultispecies) then
+        if (primary_species.lt.1) then
+           if (nrank.eq.0) then
+              print *, "Error: you must set a primary species for multispecies flow"
+              print *, "       solver will enforce Y_p = 1 - sum_s Y_s, s != p."
+              stop
+           endif
+        else if (.not.massfrac(primary_species)) then
+           if (nrank.eq.0) then
+              print *, "Error: primary species must be a massfraction!"
+           endif
+        endif
+     endif
   endif
   if (numscalar.ne.0) then
      iscalar = 1
@@ -111,7 +139,8 @@ subroutine parameter(input_i3d)
      nclxS1 = nclx1; nclxSn = nclxn
      nclyS1 = ncly1; nclySn = nclyn
      nclzS1 = nclz1; nclzSn = nclzn
-     allocate(sc(numscalar))
+     allocate(sc(numscalar), ri(numscalar))
+     ri(:) = zero
      read(10, nml=ScalarParam)
   endif
   ! !! These are the 'optional'/model parameters
@@ -171,6 +200,8 @@ subroutine parameter(input_i3d)
         print *,'Debug schemes'
      elseif (itype.eq.itype_mixlayer) then
         print *,'Mixing layer'
+     elseif (itype.eq.itype_jet) then
+        print *,'Jet'
      else
         print *,'Unknown itype: ', itype
         stop
@@ -195,8 +226,14 @@ subroutine parameter(input_i3d)
      write(*,"('                      (nclz1 ,nclzn )=(',I1,',',I1,')')") nclz1,nclzn
      write(*,"(' High and low speed : u1=',F6.2,' and u2=',F6.2)") u1,u2
      write(*,"(' Reynolds number Re : ',F15.8)") re
+     write(*,"(' Gravity vector     : (gx, gy, gz)=(',F15.8,',',F15.8,',',F15.8,')')") gravx, gravy, gravz
      if (ilmn) then
         print *, "LMN                : Enabled"
+        if (ivarcoeff) then
+           print *, "LMN-Poisson solver : Variable-coefficient"
+        else
+           print *, "LMN-Poisson solver : Constant-coefficient"
+        endif
         if (ilmn_bound) then
            print *, "LMN boundedness    : Enforced"
         else
@@ -251,6 +288,7 @@ subroutine parameter(input_i3d)
         do is=1, numscalar
            write (*,"(' Scalar             : #',I1)") is
            write (*,"(' Schmidt number     : ',F15.8)") sc(is)
+           write (*,"(' Richardson number  : ',F15.8)") ri(is)
         end do
      endif
      if (iibm.eq.0) then
@@ -265,6 +303,12 @@ subroutine parameter(input_i3d)
   endif
 
   xnu=one/re
+
+  if (ilmn) then
+     if (ivarcoeff) then
+        npress = 2 !! Need current pressure and previous iterate
+     endif
+  endif
 
 #ifdef DOUBLE_PREC
   anglex = dsin(pi*angle/180._mytype)
@@ -298,7 +342,7 @@ subroutine parameter_defaults()
   USE variables
   USE decomp_2d
   USE complex_geometry
-  
+
   IMPLICIT NONE
 
   ro = 99999999._mytype
@@ -322,11 +366,16 @@ subroutine parameter_defaults()
   !! IBM stuff
   nraf = 0
   nobjmax = 0
-   
+
   itrip = 0
   wrotation = zero
   irotation = 0
   itest=1
+
+  !! Gravity field
+  gravx = zero
+  gravy = zero
+  gravz = zero
 
   !! LMN stuff
   ilmn = .FALSE.
@@ -335,11 +384,17 @@ subroutine parameter_defaults()
   prandtl = one
   dens1 = one
   dens2 = one
+  ivarcoeff = .FALSE.
+  npress = 1 !! By default people only need one pressure field
+  ilmn_solve_temp = .FALSE.
+  imultispecies = .FALSE.
+
+  primary_species = -1
 
   !! IO
   ivisu = 1
   ipost = 0
-  
+
   save_ux = 0
   save_uy = 0
   save_uz = 0

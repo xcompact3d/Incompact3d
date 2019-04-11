@@ -50,58 +50,58 @@ contains
     real(mytype)               :: zeromach
     real(mytype), dimension(nxi:nxf) :: dune
     real(mytype) :: y_bump
-    
-   zeromach=one
-  do while ((one + zeromach / two) .gt. one)
-     zeromach = zeromach/two
-  end do
-  zeromach = 1.0e1*zeromach
-  !
-  y_bump=zero
-  dune=zero
-  do i=nxi,nxf
-     xm=real(i-1,mytype)*dx
-     if (xm.gt.xlx/two) then
-        xm = (xlx-xm)*twentyeight
-     else
-        xm = xm*twentyeight
-     endif
-     if ((xm.ge.zero).and.(xm.le.nine)) then
-        y_bump=min(28.,28+0.006775070969851*xm**two-2.124527775800E-03*xm**three)
-     endif
-     if ((xm.ge.9.).and.(xm.le.fourteen)) then
-        y_bump=  2.507355893131E+01      +9.754803562315E-01*xm&
-             -1.016116352781E-01*xm**two +1.889794677828E-03*xm**three
-     endif
-     if ((xm.ge.14.).and.(xm.le.twenty)) then
-        y_bump=  2.579601052357E+01      +8.206693007457E-01*xm &
-             -9.055370274339E-02*xm**two +1.626510569859E-03*xm**three
-     endif
-     if ((xm.ge.20.).and.(xm.le.30._mytype)) then
-        y_bump=  4.046435022819E+01      -1.379581654948E+00*xm &
-             +1.945884504128E-02*xm**two -2.070318932190E-04*xm**three
-     endif
-     if ((xm.ge.30.).and.(xm.le.40._mytype)) then
-        y_bump=  1.792461334664E+01      +8.743920332081E-01*xm &
-             -5.567361123058E-02*xm**two +6.277731764683E-04*xm**three
-     endif
-     if ((xm.ge.40.).and.(xm.le.54._mytype)) then
-        y_bump=max(0.,5.639011190988E+01  -2.010520359035E+00*xm &
-             +1.644919857549E-02*xm**two  +2.674976141766E-05*xm**three)
-     endif
-     dune(i)=y_bump/twentyeight
-  enddo
 
-  do k=nzi,nzf
-     do j=nyi,nyf
-        ym=yp(j)
-        do i=nxi,nxf
-           if (ym-dune(i).le.zeromach) then
-              epsi(i,j,k)=remp
-           endif
-        enddo
-     enddo
-  enddo
+    zeromach=one
+    do while ((one + zeromach / two) .gt. one)
+       zeromach = zeromach/two
+    end do
+    zeromach = 1.0e1*zeromach
+    !
+    y_bump=zero
+    dune=zero
+    do i=nxi,nxf
+       xm=real(i-1,mytype)*dx
+       if (xm.gt.xlx/two) then
+          xm = (xlx-xm)*twentyeight
+       else
+          xm = xm*twentyeight
+       endif
+       if ((xm.ge.zero).and.(xm.le.nine)) then
+          y_bump=min(28.,28+0.006775070969851*xm**two-2.124527775800E-03*xm**three)
+       endif
+       if ((xm.ge.9.).and.(xm.le.fourteen)) then
+          y_bump=  2.507355893131E+01      +9.754803562315E-01*xm&
+               -1.016116352781E-01*xm**two +1.889794677828E-03*xm**three
+       endif
+       if ((xm.ge.14.).and.(xm.le.twenty)) then
+          y_bump=  2.579601052357E+01      +8.206693007457E-01*xm &
+               -9.055370274339E-02*xm**two +1.626510569859E-03*xm**three
+       endif
+       if ((xm.ge.20.).and.(xm.le.30._mytype)) then
+          y_bump=  4.046435022819E+01      -1.379581654948E+00*xm &
+               +1.945884504128E-02*xm**two -2.070318932190E-04*xm**three
+       endif
+       if ((xm.ge.30.).and.(xm.le.40._mytype)) then
+          y_bump=  1.792461334664E+01      +8.743920332081E-01*xm &
+               -5.567361123058E-02*xm**two +6.277731764683E-04*xm**three
+       endif
+       if ((xm.ge.40.).and.(xm.le.54._mytype)) then
+          y_bump=max(0.,5.639011190988E+01  -2.010520359035E+00*xm &
+               +1.644919857549E-02*xm**two  +2.674976141766E-05*xm**three)
+       endif
+       dune(i)=y_bump/twentyeight
+    enddo
+
+    do k=nzi,nzf
+       do j=nyi,nyf
+          ym=yp(j)
+          do i=nxi,nxf
+             if (ym-dune(i).le.zeromach) then
+                epsi(i,j,k)=remp
+             endif
+          enddo
+       enddo
+    enddo
 
     return
   end subroutine geomcomplex_hill
@@ -118,13 +118,13 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
-     real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: gx
-     
-     ux = ux*(one-ep1)
-     call transpose_x_to_y(ux,gx)
-     call hill_flrt(gx,(two/three)*(two/yly))
-     call transpose_y_to_x(gx,ux)
-     
+    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: gx
+
+    ux = ux*(one-ep1)
+    call transpose_x_to_y(ux,gx)
+    call hill_flrt(gx,(two/three)*(two/yly))
+    call transpose_y_to_x(gx,ux)
+
     return
   end subroutine boundary_conditions_hill
 
@@ -151,80 +151,80 @@ contains
 
     integer, dimension (:), allocatable :: seed
 
-  if (iscalar==1) then
+    if (iscalar==1) then
 
-     phi1(:,:,:,:) = zero !change as much as you want
+       phi1(:,:,:,:) = zero !change as much as you want
 
-     !do not delete this
-     dphi1(:,:,:,1,:) = phi1(:,:,:,:)
-     do is = 2, ntime
-        dphi1(:,:,:,is,:) = dphi1(:,:,:,is - 1,:)
-     enddo
+       !do not delete this
+       dphi1(:,:,:,1,:) = phi1(:,:,:,:)
+       do is = 2, ntime
+          dphi1(:,:,:,is,:) = dphi1(:,:,:,is - 1,:)
+       enddo
 
-  endif
-  ux1=zero;uy1=zero;uz1=zero
-  if (iin.ne.0) then
-     call system_clock(count=code)
-     if (iin.eq.2) code=0
-     call random_seed(size = ii)
-     call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /))
+    endif
+    ux1=zero;uy1=zero;uz1=zero
+    if (iin.ne.0) then
+       call system_clock(count=code)
+       if (iin.eq.2) code=0
+       call random_seed(size = ii)
+       call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /))
 
-     call random_number(ux1)
-     call random_number(uy1)
-     call random_number(uz1)
-  endif
+       call random_number(ux1)
+       call random_number(uy1)
+       call random_number(uz1)
+    endif
 
-  !modulation of the random noise
-  do k=1,xsize(3)
-     do j=1,xsize(2)
-        do i=1,xsize(1)
-           ux1(i,j,k)=init_noise*(two*ux1(i,j,k)-one)
-           uy1(i,j,k)=init_noise*(two*uy1(i,j,k)-one)
-           uz1(i,j,k)=init_noise*(two*uz1(i,j,k)-one)
-        enddo
-     enddo
-  enddo
+    !modulation of the random noise
+    do k=1,xsize(3)
+       do j=1,xsize(2)
+          do i=1,xsize(1)
+             ux1(i,j,k)=init_noise*(two*ux1(i,j,k)-one)
+             uy1(i,j,k)=init_noise*(two*uy1(i,j,k)-one)
+             uz1(i,j,k)=init_noise*(two*uz1(i,j,k)-one)
+          enddo
+       enddo
+    enddo
 
-  !initial velocity profile
-  do k=1,xsize(3)
-     do j=1,xsize(2)
-        if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy
-        if (istret.ne.0) y=yp(j+xstart(2)-1)
-        if (y.lt.yly-two) then
-           do i=1,xsize(1)
-              ux1(i,j,k) = zero
-              uy1(i,j,k) = zero
-              uz1(i,j,k) = zero
-           enddo
-        else
-           do i=1,xsize(1)
-              ux1(i,j,k)=(ux1(i,j,k)+one)*(one-(y+one-yly)**two)
-              uy1(i,j,k)=(uy1(i,j,k))*(one-(y+one-yly)**two)
-              uz1(i,j,k)=(uz1(i,j,k))*(one-(y+one-yly)**two)
-           enddo
-        endif
-     enddo
-  enddo
+    !initial velocity profile
+    do k=1,xsize(3)
+       do j=1,xsize(2)
+          if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy
+          if (istret.ne.0) y=yp(j+xstart(2)-1)
+          if (y.lt.yly-two) then
+             do i=1,xsize(1)
+                ux1(i,j,k) = zero
+                uy1(i,j,k) = zero
+                uz1(i,j,k) = zero
+             enddo
+          else
+             do i=1,xsize(1)
+                ux1(i,j,k)=(ux1(i,j,k)+one)*(one-(y+one-yly)**two)
+                uy1(i,j,k)=(uy1(i,j,k))*(one-(y+one-yly)**two)
+                uz1(i,j,k)=(uz1(i,j,k))*(one-(y+one-yly)**two)
+             enddo
+          endif
+       enddo
+    enddo
 
-  !INIT FOR G AND U=MEAN FLOW + NOISE
-  do k=1,xsize(3)
-     do j=1,xsize(2)
-        do i=1,xsize(1)
-           ux1(i,j,k)=ux1(i,j,k)+bxx1(j,k)
-           uy1(i,j,k)=uy1(i,j,k)+bxy1(j,k)
-           uz1(i,j,k)=uz1(i,j,k)+bxz1(j,k)
-           dux1(i,j,k,1)=ux1(i,j,k)
-           duy1(i,j,k,1)=uy1(i,j,k)
-           duz1(i,j,k,1)=uz1(i,j,k)
-           dux1(i,j,k,2)=dux1(i,j,k,1)
-           duy1(i,j,k,2)=duy1(i,j,k,1)
-           duz1(i,j,k,2)=duz1(i,j,k,1)
-        enddo
-     enddo
-  enddo
+    !INIT FOR G AND U=MEAN FLOW + NOISE
+    do k=1,xsize(3)
+       do j=1,xsize(2)
+          do i=1,xsize(1)
+             ux1(i,j,k)=ux1(i,j,k)+bxx1(j,k)
+             uy1(i,j,k)=uy1(i,j,k)+bxy1(j,k)
+             uz1(i,j,k)=uz1(i,j,k)+bxz1(j,k)
+             dux1(i,j,k,1)=ux1(i,j,k)
+             duy1(i,j,k,1)=uy1(i,j,k)
+             duz1(i,j,k,1)=uz1(i,j,k)
+             dux1(i,j,k,2)=dux1(i,j,k,1)
+             duy1(i,j,k,2)=duy1(i,j,k,1)
+             duz1(i,j,k,2)=duz1(i,j,k,1)
+          enddo
+       enddo
+    enddo
 
 #ifdef DEBG
-  if (nrank .eq. 0) print *,'# init end ok'
+    if (nrank .eq. 0) print *,'# init end ok'
 #endif
 
     return
@@ -505,7 +505,7 @@ contains
 
   end subroutine write_probes
   !############################################################################
-    !********************************************************************
+  !********************************************************************
   !
   subroutine hill_flrt (ux,constant)
     !

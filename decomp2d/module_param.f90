@@ -18,7 +18,7 @@ module variables
   !nvisu = size for visualization collection
   !nprobe =  size for probe collection (energy spectra)
 
-!Possible n points: 3 5 7 9 11 13 17 19 21 25 31 33 37 41 49 51 55 61 65 73 81 91 97 101 109 121 129 145 151 161 163 181 193 201 217 241 251 257 271 289 301 321 325 361 385 401 433 451 481 487 501 513 541 577 601 641 649 721 751 769 801 811 865 901 961 973 1001 1025 1081 1153 1201 1251 1281 1297 1351 1441 1459 1501 1537 1601 1621 1729 1801 1921 1945 2001 2049 2161 2251 2305 2401 2431 2501 2561 2593 2701 2881 2917 3001 3073 3201 3241 3457 3601 3751 3841 3889 4001 4051 4097 4321 4375 4501 4609 4801 4861 5001 5121 5185 5401 5761 5833 6001 6145 6251 6401 6481 6751 6913 7201 7291 7501 7681 7777 8001 8101 8193 8641 8749 9001 9217 9601 9721 enough
+  !Possible n points: 3 5 7 9 11 13 17 19 21 25 31 33 37 41 49 51 55 61 65 73 81 91 97 101 109 121 129 145 151 161 163 181 193 201 217 241 251 257 271 289 301 321 325 361 385 401 433 451 481 487 501 513 541 577 601 641 649 721 751 769 801 811 865 901 961 973 1001 1025 1081 1153 1201 1251 1281 1297 1351 1441 1459 1501 1537 1601 1621 1729 1801 1921 1945 2001 2049 2161 2251 2305 2401 2431 2501 2561 2593 2701 2881 2917 3001 3073 3201 3241 3457 3601 3751 3841 3889 4001 4051 4097 4321 4375 4501 4609 4801 4861 5001 5121 5185 5401 5761 5833 6001 6145 6251 6401 6481 6751 6913 7201 7291 7501 7681 7777 8001 8101 8193 8641 8749 9001 9217 9601 9721 enough
 
   integer :: nx,ny,nz,numscalar,p_row,p_col,nxm,nym,nzm
   real :: spinup_time
@@ -33,7 +33,7 @@ module variables
 #ifdef SAVE_SINGLE
   integer,parameter :: prec = 4
 #else
-  integer,parameter :: prec = 8  
+  integer,parameter :: prec = 8
 #endif
 #endif
   !module filter
@@ -44,7 +44,7 @@ module variables
   real(mytype),allocatable,dimension(:) :: fiffyp,fifsyp,fifwyp,fisfyp,fissyp,fiswyp
   real(mytype),allocatable,dimension(:) :: fiffz, fifcz, fifbz, fisfz, fiscz, fisbz,fifsz,fifwz,fissz,fiswz
   real(mytype),allocatable,dimension(:) :: fiffzp,fifszp,fifwzp,fisfzp,fisszp,fiswzp
-  
+
   real(mytype),allocatable,dimension(:,:) :: fisx,fivx
   real(mytype),allocatable,dimension(:,:) :: fisy,fivy
   real(mytype),allocatable,dimension(:,:) :: fisz,fivz
@@ -81,30 +81,30 @@ module variables
      SUBROUTINE DERIVATIVE_X(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
        use decomp_2d, only : mytype
        integer :: nx,ny,nz,npaire
-       real(mytype), dimension(nx,ny,nz) :: t,u,r 
+       real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(ny,nz):: s
-       real(mytype), dimension(nx):: ff,fs,fw 
+       real(mytype), dimension(nx):: ff,fs,fw
      END SUBROUTINE DERIVATIVE_X
      SUBROUTINE DERIVATIVE_Y(t,u,r,s,ff,fs,fw,pp,nx,ny,nz,npaire)
        use decomp_2d, only : mytype
        integer :: nx,ny,nz,npaire
-       real(mytype), dimension(nx,ny,nz) :: t,u,r 
+       real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,nz):: s
        real(mytype), dimension(ny):: ff,fs,fw,pp
      END SUBROUTINE DERIVATIVE_Y
      SUBROUTINE DERIVATIVE_YY(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
        use decomp_2d, only : mytype
        integer :: nx,ny,nz,npaire
-       real(mytype), dimension(nx,ny,nz) :: t,u,r 
+       real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,nz):: s
        real(mytype), dimension(ny):: ff,fs,fw
      END SUBROUTINE DERIVATIVE_YY
      SUBROUTINE DERIVATIVE_Z(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
        use decomp_2d, only : mytype
        integer :: nx,ny,nz,npaire
-       real(mytype), dimension(nx,ny,nz) :: t,u,r 
+       real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,ny):: s
-       real(mytype), dimension(nz):: ff,fs,fw 
+       real(mytype), dimension(nz):: ff,fs,fw
      END SUBROUTINE DERIVATIVE_Z
   END INTERFACE
 
@@ -219,8 +219,9 @@ module param
        itype_hill = 4, &
        itype_cyl = 5, &
        itype_dbg = 6, &
-       itype_mixlayer = 7
-  
+       itype_mixlayer = 7, &
+       itype_jet = 8
+
   integer :: cont_phi,itr,itime,itest,iprocessing
   integer :: ifft,istret,iforc_entree,iturb
   integer :: iin,itimescheme,ifirst,ilast,iles,iimplicit
@@ -245,7 +246,7 @@ module param
   !! alpha * T + beta * dT/dn = g
   !! alpha=1, beta=0 is dirichlet
   !! alpha=0, beta=1 is neumann
-  !! 
+  !!
   !! WARNING ATTENTION ACHTUNG WARNING ATTENTION ACHTUNG
   !!
   !! beta is the coefficient for NORMAL derivative :
@@ -258,19 +259,28 @@ module param
 
   !! LES modelling flag
   integer :: ilesmod, iwall
-  
+
   !LES
   integer :: jLES
   integer :: smagwalldamp
   real(mytype) :: smagcst,walecst,FSGS,pr_t,maxdsmagcst
 
+  !! Gravity field (vector components)
+  real(mytype) :: gravx, gravy, gravz
+
   !! LMN
-  logical :: ilmn, ilmn_bound
+  logical :: ilmn, ilmn_bound, ilmn_solve_temp
   real(mytype) :: pressure0, prandtl
-  integer :: nrhotime
+  integer :: nrhotime, npress
+  logical :: ivarcoeff
+
+  logical :: imultispecies
+  logical, allocatable, dimension(:) :: massfrac
+  real(mytype), allocatable, dimension(:) :: mol_weight
+  integer :: primary_species
 
   character :: filesauve*80, filenoise*80, &
-  nchamp*80,filepath*80, fileturb*80, filevisu*80, datapath*80
+       nchamp*80,filepath*80, fileturb*80, filevisu*80, datapath*80
   real(mytype), dimension(5) :: adt,bdt,cdt,ddt,gdt
 
   !VISU
@@ -287,7 +297,7 @@ module param
   real(mytype), allocatable, dimension(:) :: h_coeff, h_nxt,h_i
 
   !numbers
-  
+
   real(mytype),parameter :: zpone=0.1_mytype
   real(mytype),parameter :: zptwo=0.2_mytype
   real(mytype),parameter :: zpthree=0.3_mytype
@@ -325,48 +335,48 @@ module param
   real(mytype),parameter :: twentyfive=25._mytype
   real(mytype),parameter :: twentyseven=27._mytype
   real(mytype),parameter :: twentyeight=28._mytype
-!
+  !
   real(mytype),parameter :: thirtytwo=32._mytype
   real(mytype),parameter :: thirtyfour=34._mytype
   real(mytype),parameter :: thirtysix=36._mytype
-!
+  !
   real(mytype),parameter :: fortyfour=44._mytype
   real(mytype),parameter :: fortyfive=45._mytype
   real(mytype),parameter :: fortyeight=48._mytype
-!
+  !
   real(mytype),parameter :: sixty=60._mytype
   real(mytype),parameter :: sixtytwo=62._mytype
   real(mytype),parameter :: sixtythree=63._mytype
-!
+  !
   real(mytype),parameter :: seventy=70._mytype
   real(mytype),parameter :: seventyfive=75._mytype
-!
+  !
   real(mytype),parameter :: onehundredtwentysix=126._mytype
   real(mytype),parameter :: onehundredtwentyeight=128._mytype
-!
+  !
   real(mytype),parameter :: twohundredsix=206._mytype
   real(mytype),parameter :: twohundredeight=208._mytype
   real(mytype),parameter :: twohundredfiftysix=256._mytype
   real(mytype),parameter :: twohundredseventytwo=272._mytype
-!
+  !
   real(mytype),parameter :: twothousand=2000._mytype
   real(mytype),parameter :: thirtysixthousand=3600._mytype
 
 
-#ifdef DOUBLE_PREC 
-  real(mytype),parameter :: pi=dacos(-one) 
-  real(mytype),parameter :: twopi=two*dacos(-one) 
+#ifdef DOUBLE_PREC
+  real(mytype),parameter :: pi=dacos(-one)
+  real(mytype),parameter :: twopi=two*dacos(-one)
 #else
   real(mytype),parameter :: pi=acos(-one)
-  real(mytype),parameter :: twopi=two*acos(-one) 
+  real(mytype),parameter :: twopi=two*acos(-one)
 #endif
 
 end module param
 
 module complex_geometry
 
-use decomp_2d,only : mytype
-use variables,only : nx,ny,nz,nxm,nym,nzm
+  use decomp_2d,only : mytype
+  use variables,only : nx,ny,nz,nxm,nym,nzm
 
   integer     ,allocatable,dimension(:,:)   :: nobjx,nobjy,nobjz
   integer     ,allocatable,dimension(:,:,:) :: nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif
@@ -391,7 +401,7 @@ module derivX
   real(mytype) :: alsaix,asix,bsix,csix,dsix
 
 #ifdef IMPLICIT
-  !implicit 
+  !implicit
   real(mytype) :: alsaixt,asixt,bsixt,csixt
 #endif
 end module derivX
@@ -413,7 +423,7 @@ module derivY
   real(mytype) :: alsajy,asjy,bsjy,csjy,dsjy
 
 #ifdef IMPLICIT
-  !implicit 
+  !implicit
   real(mytype) :: alsajyt,asjyt,bsjyt,csjyt
 #endif
 end module derivY
@@ -435,7 +445,7 @@ module derivZ
   real(mytype) :: alsakz,askz,bskz,cskz,dskz
 
 #ifdef IMPLICIT
-  !implicit 
+  !implicit
   real(mytype) :: alsakzt,askzt,bskzt,cskzt
 #endif
 
@@ -443,7 +453,7 @@ end module derivZ
 
 ! Describes the parameters for the discrete filters in X-Pencil
 module parfiX
-use decomp_2d, only : mytype
+  use decomp_2d, only : mytype
   real(mytype) :: fial1x, fia1x, fib1x, fic1x, fid1x, fie1x, fif1x  ! Coefficients for filter at boundary point 1  
   real(mytype) :: fial2x, fia2x, fib2x, fic2x, fid2x, fie2x, fif2x  ! Coefficients for filter at boundary point 2
   real(mytype) :: fial3x, fia3x, fib3x, fic3x, fid3x, fie3x, fif3x  ! Coefficients for filter at boundary point 3
@@ -455,7 +465,7 @@ end module parfiX
 !
 module parfiY
 
-use decomp_2d, only : mytype
+  use decomp_2d, only : mytype
   real(mytype) :: fial1y, fia1y, fib1y, fic1y, fid1y, fie1y, fif1y ! Coefficients for filter at boundary point 1  
   real(mytype) :: fial2y, fia2y, fib2y, fic2y, fid2y, fie2y, fif2y ! Coefficients for filter at boundary point 2
   real(mytype) :: fial3y, fia3y, fib3y, fic3y, fid3y, fie3y, fif3y ! Coefficients for filter at boundary point 3
@@ -467,7 +477,7 @@ end module parfiY
 
 module parfiZ
 
-use decomp_2d, only : mytype
+  use decomp_2d, only : mytype
   real(mytype) :: fial1z, fia1z, fib1z, fic1z, fid1z, fie1z, fif1z ! Coefficients for filter at boundary point 1  
   real(mytype) :: fial2z, fia2z, fib2z, fic2z, fid2z, fie2z, fif2z ! Coefficients for filter at boundary point 2
   real(mytype) :: fial3z, fia3z, fib3z, fic3z, fid3z, fie3z, fif3z ! Coefficients for filter at boundary point 3
@@ -478,10 +488,10 @@ use decomp_2d, only : mytype
 end module parfiZ
 
 module simulation_stats
-  real(8) :: tstart,time1,trank,tranksum,ttotal,tremaining,telapsed      
+  real(8) :: tstart,time1,trank,tranksum,ttotal,tremaining,telapsed
 end module simulation_stats
 
 module ibm
   use decomp_2d, only : mytype
-   real(mytype) :: cex,cey,ra        
+  real(mytype) :: cex,cey,ra
 end module ibm

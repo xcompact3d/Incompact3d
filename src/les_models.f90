@@ -38,7 +38,7 @@ subroutine init_explicit_les
 end subroutine init_explicit_les
 !************************************************************
 subroutine Compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,iconservative)
-    
+
   USE param
   USE variables
   USE decomp_2d
@@ -50,28 +50,28 @@ subroutine Compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,iconservative)
   real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sgsx1, sgsy1, sgsz1
   integer :: iconservative
 
-    ! Calculate eddy-viscosity
-    if(jLES.eq.1) then ! Smagorinsky
+  ! Calculate eddy-viscosity
+  if(jLES.eq.1) then ! Smagorinsky
 
-        call smag(nut1,ux1,uy1,uz1)
-    
-    elseif(jLES.eq.2) then !WALE
-        
-        call smag(nut1,ux1,uy1,uz1)
-  
-    elseif(jLES.eq.3) then ! Lilly-style Dynamic Smagorinsky
+     call smag(nut1,ux1,uy1,uz1)
 
-    endif
+  elseif(jLES.eq.2) then !WALE
 
-    if(iconservative.eq.0) then ! Non-conservative form for calculating the divergence of the SGS stresses
-   
-        call les_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
+     call smag(nut1,ux1,uy1,uz1)
 
-    elseif (iconservative.eq.1) then ! Conservative form for calculating the divergence of the SGS stresses (used with wall functions)
+  elseif(jLES.eq.3) then ! Lilly-style Dynamic Smagorinsky
 
-        ! Call les_conservative
+  endif
 
-    endif
+  if(iconservative.eq.0) then ! Non-conservative form for calculating the divergence of the SGS stresses
+
+     call les_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
+
+  elseif (iconservative.eq.1) then ! Conservative form for calculating the divergence of the SGS stresses (used with wall functions)
+
+     ! Call les_conservative
+
+  endif
 
   return
 

@@ -145,7 +145,7 @@ module decomp_2d
   real(mytype),    allocatable, dimension(:) :: work1_r, work2_r
   complex(mytype), allocatable, dimension(:) :: work1_c, work2_c
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! To define smaller arrays using every several mesh points
   integer, save, dimension(3), public :: xszS,yszS,zszS,xstS,ystS,zstS,xenS,yenS,zenS
   integer, save, dimension(3), public :: xszV,yszV,zszV,xstV,ystV,zstV,xenV,yenV,zenV
@@ -176,7 +176,7 @@ module decomp_2d
        get_decomp_info
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! These are routines to perform global data transpositions
   ! 
   !   Four combinations are available, enough to cover all situations
@@ -192,18 +192,18 @@ module decomp_2d
   !    - an optional argument can be supplied to transpose data whose 
   !      global size is not the default nx*ny*nz 
   !       * as the case in fft r2c/c2r interface 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   interface transpose_x_to_y
      module procedure transpose_x_to_y_real
      module procedure transpose_x_to_y_complex
   end interface transpose_x_to_y
-  
+
   interface transpose_y_to_z
      module procedure transpose_y_to_z_real
      module procedure transpose_y_to_z_complex
   end interface transpose_y_to_z
-  
+
   interface transpose_z_to_y
      module procedure transpose_z_to_y_real
      module procedure transpose_z_to_y_complex
@@ -229,7 +229,7 @@ module decomp_2d
      module procedure transpose_z_to_y_real_start
      module procedure transpose_z_to_y_complex_start
   end interface transpose_z_to_y_start
-     
+
   interface transpose_y_to_x_start
      module procedure transpose_y_to_x_real_start
      module procedure transpose_y_to_x_complex_start
@@ -249,7 +249,7 @@ module decomp_2d
      module procedure transpose_z_to_y_real_wait
      module procedure transpose_z_to_y_complex_wait
   end interface transpose_z_to_y_wait
-     
+
   interface transpose_y_to_x_wait
      module procedure transpose_y_to_x_real_wait
      module procedure transpose_y_to_x_complex_wait
@@ -279,7 +279,7 @@ module decomp_2d
 contains
 
 #ifdef SHM_DEBUG
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! For debugging, print the shared-memory structure
   subroutine print_smp_info(s)
     TYPE(SMP_INFO) :: s
@@ -295,7 +295,7 @@ contains
   end subroutine print_smp_info
 #endif
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Routine to be called by applications to initialise this library
   !   INPUT:
   !     nx, ny, nz   - global data dimension
@@ -303,16 +303,16 @@ contains
   !   OUTPUT:
   !     all internal data structures initialised properly
   !     library ready to use
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine decomp_2d_init(nx,ny,nz,p_row,p_col,periodic_bc)
 
     implicit none
 
     integer, intent(IN) :: nx,ny,nz,p_row,p_col
     logical, dimension(3), intent(IN), optional :: periodic_bc
-    
+
     integer :: errorcode, ierror, row, col
-    
+
 #ifdef SHM_DEBUG
     character(len=80) fname
 #endif
@@ -344,7 +344,7 @@ contains
           col = p_col
        end if
     end if
-    
+
     ! Create 2D Catersian topology
     ! Note that in order to support periodic B.C. in the halo-cell code,
     ! need to create multiple topology objects: DECOMP_2D_COMM_CART_?,
@@ -368,7 +368,7 @@ contains
          .false., DECOMP_2D_COMM_CART_Z, ierror)
 
     call MPI_CART_COORDS(DECOMP_2D_COMM_CART_X,nrank,2,coord,ierror)
-    
+
     ! derive communicators defining sub-groups for ALLTOALL(V)
     call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.true.,.false./), &
          DECOMP_2D_COMM_COL,ierror)
@@ -377,10 +377,10 @@ contains
 
     ! gather information for halo-cell support code
     call init_neighbour
-    
+
     ! actually generate all 2D decomposition information
     call decomp_info_init(nx,ny,nz,decomp_main)
-    
+
     ! make a copy of the decomposition information associated with the
     ! default global size in these global variables so applications can
     ! use them to create data structures 
@@ -460,27 +460,27 @@ contains
 
     return
   end subroutine decomp_2d_init
-  
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Routine to be called by applications to clean things up
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine decomp_2d_finalize
 
     implicit none
-    
+
     call decomp_info_finalize(decomp_main)
 
     decomp_buf_size = 0
     deallocate(work1_r, work2_r, work1_c, work2_c)
-    
+
     return
   end subroutine decomp_2d_finalize
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Return the default decomposition object
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine get_decomp_info(decomp)
 
     implicit none
@@ -491,9 +491,9 @@ contains
 
     return
   end subroutine get_decomp_info
-    
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Advanced Interface allowing applications to define globle domain of
   ! any size, distribute it, and then transpose data among pencils.
   !  - generate 2D decomposition details as defined in DECOMP_INFO
@@ -501,11 +501,11 @@ contains
   !  - a different global size nx/2+1,ny,nz is used in FFT r2c/c2r
   !  - multiple global sizes can co-exist in one application, each
   !    using its own DECOMP_INFO object
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine decomp_info_init(nx,ny,nz,decomp)
 
     implicit none
-    
+
     integer, intent(IN) :: nx,ny,nz
     TYPE(DECOMP_INFO), intent(INOUT) :: decomp
 
@@ -519,7 +519,7 @@ contains
             'Make sure that min(nx,ny) >= p_row and ' // &
             'min(ny,nz) >= p_col')
     end if
-    
+
     if (mod(nx,dims(1))==0 .and. mod(ny,dims(1))==0 .and. &
          mod(ny,dims(2))==0 .and. mod(nz,dims(2))==0) then
        decomp%even = .true.
@@ -531,7 +531,7 @@ contains
     allocate(decomp%x1dist(0:dims(1)-1),decomp%y1dist(0:dims(1)-1), &
          decomp%y2dist(0:dims(2)-1),decomp%z2dist(0:dims(2)-1))
     call get_dist(nx,ny,nz,decomp)
-    
+
     ! generate partition information - starting/ending index etc.
     call partition(nx, ny, nz, (/ 1,2,3 /), &
          decomp%xst, decomp%xen, decomp%xsz)
@@ -539,7 +539,7 @@ contains
          decomp%yst, decomp%yen, decomp%ysz)
     call partition(nx, ny, nz, (/ 2,3,1 /), &
          decomp%zst, decomp%zen, decomp%zsz)
-    
+
     ! prepare send/receive buffer displacement and count for ALLTOALL(V)
     allocate(decomp%x1cnts(0:dims(1)-1),decomp%y1cnts(0:dims(1)-1), &
          decomp%y2cnts(0:dims(2)-1),decomp%z2cnts(0:dims(2)-1))
@@ -554,7 +554,7 @@ contains
 
     ! allocate memory for the MPI_ALLTOALL(V) buffers
     ! define the buffers globally for performance reason
-    
+
     buf_size = max(decomp%xsz(1)*decomp%xsz(2)*decomp%xsz(3), &
          max(decomp%ysz(1)*decomp%ysz(2)*decomp%ysz(3), &
          decomp%zsz(1)*decomp%zsz(2)*decomp%zsz(3)) )
@@ -587,9 +587,9 @@ contains
   end subroutine decomp_info_init
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Release memory associated with a DECOMP_INFO object
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine decomp_info_finalize(decomp)
 
     implicit none
@@ -613,16 +613,16 @@ contains
   end subroutine decomp_info_finalize
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Coarser mesh support for statistic
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine init_coarser_mesh_statS(i_skip,j_skip,k_skip,from1)
 
     implicit none
-    
+
     integer, intent(IN) :: i_skip,j_skip,k_skip
     logical, intent(IN) :: from1  ! .true.  - save 1,n+1,2n+1...
-                                  ! .false. - save n,2n,3n...
+    ! .false. - save n,2n,3n...
 
     integer, dimension(3) :: skip
     integer :: i
@@ -678,16 +678,16 @@ contains
     return
   end subroutine init_coarser_mesh_statS
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Coarser mesh support for visualization
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine init_coarser_mesh_statV(i_skip,j_skip,k_skip,from1)
 
     implicit none
-    
+
     integer, intent(IN) :: i_skip,j_skip,k_skip
     logical, intent(IN) :: from1  ! .true.  - save 1,n+1,2n+1...
-                                  ! .false. - save n,2n,3n...
+    ! .false. - save n,2n,3n...
 
     integer, dimension(3) :: skip
     integer :: i
@@ -743,16 +743,16 @@ contains
     return
   end subroutine init_coarser_mesh_statV
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Coarser mesh support for probe
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine init_coarser_mesh_statP(i_skip,j_skip,k_skip,from1)
 
     implicit none
-    
+
     integer, intent(IN) :: i_skip,j_skip,k_skip
     logical, intent(IN) :: from1  ! .true.  - save 1,n+1,2n+1...
-                                  ! .false. - save n,2n,3n...
+    ! .false. - save n,2n,3n...
 
     integer, dimension(3) :: skip
     integer :: i
@@ -1064,7 +1064,7 @@ contains
   end subroutine fine_to_coarseP
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Find sub-domain information held by current processor
   !   INPUT: 
   !     nx, ny, nz - global data dimension
@@ -1076,7 +1076,7 @@ contains
   !     lstart(3)  - starting index
   !     lend(3)    - ending index
   !     lsize(3)   - size of the sub-block (redundant) 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine partition(nx, ny, nz, pdim, lstart, lend, lsize)
 
     implicit none
@@ -1089,50 +1089,50 @@ contains
     integer :: i, gsize
 
     do i = 1, 3
- 
-      if (i==1) then
-        gsize = nx
-      else if (i==2) then
-        gsize = ny
-      else if (i==3) then
-        gsize = nz
-      end if
 
-      if (pdim(i) == 1) then        ! all local
-        lstart(i) = 1
-        lend(i)   = gsize
-        lsize(i)  = gsize
-      elseif (pdim(i) == 2) then    ! distribute across dims(1)
-        allocate(st(0:dims(1)-1))
-        allocate(en(0:dims(1)-1))
-        allocate(sz(0:dims(1)-1))
-        call distribute(gsize,dims(1),st,en,sz)
-        lstart(i) = st(coord(1))
-        lend(i)   = en(coord(1))
-        lsize(i)  = sz(coord(1))
-        deallocate(st,en,sz)
-      elseif (pdim(i) == 3) then    ! distribute across dims(2)
-        allocate(st(0:dims(2)-1))
-        allocate(en(0:dims(2)-1))
-        allocate(sz(0:dims(2)-1))
-        call distribute(gsize,dims(2),st,en,sz)
-        lstart(i) = st(coord(2))
-        lend(i)   = en(coord(2))
-        lsize(i)  = sz(coord(2))
-        deallocate(st,en,sz)
-      end if    
+       if (i==1) then
+          gsize = nx
+       else if (i==2) then
+          gsize = ny
+       else if (i==3) then
+          gsize = nz
+       end if
+
+       if (pdim(i) == 1) then        ! all local
+          lstart(i) = 1
+          lend(i)   = gsize
+          lsize(i)  = gsize
+       elseif (pdim(i) == 2) then    ! distribute across dims(1)
+          allocate(st(0:dims(1)-1))
+          allocate(en(0:dims(1)-1))
+          allocate(sz(0:dims(1)-1))
+          call distribute(gsize,dims(1),st,en,sz)
+          lstart(i) = st(coord(1))
+          lend(i)   = en(coord(1))
+          lsize(i)  = sz(coord(1))
+          deallocate(st,en,sz)
+       elseif (pdim(i) == 3) then    ! distribute across dims(2)
+          allocate(st(0:dims(2)-1))
+          allocate(en(0:dims(2)-1))
+          allocate(sz(0:dims(2)-1))
+          call distribute(gsize,dims(2),st,en,sz)
+          lstart(i) = st(coord(2))
+          lend(i)   = en(coord(2))
+          lsize(i)  = sz(coord(2))
+          deallocate(st,en,sz)
+       end if
 
     end do
     return   
 
   end subroutine partition
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !   - distibutes grid points in one dimension
   !   - handles uneven distribution properly 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
   subroutine distribute(data1,proc,st,en,sz)
-  
+
     implicit none
     ! data1 -- data size in any dimension to be partitioned
     ! proc  -- number of processors in that dimension
@@ -1141,7 +1141,7 @@ contains
     ! sz    -- array of local size  (redundent)
     integer data1,proc,st(0:proc-1),en(0:proc-1),sz(0:proc-1)
     integer i,size1,nl,nu
-  
+
     size1=data1/proc
     nu = data1 - size1 * proc
     nl = proc - nu
@@ -1149,27 +1149,27 @@ contains
     sz(0) = size1
     en(0) = size1
     do i=1,nl-1
-      st(i) = st(i-1) + size1
-      sz(i) = size1
-      en(i) = en(i-1) + size1
+       st(i) = st(i-1) + size1
+       sz(i) = size1
+       en(i) = en(i-1) + size1
     end do
     size1 = size1 + 1
     do i=nl,proc-1
-      st(i) = en(i-1) + 1
-      sz(i) = size1
-      en(i) = en(i-1) + size1
+       st(i) = en(i-1) + 1
+       sz(i) = size1
+       en(i) = en(i-1) + size1
     end do
     en(proc-1)= data1 
     sz(proc-1)= data1-st(proc-1)+1
-  
+
     return
   end subroutine distribute
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !  Define how each dimension is distributed across processors
   !    e.g. 17 meshes across 4 processor would be distibuted as (4,4,4,5)
   !    such global information is required locally at MPI_ALLTOALLV time
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine get_dist(nx,ny,nz,decomp)
 
     integer, intent(IN) :: nx, ny, nz
@@ -1191,13 +1191,13 @@ contains
     return
   end subroutine get_dist
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Prepare the send / receive buffers for MPI_ALLTOALLV communications
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine prepare_buffer(decomp)
-    
+
     implicit none
-    
+
     TYPE(DECOMP_INFO), intent(INOUT) :: decomp
 
     integer :: i
@@ -1215,7 +1215,7 @@ contains
           decomp%y1disp(i) = decomp%y1disp(i-1) + decomp%y1cnts(i-1)
        end if
     end do
-    
+
     do i=0, dims(2)-1
        decomp%y2cnts(i) = decomp%ysz(1)*decomp%y2dist(i)*decomp%ysz(3)
        decomp%z2cnts(i) = decomp%zsz(1)*decomp%zsz(2)*decomp%z2dist(i)
@@ -1227,7 +1227,7 @@ contains
           decomp%z2disp(i) = decomp%z2disp(i-1) + decomp%z2cnts(i-1)
        end if
     end do
-    
+
     ! MPI_ALLTOALL buffer information
 
     ! For evenly distributed data, following is an easier implementation.
@@ -1247,15 +1247,15 @@ contains
     decomp%y2count = decomp%y2dist(dims(2)-1) * &
          decomp%z2dist(dims(2)-1) * decomp%zsz(1)
     decomp%z2count = decomp%y2count
-    
+
     return
-  end subroutine prepare_buffer  
+  end subroutine prepare_buffer
 
 #ifdef SHM
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !  Generate shared-memory information 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine decomp_info_init_shm(decomp)
 
     implicit none
@@ -1277,22 +1277,22 @@ contains
   end subroutine decomp_info_init_shm
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! For shared-memory implementation, prepare send/recv shared buffer
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine prepare_shared_buffer(C,MPI_COMM,decomp)
 
     implicit none
-    
+
     TYPE(SMP_INFO) :: C
     INTEGER :: MPI_COMM
     TYPE(DECOMP_INFO) :: decomp
-    
+
     INTEGER, ALLOCATABLE :: KTBL(:,:),NARY(:,:),KTBLALL(:,:)
     INTEGER MYSMP, MYCORE, COLOR
-    
+
     integer :: ierror
-    
+
     C%MPI_COMM = MPI_COMM
     CALL MPI_COMM_SIZE(MPI_COMM,C%NCPU,ierror)
     CALL MPI_COMM_RANK(MPI_COMM,C%NODE_ME,ierror)
@@ -1309,7 +1309,7 @@ contains
     C%RCV_P = 0
     C%SND_P_c = 0
     C%RCV_P_c = 0
-    
+
     ! get smp-node map for this communicator and set up smp communicators
     CALL GET_SMP_MAP(C%MPI_COMM, C%NSMP, MYSMP, &
          C%NCORE, MYCORE, C%MAXCORE)
@@ -1331,72 +1331,72 @@ contains
     KTBL=KTBLALL
     !  IF (SUM(KTBL) /= C%NCPU*(C%NCPU+1)/2) &
     !       CALL MPI_ABORT(...
-    
+
     ! compute offsets in shared SNDBUF and RCVBUF
     CALL MAPSET_SMPSHM(C, KTBL, NARY, decomp)
-    
+
     DEALLOCATE(KTBL,NARY)
-    
+
     return
   end subroutine prepare_shared_buffer
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Use Ian Bush's FreeIPC to generate shared-memory information
   !  - system independent solution
   !  - replacing David Tanqueray's implementation in alloc_shm.c
   !    (old C code renamed to get_smp_map2)
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine get_smp_map(comm, nnodes, my_node, ncores, my_core, maxcor)
-    
+
     use FIPC_module
-    
+
     implicit none
-    
+
     integer, intent(IN) :: comm
     integer, intent(OUT) :: nnodes, my_node, ncores, my_core, maxcor
-    
+
     integer :: intra_comm, extra_comm
     integer :: ierror
-    
+
     call FIPC_init(comm, ierror)
-    
+
     ! intra_comm: communicator for processes on this shared memory node
     ! extra_comm: communicator for all rank 0 on each shared memory node
     call FIPC_ctxt_intra_comm(FIPC_ctxt_world, intra_comm, ierror)
     call FIPC_ctxt_extra_comm(FIPC_ctxt_world, extra_comm, ierror)
-    
+
     call MPI_COMM_SIZE(intra_comm,  ncores, ierror)
     call MPI_COMM_RANK(intra_comm, my_core, ierror)
-    
+
     ! only rank 0 on each shared memory node member of extra_comm
     ! for others extra_comm = MPI_COMM_NULL
     if (extra_comm /= MPI_COMM_NULL) then
        call MPI_COMM_SIZE(extra_comm,  nnodes, ierror)
        call MPI_COMM_RANK(extra_comm, my_node, ierror)
     end if
-    
+
     ! other ranks share the same information as their leaders
     call MPI_BCAST( nnodes, 1, MPI_INTEGER, 0, intra_comm, ierror)
     call MPI_BCAST(my_node, 1, MPI_INTEGER, 0, intra_comm, ierror)
-    
+
     ! maxcor
     call MPI_ALLREDUCE(ncores, maxcor, 1, MPI_INTEGER, MPI_MAX, &
          MPI_COMM_WORLD, ierror)
-    
+
     call FIPC_finalize(ierror)
-    
+
     return
-    
+
   end subroutine get_smp_map
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Set up smp-node based shared memory maps
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE MAPSET_SMPSHM(C, KTBL, NARY, decomp)
-        
+
     IMPLICIT NONE
-    
+
     TYPE (SMP_INFO) C
     INTEGER KTBL(C%MAXCORE,C%NSMP)
     INTEGER NARY(C%NCPU,C%NCORE)
@@ -1404,9 +1404,9 @@ contains
 
     INTEGER i, j, k, l, N, PTR, BSIZ, ierror, status, seed
     character*16 s
- 
+
     BSIZ = C%N_SND
-    
+
     ! a - SNDBUF
     IF (C%MPI_COMM==DECOMP_2D_COMM_COL) THEN
        ALLOCATE(decomp%x1cnts_s(C%NSMP),decomp%x1disp_s(C%NSMP+1), &
@@ -1431,7 +1431,7 @@ contains
        END DO
        decomp%x1disp_s(C%NSMP+1) = PTR
        IF (PTR > BSIZ) BSIZ = PTR
-       
+
     ELSE IF (C%MPI_COMM==DECOMP_2D_COMM_ROW) THEN
        ALLOCATE(decomp%y2cnts_s(C%NSMP),decomp%y2disp_s(C%NSMP+1), &
             stat=status)
@@ -1456,9 +1456,9 @@ contains
        decomp%y2disp_s(C%NSMP+1) = PTR
        IF (PTR > BSIZ) BSIZ = PTR
     END IF
-    
+
     ! b - RCVBUF
-    
+
     IF (C%MPI_COMM==DECOMP_2D_COMM_COL) THEN
        ALLOCATE(decomp%y1cnts_s(C%NSMP),decomp%y1disp_s(C%NSMP+1), &
             stat=status)
@@ -1482,7 +1482,7 @@ contains
        END DO
        decomp%y1disp_s(C%NSMP+1) = PTR
        IF (PTR > BSIZ) BSIZ = PTR
-       
+
     ELSE IF (C%MPI_COMM==DECOMP_2D_COMM_ROW) THEN
        ALLOCATE(decomp%z2cnts_s(C%NSMP),decomp%z2disp_s(C%NSMP+1), &
             stat=status)
@@ -1506,9 +1506,9 @@ contains
        END DO
        decomp%z2disp_s(C%NSMP+1) = PTR
        IF (PTR > BSIZ) BSIZ = PTR
-       
+
     END IF
-    
+
     ! check buffer size and (re)-allocate buffer space if necessary
     IF (BSIZ > C%N_SND) then
        IF (C%SND_P /= 0) CALL DEALLOC_SHM(C%SND_P, C%CORE_COMM)
@@ -1541,7 +1541,7 @@ contains
 
 
     END IF
-    
+
     RETURN
   END SUBROUTINE MAPSET_SMPSHM
 
@@ -1563,18 +1563,18 @@ contains
 #endif
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Transposition routines 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #include "transpose_x_to_y.inc"
 #include "transpose_y_to_z.inc"
 #include "transpose_z_to_y.inc"
 #include "transpose_y_to_x.inc"
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Auto-tuning algorithm to select the best 2D processor grid
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine best_2d_grid(iproc, best_p_row, best_p_col)
 
     implicit none
@@ -1595,7 +1595,7 @@ contains
     best_time = huge(t1)
     best_p_row = -1
     best_p_col = -1
-    
+
     i = int(sqrt(real(iproc))) + 10  ! enough space to save all factors 
     allocate(factors(i))
     call findfactor(iproc, factors, nfact)
@@ -1618,13 +1618,13 @@ contains
           call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
                .false.,DECOMP_2D_COMM_CART_X, ierror)
           call MPI_CART_COORDS(DECOMP_2D_COMM_CART_X,nrank,2,coord,ierror)
-          
+
           ! communicators defining sub-groups for ALLTOALL(V)
           call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.true.,.false./), &
                DECOMP_2D_COMM_COL,ierror)
           call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.false.,.true./), &
                DECOMP_2D_COMM_ROW,ierror)
-          
+
           ! generate 2D decomposition information for this row*col
           call decomp_info_init(nx_global,ny_global,nz_global,decomp)
 
@@ -1645,7 +1645,7 @@ contains
           call decomp_info_finalize(decomp)
 
           call MPI_ALLREDUCE(t2,t1,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
-                   MPI_COMM_WORLD,ierror)
+               MPI_COMM_WORLD,ierror)
           t1 = t1 / dble(nproc)
 
           if (nrank==0) then
@@ -1659,7 +1659,7 @@ contains
           end if
 
        end if
-       
+
     end do ! loop through processer grid
 
     deallocate(factors)
@@ -1681,15 +1681,15 @@ contains
 
 #include "factor.inc"
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Halo cell support
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #include "halo.inc"
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Error handling
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine decomp_2d_abort(errorcode, msg)
 
     implicit none
@@ -1698,7 +1698,7 @@ contains
     character(len=*), intent(IN) :: msg
 
     integer :: ierror
-    
+
     if (nrank==0) then
        write(*,*) '2DECOMP&FFT ERROR - errorcode: ', errorcode
        write(*,*) 'ERROR MESSAGE: ' // msg
@@ -1709,11 +1709,11 @@ contains
   end subroutine decomp_2d_abort
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Utility routines to help allocate 3D arrays
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #include "alloc.inc"
-    
-  
+
+
 end module decomp_2d
 

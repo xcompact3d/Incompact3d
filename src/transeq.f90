@@ -1,8 +1,8 @@
 MODULE transeq
 
   PRIVATE
-  PUBLIC :: momentum_rhs_eq, continuity_rhs_eq, scalar
-  
+  PUBLIC :: momentum_rhs_eq, continuity_rhs_eq, scalar, temperature_rhs_eq, scalar_transport_eq
+
 CONTAINS
 
   subroutine momentum_rhs_eq(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
@@ -28,7 +28,7 @@ CONTAINS
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
 
-    integer :: ijk,nvect1,nvect2,nvect3,i,j,k,is
+    integer :: i,j,k,is
 
     !SKEW SYMMETRIC FORM
     !WORK X-PENCILS
@@ -67,7 +67,7 @@ CONTAINS
     else
        rho2(:,:,:) = one
     endif
-    
+
     !WORK Y-PENCILS
     td2(:,:,:) = rho2(:,:,:) * ux2(:,:,:) * uy2(:,:,:)
     te2(:,:,:) = rho2(:,:,:) * uy2(:,:,:) * uy2(:,:,:)
@@ -140,9 +140,9 @@ CONTAINS
     tc3(:,:,:) = half * tc3(:,:,:)
 
     !ALL THE CONVECTIVE TERMS ARE IN TA3, TB3 and TC3
-    td3 = ta3 
-    te3 = tb3 
-    tf3 = tc3 
+    td3 = ta3
+    te3 = tb3
+    tf3 = tc3
 
     !DIFFUSIVE TERMS IN Z
     call derzz (ta3,ux3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
@@ -157,9 +157,9 @@ CONTAINS
     call transpose_z_to_y(te3,te2)
     call transpose_z_to_y(tf3,tf2)
 
-    tg2 = td2 
-    th2 = te2 
-    ti2 = tf2 
+    tg2 = td2
+    th2 = te2
+    ti2 = tf2
 
     !DIFFUSIVE TERMS IN Y
     !-->for ux
@@ -201,9 +201,9 @@ CONTAINS
        enddo
     endif
 
-    ta2 = ta2 + td2 
-    tb2 = tb2 + te2 
-    tc2 = tc2 + tf2 
+    ta2 = ta2 + td2
+    tb2 = tb2 + te2
+    tc2 = tc2 + tf2
 
     !WORK X-PENCILS
     call transpose_y_to_x(ta2,ta1)
@@ -213,17 +213,17 @@ CONTAINS
     call transpose_y_to_x(th2,te1)
     call transpose_y_to_x(ti2,tf1) !conv
 
-    tg1 = td1 
-    th1 = te1 
-    ti1 = tf1 
+    tg1 = td1
+    th1 = te1
+    ti1 = tf1
 
     !DIFFUSIVE TERMS IN X
     call derxx (td1,ux1,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0)
     call derxx (te1,uy1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
     call derxx (tf1,uz1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
 
-    ta1 = ta1 + td1 
-    tb1 = tb1 + te1 
+    ta1 = ta1 + td1
+    tb1 = tb1 + te1
     tc1 = tc1 + tf1
 
     ! di1 =  zero
@@ -242,18 +242,25 @@ CONTAINS
 
     ! If LES modelling is enabled, add the SGS stresses
     if (ilesmod.ne.0.and.jles.le.3.) then
-        ! Wall model for LES
-        if (iwall.eq.1) then 
-        call compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,1)
-        else
-        call compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,0)
-        endif
-        ! Calculate SGS stresses (conservative/non-conservative formulation)
-        dux1(:,:,:,1) = dux1(:,:,:,1) + sgsx1(:,:,:)
-        duy1(:,:,:,1) = duy1(:,:,:,1) + sgsy1(:,:,:)
-        duz1(:,:,:,1) = duz1(:,:,:,1) + sgsz1(:,:,:)
+       ! Wall model for LES
+       if (iwall.eq.1) then 
+          call compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,1)
+       else
+          call compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,0)
+       endif
+       ! Calculate SGS stresses (conservative/non-conservative formulation)
+       dux1(:,:,:,1) = dux1(:,:,:,1) + sgsx1(:,:,:)
+       duy1(:,:,:,1) = duy1(:,:,:,1) + sgsy1(:,:,:)
+       duz1(:,:,:,1) = duz1(:,:,:,1) + sgsz1(:,:,:)
     endif
 
+    !! Gravity
+    call momentum_gravity(dux1, duy1, duz1, rho1(:,:,:,1) - one, zero)
+    do is = 1, numscalar
+       call momentum_gravity(dux1, duy1, duz1, phi1(:,:,:,is), ri(is))
+    enddo
+
+    !! Additional forcing
     call momentum_forcing(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
 
     if (itrip == 1) then
@@ -264,7 +271,7 @@ CONTAINS
   end subroutine momentum_rhs_eq
   !************************************************************
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!
   !!  SUBROUTINE: momentum_full_viscstress_tensor
   !!      AUTHOR: Paul Bartholomew
@@ -281,14 +288,14 @@ CONTAINS
   !!              contributions not accounted for in the
   !!              incompressible solver.
   !!
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine momentum_full_viscstress_tensor(ta1, tb1, tc1, divu3)
 
     USE param
     USE variables
     USE decomp_2d
     USE var, only : td1,te1,tf1,tg1,di1
-    USE var, only : ta2,tb2,tc2,td2,di2
+    USE var, only : ta2,tb2,tc2,di2
     USE var, only : tc3,di3
 
     IMPLICIT NONE
@@ -296,11 +303,10 @@ CONTAINS
     REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ta1, tb1, tc1
     REAL(mytype), DIMENSION(zsize(1), zsize(2), zsize(3)), INTENT(IN) :: divu3
 
-    INTEGER :: i, j, k
     REAL(mytype) :: one_third
 
     one_third = one / three
-    
+
     call derz (tc3,divu3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
     call transpose_z_to_y(tc3, tc2)
     call transpose_z_to_y(divu3, ta2)
@@ -317,83 +323,292 @@ CONTAINS
     tc1(:,:,:) = tc1(:,:,:) + one_third * xnu * tf1(:,:,:)
 
   end subroutine momentum_full_viscstress_tensor
-  
-  !************************************************************
-  subroutine scalar(dphi1, ux1, uy1, uz1, phi1)
+
+  subroutine momentum_gravity(dux1, duy1, duz1, peculiar_density1, richardson)
+
+    use decomp_2d
+    use param
+    use variables
+
+    implicit none
+
+    !! Inputs
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: peculiar_density1
+    real(mytype), intent(in) :: richardson
+
+    !! InOut
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
+
+    !! Locals
+    integer :: istart, jstart, kstart
+    integer :: iend, jend, kend
+    integer :: i, j, k
+
+    !! X-gravity
+    if ((nclx1.eq.0).and.(nclxn.eq.0)) then
+       istart = 1
+       iend = xsize(1)
+    else
+       istart = 2
+       iend = xsize(1) - 1
+    endif
+    if ((xstart(2).eq.1).and.(ncly1.eq.2)) then
+       jstart = 2
+    else
+       jstart = 1
+    endif
+    if ((xend(2).eq.ny).and.(nclyn.eq.2)) then
+       jend = xsize(2) - 1
+    else
+       jend = xsize(2)
+    endif
+    if ((xstart(3).eq.1).and.(nclz1.eq.2)) then
+       kstart = 2
+    else
+       kstart = 1
+    endif
+    if ((xend(3).eq.nz).and.(nclzn.eq.2)) then
+       kend = xsize(3) - 1
+    else
+       kend = xsize(3)
+    endif
+
+    do k = kstart, kend
+       do j = jstart, jend
+          do i = istart, iend
+             dux1(i, j, k, 1) = dux1(i, j, k, 1) + peculiar_density1(i, j, k) * richardson * gravx
+          enddo
+       enddo
+    enddo
+
+    !! Y-gravity
+    if (nclx1.eq.2) then
+       istart = 2
+    else
+       istart = 1
+    endif
+    if (nclxn.eq.2) then
+       iend = xsize(1) - 1
+    else
+       iend = xsize(2)
+    endif
+    if ((xstart(2).eq.1).and.(ncly1.eq.0)) then
+       jstart = 1
+    else
+       jstart = 2
+    endif
+    if ((xend(2).eq.ny).and.(nclyn.eq.0)) then
+       jend = xsize(2)
+    else
+       jend = xsize(2) - 1
+    endif
+    if ((xstart(3).eq.1).and.(nclz1.eq.2)) then
+       kstart = 2
+    else
+       kstart = 1
+    endif
+    if ((xend(3).eq.nz).and.(nclzn.eq.2)) then
+       kend = xsize(3) - 1
+    else
+       kend = xsize(3)
+    endif
+    do k = kstart, kend
+       do j = jstart, jend
+          do i = istart, iend
+             duy1(i, j, k, 1) = duy1(i, j, k, 1) + peculiar_density1(i, j, k) * richardson * gravy
+          enddo
+       enddo
+    enddo
+
+    !! Z-gravity
+    if (nclx1.eq.2) then
+       istart = 2
+    else
+       istart = 1
+    endif
+    if (nclxn.eq.2) then
+       iend = xsize(1) - 1
+    else
+       iend = xsize(2)
+    endif
+    if ((xstart(2).eq.1).and.(ncly1.eq.2)) then
+       jstart = 2
+    else
+       jstart = 1
+    endif
+    if ((xend(2).eq.ny).and.(nclyn.eq.2)) then
+       jend = xsize(2) - 1
+    else
+       jend = xsize(2)
+    endif
+    if ((xstart(3).eq.1).and.(nclz1.eq.0)) then
+       kstart = 1
+    else
+       kstart = 2
+    endif
+    if ((xend(3).eq.nz).and.(nclzn.eq.0)) then
+       kend = xsize(3)
+    else
+       kend = xsize(3) - 1
+    endif
+    do k = kstart, kend
+       do j = jstart, jend
+          do i = istart, iend
+             duz1(i, j, k, 1) = duz1(i, j, k, 1) + peculiar_density1(i, j, k) * richardson * gravz
+          enddo
+       enddo
+    enddo
+
+
+  end subroutine momentum_gravity
+
+  subroutine scalar_transport_eq(dphi1, rho1, ux1, phi1, schmidt)
 
     USE param
     USE variables
     USE decomp_2d
-    
+
     USE var, ONLY : ta1,tb1,tc1,td1,di1
-    USE var, ONLY : uy2,phi2,ta2,tb2,tc2,td2,di2
-    USE var, ONLY : uz3,phi3,ta3,tb3,di3
+    USE var, ONLY : rho2,uy2,phi2,ta2,tb2,tc2,td2,di2
+    USE var, ONLY : rho3,uz3,phi3,ta3,tb3,td3,di3
 
     implicit none
 
     !! INPUTS
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: phi1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
+    REAL(mytype), INTENT(IN) :: schmidt
+
+    !! OUTPUTS
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dphi1
+
+    !! LOCALS
+    integer :: i, j, k
+
+    !X PENCILS
+    call derxS (tb1,phi1(:,:,:),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1)
+    tb1(:,:,:) = rho1(:,:,:,1) * ux1(:,:,:) * tb1(:,:,:)
+    call derxxS (ta1,phi1(:,:,:),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1)
+    call transpose_x_to_y(phi1(:,:,:),td2(:,:,:))
+
+    !Y PENCILS
+    call deryS (tb2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
+    tb2(:,:,:) = rho2(:,:,:) * uy2(:,:,:) * tb2(:,:,:)
+    call deryyS (ta2,td2(:,:,:),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
+    if (istret.ne.0) then
+       call deryS (tc2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
+       do k = 1,ysize(3)
+          do j = 1,ysize(2)
+             do i = 1,ysize(1)
+                ta2(i,j,k) = ta2(i,j,k)*pp2y(j)-pp4y(j)*tc2(i,j,k)
+             enddo
+          enddo
+       enddo
+    endif
+    call transpose_y_to_z(td2(:,:,:),td3(:,:,:))
+
+    !Z PENCILS
+    call derzS (tb3,td3(:,:,:),di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1)
+    tb3(:,:,:) = rho2(:,:,:) * uz3(:,:,:) * tb3(:,:,:)
+    call derzzS (ta3,td3(:,:,:),di3,sz,sfzpS,sszpS,swzpS,zsize(1),zsize(2),zsize(3),1)
+
+    call transpose_z_to_y(ta3,tc2)
+    call transpose_z_to_y(tb3,td2)
+
+    !Y PENCILS ADD TERMS
+    tc2 = tc2+ta2
+    td2 = td2+tb2
+
+    call transpose_y_to_x(tc2,tc1)
+    call transpose_y_to_x(td2,td1)
+
+    !X PENCILS ADD TERMS
+    ta1 = ta1+tc1 !SECOND DERIVATIVE
+    tb1 = tb1+td1 !FIRST DERIVATIVE
+
+    dphi1(:,:,:,1) = (xnu/schmidt)*ta1(:,:,:) - tb1(:,:,:)
+
+    !! XXX We have computed rho dphidt, want dphidt
+    dphi1(:,:,:,1) = dphi1(:,:,:,1) / rho1(:,:,:,1)
+
+  endsubroutine scalar_transport_eq
+
+  !************************************************************
+  subroutine scalar(dphi1, rho1, ux1, phi1)
+
+    USE param
+    USE variables
+    USE decomp_2d
+
+    implicit none
+
+    !! INPUTS
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
 
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
 
     !! LOCALS
-    integer :: i, j, k, is
+    integer :: is
 
     !!=====================================================================
     !! XXX It is assumed that ux,uy,uz are already updated in all pencils!
     !!=====================================================================
     do is = 1, numscalar
 
-       !X PENCILS
-       call derxS (tb1,phi1(:,:,:,is),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1)
-       tb1(:,:,:) = ux1(:,:,:) * tb1(:,:,:)
-       call derxxS (ta1,phi1(:,:,:,is),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1)
-       call transpose_x_to_y(phi1(:,:,:,is),phi2(:,:,:,is))
-
-       !Y PENCILS
-       call deryS (tb2,phi2(:,:,:,is),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
-       tb2(:,:,:) = uy2(:,:,:) * tb2(:,:,:)
-       call deryyS (ta2,phi2(:,:,:,is),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
-       if (istret.ne.0) then
-          call deryS (tc2,phi2(:,:,:,is),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
-          do k = 1,ysize(3)
-             do j = 1,ysize(2)
-                do i = 1,ysize(1)
-                   ta2(i,j,k) = ta2(i,j,k)*pp2y(j)-pp4y(j)*tc2(i,j,k)
-                enddo
-             enddo
-          enddo
+       if (is.ne.primary_species) then
+          !! For mass fractions enforce primary species Y_p = 1 - sum_s Y_s
+          !! So don't solve a transport equation
+          call scalar_transport_eq(dphi1(:,:,:,:,is), rho1, ux1, phi1(:,:,:,is), sc(is))
        endif
-       call transpose_y_to_z(phi2(:,:,:,is),phi3(:,:,:,is))
-
-       !Z PENCILS
-       call derzS (tb3,phi3(:,:,:,is),di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1)
-       tb3 = tb3*uz3
-       call derzzS (ta3,phi3(:,:,:,is),di3,sz,sfzpS,sszpS,swzpS,zsize(1),zsize(2),zsize(3),1)
-
-       call transpose_z_to_y(ta3,tc2)
-       call transpose_z_to_y(tb3,td2)
-
-       !Y PENCILS ADD TERMS
-       tc2 = tc2+ta2
-       td2 = td2+tb2
-
-       call transpose_y_to_x(tc2,tc1)
-       call transpose_y_to_x(td2,td1)
-
-       !X PENCILS ADD TERMS
-       ta1 = ta1+tc1 !SECOND DERIVATIVE
-       tb1 = tb1+td1 !FIRST DERIVATIVE
-
-       dphi1(:,:,:,1,is) = (xnu/sc(is))*ta1(:,:,:) - tb1(:,:,:)
 
     end do !loop numscalar
 
+    if (primary_species.ge.1) then
+       !! Compute rate of change of primary species
+       dphi1(:,:,:,1,primary_species) = zero
+       do is = 1, numscalar
+          if (is.ne.primary_species) then
+             dphi1(:,:,:,1,primary_species) = dphi1(:,:,:,1,primary_species) - dphi1(:,:,:,1,is)
+          endif
+       enddo
+    endif
+
   end subroutine scalar
 
-  SUBROUTINE continuity_rhs_eq(drho1, rho1, ux1, uy1, uz1, divu3)
+  subroutine temperature_rhs_eq(drho1, rho1, ux1, phi1)
+
+    USE param
+    USE variables
+    USE decomp_2d
+
+    USE var, ONLY : te1, tb1
+
+    implicit none
+
+    !! INPUTS
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+
+    !! OUTPUTS
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
+
+    !! Get temperature
+    CALL calc_temp_eos(te1, rho1(:,:,:,1), phi1, tb1, xsize(1), xsize(2), xsize(3))
+
+    !!=====================================================================
+    !! XXX It is assumed that ux,uy,uz are already updated in all pencils!
+    !!=====================================================================
+    call scalar_transport_eq(drho1, rho1, ux1, te1, prandtl)
+
+  end subroutine temperature_rhs_eq
+
+
+  SUBROUTINE continuity_rhs_eq(drho1, rho1, ux1, divu3)
 
     USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
     USE decomp_2d, ONLY : transpose_z_to_y, transpose_y_to_x
@@ -403,20 +618,20 @@ CONTAINS
     USE var, ONLY : ta1, di1
     USE var, ONLY : rho2, uy2, ta2, tb2, di2
     USE var, ONLY : rho3, uz3, ta3, di3
-    
+
     IMPLICIT NONE
 
-    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
     REAL(mytype), INTENT(IN), DIMENSION(zsize(1), zsize(2), zsize(3)) :: divu3
-    
+
     REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1
 
     !! XXX All variables up to date - no need to transpose
 
     CALL derz (ta3, rho3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
     ta3(:,:,:) = uz3(:,:,:) * ta3(:,:,:) + rho3(:,:,:) * divu3(:,:,:)
-    
+
     CALL transpose_z_to_y(ta3, tb2)
     CALL dery (ta2, rho2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
     ta2(:,:,:) = uy2(:,:,:) * ta2(:,:,:) + tb2(:,:,:)
@@ -427,5 +642,5 @@ CONTAINS
     drho1(:,:,:,1) = -(ux1(:,:,:) * drho1(:,:,:,1) + ta1(:,:,:))
 
   ENDSUBROUTINE continuity_rhs_eq
-  
+
 END MODULE transeq

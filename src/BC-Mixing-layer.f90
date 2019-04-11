@@ -18,7 +18,7 @@ module mixlayer
   PUBLIC :: init_mixlayer!, boundary_conditions_mixlayer, postprocessing_mixlayer
 
 contains
-  
+
   subroutine init_mixlayer (rho1,ux1,uy1,uz1,drho1,dux1,duy1,duz1)
 
     USE decomp_2d, ONLY : mytype, xsize
@@ -78,7 +78,7 @@ contains
                      + half * (u1 - u2) * TANH(two * y)
                 uy1(i, j, k) = zero
                 uz1(i, j, k) = zero
-                
+
                 rho1(i, j, k, 1) = (one / (two * heatcap)) &
                      * (ux1(i, j, k) * (u1 + u2) - ux1(i, j, k)**2 - u1 * u2) &
                      + ux1(i, j, k) * (T1 - T2) / (u1 - u2) &
@@ -117,7 +117,7 @@ contains
        duy1(:,:,:,is)=duy1(:,:,:,is - 1)
        duz1(:,:,:,is)=duz1(:,:,:,is - 1)
     enddo
-    
+
     drho1(:,:,:,1)=rho1(:,:,:,1)
     do is = 2, ntime
        drho1(:,:,:,is)=drho1(:,:,:,is - 1)
@@ -133,5 +133,5 @@ contains
 
     return
   end subroutine init_mixlayer
-  
+
 end module mixlayer

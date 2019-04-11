@@ -314,7 +314,7 @@ MODULE MKL_DFTI
        INTEGER, INTENT(IN), DIMENSION(*) :: dims
      END FUNCTION dfti_create_descriptor_d_md
 
-  END INTERFACE
+  END INTERFACE DftiCreateDescriptor
 
   INTERFACE DftiCopyDescriptor
 
@@ -327,7 +327,7 @@ MODULE MKL_DFTI
        TYPE(DFTI_DESCRIPTOR), POINTER :: new_desc
      END FUNCTION dfti_copy_descriptor_external
 
-  END INTERFACE
+  END INTERFACE DftiCopyDescriptor
 
   INTERFACE DftiCommitDescriptor
 
@@ -339,7 +339,7 @@ MODULE MKL_DFTI
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
      END FUNCTION dfti_commit_descriptor_external
 
-  END INTERFACE
+  END INTERFACE DftiCommitDescriptor
 
   INTERFACE DftiSetValue
 
@@ -398,7 +398,7 @@ MODULE MKL_DFTI
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
      END FUNCTION dfti_set_value_chars
 
-  END INTERFACE
+  END INTERFACE DftiSetValue
 
   INTERFACE DftiGetValue
 
@@ -457,7 +457,7 @@ MODULE MKL_DFTI
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
      END FUNCTION dfti_get_value_chars
 
-  END INTERFACE
+  END INTERFACE DftiGetValue
 
   INTERFACE DftiComputeForward
 
@@ -746,7 +746,7 @@ MODULE MKL_DFTI
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
      END FUNCTION dfti_free_descriptor_external
 
-  END INTERFACE
+  END INTERFACE DftiFreeDescriptor
 
   INTERFACE DftiErrorClass
 
@@ -759,7 +759,7 @@ MODULE MKL_DFTI
        INTEGER, INTENT(IN) :: ErrorClass
      END FUNCTION dfti_error_class_external
 
-  END INTERFACE
+  END INTERFACE DftiErrorClass
 
   INTERFACE DftiErrorMessage
 
@@ -771,6 +771,6 @@ MODULE MKL_DFTI
        INTEGER, INTENT(IN) :: Status
      END FUNCTION dfti_error_message_external
 
-  END INTERFACE
+  END INTERFACE DftiErrorMessage
 
 END MODULE MKL_DFTI

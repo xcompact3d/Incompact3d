@@ -188,7 +188,7 @@ contains
        enddo
        close(69)
     endif
-    
+
     ! FILTER
     call random_number(rand1)
     call filter(0.45_mytype)
@@ -215,7 +215,7 @@ contains
        enddo
        close(70)
     endif
-    
+
     do k=1,ysize(3)
        do j=1,ysize(2)
           y = real(j-1,mytype)*dy*4*pi
@@ -278,7 +278,7 @@ contains
        enddo
        close(69)
     endif
-    
+
     ! FILTER
     call filter(0.45_mytype)
     do k=1,ysize(3)
@@ -366,11 +366,11 @@ contains
        enddo
        close(69)
     endif
-    
+
     ! FILTER
     call filter(0.45_mytype)
     do k=1,zsize(3)
-          z = real(k-1,mytype)*dz*four*pi
+       z = real(k-1,mytype)*dz*four*pi
        do j=1,zsize(2)
           do i=1,zsize(1)
              ffz3(i,j,k)  = sin_prec(z)
@@ -424,7 +424,7 @@ contains
        enddo
        close(67)
     endif
-    
+
     ! FILTER
     call random_number(rand1)
     call filter(-0.45_mytype)
@@ -522,7 +522,7 @@ contains
     ! FILTER
     call filter(0.45_mytype)
     do k=1,zsize(3)
-          z = real(k-1,mytype)*dz*four*pi
+       z = real(k-1,mytype)*dz*four*pi
        do j=1,zsize(2)
           do i=1,zsize(1)
              ffz3(i,j,k)  = sin_prec(z)
@@ -689,7 +689,7 @@ contains
     ! FILTER
     call filter(0.45_mytype)
     do k=1,zsize(3)
-          z = real(k-1,mytype)*dz*four*pi
+       z = real(k-1,mytype)*dz*four*pi
        do j=1,zsize(2)
           do i=1,zsize(1)
              ffz3(i,j,k)  = sin_prec(z)
@@ -856,7 +856,7 @@ contains
     ! FILTER
     call filter(0.45_mytype)
     do k=1,zsize(3)
-          z = real(k-1,mytype)*dz*four*pi
+       z = real(k-1,mytype)*dz*four*pi
        do j=1,zsize(2)
           do i=1,zsize(1)
              ffz3(i,j,k)  = sin_prec(z)
@@ -973,7 +973,7 @@ contains
        enddo
        close(69)
     endif
-    
+
     ! FILTER
     call random_number(rand1)
     call filter(-0.45_mytype)
@@ -1145,7 +1145,7 @@ contains
     ! FILTER
     call filter(0.45_mytype)
     do k=1,zsize(3)
-          z = real(k-1,mytype)*dz*four*pi
+       z = real(k-1,mytype)*dz*four*pi
        do j=1,zsize(2)
           do i=1,zsize(1)
              ffz3(i,j,k)  = sin_prec(z)

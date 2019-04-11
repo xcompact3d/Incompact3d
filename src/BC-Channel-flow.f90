@@ -147,7 +147,7 @@ contains
           i = xsize(1)
           phi(i,:,:,:) = phi(i - 1,:,:,:)
        endif
-       
+
        if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
           !! Generate a hot patch on bottom boundary
           do k = 1, xsize(3)
@@ -435,13 +435,13 @@ contains
   end subroutine write_probes
   !############################################################################
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!
   !!  SUBROUTINE: momentum_forcing
   !!      AUTHOR: Paul Bartholomew
   !! DESCRIPTION: Applies rotation for t < spinup_time.
   !!
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE momentum_forcing_channel(dux1, duy1, ux1, uy1)
 
     IMPLICIT NONE
