@@ -244,10 +244,10 @@ subroutine wale(gxx1, gyx1, gzx1, gxy1, gyy1, gzy1, gxz1, gyz1, gzz1, srt_smag, 
   endif
 
 end subroutine wale
-!************************************************************
+
 !subroutine dynsmag(ux1,uy1,uz1,ep1,sxx1,syy1,szz1,sxy1,sxz1,syz1,&
-!     srt_smag,nut1,di1,ta1,tb1,tc1,td1,ta2,tb2,tc2,td2,te2,tf2,&
-!     tg2,th2,ti2,di2,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3)
+!  srt_smag,nut1,di1,ta1,tb1,tc1,td1,ta2,tb2,tc2,td2,te2,tf2,&
+!  tg2,th2,ti2,di2,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3)
 !
 !  USE param
 !  USE variables
@@ -256,8 +256,6 @@ end subroutine wale
 !  USE MPI
 !
 !  implicit none
-!
-!  TYPE(DECOMP_INFO) :: ph3
 !
 !  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, ep1, srt_smag
 !  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1
@@ -357,39 +355,23 @@ end subroutine wale
 !  uxz1 = ta1 * tc1
 !  uyz1 = tb1 * tc1
 !
-!  if (nclx1.eq.0.and.nclxn.eq.0) then
+!  call filx(ux1f, ta1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0) !ux1
+!  call filx(uy1f, tb1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !uy1
+!  call filx(uz1f, tc1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !uz1
 !
-!     call filx(ux1f, ta1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 0) !ux1
-!     call filx(uy1f, tb1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1) !uy1
-!     call filx(uz1f, tc1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1) !uz1
+!  call filx(uxx1f, uxx1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !ux1*ux1
+!  call filx(uyy1f, uyy1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !uy1*uy1
+!  call filx(uzz1f, uzz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !uz1*uz1
 !
-!     call filx(uxx1f, uxx1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1) !ux1*ux1
-!     call filx(uyy1f, uyy1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1) !uy1*uy1
-!     call filx(uzz1f, uzz1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1) !uz1*uz1
+!  call filx(uxy1f, uxy1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0) !ux1*uy1
+!  call filx(uxz1f, uxz1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0) !ux1*uz1
+!  call filx(uyz1f, uyz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !uy1*uz1
 !
-!     call filx(uxy1f, uxy1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 0) !ux1*uy1
-!     call filx(uxz1f, uxz1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 0) !ux1*uz1
-!     call filx(uyz1f, uyz1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1) !uy1*uz1
-!
-!  else
-!
-!     call filx(ux1f, ta1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 0) !ux1
-!     call filx(uy1f, tb1, di1, sx, vx, fiffxp, fifxp, ficxp, fibxp, fibbxp, filaxp, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1) !uy1
-!     call filx(uz1f, tc1, di1, sx, vx, fiffxp, fifxp, ficxp, fibxp, fibbxp, filaxp, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1) !uz1
-!
-!     call filx(uxx1f, uxx1, di1, sx, vx, fiffxp, fifxp, ficxp, fibxp, fibbxp, filaxp, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1) !ux1*ux1
-!     call filx(uyy1f, uyy1, di1, sx, vx, fiffxp, fifxp, ficxp, fibxp, fibbxp, filaxp, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1) !uy1*uy1
-!     call filx(uzz1f, uzz1, di1, sx, vx, fiffxp, fifxp, ficxp, fibxp, fibbxp, filaxp, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1) !uz1*uz1
-!
-!     call filx(uxy1f, uxy1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 0) !ux1*uy1
-!     call filx(uxz1f, uxz1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 0) !ux1*uz1
-!     call filx(uyz1f, uyz1, di1, sx, vx, fiffxp, fifxp, ficxp, fibxp, fibbxp, filaxp, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1) !uy1*uz1
-!
+!  if (mod(itime, ioutput).eq.0) then
+!    if (nrank==0) print *, "filx ux= ", maxval(ta1), maxval(ux1f), maxval(ta1) - maxval(ux1f)
 !  endif
 !
-!  if (nrank==0) print *, "filx ux= ", maxval(ta1), maxval(ux1f), maxval(ta1) - maxval(ux1f)
-!
-!#ifdef IBM
+!  if(iibm==1) then
 !  ux1f = ux1f * (one - ep1)
 !  uy1f = uy1f * (one - ep1)
 !  uz1f = uz1f * (one - ep1)
@@ -400,7 +382,7 @@ end subroutine wale
 !  uxz1f = uxz1f * (one - ep1)
 !  uyz1f = uyz1f * (one - ep1)
 !  call transpose_x_to_y(ep1, ep2)
-!#endif
+!  endif
 !
 !  call transpose_x_to_y(ux1f, ta2)
 !  call transpose_x_to_y(uy1f, tb2)
@@ -412,37 +394,21 @@ end subroutine wale
 !  call transpose_x_to_y(uxz1f, th2)
 !  call transpose_x_to_y(uyz1f, ti2)
 !
-!  if (ncly1.eq.0.and.nclyn.eq.0) then
+!  call fily(ux2f, ta2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !ux2
+!  call fily(uy2f, tb2, di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0) !uy2
+!  call fily(uz2f, tc2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !uz2
 !
-!     call fily(ux2f, ta2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1) !ux2
-!     call fily(uy2f, tb2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 0) !uy2
-!     call fily(uz2f, tc2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1) !uz2
+!  call fily(uxx2f, td2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !ux2*ux2
+!  call fily(uyy2f, te2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !uy2*uy2
+!  call fily(uzz2f, tf2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !uz2*uz2
 !
-!     call fily(uxx2f, td2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1) !ux2*ux2
-!     call fily(uyy2f, te2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1) !uy2*uy2
-!     call fily(uzz2f, tf2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1) !uz2*uz2
+!  call fily(uxy2f, tg2, di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0) !ux2*uy2
+!  call fily(uxz2f, th2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !ux2*uz2
+!  call fily(uyz2f, ti2, di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0) !uy2*uz2
 !
-!     call fily(uxy2f, tg2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 0) !ux2*uy2
-!     call fily(uxz2f, th2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1) !ux2*uz2
-!     call fily(uyz2f, ti2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 0) !uy2*uz2
-!
-!  else
-!
-!     call fily(ux2f, ta2, di2, sy, vy, fiffyp, fifyp, ficyp, fibyp, fibbyp, filayp, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1) !ux2
-!     call fily(uy2f, tb2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 0) !uy2
-!     call fily(uz2f, tc2, di2, sy, vy, fiffyp, fifyp, ficyp, fibyp, fibbyp, filayp, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1) !uz2
-!
-!     call fily(uxx2f, td2, di2, sy, vy, fiffyp, fifyp, ficyp, fibyp, fibbyp, filayp, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1) !ux2*ux2
-!     call fily(uyy2f, te2, di2, sy, vy, fiffyp, fifyp, ficyp, fibyp, fibbyp, filayp, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1) !uy2*uy2
-!     call fily(uzz2f, tf2, di2, sy, vy, fiffyp, fifyp, ficyp, fibyp, fibbyp, filayp, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1) !uz2*uz2
-!
-!     call fily(uxy2f, tg2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 0) !ux2*uy2
-!     call fily(uxz2f, th2, di2, sy, vy, fiffyp, fifyp, ficyp, fibyp, fibbyp, filayp, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1) !ux2*uz2
-!     call fily(uyz2f, ti2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 0) !uy2*uz2
-!
+!  if (mod(itime, ioutput).eq.0) then
+!    if (nrank==0) print *, "fily ux= ", maxval(ta2), maxval(ux2f), maxval(ta2) - maxval(ux2f)
 !  endif
-!
-!  if (nrank==0) print *, "fily ux= ", maxval(ta2), maxval(ux2f), maxval(ta2) - maxval(ux2f)
 !
 !#ifdef IBM
 !  ux2f = ux2f * (one - ep2)
@@ -470,37 +436,21 @@ end subroutine wale
 !  call transpose_y_to_z(uxz2f, th3)
 !  call transpose_y_to_z(uyz2f, ti3)
 !
-!  if (nclz1.eq.0.and.nclzn.eq.0) then
+!  call filz(ux3f, ta3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1) !ux3
+!  call filz(uy3f, tb3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1) !uy3
+!  call filz(uz3f, tc3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0) !uz3
 !
-!     call filz(ux3f, ta3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1) !ux3
-!     call filz(uy3f, tb3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1) !uy3
-!     call filz(uz3f, tc3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 0) !uz3
+!  call filz(uxx3f, td3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1) !ux3*ux3
+!  call filz(uyy3f, te3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1) !uy3*uy3
+!  call filz(uzz3f, tf3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1) !uz3*uz3
 !
-!     call filz(uxx3f, td3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1) !ux3*ux3
-!     call filz(uyy3f, te3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1) !uy3*uy3
-!     call filz(uzz3f, tf3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1) !uz3*uz3
+!  call filz(uxy3f, tg3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1) !ux3*uy3
+!  call filz(uxz3f, th3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0) !ux3*uz3
+!  call filz(uyz3f, ti3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0) !uy3*uz3
 !
-!     call filz(uxy3f, tg3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1) !ux3*uy3
-!     call filz(uxz3f, th3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 0) !ux3*uz3
-!     call filz(uyz3f, ti3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 0) !uy3*uz3
-!
-!  else
-!
-!     call filz(ux3f, ta3, di3, sz, vz, fiffzp, fifzp, ficzp, fibzp, fibbzp, filazp, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1) !ux3
-!     call filz(uy3f, tb3, di3, sz, vz, fiffzp, fifzp, ficzp, fibzp, fibbzp, filazp, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1) !uy3
-!     call filz(uz3f, tc3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 0) !uz3
-!
-!     call filz(uxx3f, td3, di3, sz, vz, fiffzp, fifzp, ficzp, fibzp, fibbzp, filazp, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1) !ux3*ux3
-!     call filz(uyy3f, te3, di3, sz, vz, fiffzp, fifzp, ficzp, fibzp, fibbzp, filazp, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1) !uy3*uy3
-!     call filz(uzz3f, tf3, di3, sz, vz, fiffzp, fifzp, ficzp, fibzp, fibbzp, filazp, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1) !uz3*uz3
-!
-!     call filz(uxy3f, tg3, di3, sz, vz, fiffzp, fifzp, ficzp, fibzp, fibbzp, filazp, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1) !ux3*uy3
-!     call filz(uxz3f, th3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 0) !ux3*uz3
-!     call filz(uyz3f, ti3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 0) !uy3*uz3
-!
+!  if (mod(itime, ioutput).eq.0) then
+!    if (nrank==0) print *, "filz ux= ", maxval(ta3), maxval(ux3f), maxval(ta3) - maxval(ux3f)
 !  endif
-!
-!  if (nrank==0) print *, "filz ux= ", maxval(ta3), maxval(ux3f), maxval(ta3) - maxval(ux3f)
 !
 !  ta3 = zero; tb3 = zero; tc3 = zero
 !  td3 = zero; te3 = zero; tf3 = zero
@@ -637,12 +587,12 @@ end subroutine wale
 !  call transpose_x_to_y(ayz1, tf2)
 !
 !  do j = 1, ysize(2)
-!     ta2(:, j, :) = ta2(:, j, :) * (del(j))**two
-!     tb2(:, j, :) = tb2(:, j, :) * (del(j))**two
-!     tc2(:, j, :) = tc2(:, j, :) * (del(j))**two
-!     td2(:, j, :) = td2(:, j, :) * (del(j))**two
-!     te2(:, j, :) = te2(:, j, :) * (del(j))**two
-!     tf2(:, j, :) = tf2(:, j, :) * (del(j))**two
+!    ta2(:, j, :) = ta2(:, j, :) * (del(j))**two
+!    tb2(:, j, :) = tb2(:, j, :) * (del(j))**two
+!    tc2(:, j, :) = tc2(:, j, :) * (del(j))**two
+!    td2(:, j, :) = td2(:, j, :) * (del(j))**two
+!    te2(:, j, :) = te2(:, j, :) * (del(j))**two
+!    tf2(:, j, :) = tf2(:, j, :) * (del(j))**two
 !  enddo
 !
 !  call transpose_y_to_x(ta2, axx1)
@@ -660,12 +610,12 @@ end subroutine wale
 !  call transpose_x_to_y(bbyz1, tf2)
 !
 !  do j = 1, ysize(2)
-!     ta2(:, j, :) = ta2(:, j, :) * (two * del(j))**two
-!     tb2(:, j, :) = tb2(:, j, :) * (two * del(j))**two
-!     tc2(:, j, :) = tc2(:, j, :) * (two * del(j))**two
-!     td2(:, j, :) = td2(:, j, :) * (two * del(j))**two
-!     te2(:, j, :) = te2(:, j, :) * (two * del(j))**two
-!     tf2(:, j, :) = tf2(:, j, :) * (two * del(j))**two
+!    ta2(:, j, :) = ta2(:, j, :) * (two * del(j))**two
+!    tb2(:, j, :) = tb2(:, j, :) * (two * del(j))**two
+!    tc2(:, j, :) = tc2(:, j, :) * (two * del(j))**two
+!    td2(:, j, :) = td2(:, j, :) * (two * del(j))**two
+!    te2(:, j, :) = te2(:, j, :) * (two * del(j))**two
+!    tf2(:, j, :) = tf2(:, j, :) * (two * del(j))**two
 !  enddo
 !
 !  call transpose_y_to_x(ta2, bbxx1)
@@ -677,29 +627,17 @@ end subroutine wale
 !
 !  !Need to filter Aij components
 !
-!  if (nclx1.eq.0.and.nclxn.eq.0) then
+!  call filx(axx1f, axx1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1)
+!  call filx(ayy1f, ayy1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1)
+!  call filx(azz1f, azz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1)
 !
-!     call filx(axx1f, axx1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1)
-!     call filx(ayy1f, ayy1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1)
-!     call filx(azz1f, azz1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1)
+!  call filx(axy1f, axy1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0)
+!  call filx(axz1f, axz1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0)
+!  call filx(ayz1f, ayz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1)
 !
-!     call filx(axy1f, axy1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 0)
-!     call filx(axz1f, axz1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 0)
-!     call filx(ayz1f, ayz1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1)
-!
-!  else
-!
-!     call filx(axx1f, axx1, di1, sx, vx, fiffxp, fifxp, ficxp, fibxp, fibbxp, filaxp, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1)
-!     call filx(ayy1f, ayy1, di1, sx, vx, fiffxp, fifxp, ficxp, fibxp, fibbxp, filaxp, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1)
-!     call filx(azz1f, azz1, di1, sx, vx, fiffxp, fifxp, ficxp, fibxp, fibbxp, filaxp, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1)
-!
-!     call filx(axy1f, axy1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 0)
-!     call filx(axz1f, axz1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 0)
-!     call filx(ayz1f, ayz1, di1, sx, vx, fiffxp, fifxp, ficxp, fibxp, fibbxp, filaxp, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 1)
-!
+!  if (mod(itime, ioutput).eq.0) then
+!    if (nrank==0) print *, "filx axx1= ", maxval(axx1), maxval(axx1f), maxval(axx1) - maxval(axx1f)
 !  endif
-!
-!  if (nrank==0) print *, "filx axx1= ", maxval(axx1), maxval(axx1f), maxval(axx1) - maxval(axx1f)
 !
 !#ifdef IBM
 !  axx1f = axx1f * (one - ep1)
@@ -717,29 +655,17 @@ end subroutine wale
 !  call transpose_x_to_y(axz1f, te2)
 !  call transpose_x_to_y(ayz1f, tf2)
 !
-!  if (ncly1.eq.0.and.nclyn.eq.0) then
+!  call fily(axx2f, ta2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+!  call fily(ayy2f, tb2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+!  call fily(azz2f, tc2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1)
 !
-!     call fily(axx2f, ta2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1)
-!     call fily(ayy2f, tb2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1)
-!     call fily(azz2f, tc2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1)
+!  call fily(axy2f, td2, di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0)
+!  call fily(axz2f, te2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+!  call fily(ayz2f, tf2, di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0)
 !
-!     call fily(axy2f, td2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 0)
-!     call fily(axz2f, te2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1)
-!     call fily(ayz2f, tf2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 0)
-!
-!  else
-!
-!     call fily(axx2f, ta2, di2, sy, vy, fiffyp, fifyp, ficyp, fibyp, fibbyp, filayp, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1)
-!     call fily(ayy2f, tb2, di2, sy, vy, fiffyp, fifyp, ficyp, fibyp, fibbyp, filayp, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1)
-!     call fily(azz2f, tc2, di2, sy, vy, fiffyp, fifyp, ficyp, fibyp, fibbyp, filayp, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1)
-!
-!     call fily(axy2f, td2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 0)
-!     call fily(axz2f, te2, di2, sy, vy, fiffyp, fifyp, ficyp, fibyp, fibbyp, filayp, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 1)
-!     call fily(ayz2f, tf2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 0)
-!
+!  if (mod(itime, ioutput).eq.0) then
+!    if (nrank==0) print *, "fily axx2= ", maxval(ta2), maxval(axx2f), maxval(ta2) - maxval(axx2f)
 !  endif
-!
-!  if (nrank==0) print *, "fily axx2= ", maxval(ta2), maxval(axx2f), maxval(ta2) - maxval(axx2f)
 !
 !#ifdef IBM
 !  axx2f = axx2f * (one - ep2)
@@ -760,29 +686,18 @@ end subroutine wale
 !  call transpose_y_to_z(axz2f, te3)
 !  call transpose_y_to_z(ayz2f, tf3)
 !
-!  if (nclz1.eq.0.and.nclzn.eq.0) then
 !
-!     call filz(axx3f, ta3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1)
-!     call filz(ayy3f, tb3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1)
-!     call filz(azz3f, tc3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1)
+!  call filz(axx3f, ta3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1)
+!  call filz(ayy3f, tb3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1)
+!  call filz(azz3f, tc3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1)
 !
-!     call filz(axy3f, td3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1)
-!     call filz(axz3f, te3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 0)
-!     call filz(ayz3f, tf3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 0)
+!  call filz(axy3f, td3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1)
+!  call filz(axz3f, te3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0)
+!  call filz(ayz3f, tf3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0)
 !
-!  else
-!
-!     call filz(axx3f, ta3, di3, sz, vz, fiffzp, fifzp, ficzp, fibzp, fibbzp, filazp, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1)
-!     call filz(ayy3f, tb3, di3, sz, vz, fiffzp, fifzp, ficzp, fibzp, fibbzp, filazp, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1)
-!     call filz(azz3f, tc3, di3, sz, vz, fiffzp, fifzp, ficzp, fibzp, fibbzp, filazp, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1)
-!
-!     call filz(axy3f, td3, di3, sz, vz, fiffzp, fifzp, ficzp, fibzp, fibbzp, filazp, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 1)
-!     call filz(axz3f, te3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 0)
-!     call filz(ayz3f, tf3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 0)
-!
+!  if (mod(itime, ioutput).eq.0) then
+!    if (nrank==0) print *, "filz axx3= ", maxval(ta3), maxval(axx3f), maxval(ta3) - maxval(axx3f)
 !  endif
-!
-!  if (nrank==0) print *, "filz axx3= ", maxval(ta3), maxval(axx3f), maxval(ta3) - maxval(axx3f)
 !
 !  ta3 = zero; tb3 = zero; tc3 = zero
 !  td3 = zero; te3 = zero; tf3 = zero
@@ -825,39 +740,43 @@ end subroutine wale
 !
 !#ifdef IBM
 !  do ijk = 1, nvect1
-!     if (ep1(ijk, 1, 1) .eq. one) then
-!        ta1(ijk, 1, 1) = zero
-!        tb1(ijk, 1, 1) = one
-!     endif
+!    if (ep1(ijk, 1, 1) .eq. one) then
+!      ta1(ijk, 1, 1) = zero
+!      tb1(ijk, 1, 1) = one
+!    endif
 !  enddo
 !#endif
 !
 !  !MODEL OF LILLY (1992)
 !  smagC1 = (lxx1 * mxx1 + lyy1 * myy1 + lzz1 * mzz1 + two * (lxy1 * mxy1 + lxz1 * mxz1 + lyz1 * myz1)) / &
-!       (mxx1 * mxx1 + myy1 * myy1 + mzz1 * mzz1 + two * (mxy1 * mxy1 + mxz1 * mxz1 + myz1 * myz1)) !l/M
+!  (mxx1 * mxx1 + myy1 * myy1 + mzz1 * mzz1 + two * (mxy1 * mxy1 + mxz1 * mxz1 + myz1 * myz1)) !l/M
 !
 !  do ijk = 1, nvect1 !ERIC LIMITEUR SI BESOIN
-!     if (smagC1(ijk, 1, 1).gt. maxdsmagcst) smagC1(ijk, 1, 1) = zero
-!     if (smagC1(ijk, 1, 1).lt. 0.0) smagC1(ijk, 1, 1) = zero
+!    if (smagC1(ijk, 1, 1).gt. maxdsmagcst) smagC1(ijk, 1, 1) = zero
+!    if (smagC1(ijk, 1, 1).lt. 0.0) smagC1(ijk, 1, 1) = zero
 !  enddo
 !
 !  !FILTERING THE NON-CONSTANT CONSTANT
-!  call filx(smagC1f, smagC1, di1, sx, vx, fiffx, fifx, ficx, fibx, fibbx, filax, fiz1x, fiz2x, xsize(1), xsize(2), xsize(3), 0)
-!  if (nrank==0) print *, "filx smagC1= ", maxval(smagC1), maxval(smagC1f), maxval(smagC1) - maxval(smagC1f)
+!  call filx(smagC1f, smagC1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0)
 !
 !  call transpose_x_to_y(smagC1f, ta2)
-!  call fily(smagC2f, ta2, di2, sy, vy, fiffy, fify, ficy, fiby, fibby, filay, fiz1y, fiz2y, ysize(1), ysize(2), ysize(3), 0)
-!  if (nrank==0) print *, "fily smagC1= ", maxval(ta2), maxval(smagC2f), maxval(ta2) - maxval(smagC2f)
+!  call fily(smagC2f, ta2, di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0)
 !
 !  call transpose_y_to_z(smagC2f, ta3)
-!  call filz(smagC3f, ta3, di3, sz, vz, fiffz, fifz, ficz, fibz, fibbz, filaz, fiz1z, fiz2z, zsize(1), zsize(2), zsize(3), 0)
-!  if (nrank==0) print *, "filz smagC1= ", maxval(ta3), maxval(smagC3f), maxval(ta3) - maxval(smagC3f)
+!  call filz(smagC3f, ta3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0)
+!
+!  if (mod(itime, ioutput).eq.0) then
+!    if (nrank==0) print *, "filx smagC1= ", maxval(smagC1), maxval(smagC1f), maxval(smagC1) - maxval(smagC1f)
+!    if (nrank==0) print *, "fily smagC1= ", maxval(ta2), maxval(smagC2f), maxval(ta2) - maxval(smagC2f)
+!    if (nrank==0) print *, "filz smagC1= ", maxval(ta3), maxval(smagC3f), maxval(ta3) - maxval(smagC3f)
+!  endif
+!
 !
 !  dsmagcst3 = zero
 !  call mean_plane_z(smagC3f, zsize(1), zsize(2), zsize(3), dsmagcst3(:, :, 1))
 !
 !  do k = 2, zsize(3)
-!     dsmagcst3(:, :, k) = dsmagcst3(:, :, 1)
+!    dsmagcst3(:, :, k) = dsmagcst3(:, :, 1)
 !  enddo
 !
 !  call transpose_z_to_y(dsmagcst3, dsmagcst2)
@@ -865,42 +784,43 @@ end subroutine wale
 !
 !  call transpose_y_to_x(dsmagcst2, dsmagcst1)
 !
-!  do ijk = 1, nvect1 !ERIC LIMITEUR SI BESOIN
-!     if (dsmagcst1(ijk, 1, 1).gt. maxdsmagcst) dsmagcst1(ijk, 1, 1) = zero
-!     if (dsmagcst1(ijk, 1, 1).lt. 0.0) dsmagcst1(ijk, 1, 1) = zero
-!  enddo
+!  ! do ijk = 1, nvect1 !ERIC LIMITEUR SI BESOIN
+!  !   if (dsmagcst1(ijk, 1, 1).gt. maxdsmagcst) dsmagcst1(ijk, 1, 1) =zero
+!  !   if (dsmagcst1(ijk, 1, 1).lt. 0.0) dsmagcst1(ijk, 1, 1) = zero
+!  ! enddo
 !
 !  nut1 = zero; nut2 = zero
 !  call transpose_x_to_y(srt_smag, srt_smag2)
 !  call transpose_x_to_y(dsmagcst1, dsmagcst2)
 !  do k = 1, ysize(3)
-!     do j = 1, ysize(2)
-!        do i = 1, ysize(1)
-!           nut2(i, j, k) = dsmagcst2(i, j, k) * ((FSGS * del(j))**two) * sqrt(two * srt_smag2(i, j, k))
-!        enddo
-!     enddo
+!    do j = 1, ysize(2)
+!      do i = 1, ysize(1)
+!        nut2(i, j, k) = dsmagcst2(i, j, k) * ((del(j))**two) * sqrt(two * srt_smag2(i, j, k))
+!      enddo
+!    enddo
 !  enddo
 !  call transpose_y_to_x(nut2, nut1)
 !
-!  if (nrank==0) print *, "dsmagc init   min max= ", minval(smagC1), maxval(smagC1)
-!  if (nrank==0) print *, "dsmagc final  min max= ", minval(dsmagcst1), maxval(dsmagcst1)
-!  if (nrank==0) print *, "dsmag nut1    min max= ", minval(nut1), maxval(nut1)
+!  if (mod(itime,itest)==0) then
+!    !if (nrank==0) print *, "dsmagc init   min max= ", minval(smagC1), maxval(smagC1)
+!    if (nrank==0) print *, "dsmagc final  min max= ", minval(dsmagcst1), maxval(dsmagcst1)
+!    if (nrank==0) print *, "dsmag nut1    min max= ", minval(nut1), maxval(nut1)
+!  endif
 !
-!  if (mod(itime, imodulo).eq.0) then
+!  if (mod(itime, ioutput).eq.0) then
 !
-!     write(filename, "('./data/dsmagcst_initial',I4.4)") itime / imodulo
-!     call decomp_2d_write_one(1, smagC1, filename, 2)
+!    ! write(filename, "('./data/dsmagcst_initial',I4.4)") itime / imodulo
+!    ! call decomp_2d_write_one(1, smagC1, filename, 2)
 !
-!     write(filename, "('./data/dsmagcst_final',I4.4)") itime / imodulo
-!     call decomp_2d_write_one(1, dsmagcst1, filename, 2)
+!    write(filename, "('./data/dsmagcst_final',I4.4)") itime / ioutput
+!    call decomp_2d_write_one(1, dsmagcst1, filename, 2)
 !
-!     write(filename, "('./data/nut_dynsmag',I4.4)") itime / imodulo
-!     call decomp_2d_write_one(1, nut1, filename, 2)
+!    write(filename, "('./data/nut_dynsmag',I4.4)") itime / ioutput
+!    call decomp_2d_write_one(1, nut1, filename, 2)
 !
 !  endif
 !
 !end subroutine dynsmag
-!************************************************************
 
 subroutine les_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
 
