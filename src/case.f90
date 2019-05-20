@@ -151,11 +151,15 @@ CONTAINS
 
   END SUBROUTINE boundary_conditions
 
-  SUBROUTINE postprocessing(ux,uy,uz,phi,ep)
+  SUBROUTINE postprocessing(ux,uy,uz,pp,phi,ep)
+    
+    USE var, ONLY : nzmsize
+    USE param, ONLY : npress
 
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),numscalar) :: phi
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)) :: ep
+    real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp
 
     IF (itype.EQ.itype_user) THEN
 
@@ -174,7 +178,7 @@ CONTAINS
 
     ELSEIF (itype.EQ.itype_channel) THEN
 
-       CALL postprocessing_channel (ux, uy, uz, phi, ep)
+       CALL postprocessing_channel (ux, uy, uz, pp, phi, ep)
 
     ELSEIF (itype.EQ.itype_hill) THEN
 
