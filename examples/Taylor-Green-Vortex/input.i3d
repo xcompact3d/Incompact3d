@@ -105,3 +105,9 @@ smagcst=0.1
 walecst=0.5 
 iwall=0
 /End
+
+!=================
+&CASE
+!=================
+tgv_twod = .FALSE.
+/End

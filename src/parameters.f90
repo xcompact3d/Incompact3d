@@ -72,6 +72,7 @@ subroutine parameter(input_i3d)
 
   NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf
   NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, massfrac, mol_weight, imultispecies, primary_species
+  NAMELIST /CASE/ tgv_twod
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter start'
 #endif
@@ -147,6 +148,7 @@ subroutine parameter(input_i3d)
   ! read(10, nml=ScalarParam)
   if(ilesmod.ne.0) read(10, nml=LESModel)
   ! read(10, nml=TurbulenceWallModel)
+  read(10, nml=CASE) !! Read case-specific variables
   close(10)
 
   ! allocate(sc(numscalar),cp(numscalar),ri(numscalar),group(numscalar))
@@ -434,5 +436,8 @@ subroutine parameter_defaults()
   izap = 1
 
   imodulo2 = 1
+
+  !! CASE specific variables
+  tgv_twod = .FALSE.
 
 end subroutine parameter_defaults

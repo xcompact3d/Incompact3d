@@ -76,28 +76,20 @@ contains
 
        ux1=zero; uy1=zero; uz1=zero
 
-       !t=zero
-       !xv=1._mytype/10zero
-       !xxk1=twopi/xlx
-       !xxk2=twopi/yly
        do k=1,xsize(3)
           z=real((k+xstart(3)-1-1),mytype)*dz
           do j=1,xsize(2)
              y=real((j+xstart(2)-1-1),mytype)*dy
              do i=1,xsize(1)
                 x=real(i-1,mytype)*dx
-                !ux1(i,j,k)=sin(2.*pi*x)*cos(2.*pi*y)*cos(2.*pi*z)
-                !sin(xxk1*x)*cos(xxk2*y)*exp(-(xxk1*xxk1+xxk2*xxk2)*xv*t)
-                !uy1(i,j,k)=sin(2.*pi*y)*cos(2.*pi*x)*cos(2.*pi*z)
-                !-xxk1/xxk2*sin(xxk2*y)*cos(xxk1*x)*exp(-(xxk1*xxk1+xxk2*xxk2)*xv*t)
-                !uz1(i,j,k)=sin(2.*pi*z)*cos(2.*pi*x)*cos(2.*pi*y)
-#ifndef TWOD
-                ux1(i,j,k)=+sin(x)*cos(y)*cos(z)
-                uy1(i,j,k)=-cos(x)*sin(y)*cos(z)
-#else
-                ux1(i,j,k)=+sin(x)*cos(y)
-                uy1(i,j,k)=-cos(x)*sin(y)
-#endif
+
+                if (.not.tgv_twod) then
+                   ux1(i,j,k)=+sin(x)*cos(y)*cos(z)
+                   uy1(i,j,k)=-cos(x)*sin(y)*cos(z)
+                else
+                   ux1(i,j,k)=+sin(x)*cos(y)
+                   uy1(i,j,k)=-cos(x)*sin(y)
+                endif
                 uz1(i,j,k)=zero
              enddo
           enddo
