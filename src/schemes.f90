@@ -297,21 +297,39 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
      endif
   endif
 
-  alfa1= two
-  af1  =-(five/two)/d
-  bf1  = (two)/d
-  cf1  = (half)/d
-  df1  = zero
+  if (ifirstder==1) then
+     alfa1 = zero
+     af1   = zero
+     bf1   = zero
+     cf1   = zero
+     df1   = zero
+     alfa2 = zero
+     af2   = zero
 
-  alfa2= one/four
-  af2  = (three/four)/d
-  alfan= two
-  afn  =-(five/two)/d
-  bfn  = (two)/d
-  cfn  = (half)/d
-  dfn  = zero
-  alfam= one/four
-  afm  = (three/four)/d
+     alfam = zero
+     afm   = zero
+     alfan = zero
+     afn   = zero
+     bfn   = zero
+     cfn   = zero
+     dfn   = zero
+  else
+     alfa1= two
+     af1  =-(five/two)/d
+     bf1  = (two)/d
+     cf1  = (half)/d
+     df1  = zero
+
+     alfa2= one/four
+     af2  = (three/four)/d
+     alfan= two
+     afn  =-(five/two)/d
+     bfn  = (two)/d
+     cfn  = (half)/d
+     dfn  = zero
+     alfam= one/four
+     afm  = (three/four)/d
+  endif
 
   if     (ncl1.eq.0) then !Periodic
      ff(1)   =alfai
@@ -427,7 +445,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
      asi  =one/d2  !((six-nine*alsai)/four)/d2
      bsi  =zero !((-three+twentyfour*alsai)/five)/(four*d2)
      csi  =zero !((two-eleven*alsai)/twenty)/(nine*d2)
-     dsi = zero
+     dsi  =zero
 
      alsa4= alsai
      as4  = asi
@@ -527,8 +545,13 @@ subroutine second_derivative(alsa1,as1,bs1,&
   cs1  = (fifteen)/d2
   ds1  =-(one)/d2
 
-  alsa2= zpone
-  as2  = (six/five)/d2
+  if (isecondder==1) then
+     alsa2 = zero
+     as2   = one / d2
+  else
+     alsa2= zpone
+     as2  = (six/five)/d2
+  endif
 
   alsa3= two/eleven
   as3  = (twelve/eleven)/d2
@@ -545,8 +568,13 @@ subroutine second_derivative(alsa1,as1,bs1,&
   csn  = (fifteen)/d2
   dsn  =-(one)/d2
 
-  alsam= zpone
-  asm  = (six/five)/d2
+  if (isecondder==1) then
+     alsam = zero
+     asm   = one / d2
+  else
+     alsam= zpone
+     asm  = (six/five)/d2
+  endif
 
   alsat= two/eleven
   ast  = (twelve/eleven)/d2
@@ -556,7 +584,6 @@ subroutine second_derivative(alsa1,as1,bs1,&
   astt = (twelve/eleven)/d2
   bstt = (three/fortyfour)/d2
   cstt = zero
-
 
   if     (ncl1.eq.0) then !Periodic
      sf(1)   =alsai
@@ -687,7 +714,8 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
   !*******************************************************************
 
   use decomp_2d, only : mytype
-  use param, only : ipinter, zero, one, two, three, nine, ten
+  use param, only : zero, half, one, two, three, nine, ten
+  use param, only : ipinter, ifirstder
 
   implicit none
 
@@ -704,9 +732,15 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
 
   integer :: i
 
-  alcaix6=nine/62._mytype 
-  acix6=(63._mytype/62._mytype)/dx
-  bcix6=(17._mytype/62._mytype)/three/dx 
+  if (ifirstder==1) then
+     alcaix6 = zero
+     acix6   = one / dx
+     bcix6   = zero
+  else
+     alcaix6=nine/62._mytype 
+     acix6=(63._mytype/62._mytype)/dx
+     bcix6=(17._mytype/62._mytype)/three/dx
+  endif
 
   cfx6(1)=alcaix6 
   cfx6(2)=alcaix6 
@@ -754,15 +788,20 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      cbi6(i)=alcaix6 
   enddo
 
-  if (ipinter.eq.1) then
+  if (ifirstder == 1) then
+     ailcaix6 = zero
+     aicix6   = half
+     bicix6   = zero
+     cicix6   = zero
+     dicix6   = zero
+  else if (ipinter.eq.1) then
      ailcaix6=three/ten
      dicix6=zero
      aicix6=one/128._mytype *(75._mytype +70._mytype*ailcaix6)
      bicix6=one/256._mytype *(126._mytype*ailcaix6-25._mytype)
      cicix6=one/256._mytype *(-ten*ailcaix6+three)
      dicix6=dicix6/two
-  endif
-  if (ipinter.eq.2) then
+  else if (ipinter.eq.2) then
      ailcaix6=0.461658
      dicix6=0.00293016
      aicix6=one/64._mytype *(75._mytype +70._mytype *ailcaix6-320._mytype *dicix6)
@@ -772,8 +811,7 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      bicix6=bicix6/two
      cicix6=cicix6/two
      dicix6=dicix6/two
-  endif
-  if (ipinter.eq.3) then   
+  else if (ipinter.eq.3) then   
      ailcaix6=0.49_mytype 
      dicix6=zero
      aicix6=one/128._mytype *(75._mytype +70._mytype*ailcaix6)
