@@ -162,10 +162,7 @@ CONTAINS
 
     ELSEIF (itype.EQ.itype_lockexch) THEN
 
-       IF (nrank.EQ.0) THEN
-          PRINT *, "Lock-exchange case not modernised yet!"
-          STOP
-       ENDIF
+       CALL postprocessing_lockexch(ux, uy, uz, phi, ep)
 
     ELSEIF (itype.EQ.itype_tgv) THEN
 
