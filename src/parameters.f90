@@ -304,6 +304,13 @@ subroutine parameter(input_i3d)
      endif
      if (angle.ne.0.) write(*,"(' Solid rotation     : ',F6.2)") angle
      print *,''
+
+     !! Print case-specific information
+     if (itype==itype_lockexch) then
+        print *, "Initial front location: ", pfront
+     elseif (itype==itype_tgv) then
+        print *, "TGV 2D: ", tgv_twod
+     endif
   endif
 
   xnu=one/re
@@ -311,6 +318,8 @@ subroutine parameter(input_i3d)
   if (ilmn) then
      if (ivarcoeff) then
         npress = 2 !! Need current pressure and previous iterate
+     else
+        npress = 1
      endif
   endif
 
