@@ -48,6 +48,8 @@ subroutine parameter(input_i3d)
 
   USE var, ONLY : dphi1
 
+  USE lockexch, ONLY : pfront
+
   implicit none
 
   character(len=80), intent(in) :: input_i3d
@@ -72,7 +74,7 @@ subroutine parameter(input_i3d)
 
   NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf
   NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, massfrac, mol_weight, imultispecies, primary_species
-  NAMELIST /CASE/ tgv_twod
+  NAMELIST /CASE/ tgv_twod, pfront
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter start'
 #endif

@@ -43,6 +43,7 @@ MODULE case
   USE channel
   USE mixlayer
   USE jet
+  USE lockexch
 
   IMPLICIT NONE
 
@@ -69,10 +70,7 @@ CONTAINS
 
     ELSEIF (itype.EQ.itype_lockexch) THEN
 
-       IF (nrank.EQ.0) THEN
-          PRINT *, "Lock-exchange case not modernised yet!"
-          STOP
-       ENDIF
+       CALL init_lockexch(ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, dphi1)
 
     ELSEIF (itype.EQ.itype_tgv) THEN
 
@@ -118,10 +116,7 @@ CONTAINS
 
     ELSEIF (itype.EQ.itype_lockexch) THEN
 
-       IF (nrank.EQ.0) THEN
-          PRINT *, "Lock-exchange case not modernised yet!"
-          STOP
-       ENDIF
+       CALL boundary_conditions_lockexch(phi)
 
     ELSEIF (itype.EQ.itype_tgv) THEN
 
