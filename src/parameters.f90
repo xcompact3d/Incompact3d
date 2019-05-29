@@ -59,7 +59,7 @@ subroutine parameter(input_i3d)
   NAMELIST /BasicParam/ p_row, p_col, nx, ny, nz, istret, beta, xlx, yly, zlz, &
        itype, iin, re, u1, u2, init_noise, inflow_noise, &
        dt, ifirst, ilast, &
-       ilesmod, numscalar, iibm, ilmn, &
+       numscalar, iibm, ilmn, &
        ilesmod, iscalar, iibm, &
        nclx1, nclxn, ncly1, nclyn, nclz1, nclzn, &
        ivisu, ipost, &
