@@ -46,7 +46,7 @@ ifirst = 1            ! First iteration
 ilast =  10     ! Last iteration
 
 ! Enable modelling tools
-iturbmod=0            ! if 0 then DNS
+ilesmod=0            ! if 0 then DNS
 iscalar=0             ! If iscalar=0 (no scalar), if iscalar=1 (scalar)
 iibm=2                ! Flag for immersed boundary method
 
