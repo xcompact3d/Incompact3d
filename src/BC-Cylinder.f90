@@ -228,7 +228,6 @@ contains
        call random_number(uy1)
        call random_number(uz1)
 
-
        do k=1,xsize(3)
           do j=1,xsize(2)
              do i=1,xsize(1)
