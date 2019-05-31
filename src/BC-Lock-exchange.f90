@@ -37,6 +37,8 @@ module lockexch
   character(len=100) :: fileformat
   character(len=1),parameter :: NL=char(10) !new line character
 
+  logical, save :: init = .FALSE.
+
   private
   public :: init_lockexch, boundary_conditions_lockexch, postprocessing_lockexch, &
        pfront
@@ -109,12 +111,13 @@ contains
              do j=1,xsize(2)
                 do i=1,xsize(1)
                    x=real(i+xstart(1)-1-1,mytype)*dx-pfront
-                   phi1(i,j,k,is)=(half-half*tanh((sc(is)/xnu)**(half)*x))*cp(is)
+                   phi1(i,j,k,is)=(half-half*tanh((sc(is)/xnu)**(half)*x))*one ! cp(is)
                 enddo
              enddo
           enddo
           do ijk = 1,xsize(1)*xsize(2)*xsize(3)
-             if (phi1(ijk,1,1,is).gt.cp(is)) phi1(ijk,1,1,is) =  cp(is)
+             ! if (phi1(ijk,1,1,is).gt.cp(is)) phi1(ijk,1,1,is) =  cp(is)
+             if (phi1(ijk,1,1,is).gt.one) phi1(ijk,1,1,is) =  one
              if (phi1(ijk,1,1,is).lt.zero) phi1(ijk,1,1,is) =  zero
           enddo
        enddo
@@ -280,6 +283,12 @@ contains
     integer :: i,j,k,is
 
     real(mytype) :: mp(numscalar),dms(numscalar),xf(1:2,1:3),xf2d(1:2,1:2)
+
+    if (.not.init) then
+       ! call alloc_x(vol1, opt_global=.true.)
+       allocate(vol1(xsize(1),xsize(2),xsize(3)))
+       init = .TRUE.
+    endif
 
     if (mod(itime,iprocessing).ne.0) return
 

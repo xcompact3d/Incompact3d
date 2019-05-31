@@ -40,6 +40,8 @@
 !================================================================================
 subroutine parameter(input_i3d)
 
+  USE iso_fortran_env
+
   USE param
   USE variables
   USE complex_geometry
@@ -65,7 +67,7 @@ subroutine parameter(input_i3d)
        ivisu, ipost, &
        gravx, gravy, gravz
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, rxxnu, cnu, fpi2, ipinter
-  NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu
+  NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu, iprocessing
   NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat
   NAMELIST /ScalarParam/ sc, ri, &
        nclxS1, nclxSn, nclyS1, nclySn, nclzS1, nclzSn
@@ -107,13 +109,25 @@ subroutine parameter(input_i3d)
   if (iibm.ne.0) then
      read(10, nml=ibmstuff)
   endif
+
+  if (numscalar.ne.0) then
+     iscalar = 1
+     !! Set Scalar BCs same as fluid (may be overridden)
+     nclxS1 = nclx1; nclxSn = nclxn
+     nclyS1 = ncly1; nclySn = nclyn
+     nclzS1 = nclz1; nclzSn = nclzn
+     
+     !! Allocate scalar arrays and set sensible defaults
+     allocate(massfrac(numscalar))
+     allocate(mol_weight(numscalar))
+     massfrac(:) = .FALSE.
+     mol_weight(:) = one
+     allocate(sc(numscalar), ri(numscalar), uset(numscalar))
+     ri(:) = zero
+     uset(:) = zero
+  endif
+  
   if (ilmn) then
-     if (numscalar.ne.0) then
-        allocate(massfrac(numscalar))
-        allocate(mol_weight(numscalar))
-        massfrac(:) = .FALSE.
-        mol_weight(:) = one
-     endif
      read(10, nml=LMN)
 
      do is = 1, numscalar
@@ -137,13 +151,6 @@ subroutine parameter(input_i3d)
      endif
   endif
   if (numscalar.ne.0) then
-     iscalar = 1
-     !! Set Scalar BCs same as fluid (may be overridden)
-     nclxS1 = nclx1; nclxSn = nclxn
-     nclyS1 = ncly1; nclySn = nclyn
-     nclzS1 = nclz1; nclzSn = nclzn
-     allocate(sc(numscalar), ri(numscalar))
-     ri(:) = zero
      read(10, nml=ScalarParam)
   endif
   ! !! These are the 'optional'/model parameters
@@ -358,6 +365,8 @@ subroutine parameter_defaults()
 
   IMPLICIT NONE
 
+  integer :: i
+
   ro = 99999999._mytype
   angle = zero
   u1 = 2
@@ -407,6 +416,7 @@ subroutine parameter_defaults()
   !! IO
   ivisu = 1
   ipost = 0
+  iprocessing = huge(i)
 
   save_ux = 0
   save_uy = 0
