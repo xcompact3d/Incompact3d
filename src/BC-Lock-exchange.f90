@@ -23,12 +23,7 @@ module lockexch
   use var, only : nrank
 
   use var, only : zero, half, two
-  use var, only : vol1 => ta1
   use var, only : dx, dy, dz
-
-  use var, only : ffx, ffxp, fsx, fsxp, fwx, fwxp, sfxps, ssxps, swxps, sx
-  use var, only : ffy, ffyp, ffys, fsy, fsyp, fsys, fwy, fwyp, fwys, ppy, sfyps, ssyps, swyps, sy
-  use var, only : ffz, ffzp, fsz, fszp, fwz, fwzp, sfzps, sszps, swzps, sz
 
   use param, only : itime, ioutput, iprocessing
   use param, only : t
@@ -36,7 +31,7 @@ module lockexch
   implicit none
 
   real(mytype), save :: pfront
-  real(mytype), save, allocatable :: area2(:,:)
+  real(mytype), save, allocatable :: area2(:,:), vol1(:,:,:)
 
   integer :: FS
   character(len=100) :: fileformat
@@ -63,7 +58,7 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
     do is=1, numscalar
-       if (uset(is) .eq. 0.) cycle
+       if (uset(is) .eq. zero) cycle
        call transpose_x_to_y(phi1(:,:,:,is),phi2(:,:,:,is))
 
        j = 1
@@ -114,7 +109,7 @@ contains
              do j=1,xsize(2)
                 do i=1,xsize(1)
                    x=real(i+xstart(1)-1-1,mytype)*dx-pfront
-                   phi1(i,j,k,is)=(0.5-0.5*tanh((sc(is)/xnu)**(0.5)*x))*cp(is)
+                   phi1(i,j,k,is)=(half-half*tanh((sc(is)/xnu)**(half)*x))*cp(is)
                 enddo
              enddo
           enddo
@@ -273,13 +268,14 @@ contains
 
   subroutine postprocessing_lockexch(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
+    use var, only : phi2
+    use var, only : phi3
+
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3),numscalar) :: phi2
-    real(mytype),dimension(zsize(1),zsize(2),zsize(3),numscalar) :: phi3
-    real(mytype),dimension(ysize(1),ysize(3),numscalar) :: dep2
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: phisum1
+    real(mytype),dimension(ysize(1),ysize(3),numscalar) :: dep2
     real(mytype),dimension(zsize(1),zsize(2),numscalar) :: phim3
     integer :: i,j,k,is
 
@@ -336,18 +332,27 @@ contains
     use variables, only : derx, dery, derys, derz
     use variables, only : derxxs, deryys, derzzs
 
+    use var, only : ffx, ffxp, fsx, fsxp, fwx, fwxp, sfxps, ssxps, swxps, sx
+    use var, only : ffy, ffyp, ffys, fsy, fsyp, fsys, fwy, fwyp, fwys, ppy, sfyps, ssyps, swyps, sy
+    use var, only : ffz, ffzp, fsz, fszp, fwz, fwzp, sfzps, sszps, swzps, sz
+
+    use var, only : di1
+    use var, only : phi2, di2
+    use var, only : phi3, di3
+    
+    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1
+    use var, only : ta2,tb2,tc2,td2,te2,tf2
+    use var, only : ta3,tb3,tc3,td3,te3,tf3
+
     implicit none
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,vol1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: diss1,dphiy1, dphixx1, dphiyy1, dphizz1, ddphi1, di1, temp1
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: phi2, dphiy2, dphixx2, dphiyy2, dphizz2, ddphi2, di2, vol2, temp2
-    real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: phi3, dphiy3, dphixx3, dphiyy3, dphizz3, ddphi3, di3, temp3
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: diss1, dphixx1
+    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: dphiy2, dphixx2, dphiyy2, dphizz2, ddphi2, vol2, temp2
+    real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: dphizz3, temp3
 
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2
-    real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3
     real(mytype),dimension(3,3,xsize(1),xsize(2),xsize(3)) :: A
 
     real(mytype),dimension(xszV(1),xszV(2),xszV(3)) :: uvisu
@@ -422,20 +427,20 @@ contains
     !    ilag=0
     ! endif
     do is=1, numscalar
-       if (ri(is) .eq. 0.) cycle
+       if (ri(is) .eq. zero) cycle
        call derxxS (dphixx1,phi1(:,:,:,is),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1)
 
        call transpose_x_to_y(dphixx1,dphixx2)
 
-       call transpose_x_to_y(phi1(:,:,:,is),phi2)
+       call transpose_x_to_y(phi1(:,:,:,is),phi2(:,:,:,is))
 
-       call deryS (dphiy2,phi2,di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),1)
+       call deryS (dphiy2,phi2(:,:,:,is),di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),1)
 
-       call deryyS (dphiyy2,phi2,di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
+       call deryyS (dphiyy2,phi2(:,:,:,is),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
 
-       call transpose_y_to_z(phi2,phi3)
+       call transpose_y_to_z(phi2(:,:,:,is),phi3(:,:,:,is))
 
-       call derzzS (dphizz3,phi3,di3,sz,sfzpS,sszpS,swzpS,zsize(1),zsize(2),zsize(3),1)
+       call derzzS (dphizz3,phi3(:,:,:,is),di3,sz,sfzpS,sszpS,swzpS,zsize(1),zsize(2),zsize(3),1)
 
        call transpose_z_to_y(dphizz3,dphizz2)
 
@@ -447,7 +452,7 @@ contains
           do j=1,ysize(2)
              do i=1,ysize(1)
                 xvol=real(vol2(i,j,k),8)
-                ep=ep + xvol * (phi2(i,j,k)*(j-1)*dy)
+                ep=ep + xvol * (phi2(i,j,k,is)*(j-1)*dy)
                 dep=dep - xvol * (ddphi2(i,j,k)*xnu/sc(is)+uset(is)*dphiy2(i,j,k))*(j-1)*dy
              enddo
           enddo
@@ -493,18 +498,19 @@ contains
     USE decomp_2d_io
     USE MPI
 
+    use var, only : phi2
+
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),numscalar) :: phi1
     real(mytype),intent(out),dimension(ystart(1):yend(1),ystart(3):yend(3),numscalar) :: dep2
 
     real(mytype),dimension(ystart(1):yend(1),ystart(2):yend(2),ystart(3):yend(3),numscalar) :: tempdep2
-    real(mytype),dimension(ystart(1):yend(1),ystart(2):yend(2),ystart(3):yend(3),numscalar) :: phi2
 
-    integer :: i, j, k, is
+    integer :: i, k, is
     character(len=30) :: filename
 
     dep2 = zero
     do is=1, numscalar
-       if (uset(is) .eq. 0.) cycle
+       if (uset(is) .eq. zero) cycle
        call transpose_x_to_y(phi1(:,:,:,is),phi2(:,:,:,is))
 
        tempdep2=zero
@@ -563,7 +569,7 @@ contains
 
     dms=zero; dms1=zero
     do is=1, numscalar
-       if (uset(is) .eq. 0.) cycle
+       if (uset(is) .eq. zero) cycle
        do k=ystart(3),yend(3)
           do i=ystart(1),yend(1)
              dms(is)=dms(is)+dep2(i,k,is)*area2(i,k)
@@ -583,8 +589,8 @@ contains
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: phisum1
     real(mytype),intent(out) :: xp(1:2,1:3)
 
-    real(mytype) :: xp1(1:2),y
-    integer :: is, i, j ,k, code
+    real(mytype) :: xp1(1:2)
+    integer :: i, j ,k, code
 
     xp(2,:) = real(nrank,mytype)
     xp(1,:)=zero
@@ -603,7 +609,6 @@ contains
     call MPI_ALLREDUCE(xp(:,1),xp1,1,real2_type,MPI_MAXLOC,MPI_COMM_WORLD,code)
     call MPI_Bcast(xp(1,:), 3,real_type, int(xp1(2)), MPI_COMM_WORLD,code)
 
-
   end subroutine front
 
   subroutine front2d ( phim3, xp )
@@ -614,7 +619,7 @@ contains
     real(mytype),intent(in),dimension(zstart(1):zend(1),zstart(2):zend(2),1:numscalar) :: phim3
     real(mytype),intent(out) :: xp(1:2,1:2)
     real(mytype) :: xp1(1:2),y
-    integer :: is, i, j, code
+    integer :: i, j, code
 
     xp(2,:) = real(nrank,mytype)
     xp(1,:) = zero
