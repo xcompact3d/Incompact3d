@@ -1136,7 +1136,7 @@ subroutine simu_stats(iwhen)
         print *,'nx,ny,nz=',nx,ny,nz
         print *,'dx,dy,dz=',dx,dy,dz
         print *,''
-        print *,'Averaged time per step (s):',real(ttotal/(ilast-ifirst),4)
+        print *,'Averaged time per step (s):',real(ttotal/(ilast-(ifirst-1)),4)
         print *,'Total wallclock (s):',real(ttotal,4)
         print *,'Total wallclock (m):',real(ttotal/sixty,4)
         print *,'Total wallclock (h):',real(ttotal/thirtysixthousand,4)
