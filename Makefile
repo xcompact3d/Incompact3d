@@ -49,7 +49,8 @@ FFLAGS = -fpp -O3 -xSSE4.2 -axAVX,CORE-AVX-I,CORE-AVX2 -ipo -fp-model fast=2 -mc
 else ifeq ($(CMP),gcc)
 FC = mpif90
 #FFLAGS = -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -x f95-cpp-input
-FFLAGS = -cpp  -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none -ffpe-trap=invalid,zero
+FFLAGS = -cpp  -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none 
+#-ffpe-trap=invalid,zero
 else ifeq ($(CMP),nagfor)
 FC = mpinagfor
 FFLAGS = -fpp
