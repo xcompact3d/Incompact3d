@@ -15,10 +15,11 @@ module lockexch
   use decomp_2d, only : xsize, ysize, zsize
   use decomp_2d, only : xstart, ystart, zstart
   use decomp_2d, only : xend, yend, zend
+  use decomp_2d, only : transpose_x_to_y, transpose_y_to_z, transpose_z_to_y, transpose_y_to_x
 
   use variables, only : numscalar
 
-  use var, only : xnu, ri
+  use var, only : xnu, ri, uset, sc
   use var, only : nrank
 
   use var, only : zero, half, two
@@ -29,7 +30,7 @@ module lockexch
   use var, only : ffy, ffyp, ffys, fsy, fsyp, fsys, fwy, fwyp, fwys, ppy, sfyps, ssyps, swyps, sy
   use var, only : ffz, ffzp, fsz, fszp, fwz, fwzp, sfzps, sszps, swzps, sz
 
-  use param, only : itime, ioutput
+  use param, only : itime, ioutput, iprocessing
   use param, only : t
 
   implicit none
@@ -69,7 +70,7 @@ contains
        do k=1,ysize(3)
           do i=1,ysize(1)
 
-             !phi2(i,yend(2),k)= phi2(i,yend(2)-1,k) / (1.+uset(is)*dy*nsc(is)/xnu) !Robin on top BC
+             !phi2(i,yend(2),k)= phi2(i,yend(2)-1,k) / (1.+uset(is)*dy*sc(is)/xnu) !Robin on top BC
 
              if ( phi2(i,j+1,k,is) .gt. phi2(i,j,k,is) ) then
 
@@ -332,6 +333,9 @@ contains
     USE decomp_2d_io
     USE MPI
 
+    use variables, only : derx, dery, derys, derz
+    use variables, only : derxxs, deryys, derzzs
+
     implicit none
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,vol1
@@ -444,7 +448,7 @@ contains
              do i=1,ysize(1)
                 xvol=real(vol2(i,j,k),8)
                 ep=ep + xvol * (phi2(i,j,k)*(j-1)*dy)
-                dep=dep - xvol * (ddphi2(i,j,k)*xnu/nsc(is)+uset(is)*dphiy2(i,j,k))*(j-1)*dy
+                dep=dep - xvol * (ddphi2(i,j,k)*xnu/sc(is)+uset(is)*dphiy2(i,j,k))*(j-1)*dy
              enddo
           enddo
        enddo
