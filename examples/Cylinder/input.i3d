@@ -43,10 +43,10 @@ inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
 ! Time stepping
 dt = 0.005              ! Time step
 ifirst = 1            ! First iteration
-ilast =  10     ! Last iteration
+ilast =  10000     ! Last iteration
 
 ! Enable modelling tools
-iturbmod=0            ! if 0 then DNS
+ilesmod=0            ! if 0 then DNS
 iscalar=0             ! If iscalar=0 (no scalar), if iscalar=1 (scalar)
 iibm=2                ! Flag for immersed boundary method
 
@@ -77,7 +77,7 @@ rxxnu = 0             ! Ratio between hyperviscosity/viscosity at nu
 ! Basic I/O
 irestart = 0          ! Read initial flow field ?
 icheckpoint = 5    ! Frequency for writing backup file
-ioutput = 1        ! Frequency for visualization
+ioutput = 1000        ! Frequency for visualization
 nvisu = 1             ! Size for visualisation collection
 
 /End
@@ -135,4 +135,7 @@ ra=0.5        !when simulating a cylinder, radius
 nraf=10       !level of refinement for iibm==2 to find the surface of the immersed object
 nobjmax=2     !number of immersed objects (DO NOT USE ZERO OBJECTS)
 
+/End
+
+&CASE
 /End

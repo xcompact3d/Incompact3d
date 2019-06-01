@@ -299,18 +299,22 @@ contains
 
   end subroutine init_post
   !############################################################################
-  subroutine postprocessing_channel(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
+  subroutine postprocessing_channel(ux1,uy1,uz1,pp3,phi1,ep1) !By Felipe Schuch
 
     USE MPI
     USE decomp_2d
     USE decomp_2d_io
-    USE var, only : umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
-    USE var, only : uvisu
-    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-    USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+    USE var, only : umean,vmean,wmean,pmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
+    USE var, only : ta1, pp1, di1
+    USE var, only : ppi3, dip3
+    USE var, only : pp2, ppi2, dip2
+    
+    USE var, ONLY : nxmsize, nymsize, nzmsize
+    USE param, ONLY : npress
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
     character(len=30) :: filename
 
     if (itime.ge.initstat) then
@@ -325,6 +329,20 @@ contains
        !wmean=uz1
        call fine_to_coarseS(1,uz1,tmean)
        wmean(:,:,:)=wmean(:,:,:)+tmean(:,:,:)
+
+       !pmean
+
+       call interzpv(ppi3,pp3,dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
+            (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
+       call transpose_z_to_y(ppi3,pp2,ph3) !nxm nym nz
+       call interypv(ppi2,pp2,dip2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
+            (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
+       call transpose_y_to_x(ppi2,pp1,ph2) !nxm ny nz
+       call interxpv(ta1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
+            nxmsize,xsize(1),xsize(2),xsize(3),1)
+       
+       call fine_to_coarseS(1,pp1,tmean)
+       pmean(:,:,:)=pmean(:,:,:)+tmean(:,:,:)
 
        !uumean=ux1*ux1
        ta1(:,:,:)=ux1(:,:,:)*ux1(:,:,:)
@@ -365,6 +383,8 @@ contains
           call decomp_2d_write_one(1,vmean,filename,1)
           write(filename,"('wmean.dat',I7.7)") itime
           call decomp_2d_write_one(1,wmean,filename,1)
+          write(filename,"('pmean.dat',I7.7)") itime
+          call decomp_2d_write_one(1,pmean,filename,1)
           write(filename,"('uumean.dat',I7.7)") itime
           call decomp_2d_write_one(1,uumean,filename,1)
           write(filename,"('vvmean.dat',I7.7)") itime
@@ -385,6 +405,8 @@ contains
              write(filename,"('vmean.dat',I7.7)") itime-icheckpoint
              call system ("rm " //filename)
              write(filename,"('wmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('pmean.dat',I7.7)") itime-icheckpoint
              call system ("rm " //filename)
              write(filename,"('uumean.dat',I7.7)") itime-icheckpoint
              call system ("rm " //filename)

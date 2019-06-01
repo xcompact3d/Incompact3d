@@ -21,7 +21,7 @@ beta = 0.259065151    ! Refinement parameter (beta)
 ! Domain
 xlx = 12.      ! Lx (Size of the box in x-direction)
 yly = 2.            ! Ly (Size of the box in y-direction)
-zlz = 1.5            ! Lz (Size of the box in z-direction)
+zlz = 4.            ! Lz (Size of the box in z-direction)
 
 ! Boundary conditions
 nclx1 = 0
@@ -36,16 +36,16 @@ iin = 1               ! Inflow conditions (1: classic, 2: turbinit)
 re  = 4200. ! nu=1/re (Kinematic Viscosity)
 u1  = 1.              ! u1 (max velocity) (for inflow condition)
 u2  = 1.              ! u2 (min velocity) (for inflow condition)
-init_noise  = 0.125   ! Turbulence intensity (1=100%) !! Initial condition
+init_noise = 0.125   ! Turbulence intensity (1=100%) !! Initial condition
 inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
 
 ! Time stepping
 dt = 0.001              ! Time step
 ifirst = 1            ! First iteration
-ilast =  15000       ! Last iteration
+ilast = 100000       ! Last iteration
 
 ! Enable modelling tools
-iturbmod=0            ! if 0 then DNS
+ilesmod=0            ! if 0 then DNS
 numscalar = 0         ! How many scalars? (Set to zero to disable scalars)
 iibm=0                ! Flag for immersed boundary method
 
@@ -75,8 +75,8 @@ cnu = 0               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 
 ! Basic I/O
 irestart = 0          ! Read initial flow field ?
-icheckpoint = 5    ! Frequency for writing backup file
-ioutput = 5        ! Frequency for visualization
+icheckpoint = 5000    ! Frequency for writing backup file
+ioutput = 1000        ! Frequency for visualization
 nvisu = 1             ! Size for visualisation collection
 
 /End
@@ -85,10 +85,10 @@ nvisu = 1             ! Size for visualisation collection
 &Statistics
 !=================
 
-wrotation = 0.12 !rotation speed to trigger turbulence
-spinup_time = 5000   ! number of time steps with a rotation to trigger turbulence
+wrotation = 0.12      ! rotation speed to trigger turbulence
+spinup_time = 5000    ! number of time steps with a rotation to trigger turbulence
 nstat = 1             ! Size arrays for statistic collection
-initstat = 6         ! Time steps after which statistics are collected 
+initstat = 40000      ! Time steps after which statistics are collected 
 
 /End
 
