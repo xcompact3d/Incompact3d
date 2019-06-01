@@ -57,7 +57,7 @@ subroutine Compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,iconservative)
 
   elseif(jLES.eq.2) then !WALE
 
-     call smag(nut1,ux1,uy1,uz1)
+     call wale(nut1,ux1,uy1,uz1)
 
   elseif(jLES.eq.3) then ! Lilly-style Dynamic Smagorinsky
 
@@ -188,7 +188,7 @@ subroutine smag(nut1,ux1,uy1,uz1)
 
 end subroutine smag
 !************************************************************
-subroutine wale(gxx1, gyx1, gzx1, gxy1, gyy1, gzy1, gxz1, gyz1, gzz1, srt_smag, nut1)
+subroutine wale(nut1,ux1,uy1,uz1)
 
 
   USE param
@@ -198,6 +198,7 @@ subroutine wale(gxx1, gyx1, gzx1, gxy1, gyy1, gzy1, gxz1, gyz1, gzz1, srt_smag, 
 
   implicit none
 
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
   real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: gxx1, gyx1, gzx1, &
        gxy1, gyy1, gzy1, gxz1, gyz1, gzz1
   real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: srt_wale, srt_smag

@@ -8,8 +8,8 @@
 itype = 2
 
 ! Domain decomposition
-p_row=0               ! Row partition
-p_col=0               ! Column partition
+p_row=4               ! Row partition
+p_col=4               ! Column partition
 
 ! Mesh
 nx=65                 ! X-direction nodes
