@@ -67,12 +67,10 @@ PROGRAM incompact3d
 
   call schemes()
 
-
   !if (nrank==0) call stabiltemp()
 
   call decomp_2d_poisson_init()
   call decomp_info_init(nxm,nym,nzm,phG)
-
 
   if (ilesmod.ne.0) then
      call filter(0.45_mytype)
@@ -131,12 +129,9 @@ PROGRAM incompact3d
         !!-------------------------------------------------------------------------
         !! Time integrate transport equations
         !!-------------------------------------------------------------------------
-        if (ilmn) then
-           !! XXX N.B. from this point, X-pencil velocity arrays contain momentum.
-           call primary_to_conserved(rho1, ux1)
-           call primary_to_conserved(rho1, uy1)
-           call primary_to_conserved(rho1, uz1)
-        endif
+
+        !! XXX N.B. from this point, X-pencil velocity arrays contain momentum.
+        call velocity_to_momentum(rho1, ux1, uy1, uz1)
 
         call intt(rho1,ux1,uy1,uz1,phi1,drho1,dux1,duy1,duz1,dphi1)
         call pre_correc(ux1,uy1,uz1,ep1)
@@ -157,12 +152,9 @@ PROGRAM incompact3d
         call solve_poisson(pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
         call corpg(ux1,uy1,uz1,px1,py1,pz1)
 
-        if (ilmn) then
-           !! XXX N.B. from this point, X-pencil velocity arrays contain velocity.
-           call conserved_to_primary(rho1, ux1)
-           call conserved_to_primary(rho1, uy1)
-           call conserved_to_primary(rho1, uz1)
-        endif
+        call momentum_to_velocity(rho1, ux1, uy1, uz1)
+        !! XXX N.B. from this point, X-pencil velocity arrays contain velocity.
+
         !!-------------------------------------------------------------------------
         !! End Poisson solver and velocity correction
         !!-------------------------------------------------------------------------
@@ -299,9 +291,7 @@ SUBROUTINE solve_poisson(pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, di
   IF (ilmn.AND.ivarcoeff) THEN
      !! Variable-coefficient Poisson solver works on div(u), not div(rho u)
      !! rho u -> u
-     CALL conserved_to_primary(rho1, ux1)
-     CALL conserved_to_primary(rho1, uy1)
-     CALL conserved_to_primary(rho1, uz1)
+     CALL momentum_to_velocity(rho1, ux1, uy1, uz1)
   ENDIF
 
   CALL divergence(pp3(:,:,:,1),rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
@@ -342,9 +332,7 @@ SUBROUTINE solve_poisson(pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, di
   IF (ilmn.AND.ivarcoeff) THEN
      !! Variable-coefficient Poisson solver works on div(u), not div(rho u)
      !! u -> rho u
-     CALL primary_to_conserved(rho1, ux1)
-     CALL primary_to_conserved(rho1, uy1)
-     CALL primary_to_conserved(rho1, uz1)
+     CALL velocity_to_momentum(rho1, ux1, uy1, uz1)
   ENDIF
 
 END SUBROUTINE solve_poisson

@@ -888,6 +888,26 @@ SUBROUTINE primary_to_conserved(rho1, var1)
   var1(:,:,:) = rho1(:,:,:,1) * var1(:,:,:)
 
 ENDSUBROUTINE primary_to_conserved
+SUBROUTINE velocity_to_momentum (rho1, ux1, uy1, uz1)
+
+  USE decomp_2d, ONLY : mytype, xsize
+  USE param, ONLY : nrhotime
+  USE var, ONLY : ilmn
+
+  IMPLICIT NONE
+
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+
+  IF (.NOT.ilmn) THEN
+     RETURN
+  ENDIF
+
+  CALL primary_to_conserved(rho1, ux1)
+  CALL primary_to_conserved(rho1, uy1)
+  CALL primary_to_conserved(rho1, uz1)
+
+ENDSUBROUTINE velocity_to_momentum
 SUBROUTINE conserved_to_primary(rho1, var1)
 
   USE decomp_2d, ONLY : mytype, xsize
@@ -901,6 +921,26 @@ SUBROUTINE conserved_to_primary(rho1, var1)
   var1(:,:,:) = var1(:,:,:) / rho1(:,:,:,1)
 
 ENDSUBROUTINE conserved_to_primary
+SUBROUTINE momentum_to_velocity (rho1, ux1, uy1, uz1)
+
+  USE decomp_2d, ONLY : mytype, xsize
+  USE param, ONLY : nrhotime
+  USE var, ONLY : ilmn
+
+  IMPLICIT NONE
+
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+
+  IF (.NOT.ilmn) THEN
+     RETURN
+  ENDIF
+
+  CALL conserved_to_primary(rho1, ux1)
+  CALL conserved_to_primary(rho1, uy1)
+  CALL conserved_to_primary(rho1, uz1)
+  
+ENDSUBROUTINE momentum_to_velocity
 
 !! Calculate velocity-divergence constraint
 SUBROUTINE calc_divu_constraint(divu3, rho1, phi1)
