@@ -431,6 +431,7 @@ SUBROUTINE intt(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
   USE param, ONLY : zero, one
   USE param, ONLY : ntime, nrhotime, ilmn, iscalar, ilmn_solve_temp
   USE param, ONLY : primary_species, massfrac
+  use param, only : scalar_lbound, scalar_ubound
   USE variables, ONLY : numscalar
   USE var, ONLY : ta1, tb1
 
@@ -468,16 +469,14 @@ SUBROUTINE intt(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
         IF (is.NE.primary_species) THEN
            CALL int_time(phi1(:,:,:,is), dphi1(:,:,:,:,is))
 
-           IF (massfrac(is)) THEN
-              DO k = 1, xsize(3)
-                 DO j = 1, xsize(2)
-                    DO i = 1, xsize(1)
-                       phi1(i,j,k,is) = max(phi1(i,j,k,is),zero)
-                       phi1(i,j,k,is) = min(phi1(i,j,k,is),one)
-                    ENDDO
+           DO k = 1, xsize(3)
+              DO j = 1, xsize(2)
+                 DO i = 1, xsize(1)
+                    phi1(i,j,k,is) = max(phi1(i,j,k,is),scalar_lbound(is))
+                    phi1(i,j,k,is) = min(phi1(i,j,k,is),scalar_ubound(is))
                  ENDDO
               ENDDO
-           ENDIF
+           ENDDO
         ENDIF
      ENDDO
 

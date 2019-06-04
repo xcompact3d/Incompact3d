@@ -257,6 +257,9 @@ module param
 
 #endif
 
+  !! Scalars
+  real(mytype), allocatable, dimension(:) :: scalar_lbound, scalar_ubound
+
   !! LES modelling flag
   integer :: ilesmod, iwall
 

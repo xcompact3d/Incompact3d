@@ -70,7 +70,8 @@ subroutine parameter(input_i3d)
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu, iprocessing
   NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat
   NAMELIST /ScalarParam/ sc, ri, &
-       nclxS1, nclxSn, nclyS1, nclySn, nclzS1, nclzSn
+       nclxS1, nclxSn, nclyS1, nclySn, nclzS1, nclzSn, &
+       scalar_lbound, scalar_ubound
   NAMELIST /LESModel/ jles, smagcst, walecst, iwall
   NAMELIST /WallModel/ smagwalldamp
 
@@ -125,6 +126,10 @@ subroutine parameter(input_i3d)
      allocate(sc(numscalar), ri(numscalar), uset(numscalar))
      ri(:) = zero
      uset(:) = zero
+
+     allocate(scalar_lbound(numscalar), scalar_ubound(numscalar))
+     scalar_lbound(:) = -huge(one)
+     scalar_ubound(:) = huge(one)
   endif
   
   if (ilmn) then
