@@ -469,8 +469,8 @@ CONTAINS
     USE decomp_2d
 
     USE var, ONLY : ta1,tb1,tc1,td1,di1
-    USE var, ONLY : rho2,uy2,phi2,ta2,tb2,tc2,td2,di2
-    USE var, ONLY : rho3,uz3,phi3,ta3,tb3,td3,di3
+    USE var, ONLY : rho2,uy2,ta2,tb2,tc2,td2,di2
+    USE var, ONLY : rho3,uz3,ta3,tb3,td3,di3
 
     implicit none
 
@@ -510,7 +510,7 @@ CONTAINS
 
     !Z PENCILS
     call derzS (tb3,td3(:,:,:),di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1)
-    tb3(:,:,:) = rho2(:,:,:) * uz3(:,:,:) * tb3(:,:,:)
+    tb3(:,:,:) = rho3(:,:,:) * uz3(:,:,:) * tb3(:,:,:)
     call derzzS (ta3,td3(:,:,:),di3,sz,sfzpS,sszpS,swzpS,zsize(1),zsize(2),zsize(3),1)
 
     call transpose_z_to_y(ta3,tc2)
