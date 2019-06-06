@@ -88,7 +88,7 @@ contains
     return
   end subroutine boundary_conditions_lockexch
 
-  subroutine init_lockexch (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,dphi1)
+  subroutine init_lockexch (rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,dphi1)
 
     USE decomp_2d
     USE decomp_2d_io
@@ -98,41 +98,45 @@ contains
 
     implicit none
 
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1,drho1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
 
     real(mytype) :: um,x
     integer :: k,j,i,ijk,ii,is,it,code
-
-    if (iscalar==1) then
-
-       !lock-exchange
-
-       do is=1,numscalar
-          do k=1,xsize(3)
-             do j=1,xsize(2)
-                do i=1,xsize(1)
-                   x=real(i+xstart(1)-1-1,mytype)*dx-pfront
-                   phi1(i,j,k,is)=(half-half*tanh((sc(is)/xnu)**(half)*x))*one ! cp(is)
-                enddo
+    
+    do k=1,xsize(3)
+       do j=1,xsize(2)
+          do i=1,xsize(1)
+             x=real(i+xstart(1)-1-1,mytype)*dx-pfront
+             do is=1,numscalar
+                phi1(i,j,k,is)=half * (one - tanh((sc(is) / xnu)**(half) * x)) * one ! cp(is)
+                rho1(i,j,k,1) = half * (one - tanh((prandtl / xnu)**half * x)) &
+                     * (dens1 - dens2) + dens2
              enddo
           enddo
-          do ijk = 1,xsize(1)*xsize(2)*xsize(3)
-             ! if (phi1(ijk,1,1,is).gt.cp(is)) phi1(ijk,1,1,is) =  cp(is)
-             if (phi1(ijk,1,1,is).gt.one) phi1(ijk,1,1,is) =  one
-             if (phi1(ijk,1,1,is).lt.zero) phi1(ijk,1,1,is) =  zero
-          enddo
        enddo
-
+    enddo
+    do ijk = 1,xsize(1)*xsize(2)*xsize(3)
        do is=1,numscalar
-          do it = 1,ntime
-             dphi1(:,:,:,it,is) = phi1(:,:,:,is)
-          enddo
+          ! if (phi1(ijk,1,1,is).gt.cp(is)) phi1(ijk,1,1,is) =  cp(is)
+          if (phi1(ijk,1,1,is).gt.one) phi1(ijk,1,1,is) =  one
+          if (phi1(ijk,1,1,is).lt.zero) phi1(ijk,1,1,is) =  zero
        enddo
+       if (rho1(ijk,1,1,1).gt.max(dens1, dens2)) then
+          rho1(ijk,1,1,1) = max(dens1, dens2)
+       elseif (rho1(ijk,1,1,1).lt.min(dens1, dens2)) then
+          rho1(ijk,1,1,1) = min(dens1, dens2)
+       endif
+    enddo
 
-    endif
+    do is=1,numscalar
+       do it = 1,ntime
+          dphi1(:,:,:,it,is) = phi1(:,:,:,is)
+       enddo
+    enddo
 
     ux1=zero; uy1=zero; uz1=zero
 
@@ -161,19 +165,20 @@ contains
     endif
 
     !INIT FOR G AND U=MEAN FLOW + NOISE
-    do k=1,xsize(3)
-       do j=1,xsize(2)
-          do i=1,xsize(1)
-             ux1(i,j,k)=ux1(i,j,k)!+bxx1(j,k)
-             uy1(i,j,k)=uy1(i,j,k)!+bxy1(j,k)
-             uz1(i,j,k)=uz1(i,j,k)!+bxz1(j,k)
-             dux1(i,j,k,1)=ux1(i,j,k)
-             duy1(i,j,k,1)=uy1(i,j,k)
-             duz1(i,j,k,1)=uz1(i,j,k)
-             dux1(i,j,k,2)=dux1(i,j,k,1)
-             duy1(i,j,k,2)=duy1(i,j,k,1)
-             duz1(i,j,k,2)=duz1(i,j,k,1)
-          enddo
+    do it = 1, ntime
+       drho1(:,:,:,it) = rho1(:,:,:,1)
+       dux1(:,:,:,it)=ux1(:,:,:)
+       duy1(:,:,:,it)=uy1(:,:,:)
+       duz1(:,:,:,it)=uz1(:,:,:)
+    enddo
+
+    do it = 2, nrhotime
+       rho1(:,:,:,it) = rho1(:,:,:,1)
+    enddo
+
+    do is = 1, numscalar
+       do it = 1, ntime
+          dphi1(:,:,:,it,is) = phi1(:,:,:,is)
        enddo
     enddo
 

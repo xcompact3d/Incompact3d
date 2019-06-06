@@ -81,7 +81,7 @@ CONTAINS
 
     ELSEIF (itype.EQ.itype_lockexch) THEN
 
-       CALL init_lockexch(ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, dphi1)
+       CALL init_lockexch(rho1, ux1, uy1, uz1, ep1, phi1, drho1, dux1, duy1, duz1, dphi1)
 
     ELSEIF (itype.EQ.itype_tgv) THEN
 
