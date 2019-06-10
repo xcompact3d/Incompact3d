@@ -62,7 +62,7 @@ subroutine parameter(input_i3d)
        itype, iin, re, u1, u2, init_noise, inflow_noise, &
        dt, ifirst, ilast, &
        numscalar, iibm, ilmn, &
-       ilesmod, iscalar, iibm, &
+       ilesmod, iscalar, &
        nclx1, nclxn, ncly1, nclyn, nclz1, nclzn, &
        ivisu, ipost, &
        gravx, gravy, gravz
