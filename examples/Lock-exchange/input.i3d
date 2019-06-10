@@ -99,6 +99,21 @@ nstat = 1             ! Size arrays for statistic collection
 /End
 
 !=================
+&LMN
+!=================
+
+dens1 = 1.0           ! Density of 'hot' stream (y > 0)
+dens2 = 0.998         ! Density of 'cold' stream (y < 0)
+
+Fr = 0.002
+
+prandtl = 0.75        ! Prandtl number
+
+ivarcoeff = .FALSE.   ! Solve variable-coefficient Poisson equation
+
+/End
+
+!=================
 &ScalarParam
 !=================
 

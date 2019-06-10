@@ -299,7 +299,9 @@ CONTAINS
     endif
 
     !! Gravity
-    call momentum_gravity(dux1, duy1, duz1, rho1(:,:,:,1) - one, zero)
+    if ((Fr**2).gt.zero) then
+       call momentum_gravity(dux1, duy1, duz1, rho1(:,:,:,1) - one, one / Fr**2)
+    endif
     do is = 1, numscalar
        call momentum_gravity(dux1, duy1, duz1, phi1(:,:,:,is), ri(is))
     enddo

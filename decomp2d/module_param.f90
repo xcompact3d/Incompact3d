@@ -274,7 +274,7 @@ module param
 
   !! LMN
   logical :: ilmn, ilmn_bound, ilmn_solve_temp
-  real(mytype) :: pressure0, prandtl
+  real(mytype) :: pressure0, prandtl, Fr
   integer :: nrhotime, npress
   logical :: ivarcoeff
 

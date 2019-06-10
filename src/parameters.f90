@@ -79,7 +79,9 @@ subroutine parameter(input_i3d)
 
   NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf,nvol
   NAMELIST /ForceCVs/ xld, xrd, yld, yud
-  NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, massfrac, mol_weight, imultispecies, primary_species
+  NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, &
+       massfrac, mol_weight, imultispecies, primary_species, &
+       Fr
   NAMELIST /CASE/ tgv_twod, pfront
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter start'
@@ -431,6 +433,7 @@ subroutine parameter_defaults()
   npress = 1 !! By default people only need one pressure field
   ilmn_solve_temp = .FALSE.
   imultispecies = .FALSE.
+  Fr = zero
 
   primary_species = -1
 
