@@ -127,7 +127,7 @@ CONTAINS
 
     ELSEIF (itype.EQ.itype_lockexch) THEN
 
-       CALL boundary_conditions_lockexch(phi)
+       CALL boundary_conditions_lockexch(rho, phi)
 
     ELSEIF (itype.EQ.itype_tgv) THEN
 

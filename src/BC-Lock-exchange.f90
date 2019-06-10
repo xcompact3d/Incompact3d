@@ -45,7 +45,7 @@ module lockexch
 
 contains
 
-  subroutine boundary_conditions_lockexch (phi1)
+  subroutine boundary_conditions_lockexch (rho1, phi1)
 
     USE param
     USE variables
@@ -56,6 +56,7 @@ contains
 
     integer  :: i,j,k,is
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
 
     if (xstart(2).eq.1) then
        j = 1
@@ -80,6 +81,12 @@ contains
                       phi1(i,j,k,is) = phi1(i,j+1,k,is)! dc/dn=0
                    endif
                 enddo
+             enddo
+          enddo
+
+          do k = 1, xsize(3)
+             do i = 1, xsize(1)
+                rho1(i, j, k, 1) = rho1(i, j + 1, k, 1) !! drho/dy=0
              enddo
           enddo
        endif
@@ -113,9 +120,9 @@ contains
              x=real(i+xstart(1)-1-1,mytype)*dx-pfront
              do is=1,numscalar
                 phi1(i,j,k,is)=half * (one - tanh((sc(is) / xnu)**(half) * x)) * one ! cp(is)
-                rho1(i,j,k,1) = half * (one - tanh((prandtl / xnu)**half * x)) &
-                     * (dens1 - dens2) + dens2
              enddo
+             rho1(i,j,k,1) = half * (one - tanh((prandtl / xnu)**half * x)) &
+                  * (dens1 - dens2) + dens2
           enddo
        enddo
     enddo
