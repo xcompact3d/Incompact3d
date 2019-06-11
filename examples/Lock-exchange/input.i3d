@@ -49,8 +49,9 @@ ilast = 100000        ! Last iteration
 
 ! Enable modelling tools
 ilesmod=0             ! if 0 then DNS
-numscalar=1           ! If iscalar=0 (no scalar), if iscalar=1 (scalar)
+numscalar=0           ! If iscalar=0 (no scalar), if iscalar=1 (scalar)
 iibm=0                ! Flag for immersed boundary method
+ilmn = .TRUE.         ! Enable low Mach number
 
 ! Enable io
 ivisu=1               ! Store snapshots
@@ -105,7 +106,7 @@ nstat = 1             ! Size arrays for statistic collection
 dens1 = 1.0           ! Density of 'hot' stream (y > 0)
 dens2 = 0.998         ! Density of 'cold' stream (y < 0)
 
-Fr = 0.002
+Fr = 0.04472136
 
 prandtl = 0.75        ! Prandtl number
 
