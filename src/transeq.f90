@@ -390,7 +390,7 @@ CONTAINS
     if (nclxn.eq.2) then
        iend = xsize(1) - 1
     else
-       iend = xsize(2)
+       iend = xsize(1)
     endif
     if ((xstart(2).eq.1).and.(ncly1.eq.0)) then
        jstart = 1
@@ -429,7 +429,7 @@ CONTAINS
     if (nclxn.eq.2) then
        iend = xsize(1) - 1
     else
-       iend = xsize(2)
+       iend = xsize(1)
     endif
     if ((xstart(2).eq.1).and.(ncly1.eq.2)) then
        jstart = 2
