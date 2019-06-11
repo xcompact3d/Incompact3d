@@ -101,8 +101,6 @@ dens2 = 1.0           ! Density of 'cold' stream (y < 0)
 
 prandtl = 0.75        ! Prandtl number
 
-Fr = 0.04472136       ! Froude number
-
 ivarcoeff = .FALSE.   ! Solve variable-coefficient Poisson equation
 
 /End
