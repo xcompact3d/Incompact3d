@@ -113,6 +113,8 @@ prandtl = 0.75        ! Prandtl number
 
 ivarcoeff = .FALSE.   ! Solve variable-coefficient Poisson equation
 
+ibirman_eos = .TRUE.
+
 /End
 
 !=================
