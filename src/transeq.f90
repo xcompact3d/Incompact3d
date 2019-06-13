@@ -658,10 +658,11 @@ CONTAINS
 
     USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
     USE decomp_2d, ONLY : transpose_z_to_y, transpose_y_to_x
-    USE param, ONLY : ntime, nrhotime
+    USE param, ONLY : ntime, nrhotime, ibirman_eos
+    USE param, ONLY : xnu, prandtl
     USE variables
 
-    USE var, ONLY : ta1, di1
+    USE var, ONLY : ta1, tb1, di1
     USE var, ONLY : rho2, uy2, ta2, tb2, di2
     USE var, ONLY : rho3, uz3, ta3, di3
 
@@ -672,6 +673,10 @@ CONTAINS
     REAL(mytype), INTENT(IN), DIMENSION(zsize(1), zsize(2), zsize(3)) :: divu3
 
     REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1
+
+    REAL(mytype) :: invpe
+
+    invpe = xnu / prandtl
 
     !! XXX All variables up to date - no need to transpose
 
@@ -686,6 +691,20 @@ CONTAINS
     CALL derx (drho1(:,:,:,1), rho1(:,:,:,1), &
          di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1)
     drho1(:,:,:,1) = -(ux1(:,:,:) * drho1(:,:,:,1) + ta1(:,:,:))
+
+    IF (ibirman_eos) THEN !! Add a diffusion term
+       CALL derzz (ta3,rho3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
+       CALL transpose_z_to_y(ta3, tb2)
+
+       CALL deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+       ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
+       CALL transpose_y_to_x(ta2, ta1)
+  
+       CALL derxx (tb1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+       ta1(:,:,:) = ta1(:,:,:) + tb1(:,:,:)
+
+       drho1(:,:,:,1) = drho1(:,:,:,1) + invpe * ta1(:,:,:)
+    ENDIF
 
   ENDSUBROUTINE continuity_rhs_eq
 
