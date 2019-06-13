@@ -283,6 +283,8 @@ module param
   real(mytype), allocatable, dimension(:) :: mol_weight
   integer :: primary_species
 
+  logical :: ibirman_eos
+
   !! Case-specific variables
   logical :: tgv_twod
 

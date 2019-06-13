@@ -1118,6 +1118,7 @@ SUBROUTINE calc_divu_constraint(divu3, rho1, phi1)
   USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
   USE decomp_2d, ONLY : transpose_x_to_y, transpose_y_to_z
   USE param, ONLY : nrhotime, zero, ilmn, pressure0, imultispecies, massfrac, mol_weight
+  USE param, ONLY : ibirman_eos
   USE param, ONLY : xnu, prandtl
   USE param, ONLY : one
   USE variables
@@ -1134,7 +1135,7 @@ SUBROUTINE calc_divu_constraint(divu3, rho1, phi1)
   REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
   REAL(mytype), INTENT(OUT), DIMENSION(zsize(1), zsize(2), zsize(3)) :: divu3
 
-  IF (ilmn) THEN
+  IF (ilmn.and.(.not.ibirman_eos)) THEN
      !!------------------------------------------------------------------------------
      !! X-pencil
 
@@ -1248,6 +1249,7 @@ SUBROUTINE extrapol_drhodt(drhodt1_next, rho1, drho1)
   USE decomp_2d, ONLY : mytype, xsize, nrank
   USE param, ONLY : ntime, nrhotime, itime, itimescheme, itr, dt, gdt, irestart
   USE param, ONLY : half, three, four
+  USE param, ONLY : ibirman_eos
 
   IMPLICIT NONE
 
@@ -1290,7 +1292,50 @@ SUBROUTINE extrapol_drhodt(drhodt1_next, rho1, drho1)
      ENDIF
   ENDIF
 
+  IF (ibirman_eos) THEN
+     CALL birman_drhodt_corr(drhodt1_next, rho1)
+  ENDIF
+
 ENDSUBROUTINE extrapol_drhodt
+
+SUBROUTINE birman_drhodt_corr(drhodt1_next, rho1)
+
+  USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
+  USE decomp_2d, ONLY : transpose_x_to_y, transpose_y_to_z, transpose_z_to_y, transpose_y_to_x
+  USE variables, ONLY : derxx, deryy, derzz
+  USE param, ONLY : nrhotime
+  USE param, ONLY : xnu, prandtl
+  
+  USE var, ONLY : ta1, tb1, di1, sx, sfxp, ssxp, swxp
+  USE var, ONLY : rho2, ta2, tb2, di2, sy, sfyp, ssyp, swyp
+  USE var, ONLY : rho3, ta3, di3, sz, sfzp, sszp, swzp
+
+  IMPLICIT NONE
+
+  REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: drhodt1_next
+
+  REAL(mytype) :: invpe
+
+  invpe = xnu / prandtl
+  
+  CALL transpose_x_to_y(rho1(:,:,:,1), rho2)
+  CALL transpose_y_to_z(rho2, rho3)
+
+  !! Diffusion term
+  CALL derzz (ta3,rho3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
+  CALL transpose_z_to_y(ta3, tb2)
+
+  CALL deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+  ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
+  CALL transpose_y_to_x(ta2, tb1)
+  
+  CALL derxx (ta1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+  ta1(:,:,:) = ta1(:,:,:) + tb1(:,:,:)
+
+  drhodt1_next(:,:,:) = drhodt1_next(:,:,:) - invpe * ta1(:,:,:)
+
+ENDSUBROUTINE birman_drhodt_corr
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!
