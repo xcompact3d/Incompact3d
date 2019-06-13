@@ -1306,7 +1306,7 @@ SUBROUTINE birman_drhodt_corr(drhodt1_next, rho1)
   USE param, ONLY : nrhotime
   USE param, ONLY : xnu, prandtl
   
-  USE var, ONLY : ta1, tb1, di1, sx, sfxp, ssxp, swxp
+  USE var, ONLY : td1, te1, di1, sx, sfxp, ssxp, swxp
   USE var, ONLY : rho2, ta2, tb2, di2, sy, sfyp, ssyp, swyp
   USE var, ONLY : rho3, ta3, di3, sz, sfzp, sszp, swzp
 
@@ -1328,12 +1328,12 @@ SUBROUTINE birman_drhodt_corr(drhodt1_next, rho1)
 
   CALL deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
   ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
-  CALL transpose_y_to_x(ta2, tb1)
+  CALL transpose_y_to_x(ta2, te1)
   
-  CALL derxx (ta1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
-  ta1(:,:,:) = ta1(:,:,:) + tb1(:,:,:)
+  CALL derxx (td1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+  td1(:,:,:) = td1(:,:,:) + te1(:,:,:)
 
-  drhodt1_next(:,:,:) = drhodt1_next(:,:,:) - invpe * ta1(:,:,:)
+  drhodt1_next(:,:,:) = drhodt1_next(:,:,:) - invpe * td1(:,:,:)
 
 ENDSUBROUTINE birman_drhodt_corr
 
