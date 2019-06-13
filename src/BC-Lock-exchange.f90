@@ -65,6 +65,12 @@ contains
           byx1(:,:) = zero
           byy1(:,:) = zero
           byz1(:,:) = zero
+
+          do k = 1, xsize(3)
+             do i = 1, xsize(1)
+                rho1(i, j, k, 1) = rho1(i, j + 1, k, 1) !! drho/dy=0
+             enddo
+          enddo
        endif
 
        if (nclyS1.eq.2) then !! Set scalar BCs
@@ -81,12 +87,6 @@ contains
                       phi1(i,j,k,is) = phi1(i,j+1,k,is)! dc/dn=0
                    endif
                 enddo
-             enddo
-          enddo
-
-          do k = 1, xsize(3)
-             do i = 1, xsize(1)
-                rho1(i, j, k, 1) = rho1(i, j + 1, k, 1) !! drho/dy=0
              enddo
           enddo
        endif
