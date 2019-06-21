@@ -58,12 +58,12 @@ module var
 
   !arrays for statistic collection
   real(mytype), save, allocatable, dimension(:,:,:) :: umean,vmean,wmean,pmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean  
+  real(mytype), save, allocatable, dimension(:,:,:,:) :: phimean,phiphimean,uphimean,vphimean,wphimean
   real(mytype), save, allocatable, dimension(:,:,:) :: tik1,tik2,tak1,tak2
   real(mytype), save, allocatable, dimension(:,:,:) :: u1sum_tik,u1sum_tak
   real(mytype), save, allocatable, dimension(:,:,:) :: u1sum,v1sum,w1sum,u2sum,v2sum,w2sum
   real(mytype), save, allocatable, dimension(:,:,:) :: u3sum,v3sum,w3sum,u4sum,v4sum,w4sum
   real(mytype), save, allocatable, dimension(:,:,:) :: uvsum,uwsum,vwsum,disssum,presum,tsum
-  real(mytype), save, allocatable, dimension(:,:,:,:) :: psum,ppsum,upsum,vpsum,wpsum
 
   !arrays for extra statistics collection
   real(mytype), save, allocatable, dimension(:,:,:) :: dudxsum,utmapsum
@@ -203,6 +203,8 @@ contains
     allocate (uvmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
     allocate (uwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
     allocate (vwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    allocate (phimean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
+    allocate (phiphimean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
     allocate (tmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
 
 

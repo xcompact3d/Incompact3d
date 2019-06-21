@@ -67,12 +67,10 @@ PROGRAM incompact3d
 
   call schemes()
 
-
   !if (nrank==0) call stabiltemp()
 
   call decomp_2d_poisson_init()
   call decomp_info_init(nxm,nym,nzm,phG)
-
 
   if (ilesmod.ne.0) then
      call filter(0.45_mytype)
@@ -81,6 +79,10 @@ PROGRAM incompact3d
 
   if (irestart==0) then
      call init(rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,dphi1)
+     pp3(:,:,:,1) = zero
+     px1(:,:,:) = zero
+     py1(:,:,:) = zero
+     pz1(:,:,:) = zero
      CALL visu(rho1, ux1, uy1, uz1, pp3(:,:,:,1),phi1, 0)
   else
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,0)
@@ -131,12 +133,9 @@ PROGRAM incompact3d
         !!-------------------------------------------------------------------------
         !! Time integrate transport equations
         !!-------------------------------------------------------------------------
-        if (ilmn) then
-           !! XXX N.B. from this point, X-pencil velocity arrays contain momentum.
-           call primary_to_conserved(rho1, ux1)
-           call primary_to_conserved(rho1, uy1)
-           call primary_to_conserved(rho1, uz1)
-        endif
+
+        !! XXX N.B. from this point, X-pencil velocity arrays contain momentum.
+        call velocity_to_momentum(rho1, ux1, uy1, uz1)
 
         call intt(rho1,ux1,uy1,uz1,phi1,drho1,dux1,duy1,duz1,dphi1)
         call pre_correc(ux1,uy1,uz1,ep1)
@@ -157,12 +156,9 @@ PROGRAM incompact3d
         call solve_poisson(pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
         call corpg(ux1,uy1,uz1,px1,py1,pz1)
 
-        if (ilmn) then
-           !! XXX N.B. from this point, X-pencil velocity arrays contain velocity.
-           call conserved_to_primary(rho1, ux1)
-           call conserved_to_primary(rho1, uy1)
-           call conserved_to_primary(rho1, uz1)
-        endif
+        call momentum_to_velocity(rho1, ux1, uy1, uz1)
+        !! XXX N.B. from this point, X-pencil velocity arrays contain velocity.
+
         !!-------------------------------------------------------------------------
         !! End Poisson solver and velocity correction
         !!-------------------------------------------------------------------------
@@ -299,9 +295,7 @@ SUBROUTINE solve_poisson(pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, di
   IF (ilmn.AND.ivarcoeff) THEN
      !! Variable-coefficient Poisson solver works on div(u), not div(rho u)
      !! rho u -> u
-     CALL conserved_to_primary(rho1, ux1)
-     CALL conserved_to_primary(rho1, uy1)
-     CALL conserved_to_primary(rho1, uz1)
+     CALL momentum_to_velocity(rho1, ux1, uy1, uz1)
   ENDIF
 
   CALL divergence(pp3(:,:,:,1),rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
@@ -342,9 +336,7 @@ SUBROUTINE solve_poisson(pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, di
   IF (ilmn.AND.ivarcoeff) THEN
      !! Variable-coefficient Poisson solver works on div(u), not div(rho u)
      !! u -> rho u
-     CALL primary_to_conserved(rho1, ux1)
-     CALL primary_to_conserved(rho1, uy1)
-     CALL primary_to_conserved(rho1, uz1)
+     CALL velocity_to_momentum(rho1, ux1, uy1, uz1)
   ENDIF
 
 END SUBROUTINE solve_poisson
@@ -443,6 +435,7 @@ SUBROUTINE intt(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
   USE param, ONLY : zero, one
   USE param, ONLY : ntime, nrhotime, ilmn, iscalar, ilmn_solve_temp
   USE param, ONLY : primary_species, massfrac
+  use param, only : scalar_lbound, scalar_ubound
   USE variables, ONLY : numscalar
   USE var, ONLY : ta1, tb1
 
@@ -480,16 +473,14 @@ SUBROUTINE intt(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
         IF (is.NE.primary_species) THEN
            CALL int_time(phi1(:,:,:,is), dphi1(:,:,:,:,is))
 
-           IF (massfrac(is)) THEN
-              DO k = 1, xsize(3)
-                 DO j = 1, xsize(2)
-                    DO i = 1, xsize(1)
-                       phi1(i,j,k,is) = max(phi1(i,j,k,is),zero)
-                       phi1(i,j,k,is) = min(phi1(i,j,k,is),one)
-                    ENDDO
+           DO k = 1, xsize(3)
+              DO j = 1, xsize(2)
+                 DO i = 1, xsize(1)
+                    phi1(i,j,k,is) = max(phi1(i,j,k,is),scalar_lbound(is))
+                    phi1(i,j,k,is) = min(phi1(i,j,k,is),scalar_ubound(is))
                  ENDDO
               ENDDO
-           ENDIF
+           ENDDO
         ENDIF
      ENDDO
 

@@ -129,3 +129,6 @@ iwall = 0             ! Enable wall modeling
 SmagWallDamp = 1      ! Smagorinsky damping function for ABL if 1
 
 /End
+
+&CASE
+/End

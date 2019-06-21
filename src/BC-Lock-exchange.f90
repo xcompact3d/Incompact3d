@@ -52,34 +52,38 @@ contains
     USE decomp_2d
     USE MPI
 
-    USE var, only : phi2
-
     implicit none
 
     integer  :: i,j,k,is
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
-    do is=1, numscalar
-       if (uset(is) .eq. zero) cycle
-       call transpose_x_to_y(phi1(:,:,:,is),phi2(:,:,:,is))
-
+    if (xstart(2).eq.1) then
        j = 1
-       do k=1,ysize(3)
-          do i=1,ysize(1)
+       
+       if (ncly1.eq.2) then !! Set velocity BCs
+          byx1(:,:) = zero
+          byy1(:,:) = zero
+          byz1(:,:) = zero
+       endif
 
-             !phi2(i,yend(2),k)= phi2(i,yend(2)-1,k) / (1.+uset(is)*dy*sc(is)/xnu) !Robin on top BC
+       if (nclyS1.eq.2) then !! Set scalar BCs
+          do is=1, numscalar
+             do k=1,xsize(3)
+                do i=1,xsize(1)
+                   !phi2(i,yend(2),k)= phi2(i,yend(2)-1,k) / (1.+uset(is)*dy*sc(is)/xnu) !Robin on top BC
 
-             if ( phi2(i,j+1,k,is) .gt. phi2(i,j,k,is) ) then
-
-                phi2(i,j,k,is)= phi2(i,j,k,is) + ((uset(is)*gdt(itr))/dy)*(phi2(i,j+1,k,is)-phi2(i,j,k,is)) !Deposit on bottom BC
-             else
-                phi2(i,j,k,is)= phi2(i,j+1,k,is)! dc/dn=0
-             endif
-
+                   if ((uset(is).ne.zero).and.&
+                        (phi1(i,j+1,k,is).gt.phi1(i,j,k,is))) then
+                      phi1(i,j,k,is) = phi1(i,j,k,is) + &
+                           ((uset(is)*gdt(itr))/dy)*(phi1(i,j+1,k,is)-phi1(i,j,k,is)) !Deposit on bottom BC
+                   else
+                      phi1(i,j,k,is) = phi1(i,j+1,k,is)! dc/dn=0
+                   endif
+                enddo
+             enddo
           enddo
-       enddo
-       call transpose_y_to_x(phi2(:,:,:,is),phi1(:,:,:,is))
-    enddo
+       endif
+    endif
 
     return
   end subroutine boundary_conditions_lockexch

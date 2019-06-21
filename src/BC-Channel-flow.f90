@@ -305,6 +305,7 @@ contains
     USE decomp_2d
     USE decomp_2d_io
     USE var, only : umean,vmean,wmean,pmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
+    USE var, only : phimean, phiphimean
     USE var, only : ta1, pp1, di1
     USE var, only : ppi3, dip3
     USE var, only : pp2, ppi2, dip2
@@ -316,6 +317,8 @@ contains
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
     character(len=30) :: filename
+
+    integer :: is
 
     if (itime.ge.initstat) then
        !umean=ux1
@@ -374,6 +377,15 @@ contains
        call fine_to_coarseS(1,ta1,tmean)
        vwmean(:,:,:)=vwmean(:,:,:)+tmean(:,:,:)
 
+       do is = 1, numscalar
+          call fine_to_coarseS(1,phi1(:,:,:,is),tmean)
+          phimean(:,:,:,is) = phimean(:,:,:,is) + tmean(:,:,:)
+
+          ta1(:,:,:) = phi1(:,:,:,is) * phi1(:,:,:,is)
+          call fine_to_coarseS(1,ta1,tmean)
+          phiphimean(:,:,:,is) = phiphimean(:,:,:,is) + tmean(:,:,:)
+       enddo
+
        if (mod(itime,icheckpoint)==0) then
           if (nrank==0) print *,'===========================================================<<<<<'
           if (nrank==0) print *,'Writing stat file',itime
@@ -396,8 +408,14 @@ contains
           write(filename,"('uwmean.dat',I7.7)") itime
           call decomp_2d_write_one(1,uwmean,filename,1)
           write(filename,"('vwmean.dat',I7.7)") itime
-          call decomp_2d_write_one(1,vwmean,filename,1)  
-          if (nrank==0) print *,'write stat done!'
+          call decomp_2d_write_one(1,vwmean,filename,1)
+          do is = 1, numscalar
+             write(filename, "('phimean', I2.2, '.dat', I7.7)") is, itime
+             call decomp_2d_write_one(1, phimean(:,:,:,is), filename, 1)
+             write(filename, "('phiphimean', I2.2, '.dat', I7.7)") is, itime
+             call decomp_2d_write_one(1, phiphimean(:,:,:,is), filename, 1)
+          enddo
+          if (nrank==0) print *,'write stat done! BOOO'
           if (nrank==0) print *,'===========================================================<<<<<'
           if (nrank==0) then
              write(filename,"('umean.dat',I7.7)") itime-icheckpoint
@@ -420,6 +438,12 @@ contains
              call system ("rm " //filename)
              write(filename,"('vwmean.dat',I7.7)") itime-icheckpoint
              call system ("rm " //filename)
+             do is = 1, numscalar
+                write(filename, "('phimean', I2.2, '.dat', I7.7)") is, itime-icheckpoint
+                call system ("rm " //filename)
+                write(filename, "('phiphimean', I2.2, '.dat', I7.7)") is, itime-icheckpoint
+                call system ("rm " //filename)
+             enddo
           endif
        endif
 
