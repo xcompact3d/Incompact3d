@@ -75,10 +75,11 @@ end subroutine body
 !*******************************************************************
 SUBROUTINE geomcomplex(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
 
-  USE param, ONLY : itype, itype_cyl, itype_hill
+  USE param, ONLY : itype, itype_cyl, itype_hill, itype_channel
   USE decomp_2d, ONLY : mytype
   USE cyl, ONLY : geomcomplex_cyl
   USE hill, ONLY : geomcomplex_hill
+  USE channel, ONLY : geomcomplex_channel
 
   IMPLICIT NONE
 
@@ -95,6 +96,10 @@ SUBROUTINE geomcomplex(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
   ELSEIF (itype.EQ.itype_hill) THEN
 
      CALL geomcomplex_hill(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
+
+  ELSEIF (itype.EQ.itype_channel) THEN
+
+     CALL geomcomplex_channel(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, yp, remp)
 
   ENDIF
 
