@@ -453,7 +453,7 @@ contains
     call alloc_y(rho2)
     call alloc_z(rho3)
     allocate(drho1(xsize(1),xsize(2),xsize(3),ntime))
-
+    rho1(:,:,:,:) = one
     call alloc_z(divu3, opt_global=.true.) !global indices
 
     ! !TRIPPING PARAMES LOST HERE
