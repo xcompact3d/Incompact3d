@@ -157,13 +157,14 @@ CONTAINS
 
   END SUBROUTINE boundary_conditions
 
-  SUBROUTINE postprocessing(ux,uy,uz,pp,phi,ep)
+  SUBROUTINE postprocessing(rho,ux,uy,uz,pp,phi,ep)
     
     USE var, ONLY : nzmsize
     USE param, ONLY : npress
 
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),numscalar) :: phi
+    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),nrhotime) :: rho
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)) :: ep
     real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp
 
@@ -173,7 +174,7 @@ CONTAINS
 
     ELSEIF (itype.EQ.itype_lockexch) THEN
 
-       CALL postprocessing_lockexch(ux, uy, uz, phi, ep)
+       CALL postprocessing_lockexch(rho, ux, uy, uz, phi, ep)
 
     ELSEIF (itype.EQ.itype_tgv) THEN
 
