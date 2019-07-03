@@ -116,7 +116,7 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1,drho1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
 
-    real(mytype) :: um,x
+    real(mytype) :: um,x,ek,ep,ekg,epg
     integer :: k,j,i,ijk,ii,is,it,code
     
     do k=1,xsize(3)
@@ -174,6 +174,64 @@ contains
              enddo
           enddo
        enddo
+       
+       ek = zero
+       do k = 1, xsize(3)
+          do j = 1, xsize(2)
+             do i = 1, xsize(1)
+                ek = ek + half * rho1(i, j, k, 1) &
+                     * (ux1(i, j, k)**2 + uy1(i, j, k)**2 + uz1(i, j, k)**2)
+             enddo
+          enddo
+       enddo
+       ep = zero
+       do is = 1, numscalar
+          do k = 1, xsize(3)
+             do j = 1, xsize(2)
+                do i = 1, xsize(1)
+                   ep = ep - phi1(i, j, k, is) * ri(is) * gravy * (j - 1) * dy
+                enddo
+             enddo
+          enddo
+       enddo
+
+       if (ilmn.and.((Fr**2).gt.zero)) then
+          do k = 1, xsize(3)
+             do j = 1, xsize(2)
+                do i = 1, xsize(1)
+                   ep = ep - (rho1(i, j, k, 1) - min(dens1, dens2)) * (gravy / Fr**2) * (j - 1) * dy
+                enddo
+             enddo
+          enddo
+       endif
+
+       call MPI_ALLREDUCE(ek,ekg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(ep,epg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,code)
+
+       if ((epg.ne.zero).and.(ekg.ne.zero)) then
+          um = ekg / epg
+          um = init_noise / um
+          um = sqrt(um)
+
+          ux1(:,:,:) = um * ux1(:,:,:)
+          uy1(:,:,:) = um * uy1(:,:,:)
+          uz1(:,:,:) = um * uz1(:,:,:)
+       
+          ek = zero
+          do k = 1, xsize(3)
+             do j = 1, xsize(2)
+                do i = 1, xsize(1)
+                   ek = ek + half * rho1(i, j, k, 1) &
+                        * (ux1(i, j, k)**2 + uy1(i, j, k)**2 + uz1(i, j, k)**2)
+                enddo
+             enddo
+          enddo
+          call MPI_ALLREDUCE(ek,ekg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,code)
+          
+          if (nrank.eq.0) then
+             print *, "Ek / Ep: ", ekg / epg, ekg, epg
+          endif
+       endif
     endif
 
     !INIT FOR G AND U=MEAN FLOW + NOISE
