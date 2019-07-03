@@ -497,7 +497,7 @@ contains
 
     do ijk=1,xsize(1)*xsize(2)*xsize(3)
        xvol=real(vol1(ijk,1,1),8)
-       ek = ek + half * xvol * (ux1(ijk,1,1)**2+uy1(ijk,1,1)**2+uz1(ijk,1,1)**2)
+       ek = ek + half * xvol * rho1(ijk,1,1,1) * (ux1(ijk,1,1)**2+uy1(ijk,1,1)**2+uz1(ijk,1,1)**2)
        dek = dek + xvol * diss1(ijk,1,1)
     enddo
 
