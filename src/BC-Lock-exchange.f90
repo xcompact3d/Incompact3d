@@ -472,12 +472,12 @@ contains
          sfzp, sszp, swzp
 
     use var, only : di1
-    use var, only : rho2, phi2, di2
-    use var, only : rho3, phi3, di3
+    use var, only : rho2, ux2, uy2, uz2, phi2, di2
+    use var, only : rho3, ux3, uy3, uz3, phi3, di3
     
     use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1
     use var, only : ta2,tb2,tc2,td2,te2,tf2
-    use var, only : ta3,tb3,tc3,td3,te3,tf3
+    use var, only : ta3,tb3,tc3
 
     implicit none
 
@@ -497,6 +497,8 @@ contains
     integer :: ijk,i,j,k,l,m,is,code
     character(len=30) :: filename
 
+    real(mytype) :: y
+
     ek=zero;ek1=zero;dek=zero;dek1=zero;ep=zero;ep1=zero;dep=zero;dep1=zero;diss1=zero
 
     !x-derivatives
@@ -504,19 +506,19 @@ contains
     call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
     call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
     !y-derivatives
-    call transpose_x_to_y(ux1,td2)
-    call transpose_x_to_y(uy1,te2)
-    call transpose_x_to_y(uz1,tf2)
-    call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-    call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-    call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call transpose_x_to_y(ux1,ux2)
+    call transpose_x_to_y(uy1,uy2)
+    call transpose_x_to_y(uz1,uz2)
+    call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+    call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
     !!z-derivatives
-    call transpose_y_to_z(td2,td3)
-    call transpose_y_to_z(te2,te3)
-    call transpose_y_to_z(tf2,tf3)
-    call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+    call transpose_y_to_z(ux2,ux3)
+    call transpose_y_to_z(uy2,uy3)
+    call transpose_y_to_z(uz2,uz3)
+    call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+    call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+    call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
     !!all back to x-pencils
     call transpose_z_to_y(ta3,td2)
     call transpose_z_to_y(tb3,te2)
@@ -545,8 +547,7 @@ contains
              do m=1,3
                 do l=1,3
                    diss1(i,j,k) = diss1(i,j,k) &
-                        + (two * xnu) * rho1(i,j,k,1) &
-                        * (half * (A(l,m,i,j,k) + A(m,l,i,j,k)))**2
+                        + (two * xnu) * (half * (A(l,m,i,j,k) + A(m,l,i,j,k)))**2
                 enddo
              enddo
           enddo
@@ -582,16 +583,15 @@ contains
 
        call transpose_z_to_y(dphizz3,dphizz2)
 
-       do ijk=1,ysize(1)*ysize(2)*ysize(3)
-          ddphi2(ijk,1,1)=dphixx2(ijk,1,1)+dphiyy2(ijk,1,1)+dphizz2(ijk,1,1)
-       enddo
+       ddphi2(:,:,:)=dphixx2(:,:,:)+dphiyy2(:,:,:)+dphizz2(:,:,:)
 
        do k=1,ysize(3)
           do j=1,ysize(2)
+             y = (j + ystart(2) - 2) * dy
              do i=1,ysize(1)
                 xvol=real(vol2(i,j,k),8)
-                ep=ep + xvol * (phi2(i,j,k,is)*(j-1)*dy)
-                dep=dep - xvol * (ddphi2(i,j,k)*xnu/sc(is)+uset(is)*dphiy2(i,j,k))*(j-1)*dy
+                ep = ep - xvol * ri(is) * phi2(i,j,k,is) * (gravy * y)
+                dep = dep - xvol * (ddphi2(i,j,k)*xnu/sc(is)+uset(is)*dphiy2(i,j,k)) * (gravy * y)
              enddo
           enddo
        enddo
@@ -610,12 +610,13 @@ contains
 
        do k = 1, ysize(3)
           do j = 1, ysize(2)
+             y = (j + ystart(2) - 2) * dy
              do i = 1, ysize(1)
                 xvol = real(vol2(i, j, k), 8)
-                ep = ep - xvol * (one / Fr**2) * rho2(i, j, k) * (gravy * (j - 1) * dy)
+                ep = ep - xvol * (one / Fr**2) * rho2(i, j, k) * (gravy * y)
                 dep = dep - xvol * ((xnu / prandtl / (Fr**2)) &
                      * (ta2(i, j, k) + tb2(i, j, k) + tc2(i, j, k))) &
-                     * (gravy * (j - 1) * dy)
+                     * (gravy * y)
              enddo
           enddo
        enddo
