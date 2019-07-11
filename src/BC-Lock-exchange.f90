@@ -116,7 +116,7 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1,drho1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
 
-    real(mytype) :: um,x,ek,ep,ekg,epg
+    real(mytype) :: um,x,y,ek,ep,ekg,epg
     integer :: k,j,i,ijk,ii,is,it,code
     
     do k=1,xsize(3)
@@ -187,9 +187,10 @@ contains
        ep = zero
        do is = 1, numscalar
           do k = 1, xsize(3)
+             y = (j + xstart(2) - 2) * dy
              do j = 1, xsize(2)
                 do i = 1, xsize(1)
-                   ep = ep - phi1(i, j, k, is) * ri(is) * gravy * (j - 1) * dy
+                   ep = ep - phi1(i, j, k, is) * ri(is) * (gravy * y)
                 enddo
              enddo
           enddo
@@ -198,8 +199,9 @@ contains
        if (ilmn.and.((Fr**2).gt.zero)) then
           do k = 1, xsize(3)
              do j = 1, xsize(2)
+                y = (j + xstart(2) - 2) * dy
                 do i = 1, xsize(1)
-                   ep = ep - (rho1(i, j, k, 1) - min(dens1, dens2)) * (gravy / Fr**2) * (j - 1) * dy
+                   ep = ep - (rho1(i, j, k, 1) - min(dens1, dens2)) * (gravy * y) / Fr**2
                 enddo
              enddo
           enddo
@@ -591,7 +593,9 @@ contains
              do i=1,ysize(1)
                 xvol=real(vol2(i,j,k),8)
                 ep = ep - xvol * ri(is) * phi2(i,j,k,is) * (gravy * y)
-                dep = dep - xvol * (ddphi2(i,j,k)*xnu/sc(is)+uset(is)*dphiy2(i,j,k)) * (gravy * y)
+                dep = dep &
+                     - xvol * ri(is) * (ddphi2(i,j,k)*xnu/sc(is)+uset(is)*dphiy2(i,j,k)) &
+                     * (gravy * y)
              enddo
           enddo
        enddo
