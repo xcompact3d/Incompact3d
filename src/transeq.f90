@@ -438,15 +438,15 @@ CONTAINS
     else
        iend = xsize(1)
     endif
-    if ((xstart(2).eq.1).and.(ncly1.eq.0)) then
-       jstart = 1
-    else
+    if ((xstart(2).eq.1).and.(ncly1.ne.0)) then
        jstart = 2
-    endif
-    if ((xend(2).eq.ny).and.(nclyn.eq.0)) then
-       jend = xsize(2)
     else
+       jstart = 1
+    endif
+    if ((xend(2).eq.ny).and.(nclyn.ne.0)) then
        jend = xsize(2) - 1
+    else
+       jend = xsize(2)
     endif
     if ((xstart(3).eq.1).and.(nclz1.eq.2)) then
        kstart = 2
@@ -487,15 +487,15 @@ CONTAINS
     else
        jend = xsize(2)
     endif
-    if ((xstart(3).eq.1).and.(nclz1.eq.0)) then
-       kstart = 1
-    else
+    if ((xstart(3).eq.1).and.(nclz1.ne.0)) then
        kstart = 2
-    endif
-    if ((xend(3).eq.nz).and.(nclzn.eq.0)) then
-       kend = xsize(3)
     else
+       kstart = 1
+    endif
+    if ((xend(3).eq.nz).and.(nclzn.ne.0)) then
        kend = xsize(3) - 1
+    else
+       kend = xsize(3)
     endif
     do k = kstart, kend
        do j = jstart, jend
