@@ -12,10 +12,8 @@ PROGRAM incompact3d
   USE derivZ
   USE case
   USE simulation_stats
-
-#ifdef FORCES
   USE forces
-#endif
+
   implicit none
 
   integer :: ierr
@@ -94,10 +92,10 @@ PROGRAM incompact3d
      call body(ux1,uy1,uz1,ep1,0)
   endif
 
-#ifdef FORCES
-  call init_forces()
-  if (irestart==1) call restart_forces(0)
-#endif
+  if (iforces) then
+     call init_forces()
+     if (irestart==1) call restart_forces(0)
+  endif
 
   call test_speed_min_max(ux1,uy1,uz1)
   if (iscalar==1) call test_scalar_min_max(phi1)
@@ -170,13 +168,14 @@ PROGRAM incompact3d
         endif
 
      enddo !! End sub timesteps
-#ifdef FORCES
-     call force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
-          ux2,uy2,ta2,tb2,tc2,td2,di2)
-     if (mod(itime,icheckpoint).eq.0) then
-        call restart_forces(1)
+
+     if(iforces) then
+        call force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
+             ux2,uy2,ta2,tb2,tc2,td2,di2)
+        if (mod(itime,icheckpoint).eq.0) then
+           call restart_forces(1)
+        endif
      endif
-#endif
 
      !!----------------------------------------------------------------------------
      !! Post-processing / IO
