@@ -45,6 +45,8 @@ MODULE case
   USE jet
   USE lockexch
 
+  USE var, ONLY : nzmsize
+
   IMPLICIT NONE
 
   PRIVATE ! All functions/subroutines private by default
@@ -52,14 +54,23 @@ MODULE case
 
 CONTAINS
 
-  SUBROUTINE init (rho1, ux1, uy1, uz1, ep1, phi1, drho1, dux1, duy1, duz1, dphi1)
+  SUBROUTINE init (rho1, ux1, uy1, uz1, ep1, phi1, drho1, dux1, duy1, duz1, dphi1, &
+       pp3, px1, py1, pz1)
 
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1,drho1
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
+    REAL(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
+    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)) :: px1, py1, pz1
 
+    !! Zero out the pressure field
+    pp3(:,:,:,1) = zero
+    px1(:,:,:) = zero
+    py1(:,:,:) = zero
+    pz1(:,:,:) = zero
+    
     !! Default density and pressure0 to one
     pressure0 = one
     rho1(:,:,:,:) = one
