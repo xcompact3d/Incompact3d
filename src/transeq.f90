@@ -1,9 +1,53 @@
 MODULE transeq
 
   PRIVATE
-  PUBLIC :: momentum_rhs_eq, continuity_rhs_eq, scalar, temperature_rhs_eq, scalar_transport_eq
+  PUBLIC :: calculate_transeq_rhs
 
 CONTAINS
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!  SUBROUTINE: calculate_transeq_rhs
+  !!      AUTHOR: Paul Bartholomew
+  !! DESCRIPTION: Calculates the right hand sides of all transport
+  !!              equations - momentum, scalar transport, etc.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  SUBROUTINE calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
+
+    USE decomp_2d, ONLY : mytype, xsize, zsize
+    USE variables, ONLY : numscalar
+    USE param, ONLY : ntime, ilmn, nrhotime, ilmn_solve_temp
+    
+    IMPLICIT NONE
+    
+    !! Inputs
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime), INTENT(IN) :: rho1
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar), INTENT(IN) :: phi1
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ep1
+    REAL(mytype), DIMENSION(zsize(1), zsize(2), zsize(3)), INTENT(IN) :: divu3
+    
+    !! Outputs
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime, numscalar) :: dphi1
+    
+    !! Momentum equations
+    CALL momentum_rhs_eq(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
+    
+    !! Scalar equations
+    !! XXX Not yet LMN!!!
+    CALL scalar(dphi1, rho1, ux1, phi1)
+
+    !! Other (LMN, ...)
+    IF (ilmn) THEN
+       IF (ilmn_solve_temp) THEN
+          CALL temperature_rhs_eq(drho1, rho1, ux1, phi1)
+       ELSE
+          CALL continuity_rhs_eq(drho1, rho1, ux1, divu3)
+       ENDIF
+    ENDIF
+    
+  END SUBROUTINE calculate_transeq_rhs
 
   subroutine momentum_rhs_eq(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
