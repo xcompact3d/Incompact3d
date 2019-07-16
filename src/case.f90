@@ -97,7 +97,7 @@ CONTAINS
 
     ELSEIF (itype.EQ.itype_cyl) THEN
 
-       CALL init_cyl (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, dphi1)
+       CALL init_cyl (ux1, uy1, uz1, phi1, dux1, duy1, duz1, dphi1)
 
     ELSEIF (itype.EQ.itype_dbg) THEN
 
@@ -189,7 +189,7 @@ CONTAINS
 
     ELSEIF (itype.EQ.itype_cyl) THEN
 
-       CALL postprocessing_cyl (ux, uy, uz, phi, ep)
+       CALL postprocessing_cyl (ux, uy, uz)
 
     ELSEIF (itype.EQ.itype_dbg) THEN
 

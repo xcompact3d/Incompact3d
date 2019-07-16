@@ -91,7 +91,7 @@ SUBROUTINE geomcomplex(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
 
   IF (itype.EQ.itype_cyl) THEN
 
-     CALL geomcomplex_cyl(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
+     CALL geomcomplex_cyl(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, remp)
 
   ELSEIF (itype.EQ.itype_hill) THEN
 

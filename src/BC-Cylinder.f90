@@ -32,20 +32,20 @@ module cyl
 
 contains
 
-  subroutine geomcomplex_cyl(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
+  subroutine geomcomplex_cyl(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,remp)
 
     use decomp_2d, only : mytype
-    use param, only : zero, one, two
+    use param, only : one, two
     use ibm
 
     implicit none
 
+    integer                    :: nxi,nxf,ny,nyi,nyf,nzi,nzf
     real(mytype),dimension(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
     real(mytype),dimension(ny) :: yp
-    integer                    :: nxi,nxf,ny,nyi,nyf,nzi,nzf
-    real(mytype)               :: dx,dz
+    real(mytype)               :: dx
     real(mytype)               :: remp
-    integer                    :: i,ic,j,k
+    integer                    :: i,j,k
     real(mytype)               :: xm,ym,r
     real(mytype)               :: zeromach
 
@@ -81,16 +81,16 @@ contains
 
     implicit none
 
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,ep1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
-    call inflow (ux,uy,uz,phi)
+    call inflow (phi)
     call outflow (ux,uy,uz,phi)
 
     return
   end subroutine boundary_conditions_cyl
   !********************************************************************
-  subroutine inflow (ux,uy,uz,phi)
+  subroutine inflow (phi)
 
     USE param
     USE variables
@@ -99,7 +99,6 @@ contains
     implicit none
 
     integer  :: j,k,is
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
     call random_number(bxo)
@@ -135,10 +134,10 @@ contains
 
     implicit none
 
-    integer :: i,j,k,is,code
+    integer :: j,k,code
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
-    real(mytype) :: udx,udy,udz,uddx,uddy,uddz,cx,cz,uxmin,uxmax,uxmin1,uxmax1
+    real(mytype) :: udx,udy,udz,uddx,uddy,uddz,cx,uxmin,uxmax,uxmin1,uxmax1
 
     udx=one/dx; udy=one/dy; udz=one/dz; uddx=half/dx; uddy=half/dy; uddz=half/dz
 
@@ -154,9 +153,15 @@ contains
     call MPI_ALLREDUCE(uxmax,uxmax1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
     call MPI_ALLREDUCE(uxmin,uxmin1,1,real_type,MPI_MIN,MPI_COMM_WORLD,code)
 
-    if (u1.eq.0) cx=(half*(uxmax1+uxmin1))*gdt(itr)*udx
-    if (u1.eq.1) cx=uxmax1*gdt(itr)*udx
-    if (u1.eq.2) cx=u2*gdt(itr)*udx    !works better
+    if (u1.eq.zero) then
+       cx=(half*(uxmax1+uxmin1))*gdt(itr)*udx
+    elseif (u1.eq.one) then
+       cx=uxmax1*gdt(itr)*udx
+    elseif (u1.eq.two) then
+       cx=u2*gdt(itr)*udx    !works better
+    else
+       stop
+    endif
 
     do k=1,xsize(3)
        do j=1,xsize(2)
@@ -167,9 +172,16 @@ contains
     enddo
 
     if (iscalar==1) then
-       if (u2.eq.0.) cx=(half*(uxmax1+uxmin1))*gdt(itr)*udx
-       if (u2.eq.1.) cx=uxmax1*gdt(itr)*udx
-       if (u2.eq.2.) cx=u2*gdt(itr)*udx    !works better
+       if (u2.eq.zero) then
+          cx=(half*(uxmax1+uxmin1))*gdt(itr)*udx
+       elseif (u2.eq.one) then
+          cx=uxmax1*gdt(itr)*udx
+       elseif (u2.eq.two) then
+          cx=u2*gdt(itr)*udx    !works better
+       else
+          stop
+       endif
+       
        do k=1,xsize(3)
           do j=1,xsize(2)
              phi(nx,j,k,:)=phi(nx,j,k,:)-cx*(phi(nx,j,k,:)-phi(nx-1,j,k,:))
@@ -182,7 +194,7 @@ contains
     return
   end subroutine outflow
   !********************************************************************
-  subroutine init_cyl (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,dphi1)
+  subroutine init_cyl (ux1,uy1,uz1,phi1,dux1,duy1,duz1,dphi1)
 
     USE decomp_2d
     USE decomp_2d_io
@@ -192,17 +204,13 @@ contains
 
     implicit none
 
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
 
-    real(mytype) :: y,r,um,r3,x,z,h,ct
-    real(mytype) :: cx0,cy0,cz0,hg,lg
-    integer :: k,j,i,ijk,fh,ierror,ii,is,code
-    integer (kind=MPI_OFFSET_KIND) :: disp
-
-    integer, dimension (:), allocatable :: seed
+    real(mytype) :: y,um
+    integer :: k,j,i,ii,is,code
 
     if (iscalar==1) then
 
@@ -279,13 +287,12 @@ contains
   !********************************************************************
 
   !############################################################################
-  subroutine init_post(ep1)
+  subroutine init_post()
 
     USE MPI
 
-    real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ep1
-    real(mytype) :: x, xprobes, yprobes, zprobes
-    integer :: i,j,k,code
+    real(mytype) :: xprobes, yprobes, zprobes
+    integer :: i
     character :: a
 
 #ifdef DEBG
@@ -347,7 +354,7 @@ contains
 
   end subroutine init_post
   !############################################################################
-  subroutine postprocessing_cyl(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
+  subroutine postprocessing_cyl(ux1,uy1,uz1) !By Felipe Schuch
 
     USE MPI
     USE decomp_2d
@@ -357,8 +364,7 @@ contains
     USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
     USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
 
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1
     character(len=30) :: filename
 
     if (itime.ge.ioutput) then
