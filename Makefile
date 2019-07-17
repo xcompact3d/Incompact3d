@@ -54,6 +54,10 @@ FFLAGS = -cpp  -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -
 else ifeq ($(CMP),nagfor)
 FC = mpinagfor
 FFLAGS = -fpp
+else ifeq ($(CMP),cray)
+FC = ftn
+FFLAGS = -cpp -xHost -O3 -ipo -heaparrays -safe-cray-ptr -g -traceback
+PLATFORM=intel
 endif
 
 
