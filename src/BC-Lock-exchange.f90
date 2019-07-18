@@ -376,12 +376,12 @@ contains
           do j=xstart(2),xend(2)
              do i=xstart(1),xend(1)
                 vol1(i,j,k)=dx*dy*dz
-                if (i .eq. 1 .or. i .eq. nx) vol1(i,j,k) = vol1(i,j,k) * five/twelve
-                if (j .eq. 1 .or. j .eq. ny) vol1(i,j,k) = vol1(i,j,k) * five/twelve
-                if (k .eq. 1 .or. k .eq. nz) vol1(i,j,k) = vol1(i,j,k) * five/twelve
-                if (i .eq. 2 .or. i .eq. nx-1) vol1(i,j,k) = vol1(i,j,k) * thirteen/twelve
-                if (j .eq. 2 .or. j .eq. ny-1) vol1(i,j,k) = vol1(i,j,k) * thirteen/twelve
-                if (k .eq. 2 .or. k .eq. nz-1) vol1(i,j,k) = vol1(i,j,k) * thirteen/twelve
+                if (i .eq. 1 .or. i .eq. nx) vol1(i,j,k) = vol1(i,j,k) * half !five/twelve
+                if (j .eq. 1 .or. j .eq. ny) vol1(i,j,k) = vol1(i,j,k) * half !five/twelve
+                if (k .eq. 1 .or. k .eq. nz) vol1(i,j,k) = vol1(i,j,k) * half !five/twelve
+                ! if (i .eq. 2 .or. i .eq. nx-1) vol1(i,j,k) = vol1(i,j,k) * thirteen/twelve
+                ! if (j .eq. 2 .or. j .eq. ny-1) vol1(i,j,k) = vol1(i,j,k) * thirteen/twelve
+                ! if (k .eq. 2 .or. k .eq. nz-1) vol1(i,j,k) = vol1(i,j,k) * thirteen/twelve
              end do
           end do
        end do
