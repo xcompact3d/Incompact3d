@@ -1,20 +1,91 @@
 PROGRAM incompact3d
 
-  USE decomp_2d
-  USE decomp_2d_poisson, ONLY : decomp_2d_poisson_init
-  use decomp_2d_io
-  USE variables
-  USE ibm
-  USE param
   USE var
-  USE MPI
-  USE derivX
-  USE derivZ
   USE case
-  USE simulation_stats
   USE forces
 
   USE transeq, ONLY : calculate_transeq_rhs
+
+  implicit none
+
+  call init_incompact3d()
+
+  do itime=ifirst,ilast
+     t=itime*dt
+     call simu_stats(2)
+
+     call postprocessing(ux1,uy1,uz1,pp3,phi1,ep1)
+
+     do itr=1,iadvance_time
+
+        call boundary_conditions(rho1,ux1,uy1,uz1,phi1,ep1)
+        CALL calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
+
+        !! XXX N.B. from this point, X-pencil velocity arrays contain momentum.
+        call velocity_to_momentum(rho1, ux1, uy1, uz1)
+
+        call intt(rho1,ux1,uy1,uz1,phi1,drho1,dux1,duy1,duz1,dphi1)
+        call pre_correc(ux1,uy1,uz1,ep1)
+
+        if (iibm==1) then !solid body old school
+           call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,1)
+           call body(ux1,uy1,uz1,ep1,1)
+           call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,2)
+        endif
+
+        call calc_divu_constraint(divu3, rho1, phi1)
+        call solve_poisson(pp3,px1,py1,pz1,rho1,ux1,uy1,uz1,ep1,drho1,divu3)
+        call corpg(ux1,uy1,uz1,px1,py1,pz1)
+
+        call momentum_to_velocity(rho1,ux1,uy1,uz1)
+        !! XXX N.B. from this point, X-pencil velocity arrays contain velocity.
+
+        if (mod(itime,10)==0) then
+           call divergence(dv3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,2)
+           call test_speed_min_max(ux1,uy1,uz1)
+           if (iscalar==1) call test_scalar_min_max(phi1)
+        endif
+
+     enddo !! End sub timesteps
+
+     if(iforces) then
+        call force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
+             ux2,uy2,ta2,tb2,tc2,td2,di2)
+        if (mod(itime,icheckpoint).eq.0) then
+           call restart_forces(1)
+        endif
+     endif
+
+     if (mod(itime,icheckpoint).eq.0) then
+        call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,1)
+     endif
+
+     call simu_stats(3)
+
+     CALL visu(rho1,ux1,uy1,uz1,pp3(:,:,:,1),phi1,itime)
+
+  enddo !! End time loop
+
+  call finalise_incompact3d()
+
+END PROGRAM incompact3d
+
+subroutine init_incompact3d()
+
+  use MPI
+  use decomp_2d
+  USE decomp_2d_poisson, ONLY : decomp_2d_poisson_init
+  use case
+  use forces
+  
+  use var
+  
+  use param, only : ilesmod, jles
+  use param, only : irestart
+  
+  use variables, only : nx, ny, nz, nxm, nym, nzm
+  use variables, only : p_row, p_col
+  use variables, only : nstat, nvisu, nprobe
 
   implicit none
 
@@ -23,10 +94,6 @@ PROGRAM incompact3d
   integer :: nargin, FNLength, status, DecInd
   logical :: back
   character(len=80) :: InputFN, FNBase
-
-  !!-------------------------------------------------------------------------------
-  !! Initialisation
-  !!-------------------------------------------------------------------------------
 
   !! Initialise MPI
   call MPI_INIT(ierr)
@@ -101,100 +168,22 @@ PROGRAM incompact3d
   call simu_stats(1)
 
   call calc_divu_constraint(divu3, rho1, phi1)
-  !!-------------------------------------------------------------------------------
-  !! End initialisation
-  !!-------------------------------------------------------------------------------
+
   if(nrank.eq.0)then
      open(42,file='time_evol.dat',form='formatted')
   endif
 
-  do itime=ifirst,ilast
-     t=itime*dt
-     call simu_stats(2)
+endsubroutine init_incompact3d
 
-     call postprocessing(ux1,uy1,uz1,pp3,phi1,ep1)
+subroutine finalise_incompact3d()
 
-     do itr=1,iadvance_time
+  use MPI 
+  use decomp_2d
 
-        !!-------------------------------------------------------------------------
-        !! Initialise timestep
-        !!-------------------------------------------------------------------------
-        call boundary_conditions(rho1,ux1,uy1,uz1,phi1,ep1)
-        !!-------------------------------------------------------------------------
-        !! End initialise timestep
-        !!-------------------------------------------------------------------------
+  implicit none
 
-        CALL calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
+  integer :: ierr
 
-        !!-------------------------------------------------------------------------
-        !! Time integrate transport equations
-        !!-------------------------------------------------------------------------
-
-        !! XXX N.B. from this point, X-pencil velocity arrays contain momentum.
-        call velocity_to_momentum(rho1, ux1, uy1, uz1)
-
-        call intt(rho1,ux1,uy1,uz1,phi1,drho1,dux1,duy1,duz1,dphi1)
-        call pre_correc(ux1,uy1,uz1,ep1)
-        !!-------------------------------------------------------------------------
-        !! End time integrate transport equations
-        !!-------------------------------------------------------------------------
-
-        if (iibm==1) then !solid body old school
-           call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,1)
-           call body(ux1,uy1,uz1,ep1,1)
-           call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,2)
-        endif
-
-        !!-------------------------------------------------------------------------
-        !! Poisson solver and velocity correction
-        !!-------------------------------------------------------------------------
-        call calc_divu_constraint(divu3, rho1, phi1)
-        call solve_poisson(pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
-        call corpg(ux1,uy1,uz1,px1,py1,pz1)
-
-        call momentum_to_velocity(rho1, ux1, uy1, uz1)
-        !! XXX N.B. from this point, X-pencil velocity arrays contain velocity.
-
-        !!-------------------------------------------------------------------------
-        !! End Poisson solver and velocity correction
-        !!-------------------------------------------------------------------------
-
-        if (mod(itime,10)==0) then
-           call divergence(dv3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,2)
-           call test_speed_min_max(ux1,uy1,uz1)
-           if (iscalar==1) call test_scalar_min_max(phi1)
-        endif
-
-     enddo !! End sub timesteps
-
-     if(iforces) then
-        call force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
-             ux2,uy2,ta2,tb2,tc2,td2,di2)
-        if (mod(itime,icheckpoint).eq.0) then
-           call restart_forces(1)
-        endif
-     endif
-
-     !!----------------------------------------------------------------------------
-     !! Post-processing / IO
-     !!----------------------------------------------------------------------------
-
-     if (mod(itime,icheckpoint).eq.0) then
-        call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,1)
-     endif
-
-     call simu_stats(3)
-
-     CALL visu(rho1, ux1, uy1, uz1, pp3(:,:,:,1), phi1, itime)
-     !!----------------------------------------------------------------------------
-     !! End post-processing / IO
-     !!----------------------------------------------------------------------------
-
-  enddo !! End time loop
-
-  !!-------------------------------------------------------------------------------
-  !! End simulation
-  !!-------------------------------------------------------------------------------
   if(nrank.eq.0)then
      close(42)
   endif
@@ -202,4 +191,4 @@ PROGRAM incompact3d
   call decomp_2d_finalize
   CALL MPI_FINALIZE(ierr)
 
-END PROGRAM incompact3d
+endsubroutine finalise_incompact3d
