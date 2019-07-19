@@ -370,7 +370,6 @@ contains
 
     if (.not.init) then
        call alloc_x(vol1, opt_global=.true.)
-       ! allocate(vol1(xsize(1),xsize(2),xsize(3)))
        do k=xstart(3),xend(3)
           do j=xstart(2),xend(2)
              do i=xstart(1),xend(1)
@@ -384,6 +383,15 @@ contains
              end do
           end do
        end do
+       
+    allocate(area2(ystart(1):yend(1),ystart(3):yend(3)))
+    area2=dx*dz
+    do k=ystart(3),yend(3)
+       do i=ystart(1),yend(1)
+          if (i .eq. 1 .or. i .eq. nx) area2(i,k) = area2(i,k)/two
+          if (k .eq. 1 .or. k .eq. nz)  area2(i,k) = area2(i,k)/two
+       end do
+    end do
 
        init = .TRUE.
     endif
