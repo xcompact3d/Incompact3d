@@ -54,7 +54,7 @@ CONTAINS
     USE param
     USE variables
     USE decomp_2d
-    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    USE var, only : mu1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
     USE var, only : rho2,ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2
     USE var, only : rho3,ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
     USE var, only : sgsx1,sgsy1,sgsz1
@@ -276,12 +276,12 @@ CONTAINS
     ! enddo
 
     !FINAL SUM: DIFF TERMS + CONV TERMS
-    dux1(:,:,:,1) = xnu*ta1(:,:,:) - tg1(:,:,:) ! + di1(:,:,:)*anglex  !+x
-    duy1(:,:,:,1) = xnu*tb1(:,:,:) - th1(:,:,:) ! - di1(:,:,:)*angley  !+y
-    duz1(:,:,:,1) = xnu*tc1(:,:,:) - ti1(:,:,:) ! !+- di1       !+z
+    dux1(:,:,:,1) = mu1(:,:,:) * xnu*ta1(:,:,:) - tg1(:,:,:) ! + di1(:,:,:)*anglex  !+x
+    duy1(:,:,:,1) = mu1(:,:,:) * xnu*tb1(:,:,:) - th1(:,:,:) ! - di1(:,:,:)*angley  !+y
+    duz1(:,:,:,1) = mu1(:,:,:) * xnu*tc1(:,:,:) - ti1(:,:,:) ! !+- di1       !+z
 
     if (ilmn) then
-       call momentum_full_viscstress_tensor(dux1(:,:,:,1), duy1(:,:,:,1), duz1(:,:,:,1), divu3)
+       call momentum_full_viscstress_tensor(dux1(:,:,:,1), duy1(:,:,:,1), duz1(:,:,:,1), divu3, mu1)
     endif
 
     ! If LES modelling is enabled, add the SGS stresses
@@ -335,18 +335,20 @@ CONTAINS
   !!              incompressible solver.
   !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine momentum_full_viscstress_tensor(ta1, tb1, tc1, divu3)
+  subroutine momentum_full_viscstress_tensor(dux1, duy1, duz1, divu3, mu1)
 
     USE param
     USE variables
     USE decomp_2d
-    USE var, only : td1,te1,tf1,tg1,di1
-    USE var, only : ta2,tb2,tc2,di2
-    USE var, only : tc3,di3
+
+    USE var, only : ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    USE var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,di2
+    USE var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
 
     IMPLICIT NONE
 
-    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ta1, tb1, tc1
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: dux1, duy1, duz1
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: mu1
     REAL(mytype), DIMENSION(zsize(1), zsize(2), zsize(3)), INTENT(IN) :: divu3
 
     REAL(mytype) :: one_third
@@ -355,18 +357,87 @@ CONTAINS
 
     call derz (tc3,divu3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
     call transpose_z_to_y(tc3, tc2)
-    call transpose_z_to_y(divu3, ta2)
+    call transpose_z_to_y(divu3, th2)
 
-    call dery(tb2,ta2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+    call dery(tb2,th2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
     call transpose_y_to_x(tb2, te1)
     call transpose_y_to_x(tc2, tf1)
-    call transpose_y_to_x(ta2, tg1)
+    call transpose_y_to_x(th2, tg1)
 
     call derx(td1,tg1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
 
-    ta1(:,:,:) = ta1(:,:,:) + one_third * xnu * td1(:,:,:)
-    tb1(:,:,:) = tb1(:,:,:) + one_third * xnu * te1(:,:,:)
-    tc1(:,:,:) = tc1(:,:,:) + one_third * xnu * tf1(:,:,:)
+    dux1(:,:,:) = dux1(:,:,:) + mu1(:,:,:) * one_third * xnu * td1(:,:,:)
+    duy1(:,:,:) = duy1(:,:,:) + mu1(:,:,:) * one_third * xnu * te1(:,:,:)
+    duz1(:,:,:) = duz1(:,:,:) + mu1(:,:,:) * one_third * xnu * tf1(:,:,:)
+
+    !! Variable viscosity part
+    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    call derx (td1,mu1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    ta1(:,:,:) = two * ta1(:,:,:) - two * one_third * tg1(:,:,:)
+
+    ta1(:,:,:) = td1(:,:,:) * ta1(:,:,:)
+    tb1(:,:,:) = td1(:,:,:) * tb1(:,:,:)
+    tc1(:,:,:) = td1(:,:,:) * tc1(:,:,:)
+
+    call transpose_x_to_y(ta1, ta2)
+    call transpose_x_to_y(tb1, tb2)
+    call transpose_x_to_y(tc1, tc2)
+    call transpose_x_to_y(td1, tg2)
+    
+    call dery (td2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+    call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    te2(:,:,:) = two * te2(:,:,:) - two * one_third * th2(:,:,:)
+
+    call transpose_x_to_y(mu1, ti2)
+    call dery (th2,ti2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+
+    ta2(:,:,:) = ta2(:,:,:) + th2(:,:,:) * td2(:,:,:)
+    tb2(:,:,:) = tb2(:,:,:) + th2(:,:,:) * te2(:,:,:) + tg2(:,:,:) * td2(:,:,:)
+    tc2(:,:,:) = tc2(:,:,:) + th2(:,:,:) * tf2(:,:,:)
+
+    call transpose_y_to_z(ta2, ta3)
+    call transpose_y_to_z(tb2, tb3)
+    call transpose_y_to_z(tc2, tc3)
+    call transpose_y_to_z(tg2, tg3) !! dmudx
+    call transpose_y_to_z(th2, th3) !! dmudy
+    call transpose_y_to_z(ti2, ti3) !! mu
+
+    call derz (td3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+    call derz (te3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+    call derz (tf3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+    tf3(:,:,:) = two * tf3(:,:,:) - two * one_third * divu3(:,:,:)
+
+    tc3(:,:,:) = tc3(:,:,:) + tg3(:,:,:) * td3(:,:,:) + th3(:,:,:) * te3(:,:,:)
+    
+    call derz (th3,ti3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+
+    ta3(:,:,:) = ta3(:,:,:) + th3(:,:,:) * td3(:,:,:)
+    tb3(:,:,:) = tb3(:,:,:) + th3(:,:,:) * te3(:,:,:)
+    tc3(:,:,:) = tc3(:,:,:) + th3(:,:,:) * tf3(:,:,:)
+
+    call transpose_z_to_y(ta3, ta2)
+    call transpose_z_to_y(tb3, tb2)
+    call transpose_z_to_y(tc3, tc2)
+    call transpose_z_to_y(th3, ti2) !! dmudz
+
+    tb2(:,:,:) = tb2(:,:,:) + ti2(:,:,:) * tf2(:,:,:)
+
+    call transpose_y_to_x(ta2, ta1)
+    call transpose_y_to_x(tb2, tb1)
+    call transpose_y_to_x(tc2, tc1)
+    call transpose_y_to_x(th2, te1) !! dmudy
+    call transpose_y_to_x(ti2, tf1) !! dmudz
+
+    call derx (th1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    call derx (ti1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    ta1(:,:,:) = ta1(:,:,:) + te1(:,:,:) * th1(:,:,:) + tf1(:,:,:) * ti1(:,:,:)
+
+    dux1(:,:,:) = dux1(:,:,:) + ta1(:,:,:)
+    duy1(:,:,:) = duy1(:,:,:) + tb1(:,:,:)
+    duz1(:,:,:) = duz1(:,:,:) + tc1(:,:,:)
 
   end subroutine momentum_full_viscstress_tensor
 
