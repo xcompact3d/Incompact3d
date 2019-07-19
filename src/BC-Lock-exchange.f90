@@ -124,7 +124,7 @@ contains
           do i=1,xsize(1)
              x=real(i+xstart(1)-1-1,mytype)*dx-pfront
              do is=1,numscalar
-                phi1(i,j,k,is)=half * (one - tanh((sc(is) / xnu)**(half) * x)) * one ! cp(is)
+                phi1(i,j,k,is)=half * (one - tanh((sc(is) / xnu)**(half) * x)) * cp(is)
              enddo
              rho1(i,j,k,1) = half * (one - tanh((prandtl / xnu)**half * x)) &
                   * (dens1 - dens2) + dens2
@@ -133,9 +133,8 @@ contains
     enddo
     do ijk = 1,xsize(1)*xsize(2)*xsize(3)
        do is=1,numscalar
-          ! if (phi1(ijk,1,1,is).gt.cp(is)) phi1(ijk,1,1,is) =  cp(is)
-          if (phi1(ijk,1,1,is).gt.one) phi1(ijk,1,1,is) =  one
-          if (phi1(ijk,1,1,is).lt.zero) phi1(ijk,1,1,is) =  zero
+          if (phi1(ijk,1,1,is).gt.cp(is)) phi1(ijk,1,1,is) = cp(is)
+          if (phi1(ijk,1,1,is).lt.zero) phi1(ijk,1,1,is) = zero
        enddo
        if (rho1(ijk,1,1,1).gt.max(dens1, dens2)) then
           rho1(ijk,1,1,1) = max(dens1, dens2)

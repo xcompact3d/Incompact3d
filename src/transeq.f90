@@ -609,6 +609,9 @@ CONTAINS
           !! For mass fractions enforce primary species Y_p = 1 - sum_s Y_s
           !! So don't solve a transport equation
           call scalar_transport_eq(dphi1(:,:,:,:,is), rho1, ux1, phi1(:,:,:,is), sc(is))
+          if (uset(is).ne.zero) then
+             call scalar_settling(dphi1, phi1(:,:,:,is), is)
+          endif
        endif
 
     end do !loop numscalar
@@ -624,6 +627,45 @@ CONTAINS
     endif
 
   end subroutine scalar
+
+  subroutine scalar_settling(dphi1, phi1, is)
+
+    USE param
+    USE variables
+    USE decomp_2d
+
+    USE var, only : ta1, di1
+    USE var, only : ta2, tb2, di2, phi2 => tc2
+    USE var, only : ta3, di3, phi3 => tb3
+
+    implicit none
+
+    !! INPUTS
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: phi1
+    integer,intent(in) :: is
+
+    !! OUTPUTS
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
+
+    call transpose_x_to_y(phi1, phi2)
+    call transpose_y_to_z(phi2, phi3)
+    
+    CALL derz (ta3, phi3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
+    ta3(:,:,:) = uset(is) * gravz * ta3(:,:,:)
+    
+    call transpose_z_to_y(ta3, tb2)
+
+    CALL dery (ta2, phi2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
+    ta2(:,:,:) = uset(is) * gravy * ta2(:,:,:)
+    ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
+    
+    call transpose_y_to_x(ta2, ta1)
+    
+    dphi1(:,:,:,1,is) = dphi1(:,:,:,1,is) + ta1(:,:,:)
+    CALL derx (ta1, phi1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1)
+    dphi1(:,:,:,1,is) = dphi1(:,:,:,1,is) + uset(is) * gravx * ta1(:,:,:)
+    
+  endsubroutine scalar_settling
 
   subroutine temperature_rhs_eq(drho1, rho1, ux1, phi1)
 

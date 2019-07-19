@@ -123,7 +123,15 @@ ibirman_eos = .TRUE.
 
 !! Schmidt numbers
 sc(1) = 1.0
+
+!! Richardson numbers
 ri(1) = 1.0
+
+!! Settling velocities
+uset(1) = 0.02
+
+!! Initial concentrations
+cp(1) = 1.0
 
 /End
 
