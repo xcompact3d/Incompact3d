@@ -606,7 +606,8 @@ contains
                 xvol=real(vol2(i,j,k),8)
                 ep = ep - xvol * ri(is) * phi2(i,j,k,is) * (gravy * y)
                 dep = dep &
-                     - xvol * ri(is) * (ddphi2(i,j,k)*xnu/sc(is)+uset(is)*dphiy2(i,j,k)) &
+                     - xvol * ri(is) * (ddphi2(i,j,k)*xnu/sc(is) &
+                     - uset(is) * (gravy * dphiy2(i,j,k))) &
                      * (gravy * y)
              enddo
           enddo
