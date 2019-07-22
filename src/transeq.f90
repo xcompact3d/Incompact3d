@@ -348,7 +348,7 @@ CONTAINS
     IMPLICIT NONE
 
     REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: dux1, duy1, duz1
-    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: mu1
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: mu1
     REAL(mytype), DIMENSION(zsize(1), zsize(2), zsize(3)), INTENT(IN) :: divu3
 
     REAL(mytype) :: one_third
@@ -375,7 +375,7 @@ CONTAINS
     call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
     call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
     call derx (td1,mu1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-    ta1(:,:,:) = two * ta1(:,:,:) - two * one_third * tg1(:,:,:)
+    ta1(:,:,:) = two * ta1(:,:,:) - (two * one_third) * tg1(:,:,:)
 
     ta1(:,:,:) = td1(:,:,:) * ta1(:,:,:)
     tb1(:,:,:) = td1(:,:,:) * tb1(:,:,:)
@@ -389,7 +389,7 @@ CONTAINS
     call dery (td2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
     call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
     call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-    te2(:,:,:) = two * te2(:,:,:) - two * one_third * th2(:,:,:)
+    te2(:,:,:) = two * te2(:,:,:) - (two * one_third) * th2(:,:,:)
 
     call transpose_x_to_y(mu1, ti2)
     call dery (th2,ti2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
@@ -408,7 +408,7 @@ CONTAINS
     call derz (td3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
     call derz (te3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
     call derz (tf3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
-    tf3(:,:,:) = two * tf3(:,:,:) - two * one_third * divu3(:,:,:)
+    tf3(:,:,:) = two * tf3(:,:,:) - (two * one_third) * divu3(:,:,:)
 
     tc3(:,:,:) = tc3(:,:,:) + tg3(:,:,:) * td3(:,:,:) + th3(:,:,:) * te3(:,:,:)
     
@@ -435,9 +435,9 @@ CONTAINS
     call derx (ti1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
     ta1(:,:,:) = ta1(:,:,:) + te1(:,:,:) * th1(:,:,:) + tf1(:,:,:) * ti1(:,:,:)
 
-    dux1(:,:,:) = dux1(:,:,:) + ta1(:,:,:)
-    duy1(:,:,:) = duy1(:,:,:) + tb1(:,:,:)
-    duz1(:,:,:) = duz1(:,:,:) + tc1(:,:,:)
+    dux1(:,:,:) = dux1(:,:,:) + xnu * ta1(:,:,:)
+    duy1(:,:,:) = duy1(:,:,:) + xnu * tb1(:,:,:)
+    duz1(:,:,:) = duz1(:,:,:) + xnu * tc1(:,:,:)
 
   end subroutine momentum_full_viscstress_tensor
 
