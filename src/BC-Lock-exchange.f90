@@ -46,7 +46,7 @@ module lockexch
 
   private
   public :: init_lockexch, boundary_conditions_lockexch, postprocessing_lockexch, &
-       pfront
+       pfront, set_fluid_properties_lockexch
 
 contains
 
@@ -108,6 +108,8 @@ contains
     USE param
     USE MPI
 
+    USE var, only : mu1
+
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
@@ -142,6 +144,8 @@ contains
           rho1(ijk,1,1,1) = min(dens1, dens2)
        endif
     enddo
+
+    call set_fluid_properties_lockexch(rho1, mu1)
 
     do is=1,numscalar
        do it = 1,ntime
@@ -480,13 +484,13 @@ contains
     use var, only : ffz, ffzp, fsz, fszp, fwz, fwzp, sfzps, sszps, swzps, sz, &
          sfzp, sszp, swzp
 
-    use var, only : di1
-    use var, only : rho2, ux2, uy2, uz2, phi2, di2
-    use var, only : rho3, ux3, uy3, uz3, phi3, di3
+    use var, only : mu1
+    use var, only : rho2, ux2, uy2, uz2, phi2
+    use var, only : rho3, ux3, uy3, uz3, phi3
     
-    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1
-    use var, only : ta2,tb2,tc2,td2,te2,tf2
-    use var, only : ta3,tb3,tc3
+    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    use var, only : ta2,tb2,tc2,td2,te2,tf2,di2
+    use var, only : ta3,tb3,tc3,di3
 
     implicit none
 
@@ -556,7 +560,8 @@ contains
              do m=1,3
                 do l=1,3
                    diss1(i,j,k) = diss1(i,j,k) &
-                        + (two * xnu) * (half * (A(l,m,i,j,k) + A(m,l,i,j,k)))**2
+                        + (two * xnu * mu1(i, j, k)) &
+                        * (half * (A(l,m,i,j,k) + A(m,l,i,j,k)))**2
                 enddo
              enddo
           enddo
@@ -812,6 +817,17 @@ contains
     call MPI_Bcast(xp(1,:), 2,real_type, int(xp1(2)), MPI_COMM_WORLD,code)
 
   end subroutine front2d
+
+  subroutine set_fluid_properties_lockexch(rho1, mu1)
+
+    implicit none
+
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: rho1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: mu1
+
+    mu1(:,:,:) = rho1(:,:,:)
+    
+  endsubroutine set_fluid_properties_lockexch
 
 end module lockexch
 

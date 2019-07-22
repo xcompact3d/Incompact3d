@@ -50,7 +50,7 @@ MODULE case
   IMPLICIT NONE
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init, boundary_conditions, postprocessing, momentum_forcing
+  PUBLIC :: init, boundary_conditions, postprocessing, momentum_forcing, set_fluid_properties
 
 CONTAINS
 
@@ -230,6 +230,21 @@ CONTAINS
     ENDIF
 
   ENDSUBROUTINE momentum_forcing
+
+  subroutine set_fluid_properties(rho1, mu1)
+
+    implicit none
+
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: rho1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: mu1
+
+    if (itype.eq.itype_lockexch) then
+
+       call set_fluid_properties_lockexch(rho1, mu1)
+       
+    endif
+    
+  endsubroutine set_fluid_properties
 
 END MODULE case
 
