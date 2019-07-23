@@ -732,9 +732,9 @@ CONTAINS
     
     call transpose_y_to_x(ta2, ta1)
     
-    dphi1(:,:,:,1,is) = dphi1(:,:,:,1,is) + ta1(:,:,:)
+    dphi1(:,:,:,1,is) = dphi1(:,:,:,1,is) - ta1(:,:,:)
     CALL derx (ta1, phi1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1)
-    dphi1(:,:,:,1,is) = dphi1(:,:,:,1,is) + uset(is) * gravx * ta1(:,:,:)
+    dphi1(:,:,:,1,is) = dphi1(:,:,:,1,is) - uset(is) * gravx * ta1(:,:,:)
     
   endsubroutine scalar_settling
 

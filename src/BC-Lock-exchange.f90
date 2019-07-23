@@ -86,8 +86,8 @@ contains
 
                    if ((uset(is).ne.zero).and.&
                         (phi1(i,j+1,k,is).gt.phi1(i,j,k,is))) then
-                      phi1(i,j,k,is) = phi1(i,j,k,is) + &
-                           ((uset(is)*gdt(itr))/dy)*(phi1(i,j+1,k,is)-phi1(i,j,k,is)) !Deposit on bottom BC
+                      phi1(i,j,k,is) = phi1(i,j,k,is) - &
+                           ((uset(is)*gdt(itr))*gravy/dy)*(phi1(i,j+1,k,is)-phi1(i,j,k,is)) !Deposit on bottom BC
                    else
                       phi1(i,j,k,is) = phi1(i,j+1,k,is)! dc/dn=0
                    endif
