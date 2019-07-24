@@ -1,10 +1,10 @@
-PROGRAM incompact3d
+program incompact3d
 
-  USE var
-  USE case
-  USE forces
+  use var
+  use case
+  use forces
 
-  USE transeq, ONLY : calculate_transeq_rhs
+  use transeq, only : calculate_transeq_rhs
 
   implicit none
 
@@ -20,7 +20,7 @@ PROGRAM incompact3d
 
         call set_fluid_properties(rho1,mu1)
         call boundary_conditions(rho1,ux1,uy1,uz1,phi1,ep1)
-        CALL calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
+        call calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
         !! XXX N.B. from this point, X-pencil velocity arrays contain momentum.
         call velocity_to_momentum(rho1, ux1, uy1, uz1)
@@ -49,7 +49,7 @@ PROGRAM incompact3d
 
   call finalise_incompact3d()
 
-END PROGRAM incompact3d
+end program incompact3d
 
 subroutine init_incompact3d()
 
