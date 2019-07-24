@@ -2,9 +2,9 @@ program incompact3d
 
   use var
   use case
-  use forces
 
   use transeq, only : calculate_transeq_rhs
+  use time_integrators, only : intt
 
   implicit none
 
