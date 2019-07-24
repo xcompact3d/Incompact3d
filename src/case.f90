@@ -158,7 +158,8 @@ CONTAINS
   END SUBROUTINE boundary_conditions
 
   SUBROUTINE postprocessing(rho,ux,uy,uz,pp,phi,ep)
-    
+
+    USE forces
     USE var, ONLY : nzmsize
     USE param, ONLY : npress
 
@@ -201,6 +202,12 @@ CONTAINS
        CALL postprocessing_jet (ux, uy, uz, phi, ep)
 
     ENDIF
+
+     if(iforces) then
+        call force(ux,uy,ep)
+        call restart_forces(1)
+     endif
+
   END SUBROUTINE postprocessing
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

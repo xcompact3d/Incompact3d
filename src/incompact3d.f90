@@ -39,14 +39,6 @@ PROGRAM incompact3d
 
      enddo !! End sub timesteps
 
-     if(iforces) then
-        call force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
-             ux2,uy2,ta2,tb2,tc2,td2,di2)
-        if (mod(itime,icheckpoint).eq.0) then
-           call restart_forces(1)
-        endif
-     endif
-
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,1)
 
      call simu_stats(3)
