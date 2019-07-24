@@ -671,8 +671,8 @@ contains
 
   subroutine mpiio_write_real_coarse(ipencil,var,filename,icoarse)
 
-    USE param
-    USE variables
+    ! USE param
+    ! USE variables
 
     implicit none
 
@@ -767,14 +767,15 @@ contains
     return
   end subroutine mpiio_write_real_coarse
 
-  subroutine mpiio_write_real_probe(ipencil,var,filename)
+  subroutine mpiio_write_real_probe(ipencil,var,filename,nlength)
 
-    USE param
-    USE variables
+    ! USE param
+    ! USE variables
 
     implicit none
 
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
+    integer, intent(in) :: nlength
     real(mytype), dimension(:,:,:,:), intent(IN) :: var
 
     character(len=*) :: filename
