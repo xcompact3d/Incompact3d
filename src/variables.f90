@@ -50,6 +50,7 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:) :: ep1, diss1, pre1, depo, depof, kine
   real(mytype), save, allocatable, dimension(:,:,:,:) :: dux1,duy1,duz1  ! Output of convdiff
   real(mytype), save, allocatable, dimension(:,:,:,:,:) :: dphi1
+  real(mytype), save, allocatable, dimension(:,:,:) :: mu1
 
   !arrays for post processing
   real(mytype), save, allocatable, dimension(:,:,:) :: f1,fm1
@@ -139,6 +140,8 @@ contains
     call alloc_x(td1);call alloc_x(te1);call alloc_x(tf1)
     call alloc_x(tg1);call alloc_x(th1);call alloc_x(ti1)
     call alloc_x(di1);call alloc_x(ep1)
+    call alloc_x(mu1)
+    mu1(:,:,:) = one
 
     allocate(pp1(nxmsize,xsize(2),xsize(3)))
     allocate(pgy1(nxmsize,xsize(2),xsize(3)))
@@ -453,7 +456,7 @@ contains
     call alloc_y(rho2)
     call alloc_z(rho3)
     allocate(drho1(xsize(1),xsize(2),xsize(3),ntime))
-
+    rho1(:,:,:,:) = one
     call alloc_z(divu3, opt_global=.true.) !global indices
 
     ! !TRIPPING PARAMES LOST HERE

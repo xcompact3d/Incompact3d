@@ -19,12 +19,17 @@ module lockexch
 
   use variables, only : numscalar
 
-  use var, only : xnu, ri, uset, sc
+  use var, only : xnu, ri, uset, sc, Fr, prandtl
+  use var, only : gravy
   use var, only : nrank
+  use var, only : dens1, dens2
 
-  use var, only : zero, half, two
-  use var, only : dx, dy, dz
+  use var, only : zero, half, one, two, five, twelve, thirteen
+  use var, only : dx, dy, dz, nx, ny, nz
 
+  use var, only : nrhotime
+
+  use param, only : ilmn, ibirman_eos
   use param, only : itime, ioutput, iprocessing
   use param, only : t
 
@@ -41,11 +46,11 @@ module lockexch
 
   private
   public :: init_lockexch, boundary_conditions_lockexch, postprocessing_lockexch, &
-       pfront
+       pfront, set_fluid_properties_lockexch
 
 contains
 
-  subroutine boundary_conditions_lockexch (phi1)
+  subroutine boundary_conditions_lockexch (rho1, phi1)
 
     USE param
     USE variables
@@ -56,6 +61,7 @@ contains
 
     integer  :: i,j,k,is
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
 
     if (xstart(2).eq.1) then
        j = 1
@@ -64,6 +70,12 @@ contains
           byx1(:,:) = zero
           byy1(:,:) = zero
           byz1(:,:) = zero
+
+          do k = 1, xsize(3)
+             do i = 1, xsize(1)
+                rho1(i, j, k, 1) = rho1(i, j + 1, k, 1) !! drho/dy=0
+             enddo
+          enddo
        endif
 
        if (nclyS1.eq.2) then !! Set scalar BCs
@@ -74,8 +86,8 @@ contains
 
                    if ((uset(is).ne.zero).and.&
                         (phi1(i,j+1,k,is).gt.phi1(i,j,k,is))) then
-                      phi1(i,j,k,is) = phi1(i,j,k,is) + &
-                           ((uset(is)*gdt(itr))/dy)*(phi1(i,j+1,k,is)-phi1(i,j,k,is)) !Deposit on bottom BC
+                      phi1(i,j,k,is) = phi1(i,j,k,is) - &
+                           ((uset(is)*gdt(itr))*gravy/dy)*(phi1(i,j+1,k,is)-phi1(i,j,k,is)) !Deposit on bottom BC
                    else
                       phi1(i,j,k,is) = phi1(i,j+1,k,is)! dc/dn=0
                    endif
@@ -88,7 +100,7 @@ contains
     return
   end subroutine boundary_conditions_lockexch
 
-  subroutine init_lockexch (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,dphi1)
+  subroutine init_lockexch (rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,dphi1)
 
     USE decomp_2d
     USE decomp_2d_io
@@ -96,43 +108,50 @@ contains
     USE param
     USE MPI
 
+    USE var, only : mu1
+
     implicit none
 
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1,drho1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
 
-    real(mytype) :: um,x
+    real(mytype) :: um,x,y,ek,ep,ekg,epg
     integer :: k,j,i,ijk,ii,is,it,code
-
-    if (iscalar==1) then
-
-       !lock-exchange
-
-       do is=1,numscalar
-          do k=1,xsize(3)
-             do j=1,xsize(2)
-                do i=1,xsize(1)
-                   x=real(i+xstart(1)-1-1,mytype)*dx-pfront
-                   phi1(i,j,k,is)=(half-half*tanh((sc(is)/xnu)**(half)*x))*one ! cp(is)
-                enddo
+    
+    do k=1,xsize(3)
+       do j=1,xsize(2)
+          do i=1,xsize(1)
+             x=real(i+xstart(1)-1-1,mytype)*dx-pfront
+             do is=1,numscalar
+                phi1(i,j,k,is)=half * (one - tanh((sc(is) / xnu)**(half) * x)) * cp(is)
              enddo
-          enddo
-          do ijk = 1,xsize(1)*xsize(2)*xsize(3)
-             ! if (phi1(ijk,1,1,is).gt.cp(is)) phi1(ijk,1,1,is) =  cp(is)
-             if (phi1(ijk,1,1,is).gt.one) phi1(ijk,1,1,is) =  one
-             if (phi1(ijk,1,1,is).lt.zero) phi1(ijk,1,1,is) =  zero
+             rho1(i,j,k,1) = half * (one - tanh((prandtl / xnu)**half * x)) &
+                  * (dens1 - dens2) + dens2
           enddo
        enddo
-
+    enddo
+    do ijk = 1,xsize(1)*xsize(2)*xsize(3)
        do is=1,numscalar
-          do it = 1,ntime
-             dphi1(:,:,:,it,is) = phi1(:,:,:,is)
-          enddo
+          if (phi1(ijk,1,1,is).gt.cp(is)) phi1(ijk,1,1,is) = cp(is)
+          if (phi1(ijk,1,1,is).lt.zero) phi1(ijk,1,1,is) = zero
        enddo
+       if (rho1(ijk,1,1,1).gt.max(dens1, dens2)) then
+          rho1(ijk,1,1,1) = max(dens1, dens2)
+       elseif (rho1(ijk,1,1,1).lt.min(dens1, dens2)) then
+          rho1(ijk,1,1,1) = min(dens1, dens2)
+       endif
+    enddo
 
-    endif
+    call set_fluid_properties_lockexch(rho1, mu1)
+
+    do is=1,numscalar
+       do it = 1,ntime
+          dphi1(:,:,:,it,is) = phi1(:,:,:,is)
+       enddo
+    enddo
 
     ux1=zero; uy1=zero; uz1=zero
 
@@ -158,22 +177,83 @@ contains
              enddo
           enddo
        enddo
+       
+       ek = zero
+       do k = 1, xsize(3)
+          do j = 1, xsize(2)
+             do i = 1, xsize(1)
+                ek = ek + half * rho1(i, j, k, 1) &
+                     * (ux1(i, j, k)**2 + uy1(i, j, k)**2 + uz1(i, j, k)**2)
+             enddo
+          enddo
+       enddo
+       ep = zero
+       do is = 1, numscalar
+          do k = 1, xsize(3)
+             y = (j + xstart(2) - 2) * dy
+             do j = 1, xsize(2)
+                do i = 1, xsize(1)
+                   ep = ep - phi1(i, j, k, is) * ri(is) * (gravy * y)
+                enddo
+             enddo
+          enddo
+       enddo
+
+       if (ilmn.and.((Fr**2).gt.zero)) then
+          do k = 1, xsize(3)
+             do j = 1, xsize(2)
+                y = (j + xstart(2) - 2) * dy
+                do i = 1, xsize(1)
+                   ep = ep - (rho1(i, j, k, 1) - min(dens1, dens2)) * (gravy * y) / Fr**2
+                enddo
+             enddo
+          enddo
+       endif
+
+       call MPI_ALLREDUCE(ek,ekg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(ep,epg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,code)
+
+       if ((epg.ne.zero).and.(ekg.ne.zero)) then
+          um = ekg / epg
+          um = init_noise / um
+          um = sqrt(um)
+
+          ux1(:,:,:) = um * ux1(:,:,:)
+          uy1(:,:,:) = um * uy1(:,:,:)
+          uz1(:,:,:) = um * uz1(:,:,:)
+       
+          ek = zero
+          do k = 1, xsize(3)
+             do j = 1, xsize(2)
+                do i = 1, xsize(1)
+                   ek = ek + half * rho1(i, j, k, 1) &
+                        * (ux1(i, j, k)**2 + uy1(i, j, k)**2 + uz1(i, j, k)**2)
+                enddo
+             enddo
+          enddo
+          call MPI_ALLREDUCE(ek,ekg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,code)
+          
+          if (nrank.eq.0) then
+             print *, "Ek / Ep: ", ekg / epg, ekg, epg
+          endif
+       endif
     endif
 
     !INIT FOR G AND U=MEAN FLOW + NOISE
-    do k=1,xsize(3)
-       do j=1,xsize(2)
-          do i=1,xsize(1)
-             ux1(i,j,k)=ux1(i,j,k)!+bxx1(j,k)
-             uy1(i,j,k)=uy1(i,j,k)!+bxy1(j,k)
-             uz1(i,j,k)=uz1(i,j,k)!+bxz1(j,k)
-             dux1(i,j,k,1)=ux1(i,j,k)
-             duy1(i,j,k,1)=uy1(i,j,k)
-             duz1(i,j,k,1)=uz1(i,j,k)
-             dux1(i,j,k,2)=dux1(i,j,k,1)
-             duy1(i,j,k,2)=duy1(i,j,k,1)
-             duz1(i,j,k,2)=duz1(i,j,k,1)
-          enddo
+    do it = 1, ntime
+       drho1(:,:,:,it) = rho1(:,:,:,1)
+       dux1(:,:,:,it)=ux1(:,:,:)
+       duy1(:,:,:,it)=uy1(:,:,:)
+       duz1(:,:,:,it)=uz1(:,:,:)
+    enddo
+
+    do it = 2, nrhotime
+       rho1(:,:,:,it) = rho1(:,:,:,1)
+    enddo
+
+    do is = 1, numscalar
+       do it = 1, ntime
+          dphi1(:,:,:,it,is) = phi1(:,:,:,is)
        enddo
     enddo
 
@@ -273,24 +353,50 @@ contains
 
 !   end subroutine init_post
 
-  subroutine postprocessing_lockexch(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
+  subroutine postprocessing_lockexch(rho1,ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
-    use var, only : phi2
-    use var, only : phi3
+    use decomp_2d, only : alloc_x
+    
+    use var, only : phi2, rho2
+    use var, only : phi3, rho3
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: phisum1
     real(mytype),dimension(ysize(1),ysize(3),numscalar) :: dep2
     real(mytype),dimension(zsize(1),zsize(2),numscalar) :: phim3
+    real(mytype),dimension(zsize(1),zsize(2)) :: rhom3
     integer :: i,j,k,is
 
     real(mytype) :: mp(numscalar),dms(numscalar),xf(1:2,1:3),xf2d(1:2,1:2)
 
     if (.not.init) then
-       ! call alloc_x(vol1, opt_global=.true.)
-       allocate(vol1(xsize(1),xsize(2),xsize(3)))
+       call alloc_x(vol1, opt_global=.true.)
+       do k=xstart(3),xend(3)
+          do j=xstart(2),xend(2)
+             do i=xstart(1),xend(1)
+                vol1(i,j,k)=dx*dy*dz
+                if (i .eq. 1 .or. i .eq. nx) vol1(i,j,k) = vol1(i,j,k) * half !five/twelve
+                if (j .eq. 1 .or. j .eq. ny) vol1(i,j,k) = vol1(i,j,k) * half !five/twelve
+                if (k .eq. 1 .or. k .eq. nz) vol1(i,j,k) = vol1(i,j,k) * half !five/twelve
+                ! if (i .eq. 2 .or. i .eq. nx-1) vol1(i,j,k) = vol1(i,j,k) * thirteen/twelve
+                ! if (j .eq. 2 .or. j .eq. ny-1) vol1(i,j,k) = vol1(i,j,k) * thirteen/twelve
+                ! if (k .eq. 2 .or. k .eq. nz-1) vol1(i,j,k) = vol1(i,j,k) * thirteen/twelve
+             end do
+          end do
+       end do
+       
+    allocate(area2(ystart(1):yend(1),ystart(3):yend(3)))
+    area2=dx*dz
+    do k=ystart(3),yend(3)
+       do i=ystart(1),yend(1)
+          if (i .eq. 1 .or. i .eq. nx) area2(i,k) = area2(i,k)/two
+          if (k .eq. 1 .or. k .eq. nz)  area2(i,k) = area2(i,k)/two
+       end do
+    end do
+
        init = .TRUE.
     endif
 
@@ -298,7 +404,7 @@ contains
 
     mp=zero; dms=zero; xf=zero; xf2d=zero
 
-    phisum1=zero
+    phisum1(:,:,:)=zero
     do is=1, numscalar
        do k=1,xsize(3)
           do j=1,xsize(2)
@@ -312,12 +418,37 @@ contains
        call mean_plane_z(phi3(:,:,:,is),zsize(1),zsize(2),zsize(3),phim3(:,:,is))
     enddo
 
-    call budget(ux1,uy1,uz1,phi1,vol1)
+    do is = 2, numscalar
+       phim3(:,:,1) = phim3(:,:,1) + phim3(:,:,is) 
+    enddo
+
+    if (ilmn) then
+       call transpose_x_to_y(rho1(:,:,:,1), rho2)
+       call transpose_y_to_z(rho2, rho3)
+       call mean_plane_z(rho3, zsize(1), zsize(2), zsize(3), rhom3)
+       
+       if (ibirman_eos) then
+          phisum1(:,:,:) = phisum1(:,:,:) + (rho1(:,:,:,1) - dens2) / (dens1 - dens2)
+          if (numscalar.gt.0) then
+             do j = 1, zsize(2)
+                do i = 1, zsize(1)
+                   phim3(i,j,1) = phim3(i,j,1) + (rhom3(i,j) - dens2) / (dens1 - dens2)
+                enddo
+             enddo
+          endif
+       endif
+    endif
+
+    call budget(rho1,ux1,uy1,uz1,phi1,vol1)
     call dep(phi1,dep2)
     call suspended(phi1,vol1,mp)
     call depositrate (dep2,dms)
     call front(phisum1,xf)
-    call front2d(phim3,xf2d)
+    if (numscalar.gt.0) then
+       call front2d(phim3(:,:,1),xf2d)
+    elseif (ilmn.and.ibirman_eos) then
+       call front2d(rhom3(:,:),xf2d)
+    endif
 
     if (nrank .eq. 0) then
        FS = 1+numscalar+numscalar+3+2 !Number of columns
@@ -336,31 +467,36 @@ contains
 
   end subroutine postprocessing_lockexch
 
-  subroutine budget(ux1,uy1,uz1,phi1,vol1)
+  subroutine budget(rho1,ux1,uy1,uz1,phi1,vol1)
 
     USE decomp_2d
     USE decomp_2d_io
     USE MPI
 
     use variables, only : derx, dery, derys, derz
+    use variables, only : derxx, deryy, derzz
     use variables, only : derxxs, deryys, derzzs
 
-    use var, only : ffx, ffxp, fsx, fsxp, fwx, fwxp, sfxps, ssxps, swxps, sx
-    use var, only : ffy, ffyp, ffys, fsy, fsyp, fsys, fwy, fwyp, fwys, ppy, sfyps, ssyps, swyps, sy
-    use var, only : ffz, ffzp, fsz, fszp, fwz, fwzp, sfzps, sszps, swzps, sz
+    use var, only : ffx, ffxp, fsx, fsxp, fwx, fwxp, sfxps, ssxps, swxps, sx, &
+         sfxp, ssxp, swxp
+    use var, only : ffy, ffyp, ffys, fsy, fsyp, fsys, fwy, fwyp, fwys, ppy, sfyps, ssyps, swyps, sy, &
+         sfyp, ssyp, swyp
+    use var, only : ffz, ffzp, fsz, fszp, fwz, fwzp, sfzps, sszps, swzps, sz, &
+         sfzp, sszp, swzp
 
-    use var, only : di1
-    use var, only : phi2, di2
-    use var, only : phi3, di3
+    use var, only : mu1
+    use var, only : rho2, ux2, uy2, uz2, phi2
+    use var, only : rho3, ux3, uy3, uz3, phi3
     
-    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1
-    use var, only : ta2,tb2,tc2,td2,te2,tf2
-    use var, only : ta3,tb3,tc3,td3,te3,tf3
+    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    use var, only : ta2,tb2,tc2,td2,te2,tf2,di2
+    use var, only : ta3,tb3,tc3,di3
 
     implicit none
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,vol1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: diss1, dphixx1
     real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: dphiy2, dphixx2, dphiyy2, dphizz2, ddphi2, vol2, temp2
@@ -374,6 +510,8 @@ contains
     integer :: ijk,i,j,k,l,m,is,code
     character(len=30) :: filename
 
+    real(mytype) :: y
+
     ek=zero;ek1=zero;dek=zero;dek1=zero;ep=zero;ep1=zero;dep=zero;dep1=zero;diss1=zero
 
     !x-derivatives
@@ -381,19 +519,19 @@ contains
     call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
     call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
     !y-derivatives
-    call transpose_x_to_y(ux1,td2)
-    call transpose_x_to_y(uy1,te2)
-    call transpose_x_to_y(uz1,tf2)
-    call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-    call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-    call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call transpose_x_to_y(ux1,ux2)
+    call transpose_x_to_y(uy1,uy2)
+    call transpose_x_to_y(uz1,uz2)
+    call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+    call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
     !!z-derivatives
-    call transpose_y_to_z(td2,td3)
-    call transpose_y_to_z(te2,te3)
-    call transpose_y_to_z(tf2,tf3)
-    call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+    call transpose_y_to_z(ux2,ux3)
+    call transpose_y_to_z(uy2,uy3)
+    call transpose_y_to_z(uz2,uz3)
+    call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+    call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+    call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
     !!all back to x-pencils
     call transpose_z_to_y(ta3,td2)
     call transpose_z_to_y(tb3,te2)
@@ -421,7 +559,9 @@ contains
           do i=1,xsize(1)
              do m=1,3
                 do l=1,3
-                   diss1(i,j,k)=diss1(i,j,k)+two*xnu*half*half*(A(l,m,i,j,k)+A(m,l,i,j,k))**two
+                   diss1(i,j,k) = diss1(i,j,k) &
+                        + (two * xnu * mu1(i, j, k)) &
+                        * (half * (A(l,m,i,j,k) + A(m,l,i,j,k)))**2
                 enddo
              enddo
           enddo
@@ -430,7 +570,7 @@ contains
 
     do ijk=1,xsize(1)*xsize(2)*xsize(3)
        xvol=real(vol1(ijk,1,1),8)
-       ek = ek + half * xvol * (ux1(ijk,1,1)**two+uy1(ijk,1,1)**two+uz1(ijk,1,1)**two)
+       ek = ek + half * xvol * rho1(ijk,1,1,1) * (ux1(ijk,1,1)**2+uy1(ijk,1,1)**2+uz1(ijk,1,1)**2)
        dek = dek + xvol * diss1(ijk,1,1)
     enddo
 
@@ -457,20 +597,47 @@ contains
 
        call transpose_z_to_y(dphizz3,dphizz2)
 
-       do ijk=1,ysize(1)*ysize(2)*ysize(3)
-          ddphi2(ijk,1,1)=dphixx2(ijk,1,1)+dphiyy2(ijk,1,1)+dphizz2(ijk,1,1)
-       enddo
+       ddphi2(:,:,:)=dphixx2(:,:,:)+dphiyy2(:,:,:)+dphizz2(:,:,:)
 
        do k=1,ysize(3)
           do j=1,ysize(2)
+             y = (j + ystart(2) - 2) * dy
              do i=1,ysize(1)
                 xvol=real(vol2(i,j,k),8)
-                ep=ep + xvol * (phi2(i,j,k,is)*(j-1)*dy)
-                dep=dep - xvol * (ddphi2(i,j,k)*xnu/sc(is)+uset(is)*dphiy2(i,j,k))*(j-1)*dy
+                ep = ep - xvol * ri(is) * phi2(i,j,k,is) * (gravy * y)
+                dep = dep &
+                     - xvol * ri(is) * (ddphi2(i,j,k)*xnu/sc(is) &
+                     - uset(is) * (gravy * dphiy2(i,j,k))) &
+                     * (gravy * y)
              enddo
           enddo
        enddo
     enddo
+
+    if (ilmn.and.((Fr**2).gt.zero)) then
+       call derxx(ta1, rho1(:,:,:,1), di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1)
+       call transpose_x_to_y(ta1, ta2)
+       call transpose_x_to_y(rho1(:,:,:,1), rho2)
+
+       call deryy(tb2, rho2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
+       call transpose_y_to_z(rho2, rho3)
+
+       call derzz(ta3, rho3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
+       call transpose_z_to_y(ta3, tc2)
+
+       do k = 1, ysize(3)
+          do j = 1, ysize(2)
+             y = (j + ystart(2) - 2) * dy
+             do i = 1, ysize(1)
+                xvol = real(vol2(i, j, k), 8)
+                ep = ep - xvol * (one / Fr**2) * rho2(i, j, k) * (gravy * y)
+                dep = dep - xvol * ((xnu / prandtl / (Fr**2)) &
+                     * (ta2(i, j, k) + tb2(i, j, k) + tc2(i, j, k))) &
+                     * (gravy * y)
+             enddo
+          enddo
+       enddo
+    endif
     ! if (ivirt==2) then
     !    ilag=1
     ! endif
@@ -624,12 +791,12 @@ contains
 
   end subroutine front
 
-  subroutine front2d ( phim3, xp )
+  subroutine front2d (phim3, xp)
 
     USE decomp_2d_io
     USE MPI
 
-    real(mytype),intent(in),dimension(zstart(1):zend(1),zstart(2):zend(2),1:numscalar) :: phim3
+    real(mytype),intent(in),dimension(zstart(1):zend(1),zstart(2):zend(2)) :: phim3
     real(mytype),intent(out) :: xp(1:2,1:2)
     real(mytype) :: xp1(1:2),y
     integer :: i, j, code
@@ -640,7 +807,7 @@ contains
     jloop: do j=zstart(2),zend(2)
        y = real( j - 1, mytype )*dy
        iloop: do i=zend(1), zstart(1), -1
-          if ( sum(phim3(i,j,:)) .ge. 0.01_mytype) then
+          if (phim3(i,j).ge.0.01_mytype) then
              xp(1,1:2) = (/ real (i-1,mytype)*dx, real (j-1,mytype)*dy /)
              exit jloop
           end if
@@ -651,6 +818,17 @@ contains
     call MPI_Bcast(xp(1,:), 2,real_type, int(xp1(2)), MPI_COMM_WORLD,code)
 
   end subroutine front2d
+
+  subroutine set_fluid_properties_lockexch(rho1, mu1)
+
+    implicit none
+
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: rho1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: mu1
+
+    mu1(:,:,:) = rho1(:,:,:)
+    
+  endsubroutine set_fluid_properties_lockexch
 
 end module lockexch
 

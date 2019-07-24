@@ -103,6 +103,10 @@ contains
     write(filestart,"('sauve-forces',I7.7)") ifirst-1
 
     if (itest1==1) then !write
+       if (mod(itime, icheckpoint).ne.0) then
+          return
+       endif
+       
        call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
             MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
             fh, ierror)
@@ -139,8 +143,7 @@ contains
 end module forces
 
 !***********************************************************************
-subroutine force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
-     ux2,uy2,ta2,tb2,tc2,td2,di2)
+subroutine force(ux1,uy1,ep1)
 
   !***********************************************************************
 
@@ -150,17 +153,19 @@ subroutine force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
   USE decomp_2d
   USE MPI
 
+  use var, only : ta1, tb1, tc1, td1, di1
+  use var, only : ux2, uy2, ta2, tb2, tc2, td2, di2
+
   implicit none
   character(len=30) :: filename
   integer :: nzmsize
   integer                                             :: i, iv, j, k, kk, ijk, code
   integer                                             :: nvect1,nvect2,nvect3
 
-  real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1
-  real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
-  real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ta1,tb1,tc1,td1,di1
-  real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: ux2, uy2
-  real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: ta2,tb2,tc2,td2,di2,ppi2
+  real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1, uy1
+  real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ep1
+
+  real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: ppi2
 
   real(mytype), dimension(nz) :: yLift,xDrag
   real(mytype) :: yLift_mean,xDrag_mean

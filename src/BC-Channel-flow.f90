@@ -28,7 +28,9 @@ module channel
   real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_channel, boundary_conditions_channel, postprocessing_channel, momentum_forcing_channel
+  PUBLIC :: init_channel, boundary_conditions_channel, postprocessing_channel, &
+       momentum_forcing_channel, &
+       geomcomplex_channel
 
 contains
 
@@ -502,5 +504,41 @@ contains
     endif
 
   ENDSUBROUTINE momentum_forcing_channel
+
+  subroutine geomcomplex_channel(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,yp,remp)
+
+    use decomp_2d, only : mytype
+    use param, only : zero, one, two
+    use ibm
+
+    implicit none
+
+    integer                    :: nxi,nxf,ny,nyi,nyf,nzi,nzf
+    real(mytype),dimension(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
+    real(mytype),dimension(ny) :: yp
+    real(mytype)               :: remp
+    integer                    :: j
+    real(mytype)               :: ym
+    real(mytype)               :: zeromach
+    real(mytype)               :: h
+
+    epsi(:,:,:) = zero
+    h = (yly - two) / two
+
+    zeromach=one
+    do while ((one + zeromach / two) .gt. one)
+       zeromach = zeromach/two
+    end do
+    zeromach = 1.0e1*zeromach
+
+    do j=nyi,nyf
+       ym=yp(j)
+       if ((ym.le.h).or.(ym.ge.(h+two))) then
+          epsi(:,j,:)=remp
+       endif
+    enddo
+
+    return
+  end subroutine geomcomplex_channel
 
 end module channel

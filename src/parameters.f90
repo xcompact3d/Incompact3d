@@ -52,6 +52,8 @@ subroutine parameter(input_i3d)
 
   USE lockexch, ONLY : pfront
 
+  USE forces, ONLY : nvol, xld, xrd, yld, yud
+
   implicit none
 
   character(len=80), intent(in) :: input_i3d
@@ -69,14 +71,17 @@ subroutine parameter(input_i3d)
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, rxxnu, cnu, fpi2, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu, iprocessing
   NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat
-  NAMELIST /ScalarParam/ sc, ri, &
+  NAMELIST /ScalarParam/ sc, ri, uset, cp, &
        nclxS1, nclxSn, nclyS1, nclySn, nclzS1, nclzSn, &
        scalar_lbound, scalar_ubound
   NAMELIST /LESModel/ jles, smagcst, walecst, iwall
   NAMELIST /WallModel/ smagwalldamp
 
-  NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf
-  NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, massfrac, mol_weight, imultispecies, primary_species
+  NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf,nvol
+  NAMELIST /ForceCVs/ xld, xrd, yld, yud
+  NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, &
+       massfrac, mol_weight, imultispecies, primary_species, &
+       Fr, ibirman_eos
   NAMELIST /CASE/ tgv_twod, pfront
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter start'
@@ -109,6 +114,14 @@ subroutine parameter(input_i3d)
   read(10, nml=Statistics)
   if (iibm.ne.0) then
      read(10, nml=ibmstuff)
+     if (nvol.gt.0) then
+        iforces = .TRUE.
+     endif
+  endif
+
+  if (iforces) then
+     allocate(xld(nvol), xrd(nvol), yld(nvol), yud(nvol))
+     read(10, nml=ForceCVs)
   endif
 
   if (numscalar.ne.0) then
@@ -123,9 +136,10 @@ subroutine parameter(input_i3d)
      allocate(mol_weight(numscalar))
      massfrac(:) = .FALSE.
      mol_weight(:) = one
-     allocate(sc(numscalar), ri(numscalar), uset(numscalar))
+     allocate(sc(numscalar), ri(numscalar), uset(numscalar), cp(numscalar))
      ri(:) = zero
      uset(:) = zero
+     cp(:) = zero
 
      allocate(scalar_lbound(numscalar), scalar_ubound(numscalar))
      scalar_lbound(:) = -huge(one)
@@ -368,6 +382,8 @@ subroutine parameter_defaults()
   USE decomp_2d
   USE complex_geometry
 
+  USE forces, ONLY : nvol
+
   IMPLICIT NONE
 
   integer :: i
@@ -394,6 +410,9 @@ subroutine parameter_defaults()
   nraf = 0
   nobjmax = 0
 
+  nvol = 0
+  iforces = .FALSE.
+
   itrip = 0
   wrotation = zero
   irotation = 0
@@ -415,6 +434,8 @@ subroutine parameter_defaults()
   npress = 1 !! By default people only need one pressure field
   ilmn_solve_temp = .FALSE.
   imultispecies = .FALSE.
+  Fr = zero
+  ibirman_eos = .FALSE.
 
   primary_species = -1
 

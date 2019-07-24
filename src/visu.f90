@@ -1,3 +1,90 @@
+SUBROUTINE visu(rho1, ux1, uy1, uz1, pp3, phi1, itime)
+
+  USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
+  USE decomp_2d, ONLY : fine_to_coarseV, transpose_z_to_y, transpose_y_to_x
+  USE decomp_2d_io, ONLY : decomp_2d_write_one
+  USE param, ONLY : ivisu, ioutput, nrhotime, ilmn, iscalar
+  USE variables, ONLY : sx, cifip6, cisip6, ciwip6, cifx6, cisx6, ciwx6
+  USE variables, ONLY : sy, cifip6y, cisip6y, ciwip6y, cify6, cisy6, ciwy6
+  USE variables, ONLY : sz, cifip6z, cisip6z, ciwip6z, cifz6, cisz6, ciwz6
+  USE variables, ONLY : numscalar
+  USE var, ONLY : uvisu
+  USE var, ONLY : pp1, ta1, di1, nxmsize
+  USE var, ONLY : pp2, ppi2, dip2, ph2, nymsize
+  USE var, ONLY : ppi3, dip3, ph3, nzmsize
+
+  IMPLICIT NONE
+
+  CHARACTER(len=30) :: filename
+
+  !! Inputs
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime), INTENT(IN) :: rho1
+  REAL(mytype), DIMENSION(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize), INTENT(IN) :: pp3
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar), INTENT(IN) :: phi1
+  INTEGER, INTENT(IN) :: itime
+
+  INTEGER :: is
+
+  IF ((ivisu.NE.0).AND.(MOD(itime, ioutput).EQ.0)) THEN
+     !! Write velocity
+     uvisu=0.
+     call fine_to_coarseV(1,ux1,uvisu)
+990  format('ux',I3.3)
+     write(filename, 990) itime/ioutput
+     call decomp_2d_write_one(1,uvisu,filename,2)
+
+     uvisu=0.
+     call fine_to_coarseV(1,uy1,uvisu)
+991  format('uy',I3.3)
+     write(filename, 991) itime/ioutput
+     call decomp_2d_write_one(1,uvisu,filename,2)
+
+     uvisu=0.
+     call fine_to_coarseV(1,uz1,uvisu)
+992  format('uz',I3.3)
+     write(filename, 992) itime/ioutput
+     call decomp_2d_write_one(1,uvisu,filename,2)
+
+     !WORK Z-PENCILS
+     call interzpv(ppi3,pp3,dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
+          (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
+     !WORK Y-PENCILS
+     call transpose_z_to_y(ppi3,pp2,ph3) !nxm nym nz
+     call interypv(ppi2,pp2,dip2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
+          (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
+     !WORK X-PENCILS
+     call transpose_y_to_x(ppi2,pp1,ph2) !nxm ny nz
+     call interxpv(ta1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
+          nxmsize,xsize(1),xsize(2),xsize(3),1)
+
+     uvisu=0._mytype
+     call fine_to_coarseV(1,ta1,uvisu)
+993  format('pp',I3.3)
+     write(filename, 993) itime/ioutput
+     call decomp_2d_write_one(1,uvisu,filename,2)
+
+     !! LMN - write out density
+     IF (ilmn) THEN
+        uvisu=0.
+        call fine_to_coarseV(1,rho1(:,:,:,1),uvisu)
+994     format('rho',I3.3)
+        write(filename, 994) itime/ioutput
+        call decomp_2d_write_one(1,uvisu,filename,2)
+     ENDIF
+
+     !! Scalars
+     IF (iscalar.NE.0) THEN
+995     format('phi',I1.1,I3.3)
+        DO is = 1, numscalar
+           uvisu=0.
+           call fine_to_coarseV(1,phi1(:,:,:,is),uvisu)
+           write(filename, 995) is, itime/ioutput
+           call decomp_2d_write_one(1,uvisu,filename,2)
+        ENDDO
+     ENDIF
+  ENDIF
+END SUBROUTINE visu
 !############################################################################
 subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
 

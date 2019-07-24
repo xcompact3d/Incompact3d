@@ -1,21 +1,81 @@
-PROGRAM incompact3d
+program incompact3d
 
-  USE decomp_2d
+  use var
+  use case
+
+  use transeq, only : calculate_transeq_rhs
+  use time_integrators, only : intt
+  use navier, only : velocity_to_momentum, momentum_to_velocity, pre_correc, &
+       calc_divu_constraint, solve_poisson, corpg
+  use tools, only : test_flow, restart, simu_stats
+
+  implicit none
+
+  call init_incompact3d()
+
+  do itime=ifirst,ilast
+     t=itime*dt
+     call simu_stats(2)
+
+     call postprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
+
+     do itr=1,iadvance_time
+
+        call set_fluid_properties(rho1,mu1)
+        call boundary_conditions(rho1,ux1,uy1,uz1,phi1,ep1)
+        call calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
+
+        !! XXX N.B. from this point, X-pencil velocity arrays contain momentum.
+        call velocity_to_momentum(rho1,ux1,uy1,uz1)
+
+        call intt(rho1,ux1,uy1,uz1,phi1,drho1,dux1,duy1,duz1,dphi1)
+        call pre_correc(ux1,uy1,uz1,ep1)
+
+        call calc_divu_constraint(divu3,rho1,phi1)
+        call solve_poisson(pp3,px1,py1,pz1,rho1,ux1,uy1,uz1,ep1,drho1,divu3)
+        call corpg(ux1,uy1,uz1,px1,py1,pz1)
+
+        call momentum_to_velocity(rho1,ux1,uy1,uz1)
+        !! XXX N.B. from this point, X-pencil velocity arrays contain velocity.
+
+        call test_flow(rho1,ux1,uy1,uz1,phi1,ep1,drho1,divu3)
+
+     enddo !! End sub timesteps
+
+     call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,1)
+
+     call simu_stats(3)
+
+     CALL visu(rho1,ux1,uy1,uz1,pp3(:,:,:,1),phi1,itime)
+
+  enddo !! End time loop
+
+  call finalise_incompact3d()
+
+end program incompact3d
+
+subroutine init_incompact3d()
+
+  use MPI
+  use decomp_2d
   USE decomp_2d_poisson, ONLY : decomp_2d_poisson_init
-  use decomp_2d_io
-  USE variables
-  USE ibm
-  USE param
-  USE var
-  USE MPI
-  USE derivX
-  USE derivZ
-  USE case
-  USE simulation_stats
+  use case
+  use forces
+  
+  use var
 
-#ifdef FORCES
-  USE forces
-#endif
+  use navier, only : calc_divu_constraint
+  use tools, only : test_speed_min_max, test_scalar_min_max, &
+       restart, &
+       simu_stats
+  
+  use param, only : ilesmod, jles
+  use param, only : irestart
+  
+  use variables, only : nx, ny, nz, nxm, nym, nzm
+  use variables, only : p_row, p_col
+  use variables, only : nstat, nvisu, nprobe
+
   implicit none
 
   integer :: ierr
@@ -23,10 +83,6 @@ PROGRAM incompact3d
   integer :: nargin, FNLength, status, DecInd
   logical :: back
   character(len=80) :: InputFN, FNBase
-
-  !!-------------------------------------------------------------------------------
-  !! Initialisation
-  !!-------------------------------------------------------------------------------
 
   !! Initialise MPI
   call MPI_INIT(ierr)
@@ -78,11 +134,7 @@ PROGRAM incompact3d
   endif
 
   if (irestart==0) then
-     call init(rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,dphi1)
-     pp3(:,:,:,1) = zero
-     px1(:,:,:) = zero
-     py1(:,:,:) = zero
-     pz1(:,:,:) = zero
+     call init(rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,dphi1,pp3,px1,py1,pz1)
      CALL visu(rho1, ux1, uy1, uz1, pp3(:,:,:,1),phi1, 0)
   else
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,0)
@@ -94,10 +146,10 @@ PROGRAM incompact3d
      call body(ux1,uy1,uz1,ep1,0)
   endif
 
-#ifdef FORCES
-  call init_forces()
-  if (irestart==1) call restart_forces(0)
-#endif
+  if (iforces) then
+     call init_forces()
+     if (irestart==1) call restart_forces(0)
+  endif
 
   call test_speed_min_max(ux1,uy1,uz1)
   if (iscalar==1) call test_scalar_min_max(phi1)
@@ -105,99 +157,24 @@ PROGRAM incompact3d
   call simu_stats(1)
 
   call calc_divu_constraint(divu3, rho1, phi1)
-  !!-------------------------------------------------------------------------------
-  !! End initialisation
-  !!-------------------------------------------------------------------------------
+
   if(nrank.eq.0)then
      open(42,file='time_evol.dat',form='formatted')
   endif
 
-  do itime=ifirst,ilast
-     t=itime*dt
-     call simu_stats(2)
+endsubroutine init_incompact3d
 
-     call postprocessing(ux1,uy1,uz1,pp3,phi1,ep1)
+subroutine finalise_incompact3d()
 
-     do itr=1,iadvance_time
+  use MPI 
+  use decomp_2d
 
-        !!-------------------------------------------------------------------------
-        !! Initialise timestep
-        !!-------------------------------------------------------------------------
-        call boundary_conditions(rho1,ux1,uy1,uz1,phi1,ep1)
-        !!-------------------------------------------------------------------------
-        !! End initialise timestep
-        !!-------------------------------------------------------------------------
+  use tools, only : simu_stats
 
-        CALL calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
+  implicit none
 
-        !!-------------------------------------------------------------------------
-        !! Time integrate transport equations
-        !!-------------------------------------------------------------------------
+  integer :: ierr
 
-        !! XXX N.B. from this point, X-pencil velocity arrays contain momentum.
-        call velocity_to_momentum(rho1, ux1, uy1, uz1)
-
-        call intt(rho1,ux1,uy1,uz1,phi1,drho1,dux1,duy1,duz1,dphi1)
-        call pre_correc(ux1,uy1,uz1,ep1)
-        !!-------------------------------------------------------------------------
-        !! End time integrate transport equations
-        !!-------------------------------------------------------------------------
-
-        if (iibm==1) then !solid body old school
-           call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,1)
-           call body(ux1,uy1,uz1,ep1,1)
-           call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,2)
-        endif
-
-        !!-------------------------------------------------------------------------
-        !! Poisson solver and velocity correction
-        !!-------------------------------------------------------------------------
-        call calc_divu_constraint(divu3, rho1, phi1)
-        call solve_poisson(pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
-        call corpg(ux1,uy1,uz1,px1,py1,pz1)
-
-        call momentum_to_velocity(rho1, ux1, uy1, uz1)
-        !! XXX N.B. from this point, X-pencil velocity arrays contain velocity.
-
-        !!-------------------------------------------------------------------------
-        !! End Poisson solver and velocity correction
-        !!-------------------------------------------------------------------------
-
-        if (mod(itime,10)==0) then
-           call divergence(dv3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,2)
-           call test_speed_min_max(ux1,uy1,uz1)
-           if (iscalar==1) call test_scalar_min_max(phi1)
-        endif
-
-     enddo !! End sub timesteps
-#ifdef FORCES
-     call force(ux1,uy1,ep1,ta1,tb1,tc1,td1,di1,&
-          ux2,uy2,ta2,tb2,tc2,td2,di2)
-     if (mod(itime,icheckpoint).eq.0) then
-        call restart_forces(1)
-     endif
-#endif
-
-     !!----------------------------------------------------------------------------
-     !! Post-processing / IO
-     !!----------------------------------------------------------------------------
-
-     if (mod(itime,icheckpoint).eq.0) then
-        call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,1)
-     endif
-
-     call simu_stats(3)
-
-     CALL visu(rho1, ux1, uy1, uz1, pp3(:,:,:,1), phi1, itime)
-     !!----------------------------------------------------------------------------
-     !! End post-processing / IO
-     !!----------------------------------------------------------------------------
-
-  enddo !! End time loop
-
-  !!-------------------------------------------------------------------------------
-  !! End simulation
-  !!-------------------------------------------------------------------------------
   if(nrank.eq.0)then
      close(42)
   endif
@@ -205,307 +182,5 @@ PROGRAM incompact3d
   call decomp_2d_finalize
   CALL MPI_FINALIZE(ierr)
 
-END PROGRAM incompact3d
+endsubroutine finalise_incompact3d
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!  SUBROUTINE: calculate_transeq_rhs
-!!      AUTHOR: Paul Bartholomew
-!! DESCRIPTION: Calculates the right hand sides of all transport
-!!              equations - momentum, scalar transport, etc.
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
-
-  USE decomp_2d, ONLY : mytype, xsize, zsize
-  USE variables, ONLY : numscalar
-  USE param, ONLY : ntime, ilmn, nrhotime, ilmn_solve_temp
-  USE transeq, ONLY : momentum_rhs_eq, continuity_rhs_eq, scalar, temperature_rhs_eq
-
-  IMPLICIT NONE
-
-  !! Inputs
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime), INTENT(IN) :: rho1
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar), INTENT(IN) :: phi1
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ep1
-  REAL(mytype), DIMENSION(zsize(1), zsize(2), zsize(3)), INTENT(IN) :: divu3
-
-  !! Outputs
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime, numscalar) :: dphi1
-
-  !! Momentum equations
-  CALL momentum_rhs_eq(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
-
-  !! Scalar equations
-  !! XXX Not yet LMN!!!
-  CALL scalar(dphi1, rho1, ux1, phi1)
-
-  !! Other (LMN, ...)
-  IF (ilmn) THEN
-     IF (ilmn_solve_temp) THEN
-        CALL temperature_rhs_eq(drho1, rho1, ux1, phi1)
-     ELSE
-        CALL continuity_rhs_eq(drho1, rho1, ux1, divu3)
-     ENDIF
-  ENDIF
-
-END SUBROUTINE calculate_transeq_rhs
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!  SUBROUTINE: solve_poisson
-!!      AUTHOR: Paul Bartholomew
-!! DESCRIPTION: Takes the intermediate momentum field as input,
-!!              computes div and solves pressure-Poisson equation.
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE solve_poisson(pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
-
-  USE decomp_2d, ONLY : mytype, xsize, zsize, ph1
-  USE decomp_2d_poisson, ONLY : poisson
-  USE var, ONLY : nzmsize
-  USE var, ONLY : dv3
-  USE param, ONLY : ntime, nrhotime, npress
-  USE param, ONLY : ilmn, ivarcoeff
-
-  IMPLICIT NONE
-
-  !! Inputs
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ep1
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime), INTENT(IN) :: rho1
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime), INTENT(IN) :: drho1
-  REAL(mytype), DIMENSION(zsize(1), zsize(2), zsize(3)), INTENT(IN) :: divu3
-
-  !! Outputs
-  REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: px1, py1, pz1
-
-  !! Locals
-  INTEGER :: nlock, poissiter
-  LOGICAL :: converged
-  REAL(mytype) :: atol, rtol
-
-  nlock = 1 !! Corresponds to computing div(u*)
-  converged = .FALSE.
-  poissiter = 0
-
-  atol = 1.0e-14_mytype !! Absolute tolerance for Poisson solver
-  rtol = 1.0e-14_mytype !! Relative tolerance for Poisson solver
-
-  IF (ilmn.AND.ivarcoeff) THEN
-     !! Variable-coefficient Poisson solver works on div(u), not div(rho u)
-     !! rho u -> u
-     CALL momentum_to_velocity(rho1, ux1, uy1, uz1)
-  ENDIF
-
-  CALL divergence(pp3(:,:,:,1),rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
-  IF (ilmn.AND.ivarcoeff) THEN
-     dv3(:,:,:) = pp3(:,:,:,1)
-  ENDIF
-
-  DO WHILE(.NOT.converged)
-     IF (ivarcoeff) THEN
-
-        !! Test convergence
-        CALL test_varcoeff(converged, pp3, dv3, atol, rtol, poissiter)
-
-        IF (.NOT.converged) THEN
-           !! Evaluate additional RHS terms
-           CALL calc_varcoeff_rhs(pp3(:,:,:,1), rho1, px1, py1, pz1, dv3, drho1, ep1, divu3, &
-                poissiter)
-        ENDIF
-     ENDIF
-
-     IF (.NOT.converged) THEN
-        CALL poisson(pp3(:,:,:,1))
-
-        !! Need to update pressure gradient here for varcoeff
-        CALL gradp(px1,py1,pz1,pp3(:,:,:,1))
-
-        IF ((.NOT.ilmn).OR.(.NOT.ivarcoeff)) THEN
-           !! Once-through solver
-           !! - Incompressible flow
-           !! - LMN - constant-coefficient solver
-           converged = .TRUE.
-        ENDIF
-     ENDIF
-
-     poissiter = poissiter + 1
-  ENDDO
-
-  IF (ilmn.AND.ivarcoeff) THEN
-     !! Variable-coefficient Poisson solver works on div(u), not div(rho u)
-     !! u -> rho u
-     CALL velocity_to_momentum(rho1, ux1, uy1, uz1)
-  ENDIF
-
-END SUBROUTINE solve_poisson
-
-SUBROUTINE visu(rho1, ux1, uy1, uz1, pp3, phi1, itime)
-
-  USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
-  USE decomp_2d, ONLY : fine_to_coarseV, transpose_z_to_y, transpose_y_to_x
-  USE decomp_2d_io, ONLY : decomp_2d_write_one
-  USE param, ONLY : ivisu, ioutput, nrhotime, ilmn, iscalar
-  USE variables, ONLY : sx, cifip6, cisip6, ciwip6, cifx6, cisx6, ciwx6
-  USE variables, ONLY : sy, cifip6y, cisip6y, ciwip6y, cify6, cisy6, ciwy6
-  USE variables, ONLY : sz, cifip6z, cisip6z, ciwip6z, cifz6, cisz6, ciwz6
-  USE variables, ONLY : numscalar
-  USE var, ONLY : uvisu
-  USE var, ONLY : pp1, ta1, di1, nxmsize
-  USE var, ONLY : pp2, ppi2, dip2, ph2, nymsize
-  USE var, ONLY : ppi3, dip3, ph3, nzmsize
-
-  IMPLICIT NONE
-
-  CHARACTER(len=30) :: filename
-
-  !! Inputs
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime), INTENT(IN) :: rho1
-  REAL(mytype), DIMENSION(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize), INTENT(IN) :: pp3
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar), INTENT(IN) :: phi1
-  INTEGER, INTENT(IN) :: itime
-
-  INTEGER :: is
-
-  IF ((ivisu.NE.0).AND.(MOD(itime, ioutput).EQ.0)) THEN
-     !! Write velocity
-     uvisu=0.
-     call fine_to_coarseV(1,ux1,uvisu)
-990  format('ux',I3.3)
-     write(filename, 990) itime/ioutput
-     call decomp_2d_write_one(1,uvisu,filename,2)
-
-     uvisu=0.
-     call fine_to_coarseV(1,uy1,uvisu)
-991  format('uy',I3.3)
-     write(filename, 991) itime/ioutput
-     call decomp_2d_write_one(1,uvisu,filename,2)
-
-     uvisu=0.
-     call fine_to_coarseV(1,uz1,uvisu)
-992  format('uz',I3.3)
-     write(filename, 992) itime/ioutput
-     call decomp_2d_write_one(1,uvisu,filename,2)
-
-     !WORK Z-PENCILS
-     call interzpv(ppi3,pp3,dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
-          (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
-     !WORK Y-PENCILS
-     call transpose_z_to_y(ppi3,pp2,ph3) !nxm nym nz
-     call interypv(ppi2,pp2,dip2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
-          (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
-     !WORK X-PENCILS
-     call transpose_y_to_x(ppi2,pp1,ph2) !nxm ny nz
-     call interxpv(ta1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
-          nxmsize,xsize(1),xsize(2),xsize(3),1)
-
-     uvisu=0._mytype
-     call fine_to_coarseV(1,ta1,uvisu)
-993  format('pp',I3.3)
-     write(filename, 993) itime/ioutput
-     call decomp_2d_write_one(1,uvisu,filename,2)
-
-     !! LMN - write out density
-     IF (ilmn) THEN
-        uvisu=0.
-        call fine_to_coarseV(1,rho1(:,:,:,1),uvisu)
-994     format('rho',I3.3)
-        write(filename, 994) itime/ioutput
-        call decomp_2d_write_one(1,uvisu,filename,2)
-     ENDIF
-
-     !! Scalars
-     IF (iscalar.NE.0) THEN
-995     format('phi',I1.1,I3.3)
-        DO is = 1, numscalar
-           uvisu=0.
-           call fine_to_coarseV(1,phi1(:,:,:,is),uvisu)
-           write(filename, 995) is, itime/ioutput
-           call decomp_2d_write_one(1,uvisu,filename,2)
-        ENDDO
-     ENDIF
-  ENDIF
-END SUBROUTINE visu
-
-SUBROUTINE intt(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
-
-  USE decomp_2d, ONLY : mytype, xsize
-  USE param, ONLY : zero, one
-  USE param, ONLY : ntime, nrhotime, ilmn, iscalar, ilmn_solve_temp
-  USE param, ONLY : primary_species, massfrac
-  use param, only : scalar_lbound, scalar_ubound
-  USE variables, ONLY : numscalar
-  USE var, ONLY : ta1, tb1
-
-  IMPLICIT NONE
-
-  !! INPUT/OUTPUT
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1, dux1, duy1, duz1
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime, numscalar) :: dphi1
-
-  !! OUTPUT
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
-
-  !! LOCAL
-  INTEGER :: is, i, j, k
-
-  CALL int_time_momentum(ux1, uy1, uz1, dux1, duy1, duz1)
-
-  IF (ilmn) THEN
-     IF (ilmn_solve_temp) THEN
-        CALL int_time_temperature(rho1, drho1, dphi1, phi1)
-     ELSE
-        CALL int_time_continuity(rho1, drho1)
-     ENDIF
-  ENDIF
-
-  IF (iscalar.NE.0) THEN
-     IF (ilmn.and.ilmn_solve_temp) THEN
-        !! Compute temperature
-        call calc_temp_eos(ta1, rho1(:,:,:,1), phi1, tb1, xsize(1), xsize(2), xsize(3))
-     ENDIF
-
-     DO is = 1, numscalar
-        IF (is.NE.primary_species) THEN
-           CALL int_time(phi1(:,:,:,is), dphi1(:,:,:,:,is))
-
-           DO k = 1, xsize(3)
-              DO j = 1, xsize(2)
-                 DO i = 1, xsize(1)
-                    phi1(i,j,k,is) = max(phi1(i,j,k,is),scalar_lbound(is))
-                    phi1(i,j,k,is) = min(phi1(i,j,k,is),scalar_ubound(is))
-                 ENDDO
-              ENDDO
-           ENDDO
-        ENDIF
-     ENDDO
-
-     IF (primary_species.GE.1) THEN
-        phi1(:,:,:,primary_species) = one
-        DO is = 1, numscalar
-           IF ((is.NE.primary_species).AND.massfrac(is)) THEN
-              phi1(:,:,:,primary_species) = phi1(:,:,:,primary_species) - phi1(:,:,:,is)
-           ENDIF
-        ENDDO
-
-        DO k = 1, xsize(3)
-           DO j = 1, xsize(2)
-              DO i = 1, xsize(1)
-                 phi1(i,j,k,primary_species) = max(phi1(i,j,k,primary_species),zero)
-                 phi1(i,j,k,primary_species) = min(phi1(i,j,k,primary_species),one)
-              ENDDO
-           ENDDO
-        ENDDO
-     ENDIF
-
-     IF (ilmn.and.ilmn_solve_temp) THEN
-        !! Compute rho
-        call calc_temp_eos(rho1(:,:,:,1), ta1, phi1, tb1, xsize(1), xsize(2), xsize(3))
-     ENDIF
-  ENDIF
-
-ENDSUBROUTINE intt

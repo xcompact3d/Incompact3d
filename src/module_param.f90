@@ -228,6 +228,7 @@ module param
   integer :: ntime ! How many (sub)timestpeps do we need to store?
   integer :: icheckpoint,irestart,idebmod,ioutput,imodulo2,idemarre,icommence,irecord
   integer :: iscalar,nxboite,istat,iread,iadvance_time,irotation,iibm
+  logical :: iforces
   integer :: npif,izap
   integer :: ivisu, ipost, initstat
   real(mytype) :: xlx,yly,zlz,dx,dy,dz,dx2,dy2,dz2,t,xxk1,xxk2
@@ -273,7 +274,7 @@ module param
 
   !! LMN
   logical :: ilmn, ilmn_bound, ilmn_solve_temp
-  real(mytype) :: pressure0, prandtl
+  real(mytype) :: pressure0, prandtl, Fr
   integer :: nrhotime, npress
   logical :: ivarcoeff
 
@@ -281,6 +282,8 @@ module param
   logical, allocatable, dimension(:) :: massfrac
   real(mytype), allocatable, dimension(:) :: mol_weight
   integer :: primary_species
+
+  logical :: ibirman_eos
 
   !! Case-specific variables
   logical :: tgv_twod
