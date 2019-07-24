@@ -292,6 +292,10 @@ subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1,ire
   character(len=30) :: filename, filestart
 
   if (iresflg .eq. 1 ) then !Writing restart
+     if (mod(itime, icheckpoint).ne.0) then
+        return
+     endif
+     
      if (nrank==0) print *,'===========================================================<<<<<'
      if (nrank==0) print *,'Writing restart point',itime/icheckpoint
      !if (nrank==0) print *,'File size',real((s3df*16.)*1e-9,4),'GB'

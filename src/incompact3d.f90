@@ -51,9 +51,7 @@ PROGRAM incompact3d
         endif
      endif
 
-     if (mod(itime,icheckpoint).eq.0) then
-        call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,1)
-     endif
+     call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,1)
 
      call simu_stats(3)
 
