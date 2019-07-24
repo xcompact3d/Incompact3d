@@ -18,7 +18,7 @@ PROGRAM incompact3d
 
      do itr=1,iadvance_time
 
-        call set_fluid_properties(rho1, mu1)
+        call set_fluid_properties(rho1,mu1)
         call boundary_conditions(rho1,ux1,uy1,uz1,phi1,ep1)
         CALL calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
@@ -34,7 +34,7 @@ PROGRAM incompact3d
            call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,2)
         endif
 
-        call calc_divu_constraint(divu3, rho1, phi1)
+        call calc_divu_constraint(divu3,rho1,phi1)
         call solve_poisson(pp3,px1,py1,pz1,rho1,ux1,uy1,uz1,ep1,drho1,divu3)
         call corpg(ux1,uy1,uz1,px1,py1,pz1)
 
