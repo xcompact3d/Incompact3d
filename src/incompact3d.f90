@@ -5,6 +5,8 @@ program incompact3d
 
   use transeq, only : calculate_transeq_rhs
   use time_integrators, only : intt
+  use navier, only : velocity_to_momentum, momentum_to_velocity, pre_correc, &
+       calc_divu_constraint, solve_poisson, corpg
 
   implicit none
 
@@ -60,6 +62,8 @@ subroutine init_incompact3d()
   use forces
   
   use var
+
+  use navier, only : calc_divu_constraint
   
   use param, only : ilesmod, jles
   use param, only : irestart

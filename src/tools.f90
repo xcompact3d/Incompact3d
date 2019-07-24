@@ -1235,6 +1235,8 @@ subroutine test_flow(rho1,ux1,uy1,uz1,phi1,ep1,drho1,divu3)
   use decomp_2d
   use param
 
+  use navier, only : divergence
+
   use var, only : numscalar, dv3
   
   implicit none

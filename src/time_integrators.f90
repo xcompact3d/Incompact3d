@@ -338,6 +338,7 @@ contains
     USE variables
     USE decomp_2d
 
+    USE navier, ONLY : lmn_t_to_rho_trans
     USE var, ONLY : tc1, tb1
 
     implicit none
