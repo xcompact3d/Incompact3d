@@ -1229,3 +1229,26 @@ SUBROUTINE calc_mweight(mweight, phi, xlen, ylen, zlen)
   mweight(:,:,:) = one / mweight(:,:,:)
 
 ENDSUBROUTINE calc_mweight
+
+subroutine test_flow(rho1,ux1,uy1,uz1,phi1,ep1,drho1,divu3)
+
+  use decomp_2d
+  use param
+
+  use var, only : numscalar, dv3
+  
+  implicit none
+
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: ux1, uy1, uz1, ep1
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3), nrhotime), intent(in) :: rho1
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar), intent(in) :: phi1
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime), intent(in) :: drho1
+  real(mytype), dimension(zsize(1), zsize(2), zsize(3)), intent(in) :: divu3
+  
+  if (mod(itime,10)==0) then
+     call divergence(dv3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,2)
+     call test_speed_min_max(ux1,uy1,uz1)
+     if (iscalar==1) call test_scalar_min_max(phi1)
+  endif
+
+endsubroutine test_flow

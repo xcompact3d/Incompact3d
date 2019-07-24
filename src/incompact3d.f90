@@ -35,11 +35,7 @@ PROGRAM incompact3d
         call momentum_to_velocity(rho1,ux1,uy1,uz1)
         !! XXX N.B. from this point, X-pencil velocity arrays contain velocity.
 
-        if (mod(itime,10)==0) then
-           call divergence(dv3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,2)
-           call test_speed_min_max(ux1,uy1,uz1)
-           if (iscalar==1) call test_scalar_min_max(phi1)
-        endif
+        call test_flow(rho1,ux1,uy1,uz1,phi1,ep1,drho1,divu3)
 
      enddo !! End sub timesteps
 
@@ -185,3 +181,4 @@ subroutine finalise_incompact3d()
   CALL MPI_FINALIZE(ierr)
 
 endsubroutine finalise_incompact3d
+
