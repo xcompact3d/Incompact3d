@@ -68,7 +68,7 @@ subroutine parameter(input_i3d)
        nclx1, nclxn, ncly1, nclyn, nclz1, nclzn, &
        ivisu, ipost, &
        gravx, gravy, gravz
-  NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, rxxnu, cnu, fpi2, ipinter
+  NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, nu0nu, cnu, fpi2, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu, iprocessing
   NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat
   NAMELIST /ScalarParam/ sc, ri, uset, cp, &
@@ -174,6 +174,7 @@ subroutine parameter(input_i3d)
   endif
   ! !! These are the 'optional'/model parameters
   ! read(10, nml=ScalarParam)
+  if(ilesmod==0) nu0nu=four; cnu=0.44_mytype 
   if(ilesmod.ne.0) read(10, nml=LESModel)
   ! read(10, nml=TurbulenceWallModel)
   read(10, nml=CASE) !! Read case-specific variables

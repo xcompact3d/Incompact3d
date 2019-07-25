@@ -57,8 +57,8 @@ subroutine Compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,iconservative)
 
   elseif(jLES.eq.2) then !WALE
 
-     call wale(nut1,ux1,uy1,uz1)
-
+     !call wale(nut1,ux1,uy1,uz1)
+     if(nrank==0) print *, 'WALES model not available at the moment'
   elseif(jLES.eq.3) then ! Lilly-style Dynamic Smagorinsky
 
   endif
@@ -188,228 +188,193 @@ subroutine smag(nut1,ux1,uy1,uz1)
 
 end subroutine smag
 !************************************************************
-subroutine wale(nut1,ux1,uy1,uz1)
-
-
-  USE param
-  USE variables
-  USE decomp_2d
-  USE decomp_2d_io
-
-  implicit none
-
-  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
-  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: gxx1, gyx1, gzx1, &
-       gxy1, gyy1, gzy1, gxz1, gyz1, gzz1
-  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: srt_wale, srt_smag
-  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: srt_wale2, srt_smag2, nut2
-  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sxxd1, syyd1, szzd1, sxyd1, sxzd1, syzd1
-  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1
-
-  character(len = 30) :: filename
-  integer :: i, j, k
-
-  sxxd1 = gxx1 * gxx1 + gxy1 * gyx1 + gxz1 * gzx1 - (one / three) * (gxx1 * gxx1 + gyy1 * gyy1 + gzz1 * gzz1 + two * gxy1 * gyx1 + two * gxz1 * gzx1 + two * gzy1 * gyz1)
-  sxyd1 = half * (gxx1 * gxy1 + gxy1 * gyy1 + gxz1 * gzy1 + gyx1 * gxx1 + gyy1 * gyx1 + gyz1 * gzx1)
-  sxzd1 = half * (gxx1 * gxz1 + gxy1 * gyz1 + gxz1 * gzz1 + gzx1 * gxx1 + gzy1 * gyx1 + gzz1 * gzx1)
-  syyd1 = gyx1 * gxy1 + gyy1 * gyy1 + gyz1 * gzy1 - (one / three) * (gxx1 * gxx1 + gyy1 * gyy1 + gzz1 * gzz1 + two * gxy1 * gyx1 + two * gxz1 * gzx1 + two * gzy1 * gyz1)
-  syzd1 = half * (gyx1 * gxz1 + gyy1 * gyz1 + gyz1 * gzz1 + gzx1 * gxy1 + gzy1 * gyy1 + gzz1 * gzy1)
-  szzd1 = gzx1 * gxz1 + gzy1 * gyz1 + gzz1 * gzz1 - (one / three) * (gxx1 * gxx1 + gyy1 * gyy1 + gzz1 * gzz1 + two * gxy1 * gyx1 + two * gxz1 * gzx1 + two * gzy1 * gyz1)
-
-  srt_wale = zero
-  srt_wale = sxxd1 * sxxd1 + syyd1 * syyd1 + szzd1 * szzd1 + two * sxyd1 * sxyd1 + two * sxzd1 * sxzd1 + two * syzd1 * syzd1
-
-  nut1 = zero; nut2 = zero
-  call transpose_x_to_y(srt_smag, srt_smag2)
-  call transpose_x_to_y(srt_wale, srt_wale2)
-  do k = 1, ysize(3)
-     do j = 1, ysize(2)
-        do i = 1, ysize(1)
-           nut2(i, j, k) = ((walecst * del(j))**two) * ((srt_wale2(i, j, k)**(three / two)) / ((srt_smag2(i, j, k)**(five / two)) + (srt_wale2(i, j, k)**(five / four))))
-        enddo
-     enddo
-  enddo
-  call transpose_y_to_x(nut2, nut1)
-
-  if (nrank==0) print *, "wale srt_wale min max= ", minval(srt_wale), maxval(srt_wale)
-  if (nrank==0) print *, "wale nut1     min max= ", minval(nut1), maxval(nut1)
-
-  if (mod(itime, ioutput).eq.0) then
-
-     write(filename, "('./data/srt_wale',I4.4)") itime / ioutput
-     call decomp_2d_write_one(1, srt_wale, filename, 2)
-
-     write(filename, "('./data/nut_wale',I4.4)") itime / ioutput
-     call decomp_2d_write_one(1, nut1, filename, 2)
-
-  endif
-
-end subroutine wale
-
-!subroutine dynsmag(ux1,uy1,uz1,ep1,sxx1,syy1,szz1,sxy1,sxz1,syz1,&
-!  srt_smag,nut1,di1,ta1,tb1,tc1,td1,ta2,tb2,tc2,td2,te2,tf2,&
-!  tg2,th2,ti2,di2,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3)
+!subroutine wale(nut1,ux1,uy1,uz1)
+!
 !
 !  USE param
 !  USE variables
 !  USE decomp_2d
 !  USE decomp_2d_io
-!  USE MPI
 !
 !  implicit none
 !
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, ep1, srt_smag
+!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: gxx1, gyx1, gzx1, &
+!       gxy1, gyy1, gzy1, gxz1, gyz1, gzz1
+!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: srt_wale, srt_smag
+!  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: srt_wale2, srt_smag2, nut2
+!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sxxd1, syyd1, szzd1, sxyd1, sxzd1, syzd1
 !  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1
 !
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1f, uy1f, uz1f
-!  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ux2f, uy2f, uz2f, ep2
-!  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: ux3f, uy3f, uz3f
-!
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: uxx1, uyy1, uzz1, uxy1, uxz1, uyz1
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: uxx1f, uyy1f, uzz1f, uxy1f, uxz1f, uyz1f
-!  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: uxx2f, uyy2f, uzz2f, uxy2f, uxz2f, uyz2f
-!  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: uxx3f, uyy3f, uzz3f, uxy3f, uxz3f, uyz3f
-!
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ta1, tb1, tc1, td1, di1
-!  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ta2, tb2, tc2, td2, te2, tf2, tg2, th2, ti2, di2
-!  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: ta3, tb3, tc3, td3, te3, tf3, tg3, th3, ti3, di3
-!
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sxx1, syy1, szz1, sxy1, sxz1, syz1
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sxx1f, syy1f, szz1f, sxy1f, sxz1f, syz1f
-!  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: syy2f, szz2f, sxy2f, syz2f
-!  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: szz3f, syz3f
-!
-!  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: nut2, srt_smag2
-!
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: gxx1f, gyx1f, gzx1f, gxz1f
-!  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: gxy2f, gyy2f, gzy2f, gxz2f
-!  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: gxz3f, gyz3f, gzz3f
-!
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: axx1, ayy1, azz1, axy1, axz1, ayz1
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: axx1f, ayy1f, azz1f, axy1f, axz1f, ayz1f
-!  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: axx2f, ayy2f, azz2f, axy2f, axz2f, ayz2f
-!  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: axx3f, ayy3f, azz3f, axy3f, axz3f, ayz3f
-!
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: bbxx1, bbyy1, bbzz1, bbxy1, bbxz1, bbyz1
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: lxx1, lyy1, lzz1, lxy1, lxz1, lyz1
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: mxx1, myy1, mzz1, mxy1, mxz1, myz1
-!
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: smagC1, smagC1f, dsmagcst1
-!  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: smagC2, smagC2f, dsmagcst2
-!  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: smagC3, smagC3f, dsmagcst3
-!
 !  character(len = 30) :: filename
+!  integer :: i, j, k
 !
-!  integer :: i, j, k, ijk, code, nvect1
-!  nvect1 = xsize(1) * xsize(2) * xsize(3)
+!  sxxd1 = gxx1 * gxx1 + gxy1 * gyx1 + gxz1 * gzx1 - (one / three) * (gxx1 * gxx1 + gyy1 * gyy1 + gzz1 * gzz1 + two * gxy1 * gyx1 + two * gxz1 * gzx1 + two * gzy1 * gyz1)
+!  sxyd1 = half * (gxx1 * gxy1 + gxy1 * gyy1 + gxz1 * gzy1 + gyx1 * gxx1 + gyy1 * gyx1 + gyz1 * gzx1)
+!  sxzd1 = half * (gxx1 * gxz1 + gxy1 * gyz1 + gxz1 * gzz1 + gzx1 * gxx1 + gzy1 * gyx1 + gzz1 * gzx1)
+!  syyd1 = gyx1 * gxy1 + gyy1 * gyy1 + gyz1 * gzy1 - (one / three) * (gxx1 * gxx1 + gyy1 * gyy1 + gzz1 * gzz1 + two * gxy1 * gyx1 + two * gxz1 * gzx1 + two * gzy1 * gyz1)
+!  syzd1 = half * (gyx1 * gxz1 + gyy1 * gyz1 + gyz1 * gzz1 + gzx1 * gxy1 + gzy1 * gyy1 + gzz1 * gzy1)
+!  szzd1 = gzx1 * gxz1 + gzy1 * gyz1 + gzz1 * gzz1 - (one / three) * (gxx1 * gxx1 + gyy1 * gyy1 + gzz1 * gzz1 + two * gxy1 * gyx1 + two * gxz1 * gzx1 + two * gzy1 * gyz1)
 !
-!#ifdef IBM
-!  ta1 = ux1 * (one - ep1)
-!  tb1 = uy1 * (one - ep1)
-!  tc1 = uz1 * (one - ep1)
-!#else
-!  ta1 = ux1
-!  tb1 = uy1
-!  tc1 = uz1
-!#endif
+!  srt_wale = zero
+!  srt_wale = sxxd1 * sxxd1 + syyd1 * syyd1 + szzd1 * szzd1 + two * sxyd1 * sxyd1 + two * sxzd1 * sxzd1 + two * syzd1 * syzd1
 !
-!  !    !!!average TA1
-!  !    call transpose_x_to_y(ta1,ta2)
-!  !    call transpose_y_to_z(ta2,ta3)
-!  !    dsmagcst3 = zero
-!  !    call mean_plane_z(ta3,zsize(1),zsize(2),zsize(3),dsmagcst3(:,:,1))
-!  !    do k=2,zsize(3)
-!  !      dsmagcst3(:,:,k) = dsmagcst3(:,:,1)
-!  !    enddo
-!  !    call transpose_z_to_y(dsmagcst3,ta2)
-!  !    ta1=zero
-!  !    call transpose_y_to_x(ta2,ta1)
+!  nut1 = zero; nut2 = zero
+!  call transpose_x_to_y(srt_smag, srt_smag2)
+!  call transpose_x_to_y(srt_wale, srt_wale2)
+!  do k = 1, ysize(3)
+!     do j = 1, ysize(2)
+!        do i = 1, ysize(1)
+!           nut2(i, j, k) = ((walecst * del(j))**two) * ((srt_wale2(i, j, k)**(three / two)) / ((srt_smag2(i, j, k)**(five / two)) + (srt_wale2(i, j, k)**(five / four))))
+!        enddo
+!     enddo
+!  enddo
+!  call transpose_y_to_x(nut2, nut1)
 !
-!  !    !!!average TB1
-!  !    call transpose_x_to_y(tb1,tb2)
-!  !    call transpose_y_to_z(tb2,tb3)
-!  !    dsmagcst3 = zero
-!  !    call mean_plane_z(tb3,zsize(1),zsize(2),zsize(3),dsmagcst3(:,:,1))
-!  !    do k=2,zsize(3)
-!  !      dsmagcst3(:,:,k) = dsmagcst3(:,:,1)
-!  !    enddo
-!  !    call transpose_z_to_y(dsmagcst3,tb2)
-!  !    tb1=zero
-!  !    call transpose_y_to_x(tb2,tb1)
-!
-!  !    !!!average TC1
-!  !    call transpose_x_to_y(tc1,tc2)
-!  !    call transpose_y_to_z(tc2,tc3)
-!  !    dsmagcst3 = zero
-!  !    call mean_plane_z(tc3,zsize(1),zsize(2),zsize(3),dsmagcst3(:,:,1))
-!  !    do k=2,zsize(3)
-!  !      dsmagcst3(:,:,k) = dsmagcst3(:,:,1)
-!  !    enddo
-!  !    call transpose_z_to_y(dsmagcst3,tc2)
-!  !    tc1=zero
-!  !    call transpose_y_to_x(tc2,tc1)
-!
-!  uxx1 = ta1 * ta1
-!  uyy1 = tb1 * tb1
-!  uzz1 = tc1 * tc1
-!  uxy1 = ta1 * tb1
-!  uxz1 = ta1 * tc1
-!  uyz1 = tb1 * tc1
-!
-!  call filx(ux1f, ta1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0) !ux1
-!  call filx(uy1f, tb1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !uy1
-!  call filx(uz1f, tc1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !uz1
-!
-!  call filx(uxx1f, uxx1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !ux1*ux1
-!  call filx(uyy1f, uyy1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !uy1*uy1
-!  call filx(uzz1f, uzz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !uz1*uz1
-!
-!  call filx(uxy1f, uxy1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0) !ux1*uy1
-!  call filx(uxz1f, uxz1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0) !ux1*uz1
-!  call filx(uyz1f, uyz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !uy1*uz1
+!  if (nrank==0) print *, "wale srt_wale min max= ", minval(srt_wale), maxval(srt_wale)
+!  if (nrank==0) print *, "wale nut1     min max= ", minval(nut1), maxval(nut1)
 !
 !  if (mod(itime, ioutput).eq.0) then
-!    if (nrank==0) print *, "filx ux= ", maxval(ta1), maxval(ux1f), maxval(ta1) - maxval(ux1f)
+!
+!     write(filename, "('./data/srt_wale',I4.4)") itime / ioutput
+!     call decomp_2d_write_one(1, srt_wale, filename, 2)
+!
+!     write(filename, "('./data/nut_wale',I4.4)") itime / ioutput
+!     call decomp_2d_write_one(1, nut1, filename, 2)
+!
 !  endif
 !
-!  if(iibm==1) then
-!  ux1f = ux1f * (one - ep1)
-!  uy1f = uy1f * (one - ep1)
-!  uz1f = uz1f * (one - ep1)
-!  uxx1f = uxx1f * (one - ep1)
-!  uyy1f = uyy1f * (one - ep1)
-!  uzz1f = uzz1f * (one - ep1)
-!  uxy1f = uxy1f * (one - ep1)
-!  uxz1f = uxz1f * (one - ep1)
-!  uyz1f = uyz1f * (one - ep1)
-!  call transpose_x_to_y(ep1, ep2)
-!  endif
-!
-!  call transpose_x_to_y(ux1f, ta2)
-!  call transpose_x_to_y(uy1f, tb2)
-!  call transpose_x_to_y(uz1f, tc2)
-!  call transpose_x_to_y(uxx1f, td2)
-!  call transpose_x_to_y(uyy1f, te2)
-!  call transpose_x_to_y(uzz1f, tf2)
-!  call transpose_x_to_y(uxy1f, tg2)
-!  call transpose_x_to_y(uxz1f, th2)
-!  call transpose_x_to_y(uyz1f, ti2)
-!
-!  call fily(ux2f, ta2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !ux2
-!  call fily(uy2f, tb2, di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0) !uy2
-!  call fily(uz2f, tc2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !uz2
-!
-!  call fily(uxx2f, td2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !ux2*ux2
-!  call fily(uyy2f, te2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !uy2*uy2
-!  call fily(uzz2f, tf2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !uz2*uz2
-!
-!  call fily(uxy2f, tg2, di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0) !ux2*uy2
-!  call fily(uxz2f, th2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !ux2*uz2
-!  call fily(uyz2f, ti2, di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0) !uy2*uz2
-!
-!  if (mod(itime, ioutput).eq.0) then
-!    if (nrank==0) print *, "fily ux= ", maxval(ta2), maxval(ux2f), maxval(ta2) - maxval(ux2f)
-!  endif
+!end subroutine wale
+
+!***************************************************************************
+subroutine dynsmag(nut1,ux1,uy1,uz1,ep1)
+    
+!subroutine dynsmag(ux1,uy1,uz1,ep1,sxx1,syy1,szz1,sxy1,sxz1,syz1,&
+!  srt_smag,nut1,di1,ta1,tb1,tc1,td1,ta2,tb2,tc2,td2,te2,tf2,&
+!  tg2,th2,ti2,di2,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3)
+
+  USE param
+  USE variables
+  USE decomp_2d
+  USE decomp_2d_io
+  USE MPI
+  USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+  USE var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,di2
+  USE var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
+  USE var, only : sxx1,syy1,szz1,sxy1,sxz1,syz1,srt_smag
+  USE var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2,srt_smag2,nut2
+  USE var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
+
+  implicit none
+
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, ep1
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1
+
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1f, uy1f, uz1f
+  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ux2f, uy2f, uz2f, ep2
+  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: ux3f, uy3f, uz3f
+
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: uxx1, uyy1, uzz1, uxy1, uxz1, uyz1
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: uxx1f, uyy1f, uzz1f, uxy1f, uxz1f, uyz1f
+  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: uxx2f, uyy2f, uzz2f, uxy2f, uxz2f, uyz2f
+  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: uxx3f, uyy3f, uzz3f, uxy3f, uxz3f, uyz3f
+
+
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sxx1f, syy1f, szz1f, sxy1f, sxz1f, syz1f
+  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: syy2f, szz2f, sxy2f, syz2f
+  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: szz3f, syz3f
+
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: gxx1f, gyx1f, gzx1f, gxz1f
+  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: gxy2f, gyy2f, gzy2f, gxz2f
+  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: gxz3f, gyz3f, gzz3f
+
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: axx1, ayy1, azz1, axy1, axz1, ayz1
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: axx1f, ayy1f, azz1f, axy1f, axz1f, ayz1f
+  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: axx2f, ayy2f, azz2f, axy2f, axz2f, ayz2f
+  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: axx3f, ayy3f, azz3f, axy3f, axz3f, ayz3f
+
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: bbxx1, bbyy1, bbzz1, bbxy1, bbxz1, bbyz1
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: lxx1, lyy1, lzz1, lxy1, lxz1, lyz1
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: mxx1, myy1, mzz1, mxy1, mxz1, myz1
+
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: smagC1, smagC1f, dsmagcst1
+  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: smagC2, smagC2f, dsmagcst2
+  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: smagC3, smagC3f, dsmagcst3
+
+  character(len = 30) :: filename
+
+
+if(iibm==1) then
+ ta1 = ux1 * (one - ep1)
+ tb1 = uy1 * (one - ep1)
+ tc1 = uz1 * (one - ep1)
+else
+ ta1 = ux1
+ tb1 = uy1
+ tc1 = uz1
+endif
+
+  uxx1 = ta1 * ta1
+  uyy1 = tb1 * tb1
+  uzz1 = tc1 * tc1
+  uxy1 = ta1 * tb1
+  uxz1 = ta1 * tc1
+  uyz1 = tb1 * tc1
+
+  call filx(ux1f, ta1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0) !ux1
+  call filx(uy1f, tb1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !uy1
+  call filx(uz1f, tc1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !uz1
+
+  call filx(uxx1f, uxx1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !ux1*ux1
+  call filx(uyy1f, uyy1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !uy1*uy1
+  call filx(uzz1f, uzz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !uz1*uz1
+
+  call filx(uxy1f, uxy1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0) !ux1*uy1
+  call filx(uxz1f, uxz1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0) !ux1*uz1
+  call filx(uyz1f, uyz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !uy1*uz1
+
+  if (mod(itime, ioutput).eq.0) then
+    if (nrank==0) print *, "filx ux= ", maxval(ta1), maxval(ux1f), maxval(ta1) - maxval(ux1f)
+  endif
+
+  if(iibm==1) then
+  ux1f = ux1f * (one - ep1)
+  uy1f = uy1f * (one - ep1)
+  uz1f = uz1f * (one - ep1)
+  uxx1f = uxx1f * (one - ep1)
+  uyy1f = uyy1f * (one - ep1)
+  uzz1f = uzz1f * (one - ep1)
+  uxy1f = uxy1f * (one - ep1)
+  uxz1f = uxz1f * (one - ep1)
+  uyz1f = uyz1f * (one - ep1)
+  call transpose_x_to_y(ep1, ep2)
+  endif
+
+  call transpose_x_to_y(ux1f, ta2)
+  call transpose_x_to_y(uy1f, tb2)
+  call transpose_x_to_y(uz1f, tc2)
+  call transpose_x_to_y(uxx1f, td2)
+  call transpose_x_to_y(uyy1f, te2)
+  call transpose_x_to_y(uzz1f, tf2)
+  call transpose_x_to_y(uxy1f, tg2)
+  call transpose_x_to_y(uxz1f, th2)
+  call transpose_x_to_y(uyz1f, ti2)
+
+  call fily(ux2f, ta2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !ux2
+  call fily(uy2f, tb2, di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0) !uy2
+  call fily(uz2f, tc2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !uz2
+
+  call fily(uxx2f, td2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !ux2*ux2
+  call fily(uyy2f, te2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !uy2*uy2
+  call fily(uzz2f, tf2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !uz2*uz2
+
+  call fily(uxy2f, tg2, di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0) !ux2*uy2
+  call fily(uxz2f, th2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !ux2*uz2
+  call fily(uyz2f, ti2, di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0) !uy2*uz2
+
+  if (mod(itime, ioutput).eq.0) then
+    if (nrank==0) print *, "fily ux= ", maxval(ta2), maxval(ux2f), maxval(ta2) - maxval(ux2f)
+  endif
 !
 !#ifdef IBM
 !  ux2f = ux2f * (one - ep2)
@@ -821,7 +786,7 @@ end subroutine wale
 !
 !  endif
 !
-!end subroutine dynsmag
+end subroutine dynsmag
 
 subroutine les_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
 

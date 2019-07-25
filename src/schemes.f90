@@ -420,7 +420,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
 
   use decomp_2d, only : mytype, nrank
   use param
-  use variables, only : fpi2
+  use variables, only : nu0nu,fpi2,cnu 
 
   implicit none
 
@@ -512,10 +512,9 @@ subroutine second_derivative(alsa1,as1,bs1,&
      bstt = bsi
      cstt = csi 
   elseif(isecondder==5) then ! Sixth-order Hyperviscous operator 
-     xxnu=one/fpi2
      dpis3=two*pi/three
-     kppkc=pi*pi/xxnu+pi*pi
-     kppkm=dpis3*dpis3*exp(-((pi-dpis3)/(zpthree*pi-dpis3))**two)/xxnu+dpis3*dpis3
+     kppkc=pi*pi*(one+nu0nu)
+     kppkm=dpis3*dpis3*(one+cnu*nu0nu) !exp(-((pi-dpis3)/(zpthree*pi-dpis3))**two)/xxnu+dpis3*dpis3
      xnpi2=kppkc
      xmpi2=kppkm
      alsai=(405._mytype*xnpi2 - 1280._mytype*xmpi2 + 2736._mytype)/&
