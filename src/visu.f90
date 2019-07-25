@@ -1,163 +1,175 @@
-SUBROUTINE visu(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime)
+module visu
 
-  USE decomp_2d, ONLY : transpose_x_to_y, transpose_y_to_z, transpose_z_to_y, transpose_y_to_x
-  USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
-  USE decomp_2d, ONLY : fine_to_coarseV
-  USE decomp_2d_io, ONLY : decomp_2d_write_one
-  
-  USE param, ONLY : ivisu, ioutput, nrhotime, ilmn, iscalar, iibm
+  implicit none
 
-  USE variables, ONLY : derx, dery, derz 
-  USE variables, ONLY : ffx, ffxp, fsx, fsxp, fwx, fwxp
-  USE variables, ONLY : ffy, ffyp, fsy, fsyp, fwy, fwyp, ppy
-  USE variables, ONLY : ffz, ffzp, fsz, fszp, fwz, fwzp
-  USE variables, ONLY : sx, cifip6, cisip6, ciwip6, cifx6, cisx6, ciwx6
-  USE variables, ONLY : sy, cifip6y, cisip6y, ciwip6y, cify6, cisy6, ciwy6
-  USE variables, ONLY : sz, cifip6z, cisip6z, ciwip6z, cifz6, cisz6, ciwz6
-  USE variables, ONLY : numscalar
+  private
+  public :: write_snapshot
 
-  USE var, ONLY : one
-  USE var, ONLY : uvisu
-  USE var, ONLY : pp1, ta1, tb1, tc1, td1, te1, tf1, tg1, th1, ti1, di1, nxmsize
-  USE var, ONLY : pp2, ta2, tb2, tc2, td2, te2, tf2, ppi2, di2, dip2, ph2, nymsize
-  USE var, ONLY : ppi3, ta3, tb3, tc3, td3, te3, tf3, di3, dip3, ph3, nzmsize
+contains
 
-  IMPLICIT NONE
+  SUBROUTINE write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime)
 
-  CHARACTER(len=30) :: filename
+    USE decomp_2d, ONLY : transpose_x_to_y, transpose_y_to_z, transpose_z_to_y, transpose_y_to_x
+    USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
+    USE decomp_2d, ONLY : fine_to_coarseV
+    USE decomp_2d_io, ONLY : decomp_2d_write_one
 
-  !! Inputs
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ep1
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime), INTENT(IN) :: rho1
-  REAL(mytype), DIMENSION(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize), INTENT(IN) :: pp3
-  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar), INTENT(IN) :: phi1
-  INTEGER, INTENT(IN) :: itime
+    USE param, ONLY : ivisu, ioutput, nrhotime, ilmn, iscalar, iibm
 
-  INTEGER :: is
+    USE variables, ONLY : derx, dery, derz 
+    USE variables, ONLY : ffx, ffxp, fsx, fsxp, fwx, fwxp
+    USE variables, ONLY : ffy, ffyp, fsy, fsyp, fwy, fwyp, ppy
+    USE variables, ONLY : ffz, ffzp, fsz, fszp, fwz, fwzp
+    USE variables, ONLY : sx, cifip6, cisip6, ciwip6, cifx6, cisx6, ciwx6
+    USE variables, ONLY : sy, cifip6y, cisip6y, ciwip6y, cify6, cisy6, ciwy6
+    USE variables, ONLY : sz, cifip6z, cisip6z, ciwip6z, cifz6, cisz6, ciwz6
+    USE variables, ONLY : numscalar
 
-  IF ((ivisu.NE.0).AND.(MOD(itime, ioutput).EQ.0)) THEN
-     !! Write velocity
-     uvisu=0.
-     if (iibm==2) then
-        ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)
-     else
-        ta1(:,:,:) = ux1(:,:,:)
-     endif
-     call fine_to_coarseV(1,ta1,uvisu)
-990  format('ux',I3.3)
-     write(filename, 990) itime/ioutput
-     call decomp_2d_write_one(1,uvisu,filename,2)
+    USE var, ONLY : one
+    USE var, ONLY : uvisu
+    USE var, ONLY : pp1, ta1, tb1, tc1, td1, te1, tf1, tg1, th1, ti1, di1, nxmsize
+    USE var, ONLY : pp2, ta2, tb2, tc2, td2, te2, tf2, ppi2, di2, dip2, ph2, nymsize
+    USE var, ONLY : ppi3, ta3, tb3, tc3, td3, te3, tf3, di3, dip3, ph3, nzmsize
 
-     uvisu=0.
-     if (iibm==2) then
-        ta1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:)
-     else
-        ta1(:,:,:) = uy1(:,:,:)
-     endif
-     call fine_to_coarseV(1,ta1,uvisu)
-991  format('uy',I3.3)
-     write(filename, 991) itime/ioutput
-     call decomp_2d_write_one(1,uvisu,filename,2)
+    IMPLICIT NONE
 
-     uvisu=0.
-     if (iibm==2) then
-        ta1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:)
-     else
-        ta1(:,:,:) = uz1(:,:,:)
-     endif
-     call fine_to_coarseV(1,ta1,uvisu)
-992  format('uz',I3.3)
-     write(filename, 992) itime/ioutput
-     call decomp_2d_write_one(1,uvisu,filename,2)
+    CHARACTER(len=30) :: filename
 
-     !! Write pressure
-     !WORK Z-PENCILS
-     call interzpv(ppi3,pp3,dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
-          (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
-     !WORK Y-PENCILS
-     call transpose_z_to_y(ppi3,pp2,ph3) !nxm nym nz
-     call interypv(ppi2,pp2,dip2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
-          (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
-     !WORK X-PENCILS
-     call transpose_y_to_x(ppi2,pp1,ph2) !nxm ny nz
-     call interxpv(ta1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
-          nxmsize,xsize(1),xsize(2),xsize(3),1)
+    !! Inputs
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ep1
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime), INTENT(IN) :: rho1
+    REAL(mytype), DIMENSION(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize), INTENT(IN) :: pp3
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar), INTENT(IN) :: phi1
+    INTEGER, INTENT(IN) :: itime
 
-     uvisu=0._mytype
-     if (iibm==2) then
-        ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
-     endif
-     call fine_to_coarseV(1,ta1,uvisu)
-993  format('pp',I3.3)
-     write(filename, 993) itime/ioutput
-     call decomp_2d_write_one(1,uvisu,filename,2)
+    INTEGER :: is
 
-     !! Write vorticity
-     !x-derivatives
-     call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
-     call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-     call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-     !y-derivatives
-     call transpose_x_to_y(ux1,td2)
-     call transpose_x_to_y(uy1,te2)
-     call transpose_x_to_y(uz1,tf2)
-     call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-     call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-     call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-     !!z-derivatives
-     call transpose_y_to_z(td2,td3)
-     call transpose_y_to_z(te2,te3)
-     call transpose_y_to_z(tf2,tf3)
-     call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-     call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-     call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
-     !!all back to x-pencils
-     call transpose_z_to_y(ta3,td2)
-     call transpose_z_to_y(tb3,te2)
-     call transpose_z_to_y(tc3,tf2)
-     call transpose_y_to_x(td2,tg1)
-     call transpose_y_to_x(te2,th1)
-     call transpose_y_to_x(tf2,ti1)
-     call transpose_y_to_x(ta2,td1)
-     call transpose_y_to_x(tb2,te1)
-     call transpose_y_to_x(tc2,tf1)
-     !du/dx=ta1 du/dy=td1 and du/dz=tg1
-     !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
-     !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
-     
-     di1(:,:,:)=sqrt((tf1(:,:,:)-th1(:,:,:))**2+(tg1(:,:,:)-tc1(:,:,:))**2+&
-          (tb1(:,:,:)-td1(:,:,:))**2)
-     if (iibm==2) then
-        di1(:,:,:) = (one - ep1(:,:,:)) * di1(:,:,:)
-     endif
-     uvisu=0.
-     call fine_to_coarseV(1,di1,uvisu)
-994  format('vort',I3.3)
-     write(filename, 994) itime/ioutput
-     call decomp_2d_write_one(1,uvisu,filename,2)
+    IF ((ivisu.NE.0).AND.(MOD(itime, ioutput).EQ.0)) THEN
+       !! Write velocity
+       uvisu=0.
+       if (iibm==2) then
+          ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)
+       else
+          ta1(:,:,:) = ux1(:,:,:)
+       endif
+       call fine_to_coarseV(1,ta1,uvisu)
+990    format('ux',I3.3)
+       write(filename, 990) itime/ioutput
+       call decomp_2d_write_one(1,uvisu,filename,2)
 
-     !! LMN - write out density
-     IF (ilmn) THEN
-        uvisu=0.
-        call fine_to_coarseV(1,rho1(:,:,:,1),uvisu)
-995     format('rho',I3.3)
-        write(filename, 995) itime/ioutput
-        call decomp_2d_write_one(1,uvisu,filename,2)
-     ENDIF
+       uvisu=0.
+       if (iibm==2) then
+          ta1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:)
+       else
+          ta1(:,:,:) = uy1(:,:,:)
+       endif
+       call fine_to_coarseV(1,ta1,uvisu)
+991    format('uy',I3.3)
+       write(filename, 991) itime/ioutput
+       call decomp_2d_write_one(1,uvisu,filename,2)
 
-     !! Scalars
-     IF (iscalar.NE.0) THEN
-996     format('phi',I1.1,I3.3)
-        DO is = 1, numscalar
-           uvisu=0.
-           call fine_to_coarseV(1,phi1(:,:,:,is),uvisu)
-           write(filename, 996) is, itime/ioutput
-           call decomp_2d_write_one(1,uvisu,filename,2)
-        ENDDO
-     ENDIF
-  ENDIF
-END SUBROUTINE visu
+       uvisu=0.
+       if (iibm==2) then
+          ta1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:)
+       else
+          ta1(:,:,:) = uz1(:,:,:)
+       endif
+       call fine_to_coarseV(1,ta1,uvisu)
+992    format('uz',I3.3)
+       write(filename, 992) itime/ioutput
+       call decomp_2d_write_one(1,uvisu,filename,2)
+
+       !! Write pressure
+       !WORK Z-PENCILS
+       call interzpv(ppi3,pp3,dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
+            (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
+       !WORK Y-PENCILS
+       call transpose_z_to_y(ppi3,pp2,ph3) !nxm nym nz
+       call interypv(ppi2,pp2,dip2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
+            (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
+       !WORK X-PENCILS
+       call transpose_y_to_x(ppi2,pp1,ph2) !nxm ny nz
+       call interxpv(ta1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
+            nxmsize,xsize(1),xsize(2),xsize(3),1)
+
+       uvisu=0._mytype
+       if (iibm==2) then
+          ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+       endif
+       call fine_to_coarseV(1,ta1,uvisu)
+993    format('pp',I3.3)
+       write(filename, 993) itime/ioutput
+       call decomp_2d_write_one(1,uvisu,filename,2)
+
+       !! Write vorticity
+       !x-derivatives
+       call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+       call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+       call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+       !y-derivatives
+       call transpose_x_to_y(ux1,td2)
+       call transpose_x_to_y(uy1,te2)
+       call transpose_x_to_y(uz1,tf2)
+       call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+       call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+       call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+       !!z-derivatives
+       call transpose_y_to_z(td2,td3)
+       call transpose_y_to_z(te2,te3)
+       call transpose_y_to_z(tf2,tf3)
+       call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+       call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+       call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+       !!all back to x-pencils
+       call transpose_z_to_y(ta3,td2)
+       call transpose_z_to_y(tb3,te2)
+       call transpose_z_to_y(tc3,tf2)
+       call transpose_y_to_x(td2,tg1)
+       call transpose_y_to_x(te2,th1)
+       call transpose_y_to_x(tf2,ti1)
+       call transpose_y_to_x(ta2,td1)
+       call transpose_y_to_x(tb2,te1)
+       call transpose_y_to_x(tc2,tf1)
+       !du/dx=ta1 du/dy=td1 and du/dz=tg1
+       !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
+       !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
+
+       di1(:,:,:)=sqrt((tf1(:,:,:)-th1(:,:,:))**2+(tg1(:,:,:)-tc1(:,:,:))**2+&
+            (tb1(:,:,:)-td1(:,:,:))**2)
+       if (iibm==2) then
+          di1(:,:,:) = (one - ep1(:,:,:)) * di1(:,:,:)
+       endif
+       uvisu=0.
+       call fine_to_coarseV(1,di1,uvisu)
+994    format('vort',I3.3)
+       write(filename, 994) itime/ioutput
+       call decomp_2d_write_one(1,uvisu,filename,2)
+
+       !! LMN - write out density
+       IF (ilmn) THEN
+          uvisu=0.
+          call fine_to_coarseV(1,rho1(:,:,:,1),uvisu)
+995       format('rho',I3.3)
+          write(filename, 995) itime/ioutput
+          call decomp_2d_write_one(1,uvisu,filename,2)
+       ENDIF
+
+       !! Scalars
+       IF (iscalar.NE.0) THEN
+996       format('phi',I1.1,I3.3)
+          DO is = 1, numscalar
+             uvisu=0.
+             call fine_to_coarseV(1,phi1(:,:,:,is),uvisu)
+             write(filename, 996) is, itime/ioutput
+             call decomp_2d_write_one(1,uvisu,filename,2)
+          ENDDO
+       ENDIF
+    ENDIF
+  END SUBROUTINE write_snapshot
+
+endmodule visu
+
 !############################################################################
 subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
 
