@@ -46,7 +46,7 @@ program incompact3d
 
      call simu_stats(3)
 
-     CALL visu(rho1,ux1,uy1,uz1,pp3(:,:,:,1),phi1,itime)
+     CALL visu(rho1,ux1,uy1,uz1,pp3(:,:,:,1),phi1,ep1,itime)
 
   enddo !! End time loop
 

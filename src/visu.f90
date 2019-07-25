@@ -1,13 +1,17 @@
-SUBROUTINE visu(rho1, ux1, uy1, uz1, pp3, phi1, itime)
+SUBROUTINE visu(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime)
 
   USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
   USE decomp_2d, ONLY : fine_to_coarseV, transpose_z_to_y, transpose_y_to_x
   USE decomp_2d_io, ONLY : decomp_2d_write_one
-  USE param, ONLY : ivisu, ioutput, nrhotime, ilmn, iscalar
+  
+  USE param, ONLY : ivisu, ioutput, nrhotime, ilmn, iscalar, iibm
+  
   USE variables, ONLY : sx, cifip6, cisip6, ciwip6, cifx6, cisx6, ciwx6
   USE variables, ONLY : sy, cifip6y, cisip6y, ciwip6y, cify6, cisy6, ciwy6
   USE variables, ONLY : sz, cifip6z, cisip6z, ciwip6z, cifz6, cisz6, ciwz6
   USE variables, ONLY : numscalar
+
+  USE var, ONLY : one
   USE var, ONLY : uvisu
   USE var, ONLY : pp1, ta1, di1, nxmsize
   USE var, ONLY : pp2, ppi2, dip2, ph2, nymsize
@@ -19,6 +23,7 @@ SUBROUTINE visu(rho1, ux1, uy1, uz1, pp3, phi1, itime)
 
   !! Inputs
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
+  REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ep1
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime), INTENT(IN) :: rho1
   REAL(mytype), DIMENSION(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize), INTENT(IN) :: pp3
   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar), INTENT(IN) :: phi1
@@ -29,23 +34,39 @@ SUBROUTINE visu(rho1, ux1, uy1, uz1, pp3, phi1, itime)
   IF ((ivisu.NE.0).AND.(MOD(itime, ioutput).EQ.0)) THEN
      !! Write velocity
      uvisu=0.
-     call fine_to_coarseV(1,ux1,uvisu)
+     if (iibm==2) then
+        ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)
+     else
+        ta1(:,:,:) = ux1(:,:,:)
+     endif
+     call fine_to_coarseV(1,ta1,uvisu)
 990  format('ux',I3.3)
      write(filename, 990) itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
 
      uvisu=0.
-     call fine_to_coarseV(1,uy1,uvisu)
+     if (iibm==2) then
+        ta1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:)
+     else
+        ta1(:,:,:) = uy1(:,:,:)
+     endif
+     call fine_to_coarseV(1,ta1,uvisu)
 991  format('uy',I3.3)
      write(filename, 991) itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
 
      uvisu=0.
-     call fine_to_coarseV(1,uz1,uvisu)
+     if (iibm==2) then
+        ta1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:)
+     else
+        ta1(:,:,:) = uz1(:,:,:)
+     endif
+     call fine_to_coarseV(1,ta1,uvisu)
 992  format('uz',I3.3)
      write(filename, 992) itime/ioutput
      call decomp_2d_write_one(1,uvisu,filename,2)
 
+     !! Write pressure
      !WORK Z-PENCILS
      call interzpv(ppi3,pp3,dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
           (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
@@ -59,6 +80,9 @@ SUBROUTINE visu(rho1, ux1, uy1, uz1, pp3, phi1, itime)
           nxmsize,xsize(1),xsize(2),xsize(3),1)
 
      uvisu=0._mytype
+     if (iibm==2) then
+        ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+     endif
      call fine_to_coarseV(1,ta1,uvisu)
 993  format('pp',I3.3)
      write(filename, 993) itime/ioutput
