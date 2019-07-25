@@ -45,7 +45,7 @@ module lockexch
   logical, save :: init = .FALSE.
 
   private
-  public :: init_lockexch, boundary_conditions_lockexch, postprocessing_lockexch, &
+  public :: init_lockexch, boundary_conditions_lockexch, postprocess_lockexch, &
        pfront, set_fluid_properties_lockexch
 
 contains
@@ -361,7 +361,7 @@ contains
 
 !   end subroutine init_post
 
-  subroutine postprocessing_lockexch(rho1,ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
+  subroutine postprocess_lockexch(rho1,ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
     use decomp_2d, only : alloc_x
     
@@ -473,7 +473,7 @@ contains
        close(67)
     end if
 
-  end subroutine postprocessing_lockexch
+  end subroutine postprocess_lockexch
 
   subroutine budget(rho1,ux1,uy1,uz1,phi1,vol1)
 

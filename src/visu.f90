@@ -3,9 +3,29 @@ module visu
   implicit none
 
   private
-  public :: write_snapshot
+  public :: write_snapshot, postprocessing
 
 contains
+
+  SUBROUTINE postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
+
+    USE decomp_2d, ONLY : mytype, xsize, ph1
+    USE case, ONLY : postprocess_case
+
+    USE var, ONLY : nzmsize
+    USE var, ONLY : itime
+    USE var, ONLY : numscalar, nrhotime, npress
+    
+    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)), intent(in) :: ux1, uy1, uz1
+    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),numscalar), intent(in) :: phi1
+    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),nrhotime), intent(in) :: rho1
+    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)), intent(in) :: ep1
+    real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
+
+    CALL write_snapshot(rho1, ux1, uy1, uz1, pp3(:,:,:,1), phi1, ep1, itime)
+    CALL postprocess_case(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
+    
+  END SUBROUTINE postprocessing
 
   SUBROUTINE write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime)
 

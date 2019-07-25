@@ -8,7 +8,7 @@ program incompact3d
   use navier, only : velocity_to_momentum, momentum_to_velocity, pre_correc, &
        calc_divu_constraint, solve_poisson, corpg
   use tools, only : test_flow, restart, simu_stats
-  use visu, only : write_snapshot
+  use visu, only : postprocessing
 
   implicit none
 
@@ -17,8 +17,6 @@ program incompact3d
   do itime=ifirst,ilast
      t=itime*dt
      call simu_stats(2)
-
-     call postprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
 
      do itr=1,iadvance_time
 
@@ -47,7 +45,7 @@ program incompact3d
 
      call simu_stats(3)
 
-     CALL write_snapshot(rho1,ux1,uy1,uz1,pp3(:,:,:,1),phi1,ep1,itime)
+     call postprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
 
   enddo !! End time loop
 

@@ -27,7 +27,7 @@ module tgv
   integer, save, allocatable, dimension(:) :: rankprobes, nxprobes, nyprobes, nzprobes
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_tgv, boundary_conditions_tgv, postprocessing_tgv
+  PUBLIC :: init_tgv, boundary_conditions_tgv, postprocess_tgv
 
 contains
 
@@ -307,7 +307,7 @@ contains
 
   end subroutine write_probes
   !############################################################################
-  subroutine postprocessing_tgv(ux1,uy1,uz1,phi1,ep1)
+  subroutine postprocess_tgv(ux1,uy1,uz1,phi1,ep1)
 
     USE decomp_2d
     USE MPI
@@ -515,7 +515,7 @@ contains
        call flush(42)
     endif
 
-  end subroutine postprocessing_tgv
+  end subroutine postprocess_tgv
   !############################################################################
   subroutine suspended(phi1,vol1,mp1)
 

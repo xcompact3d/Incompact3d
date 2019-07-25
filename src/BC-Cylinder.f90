@@ -28,7 +28,7 @@ module cyl
   real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_cyl, boundary_conditions_cyl, postprocessing_cyl, geomcomplex_cyl
+  PUBLIC :: init_cyl, boundary_conditions_cyl, postprocess_cyl, geomcomplex_cyl
 
 contains
 
@@ -354,7 +354,7 @@ contains
 
   end subroutine init_post
   !############################################################################
-  subroutine postprocessing_cyl(ux1,uy1,uz1) !By Felipe Schuch
+  subroutine postprocess_cyl(ux1,uy1,uz1) !By Felipe Schuch
 
     USE MPI
     USE decomp_2d
@@ -458,7 +458,7 @@ contains
     endif
 
     return
-  end subroutine postprocessing_cyl
+  end subroutine postprocess_cyl
   !############################################################################
   subroutine write_probes(ux1,uy1,uz1,phi1) !By Felipe Schuch
 

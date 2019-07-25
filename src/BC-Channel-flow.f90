@@ -28,7 +28,7 @@ module channel
   real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_channel, boundary_conditions_channel, postprocessing_channel, &
+  PUBLIC :: init_channel, boundary_conditions_channel, postprocess_channel, &
        momentum_forcing_channel, &
        geomcomplex_channel
 
@@ -301,7 +301,7 @@ contains
 
   end subroutine init_post
   !############################################################################
-  subroutine postprocessing_channel(ux1,uy1,uz1,pp3,phi1,ep1) !By Felipe Schuch
+  subroutine postprocess_channel(ux1,uy1,uz1,pp3,phi1,ep1) !By Felipe Schuch
 
     USE MPI
     USE decomp_2d
@@ -452,7 +452,7 @@ contains
     endif
 
     return
-  end subroutine postprocessing_channel
+  end subroutine postprocess_channel
   !############################################################################
   subroutine write_probes(ux1,uy1,uz1,phi1) !By Felipe Schuch
 

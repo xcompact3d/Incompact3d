@@ -20,7 +20,7 @@ module dbg_schemes
   integer :: nprobes
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_dbg, boundary_conditions_dbg, postprocessing_dbg
+  PUBLIC :: init_dbg, boundary_conditions_dbg, postprocess_dbg
 
 contains
   !********************************************************************
@@ -1176,14 +1176,14 @@ contains
 
   end subroutine init_post
 
-  subroutine postprocessing_dbg(ux1,uy1,uz1,phi1,ep1)
+  subroutine postprocess_dbg(ux1,uy1,uz1,phi1,ep1)
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
 
-  end subroutine postprocessing_dbg
+  end subroutine postprocess_dbg
 
   subroutine write_probes(ux1,uy1,uz1,phi1)
 
