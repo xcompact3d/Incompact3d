@@ -113,7 +113,7 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
 
   real(mytype) :: s3df,s2df,ttsize
   real(8) :: t1,tstart,tend
-  integer :: n3df,n2df,i,j,k,ijk,nvect1,is
+  integer :: n3df,n2df,i,j,k,is
   logical,intent(in) :: protection
   character(len=1) :: a
   character(len=30) :: filename
@@ -189,8 +189,6 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
   if (nrank.eq.0) print *,'Writing snapshot =>',itime/ioutput
   if (nrank.eq.0) print *,'This simulation requieres',real((ttsize*int(ilast/ioutput)&
        +(16+3*numscalar)*s3df*int(ilast/icheckpoint))*1e-9,4),'GB' !1e-9 from Byte-B to Gigabyte-GB
-
-  nvect1=xsize(1)*xsize(2)*xsize(3)
 
   if (save_ux.eq.1) then
      uvisu=0._mytype
@@ -309,11 +307,8 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
   !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
 
   if (save_w.eq.1) then
-     di1=0._mytype
-     do ijk=1,nvect1
-        di1(ijk,1,1)=sqrt((tf1(ijk,1,1)-th1(ijk,1,1))**2+&
-             (tg1(ijk,1,1)-tc1(ijk,1,1))**2+(tb1(ijk,1,1)-td1(ijk,1,1))**2)
-     enddo
+     di1(:,:,:) = sqrt((tf1(:,:,:) - th1(:,:,:))**2 &
+          + (tg1(:,:,:) - tc1(:,:,:))**2 + (tb1(:,:,:) - td1(:,:,:))**2)
      uvisu=0._mytype
      call fine_to_coarseV(1,di1,uvisu)
      write(filename,"('./data/w',I4.4)") itime/ioutput
@@ -321,10 +316,8 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
   endif
 
   if (save_w1.eq.1) then
-     di1=0._mytype
-     do ijk=1,nvect1 !dw/dy - dv/dz
-        di1(ijk,1,1)=tf1(ijk,1,1)-th1(ijk,1,1)
-     enddo
+     !dw/dy - dv/dz
+     di1(:,:,:) = tf1(:,:,:) - th1(:,:,:)
      uvisu=0.
      call fine_to_coarseV(1,di1,uvisu)
      write(filename,"('./data/w1',I4.4)") itime/ioutput
@@ -332,10 +325,8 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
   endif
 
   if (save_w2.eq.1) then
-     di1=0._mytype
-     do ijk=1,nvect1 !du/dz - dw/dx
-        di1(ijk,1,1)=tg1(ijk,1,1)-tc1(ijk,1,1)
-     enddo
+     !du/dz - dw/dx
+     di1(:,:,:) = tg1(:,:,:) - tc1(:,:,:)
      uvisu=0._mytype
      call fine_to_coarseV(1,di1,uvisu)
      write(filename,"('./data/w2',I4.4)") itime/ioutput
@@ -343,10 +334,8 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
   endif
 
   if (save_w3.eq.1) then
-     di1=0._mytype
-     do ijk=1,nvect1 !dv/dx - du/dy
-        di1(ijk,1,1)=tb1(ijk,1,1)-td1(ijk,1,1)
-     enddo
+     !dv/dx - du/dy
+     di1(:,:,:) = th1(:,:,:) - td1(:,:,:)
      uvisu=0._mytype
      call fine_to_coarseV(1,di1,uvisu)
      write(filename,"('./data/w3',I4.4)") itime/ioutput
@@ -417,24 +406,21 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
   endif
 
   if (save_pc.eq.1) then
-     di1=0._mytype
-     do ijk=1,nvect1
-        !P=-(1./3.)*(ta1**3+te1**3+ti1**3+2*td1*th1*tc1+2*tb1*tf1*tg1+
-        !tb1*tg1*tf1+tc1*td1*th1)-ta1*td1*tb1-ta1*tg1*tc1-
-        !td1*te1*tb1-tg1*ti1*tc1-te1*th1*tf1-th1*ti1*tf1
-        di1(ijk,1,1)=-(1._mytype/3._mytype)*(ta1(ijk,1,1)**3+&
-             te1(ijk,1,1)**3+ti1(ijk,1,1)**3+&
-             2.*td1(ijk,1,1)*th1(ijk,1,1)*tc1(ijk,1,1)+&
-             2.*tb1(ijk,1,1)*tf1(ijk,1,1)*tg1(ijk,1,1)+&
-             tb1(ijk,1,1)*tg1(ijk,1,1)*tf1(ijk,1,1)+&
-             tc1(ijk,1,1)*td1(ijk,1,1)*th1(ijk,1,1))-&
-             ta1(ijk,1,1)*td1(ijk,1,1)*tb1(ijk,1,1)-&
-             ta1(ijk,1,1)*tg1(ijk,1,1)*tc1(ijk,1,1)-&
-             td1(ijk,1,1)*te1(ijk,1,1)*tb1(ijk,1,1)-&
-             tg1(ijk,1,1)*ti1(ijk,1,1)*tc1(ijk,1,1)-&
-             te1(ijk,1,1)*th1(ijk,1,1)*tf1(ijk,1,1)-&
-             th1(ijk,1,1)*ti1(ijk,1,1)*tf1(ijk,1,1)
-     enddo
+     !P=-(1./3.)*(ta1**3+te1**3+ti1**3+2*td1*th1*tc1+2*tb1*tf1*tg1+
+     !tb1*tg1*tf1+tc1*td1*th1)-ta1*td1*tb1-ta1*tg1*tc1-
+     !td1*te1*tb1-tg1*ti1*tc1-te1*th1*tf1-th1*ti1*tf1
+     di1(:,:,:)=-(1._mytype/3._mytype)*(ta1(:,:,:)**3+&
+          te1(:,:,:)**3+ti1(:,:,:)**3+&
+          2.*td1(:,:,:)*th1(:,:,:)*tc1(:,:,:)+&
+          2.*tb1(:,:,:)*tf1(:,:,:)*tg1(:,:,:)+&
+          tb1(:,:,:)*tg1(:,:,:)*tf1(:,:,:)+&
+          tc1(:,:,:)*td1(:,:,:)*th1(:,:,:))-&
+          ta1(:,:,:)*td1(:,:,:)*tb1(:,:,:)-&
+          ta1(:,:,:)*tg1(:,:,:)*tc1(:,:,:)-&
+          td1(:,:,:)*te1(:,:,:)*tb1(:,:,:)-&
+          tg1(:,:,:)*ti1(:,:,:)*tc1(:,:,:)-&
+          te1(:,:,:)*th1(:,:,:)*tf1(:,:,:)-&
+          th1(:,:,:)*ti1(:,:,:)*tf1(:,:,:)
      uvisu=0._mytype
      call fine_to_coarseV(1,di1,uvisu)
      write(filename,"('./data/pc',I4.4)") itime/ioutput
@@ -443,11 +429,9 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
 
   if (save_qc.eq.1) then
      di1=0._mytype
-     do ijk=1,nvect1
-        !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
-        di1(ijk,1,1)=-0.5*(ta1(ijk,1,1)**2+te1(ijk,1,1)**2+ti1(ijk,1,1)**2)-&
-             td1(ijk,1,1)*tb1(ijk,1,1)-tg1(ijk,1,1)*tc1(ijk,1,1)-th1(ijk,1,1)*tf1(ijk,1,1)
-     enddo
+     !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
+     di1(:,:,:)=-0.5*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2)-&
+          td1(:,:,:)*tb1(:,:,:)-tg1(:,:,:)*tc1(:,:,:)-th1(:,:,:)*tf1(:,:,:)
      uvisu=0._mytype
      call fine_to_coarseV(1,di1,uvisu)
      write(filename,"('./data/qc',I4.4)") itime/ioutput
@@ -457,9 +441,7 @@ subroutine VISU_INSTA (ux1,uy1,uz1,phi1,ep1,protection)
   if (save_utmap.eq.1) then
      di1=0._mytype
      write(filename,"('./data/utmap',I4.4)") itime/ioutput
-     do ijk=1,nvect1
-        di1(ijk,1,1)=sqrt(sqrt((td1(ijk,1,1)**2)+(tf1(ijk,1,1)**2))*xnu)
-     enddo
+     di1(:,:,:)=sqrt(sqrt((td1(:,:,:)**2)+(tf1(:,:,:)**2))*xnu)
      call decomp_2d_write_plane(1,di1,2,1,filename)
   endif
 
@@ -509,6 +491,8 @@ subroutine VISU_PRE (pp3,ta1,tb1,di1,ta2,tb2,di2,ta3,di3,nxmsize,nymsize,nzmsize
 
   implicit none
 
+  integer :: nxmsize,nymsize,nzmsize
+
   real(mytype),dimension(xszV(1),xszV(2),xszV(3)) :: uvisu
   real(mytype),dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize) :: pp3
   !Z PENCILS NXM NYM NZM-->NXM NYM NZ
@@ -520,7 +504,6 @@ subroutine VISU_PRE (pp3,ta1,tb1,di1,ta2,tb2,di2,ta3,di3,nxmsize,nymsize,nzmsize
   real(mytype),dimension(nxmsize,xsize(2),xsize(3)) :: ta1
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: tb1,di1,pre1
 
-  integer :: nxmsize,nymsize,nzmsize
   character(len=30) filename
 
   !WORK Z-PENCILS

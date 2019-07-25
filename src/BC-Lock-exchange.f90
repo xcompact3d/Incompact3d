@@ -119,7 +119,7 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
 
     real(mytype) :: um,x,y,ek,ep,ekg,epg
-    integer :: k,j,i,ijk,ii,is,it,code
+    integer :: k,j,i,ii,is,it,code
     
     do k=1,xsize(3)
        do j=1,xsize(2)
@@ -133,16 +133,24 @@ contains
           enddo
        enddo
     enddo
-    do ijk = 1,xsize(1)*xsize(2)*xsize(3)
-       do is=1,numscalar
-          if (phi1(ijk,1,1,is).gt.cp(is)) phi1(ijk,1,1,is) = cp(is)
-          if (phi1(ijk,1,1,is).lt.zero) phi1(ijk,1,1,is) = zero
+    do k = 1,xsize(3)
+       do j = 1, xsize(2)
+          do i = 1, xsize(1)
+             do is=1,numscalar
+                if (phi1(i,j,k,is).gt.cp(is)) then
+                   phi1(i,j,k,is) = cp(is)
+                elseif (phi1(i,j,k,is).lt.zero) then
+                   phi1(i,j,k,is) = zero
+                endif
+             enddo
+
+             if (rho1(i,j,k,1).gt.max(dens1, dens2)) then
+                rho1(i,j,k,1) = max(dens1, dens2)
+             elseif (rho1(i,j,k,1).lt.min(dens1, dens2)) then
+                rho1(i,j,k,1) = min(dens1, dens2)
+             endif
+          enddo
        enddo
-       if (rho1(ijk,1,1,1).gt.max(dens1, dens2)) then
-          rho1(ijk,1,1,1) = max(dens1, dens2)
-       elseif (rho1(ijk,1,1,1).lt.min(dens1, dens2)) then
-          rho1(ijk,1,1,1) = min(dens1, dens2)
-       endif
     enddo
 
     call set_fluid_properties_lockexch(rho1, mu1)

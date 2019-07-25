@@ -934,16 +934,13 @@ contains
 
     implicit none
 
-    integer :: code,ierror,ijk,is
+    integer :: code,ierror,i,j,k,is
     real(mytype) :: phimax,phimin,phimax1,phimin1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
     do is=1, numscalar
-       phimax=-1609.;phimin=1609.
-       do ijk=1,xsize(1)*xsize(2)*xsize(3)
-          if (phi(ijk,1,1,is).gt.phimax) phimax=phi(ijk,1,1,is)
-          if (phi(ijk,1,1,is).lt.phimin) phimin=phi(ijk,1,1,is)
-       enddo
+       phimax = maxval(phi(:,:,:,is))
+       phimin = minval(phi(:,:,:,is))
 
        call MPI_REDUCE(phimax,phimax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
        call MPI_REDUCE(phimin,phimin1,1,real_type,MPI_MIN,0,MPI_COMM_WORLD,code)
@@ -973,21 +970,34 @@ contains
 
     implicit none
 
-    integer :: code,ierror,ijk
+    integer :: code,ierror,i,j,k
     real(mytype) :: uxmax,uymax,uzmax,uxmin,uymin,uzmin
     real(mytype) :: uxmax1,uymax1,uzmax1,uxmin1,uymin1,uzmin1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
 
     uxmax=-1609.;uymax=-1609.;uzmax=-1609.;uxmin=1609.;uymin=1609.;uzmin=1609.
-    do ijk=1,xsize(1)*xsize(2)*xsize(3)
-       if ((iibm.eq.0).or.(ep1(ijk,1,1).eq.zero)) then
-          if (ux(ijk,1,1).gt.uxmax) uxmax=ux(ijk,1,1)
-          if (uy(ijk,1,1).gt.uymax) uymax=uy(ijk,1,1)
-          if (uz(ijk,1,1).gt.uzmax) uzmax=uz(ijk,1,1)
-          if (ux(ijk,1,1).lt.uxmin) uxmin=ux(ijk,1,1)
-          if (uy(ijk,1,1).lt.uymin) uymin=uy(ijk,1,1)
-          if (uz(ijk,1,1).lt.uzmin) uzmin=uz(ijk,1,1)
-       endif
+    do k = 1, xsize(3)
+       do j = 1, xsize(2)
+          do i = 1, xsize(1)
+             if ((iibm.eq.0).or.(ep1(i,j,k).eq.zero)) then
+                if (ux(i,j,k).gt.uxmax) then
+                   uxmax=ux(i,j,k)
+                elseif (ux(i,j,k).lt.uxmin) then
+                   uxmin=ux(i,j,k)
+                endif
+                if (uy(i,j,k).gt.uymax) then
+                   uymax=uy(i,j,k)
+                elseif (uy(i,j,k).lt.uymin) then
+                   uymin=uy(i,j,k)
+                endif
+                if (uz(i,j,k).gt.uzmax) then
+                   uzmax=uz(i,j,k)
+                elseif (uz(i,j,k).lt.uzmin) then
+                   uzmin=uz(i,j,k)
+                endif
+             endif
+          enddo
+       enddo
     enddo
 
     call MPI_REDUCE(uxmax,uxmax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)

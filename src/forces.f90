@@ -159,7 +159,7 @@ subroutine force(ux1,uy1,ep1)
   implicit none
   character(len=30) :: filename
   integer :: nzmsize
-  integer                                             :: i, iv, j, k, kk, ijk, code
+  integer                                             :: i, iv, j, k, kk, code
   integer                                             :: nvect1,nvect2,nvect3
 
   real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1, uy1
@@ -191,15 +191,23 @@ subroutine force(ux1,uy1,ep1)
   nvect3=zsize(1)*zsize(2)*zsize(3)
 
   if (itime.eq.1) then
-     do ijk=1,nvect1
-        ux11(ijk,1,1)=ux1(ijk,1,1)
-        uy11(ijk,1,1)=uy1(ijk,1,1)
+     do k = 1, xsize(3)
+        do j = 1, xsize(2)
+           do i = 1, xsize(1)
+              ux11(i,j,k)=ux1(i,j,k)
+              uy11(i,j,k)=uy1(i,j,k)
+           enddo
+        enddo
      enddo
      return
   elseif (itime.eq.2) then
-     do ijk=1,nvect1
-        ux01(ijk,1,1)=ux1(ijk,1,1)
-        uy01(ijk,1,1)=uy1(ijk,1,1)
+     do k = 1, xsize(3)
+        do j = 1, xsize(2)
+           do i = 1, xsize(1)
+              ux01(i,j,k)=ux1(i,j,k)
+              uy01(i,j,k)=uy1(i,j,k)
+           enddo
+        enddo
      enddo
      return
   endif
@@ -461,14 +469,15 @@ subroutine force(ux1,uy1,ep1)
      endif
   enddo
 
-  do ijk=1,nvect1
-     ux11(ijk,1,1)=ux01(ijk,1,1)
-     uy11(ijk,1,1)=uy01(ijk,1,1)
-  enddo
-
-  do ijk=1,nvect1
-     ux01(ijk,1,1)=ux1(ijk,1,1)
-     uy01(ijk,1,1)=uy1(ijk,1,1)
+  do k = 1, xsize(3)
+     do j = 1, xsize(2)
+        do i = 1, xsize(1)
+           ux11(i,j,k)=ux01(i,j,k)
+           uy11(i,j,k)=uy01(i,j,k)
+           ux01(i,j,k)=ux1(i,j,k)
+           uy01(i,j,k)=uy1(i,j,k)
+        enddo
+     enddo
   enddo
 
   return

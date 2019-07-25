@@ -919,10 +919,9 @@ subroutine les_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
   real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, nut1, ep1
   real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sgsx1, sgsy1, sgsz1
 
-  integer :: i, j, k, ijk, nvect1
+  integer :: i, j, k 
 
   ta1 = zero; ta2 = zero; ta3 = zero
-  nvect1 = xsize(1) * xsize(2) * xsize(3)
 
   !WORK X-PENCILS
 
@@ -1050,12 +1049,14 @@ subroutine les_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
   call transpose_y_to_x(sgsz2, sgsz1)
 
 #ifdef IBM
-  do ijk = 1, nvect1
-     if(ep1(ijk, 1, 1).eq.1) then
-        sgsx1(ijk, 1, 1) = zero
-        sgsy1(ijk, 1, 1) = zero
-        sgsz1(ijk, 1, 1) = zero
-     endif
+  do k = 1, xsize(3)
+     do j = 1, xsize(2)
+        do i = 1, xsize(1)
+           sgsx1(i, j, k) = zero
+           sgsy1(i, j, k) = zero
+           sgsz1(i, j, k) = zero
+        enddo
+     enddo
   enddo
 #endif
 

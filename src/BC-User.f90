@@ -41,7 +41,7 @@ contains
 
     real(mytype) :: y,r,um,r3,x,z,h,ct
     real(mytype) :: cx0,cy0,cz0,hg,lg
-    integer :: k,j,i,ijk,fh,ierror,is,code
+    integer :: k,j,i,fh,ierror,is,code
     integer (kind=MPI_OFFSET_KIND) :: disp
     integer, dimension (:), allocatable :: seed
     integer ::  isize
