@@ -435,7 +435,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
        alsai,asi,bsi,csi,dsi
   integer :: i
   real(mytype),dimension(n) :: sb,sc
-  real(mytype) :: xxnu,dpis3,kppkc,kppkm,xnpi2,xmpi2
+  real(mytype) :: xxnu,dpis3,kppkc,kppkm,xnpi2,xmpi2,den
 
   sf=zero;ss=zero;sw=zero;sfp=zero;ssp=zero;swp=zero
 
@@ -518,20 +518,16 @@ subroutine second_derivative(alsa1,as1,bs1,&
      kppkm=dpis3*dpis3*exp(-((pi-dpis3)/(zpthree*pi-dpis3))**two)/xxnu+dpis3*dpis3
      xnpi2=kppkc
      xmpi2=kppkm
-     alsai=(405._mytype*xnpi2 - 1280._mytype*xmpi2 + 2736._mytype)/&
-          (810._mytype*xnpi2 - 1280._mytype*xmpi2 + 288._mytype)
-     asi=-(4329._mytype*xnpi2 - 256._mytype*xmpi2 - 1120._mytype*xnpi2*xmpi2 + 2288._mytype)/&
-          (3240._mytype*xnpi2 - 5120._mytype*xmpi2 + 1152._mytype)
-     asi = asi / (d2)
-     bsi=(2115._mytype*xnpi2 - 1792._mytype*xmpi2 - 280._mytype*xnpi2*xmpi2 + 1328._mytype)/&
-          (405._mytype*xnpi2 - 640._mytype*xmpi2 + 144._mytype)
-     bsi = bsi / (four*d2)
-     csi=-(nine*(855._mytype*xnpi2 + 256._mytype*xmpi2 - 160._mytype*xnpi2*xmpi2 - 2288._mytype))/&
-          (eight*(405._mytype*xnpi2 - 640._mytype*xmpi2 + 144._mytype))
-     csi = csi / (nine*d2)  
-     dsi=(198._mytype*xnpi2 + 128._mytype*xmpi2 - 40._mytype*xnpi2*xmpi2 - 736._mytype)/&
-          (405._mytype*xnpi2 - 640._mytype*xmpi2 + 144._mytype)
-     dsi = dsi / (16._mytype*d2)  
+
+     den = 405._mytype * xnpi2 - 640._mytype * xmpi2 + 144._mytype
+
+     alsai = half - (320._mytype * xmpi2 - 1296._mytype) / den
+     asi = -(4329._mytype * xnpi2 / eight - 32._mytype * xmpi2 - 140._mytype * xnpi2 * xmpi2 + 286._mytype) / den / d2
+     bsi = (2115._mytype * xnpi2 - 1792._mytype * xmpi2 - 280._mytype * xnpi2 * xmpi2 + 1328._mytype) / den / (four * d2)
+     csi = -(7695 * xnpi2 / eight + 288._mytype * xmpi2 - 180._mytype * xnpi2 * xmpi2 - 2574._mytype) / den / (nine * d2)
+     dsi = (198._mytype * xnpi2 + 128._mytype * xmpi2 - 40._mytype * xnpi2 * xmpi2 - 736._mytype) / den / (four**2 * d2)
+
+     print *, alsai, asi, bsi, csi, dsi
   else
      if (nrank==0) then
         print *, 'This is not an option.'
