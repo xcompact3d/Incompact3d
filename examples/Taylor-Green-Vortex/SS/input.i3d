@@ -12,9 +12,9 @@ p_row=4               ! Row partition
 p_col=4               ! Column partition
 
 ! Mesh
-nx=129                 ! X-direction nodes
-ny=129                 ! Y-direction nodes
-nz=129                 ! Z-direction nodes
+nx=65                 ! X-direction nodes
+ny=65                 ! Y-direction nodes
+nz=65                 ! Z-direction nodes
 istret = 0            ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
 beta = 0.259065151    ! Refinement parameter (beta)
 
@@ -67,7 +67,7 @@ isecondder = 4        ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th
 itimescheme = 5       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4)
 
 ! Dissipation control
-rxxnu = 0             ! Ratio between hyperviscosity/viscosity at nu
+nu0nu = 0             ! Ratio between hyperviscosity/viscosity at nu
 cnu = 0               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 
 /End
