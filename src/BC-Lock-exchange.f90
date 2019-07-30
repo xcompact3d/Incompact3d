@@ -45,7 +45,7 @@ module lockexch
   logical, save :: init = .FALSE.
 
   private
-  public :: init_lockexch, boundary_conditions_lockexch, postprocessing_lockexch, &
+  public :: init_lockexch, boundary_conditions_lockexch, postprocess_lockexch, &
        pfront, set_fluid_properties_lockexch
 
 contains
@@ -119,7 +119,7 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
 
     real(mytype) :: um,x,y,ek,ep,ekg,epg
-    integer :: k,j,i,ijk,ii,is,it,code
+    integer :: k,j,i,ii,is,it,code
     
     do k=1,xsize(3)
        do j=1,xsize(2)
@@ -133,16 +133,24 @@ contains
           enddo
        enddo
     enddo
-    do ijk = 1,xsize(1)*xsize(2)*xsize(3)
-       do is=1,numscalar
-          if (phi1(ijk,1,1,is).gt.cp(is)) phi1(ijk,1,1,is) = cp(is)
-          if (phi1(ijk,1,1,is).lt.zero) phi1(ijk,1,1,is) = zero
+    do k = 1,xsize(3)
+       do j = 1, xsize(2)
+          do i = 1, xsize(1)
+             do is=1,numscalar
+                if (phi1(i,j,k,is).gt.cp(is)) then
+                   phi1(i,j,k,is) = cp(is)
+                elseif (phi1(i,j,k,is).lt.zero) then
+                   phi1(i,j,k,is) = zero
+                endif
+             enddo
+
+             if (rho1(i,j,k,1).gt.max(dens1, dens2)) then
+                rho1(i,j,k,1) = max(dens1, dens2)
+             elseif (rho1(i,j,k,1).lt.min(dens1, dens2)) then
+                rho1(i,j,k,1) = min(dens1, dens2)
+             endif
+          enddo
        enddo
-       if (rho1(ijk,1,1,1).gt.max(dens1, dens2)) then
-          rho1(ijk,1,1,1) = max(dens1, dens2)
-       elseif (rho1(ijk,1,1,1).lt.min(dens1, dens2)) then
-          rho1(ijk,1,1,1) = min(dens1, dens2)
-       endif
     enddo
 
     call set_fluid_properties_lockexch(rho1, mu1)
@@ -353,7 +361,7 @@ contains
 
 !   end subroutine init_post
 
-  subroutine postprocessing_lockexch(rho1,ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
+  subroutine postprocess_lockexch(rho1,ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
     use decomp_2d, only : alloc_x
     
@@ -465,7 +473,7 @@ contains
        close(67)
     end if
 
-  end subroutine postprocessing_lockexch
+  end subroutine postprocess_lockexch
 
   subroutine budget(rho1,ux1,uy1,uz1,phi1,vol1)
 

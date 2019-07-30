@@ -28,7 +28,7 @@ module hill
   real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_hill, boundary_conditions_hill, postprocessing_hill, geomcomplex_hill
+  PUBLIC :: init_hill, boundary_conditions_hill, postprocess_hill, geomcomplex_hill
 
 contains
 
@@ -146,7 +146,7 @@ contains
 
     real(mytype) :: y,r,um,r3,x,z,h,ct
     real(mytype) :: cx0,cy0,cz0,hg,lg
-    integer :: k,j,i,ijk,fh,ierror,ii,is,code
+    integer :: k,j,i,fh,ierror,ii,is,code
     integer (kind=MPI_OFFSET_KIND) :: disp
 
     integer, dimension (:), allocatable :: seed
@@ -300,7 +300,7 @@ contains
 
   end subroutine init_post
   !############################################################################
-  subroutine postprocessing_hill(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
+  subroutine postprocess_hill(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
     USE MPI
     USE decomp_2d
@@ -475,7 +475,7 @@ contains
     endif
 
     return
-  end subroutine postprocessing_hill
+  end subroutine postprocess_hill
   !############################################################################
   subroutine write_probes(ux1,uy1,uz1,phi1) !By Felipe Schuch
 

@@ -20,7 +20,7 @@ module user_sim
   character(len=1),parameter :: NL=char(10) !new line character
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_user, boundary_conditions_user, postprocessing_user
+  PUBLIC :: init_user, boundary_conditions_user, postprocess_user
 
 contains
 
@@ -41,7 +41,7 @@ contains
 
     real(mytype) :: y,r,um,r3,x,z,h,ct
     real(mytype) :: cx0,cy0,cz0,hg,lg
-    integer :: k,j,i,ijk,fh,ierror,is,code
+    integer :: k,j,i,fh,ierror,is,code
     integer (kind=MPI_OFFSET_KIND) :: disp
     integer, dimension (:), allocatable :: seed
     integer ::  isize
@@ -121,7 +121,7 @@ contains
 
   end subroutine boundary_conditions_user
 
-  subroutine postprocessing_user(ux1,uy1,uz1,phi1,ep1)
+  subroutine postprocess_user(ux1,uy1,uz1,phi1,ep1)
 
     USE decomp_2d
     USE MPI
@@ -129,6 +129,6 @@ contains
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
-  end subroutine postprocessing_user
+  end subroutine postprocess_user
 
 end module user_sim

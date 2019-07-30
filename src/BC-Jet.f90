@@ -30,7 +30,7 @@ module jet
   LOGICAL :: initialising
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_jet, boundary_conditions_jet, postprocessing_jet, momentum_forcing_jet
+  PUBLIC :: init_jet, boundary_conditions_jet, postprocess_jet, momentum_forcing_jet
 
 contains
 
@@ -792,7 +792,7 @@ contains
 
   end subroutine init_post
   !############################################################################
-  subroutine postprocessing_jet(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
+  subroutine postprocess_jet(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
     USE MPI
     USE decomp_2d
@@ -897,7 +897,7 @@ contains
     endif
 
     return
-  end subroutine postprocessing_jet
+  end subroutine postprocess_jet
   !############################################################################
   subroutine write_probes(ux1,uy1,uz1,phi1) !By Felipe Schuch
 

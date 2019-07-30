@@ -8,6 +8,7 @@ program incompact3d
   use navier, only : velocity_to_momentum, momentum_to_velocity, pre_correc, &
        calc_divu_constraint, solve_poisson, corpg
   use tools, only : test_flow, restart, simu_stats
+  use visu, only : postprocessing
 
   implicit none
 
@@ -16,8 +17,6 @@ program incompact3d
   do itime=ifirst,ilast
      t=itime*dt
      call simu_stats(2)
-
-     call postprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
 
      do itr=1,iadvance_time
 
@@ -46,7 +45,7 @@ program incompact3d
 
      call simu_stats(3)
 
-     CALL visu(rho1,ux1,uy1,uz1,pp3(:,:,:,1),phi1,itime)
+     call postprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
 
   enddo !! End time loop
 
@@ -68,6 +67,7 @@ subroutine init_incompact3d()
   use tools, only : test_speed_min_max, test_scalar_min_max, &
        restart, &
        simu_stats
+  use visu, only : write_snapshot
   
   use param, only : ilesmod, jles
   use param, only : irestart
@@ -135,7 +135,7 @@ subroutine init_incompact3d()
 
   if (irestart==0) then
      call init(rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,dphi1,pp3,px1,py1,pz1)
-     CALL visu(rho1, ux1, uy1, uz1, pp3(:,:,:,1),phi1, 0)
+     CALL write_snapshot(rho1, ux1, uy1, uz1, pp3(:,:,:,1),phi1, ep1, 0)
   else
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,0)
   endif
