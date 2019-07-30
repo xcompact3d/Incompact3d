@@ -526,8 +526,6 @@ subroutine second_derivative(alsa1,as1,bs1,&
      bsi = (2115._mytype * xnpi2 - 1792._mytype * xmpi2 - 280._mytype * xnpi2 * xmpi2 + 1328._mytype) / den / (four * d2)
      csi = -(7695 * xnpi2 / eight + 288._mytype * xmpi2 - 180._mytype * xnpi2 * xmpi2 - 2574._mytype) / den / (nine * d2)
      dsi = (198._mytype * xnpi2 + 128._mytype * xmpi2 - 40._mytype * xnpi2 * xmpi2 - 736._mytype) / den / (four**2 * d2)
-
-     print *, alsai, asi, bsi, csi, dsi
   else
      if (nrank==0) then
         print *, 'This is not an option.'
