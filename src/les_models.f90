@@ -844,7 +844,7 @@ subroutine les_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
     call transpose_y_to_z(uy2, uy3)
     call transpose_y_to_z(uz2, uz3)
 
-    call derz (ta3, nut3, di3, sz, ffz, fsz, fwz, zsize(1), zsize(2), zsize(3), 1)
+    call derz (ta3, nut3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
 
     call derzz (td3, ux3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
     call derzz (te3, uy3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
