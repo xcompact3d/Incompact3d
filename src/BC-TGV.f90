@@ -311,6 +311,7 @@ contains
 
     USE decomp_2d
     USE MPI
+    USE var, only: nut1, srt_smag 
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
@@ -423,11 +424,14 @@ contains
     do k=1,xsize3
        do j=1,xsize2
           do i=1,xsize1
-             temp1=temp1+0.5*xnu*((2.*ta1(i,j,k))**2+(2.*te1(i,j,k))**2+&
-                  (2.*ti1(i,j,k))**2+2.*(td1(i,j,k)+tb1(i,j,k))**2+&
-                  2.*(tg1(i,j,k)+tc1(i,j,k))**2+&
-                  2.*(th1(i,j,k)+tf1(i,j,k))**2)
-          enddo
+             temp1=temp1+half*xnu*((two*ta1(i,j,k))**two+(two*te1(i,j,k))**two+&
+                  (two*ti1(i,j,k))**two+two*(td1(i,j,k)+tb1(i,j,k))**two+&
+                  two*(tg1(i,j,k)+tc1(i,j,k))**two+&
+                  two*(th1(i,j,k)+tf1(i,j,k))**two)
+             if(ilesmod.ne.0.and.jLES.gt.0) then 
+                  temp1=temp1+two*nut1(i,j,k)*srt_smag(i,j,k)
+             endif
+            enddo
        enddo
     enddo
     call MPI_ALLREDUCE(temp1,eps,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
@@ -549,7 +553,6 @@ contains
     USE param
     USE variables
     USE decomp_2d
-
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,diss1
@@ -574,12 +577,13 @@ contains
           do i=1,xsize(1)
              do m=1,3
                 do l=1,3
-                   diss1(i,j,k)=diss1(i,j,k)+two*xnu*half*half*(A(l,m,i,j,k)+A(m,l,i,j,k))**two
+                        diss1(i,j,k)=diss1(i,j,k)+two*xnu*half*half*(A(l,m,i,j,k)+A(m,l,i,j,k))**two
                 enddo
              enddo
           enddo
        enddo
     enddo
+
     return
 
   end subroutine dissipation
