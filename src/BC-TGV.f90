@@ -508,6 +508,9 @@ contains
                   uy1(i,j,k)*(tb1(i,j,k)+te1(i,j,k)+th1(i,j,k))+ &
                   uz1(i,j,k)*(tc1(i,j,k)+tf1(i,j,k)+ti1(i,j,k)))
              temp1=temp1+di1(i,j,k)
+             if(ilesmod.ne.0.and.jLES.gt.0) then 
+                  temp1=temp1+two*nut1(i,j,k)*srt_smag(i,j,k)
+             endif
           enddo
        enddo
     enddo

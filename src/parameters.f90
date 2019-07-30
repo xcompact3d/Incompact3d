@@ -74,7 +74,7 @@ subroutine parameter(input_i3d)
   NAMELIST /ScalarParam/ sc, ri, uset, cp, &
        nclxS1, nclxSn, nclyS1, nclySn, nclzS1, nclzSn, &
        scalar_lbound, scalar_ubound
-  NAMELIST /LESModel/ jles, smagcst, walecst, iwall
+  NAMELIST /LESModel/ jles, smagcst, walecst, maxdsmagcst, iwall
   NAMELIST /WallModel/ smagwalldamp
 
   NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf,nvol

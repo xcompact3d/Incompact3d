@@ -129,7 +129,6 @@ subroutine init_incompact3d()
   call decomp_info_init(nxm,nym,nzm,phG)
 
   if (ilesmod.ne.0) then
-     call filter(0.45_mytype)
      if (jles.gt.0)  call init_explicit_les()
   endif
 
