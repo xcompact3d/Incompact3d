@@ -117,7 +117,7 @@ subroutine smag(nut1,ux1,uy1,uz1)
   call dery (tf2, uz2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
 
   sxy2 = half * (td2 + tb2) ! Sxy2
-  syy2 = tf2                ! duz2/dy2
+  syy2 = te2                ! Syy2
 
   !WORK Z-PENCILS
   call transpose_y_to_z(ux2, ux3)
@@ -130,7 +130,7 @@ subroutine smag(nut1,ux1,uy1,uz1)
   call derz(ti3, uz3, di3, sz, ffz,  fsz,  fwz,  zsize(1), zsize(2), zsize(3), 0)
 
   szz3 = ti3                ! Szz3
-  syz3 = half * (th3 + ti3) ! Syz2
+  syz3 = half * (th3 + tf3) ! Syz2
 
   ! 
   !WORK Y-PENCILS
