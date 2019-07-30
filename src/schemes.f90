@@ -511,7 +511,8 @@ subroutine second_derivative(alsa1,as1,bs1,&
      astt = asi
      bstt = bsi
      cstt = csi 
-  elseif(isecondder==5) then ! Sixth-order Hyperviscous operator 
+  elseif(isecondder==5) then ! Sixth-order Hyperviscous operator
+     if(nrank==0) print *, 'Using the hyperviscous operator with (nu_0/nu,c_nu) = ', '(', nu0nu,',', cnu,')' 
      dpis3=two*pi/three
      kppkc=pi*pi*(one+nu0nu)
      kppkm=dpis3*dpis3*(one+cnu*nu0nu) !exp(-((pi-dpis3)/(zpthree*pi-dpis3))**two)/xxnu+dpis3*dpis3

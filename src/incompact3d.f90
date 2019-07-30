@@ -130,7 +130,7 @@ subroutine init_incompact3d()
 
   if (ilesmod.ne.0) then
      call filter(0.45_mytype)
-     if (jles.le.3)  call init_explicit_les()
+     if (jles.gt.0)  call init_explicit_les()
   endif
 
   if (irestart==0) then

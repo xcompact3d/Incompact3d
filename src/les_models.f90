@@ -16,21 +16,19 @@ subroutine init_explicit_les
   del(ny) = del(ny - 1)
 
   if(nrank==0) then
+    
      write(*, *) ' '
      write(*, *) '++++++++++++++++++++++++++++++++'
-     write(*, *) 'Initializing explicit LES Filter'
+     write(*, *) 'LES Modelling'
      if(jLES==1) then
         write(*, *) ' Classic Smagorinsky is used ... '
         write(*, *) ' Smagorinsky constant = ', smagcst
      else if (jLES==2) then
-        write(*, *) ' Wall-adaptive LES (WALES) is used ... '
-        write(*, *) ' WALE constant = ', walecst
-     else if (jLES==3) then
         write(*, *) ' Dynamic Smagorinsky is used ... '
         write(*, *) ' Max value for the dynamic constant field = ', maxdsmagcst
      endif
      write(*, *) '++++++++++++++++++++++++++++++++'
-     if (nrank==0) print *, "Del y min max= ", minval(del), maxval(del)
+     !if (nrank==0) print *, "Del y min max= ", minval(del), maxval(del)
      write(*, *) '++++++++++++++++++++++++++++++++'
      write(*, *) ' '
   endif
@@ -55,11 +53,7 @@ subroutine Compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,iconservative)
 
      call smag(nut1,ux1,uy1,uz1)
 
-  elseif(jLES.eq.2) then !WALE
-
-     !call wale(nut1,ux1,uy1,uz1)
-     if(nrank==0) print *, 'WALES model not available at the moment'
-  elseif(jLES.eq.3) then ! Lilly-style Dynamic Smagorinsky
+  elseif(jLES.eq.2) then ! Lilly-style Dynamic Smagorinsky
 
   endif
 
@@ -123,7 +117,7 @@ subroutine smag(nut1,ux1,uy1,uz1)
   call dery (tf2, uz2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
 
   sxy2 = half * (td2 + tb2) ! Sxy2
-  syy2 = te2                ! duz2/dy2
+  syy2 = tf2                ! duz2/dy2
 
   !WORK Z-PENCILS
   call transpose_y_to_z(ux2, ux3)
@@ -187,64 +181,6 @@ subroutine smag(nut1,ux1,uy1,uz1)
   endif
 
 end subroutine smag
-!************************************************************
-!subroutine wale(nut1,ux1,uy1,uz1)
-!
-!
-!  USE param
-!  USE variables
-!  USE decomp_2d
-!  USE decomp_2d_io
-!
-!  implicit none
-!
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: gxx1, gyx1, gzx1, &
-!       gxy1, gyy1, gzy1, gxz1, gyz1, gzz1
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: srt_wale, srt_smag
-!  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: srt_wale2, srt_smag2, nut2
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sxxd1, syyd1, szzd1, sxyd1, sxzd1, syzd1
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1
-!
-!  character(len = 30) :: filename
-!  integer :: i, j, k
-!
-!  sxxd1 = gxx1 * gxx1 + gxy1 * gyx1 + gxz1 * gzx1 - (one / three) * (gxx1 * gxx1 + gyy1 * gyy1 + gzz1 * gzz1 + two * gxy1 * gyx1 + two * gxz1 * gzx1 + two * gzy1 * gyz1)
-!  sxyd1 = half * (gxx1 * gxy1 + gxy1 * gyy1 + gxz1 * gzy1 + gyx1 * gxx1 + gyy1 * gyx1 + gyz1 * gzx1)
-!  sxzd1 = half * (gxx1 * gxz1 + gxy1 * gyz1 + gxz1 * gzz1 + gzx1 * gxx1 + gzy1 * gyx1 + gzz1 * gzx1)
-!  syyd1 = gyx1 * gxy1 + gyy1 * gyy1 + gyz1 * gzy1 - (one / three) * (gxx1 * gxx1 + gyy1 * gyy1 + gzz1 * gzz1 + two * gxy1 * gyx1 + two * gxz1 * gzx1 + two * gzy1 * gyz1)
-!  syzd1 = half * (gyx1 * gxz1 + gyy1 * gyz1 + gyz1 * gzz1 + gzx1 * gxy1 + gzy1 * gyy1 + gzz1 * gzy1)
-!  szzd1 = gzx1 * gxz1 + gzy1 * gyz1 + gzz1 * gzz1 - (one / three) * (gxx1 * gxx1 + gyy1 * gyy1 + gzz1 * gzz1 + two * gxy1 * gyx1 + two * gxz1 * gzx1 + two * gzy1 * gyz1)
-!
-!  srt_wale = zero
-!  srt_wale = sxxd1 * sxxd1 + syyd1 * syyd1 + szzd1 * szzd1 + two * sxyd1 * sxyd1 + two * sxzd1 * sxzd1 + two * syzd1 * syzd1
-!
-!  nut1 = zero; nut2 = zero
-!  call transpose_x_to_y(srt_smag, srt_smag2)
-!  call transpose_x_to_y(srt_wale, srt_wale2)
-!  do k = 1, ysize(3)
-!     do j = 1, ysize(2)
-!        do i = 1, ysize(1)
-!           nut2(i, j, k) = ((walecst * del(j))**two) * ((srt_wale2(i, j, k)**(three / two)) / ((srt_smag2(i, j, k)**(five / two)) + (srt_wale2(i, j, k)**(five / four))))
-!        enddo
-!     enddo
-!  enddo
-!  call transpose_y_to_x(nut2, nut1)
-!
-!  if (nrank==0) print *, "wale srt_wale min max= ", minval(srt_wale), maxval(srt_wale)
-!  if (nrank==0) print *, "wale nut1     min max= ", minval(nut1), maxval(nut1)
-!
-!  if (mod(itime, ioutput).eq.0) then
-!
-!     write(filename, "('./data/srt_wale',I4.4)") itime / ioutput
-!     call decomp_2d_write_one(1, srt_wale, filename, 2)
-!
-!     write(filename, "('./data/nut_wale',I4.4)") itime / ioutput
-!     call decomp_2d_write_one(1, nut1, filename, 2)
-!
-!  endif
-!
-!end subroutine wale
 
 !***************************************************************************
 subroutine dynsmag(nut1,ux1,uy1,uz1,ep1)
