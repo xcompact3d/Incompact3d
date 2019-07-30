@@ -74,111 +74,112 @@ end subroutine Compute_SGS
 
 subroutine smag(nut1,ux1,uy1,uz1)
 
-  USE param
-  USE variables
-  USE decomp_2d
-  USE decomp_2d_io
-  USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-  USE var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,di2
-  USE var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
-  USE var, only : sxx1,syy1,szz1,sxy1,sxz1,syz1,srt_smag
-  USE var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2,srt_smag2,nut2
-  USE var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
+    USE param
+    USE variables
+    USE decomp_2d
+    USE decomp_2d_io
+    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    USE var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,di2
+    USE var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
+    USE var, only : sxx1,syy1,szz1,sxy1,sxz1,syz1,srt_smag
+    USE var, only : gxx1,gyx1,gzx1,gxy2,gyy2,gzy2,gxz3,gyz3,gzz3
+    USE var, only : gxy1,gyy1,gzy1,gxz2,gyz2,gzz2,gxz1,gyz1,gzz1 
+    USE var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2,srt_smag2,nut2
+    USE var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
 
-  implicit none
+    implicit none
 
-  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
-  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1
 
-  integer :: i, j, k
-  character(len = 30) :: filename
+    integer :: i, j, k
+    character(len = 30) :: filename
 
 
-  ! INFO about the auxillary arrays
-  !--------------------------------------------------------
-  ! ta= dux/dx; tb=duy/dx; tc=duz/dx; 
-  ! td= dux/dy; te=duy/dy; tf=duz/dy;
-  ! tg= dux/dz; th=duy/dz; ti=duz/dz
+    ! INFO about the auxillary arrays
+    !--------------------------------------------------------
+    ! gxx= dux/dx; gyx=duy/dx; gzx=duz/dx; 
+    ! gxy= dux/dy; gyy=duy/dy; gzy=duz/dy;
+    ! gxz= dux/dz; gyz=duy/dz; gzz=duz/dz
 
-  call derx (ta1, ux1, di1, sx, ffx,  fsx,  fwx,  xsize(1), xsize(2), xsize(3), 0)
-  call derx (tb1, uy1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1)
-  call derx (tc1, uz1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1)
+    call derx (gxx1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+    call derx (gyx1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    call derx (gzx1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
 
-  sxx1 = ta1                ! Sxx1
+    sxx1(:,:,:) = gxx1(:,:,:)
 
-  !WORK Y-PENCILS
-  call transpose_x_to_y(ux1, ux2)
-  call transpose_x_to_y(uy1, uy2)
-  call transpose_x_to_y(uz1, uz2)
-  call transpose_x_to_y(tb1, tb2)
+    !WORK Y-PENCILS
+    call transpose_x_to_y(ux1,ux2)
+    call transpose_x_to_y(uy1,uy2)
+    call transpose_x_to_y(uz1,uz2)
+    call transpose_x_to_y(gyx1,ta2)
 
-  call dery (td2, ux2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
-  call dery (te2, uy2, di2, sy, ffy , fsy , fwy , ppy, ysize(1), ysize(2), ysize(3), 0)
-  call dery (tf2, uz2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
+    call dery (gxy2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call dery (gyy2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+    call dery (gzy2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
 
-  sxy2 = half * (td2 + tb2) ! Sxy2
-  syy2 = te2                ! Syy2
+    sxy2(:,:,:)=half*(gxy2(:,:,:)+ta2(:,:,:))
+    syy2(:,:,:)=gyy2(:,:,:)
 
-  !WORK Z-PENCILS
-  call transpose_y_to_z(ux2, ux3)
-  call transpose_y_to_z(uy2, uy3)
-  call transpose_y_to_z(uz2, uz3)
-  call transpose_y_to_z(tf2, tf3)
+    !WORK Z-PENCILS
+    call transpose_y_to_z(ux2,ux3)
+    call transpose_y_to_z(uy2,uy3)
+    call transpose_y_to_z(uz2,uz3)
+    call transpose_y_to_z(gzy2,ta3)
 
-  call derz(tg3, ux3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
-  call derz(th3, uy3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
-  call derz(ti3, uz3, di3, sz, ffz,  fsz,  fwz,  zsize(1), zsize(2), zsize(3), 0)
+    call derz(gxz3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+    call derz(gyz3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+    call derz(gzz3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
 
-  szz3 = ti3                ! Szz3
-  syz3 = half * (th3 + tf3) ! Syz2
+    szz3(:,:,:)=gzz3(:,:,:)
+    syz3(:,:,:)=half*(gyz3(:,:,:)+ta3(:,:,:))
 
-  ! 
-  !WORK Y-PENCILS
-  call transpose_z_to_y(syz3,  syz2)
-  call transpose_z_to_y(szz3,  szz2)
+    !WORK Y-PENCILS
+    call transpose_z_to_y(syz3,syz2)
+    call transpose_z_to_y(szz3,szz2)
 
-  call transpose_z_to_y(tg3, tg2)
-  call transpose_z_to_y(th3, th2)
-  call transpose_z_to_y(ti3, ti2)
+    call transpose_z_to_y(gxz3,gxz2)
+    call transpose_z_to_y(gyz3,gyz2)
+    call transpose_z_to_y(gzz3,gzz2)
+    
+    !WORK X-PENCILS
+    call transpose_y_to_x(sxy2,sxy1)
+    call transpose_y_to_x(syy2,syy1)
+    call transpose_y_to_x(syz2,syz1)
+    call transpose_y_to_x(szz2,szz1)
+    
+    call transpose_y_to_x(gxy2,gxy1)
+    call transpose_y_to_x(gyy2,gyy1)
+    call transpose_y_to_x(gzy2,gzy1)
+    call transpose_y_to_x(gxz2,gxz1)
+    call transpose_y_to_x(gyz2,gyz1)
+    call transpose_y_to_x(gzz2,gzz1)
+    
+    sxz1(:,:,:)=half*(gzx1(:,:,:)+gxz1(:,:,:))
 
-  !WORK X-PENCILS
-  call transpose_y_to_x(sxy2, sxy1)
-  call transpose_y_to_x(syy2, syy1)
-  call transpose_y_to_x(syz2, syz1)
-  call transpose_y_to_x(szz2, szz1)
+    srt_smag = zero
+    srt_smag = sxx1 * sxx1 + syy1 * syy1 + szz1 * szz1 + two * sxy1 * sxy1 + two * sxz1 * sxz1 + two * syz1 * syz1
 
-  call transpose_y_to_x(td2, td1)
-  call transpose_y_to_x(te2, te1)
-  call transpose_y_to_x(tf2, tf1)
-  call transpose_y_to_x(tg2, tg1)
-  call transpose_y_to_x(th2, th1)
-  call transpose_y_to_x(ti2, ti1)
+    nut1 = zero; nut2 = zero
+    call transpose_x_to_y(srt_smag, srt_smag2)
+    do k = 1, ysize(3)
+       do j = 1, ysize(2)
+          do i = 1, ysize(1)
+             nut2(i, j, k) = ((smagcst * del(j))**two) * sqrt(two * srt_smag2(i, j, k))
+          enddo
+       enddo
+    enddo
+    call transpose_y_to_x(nut2, nut1)
 
-  sxz1 = half * (tg1 + tc1)
+    if (nrank==0) print *, "smag srt_smag min max= ", minval(srt_smag), maxval(srt_smag)
+    if (nrank==0) print *, "smag nut1     min max= ", minval(nut1), maxval(nut1)
 
-  srt_smag = zero
-  srt_smag = sxx1 * sxx1 + syy1 * syy1 + szz1 * szz1 + two * sxy1 * sxy1 + two * sxz1 * sxz1 + two * syz1 * syz1
+    if (mod(itime, ioutput).eq.0) then
 
-  nut1 = zero; nut2 = zero
-  call transpose_x_to_y(srt_smag, srt_smag2)
-  do k = 1, ysize(3)
-     do j = 1, ysize(2)
-        do i = 1, ysize(1)
-           nut2(i, j, k) = ((smagcst * del(j))**two) * sqrt(two * srt_smag2(i, j, k))
-        enddo
-     enddo
-  enddo
-  call transpose_y_to_x(nut2, nut1)
+       write(filename, "('./data/nut_smag',I4.4)") itime / ioutput
+       call decomp_2d_write_one(1, nut1, filename, 2)
 
-  if (nrank==0) print *, "smag srt_smag min max= ", minval(srt_smag), maxval(srt_smag)
-  if (nrank==0) print *, "smag nut1     min max= ", minval(nut1), maxval(nut1)
-
-  if (mod(itime, ioutput).eq.0) then
-
-     write(filename, "('./data/nut_smag',I4.4)") itime / ioutput
-     call decomp_2d_write_one(1, nut1, filename, 2)
-
-  endif
+    endif
 
 end subroutine smag
 
@@ -732,9 +733,12 @@ subroutine les_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
   USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
   USE var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2
   USE var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
-  USE var, only : sxx1,syy1,szz1,sxy1,sxz1,syz1 
-  USE var, only : sgsx2,sgsy2,sgsz2,sxx2,syy2,szz2,sxy2,sxz2,syz2,nut2
-  USE var, only : sgsx3,sgsy3,sgsz3,sxx3,syy3,szz3,sxy3,sxz3,syz3,nut3
+  USE var, only : sgsx2,sgsy2,sgsz2,nut2
+  USE var, only : sgsx3,sgsy3,sgsz3,nut3
+  USE var, only : gxx1,gyx1,gzx1,gxy2,gyy2,gzy2,gxz3,gyz3,gzz3
+  USE var, only : gxy1,gyy1,gzy1,gxz2,gyz2,gzz2,gxz1,gyz1,gzz1 
+  USE var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2
+  USE var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
 
   implicit none
 
@@ -743,155 +747,135 @@ subroutine les_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
 
   integer :: i, j, k, ijk, nvect1
 
-  ta1 = zero; ta2 = zero; ta3 = zero
-  nvect1 = xsize(1) * xsize(2) * xsize(3)
+    ta1 = zero; ta2 = zero; ta3 = zero
+    sgsx1=0.;sgsy1=0.;sgsz1=0.
+    sgsx2=0.;sgsy2=0.;sgsz2=0.
+    sgsx3=0.;sgsy3=0.;sgsz3=0.
+    !WORK X-PENCILS
+    call derx (ta1,nut1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    
+    call derxx (td1,ux1,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0)
+    call derxx (te1,uy1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+    call derxx (tf1,uz1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+    
+    sgsx1(:,:,:)=td1(:,:,:)*nut1(:,:,:)+gxx1(:,:,:)*ta1(:,:,:)
+    sgsy1(:,:,:)=te1(:,:,:)*nut1(:,:,:)+gyx1(:,:,:)*ta1(:,:,:)
+    sgsz1(:,:,:)=tf1(:,:,:)*nut1(:,:,:)+gzx1(:,:,:)*ta1(:,:,:)
+    
+    
+    !WORK Y-PENCILS
+    call transpose_x_to_y(sgsx1,sgsx2)
+    call transpose_x_to_y(sgsy1,sgsy2)
+    call transpose_x_to_y(sgsz1,sgsz2)
+    call transpose_x_to_y(gxy1,gxy2)
+    call transpose_x_to_y(gyy1,gyy2)
+    call transpose_x_to_y(gzy1,gzy2)
+    call transpose_x_to_y(gxz1,gxz2)
+    call transpose_x_to_y(gyz1,gyz2)
+    call transpose_x_to_y(gzz1,gzz2)
+    call transpose_x_to_y(nut1,nut2)
+    call transpose_x_to_y(ux1,ux2)
+    call transpose_x_to_y(uy1,uy2)
+    call transpose_x_to_y(uz1,uz2)
 
-  !WORK X-PENCILS
+    call dery (ta2, nut2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
 
-  call derx (ta1, nut1, di1, sx, ffx, fsx, fwx, xsize(1), xsize(2), xsize(3), 0)
+    !-->for ux
+    td2 = zero
+    if (istret.ne.0) then
+       call deryy (td2, ux2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
+       call dery (te2, ux2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
+       do k = 1, ysize(3)
+          do j = 1, ysize(2)
+             do i = 1, ysize(1)
+                td2(i, j, k) = td2(i, j, k) * pp2y(j) - pp4y(j) * te2(i, j, k)
+             enddo
+          enddo
+       enddo
+    else
+       call deryy (td2, ux2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
+    endif
 
-  call derxx (td1, ux1, di1, sx, sfx, ssx, swx, xsize(1), xsize(2), xsize(3), 0)
-  call derxx (te1, uy1, di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1)
-  call derxx (tf1, uz1, di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1)
+    !-->for uy
+    te2 = zero
+    if (istret.ne.0) then
+       call deryy (te2, uy2, di2, sy, sfy, ssy, swy, ysize(1), ysize(2), ysize(3), 0)
+       call dery (tf2, uy2, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0)
+       do k = 1, ysize(3)
+          do j = 1, ysize(2)
+             do i = 1, ysize(1)
+                te2(i, j, k) = te2(i, j, k) * pp2y(j) - pp4y(j) * tf2(i, j, k)
+             enddo
+          enddo
+       enddo
+    else
+       call deryy (te2, uy2, di2, sy, sfy, ssy, swy, ysize(1), ysize(2), ysize(3), 0)
+    endif
 
-  !nu_t constant
-  !sgsx1 = td1*nut1 + gxx1*ta1
-  !sgsy1 = te1*nut1 + gyx1*ta1
-  !sgsz1 = tf1*nut1 + gzx1*ta1
+    !-->for uz
+    tf2 = zero
+    if (istret.ne.0) then
+       call deryy (tf2, uz2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
+       call dery (tj2, uz2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
+       do k = 1, ysize(3)
+          do j = 1, ysize(2)
+             do i = 1, ysize(1)
+                tf2(i, j, k) = tf2(i, j, k) * pp2y(j) - pp4y(j) * tj2(i, j, k)
+             enddo
+          enddo
+       enddo
+    else
+       call deryy (tf2, uz2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
+    endif
 
-  sgsx1 = td1 * nut1 + two * sxx1 * ta1
-  sgsy1 = te1 * nut1 + two * sxy1 * ta1
-  sgsz1 = tf1 * nut1 + two * sxz1 * ta1
+    sgsx2(:,:,:)=sgsx2(:,:,:)+nut2(:,:,:)*td2(:,:,:)+gxy2(:,:,:)*ta2(:,:,:)
+    sgsy2(:,:,:)=sgsy2(:,:,:)+nut2(:,:,:)*te2(:,:,:)+gyy2(:,:,:)*ta2(:,:,:)
+    sgsz2(:,:,:)=sgsz2(:,:,:)+nut2(:,:,:)*tf2(:,:,:)+gzy2(:,:,:)*ta2(:,:,:)
 
-  !WORK Y-PENCILS
-  call transpose_x_to_y(sgsx1, sgsx2)
-  call transpose_x_to_y(sgsy1, sgsy2)
-  call transpose_x_to_y(sgsz1, sgsz2)
-  call transpose_x_to_y(sxz1, sxz2)
-  call transpose_x_to_y(sxy1, sxy2)
-  call transpose_x_to_y(syy1, syy2)
-  call transpose_x_to_y(syz1, syz2)
-  call transpose_x_to_y(szz1, szz2)
-  call transpose_x_to_y(nut1, nut2)
-  call transpose_x_to_y(ux1, ux2)
-  call transpose_x_to_y(uy1, uy2)
-  call transpose_x_to_y(uz1, uz2)
+    !WORK Z-PENCILS
+    call transpose_y_to_z(sgsx2, sgsx3)
+    call transpose_y_to_z(sgsy2, sgsy3)
+    call transpose_y_to_z(sgsz2, sgsz3)
+    call transpose_y_to_z(sxz2, sxz3)
+    call transpose_y_to_z(syz2, syz3)
+    call transpose_y_to_z(szz2, szz3)
+    call transpose_y_to_z(nut2, nut3)
+    call transpose_y_to_z(ux2, ux3)
+    call transpose_y_to_z(uy2, uy3)
+    call transpose_y_to_z(uz2, uz3)
 
-  call dery (ta2, nut2, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0)
+    call derz (ta3, nut3, di3, sz, ffz, fsz, fwz, zsize(1), zsize(2), zsize(3), 1)
 
-  !-->for ux
-  td2 = zero
-  if (istret.ne.0) then
-     call deryy (td2, ux2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
-     call dery (te2, ux2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
-     do k = 1, ysize(3)
-        do j = 1, ysize(2)
-           do i = 1, ysize(1)
-              td2(i, j, k) = td2(i, j, k) * pp2y(j) - pp4y(j) * te2(i, j, k)
-           enddo
+    call derzz (td3, ux3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
+    call derzz (te3, uy3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
+    call derzz (tf3, uz3, di3, sz, sfz, ssz, swz, zsize(1), zsize(2), zsize(3), 0)
+
+    sgsx3(:,:,:)=sgsx3(:,:,:)+nut3(:,:,:)*td3(:,:,:)+gxz3(:,:,:)*ta3(:,:,:)
+    sgsy3(:,:,:)=sgsy3(:,:,:)+nut3(:,:,:)*te3(:,:,:)+gyz3(:,:,:)*ta3(:,:,:)
+    sgsz3(:,:,:)=sgsz3(:,:,:)+nut3(:,:,:)*tf3(:,:,:)+gzz3(:,:,:)*ta3(:,:,:)
+
+    call transpose_z_to_y(sgsx3, sgsx2)
+    call transpose_z_to_y(sgsy3, sgsy2)
+    call transpose_z_to_y(sgsz3, sgsz2)
+
+    call transpose_y_to_x(sgsx2, sgsx1)
+    call transpose_y_to_x(sgsy2, sgsy1)
+    call transpose_y_to_x(sgsz2, sgsz1)
+
+    if(iibm==1) then
+        do k=1,xsize(3)
+        do j=1,xsize(2)
+        do i=1,xsize(1)
+          if(ep1(i,j, k).eq.1) then
+          sgsx1(i,j,k) = zero
+          sgsy1(i,j,k) = zero
+          sgsz1(i,j,k) = zero
+          endif
         enddo
-     enddo
-  else
-     call deryy (td2, ux2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
-  endif
-
-  !-->for uy
-  te2 = zero
-  if (istret.ne.0) then
-     call deryy (te2, uy2, di2, sy, sfy, ssy, swy, ysize(1), ysize(2), ysize(3), 0)
-     call dery (tf2, uy2, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0)
-     do k = 1, ysize(3)
-        do j = 1, ysize(2)
-           do i = 1, ysize(1)
-              te2(i, j, k) = te2(i, j, k) * pp2y(j) - pp4y(j) * tf2(i, j, k)
-           enddo
         enddo
-     enddo
-  else
-     call deryy (te2, uy2, di2, sy, sfy, ssy, swy, ysize(1), ysize(2), ysize(3), 0)
-  endif
-
-  !-->for uz
-  tf2 = zero
-  if (istret.ne.0) then
-     call deryy (tf2, uz2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
-     call dery (tj2, uz2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
-     do k = 1, ysize(3)
-        do j = 1, ysize(2)
-           do i = 1, ysize(1)
-              tf2(i, j, k) = tf2(i, j, k) * pp2y(j) - pp4y(j) * tj2(i, j, k)
-           enddo
         enddo
-     enddo
-  else
-     call deryy (tf2, uz2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
-  endif
 
-  !nu_t constant
-  !sgsx2=sgsx2+nut2*td2+gxy2*ta2
-  !sgsy2=sgsy2+nut2*te2+gyy2*ta2
-  !sgsz2=sgsz2+nut2*tf2+gzy2*ta2
-
-  sgsx2 = sgsx2 + nut2 * td2 + two * sxy2 * ta2
-  sgsy2 = sgsy2 + nut2 * te2 + two * syy2 * ta2
-  sgsz2 = sgsz2 + nut2 * tf2 + two * syz2 * ta2
-
-  !WORK Z-PENCILS
-  call transpose_y_to_z(sgsx2, sgsx3)
-  call transpose_y_to_z(sgsy2, sgsy3)
-  call transpose_y_to_z(sgsz2, sgsz3)
-  call transpose_y_to_z(sxz2, sxz3)
-  call transpose_y_to_z(syz2, syz3)
-  call transpose_y_to_z(szz2, szz3)
-  call transpose_y_to_z(nut2, nut3)
-  call transpose_y_to_z(ux2, ux3)
-  call transpose_y_to_z(uy2, uy3)
-  call transpose_y_to_z(uz2, uz3)
-
-  call derz (ta3, nut3, di3, sz, ffz, fsz, fwz, zsize(1), zsize(2), zsize(3), 0)
-
-  call derzz (td3, ux3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
-  call derzz (te3, uy3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
-  call derzz (tf3, uz3, di3, sz, sfz, ssz, swz, zsize(1), zsize(2), zsize(3), 0)
-
-  !nu_t constant
-  !sgsx3=sgsx3+nut3*td3+gxz3*ta3
-  !sgsy3=sgsy3+nut3*te3+gyz3*ta3
-  !sgsz3=sgsz3+nut3*tf3+gzz3*ta3
-
-  sgsx3 = sgsx3 + nut3 * td3 + two * sxz3 * ta3
-  sgsy3 = sgsy3 + nut3 * te3 + two * syz3 * ta3
-  sgsz3 = sgsz3 + nut3 * tf3 + two * szz3 * ta3
-
-  call transpose_z_to_y(sgsx3, sgsx2)
-  call transpose_z_to_y(sgsy3, sgsy2)
-  call transpose_z_to_y(sgsz3, sgsz2)
-
-  call transpose_y_to_x(sgsx2, sgsx1)
-  call transpose_y_to_x(sgsy2, sgsy1)
-  call transpose_y_to_x(sgsz2, sgsz1)
-
-#ifdef IBM
-  do ijk = 1, nvect1
-     if(ep1(ijk, 1, 1).eq.1) then
-        sgsx1(ijk, 1, 1) = zero
-        sgsy1(ijk, 1, 1) = zero
-        sgsz1(ijk, 1, 1) = zero
-     endif
-  enddo
-#endif
-
-  !call transpose_x_to_y(sgsx1,sgsx2)
-  !call transpose_x_to_y(sgsy1,sgsy2)
-  !call transpose_x_to_y(sgsz1,sgsz2)
-
-  !sgsx2(:,1,:) = zero; sgsx2(:,ysize(2),:) = zero
-  !sgsy2(:,1,:) = zero; sgsy2(:,ysize(2),:) = zero
-  !sgsz2(:,1,:) = zero; sgsz2(:,ysize(2),:) = zero
-
-  !call transpose_y_to_x(sgsx2,sgsx1)
-  !call transpose_y_to_x(sgsy2,sgsy1)
-  !call transpose_y_to_x(sgsz2,sgsz1)
+    endif
 
 end subroutine les_nonconservative
 
