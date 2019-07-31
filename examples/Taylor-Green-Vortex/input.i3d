@@ -8,8 +8,8 @@
 itype = 2
 
 ! Domain decomposition
-p_row=4               ! Row partition
-p_col=4               ! Column partition
+p_row=0               ! Row partition
+p_col=0               ! Column partition
 
 ! Mesh
 nx=65                 ! X-direction nodes
@@ -67,8 +67,8 @@ isecondder = 4        ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th
 itimescheme = 5       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4)
 
 ! Dissipation control
-rxxnu = 0             ! Ratio between hyperviscosity/viscosity at nu
-cnu = 0               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
+nu0nu = 4.0             ! Ratio between hyperviscosity/viscosity at nu
+cnu = 0.44               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 
 /End
 
