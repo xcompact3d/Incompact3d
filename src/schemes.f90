@@ -708,7 +708,7 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
   !*******************************************************************
 
   use decomp_2d, only : mytype
-  use param, only : zero, half, one, two, three, nine, ten
+  use param, only : zero, half, one, two, three, four, nine, ten
   use param, only : ipinter, ifirstder
 
   implicit none
@@ -790,11 +790,10 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      dicix6   = zero
   else if (ipinter.eq.1) then
      ailcaix6=three/ten
+     aicix6=three/four
+     bicix6=one/(two*ten)
+     cicix6=zero
      dicix6=zero
-     aicix6=one/128._mytype *(75._mytype +70._mytype*ailcaix6)
-     bicix6=one/256._mytype *(126._mytype*ailcaix6-25._mytype)
-     cicix6=one/256._mytype *(-ten*ailcaix6+three)
-     dicix6=dicix6/two
   else if (ipinter.eq.2) then
      ailcaix6=0.461658
      dicix6=0.00293016
