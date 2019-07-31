@@ -3,34 +3,45 @@ subroutine corgp_IBM (ux,uy,uz,px,py,pz,nlock)
   USE decomp_2d
   USE variables
   implicit none
-  integer :: ijk,nlock,nxyz
+  integer :: i,j,k,nlock
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,px,py,pz
-  nxyz=xsize(1)*xsize(2)*xsize(3)
   if (nlock.eq.1) then
      if (nz.gt.1) then
-        do ijk=1,nxyz
-           uy(ijk,1,1)=-py(ijk,1,1)+uy(ijk,1,1)
-           uz(ijk,1,1)=-pz(ijk,1,1)+uz(ijk,1,1)
-           ux(ijk,1,1)=-px(ijk,1,1)+ux(ijk,1,1)
+        do k = 1, xsize(3)
+           do j = 1, xsize(2)
+              do i = 1, xsize(1)
+                 ux(i,j,k)=-px(i,j,k)+ux(i,j,k)
+                 uy(i,j,k)=-py(i,j,k)+uy(i,j,k)
+                 uz(i,j,k)=-pz(i,j,k)+uz(i,j,k)
+              enddo
+           enddo
         enddo
      else
-        do ijk=1,nxyz
-           uy(ijk,1,1)=-py(ijk,1,1)+uy(ijk,1,1)
-           ux(ijk,1,1)=-px(ijk,1,1)+ux(ijk,1,1)
+        do j = 1, xsize(2)
+           do i = 1, xsize(1)
+              ux(i,j,k)=-px(i,j,k)+ux(i,j,k)
+              uy(i,j,k)=-py(i,j,k)+uy(i,j,k)
+           enddo
         enddo
      endif
   endif
   if (nlock.eq.2) then
      if (nz.gt.1) then
-        do ijk=1,nxyz
-           uy(ijk,1,1)=py(ijk,1,1)+uy(ijk,1,1)
-           uz(ijk,1,1)=pz(ijk,1,1)+uz(ijk,1,1)
-           ux(ijk,1,1)=px(ijk,1,1)+ux(ijk,1,1)
+        do k = 1, xsize(3)
+           do j = 1, xsize(2)
+              do i = 1, xsize(1)
+                 ux(i,j,k)=px(i,j,k)+ux(i,j,k)
+                 uy(i,j,k)=py(i,j,k)+uy(i,j,k)
+                 uz(i,j,k)=pz(i,j,k)+uz(i,j,k)
+              enddo
+           enddo
         enddo
      else
-        do ijk=1,nxyz
-           uy(ijk,1,1)=py(ijk,1,1)+uy(ijk,1,1)
-           ux(ijk,1,1)=px(ijk,1,1)+ux(ijk,1,1)
+        do j = 1, xsize(2)
+           do i = 1, xsize(1)
+              ux(i,j,k)=px(i,j,k)+ux(i,j,k)
+              uy(i,j,k)=py(i,j,k)+uy(i,j,k)
+           enddo
         enddo
      endif
   endif
@@ -45,22 +56,24 @@ subroutine body(ux1,uy1,uz1,ep1,arg)
   USE variables
   implicit none
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-  integer :: arg,ijk,nvect1
+  integer :: arg,i,j,k
 
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# body start'
 #endif
 
-
   if (arg==0) then !First execution, initt epsi
      ep1(:,:,:)=zero
      call geomcomplex(ep1,xstart(1),xend(1),ny,xstart(2),xend(2),xstart(3),xend(3),dx,yp,dz,one)
   elseif (arg==1) then  !Any other iteration
-     nvect1=xsize(1)*xsize(2)*xsize(3)
-     do ijk=1,nvect1
-        ux1(ijk,1,1)=(one-ep1(ijk,1,1))*ux1(ijk,1,1)
-        uy1(ijk,1,1)=(one-ep1(ijk,1,1))*uy1(ijk,1,1)
-        uz1(ijk,1,1)=(one-ep1(ijk,1,1))*uz1(ijk,1,1)
+     do k = 1, xsize(3)
+        do j = 1, xsize(2)
+           do i = 1, xsize(1)
+              ux1(i,j,k)=(one-ep1(i,j,k))*ux1(i,j,k)
+              uy1(i,j,k)=(one-ep1(i,j,k))*uy1(i,j,k)
+              uz1(i,j,k)=(one-ep1(i,j,k))*uz1(i,j,k)
+           enddo
+        enddo
      enddo
   endif
 

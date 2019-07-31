@@ -287,11 +287,15 @@ subroutine RMS(meanA,meanB,rms1)
   real(mytype),dimension(xszS(1),xszS(2),xszS(3)) :: meanA, meanB
   real(mytype) :: rms0,rms1
   character(len=30) :: filename
-  integer :: ijk,code
+  integer :: i,j,k,code
 
   rms1 = zero
-  do ijk=1,xszS(1)*xszS(2)*xszS(3)
-     rms1=rms1+(meanB(ijk,1,1)-meanA(ijk,1,1))**2
+  do k = 1, xszS(3)
+     do j = 1, xszS(2)
+        do i = 1, xszS(1)
+           rms1=rms1+(meanB(i,j,k)-meanA(i,j,k))**2
+        enddo
+     enddo
   enddo
 
   rms0 = zero

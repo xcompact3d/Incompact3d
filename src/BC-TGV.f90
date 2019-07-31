@@ -27,7 +27,7 @@ module tgv
   integer, save, allocatable, dimension(:) :: rankprobes, nxprobes, nyprobes, nzprobes
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_tgv, boundary_conditions_tgv, postprocessing_tgv
+  PUBLIC :: init_tgv, boundary_conditions_tgv, postprocess_tgv
 
 contains
 
@@ -48,7 +48,7 @@ contains
 
     real(mytype) :: y,r,um,r3,x,z,h,ct
     real(mytype) :: cx0,cy0,cz0,hg,lg
-    integer :: k,j,i,ijk,fh,ierror,is,code
+    integer :: k,j,i,fh,ierror,is,code
     integer (kind=MPI_OFFSET_KIND) :: disp
     integer, dimension (:), allocatable :: seed
     integer ::  isize
@@ -307,7 +307,7 @@ contains
 
   end subroutine write_probes
   !############################################################################
-  subroutine postprocessing_tgv(ux1,uy1,uz1,phi1,ep1)
+  subroutine postprocess_tgv(ux1,uy1,uz1,phi1,ep1)
 
     USE decomp_2d
     USE MPI
@@ -325,7 +325,7 @@ contains
     real(mytype) :: eek, enst, eps, eps2
     integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
 
-    integer :: i,j,k,is,ijk,code,nvect1
+    integer :: i,j,k,is,code,nvect1
     nvect1=xsize(1)*xsize(2)*xsize(3)
 
     if (nclx1==1.and.xend(1)==nx) then
@@ -522,7 +522,7 @@ contains
        call flush(42)
     endif
 
-  end subroutine postprocessing_tgv
+  end subroutine postprocess_tgv
   !############################################################################
   subroutine suspended(phi1,vol1,mp1)
 

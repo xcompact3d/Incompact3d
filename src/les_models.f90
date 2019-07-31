@@ -757,7 +757,6 @@ subroutine dynsmag(nut1,ux1,uy1,uz1,ep1)
 
       write(filename, "('./data/nut_dynsmag',I4.4)") itime / ioutput
       call decomp_2d_write_one(1, nut1, filename, 2)
-
     endif
 
 end subroutine dynsmag
