@@ -687,7 +687,7 @@ subroutine dynsmag(nut1,ux1,uy1,uz1,ep1)
     smagC1 = (lxx1 * mxx1 + lyy1 * myy1 + lzz1 * mzz1 + two * (lxy1 * mxy1 + lxz1 * mxz1 + lyz1 * myz1)) / &
     (mxx1 * mxx1 + myy1 * myy1 + mzz1 * mzz1 + two * (mxy1 * mxy1 + mxz1 * mxz1 + myz1 * myz1)) !l/M
 
-    do ijk = 1, nvect1 !ERIC LIMITEUR SI BESOIN
+    do ijk = 1, nvect1 ! Limiter for the dynamic Smagorinsky constant
       if (smagC1(ijk, 1, 1).gt. maxdsmagcst) smagC1(ijk, 1, 1) = zero
       if (smagC1(ijk, 1, 1).lt. 0.0) smagC1(ijk, 1, 1) = zero
     enddo
@@ -726,6 +726,10 @@ subroutine dynsmag(nut1,ux1,uy1,uz1,ep1)
     ! enddo
 
     nut1 = zero; nut2 = zero
+    
+    ! Use the standard smagorinsky to calculate the srt_smag
+    call smag(nut1,ux1,uy1,uz1)
+
     call transpose_x_to_y(srt_smag, srt_smag2)
     call transpose_x_to_y(dsmagcst1, dsmagcst2)
     do k = 1, ysize(3)
