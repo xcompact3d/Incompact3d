@@ -420,7 +420,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
 
   use decomp_2d, only : mytype, nrank
   use param
-  use variables, only : fpi2
+  use variables, only : nu0nu,fpi2,cnu 
 
   implicit none
 
@@ -435,7 +435,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
        alsai,asi,bsi,csi,dsi
   integer :: i
   real(mytype),dimension(n) :: sb,sc
-  real(mytype) :: xxnu,dpis3,kppkc,kppkm,xnpi2,xmpi2
+  real(mytype) :: xxnu,dpis3,kppkc,kppkm,xnpi2,xmpi2,den
 
   sf=zero;ss=zero;sw=zero;sfp=zero;ssp=zero;swp=zero
 
@@ -511,27 +511,21 @@ subroutine second_derivative(alsa1,as1,bs1,&
      astt = asi
      bstt = bsi
      cstt = csi 
-  elseif(isecondder==5) then ! Sixth-order Hyperviscous operator 
-     xxnu=one/fpi2
+  elseif(isecondder==5) then ! Sixth-order Hyperviscous operator
+     if(nrank==0) print *, 'Using the hyperviscous operator with (nu_0/nu,c_nu) = ', '(', nu0nu,',', cnu,')' 
      dpis3=two*pi/three
-     kppkc=pi*pi/xxnu+pi*pi
-     kppkm=dpis3*dpis3*exp(-((pi-dpis3)/(zpthree*pi-dpis3))**two)/xxnu+dpis3*dpis3
+     kppkc=pi*pi*(one+nu0nu)
+     kppkm=dpis3*dpis3*(one+cnu*nu0nu) !exp(-((pi-dpis3)/(zpthree*pi-dpis3))**two)/xxnu+dpis3*dpis3
      xnpi2=kppkc
      xmpi2=kppkm
-     alsai=(405._mytype*xnpi2 - 1280._mytype*xmpi2 + 2736._mytype)/&
-          (810._mytype*xnpi2 - 1280._mytype*xmpi2 + 288._mytype)
-     asi=-(4329._mytype*xnpi2 - 256._mytype*xmpi2 - 1120._mytype*xnpi2*xmpi2 + 2288._mytype)/&
-          (3240._mytype*xnpi2 - 5120._mytype*xmpi2 + 1152._mytype)
-     asi = asi / (d2)
-     bsi=(2115._mytype*xnpi2 - 1792._mytype*xmpi2 - 280._mytype*xnpi2*xmpi2 + 1328._mytype)/&
-          (405._mytype*xnpi2 - 640._mytype*xmpi2 + 144._mytype)
-     bsi = bsi / (four*d2)
-     csi=-(nine*(855._mytype*xnpi2 + 256._mytype*xmpi2 - 160._mytype*xnpi2*xmpi2 - 2288._mytype))/&
-          (eight*(405._mytype*xnpi2 - 640._mytype*xmpi2 + 144._mytype))
-     csi = csi / (nine*d2)  
-     dsi=(198._mytype*xnpi2 + 128._mytype*xmpi2 - 40._mytype*xnpi2*xmpi2 - 736._mytype)/&
-          (405._mytype*xnpi2 - 640._mytype*xmpi2 + 144._mytype)
-     dsi = dsi / (16._mytype*d2)  
+
+     den = 405._mytype * xnpi2 - 640._mytype * xmpi2 + 144._mytype
+
+     alsai = half - (320._mytype * xmpi2 - 1296._mytype) / den
+     asi = -(4329._mytype * xnpi2 / eight - 32._mytype * xmpi2 - 140._mytype * xnpi2 * xmpi2 + 286._mytype) / den / d2
+     bsi = (2115._mytype * xnpi2 - 1792._mytype * xmpi2 - 280._mytype * xnpi2 * xmpi2 + 1328._mytype) / den / (four * d2)
+     csi = -(7695 * xnpi2 / eight + 288._mytype * xmpi2 - 180._mytype * xnpi2 * xmpi2 - 2574._mytype) / den / (nine * d2)
+     dsi = (198._mytype * xnpi2 + 128._mytype * xmpi2 - 40._mytype * xnpi2 * xmpi2 - 736._mytype) / den / (four**2 * d2)
   else
      if (nrank==0) then
         print *, 'This is not an option.'
@@ -714,7 +708,7 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
   !*******************************************************************
 
   use decomp_2d, only : mytype
-  use param, only : zero, half, one, two, three, nine, ten
+  use param, only : zero, half, one, two, three, four, nine, ten
   use param, only : ipinter, ifirstder
 
   implicit none
@@ -796,28 +790,28 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      dicix6   = zero
   else if (ipinter.eq.1) then
      ailcaix6=three/ten
+     aicix6=three/four
+     bicix6=one/(two*ten)
+     cicix6=zero
      dicix6=zero
-     aicix6=one/128._mytype *(75._mytype +70._mytype*ailcaix6)
-     bicix6=one/256._mytype *(126._mytype*ailcaix6-25._mytype)
-     cicix6=one/256._mytype *(-ten*ailcaix6+three)
-     dicix6=dicix6/two
   else if (ipinter.eq.2) then
      ailcaix6=0.461658
+     
      dicix6=0.00293016
      aicix6=one/64._mytype *(75._mytype +70._mytype *ailcaix6-320._mytype *dicix6)
      bicix6=one/128._mytype *(126._mytype *ailcaix6-25._mytype +1152._mytype *dicix6)
      cicix6=one/128._mytype *(-ten*ailcaix6+three-640._mytype *dicix6)
+     
      aicix6=aicix6/two
      bicix6=bicix6/two
      cicix6=cicix6/two
      dicix6=dicix6/two
   else if (ipinter.eq.3) then   
      ailcaix6=0.49_mytype 
-     dicix6=zero
      aicix6=one/128._mytype *(75._mytype +70._mytype*ailcaix6)
      bicix6=one/256._mytype *(126._mytype*ailcaix6-25._mytype)
      cicix6=one/256._mytype *(-ten*ailcaix6+three)
-     dicix6=dicix6/two
+     dicix6=zero
   endif
 
   cifx6(1)=ailcaix6 

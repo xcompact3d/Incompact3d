@@ -280,7 +280,7 @@ CONTAINS
     endif
 
     ! If LES modelling is enabled, add the SGS stresses
-    if (ilesmod.ne.0.and.jles.le.3.) then
+    if (ilesmod.ne.0.and.jles.le.2.and.jles.gt.0) then
        ! Wall model for LES
        if (iwall.eq.1) then 
           call compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,1)

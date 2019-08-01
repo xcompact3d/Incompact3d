@@ -4,49 +4,50 @@
 &BasicParam
 !===================
 
-! Flow type (1=Lock-exchange, 2=TGV, 3=Channel, 4=Periodic hill, 5=Cylinder, 6=dbg-schemes, 7=Mixing layer)
-itype = 7
+! Flow type (1=Lock-exchange, 2=TGV, 3=Channel, 4=Periodic hill, 5=Cylinder, 6=dbg-schemes)
+itype = 2
 
 ! Domain decomposition
-p_row=0               ! Row partition
-p_col=0               ! Column partition
+p_row=4               ! Row partition
+p_col=4               ! Column partition
 
 ! Mesh
-nx=256                ! X-direction nodes
-ny=501                ! Y-direction nodes
-nz=8                  ! Z-direction nodes
+nx=65                 ! X-direction nodes
+ny=65                 ! Y-direction nodes
+nz=65                 ! Z-direction nodes
 istret = 0            ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
 beta = 0.259065151    ! Refinement parameter (beta)
 
 ! Domain
-xlx = 30.7            ! Lx (Size of the box in x-direction)
-yly = 60.0            ! Ly (Size of the boy in y-direction)
-zlz = 1.0             ! Lz (Size of the boz in z-direction)
+xlx = 3.14159265358979 ! Lx (Size of the box in x-direction)
+yly = 3.14159265358979 ! Ly (Size of the boy in y-direction)
+zlz = 3.14159265358979 ! Lz (Size of the boz in z-direction)
 
 ! Boundary conditions
-nclx1 = 0
-nclxn = 0
-ncly1 = 1
-nclyn = 1
-nclz1 = 0
-nclzn = 0
+nclx1 = 1 
+nclxn = 1 
+ncly1 = 1 
+nclyn = 1 
+nclz1 = 1 
+nclzn = 1 
 
 ! Flow parameters
 iin = 1               ! Inflow conditions (1: classic, 2: turbinit)
-re = 400.             ! nu=1/re (Kinematic Viscosity)
-init_noise = 0.0      ! Turbulence intensity (1=100%) !! Initial condition
+re = 10000.            ! nu=1/re (Kinematic Viscosity)
+u1 = 8.               ! u1 (max velocity) (for inflow condition)
+u2 = 8.               ! u2 (min velocity) (for inflow condition)
+init_noise  = 0.0     ! Turbulence intensity (1=100%) !! Initial condition
 inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
 
 ! Time stepping
-dt = 0.01             ! Time step
+dt = 0.0005            ! Time step
 ifirst = 1            ! First iteration
-ilast = 20000         ! Last iteration
+ilast = 40000         ! Last iteration
 
 ! Enable modelling tools
-ilesmod=0            ! if 0 then DNS
+ilesmod=1             ! if 0 then DNS
 iscalar=0             ! If iscalar=0 (no scalar), if iscalar=1 (scalar)
 iibm=0                ! Flag for immersed boundary method
-ilmn=.TRUE.           ! Flag for Low Mach Number flow
 
 ! Enable io
 ivisu=1               ! Store snapshots
@@ -66,8 +67,8 @@ isecondder = 4        ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th
 itimescheme = 5       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4)
 
 ! Dissipation control
-nu0nu = 4.0             ! Ratio between hyperviscosity/viscosity at nu
-cnu = 0.44               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
+nu0nu = 0             ! Ratio between hyperviscosity/viscosity at nu
+cnu = 0               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 
 /End
 
@@ -77,8 +78,8 @@ cnu = 0.44               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 
 ! Basic I/O
 irestart = 0          ! Read initial flow field ?
-icheckpoint = 500     ! Frequency for writing backup file
-ioutput = 100         ! Frequency for visualization
+icheckpoint = 5000    ! Frequency for writing backup file
+ioutput = 1000        ! Frequency for visualization
 nvisu = 1             ! Size for visualisation collection
 
 /End
@@ -92,19 +93,21 @@ nstat = 1             ! Size arrays for statistic collection
 
 /End
 
-!=================
-&LMN
-!=================
-
-dens1 = 0.5           ! Density of 'hot' stream (y > 0)
-dens2 = 1.0           ! Density of 'cold' stream (y < 0)
-
-prandtl = 0.75        ! Prandtl number
-
-ivarcoeff = .FALSE.   ! Solve variable-coefficient Poisson equation
-
-/End
-
 !#######################
 ! OPTIONAL PARAMETERS
 !#######################
+
+!=================
+&LESModel
+!=================
+jles=1
+smagcst=0.165
+walecst=0.5 
+iwall=0
+/End
+
+!=========
+&CASE
+!=========
+
+/End
