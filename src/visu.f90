@@ -3,69 +3,73 @@ module visu
   implicit none
 
   private
-  public :: write_snapshot, postprocessing
+  public :: postprocessing
 
 contains
 
-  SUBROUTINE postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
+  subroutine postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
 
-    USE decomp_2d, ONLY : mytype, xsize, ph1
-    USE case, ONLY : postprocess_case
+    use decomp_2d, only : mytype, xsize, ph1
+    use case, only : postprocess_case
 
-    USE var, ONLY : nzmsize
-    USE var, ONLY : itime
-    USE var, ONLY : numscalar, nrhotime, npress
+    use stats, only : overall_statistic
     
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)), intent(in) :: ux1, uy1, uz1
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),numscalar), intent(in) :: phi1
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),nrhotime), intent(in) :: rho1
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)), intent(in) :: ep1
+    use var, only : nzmsize
+    use var, only : itime
+    use var, only : numscalar, nrhotime, npress
+    
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux1, uy1, uz1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(in) :: phi1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime), intent(in) :: rho1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ep1
     real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
 
-    CALL write_snapshot(rho1, ux1, uy1, uz1, pp3(:,:,:,1), phi1, ep1, itime)
-    CALL postprocess_case(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
+    call write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime)
+    call postprocess_case(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
+    call overall_statistic(ux1, uy1, uz1, phi1, pp3, ep1)
     
-  END SUBROUTINE postprocessing
+  end subroutine postprocessing
 
-  SUBROUTINE write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime)
+  subroutine write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime)
 
-    USE decomp_2d, ONLY : transpose_x_to_y, transpose_y_to_z, transpose_z_to_y, transpose_y_to_x
-    USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
-    USE decomp_2d, ONLY : fine_to_coarseV
-    USE decomp_2d_io, ONLY : decomp_2d_write_one
+    use decomp_2d, only : transpose_x_to_y, transpose_y_to_z, transpose_z_to_y, transpose_y_to_x
+    use decomp_2d, only : mytype, xsize, ysize, zsize
+    use decomp_2d, only : fine_to_coarsev
+    use decomp_2d_io, only : decomp_2d_write_one
 
-    USE param, ONLY : ivisu, ioutput, nrhotime, ilmn, iscalar, iibm
+    use param, only : ivisu, ioutput, nrhotime, ilmn, iscalar, iibm
 
-    USE variables, ONLY : derx, dery, derz 
-    USE variables, ONLY : ffx, ffxp, fsx, fsxp, fwx, fwxp
-    USE variables, ONLY : ffy, ffyp, fsy, fsyp, fwy, fwyp, ppy
-    USE variables, ONLY : ffz, ffzp, fsz, fszp, fwz, fwzp
-    USE variables, ONLY : sx, cifip6, cisip6, ciwip6, cifx6, cisx6, ciwx6
-    USE variables, ONLY : sy, cifip6y, cisip6y, ciwip6y, cify6, cisy6, ciwy6
-    USE variables, ONLY : sz, cifip6z, cisip6z, ciwip6z, cifz6, cisz6, ciwz6
-    USE variables, ONLY : numscalar
+    use variables, only : derx, dery, derz 
+    use variables, only : ffx, ffxp, fsx, fsxp, fwx, fwxp
+    use variables, only : ffy, ffyp, fsy, fsyp, fwy, fwyp, ppy
+    use variables, only : ffz, ffzp, fsz, fszp, fwz, fwzp
+    use variables, only : sx, cifip6, cisip6, ciwip6, cifx6, cisx6, ciwx6
+    use variables, only : sy, cifip6y, cisip6y, ciwip6y, cify6, cisy6, ciwy6
+    use variables, only : sz, cifip6z, cisip6z, ciwip6z, cifz6, cisz6, ciwz6
+    use variables, only : numscalar
 
-    USE var, ONLY : one
-    USE var, ONLY : uvisu
-    USE var, ONLY : pp1, ta1, tb1, tc1, td1, te1, tf1, tg1, th1, ti1, di1, nxmsize
-    USE var, ONLY : pp2, ta2, tb2, tc2, td2, te2, tf2, ppi2, di2, dip2, ph2, nymsize
-    USE var, ONLY : ppi3, ta3, tb3, tc3, td3, te3, tf3, di3, dip3, ph3, nzmsize
+    use var, only : one
+    use var, only : uvisu
+    use var, only : pp1, ta1, tb1, tc1, td1, te1, tf1, tg1, th1, ti1, di1, nxmsize
+    use var, only : pp2, ta2, tb2, tc2, td2, te2, tf2, ppi2, di2, dip2, ph2, nymsize
+    use var, only : ppi3, ta3, tb3, tc3, td3, te3, tf3, di3, dip3, ph3, nzmsize
+    use var, only : npress
 
-    IMPLICIT NONE
+    implicit none
 
-    CHARACTER(len=30) :: filename
+    character(len=30) :: filename
 
-    !! Inputs
-    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
-    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ep1
-    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime), INTENT(IN) :: rho1
-    REAL(mytype), DIMENSION(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize), INTENT(IN) :: pp3
-    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar), INTENT(IN) :: phi1
-    INTEGER, INTENT(IN) :: itime
+    !! inputs
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: ux1, uy1, uz1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: ep1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), nrhotime), intent(in) :: rho1
+    real(mytype), dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize,npress), intent(in) :: pp3
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar), intent(in) :: phi1
+    integer, intent(in) :: itime
 
-    INTEGER :: is
+    integer :: is
 
-    IF ((ivisu.NE.0).AND.(MOD(itime, ioutput).EQ.0)) THEN
+    if ((ivisu.ne.0).and.(mod(itime, ioutput).eq.0)) then
        !! Write velocity
        uvisu=0.
        if (iibm==2) then
@@ -102,7 +106,7 @@ contains
 
        !! Write pressure
        !WORK Z-PENCILS
-       call interzpv(ppi3,pp3,dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
+       call interzpv(ppi3,pp3(:,:,:,1),dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
             (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
        !WORK Y-PENCILS
        call transpose_z_to_y(ppi3,pp2,ph3) !nxm nym nz
@@ -167,26 +171,26 @@ contains
        call decomp_2d_write_one(1,uvisu,filename,2)
 
        !! LMN - write out density
-       IF (ilmn) THEN
+       if (ilmn) then
           uvisu=0.
-          call fine_to_coarseV(1,rho1(:,:,:,1),uvisu)
-995       format('rho',I3.3)
+          call fine_to_coarsev(1,rho1(:,:,:,1),uvisu)
+995       format('rho',i3.3)
           write(filename, 995) itime/ioutput
           call decomp_2d_write_one(1,uvisu,filename,2)
-       ENDIF
+       endif
 
        !! Scalars
-       IF (iscalar.NE.0) THEN
-996       format('phi',I1.1,I3.3)
-          DO is = 1, numscalar
+       if (iscalar.ne.0) then
+996       format('phi',i1.1,i3.3)
+          do is = 1, numscalar
              uvisu=0.
-             call fine_to_coarseV(1,phi1(:,:,:,is),uvisu)
+             call fine_to_coarsev(1,phi1(:,:,:,is),uvisu)
              write(filename, 996) is, itime/ioutput
              call decomp_2d_write_one(1,uvisu,filename,2)
-          ENDDO
-       ENDIF
-    ENDIF
-  END SUBROUTINE write_snapshot
+          enddo
+       endif
+    endif
+  end subroutine write_snapshot
 
 endmodule visu
 
