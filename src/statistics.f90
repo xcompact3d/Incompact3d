@@ -7,7 +7,7 @@ module stats
   
   contains
     
-    subroutine overall_statistic(ux1,uy1,uz1,phi1,pp3)
+    subroutine overall_statistic(ux1,uy1,uz1,phi1,pp3,ep1)
 
       use param
       use variables
@@ -31,7 +31,7 @@ module stats
       implicit none
 
       !! Inputs
-      real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1,uy1,uz1
+      real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1,uy1,uz1,ep1
       real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar),intent(in) :: phi1
       real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
 
@@ -58,35 +58,71 @@ module stats
       call transpose_y_to_x(ppi2,pp1,ph2) !nxm ny nz
       call interxpv(ta1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
            nxmsize,xsize(1),xsize(2),xsize(3),1)
+      if (iibm==2) then
+         ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+      endif
       call fine_to_coarseS(1,ta1,tmean)
       pmean=pmean+tmean
 
       !! Mean velocity
-      call fine_to_coarseS(1,ux1,tmean)
+      if (iibm==2) then
+         ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)
+      else
+         ta1(:,:,:) = ux1(:,:,:)
+      endif
+      call fine_to_coarseS(1,ta1,tmean)
       umean=umean+tmean
-      call fine_to_coarseS(1,uy1,tmean)
+      if (iibm==2) then
+         ta1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:)
+      else
+         ta1(:,:,:) = uy1(:,:,:)
+      endif
+      call fine_to_coarseS(1,ta1,tmean)
       vmean=vmean+tmean
-      call fine_to_coarseS(1,uz1,tmean)
+      if (iibm==2) then
+         ta1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:)
+      else
+         ta1(:,:,:) = uz1(:,:,:)
+      endif
+      call fine_to_coarseS(1,ta1,tmean)
       wmean=wmean+tmean
 
       !! Second-rder velocity moments
       ta1=ux1*ux1
+      if (iibm==2) then
+         ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+      endif
       call fine_to_coarseS(1,ta1,tmean)
       uumean=uumean+tmean
       ta1=uy1*uy1
+      if (iibm==2) then
+         ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+      endif
       call fine_to_coarseS(1,ta1,tmean)
       vvmean=vvmean+tmean
       ta1=uz1*uz1
+      if (iibm==2) then
+         ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+      endif
       call fine_to_coarseS(1,ta1,tmean)
       wwmean=wwmean+tmean
       
       ta1=ux1*uy1
+      if (iibm==2) then
+         ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+      endif
       call fine_to_coarseS(1,ta1,tmean)
       uvmean=uvmean+tmean
       ta1=ux1*uz1
+      if (iibm==2) then
+         ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+      endif
       call fine_to_coarseS(1,ta1,tmean)
       uwmean=uwmean+tmean
       ta1=uy1*uz1
+      if (iibm==2) then
+         ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+      endif
       call fine_to_coarseS(1,ta1,tmean)
       vwmean=vwmean+tmean
 
@@ -94,11 +130,19 @@ module stats
       if (iscalar==1) then
          do is=1, numscalar
             !pmean=phi1
-            call fine_to_coarseS(1,phi1(:,:,:,is),tmean)
+            if (iibm==2) then
+               ta1(:,:,:) = (one - ep1(:,:,:)) * phi1(:,:,:,is)
+            else
+               ta1(:,:,:) = phi1(:,:,:,is)
+            endif
+            call fine_to_coarseS(1,ta1,tmean)
             phimean(:,:,:,is)=phimean(:,:,:,is)+tmean
 
             !phiphimean=phi1*phi1
             ta1=phi1(:,:,:,is)*phi1(:,:,:,is)
+            if (iibm == 2) then
+               ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+            endif
             call fine_to_coarseS(1,ta1,tmean)
             phiphimean(:,:,:,is)=phiphimean(:,:,:,is)+tmean
          enddo
