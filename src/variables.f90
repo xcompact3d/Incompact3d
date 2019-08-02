@@ -88,7 +88,11 @@ module var
   ! working arrays for LES
   real(mytype), save, allocatable, dimension(:,:,:) :: sgsx1,sgsy1,sgsz1,nut1,sxx1,syy1,szz1,sxy1,sxz1,syz1
   real(mytype), save, allocatable, dimension(:,:,:) :: sgsx2,sgsy2,sgsz2,nut2,sxx2,syy2,szz2,sxy2,sxz2,syz2 
-  real(mytype), save, allocatable, dimension(:,:,:) :: sgsx3,sgsy3,sgsz3,nut3,sxx3,syy3,szz3,sxy3,sxz3,syz3 
+  real(mytype), save, allocatable, dimension(:,:,:) :: sgsx3,sgsy3,sgsz3,nut3,sxx3,syy3,szz3,sxy3,sxz3,syz3
+  real(mytype), save, allocatable, dimension(:,:,:) :: gxx1,gyx1,gzx1,gxy1,gyy1,gzy1,gxz1,gyz1,gzz1
+  real(mytype), save, allocatable, dimension(:,:,:) :: gxy2,gyy2,gzy2,gxz2,gyz2,gzz2
+  real(mytype), save, allocatable, dimension(:,:,:) :: gxz3,gyz3,gzz3
+
   real(mytype), save, allocatable, dimension(:,:,:) :: srt_smag, srt_smag2, srt_wale, srt_wale2 
 
 contains
@@ -255,7 +259,7 @@ contains
     call alloc_z(dv3,ph,.true.)
     call alloc_z(po3,ph,.true.)
 
-    if(ilesmod.ne.0) then
+    if(ilesmod.ne.0.and.jLES.gt.0) then
        call alloc_x(sgsx1);call alloc_x(sgsy1); call alloc_x(sgsz1)
        call alloc_x(sxx1);call alloc_x(syy1); call alloc_x(szz1)
        call alloc_x(sxy1);call alloc_x(sxz1); call alloc_x(syz1)
@@ -268,6 +272,10 @@ contains
        call alloc_z(sxx3) ;call alloc_z(syy3);  call alloc_z(szz3)
        call alloc_z(sxy3) ;call alloc_z(sxz3);  call alloc_z(syz3)
        call alloc_z(nut3)
+       call alloc_x(gxx1); call alloc_x(gyx1); call alloc_x(gzx1); call alloc_x(gxy1) 
+       call alloc_x(gyy1); call alloc_x(gzy1); call alloc_x(gxz1); call alloc_x(gyz1); call alloc_x(gzz1)
+       call alloc_y(gxy2); call alloc_y(gyy2); call alloc_y(gzy2); call alloc_y(gxz2); call alloc_y(gyz2); call alloc_y(gzz2)
+       call alloc_z(gxz3); call alloc_z(gyz3); call alloc_z(gzz3)
     endif
 
 
