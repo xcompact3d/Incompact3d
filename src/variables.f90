@@ -92,6 +92,7 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:) :: gxx1,gyx1,gzx1,gxy1,gyy1,gzy1,gxz1,gyz1,gzz1
   real(mytype), save, allocatable, dimension(:,:,:) :: gxy2,gyy2,gzy2,gxz2,gyz2,gzz2
   real(mytype), save, allocatable, dimension(:,:,:) :: gxz3,gyz3,gzz3
+  real(mytype), save, allocatable, dimension(:,:,:,:) :: sgsphi1,sgsphi2,sgsphi3
 
   real(mytype), save, allocatable, dimension(:,:,:) :: srt_smag, srt_smag2, srt_wale, srt_wale2 
 
@@ -276,7 +277,10 @@ contains
        call alloc_x(gyy1); call alloc_x(gzy1); call alloc_x(gxz1); call alloc_x(gyz1); call alloc_x(gzz1)
        call alloc_y(gxy2); call alloc_y(gyy2); call alloc_y(gzy2); call alloc_y(gxz2); call alloc_y(gyz2); call alloc_y(gzz2)
        call alloc_z(gxz3); call alloc_z(gyz3); call alloc_z(gzz3)
-    endif
+       allocate(sgsphi1(xsize(1),xsize(2),xsize(3),1:numscalar))
+       allocate(sgsphi2(ysize(1),ysize(2),ysize(3),1:numscalar))
+       allocate(sgsphi3(zsize(1),zsize(2),zsize(3),1:numscalar)) 
+   endif
 
 
     if (iibm.ne.0) then

@@ -58,6 +58,7 @@ CONTAINS
     USE var, only : rho2,ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2
     USE var, only : rho3,ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
     USE var, only : sgsx1,sgsy1,sgsz1
+    USE les, only : compute_SGS
 
     USE case, ONLY : momentum_forcing
 
@@ -434,6 +435,7 @@ CONTAINS
     duy1(:,:,:) = duy1(:,:,:) + xnu * tb1(:,:,:)
     duz1(:,:,:) = duz1(:,:,:) + xnu * tc1(:,:,:)
 
+
   end subroutine momentum_full_viscstress_tensor
 
   subroutine momentum_gravity(dux1, duy1, duz1, peculiar_density1, richardson)
@@ -652,6 +654,7 @@ CONTAINS
     USE param
     USE variables
     USE decomp_2d
+    USE var, ONLY : sgsphi1
 
     implicit none
 
@@ -678,6 +681,10 @@ CONTAINS
           if (uset(is).ne.zero) then
              call scalar_settling(dphi1, phi1(:,:,:,is), is)
           endif
+        ! If LES modelling is enabled, add the SGS stresses
+        if (ilesmod.ne.0.and.jles.le.2.and.jles.gt.0) then
+           dphi1(:,:,:,1,is) = dphi1(:,:,:,1,is) + sgsphi1(:,:,:,is)
+        endif
        endif
 
     end do !loop numscalar

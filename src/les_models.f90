@@ -1,3 +1,7 @@
+module les
+
+    contains
+
 subroutine init_explicit_les
     !================================================================================
     !
@@ -75,7 +79,8 @@ subroutine Compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,iconservative)
 
     if(iconservative.eq.0) then ! Non-conservative form for calculating the divergence of the SGS stresses
 
-       call les_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
+       call sgs_mom_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
+       !call sgs_scalar_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
 
     elseif (iconservative.eq.1) then ! Conservative form for calculating the divergence of the SGS stresses (used with wall functions)
 
@@ -761,10 +766,10 @@ subroutine dynsmag(nut1,ux1,uy1,uz1,ep1)
 
 end subroutine dynsmag
 
-subroutine les_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
+subroutine sgs_mom_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
     !================================================================================
     !
-    !  SUBROUTINE: les_nonconservative 
+    !  SUBROUTINE: sgs_mom_nonconservative 
     ! DESCRIPTION: Calculates the divergence of the sub-grid-scale stresses  
     !              using a non-conservative formulation
     !      AUTHOR: G. Deskos <g.deskos14@imperial.ac.uk>
@@ -917,57 +922,59 @@ subroutine les_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
           enddo
       endif
 
-end subroutine les_nonconservative
+end subroutine sgs_mom_nonconservative
 
 !************************************************************
-!subroutine lesdiff_scalar(phi1, di1, di2, di3, kappat1, sgsphi1)
-!
-!  USE param
-!  USE variables
-!  USE decomp_2d
-!
-!  implicit none
-!
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3), nphi) :: phi1, sgsphi1
-!  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: phi2, sgsphi2
-!  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: phi3, sgsphi3
-!
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: di1, tb1
-!  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: di2, tb2
-!  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: di3, tb3
-!
-!  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: kappat1, dkappat1
-!  real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: kappat2, dkappat2
-!  real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: kappat3, dkappat3
-!
-!  integer :: is
-!
-!  sgsphi1 = zero; sgsphi2 = zero; sgsphi3 = zero
-!
-!  call derxS (dkappat1, kappat1, di1, sx, ffxpS, fsxpS, fwxpS, xsize(1), xsize(2), xsize(3), 1)
-!  call transpose_x_to_y(kappat1, kappat2)KARONIAMEKIMA
-!  call deryS (dkappat2, kappat2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1)
-!  call transpose_y_to_z(kappat2, kappat3)
-!  call derzS (dkappat3, kappat3, di3, sz, ffzpS, fszpS, fwzpS, zsize(1), zsize(2), zsize(3), 1)
-!
-!  do is = 1, nphi
-!     call derxS (tb1, phi1(:, :, :, is), di1, sx, ffxpS, fsxpS, fwxpS, xsize(1), xsize(2), xsize(3), 1)
-!     sgsphi1(:, :, :, is) = tb1 * dkappat1 !d(phi)/dx * d(kappa_t)/dx
-!
-!     call transpose_x_to_y(phi1(:, :, :, is), phi2)
-!     call transpose_x_to_y(sgsphi1(:, :, :, is),sgsphi2)
-!
-!     call deryS (tb2, phi2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1)
-!     sgsphi2 = sgsphi2 + tb2 * dkappat2 !d(phi)/dy * d(kappa_t)/dy
-!
-!     call transpose_y_to_z(phi2, phi3)
-!     call transpose_y_to_z(sgsphi2, sgsphi3)
-!
-!     call derzS (tb3, phi3, di3, sz, ffzpS, fszpS, fwzpS, zsize(1), zsize(2), zsize(3), 1)
-!     sgsphi3 = sgsphi3 + tb3 * dkappat3 !d(phi)/dz * d(kappa_t)/dz
-!
-!     call transpose_z_to_y(sgsphi3, sgsphi2)
-!     call transpose_y_to_x(sgsphi2, sgsphi1(:, :, :, is))
-!  end do
-!
-!end subroutine lesdiff_scalar
+subroutine sgs_scalar_nonconservative(sgsphi1,kappat1,phi1)
+
+    USE param
+    USE variables
+    USE decomp_2d
+
+    USE var, only: di1,tb1,di2,tb2,di3,tb3
+    !USE var, only : dkappat1 => tb1
+
+    implicit none
+
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: sgsphi1, phi1
+    real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: phi2, sgsphi2
+    real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: phi3, sgsphi3
+
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: kappat1, dkappat1
+    real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: kappat2, dkappat2
+    real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: kappat3, dkappat3
+
+    integer :: is
+
+    sgsphi1 = zero; sgsphi2 = zero; sgsphi3 = zero
+    
+    call derxS (dkappat1, kappat1, di1, sx, ffxpS, fsxpS, fwxpS, xsize(1), xsize(2), xsize(3), 1)
+    call transpose_x_to_y(kappat1, kappat2)
+    call deryS (dkappat2, kappat2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1)
+    call transpose_y_to_z(kappat2, kappat3)
+    call derzS (dkappat3, kappat3, di3, sz, ffzpS, fszpS, fwzpS, zsize(1), zsize(2), zsize(3), 1)
+    
+    do is = 1, numscalar
+
+    call derxS (tb1, phi1(:, :, :, is), di1, sx, ffxpS, fsxpS, fwxpS, xsize(1), xsize(2), xsize(3), 1)
+    sgsphi1(:, :, :, is) = tb1 * dkappat1 !d(phi)/dx * d(kappa_t)/dx
+
+    call transpose_x_to_y(phi1(:, :, :, is), phi2)
+    call transpose_x_to_y(sgsphi1(:, :, :, is),sgsphi2)
+
+    call deryS (tb2, phi2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1)
+    sgsphi2 = sgsphi2 + tb2 * dkappat2 !d(phi)/dy * d(kappa_t)/dy
+
+    call transpose_y_to_z(phi2, phi3)
+    call transpose_y_to_z(sgsphi2, sgsphi3)
+
+    call derzS (tb3, phi3, di3, sz, ffzpS, fszpS, fwzpS, zsize(1), zsize(2), zsize(3), 1)
+    sgsphi3 = sgsphi3 + tb3 * dkappat3 !d(phi)/dz * d(kappa_t)/dz
+
+    call transpose_z_to_y(sgsphi3, sgsphi2)
+    call transpose_y_to_x(sgsphi2, sgsphi1(:, :, :, is))
+    end do
+
+end subroutine sgs_scalar_nonconservative
+
+end module
