@@ -456,7 +456,7 @@ subroutine force(ux1,uy1,ep1)
      !Edited by F. Schuch
      xDrag_mean = sum(xDrag(:))/real(nz,mytype)
      yLift_mean = sum(yLift(:))/real(nz,mytype)
-     if (nrank .eq. 0) then
+     if ((nrank .eq. 0).and.(itime.gt.0)) then
         write(filename,"('./out/aerof_avr',I1.1)") iv
         open(67,file=filename,status='unknown',form='formatted',access='direct',recl=43) !43 = 3*14+1
         !Using the direct access, each value for the coefficients will be written

@@ -134,14 +134,6 @@ subroutine init_incompact3d()
      if (jles.gt.0)  call init_explicit_les()
   endif
 
-  if (irestart==0) then
-     call init(rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,dphi1,pp3,px1,py1,pz1)
-     itime = 0
-     call postprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
-  else
-     call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,0)
-  endif
-
   if (iibm.eq.2) then
      call genepsi3d(ep1)
   else if (iibm.eq.1) then
@@ -151,6 +143,14 @@ subroutine init_incompact3d()
   if (iforces) then
      call init_forces()
      if (irestart==1) call restart_forces(0)
+  endif
+
+  if (irestart==0) then
+     call init(rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,dphi1,pp3,px1,py1,pz1)
+     itime = 0
+     call postprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
+  else
+     call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,0)
   endif
 
   call test_speed_min_max(ux1,uy1,uz1)
