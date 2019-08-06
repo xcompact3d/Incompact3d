@@ -1038,15 +1038,13 @@ contains
     if (iwhen.eq.1) then !AT THE START OF THE SIMULATION
        tstart=zero;time1=zero;trank=zero;tranksum=zero;ttotal=zero
        call cpu_time(tstart)
-    endif
-    if (iwhen.eq.2) then !AT THE START OF A TIME STEP
+    else if (iwhen.eq.2) then !AT THE START OF A TIME STEP
        call cpu_time(time1)
        if (nrank==0) then
           print *,'-----------------------------------------------------------'
           write(*,"(' Time step =',i7,'/',i7,', Time unit =',F9.4)") itime,ilast,t
        endif
-    endif
-    if ((iwhen.eq.3).and.(itime.gt.ifirst)) then !AT THE END OF A TIME STEP
+    else if ((iwhen.eq.3).and.(itime.gt.ifirst)) then !AT THE END OF A TIME STEP
        call cpu_time(trank)
        if (nrank==0) print *,'Time for this time step (s):',real(trank-time1)
        telapsed = (trank-tstart)/thirtysixthousand
@@ -1055,8 +1053,7 @@ contains
           write(*,"(' Remaining time:',I8,' h ',I2,' min')") int(tremaining), int((tremaining-int(tremaining))*sixty)
           write(*,"(' Elapsed time:  ',I8,' h ',I2,' min')") int(telapsed), int((telapsed-int(telapsed))*sixty)
        endif
-    endif
-    if (iwhen.eq.4) then !AT THE END OF THE SIMULATION
+    else if (iwhen.eq.4) then !AT THE END OF THE SIMULATION
        call cpu_time(trank); ttotal=trank-tstart
        if (nrank==0) then
           print *,'==========================================================='
@@ -1108,9 +1105,11 @@ contains
           return
        endif
 
-       if (nrank==0) print *,'===========================================================<<<<<'
-       if (nrank==0) print *,'Writing restart point',itime/icheckpoint
-       !if (nrank==0) print *,'File size',real((s3df*16.)*1e-9,4),'GB'
+       if (nrank==0) then
+          print *,'===========================================================<<<<<'
+          print *,'Writing restart point',itime/icheckpoint
+          ! print *,'File size',real((s3df*16.)*1e-9,4),'GB'
+       endif
     end if
 
     write(filename,"('restart',I7.7)") itime
@@ -1271,10 +1270,12 @@ contains
     endif
 
     if (iresflg .eq. 1 ) then !Writing restart
-       if (nrank==0)  print *,'Restart point',itime/icheckpoint,'saved successfully!'
-       !if (nrank==0) print *,'Elapsed time (s)',real(trestart,4)
-       !if (nrank==0) print *,'Aproximated writing speed (MB/s)',real(((s3df*16.)*1e-6)/trestart,4)
-       if (nrank==0) print *,'If necesseary restart from:',itime+1
+       if (nrank==0) then
+          print *,'Restart point',itime/icheckpoint,'saved successfully!'
+          ! print *,'Elapsed time (s)',real(trestart,4)
+          ! print *,'Aproximated writing speed (MB/s)',real(((s3df*16.)*1e-6)/trestart,4)
+          print *,'If necesseary restart from:',itime+1
+       endif
     end if
 
   end subroutine restart
