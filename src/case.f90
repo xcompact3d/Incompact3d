@@ -191,7 +191,7 @@ CONTAINS
 
     ELSEIF (itype.EQ.itype_cyl) THEN
 
-       CALL postprocess_cyl (ux, uy, uz)
+       CALL postprocess_cyl (ux, uy, uz, ep)
 
     ELSEIF (itype.EQ.itype_dbg) THEN
 
