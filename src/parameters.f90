@@ -52,8 +52,6 @@ subroutine parameter(input_i3d)
 
   USE lockexch, ONLY : pfront
 
-  USE forces, ONLY : nvol, xld, xrd, yld, yud
-
   implicit none
 
   character(len=80), intent(in) :: input_i3d
@@ -77,8 +75,7 @@ subroutine parameter(input_i3d)
   NAMELIST /LESModel/ jles, smagcst, walecst, maxdsmagcst, iwall
   NAMELIST /WallModel/ smagwalldamp
 
-  NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf,nvol
-  NAMELIST /ForceCVs/ xld, xrd, yld, yud
+  NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf
   NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, &
        massfrac, mol_weight, imultispecies, primary_species, &
        Fr, ibirman_eos
@@ -114,14 +111,6 @@ subroutine parameter(input_i3d)
   read(10, nml=Statistics)
   if (iibm.ne.0) then
      read(10, nml=ibmstuff)
-     if (nvol.gt.0) then
-        iforces = .TRUE.
-     endif
-  endif
-
-  if (iforces) then
-     allocate(xld(nvol), xrd(nvol), yld(nvol), yud(nvol))
-     read(10, nml=ForceCVs)
   endif
 
   if (numscalar.ne.0) then
@@ -383,8 +372,6 @@ subroutine parameter_defaults()
   USE decomp_2d
   USE complex_geometry
 
-  USE forces, ONLY : nvol
-
   IMPLICIT NONE
 
   integer :: i
@@ -411,7 +398,6 @@ subroutine parameter_defaults()
   nraf = 0
   nobjmax = 0
 
-  nvol = 0
   iforces = .FALSE.
 
   itrip = 0

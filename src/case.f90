@@ -38,11 +38,8 @@ MODULE case
   USE user_sim
   USE tgv
   USE cyl
-  USE hill
   USE dbg_schemes
   USE channel
-  USE mixlayer
-  USE jet
   USE lockexch
 
   USE var, ONLY : nzmsize
@@ -91,10 +88,6 @@ CONTAINS
 
        CALL init_channel (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, dphi1)
 
-    ELSEIF (itype.EQ.itype_hill) THEN
-
-       CALL  init_hill (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,dphi1)
-
     ELSEIF (itype.EQ.itype_cyl) THEN
 
        CALL init_cyl (ux1, uy1, uz1, phi1, dux1, duy1, duz1, dphi1)
@@ -102,15 +95,6 @@ CONTAINS
     ELSEIF (itype.EQ.itype_dbg) THEN
 
        CALL init_dbg (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, dphi1)
-
-    ELSEIF (itype.EQ.itype_mixlayer) THEN
-
-       CALL init_mixlayer(rho1, ux1, uy1, uz1, drho1, dux1, duy1, duz1)
-
-    ELSEIF (itype.EQ.itype_jet) THEN
-
-       CALL init_jet(rho1, ux1, uy1, uz1, ep1, phi1, drho1, dux1, duy1, duz1, dphi1)
-
     ENDIF
 
   END SUBROUTINE init
@@ -137,10 +121,6 @@ CONTAINS
 
        CALL boundary_conditions_channel (ux, uy, uz, phi)
 
-    ELSEIF (itype.EQ.itype_hill) THEN
-
-       CALL boundary_conditions_hill (ux,uy,uz,phi,ep)
-
     ELSEIF (itype.EQ.itype_cyl) THEN
 
        CALL boundary_conditions_cyl (ux, uy, uz, phi)
@@ -149,17 +129,12 @@ CONTAINS
 
        CALL boundary_conditions_dbg (ux, uy, uz, phi)
 
-    ELSEIF (itype.EQ.itype_jet) THEN
-
-       CALL boundary_conditions_jet (rho,ux,uy,uz,phi)
-
     ENDIF
 
   END SUBROUTINE boundary_conditions
 
   SUBROUTINE postprocess_case(rho,ux,uy,uz,pp,phi,ep)
 
-    USE forces
     USE var, ONLY : nzmsize
     USE param, ONLY : npress
 
@@ -185,10 +160,6 @@ CONTAINS
 
        CALL postprocess_channel (ux, uy, uz, pp, phi, ep)
 
-    ELSEIF (itype.EQ.itype_hill) THEN
-
-       CALL postprocess_hill(ux, uy, uz, phi, ep)
-
     ELSEIF (itype.EQ.itype_cyl) THEN
 
        CALL postprocess_cyl (ux, uy, uz, ep)
@@ -197,16 +168,7 @@ CONTAINS
 
        CALL postprocess_dbg (ux, uy, uz, phi, ep)
 
-    ELSEIF (itype.EQ.itype_jet) THEN
-
-       CALL postprocess_jet (ux, uy, uz, phi, ep)
-
     ENDIF
-
-     if(iforces) then
-        call force(ux,uy,ep)
-        call restart_forces(1)
-     endif
 
   END SUBROUTINE postprocess_case
 
@@ -229,10 +191,6 @@ CONTAINS
     IF (itype.EQ.itype_channel) THEN
 
        CALL momentum_forcing_channel(dux1, duy1, ux1, uy1)
-
-    ELSEIF (itype.EQ.itype_jet) THEN
-
-       CALL momentum_forcing_jet(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
 
     ENDIF
 

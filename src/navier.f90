@@ -326,8 +326,6 @@ contains
     USE var, only: pp1,pgy1,pgz1,di1,pp2,ppi2,pgy2,pgz2,pgzi2,dip2,&
          pgz3,ppi3,dip3,nxmsize,nymsize,nzmsize
 
-    USE forces, only : ppi1
-
     implicit none
 
     integer :: i,j,k
@@ -364,11 +362,6 @@ contains
          nxmsize,xsize(1),xsize(2),xsize(3),1)
     call interxpv(pz1,pgz1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
          nxmsize,xsize(1),xsize(2),xsize(3),1)
-
-    if (iforces) then
-       call interxpv(ppi1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
-            nxmsize,xsize(1),xsize(2),xsize(3),1)
-    endif
 
     !we are in X pencils:
     if (nclx1.eq.2) then

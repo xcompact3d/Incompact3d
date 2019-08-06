@@ -59,7 +59,6 @@ subroutine init_incompact3d()
   use decomp_2d
   USE decomp_2d_poisson, ONLY : decomp_2d_poisson_init
   use case
-  use forces
   
   use var
 
@@ -138,11 +137,6 @@ subroutine init_incompact3d()
      call genepsi3d(ep1)
   else if (iibm.eq.1) then
      call body(ux1,uy1,uz1,ep1,0)
-  endif
-
-  if (iforces) then
-     call init_forces()
-     if (irestart==1) call restart_forces(0)
   endif
 
   if (irestart==0) then
