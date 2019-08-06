@@ -197,8 +197,6 @@ subroutine parameter(input_i3d)
   dy=yly/real(nym,mytype)
   dz=zlz/real(nzm,mytype)
 
-  if (nrank==0) call system('mkdir data out probes 2> /dev/null')
-
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter incompact3d.prm done'
 #endif
@@ -389,9 +387,7 @@ subroutine parameter_defaults()
   beta = 0
   iscalar = 0
   cont_phi = 0
-  filepath = './data/'
   irestart = 0
-  datapath = './data/'
   fpi2 = (48._mytype / seven) / (PI**2)
 
   !! IBM stuff

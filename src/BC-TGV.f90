@@ -292,7 +292,7 @@ contains
 
     do i=1, nprobes
        if (rankprobes(i) .eq. 1) then
-          write(filename,"('./out/probe',I4.4)") i
+          write(filename,"('./probe',I4.4)") i
           open(67,file=trim(filename),status='unknown',form='formatted'&
                ,access='direct',recl=FS)
           write(67,fileformat,rec=itime) t,&                         !1

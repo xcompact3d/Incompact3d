@@ -462,7 +462,7 @@ contains
        FS = 1+numscalar+numscalar+3+2 !Number of columns
        write(fileformat, '( "(",I4,"(E14.6),A)" )' ) FS
        FS = FS*14+1  !Line width
-       open(67,file='./out/statistics',status='unknown',form='formatted',&
+       open(67,file='./statistics',status='unknown',form='formatted',&
             access='direct',recl=FS)
        write(67,fileformat,rec=itime/iprocessing+1) t,& !1
             mp,&                                    !numscalar
@@ -656,7 +656,7 @@ contains
     call MPI_REDUCE(dep,dep1,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,MPI_COMM_WORLD,code)
 
     if (nrank .eq. 0) then
-       open(67,file='./out/budget',status='unknown',form='formatted',&
+       open(67,file='./budget',status='unknown',form='formatted',&
             access='direct',recl=71) !71=5*14+1
        write(67,"(5E14.6,A)",rec=itime/iprocessing+1) t,ek1,dek1,ep1,dep1,NL
        close(67)
@@ -666,7 +666,7 @@ contains
        !if (save_diss.eq.1) then
        uvisu=zero
        call fine_to_coarseV(1,diss1,uvisu)
-       write(filename,"('./data/diss',I4.4)") itime/ioutput
+       write(filename,"('./diss',I4.4)") itime/ioutput
        call decomp_2d_write_one(1,uvisu,filename,2)
        !endif
 
@@ -674,7 +674,7 @@ contains
        call transpose_x_to_y (diss1,temp2)
        call transpose_y_to_z (temp2,temp3)
        call mean_plane_z(temp3,zsize(1),zsize(2),zsize(3),temp3(:,:,1))
-       write(filename,"('./data/dissm',I4.4)") itime/ioutput
+       write(filename,"('./dissm',I4.4)") itime/ioutput
        call decomp_2d_write_plane(3,temp3,3,1,filename)
        !endif
     endif
@@ -711,7 +711,7 @@ contains
           end do
        end do
 
-       write(filename,"('./out/dep',I1.1,I4.4)") is,itime/iprocessing
+       write(filename,"('./dep',I1.1,I4.4)") is,itime/iprocessing
        call decomp_2d_write_plane(2,tempdep2(:,:,:,is),2,1,filename)
     enddo
 
@@ -839,58 +839,3 @@ contains
   endsubroutine set_fluid_properties_lockexch
 
 end module lockexch
-
-! !*******************************************************************
-! module post_processing
-
-!   USE decomp_2d
-!   USE variables
-!   USE param
-!   USE flow_type
-
-!   implicit none
-!   !
-!   real(mytype), save, allocatable, dimension(:,:,:) :: vol1
-!   real(mytype), save, allocatable, dimension(:,:) :: area2
-!   !
-!   integer :: FS
-!   character(len=100) :: fileformat
-!   character(len=1),parameter :: NL=char(10) !new line character
-!   !
-!   !probes
-!   integer :: nprobes
-!   integer, save, allocatable, dimension(:) :: rankprobes, nxprobes, nyprobes, nzprobes
-
-! contains
-
-!   !############################################################################
-!   !############################################################################
-!   !############################################################################
-!   subroutine write_probes(ux1,uy1,uz1,phi1) !By Felipe Schuch
-
-!     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ux1, uy1, uz1
-!     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),numscalar) :: phi1
-
-!     integer :: i
-!     character(len=30) :: filename
-!     FS = 1+3+numscalar !Number of columns
-!     write(fileformat, '( "(",I4,"(E14.6),A)" )' ) FS
-!     FS = FS*14+1  !Line width
-
-!     do i=1, nprobes
-!        if (rankprobes(i) .eq. 1) then
-!           write(filename,"('./out/probe',I4.4)") i
-!           open(67,file=trim(filename),status='unknown',form='formatted'&
-!                ,access='direct',recl=FS)
-!           write(67,fileformat,rec=itime) t,&                         !1
-!                ux1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !2
-!                uy1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !3
-!                uz1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !4
-!                phi1(nxprobes(i),nyprobes(i),nzprobes(i),:),&         !numscalar
-!                NL                                                    !+1
-!           close(67)
-!        endif
-!     enddo
-
-!   end subroutine write_probes
-! end module post_processing
