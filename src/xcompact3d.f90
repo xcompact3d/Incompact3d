@@ -1,4 +1,4 @@
-program incompact3d
+program xcompact3d
 
   use var
   use case
@@ -12,7 +12,7 @@ program incompact3d
   
   implicit none
 
-  call init_incompact3d()
+  call init_xcompact3d()
 
   do itime=ifirst,ilast
      t=itime*dt
@@ -49,11 +49,11 @@ program incompact3d
 
   enddo !! End time loop
 
-  call finalise_incompact3d()
+  call finalise_xcompact3d()
 
-end program incompact3d
+end program xcompact3d
 
-subroutine init_incompact3d()
+subroutine init_xcompact3d()
 
   use MPI
   use decomp_2d
@@ -95,7 +95,7 @@ subroutine init_incompact3d()
   nargin=command_argument_count()
   if (nargin <1) then
      InputFN='input.i3d'
-     if (nrank==0) print*, 'Incompact3d is run with the default file -->', InputFN
+     if (nrank==0) print*, 'Xcompact3d is run with the default file -->', InputFN
   elseif (nargin.ge.1) then
      if (nrank==0) print*, 'Program is run with the provided file -->', InputFN
 
@@ -164,9 +164,9 @@ subroutine init_incompact3d()
      open(42,file='time_evol.dat',form='formatted')
   endif
 
-endsubroutine init_incompact3d
+endsubroutine init_xcompact3d
 
-subroutine finalise_incompact3d()
+subroutine finalise_xcompact3d()
 
   use MPI 
   use decomp_2d
@@ -184,5 +184,5 @@ subroutine finalise_incompact3d()
   call decomp_2d_finalize
   CALL MPI_FINALIZE(ierr)
 
-endsubroutine finalise_incompact3d
+endsubroutine finalise_xcompact3d
 

@@ -1058,7 +1058,7 @@ contains
        if (nrank==0) then
           print *,'==========================================================='
           print *,''
-          print *,'Good job! Incompact3d finished successfully!'
+          print *,'Good job! Xcompact3d finished successfully!'
           print *,''
           print *,'2DECOMP with p_row*p_col=',p_row,p_col
           print *,''
