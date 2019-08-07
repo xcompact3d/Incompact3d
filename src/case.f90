@@ -11,7 +11,7 @@
 !!
 !!! Commentary:
 !!
-!! This file defines an interface between the incompact3d core and the
+!! This file defines an interface between the xcompact3d core and the
 !! case-specific code, e.g. initialisation etc.
 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

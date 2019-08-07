@@ -1,15 +1,15 @@
 !################################################################################
-!This file is part of Incompact3d.
+!This file is part of Xcompact3d.
 !
-!Incompact3d
+!Xcompact3d
 !Copyright (c) 2012 Eric Lamballais and Sylvain Laizet
 !eric.lamballais@univ-poitiers.fr / sylvain.laizet@gmail.com
 !
-!    Incompact3d is free software: you can redistribute it and/or modify
+!    Xcompact3d is free software: you can redistribute it and/or modify
 !    it under the terms of the GNU General Public License as published by
 !    the Free Software Foundation.
 !
-!    Incompact3d is distributed in the hope that it will be useful,
+!    Xcompact3d is distributed in the hope that it will be useful,
 !    but WITHOUT ANY WARRANTY; without even the implied warranty of
 !    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 !    GNU General Public License for more details.
@@ -18,8 +18,8 @@
 !    along with the code.  If not, see <http://www.gnu.org/licenses/>.
 !-------------------------------------------------------------------------------
 !-------------------------------------------------------------------------------
-!    We kindly request that you cite Incompact3d in your publications and
-!    presentations. The following citations are suggested:
+!    We kindly request that you cite Xcompact3d/Incompact3d in your
+!    publications and presentations. The following citations are suggested:
 !
 !    1-Laizet S. & Lamballais E., 2009, High-order compact schemes for
 !    incompressible flows: a simple and efficient method with the quasi-spectral
