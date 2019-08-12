@@ -42,9 +42,6 @@ module stats
       if (itime.lt.initstat) then
          return
       endif
-      
-      if (nrank==0) print *,'===========================================================<<<<<'
-      if (nrank==0) print *,'Writing stat file',itime
 
       !! Mean pressure
       !WORK Z-PENCILS
@@ -149,6 +146,11 @@ module stats
       endif
 
       if (mod(itime,icheckpoint)==0) then
+      
+         if (nrank==0) then
+            print *,'===========================================================<<<<<'
+            print *,'Writing stat file',itime
+         endif
 
          write(filename,"('pmean.dat',I7.7)") itime
          call decomp_2d_write_one(1,pmean,filename,1)
