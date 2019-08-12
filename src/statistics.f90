@@ -150,38 +150,38 @@ module stats
 
       if (mod(itime,icheckpoint)==0) then
 
-         write(filename,"('stats/pmean.dat',I7.7)") itime
+         write(filename,"('pmean.dat',I7.7)") itime
          call decomp_2d_write_one(1,pmean,filename,1)
 
-         write(filename,"('stats/umean.dat',I7.7)") itime
+         write(filename,"('umean.dat',I7.7)") itime
          call decomp_2d_write_one(1,umean,filename,1)
-         write(filename,"('stats/vmean.dat',I7.7)") itime
+         write(filename,"('vmean.dat',I7.7)") itime
          call decomp_2d_write_one(1,vmean,filename,1)
-         write(filename,"('stats/wmean.dat',I7.7)") itime
+         write(filename,"('wmean.dat',I7.7)") itime
          call decomp_2d_write_one(1,wmean,filename,1)
-         write(filename,"('stats/uumean.dat',I7.7)") itime
+         write(filename,"('uumean.dat',I7.7)") itime
          
          call decomp_2d_write_one(1,uumean,filename,1)
-         write(filename,"('stats/vvmean.dat',I7.7)") itime
+         write(filename,"('vvmean.dat',I7.7)") itime
          call decomp_2d_write_one(1,vvmean,filename,1)
-         write(filename,"('stats/wwmean.dat',I7.7)") itime
+         write(filename,"('wwmean.dat',I7.7)") itime
          call decomp_2d_write_one(1,wwmean,filename,1)
          
-         write(filename,"('stats/uvmean.dat',I7.7)") itime
+         write(filename,"('uvmean.dat',I7.7)") itime
          call decomp_2d_write_one(1,uvmean,filename,1)
-         write(filename,"('stats/uwmean.dat',I7.7)") itime
+         write(filename,"('uwmean.dat',I7.7)") itime
          call decomp_2d_write_one(1,uwmean,filename,1)
-         write(filename,"('stats/vwmean.dat',I7.7)") itime
+         write(filename,"('vwmean.dat',I7.7)") itime
          call decomp_2d_write_one(1,vwmean,filename,1)  
 
-         write(filename,"('stats/kmean.dat',I7.7)") itime
+         write(filename,"('kmean.dat',I7.7)") itime
          call decomp_2d_write_one(1,half*(uumean+vvmean+wwmean),filename,1)
 
          if (iscalar==1) then
             do is=1, numscalar
-               write(filename,"('stats/phi',I2.2,'mean.dat',I7.7)") is, itime
+               write(filename,"('phi',I2.2,'mean.dat',I7.7)") is, itime
                call decomp_2d_write_one(1,phimean(:,:,:,is),filename,1)
-               write(filename,"('stats/phiphi',I2.2,'mean.dat',I7.7)") is, itime
+               write(filename,"('phiphi',I2.2,'mean.dat',I7.7)") is, itime
                call decomp_2d_write_one(1,phiphimean(:,:,:,is),filename,1)
             enddo
          endif
@@ -193,37 +193,37 @@ module stats
 
          if ((itime - icheckpoint).ge.0) then
             !! Cleanup
-            write(filename,"('stats/pmean.dat',I7.7)") itime-icheckpoint
+            write(filename,"('pmean.dat',I7.7)") itime-icheckpoint
             call system ("rm " //filename)
 
-            write(filename,"('stats/umean.dat',I7.7)") itime-icheckpoint
+            write(filename,"('umean.dat',I7.7)") itime-icheckpoint
             call system ("rm " //filename)
-            write(filename,"('stats/vmean.dat',I7.7)") itime-icheckpoint
+            write(filename,"('vmean.dat',I7.7)") itime-icheckpoint
             call system ("rm " //filename)
-            write(filename,"('stats/wmean.dat',I7.7)") itime-icheckpoint
-            call system ("rm " //filename)
-         
-            write(filename,"('stats/uumean.dat',I7.7)") itime-icheckpoint
-            call system ("rm " //filename)
-            write(filename,"('stats/vvmean.dat',I7.7)") itime-icheckpoint
-            call system ("rm " //filename)
-            write(filename,"('stats/wwmean.dat',I7.7)") itime-icheckpoint
+            write(filename,"('wmean.dat',I7.7)") itime-icheckpoint
             call system ("rm " //filename)
          
-            write(filename,"('stats/uvmean.dat',I7.7)") itime-icheckpoint
+            write(filename,"('uumean.dat',I7.7)") itime-icheckpoint
             call system ("rm " //filename)
-            write(filename,"('stats/uwmean.dat',I7.7)") itime-icheckpoint
+            write(filename,"('vvmean.dat',I7.7)") itime-icheckpoint
             call system ("rm " //filename)
-            write(filename,"('stats/vwmean.dat',I7.7)") itime-icheckpoint
+            write(filename,"('wwmean.dat',I7.7)") itime-icheckpoint
             call system ("rm " //filename)
          
-            write(filename,"('stats/kmean.dat',I7.7)") itime-icheckpoint
+            write(filename,"('uvmean.dat',I7.7)") itime-icheckpoint
+            call system ("rm " //filename)
+            write(filename,"('uwmean.dat',I7.7)") itime-icheckpoint
+            call system ("rm " //filename)
+            write(filename,"('vwmean.dat',I7.7)") itime-icheckpoint
+            call system ("rm " //filename)
+         
+            write(filename,"('kmean.dat',I7.7)") itime-icheckpoint
             call system ("rm " //filename)
 
             do is = 1, numscalar
-               write(filename,"('stats/phi',I2.2,'mean.dat',I7.7)") is, itime - icheckpoint
+               write(filename,"('phi',I2.2,'mean.dat',I7.7)") is, itime - icheckpoint
                call system ("rm " //filename)
-               write(filename,"('stats/phiphi',I2.2,'mean.dat',I7.7)") is, itime - icheckpoint
+               write(filename,"('phiphi',I2.2,'mean.dat',I7.7)") is, itime - icheckpoint
                call system ("rm " //filename)
             enddo
          endif
@@ -257,7 +257,7 @@ module stats
 
 !   if (mod(itime,ntik)==0) then
 !      if (nrank.eq.0) print *,'Saving uxmean tik =>',(itime/(ntik/2)-1)
-!      write(filename,"('stats/uxmean',I4.4)") (itime/(ntik/2)-1)
+!      write(filename,"('uxmean',I4.4)") (itime/(ntik/2)-1)
 !      call decomp_2d_write_one(1,u1sum_tik/ntik,filename,1)
 !      u1sum_tik = zero
 !   endif
@@ -268,7 +268,7 @@ module stats
 
 !      if (itime.gt.(ntik/2).AND.mod(itime+ntik/2,ntik)==0) then
 !         if (nrank.eq.0) print *,'Saving uxmean tak =>',(itime/(ntik/2)-1)
-!         write(filename,"('stats/uxmean',I4.4)") (itime/(ntik/2) -1)
+!         write(filename,"('uxmean',I4.4)") (itime/(ntik/2) -1)
 !         call decomp_2d_write_one(1,u1sum_tak/ntik,filename,1)
 !         u1sum_tak = zero
 !      endif
@@ -324,7 +324,7 @@ module stats
 
 !            print *,'RMS=',rms1
 
-!            write(filename,"('stats/rms',I8.8)") itime
+!            write(filename,"('rms',I8.8)") itime
 !            open(67,file=trim(filename),status='unknown',form='formatted')
 !            write(67,"(2E14.6,I14)") t,rms1,itime
 !            close(67)
@@ -424,7 +424,7 @@ module stats
 !   call fine_to_coarseS(1,ta1,tsum)
 !   dudxsum = dudxsum + tsum
 !   if (mod(itime,imodulo)==0) then
-!      call decomp_2d_write_one(1,dudx,'stats/dudx.sum',1)
+!      call decomp_2d_write_one(1,dudx,'dudx.sum',1)
 !   endif
 
 !   !FRICTION VELOCITY OVER ITERATION
@@ -434,7 +434,7 @@ module stats
 !   call fine_to_coarseS(1,ta1,tsum)
 !   utmapsum=utmapsum+tsum
 !   if (mod(itime,imodulo)==0) then
-!      call decomp_2d_write_plane(1,utmapsum,2,1,'stats/utmap.sum')
+!      call decomp_2d_write_plane(1,utmapsum,2,1,'utmap.sum')
 !   endif
 
 
