@@ -42,9 +42,6 @@ module stats
       if (itime.lt.initstat) then
          return
       endif
-      
-      if (nrank==0) print *,'===========================================================<<<<<'
-      if (nrank==0) print *,'Writing stat file',itime
 
       !! Mean pressure
       !WORK Z-PENCILS
@@ -149,6 +146,11 @@ module stats
       endif
 
       if (mod(itime,icheckpoint)==0) then
+      
+         if (nrank==0) then
+            print *,'===========================================================<<<<<'
+            print *,'Writing stat file',itime
+         endif
 
          write(filename,"('pmean.dat',I7.7)") itime
          call decomp_2d_write_one(1,pmean,filename,1)
@@ -191,41 +193,43 @@ module stats
             print *,'===========================================================<<<<<'
          endif
 
-         if ((itime - icheckpoint).ge.0) then
-            !! Cleanup
-            write(filename,"('pmean.dat',I7.7)") itime-icheckpoint
-            call system ("rm " //filename)
-
-            write(filename,"('umean.dat',I7.7)") itime-icheckpoint
-            call system ("rm " //filename)
-            write(filename,"('vmean.dat',I7.7)") itime-icheckpoint
-            call system ("rm " //filename)
-            write(filename,"('wmean.dat',I7.7)") itime-icheckpoint
-            call system ("rm " //filename)
-         
-            write(filename,"('uumean.dat',I7.7)") itime-icheckpoint
-            call system ("rm " //filename)
-            write(filename,"('vvmean.dat',I7.7)") itime-icheckpoint
-            call system ("rm " //filename)
-            write(filename,"('wwmean.dat',I7.7)") itime-icheckpoint
-            call system ("rm " //filename)
-         
-            write(filename,"('uvmean.dat',I7.7)") itime-icheckpoint
-            call system ("rm " //filename)
-            write(filename,"('uwmean.dat',I7.7)") itime-icheckpoint
-            call system ("rm " //filename)
-            write(filename,"('vwmean.dat',I7.7)") itime-icheckpoint
-            call system ("rm " //filename)
-         
-            write(filename,"('kmean.dat',I7.7)") itime-icheckpoint
-            call system ("rm " //filename)
-
-            do is = 1, numscalar
-               write(filename,"('phi',I2.2,'mean.dat',I7.7)") is, itime - icheckpoint
+         if (nrank==0) then !! Cleanup old files
+            if ((itime - icheckpoint).ge.initstat) then
+               !! Cleanup
+               write(filename,"('pmean.dat',I7.7)") itime-icheckpoint
                call system ("rm " //filename)
-               write(filename,"('phiphi',I2.2,'mean.dat',I7.7)") is, itime - icheckpoint
+               
+               write(filename,"('umean.dat',I7.7)") itime-icheckpoint
                call system ("rm " //filename)
-            enddo
+               write(filename,"('vmean.dat',I7.7)") itime-icheckpoint
+               call system ("rm " //filename)
+               write(filename,"('wmean.dat',I7.7)") itime-icheckpoint
+               call system ("rm " //filename)
+         
+               write(filename,"('uumean.dat',I7.7)") itime-icheckpoint
+               call system ("rm " //filename)
+               write(filename,"('vvmean.dat',I7.7)") itime-icheckpoint
+               call system ("rm " //filename)
+               write(filename,"('wwmean.dat',I7.7)") itime-icheckpoint
+               call system ("rm " //filename)
+         
+               write(filename,"('uvmean.dat',I7.7)") itime-icheckpoint
+               call system ("rm " //filename)
+               write(filename,"('uwmean.dat',I7.7)") itime-icheckpoint
+               call system ("rm " //filename)
+               write(filename,"('vwmean.dat',I7.7)") itime-icheckpoint
+               call system ("rm " //filename)
+               
+               write(filename,"('kmean.dat',I7.7)") itime-icheckpoint
+               call system ("rm " //filename)
+
+               do is = 1, numscalar
+                  write(filename,"('phi',I2.2,'mean.dat',I7.7)") is, itime - icheckpoint
+                  call system ("rm " //filename)
+                  write(filename,"('phiphi',I2.2,'mean.dat',I7.7)") is, itime - icheckpoint
+                  call system ("rm " //filename)
+               enddo
+            endif
          endif
       endif
 
