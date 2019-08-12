@@ -426,6 +426,7 @@ subroutine parameter_defaults()
   ivisu = 1
   ipost = 0
   iprocessing = huge(i)
+  initstat = huge(i)
 
   save_ux = 0
   save_uy = 0
