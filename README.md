@@ -73,7 +73,7 @@ N.B. Other cases are in preparation.
 First, make sure you have all the [required dependencies](#required-build-tools-and-external-libraries) installed.
 Then, acquire the source code by cloning the git repository:
 
-    git clone git@github.com:xcompact3d/Xcompact3d.git
+    git clone git@github.com:xcompact3d/Incompact3d.git
 
 (If you are behind a firewall, you may need to use the `https` protocol instead of the `git` protocol:
 
