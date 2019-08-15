@@ -27,9 +27,9 @@ This is the GitHub repository of Xcompact3d source code, including instructions 
 - **Homepage:** <https://www.incompact3d.com/>
 - **Binaries:** <https://www.incompact3d.com/download.html>
 - **Documentation:** <https://www.incompact3d.com/docs>
-- **Discussion section (FORUM):** <https://github.com/xcompact3d/Xcompact3d/issues>
-- **Git clone URL-SSH:** <git@github.com:xcompact3d/Xcompact3d.git>
-- **Git clone URL-HTTPS:** <https://github.com/xcompact3d/Xcompact3d.git>
+- **Discussion section (FORUM):** <https://github.com/xcompact3d/Incompact3d/issues>
+- **Git clone URL-SSH:** <git@github.com:xcompact3d/Incompact3d.git>
+- **Git clone URL-HTTPS:** <https://github.com/xcompact3d/Incompact3d.git>
 
 New users and developers are welcome to join.
 
