@@ -62,6 +62,8 @@ CONTAINS
     REAL(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
     REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)) :: px1, py1, pz1
 
+    INTEGER :: it, is
+
     !! Zero out the pressure field
     pp3(:,:,:,1) = zero
     px1(:,:,:) = zero
@@ -74,28 +76,47 @@ CONTAINS
 
     IF (itype.EQ.itype_user) THEN
 
-       CALL init_user (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, dphi1)
+       CALL init_user (ux1, uy1, uz1, ep1, phi1)
 
     ELSEIF (itype.EQ.itype_lockexch) THEN
 
-       CALL init_lockexch(rho1, ux1, uy1, uz1, ep1, phi1, drho1, dux1, duy1, duz1, dphi1)
+       CALL init_lockexch(rho1, ux1, uy1, uz1, ep1, phi1)
 
     ELSEIF (itype.EQ.itype_tgv) THEN
 
-       CALL init_tgv (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, dphi1)
+       CALL init_tgv (ux1, uy1, uz1, ep1, phi1)
 
     ELSEIF (itype.EQ.itype_channel) THEN
 
-       CALL init_channel (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, dphi1)
+       CALL init_channel (ux1, uy1, uz1, ep1, phi1)
 
     ELSEIF (itype.EQ.itype_cyl) THEN
 
-       CALL init_cyl (ux1, uy1, uz1, phi1, dux1, duy1, duz1, dphi1)
+       CALL init_cyl (ux1, uy1, uz1, phi1)
 
     ELSEIF (itype.EQ.itype_dbg) THEN
 
-       CALL init_dbg (ux1, uy1, uz1, ep1, phi1, dux1, duy1, duz1, dphi1)
+       CALL init_dbg (ux1, uy1, uz1, ep1, phi1)
+
     ENDIF
+
+    !! Setup old arrays
+    do it = 1, ntime
+       drho1(:,:,:,it) = rho1(:,:,:,1)
+       dux1(:,:,:,it)=ux1(:,:,:)
+       duy1(:,:,:,it)=uy1(:,:,:)
+       duz1(:,:,:,it)=uz1(:,:,:)
+    enddo
+
+    do it = 2, nrhotime
+       rho1(:,:,:,it) = rho1(:,:,:,1)
+    enddo
+
+    do is = 1, numscalar
+       do it = 1, ntime
+          dphi1(:,:,:,it,is) = phi1(:,:,:,is)
+       enddo
+    enddo
 
   END SUBROUTINE init
 
