@@ -19,7 +19,7 @@ module mixlayer
 
 contains
 
-  subroutine init_mixlayer (rho1,ux1,uy1,uz1,drho1,dux1,duy1,duz1)
+  subroutine init_mixlayer (rho1,ux1,uy1,uz1)
 
     USE decomp_2d, ONLY : mytype, xsize
     USE param, ONLY : u1, u2, dens1, dens2
@@ -30,8 +30,6 @@ contains
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
 
     integer :: i, j, k, is
@@ -108,24 +106,6 @@ contains
        endif
 
     endif
-
-    dux1(:,:,:,1)=ux1(:,:,:)
-    duy1(:,:,:,1)=uy1(:,:,:)
-    duz1(:,:,:,1)=uz1(:,:,:)
-    do is = 2, ntime
-       dux1(:,:,:,is)=dux1(:,:,:,is - 1)
-       duy1(:,:,:,is)=duy1(:,:,:,is - 1)
-       duz1(:,:,:,is)=duz1(:,:,:,is - 1)
-    enddo
-
-    drho1(:,:,:,1)=rho1(:,:,:,1)
-    do is = 2, ntime
-       drho1(:,:,:,is)=drho1(:,:,:,is - 1)
-    enddo
-
-    do is = 2, nrhotime
-       rho1(:,:,:,is) = rho1(:,:,:,is - 1)
-    enddo
 
 #ifdef DEBG
     if (nrank .eq. 0) print *,'# init end ok'

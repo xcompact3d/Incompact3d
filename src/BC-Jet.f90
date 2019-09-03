@@ -34,7 +34,7 @@ module jet
 
 contains
 
-  subroutine init_jet (rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,dphi1)
+  subroutine init_jet (rho1,ux1,uy1,uz1,ep1,phi1)
 
     USE decomp_2d
     USE decomp_2d_io
@@ -47,8 +47,6 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1,drho1
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
 
     real(mytype) :: y
     integer :: i, j, k, ii, is, it, code
@@ -123,26 +121,6 @@ contains
     call transpose_y_to_x(rho2, rho1(:,:,:,1))
     do is = 1, numscalar
        call transpose_y_to_x(phi2(:,:,:,is), phi1(:,:,:,is))
-    enddo
-
-    dux1(:,:,:,1)=ux1(:,:,:)
-    duy1(:,:,:,1)=uy1(:,:,:)
-    duz1(:,:,:,1)=uz1(:,:,:)
-
-    drho1(:,:,:,1) = rho1(:,:,:,1)
-    do is = 2, ntime
-       dux1(:,:,:,is)=dux1(:,:,:,is - 1)
-       duy1(:,:,:,is)=duy1(:,:,:,is - 1)
-       duz1(:,:,:,is)=duz1(:,:,:,is - 1)
-
-       drho1(:,:,:,is) = drho1(:,:,:,is - 1)
-    enddo
-
-    do is = 1, numscalar
-       dphi1(:,:,:,1,is) = phi1(:,:,:,is)
-       do it = 2, ntime
-          dphi1(:,:,:,it,is) = dphi1(:,:,:,it - 1,is)
-       enddo
     enddo
 
 #ifdef DEBG

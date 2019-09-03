@@ -24,7 +24,7 @@ module dbg_schemes
 
 contains
   !********************************************************************
-  subroutine init_dbg (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,dphi1)
+  subroutine init_dbg (ux1,uy1,uz1,ep1,phi1)
 
     USE decomp_2d
     USE decomp_2d_io
@@ -36,8 +36,6 @@ contains
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
 
     integer :: code, ierror
 

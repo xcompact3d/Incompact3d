@@ -100,7 +100,7 @@ contains
     return
   end subroutine boundary_conditions_lockexch
 
-  subroutine init_lockexch (rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,dphi1)
+  subroutine init_lockexch (rho1,ux1,uy1,uz1,ep1,phi1)
 
     USE decomp_2d
     USE decomp_2d_io
@@ -115,8 +115,6 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1,drho1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
 
     real(mytype) :: um,x,y,ek,ep,ekg,epg
     integer :: k,j,i,ii,is,it,code
@@ -154,12 +152,6 @@ contains
     enddo
 
     call set_fluid_properties_lockexch(rho1, mu1)
-
-    do is=1,numscalar
-       do it = 1,ntime
-          dphi1(:,:,:,it,is) = phi1(:,:,:,is)
-       enddo
-    enddo
 
     ux1=zero; uy1=zero; uz1=zero
 
@@ -246,24 +238,6 @@ contains
           endif
        endif
     endif
-
-    !INIT FOR G AND U=MEAN FLOW + NOISE
-    do it = 1, ntime
-       drho1(:,:,:,it) = rho1(:,:,:,1)
-       dux1(:,:,:,it)=ux1(:,:,:)
-       duy1(:,:,:,it)=uy1(:,:,:)
-       duz1(:,:,:,it)=uz1(:,:,:)
-    enddo
-
-    do it = 2, nrhotime
-       rho1(:,:,:,it) = rho1(:,:,:,1)
-    enddo
-
-    do is = 1, numscalar
-       do it = 1, ntime
-          dphi1(:,:,:,it,is) = phi1(:,:,:,is)
-       enddo
-    enddo
 
 #ifdef DEBG 
     if (nrank .eq. 0) print *,'# init end ok'

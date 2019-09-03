@@ -31,7 +31,7 @@ module tgv
 
 contains
 
-  subroutine init_tgv (ux1,uy1,uz1,ep1,phi1,dux1,duy1,duz1,dphi1)
+  subroutine init_tgv (ux1,uy1,uz1,ep1,phi1)
 
     USE decomp_2d
     USE decomp_2d_io
@@ -43,8 +43,6 @@ contains
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
 
     real(mytype) :: y,r,um,r3,x,z,h,ct
     real(mytype) :: cx0,cy0,cz0,hg,lg
@@ -56,10 +54,6 @@ contains
     if (iscalar==1) then
 
        phi1(:,:,:,:) = zero
-       dphi1(:,:,:,1,:) = phi1(:,:,:,:)
-       do is = 2,ntime
-          dphi1(:,:,:,is,:) = dphi1(:,:,:,is - 1,:)
-       enddo
     endif
 
     if (iin.eq.0) then !empty domain
@@ -140,14 +134,6 @@ contains
              ux1(i,j,k)=ux1(i,j,k)!+bxx1(j,k)
              uy1(i,j,k)=uy1(i,j,k)!+bxy1(j,k)
              uz1(i,j,k)=uz1(i,j,k)!+bxz1(j,k)
-             dux1(i,j,k,1)=ux1(i,j,k)
-             duy1(i,j,k,1)=uy1(i,j,k)
-             duz1(i,j,k,1)=uz1(i,j,k)
-             do is = 2, ntime
-                dux1(i,j,k,is)=dux1(i,j,k,is - 1)
-                duy1(i,j,k,is)=duy1(i,j,k,is - 1)
-                duz1(i,j,k,is)=duz1(i,j,k,is - 1)
-             enddo
           enddo
        enddo
     enddo
