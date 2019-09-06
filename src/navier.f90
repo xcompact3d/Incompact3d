@@ -5,7 +5,7 @@ module navier
   private
 
   public :: solve_poisson, divergence, calc_divu_constraint
-  public :: pre_correc, corpg
+  public :: pre_correc, cor_vel
   public :: lmn_t_to_rho_trans, momentum_to_velocity, velocity_to_momentum
 
 contains
@@ -158,14 +158,14 @@ contains
   ENDSUBROUTINE lmn_t_to_rho_trans
 
   !********************************************************************
-  !subroutine CORPG
+  !subroutine COR_VEL
   !Correction of u* by the pressure gradient to get a divergence free
   !field
   ! input : px,py,pz
   ! output : ux,uy,uz
   !written by SL 2018
   !********************************************************************
-  subroutine corpg (ux,uy,uz,px,py,pz)
+  subroutine cor_vel (ux,uy,uz,px,py,pz)
 
     USE decomp_2d
     USE variables
@@ -181,7 +181,7 @@ contains
     uz(:,:,:)=uz(:,:,:)-pz(:,:,:)
 
     return
-  end subroutine corpg
+  end subroutine cor_vel
   !********************************************************************
   !subroutine DIVERGENCe
   !Calculation of div u* for nlock=1 and of div u^{n+1} for nlock=2
