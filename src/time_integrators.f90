@@ -12,11 +12,11 @@ module time_integrators
   implicit none
 
   private
-  public :: intt
+  public :: int_time
 
 contains
 
-  subroutine  int_time(var1,dvar1)
+  subroutine intt(var1,dvar1)
 
     USE param
     USE variables
@@ -142,9 +142,9 @@ contains
 
     return
 
-  end subroutine int_time
+  end subroutine intt
 
-  SUBROUTINE intt(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
+  SUBROUTINE int_time(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
 
     USE decomp_2d, ONLY : mytype, xsize
     USE param, ONLY : zero, one
@@ -186,7 +186,7 @@ contains
 
        DO is = 1, numscalar
           IF (is.NE.primary_species) THEN
-             CALL int_time(phi1(:,:,:,is), dphi1(:,:,:,:,is))
+             CALL intt(phi1(:,:,:,is), dphi1(:,:,:,:,is))
 
              DO k = 1, xsize(3)
                 DO j = 1, xsize(2)
@@ -223,7 +223,7 @@ contains
        ENDIF
     ENDIF
 
-  ENDSUBROUTINE intt
+  ENDSUBROUTINE int_time
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!
@@ -250,9 +250,9 @@ contains
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1, duy1, duz1
 
-    call int_time(ux1, dux1)
-    call int_time(uy1, duy1)
-    call int_time(uz1, duz1)
+    call intt(ux1, dux1)
+    call intt(uy1, duy1)
+    call intt(uz1, duz1)
 
   endsubroutine int_time_momentum
 
@@ -305,7 +305,7 @@ contains
     endif
 
     !! Now we can update current density
-    call int_time(rho1(:,:,:,1), drho1)
+    call intt(rho1(:,:,:,1), drho1)
 
     !! Enforce boundedness on density
     if (ilmn_bound) then
@@ -382,7 +382,7 @@ contains
     call calc_temp_eos(tc1, rho1(:,:,:,1), phi1, tb1, xsize(1), xsize(2), xsize(3))
 
     !! Now we can update current temperature
-    call int_time(tc1, drho1)
+    call intt(tc1, drho1)
 
     !! Temperature >= 0
     do k = 1, xsize(3)
