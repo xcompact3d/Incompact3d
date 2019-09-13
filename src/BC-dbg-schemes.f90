@@ -289,8 +289,8 @@ contains
        enddo
     enddo
 
-    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0)
-    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0)
+    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1)
     if (nrank.eq.0) then
        write(filename,"('filter_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
        open(70,file=trim(filename),status='unknown',form='formatted')
@@ -483,8 +483,8 @@ contains
        enddo
     enddo
 
-    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0)
-    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0)
+    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1)
     if (nrank.eq.0) then
        write(filename,"('filter_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
        open(70,file=trim(filename),status='unknown',form='formatted')
@@ -644,8 +644,8 @@ contains
        enddo
     enddo
 
-    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0)
-    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0)
+    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1)
     if (nrank.eq.0) then
        write(filename,"('filter_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
        open(70,file=trim(filename),status='unknown',form='formatted')
@@ -811,8 +811,8 @@ contains
        enddo
     enddo
 
-    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0)
-    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0)
+    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1)
     if (nrank.eq.0) then
        write(filename,"('filter_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
        open(70,file=trim(filename),status='unknown',form='formatted')
@@ -1070,8 +1070,8 @@ contains
        enddo
     enddo
 
-    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0)
-    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0)
+    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1)
     if (nrank.eq.0) then
        write(filename,"('filter_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
        open(70,file=trim(filename),status='unknown',form='formatted')

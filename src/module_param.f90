@@ -132,12 +132,12 @@ module variables
        real(mytype), dimension(ny,nz):: s
        real(mytype), dimension(nx):: ff,fs,fw 
      END SUBROUTINE FILTER_X
-     SUBROUTINE FILTER_Y(t,u,r,s,ff,fs,fw,pp,nx,ny,nz,npaire)
+     SUBROUTINE FILTER_Y(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
        use decomp_2d, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r 
        real(mytype), dimension(nx,nz):: s
-       real(mytype), dimension(ny):: ff,fs,fw,pp
+       real(mytype), dimension(ny):: ff,fs,fw
      END SUBROUTINE FILTER_Y
      SUBROUTINE FILTER_Z(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
        use decomp_2d, only : mytype

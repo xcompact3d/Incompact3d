@@ -335,17 +335,17 @@ subroutine dynsmag(nut1,ux1,uy1,uz1,ep1)
     call transpose_x_to_y(uxz1f, th2)
     call transpose_x_to_y(uyz1f, ti2)
 
-    call fily(ux2f, ta2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !ux2
-    call fily(uy2f, tb2, di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0) !uy2
-    call fily(uz2f, tc2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !uz2
+    call fily(ux2f, ta2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1) !ux2
+    call fily(uy2f, tb2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0) !uy2
+    call fily(uz2f, tc2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1) !uz2
 
-    call fily(uxx2f, td2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !ux2*ux2
-    call fily(uyy2f, te2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !uy2*uy2
-    call fily(uzz2f, tf2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !uz2*uz2
+    call fily(uxx2f, td2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1) !ux2*ux2
+    call fily(uyy2f, te2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1) !uy2*uy2
+    call fily(uzz2f, tf2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1) !uz2*uz2
 
-    call fily(uxy2f, tg2, di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0) !ux2*uy2
-    call fily(uxz2f, th2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1) !ux2*uz2
-    call fily(uyz2f, ti2, di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0) !uy2*uz2
+    call fily(uxy2f, tg2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0) !ux2*uy2
+    call fily(uxz2f, th2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1) !ux2*uz2
+    call fily(uyz2f, ti2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0) !uy2*uz2
 
     if (mod(itime, ioutput).eq.0) then
       if (nrank==0) print *, "fily ux= ", maxval(ta2), maxval(ux2f), maxval(ta2) - maxval(ux2f)
@@ -596,13 +596,13 @@ subroutine dynsmag(nut1,ux1,uy1,uz1,ep1)
     call transpose_x_to_y(axz1f, te2)
     call transpose_x_to_y(ayz1f, tf2)
 
-    call fily(axx2f, ta2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-    call fily(ayy2f, tb2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-    call fily(azz2f, tc2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call fily(axx2f, ta2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1)
+    call fily(ayy2f, tb2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1)
+    call fily(azz2f, tc2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1)
 
-    call fily(axy2f, td2, di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0)
-    call fily(axz2f, te2, di2,fisy,fiffyp,fifsyp,fifwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-    call fily(ayz2f, tf2, di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0)
+    call fily(axy2f, td2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0)
+    call fily(axz2f, te2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1)
+    call fily(ayz2f, tf2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0)
 
     if (mod(itime, ioutput).eq.0) then
       if (nrank==0) print *, "fily axx2= ", maxval(ta2), maxval(axx2f), maxval(ta2) - maxval(axx2f)
@@ -701,7 +701,7 @@ subroutine dynsmag(nut1,ux1,uy1,uz1,ep1)
     call filx(smagC1f, smagC1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0)
 
     call transpose_x_to_y(smagC1f, ta2)
-    call fily(smagC2f, ta2, di2,fisy,fiffy ,fifsy ,fifwy ,ppy,ysize(1),ysize(2),ysize(3),0)
+    call fily(smagC2f, ta2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0)
 
     call transpose_y_to_z(smagC2f, ta3)
     call filz(smagC3f, ta3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0)
