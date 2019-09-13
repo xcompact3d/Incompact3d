@@ -583,7 +583,7 @@ subroutine filx_22(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire)
   return  
 end subroutine filx_22
 
-subroutine fily_00(ty,uy,ry,fisy,fiffy,fifsy,fifwy,ppy,nx,ny,nz,npaire) 
+subroutine fily_00(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire) 
 
   USE param  
   USE parfiY 
@@ -594,7 +594,7 @@ subroutine fily_00(ty,uy,ry,fisy,fiffy,fifsy,fifwy,ppy,nx,ny,nz,npaire)
   real(mytype), dimension(nx,ny,nz) :: ty,uy 
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: fisy
-  real(mytype), dimension(ny) :: fiffy,fifsy,fifwy,ppy
+  real(mytype), dimension(ny) :: fiffy,fifsy,fifwy
 
   if(iibm.eq.2) call lagpoly(uy)
 
@@ -648,23 +648,13 @@ subroutine fily_00(ty,uy,ry,fisy,fiffy,fifsy,fifwy,ppy,nx,ny,nz,npaire)
      enddo
   enddo
 
-  if (istret.ne.0) then   
-     do k=1,nz 
-        do j=1,ny 
-           do i=1,nx 
-              ty(i,j,k)=ty(i,j,k)*ppy(j) 
-           enddo
-        enddo
-     enddo
-  endif
-
   return
 
 end subroutine fily_00
 
 !********************************************************************
 !
-subroutine fily_11(ty,uy,ry,fisy,fiffy,fifsy,fifwy,ppy,nx,ny,nz,npaire) 
+subroutine fily_11(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire) 
   !
   !********************************************************************
 
@@ -677,7 +667,7 @@ subroutine fily_11(ty,uy,ry,fisy,fiffy,fifsy,fifwy,ppy,nx,ny,nz,npaire)
   real(mytype), dimension(nx,ny,nz) :: ty,uy 
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: fisy
-  real(mytype), dimension(ny) :: fiffy,fifsy,fifwy,ppy
+  real(mytype), dimension(ny) :: fiffy,fifsy,fifwy
 
   if(iibm.eq.2) call lagpoly(uy)
 
@@ -746,16 +736,6 @@ subroutine fily_11(ty,uy,ry,fisy,fiffy,fifsy,fifwy,ppy,nx,ny,nz,npaire)
 
            do j=ny-1,1,-1  
               ty(i,j,k)=(ty(i,j,k)-fiffy(j)*ty(i,j+1,k))*fifwy(j) 
-           enddo
-        enddo
-     enddo
-  endif
-
-  if (istret.ne.0) then   
-     do k=1,nz 
-        do j=1,ny 
-           do i=1,nx 
-              ty(i,j,k)=ty(i,j,k)*ppy(j) 
            enddo
         enddo
      enddo
@@ -766,7 +746,7 @@ subroutine fily_11(ty,uy,ry,fisy,fiffy,fifsy,fifwy,ppy,nx,ny,nz,npaire)
 end subroutine fily_11
 
 
-subroutine fily_12(ty,uy,ry,fisy,fiffy,fifsy,fifwy,ppy,nx,ny,nz,npaire) 
+subroutine fily_12(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire) 
 
   USE param  
   USE parfiY 
@@ -777,7 +757,7 @@ subroutine fily_12(ty,uy,ry,fisy,fiffy,fifsy,fifwy,ppy,nx,ny,nz,npaire)
   real(mytype), dimension(nx,ny,nz) :: ty,uy 
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: fisy
-  real(mytype), dimension(ny) :: fiffy,fifsy,fifwy,ppy
+  real(mytype), dimension(ny) :: fiffy,fifsy,fifwy
 
   if(iibm.eq.2) call lagpoly(uy)
   if (npaire==1) then 
@@ -844,20 +824,10 @@ subroutine fily_12(ty,uy,ry,fisy,fiffy,fifsy,fifwy,ppy,nx,ny,nz,npaire)
      enddo
   endif
 
-  if (istret.ne.0) then   
-     do k=1,nz 
-        do j=1,ny 
-           do i=1,nx 
-              ty(i,j,k)=ty(i,j,k)*ppy(j) 
-           enddo
-        enddo
-     enddo
-  endif
-
 end subroutine fily_12
 
 
-subroutine fily_21(ty,uy,ry,fisy,fiffy,fifsy,fifwy,ppy,nx,ny,nz,npaire) 
+subroutine fily_21(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire) 
 
   USE param  
   USE parfiY 
@@ -868,7 +838,7 @@ subroutine fily_21(ty,uy,ry,fisy,fiffy,fifsy,fifwy,ppy,nx,ny,nz,npaire)
   real(mytype), dimension(nx,ny,nz) :: ty,uy 
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: fisy
-  real(mytype), dimension(ny) :: fiffy,fifsy,fifwy,ppy
+  real(mytype), dimension(ny) :: fiffy,fifsy,fifwy
 
   if(iibm.eq.2) call lagpoly(uy)
 
@@ -936,21 +906,11 @@ subroutine fily_21(ty,uy,ry,fisy,fiffy,fifsy,fifwy,ppy,nx,ny,nz,npaire)
      enddo
   endif
 
-  if (istret.ne.0) then   
-     do k=1,nz 
-        do j=1,ny 
-           do i=1,nx 
-              ty(i,j,k)=ty(i,j,k)*ppy(j) 
-           enddo
-        enddo
-     enddo
-  endif
-
   return
 
 end subroutine fily_21
 
-subroutine fily_22(ty,uy,ry,fisy,fiffy,fifsy,fifwy,ppy,nx,ny,nz,npaire) 
+subroutine fily_22(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire) 
 
   USE param  
   USE parfiY 
@@ -961,7 +921,7 @@ subroutine fily_22(ty,uy,ry,fisy,fiffy,fifsy,fifwy,ppy,nx,ny,nz,npaire)
   real(mytype), dimension(nx,ny,nz) :: ty,uy 
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: fisy
-  real(mytype), dimension(ny) :: fiffy,fifsy,fifwy,ppy
+  real(mytype), dimension(ny) :: fiffy,fifsy,fifwy
 
   if(iibm.eq.2) call lagpoly(uy)
 
