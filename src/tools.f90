@@ -688,7 +688,7 @@ subroutine tripping(tb,ta) !TRIPPING SUBROUTINE FOR TURBULENT BOUNDARY LAYERS
         call random_number(randx)
         h_coeff(j)=1.0*(randx-0.5)
      enddo
-     h_coeff=h_coeff/sqrt(DBLE(z_modes)) 
+     h_coeff=h_coeff/sqrt(DBLE(z_modes))
   endif
 
   !Initialization h_nxt  (always bounded by xsize(3)^2 operations)
@@ -742,29 +742,160 @@ subroutine tripping(tb,ta) !TRIPPING SUBROUTINE FOR TURBULENT BOUNDARY LAYERS
   !Creation of tripping velocity
   do i=1,xsize(1)
      x_pos=(xstart(1)+(i-1)-1)*dx
-     do j=1,xsize(2) 
-        !y_pos=(xstart(2)+(j-1)-1)*dy   
+     do j=1,xsize(2)
+        !y_pos=(xstart(2)+(j-1)-1)*dy
         y_pos=yp(xstart(2)+(j-1))
         do k=1,xsize(3)
            !g(z)*EXP_F(X,Y)
            ta(i,j,k)=((1.0-b_tr)*h_i(k)+b_tr*h_nxt(k))
            !ta(i,j,k)=A_tr*exp(-((x_pos-x0_tr)/xs_tr)**2-(y_pos/ys_tr)**2)*ta(i,j,k)
-           ta(i,j,k)=A_tr*exp(-((x_pos-x0_tr)/xs_tr)**2-((y_pos-0.5)/ys_tr)**2)*ta(i,j,k)  
+           ta(i,j,k)=A_tr*exp(-((x_pos-x0_tr)/xs_tr)**2-((y_pos-0.5)/ys_tr)**2)*ta(i,j,k)
            tb(i,j,k)=tb(i,j,k)+ta(i,j,k)
 
            z_pos=-zlz/2.0+(xstart(3)+(k-1)-1)*dz
            ! if ((((x_pos-x0_tr)**2).le.9.0e-3).and.(y_pos.le.0.0001).and.((z_pos).le.0.03))then
            !       open(442,file='tripping.dat',form='formatted',position='APPEND')
            !  write(442,*) t,ta(i,j,k)
-           !  close(442)   
+           !  close(442)
            ! end if
 
         enddo
      enddo
   enddo
 
-  return   
+  return
 end subroutine tripping
+!********************************************************************
+!********************************************************************
+!!TRIPPING SUBROUTINE FOR TURBULENT BOUNDARY LAYERS
+
+subroutine tbl_tripping(tb,ta)
+
+USE param
+USE variables
+USE decomp_2d
+USE MPI
+
+implicit none
+
+integer :: i,j,k
+real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: tb, ta
+integer :: seed0, ii, code
+real(mytype) :: x0_tr_tbl, xs_tr_tbl,ys_tr_tbl,ts_tr_tbl !Scales related with maximum wave numbers
+real(mytype) :: z_pos, randx, p_tr,b_tr,A_tr, x_pos, y_pos
+logical :: exist
+
+
+!Done in X-Pencils
+
+seed0=randomseed !Seed for random number
+xs_tr_tbl=4.0/2.853
+ys_tr_tbl=1.0/2.853
+ts_tr_tbl=4.0/2.853
+x0_tr_tbl=10.0/2.853
+
+A_tr =  0.5/(ts_tr_tbl) !0.3/(ts_tr)
+
+if ((itime.eq.ifirst).and.(nrank.eq.0)) then
+call random_seed(SIZE=ii)
+call random_seed(PUT=seed0*(/ (1, i = 1, ii) /))
+
+!First random generation of h_nxt
+  INQUIRE(FILE='restart.nc',exist=exist)
+  !if ((ilit==1).AND.(exist)) then
+  if (exist) then
+    print*, 'h_coeff1 and phase1 already read from restart.nc'
+    print*, 'h_coeff2 and phase2 already read from restart.nc'
+    nxt_itr=int(t/ts_tr_tbl)
+  else
+    nxt_itr=1
+    do j=1,z_modes
+      call random_number(randx)
+      h_coeff1(j)=1.0*(randx-0.5)/sqrt(DBLE(z_modes))
+      call random_number(randx)
+      phase1(j) = 2.0*pi*randx
+      call random_number(randx)
+      h_coeff2(j)=1.0*(randx-0.5)/sqrt(DBLE(z_modes))
+      call random_number(randx)
+      phase2(j) = 2.0*pi*randx
+    enddo
+  endif
+endif
+
+!Initialization h_nxt  (always bounded by xsize(3)^2 operations)
+if (itime.eq.ifirst) then
+  call MPI_BCAST(h_coeff1,z_modes,real_type,0,MPI_COMM_WORLD,code)
+  call MPI_BCAST(phase1,z_modes,real_type,0,MPI_COMM_WORLD,code)
+  call MPI_BCAST(h_coeff2,z_modes,real_type,0,MPI_COMM_WORLD,code)
+  call MPI_BCAST(phase2,z_modes,real_type,0,MPI_COMM_WORLD,code)
+  call MPI_BCAST(nxt_itr,1,mpi_int,0,MPI_COMM_WORLD,code)
+
+  do k=1,xsize(3)
+     h_1(k)=0.0
+     h_2(k)=0.0
+     z_pos=-zlz/2.0+(xstart(3)+(k-1)-1)*dz
+   do j=1,z_modes
+      h_1(k)= h_1(k)+h_coeff1(j)*sin(2.0*pi*j*z_pos/zlz+phase1(j))
+      h_2(k)= h_2(k)+h_coeff2(j)*sin(2.0*pi*j*z_pos/zlz+phase2(j))
+   enddo
+  enddo
+end if
+
+!Time-loop
+i=int(t/ts_tr_tbl)
+if (i.ge.nxt_itr) then  !Nxt_itr is a global variable
+  nxt_itr=i+1
+  !Move h_nxt to h_i
+  h_2(:)=h_1(:)
+!---------------------------------------------------------
+!Create signal again
+  if (nrank .eq. 0) then
+    do j=1,z_modes
+      call random_number(randx)
+      h_coeff1(j)=1.0*(randx-0.5)/sqrt(DBLE(z_modes))
+      call random_number(randx)
+      phase1(j) = 2.0*pi*randx
+    enddo
+  end if
+
+  call MPI_BCAST(h_coeff1,z_modes,real_type,0,MPI_COMM_WORLD,code)
+  call MPI_BCAST(phase1,z_modes,real_type,0,MPI_COMM_WORLD,code)
+
+  !Initialization h_nxt  (always bounded by z_steps^2 operations)
+  do k=1,xsize(3)
+    h_1(k)=0.0
+    z_pos=-zlz/2.0+(xstart(3)+(k-1)-1)*dz
+    do j=1,z_modes
+      h_1(k)= h_1(k)+h_coeff1(j)*sin(2.0*pi*j*z_pos/zlz+phase1(j))
+    enddo
+  enddo
+endif
+!-------------------------------------------------------------------
+
+ !Time coefficient
+  p_tr=t/ts_tr_tbl-i
+  b_tr=3.0*p_tr**2-2.0*p_tr**3
+
+  !Creation of tripping velocity
+  do i=1,xsize(1)
+    x_pos=(xstart(1)+(i-1)-1)*dx
+    do j=1,xsize(2)
+      y_pos=yp(xstart(2)+(j-1))
+      do k=1,xsize(3)
+       ta(i,j,k)=((1.0-b_tr)*h_1(k)+b_tr*h_2(k))
+      ta(i,j,k)=A_tr*exp(-((x_pos-x0_tr_tbl)/xs_tr_tbl)**2-((y_pos-0.05)/ys_tr_tbl)**2)*ta(i,j,k)
+       tb(i,j,k)=tb(i,j,k)+ta(i,j,k)
+
+       z_pos=-zlz/2.0+(xstart(3)+(k-1)-1)*dz
+
+      enddo
+    enddo
+  enddo
+
+  call MPI_BARRIER(MPI_COMM_WORLD,code)
+
+return
+end subroutine tbl_tripping
 !********************************************************************
 function rl(complexnumber)
 
@@ -889,7 +1020,7 @@ ENDSUBROUTINE calc_mweight
 module tools
 
   implicit none
-  
+
   private
 
   public :: test_flow, test_speed_min_max, test_scalar_min_max, &
@@ -1073,7 +1204,7 @@ contains
           print *,''
        endif
     endif
-    
+
   end subroutine simu_stats
 
   subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1,iresflg)
@@ -1153,7 +1284,7 @@ contains
        call decomp_2d_read_var(fh,disp,1,ux1)
        call decomp_2d_read_var(fh,disp,1,uy1)
        call decomp_2d_read_var(fh,disp,1,uz1)
-       call decomp_2d_read_var(fh,disp,1,ep1)     
+       call decomp_2d_read_var(fh,disp,1,ep1)
        do is=1, ntime
           call decomp_2d_read_var(fh,disp,1,dux1(:,:,:,is))
           call decomp_2d_read_var(fh,disp,1,duy1(:,:,:,is))
