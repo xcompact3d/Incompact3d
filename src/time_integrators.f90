@@ -8,7 +8,7 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module time_integrators
-  
+
   implicit none
 
   private
@@ -126,6 +126,9 @@ contains
           print *, "RK4 not implemented!"
           STOP
        endif
+       !>>> Semi-implicit
+     elseif(itimescheme.eq.7) then
+
 
     else
 
