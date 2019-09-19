@@ -1,5 +1,7 @@
 module variables
 
+  !USE param
+  !USE var
   use decomp_2d, only : mytype
 
   ! Boundary conditions : ncl = 2 --> Dirichlet
@@ -75,6 +77,24 @@ module variables
   real(mytype),allocatable,dimension(:) :: sfypt,ssypt,swypt
   real(mytype),allocatable,dimension(:) :: sfzt,sczt,sbzt,sszt,swzt
   real(mytype),allocatable,dimension(:) :: sfzpt,sszpt,swzpt
+
+
+  !module implicit
+  real(mytype), allocatable,dimension(:) :: aam,bbm,ccm,ddm,eem,ggm,hhm,wwm,zzm !!TIME IMPLICIT, ncl=2
+  real(mytype), allocatable,dimension(:) :: rrm,qqm,vvm,ssm !!TIME IMPLICIT (with HPL), ncl=2
+  real(mytype), allocatable,dimension(:) :: aam10,bbm10,ccm10,ddm10,eem10,ggm10,hhm10,wwm10,zzm10 !!TIME IMPLICIT, ncl=1, npaire=0
+  real(mytype), allocatable,dimension(:) :: rrm10,qqm10,vvm10,ssm10 !!TIME IMPLICIT (with HPL), ncl=1, npaire=0
+  real(mytype), allocatable,dimension(:) :: aam11,bbm11,ccm11,ddm11,eem11,ggm11,hhm11,wwm11,zzm11 !!TIME IMPLICIT, ncl=1, npaire=1
+  real(mytype), allocatable,dimension(:) :: rrm11,qqm11,vvm11,ssm11 !!TIME IMPLICIT (with HPL), ncl=1, npaire=1
+  real(mytype), allocatable,dimension(:) :: aam0,bbm0,ccm0,ddm0,eem0,ggm0,hhm0,wwm0,zzm0 !!TIME IMPLICIT, ncl=0
+  real(mytype), allocatable,dimension(:) :: rrm0,qqm0,vvm0,ssm0,l1m,l2m,l3m,u1m,u2m,u3m !!TIME IMPLICIT (with HPL), ncl=0
+  real(mytype), allocatable,dimension(:) :: aamt,bbmt,ccmt,ddmt,eemt,ggmt,hhmt,wwmt,zzmt !!TIME IMPLICIT SCALAR, ncl=2
+  real(mytype), allocatable,dimension(:) :: rrmt,qqmt,vvmt,ssmt !!TIME IMPLICIT SCALAR (with HPL), ncl=2
+  real(mytype), allocatable,dimension(:) :: aamt1,bbmt1,ccmt1,ddmt1,eemt1,ggmt1,hhmt1,wwmt1,zzmt1 !!TIME IMPLICIT SCALAR, ncl=1
+  real(mytype), allocatable,dimension(:) :: rrmt1,qqmt1,vvmt1,ssmt1 !!TIME IMPLICIT SCALAR (with HPL), ncl=1
+  real(mytype), allocatable,dimension(:) :: aamt0,bbmt0,ccmt0,ddmt0,eemt0,ggmt0,hhmt0,wwmt0,zzmt0 !!TIME IMPLICIT SCALAR, ncl=0
+  real(mytype), allocatable,dimension(:) :: rrmt0,qqmt0,vvmt0,ssmt0,l1mt,l2mt,l3mt,u1mt,u2mt,u3mt !!TIME IMPLICIT SCALAR (with HPL), ncl=0
+
 
 
   ABSTRACT INTERFACE
@@ -239,24 +259,9 @@ module param
   !! Numerics control
   integer :: ifirstder,isecondder,ipinter
 
-#ifdef IMPLICIT
   real(mytype) :: xcst, xcst_pr
   real(mytype) :: alpha_0, beta_0, g_0, alpha_n, beta_n, g_n, g_bl_inf, f_bl_inf
 
-  !! Robin boundary condition on temperature
-  !! alpha * T + beta * dT/dn = g
-  !! alpha=1, beta=0 is dirichlet
-  !! alpha=0, beta=1 is neumann
-  !!
-  !! WARNING ATTENTION ACHTUNG WARNING ATTENTION ACHTUNG
-  !!
-  !! beta is the coefficient for NORMAL derivative :
-  !!
-  !! alpha_0*T(0) - beta_0*dTdy(0)=g_0
-  !! alpha_n*T(L) + beta_n*dTdy(L)=g_n
-  !!
-
-#endif
 
   !! Scalars
   real(mytype), allocatable, dimension(:) :: scalar_lbound, scalar_ubound
@@ -413,11 +418,8 @@ module derivX
   real(mytype) :: alsa4x,as4x,bs4x,cs4x
   real(mytype) :: alsattx,asttx,bsttx,csttx
   real(mytype) :: alsaix,asix,bsix,csix,dsix
-
-#ifdef IMPLICIT
-  !implicit
   real(mytype) :: alsaixt,asixt,bsixt,csixt
-#endif
+
 end module derivX
 
 module derivY
@@ -435,11 +437,8 @@ module derivY
   real(mytype) :: alsa4y,as4y,bs4y,cs4y
   real(mytype) :: alsatty,astty,bstty,cstty
   real(mytype) :: alsajy,asjy,bsjy,csjy,dsjy
-
-#ifdef IMPLICIT
-  !implicit
   real(mytype) :: alsajyt,asjyt,bsjyt,csjyt
-#endif
+
 end module derivY
 
 module derivZ
@@ -457,11 +456,8 @@ module derivZ
   real(mytype) :: alsa4z,as4z,bs4z,cs4z
   real(mytype) :: alsattz,asttz,bsttz,csttz
   real(mytype) :: alsakz,askz,bskz,cskz,dskz
-
-#ifdef IMPLICIT
-  !implicit
   real(mytype) :: alsakzt,askzt,bskzt,cskzt
-#endif
+
 
 end module derivZ
 
