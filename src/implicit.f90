@@ -3406,3 +3406,27 @@ call ludecomp7(aamt0,bbmt0,ccmt0,ddmt0,eemt0,qqmt0,ggmt0,hhmt0,ssmt0,rrmt0,&
 !   rrmt1=rrmt11; qqmt1=qqmt11; vvmt1=vvmt11; ssmt1=ssmt11
 
 end subroutine scalar_schemes
+
+subroutine init_implicit
+
+  USE decomp_2d
+  USE param
+  USE variables
+  implicit none
+
+  allocate(aam(ny),bbm(ny),ccm(ny),ddm(ny),eem(ny),ggm(ny),hhm(ny),wwm(ny),zzm(ny))
+  allocate(rrm(ny),qqm(ny),vvm(ny),ssm(ny))
+  allocate(aam10(ny),bbm10(ny),ccm10(ny),ddm10(ny),eem10(ny),ggm10(ny),hhm10(ny),wwm10(ny),zzm10(ny))
+  allocate(rrm10(ny),qqm10(ny),vvm10(ny),ssm10(ny))
+  allocate(aam11(ny),bbm11(ny),ccm11(ny),ddm11(ny),eem11(ny),ggm11(ny),hhm11(ny),wwm11(ny),zzm11(ny))
+  allocate(rrm11(ny),qqm11(ny),vvm11(ny),ssm11(ny))
+  allocate(aam0(ny),bbm0(ny),ccm0(ny),ddm0(ny),eem0(ny),ggm0(ny),hhm0(ny),wwm0(ny),zzm0(ny))
+  allocate(rrm0(ny),qqm0(ny),vvm0(ny),ssm0(ny),l1m(ny),l2m(ny),l3m(ny),u1m(ny),u2m(ny),u3m(ny))
+  allocate(aamt(ny),bbmt(ny),ccmt(ny),ddmt(ny),eemt(ny),ggmt(ny),hhmt(ny),wwmt(ny),zzmt(ny))
+  allocate(rrmt(ny),qqmt(ny),vvmt(ny),ssmt(ny))
+  allocate(aamt1(ny),bbmt1(ny),ccmt1(ny),ddmt1(ny),eemt1(ny),ggmt1(ny),hhmt1(ny),wwmt1(ny),zzmt1(ny))
+  allocate(rrmt1(ny),qqmt1(ny),vvmt1(ny),ssmt1(ny))
+  allocate(aamt0(ny),bbmt0(ny),ccmt0(ny),ddmt0(ny),eemt0(ny),ggmt0(ny),hhmt0(ny),wwmt0(ny),zzmt0(ny))
+  allocate(rrmt0(ny),qqmt0(ny),vvmt0(ny),ssmt0(ny),l1mt(ny),l2mt(ny),l3mt(ny),u1mt(ny),u2mt(ny),u3mt(ny))
+
+end subroutine init_implicit
