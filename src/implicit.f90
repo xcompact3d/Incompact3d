@@ -645,8 +645,7 @@ end module matinv
 
 !********************************************************************
 !
-subroutine  inttimp (ux1,uy1,uz1,gx,gy,gz,hx,hy,hz,ta1,tb1,tc1,px1,py1,pz1,&
-     td1,te1,tf1,ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2)
+subroutine  inttimp (var1,dvar1)
 !
 !********************************************************************
 USE param
@@ -657,81 +656,20 @@ use matinv
 
 implicit none
 
-integer :: ijk,nxyz,i,j,k,code
-!real(mytype) :: xcst,x,z,r,liss ! pour VERIF inversion matrice, modification module param
-real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
-real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: px1,py1,pz1
-real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: gx,gy,gz
-real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: hx,hy,hz
-real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ta1,tb1,tc1
-real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: td1,te1,tf1
-real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux2,uy2,uz2
-real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ta2,tb2,tc2
-real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: td2,te2,tf2,di2
-real(mytype),dimension(ysize(1),ysize(3)) :: bc1,bc2,bc3
+integer :: i,j,k,code
 
-td1=0.;te1=0.;tf1=0.
-ta2=0.;tb2=0.;tc2=0.;td2=0.;te2=0.;tf2=0.
-ux2=0.;uy2=0.;uz2=0.
+real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: var1
+real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dvar1
 
-nxyz=xsize(1)*xsize(2)*xsize(3)
+real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: var2
+real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: di2
+real(mytype),dimension(ysize(1),ysize(3)) :: bc1
 
-if ((itimescheme.eq.2).or.(itimescheme.eq.3)) then
-   if (nrank.eq.0) print *,'RK scheme not ready, abort computation'
-   call decomp_2d_finalize
-   CALL MPI_FINALIZE(code)
-   call exit(0)
-endif
-
-!!!!!!!!!!!!!
-!! CN2+AB2 !!
-!!!!!!!!!!!!!
-if (itimescheme.eq.1) then
-   if ((itime.eq.1).and.(irestart.eq.0)) then
-
-      !START WITH EXPLICIT EULER + IMPLICIT CN SCHEMES
-      do k=1,xsize(3)
-         do j=1,xsize(2)
-            do i=1,xsize(1)
-               !uhat
-               td1(i,j,k)= gdt(itr)*ta1(i,j,k)
-               te1(i,j,k)= gdt(itr)*tb1(i,j,k)
-               tf1(i,j,k)= gdt(itr)*tc1(i,j,k)
-
-               !save (N+Lxz)(n-1)
-               gx(i,j,k)=ta1(i,j,k)
-               gy(i,j,k)=tb1(i,j,k)
-               gz(i,j,k)=tc1(i,j,k)
-
-            enddo
-         enddo
-      enddo
-
-   else !CONTINUE WITH EXPLICIT AB2 + IMPLICIT CN SCHEMES
-
-      do k=1,xsize(3)
-         do j=1,xsize(2)
-            do i=1,xsize(1)
-               !uhat
-               td1(i,j,k)= adt(itr)*ta1(i,j,k)+bdt(itr)*gx(i,j,k)-px1(i,j,k)
-               te1(i,j,k)= adt(itr)*tb1(i,j,k)+bdt(itr)*gy(i,j,k)-py1(i,j,k)
-               tf1(i,j,k)= adt(itr)*tc1(i,j,k)+bdt(itr)*gz(i,j,k)-pz1(i,j,k)
-
-               !save (N+Lxz)(n-1)
-               gx(i,j,k)=ta1(i,j,k)
-               gy(i,j,k)=tb1(i,j,k)
-               gz(i,j,k)=tc1(i,j,k)
-            enddo
-         enddo
-      enddo
-
-   endif
-endif
 
 !!!!!!!!!!!!!!!
 !!! CN2+AB3 !!!
 !!!!!!!!!!!!!!!
-if (itimescheme==4) then
+if (itimescheme==7) then
    if ((itime.eq.1).and.(irestart.eq.0)) then
 
       if (nrank==0) print *,'start AB3 with Euler',itime
@@ -741,15 +679,10 @@ if (itimescheme==4) then
          do j=1,xsize(2)
             do i=1,xsize(1)
                !uhat
-               td1(i,j,k)= dt*ta1(i,j,k)
-               te1(i,j,k)= dt*tb1(i,j,k)
-               tf1(i,j,k)= dt*tc1(i,j,k)
+               dvar1(i,j,k,5)= dt*dvar1(i,j,k,1)
 
                !save (N+Lxz)(n-1)
-               gx(i,j,k)=ta1(i,j,k)
-               gy(i,j,k)=tb1(i,j,k)
-               gz(i,j,k)=tc1(i,j,k)
-
+               dvar1(i,j,k,2)=dvar1(i,j,k,1)
             enddo
          enddo
       enddo
@@ -762,17 +695,13 @@ if (itimescheme==4) then
          do j=1,xsize(2)
             do i=1,xsize(1)
                !uhat
-               td1(i,j,k)= 1.5*dt*ta1(i,j,k)-0.5*dt*gx(i,j,k)-px1(i,j,k)
-               te1(i,j,k)= 1.5*dt*tb1(i,j,k)-0.5*dt*gy(i,j,k)-py1(i,j,k)
-               tf1(i,j,k)= 1.5*dt*tc1(i,j,k)-0.5*dt*gz(i,j,k)-pz1(i,j,k)
+               dvar1(i,j,k,5)= 1.5*dt*dvar1(i,j,k,1)-0.5*dt*dvar1(i,j,k,2)-dvar1(i,j,k,4)
 
                !save (N+Lxz)(n-1)&(n-2)
-               hx(i,j,k)=gx(i,j,k)
-               hy(i,j,k)=gy(i,j,k)
-               hz(i,j,k)=gz(i,j,k)
-               gx(i,j,k)=ta1(i,j,k)
-               gy(i,j,k)=tb1(i,j,k)
-               gz(i,j,k)=tc1(i,j,k)
+               dvar1(i,j,k,3)=dvar1(i,j,k,2)
+
+               dvar1(i,j,k,2)=dvar1(i,j,k,1)
+
             enddo
          enddo
       enddo
@@ -783,20 +712,14 @@ if (itimescheme==4) then
          do j=1,xsize(2)
             do i=1,xsize(1)
                !uhat
-               td1(i,j,k)= adt(itr)*ta1(i,j,k)+bdt(itr)*gx(i,j,k) &
-                    +cdt(itr)*hx(i,j,k)-px1(i,j,k)
-               te1(i,j,k)= adt(itr)*tb1(i,j,k)+bdt(itr)*gy(i,j,k) &
-                    +cdt(itr)*hy(i,j,k)-py1(i,j,k)
-               tf1(i,j,k)= adt(itr)*tc1(i,j,k)+bdt(itr)*gz(i,j,k) &
-                    +cdt(itr)*hz(i,j,k)-pz1(i,j,k)
+               dvar1(i,j,k,5)= adt(itr)*dvar1(i,j,k,1)+bdt(itr)*dvar1(i,j,k,2) &
+                    +cdt(itr)*dvar1(i,j,k,3)-dvar1(i,j,k,4)
 
                !save (N+Lxz)(n-1)
-               hx(i,j,k)=gx(i,j,k)
-               hy(i,j,k)=gy(i,j,k)
-               hz(i,j,k)=gz(i,j,k)
-               gx(i,j,k)=ta1(i,j,k)
-               gy(i,j,k)=tb1(i,j,k)
-               gz(i,j,k)=tc1(i,j,k)
+               dvar1(i,j,k,3)=dvar1(i,j,k,2)
+
+               dvar1(i,j,k,2)=dvar1(i,j,k,1)
+
             enddo
          enddo
       enddo
@@ -805,111 +728,48 @@ if (itimescheme==4) then
 endif
 
 !Y-PENCIL FOR MATRIX INVERSION
-call transpose_x_to_y(ux1,ux2)
-call transpose_x_to_y(uy1,uy2)
-call transpose_x_to_y(uz1,uz2)
-call transpose_x_to_y(td1,ta2)
-call transpose_x_to_y(te1,tb2)
-call transpose_x_to_y(tf1,tc2)
+call transpose_x_to_y(var1,var2)
 
-bc1(:,:)=ux2(:,ny-1,:)
-bc2(:,:)=uy2(:,ny-1,:)
-bc3(:,:)=uz2(:,ny-1,:)
+call transpose_x_to_y(dvar1(:,:,:,5),dvar1(:,:,:,6))
 
+
+bc1(:,:)=var2(:,ny-1,:)
 
 !ta2: A.uhat
 !td2:(A+xcstB).un
 if (ncly1.eq.0) then
-   call multmatrix7(td2,ta2,ux2)
-   call multmatrix7(te2,tb2,uy2)
-   call multmatrix7(tf2,tc2,uz2)
+   call multmatrix7(dvar1(:,:,:,7),dvar1(:,:,:,6),var2)
+
 elseif (ncly1.eq.1) then
 elseif (ncly1.eq.2) then
-   call multmatrix7(td2,ta2,ux2)
-   call multmatrix7(te2,tb2,uy2)
-   call multmatrix7(tf2,tc2,uz2)
+   call multmatrix7(dvar1(:,:,:,7),dvar1(:,:,:,6),var2)
 endif
 
 !SECOND MEMBRE COMPLET BBB=A uhat+(A+xcst.B)u^n
 !in  ta2,tb2,tc2
-ta2(:,:,:)=td2(:,:,:)+ta2(:,:,:)
-tb2(:,:,:)=te2(:,:,:)+tb2(:,:,:)
-tc2(:,:,:)=tf2(:,:,:)+tc2(:,:,:)
+dvar1(:,:,:,6)=dvar1(:,:,:,7)+dvar1(:,:,:,6)
+
 !
 ! CONDITIONS AUX LIMITES
-ta2(:,ny,:)=bc1(:,:)
-tb2(:,ny,:)=bc2(:,:)
-tc2(:,ny,:)=bc3(:,:)
+dvar1(:,ny,:,6)=bc1(:,:)
+
 
 !Inversion systeme lineaire Mx=b: (A-xcst.B)u^n+1=uhat+(A+xcst.B)u^n
-ux2=0.; uy2=0.; uz2=0.;
+var2=0.;
 if (ncly1.eq.0) then
-   call septinv(ux2,ta2,ggm0,hhm0,ssm0,rrm0,vvm0,wwm0,zzm0,l1m,l2m,l3m,u1m,u2m,u3m,ysize(1),ysize(2),ysize(3))
-   call septinv(uy2,tb2,ggm0,hhm0,ssm0,rrm0,vvm0,wwm0,zzm0,l1m,l2m,l3m,u1m,u2m,u3m,ysize(1),ysize(2),ysize(3))
-   call septinv(uz2,tc2,ggm0,hhm0,ssm0,rrm0,vvm0,wwm0,zzm0,l1m,l2m,l3m,u1m,u2m,u3m,ysize(1),ysize(2),ysize(3))
+   call septinv(var2,dvar1(:,:,:,6),ggm0,hhm0,ssm0,rrm0,vvm0,wwm0,zzm0,l1m,l2m,l3m,u1m,u2m,u3m,ysize(1),ysize(2),ysize(3))
 elseif (ncly1.eq.1) then
-   call septinv(ux2,ta2,ggm11,hhm11,ssm11,rrm11,vvm11,wwm11,zzm11,ysize(1),ysize(2),ysize(3))
-   call septinv(uy2,tb2,ggm10,hhm10,ssm10,rrm10,vvm10,wwm10,zzm10,ysize(1),ysize(2),ysize(3))
-   call septinv(uz2,tc2,ggm11,hhm11,ssm11,rrm11,vvm11,wwm11,zzm11,ysize(1),ysize(2),ysize(3))
+   call septinv(var2,dvar1(:,:,:,6),ggm11,hhm11,ssm11,rrm11,vvm11,wwm11,zzm11,ysize(1),ysize(2),ysize(3))
 elseif (ncly1.eq.2) then
-   call septinv(ux2,ta2,ggm,hhm,ssm,rrm,vvm,wwm,zzm,ysize(1),ysize(2),ysize(3))
-   call septinv(uy2,tb2,ggm,hhm,ssm,rrm,vvm,wwm,zzm,ysize(1),ysize(2),ysize(3))
-   call septinv(uz2,tc2,ggm,hhm,ssm,rrm,vvm,wwm,zzm,ysize(1),ysize(2),ysize(3))
+   call septinv(var2,dvar1(:,:,:,6),ggm,hhm,ssm,rrm,vvm,wwm,zzm,ysize(1),ysize(2),ysize(3))
 endif
 
-call transpose_y_to_x(ux2,ux1)
-call transpose_y_to_x(uy2,uy1)
-call transpose_y_to_x(uz2,uz1)
+call transpose_y_to_x(var2,var1)
 
-#ifdef DEBUG
-if (.false.) then
-   !VERIFICATION INVERSION CORRECTE, CAS NCLY=1
-   !Mx-b=0 ?
-   ! ux
-   if (nrank.eq.0) print *,'Check matrix inversion for ux - NCLY=1'
-   call deryy(td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
-   td2(:,1,:)=ux2(:,1,:)+alsajy*(2.*ux2(:,2,:)) - xcst*td2(:,1,:)*pp2y(1)
-   do j=2,ysize(2)-1
-      td2(:,j,:)=alsajy*ux2(:,j-1,:) + ux2(:,j,:) + alsajy*ux2(:,j+1,:) - xcst*td2(:,j,:)*pp2y(j)
-   enddo
-   td2(:,ysize(2),:)=ux2(:,ysize(2),:)+alsajy*(2.*ux2(:,ysize(2)-1,:)) - xcst*td2(:,ysize(2),:)*pp2y(ysize(2))
-   td2=td2-ta2
-   call transpose_y_to_x(td2,td1)
-   call  test_scalar_min_max(td1)
-   ! uy
-   if (nrank.eq.0) print *,'Check matrix inversion for uy - NCLY=1'
-   call deryy(td2,uy2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0)
-   td2(:,1,:)=uy2(:,1,:)+0.*alsajy*(uy2(:,2,:)+uy2(:,ysize(2),:)) - xcst*td2(:,j,:)*pp2y(1)
-   do j=2,ysize(2)-1
-      td2(:,j,:)=alsajy*uy2(:,j-1,:) + uy2(:,j,:) + alsajy*uy2(:,j+1,:) - xcst*td2(:,j,:)*pp2y(j)
-   enddo
-   td2(:,ysize(2),:)=uy2(:,ysize(2),:)+0.*alsajy*(uy2(:,ysize(2)-1,:)+uy2(:,1,:)) - xcst*td2(:,ysize(2),:)*pp2y(ysize(2))
-   td2=td2-tb2
-   call transpose_y_to_x(td2,td1)
-   call  test_scalar_min_max(td1)
-   ! uz
-   if (nrank.eq.0) print *,'Check matrix inversion for uz - NCLY=1'
-   call deryy(td2,uz2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
-   td2(:,1,:)=uz2(:,1,:)+alsajy*(2.*uz2(:,2,:)) - xcst*td2(:,1,:)*pp2y(1)
-   do j=2,ysize(2)-1
-      td2(:,j,:)=alsajy*uz2(:,j-1,:) + uz2(:,j,:) + alsajy*uz2(:,j+1,:) - xcst*td2(:,j,:)*pp2y(j)
-   enddo
-   td2(:,ysize(2),:)=uz2(:,ysize(2),:)+alsajy*(2.*uz2(:,ysize(2)-1,:)) - xcst*td2(:,ysize(2),:)*pp2y(ysize(2))
-   td2=td2-tc2
-   call transpose_y_to_x(td2,td1)
-   call  test_scalar_min_max(td1)
+if ( (irestart.eq.1).or.(itime.gt.1) ) then
+  var1(:,:,:)=var1(:,:,:)+dvar1(:,:,:,4)
 endif
-#endif
 
-! IF ab2 OR ab3
-if ((itimescheme.eq.1).or.(itimescheme.eq.4)) then
-   ! IF NOT (first time step with no restart)
-   if ( (irestart.eq.1).or.(itime.gt.1) ) then
-      ux1(:,:,:)=ux1(:,:,:)+px1(:,:,:)
-      uy1(:,:,:)=uy1(:,:,:)+py1(:,:,:)
-      uz1(:,:,:)=uz1(:,:,:)+pz1(:,:,:)
-   endif
-endif
 
 return
 end subroutine inttimp
@@ -1539,12 +1399,6 @@ nvect1=xsize(1)*xsize(2)*xsize(3)
 nvect2=ysize(1)*ysize(2)*ysize(3)
 nvect3=zsize(1)*zsize(2)*zsize(3)
 
-if ((itimescheme.eq.2).or.(itimescheme.eq.3)) then
-   if (nrank.eq.0) print *,'RK scheme not ready, abort computation'
-   call decomp_2d_finalize
-   CALL MPI_FINALIZE(code)
-   call exit(0)
-endif
 
 !X PENCILS
 tg1=ux1*phi1
@@ -1636,41 +1490,10 @@ tg1=tg1+ux1*xnu/schmidt
 ! TIME ADVANCEMENT EXPLICIT AB + IMPLICIT CN2 (d2/dy2)
 nxyz=xsize(1)*xsize(2)*xsize(3)
 
-!!!!!!!!!!!!!
-!! CN2+AB2 !!
-!!!!!!!!!!!!!
-if (itimescheme.eq.1) then
-   if (itime.eq.1.and.irestart.eq.0) then !start with EXPLICIT EULER + CN2
-
-      do k=1,xsize(3)
-         do j=1,xsize(2)
-            do i=1,xsize(1)
-               td1(i,j,k)= gdt(itr)*tg1(i,j,k)
-               phis1(i,j,k)= tg1(i,j,k)
-            enddo
-         enddo
-      enddo
-
-   else !CONTINUE WITH EXPLICIT AB2 + IMPLICIT CN SCHEMES
-
-      do k=1,xsize(3)
-         do j=1,xsize(2)
-            do i=1,xsize(1)
-               td1(i,j,k)= adt(itr)*tg1(i,j,k)+bdt(itr)*phis1(i,j,k)
-               phis1(i,j,k)= tg1(i,j,k)
-            enddo
-         enddo
-      enddo
-
-   endif
-
-endif
-
-
 !!!!!!!!!!!!!!!!!!!!
 !CN2+AB3         !!!
 !!!!!!!!!!!!!!!!!!!!
-if (itimescheme==4) then
+if (itimescheme==7) then
    if ((itime.eq.1).and.(irestart.eq.0)) then
       if (nrank==0) print *,'Temperature start with Euler',itime
       !START WITH EXPLICIT EULER + IMPLICIT CN SCHEMES

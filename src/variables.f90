@@ -58,7 +58,7 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:) :: uxm2, uym2, phim2, prem2, dissm2
 
   !arrays for statistic collection
-  real(mytype), save, allocatable, dimension(:,:,:) :: umean,vmean,wmean,pmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean  
+  real(mytype), save, allocatable, dimension(:,:,:) :: umean,vmean,wmean,pmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
   real(mytype), save, allocatable, dimension(:,:,:,:) :: phimean,phiphimean,uphimean,vphimean,wphimean
   real(mytype), save, allocatable, dimension(:,:,:) :: tik1,tik2,tak1,tak2
   real(mytype), save, allocatable, dimension(:,:,:) :: u1sum_tik,u1sum_tak
@@ -87,14 +87,14 @@ module var
 
   ! working arrays for LES
   real(mytype), save, allocatable, dimension(:,:,:) :: sgsx1,sgsy1,sgsz1,nut1,sxx1,syy1,szz1,sxy1,sxz1,syz1
-  real(mytype), save, allocatable, dimension(:,:,:) :: sgsx2,sgsy2,sgsz2,nut2,sxx2,syy2,szz2,sxy2,sxz2,syz2 
+  real(mytype), save, allocatable, dimension(:,:,:) :: sgsx2,sgsy2,sgsz2,nut2,sxx2,syy2,szz2,sxy2,sxz2,syz2
   real(mytype), save, allocatable, dimension(:,:,:) :: sgsx3,sgsy3,sgsz3,nut3,sxx3,syy3,szz3,sxy3,sxz3,syz3
   real(mytype), save, allocatable, dimension(:,:,:) :: gxx1,gyx1,gzx1,gxy1,gyy1,gzy1,gxz1,gyz1,gzz1
   real(mytype), save, allocatable, dimension(:,:,:) :: gxy2,gyy2,gzy2,gxz2,gyz2,gzz2
   real(mytype), save, allocatable, dimension(:,:,:) :: gxz3,gyz3,gzz3
   real(mytype), save, allocatable, dimension(:,:,:,:) :: sgsphi1,sgsphi2,sgsphi3
 
-  real(mytype), save, allocatable, dimension(:,:,:) :: srt_smag, srt_smag2, srt_wale, srt_wale2 
+  real(mytype), save, allocatable, dimension(:,:,:) :: srt_smag, srt_smag2, srt_wale, srt_wale2
 
 contains
 
@@ -126,7 +126,7 @@ contains
     call decomp_info_init(nxmsize, nymsize, nzmsize, ph)
     !xsize(i), ysize(i), zsize(i), i=1,2,3 - sizes of the sub-domains held by the current process. The first letter refers to the pencil orientation and the three 1D array elements contain the sub-domain sizes in X, Y and Z directions, respectively. In a 2D pencil decomposition, there is always one dimension which completely resides in local memory. So by definition xsize(1)==nx_global, ysize(2)==ny_global and zsize(3)==nz_global.
 
-    !xstart(i), ystart(i), zstart(i), xend(i), yend(i), zend(i), i=1,2,3 - the starting and ending indices for each sub-domain, as in the global coordinate system. Obviously, it can be seen that xsize(i)=xend(i)-xstart(i)+1. It may be convenient for certain applications to use global coordinate (for example when extracting a 2D plane from a 3D domain, it is easier to know which process owns the plane if global index is used). 
+    !xstart(i), ystart(i), zstart(i), xend(i), yend(i), zend(i), i=1,2,3 - the starting and ending indices for each sub-domain, as in the global coordinate system. Obviously, it can be seen that xsize(i)=xend(i)-xstart(i)+1. It may be convenient for certain applications to use global coordinate (for example when extracting a 2D plane from a 3D domain, it is easier to know which process owns the plane if global index is used).
 
 
     !X PENCILS
@@ -273,13 +273,13 @@ contains
        call alloc_z(sxx3) ;call alloc_z(syy3);  call alloc_z(szz3)
        call alloc_z(sxy3) ;call alloc_z(sxz3);  call alloc_z(syz3)
        call alloc_z(nut3)
-       call alloc_x(gxx1); call alloc_x(gyx1); call alloc_x(gzx1); call alloc_x(gxy1) 
+       call alloc_x(gxx1); call alloc_x(gyx1); call alloc_x(gzx1); call alloc_x(gxy1)
        call alloc_x(gyy1); call alloc_x(gzy1); call alloc_x(gxz1); call alloc_x(gyz1); call alloc_x(gzz1)
        call alloc_y(gxy2); call alloc_y(gyy2); call alloc_y(gzy2); call alloc_y(gxz2); call alloc_y(gyz2); call alloc_y(gzz2)
        call alloc_z(gxz3); call alloc_z(gyz3); call alloc_z(gzz3)
        allocate(sgsphi1(xsize(1),xsize(2),xsize(3),1:numscalar))
        allocate(sgsphi2(ysize(1),ysize(2),ysize(3),1:numscalar))
-       allocate(sgsphi3(zsize(1),zsize(2),zsize(3),1:numscalar)) 
+       allocate(sgsphi3(zsize(1),zsize(2),zsize(3),1:numscalar))
    endif
 
 
@@ -380,7 +380,7 @@ contains
 
     adt(:)=zero ; bdt(:)=zero ; cdt(:)=zero ; gdt(:)=zero
     if (itimescheme.eq.1) then ! Euler
-       iadvance_time=1 
+       iadvance_time=1
        adt(1)=1.0_mytype*dt
        bdt(1)=0.0_mytype*dt
        gdt(1)=adt(1)+bdt(1)
@@ -389,7 +389,7 @@ contains
        ntime = 1
        nrhotime = 2
     elseif (itimescheme.eq.2) then ! AB2
-       iadvance_time=1 
+       iadvance_time=1
        adt(1)=1.5_mytype*dt
        bdt(1)=-0.5_mytype*dt
        gdt(1)=adt(1)+bdt(1)
@@ -408,7 +408,7 @@ contains
        ntime = 3
        nrhotime = 4
     elseif(itimescheme==4) then  ! AB4
-       iadvance_time=1 
+       iadvance_time=1
        adt(1)=(55.0_mytype/24.0_mytype)*dt
        bdt(1)=-(59.0_mytype/24.0_mytype)*dt
        cdt(1)=(37.0_mytype/24.0_mytype)*dt
@@ -433,7 +433,7 @@ contains
        ntime = 2
        nrhotime = 3
     elseif(itimescheme.eq.6) then !RK4 Carpenter and Kennedy
-       iadvance_time=5 
+       iadvance_time=5
        adt(1)=0.0_mytype
        adt(2)=-0.4178904745_mytype
        adt(3)=-1.192151694643_mytype
@@ -452,6 +452,17 @@ contains
 
        ntime = 2
        nrhotime = 5 ! (A guess)
+
+     elseif(itimescheme.eq.7) then !Semi-implicit
+       iadvance_time=1
+       adt(1)= (23./12.)*dt
+       bdt(1)=-(16./12.)*dt
+       cdt(1)= ( 5./12.)*dt
+       gdt(1)=adt(1)+bdt(1)+cdt(1)
+       gdt(3)=gdt(1)
+
+        ntime = 7
+        nrhotime = 7
     endif
     allocate(dux1(xsize(1),xsize(2),xsize(3),ntime))
     allocate(duy1(xsize(1),xsize(2),xsize(3),ntime))
@@ -478,7 +489,7 @@ contains
 
 #ifdef DEBG
     if (nrank .eq. 0) print *,'# init_variables done'
-#endif 
+#endif
     return
   end subroutine init_variables
 end module var

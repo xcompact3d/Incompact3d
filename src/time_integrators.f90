@@ -127,8 +127,9 @@ contains
           STOP
        endif
        !>>> Semi-implicit
-     elseif(itimescheme.eq.7) then
-
+    elseif(itimescheme.eq.7) then
+      
+        call inttimp(var1,dvar1)
 
     else
 

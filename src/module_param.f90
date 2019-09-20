@@ -240,7 +240,8 @@ module param
        itype_cyl = 5, &
        itype_dbg = 6, &
        itype_mixlayer = 7, &
-       itype_jet = 8
+       itype_jet = 8, &
+       itype_tbl = 9
 
   integer :: cont_phi,itr,itime,itest,iprocessing
   integer :: ifft,istret,iforc_entree,iturb
