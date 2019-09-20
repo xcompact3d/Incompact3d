@@ -21,12 +21,12 @@
 !    We kindly request that you cite Xcompact3d/Incompact3d in your
 !    publications and presentations. The following citations are suggested:
 !
-!    1-Laizet S. & Lamballais E., 2009, High-order compact schemes for 
-!    incompressible flows: a simple and efficient method with the quasi-spectral 
+!    1-Laizet S. & Lamballais E., 2009, High-order compact schemes for
+!    incompressible flows: a simple and efficient method with the quasi-spectral
 !    accuracy, J. Comp. Phys.,  vol 228 (15), pp 5989-6015
 !
-!    2-Laizet S. & Li N., 2011, Incompact3d: a powerful tool to tackle turbulence 
-!    problems with up to 0(10^5) computational cores, Int. J. of Numerical 
+!    2-Laizet S. & Li N., 2011, Incompact3d: a powerful tool to tackle turbulence
+!    problems with up to 0(10^5) computational cores, Int. J. of Numerical
 !    Methods in Fluids, vol 67 (11), pp 1735-1757
 !################################################################################
 
@@ -215,8 +215,10 @@ subroutine schemes()
        cfi6z,cci6z,cbi6z,cfip6z,csip6z,cwip6z,csi6z,&
        cwi6z,cifi6z,cici6z,cibi6z,cifip6z,&
        cisip6z,ciwip6z,cisi6z,ciwi6z)
+       
+call implicit_schemes()
 
-#ifdef DEBG 
+#ifdef DEBG
   if (nrank .eq. 0) print *,'# schemes end'
 #endif
 
@@ -226,7 +228,7 @@ end subroutine schemes
 !*******************************************************************
 !
 subroutine prepare (b,c,f,s,w,n)
-  ! 
+  !
   !*******************************************************************
 
   use decomp_2d, only : mytype
@@ -256,7 +258,7 @@ end subroutine prepare
 subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
      cfn,dfn,alfam,afm,alfai,afi,bfi,&
      ff,fs,fw,ffp,fsp,fwp,d,n,ncl1,ncln)
-  ! 
+  !
   !*******************************************************************
 
   use decomp_2d, only : mytype, nrank
@@ -286,7 +288,7 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
   elseif(ifirstder==3) then ! Fourth-order compact
      alfai= one/four
      afi  = (three/four)/d
-     bfi  = zero 
+     bfi  = zero
   elseif(ifirstder==4) then ! Sixth-order compact
      alfai= one/three
      afi  = (seven/nine)/d
@@ -343,14 +345,14 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
      ff(2)   =alfai
      fc(1)   =one
      fc(2)   =one
-     fb(1)   =alfai 
+     fb(1)   =alfai
      fb(2)   =alfai
   elseif (ncl1.eq.2) then !Dirichlet
      ff(1)   =alfa1
      ff(2)   =alfa2
      fc(1)   =one
      fc(2)   =one
-     fb(1)   =alfa2 
+     fb(1)   =alfa2
      fb(2)   =alfai
   endif
   if     (ncln.eq.0) then !Periodic
@@ -420,7 +422,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
 
   use decomp_2d, only : mytype, nrank
   use param
-  use variables, only : nu0nu,fpi2,cnu 
+  use variables, only : nu0nu,fpi2,cnu
 
   implicit none
 
@@ -455,7 +457,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
      alsatt = alsai
      astt = asi
      bstt = bsi
-     cstt = csi 
+     cstt = csi
   elseif(isecondder==2) then ! Fourth-order central
      alsai=zero !(45._mytype*fpi2*pi*pi-272._mytype)/(two*(45._mytype*fpi2*pi*pi-208._mytype))
      asi  = four/three/d2 !((six-nine*alsai)/four)/d2
@@ -471,7 +473,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
      alsatt = alsai
      astt = asi
      bstt = bsi
-     cstt = csi 
+     cstt = csi
   elseif(isecondder==3) then ! Fourth-order compact
      alsai= one/ten  !(45._mytype*fpi2*pi*pi-272._mytype)/(two*(45._mytype*fpi2*pi*pi-208._mytype))
      asi  = six/five/d2 !((six-nine*alsai)/four)/d2
@@ -487,7 +489,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
      alsatt = alsai
      astt = asi
      bstt = bsi
-     cstt = csi  
+     cstt = csi
   elseif(isecondder==4) then ! Sixth-order compact
      !BASE LELE
      !alsai= 2./11.
@@ -510,9 +512,9 @@ subroutine second_derivative(alsa1,as1,bs1,&
      alsatt = alsai
      astt = asi
      bstt = bsi
-     cstt = csi 
+     cstt = csi
   elseif(isecondder==5) then ! Sixth-order Hyperviscous operator
-     if(nrank==0) print *, 'Using the hyperviscous operator with (nu_0/nu,c_nu) = ', '(', nu0nu,',', cnu,')' 
+     if(nrank==0) print *, 'Using the hyperviscous operator with (nu_0/nu,c_nu) = ', '(', nu0nu,',', cnu,')'
      dpis3=two*pi/three
      kppkc=pi*pi*(one+nu0nu)
      kppkm=dpis3*dpis3*(one+cnu*nu0nu) !exp(-((pi-dpis3)/(zpthree*pi-dpis3))**two)/xxnu+dpis3*dpis3
@@ -614,7 +616,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
      sc(2)   =one
      sc(3)   =one
      sc(4)   =one
-     sb(1)   =alsa2 
+     sb(1)   =alsa2
      sb(2)   =alsa3
      sb(3)   =alsa4
      sb(4)   =alsai
@@ -704,7 +706,7 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      cfi6,cci6,cbi6,cfip6,csip6,cwip6,csi6,&
      cwi6,cifi6,cici6,cibi6,cifip6,&
      cisip6,ciwip6,cisi6,ciwi6)
-  ! 
+  !
   !*******************************************************************
 
   use decomp_2d, only : mytype
@@ -731,55 +733,55 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      acix6   = one / dx
      bcix6   = zero
   else
-     alcaix6=nine/62._mytype 
+     alcaix6=nine/62._mytype
      acix6=(63._mytype/62._mytype)/dx
      bcix6=(17._mytype/62._mytype)/three/dx
   endif
 
-  cfx6(1)=alcaix6 
-  cfx6(2)=alcaix6 
-  cfx6(nxm-2)=alcaix6 
-  cfx6(nxm-1)=alcaix6 
+  cfx6(1)=alcaix6
+  cfx6(2)=alcaix6
+  cfx6(nxm-2)=alcaix6
+  cfx6(nxm-1)=alcaix6
   cfx6(nxm)=zero
   if (nclx1==0) ccx6(1)=two
-  if (nclx1==1) ccx6(1)=one + alcaix6 
-  if (nclx1==2) ccx6(1)=one + alcaix6 
-  ccx6(2)=one 
-  ccx6(nxm-2)=one 
-  ccx6(nxm-1)=one 
-  if (nclxn==0) ccx6(nxm)=one + alcaix6*alcaix6  
-  if (nclxn==1) ccx6(nxm)=one + alcaix6 
+  if (nclx1==1) ccx6(1)=one + alcaix6
+  if (nclx1==2) ccx6(1)=one + alcaix6
+  ccx6(2)=one
+  ccx6(nxm-2)=one
+  ccx6(nxm-1)=one
+  if (nclxn==0) ccx6(nxm)=one + alcaix6*alcaix6
+  if (nclxn==1) ccx6(nxm)=one + alcaix6
   if (nclxn==2) ccx6(nxm)=one + alcaix6
-  cbx6(1)=alcaix6 
-  cbx6(2)=alcaix6 
-  cbx6(nxm-2)=alcaix6 
-  cbx6(nxm-1)=alcaix6 
-  cbx6(nxm)=0. 
-  do i=3,nxm-3 
-     cfx6(i)=alcaix6 
+  cbx6(1)=alcaix6
+  cbx6(2)=alcaix6
+  cbx6(nxm-2)=alcaix6
+  cbx6(nxm-1)=alcaix6
+  cbx6(nxm)=0.
+  do i=3,nxm-3
+     cfx6(i)=alcaix6
      ccx6(i)=one
-     cbx6(i)=alcaix6 
+     cbx6(i)=alcaix6
   enddo
 
-  cfi6(1)=alcaix6 + alcaix6 
-  cfi6(2)=alcaix6 
-  cfi6(nx-2)=alcaix6 
-  cfi6(nx-1)=alcaix6 
+  cfi6(1)=alcaix6 + alcaix6
+  cfi6(2)=alcaix6
+  cfi6(nx-2)=alcaix6
+  cfi6(nx-1)=alcaix6
   cfi6(nx)=zero
-  cci6(1)=one 
+  cci6(1)=one
   cci6(2)=one
   cci6(nx-2)=one
   cci6(nx-1)=one
   cci6(nx)=one
-  cbi6(1)=alcaix6 
-  cbi6(2)=alcaix6 
-  cbi6(nx-2)=alcaix6 
-  cbi6(nx-1)=alcaix6 + alcaix6 
+  cbi6(1)=alcaix6
+  cbi6(2)=alcaix6
+  cbi6(nx-2)=alcaix6
+  cbi6(nx-1)=alcaix6 + alcaix6
   cbi6(nx)=zero
-  do i=3,nx-3 
-     cfi6(i)=alcaix6 
+  do i=3,nx-3
+     cfi6(i)=alcaix6
      cci6(i)=one
-     cbi6(i)=alcaix6 
+     cbi6(i)=alcaix6
   enddo
 
   if (ifirstder == 1) then
@@ -796,70 +798,70 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      dicix6=zero
   else if (ipinter.eq.2) then
      ailcaix6=0.461658
-     
+
      dicix6=0.00293016
      aicix6=one/64._mytype *(75._mytype +70._mytype *ailcaix6-320._mytype *dicix6)
      bicix6=one/128._mytype *(126._mytype *ailcaix6-25._mytype +1152._mytype *dicix6)
      cicix6=one/128._mytype *(-ten*ailcaix6+three-640._mytype *dicix6)
-     
+
      aicix6=aicix6/two
      bicix6=bicix6/two
      cicix6=cicix6/two
      dicix6=dicix6/two
-  else if (ipinter.eq.3) then   
-     ailcaix6=0.49_mytype 
+  else if (ipinter.eq.3) then
+     ailcaix6=0.49_mytype
      aicix6=one/128._mytype *(75._mytype +70._mytype*ailcaix6)
      bicix6=one/256._mytype *(126._mytype*ailcaix6-25._mytype)
      cicix6=one/256._mytype *(-ten*ailcaix6+three)
      dicix6=zero
   endif
 
-  cifx6(1)=ailcaix6 
-  cifx6(2)=ailcaix6 
-  cifx6(nxm-2)=ailcaix6 
-  cifx6(nxm-1)=ailcaix6 
+  cifx6(1)=ailcaix6
+  cifx6(2)=ailcaix6
+  cifx6(nxm-2)=ailcaix6
+  cifx6(nxm-1)=ailcaix6
   cifx6(nxm)=zero
-  if (nclx1==0) cicx6(1)=two 
-  if (nclx1==1) cicx6(1)=one + ailcaix6 
-  if (nclx1==2) cicx6(1)=one + ailcaix6 
+  if (nclx1==0) cicx6(1)=two
+  if (nclx1==1) cicx6(1)=one + ailcaix6
+  if (nclx1==2) cicx6(1)=one + ailcaix6
   cicx6(2)=one
   cicx6(nxm-2)=one
   cicx6(nxm-1)=one
   if (nclxn==0) cicx6(nxm)=one + ailcaix6*ailcaix6
-  if (nclxn==1) cicx6(nxm)=one + ailcaix6 
+  if (nclxn==1) cicx6(nxm)=one + ailcaix6
   if (nclxn==2) cicx6(nxm)=one + ailcaix6
-  cibx6(1)=ailcaix6 
-  cibx6(2)=ailcaix6 
-  cibx6(nxm-2)=ailcaix6 
-  cibx6(nxm-1)=ailcaix6 
+  cibx6(1)=ailcaix6
+  cibx6(2)=ailcaix6
+  cibx6(nxm-2)=ailcaix6
+  cibx6(nxm-1)=ailcaix6
   cibx6(nxm)=zero
-  do i=3,nxm-3 
-     cifx6(i)=ailcaix6 
+  do i=3,nxm-3
+     cifx6(i)=ailcaix6
      cicx6(i)=one
-     cibx6(i)=ailcaix6 
+     cibx6(i)=ailcaix6
   enddo
-  cifi6(1)=ailcaix6 + ailcaix6 
-  cifi6(2)=ailcaix6 
-  cifi6(nx-2)=ailcaix6 
-  cifi6(nx-1)=ailcaix6 
+  cifi6(1)=ailcaix6 + ailcaix6
+  cifi6(2)=ailcaix6
+  cifi6(nx-2)=ailcaix6
+  cifi6(nx-1)=ailcaix6
   cifi6(nx)=zero
   cici6(1)=one
   cici6(2)=one
-  cici6(nx-2)=one 
+  cici6(nx-2)=one
   cici6(nx-1)=one
   cici6(nx)=one
-  cibi6(1)=ailcaix6 
-  cibi6(2)=ailcaix6 
-  cibi6(nx-2)=ailcaix6 
-  cibi6(nx-1)=ailcaix6 + ailcaix6 
+  cibi6(1)=ailcaix6
+  cibi6(2)=ailcaix6
+  cibi6(nx-2)=ailcaix6
+  cibi6(nx-1)=ailcaix6 + ailcaix6
   cibi6(nx)=zero
-  do i=3,nx-3 
-     cifi6(i)=ailcaix6 
+  do i=3,nx-3
+     cifi6(i)=ailcaix6
      cici6(i)=one
-     cibi6(i)=ailcaix6 
+     cibi6(i)=ailcaix6
   enddo
 
-  do i=1,nxm   
+  do i=1,nxm
      cfxp6(i)=cfx6(i)
      cifxp6(i)=cifx6(i)
   enddo
