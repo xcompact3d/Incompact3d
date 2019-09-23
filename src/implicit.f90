@@ -650,7 +650,7 @@ subroutine  inttimp (var1,dvar1,forcing1)
 !********************************************************************
 USE param
 USE variables
-USE var
+USE var, ONLY: ta1, ta2, tb2, tc2, td2
 USE decomp_2d
 use derivY
 use matinv
