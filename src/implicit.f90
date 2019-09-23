@@ -645,11 +645,12 @@ end module matinv
 
 !********************************************************************
 !
-subroutine  inttimp (var1,dvar1)
+subroutine  inttimp (var1,dvar1,forcing1)
 !
 !********************************************************************
 USE param
 USE variables
+USE var
 USE decomp_2d
 use derivY
 use matinv
@@ -658,12 +659,12 @@ implicit none
 
 integer :: i,j,k,code
 
+!! IN
+real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: forcing1
+
+!! IN/OUT
 real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: var1
 real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dvar1
-
-real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: var2
-real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: di2
-real(mytype),dimension(ysize(1),ysize(3)) :: bc1
 
 
 !!!!!!!!!!!!!!!
@@ -679,7 +680,7 @@ if (itimescheme==7) then
          do j=1,xsize(2)
             do i=1,xsize(1)
                !uhat
-               dvar1(i,j,k,5)= dt*dvar1(i,j,k,1)
+               ta1(i,j,k) = dt*dvar1(i,j,k,1)
 
                !save (N+Lxz)(n-1)
                dvar1(i,j,k,2)=dvar1(i,j,k,1)
@@ -695,7 +696,7 @@ if (itimescheme==7) then
          do j=1,xsize(2)
             do i=1,xsize(1)
                !uhat
-               dvar1(i,j,k,5)= 1.5*dt*dvar1(i,j,k,1)-0.5*dt*dvar1(i,j,k,2)-dvar1(i,j,k,4)
+               ta1(i,j,k)= 1.5*dt*dvar1(i,j,k,1)-0.5*dt*dvar1(i,j,k,2)-forcing1(i,j,k)
 
                !save (N+Lxz)(n-1)&(n-2)
                dvar1(i,j,k,3)=dvar1(i,j,k,2)
@@ -712,8 +713,8 @@ if (itimescheme==7) then
          do j=1,xsize(2)
             do i=1,xsize(1)
                !uhat
-               dvar1(i,j,k,5)= adt(itr)*dvar1(i,j,k,1)+bdt(itr)*dvar1(i,j,k,2) &
-                    +cdt(itr)*dvar1(i,j,k,3)-dvar1(i,j,k,4)
+               ta1(i,j,k)= adt(itr)*dvar1(i,j,k,1)+bdt(itr)*dvar1(i,j,k,2) &
+                    +cdt(itr)*dvar1(i,j,k,3)-forcing1(i,j,k)
 
                !save (N+Lxz)(n-1)
                dvar1(i,j,k,3)=dvar1(i,j,k,2)
@@ -728,46 +729,42 @@ if (itimescheme==7) then
 endif
 
 !Y-PENCIL FOR MATRIX INVERSION
-call transpose_x_to_y(var1,var2)
+call transpose_x_to_y(var1,tb2)
 
-call transpose_x_to_y(dvar1(:,:,:,5),dvar1(:,:,:,6))
+call transpose_x_to_y(ta1,ta2)
 
-
-bc1(:,:)=var2(:,ny-1,:)
+tc2(:,ny-1,:)=tb2(:,ny-1,:)
 
 !ta2: A.uhat
 !td2:(A+xcstB).un
 if (ncly1.eq.0) then
-   call multmatrix7(dvar1(:,:,:,7),dvar1(:,:,:,6),var2)
+   call multmatrix7(td2,ta2,tb2)
 
 elseif (ncly1.eq.1) then
 elseif (ncly1.eq.2) then
-   call multmatrix7(dvar1(:,:,:,7),dvar1(:,:,:,6),var2)
+   call multmatrix7(td2,ta2,tb2)
 endif
 
 !SECOND MEMBRE COMPLET BBB=A uhat+(A+xcst.B)u^n
-!in  ta2,tb2,tc2
-dvar1(:,:,:,6)=dvar1(:,:,:,7)+dvar1(:,:,:,6)
+ta2(:,:,:)=td2(:,:,:)+ta2(:,:,:)
 
-!
 ! CONDITIONS AUX LIMITES
-dvar1(:,ny,:,6)=bc1(:,:)
-
+ta2(:,ny,:)=tc2(:,ny-1,:)
 
 !Inversion systeme lineaire Mx=b: (A-xcst.B)u^n+1=uhat+(A+xcst.B)u^n
-var2=0.;
+tb2=0.;
 if (ncly1.eq.0) then
-   call septinv(var2,dvar1(:,:,:,6),ggm0,hhm0,ssm0,rrm0,vvm0,wwm0,zzm0,l1m,l2m,l3m,u1m,u2m,u3m,ysize(1),ysize(2),ysize(3))
+   call septinv(tb2,ta2,ggm0,hhm0,ssm0,rrm0,vvm0,wwm0,zzm0,l1m,l2m,l3m,u1m,u2m,u3m,ysize(1),ysize(2),ysize(3))
 elseif (ncly1.eq.1) then
-   call septinv(var2,dvar1(:,:,:,6),ggm11,hhm11,ssm11,rrm11,vvm11,wwm11,zzm11,ysize(1),ysize(2),ysize(3))
+   call septinv(tb2,ta2,ggm11,hhm11,ssm11,rrm11,vvm11,wwm11,zzm11,ysize(1),ysize(2),ysize(3))
 elseif (ncly1.eq.2) then
-   call septinv(var2,dvar1(:,:,:,6),ggm,hhm,ssm,rrm,vvm,wwm,zzm,ysize(1),ysize(2),ysize(3))
+   call septinv(tb2,ta2,ggm,hhm,ssm,rrm,vvm,wwm,zzm,ysize(1),ysize(2),ysize(3))
 endif
 
-call transpose_y_to_x(var2,var1)
+call transpose_y_to_x(tb2,var1)
 
 if ( (irestart.eq.1).or.(itime.gt.1) ) then
-  var1(:,:,:)=var1(:,:,:)+dvar1(:,:,:,4)
+  var1(:,:,:)=var1(:,:,:)+forcing1(:,:,:)
 endif
 
 
@@ -3407,7 +3404,7 @@ call ludecomp7(aamt0,bbmt0,ccmt0,ddmt0,eemt0,qqmt0,ggmt0,hhmt0,ssmt0,rrmt0,&
 
 end subroutine scalar_schemes
 
-subroutine init_implicit
+subroutine init_implicit ()
 
   USE decomp_2d
   USE param

@@ -123,6 +123,10 @@ subroutine init_xcompact3d()
 
   call init_variables()
 
+  if (itimescheme.eq.7) then
+      call init_implicit
+  endif
+
   call schemes()
 
   !if (nrank==0) call stabiltemp()
@@ -160,9 +164,6 @@ subroutine init_xcompact3d()
 
   call calc_divu_constraint(divu3, rho1, phi1)
 
-  if (itimescheme.eq.7) then
-    call init_implicit
-  endif
 
   if(nrank.eq.0)then
      open(42,file='time_evol.dat',form='formatted')

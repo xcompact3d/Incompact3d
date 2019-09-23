@@ -16,24 +16,24 @@ CONTAINS
     USE decomp_2d, ONLY : mytype, xsize, zsize
     USE variables, ONLY : numscalar
     USE param, ONLY : ntime, ilmn, nrhotime, ilmn_solve_temp
-    
+
     IMPLICIT NONE
-    
+
     !! Inputs
     REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
     REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime), INTENT(IN) :: rho1
     REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar), INTENT(IN) :: phi1
     REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ep1
     REAL(mytype), DIMENSION(zsize(1), zsize(2), zsize(3)), INTENT(IN) :: divu3
-    
+
     !! Outputs
     REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
     REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1
     REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime, numscalar) :: dphi1
-    
+
     !! Momentum equations
     CALL momentum_rhs_eq(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
-    
+
     !! Scalar equations
     !! XXX Not yet LMN!!!
     CALL scalar(dphi1, rho1, ux1, phi1)
@@ -46,7 +46,7 @@ CONTAINS
           CALL continuity_rhs_eq(drho1, rho1, ux1, divu3)
        ENDIF
     ENDIF
-    
+
   END SUBROUTINE calculate_transeq_rhs
 
   subroutine momentum_rhs_eq(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
@@ -207,45 +207,79 @@ CONTAINS
     ti2 = tf2
 
     !DIFFUSIVE TERMS IN Y
+    if (itimescheme.ne.7) then
     !-->for ux
-    call deryy (td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
-    if (istret.ne.0) then
-       call dery (te2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-       do k = 1,ysize(3)
-          do j = 1,ysize(2)
-             do i = 1,ysize(1)
-                td2(i,j,k) = td2(i,j,k)*pp2y(j)-pp4y(j)*te2(i,j,k)
-             enddo
-          enddo
-       enddo
-    endif
+        call deryy (td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+        if (istret.ne.0) then
+           call dery (te2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+           do k = 1,ysize(3)
+              do j = 1,ysize(2)
+                 do i = 1,ysize(1)
+                    td2(i,j,k) = td2(i,j,k)*pp2y(j)-pp4y(j)*te2(i,j,k)
+                 enddo
+              enddo
+           enddo
+        endif
 
-    !-->for uy
-    call deryy (te2,uy2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0)
-    if (istret.ne.0) then
-       call dery (tf2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-       do k = 1,ysize(3)
-          do j = 1,ysize(2)
-             do i = 1,ysize(1)
-                te2(i,j,k) = te2(i,j,k)*pp2y(j)-pp4y(j)*tf2(i,j,k)
-             enddo
-          enddo
-       enddo
-    endif
+        !-->for uy
+        call deryy (te2,uy2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0)
+        if (istret.ne.0) then
+           call dery (tf2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+           do k = 1,ysize(3)
+              do j = 1,ysize(2)
+                 do i = 1,ysize(1)
+                    te2(i,j,k) = te2(i,j,k)*pp2y(j)-pp4y(j)*tf2(i,j,k)
+                 enddo
+              enddo
+           enddo
+        endif
 
-    !-->for uz
-    call deryy (tf2,uz2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
-    if (istret.ne.0) then
-       call dery (tj2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-       do k = 1,ysize(3)
-          do j = 1,ysize(2)
-             do i = 1,ysize(1)
-                tf2(i,j,k) = tf2(i,j,k)*pp2y(j)-pp4y(j)*tj2(i,j,k)
-             enddo
-          enddo
-       enddo
-    endif
+        !-->for uz
+        call deryy (tf2,uz2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+        if (istret.ne.0) then
+           call dery (tj2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+           do k = 1,ysize(3)
+              do j = 1,ysize(2)
+                 do i = 1,ysize(1)
+                    tf2(i,j,k) = tf2(i,j,k)*pp2y(j)-pp4y(j)*tj2(i,j,k)
+                 enddo
+              enddo
+           enddo
+        endif
+    else !Semi-implicit
+        if (istret.ne.0) then
 
+      !-->for ux
+          call dery (te2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+          do k=1,ysize(3)
+              do j=1,ysize(2)
+                do i=1,ysize(1)
+                  td2(i,j,k)=-pp4y(j)*te2(i,j,k)
+                enddo
+              enddo
+         enddo
+      !-->for uy
+          call dery (tf2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+          do k=1,ysize(3)
+              do j=1,ysize(2)
+                do i=1,ysize(1)
+                  te2(i,j,k)=-pp4y(j)*tf2(i,j,k)
+                enddo
+              enddo
+         enddo
+      !-->for uz
+          call dery (tj2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+          do k=1,ysize(3)
+              do j=1,ysize(2)
+                do i=1,ysize(1)
+                  tf2(i,j,k)=-pp4y(j)*tj2(i,j,k)
+                enddo
+              enddo
+         enddo
+
+       endif
+    endif
+    
     ta2 = ta2 + td2
     tb2 = tb2 + te2
     tc2 = tc2 + tf2
@@ -283,7 +317,7 @@ CONTAINS
     ! If LES modelling is enabled, add the SGS stresses
     if (ilesmod.ne.0.and.jles.le.2.and.jles.gt.0) then
        ! Wall model for LES
-       if (iwall.eq.1) then 
+       if (iwall.eq.1) then
           call compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,1)
        else
           call compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,0)
@@ -381,7 +415,7 @@ CONTAINS
     call transpose_x_to_y(tb1, tb2)
     call transpose_x_to_y(tc1, tc2)
     call transpose_x_to_y(td1, tg2)
-    
+
     call dery (td2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
     call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
     call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
@@ -407,7 +441,7 @@ CONTAINS
     tf3(:,:,:) = two * tf3(:,:,:) - (two * one_third) * divu3(:,:,:)
 
     tc3(:,:,:) = tc3(:,:,:) + tg3(:,:,:) * td3(:,:,:) + th3(:,:,:) * te3(:,:,:)
-    
+
     call derz (th3,ti3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
 
     ta3(:,:,:) = ta3(:,:,:) + th3(:,:,:) * td3(:,:,:)
@@ -722,22 +756,22 @@ CONTAINS
 
     call transpose_x_to_y(phi1, phi2)
     call transpose_y_to_z(phi2, phi3)
-    
+
     CALL derz (ta3, phi3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
     ta3(:,:,:) = uset(is) * gravz * ta3(:,:,:)
-    
+
     call transpose_z_to_y(ta3, tb2)
 
     CALL dery (ta2, phi2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
     ta2(:,:,:) = uset(is) * gravy * ta2(:,:,:)
     ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
-    
+
     call transpose_y_to_x(ta2, ta1)
-    
+
     dphi1(:,:,:,1,is) = dphi1(:,:,:,1,is) - ta1(:,:,:)
     CALL derx (ta1, phi1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1)
     dphi1(:,:,:,1,is) = dphi1(:,:,:,1,is) - uset(is) * gravx * ta1(:,:,:)
-    
+
   endsubroutine scalar_settling
 
   subroutine temperature_rhs_eq(drho1, rho1, ux1, phi1)
@@ -814,7 +848,7 @@ CONTAINS
        CALL deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
        ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
        CALL transpose_y_to_x(ta2, ta1)
-  
+
        CALL derxx (tb1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
        ta1(:,:,:) = ta1(:,:,:) + tb1(:,:,:)
 

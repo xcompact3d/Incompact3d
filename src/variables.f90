@@ -461,8 +461,8 @@ contains
        gdt(1)=adt(1)+bdt(1)+cdt(1)
        gdt(3)=gdt(1)
 
-        ntime = 7
-        nrhotime = 7
+        ntime = 3
+        nrhotime = 4
     endif
     allocate(dux1(xsize(1),xsize(2),xsize(3),ntime))
     allocate(duy1(xsize(1),xsize(2),xsize(3),ntime))
