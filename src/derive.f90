@@ -21,18 +21,18 @@
 !    We kindly request that you cite Xcompact3d/Incompact3d in your
 !    publications and presentations. The following citations are suggested:
 !
-!    1-Laizet S. & Lamballais E., 2009, High-order compact schemes for 
-!    incompressible flows: a simple and efficient method with the quasi-spectral 
+!    1-Laizet S. & Lamballais E., 2009, High-order compact schemes for
+!    incompressible flows: a simple and efficient method with the quasi-spectral
 !    accuracy, J. Comp. Phys.,  vol 228 (15), pp 5989-6015
 !
-!    2-Laizet S. & Li N., 2011, Incompact3d: a powerful tool to tackle turbulence 
-!    problems with up to 0(10^5) computational cores, Int. J. of Numerical 
+!    2-Laizet S. & Li N., 2011, Incompact3d: a powerful tool to tackle turbulence
+!    problems with up to 0(10^5) computational cores, Int. J. of Numerical
 !    Methods in Fluids, vol 67 (11), pp 1735-1757
 !################################################################################
 
 !********************************************************************
 !
-subroutine derx_00(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire) 
+subroutine derx_00(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -42,45 +42,45 @@ subroutine derx_00(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   implicit none
 
   integer :: nx,ny,nz,npaire,i,j,k
-  real(mytype), dimension(nx,ny,nz) :: tx,ux,rx 
+  real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz):: sx
   real(mytype), dimension(nx):: ffx,fsx,fwx
 
   if(iibm.eq.2) call lagpolx(ux)
 
-  do k=1,nz 
-     do j=1,ny 
-        tx(1,j,k)=afix*(ux(2,j,k)-ux(nx,j,k))& 
-             +bfix*(ux(3,j,k)-ux(nx-1,j,k)) 
+  do k=1,nz
+     do j=1,ny
+        tx(1,j,k)=afix*(ux(2,j,k)-ux(nx,j,k))&
+             +bfix*(ux(3,j,k)-ux(nx-1,j,k))
         rx(1,j,k)=-one
         tx(2,j,k)=afix*(ux(3,j,k)-ux(1,j,k))&
-             +bfix*(ux(4,j,k)-ux(nx,j,k)) 
+             +bfix*(ux(4,j,k)-ux(nx,j,k))
         rx(2,j,k)=zero
         do i=3,nx-2
            tx(i,j,k)=afix*(ux(i+1,j,k)-ux(i-1,j,k))&
-                +bfix*(ux(i+2,j,k)-ux(i-2,j,k)) 
+                +bfix*(ux(i+2,j,k)-ux(i-2,j,k))
            rx(i,j,k)=zero
         enddo
         tx(nx-1,j,k)=afix*(ux(nx,j,k)-ux(nx-2,j,k))&
-             +bfix*(ux(1,j,k)-ux(nx-3,j,k)) 
+             +bfix*(ux(1,j,k)-ux(nx-3,j,k))
         rx(nx-1,j,k)=zero
         tx(nx,j,k)=afix*(ux(1,j,k)-ux(nx-1,j,k))&
-             +bfix*(ux(2,j,k)-ux(nx-2,j,k)) 
-        rx(nx,j,k)=alfaix           
+             +bfix*(ux(2,j,k)-ux(nx-2,j,k))
+        rx(nx,j,k)=alfaix
         do i=2, nx
-           tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fsx(i) 
-           rx(i,j,k)=rx(i,j,k)-rx(i-1,j,k)*fsx(i) 
+           tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fsx(i)
+           rx(i,j,k)=rx(i,j,k)-rx(i-1,j,k)*fsx(i)
         enddo
-        tx(nx,j,k)=tx(nx,j,k)*fwx(nx) 
-        rx(nx,j,k)=rx(nx,j,k)*fwx(nx) 
+        tx(nx,j,k)=tx(nx,j,k)*fwx(nx)
+        rx(nx,j,k)=rx(nx,j,k)*fwx(nx)
         do i=nx-1,1,-1
-           tx(i,j,k)=(tx(i,j,k)-ffx(i)*tx(i+1,j,k))*fwx(i) 
-           rx(i,j,k)=(rx(i,j,k)-ffx(i)*rx(i+1,j,k))*fwx(i) 
+           tx(i,j,k)=(tx(i,j,k)-ffx(i)*tx(i+1,j,k))*fwx(i)
+           rx(i,j,k)=(rx(i,j,k)-ffx(i)*rx(i+1,j,k))*fwx(i)
         enddo
         sx(j,k)=(tx(1,j,k)-alfaix*tx(nx,j,k))&
-             /(one+rx(1,j,k)-alfaix*rx(nx,j,k)) 
-        do i=1,nx 
-           tx(i,j,k)=tx(i,j,k)-sx(j,k)*rx(i,j,k) 
+             /(one+rx(1,j,k)-alfaix*rx(nx,j,k))
+        do i=1,nx
+           tx(i,j,k)=tx(i,j,k)-sx(j,k)*rx(i,j,k)
         enddo
      enddo
   enddo
@@ -90,7 +90,7 @@ end subroutine derx_00
 
 !********************************************************************
 !
-subroutine derx_11(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire) 
+subroutine derx_11(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -100,56 +100,56 @@ subroutine derx_11(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   implicit none
 
   integer :: nx,ny,nz,npaire,i,j,k
-  real(mytype), dimension(nx,ny,nz) :: tx,ux,rx 
+  real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz):: sx
   real(mytype), dimension(nx):: ffx,fsx,fwx
 
   if(iibm.eq.2) call lagpolx(ux)
 
-  if (npaire==1) then 
-     do k=1,nz 
-        do j=1,ny 
+  if (npaire==1) then
+     do k=1,nz
+        do j=1,ny
            tx(1,j,k)=zero
            tx(2,j,k)=afix*(ux(3,j,k)-ux(1,j,k))&
-                +bfix*(ux(4,j,k)-ux(2,j,k)) 
-           do i=3,nx-2 
+                +bfix*(ux(4,j,k)-ux(2,j,k))
+           do i=3,nx-2
               tx(i,j,k)=afix*(ux(i+1,j,k)-ux(i-1,j,k))&
-                   +bfix*(ux(i+2,j,k)-ux(i-2,j,k)) 
+                   +bfix*(ux(i+2,j,k)-ux(i-2,j,k))
            enddo
            tx(nx-1,j,k)=afix*(ux(nx,j,k)-ux(nx-2,j,k))&
-                +bfix*(ux(nx-1,j,k)-ux(nx-3,j,k)) 
-           tx(nx,j,k)=zero 
+                +bfix*(ux(nx-1,j,k)-ux(nx-3,j,k))
+           tx(nx,j,k)=zero
            do i=2,nx
-              tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fsx(i) 
+              tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fsx(i)
            enddo
-           tx(nx,j,k)=tx(nx,j,k)*fwx(nx) 
-           do i=nx-1,1,-1 
-              tx(i,j,k)=(tx(i,j,k)-ffx(i)*tx(i+1,j,k))*fwx(i) 
+           tx(nx,j,k)=tx(nx,j,k)*fwx(nx)
+           do i=nx-1,1,-1
+              tx(i,j,k)=(tx(i,j,k)-ffx(i)*tx(i+1,j,k))*fwx(i)
            enddo
         enddo
      enddo
   endif
-  if (npaire==0) then 
-     do k=1,nz 
-        do j=1,ny 
+  if (npaire==0) then
+     do k=1,nz
+        do j=1,ny
            tx(1,j,k)=afix*(ux(2,j,k)+ux(2,j,k))&
-                +bfix*(ux(3,j,k)+ux(3,j,k)) 
+                +bfix*(ux(3,j,k)+ux(3,j,k))
            tx(2,j,k)=afix*(ux(3,j,k)-ux(1,j,k))&
                 +bfix*(ux(4,j,k)+ux(2,j,k))
-           do i=3,nx-2  
+           do i=3,nx-2
               tx(i,j,k)=afix*(ux(i+1,j,k)-ux(i-1,j,k))&
-                   +bfix*(ux(i+2,j,k)-ux(i-2,j,k)) 
+                   +bfix*(ux(i+2,j,k)-ux(i-2,j,k))
            enddo
            tx(nx-1,j,k)=afix*(ux(nx,j,k)-ux(nx-2,j,k))&
-                +bfix*((-ux(nx-1,j,k))-ux(nx-3,j,k)) 
+                +bfix*((-ux(nx-1,j,k))-ux(nx-3,j,k))
            tx(nx,j,k)=afix*((-ux(nx-1,j,k))-ux(nx-1,j,k))&
                 +bfix*((-ux(nx-2,j,k))-ux(nx-2,j,k))
-           do i=2,nx 
-              tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fsx(i) 
+           do i=2,nx
+              tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fsx(i)
            enddo
-           tx(nx,j,k)=tx(nx,j,k)*fwx(nx) 
-           do i=nx-1,1,-1 
-              tx(i,j,k)=(tx(i,j,k)-ffx(i)*tx(i+1,j,k))*fwx(i) 
+           tx(nx,j,k)=tx(nx,j,k)*fwx(nx)
+           do i=nx-1,1,-1
+              tx(i,j,k)=(tx(i,j,k)-ffx(i)*tx(i+1,j,k))*fwx(i)
            enddo
         enddo
      enddo
@@ -160,7 +160,7 @@ end subroutine derx_11
 
 !********************************************************************
 !
-subroutine derx_12(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire) 
+subroutine derx_12(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -170,53 +170,53 @@ subroutine derx_12(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   implicit none
 
   integer :: nx,ny,nz,i,j,k,npaire
-  real(mytype), dimension(nx,ny,nz) :: tx,ux,rx 
+  real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz):: sx
   real(mytype), dimension(nx):: ffx,fsx,fwx
 
   if(iibm.eq.2) call lagpolx(ux)
 
-  if (npaire==1) then 
-     do k=1,nz 
-        do j=1,ny 
+  if (npaire==1) then
+     do k=1,nz
+        do j=1,ny
            tx(1,j,k)=zero
            tx(2,j,k)=afix*(ux(3,j,k)-ux(1,j,k))&
-                +bfix*(ux(4,j,k)-ux(2,j,k)) 
-           do i=3,nx-2 
+                +bfix*(ux(4,j,k)-ux(2,j,k))
+           do i=3,nx-2
               tx(i,j,k)=afix*(ux(i+1,j,k)-ux(i-1,j,k))&
-                   +bfix*(ux(i+2,j,k)-ux(i-2,j,k)) 
+                   +bfix*(ux(i+2,j,k)-ux(i-2,j,k))
            enddo
-           tx(nx-1,j,k)=afmx*(ux(nx,j,k)-ux(nx-2,j,k)) 
-           tx(nx,j,k)=(-afnx*ux(nx,j,k))-bfnx*ux(nx-1,j,k)-cfnx*ux(nx-2,j,k) 
+           tx(nx-1,j,k)=afmx*(ux(nx,j,k)-ux(nx-2,j,k))
+           tx(nx,j,k)=(-afnx*ux(nx,j,k))-bfnx*ux(nx-1,j,k)-cfnx*ux(nx-2,j,k)
            do i=2,nx
-              tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fsx(i) 
+              tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fsx(i)
            enddo
-           tx(nx,j,k)=tx(nx,j,k)*fwx(nx) 
-           do i=nx-1,1,-1 
-              tx(i,j,k)=(tx(i,j,k)-ffx(i)*tx(i+1,j,k))*fwx(i) 
+           tx(nx,j,k)=tx(nx,j,k)*fwx(nx)
+           do i=nx-1,1,-1
+              tx(i,j,k)=(tx(i,j,k)-ffx(i)*tx(i+1,j,k))*fwx(i)
            enddo
         enddo
      enddo
   endif
-  if (npaire==0) then 
-     do k=1,nz 
-        do j=1,ny 
+  if (npaire==0) then
+     do k=1,nz
+        do j=1,ny
            tx(1,j,k)=afix*(ux(2,j,k)+ux(2,j,k))&
-                +bfix*(ux(3,j,k)+ux(3,j,k)) 
+                +bfix*(ux(3,j,k)+ux(3,j,k))
            tx(2,j,k)=afix*(ux(3,j,k)-ux(1,j,k))&
                 +bfix*(ux(4,j,k)+ux(2,j,k))
-           do i=3,nx-2  
+           do i=3,nx-2
               tx(i,j,k)=afix*(ux(i+1,j,k)-ux(i-1,j,k))&
-                   +bfix*(ux(i+2,j,k)-ux(i-2,j,k)) 
+                   +bfix*(ux(i+2,j,k)-ux(i-2,j,k))
            enddo
-           tx(nx-1,j,k)=afmx*(ux(nx,j,k)-ux(nx-2,j,k)) 
+           tx(nx-1,j,k)=afmx*(ux(nx,j,k)-ux(nx-2,j,k))
            tx(nx,j,k)=(-afnx*ux(nx,j,k))-bfnx*ux(nx-1,j,k)-cfnx*ux(nx-2,j,k)
-           do i=2,nx 
-              tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fsx(i) 
+           do i=2,nx
+              tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fsx(i)
            enddo
-           tx(nx,j,k)=tx(nx,j,k)*fwx(nx) 
-           do i=nx-1,1,-1 
-              tx(i,j,k)=(tx(i,j,k)-ffx(i)*tx(i+1,j,k))*fwx(i) 
+           tx(nx,j,k)=tx(nx,j,k)*fwx(nx)
+           do i=nx-1,1,-1
+              tx(i,j,k)=(tx(i,j,k)-ffx(i)*tx(i+1,j,k))*fwx(i)
            enddo
         enddo
      enddo
@@ -227,7 +227,7 @@ end subroutine derx_12
 
 !********************************************************************
 !
-subroutine derx_21(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire) 
+subroutine derx_21(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -237,53 +237,53 @@ subroutine derx_21(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   implicit none
 
   integer :: nx,ny,nz,i,j,k,npaire
-  real(mytype), dimension(nx,ny,nz) :: tx,ux,rx 
+  real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz):: sx
-  real(mytype), dimension(nx):: ffx,fsx,fwx 
+  real(mytype), dimension(nx):: ffx,fsx,fwx
 
   if(iibm.eq.2) call lagpolx(ux)
 
-  if (npaire==1) then 
-     do k=1,nz 
-        do j=1,ny 
-           tx(1,j,k)=af1x*ux(1,j,k)+bf1x*ux(2,j,k)+cf1x*ux(3,j,k) 
-           tx(2,j,k)=af2x*(ux(3,j,k)-ux(1,j,k)) 
-           do i=3,nx-2 
+  if (npaire==1) then
+     do k=1,nz
+        do j=1,ny
+           tx(1,j,k)=af1x*ux(1,j,k)+bf1x*ux(2,j,k)+cf1x*ux(3,j,k)
+           tx(2,j,k)=af2x*(ux(3,j,k)-ux(1,j,k))
+           do i=3,nx-2
               tx(i,j,k)=afix*(ux(i+1,j,k)-ux(i-1,j,k))&
-                   +bfix*(ux(i+2,j,k)-ux(i-2,j,k)) 
+                   +bfix*(ux(i+2,j,k)-ux(i-2,j,k))
            enddo
            tx(nx-1,j,k)=afix*(ux(nx,j,k)-ux(nx-2,j,k))&
-                +bfix*(ux(nx-1,j,k)-ux(nx-3,j,k)) 
+                +bfix*(ux(nx-1,j,k)-ux(nx-3,j,k))
            tx(nx,j,k)=zero
            do i=2,nx
-              tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fsx(i) 
+              tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fsx(i)
            enddo
-           tx(nx,j,k)=tx(nx,j,k)*fwx(nx) 
-           do i=nx-1,1,-1 
-              tx(i,j,k)=(tx(i,j,k)-ffx(i)*tx(i+1,j,k))*fwx(i) 
+           tx(nx,j,k)=tx(nx,j,k)*fwx(nx)
+           do i=nx-1,1,-1
+              tx(i,j,k)=(tx(i,j,k)-ffx(i)*tx(i+1,j,k))*fwx(i)
            enddo
         enddo
      enddo
   endif
-  if (npaire==0) then 
-     do k=1,nz 
-        do j=1,ny 
-           tx(1,j,k)=af1x*ux(1,j,k)+bf1x*ux(2,j,k)+cf1x*ux(3,j,k) 
-           tx(2,j,k)=af2x*(ux(3,j,k)-ux(1,j,k)) 
-           do i=3,nx-2  
+  if (npaire==0) then
+     do k=1,nz
+        do j=1,ny
+           tx(1,j,k)=af1x*ux(1,j,k)+bf1x*ux(2,j,k)+cf1x*ux(3,j,k)
+           tx(2,j,k)=af2x*(ux(3,j,k)-ux(1,j,k))
+           do i=3,nx-2
               tx(i,j,k)=afix*(ux(i+1,j,k)-ux(i-1,j,k))&
-                   +bfix*(ux(i+2,j,k)-ux(i-2,j,k)) 
+                   +bfix*(ux(i+2,j,k)-ux(i-2,j,k))
            enddo
            tx(nx-1,j,k)=afix*(ux(nx,j,k)-ux(nx-2,j,k))&
-                +bfix*((-ux(nx-1,j,k))-ux(nx-3,j,k)) 
+                +bfix*((-ux(nx-1,j,k))-ux(nx-3,j,k))
            tx(nx,j,k)=afix*((-ux(nx-1,j,k))-ux(nx-1,j,k))&
                 +bfix*((-ux(nx-2,j,k))-ux(nx-2,j,k))
-           do i=2,nx 
-              tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fsx(i) 
+           do i=2,nx
+              tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fsx(i)
            enddo
-           tx(nx,j,k)=tx(nx,j,k)*fwx(nx) 
-           do i=nx-1,1,-1 
-              tx(i,j,k)=(tx(i,j,k)-ffx(i)*tx(i+1,j,k))*fwx(i) 
+           tx(nx,j,k)=tx(nx,j,k)*fwx(nx)
+           do i=nx-1,1,-1
+              tx(i,j,k)=(tx(i,j,k)-ffx(i)*tx(i+1,j,k))*fwx(i)
            enddo
         enddo
      enddo
@@ -294,7 +294,7 @@ end subroutine derx_21
 
 !********************************************************************
 !
-subroutine derx_22(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire) 
+subroutine derx_22(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -304,28 +304,28 @@ subroutine derx_22(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   implicit none
 
   integer :: nx,ny,nz,i,j,k,npaire
-  real(mytype), dimension(nx,ny,nz) :: tx,ux,rx 
+  real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz):: sx
-  real(mytype), dimension(nx):: ffx,fsx,fwx 
+  real(mytype), dimension(nx):: ffx,fsx,fwx
 
   if(iibm.eq.2) call lagpolx(ux)
 
   do k=1,nz
-     do j=1,ny 
-        tx(1,j,k)=af1x*ux(1,j,k)+bf1x*ux(2,j,k)+cf1x*ux(3,j,k) 
-        tx(2,j,k)=af2x*(ux(3,j,k)-ux(1,j,k)) 
+     do j=1,ny
+        tx(1,j,k)=af1x*ux(1,j,k)+bf1x*ux(2,j,k)+cf1x*ux(3,j,k)
+        tx(2,j,k)=af2x*(ux(3,j,k)-ux(1,j,k))
         do i=3,nx-2
            tx(i,j,k)=afix*(ux(i+1,j,k)-ux(i-1,j,k))&
-                +bfix*(ux(i+2,j,k)-ux(i-2,j,k)) 
+                +bfix*(ux(i+2,j,k)-ux(i-2,j,k))
         enddo
-        tx(nx-1,j,k)=afmx*(ux(nx,j,k)-ux(nx-2,j,k)) 
+        tx(nx-1,j,k)=afmx*(ux(nx,j,k)-ux(nx-2,j,k))
         tx(nx,j,k)=(-afnx*ux(nx,j,k))-bfnx*ux(nx-1,j,k)-cfnx*ux(nx-2,j,k)
-        do i=2,nx 
-           tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fsx(i) 
+        do i=2,nx
+           tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fsx(i)
         enddo
-        tx(nx,j,k)=tx(nx,j,k)*fwx(nx) 
+        tx(nx,j,k)=tx(nx,j,k)*fwx(nx)
         do i=nx-1,1,-1
-           tx(i,j,k)=(tx(i,j,k)-ffx(i)*tx(i+1,j,k))*fwx(i) 
+           tx(i,j,k)=(tx(i,j,k)-ffx(i)*tx(i+1,j,k))*fwx(i)
         enddo
      enddo
   enddo
@@ -335,7 +335,7 @@ end subroutine derx_22
 
 !********************************************************************
 !
-subroutine dery_00(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire) 
+subroutine dery_00(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -345,92 +345,92 @@ subroutine dery_00(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
   implicit none
 
   integer :: nx,ny,nz,npaire,i,j,k
-  real(mytype), dimension(nx,ny,nz) :: ty,uy 
+  real(mytype), dimension(nx,ny,nz) :: ty,uy
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: sy
   real(mytype), dimension(ny) :: ffy,fsy,fwy,ppy
 
   if(iibm.eq.2) call lagpoly(uy)
 
-  do k=1,nz 
-     do i=1,nx 
+  do k=1,nz
+     do i=1,nx
         ty(i,1,k)=afjy*(uy(i,2,k)-uy(i,ny,k))&
-             +bfjy*(uy(i,3,k)-uy(i,ny-1,k)) 
+             +bfjy*(uy(i,3,k)-uy(i,ny-1,k))
         ry(i,1,k)=-one
         ty(i,2,k)=afjy*(uy(i,3,k)-uy(i,1,k))&
-             +bfjy*(uy(i,4,k)-uy(i,ny,k)) 
+             +bfjy*(uy(i,4,k)-uy(i,ny,k))
         ry(i,2,k)=zero
      enddo
   enddo
   do k=1,nz
-     do j=3,ny-2  
-        do i=1,nx 
+     do j=3,ny-2
+        do i=1,nx
            ty(i,j,k)=afjy*(uy(i,j+1,k)-uy(i,j-1,k))&
-                +bfjy*(uy(i,j+2,k)-uy(i,j-2,k)) 
+                +bfjy*(uy(i,j+2,k)-uy(i,j-2,k))
            ry(i,j,k)=zero
         enddo
      enddo
   enddo
-  do k=1,nz 
-     do i=1,nx 
+  do k=1,nz
+     do i=1,nx
         ty(i,ny-1,k)=afjy*(uy(i,ny,k)-uy(i,ny-2,k))&
-             +bfjy*(uy(i,1,k)-uy(i,ny-3,k)) 
+             +bfjy*(uy(i,1,k)-uy(i,ny-3,k))
         ry(i,ny-1,k)=zero
         ty(i,ny,k)=afjy*(uy(i,1,k)-uy(i,ny-1,k))&
-             +bfjy*(uy(i,2,k)-uy(i,ny-2,k)) 
-        ry(i,ny,k)=alfajy 
+             +bfjy*(uy(i,2,k)-uy(i,ny-2,k))
+        ry(i,ny,k)=alfajy
      enddo
   enddo
   do k=1,nz
-     do j=2,ny  
-        do i=1,nx 
-           ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fsy(j) 
-           ry(i,j,k)=ry(i,j,k)-ry(i,j-1,k)*fsy(j) 
+     do j=2,ny
+        do i=1,nx
+           ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fsy(j)
+           ry(i,j,k)=ry(i,j,k)-ry(i,j-1,k)*fsy(j)
         enddo
-     enddo
-  enddo
-  do k=1,nz 
-     do i=1,nx 
-        ty(i,ny,k)=ty(i,ny,k)*fwy(ny) 
-        ry(i,ny,k)=ry(i,ny,k)*fwy(ny) 
      enddo
   enddo
   do k=1,nz
-     do j=ny-1,1,-1  
-        do i=1,nx 
-           ty(i,j,k)=(ty(i,j,k)-ffy(j)*ty(i,j+1,k))*fwy(j) 
-           ry(i,j,k)=(ry(i,j,k)-ffy(j)*ry(i,j+1,k))*fwy(j) 
+     do i=1,nx
+        ty(i,ny,k)=ty(i,ny,k)*fwy(ny)
+        ry(i,ny,k)=ry(i,ny,k)*fwy(ny)
+     enddo
+  enddo
+  do k=1,nz
+     do j=ny-1,1,-1
+        do i=1,nx
+           ty(i,j,k)=(ty(i,j,k)-ffy(j)*ty(i,j+1,k))*fwy(j)
+           ry(i,j,k)=(ry(i,j,k)-ffy(j)*ry(i,j+1,k))*fwy(j)
         enddo
      enddo
   enddo
-  do k=1,nz 
-     do i=1,nx 
+  do k=1,nz
+     do i=1,nx
         sy(i,k)=(ty(i,1,k)-alfajy*ty(i,ny,k))&
-             /(1.+ry(i,1,k)-alfajy*ry(i,ny,k)) 
+             /(1.+ry(i,1,k)-alfajy*ry(i,ny,k))
      enddo
   enddo
   do k=1,nz
-     do j=1,ny  
-        do i=1,nx 
-           ty(i,j,k)=ty(i,j,k)-sy(i,k)*ry(i,j,k) 
+     do j=1,ny
+        do i=1,nx
+           ty(i,j,k)=ty(i,j,k)-sy(i,k)*ry(i,j,k)
         enddo
      enddo
   enddo
-  if (istret.ne.0) then   
-     do k=1,nz 
-        do j=1,ny 
-           do i=1,nx 
-              ty(i,j,k)=ty(i,j,k)*ppy(j) 
+  if (istret.ne.0) then
+     do k=1,nz
+        do j=1,ny
+           do i=1,nx
+              ty(i,j,k)=ty(i,j,k)*ppy(j)
            enddo
         enddo
      enddo
   endif
-  return  
+  return
 end subroutine dery_00
 
 !********************************************************************
 !
-subroutine dery_11(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire) 
+subroutine dery_11(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -440,116 +440,116 @@ subroutine dery_11(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
   implicit none
 
   integer :: nx,ny,nz,i,j,k,npaire
-  real(mytype), dimension(nx,ny,nz) :: ty,uy 
+  real(mytype), dimension(nx,ny,nz) :: ty,uy
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: sy
   real(mytype), dimension(ny) :: ffy,fsy,fwy,ppy
 
   if(iibm.eq.2) call lagpoly(uy)
 
-  if (npaire==1) then 
-     do k=1,nz 
-        do i=1,nx 
+  if (npaire==1) then
+     do k=1,nz
+        do i=1,nx
            ty(i,1,k)=zero
            ty(i,2,k)=afjy*(uy(i,3,k)-uy(i,1,k))&
-                +bfjy*(uy(i,4,k)-uy(i,2,k)) 
+                +bfjy*(uy(i,4,k)-uy(i,2,k))
         enddo
      enddo
-     do k=1,nz 
-        do j=3,ny-2 
-           do i=1,nx 
+     do k=1,nz
+        do j=3,ny-2
+           do i=1,nx
               ty(i,j,k)=afjy*(uy(i,j+1,k)-uy(i,j-1,k))&
-                   +bfjy*(uy(i,j+2,k)-uy(i,j-2,k)) 
+                   +bfjy*(uy(i,j+2,k)-uy(i,j-2,k))
            enddo
         enddo
      enddo
-     do k=1,nz 
-        do i=1,nx 
+     do k=1,nz
+        do i=1,nx
            ty(i,ny-1,k)=afjy*(uy(i,ny,k)-uy(i,ny-2,k))&
-                +bfjy*(uy(i,ny-1,k)-uy(i,ny-3,k)) 
+                +bfjy*(uy(i,ny-1,k)-uy(i,ny-3,k))
            ty(i,ny,k)=zero
         enddo
      enddo
      do k=1,nz
-        do j=2,ny  
-           do i=1,nx 
-              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fsy(j) 
+        do j=2,ny
+           do i=1,nx
+              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fsy(j)
            enddo
         enddo
      enddo
-     do k=1,nz 
-        do i=1,nx 
-           ty(i,ny,k)=ty(i,ny,k)*fwy(ny) 
+     do k=1,nz
+        do i=1,nx
+           ty(i,ny,k)=ty(i,ny,k)*fwy(ny)
         enddo
      enddo
      do k=1,nz
-        do j=ny-1,1,-1  
-           do i=1,nx 
-              ty(i,j,k)=(ty(i,j,k)-ffy(j)*ty(i,j+1,k))*fwy(j) 
+        do j=ny-1,1,-1
+           do i=1,nx
+              ty(i,j,k)=(ty(i,j,k)-ffy(j)*ty(i,j+1,k))*fwy(j)
            enddo
         enddo
      enddo
   endif
-  if (npaire==0) then 
-     do k=1,nz 
-        do i=1,nx 
+  if (npaire==0) then
+     do k=1,nz
+        do i=1,nx
            ty(i,1,k)=afjy*(uy(i,2,k)+uy(i,2,k))&
-                +bfjy*(uy(i,3,k)+uy(i,3,k)) 
+                +bfjy*(uy(i,3,k)+uy(i,3,k))
            ty(i,2,k)=afjy*(uy(i,3,k)-uy(i,1,k))&
-                +bfjy*(uy(i,4,k)+uy(i,2,k)) 
-        enddo
-     enddo
-     do k=1,nz 
-        do j=3,ny-2 
-           do i=1,nx 
-              ty(i,j,k)=afjy*(uy(i,j+1,k)-uy(i,j-1,k))&
-                   +bfjy*(uy(i,j+2,k)-uy(i,j-2,k)) 
-           enddo
-        enddo
-     enddo
-     do k=1,nz 
-        do i=1,nx 
-           ty(i,ny-1,k)=afjy*(uy(i,ny,k)-uy(i,ny-2,k))&
-                +bfjy*((-uy(i,ny-1,k))-uy(i,ny-3,k)) 
-           ty(i,ny,k)=afjy*((-uy(i,ny-1,k))-uy(i,ny-1,k))&
-                +bfjy*((-uy(i,ny-2,k))-uy(i,ny-2,k)) 
-        enddo
-     enddo
-     do k=1,nz 
-        do j=2,ny 
-           do i=1,nx 
-              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fsy(j) 
-           enddo
-        enddo
-     enddo
-     do k=1,nz 
-        do i=1,nx 
-           ty(i,ny,k)=ty(i,ny,k)*fwy(ny) 
+                +bfjy*(uy(i,4,k)+uy(i,2,k))
         enddo
      enddo
      do k=1,nz
-        do j=ny-1,1,-1  
-           do i=1,nx 
-              ty(i,j,k)=(ty(i,j,k)-ffy(j)*ty(i,j+1,k))*fwy(j) 
+        do j=3,ny-2
+           do i=1,nx
+              ty(i,j,k)=afjy*(uy(i,j+1,k)-uy(i,j-1,k))&
+                   +bfjy*(uy(i,j+2,k)-uy(i,j-2,k))
+           enddo
+        enddo
+     enddo
+     do k=1,nz
+        do i=1,nx
+           ty(i,ny-1,k)=afjy*(uy(i,ny,k)-uy(i,ny-2,k))&
+                +bfjy*((-uy(i,ny-1,k))-uy(i,ny-3,k))
+           ty(i,ny,k)=afjy*((-uy(i,ny-1,k))-uy(i,ny-1,k))&
+                +bfjy*((-uy(i,ny-2,k))-uy(i,ny-2,k))
+        enddo
+     enddo
+     do k=1,nz
+        do j=2,ny
+           do i=1,nx
+              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fsy(j)
+           enddo
+        enddo
+     enddo
+     do k=1,nz
+        do i=1,nx
+           ty(i,ny,k)=ty(i,ny,k)*fwy(ny)
+        enddo
+     enddo
+     do k=1,nz
+        do j=ny-1,1,-1
+           do i=1,nx
+              ty(i,j,k)=(ty(i,j,k)-ffy(j)*ty(i,j+1,k))*fwy(j)
            enddo
         enddo
      enddo
   endif
-  if (istret.ne.0) then   
-     do k=1,nz 
-        do j=1,ny 
-           do i=1,nx 
-              ty(i,j,k)=ty(i,j,k)*ppy(j) 
+  if (istret.ne.0) then
+     do k=1,nz
+        do j=1,ny
+           do i=1,nx
+              ty(i,j,k)=ty(i,j,k)*ppy(j)
            enddo
         enddo
      enddo
   endif
-  return  
+  return
 end subroutine dery_11
 
 !********************************************************************
 !
-subroutine dery_12(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire) 
+subroutine dery_12(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -559,113 +559,113 @@ subroutine dery_12(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
   implicit none
 
   integer :: nx,ny,nz,i,j,k,npaire
-  real(mytype), dimension(nx,ny,nz) :: ty,uy 
+  real(mytype), dimension(nx,ny,nz) :: ty,uy
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: sy
   real(mytype), dimension(ny) :: ffy,fsy,fwy,ppy
 
   if(iibm.eq.2) call lagpoly(uy)
 
-  if (npaire==1) then 
-     do k=1,nz 
-        do i=1,nx 
+  if (npaire==1) then
+     do k=1,nz
+        do i=1,nx
            ty(i,1,k)=zero
            ty(i,2,k)=afjy*(uy(i,3,k)-uy(i,1,k))&
-                +bfjy*(uy(i,4,k)-uy(i,2,k)) 
+                +bfjy*(uy(i,4,k)-uy(i,2,k))
         enddo
      enddo
-     do k=1,nz 
-        do j=3,ny-2 
-           do i=1,nx 
+     do k=1,nz
+        do j=3,ny-2
+           do i=1,nx
               ty(i,j,k)=afjy*(uy(i,j+1,k)-uy(i,j-1,k))&
-                   +bfjy*(uy(i,j+2,k)-uy(i,j-2,k)) 
+                   +bfjy*(uy(i,j+2,k)-uy(i,j-2,k))
            enddo
         enddo
      enddo
-     do k=1,nz 
-        do i=1,nx 
-           ty(i,ny-1,k)=afmy*(uy(i,ny,k)-uy(i,ny-2,k)) 
-           ty(i,ny,k)=-afny*uy(i,ny,k)-bfny*uy(i,ny-1,k)-cfny*uy(i,ny-2,k)  
+     do k=1,nz
+        do i=1,nx
+           ty(i,ny-1,k)=afmy*(uy(i,ny,k)-uy(i,ny-2,k))
+           ty(i,ny,k)=-afny*uy(i,ny,k)-bfny*uy(i,ny-1,k)-cfny*uy(i,ny-2,k)
         enddo
      enddo
      do k=1,nz
-        do j=2,ny  
-           do i=1,nx 
-              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fsy(j) 
+        do j=2,ny
+           do i=1,nx
+              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fsy(j)
            enddo
         enddo
      enddo
-     do k=1,nz 
-        do i=1,nx 
-           ty(i,ny,k)=ty(i,ny,k)*fwy(ny) 
+     do k=1,nz
+        do i=1,nx
+           ty(i,ny,k)=ty(i,ny,k)*fwy(ny)
         enddo
      enddo
      do k=1,nz
-        do j=ny-1,1,-1  
-           do i=1,nx 
-              ty(i,j,k)=(ty(i,j,k)-ffy(j)*ty(i,j+1,k))*fwy(j) 
+        do j=ny-1,1,-1
+           do i=1,nx
+              ty(i,j,k)=(ty(i,j,k)-ffy(j)*ty(i,j+1,k))*fwy(j)
            enddo
         enddo
      enddo
   endif
-  if (npaire==0) then 
-     do k=1,nz 
-        do i=1,nx 
+  if (npaire==0) then
+     do k=1,nz
+        do i=1,nx
            ty(i,1,k)=afjy*(uy(i,2,k)+uy(i,2,k))&
-                +bfjy*(uy(i,3,k)+uy(i,3,k)) 
+                +bfjy*(uy(i,3,k)+uy(i,3,k))
            ty(i,2,k)=afjy*(uy(i,3,k)-uy(i,1,k))&
-                +bfjy*(uy(i,4,k)+uy(i,2,k)) 
-        enddo
-     enddo
-     do k=1,nz 
-        do j=3,ny-2 
-           do i=1,nx 
-              ty(i,j,k)=afjy*(uy(i,j+1,k)-uy(i,j-1,k))&
-                   +bfjy*(uy(i,j+2,k)-uy(i,j-2,k)) 
-           enddo
-        enddo
-     enddo
-     do k=1,nz 
-        do i=1,nx 
-           ty(i,ny-1,k)=afmy*(uy(i,ny,k)-uy(i,ny-2,k)) 
-           ty(i,ny,k)=-afny*uy(i,ny,k)-bfny*uy(i,ny-1,k)-cfny*uy(i,ny-2,k) 
-        enddo
-     enddo
-     do k=1,nz 
-        do j=2,ny 
-           do i=1,nx 
-              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fsy(j) 
-           enddo
-        enddo
-     enddo
-     do k=1,nz 
-        do i=1,nx 
-           ty(i,ny,k)=ty(i,ny,k)*fwy(ny) 
+                +bfjy*(uy(i,4,k)+uy(i,2,k))
         enddo
      enddo
      do k=1,nz
-        do j=ny-1,1,-1  
-           do i=1,nx 
-              ty(i,j,k)=(ty(i,j,k)-ffy(j)*ty(i,j+1,k))*fwy(j) 
+        do j=3,ny-2
+           do i=1,nx
+              ty(i,j,k)=afjy*(uy(i,j+1,k)-uy(i,j-1,k))&
+                   +bfjy*(uy(i,j+2,k)-uy(i,j-2,k))
+           enddo
+        enddo
+     enddo
+     do k=1,nz
+        do i=1,nx
+           ty(i,ny-1,k)=afmy*(uy(i,ny,k)-uy(i,ny-2,k))
+           ty(i,ny,k)=-afny*uy(i,ny,k)-bfny*uy(i,ny-1,k)-cfny*uy(i,ny-2,k)
+        enddo
+     enddo
+     do k=1,nz
+        do j=2,ny
+           do i=1,nx
+              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fsy(j)
+           enddo
+        enddo
+     enddo
+     do k=1,nz
+        do i=1,nx
+           ty(i,ny,k)=ty(i,ny,k)*fwy(ny)
+        enddo
+     enddo
+     do k=1,nz
+        do j=ny-1,1,-1
+           do i=1,nx
+              ty(i,j,k)=(ty(i,j,k)-ffy(j)*ty(i,j+1,k))*fwy(j)
            enddo
         enddo
      enddo
   endif
-  if (istret.ne.0) then   
-     do k=1,nz 
-        do j=1,ny 
-           do i=1,nx 
-              ty(i,j,k)=ty(i,j,k)*ppy(j) 
+  if (istret.ne.0) then
+     do k=1,nz
+        do j=1,ny
+           do i=1,nx
+              ty(i,j,k)=ty(i,j,k)*ppy(j)
            enddo
         enddo
      enddo
   endif
-  return  
+  return
 end subroutine dery_12
 
 !********************************************************************
 !
-subroutine dery_21(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire) 
+subroutine dery_21(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -675,113 +675,113 @@ subroutine dery_21(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
   implicit none
 
   integer :: nx,ny,nz,i,j,k,npaire
-  real(mytype), dimension(nx,ny,nz) :: ty,uy 
+  real(mytype), dimension(nx,ny,nz) :: ty,uy
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: sy
   real(mytype), dimension(ny) :: ffy,fsy,fwy,ppy
 
   if(iibm.eq.2) call lagpoly(uy)
 
-  if (npaire==1) then 
-     do k=1,nz 
-        do i=1,nx 
-           ty(i,1,k)=af1y*uy(i,1,k)+bf1y*uy(i,2,k)+cf1y*uy(i,3,k) 
-           ty(i,2,k)=af2y*(uy(i,3,k)-uy(i,1,k))  
+  if (npaire==1) then
+     do k=1,nz
+        do i=1,nx
+           ty(i,1,k)=af1y*uy(i,1,k)+bf1y*uy(i,2,k)+cf1y*uy(i,3,k)
+           ty(i,2,k)=af2y*(uy(i,3,k)-uy(i,1,k))
         enddo
      enddo
-     do k=1,nz 
-        do j=3,ny-2 
-           do i=1,nx 
+     do k=1,nz
+        do j=3,ny-2
+           do i=1,nx
               ty(i,j,k)=afjy*(uy(i,j+1,k)-uy(i,j-1,k))&
-                   +bfjy*(uy(i,j+2,k)-uy(i,j-2,k)) 
+                   +bfjy*(uy(i,j+2,k)-uy(i,j-2,k))
            enddo
         enddo
      enddo
-     do k=1,nz 
-        do i=1,nx 
+     do k=1,nz
+        do i=1,nx
            ty(i,ny-1,k)=afjy*(uy(i,ny,k)-uy(i,ny-2,k))&
-                +bfjy*(uy(i,ny-1,k)-uy(i,ny-3,k)) 
+                +bfjy*(uy(i,ny-1,k)-uy(i,ny-3,k))
            ty(i,ny,k)=zero
         enddo
      enddo
      do k=1,nz
-        do j=2,ny  
-           do i=1,nx 
-              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fsy(j) 
+        do j=2,ny
+           do i=1,nx
+              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fsy(j)
            enddo
         enddo
      enddo
-     do k=1,nz 
-        do i=1,nx 
-           ty(i,ny,k)=ty(i,ny,k)*fwy(ny) 
+     do k=1,nz
+        do i=1,nx
+           ty(i,ny,k)=ty(i,ny,k)*fwy(ny)
         enddo
      enddo
      do k=1,nz
-        do j=ny-1,1,-1  
-           do i=1,nx 
-              ty(i,j,k)=(ty(i,j,k)-ffy(j)*ty(i,j+1,k))*fwy(j) 
+        do j=ny-1,1,-1
+           do i=1,nx
+              ty(i,j,k)=(ty(i,j,k)-ffy(j)*ty(i,j+1,k))*fwy(j)
            enddo
         enddo
      enddo
   endif
-  if (npaire==0) then 
-     do k=1,nz 
-        do i=1,nx 
-           ty(i,1,k)=af1y*uy(i,1,k)+bf1y*uy(i,2,k)+cf1y*uy(i,3,k) 
-           ty(i,2,k)=af2y*(uy(i,3,k)-uy(i,1,k)) 
+  if (npaire==0) then
+     do k=1,nz
+        do i=1,nx
+           ty(i,1,k)=af1y*uy(i,1,k)+bf1y*uy(i,2,k)+cf1y*uy(i,3,k)
+           ty(i,2,k)=af2y*(uy(i,3,k)-uy(i,1,k))
         enddo
      enddo
-     do k=1,nz 
-        do j=3,ny-2 
-           do i=1,nx 
+     do k=1,nz
+        do j=3,ny-2
+           do i=1,nx
               ty(i,j,k)=afjy*(uy(i,j+1,k)-uy(i,j-1,k))&
-                   +bfjy*(uy(i,j+2,k)-uy(i,j-2,k)) 
+                   +bfjy*(uy(i,j+2,k)-uy(i,j-2,k))
            enddo
-        enddo
-     enddo
-     do k=1,nz 
-        do i=1,nx 
-           ty(i,ny-1,k)=afjy*(uy(i,ny,k)-uy(i,ny-2,k))&
-                +bfjy*((-uy(i,ny-1,k))-uy(i,ny-3,k)) 
-           ty(i,ny,k)=afjy*((-uy(i,ny-1,k))-uy(i,ny-1,k))&
-                +bfjy*((-uy(i,ny-2,k))-uy(i,ny-2,k)) 
-        enddo
-     enddo
-     do k=1,nz 
-        do j=2,ny 
-           do i=1,nx 
-              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fsy(j) 
-           enddo
-        enddo
-     enddo
-     do k=1,nz 
-        do i=1,nx 
-           ty(i,ny,k)=ty(i,ny,k)*fwy(ny) 
         enddo
      enddo
      do k=1,nz
-        do j=ny-1,1,-1  
-           do i=1,nx 
-              ty(i,j,k)=(ty(i,j,k)-ffy(j)*ty(i,j+1,k))*fwy(j) 
+        do i=1,nx
+           ty(i,ny-1,k)=afjy*(uy(i,ny,k)-uy(i,ny-2,k))&
+                +bfjy*((-uy(i,ny-1,k))-uy(i,ny-3,k))
+           ty(i,ny,k)=afjy*((-uy(i,ny-1,k))-uy(i,ny-1,k))&
+                +bfjy*((-uy(i,ny-2,k))-uy(i,ny-2,k))
+        enddo
+     enddo
+     do k=1,nz
+        do j=2,ny
+           do i=1,nx
+              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fsy(j)
+           enddo
+        enddo
+     enddo
+     do k=1,nz
+        do i=1,nx
+           ty(i,ny,k)=ty(i,ny,k)*fwy(ny)
+        enddo
+     enddo
+     do k=1,nz
+        do j=ny-1,1,-1
+           do i=1,nx
+              ty(i,j,k)=(ty(i,j,k)-ffy(j)*ty(i,j+1,k))*fwy(j)
            enddo
         enddo
      enddo
   endif
-  if (istret.ne.0) then   
-     do k=1,nz 
-        do j=1,ny 
-           do i=1,nx 
-              ty(i,j,k)=ty(i,j,k)*ppy(j) 
+  if (istret.ne.0) then
+     do k=1,nz
+        do j=1,ny
+           do i=1,nx
+              ty(i,j,k)=ty(i,j,k)*ppy(j)
            enddo
         enddo
      enddo
   endif
-  return  
+  return
 end subroutine dery_21
 
 !********************************************************************
 !
-subroutine dery_22(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire) 
+subroutine dery_22(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -791,80 +791,80 @@ subroutine dery_22(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
   implicit none
 
   integer :: nx,ny,nz,i,j,k,npaire
-  real(mytype), dimension(nx,ny,nz) :: ty,uy 
+  real(mytype), dimension(nx,ny,nz) :: ty,uy
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: sy
   real(mytype), dimension(ny) :: ffy,fsy,fwy,ppy
 
   if(iibm.eq.2) call lagpoly(uy)
 
-  do k=1,nz 
-     do i=1,nx 
-        ty(i,1,k)=af1y*uy(i,1,k)+bf1y*uy(i,2,k)+cf1y*uy(i,3,k) 
-        ty(i,2,k)=af2y*(uy(i,3,k)-uy(i,1,k)) 
+  do k=1,nz
+     do i=1,nx
+        ty(i,1,k)=af1y*uy(i,1,k)+bf1y*uy(i,2,k)+cf1y*uy(i,3,k)
+        ty(i,2,k)=af2y*(uy(i,3,k)-uy(i,1,k))
      enddo
   enddo
   do k=1,nz
-     do j=3,ny-2  
-        do i=1,nx 
+     do j=3,ny-2
+        do i=1,nx
            ty(i,j,k)=afjy*(uy(i,j+1,k)-uy(i,j-1,k))&
-                +bfjy*(uy(i,j+2,k)-uy(i,j-2,k)) 
+                +bfjy*(uy(i,j+2,k)-uy(i,j-2,k))
         enddo
      enddo
   enddo
-  do k=1,nz 
-     do i=1,nx 
-        ty(i,ny-1,k)=afmy*(uy(i,ny,k)-uy(i,ny-2,k)) 
-        ty(i,ny,k)=-afny*uy(i,ny,k)-bfny*uy(i,ny-1,k)-cfny*uy(i,ny-2,k) 
+  do k=1,nz
+     do i=1,nx
+        ty(i,ny-1,k)=afmy*(uy(i,ny,k)-uy(i,ny-2,k))
+        ty(i,ny,k)=-afny*uy(i,ny,k)-bfny*uy(i,ny-1,k)-cfny*uy(i,ny-2,k)
      enddo
   enddo
   do k=1,nz
-     do j=2,ny  
-        do i=1,nx 
-           ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fsy(j) 
+     do j=2,ny
+        do i=1,nx
+           ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fsy(j)
         enddo
      enddo
   enddo
-  do k=1,nz 
-     do i=1,nx 
-        ty(i,ny,k)=ty(i,ny,k)*fwy(ny) 
+  do k=1,nz
+     do i=1,nx
+        ty(i,ny,k)=ty(i,ny,k)*fwy(ny)
      enddo
   enddo
   do k=1,nz
-     do j=ny-1,1,-1  
-        do i=1,nx 
-           ty(i,j,k)=(ty(i,j,k)-ffy(j)*ty(i,j+1,k))*fwy(j) 
+     do j=ny-1,1,-1
+        do i=1,nx
+           ty(i,j,k)=(ty(i,j,k)-ffy(j)*ty(i,j+1,k))*fwy(j)
         enddo
      enddo
   enddo
 
-  if (istret.ne.0) then   
-     do k=1,nz 
-        do j=1,ny 
-           do i=1,nx 
-              ty(i,j,k)=ty(i,j,k)*ppy(j) 
+  if (istret.ne.0) then
+     do k=1,nz
+        do j=1,ny
+           do i=1,nx
+              ty(i,j,k)=ty(i,j,k)*ppy(j)
            enddo
         enddo
      enddo
   endif
 
-  return  
+  return
 end subroutine dery_22
 
 !********************************************************************
 !
-subroutine derz_00(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire) 
+subroutine derz_00(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivZ 
+  USE param
+  USE derivZ
 
   implicit none
 
   integer :: nx,ny,nz,npaire,i,j,k
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
-  real(mytype), dimension(nx,ny) :: sz 
+  real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: ffz,fsz,fwz
 
   if(iibm.eq.2) call lagpolz(uz)
@@ -938,18 +938,18 @@ end subroutine derz_00
 
 !********************************************************************
 !
-subroutine derz_11(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire) 
+subroutine derz_11(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivZ 
+  USE param
+  USE derivZ
 
   implicit none
 
   integer :: nx,ny,nz,npaire,i,j,k
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
-  real(mytype), dimension(nx,ny) :: sz 
+  real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: ffz,fsz,fwz
 
   if(iibm.eq.2) call lagpolz(uz)
@@ -1048,18 +1048,18 @@ end subroutine derz_11
 
 !********************************************************************
 !
-subroutine derz_12(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire) 
+subroutine derz_12(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivZ 
+  USE param
+  USE derivZ
 
   implicit none
 
   integer :: nx,ny,nz,npaire,i,j,k
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
-  real(mytype), dimension(nx,ny) :: sz 
+  real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: ffz,fsz,fwz
 
   if(iibm.eq.2) call lagpolz(uz)
@@ -1157,18 +1157,18 @@ end subroutine derz_12
 
 !********************************************************************
 !
-subroutine derz_21(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire) 
+subroutine derz_21(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivZ 
+  USE param
+  USE derivZ
 
   implicit none
 
   integer :: nx,ny,nz,npaire,i,j,k
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
-  real(mytype), dimension(nx,ny) :: sz 
+  real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: ffz,fsz,fwz
 
   if(iibm.eq.2) call lagpolz(uz)
@@ -1266,18 +1266,18 @@ end subroutine derz_21
 
 !********************************************************************
 !
-subroutine derz_22(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire) 
+subroutine derz_22(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivZ 
+  USE param
+  USE derivZ
 
   implicit none
 
   integer :: nx,ny,nz,npaire,i,j,k
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
-  real(mytype), dimension(nx,ny) :: sz 
+  real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: ffz,fsz,fwz
 
   if(iibm.eq.2) call lagpolz(uz)
@@ -1329,19 +1329,19 @@ end subroutine derz_22
 
 !********************************************************************
 !
-subroutine derxx_00(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire) 
+subroutine derxx_00(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivX 
+  USE param
+  USE derivX
 
   implicit none
 
   integer :: nx,ny,nz,npaire,i,j,k
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: sx
-  real(mytype),  dimension(nx):: sfx,ssx,swx 
+  real(mytype),  dimension(nx):: sfx,ssx,swx
 
   if(iibm.eq.2) call lagpolx(ux)
 
@@ -1448,24 +1448,24 @@ subroutine derxx_00(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
      enddo
   enddo
 
-  return  
+  return
 end subroutine derxx_00
 
 !********************************************************************
 !
-subroutine derxx_11(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire) 
+subroutine derxx_11(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivX 
+  USE param
+  USE derivX
 
   implicit none
 
   integer :: nx,ny,nz,npaire,i,j,k
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: sx
-  real(mytype),  dimension(nx):: sfx,ssx,swx 
+  real(mytype),  dimension(nx):: sfx,ssx,swx
 
   if(iibm.eq.2) call lagpolx(ux)
 
@@ -1630,24 +1630,24 @@ subroutine derxx_11(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
      enddo
   endif
 
-  return  
+  return
 end subroutine derxx_11
 
 !********************************************************************
 !
-subroutine derxx_12(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire) 
+subroutine derxx_12(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivX 
+  USE param
+  USE derivX
 
   implicit none
 
   integer :: nx,ny,nz,npaire,i,j,k
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: sx
-  real(mytype),  dimension(nx):: sfx,ssx,swx 
+  real(mytype),  dimension(nx):: sfx,ssx,swx
 
   if(iibm.eq.2) call lagpolx(ux)
 
@@ -1783,24 +1783,24 @@ subroutine derxx_12(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
      enddo
   endif
 
-  return  
+  return
 end subroutine derxx_12
 
 !********************************************************************
 !
-subroutine derxx_21(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire) 
+subroutine derxx_21(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivX 
+  USE param
+  USE derivX
 
   implicit none
 
   integer :: nx,ny,nz,npaire,i,j,k
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: sx
-  real(mytype),  dimension(nx):: sfx,ssx,swx 
+  real(mytype),  dimension(nx):: sfx,ssx,swx
 
   if(iibm.eq.2) call lagpolx(ux)
 
@@ -1936,24 +1936,24 @@ subroutine derxx_21(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
      enddo
   endif
 
-  return  
+  return
 end subroutine derxx_21
 
 !********************************************************************
 !
-subroutine derxx_22(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire) 
+subroutine derxx_22(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivX 
+  USE param
+  USE derivX
 
   implicit none
 
   integer :: nx,ny,nz,npaire,i,j,k
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: sx
-  real(mytype),  dimension(nx):: sfx,ssx,swx 
+  real(mytype),  dimension(nx):: sfx,ssx,swx
 
   if(iibm.eq.2) call lagpolx(ux)
 
@@ -2007,21 +2007,21 @@ subroutine derxx_22(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
      enddo
   enddo
 
-  return  
+  return
 end subroutine derxx_22
 
 !********************************************************************
 !
-subroutine deryy_00(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire) 
+subroutine deryy_00(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivY 
+  USE param
+  USE derivY
 
   implicit none
 
-  integer :: nx,ny,nz,npaire,i,j,k 
+  integer :: nx,ny,nz,npaire,i,j,k
   real(mytype), dimension(nx,ny,nz) :: ty,uy,ry
   real(mytype), dimension(nx,nz) :: sy
   real(mytype), dimension(ny) :: sfy,ssy,swy
@@ -2123,9 +2123,7 @@ subroutine deryy_00(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
         ry(i,ny  ,k)=alsajy
      enddo
   enddo
-#ifdef IMPLICIT
-  return
-#endif
+if (itimescheme.eq.7) return
   do k=1,nz
      do j=2,ny
         do i=1,nx
@@ -2155,27 +2153,27 @@ subroutine deryy_00(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
      enddo
   enddo
   do k=1,nz
-     do j=1,ny     
+     do j=1,ny
         do i=1,nx
            ty(i,j,k)=ty(i,j,k)-sy(i,k)*ry(i,j,k)
         enddo
      enddo
   enddo
-  return  
+  return
 end subroutine deryy_00
 
 !********************************************************************
 !
-subroutine deryy_11(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire) 
+subroutine deryy_11(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivY 
+  USE param
+  USE derivY
 
   implicit none
 
-  integer :: nx,ny,nz,npaire,i,j,k 
+  integer :: nx,ny,nz,npaire,i,j,k
   real(mytype), dimension(nx,ny,nz) :: ty,uy,ry
   real(mytype), dimension(nx,nz) :: sy
   real(mytype), dimension(ny) :: sfy,ssy,swy
@@ -2220,8 +2218,8 @@ subroutine deryy_11(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
         enddo
      enddo
      do k=1,nz
-        do j=5,ny-4    
-           do i=1,nx   
+        do j=5,ny-4
+           do i=1,nx
               ty(i,j,k)=asjy*(uy(i,j+1,k)-uy(i,j  ,k)&
                    -uy(i,j  ,k)+uy(i,j-1,k))&
                    +bsjy*(uy(i,j+2,k)-uy(i,j  ,k)&
@@ -2269,11 +2267,9 @@ subroutine deryy_11(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
                 -uy(i,ny  ,k)+uy(i,ny-4,k))
         enddo
      enddo
-#ifdef IMPLICIT
-     return
-#endif
+if (itimescheme.eq.7) return
      do k=1,nz
-        do j=2,ny         
+        do j=2,ny
            do i=1,nx
               ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*ssy(j)
            enddo
@@ -2285,7 +2281,7 @@ subroutine deryy_11(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
         enddo
      enddo
      do k=1,nz
-        do j=ny-1,1,-1         
+        do j=ny-1,1,-1
            do i=1,nx
               ty(i,j,k)=(ty(i,j,k)-sfy(j)*ty(i,j+1,k))*swy(j)
            enddo
@@ -2324,7 +2320,7 @@ subroutine deryy_11(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
      enddo
      do k=1,nz
         do j=5,ny-4
-           do i=1,nx   
+           do i=1,nx
               ty(i,j,k)=asjy*(uy(i,j+1,k)-uy(i,j  ,k)&
                    -uy(i,j  ,k)+uy(i,j-1,k))&
                    +bsjy*(uy(i,j+2,k)-uy(i,j  ,k)&
@@ -2365,9 +2361,7 @@ subroutine deryy_11(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
            ty(i,ny  ,k)=zero
         enddo
      enddo
-#ifdef IMPLICIT
-     return
-#endif
+if (itimescheme.eq.7) return
      do k=1,nz
         do j=2,ny
            do i=1,nx
@@ -2388,21 +2382,21 @@ subroutine deryy_11(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
         enddo
      enddo
   endif
-  return  
+  return
 end subroutine deryy_11
 
 !********************************************************************
 !
-subroutine deryy_12(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire) 
+subroutine deryy_12(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivY 
+  USE param
+  USE derivY
 
   implicit none
 
-  integer :: nx,ny,nz,npaire,i,j,k 
+  integer :: nx,ny,nz,npaire,i,j,k
   real(mytype), dimension(nx,ny,nz) :: ty,uy,ry
   real(mytype), dimension(nx,nz) :: sy
   real(mytype), dimension(ny) :: sfy,ssy,swy
@@ -2447,8 +2441,8 @@ subroutine deryy_12(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
         enddo
      enddo
      do k=1,nz
-        do j=5,ny-4    
-           do i=1,nx   
+        do j=5,ny-4
+           do i=1,nx
               ty(i,j,k)=asjy*(uy(i,j+1,k)-uy(i,j  ,k)&
                    -uy(i,j  ,k)+uy(i,j-1,k))&
                    +bsjy*(uy(i,j+2,k)-uy(i,j  ,k)&
@@ -2478,11 +2472,9 @@ subroutine deryy_12(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
                 +csny*uy(i,ny-2,k)+dsny*uy(i,ny-3,k)
         enddo
      enddo
-#ifdef IMPLICIT
-     return
-#endif
+if (itimescheme.eq.7) return
      do k=1,nz
-        do j=2,ny         
+        do j=2,ny
            do i=1,nx
               ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*ssy(j)
            enddo
@@ -2494,7 +2486,7 @@ subroutine deryy_12(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
         enddo
      enddo
      do k=1,nz
-        do j=ny-1,1,-1         
+        do j=ny-1,1,-1
            do i=1,nx
               ty(i,j,k)=(ty(i,j,k)-sfy(j)*ty(i,j+1,k))*swy(j)
            enddo
@@ -2533,7 +2525,7 @@ subroutine deryy_12(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
      enddo
      do k=1,nz
         do j=5,ny-4
-           do i=1,nx   
+           do i=1,nx
               ty(i,j,k)=asjy*(uy(i,j+1,k)-uy(i,j  ,k)&
                    -uy(i,j  ,k)+uy(i,j-1,k))&
                    +bsjy*(uy(i,j+2,k)-uy(i,j  ,k)&
@@ -2563,9 +2555,7 @@ subroutine deryy_12(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
                 +csny*uy(i,ny-2,k)+dsny*uy(i,ny-3,k)
         enddo
      enddo
-#ifdef IMPLICIT
-     return
-#endif
+if (itimescheme.eq.7) return
      do k=1,nz
         do j=2,ny
            do i=1,nx
@@ -2587,21 +2577,21 @@ subroutine deryy_12(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
      enddo
   endif
 
-  return  
+  return
 end subroutine deryy_12
 
 !********************************************************************
 !
-subroutine deryy_21(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire) 
+subroutine deryy_21(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivY 
+  USE param
+  USE derivY
 
   implicit none
 
-  integer :: nx,ny,nz,npaire,i,j,k 
+  integer :: nx,ny,nz,npaire,i,j,k
   real(mytype), dimension(nx,ny,nz) :: ty,uy,ry
   real(mytype), dimension(nx,nz) :: sy
   real(mytype), dimension(ny) :: sfy,ssy,swy
@@ -2628,8 +2618,8 @@ subroutine deryy_21(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
         enddo
      enddo
      do k=1,nz
-        do j=5,ny-4    
-           do i=1,nx   
+        do j=5,ny-4
+           do i=1,nx
               ty(i,j,k)=asjy*(uy(i,j+1,k)-uy(i,j  ,k)&
                    -uy(i,j  ,k)+uy(i,j-1,k))&
                    +bsjy*(uy(i,j+2,k)-uy(i,j  ,k)&
@@ -2677,11 +2667,9 @@ subroutine deryy_21(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
                 -uy(i,ny  ,k)+uy(i,ny-4,k))
         enddo
      enddo
-#ifdef IMPLICIT
-     return
-#endif
+if (itimescheme.eq.7) return
      do k=1,nz
-        do j=2,ny         
+        do j=2,ny
            do i=1,nx
               ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*ssy(j)
            enddo
@@ -2693,7 +2681,7 @@ subroutine deryy_21(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
         enddo
      enddo
      do k=1,nz
-        do j=ny-1,1,-1         
+        do j=ny-1,1,-1
            do i=1,nx
               ty(i,j,k)=(ty(i,j,k)-sfy(j)*ty(i,j+1,k))*swy(j)
            enddo
@@ -2721,7 +2709,7 @@ subroutine deryy_21(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
      enddo
      do k=1,nz
         do j=5,ny-4
-           do i=1,nx   
+           do i=1,nx
               ty(i,j,k)=asjy*(uy(i,j+1,k)-uy(i,j  ,k)&
                    -uy(i,j  ,k)+uy(i,j-1,k))&
                    +bsjy*(uy(i,j+2,k)-uy(i,j  ,k)&
@@ -2762,9 +2750,7 @@ subroutine deryy_21(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
            ty(i,ny  ,k)=zero
         enddo
      enddo
-#ifdef IMPLICIT
-     return
-#endif
+if (itimescheme.eq.7) return
      do k=1,nz
         do j=2,ny
            do i=1,nx
@@ -2786,21 +2772,21 @@ subroutine deryy_21(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
      enddo
   endif
 
-  return  
+  return
 end subroutine deryy_21
 
 !********************************************************************
 !
-subroutine deryy_22(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire) 
+subroutine deryy_22(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivY 
+  USE param
+  USE derivY
 
   implicit none
 
-  integer :: nx,ny,nz,npaire,i,j,k 
+  integer :: nx,ny,nz,npaire,i,j,k
   real(mytype), dimension(nx,ny,nz) :: ty,uy,ry
   real(mytype), dimension(nx,nz) :: sy
   real(mytype), dimension(ny) :: sfy,ssy,swy
@@ -2827,7 +2813,7 @@ subroutine deryy_22(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
   enddo
   do k=1,nz
      do j=5,ny-4
-        do i=1,nx   
+        do i=1,nx
            ty(i,j,k)=asjy*(uy(i,j+1,k)-uy(i,j  ,k)&
                 -uy(i,j  ,k)+uy(i,j-1,k))&
                 +bsjy*(uy(i,j+2,k)-uy(i,j  ,k)&
@@ -2857,9 +2843,7 @@ subroutine deryy_22(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
              +csny*uy(i,ny-2,k)+dsny*uy(i,ny-3,k)
      enddo
   enddo
-#ifdef IMPLICIT
-  return
-#endif
+if (itimescheme.eq.7) return
   do k=1,nz
      do j=2,ny
         do i=1,nx
@@ -2879,23 +2863,23 @@ subroutine deryy_22(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
         enddo
      enddo
   enddo
-  return  
+  return
 end subroutine deryy_22
 
 !********************************************************************
 !
-subroutine derzz_00(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire) 
+subroutine derzz_00(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivZ 
+  USE param
+  USE derivZ
 
   implicit none
 
   integer :: nx,ny,nz,npaire,i,j,k
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
-  real(mytype), dimension(nx,ny) :: sz 
+  real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: sfz,ssz,swz
 
   if(iibm.eq.2) call lagpolz(uz)
@@ -3030,23 +3014,23 @@ subroutine derzz_00(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
         enddo
      enddo
   enddo
-  return  
+  return
 end subroutine derzz_00
 
 !********************************************************************
 !
-subroutine derzz_11(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire) 
+subroutine derzz_11(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivZ 
+  USE param
+  USE derivZ
 
   implicit none
 
   integer :: nx,ny,nz,npaire,i,j,k
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
-  real(mytype), dimension(nx,ny) :: sz 
+  real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: sfz,ssz,swz
 
   if(iibm.eq.2) call lagpolz(uz)
@@ -3252,23 +3236,23 @@ subroutine derzz_11(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
      enddo
   endif
 
-  return  
+  return
 end subroutine derzz_11
 
 !********************************************************************
 !
-subroutine derzz_12(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire) 
+subroutine derzz_12(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivZ 
+  USE param
+  USE derivZ
 
   implicit none
 
   integer :: nx,ny,nz,npaire,i,j,k
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
-  real(mytype), dimension(nx,ny) :: sz 
+  real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: sfz,ssz,swz
 
   if(iibm.eq.2) call lagpolz(uz)
@@ -3445,23 +3429,23 @@ subroutine derzz_12(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
      enddo
   endif
 
-  return  
+  return
 end subroutine derzz_12
 
 !********************************************************************
 !
-subroutine derzz_21(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire) 
+subroutine derzz_21(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivZ 
+  USE param
+  USE derivZ
 
   implicit none
 
   integer :: nx,ny,nz,npaire,i,j,k
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
-  real(mytype), dimension(nx,ny) :: sz 
+  real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: sfz,ssz,swz
 
   if(iibm.eq.2) call lagpolz(uz)
@@ -3638,23 +3622,23 @@ subroutine derzz_21(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
      enddo
   endif
 
-  return  
+  return
 end subroutine derzz_21
 
 !********************************************************************
 !
-subroutine derzz_22(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire) 
+subroutine derzz_22(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivZ 
+  USE param
+  USE derivZ
 
   implicit none
 
   integer :: nx,ny,nz,npaire,i,j,k
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
-  real(mytype), dimension(nx,ny) :: sz 
+  real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: sfz,ssz,swz
 
   if(iibm.eq.2) call lagpolz(uz)
@@ -3733,17 +3717,17 @@ subroutine derzz_22(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
         enddo
      enddo
   enddo
-  return  
+  return
 end subroutine derzz_22
 
 !********************************************************************
 !
-subroutine derxvp(tx,ux,rx,sx,cfx6,csx6,cwx6,nx,nxm,ny,nz,npaire)  
+subroutine derxvp(tx,ux,rx,sx,cfx6,csx6,cwx6,nx,nxm,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivX 
+  USE param
+  USE derivX
 
   implicit none
 
@@ -3800,15 +3784,15 @@ subroutine derxvp(tx,ux,rx,sx,cfx6,csx6,cwx6,nx,nxm,ny,nz,npaire)
         do k=1,nz
            do j=1,ny
               tx(1,j,k)=acix6*(ux(2,j,k)-ux(1,j,k))&
-                   +bcix6*(ux(3,j,k)-ux(2,j,k))             
+                   +bcix6*(ux(3,j,k)-ux(2,j,k))
               tx(2,j,k)=acix6*(ux(3,j,k)-ux(2,j,k))&
-                   +bcix6*(ux(4,j,k)-ux(1,j,k)) 
+                   +bcix6*(ux(4,j,k)-ux(1,j,k))
               do i=3,nxm-2
                  tx(i,j,k)=acix6*(ux(i+1,j,k)-ux(i,j,k))&
-                      +bcix6*(ux(i+2,j,k)-ux(i-1,j,k))              
+                      +bcix6*(ux(i+2,j,k)-ux(i-1,j,k))
               enddo
               tx(nxm-1,j,k)=acix6*(ux(nxm,j,k)-ux(nxm-1,j,k))&
-                   +bcix6*(ux(nx,j,k)-ux(nxm-2,j,k))         
+                   +bcix6*(ux(nx,j,k)-ux(nxm-2,j,k))
               tx(nxm,j,k)=acix6*(ux(nx,j,k)-ux(nxm,j,k))&
                    +bcix6*(ux(nxm,j,k)-ux(nxm-1,j,k))
               do i=2,nxm
@@ -3825,7 +3809,7 @@ subroutine derxvp(tx,ux,rx,sx,cfx6,csx6,cwx6,nx,nxm,ny,nz,npaire)
         do k=1,nz
            do j=1,ny
               tx(1,j,k)=acix6*(ux(2,j,k)-ux(1,j,k))&
-                   +bcix6*(ux(3,j,k)-2.*ux(1,j,k)+ux(2,j,k)) 
+                   +bcix6*(ux(3,j,k)-2.*ux(1,j,k)+ux(2,j,k))
               tx(2,j,k)=acix6*(ux(3,j,k)-ux(2,j,k))&
                    +bcix6*(ux(4,j,k)-ux(1,j,k))
               do i=3,nxm-2
@@ -3833,9 +3817,9 @@ subroutine derxvp(tx,ux,rx,sx,cfx6,csx6,cwx6,nx,nxm,ny,nz,npaire)
                       +bcix6*(ux(i+2,j,k)-ux(i-1,j,k))
               enddo
               tx(nxm-1,j,k)=acix6*(ux(nxm,j,k)-ux(nxm-1,j,k))&
-                   +bcix6*(ux(nx,j,k)-ux(nxm-2,j,k)) 
+                   +bcix6*(ux(nx,j,k)-ux(nxm-2,j,k))
               tx(nxm,j,k)=acix6*(ux(nx,j,k)-ux(nxm,j,k))&
-                   +bcix6*(2.*ux(nx,j,k)-ux(nxm,j,k)-ux(nxm-1,j,k)) 
+                   +bcix6*(2.*ux(nx,j,k)-ux(nxm,j,k)-ux(nxm-1,j,k))
               do i=2,nxm
                  tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*csx6(i)
               enddo
@@ -3848,17 +3832,17 @@ subroutine derxvp(tx,ux,rx,sx,cfx6,csx6,cwx6,nx,nxm,ny,nz,npaire)
      endif
   endif
 
-  return     
+  return
 end subroutine derxvp
 
 !********************************************************************
 !
-subroutine interxvp(tx,ux,rx,sx,cifx6,cisx6,ciwx6,nx,nxm,ny,nz,npaire) 
+subroutine interxvp(tx,ux,rx,sx,cifx6,cisx6,ciwx6,nx,nxm,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivX 
+  USE param
+  USE derivX
 
   implicit none
 
@@ -3953,7 +3937,7 @@ subroutine interxvp(tx,ux,rx,sx,cifx6,cisx6,ciwx6,nx,nxm,ny,nz,npaire)
                  tx(i,j,k)=aicix6*(ux(i+1,j,k)+ux(i,j,k))&
                       +bicix6*(ux(i+2,j,k)+ux(i-1,j,k))&
                       +cicix6*(ux(i+3,j,k)+ux(i-2,j,k))&
-                      +dicix6*(ux(i+4,j,k)+ux(i-3,j,k))              
+                      +dicix6*(ux(i+4,j,k)+ux(i-3,j,k))
               enddo
               tx(nxm-2,j,k)=aicix6*(ux(nxm-1,j,k)+ux(nxm-2,j,k))&
                    +bicix6*(ux(nxm,j,k)+ux(nxm-3,j,k))&
@@ -3984,12 +3968,12 @@ end subroutine interxvp
 
 !********************************************************************
 !
-subroutine derxpv(tx,ux,rx,sx,cfi6,csi6,cwi6,cfx6,csx6,cwx6,nxm,nx,ny,nz,npaire) 
+subroutine derxpv(tx,ux,rx,sx,cfi6,csi6,cwi6,cfx6,csx6,cwx6,nxm,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivX 
+  USE param
+  USE derivX
 
   implicit none
 
@@ -4042,9 +4026,9 @@ subroutine derxpv(tx,ux,rx,sx,cfi6,csi6,cwi6,cfx6,csx6,cwx6,nxm,nx,ny,nz,npaire)
      if (npaire==1) then
         do k=1,nz
            do j=1,ny
-              tx(1,j,k)=0.  
+              tx(1,j,k)=0.
               tx(2,j,k)=acix6*(ux(2,j,k)-ux(1,j,k))&
-                   +bcix6*(ux(3,j,k)-ux(1,j,k)) 
+                   +bcix6*(ux(3,j,k)-ux(1,j,k))
               do i=3,nx-2
                  tx(i,j,k)=acix6*(ux(i,j,k)-ux(i-1,j,k))&
                       +bcix6*(ux(i+1,j,k)-ux(i-2,j,k))
@@ -4070,12 +4054,12 @@ end subroutine derxpv
 !********************************************************************
 !
 subroutine interxpv(tx,ux,rx,sx,cifi6,cisi6,ciwi6,cifx6,cisx6,ciwx6,&
-     nxm,nx,ny,nz,npaire) 
+     nxm,nx,ny,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivX 
+  USE param
+  USE derivX
 
   implicit none
 
@@ -4178,11 +4162,11 @@ subroutine interxpv(tx,ux,rx,sx,cifi6,cisi6,ciwi6,cifx6,cisx6,ciwx6,&
               tx(nx-3,j,k)=aicix6*(ux(nx-3,j,k)+ux(nx-4,j,k))&
                    +bicix6*(ux(nx-2,j,k)+ux(nx-5,j,k))&
                    +cicix6*(ux(nx-1,j,k)+ux(nx-6,j,k))&
-                   +dicix6*(ux(nx-1,j,k)+ux(nx-7,j,k))        
+                   +dicix6*(ux(nx-1,j,k)+ux(nx-7,j,k))
               tx(nx-2,j,k)=aicix6*(ux(nx-2,j,k)+ux(nx-3,j,k))&
                    +bicix6*(ux(nx-1,j,k)+ux(nx-4,j,k))&
                    +cicix6*(ux(nx-1,j,k)+ux(nx-5,j,k))&
-                   +dicix6*(ux(nx-2,j,k)+ux(nx-6,j,k))        
+                   +dicix6*(ux(nx-2,j,k)+ux(nx-6,j,k))
               tx(nx-1,j,k)=aicix6*(ux(nx-1,j,k)+ux(nx-2,j,k))&
                    +bicix6*(ux(nx-1,j,k)+ux(nx-3,j,k))&
                    +cicix6*(ux(nx-2,j,k)+ux(nx-4,j,k))&
@@ -4208,12 +4192,12 @@ end subroutine interxpv
 
 !********************************************************************
 !
-subroutine interyvp(ty,uy,ry,sy,cify6,cisy6,ciwy6,nx,ny,nym,nz,npaire) 
+subroutine interyvp(ty,uy,ry,sy,cify6,cisy6,ciwy6,nx,ny,nym,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivY 
+  USE param
+  USE derivY
 
   implicit none
 
@@ -4225,38 +4209,38 @@ subroutine interyvp(ty,uy,ry,sy,cify6,cisy6,ciwy6,nx,ny,nym,nz,npaire)
   integer :: i,j,k
 
   if (ncly) then
-     do k=1,nz 
-        do i=1,nx 
+     do k=1,nz
+        do i=1,nx
            ty(i,1,k)=aiciy6*(uy(i,2,k)+uy(i,1,k))&
                 +biciy6*(uy(i,3,k)+uy(i,ny,k))&
                 +ciciy6*(uy(i,4,k)+uy(i,ny-1,k))&
-                +diciy6*(uy(i,5,k)+uy(i,ny-2,k)) 
+                +diciy6*(uy(i,5,k)+uy(i,ny-2,k))
            ry(i,1,k)=-1.
            ty(i,2,k)=aiciy6*(uy(i,3,k)+uy(i,2,k))&
                 +biciy6*(uy(i,4,k)+uy(i,1,k))&
-                +ciciy6*(uy(i,5,k)+uy(i,ny,k))& 
-                +diciy6*(uy(i,6,k)+uy(i,ny-1,k)) 
-           ry(i,2,k)=0. 
+                +ciciy6*(uy(i,5,k)+uy(i,ny,k))&
+                +diciy6*(uy(i,6,k)+uy(i,ny-1,k))
+           ry(i,2,k)=0.
            ty(i,3,k)=aiciy6*(uy(i,4,k)+uy(i,3,k))&
                 +biciy6*(uy(i,5,k)+uy(i,2,k))&
-                +ciciy6*(uy(i,6,k)+uy(i,1,k))& 
-                +diciy6*(uy(i,7,k)+uy(i,ny,k)) 
-           ry(i,3,k)=0. 
+                +ciciy6*(uy(i,6,k)+uy(i,1,k))&
+                +diciy6*(uy(i,7,k)+uy(i,ny,k))
+           ry(i,3,k)=0.
         enddo
      enddo
      do k=1,nz
         do j=4,ny-4
-           do i=1,nx 
+           do i=1,nx
               ty(i,j,k)=aiciy6*(uy(i,j+1,k)+uy(i,j,k))&
                    +biciy6*(uy(i,j+2,k)+uy(i,j-1,k))&
-                   +ciciy6*(uy(i,j+3,k)+uy(i,j-2,k))& 
-                   +diciy6*(uy(i,j+4,k)+uy(i,j-3,k)) 
-              ry(i,j,k)=0. 
+                   +ciciy6*(uy(i,j+3,k)+uy(i,j-2,k))&
+                   +diciy6*(uy(i,j+4,k)+uy(i,j-3,k))
+              ry(i,j,k)=0.
            enddo
         enddo
      enddo
-     do k=1,nz 
-        do i=1,nx 
+     do k=1,nz
+        do i=1,nx
            ty(i,ny-3,k)=aiciy6*(uy(i,ny-2,k)+uy(i,ny-3,k))&
                 +biciy6*(uy(i,ny-1,k)+uy(i,ny-4,k))&
                 +ciciy6*(uy(i,ny,k)+uy(i,ny-5,k))&
@@ -4270,47 +4254,47 @@ subroutine interyvp(ty,uy,ry,sy,cify6,cisy6,ciwy6,nx,ny,nym,nz,npaire)
            ty(i,ny-1,k)=aiciy6*(uy(i,ny,k)+uy(i,ny-1,k))&
                 +biciy6*(uy(i,1,k)+uy(i,ny-2,k))&
                 +ciciy6*(uy(i,2,k)+uy(i,ny-3,k))&
-                +diciy6*(uy(i,3,k)+uy(i,ny-4,k)) 
-           ry(i,ny-1,k)=0. 
+                +diciy6*(uy(i,3,k)+uy(i,ny-4,k))
+           ry(i,ny-1,k)=0.
            ty(i,ny,k)=aiciy6*(uy(i,1,k)+uy(i,ny,k))&
                 +biciy6*(uy(i,2,k)+uy(i,ny-1,k))&
-                +ciciy6*(uy(i,3,k)+uy(i,ny-2,k))& 
-                +diciy6*(uy(i,4,k)+uy(i,ny-3,k)) 
+                +ciciy6*(uy(i,3,k)+uy(i,ny-2,k))&
+                +diciy6*(uy(i,4,k)+uy(i,ny-3,k))
            ry(i,ny,k)=ailcaiy6
         enddo
      enddo
      do k=1,nz
-        do j=2,ny  
-           do i=1,nx 
-              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*cisy6(j) 
-              ry(i,j,k)=ry(i,j,k)-ry(i,j-1,k)*cisy6(j) 
+        do j=2,ny
+           do i=1,nx
+              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*cisy6(j)
+              ry(i,j,k)=ry(i,j,k)-ry(i,j-1,k)*cisy6(j)
            enddo
-        enddo
-     enddo
-     do k=1,nz 
-        do i=1,nx 
-           ty(i,ny,k)=ty(i,ny,k)*ciwy6(ny) 
-           ry(i,ny,k)=ry(i,ny,k)*ciwy6(ny) 
-        enddo
-     enddo
-     do k=1,nz 
-        do j=ny-1,1,-1 
-           do i=1,nx 
-              ty(i,j,k)=(ty(i,j,k)-cify6(j)*ty(i,j+1,k))*ciwy6(j) 
-              ry(i,j,k)=(ry(i,j,k)-cify6(j)*ry(i,j+1,k))*ciwy6(j) 
-           enddo
-        enddo
-     enddo
-     do k=1,nz 
-        do i=1,nx 
-           sy(i,k)=(ty(i,1,k)-ailcaiy6*ty(i,ny,k))&
-                /(1.+ry(i,1,k)-ailcaiy6*ry(i,ny,k)) 
         enddo
      enddo
      do k=1,nz
-        do j=1,ny  
-           do i=1,nx 
-              ty(i,j,k)=ty(i,j,k)-sy(i,k)*ry(i,j,k) 
+        do i=1,nx
+           ty(i,ny,k)=ty(i,ny,k)*ciwy6(ny)
+           ry(i,ny,k)=ry(i,ny,k)*ciwy6(ny)
+        enddo
+     enddo
+     do k=1,nz
+        do j=ny-1,1,-1
+           do i=1,nx
+              ty(i,j,k)=(ty(i,j,k)-cify6(j)*ty(i,j+1,k))*ciwy6(j)
+              ry(i,j,k)=(ry(i,j,k)-cify6(j)*ry(i,j+1,k))*ciwy6(j)
+           enddo
+        enddo
+     enddo
+     do k=1,nz
+        do i=1,nx
+           sy(i,k)=(ty(i,1,k)-ailcaiy6*ty(i,ny,k))&
+                /(1.+ry(i,1,k)-ailcaiy6*ry(i,ny,k))
+        enddo
+     enddo
+     do k=1,nz
+        do j=1,ny
+           do i=1,nx
+              ty(i,j,k)=ty(i,j,k)-sy(i,k)*ry(i,j,k)
            enddo
         enddo
      enddo
@@ -4320,16 +4304,16 @@ subroutine interyvp(ty,uy,ry,sy,cify6,cisy6,ciwy6,nx,ny,nym,nz,npaire)
            do i=1,nx
               ty(i,1,k)=aiciy6*(uy(i,2,k)+uy(i,1,k))&
                    +biciy6*(uy(i,3,k)+uy(i,2,k))&
-                   +ciciy6*(uy(i,4,k)+uy(i,3,k))&             
-                   +diciy6*(uy(i,5,k)+uy(i,4,k))             
+                   +ciciy6*(uy(i,4,k)+uy(i,3,k))&
+                   +diciy6*(uy(i,5,k)+uy(i,4,k))
               ty(i,2,k)=aiciy6*(uy(i,3,k)+uy(i,2,k))&
                    +biciy6*(uy(i,4,k)+uy(i,1,k))&
-                   +ciciy6*(uy(i,5,k)+uy(i,2,k))&             
-                   +diciy6*(uy(i,6,k)+uy(i,3,k))             
+                   +ciciy6*(uy(i,5,k)+uy(i,2,k))&
+                   +diciy6*(uy(i,6,k)+uy(i,3,k))
               ty(i,3,k)=aiciy6*(uy(i,4,k)+uy(i,3,k))&
                    +biciy6*(uy(i,5,k)+uy(i,2,k))&
-                   +ciciy6*(uy(i,6,k)+uy(i,1,k))&             
-                   +diciy6*(uy(i,7,k)+uy(i,2,k))             
+                   +ciciy6*(uy(i,6,k)+uy(i,1,k))&
+                   +diciy6*(uy(i,7,k)+uy(i,2,k))
            enddo
         enddo
         do k=1,nz
@@ -4337,8 +4321,8 @@ subroutine interyvp(ty,uy,ry,sy,cify6,cisy6,ciwy6,nx,ny,nym,nz,npaire)
               do i=1,nx
                  ty(i,j,k)=aiciy6*(uy(i,j+1,k)+uy(i,j,k))&
                       +biciy6*(uy(i,j+2,k)+uy(i,j-1,k))&
-                      +ciciy6*(uy(i,j+3,k)+uy(i,j-2,k))&              
-                      +diciy6*(uy(i,j+4,k)+uy(i,j-3,k))              
+                      +ciciy6*(uy(i,j+3,k)+uy(i,j-2,k))&
+                      +diciy6*(uy(i,j+4,k)+uy(i,j-3,k))
               enddo
            enddo
         enddo
@@ -4346,16 +4330,16 @@ subroutine interyvp(ty,uy,ry,sy,cify6,cisy6,ciwy6,nx,ny,nym,nz,npaire)
            do i=1,nx
               ty(i,nym-2,k)=aiciy6*(uy(i,nym-1,k)+uy(i,nym-2,k))&
                    +biciy6*(uy(i,nym,k)+uy(i,nym-3,k))&
-                   +ciciy6*(uy(i,ny,k)+uy(i,nym-4,k))&         
-                   +diciy6*(uy(i,nym,k)+uy(i,nym-5,k))         
+                   +ciciy6*(uy(i,ny,k)+uy(i,nym-4,k))&
+                   +diciy6*(uy(i,nym,k)+uy(i,nym-5,k))
               ty(i,nym-1,k)=aiciy6*(uy(i,nym,k)+uy(i,nym-1,k))&
                    +biciy6*(uy(i,ny,k)+uy(i,nym-2,k))&
-                   +ciciy6*(uy(i,nym,k)+uy(i,nym-3,k))&         
-                   +diciy6*(uy(i,nym-1,k)+uy(i,nym-4,k))         
+                   +ciciy6*(uy(i,nym,k)+uy(i,nym-3,k))&
+                   +diciy6*(uy(i,nym-1,k)+uy(i,nym-4,k))
               ty(i,nym,k)=aiciy6*(uy(i,ny,k)+uy(i,nym,k))&
                    +biciy6*(uy(i,nym,k)+uy(i,nym-1,k))&
-                   +ciciy6*(uy(i,nym-1,k)+uy(i,nym-2,k))&            
-                   +diciy6*(uy(i,nym-2,k)+uy(i,nym-3,k))            
+                   +ciciy6*(uy(i,nym-1,k)+uy(i,nym-2,k))&
+                   +diciy6*(uy(i,nym-2,k)+uy(i,nym-3,k))
            enddo
         enddo
         do k=1,nz
@@ -4385,12 +4369,12 @@ end subroutine interyvp
 
 !********************************************************************
 !
-subroutine deryvp(ty,uy,ry,sy,cfy6,csy6,cwy6,ppyi,nx,ny,nym,nz,npaire) 
+subroutine deryvp(ty,uy,ry,sy,cfy6,csy6,cwy6,ppyi,nx,ny,nym,nz,npaire)
   !
   !********************************************************************
 
   USE param
-  USE derivY 
+  USE derivY
 
   implicit none
 
@@ -4403,67 +4387,67 @@ subroutine deryvp(ty,uy,ry,sy,cfy6,csy6,cwy6,ppyi,nx,ny,nym,nz,npaire)
   integer :: i,j,k
 
   if (ncly) then
-     do k=1,nz 
-        do i=1,nx 
+     do k=1,nz
+        do i=1,nx
            ty(i,1,k)=aciy6*(uy(i,2,k)-uy(i,1,k))&
-                +bciy6*(uy(i,3,k)-uy(i,ny,k)) 
+                +bciy6*(uy(i,3,k)-uy(i,ny,k))
            ry(i,1,k)=-1.
            ty(i,2,k)=aciy6*(uy(i,3,k)-uy(i,2,k))&
-                +bciy6*(uy(i,4,k)-uy(i,1,k)) 
-           ry(i,2,k)=0. 
+                +bciy6*(uy(i,4,k)-uy(i,1,k))
+           ry(i,2,k)=0.
         enddo
      enddo
      do k=1,nz
-        do j=3,ny-2  
-           do i=1,nx 
+        do j=3,ny-2
+           do i=1,nx
               ty(i,j,k)=aciy6*(uy(i,j+1,k)-uy(i,j,k))&
-                   +bciy6*(uy(i,j+2,k)-uy(i,j-1,k)) 
+                   +bciy6*(uy(i,j+2,k)-uy(i,j-1,k))
               ry(i,j,k)=0.
            enddo
         enddo
      enddo
-     do k=1,nz 
-        do i=1,nx 
+     do k=1,nz
+        do i=1,nx
            ty(i,ny-1,k)=aciy6*(uy(i,ny,k)-uy(i,ny-1,k))&
-                +bciy6*(uy(i,1,k)-uy(i,ny-2,k)) 
-           ry(i,ny-1,k)=0. 
+                +bciy6*(uy(i,1,k)-uy(i,ny-2,k))
+           ry(i,ny-1,k)=0.
            ty(i,ny,k)=aciy6*(uy(i,1,k)-uy(i,ny,k))&
-                +bciy6*(uy(i,2,k)-uy(i,ny-1,k)) 
+                +bciy6*(uy(i,2,k)-uy(i,ny-1,k))
            ry(i,ny,k)=alcaiy6
         enddo
      enddo
      do k=1,nz
-        do j=2,ny  
-           do i=1,nx 
-              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*csy6(j) 
-              ry(i,j,k)=ry(i,j,k)-ry(i,j-1,k)*csy6(j) 
+        do j=2,ny
+           do i=1,nx
+              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*csy6(j)
+              ry(i,j,k)=ry(i,j,k)-ry(i,j-1,k)*csy6(j)
            enddo
-        enddo
-     enddo
-     do k=1,nz 
-        do i=1,nx 
-           ty(i,ny,k)=ty(i,ny,k)*cwy6(ny) 
-           ry(i,ny,k)=ry(i,ny,k)*cwy6(ny) 
         enddo
      enddo
      do k=1,nz
-        do j=ny-1,1,-1  
-           do i=1,nx 
-              ty(i,j,k)=(ty(i,j,k)-cfy6(j)*ty(i,j+1,k))*cwy6(j) 
-              ry(i,j,k)=(ry(i,j,k)-cfy6(j)*ry(i,j+1,k))*cwy6(j) 
+        do i=1,nx
+           ty(i,ny,k)=ty(i,ny,k)*cwy6(ny)
+           ry(i,ny,k)=ry(i,ny,k)*cwy6(ny)
+        enddo
+     enddo
+     do k=1,nz
+        do j=ny-1,1,-1
+           do i=1,nx
+              ty(i,j,k)=(ty(i,j,k)-cfy6(j)*ty(i,j+1,k))*cwy6(j)
+              ry(i,j,k)=(ry(i,j,k)-cfy6(j)*ry(i,j+1,k))*cwy6(j)
            enddo
         enddo
      enddo
-     do k=1,nz 
-        do i=1,nx 
+     do k=1,nz
+        do i=1,nx
            sy(i,k)=(ty(i,1,k)-alcaiy6*ty(i,ny,k))&
-                /(1.+ry(i,1,k)-alcaiy6*ry(i,ny,k)) 
+                /(1.+ry(i,1,k)-alcaiy6*ry(i,ny,k))
         enddo
      enddo
      do k=1,nz
-        do j=1,ny  
-           do i=1,nx 
-              ty(i,j,k)=ty(i,j,k)-sy(i,k)*ry(i,j,k) 
+        do j=1,ny
+           do i=1,nx
+              ty(i,j,k)=ty(i,j,k)-sy(i,k)*ry(i,j,k)
            enddo
         enddo
      enddo
@@ -4472,7 +4456,7 @@ subroutine deryvp(ty,uy,ry,sy,cfy6,csy6,cwy6,ppyi,nx,ny,nym,nz,npaire)
         do k=1,nz
            do i=1,nx
               ty(i,1,k)=aciy6*(uy(i,2,k)-uy(i,1,k))&
-                   +bciy6*(uy(i,3,k)-2.*uy(i,1,k)+uy(i,2,k)) 
+                   +bciy6*(uy(i,3,k)-2.*uy(i,1,k)+uy(i,2,k))
               ty(i,2,k)=aciy6*(uy(i,3,k)-uy(i,2,k))&
                    +bciy6*(uy(i,4,k)-uy(i,1,k))
            enddo
@@ -4488,9 +4472,9 @@ subroutine deryvp(ty,uy,ry,sy,cfy6,csy6,cwy6,ppyi,nx,ny,nym,nz,npaire)
         do k=1,nz
            do i=1,nx
               ty(i,nym-1,k)=aciy6*(uy(i,nym,k)-uy(i,nym-1,k))&
-                   +bciy6*(uy(i,ny,k)-uy(i,nym-2,k)) 
+                   +bciy6*(uy(i,ny,k)-uy(i,nym-2,k))
               ty(i,nym,k)=aciy6*(uy(i,ny,k)-uy(i,nym,k))&
-                   +bciy6*(2.*uy(i,ny,k)-uy(i,nym,k)-uy(i,nym-1,k)) 
+                   +bciy6*(2.*uy(i,ny,k)-uy(i,nym,k)-uy(i,nym-1,k))
            enddo
         enddo
         do k=1,nz
@@ -4531,7 +4515,7 @@ end subroutine deryvp
 !********************************************************************
 !
 subroutine interypv(ty,uy,ry,sy,cifi6y,cisi6y,ciwi6y,cify6,cisy6,ciwy6,&
-     nx,nym,ny,nz,npaire) 
+     nx,nym,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -4646,7 +4630,7 @@ subroutine interypv(ty,uy,ry,sy,cifi6y,cisi6y,ciwi6y,cify6,cisy6,ciwy6,&
               ty(i,1,k)=aiciy6*(uy(i,1,k)+uy(i,1,k))&
                    +biciy6*(uy(i,2,k)+uy(i,2,k))&
                    +ciciy6*(uy(i,3,k)+uy(i,3,k))&
-                   +diciy6*(uy(i,4,k)+uy(i,4,k))             
+                   +diciy6*(uy(i,4,k)+uy(i,4,k))
               ty(i,2,k)=aiciy6*(uy(i,2,k)+uy(i,1,k))&
                    +biciy6*(uy(i,3,k)+uy(i,1,k))&
                    +ciciy6*(uy(i,4,k)+uy(i,2,k))&
@@ -4654,11 +4638,11 @@ subroutine interypv(ty,uy,ry,sy,cifi6y,cisi6y,ciwi6y,cify6,cisy6,ciwy6,&
               ty(i,3,k)=aiciy6*(uy(i,3,k)+uy(i,2,k))&
                    +biciy6*(uy(i,4,k)+uy(i,1,k))&
                    +ciciy6*(uy(i,5,k)+uy(i,1,k))&
-                   +diciy6*(uy(i,6,k)+uy(i,2,k))             
+                   +diciy6*(uy(i,6,k)+uy(i,2,k))
               ty(i,4,k)=aiciy6*(uy(i,4,k)+uy(i,3,k))&
                    +biciy6*(uy(i,5,k)+uy(i,2,k))&
                    +ciciy6*(uy(i,6,k)+uy(i,1,k))&
-                   +diciy6*(uy(i,7,k)+uy(i,1,k))             
+                   +diciy6*(uy(i,7,k)+uy(i,1,k))
            enddo
         enddo
         do j=5,ny-4
@@ -4667,7 +4651,7 @@ subroutine interypv(ty,uy,ry,sy,cifi6y,cisi6y,ciwi6y,cify6,cisy6,ciwy6,&
                  ty(i,j,k)=aiciy6*(uy(i,j,k)+uy(i,j-1,k))&
                       +biciy6*(uy(i,j+1,k)+uy(i,j-2,k))&
                       +ciciy6*(uy(i,j+2,k)+uy(i,j-3,k))&
-                      +diciy6*(uy(i,j+3,k)+uy(i,j-4,k))              
+                      +diciy6*(uy(i,j+3,k)+uy(i,j-4,k))
               enddo
            enddo
         enddo
@@ -4676,19 +4660,19 @@ subroutine interypv(ty,uy,ry,sy,cifi6y,cisi6y,ciwi6y,cify6,cisy6,ciwy6,&
               ty(i,ny-3,k)=aiciy6*(uy(i,ny-3,k)+uy(i,ny-4,k))&
                    +biciy6*(uy(i,ny-2,k)+uy(i,ny-5,k))&
                    +ciciy6*(uy(i,ny-1,k)+uy(i,ny-6,k))&
-                   +diciy6*(uy(i,ny-1,k)+uy(i,ny-7,k))   
+                   +diciy6*(uy(i,ny-1,k)+uy(i,ny-7,k))
               ty(i,ny-2,k)=aiciy6*(uy(i,ny-2,k)+uy(i,ny-3,k))&
                    +biciy6*(uy(i,ny-1,k)+uy(i,ny-4,k))&
                    +ciciy6*(uy(i,ny-1,k)+uy(i,ny-5,k))&
-                   +diciy6*(uy(i,ny-2,k)+uy(i,ny-6,k))   
+                   +diciy6*(uy(i,ny-2,k)+uy(i,ny-6,k))
               ty(i,ny-1,k)=aiciy6*(uy(i,ny-1,k)+uy(i,ny-2,k))&
                    +biciy6*(uy(i,ny-1,k)+uy(i,ny-3,k))&
                    +ciciy6*(uy(i,ny-2,k)+uy(i,ny-4,k))&
-                   +diciy6*(uy(i,ny-3,k)+uy(i,ny-5,k))         
+                   +diciy6*(uy(i,ny-3,k)+uy(i,ny-5,k))
               ty(i,ny,k)=aiciy6*(uy(i,ny-1,k)+uy(i,ny-1,k))&
                    +biciy6*(uy(i,ny-2,k)+uy(i,ny-2,k))&
                    +ciciy6*(uy(i,ny-3,k)+uy(i,ny-3,k))&
-                   +diciy6*(uy(i,ny-4,k)+uy(i,ny-4,k))            
+                   +diciy6*(uy(i,ny-4,k)+uy(i,ny-4,k))
            enddo
         enddo
         do j=2,ny
@@ -4713,18 +4697,18 @@ subroutine interypv(ty,uy,ry,sy,cifi6y,cisi6y,ciwi6y,cify6,cisy6,ciwy6,&
      endif
   endif
 
-  return  
+  return
 end subroutine interypv
 
 !********************************************************************
 !
 subroutine derypv(ty,uy,ry,sy,cfi6y,csi6y,cwi6y,cfy6,csy6,cwy6,&
-     ppy,nx,nym,ny,nz,npaire) 
+     ppy,nx,nym,ny,nz,npaire)
   !
   !********************************************************************
 
   USE param
-  USE derivY 
+  USE derivY
 
   implicit none
 
@@ -4738,65 +4722,65 @@ subroutine derypv(ty,uy,ry,sy,cfi6y,csi6y,cwi6y,cfy6,csy6,cwy6,&
   integer :: i,j,k
 
   if (ncly) then
-     do k=1,nz 
-        do i=1,nx 
+     do k=1,nz
+        do i=1,nx
            ty(i,1,k)=aciy6*(uy(i,1,k)-uy(i,ny,k))&
-                +bciy6*(uy(i,2,k)-uy(i,ny-1,k)) 
+                +bciy6*(uy(i,2,k)-uy(i,ny-1,k))
            ry(i,1,k)=-1.
            ty(i,2,k)=aciy6*(uy(i,2,k)-uy(i,1,k))&
-                +bciy6*(uy(i,3,k)-uy(i,ny,k)) 
+                +bciy6*(uy(i,3,k)-uy(i,ny,k))
            ry(i,2,k)=0.
         enddo
      enddo
-     do j=3,ny-2 
-        do k=1,nz 
-           do i=1,nx 
+     do j=3,ny-2
+        do k=1,nz
+           do i=1,nx
               ty(i,j,k)=aciy6*(uy(i,j,k)-uy(i,j-1,k))&
-                   +bciy6*(uy(i,j+1,k)-uy(i,j-2,k)) 
-              ry(i,j,k)=0. 
+                   +bciy6*(uy(i,j+1,k)-uy(i,j-2,k))
+              ry(i,j,k)=0.
            enddo
         enddo
      enddo
-     do k=1,nz 
-        do i=1,nx 
+     do k=1,nz
+        do i=1,nx
            ty(i,ny-1,k)=aciy6*(uy(i,ny-1,k)-uy(i,ny-2,k))&
-                +bciy6*(uy(i,ny,k)-uy(i,ny-3,k)) 
-           ry(i,ny-1,k)=0. 
+                +bciy6*(uy(i,ny,k)-uy(i,ny-3,k))
+           ry(i,ny-1,k)=0.
            ty(i,ny,k)=aciy6*(uy(i,ny,k)-uy(i,ny-1,k))&
-                +bciy6*(uy(i,1,k)-uy(i,ny-2,k)) 
+                +bciy6*(uy(i,1,k)-uy(i,ny-2,k))
            ry(i,ny,k)=alcaiy6
         enddo
      enddo
-     do j=2,ny 
-        do k=1,nz 
-           do i=1,nx 
-              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*csy6(j) 
-              ry(i,j,k)=ry(i,j,k)-ry(i,j-1,k)*csy6(j) 
+     do j=2,ny
+        do k=1,nz
+           do i=1,nx
+              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*csy6(j)
+              ry(i,j,k)=ry(i,j,k)-ry(i,j-1,k)*csy6(j)
            enddo
         enddo
      enddo
-     do k=1,nz 
-        do i=1,nx 
-           ty(i,ny,k)=ty(i,ny,k)*cwy6(ny) 
-           ry(i,ny,k)=ry(i,ny,k)*cwy6(ny) 
+     do k=1,nz
+        do i=1,nx
+           ty(i,ny,k)=ty(i,ny,k)*cwy6(ny)
+           ry(i,ny,k)=ry(i,ny,k)*cwy6(ny)
         enddo
      enddo
-     do j=ny-1,1,-1 
-        do k=1,nz 
-           do i=1,nx 
-              ty(i,j,k)=(ty(i,j,k)-cfy6(j)*ty(i,j+1,k))*cwy6(j) 
-              ry(i,j,k)=(ry(i,j,k)-cfy6(j)*ry(i,j+1,k))*cwy6(j) 
+     do j=ny-1,1,-1
+        do k=1,nz
+           do i=1,nx
+              ty(i,j,k)=(ty(i,j,k)-cfy6(j)*ty(i,j+1,k))*cwy6(j)
+              ry(i,j,k)=(ry(i,j,k)-cfy6(j)*ry(i,j+1,k))*cwy6(j)
            enddo
         enddo
      enddo
-     do k=1,nz 
-        do i=1,nx 
+     do k=1,nz
+        do i=1,nx
            sy(i,k)=(ty(i,1,k)-alcaiy6*ty(i,ny,k))&
-                /(1.+ry(i,1,k)-alcaiy6*ry(i,ny,k)) 
+                /(1.+ry(i,1,k)-alcaiy6*ry(i,ny,k))
         enddo
      enddo
-     do j=1,ny 
-        do k=1,nz 
+     do j=1,ny
+        do k=1,nz
            do i=1,nx
               ty(i,j,k)=ty(i,j,k)-sy(i,k)*ry(i,j,k)
            enddo
@@ -4806,24 +4790,24 @@ subroutine derypv(ty,uy,ry,sy,cfi6y,csi6y,cwi6y,cfy6,csy6,cwy6,&
      if (npaire==1) then
         do k=1,nz
            do i=1,nx
-              ty(i,1,k)=0.            
+              ty(i,1,k)=0.
               ty(i,2,k)=aciy6*(uy(i,2,k)-uy(i,1,k))&
-                   +bciy6*(uy(i,3,k)-uy(i,1,k))             
+                   +bciy6*(uy(i,3,k)-uy(i,1,k))
            enddo
         enddo
         do j=3,ny-2
            do k=1,nz
               do i=1,nx
                  ty(i,j,k)=aciy6*(uy(i,j,k)-uy(i,j-1,k))&
-                      +bciy6*(uy(i,j+1,k)-uy(i,j-2,k))              
+                      +bciy6*(uy(i,j+1,k)-uy(i,j-2,k))
               enddo
            enddo
         enddo
         do k=1,nz
            do i=1,nx
               ty(i,ny-1,k)=aciy6*(uy(i,ny-1,k)-uy(i,ny-2,k))&
-                   +bciy6*(uy(i,ny-1,k)-uy(i,ny-3,k))         
-              ty(i,ny,k)=0.          
+                   +bciy6*(uy(i,ny-1,k)-uy(i,ny-3,k))
+              ty(i,ny,k)=0.
            enddo
         enddo
         do j=2,ny
@@ -4848,27 +4832,27 @@ subroutine derypv(ty,uy,ry,sy,cfi6y,csi6y,cwi6y,cfy6,csy6,cwy6,&
      endif
   endif
 
-  if (istret.ne.0) then   
-     do k=1,nz 
+  if (istret.ne.0) then
+     do k=1,nz
         do j=1,ny
-           do i=1,nx 
-              ty(i,j,k)=ty(i,j,k)*ppy(j) 
+           do i=1,nx
+              ty(i,j,k)=ty(i,j,k)*ppy(j)
            enddo
         enddo
      enddo
   endif
 
-  return  
+  return
 end subroutine derypv
 
 !********************************************************************
 !
-subroutine derzvp(tz,uz,rz,sz,cfz6,csz6,cwz6,nx,ny,nz,nzm,npaire) 
+subroutine derzvp(tz,uz,rz,sz,cfz6,csz6,cwz6,nx,ny,nz,nzm,npaire)
   !
   !********************************************************************
 
   USE param
-  USE derivZ 
+  USE derivZ
 
   implicit none
 
@@ -4950,25 +4934,25 @@ subroutine derzvp(tz,uz,rz,sz,cfz6,csz6,cwz6,nx,ny,nz,nzm,npaire)
         do j=1,ny
            do i=1,nx
               tz(i,j,1)=aciz6*(uz(i,j,2)-uz(i,j,1))&
-                   +bciz6*(uz(i,j,3)-uz(i,j,2))             
+                   +bciz6*(uz(i,j,3)-uz(i,j,2))
               tz(i,j,2)=aciz6*(uz(i,j,3)-uz(i,j,2))&
-                   +bciz6*(uz(i,j,4)-uz(i,j,1))             
+                   +bciz6*(uz(i,j,4)-uz(i,j,1))
            enddo
         enddo
         do k=3,nzm-2
            do j=1,ny
               do i=1,nx
                  tz(i,j,k)=aciz6*(uz(i,j,k+1)-uz(i,j,k))&
-                      +bciz6*(uz(i,j,k+2)-uz(i,j,k-1))              
+                      +bciz6*(uz(i,j,k+2)-uz(i,j,k-1))
               enddo
            enddo
         enddo
         do j=1,ny
            do i=1,nx
               tz(i,j,nzm-1)=aciz6*(uz(i,j,nzm)-uz(i,j,nzm-1))&
-                   +bciz6*(uz(nz,j,k)-uz(nzm-2,j,k))         
+                   +bciz6*(uz(nz,j,k)-uz(nzm-2,j,k))
               tz(i,j,nzm)=aciz6*(uz(i,j,nz)-uz(i,j,nzm))&
-                   +bciz6*(uz(i,j,nzm)-uz(i,j,nzm-1))            
+                   +bciz6*(uz(i,j,nzm)-uz(i,j,nzm-1))
            enddo
         enddo
         do k=2,nzm
@@ -4995,7 +4979,7 @@ subroutine derzvp(tz,uz,rz,sz,cfz6,csz6,cwz6,nx,ny,nz,nzm,npaire)
         do j=1,ny
            do i=1,nx
               tz(i,j,1)=aciz6*(uz(i,j,2)-uz(i,j,1))&
-                   +bciz6*(uz(i,j,3)-2.*uz(i,j,1)+uz(i,j,2)) 
+                   +bciz6*(uz(i,j,3)-2.*uz(i,j,1)+uz(i,j,2))
               tz(i,j,2)=aciz6*(uz(i,j,3)-uz(i,j,2))&
                    +bciz6*(uz(i,j,4)-uz(i,j,1))
            enddo
@@ -5011,9 +4995,9 @@ subroutine derzvp(tz,uz,rz,sz,cfz6,csz6,cwz6,nx,ny,nz,nzm,npaire)
         do j=1,ny
            do i=1,nx
               tz(i,j,nzm-1)=aciz6*(uz(i,j,nz-1)-uz(i,j,nz-2))&
-                   +bciz6*(uz(i,j,nz)-uz(i,j,nz-3)) 
+                   +bciz6*(uz(i,j,nz)-uz(i,j,nz-3))
               tz(i,j,nzm)=aciz6*(uz(i,j,nz)-uz(i,j,nz-1))&
-                   +bciz6*(2.*uz(i,j,nz)-uz(i,j,nz-1)-uz(i,j,nz-2)) 
+                   +bciz6*(2.*uz(i,j,nz)-uz(i,j,nz-1)-uz(i,j,nz-2))
            enddo
         enddo
         do k=2,nzm
@@ -5038,17 +5022,17 @@ subroutine derzvp(tz,uz,rz,sz,cfz6,csz6,cwz6,nx,ny,nz,nzm,npaire)
      endif
   endif
 
-  return     
+  return
 end subroutine derzvp
 
 !********************************************************************
 !
-subroutine interzvp(tz,uz,rz,sz,cifz6,cisz6,ciwz6,nx,ny,nz,nzm,npaire) 
+subroutine interzvp(tz,uz,rz,sz,cifz6,cisz6,ciwz6,nx,ny,nz,nzm,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivZ 
+  USE param
+  USE derivZ
 
   implicit none
 
@@ -5155,16 +5139,16 @@ subroutine interzvp(tz,uz,rz,sz,cifz6,cisz6,ciwz6,nx,ny,nz,nzm,npaire)
            do i=1,nx
               tz(i,j,1)=aiciz6*(uz(i,j,2)+uz(i,j,1))&
                    +biciz6*(uz(i,j,3)+uz(i,j,2))&
-                   +ciciz6*(uz(i,j,4)+uz(i,j,3))&             
-                   +diciz6*(uz(i,j,5)+uz(i,j,4))             
+                   +ciciz6*(uz(i,j,4)+uz(i,j,3))&
+                   +diciz6*(uz(i,j,5)+uz(i,j,4))
               tz(i,j,2)=aiciz6*(uz(i,j,3)+uz(i,j,2))&
                    +biciz6*(uz(i,j,4)+uz(i,j,1))&
-                   +ciciz6*(uz(i,j,5)+uz(i,j,2))&             
-                   +diciz6*(uz(i,j,6)+uz(i,j,3))             
+                   +ciciz6*(uz(i,j,5)+uz(i,j,2))&
+                   +diciz6*(uz(i,j,6)+uz(i,j,3))
               tz(i,j,3)=aiciz6*(uz(i,j,4)+uz(i,j,3))&
                    +biciz6*(uz(i,j,5)+uz(i,j,2))&
-                   +ciciz6*(uz(i,j,6)+uz(i,j,1))&             
-                   +diciz6*(uz(i,j,7)+uz(i,j,2))             
+                   +ciciz6*(uz(i,j,6)+uz(i,j,1))&
+                   +diciz6*(uz(i,j,7)+uz(i,j,2))
            enddo
         enddo
         do k=4,nzm-3
@@ -5172,8 +5156,8 @@ subroutine interzvp(tz,uz,rz,sz,cifz6,cisz6,ciwz6,nx,ny,nz,nzm,npaire)
               do i=1,nx
                  tz(i,j,k)=aiciz6*(uz(i,j,k+1)+uz(i,j,k))&
                       +biciz6*(uz(i,j,k+2)+uz(i,j,k-1))&
-                      +ciciz6*(uz(i,j,k+3)+uz(i,j,k-2))&              
-                      +diciz6*(uz(i,j,k+4)+uz(i,j,k-3))              
+                      +ciciz6*(uz(i,j,k+3)+uz(i,j,k-2))&
+                      +diciz6*(uz(i,j,k+4)+uz(i,j,k-3))
               enddo
            enddo
         enddo
@@ -5181,16 +5165,16 @@ subroutine interzvp(tz,uz,rz,sz,cifz6,cisz6,ciwz6,nx,ny,nz,nzm,npaire)
            do i=1,nx
               tz(i,j,nzm-2)=aiciz6*(uz(i,j,nzm-1)+uz(i,j,nzm-2))&
                    +biciz6*(uz(i,j,nzm)+uz(i,j,nzm-3))&
-                   +ciciz6*(uz(i,j,nz)+uz(i,j,nzm-4))&         
-                   +diciz6*(uz(i,j,nzm)+uz(i,j,nzm-5))         
+                   +ciciz6*(uz(i,j,nz)+uz(i,j,nzm-4))&
+                   +diciz6*(uz(i,j,nzm)+uz(i,j,nzm-5))
               tz(i,j,nzm-1)=aiciz6*(uz(i,j,nzm)+uz(i,j,nzm-1))&
                    +biciz6*(uz(i,j,nz)+uz(i,j,nzm-2))&
-                   +ciciz6*(uz(i,j,nzm)+uz(i,j,nzm-3))&         
-                   +diciz6*(uz(i,j,nzm-1)+uz(i,j,nzm-4))         
+                   +ciciz6*(uz(i,j,nzm)+uz(i,j,nzm-3))&
+                   +diciz6*(uz(i,j,nzm-1)+uz(i,j,nzm-4))
               tz(i,j,nzm)=aiciz6*(uz(i,j,nz)+uz(i,j,nzm))&
                    +biciz6*(uz(i,j,nzm)+uz(i,j,nzm-1))&
-                   +ciciz6*(uz(i,j,nzm-1)+uz(i,j,nzm-2))&            
-                   +diciz6*(uz(i,j,nzm-2)+uz(i,j,nzm-3))            
+                   +ciciz6*(uz(i,j,nzm-1)+uz(i,j,nzm-2))&
+                   +diciz6*(uz(i,j,nzm-2)+uz(i,j,nzm-3))
            enddo
         enddo
         do k=2,nzm
@@ -5215,18 +5199,18 @@ subroutine interzvp(tz,uz,rz,sz,cifz6,cisz6,ciwz6,nx,ny,nz,nzm,npaire)
      endif
   endif
 
-  return     
+  return
 end subroutine interzvp
 
 !********************************************************************
 !
 subroutine derzpv(tz,uz,rz,sz,cfiz6,csiz6,cwiz6,cfz6,csz6,cwz6,&
-     nx,ny,nzm,nz,npaire) 
+     nx,ny,nzm,nz,npaire)
   !
   !********************************************************************
 
-  USE param 
-  USE derivZ 
+  USE param
+  USE derivZ
 
   implicit none
 
@@ -5309,7 +5293,7 @@ subroutine derzpv(tz,uz,rz,sz,cfiz6,csiz6,cwiz6,cfz6,csz6,cwz6,&
            do i=1,nx
               tz(i,j,1)=0.
               tz(i,j,2)=aciz6*(uz(i,j,2)-uz(i,j,1))&
-                   +bciz6*(uz(i,j,3)-uz(i,j,1))  
+                   +bciz6*(uz(i,j,3)-uz(i,j,1))
            enddo
         enddo
         do k=3,nz-2
@@ -5355,12 +5339,12 @@ end subroutine derzpv
 !********************************************************************
 !
 subroutine interzpv(tz,uz,rz,sz,cifiz6,cisiz6,ciwiz6,cifz6,cisz6,ciwz6,&
-     nx,ny,nzm,nz,npaire) 
+     nx,ny,nzm,nz,npaire)
   !
   !********************************************************************
 
   USE param
-  USE derivZ 
+  USE derivZ
 
   implicit none
 
@@ -5470,7 +5454,7 @@ subroutine interzpv(tz,uz,rz,sz,cifiz6,cisiz6,ciwiz6,cifz6,cisz6,ciwz6,&
               tz(i,j,1)=aiciz6*(uz(i,j,1)+uz(i,j,1))&
                    +biciz6*(uz(i,j,2)+uz(i,j,2))&
                    +ciciz6*(uz(i,j,3)+uz(i,j,3))&
-                   +diciz6*(uz(i,j,4)+uz(i,j,4))     
+                   +diciz6*(uz(i,j,4)+uz(i,j,4))
               tz(i,j,2)=aiciz6*(uz(i,j,2)+uz(i,j,1))&
                    +biciz6*(uz(i,j,3)+uz(i,j,1))&
                    +ciciz6*(uz(i,j,4)+uz(i,j,2))&
@@ -5478,11 +5462,11 @@ subroutine interzpv(tz,uz,rz,sz,cifiz6,cisiz6,ciwiz6,cifz6,cisz6,ciwz6,&
               tz(i,j,3)=aiciz6*(uz(i,j,3)+uz(i,j,2))&
                    +biciz6*(uz(i,j,4)+uz(i,j,1))&
                    +ciciz6*(uz(i,j,5)+uz(i,j,1))&
-                   +diciz6*(uz(i,j,6)+uz(i,j,2))  
+                   +diciz6*(uz(i,j,6)+uz(i,j,2))
               tz(i,j,4)=aiciz6*(uz(i,j,4)+uz(i,j,3))&
                    +biciz6*(uz(i,j,5)+uz(i,j,2))&
                    +ciciz6*(uz(i,j,6)+uz(i,j,1))&
-                   +diciz6*(uz(i,j,7)+uz(i,j,1))  
+                   +diciz6*(uz(i,j,7)+uz(i,j,1))
            enddo
         enddo
         do k=5,nz-4
@@ -5511,8 +5495,8 @@ subroutine interzpv(tz,uz,rz,sz,cifiz6,cisiz6,ciwiz6,cifz6,cisz6,ciwz6,&
                    +diciz6*(uz(i,j,nz-3)+uz(i,j,nz-5))
               tz(i,j,nz)=aiciz6*(uz(i,j,nz-1)+uz(i,j,nz-1))&
                    +biciz6*(uz(i,j,nz-2)+uz(i,j,nz-2))&
-                   +ciciz6*(uz(i,j,nz-3)+uz(i,j,nz-3))& 
-                   +diciz6*(uz(i,j,nz-4)+uz(i,j,nz-4)) 
+                   +ciciz6*(uz(i,j,nz-3)+uz(i,j,nz-3))&
+                   +diciz6*(uz(i,j,nz-4)+uz(i,j,nz-4))
            enddo
         enddo
         do k=2,nz
