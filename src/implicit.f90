@@ -665,6 +665,7 @@ real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: forcing1
 !! IN/OUT
 real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: var1
 real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dvar1
+real(mytype),dimension(ysize(1),ysize(3)) :: bc1
 
 
 !!!!!!!!!!!!!!!
@@ -733,7 +734,7 @@ call transpose_x_to_y(var1,tb2)
 
 call transpose_x_to_y(ta1,ta2)
 
-tc2(:,ny-1,:)=tb2(:,ny-1,:)
+bc1(:,:)=tb2(:,ny-1,:)
 
 !ta2: A.uhat
 !td2:(A+xcstB).un
@@ -749,7 +750,7 @@ endif
 ta2(:,:,:)=td2(:,:,:)+ta2(:,:,:)
 
 ! CONDITIONS AUX LIMITES
-ta2(:,ny,:)=tc2(:,ny-1,:)
+ta2(:,ny,:)=bc1(:,:)
 
 !Inversion systeme lineaire Mx=b: (A-xcst.B)u^n+1=uhat+(A+xcst.B)u^n
 tb2=0.;
