@@ -40,9 +40,9 @@ init_noise = 0.125   ! Turbulence intensity (1=100%) !! Initial condition
 inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
 
 ! Time stepping
-dt = 0.001              ! Time step
+dt = 0.0025              ! Time step
 ifirst = 1            ! First iteration
-ilast = 100000       ! Last iteration
+ilast = 300000       ! Last iteration
 
 ! Enable modelling tools
 ilesmod=0            ! if 0 then DNS
@@ -86,9 +86,9 @@ nvisu = 1             ! Size for visualisation collection
 !=================
 
 wrotation = 0.12      ! rotation speed to trigger turbulence
-spinup_time = 5000    ! number of time steps with a rotation to trigger turbulence
+spinup_time = 10000   ! number of time steps with a rotation to trigger turbulence
 nstat = 1             ! Size arrays for statistic collection
-initstat = 40000      ! Time steps after which statistics are collected 
+initstat = 100000     ! Time steps after which statistics are collected 
 
 /End
 
