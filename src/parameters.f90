@@ -233,6 +233,8 @@ subroutine parameter(input_i3d)
         print *,'Mixing layer'
      elseif (itype.eq.itype_jet) then
         print *,'Jet'
+      elseif (itype.eq.itype_tbl) then
+         print *,'Turbulent boundary layer'
      else
         print *,'Unknown itype: ', itype
         stop

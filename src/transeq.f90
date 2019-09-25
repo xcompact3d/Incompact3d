@@ -279,7 +279,7 @@ CONTAINS
 
        endif
     endif
-    
+
     ta2 = ta2 + td2
     tb2 = tb2 + te2
     tc2 = tc2 + tf2
@@ -340,7 +340,8 @@ CONTAINS
     call momentum_forcing(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
 
     if (itrip == 1) then
-       call tripping(tb1,td1)
+       !call tripping(tb1,td1)
+       call tbl_tripping(tb1,td1)
        if (nrank == 0) print *,'TRIPPING KTH STYLE!!'
     endif
 
