@@ -72,9 +72,9 @@ contains
        do j=1,xsize(2)
           if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy-yly/two
           if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/two
-          um=exp(-zptwo*y*y)
+          um=exp(-16*y*y)
           do i=1,xsize(1)
-             ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
+             ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)
              uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
              uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
           enddo
@@ -165,6 +165,16 @@ contains
         bxzn(j,k)=uz(nx,j,k)-cx*(uz(nx,j,k)-uz(nx-1,j,k))
       enddo
     enddo
+
+    if (nclyn == 2) THEN
+      do k = 1, xsize(3)
+        do i = 1, xsize(1)
+          byxn(i, k) = ux(i, xsize(2) - 1, k)
+          byyn(i, k) = zero
+          byzn(i, k) = uz(i, xsize(2) - 1, k)
+        enddo
+      enddo
+    endif
 
     return
   end subroutine boundary_conditions_tbl
