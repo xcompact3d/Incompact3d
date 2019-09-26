@@ -794,7 +794,7 @@ ys_tr_tbl=1.0/2.853
 ts_tr_tbl=4.0/2.853
 x0_tr_tbl=10.0/2.853
 
-A_tr =  0.5/(ts_tr_tbl) !0.3/(ts_tr)
+A_tr =  0.75/(ts_tr_tbl) !0.3/(ts_tr)
 
 if ((itime.eq.ifirst).and.(nrank.eq.0)) then
 call random_seed(SIZE=ii)
