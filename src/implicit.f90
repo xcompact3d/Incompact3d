@@ -734,7 +734,9 @@ call transpose_x_to_y(var1,tb2)
 
 call transpose_x_to_y(ta1,ta2)
 
-bc1(:,:)=tb2(:,ny-1,:)
+if (itype.eq.itype_tbl) then
+  bc1(:,:)=tb2(:,ny-1,:)
+endif
 
 !ta2: A.uhat
 !td2:(A+xcstB).un
@@ -750,7 +752,9 @@ endif
 ta2(:,:,:)=td2(:,:,:)+ta2(:,:,:)
 
 ! CONDITIONS AUX LIMITES
-ta2(:,ny,:)=bc1(:,:)
+if (itype.eq.itype_tbl) then
+  ta2(:,ny,:)=bc1(:,:)
+endif
 
 !Inversion systeme lineaire Mx=b: (A-xcst.B)u^n+1=uhat+(A+xcst.B)u^n
 tb2=0.;
@@ -2150,7 +2154,7 @@ if (ncly1==0) then
       ry(i,ny  ,k)=alsajyt
    enddo
    enddo
-if (iimplicit.eq.1) return
+if (itimescheme.eq.7) return
    do k=1,nz
    do j=2,ny
    do i=1,nx
@@ -2246,7 +2250,7 @@ if (ncly1==1) then
               -uy(i,ny  ,k)+uy(i,ny-3,k))
       enddo
       enddo
-if (iimplicit.eq.1) return
+if (itimescheme.eq.7) return
       do k=1,nz
       do j=2,ny
       do i=1,nx
@@ -2314,7 +2318,7 @@ if (iimplicit.eq.1) return
          ty(i,ny  ,k)=0.
       enddo
       enddo
-if (iimplicit.eq.1) return
+if (itimescheme.eq.7) return
       do k=1,nz
       do j=2,ny
       do i=1,nx
@@ -2374,7 +2378,7 @@ if (ncly1==2) then
            +csny*uy(i,ny-2,k)+dsny*uy(i,ny-3,k)
    enddo
    enddo
-if (iimplicit.eq.1) return
+if (itimescheme.eq.7) return
    do k=1,nz
    do j=2,ny
    do i=1,nx
