@@ -68,6 +68,17 @@ N.B. Other cases are in preparation.
 
 **Note:** In order to compile the code with the apropiate flags you must enter the -D$FLAG, i.e., -DDOUBLE_PREC
 
+# Compiled code performance
+
+Xcompact3d is designed to run on laptops/workstations up to large clusters. We support the gfortran, ifort and ftn compilers
+which can be selected at compile time by
+
+   make CMP=gcc
+   make CMP=intel
+   make CMP=cray
+   
+respectively (it will default to gfortran otherwise). Note that we use gfortran for development, therefore not all optimisations are enabled by default - if you want to perform production runs using gfortran, adding -O3 to the FFLAGS for CMP=gcc should provide a significant speed up.
+
 ## Source Download and Compilation
 
 First, make sure you have all the [required dependencies](#required-build-tools-and-external-libraries) installed.
