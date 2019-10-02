@@ -131,7 +131,7 @@ contains
        !>>> Semi-implicit
     elseif(itimescheme.eq.7) then
 
-        call inttimp(var1,dvar1,forcing1)
+       call inttimp(var1,dvar1,forcing1)
 
     else
 
@@ -258,13 +258,13 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1, duy1, duz1
 
     if (itimescheme.eq.7) then
-      call intt(ux1, dux1, px1)
-      call intt(uy1, duy1, py1)
-      call intt(uz1, duz1, pz1)
+       call intt(ux1, dux1, px1)
+       call intt(uy1, duy1, py1)
+       call intt(uz1, duz1, pz1)
     else
-      call intt(ux1, dux1)
-      call intt(uy1, duy1)
-      call intt(uz1, duz1)
+       call intt(ux1, dux1)
+       call intt(uy1, duy1)
+       call intt(uz1, duz1)
     endif
 
   endsubroutine int_time_momentum

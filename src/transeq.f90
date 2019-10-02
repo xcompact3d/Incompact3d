@@ -208,74 +208,74 @@ CONTAINS
 
     !DIFFUSIVE TERMS IN Y
     if (itimescheme.ne.7) then
-    !-->for ux
-        call deryy (td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
-        if (istret.ne.0) then
-           call dery (te2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-           do k = 1,ysize(3)
-              do j = 1,ysize(2)
-                 do i = 1,ysize(1)
-                    td2(i,j,k) = td2(i,j,k)*pp2y(j)-pp4y(j)*te2(i,j,k)
-                 enddo
-              enddo
-           enddo
-        endif
+       !-->for ux
+       call deryy (td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+       if (istret.ne.0) then
+          call dery (te2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+          do k = 1,ysize(3)
+             do j = 1,ysize(2)
+                do i = 1,ysize(1)
+                   td2(i,j,k) = td2(i,j,k)*pp2y(j)-pp4y(j)*te2(i,j,k)
+                enddo
+             enddo
+          enddo
+       endif
 
-        !-->for uy
-        call deryy (te2,uy2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0)
-        if (istret.ne.0) then
-           call dery (tf2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-           do k = 1,ysize(3)
-              do j = 1,ysize(2)
-                 do i = 1,ysize(1)
-                    te2(i,j,k) = te2(i,j,k)*pp2y(j)-pp4y(j)*tf2(i,j,k)
-                 enddo
-              enddo
-           enddo
-        endif
+       !-->for uy
+       call deryy (te2,uy2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0)
+       if (istret.ne.0) then
+          call dery (tf2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+          do k = 1,ysize(3)
+             do j = 1,ysize(2)
+                do i = 1,ysize(1)
+                   te2(i,j,k) = te2(i,j,k)*pp2y(j)-pp4y(j)*tf2(i,j,k)
+                enddo
+             enddo
+          enddo
+       endif
 
-        !-->for uz
-        call deryy (tf2,uz2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
-        if (istret.ne.0) then
-           call dery (tj2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-           do k = 1,ysize(3)
-              do j = 1,ysize(2)
-                 do i = 1,ysize(1)
-                    tf2(i,j,k) = tf2(i,j,k)*pp2y(j)-pp4y(j)*tj2(i,j,k)
-                 enddo
-              enddo
-           enddo
-        endif
+       !-->for uz
+       call deryy (tf2,uz2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+       if (istret.ne.0) then
+          call dery (tj2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+          do k = 1,ysize(3)
+             do j = 1,ysize(2)
+                do i = 1,ysize(1)
+                   tf2(i,j,k) = tf2(i,j,k)*pp2y(j)-pp4y(j)*tj2(i,j,k)
+                enddo
+             enddo
+          enddo
+       endif
     else !Semi-implicit
-        if (istret.ne.0) then
+       if (istret.ne.0) then
 
-      !-->for ux
+          !-->for ux
           call dery (te2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
           do k=1,ysize(3)
-              do j=1,ysize(2)
+             do j=1,ysize(2)
                 do i=1,ysize(1)
-                  td2(i,j,k)=-pp4y(j)*te2(i,j,k)
+                   td2(i,j,k)=-pp4y(j)*te2(i,j,k)
                 enddo
-              enddo
-         enddo
-      !-->for uy
+             enddo
+          enddo
+          !-->for uy
           call dery (tf2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
           do k=1,ysize(3)
-              do j=1,ysize(2)
+             do j=1,ysize(2)
                 do i=1,ysize(1)
-                  te2(i,j,k)=-pp4y(j)*tf2(i,j,k)
+                   te2(i,j,k)=-pp4y(j)*tf2(i,j,k)
                 enddo
-              enddo
-         enddo
-      !-->for uz
+             enddo
+          enddo
+          !-->for uz
           call dery (tj2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
           do k=1,ysize(3)
-              do j=1,ysize(2)
+             do j=1,ysize(2)
                 do i=1,ysize(1)
-                  tf2(i,j,k)=-pp4y(j)*tj2(i,j,k)
+                   tf2(i,j,k)=-pp4y(j)*tj2(i,j,k)
                 enddo
-              enddo
-         enddo
+             enddo
+          enddo
 
        endif
     endif
@@ -717,10 +717,10 @@ CONTAINS
           if (uset(is).ne.zero) then
              call scalar_settling(dphi1, phi1(:,:,:,is), is)
           endif
-        ! If LES modelling is enabled, add the SGS stresses
-        if (ilesmod.ne.0.and.jles.le.2.and.jles.gt.0) then
-           dphi1(:,:,:,1,is) = dphi1(:,:,:,1,is) + sgsphi1(:,:,:,is)
-        endif
+          ! If LES modelling is enabled, add the SGS stresses
+          if (ilesmod.ne.0.and.jles.le.2.and.jles.gt.0) then
+             dphi1(:,:,:,1,is) = dphi1(:,:,:,1,is) + sgsphi1(:,:,:,is)
+          endif
        endif
 
     end do !loop numscalar

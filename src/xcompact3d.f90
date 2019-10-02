@@ -124,7 +124,7 @@ subroutine init_xcompact3d()
   call init_variables()
 
   if (itimescheme.eq.7) then
-      call init_implicit
+     call init_implicit
   endif
 
   call schemes()

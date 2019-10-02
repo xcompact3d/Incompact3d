@@ -232,14 +232,14 @@ CONTAINS
 
     ELSEIF (itype.EQ.itype_tbl) THEN
 
-      CALL postprocess_tbl (ux, uy, uz, pp, phi, ep)
+       CALL postprocess_tbl (ux, uy, uz, pp, phi, ep)
 
     ENDIF
 
-     if(iforces) then
-        call force(ux,uy,ep)
-        call restart_forces(1)
-     endif
+    if(iforces) then
+       call force(ux,uy,ep)
+       call restart_forces(1)
+    endif
 
   END SUBROUTINE postprocess_case
 

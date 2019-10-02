@@ -4,238 +4,238 @@ module stats
 
   private
   public overall_statistic
-  
-  contains
-    
-    subroutine overall_statistic(ux1,uy1,uz1,phi1,pp3,ep1)
 
-      use param
-      use variables
-      use decomp_2d
-      use decomp_2d_io
+contains
 
-      use var, only : nxmsize, nymsize, nzmsize
-      use var, only : ppi3, dip3
-      use var, only : pp2, ppi2, dip2
-      use var, only : pp1, ta1, di1
+  subroutine overall_statistic(ux1,uy1,uz1,phi1,pp3,ep1)
 
-      use var, only : tmean
-      use var, only : pmean
-      use var, only : umean, uumean
-      use var, only : vmean, vvmean
-      use var, only : wmean, wwmean
-      use var, only : uvmean, uwmean
-      use var, only : vwmean
-      use var, only : phimean, phiphimean
+    use param
+    use variables
+    use decomp_2d
+    use decomp_2d_io
 
-      implicit none
+    use var, only : nxmsize, nymsize, nzmsize
+    use var, only : ppi3, dip3
+    use var, only : pp2, ppi2, dip2
+    use var, only : pp1, ta1, di1
 
-      !! Inputs
-      real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1,uy1,uz1,ep1
-      real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar),intent(in) :: phi1
-      real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
+    use var, only : tmean
+    use var, only : pmean
+    use var, only : umean, uumean
+    use var, only : vmean, vvmean
+    use var, only : wmean, wwmean
+    use var, only : uvmean, uwmean
+    use var, only : vwmean
+    use var, only : phimean, phiphimean
 
-      !! Locals
-      integer :: is
-      character(len=30) :: filename
+    implicit none
 
-      if (itime.lt.initstat) then
-         return
-      endif
+    !! Inputs
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1,uy1,uz1,ep1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar),intent(in) :: phi1
+    real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
 
-      !! Mean pressure
-      !WORK Z-PENCILS
-      call interzpv(ppi3,pp3(:,:,:,1),dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
-           (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
-      !WORK Y-PENCILS
-      call transpose_z_to_y(ppi3,pp2,ph3) !nxm nym nz
-      call interypv(ppi2,pp2,dip2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
-           (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
-      !WORK X-PENCILS
-      call transpose_y_to_x(ppi2,pp1,ph2) !nxm ny nz
-      call interxpv(ta1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
-           nxmsize,xsize(1),xsize(2),xsize(3),1)
-      if (iibm==2) then
-         ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
-      endif
-      call fine_to_coarseS(1,ta1,tmean)
-      pmean=pmean+tmean
+    !! Locals
+    integer :: is
+    character(len=30) :: filename
 
-      !! Mean velocity
-      if (iibm==2) then
-         ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)
-      else
-         ta1(:,:,:) = ux1(:,:,:)
-      endif
-      call fine_to_coarseS(1,ta1,tmean)
-      umean=umean+tmean
-      if (iibm==2) then
-         ta1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:)
-      else
-         ta1(:,:,:) = uy1(:,:,:)
-      endif
-      call fine_to_coarseS(1,ta1,tmean)
-      vmean=vmean+tmean
-      if (iibm==2) then
-         ta1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:)
-      else
-         ta1(:,:,:) = uz1(:,:,:)
-      endif
-      call fine_to_coarseS(1,ta1,tmean)
-      wmean=wmean+tmean
+    if (itime.lt.initstat) then
+       return
+    endif
 
-      !! Second-rder velocity moments
-      ta1=ux1*ux1
-      if (iibm==2) then
-         ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
-      endif
-      call fine_to_coarseS(1,ta1,tmean)
-      uumean=uumean+tmean
-      ta1=uy1*uy1
-      if (iibm==2) then
-         ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
-      endif
-      call fine_to_coarseS(1,ta1,tmean)
-      vvmean=vvmean+tmean
-      ta1=uz1*uz1
-      if (iibm==2) then
-         ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
-      endif
-      call fine_to_coarseS(1,ta1,tmean)
-      wwmean=wwmean+tmean
-      
-      ta1=ux1*uy1
-      if (iibm==2) then
-         ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
-      endif
-      call fine_to_coarseS(1,ta1,tmean)
-      uvmean=uvmean+tmean
-      ta1=ux1*uz1
-      if (iibm==2) then
-         ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
-      endif
-      call fine_to_coarseS(1,ta1,tmean)
-      uwmean=uwmean+tmean
-      ta1=uy1*uz1
-      if (iibm==2) then
-         ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
-      endif
-      call fine_to_coarseS(1,ta1,tmean)
-      vwmean=vwmean+tmean
+    !! Mean pressure
+    !WORK Z-PENCILS
+    call interzpv(ppi3,pp3(:,:,:,1),dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
+         (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
+    !WORK Y-PENCILS
+    call transpose_z_to_y(ppi3,pp2,ph3) !nxm nym nz
+    call interypv(ppi2,pp2,dip2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
+         (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
+    !WORK X-PENCILS
+    call transpose_y_to_x(ppi2,pp1,ph2) !nxm ny nz
+    call interxpv(ta1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
+         nxmsize,xsize(1),xsize(2),xsize(3),1)
+    if (iibm==2) then
+       ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+    endif
+    call fine_to_coarseS(1,ta1,tmean)
+    pmean=pmean+tmean
 
-      !! Scalar statistics
-      if (iscalar==1) then
-         do is=1, numscalar
-            !pmean=phi1
-            if (iibm==2) then
-               ta1(:,:,:) = (one - ep1(:,:,:)) * phi1(:,:,:,is)
-            else
-               ta1(:,:,:) = phi1(:,:,:,is)
-            endif
-            call fine_to_coarseS(1,ta1,tmean)
-            phimean(:,:,:,is)=phimean(:,:,:,is)+tmean
+    !! Mean velocity
+    if (iibm==2) then
+       ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)
+    else
+       ta1(:,:,:) = ux1(:,:,:)
+    endif
+    call fine_to_coarseS(1,ta1,tmean)
+    umean=umean+tmean
+    if (iibm==2) then
+       ta1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:)
+    else
+       ta1(:,:,:) = uy1(:,:,:)
+    endif
+    call fine_to_coarseS(1,ta1,tmean)
+    vmean=vmean+tmean
+    if (iibm==2) then
+       ta1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:)
+    else
+       ta1(:,:,:) = uz1(:,:,:)
+    endif
+    call fine_to_coarseS(1,ta1,tmean)
+    wmean=wmean+tmean
 
-            !phiphimean=phi1*phi1
-            ta1=phi1(:,:,:,is)*phi1(:,:,:,is)
-            if (iibm == 2) then
-               ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
-            endif
-            call fine_to_coarseS(1,ta1,tmean)
-            phiphimean(:,:,:,is)=phiphimean(:,:,:,is)+tmean
-         enddo
-      endif
+    !! Second-rder velocity moments
+    ta1=ux1*ux1
+    if (iibm==2) then
+       ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+    endif
+    call fine_to_coarseS(1,ta1,tmean)
+    uumean=uumean+tmean
+    ta1=uy1*uy1
+    if (iibm==2) then
+       ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+    endif
+    call fine_to_coarseS(1,ta1,tmean)
+    vvmean=vvmean+tmean
+    ta1=uz1*uz1
+    if (iibm==2) then
+       ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+    endif
+    call fine_to_coarseS(1,ta1,tmean)
+    wwmean=wwmean+tmean
 
-      if (mod(itime,icheckpoint)==0) then
-      
-         if (nrank==0) then
-            print *,'===========================================================<<<<<'
-            print *,'Writing stat file',itime
-         endif
+    ta1=ux1*uy1
+    if (iibm==2) then
+       ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+    endif
+    call fine_to_coarseS(1,ta1,tmean)
+    uvmean=uvmean+tmean
+    ta1=ux1*uz1
+    if (iibm==2) then
+       ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+    endif
+    call fine_to_coarseS(1,ta1,tmean)
+    uwmean=uwmean+tmean
+    ta1=uy1*uz1
+    if (iibm==2) then
+       ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+    endif
+    call fine_to_coarseS(1,ta1,tmean)
+    vwmean=vwmean+tmean
 
-         write(filename,"('pmean.dat',I7.7)") itime
-         call decomp_2d_write_one(1,pmean,filename,1)
+    !! Scalar statistics
+    if (iscalar==1) then
+       do is=1, numscalar
+          !pmean=phi1
+          if (iibm==2) then
+             ta1(:,:,:) = (one - ep1(:,:,:)) * phi1(:,:,:,is)
+          else
+             ta1(:,:,:) = phi1(:,:,:,is)
+          endif
+          call fine_to_coarseS(1,ta1,tmean)
+          phimean(:,:,:,is)=phimean(:,:,:,is)+tmean
 
-         write(filename,"('umean.dat',I7.7)") itime
-         call decomp_2d_write_one(1,umean,filename,1)
-         write(filename,"('vmean.dat',I7.7)") itime
-         call decomp_2d_write_one(1,vmean,filename,1)
-         write(filename,"('wmean.dat',I7.7)") itime
-         call decomp_2d_write_one(1,wmean,filename,1)
-         write(filename,"('uumean.dat',I7.7)") itime
-         
-         call decomp_2d_write_one(1,uumean,filename,1)
-         write(filename,"('vvmean.dat',I7.7)") itime
-         call decomp_2d_write_one(1,vvmean,filename,1)
-         write(filename,"('wwmean.dat',I7.7)") itime
-         call decomp_2d_write_one(1,wwmean,filename,1)
-         
-         write(filename,"('uvmean.dat',I7.7)") itime
-         call decomp_2d_write_one(1,uvmean,filename,1)
-         write(filename,"('uwmean.dat',I7.7)") itime
-         call decomp_2d_write_one(1,uwmean,filename,1)
-         write(filename,"('vwmean.dat',I7.7)") itime
-         call decomp_2d_write_one(1,vwmean,filename,1)  
+          !phiphimean=phi1*phi1
+          ta1=phi1(:,:,:,is)*phi1(:,:,:,is)
+          if (iibm == 2) then
+             ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+          endif
+          call fine_to_coarseS(1,ta1,tmean)
+          phiphimean(:,:,:,is)=phiphimean(:,:,:,is)+tmean
+       enddo
+    endif
 
-         write(filename,"('kmean.dat',I7.7)") itime
-         call decomp_2d_write_one(1,half*(uumean+vvmean+wwmean),filename,1)
+    if (mod(itime,icheckpoint)==0) then
 
-         if (iscalar==1) then
-            do is=1, numscalar
-               write(filename,"('phi',I2.2,'mean.dat',I7.7)") is, itime
-               call decomp_2d_write_one(1,phimean(:,:,:,is),filename,1)
-               write(filename,"('phiphi',I2.2,'mean.dat',I7.7)") is, itime
-               call decomp_2d_write_one(1,phiphimean(:,:,:,is),filename,1)
-            enddo
-         endif
-         
-         if (nrank==0) then
-            print *,'write stat done!'
-            print *,'===========================================================<<<<<'
-         endif
+       if (nrank==0) then
+          print *,'===========================================================<<<<<'
+          print *,'Writing stat file',itime
+       endif
 
-         if (nrank==0) then !! Cleanup old files
-            if ((itime - icheckpoint).ge.initstat) then
-               !! Cleanup
-               write(filename,"('pmean.dat',I7.7)") itime-icheckpoint
-               call system ("rm " //filename)
-               
-               write(filename,"('umean.dat',I7.7)") itime-icheckpoint
-               call system ("rm " //filename)
-               write(filename,"('vmean.dat',I7.7)") itime-icheckpoint
-               call system ("rm " //filename)
-               write(filename,"('wmean.dat',I7.7)") itime-icheckpoint
-               call system ("rm " //filename)
-         
-               write(filename,"('uumean.dat',I7.7)") itime-icheckpoint
-               call system ("rm " //filename)
-               write(filename,"('vvmean.dat',I7.7)") itime-icheckpoint
-               call system ("rm " //filename)
-               write(filename,"('wwmean.dat',I7.7)") itime-icheckpoint
-               call system ("rm " //filename)
-         
-               write(filename,"('uvmean.dat',I7.7)") itime-icheckpoint
-               call system ("rm " //filename)
-               write(filename,"('uwmean.dat',I7.7)") itime-icheckpoint
-               call system ("rm " //filename)
-               write(filename,"('vwmean.dat',I7.7)") itime-icheckpoint
-               call system ("rm " //filename)
-               
-               write(filename,"('kmean.dat',I7.7)") itime-icheckpoint
-               call system ("rm " //filename)
+       write(filename,"('pmean.dat',I7.7)") itime
+       call decomp_2d_write_one(1,pmean,filename,1)
 
-               do is = 1, numscalar
-                  write(filename,"('phi',I2.2,'mean.dat',I7.7)") is, itime - icheckpoint
-                  call system ("rm " //filename)
-                  write(filename,"('phiphi',I2.2,'mean.dat',I7.7)") is, itime - icheckpoint
-                  call system ("rm " //filename)
-               enddo
-            endif
-         endif
-      endif
+       write(filename,"('umean.dat',I7.7)") itime
+       call decomp_2d_write_one(1,umean,filename,1)
+       write(filename,"('vmean.dat',I7.7)") itime
+       call decomp_2d_write_one(1,vmean,filename,1)
+       write(filename,"('wmean.dat',I7.7)") itime
+       call decomp_2d_write_one(1,wmean,filename,1)
+       write(filename,"('uumean.dat',I7.7)") itime
 
-    end subroutine overall_statistic
+       call decomp_2d_write_one(1,uumean,filename,1)
+       write(filename,"('vvmean.dat',I7.7)") itime
+       call decomp_2d_write_one(1,vvmean,filename,1)
+       write(filename,"('wwmean.dat',I7.7)") itime
+       call decomp_2d_write_one(1,wwmean,filename,1)
 
-  endmodule stats
+       write(filename,"('uvmean.dat',I7.7)") itime
+       call decomp_2d_write_one(1,uvmean,filename,1)
+       write(filename,"('uwmean.dat',I7.7)") itime
+       call decomp_2d_write_one(1,uwmean,filename,1)
+       write(filename,"('vwmean.dat',I7.7)") itime
+       call decomp_2d_write_one(1,vwmean,filename,1)  
+
+       write(filename,"('kmean.dat',I7.7)") itime
+       call decomp_2d_write_one(1,half*(uumean+vvmean+wwmean),filename,1)
+
+       if (iscalar==1) then
+          do is=1, numscalar
+             write(filename,"('phi',I2.2,'mean.dat',I7.7)") is, itime
+             call decomp_2d_write_one(1,phimean(:,:,:,is),filename,1)
+             write(filename,"('phiphi',I2.2,'mean.dat',I7.7)") is, itime
+             call decomp_2d_write_one(1,phiphimean(:,:,:,is),filename,1)
+          enddo
+       endif
+
+       if (nrank==0) then
+          print *,'write stat done!'
+          print *,'===========================================================<<<<<'
+       endif
+
+       if (nrank==0) then !! Cleanup old files
+          if ((itime - icheckpoint).ge.initstat) then
+             !! Cleanup
+             write(filename,"('pmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+
+             write(filename,"('umean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('vmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('wmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+
+             write(filename,"('uumean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('vvmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('wwmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+
+             write(filename,"('uvmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('uwmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+             write(filename,"('vwmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+
+             write(filename,"('kmean.dat',I7.7)") itime-icheckpoint
+             call system ("rm " //filename)
+
+             do is = 1, numscalar
+                write(filename,"('phi',I2.2,'mean.dat',I7.7)") is, itime - icheckpoint
+                call system ("rm " //filename)
+                write(filename,"('phiphi',I2.2,'mean.dat',I7.7)") is, itime - icheckpoint
+                call system ("rm " //filename)
+             enddo
+          endif
+       endif
+    endif
+
+  end subroutine overall_statistic
+
+endmodule stats
 
 ! !############################################################################
 ! subroutine CONVERGENCE_STATISTIC(ux1,ep1,u1sum_tik,u1sum_tak,tsum)

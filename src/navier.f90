@@ -9,7 +9,7 @@ module navier
   public :: lmn_t_to_rho_trans, momentum_to_velocity, velocity_to_momentum
 
 contains
-  
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!  SUBROUTINE: solve_poisson
   !!      AUTHOR: Paul Bartholomew

@@ -126,23 +126,23 @@ contains
     call random_number(bzo)
 
     if (iin.eq.1) then
-      do k=1,xsize(3)
-        do j=1,xsize(2)
-          if (istret.eq.0) y=(j+xstart(2)-1-1)*dy-1.
-          if (istret.ne.0) y=yp(j+xstart(2)-1)-1.
-          um=exp(-16*y*y)
-          bxx1(j,k)=bxx1(j,k)+bxo(j,k)*inflow_noise*um*0.
-          bxy1(j,k)=bxy1(j,k)+byo(j,k)*inflow_noise*um*0.
-          bxz1(j,k)=bxz1(j,k)+bzo(j,k)*inflow_noise*um*0.
-        enddo
-      enddo
-      !if (iscalar==1) then
-        !do k=1,xsize(3)
-          !do j=1,xsize(2)
-            !bxo(j,k)=phi(xsize(1)/4,j,k)
-          !enddo
-        !enddo
-      !endif
+       do k=1,xsize(3)
+          do j=1,xsize(2)
+             if (istret.eq.0) y=(j+xstart(2)-1-1)*dy-1.
+             if (istret.ne.0) y=yp(j+xstart(2)-1)-1.
+             um=exp(-16*y*y)
+             bxx1(j,k)=bxx1(j,k)+bxo(j,k)*inflow_noise*um*0.
+             bxy1(j,k)=bxy1(j,k)+byo(j,k)*inflow_noise*um*0.
+             bxz1(j,k)=bxz1(j,k)+bzo(j,k)*inflow_noise*um*0.
+          enddo
+       enddo
+       !if (iscalar==1) then
+       !do k=1,xsize(3)
+       !do j=1,xsize(2)
+       !bxo(j,k)=phi(xsize(1)/4,j,k)
+       !enddo
+       !enddo
+       !endif
     endif
 
     !OUTFLOW
@@ -155,25 +155,25 @@ contains
     uddz=0.5/dz
 
     do k=1,xsize(3)
-      do j=1,xsize(2)
+       do j=1,xsize(2)
 
-        cx=ux(nx,j,k)*gdt(itr)*udx
+          cx=ux(nx,j,k)*gdt(itr)*udx
 
-        if (cx.LT.0.0) cx=0.0
-        bxxn(j,k)=ux(nx,j,k)-cx*(ux(nx,j,k)-ux(nx-1,j,k))
-        bxyn(j,k)=uy(nx,j,k)-cx*(uy(nx,j,k)-uy(nx-1,j,k))
-        bxzn(j,k)=uz(nx,j,k)-cx*(uz(nx,j,k)-uz(nx-1,j,k))
-      enddo
+          if (cx.LT.0.0) cx=0.0
+          bxxn(j,k)=ux(nx,j,k)-cx*(ux(nx,j,k)-ux(nx-1,j,k))
+          bxyn(j,k)=uy(nx,j,k)-cx*(uy(nx,j,k)-uy(nx-1,j,k))
+          bxzn(j,k)=uz(nx,j,k)-cx*(uz(nx,j,k)-uz(nx-1,j,k))
+       enddo
     enddo
 
     if (nclyn == 2) THEN
-      do k = 1, xsize(3)
-        do i = 1, xsize(1)
-          byxn(i, k) = ux(i, xsize(2) - 1, k)
-          byyn(i, k) = zero
-          byzn(i, k) = uz(i, xsize(2) - 1, k)
-        enddo
-      enddo
+       do k = 1, xsize(3)
+          do i = 1, xsize(1)
+             byxn(i, k) = ux(i, xsize(2) - 1, k)
+             byyn(i, k) = zero
+             byzn(i, k) = uz(i, xsize(2) - 1, k)
+          enddo
+       enddo
     endif
 
     return
@@ -208,20 +208,20 @@ contains
 
           eta_bl=y*4.91/9.0
 
-    !OLD POLYNOMIAL FITTING
+          !OLD POLYNOMIAL FITTING
 
-           delta_eta=0.0
-           eps_eta=0.0
-           delta_int=0.2
+          delta_eta=0.0
+          eps_eta=0.0
+          delta_int=0.2
 
-           if (eta_bl .ge. (7.5/9.0)) then
+          if (eta_bl .ge. (7.5/9.0)) then
              delta_eta=eta_bl-7.5/9.0
              eta_bl=7.5/9.0
              eps_eta=0.00015
-           end if
+          end if
 
-           f_bl=1678.64209592595*eta_bl**14-11089.6925017429*eta_bl**13 &
-    	         +31996.4350140670*eta_bl**12-52671.5249779799*eta_bl**11 &
+          f_bl=1678.64209592595*eta_bl**14-11089.6925017429*eta_bl**13 &
+               +31996.4350140670*eta_bl**12-52671.5249779799*eta_bl**11 &
                +54176.1691167667*eta_bl**10-35842.8204706097*eta_bl**9  &
                +15201.3088871240*eta_bl**8 -4080.17137935648*eta_bl**7  &
                +702.129634528103*eta_bl**6 -56.2063925805318*eta_bl**5  &
@@ -231,14 +231,14 @@ contains
           f_bl=f_bl+(1-exp(-delta_eta/delta_int))*eps_eta
 
 
-           if (eta_bl .ge. (7.15/9.0)) then
+          if (eta_bl .ge. (7.15/9.0)) then
              delta_int=0.8
              delta_eta=eta_bl-7.15/9.0
              eta_bl=7.15/9.0
              eps_eta=0.0005
-           end if
+          end if
 
-           g_bl=4924.05284779754*eta_bl**14-34686.2970972733*eta_bl**13 &
+          g_bl=4924.05284779754*eta_bl**14-34686.2970972733*eta_bl**13 &
                +108130.253843618*eta_bl**12-195823.099139525*eta_bl**11 &
                +227305.908339065*eta_bl**10-176106.001047617*eta_bl**9  &
                +92234.5885895112*eta_bl**8 -32700.3687158807*eta_bl**7  &
@@ -246,7 +246,7 @@ contains
                +130.109496961069*eta_bl**4 -7.64507811014497*eta_bl**3  &
                +6.94303207046209*eta_bl**2 -0.00209716712558639*eta_bl**1 ! &
 
-           g_bl=g_bl+(1-exp(-delta_eta/delta_int))*eps_eta
+          g_bl=g_bl+(1-exp(-delta_eta/delta_int))*eps_eta
 
 
           x_bl=1.0/(4.91**2*xnu)
@@ -268,37 +268,37 @@ contains
     delta_int=0.2
 
     if (eta_bl .ge. (7.5/9.0)) then
-        delta_eta=eta_bl-7.5/9.0
-        eta_bl=7.5/9.0
-        eps_eta=0.00015
+       delta_eta=eta_bl-7.5/9.0
+       eta_bl=7.5/9.0
+       eps_eta=0.00015
     end if
 
     f_bl_inf=1678.64209592595*eta_bl**14-11089.6925017429*eta_bl**13 &
-    	      +31996.4350140670*eta_bl**12-52671.5249779799*eta_bl**11 &
-            +54176.1691167667*eta_bl**10-35842.8204706097*eta_bl**9  &
-            +15201.3088871240*eta_bl**8 -4080.17137935648*eta_bl**7  &
-            +702.129634528103*eta_bl**6 -56.2063925805318*eta_bl**5  &
-            -17.0181128273914*eta_bl**4 +0.819582894357566*eta_bl**3  &
-            -0.0601348202321954*eta_bl**2 +2.98973991270405*eta_bl**1
+         +31996.4350140670*eta_bl**12-52671.5249779799*eta_bl**11 &
+         +54176.1691167667*eta_bl**10-35842.8204706097*eta_bl**9  &
+         +15201.3088871240*eta_bl**8 -4080.17137935648*eta_bl**7  &
+         +702.129634528103*eta_bl**6 -56.2063925805318*eta_bl**5  &
+         -17.0181128273914*eta_bl**4 +0.819582894357566*eta_bl**3  &
+         -0.0601348202321954*eta_bl**2 +2.98973991270405*eta_bl**1
 
 
     f_bl_inf=f_bl_inf+(1-exp(-delta_eta/delta_int))*eps_eta
     f_bl_inf=f_bl_inf/1.0002014996204402/1.0000000359138641 !To assure 1.0 in infinity
 
     if (eta_bl .ge. (7.15/9.0)) then
-        delta_int=0.8
-        delta_eta=eta_bl-7.15/9.0
-        eta_bl=7.15/9.0
-        eps_eta=0.0005
+       delta_int=0.8
+       delta_eta=eta_bl-7.15/9.0
+       eta_bl=7.15/9.0
+       eps_eta=0.0005
     end if
 
     g_bl_inf=4924.05284779754*eta_bl**14-34686.2970972733*eta_bl**13 &
-            +108130.253843618*eta_bl**12-195823.099139525*eta_bl**11 &
-            +227305.908339065*eta_bl**10-176106.001047617*eta_bl**9  &
-            +92234.5885895112*eta_bl**8 -32700.3687158807*eta_bl**7  &
-            +7923.51008739107*eta_bl**6 -1331.09245288739*eta_bl**5  &
-            +130.109496961069*eta_bl**4 -7.64507811014497*eta_bl**3  &
-            +6.94303207046209*eta_bl**2 -0.00209716712558639*eta_bl**1
+         +108130.253843618*eta_bl**12-195823.099139525*eta_bl**11 &
+         +227305.908339065*eta_bl**10-176106.001047617*eta_bl**9  &
+         +92234.5885895112*eta_bl**8 -32700.3687158807*eta_bl**7  &
+         +7923.51008739107*eta_bl**6 -1331.09245288739*eta_bl**5  &
+         +130.109496961069*eta_bl**4 -7.64507811014497*eta_bl**3  &
+         +6.94303207046209*eta_bl**2 -0.00209716712558639*eta_bl**1
 
 
     g_bl_inf=g_bl_inf+(1-exp(-delta_eta/delta_int))*eps_eta

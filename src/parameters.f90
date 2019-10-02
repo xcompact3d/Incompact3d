@@ -233,8 +233,8 @@ subroutine parameter(input_i3d)
         print *,'Mixing layer'
      elseif (itype.eq.itype_jet) then
         print *,'Jet'
-      elseif (itype.eq.itype_tbl) then
-         print *,'Turbulent boundary layer'
+     elseif (itype.eq.itype_tbl) then
+        print *,'Turbulent boundary layer'
      else
         print *,'Unknown itype: ', itype
         stop
@@ -444,15 +444,15 @@ subroutine parameter_defaults()
 
   primary_species = -1
 
-!BLASIUS TRIPPING
-A_trip=1.
-zs_param=1.7
-randomseed=4600
-zs_tr=zs_param/2.853
-z_modes=int(zlz /zs_tr)
-allocate(h_coeff1(z_modes),h_coeff2(z_modes))
-allocate(phase1(z_modes),phase2(z_modes))
-allocate(h_1(xsize(3)), h_2(xsize(3)))
+  !BLASIUS TRIPPING
+  A_trip=1.
+  zs_param=1.7
+  randomseed=4600
+  zs_tr=zs_param/2.853
+  z_modes=int(zlz /zs_tr)
+  allocate(h_coeff1(z_modes),h_coeff2(z_modes))
+  allocate(phase1(z_modes),phase2(z_modes))
+  allocate(h_1(xsize(3)), h_2(xsize(3)))
 
   !! IO
   ivisu = 1

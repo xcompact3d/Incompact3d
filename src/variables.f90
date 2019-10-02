@@ -280,7 +280,7 @@ contains
        allocate(sgsphi1(xsize(1),xsize(2),xsize(3),1:numscalar))
        allocate(sgsphi2(ysize(1),ysize(2),ysize(3),1:numscalar))
        allocate(sgsphi3(zsize(1),zsize(2),zsize(3),1:numscalar))
-   endif
+    endif
 
 
     if (iibm.ne.0) then
@@ -453,7 +453,7 @@ contains
        ntime = 2
        nrhotime = 5 ! (A guess)
 
-     elseif(itimescheme.eq.7) then !Semi-implicit
+    elseif(itimescheme.eq.7) then !Semi-implicit
        iadvance_time=1
        adt(1)= (23./12.)*dt
        bdt(1)=-(16./12.)*dt
@@ -461,8 +461,8 @@ contains
        gdt(1)=adt(1)+bdt(1)+cdt(1)
        gdt(3)=gdt(1)
 
-        ntime = 3
-        nrhotime = 4
+       ntime = 3
+       nrhotime = 4
     endif
     allocate(dux1(xsize(1),xsize(2),xsize(3),ntime))
     allocate(duy1(xsize(1),xsize(2),xsize(3),ntime))

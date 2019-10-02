@@ -294,7 +294,7 @@ contains
     USE var, only : ta1, pp1, di1
     USE var, only : ppi3, dip3
     USE var, only : pp2, ppi2, dip2
-    
+
     USE var, ONLY : nxmsize, nymsize, nzmsize
     USE param, ONLY : npress
 
