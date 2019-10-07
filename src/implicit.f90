@@ -7,7 +7,7 @@ module ludecomp
   implicit none
 
   private
-  public :: ludecomp7
+  public :: ludecomp7, ludecomp9
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !
@@ -19,6 +19,11 @@ module ludecomp
      module procedure ludecomp7_12
      module procedure ludecomp7_0
   end interface ludecomp7
+
+  interface ludecomp9
+     module procedure ludecomp9_12
+     module procedure ludecomp9_0
+  end interface ludecomp9
 
 contains
 
@@ -504,6 +509,94 @@ contains
   end subroutine ludecomp7_0
   !
 
+  subroutine ludecomp9_12(aam,bbm,ccm,ddm,eem,qqm,ggm,hhm,ssm,rrm,vvm,wwm,zzm,ttm,uum,sssm,zzzm,ny)
+    !
+    !*******************************************************************
+    use decomp_2d, only : mytype
+
+    implicit none
+
+    integer :: i,j,k,ny
+    real(mytype),dimension(ny), intent(in)  :: aam,bbm,ccm,ddm,eem,rrm,qqm,ttm,uum
+    real(mytype),dimension(ny), intent(out) :: ggm,hhm,ssm,sssm
+    real(mytype),dimension(ny), intent(out) :: vvm,wwm,zzm,zzzm
+
+    real(mytype), dimension(ny,ny) :: mata, matl, matu, prod
+
+    ggm=0.;hhm=0.;ssm=0.;sssm=0.
+    vvm=0.;wwm=0.;zzm=0.;zzzm=0.
+
+    ggm(1)=aam(1)
+    hhm(1)=bbm(1)
+    ssm(1)=ccm(1)
+    sssm(1)=rrm(1)
+
+
+    zzzm(2)=ddm(2)/ggm(1)
+    ggm(2)=aam(2)-zzzm(2)*hhm(1)
+    hhm(2)=bbm(2)-zzzm(2)*ssm(1)
+    ssm(2)=ccm(2)-zzzm(2)*sssm(1)
+    sssm(2)=rrm(2)-zzzm(2)*ttm(1)
+
+    zzm(3)=eem(3)/ggm(1)
+    zzzm(3)=(ddm(3)-zzm(3)*hhm(1))/ggm(2)
+    ggm(3)=aam(3)-zzm(3)*ssm(1)-zzzm(3)*hhm(2)
+    hhm(3)=bbm(3)-zzm(3)*sssm(1)-zzzm(3)*ssm(2)
+    ssm(3)=ccm(3)-zzm(3)*ttm(1)-zzzm(3)*sssm(2)
+    sssm(3)=rrm(3)-zzzm(3)*ttm(2)
+
+    wwm(4)=qqm(4)/ggm(1)
+    zzm(4)=(eem(4)-wwm(4)*hhm(1))/ggm(2)
+    zzzm(4)=(ddm(4)-zzm(4)*hhm(2)-wwm(4)*ssm(1))/ggm(3)
+
+    ggm(4)=aam(4)-wwm(4)*sssm(1)-zzm(4)*ssm(2)-zzzm(4)*hhm(3)
+    hhm(4)=bbm(4)-wwm(4)*ttm(1)-zzm(4)*sssm(2)-zzzm(4)*ssm(3)
+    ssm(4)=ccm(4)-zzm(4)*ttm(2)-zzzm(4)*sssm(3)
+    sssm(4)=rrm(4)-zzzm(4)*ttm(3)
+
+    do j=5,ny
+      vvm(j)= uum(j)/ggm(j-4)
+      wwm(j)=(qqm(j)-vvm(j)*hhm(j-4))/ggm(j-3)
+      zzm(j)=(eem(j)-wwm(j)*hhm(j-3)-vvm(j)*ssm(j-4))/ggm(j-2)
+      zzzm(j)=(ddm(j)-zzm(j)*hhm(j-2)-wwm(j)*ssm(j-3)-vvm(j)*sssm(j-4))/ggm(j-1)
+
+      ggm(j)=aam(j)-vvm(j)*ttm(j-4)-wwm(j)*sssm(j-3)-zzm(j)*ssm(j-2)-zzzm(j)*hhm(j-1)
+      hhm(j)=bbm(j)-wwm(j)*ttm(j-3)-zzm(j)*sssm(j-2)-zzzm(j)*ssm(j-1)
+      ssm(j)=ccm(j)-zzm(j)*ttm(j-2)-zzzm(j)*sssm(j-1)
+      sssm(j)=rrm(j)-zzzm(j)*ttm(j-1)
+
+    enddo
+  end subroutine ludecomp9_12
+  !
+
+  !*******************************************************************
+  !Decomposition LU matrice cyclique septadiag
+  subroutine ludecomp9_0(aam,bbm,ccm,ddm,eem,qqm,ggm,hhm,ssm,rrm,vvm,wwm,zzm,l1m,l2m,l3m,u1m,u2m,u3m,ny)
+    !
+    !*******************************************************************
+    use decomp_2d, only : mytype
+
+    implicit none
+
+    integer :: i,j,k,ny
+    real(mytype),dimension(ny), intent(in)  :: aam,bbm,ccm,ddm,eem,rrm,qqm
+    real(mytype),dimension(ny), intent(out) :: ggm,hhm,ssm
+    real(mytype),dimension(ny), intent(out) :: vvm,wwm,zzm
+    real(mytype),dimension(ny), intent(out) :: l1m,l2m,l3m
+    real(mytype),dimension(ny), intent(out) :: u1m,u2m,u3m
+
+    real(mytype), dimension(ny,ny) :: mata, matl, matu, prod
+
+    ! a=diag, b=diag+1, c=diag+2, r=diag+3
+    !         d=diag-1, e=diag-2, q=diag-3
+    ggm=0.;hhm=0.;ssm=0. ! U part (diag, diag+1, diag+2, diag+3=rrm)
+    u1m=0.;u2m=0.;u3m=0. ! U cyclic part (last col, last-1, last-2)
+    vvm=0.;wwm=0.;zzm=0. ! L part (diag=1, diag-3, diag-2, diag-1)
+    l1m=0.;l2m=0.;l3m=0. ! L cyclic part (last row, last-1, last-2)
+
+
+  end subroutine ludecomp9_0
+
 end module ludecomp
 
 module matinv
@@ -513,7 +606,7 @@ module matinv
   implicit none
 
   private
-  public :: septinv
+  public :: septinv, nonainv
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !
@@ -525,6 +618,11 @@ module matinv
      module procedure septinv_12
      module procedure septinv_0
   end interface septinv
+
+  interface nonainv
+     module procedure nonainv_12
+     module procedure nonainv_0
+  end interface nonainv
 
 contains
 
@@ -640,7 +738,75 @@ contains
 
   end subroutine septinv_0
   !
+  !********************************************************************
+  !INVERSE NONADIAG
+  subroutine nonainv_12(xSol,bbb,ggm,hhm,ssm,sssm,ttm,zzzm,zzm,wwm,vvm,nx,ny,nz)
+    !
+    !********************************************************************
+    use decomp_2d, only : mytype
 
+    implicit none
+
+    integer :: i,j,k,nx,ny,nz
+    real(mytype),dimension(nx,ny,nz),intent(out) :: xsol
+    real(mytype),dimension(nx,ny,nz),intent(in) :: bbb
+    real(mytype),dimension(ny),intent(in)    :: ggm,hhm,ssm, sssm, ttm
+    real(mytype),dimension(ny),intent(in)    :: vvm,wwm,zzm,zzzm
+
+    do k=1,nz
+       do i=1,nx
+
+          !Descente
+          xSol(i,1,k)=bbb(i,1,k);
+          xSol(i,2,k)=bbb(i,2,k)-zzzm(2)*xSol(i,1,k);
+          xSol(i,3,k)=bbb(i,3,k)-zzm(3)*xSol(i,1,k)-zzzm(3)*xSol(i,2,k);
+          xSol(i,4,k)=bbb(i,4,k)-wwm(4)*xSol(i,1,k)-zzm(4)*xSol(i,2,k)-zzzm(4)*xSol(i,3,k);
+
+          do j=5,ny
+             xSol(i,j,k)=bbb(i,j,k)-vvm(j)*xSol(i,j-4,k)-wwm(j)*xSol(i,j-3,k) &
+             -zzm(j)*xSol(i,j-2,k)-zzzm(j)*xSol(i,j-1,k);
+          enddo
+          !
+
+          !Remontee
+          xSol(i,ny,k)=xSol(i,ny,k)/ggm(ny);
+          xSol(i,ny-1,k)=(xSol(i,ny-1,k)-hhm(ny-1)*xSol(i,ny,k))/ggm(ny-1);
+          xSol(i,ny-2,k)=(xSol(i,ny-2,k)-hhm(ny-2)*xSol(i,ny-1,k)-ssm(ny-2)*xSol(i,ny,k))/ggm(ny-2);
+          xSol(i,ny-3,k)=(xSol(i,ny-3,k)-hhm(ny-3)*xSol(i,ny-2,k)-ssm(ny-3)*xSol(i,ny-1,k) &
+          -sssm(ny-3)*xSol(i,ny,k))/ggm(ny-3);
+
+          do j=ny-4,1,-1
+             xSol(i,j,k)=(xSol(i,j,k)-hhm(j)*xSol(i,j+1,k)-ssm(j)*xSol(i,j+2,k) &
+             -sssm(j)*xSol(i,j+3,k)-ttm(j)*xSol(i,j+4,k))/ggm(j);
+          enddo
+
+       enddo
+    enddo
+
+  end subroutine nonainv_12
+  !
+
+  !********************************************************************
+  !INVERSE SEPTADIAG CYCLIQUE
+  subroutine nonainv_0(xsol,bbb,ggm,hhm,ssm,rrm,vvm,wwm,zzm,l1m,l2m,l3m,u1m,u2m,u3m,nx,ny,nz)
+    !
+    !********************************************************************
+    use decomp_2d, only : mytype
+
+    implicit none
+
+    integer :: i,j,k,kk,nx,ny,nz
+    real(mytype),dimension(nx,ny,nz), intent(out) :: xsol
+    real(mytype),dimension(nx,ny,nz), intent(in) :: bbb
+    real(mytype),dimension(ny), intent(in)    :: ggm,hhm,ssm,rrm
+    real(mytype),dimension(ny), intent(in)    :: vvm,wwm,zzm
+    real(mytype),dimension(ny), intent(in) :: l1m,l2m,l3m
+    real(mytype),dimension(ny), intent(in) :: u1m,u2m,u3m
+
+
+
+  end subroutine nonainv_0
+  !
 end module matinv
 
 !********************************************************************
@@ -745,7 +911,8 @@ subroutine  inttimp (var1,dvar1,forcing1)
 
   elseif (ncly1.eq.1) then
   elseif (ncly1.eq.2) then
-     call multmatrix7(td2,ta2,tb2)
+     !call multmatrix7(td2,ta2,tb2)
+     call multmatrix9(td2,ta2,tb2)
   endif
 
   !SECOND MEMBRE COMPLET BBB=A uhat+(A+xcst.B)u^n
@@ -763,7 +930,8 @@ subroutine  inttimp (var1,dvar1,forcing1)
   elseif (ncly1.eq.1) then
      call septinv(tb2,ta2,ggm11,hhm11,ssm11,rrm11,vvm11,wwm11,zzm11,ysize(1),ysize(2),ysize(3))
   elseif (ncly1.eq.2) then
-     call septinv(tb2,ta2,ggm,hhm,ssm,rrm,vvm,wwm,zzm,ysize(1),ysize(2),ysize(3))
+     !call septinv(tb2,ta2,ggm,hhm,ssm,rrm,vvm,wwm,zzm,ysize(1),ysize(2),ysize(3))
+     call nonainv(tb2,ta2,ggm,hhm,ssm,sssm,ttm,zzzm,zzm,wwm,vvm,ysize(1),ysize(2),ysize(3))
   endif
 
   call transpose_y_to_x(tb2,var1)
@@ -989,6 +1157,122 @@ subroutine multmatrix7(td2,ta2,ux2)
 end subroutine multmatrix7
 
 !********************************************************************
+
+subroutine multmatrix9(td2,ta2,ux2)
+  !
+  !********************************************************************
+  USE param
+  USE variables
+  USE derivY
+  USE decomp_2d
+
+  implicit none
+
+  integer :: i,j,k,code
+  !real(mytype) :: xcst ! modification module param
+  real(mytype),dimension(ysize(1),ysize(2),ysize(3)), intent(inout) :: ux2
+  real(mytype),dimension(ysize(1),ysize(2),ysize(3)), intent(inout) :: td2,ta2
+  real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: di2
+
+  !xcst= xnu*gdt(itr)*0.5
+
+  !A.uhat
+
+     if (istret.ne.0) then
+        do j=1,ysize(2)
+           ta2(:,j,:)=ta2(:,j,:)/pp2y(j)
+        enddo
+     endif
+
+     if (ncly1.eq.0) then
+
+        td2(:,1,:) = alsajy*ta2(:,2,:) + ta2(:,1,:) + alsajy*ta2(:,ysize(2),:)
+        do j=2,ysize(2)-1
+           td2(:,j,:) = alsajy*ta2(:,j-1,:) + ta2(:,j,:) + alsajy*ta2(:,j+1,:)
+        enddo
+        td2(:,ysize(2),:) = alsajy*ta2(:,ysize(2)-1,:) + ta2(:,ysize(2),:) + alsajy*ta2(:,1,:)
+        ta2=td2
+
+     elseif (ncly1.eq.1) then
+
+
+     elseif (ncly1.eq.2) then
+
+        td2(:,1,:) = 0.
+        td2(:,2,:) = alsa2y*ta2(:,1,:) + ta2(:,2,:) + alsa2y*ta2(:,3,:)
+        td2(:,3,:) = alsa3y*ta2(:,2,:) + ta2(:,3,:) + alsa3y*ta2(:,4,:)
+        td2(:,4,:) = alsa4y*ta2(:,3,:) + ta2(:,4,:) + alsa4y*ta2(:,5,:)
+        do j=5,ysize(2)-4
+           td2(:,j,:) = alsajy*ta2(:,j-1,:) + ta2(:,j,:) + alsajy*ta2(:,j+1,:)
+        enddo
+        td2(:,ysize(2)-3,:) = alsatty*ta2(:,ysize(2)-4,:) + ta2(:,ysize(2)-3,:) + alsatty*ta2(:,ysize(2)-2,:)
+        td2(:,ysize(2)-2,:) = alsaty*ta2(:,ysize(2)-3,:) + ta2(:,ysize(2)-2,:) + alsaty*ta2(:,ysize(2)-1,:)
+        td2(:,ysize(2)-1,:) = alsamy*ta2(:,ysize(2)-2,:) + ta2(:,ysize(2)-1,:) + alsamy*ta2(:,ysize(2),:)
+        td2(:,ysize(2),:) = 0.
+        ta2=td2
+
+     endif
+
+  !(A+nu*dt.B).un
+
+     if (ncly1.eq.0) then
+
+        call deryy(td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+
+     elseif (ncly1.eq.1) then
+
+
+     elseif (ncly1.eq.2) then
+
+        call deryy(td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+
+     endif
+
+     if (istret.ne.0) then
+        do j=1,ysize(2)
+           ux2(:,j,:)=ux2(:,j,:)/pp2y(j)
+        enddo
+     endif
+
+     if (ncly1.eq.0) then
+
+        td2(:,1,:) = alsajy*ux2(:,2,:) + ux2(:,1,:) + alsajy*ux2(:,ysize(2),:) &
+             + xcst*td2(:,1,:)
+        do j=2,ysize(2)-1
+           td2(:,j,:) = alsajy*ux2(:,j-1,:) + ux2(:,j,:) + alsajy*ux2(:,j+1,:) &
+                + xcst*td2(:,j,:)
+        enddo
+        td2(:,ysize(2),:) = alsajy*ux2(:,ysize(2)-1,:) + ux2(:,ysize(2),:) + alsajy*ux2(:,1,:) &
+             + xcst*td2(:,ysize(2),:)
+
+     elseif (ncly1.eq.1) then
+
+     elseif (ncly1.eq.2) then
+
+        td2(:,1,:) = 0.
+        td2(:,2,:) = alsa2y*ux2(:,1,:) + ux2(:,2,:) + alsa2y*ux2(:,3,:) &
+             + xcst*td2(:,2,:)
+        td2(:,3,:) = alsa3y*ux2(:,2,:) + ux2(:,3,:) + alsa3y*ux2(:,4,:) &
+             + xcst*td2(:,3,:)
+        td2(:,4,:) = alsa4y*ux2(:,3,:) + ux2(:,4,:) + alsa4y*ux2(:,5,:) &
+             + xcst*td2(:,4,:)
+        do j=5,ysize(2)-4
+           td2(:,j,:) = alsajy*ux2(:,j-1,:) + ux2(:,j,:) + alsajy*ux2(:,j+1,:) &
+                + xcst*td2(:,j,:)
+        enddo
+        td2(:,ysize(2)-3,:) = alsatty*ux2(:,ysize(2)-4,:) + ux2(:,ysize(2)-3,:) + alsatty*ux2(:,ysize(2)-2,:) &
+                          + xcst*td2(:,ysize(2)-3,:)
+        td2(:,ysize(2)-2,:) = alsaty*ux2(:,ysize(2)-3,:) + ux2(:,ysize(2)-2,:) + alsaty*ux2(:,ysize(2)-1,:) &
+             + xcst*td2(:,ysize(2)-2,:)
+        td2(:,ysize(2)-1,:) = alsamy*ux2(:,ysize(2)-2,:) + ux2(:,ysize(2)-1,:) + alsamy*ux2(:,ysize(2),:) &
+             + xcst*td2(:,ysize(2)-1,:)
+        td2(:,ysize(2),:) = 0.
+
+     endif
+
+end subroutine multmatrix9
+
+!********************************************************************
 !
 subroutine implicit_schemes()
   !
@@ -1028,8 +1312,10 @@ subroutine implicit_schemes()
   aam(2     )=-2.*as2y
   aam(ny-1  )=-2.*asmy
   aam(3     )=-2.*(as3y+bs3y)
+  aam(4     )=-2.*(as4y+bs4y+cs4y)
   aam(ny-2  )=-2.*(asty+bsty)
-  aam(4:ny-3)=-2.*(asjy+bsjy+csjy)
+  aam(ny-3  )=-2.*(astty+bstty+cstty)
+  aam(5:ny-4)=-2.*(asjy+bsjy+csjy+dsjy)
   if (istret==0) then
      aam = 1.-xcst*aam
   else
@@ -1046,20 +1332,26 @@ subroutine implicit_schemes()
   bbm(ny-1  )=asmy
   bbm(3     )=as3y
   bbm(ny-2  )=asty
-  bbm(4:ny-3)=asjy
+  bbm(4     )=as4y
+  bbm(ny-3  )=astty
+  bbm(5:ny-4)=asjy
   bbm = -xcst*bbm
   if (istret==0) then
-     bbm(2     )=bbm(2     )+alsa2y
-     bbm(ny-1  )=bbm(ny-1  )+alsamy
-     bbm(3     )=bbm(3     )+alsa3y
-     bbm(ny-2  )=bbm(ny-2  )+alsaty
-     bbm(4:ny-3)=bbm(4:ny-3)+alsajy
+    bbm(2     )=bbm(2     )+alsa2y
+    bbm(ny-1  )=bbm(ny-1  )+alsamy
+    bbm(3     )=bbm(3     )+alsa3y
+    bbm(ny-2  )=bbm(ny-2  )+alsaty
+    bbm(4     )=bbm(4     )+alsa4y
+    bbm(ny-3  )=bbm(ny-3  )+alsatty
+    bbm(5:ny-4)=bbm(5:ny-4)+alsajy
   else
-     bbm(2     )=bbm(2     )+alsa2y/pp2y(3)
-     bbm(ny-1  )=bbm(ny-1  )+alsamy/pp2y(ny)
-     bbm(3     )=bbm(3     )+alsa3y/pp2y(4)
-     bbm(ny-2  )=bbm(ny-2  )+alsaty/pp2y(ny-1)
-     bbm(4:ny-3)=bbm(4:ny-3)+alsajy/pp2y(5:ny-2)
+    bbm(2     )=bbm(2     )+alsa2y/pp2y(3)
+    bbm(ny-1  )=bbm(ny-1  )+alsamy/pp2y(ny)
+    bbm(3     )=bbm(3     )+alsa3y/pp2y(4)
+    bbm(ny-2  )=bbm(ny-2  )+alsaty/pp2y(ny-1)
+    bbm(4     )=bbm(4     )+alsa4y/pp2y(5)
+    bbm(ny-3  )=bbm(ny-3  )+alsatty/pp2y(ny-2)
+    bbm(5:ny-4)=bbm(5:ny-4)+alsajy/pp2y(6:ny-3)
   endif
   !CL sur bbm
   bbm(1 )=0.
@@ -1068,11 +1360,13 @@ subroutine implicit_schemes()
   !DIAG SUP 2
   ccm(1     )=cs1y
   ccm(ny    )=csny
-  ccm(2     )=0.
-  ccm(ny-1  )=0.
+  ccm(2     )=0.!bs2y
+  ccm(ny-1  )=0.!bsmy
   ccm(3     )=bs3y
   ccm(ny-2  )=bsty
-  ccm(4:ny-3)=bsjy
+  ccm(4     )=bs4y
+  ccm(ny-3  )=bstty
+  ccm(5:ny-4)=bsjy
   ccm = -xcst*ccm
   !CL sur ccm
   ccm(1 )=0.
@@ -1081,36 +1375,57 @@ subroutine implicit_schemes()
   !DIAG SUP 3
   rrm(1     )=ds1y
   rrm(ny    )=dsny
-  rrm(2     )=0.
-  rrm(ny-1  )=0.
-  rrm(3     )=0.
-  rrm(ny-2  )=0.
-  rrm(4:ny-3)=csjy
+  rrm(2     )=0.!cs2y
+  rrm(ny-1  )=0.!csmy
+  rrm(3     )=0.!cs3y
+  rrm(ny-2  )=0.!csty
+  rrm(4     )=cs4y
+  rrm(ny-3  )=cstty
+  rrm(5:ny-4)=csjy
   rrm = -xcst*rrm
   !CL sur rrm
   rrm(1 )=0.
   rrm(ny)=0.
   !
+  !DIAG SUP 4
+  ttm(1     )=0.
+  ttm(ny    )=0.
+  ttm(2     )=0.
+  ttm(ny-1  )=0.
+  ttm(3     )=0.!ds3y
+  ttm(ny-2  )=0.!dsty
+  ttm(4     )=0.!ds4y
+  ttm(ny-3  )=0.!dstty
+  ttm(5:ny-4)=dsjy
+  ttm = -xcst*ttm
+  !CL sur ttm
+  ttm(1 )=0.
+  ttm(ny)=0.
+  !
   !DIAG INF 1
   if (istret==0) then
      ddm=bbm
   else
-     ddm(1     )=bs1y
-     ddm(ny    )=bsny
-     ddm(2     )=as2y
-     ddm(ny-1  )=asmy
-     ddm(3     )=as3y
-     ddm(ny-2  )=asty
-     ddm(4:ny-3)=asjy
-     ddm = -xcst*ddm
-     ddm(2     )=ddm(2     )+alsa2y/pp2y(1)
-     ddm(ny-1  )=ddm(ny-1  )+alsamy/pp2y(ny-2)
-     ddm(3     )=ddm(3     )+alsa3y/pp2y(2)
-     ddm(ny-2  )=ddm(ny-2  )+alsaty/pp2y(ny-3)
-     ddm(4:ny-3)=ddm(4:ny-3)+alsajy/pp2y(3:ny-4)
-     !CL sur ddm
-     ddm(1 )=0.
-     ddm(ny)=0.
+    ddm(1     )=bs1y
+    ddm(ny    )=bsny
+    ddm(2     )=as2y
+    ddm(ny-1  )=asmy
+    ddm(3     )=as3y
+    ddm(ny-2  )=asty
+    ddm(4     )=as4y
+    ddm(ny-3  )=astty
+    ddm(5:ny-4)=asjy
+    ddm = -xcst*ddm
+    ddm(2     )=ddm(2     )+alsa2y/pp2y(1)
+    ddm(ny-1  )=ddm(ny-1  )+alsamy/pp2y(ny-2)
+    ddm(3     )=ddm(3     )+alsa3y/pp2y(2)
+    ddm(ny-2  )=ddm(ny-2  )+alsaty/pp2y(ny-3)
+    ddm(4     )=ddm(4     )+alsa4y/pp2y(3)
+    ddm(ny-3  )=ddm(ny-3  )+alsatty/pp2y(ny-4)
+    ddm(5:ny-4)=ddm(5:ny-4)+alsajy/pp2y(4:ny-5)
+    !CL sur ddm
+    ddm(1 )=0.
+    ddm(ny)=0.
   endif
   !
   !DIAG INF 2
@@ -1118,6 +1433,9 @@ subroutine implicit_schemes()
   !
   !DIAG INF 3
   qqm=rrm
+
+  !DIAG INF 4
+  uum=ttm
 
 !!! NCL = 1, npaire=0, dirichlet imposé, fonction impaire
   !
@@ -1339,14 +1657,17 @@ subroutine implicit_schemes()
   !DIAG INF 3
   qqm0=rrm0
 
-  call ludecomp7(aam,bbm,ccm,ddm,eem,qqm,ggm,hhm,ssm,rrm,&
-       vvm,wwm,zzm,ny)
-  call ludecomp7(aam10,bbm10,ccm10,ddm10,eem10,qqm10,ggm10,hhm10,ssm10,rrm10,&
-       vvm10,wwm10,zzm10,ny)
-  call ludecomp7(aam11,bbm11,ccm11,ddm11,eem11,qqm11,ggm11,hhm11,ssm11,rrm11,&
-       vvm11,wwm11,zzm11,ny)
-  call ludecomp7(aam0,bbm0,ccm0,ddm0,eem0,qqm0,ggm0,hhm0,ssm0,rrm0,&
-       vvm0,wwm0,zzm0,l1m,l2m,l3m,u1m,u2m,u3m,ny)
+  !call ludecomp7(aam,bbm,ccm,ddm,eem,qqm,ggm,hhm,ssm,rrm,&
+       !vvm,wwm,zzm,ny)
+
+  call ludecomp9(aam,bbm,ccm,ddm,eem,qqm,ggm,hhm,ssm,rrm,vvm,wwm,zzm,ttm,uum,sssm,zzzm,ny)
+
+  !call ludecomp7(aam10,bbm10,ccm10,ddm10,eem10,qqm10,ggm10,hhm10,ssm10,rrm10,&
+       !vvm10,wwm10,zzm10,ny)
+  !call ludecomp7(aam11,bbm11,ccm11,ddm11,eem11,qqm11,ggm11,hhm11,ssm11,rrm11,&
+       !vvm11,wwm11,zzm11,ny)
+  !call ludecomp7(aam0,bbm0,ccm0,ddm0,eem0,qqm0,ggm0,hhm0,ssm0,rrm0,&
+       !vvm0,wwm0,zzm0,l1m,l2m,l3m,u1m,u2m,u3m,ny)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !! FIN MATRICE M2 TIME IMPLICIT    !!
@@ -3418,6 +3739,7 @@ subroutine init_implicit ()
 
   allocate(aam(ny),bbm(ny),ccm(ny),ddm(ny),eem(ny),ggm(ny),hhm(ny),wwm(ny),zzm(ny))
   allocate(rrm(ny),qqm(ny),vvm(ny),ssm(ny))
+  allocate(sssm(ny),zzzm(ny),ttm(ny),uum(ny))
   allocate(aam10(ny),bbm10(ny),ccm10(ny),ddm10(ny),eem10(ny),ggm10(ny),hhm10(ny),wwm10(ny),zzm10(ny))
   allocate(rrm10(ny),qqm10(ny),vvm10(ny),ssm10(ny))
   allocate(aam11(ny),bbm11(ny),ccm11(ny),ddm11(ny),eem11(ny),ggm11(ny),hhm11(ny),wwm11(ny),zzm11(ny))

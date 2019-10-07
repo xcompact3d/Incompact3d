@@ -82,6 +82,7 @@ module variables
   !module implicit
   real(mytype), allocatable,dimension(:) :: aam,bbm,ccm,ddm,eem,ggm,hhm,wwm,zzm !!TIME IMPLICIT, ncl=2
   real(mytype), allocatable,dimension(:) :: rrm,qqm,vvm,ssm !!TIME IMPLICIT (with HPL), ncl=2
+  real(mytype), allocatable,dimension(:) :: sssm, zzzm, ttm, uum  !!Nona
   real(mytype), allocatable,dimension(:) :: aam10,bbm10,ccm10,ddm10,eem10,ggm10,hhm10,wwm10,zzm10 !!TIME IMPLICIT, ncl=1, npaire=0
   real(mytype), allocatable,dimension(:) :: rrm10,qqm10,vvm10,ssm10 !!TIME IMPLICIT (with HPL), ncl=1, npaire=0
   real(mytype), allocatable,dimension(:) :: aam11,bbm11,ccm11,ddm11,eem11,ggm11,hhm11,wwm11,zzm11 !!TIME IMPLICIT, ncl=1, npaire=1
@@ -142,7 +143,8 @@ module variables
 
   !O6SVV
   real(mytype),allocatable,dimension(:) :: newsm,newtm,newsmt,newtmt
-  real(mytype),allocatable,dimension(:) :: newrm,ttm,newrmt,ttmt
+  !real(mytype),allocatable,dimension(:) :: newrm,ttm,newrmt,ttmt
+  real(mytype),allocatable,dimension(:) :: newrm,newrmt,ttmt
 
   ABSTRACT INTERFACE
      SUBROUTINE FILTER_X(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)

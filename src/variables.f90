@@ -336,7 +336,8 @@ contains
 
     !O6SVV
     allocate(newsm(ny),newtm(ny),newsmt(ny),newtmt(ny))
-    allocate(newrm(ny),ttm(ny),newrmt(ny),ttmt(ny))
+    !allocate(newrm(ny),ttm(ny),newrmt(ny),ttmt(ny))
+    allocate(newrm(ny),newrmt(ny),ttmt(ny))
 
     !module derpres
     allocate(cfx6(nxm),ccx6(nxm),cbx6(nxm),cfxp6(nxm),ciwxp6(nxm),csxp6(nxm),&
