@@ -45,6 +45,8 @@ subroutine schemes()
 
   implicit none
 
+  integer :: is
+
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# schemes start'
 #endif

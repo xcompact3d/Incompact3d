@@ -154,10 +154,10 @@ contains
 
     USE decomp_2d, ONLY : mytype, xsize
     USE param, ONLY : zero, one
-    USE param, ONLY : ntime, nrhotime, ilmn, iscalar, ilmn_solve_temp
+    USE param, ONLY : ntime, nrhotime, ilmn, iscalar, ilmn_solve_temp,itimescheme
     USE param, ONLY : primary_species, massfrac
     use param, only : scalar_lbound, scalar_ubound
-    USE variables, ONLY : numscalar
+    USE variables, ONLY : numscalar,nu0nu
     USE var, ONLY : ta1, tb1
 
     IMPLICIT NONE
@@ -192,7 +192,12 @@ contains
 
        DO is = 1, numscalar
           IF (is.NE.primary_species) THEN
-             CALL intt(phi1(:,:,:,is), dphi1(:,:,:,:,is))
+             IF (itimescheme.ne.7) THEN
+               CALL intt(phi1(:,:,:,is), dphi1(:,:,:,:,is))
+             ELSE
+               CALL scalar_schemes(nu0nu,is)
+               CALL scalarimp(ux1,uy1,uz1,phi1(:,:,:,is),dphi1(:,:,:,:,is),is)
+             ENDIF
 
              DO k = 1, xsize(3)
                 DO j = 1, xsize(2)

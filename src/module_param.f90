@@ -90,6 +90,7 @@ module variables
   real(mytype), allocatable,dimension(:) :: aam0,bbm0,ccm0,ddm0,eem0,ggm0,hhm0,wwm0,zzm0 !!TIME IMPLICIT, ncl=0
   real(mytype), allocatable,dimension(:) :: rrm0,qqm0,vvm0,ssm0,l1m,l2m,l3m,u1m,u2m,u3m !!TIME IMPLICIT (with HPL), ncl=0
   real(mytype), allocatable,dimension(:) :: aamt,bbmt,ccmt,ddmt,eemt,ggmt,hhmt,wwmt,zzmt !!TIME IMPLICIT SCALAR, ncl=2
+  real(mytype), allocatable,dimension(:) :: uumt,ttmt,sssmt,zzzmt !!TIME IMPLICIT SCALAR, Nona
   real(mytype), allocatable,dimension(:) :: rrmt,qqmt,vvmt,ssmt !!TIME IMPLICIT SCALAR (with HPL), ncl=2
   real(mytype), allocatable,dimension(:) :: aamt1,bbmt1,ccmt1,ddmt1,eemt1,ggmt1,hhmt1,wwmt1,zzmt1 !!TIME IMPLICIT SCALAR, ncl=1
   real(mytype), allocatable,dimension(:) :: rrmt1,qqmt1,vvmt1,ssmt1 !!TIME IMPLICIT SCALAR (with HPL), ncl=1
@@ -144,7 +145,7 @@ module variables
   !O6SVV
   real(mytype),allocatable,dimension(:) :: newsm,newtm,newsmt,newtmt
   !real(mytype),allocatable,dimension(:) :: newrm,ttm,newrmt,ttmt
-  real(mytype),allocatable,dimension(:) :: newrm,newrmt,ttmt
+  real(mytype),allocatable,dimension(:) :: newrm,newrmt
 
   ABSTRACT INTERFACE
      SUBROUTINE FILTER_X(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
@@ -421,7 +422,7 @@ module derivX
   real(mytype) :: alsa4x,as4x,bs4x,cs4x
   real(mytype) :: alsattx,asttx,bsttx,csttx
   real(mytype) :: alsaix,asix,bsix,csix,dsix
-  real(mytype) :: alsaixt,asixt,bsixt,csixt
+  real(mytype) :: alsaixt,asixt,bsixt,csixt,dsixt
 
 end module derivX
 
@@ -440,7 +441,7 @@ module derivY
   real(mytype) :: alsa4y,as4y,bs4y,cs4y
   real(mytype) :: alsatty,astty,bstty,cstty
   real(mytype) :: alsajy,asjy,bsjy,csjy,dsjy
-  real(mytype) :: alsajyt,asjyt,bsjyt,csjyt
+  real(mytype) :: alsajyt,asjyt,bsjyt,csjyt,dsjyt
 
 end module derivY
 
@@ -459,7 +460,7 @@ module derivZ
   real(mytype) :: alsa4z,as4z,bs4z,cs4z
   real(mytype) :: alsattz,asttz,bsttz,csttz
   real(mytype) :: alsakz,askz,bskz,cskz,dskz
-  real(mytype) :: alsakzt,askzt,bskzt,cskzt
+  real(mytype) :: alsakzt,askzt,bskzt,cskzt,dskzt
 
 
 end module derivZ
