@@ -15,7 +15,7 @@ CONTAINS
 
     USE decomp_2d, ONLY : mytype, xsize, zsize
     USE variables, ONLY : numscalar
-    USE param, ONLY : ntime, ilmn, nrhotime, ilmn_solve_temp
+    USE param, ONLY : ntime, ilmn, nrhotime, ilmn_solve_temp,itimescheme
 
     IMPLICIT NONE
 
@@ -36,7 +36,9 @@ CONTAINS
 
     !! Scalar equations
     !! XXX Not yet LMN!!!
-    CALL scalar(dphi1, rho1, ux1, phi1)
+    if (itimescheme.ne.7) then
+      CALL scalar(dphi1, rho1, ux1, phi1)
+    endif
 
     !! Other (LMN, ...)
     IF (ilmn) THEN

@@ -2188,8 +2188,8 @@ subroutine scalarimp(ux1,uy1,uz1,phi1,dphi1,is)
   call transpose_x_to_y(td1,ta2)
 
 !#ifdef my_mod_solide
-  mytmptemp(:,1,:)=phi2(:,1,:)
-  mytmptemp(:,2,:)=phi2(:,ysize(2),:)
+  !mytmptemp(:,1,:)=phi2(:,1,:)
+  !mytmptemp(:,2,:)=phi2(:,ysize(2),:)
 !#endif
 
   !ta2: A.T_hat
@@ -2201,15 +2201,23 @@ subroutine scalarimp(ux1,uy1,uz1,phi1,dphi1,is)
   endif
   !right hand side
   ta2(:,:,:) = ta2(:,:,:) + td2(:,:,:)
-  if (ncly1==2) then
+  !if (ncly1==2) then
 !#ifdef my_mod_solide
      !ta2(:,1,:) = 0.5*(mytmptemp(:,1,:)+temp_bot(:,ny_sol_bot+3,:))
      !ta2(:,ysize(2),:) = 0.5*(mytmptemp(:,2,:)+temp_top(:,1,:))
 
 !#else
-     ta2(:,1       ,:)=1.!g_0
-     ta2(:,ysize(2),:)=0.!g_n
+     !ta2(:,1       ,:)=1.!g_0
+     !ta2(:,ysize(2),:)=1.!g_n
 !#endif
+  !endif
+
+  if (nclyS1.eq.2) then
+    ta2(:,1       ,:)=one
+  endif
+
+  if (nclySn.eq.2) then
+    ta2(:,ysize(2),:)=one
   endif
 
   !Inversion systeme lineaire Mx=b: (A-xcst.B)u^n+1=uhat+(A+xcst.B)u^n

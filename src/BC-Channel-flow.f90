@@ -132,13 +132,14 @@ contains
           i = xsize(1)
           phi(i,:,:,:) = phi(i - 1,:,:,:)
        endif
-
-       if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
-          !! Generate a hot patch on bottom boundary
-          phi(:,1,:,:) = one
-       endif
-       if ((nclySn.eq.2).and.(xend(2).eq.ny)) THEN
-         phi(:,xsize(2),:,:) = zero
+       if (itimescheme.ne.7) then
+         if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
+            !! Generate a hot patch on bottom boundary
+            phi(:,1,:,:) = one
+         endif
+         if ((nclySn.eq.2).and.(xend(2).eq.ny)) THEN
+           phi(:,xsize(2),:,:) = zero
+         endif
        endif
     endif
 
