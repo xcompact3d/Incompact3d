@@ -343,7 +343,7 @@ CONTAINS
 
     if (itrip == 1) then
        !call tripping(tb1,td1)
-       call tbl_tripping(tb1,td1)
+       call tbl_tripping(duy1)
        if (nrank == 0) print *,'TRIPPING!!'
        !if (nrank == 0) print *,'TRIPPING KTH STYLE!!'
     endif

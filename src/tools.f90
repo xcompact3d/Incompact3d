@@ -769,17 +769,20 @@ end subroutine tripping
 !********************************************************************
 !!TRIPPING SUBROUTINE FOR TURBULENT BOUNDARY LAYERS
 
-subroutine tbl_tripping(tb,ta)
+!subroutine tbl_tripping(tb,ta)
+subroutine tbl_tripping(tb)
 
   USE param
   USE variables
+  !USE var, ONLY: ta
   USE decomp_2d
   USE MPI
 
   implicit none
 
   integer :: i,j,k
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: tb, ta
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: tb!, ta
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ta
   integer :: seed0, ii, code
   real(mytype) :: x0_tr_tbl, xs_tr_tbl,ys_tr_tbl,ts_tr_tbl !Scales related with maximum wave numbers
   real(mytype) :: z_pos, randx, p_tr,b_tr,A_tr, x_pos, y_pos
