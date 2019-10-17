@@ -649,7 +649,7 @@ end subroutine inversion5_v2
 
 
 !********************************************************************
-subroutine tripping(tb,ta) !TRIPPING SUBROUTINE FOR TURBULENT BOUNDARY LAYERS
+subroutine tripping(tb,ta) 
 
   USE param
   USE variables
@@ -770,11 +770,9 @@ end subroutine tripping
 !!TRIPPING SUBROUTINE FOR TURBULENT BOUNDARY LAYERS
 
 subroutine tbl_tripping(tb,ta)
-!subroutine tbl_tripping(ta)
 
   USE param
   USE variables
-  !USE var, ONLY: ta
   USE decomp_2d
   USE MPI
 
@@ -782,7 +780,6 @@ subroutine tbl_tripping(tb,ta)
 
   integer :: i,j,k
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: tb, ta
-  !real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(OUT) :: ta
   integer :: seed0, ii, code
   real(mytype) :: x0_tr_tbl, xs_tr_tbl,ys_tr_tbl,ts_tr_tbl !Scales related with maximum wave numbers
   real(mytype) :: z_pos, randx, p_tr,b_tr,A_tr, x_pos, y_pos
@@ -799,7 +796,6 @@ subroutine tbl_tripping(tb,ta)
 
   A_tr =  0.75/(ts_tr_tbl) !0.3/(ts_tr)
 
-  !z_modes=zlz/zs_tr
 
   if ((itime.eq.ifirst).and.(nrank.eq.0)) then
      call random_seed(SIZE=ii)
@@ -847,7 +843,7 @@ subroutine tbl_tripping(tb,ta)
 
   !Time-loop
   i=int(t/ts_tr_tbl)
-  if (i.ge.nxt_itr) then  !Nxt_itr is a global variable
+  if (i.ge.nxt_itr) then
      nxt_itr=i+1
      !Move h_nxt to h_i
      h_2(:)=h_1(:)

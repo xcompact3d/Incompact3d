@@ -1,3 +1,12 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!!!        FILE: implicit.f90
+!!!      AUTHOR: ??
+!!!    MODIFIED: Arash Hamzehloo
+!!! DESCRIPTION: Includes modules required for the semi-implicit time integration.
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 !#define my_mod_solide
 
 module ludecomp
