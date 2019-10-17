@@ -769,8 +769,8 @@ end subroutine tripping
 !********************************************************************
 !!TRIPPING SUBROUTINE FOR TURBULENT BOUNDARY LAYERS
 
-!subroutine tbl_tripping(tb,ta)
-subroutine tbl_tripping(ta)
+subroutine tbl_tripping(tb,ta)
+!subroutine tbl_tripping(ta)
 
   USE param
   USE variables
@@ -781,8 +781,8 @@ subroutine tbl_tripping(ta)
   implicit none
 
   integer :: i,j,k
-  !real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: tb!, ta
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(OUT) :: ta
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: tb, ta
+  !real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(OUT) :: ta
   integer :: seed0, ii, code
   real(mytype) :: x0_tr_tbl, xs_tr_tbl,ys_tr_tbl,ts_tr_tbl !Scales related with maximum wave numbers
   real(mytype) :: z_pos, randx, p_tr,b_tr,A_tr, x_pos, y_pos
@@ -799,18 +799,19 @@ subroutine tbl_tripping(ta)
 
   A_tr =  0.75/(ts_tr_tbl) !0.3/(ts_tr)
 
+  !z_modes=zlz/zs_tr
+
   if ((itime.eq.ifirst).and.(nrank.eq.0)) then
      call random_seed(SIZE=ii)
      call random_seed(PUT=seed0*(/ (1, i = 1, ii) /))
 
-     !First random generation of h_nxt
      INQUIRE(FILE='restart.nc',exist=exist)
      !if ((ilit==1).AND.(exist)) then
-     if (exist) then
-        print*, 'h_coeff1 and phase1 already read from restart.nc'
-        print*, 'h_coeff2 and phase2 already read from restart.nc'
-        nxt_itr=int(t/ts_tr_tbl)
-     else
+     !if (exist) then
+        !print*, 'h_coeff1 and phase1 already read from restart.nc'
+        !print*, 'h_coeff2 and phase2 already read from restart.nc'
+        !nxt_itr=int(t/ts_tr_tbl)
+     !else
         nxt_itr=1
         do j=1,z_modes
            call random_number(randx)
@@ -822,7 +823,7 @@ subroutine tbl_tripping(ta)
            call random_number(randx)
            phase2(j) = 2.0*pi*randx
         enddo
-     endif
+     !endif
   endif
 
   !Initialization h_nxt  (always bounded by xsize(3)^2 operations)
@@ -886,7 +887,7 @@ subroutine tbl_tripping(ta)
         do k=1,xsize(3)
            ta(i,j,k)=((1.0-b_tr)*h_1(k)+b_tr*h_2(k))
            ta(i,j,k)=A_tr*exp(-((x_pos-x0_tr_tbl)/xs_tr_tbl)**2-((y_pos-0.05)/ys_tr_tbl)**2)*ta(i,j,k)
-           !tb(i,j,k)=tb(i,j,k)+ta(i,j,k)
+           tb(i,j,k)=tb(i,j,k)+ta(i,j,k)
 
            z_pos=-zlz/2.0+(xstart(3)+(k-1)-1)*dz
 
@@ -895,9 +896,8 @@ subroutine tbl_tripping(ta)
   enddo
 
   call MPI_BARRIER(MPI_COMM_WORLD,code)
-  !if (nrank==0) print*, maxval(ta(:,:,:)),minval(ta),'*****************'
-  !call fine_to_coarseV(1,ta,uvisu)
-  !call decomp_2d_write_one(1,uvisu,'ta1',2)
+  !if (nrank==0) print*, maxval(ta(:,:,:)),minval(ta), z_modes
+
   return
 end subroutine tbl_tripping
 !********************************************************************

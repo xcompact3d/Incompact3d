@@ -75,7 +75,6 @@ CONTAINS
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
 
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: tripp
 
     integer :: i,j,k,is
 
@@ -345,10 +344,7 @@ CONTAINS
 
     if (itrip == 1) then
        !call tripping(tb1,td1)
-       !call tbl_tripping(duy1(:,:,:,1))
-       call tbl_tripping(tripp)
-       duy1(:,:,:,1) = duy1(:,:,:,1) + tripp(:,:,:)
-       !if (nrank==0) print*, maxval(tripp(:,:,:)),minval(tripp(:,:,:)),'*****************'
+       call tbl_tripping(duy1(:,:,:,1),td1)
        if (nrank == 0) print *,'TRIPPING!!'
        !if (nrank == 0) print *,'TRIPPING KTH STYLE!!'
     endif

@@ -12,14 +12,14 @@ p_row=0               ! Row partition
 p_col=0               ! Column partition
 
 ! Mesh
-nx=1537               ! X-direction nodes
-ny=513                 ! Y-direction nodes
-nz=128                 ! Z-direction nodes
+nx=77               ! X-direction nodes
+ny=257                 ! Y-direction nodes
+nz=64                 ! Z-direction nodes
 istret = 3            ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
-beta = 0.8    ! Refinement parameter (beta)
+beta = 1.    ! Refinement parameter (beta)
 
 ! Domain
-xlx = 375.      ! Lx (Size of the box in x-direction)
+xlx = 37.      ! Lx (Size of the box in x-direction)
 yly = 80.            ! Ly (Size of the box in y-direction)
 zlz = 15.            ! Lz (Size of the box in z-direction)
 
@@ -40,12 +40,12 @@ init_noise = 0.0   ! Turbulence intensity (1=100%) !! Initial condition
 inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
 
 ! Time stepping
-dt = 0.008              ! Time step
+dt = 0.014              ! Time step
 ifirst = 1            ! First iteration
 ilast = 1000000       ! Last iteration
 
 ! Enable modelling tools
-ilesmod=0            ! if 0 then DNS
+ilesmod=1            ! if 0 then DNS
 numscalar = 0         ! How many scalars? (Set to zero to disable scalars)
 iibm=0                ! Flag for immersed boundary method
 
@@ -58,14 +58,14 @@ iibm=0                ! Flag for immersed boundary method
 ! Spatial derivatives
 ifirstder = 4         ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact)
 isecondder = 5        ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact, 5->hyperviscous 6th)
-ipinter = 3           ! interpolation scheme (1: classic, 2: optimized, 3: optimized agressive)
+ipinter = 1           ! interpolation scheme (1: classic, 2: optimized, 3: optimized agressive)
 
 ! Time scheme
 itimescheme = 7       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4, 7->Semi-implicit)
 
 ! Dissipation control
-nu0nu = 4.0             ! Ratio between hyperviscosity/viscosity at nu
-cnu = 0.44               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
+nu0nu = 9.0             ! Ratio between hyperviscosity/viscosity at nu
+cnu = 0.32               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 
 /End
 
@@ -75,8 +75,8 @@ cnu = 0.44               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 
 ! Basic I/O
 irestart = 0          ! Read initial flow field ?
-icheckpoint = 10000    ! Frequency for writing backup file
-ioutput = 10000        ! Frequency for visualization
+icheckpoint = 1000    ! Frequency for writing backup file
+ioutput = 1000        ! Frequency for visualization
 nvisu = 1             ! Size for visualisation collection
 
 /End
@@ -88,7 +88,7 @@ nvisu = 1             ! Size for visualisation collection
 wrotation = 0.12      ! rotation speed to trigger turbulence
 spinup_time = 5000    ! number of time steps with a rotation to trigger turbulence
 nstat = 1             ! Size arrays for statistic collection
-initstat = 70000      ! Time steps after which statistics are collected 
+initstat = 50000      ! Time steps after which statistics are collected 
 
 /End
 
@@ -115,7 +115,7 @@ nclzSn = 1
 &LESModel
 !================
 
-jles = 1              ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Smag, 4: iSVV, 5: dyn SEV)
+jles = 4              ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Smag, 4: iSVV, 5: dyn SEV)
 smagcst = 0.14        ! Smagorinsky constant
 walecst = 0.5         ! WALES Model Coefficient
 iwall = 0             ! Enable wall modeling
