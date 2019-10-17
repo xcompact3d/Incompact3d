@@ -421,7 +421,7 @@ subroutine parameter_defaults()
   nvol = 0
   iforces = .FALSE.
 
-  itrip = 0
+  itrip = 1
   wrotation = zero
   irotation = 0
   itest=1

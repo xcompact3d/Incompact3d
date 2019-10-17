@@ -770,7 +770,7 @@ end subroutine tripping
 !!TRIPPING SUBROUTINE FOR TURBULENT BOUNDARY LAYERS
 
 !subroutine tbl_tripping(tb,ta)
-subroutine tbl_tripping(tb)
+subroutine tbl_tripping(ta)
 
   USE param
   USE variables
@@ -781,8 +781,8 @@ subroutine tbl_tripping(tb)
   implicit none
 
   integer :: i,j,k
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: tb!, ta
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ta
+  !real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: tb!, ta
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(OUT) :: ta
   integer :: seed0, ii, code
   real(mytype) :: x0_tr_tbl, xs_tr_tbl,ys_tr_tbl,ts_tr_tbl !Scales related with maximum wave numbers
   real(mytype) :: z_pos, randx, p_tr,b_tr,A_tr, x_pos, y_pos
@@ -878,7 +878,6 @@ subroutine tbl_tripping(tb)
   !Time coefficient
   p_tr=t/ts_tr_tbl-i
   b_tr=3.0*p_tr**2-2.0*p_tr**3
-
   !Creation of tripping velocity
   do i=1,xsize(1)
      x_pos=(xstart(1)+(i-1)-1)*dx
@@ -887,7 +886,7 @@ subroutine tbl_tripping(tb)
         do k=1,xsize(3)
            ta(i,j,k)=((1.0-b_tr)*h_1(k)+b_tr*h_2(k))
            ta(i,j,k)=A_tr*exp(-((x_pos-x0_tr_tbl)/xs_tr_tbl)**2-((y_pos-0.05)/ys_tr_tbl)**2)*ta(i,j,k)
-           tb(i,j,k)=tb(i,j,k)+ta(i,j,k)
+           !tb(i,j,k)=tb(i,j,k)+ta(i,j,k)
 
            z_pos=-zlz/2.0+(xstart(3)+(k-1)-1)*dz
 
@@ -896,7 +895,9 @@ subroutine tbl_tripping(tb)
   enddo
 
   call MPI_BARRIER(MPI_COMM_WORLD,code)
-
+  !if (nrank==0) print*, maxval(ta(:,:,:)),minval(ta),'*****************'
+  !call fine_to_coarseV(1,ta,uvisu)
+  !call decomp_2d_write_one(1,uvisu,'ta1',2)
   return
 end subroutine tbl_tripping
 !********************************************************************
