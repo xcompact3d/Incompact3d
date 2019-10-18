@@ -176,6 +176,18 @@ contains
        enddo
     endif
 
+    !SCALAR
+    if (iscalar.ne.0) then
+       if (nclxS1.eq.2) then
+          i = 1
+          phi(i,:,:,:) = zero
+       endif
+       if (nclxSn.eq.2) then
+          i = xsize(1)
+          phi(i,:,:,:) = phi(i - 1,:,:,:)
+       endif
+    endif
+
     return
   end subroutine boundary_conditions_tbl
 

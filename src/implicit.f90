@@ -2226,7 +2226,8 @@ subroutine scalarimp(ux1,uy1,uz1,phi1,dphi1,is)
   endif
 
   if (nclySn.eq.2) then
-    ta2(:,ysize(2),:)=one
+    !ta2(:,ysize(2),:)=one
+    ta2(:,ysize(2),:)=zero
   endif
 
   !Inversion systeme lineaire Mx=b: (A-xcst.B)u^n+1=uhat+(A+xcst.B)u^n
