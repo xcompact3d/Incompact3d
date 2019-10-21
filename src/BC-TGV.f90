@@ -415,9 +415,9 @@ contains
                   two*(tg1(i,j,k)+tc1(i,j,k))**two+&
                   two*(th1(i,j,k)+tf1(i,j,k))**two)
              if(ilesmod.ne.0.and.jLES.gt.0) then 
-                  temp1=temp1+two*nut1(i,j,k)*srt_smag(i,j,k)
+                temp1=temp1+two*nut1(i,j,k)*srt_smag(i,j,k)
              endif
-            enddo
+          enddo
        enddo
     enddo
     call MPI_ALLREDUCE(temp1,eps,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
@@ -495,7 +495,7 @@ contains
                   uz1(i,j,k)*(tc1(i,j,k)+tf1(i,j,k)+ti1(i,j,k)))
              temp1=temp1+di1(i,j,k)
              if(ilesmod.ne.0.and.jLES.gt.0) then 
-                  temp1=temp1+two*nut1(i,j,k)*srt_smag(i,j,k)
+                temp1=temp1+two*nut1(i,j,k)*srt_smag(i,j,k)
              endif
           enddo
        enddo
@@ -566,7 +566,7 @@ contains
           do i=1,xsize(1)
              do m=1,3
                 do l=1,3
-                        diss1(i,j,k)=diss1(i,j,k)+two*xnu*half*half*(A(l,m,i,j,k)+A(m,l,i,j,k))**two
+                   diss1(i,j,k)=diss1(i,j,k)+two*xnu*half*half*(A(l,m,i,j,k)+A(m,l,i,j,k))**two
                 enddo
              enddo
           enddo

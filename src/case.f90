@@ -44,6 +44,7 @@ MODULE case
   USE mixlayer
   USE jet
   USE lockexch
+  USE tbl
 
   USE var, ONLY : nzmsize
 
@@ -72,7 +73,7 @@ CONTAINS
     px1(:,:,:) = zero
     py1(:,:,:) = zero
     pz1(:,:,:) = zero
-    
+
     !! Default density and pressure0 to one
     pressure0 = one
     rho1(:,:,:,:) = one
@@ -112,6 +113,10 @@ CONTAINS
     ELSEIF (itype.EQ.itype_jet) THEN
 
        CALL init_jet(rho1, ux1, uy1, uz1, ep1, phi1)
+
+    ELSEIF (itype.EQ.itype_tbl) THEN
+
+       CALL init_tbl (ux1, uy1, uz1, ep1, phi1)
 
     ENDIF
 
@@ -173,6 +178,10 @@ CONTAINS
 
        CALL boundary_conditions_jet (rho,ux,uy,uz,phi)
 
+    ELSEIF (itype.EQ.itype_tbl) THEN
+
+       CALL boundary_conditions_tbl (ux, uy, uz, phi)
+
     ENDIF
 
   END SUBROUTINE boundary_conditions
@@ -221,12 +230,16 @@ CONTAINS
 
        CALL postprocess_jet (ux, uy, uz, phi, ep)
 
+    ELSEIF (itype.EQ.itype_tbl) THEN
+
+       CALL postprocess_tbl (ux, uy, uz, pp, phi, ep)
+
     ENDIF
 
-     if(iforces) then
-        call force(ux,uy,ep)
-        call restart_forces(1)
-     endif
+    if(iforces) then
+       call force(ux,uy,ep)
+       call restart_forces(1)
+    endif
 
   END SUBROUTINE postprocess_case
 
@@ -268,9 +281,9 @@ CONTAINS
     if (itype.eq.itype_lockexch) then
 
        call set_fluid_properties_lockexch(rho1, mu1)
-       
+
     endif
-    
+
   endsubroutine set_fluid_properties
 
 END MODULE case

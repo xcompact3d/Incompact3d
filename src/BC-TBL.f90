@@ -1,15 +1,13 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!
-!!!        FILE: BC-Channel-flow.f90
+!!!        FILE: BC-TBL.f90
 !!!      AUTHOR: ??
-!!!    MODIFIED: Paul Bartholomew
-!!! DESCRIPTION: This module describes the channel flow.
-!!!   CHANGELOG: [2019-02-19] Making module private by default
-!!               [2019-02-19] Turning file into a module
+!!!    MODIFIED: Arash Hamzehloo
+!!! DESCRIPTION: This module describes the turbulent boundary layer.
 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-module channel
+module tbl
 
   USE decomp_2d
   USE variables
@@ -28,13 +26,11 @@ module channel
   real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_channel, boundary_conditions_channel, postprocess_channel, &
-       momentum_forcing_channel, &
-       geomcomplex_channel
+  PUBLIC :: init_tbl, boundary_conditions_tbl, postprocess_tbl
 
 contains
 
-  subroutine init_channel (ux1,uy1,uz1,ep1,phi1)
+  subroutine init_tbl (ux1,uy1,uz1,ep1,phi1)
 
     USE decomp_2d
     USE decomp_2d_io
@@ -76,14 +72,16 @@ contains
        do j=1,xsize(2)
           if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy-yly/two
           if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/two
-          um=exp(-zptwo*y*y)
+          um=exp(-16*y*y)
           do i=1,xsize(1)
-             ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
+             ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)
              uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
              uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
           enddo
        enddo
     enddo
+
+    call ecoule(ux1,uy1,uz1,phi1)
 
     !INIT FOR G AND U=MEAN FLOW + NOISE
     do k=1,xsize(3)
@@ -101,9 +99,9 @@ contains
 #endif
 
     return
-  end subroutine init_channel
+  end subroutine init_tbl
   !********************************************************************
-  subroutine boundary_conditions_channel (ux,uy,uz,phi)
+  subroutine boundary_conditions_tbl (ux,uy,uz,phi)
 
     USE param
     USE variables
@@ -113,16 +111,72 @@ contains
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
-!!$  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ut
 
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: gx
-    real(mytype) :: x, y, z
+    real(mytype) :: x, y, z, um
+    real(mytype) :: udx,udy,udz,uddx,uddy,uddz,cx
+
     integer :: i, j, k, is
 
-    call transpose_x_to_y(ux,gx)
-    call channel_flrt(gx,two/three)
-    call transpose_y_to_x(gx,ux)
+    !INFLOW
 
+    call ecoule(ux,uy,uz,phi)
+
+    call random_number(bxo)
+    call random_number(byo)
+    call random_number(bzo)
+
+    if (iin.eq.1) then
+       do k=1,xsize(3)
+          do j=1,xsize(2)
+             if (istret.eq.0) y=(j+xstart(2)-1-1)*dy-1.
+             if (istret.ne.0) y=yp(j+xstart(2)-1)-1.
+             um=exp(-16*y*y)
+             bxx1(j,k)=bxx1(j,k)+bxo(j,k)*inflow_noise*um*0.
+             bxy1(j,k)=bxy1(j,k)+byo(j,k)*inflow_noise*um*0.
+             bxz1(j,k)=bxz1(j,k)+bzo(j,k)*inflow_noise*um*0.
+          enddo
+       enddo
+       !if (iscalar==1) then
+       !do k=1,xsize(3)
+       !do j=1,xsize(2)
+       !bxo(j,k)=phi(xsize(1)/4,j,k)
+       !enddo
+       !enddo
+       !endif
+    endif
+
+    !OUTFLOW
+
+    udx=one/dx
+    udy=one/dy
+    udz=one/dz
+    uddx=half/dx
+    uddy=half/dy
+    uddz=half/dz
+
+    do k=1,xsize(3)
+       do j=1,xsize(2)
+
+          cx=ux(nx,j,k)*gdt(itr)*udx
+
+          if (cx.LT.0.0) cx=0.0
+          bxxn(j,k)=ux(nx,j,k)-cx*(ux(nx,j,k)-ux(nx-1,j,k))
+          bxyn(j,k)=uy(nx,j,k)-cx*(uy(nx,j,k)-uy(nx-1,j,k))
+          bxzn(j,k)=uz(nx,j,k)-cx*(uz(nx,j,k)-uz(nx-1,j,k))
+       enddo
+    enddo
+
+    if (nclyn == 2) THEN
+       do k = 1, xsize(3)
+          do i = 1, xsize(1)
+             byxn(i, k) = ux(i, xsize(2) - 1, k)
+             byyn(i, k) = zero
+             byzn(i, k) = uz(i, xsize(2) - 1, k)
+          enddo
+       enddo
+    endif
+
+    !SCALAR
     if (iscalar.ne.0) then
        if (nclxS1.eq.2) then
           i = 1
@@ -132,75 +186,138 @@ contains
           i = xsize(1)
           phi(i,:,:,:) = phi(i - 1,:,:,:)
        endif
-       if (itimescheme.ne.7) then
-          if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
-             !! Generate a hot patch on bottom boundary
-             phi(:,1,:,:) = one
-          endif
-          if ((nclySn.eq.2).and.(xend(2).eq.ny)) THEN
-             phi(:,xsize(2),:,:) = zero
-          endif
-       endif
     endif
 
     return
-  end subroutine boundary_conditions_channel
+  end subroutine boundary_conditions_tbl
 
   !********************************************************************
-  !
-  subroutine channel_flrt (ux,constant)
-    !
-    !********************************************************************
+  subroutine ecoule(ux1,uy1,uz1,phi1)
+
 
     USE decomp_2d
-    USE decomp_2d_poisson
+    USE decomp_2d_io
     USE variables
     USE param
-    USE var
     USE MPI
 
     implicit none
 
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux
-    real(mytype) :: constant
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
-    integer :: j,i,k,code
-    real(mytype) :: can,ut3,ut,ut4
+    real(mytype) :: eta_bl, f_bl, g_bl, x_bl,h_bl
+    real(mytype) :: delta_int, delta_eta, eps_eta
 
-    ut3=zero
-    do k=1,ysize(3)
-       do i=1,ysize(1)
-          ut=zero
-          do j=1,ny-1
-             if (istret.eq.0) then
-                ut=ut+dy*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
-             else
-                ut=ut+(yp(j+1)-yp(j))*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
-             endif
-          enddo
-          ut=ut/yly
-          ut3=ut3+ut
+
+    real(mytype) :: x, y, z
+    integer :: i, j, k, is
+
+    do k=1,xsize(3)
+       do j=1,xsize(2)
+          if (istret.eq.0) y=(j+xstart(2)-1-1)*dy
+          if (istret.ne.0) y=yp(j+xstart(2)-1)
+
+          eta_bl=y*4.91/9.0
+
+          !OLD POLYNOMIAL FITTING
+
+          delta_eta=0.0
+          eps_eta=0.0
+          delta_int=0.2
+
+          if (eta_bl .ge. (7.5/9.0)) then
+             delta_eta=eta_bl-7.5/9.0
+             eta_bl=7.5/9.0
+             eps_eta=0.00015
+          end if
+
+          f_bl=1678.64209592595*eta_bl**14-11089.6925017429*eta_bl**13 &
+               +31996.4350140670*eta_bl**12-52671.5249779799*eta_bl**11 &
+               +54176.1691167667*eta_bl**10-35842.8204706097*eta_bl**9  &
+               +15201.3088871240*eta_bl**8 -4080.17137935648*eta_bl**7  &
+               +702.129634528103*eta_bl**6 -56.2063925805318*eta_bl**5  &
+               -17.0181128273914*eta_bl**4 +0.819582894357566*eta_bl**3  &
+               -0.0601348202321954*eta_bl**2 +2.98973991270405*eta_bl**1
+
+          f_bl=f_bl+(1-exp(-delta_eta/delta_int))*eps_eta
+
+
+          if (eta_bl .ge. (7.15/9.0)) then
+             delta_int=0.8
+             delta_eta=eta_bl-7.15/9.0
+             eta_bl=7.15/9.0
+             eps_eta=0.0005
+          end if
+
+          g_bl=4924.05284779754*eta_bl**14-34686.2970972733*eta_bl**13 &
+               +108130.253843618*eta_bl**12-195823.099139525*eta_bl**11 &
+               +227305.908339065*eta_bl**10-176106.001047617*eta_bl**9  &
+               +92234.5885895112*eta_bl**8 -32700.3687158807*eta_bl**7  &
+               +7923.51008739107*eta_bl**6 -1331.09245288739*eta_bl**5  &
+               +130.109496961069*eta_bl**4 -7.64507811014497*eta_bl**3  &
+               +6.94303207046209*eta_bl**2 -0.00209716712558639*eta_bl**1 ! &
+
+          g_bl=g_bl+(1-exp(-delta_eta/delta_int))*eps_eta
+
+
+          x_bl=1.0/(4.91**2*xnu)
+
+          bxx1(j,k)=f_bl/1.0002014996204402/1.0000000359138641 !To assure 1.0 in infinity
+          bxy1(j,k)=g_bl*sqrt(xnu/x_bl)/1.000546554
+          bxz1(j,k)=0.0
+
        enddo
     enddo
-    ut3=ut3/(real(nx*nz,mytype))
 
-    call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    !STORE VALUE F_BL_INF G_BL_INF (ONLY ONE MORE TIME)------------------
 
-    can=-(constant-ut4)
+    y=yly
+    eta_bl=y*4.91/9.0  !The 9 is due to interpolation
 
-    if (nrank==0) print *,nrank,'UT',ut4,can
+    delta_eta=0.0
+    eps_eta=0.0
+    delta_int=0.2
 
-    do k=1,ysize(3)
-       do i=1,ysize(1)
-          do j=2,ny-1
-             ux(i,j,k)=ux(i,j,k)-can
-          enddo
-       enddo
-    enddo
+    if (eta_bl .ge. (7.5/9.0)) then
+       delta_eta=eta_bl-7.5/9.0
+       eta_bl=7.5/9.0
+       eps_eta=0.00015
+    end if
+
+    f_bl_inf=1678.64209592595*eta_bl**14-11089.6925017429*eta_bl**13 &
+         +31996.4350140670*eta_bl**12-52671.5249779799*eta_bl**11 &
+         +54176.1691167667*eta_bl**10-35842.8204706097*eta_bl**9  &
+         +15201.3088871240*eta_bl**8 -4080.17137935648*eta_bl**7  &
+         +702.129634528103*eta_bl**6 -56.2063925805318*eta_bl**5  &
+         -17.0181128273914*eta_bl**4 +0.819582894357566*eta_bl**3  &
+         -0.0601348202321954*eta_bl**2 +2.98973991270405*eta_bl**1
+
+
+    f_bl_inf=f_bl_inf+(1-exp(-delta_eta/delta_int))*eps_eta
+    f_bl_inf=f_bl_inf/1.0002014996204402/1.0000000359138641 !To assure 1.0 in infinity
+
+    if (eta_bl .ge. (7.15/9.0)) then
+       delta_int=0.8
+       delta_eta=eta_bl-7.15/9.0
+       eta_bl=7.15/9.0
+       eps_eta=0.0005
+    end if
+
+    g_bl_inf=4924.05284779754*eta_bl**14-34686.2970972733*eta_bl**13 &
+         +108130.253843618*eta_bl**12-195823.099139525*eta_bl**11 &
+         +227305.908339065*eta_bl**10-176106.001047617*eta_bl**9  &
+         +92234.5885895112*eta_bl**8 -32700.3687158807*eta_bl**7  &
+         +7923.51008739107*eta_bl**6 -1331.09245288739*eta_bl**5  &
+         +130.109496961069*eta_bl**4 -7.64507811014497*eta_bl**3  &
+         +6.94303207046209*eta_bl**2 -0.00209716712558639*eta_bl**1
+
+
+    g_bl_inf=g_bl_inf+(1-exp(-delta_eta/delta_int))*eps_eta
+    g_bl_inf=g_bl_inf/1.000546554
 
     return
-  end subroutine channel_flrt
-  !********************************************************************
+  end subroutine ecoule
 
   !############################################################################
   subroutine init_post(ep1)
@@ -271,7 +388,7 @@ contains
 
   end subroutine init_post
   !############################################################################
-  subroutine postprocess_channel(ux1,uy1,uz1,pp3,phi1,ep1) !By Felipe Schuch
+  subroutine postprocess_tbl(ux1,uy1,uz1,pp3,phi1,ep1) !By Felipe Schuch
 
     USE MPI
     USE decomp_2d
@@ -293,7 +410,7 @@ contains
     integer :: is
 
     return
-  end subroutine postprocess_channel
+  end subroutine postprocess_tbl
   !############################################################################
   subroutine write_probes(ux1,uy1,uz1,phi1) !By Felipe Schuch
 
@@ -324,62 +441,4 @@ contains
   end subroutine write_probes
   !############################################################################
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !!
-  !!  SUBROUTINE: momentum_forcing
-  !!      AUTHOR: Paul Bartholomew
-  !! DESCRIPTION: Applies rotation for t < spinup_time.
-  !!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE momentum_forcing_channel(dux1, duy1, ux1, uy1)
-
-    IMPLICIT NONE
-
-    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1
-    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1
-
-    if (itime.lt.spinup_time) then
-       if (nrank==0) print *,'Rotating turbulent channel at speed ',wrotation
-       dux1(:,:,:,1) = dux1(:,:,:,1) - wrotation*uy1(:,:,:)
-       duy1(:,:,:,1) = duy1(:,:,:,1) + wrotation*ux1(:,:,:)
-    endif
-
-  ENDSUBROUTINE momentum_forcing_channel
-
-  subroutine geomcomplex_channel(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,yp,remp)
-
-    use decomp_2d, only : mytype
-    use param, only : zero, one, two
-    use ibm
-
-    implicit none
-
-    integer                    :: nxi,nxf,ny,nyi,nyf,nzi,nzf
-    real(mytype),dimension(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
-    real(mytype),dimension(ny) :: yp
-    real(mytype)               :: remp
-    integer                    :: j
-    real(mytype)               :: ym
-    real(mytype)               :: zeromach
-    real(mytype)               :: h
-
-    epsi(:,:,:) = zero
-    h = (yly - two) / two
-
-    zeromach=one
-    do while ((one + zeromach / two) .gt. one)
-       zeromach = zeromach/two
-    end do
-    zeromach = 1.0e1*zeromach
-
-    do j=nyi,nyf
-       ym=yp(j)
-       if ((ym.le.h).or.(ym.ge.(h+two))) then
-          epsi(:,j,:)=remp
-       endif
-    enddo
-
-    return
-  end subroutine geomcomplex_channel
-
-end module channel
+end module tbl

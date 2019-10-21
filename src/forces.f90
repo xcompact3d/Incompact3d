@@ -106,7 +106,7 @@ contains
        if (mod(itime, icheckpoint).ne.0) then
           return
        endif
-       
+
        call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
             MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
             fh, ierror)

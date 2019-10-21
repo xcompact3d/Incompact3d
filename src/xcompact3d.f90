@@ -9,7 +9,7 @@ program xcompact3d
        calc_divu_constraint, solve_poisson, cor_vel
   use tools, only : test_flow, restart, simu_stats
   use visu, only : postprocessing
-  
+
   implicit none
 
   call init_xcompact3d()
@@ -60,7 +60,7 @@ subroutine init_xcompact3d()
   USE decomp_2d_poisson, ONLY : decomp_2d_poisson_init
   use case
   use forces
-  
+
   use var
 
   use navier, only : calc_divu_constraint
@@ -68,10 +68,10 @@ subroutine init_xcompact3d()
        restart, &
        simu_stats
   use visu, only : postprocessing
-  
+
   use param, only : ilesmod, jles
   use param, only : irestart
-  
+
   use variables, only : nx, ny, nz, nxm, nym, nzm
   use variables, only : p_row, p_col
   use variables, only : nstat, nvisu, nprobe
@@ -123,6 +123,10 @@ subroutine init_xcompact3d()
 
   call init_variables()
 
+  if (itimescheme.eq.7) then
+     call init_implicit
+  endif
+
   call schemes()
 
   !if (nrank==0) call stabiltemp()
@@ -160,6 +164,7 @@ subroutine init_xcompact3d()
 
   call calc_divu_constraint(divu3, rho1, phi1)
 
+
   if(nrank.eq.0)then
      open(42,file='time_evol.dat',form='formatted')
   endif
@@ -168,7 +173,7 @@ endsubroutine init_xcompact3d
 
 subroutine finalise_xcompact3d()
 
-  use MPI 
+  use MPI
   use decomp_2d
 
   use tools, only : simu_stats
@@ -185,4 +190,3 @@ subroutine finalise_xcompact3d()
   CALL MPI_FINALIZE(ierr)
 
 endsubroutine finalise_xcompact3d
-

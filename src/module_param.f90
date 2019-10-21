@@ -1,5 +1,7 @@
 module variables
 
+  !USE param
+  !USE var
   use decomp_2d, only : mytype
 
   ! Boundary conditions : ncl = 2 --> Dirichlet
@@ -77,6 +79,26 @@ module variables
   real(mytype),allocatable,dimension(:) :: sfzpt,sszpt,swzpt
 
 
+  !module implicit
+  real(mytype), allocatable,dimension(:) :: aam,bbm,ccm,ddm,eem,ggm,hhm,wwm,zzm !!TIME IMPLICIT, ncl=2
+  real(mytype), allocatable,dimension(:) :: rrm,qqm,vvm,ssm !!TIME IMPLICIT (with HPL), ncl=2
+  real(mytype), allocatable,dimension(:) :: sssm, zzzm, ttm, uum  !!Nona
+  real(mytype), allocatable,dimension(:) :: aam10,bbm10,ccm10,ddm10,eem10,ggm10,hhm10,wwm10,zzm10 !!TIME IMPLICIT, ncl=1, npaire=0
+  real(mytype), allocatable,dimension(:) :: rrm10,qqm10,vvm10,ssm10 !!TIME IMPLICIT (with HPL), ncl=1, npaire=0
+  real(mytype), allocatable,dimension(:) :: aam11,bbm11,ccm11,ddm11,eem11,ggm11,hhm11,wwm11,zzm11 !!TIME IMPLICIT, ncl=1, npaire=1
+  real(mytype), allocatable,dimension(:) :: rrm11,qqm11,vvm11,ssm11 !!TIME IMPLICIT (with HPL), ncl=1, npaire=1
+  real(mytype), allocatable,dimension(:) :: aam0,bbm0,ccm0,ddm0,eem0,ggm0,hhm0,wwm0,zzm0 !!TIME IMPLICIT, ncl=0
+  real(mytype), allocatable,dimension(:) :: rrm0,qqm0,vvm0,ssm0,l1m,l2m,l3m,u1m,u2m,u3m !!TIME IMPLICIT (with HPL), ncl=0
+  real(mytype), allocatable,dimension(:) :: aamt,bbmt,ccmt,ddmt,eemt,ggmt,hhmt,wwmt,zzmt !!TIME IMPLICIT SCALAR, ncl=2
+  real(mytype), allocatable,dimension(:) :: uumt,ttmt,sssmt,zzzmt !!TIME IMPLICIT SCALAR, Nona
+  real(mytype), allocatable,dimension(:) :: rrmt,qqmt,vvmt,ssmt !!TIME IMPLICIT SCALAR (with HPL), ncl=2
+  real(mytype), allocatable,dimension(:) :: aamt1,bbmt1,ccmt1,ddmt1,eemt1,ggmt1,hhmt1,wwmt1,zzmt1 !!TIME IMPLICIT SCALAR, ncl=1
+  real(mytype), allocatable,dimension(:) :: rrmt1,qqmt1,vvmt1,ssmt1 !!TIME IMPLICIT SCALAR (with HPL), ncl=1
+  real(mytype), allocatable,dimension(:) :: aamt0,bbmt0,ccmt0,ddmt0,eemt0,ggmt0,hhmt0,wwmt0,zzmt0 !!TIME IMPLICIT SCALAR, ncl=0
+  real(mytype), allocatable,dimension(:) :: rrmt0,qqmt0,vvmt0,ssmt0,l1mt,l2mt,l3mt,u1mt,u2mt,u3mt !!TIME IMPLICIT SCALAR (with HPL), ncl=0
+
+
+
   ABSTRACT INTERFACE
      SUBROUTINE DERIVATIVE_X(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
        use decomp_2d, only : mytype
@@ -122,29 +144,30 @@ module variables
 
   !O6SVV
   real(mytype),allocatable,dimension(:) :: newsm,newtm,newsmt,newtmt
-  real(mytype),allocatable,dimension(:) :: newrm,ttm,newrmt,ttmt
+  !real(mytype),allocatable,dimension(:) :: newrm,ttm,newrmt,ttmt
+  real(mytype),allocatable,dimension(:) :: newrm,newrmt
 
   ABSTRACT INTERFACE
      SUBROUTINE FILTER_X(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
        use decomp_2d, only : mytype
        integer :: nx,ny,nz,npaire
-       real(mytype), dimension(nx,ny,nz) :: t,u,r 
+       real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(ny,nz):: s
-       real(mytype), dimension(nx):: ff,fs,fw 
+       real(mytype), dimension(nx):: ff,fs,fw
      END SUBROUTINE FILTER_X
      SUBROUTINE FILTER_Y(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
        use decomp_2d, only : mytype
        integer :: nx,ny,nz,npaire
-       real(mytype), dimension(nx,ny,nz) :: t,u,r 
+       real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,nz):: s
        real(mytype), dimension(ny):: ff,fs,fw
      END SUBROUTINE FILTER_Y
      SUBROUTINE FILTER_Z(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
        use decomp_2d, only : mytype
        integer :: nx,ny,nz,npaire
-       real(mytype), dimension(nx,ny,nz) :: t,u,r 
+       real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,ny):: s
-       real(mytype), dimension(nz):: ff,fs,fw 
+       real(mytype), dimension(nz):: ff,fs,fw
      END SUBROUTINE FILTER_Z
   END INTERFACE
 
@@ -220,7 +243,8 @@ module param
        itype_cyl = 5, &
        itype_dbg = 6, &
        itype_mixlayer = 7, &
-       itype_jet = 8
+       itype_jet = 8, &
+       itype_tbl = 9
 
   integer :: cont_phi,itr,itime,itest,iprocessing
   integer :: ifft,istret,iforc_entree,iturb
@@ -239,24 +263,9 @@ module param
   !! Numerics control
   integer :: ifirstder,isecondder,ipinter
 
-#ifdef IMPLICIT
   real(mytype) :: xcst, xcst_pr
   real(mytype) :: alpha_0, beta_0, g_0, alpha_n, beta_n, g_n, g_bl_inf, f_bl_inf
 
-  !! Robin boundary condition on temperature
-  !! alpha * T + beta * dT/dn = g
-  !! alpha=1, beta=0 is dirichlet
-  !! alpha=0, beta=1 is neumann
-  !!
-  !! WARNING ATTENTION ACHTUNG WARNING ATTENTION ACHTUNG
-  !!
-  !! beta is the coefficient for NORMAL derivative :
-  !!
-  !! alpha_0*T(0) - beta_0*dTdy(0)=g_0
-  !! alpha_n*T(L) + beta_n*dTdy(L)=g_n
-  !!
-
-#endif
 
   !! Scalars
   real(mytype), allocatable, dimension(:) :: scalar_lbound, scalar_ubound
@@ -304,6 +313,11 @@ module param
   integer ::  z_modes, nxt_itr, itrip
   real(mytype) :: x0_tr, xs_tr, ys_tr, ts_tr, zs_param, zs_tr, randomseed, A_trip
   real(mytype), allocatable, dimension(:) :: h_coeff, h_nxt,h_i
+  !module TBL tripping
+  !integer ::  z_modes, nxt_itr, itrip
+  !real(mytype) ::  zs_param, zs_tr, A_trip, randomseed
+  real(mytype), allocatable, dimension(:) :: h_coeff1, h_1,phase1
+  real(mytype), allocatable, dimension(:) :: h_coeff2, h_2,phase2
 
   !numbers
 
@@ -408,11 +422,8 @@ module derivX
   real(mytype) :: alsa4x,as4x,bs4x,cs4x
   real(mytype) :: alsattx,asttx,bsttx,csttx
   real(mytype) :: alsaix,asix,bsix,csix,dsix
+  real(mytype) :: alsaixt,asixt,bsixt,csixt,dsixt
 
-#ifdef IMPLICIT
-  !implicit
-  real(mytype) :: alsaixt,asixt,bsixt,csixt
-#endif
 end module derivX
 
 module derivY
@@ -430,11 +441,8 @@ module derivY
   real(mytype) :: alsa4y,as4y,bs4y,cs4y
   real(mytype) :: alsatty,astty,bstty,cstty
   real(mytype) :: alsajy,asjy,bsjy,csjy,dsjy
+  real(mytype) :: alsajyt,asjyt,bsjyt,csjyt,dsjyt
 
-#ifdef IMPLICIT
-  !implicit
-  real(mytype) :: alsajyt,asjyt,bsjyt,csjyt
-#endif
 end module derivY
 
 module derivZ
@@ -452,47 +460,44 @@ module derivZ
   real(mytype) :: alsa4z,as4z,bs4z,cs4z
   real(mytype) :: alsattz,asttz,bsttz,csttz
   real(mytype) :: alsakz,askz,bskz,cskz,dskz
+  real(mytype) :: alsakzt,askzt,bskzt,cskzt,dskzt
 
-#ifdef IMPLICIT
-  !implicit
-  real(mytype) :: alsakzt,askzt,bskzt,cskzt
-#endif
 
 end module derivZ
 
 ! Describes the parameters for the discrete filters in X-Pencil
 module parfiX
   use decomp_2d, only : mytype
-  real(mytype) :: fial1x, fia1x, fib1x, fic1x, fid1x, fie1x, fif1x  ! Coefficients for filter at boundary point 1  
+  real(mytype) :: fial1x, fia1x, fib1x, fic1x, fid1x, fie1x, fif1x  ! Coefficients for filter at boundary point 1
   real(mytype) :: fial2x, fia2x, fib2x, fic2x, fid2x, fie2x, fif2x  ! Coefficients for filter at boundary point 2
   real(mytype) :: fial3x, fia3x, fib3x, fic3x, fid3x, fie3x, fif3x  ! Coefficients for filter at boundary point 3
-  real(mytype) :: fialix, fiaix, fibix, ficix, fidix                ! Coefficient for filter at interior points 
-  real(mytype) :: fialnx, fianx, fibnx, ficnx, fidnx, fienx, fifnx  ! Coefficient for filter at boundary point n 
-  real(mytype) :: fialmx, fiamx, fibmx, ficmx, fidmx, fiemx, fifmx  ! Coefficient for filter at boundary point m=n-1 
+  real(mytype) :: fialix, fiaix, fibix, ficix, fidix                ! Coefficient for filter at interior points
+  real(mytype) :: fialnx, fianx, fibnx, ficnx, fidnx, fienx, fifnx  ! Coefficient for filter at boundary point n
+  real(mytype) :: fialmx, fiamx, fibmx, ficmx, fidmx, fiemx, fifmx  ! Coefficient for filter at boundary point m=n-1
   real(mytype) :: fialpx, fiapx, fibpx, ficpx, fidpx, fiepx, fifpx  ! Coefficient for filter at boundary point p=n-2
 end module parfiX
 !
 module parfiY
 
   use decomp_2d, only : mytype
-  real(mytype) :: fial1y, fia1y, fib1y, fic1y, fid1y, fie1y, fif1y ! Coefficients for filter at boundary point 1  
+  real(mytype) :: fial1y, fia1y, fib1y, fic1y, fid1y, fie1y, fif1y ! Coefficients for filter at boundary point 1
   real(mytype) :: fial2y, fia2y, fib2y, fic2y, fid2y, fie2y, fif2y ! Coefficients for filter at boundary point 2
   real(mytype) :: fial3y, fia3y, fib3y, fic3y, fid3y, fie3y, fif3y ! Coefficients for filter at boundary point 3
-  real(mytype) :: fialjy, fiajy, fibjy, ficjy, fidjy               ! Coefficient for filter at interior points 
-  real(mytype) :: fialny, fiany, fibny, ficny, fidny, fieny, fifny ! Coefficient for filter at boundary point n 
-  real(mytype) :: fialmy, fiamy, fibmy, ficmy, fidmy, fiemy, fifmy ! Coefficient for filter at boundary point m=n-1 
+  real(mytype) :: fialjy, fiajy, fibjy, ficjy, fidjy               ! Coefficient for filter at interior points
+  real(mytype) :: fialny, fiany, fibny, ficny, fidny, fieny, fifny ! Coefficient for filter at boundary point n
+  real(mytype) :: fialmy, fiamy, fibmy, ficmy, fidmy, fiemy, fifmy ! Coefficient for filter at boundary point m=n-1
   real(mytype) :: fialpy, fiapy, fibpy, ficpy, fidpy, fiepy, fifpy ! Coefficient for filter at boundary point p=n-2
 end module parfiY
 
 module parfiZ
 
   use decomp_2d, only : mytype
-  real(mytype) :: fial1z, fia1z, fib1z, fic1z, fid1z, fie1z, fif1z ! Coefficients for filter at boundary point 1  
+  real(mytype) :: fial1z, fia1z, fib1z, fic1z, fid1z, fie1z, fif1z ! Coefficients for filter at boundary point 1
   real(mytype) :: fial2z, fia2z, fib2z, fic2z, fid2z, fie2z, fif2z ! Coefficients for filter at boundary point 2
   real(mytype) :: fial3z, fia3z, fib3z, fic3z, fid3z, fie3z, fif3z ! Coefficients for filter at boundary point 3
-  real(mytype) :: fialkz, fiakz, fibkz, fickz, fidkz               ! Coefficient for filter at interior points 
-  real(mytype) :: fialnz, fianz, fibnz, ficnz, fidnz, fienz, fifnz ! Coefficient for filter at boundary point n 
-  real(mytype) :: fialmz, fiamz, fibmz, ficmz, fidmz, fiemz, fifmz ! Coefficient for filter at boundary point m=n-1 
+  real(mytype) :: fialkz, fiakz, fibkz, fickz, fidkz               ! Coefficient for filter at interior points
+  real(mytype) :: fialnz, fianz, fibnz, ficnz, fidnz, fienz, fifnz ! Coefficient for filter at boundary point n
+  real(mytype) :: fialmz, fiamz, fibmz, ficmz, fidmz, fiemz, fifmz ! Coefficient for filter at boundary point m=n-1
   real(mytype) :: fialpz, fiapz, fibpz, ficpz, fidpz, fiepz, fifpz ! Coefficient for filter at boundary point p=n-2
 end module parfiZ
 
