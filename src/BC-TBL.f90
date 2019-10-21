@@ -147,12 +147,12 @@ contains
 
     !OUTFLOW
 
-    udx=1./dx
-    udy=1./dy
-    udz=1./dz
-    uddx=0.5/dx
-    uddy=0.5/dy
-    uddz=0.5/dz
+    udx=one/dx
+    udy=one/dy
+    udz=one/dz
+    uddx=half/dx
+    uddy=half/dy
+    uddz=half/dz
 
     do k=1,xsize(3)
        do j=1,xsize(2)

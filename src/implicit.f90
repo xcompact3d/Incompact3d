@@ -42,7 +42,7 @@ contains
     !
     !*******************************************************************
     use decomp_2d, only : mytype
-
+    USE param
     implicit none
 
     integer :: i,j,k,ny
@@ -52,8 +52,12 @@ contains
 
     real(mytype), dimension(ny,ny) :: mata, matl, matu, prod
 
-    ggm=0.;hhm=0.;ssm=0.
-    vvm=0.;wwm=0.;zzm=0.
+    ggm=zero
+    hhm=zero
+    ssm=zero
+    vvm=zero
+    wwm=zero
+    zzm=zero
 
     ggm(1)=aam(1)
     hhm(1)=bbm(1)
@@ -93,9 +97,9 @@ contains
        do k=1,ny
           print *,vvm(k),wwm(k),zzm(k)
        enddo
-       mata=0.
-       matl=0.
-       matu=0.
+       mata=zero
+       matl=zero
+       matu=zero
        j=1
        mata(j,ny-2)=qqm(j)
        mata(j,ny-1)=eem(j)
@@ -213,7 +217,7 @@ contains
 
        do i=1,ny
           do j=1,ny
-             prod(i,j)=0.
+             prod(i,j)=zero
              do k=1,ny
                 prod(i,j)=prod(i,j)+matl(i,k)*matu(k,j)
              enddo
@@ -235,6 +239,7 @@ contains
     !
     !*******************************************************************
     use decomp_2d, only : mytype
+    USE param
 
     implicit none
 
@@ -249,10 +254,10 @@ contains
 
     ! a=diag, b=diag+1, c=diag+2, r=diag+3
     !         d=diag-1, e=diag-2, q=diag-3
-    ggm=0.;hhm=0.;ssm=0. ! U part (diag, diag+1, diag+2, diag+3=rrm)
-    u1m=0.;u2m=0.;u3m=0. ! U cyclic part (last col, last-1, last-2)
-    vvm=0.;wwm=0.;zzm=0. ! L part (diag=1, diag-3, diag-2, diag-1)
-    l1m=0.;l2m=0.;l3m=0. ! L cyclic part (last row, last-1, last-2)
+    ggm=zero;hhm=zero;ssm=zero ! U part (diag, diag+1, diag+2, diag+3=rrm)
+    u1m=zero;u2m=zero;u3m=zero ! U cyclic part (last col, last-1, last-2)
+    vvm=zero;wwm=zero;zzm=zero ! L part (diag=1, diag-3, diag-2, diag-1)
+    l1m=zero;l2m=zero;l3m=zero ! L cyclic part (last row, last-1, last-2)
 
     ggm(1)=aam(1)
     hhm(1)=bbm(1)
@@ -365,9 +370,9 @@ contains
        do k=1,ny
           print *,vvm(k),wwm(k),zzm(k),l1m(k),l2m(k),l3m(k)
        enddo
-       mata=0.
-       matl=0.
-       matu=0.
+       mata=zero
+       matl=zero
+       matu=zero
        j=1
        mata(j,ny-2)=qqm(j)
        mata(j,ny-1)=eem(j)
@@ -522,6 +527,7 @@ contains
     !
     !*******************************************************************
     use decomp_2d, only : mytype
+    use param
 
     implicit none
 
@@ -532,8 +538,8 @@ contains
 
     real(mytype), dimension(ny,ny) :: mata, matl, matu, prod
 
-    ggm=0.;hhm=0.;ssm=0.;sssm=0.
-    vvm=0.;wwm=0.;zzm=0.;zzzm=0.
+    ggm=zero;hhm=zero;ssm=zero;sssm=zero
+    vvm=zero;wwm=zero;zzm=zero;zzzm=zero
 
     ggm(1)=aam(1)
     hhm(1)=bbm(1)
@@ -579,11 +585,12 @@ contains
   !
 
   !*******************************************************************
-  !Decomposition LU matrice cyclique septadiag
+
   subroutine ludecomp9_0(aam,bbm,ccm,ddm,eem,qqm,ggm,hhm,ssm,rrm,vvm,wwm,zzm,l1m,l2m,l3m,u1m,u2m,u3m,ny)
     !
     !*******************************************************************
     use decomp_2d, only : mytype
+    use param
 
     implicit none
 
@@ -596,12 +603,11 @@ contains
 
     real(mytype), dimension(ny,ny) :: mata, matl, matu, prod
 
-    ! a=diag, b=diag+1, c=diag+2, r=diag+3
-    !         d=diag-1, e=diag-2, q=diag-3
-    ggm=0.;hhm=0.;ssm=0. ! U part (diag, diag+1, diag+2, diag+3=rrm)
-    u1m=0.;u2m=0.;u3m=0. ! U cyclic part (last col, last-1, last-2)
-    vvm=0.;wwm=0.;zzm=0. ! L part (diag=1, diag-3, diag-2, diag-1)
-    l1m=0.;l2m=0.;l3m=0. ! L cyclic part (last row, last-1, last-2)
+
+    ggm=zero;hhm=zero;ssm=zero
+    u1m=zero;u2m=zero;u3m=zero
+    vvm=zero;wwm=zero;zzm=zero
+    l1m=zero;l2m=zero;l3m=zero
 
 
   end subroutine ludecomp9_0
@@ -1189,7 +1195,6 @@ subroutine multmatrix9(td2,ta2,ux2)
   real(mytype),dimension(ysize(1),ysize(2),ysize(3)), intent(inout) :: td2,ta2
   real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: di2
 
-  !xcst= xnu*gdt(itr)*0.5
 
   !A.uhat
 
@@ -1297,6 +1302,7 @@ subroutine implicit_schemes()
   USE derivY
   USE variables
   USE var
+  USE param
   use ludecomp
 
   implicit none
@@ -1313,7 +1319,7 @@ subroutine implicit_schemes()
 !!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!
 
-  xcst = xnu*dt*0.5
+  xcst = xnu*dt*half
 
 
   if (isecondder.ne.5) then
@@ -1326,19 +1332,19 @@ subroutine implicit_schemes()
     !DIAG
     aam(1     )=as1y
     aam(ny    )=asny
-    aam(2     )=-2.*as2y
-    aam(ny-1  )=-2.*asmy
-    aam(3     )=-2.*(as3y+bs3y)
-    aam(ny-2  )=-2.*(asty+bsty)
-    aam(4:ny-3)=-2.*(asjy+bsjy+csjy)
+    aam(2     )=-two*as2y
+    aam(ny-1  )=-two*asmy
+    aam(3     )=-two*(as3y+bs3y)
+    aam(ny-2  )=-two*(asty+bsty)
+    aam(4:ny-3)=-two*(asjy+bsjy+csjy)
     if (istret==0) then
        aam = 1.-xcst*aam
     else
-       aam = 1./pp2y -xcst*aam
+       aam = one/pp2y -xcst*aam
     endif
     !CL sur aam
-    aam(1 )=1.
-    aam(ny)=1.
+    aam(1 )=one
+    aam(ny)=one
     !
     !DIAG SUP 1
     bbm(1     )=bs1y
@@ -1363,34 +1369,34 @@ subroutine implicit_schemes()
       bbm(4:ny-3)=bbm(4:ny-3)+alsajy/pp2y(5:ny-2)
     endif
     !CL sur bbm
-    bbm(1 )=0.
-    bbm(ny)=0.
+    bbm(1 )=zero
+    bbm(ny)=zero
     !
     !DIAG SUP 2
     ccm(1     )=cs1y
     ccm(ny    )=csny
-    ccm(2     )=0.
-    ccm(ny-1  )=0.
+    ccm(2     )=zero
+    ccm(ny-1  )=zero
     ccm(3     )=bs3y
     ccm(ny-2  )=bsty
     ccm(4:ny-3)=bsjy
     ccm = -xcst*ccm
     !CL sur ccm
-    ccm(1 )=0.
-    ccm(ny)=0.
+    ccm(1 )=zero
+    ccm(ny)=zero
     !
     !DIAG SUP 3
     rrm(1     )=ds1y
     rrm(ny    )=dsny
-    rrm(2     )=0.
-    rrm(ny-1  )=0.
-    rrm(3     )=0.
-    rrm(ny-2  )=0.
+    rrm(2     )=zero
+    rrm(ny-1  )=zero
+    rrm(3     )=zero
+    rrm(ny-2  )=zero
     rrm(4:ny-3)=csjy
     rrm = -xcst*rrm
     !CL sur rrm
-    rrm(1 )=0.
-    rrm(ny)=0.
+    rrm(1 )=zero
+    rrm(ny)=zero
     !
     !DIAG INF 1
     if (istret==0) then
@@ -1410,8 +1416,8 @@ subroutine implicit_schemes()
       ddm(ny-2  )=ddm(ny-2  )+alsaty/pp2y(ny-3)
       ddm(4:ny-3)=ddm(4:ny-3)+alsajy/pp2y(3:ny-4)
       !CL sur ddm
-      ddm(1 )=0.
-      ddm(ny)=0.
+      ddm(1 )=zero
+      ddm(ny)=zero
     endif
     !
     !DIAG INF 2
@@ -1423,20 +1429,20 @@ subroutine implicit_schemes()
     !!! NCL = 1, npaire=0, dirichlet imposé, fonction impaire
     !
     ! DIAG
-    aam10(1     )=0.
-    aam10(ny    )=0.
-    aam10(2     )=-2.*asjy-3.*bsjy-2.*csjy
+    aam10(1     )=zero
+    aam10(ny    )=zero
+    aam10(2     )=-two*asjy-three*bsjy-two*csjy
     aam10(ny-1  )=aam10(2)
-    aam10(3:ny-2)=-2.*(asjy+bsjy+csjy)
+    aam10(3:ny-2)=-two*(asjy+bsjy+csjy)
     if (istret==0) then
-       aam10 = 1. - xcst*aam10
+       aam10 = one - xcst*aam10
     else
-       aam10 = 1./pp2y - xcst*aam10
+       aam10 = one/pp2y - xcst*aam10
     endif
     !
     !DIAG SUP 1
-    bbm10(1     )=0.
-    bbm10(ny    )=0.
+    bbm10(1     )=zero
+    bbm10(ny    )=zero
     bbm10(2     )=asjy-csjy
     bbm10(ny-1  )=asjy
     bbm10(3     )=asjy
@@ -1448,32 +1454,32 @@ subroutine implicit_schemes()
        bbm10(2:ny-1) = alsajy/pp2y(3:ny) - xcst*bbm10(2:ny-1)
     endif
     !CL sur bbm10
-    bbm10(1 )=0.
-    bbm10(ny)=0.
+    bbm10(1 )=zero
+    bbm10(ny)=zero
     !
     !DIAG SUP 2
-    ccm10(1     )=0.
-    ccm10(ny    )=0.
+    ccm10(1     )=zero
+    ccm10(ny    )=zero
     ccm10(2     )=bsjy
-    ccm10(ny-1  )=0.
+    ccm10(ny-1  )=zero
     ccm10(3     )=bsjy
     ccm10(ny-2  )=bsjy
     ccm10(4:ny-3)=bsjy
     ccm10 = -xcst*ccm10
     !
     !DIAG SUP 3
-    rrm10(1     )=0.
-    rrm10(ny    )=0.
+    rrm10(1     )=zero
+    rrm10(ny    )=zero
     rrm10(2     )=csjy
-    rrm10(ny-1  )=0.
+    rrm10(ny-1  )=zero
     rrm10(3     )=csjy
-    rrm10(ny-2  )=0.
+    rrm10(ny-2  )=zero
     rrm10(4:ny-3)=csjy
     rrm10 = -xcst*rrm10
     !
     !DIAG INF 1
-    ddm10(1     )=0.
-    ddm10(ny    )=0.
+    ddm10(1     )=zero
+    ddm10(ny    )=zero
     ddm10(2     )=asjy
     ddm10(ny-1  )=asjy-csjy
     ddm10(3     )=asjy-csjy
@@ -1485,13 +1491,13 @@ subroutine implicit_schemes()
        ddm10(2:ny-1) = alsajy/pp2y(1:ny-2) - xcst*ddm10(2:ny-1)
     endif
     !CL sur ddm10
-    ddm10(1 )=0.
-    ddm10(ny)=0.
+    ddm10(1 )=zero
+    ddm10(ny)=zero
     !
     !DIAG INF 2
-    eem10(1     )=0.
-    eem10(ny    )=0.
-    eem10(2     )=0.
+    eem10(1     )=zero
+    eem10(ny    )=zero
+    eem10(2     )=zero
     eem10(ny-1  )=bsjy
     eem10(3     )=bsjy
     eem10(ny-2  )=bsjy
@@ -1499,11 +1505,11 @@ subroutine implicit_schemes()
     eem10 = -xcst*eem10
     !
     !DIAG INF 3
-    qqm10(1     )=0.
-    qqm10(ny    )=0.
-    qqm10(2     )=0.
+    qqm10(1     )=zero
+    qqm10(ny    )=zero
+    qqm10(2     )=zero
     qqm10(ny-1  )=csjy
-    qqm10(3     )=0.
+    qqm10(3     )=zero
     qqm10(ny-2  )=csjy
     qqm10(4:ny-3)=csjy
     qqm10 = -xcst*qqm10
@@ -1511,20 +1517,20 @@ subroutine implicit_schemes()
     !!! NCL = 1, npaire=1, neumann imposé, fonction paire
     !
     ! DIAG
-    aam11(1     )=-2.*(asjy+bsjy+csjy)
+    aam11(1     )=-two*(asjy+bsjy+csjy)
     aam11(ny    )=aam11(1)
-    aam11(2     )=-2.*asjy-bsjy-2.*csjy
+    aam11(2     )=-two*asjy-bsjy-two*csjy
     aam11(ny-1  )=aam11(2)
-    aam11(3:ny-2)=-2.*(asjy+bsjy+csjy)
+    aam11(3:ny-2)=-two*(asjy+bsjy+csjy)
     if (istret==0) then
-       aam11 = 1. - xcst*aam11
+       aam11 = one - xcst*aam11
     else
-       aam11 = 1./pp2y - xcst*aam11
+       aam11 = one/pp2y - xcst*aam11
     endif
     !
     !DIAG SUP 1
-    bbm11(1     )=2.*asjy
-    bbm11(ny    )=0.
+    bbm11(1     )=two*asjy
+    bbm11(ny    )=zero
     bbm11(2     )=asjy+csjy
     bbm11(ny-1  )=asjy
     bbm11(3     )=asjy
@@ -1541,31 +1547,31 @@ subroutine implicit_schemes()
     else
       bbm11(1 )=bbm11(1)+alsajy/pp2y(2)
     endif
-    bbm11(ny)=0.
+    bbm11(ny)=zero
     !
     !DIAG SUP 2
-    ccm11(1     )=2.*bsjy
-    ccm11(ny    )=0.
+    ccm11(1     )=two*bsjy
+    ccm11(ny    )=zero
     ccm11(2     )=bsjy
-    ccm11(ny-1  )=0.
+    ccm11(ny-1  )=zero
     ccm11(3     )=bsjy
     ccm11(ny-2  )=bsjy
     ccm11(4:ny-3)=bsjy
     ccm11 = -xcst*ccm11
     !
     !DIAG SUP 3
-    rrm11(1     )=2.*csjy
-    rrm11(ny    )=0.
+    rrm11(1     )=two*csjy
+    rrm11(ny    )=zero
     rrm11(2     )=csjy
-    rrm11(ny-1  )=0.
+    rrm11(ny-1  )=zero
     rrm11(3     )=csjy
-    rrm11(ny-2  )=0.
+    rrm11(ny-2  )=zero
     rrm11(4:ny-3)=csjy
     rrm11 = -xcst*rrm11
     !
     !DIAG INF 1
-    ddm11(1     )=0.
-    ddm11(ny    )=2.*asjy
+    ddm11(1     )=zero
+    ddm11(ny    )=two*asjy
     ddm11(2     )=asjy
     ddm11(ny-1  )=asjy+csjy
     ddm11(3     )=asjy+csjy
@@ -1577,7 +1583,7 @@ subroutine implicit_schemes()
        ddm11(2:ny) = alsajy/pp2y(1:ny-1) - xcst*ddm11(2:ny)
     endif
     !CL sur ddm11
-    ddm11(1 )=0.
+    ddm11(1 )=zero
     if (istret==0) then
        ddm11(ny)=ddm11(ny)+alsajy!a1
     else
@@ -1585,9 +1591,9 @@ subroutine implicit_schemes()
     endif
     !
     !DIAG INF 2
-    eem11(1     )=0.
-    eem11(ny    )=2.*bsjy
-    eem11(2     )=0.
+    eem11(1     )=zero
+    eem11(ny    )=two*bsjy
+    eem11(2     )=zero
     eem11(ny-1  )=bsjy
     eem11(3     )=bsjy
     eem11(ny-2  )=bsjy
@@ -1595,11 +1601,11 @@ subroutine implicit_schemes()
     eem11 = -xcst*eem11
     !
     !DIAG INF 3
-    qqm11(1     )=0.
-    qqm11(ny    )=2.*csjy
-    qqm11(2     )=0.
+    qqm11(1     )=zero
+    qqm11(ny    )=two*csjy
+    qqm11(2     )=zero
     qqm11(ny-1  )=csjy
-    qqm11(3     )=0.
+    qqm11(3     )=zero
     qqm11(ny-2  )=csjy
     qqm11(4:ny-3)=csjy
     qqm11 = -xcst*qqm11
@@ -1607,9 +1613,9 @@ subroutine implicit_schemes()
     !!! NXL = 0
     !DIAG
     if (istret==0) then
-       aam0 = 1.-xcst*(-2.*(asjy+bsjy+csjy))
+       aam0 = one-xcst*(-two*(asjy+bsjy+csjy))
     else
-       aam0 = 1./pp2y-xcst*(-2.*(asjy+bsjy+csjy))
+       aam0 = one/pp2y-xcst*(-two*(asjy+bsjy+csjy))
     endif
     !
     !DIAG SUP 1
@@ -1650,21 +1656,21 @@ subroutine implicit_schemes()
     !DIAG
     aam(1     )=as1y
     aam(ny    )=asny
-    aam(2     )=-2.*as2y
-    aam(ny-1  )=-2.*asmy
-    aam(3     )=-2.*(as3y+bs3y)
-    aam(4     )=-2.*(as4y+bs4y+cs4y)
-    aam(ny-2  )=-2.*(asty+bsty)
-    aam(ny-3  )=-2.*(astty+bstty+cstty)
-    aam(5:ny-4)=-2.*(asjy+bsjy+csjy+dsjy)
+    aam(2     )=-two*as2y
+    aam(ny-1  )=-two*asmy
+    aam(3     )=-two*(as3y+bs3y)
+    aam(4     )=-two*(as4y+bs4y+cs4y)
+    aam(ny-2  )=-two*(asty+bsty)
+    aam(ny-3  )=-two*(astty+bstty+cstty)
+    aam(5:ny-4)=-two*(asjy+bsjy+csjy+dsjy)
     if (istret==0) then
-       aam = 1.-xcst*aam
+       aam = one-xcst*aam
     else
-       aam = 1./pp2y -xcst*aam
+       aam = one/pp2y -xcst*aam
     endif
     !CL sur aam
-    aam(1 )=1.
-    aam(ny)=1.
+    aam(1 )=one
+    aam(ny)=one
     !
     !DIAG SUP 1
     bbm(1     )=bs1y
@@ -1695,8 +1701,8 @@ subroutine implicit_schemes()
       bbm(5:ny-4)=bbm(5:ny-4)+alsajy/pp2y(6:ny-3)
     endif
     !CL sur bbm
-    bbm(1 )=0.
-    bbm(ny)=0.
+    bbm(1 )=zero
+    bbm(ny)=zero
     !
     !DIAG SUP 2
     ccm(1     )=cs1y
@@ -1710,38 +1716,38 @@ subroutine implicit_schemes()
     ccm(5:ny-4)=bsjy
     ccm = -xcst*ccm
     !CL sur ccm
-    ccm(1 )=0.
-    ccm(ny)=0.
+    ccm(1 )=zero
+    ccm(ny)=zero
     !
     !DIAG SUP 3
     rrm(1     )=ds1y
     rrm(ny    )=dsny
-    rrm(2     )=0.!cs2y
-    rrm(ny-1  )=0.!csmy
-    rrm(3     )=0.!cs3y
-    rrm(ny-2  )=0.!csty
+    rrm(2     )=zero!cs2y
+    rrm(ny-1  )=zero!csmy
+    rrm(3     )=zero!cs3y
+    rrm(ny-2  )=zero!csty
     rrm(4     )=cs4y
     rrm(ny-3  )=cstty
     rrm(5:ny-4)=csjy
     rrm = -xcst*rrm
     !CL sur rrm
-    rrm(1 )=0.
-    rrm(ny)=0.
+    rrm(1 )=zero
+    rrm(ny)=zero
     !
     !DIAG SUP 4
-    ttm(1     )=0.
-    ttm(ny    )=0.
-    ttm(2     )=0.
-    ttm(ny-1  )=0.
-    ttm(3     )=0.!ds3y
-    ttm(ny-2  )=0.!dsty
-    ttm(4     )=0.!ds4y
-    ttm(ny-3  )=0.!dstty
+    ttm(1     )=zero
+    ttm(ny    )=zero
+    ttm(2     )=zero
+    ttm(ny-1  )=zero
+    ttm(3     )=zero!ds3y
+    ttm(ny-2  )=zero!dsty
+    ttm(4     )=zero!ds4y
+    ttm(ny-3  )=zero!dstty
     ttm(5:ny-4)=dsjy
     ttm = -xcst*ttm
     !CL sur ttm
-    ttm(1 )=0.
-    ttm(ny)=0.
+    ttm(1 )=zero
+    ttm(ny)=zero
     !
     !DIAG INF 1
     if (istret==0) then
@@ -1765,8 +1771,8 @@ subroutine implicit_schemes()
       ddm(ny-3  )=ddm(ny-3  )+alsatty/pp2y(ny-4)
       ddm(5:ny-4)=ddm(5:ny-4)+alsajy/pp2y(4:ny-5)
       !CL sur ddm
-      ddm(1 )=0.
-      ddm(ny)=0.
+      ddm(1 )=zero
+      ddm(ny)=zero
     endif
     !
     !DIAG INF 2
@@ -1781,20 +1787,20 @@ subroutine implicit_schemes()
   !!! NCL = 1, npaire=0, dirichlet imposé, fonction impaire
     !
     ! DIAG
-    aam10(1     )=0.
-    aam10(ny    )=0.
-    aam10(2     )=-2.*asjy-3.*bsjy-2.*csjy
+    aam10(1     )=zero
+    aam10(ny    )=zero
+    aam10(2     )=-two*asjy-three*bsjy-two*csjy
     aam10(ny-1  )=aam10(2)
-    aam10(3:ny-2)=-2.*(asjy+bsjy+csjy)
+    aam10(3:ny-2)=-two*(asjy+bsjy+csjy)
     if (istret==0) then
-       aam10 = 1. - xcst*aam10
+       aam10 = one - xcst*aam10
     else
-       aam10 = 1./pp2y - xcst*aam10
+       aam10 = one/pp2y - xcst*aam10
     endif
     !
     !DIAG SUP 1
-    bbm10(1     )=0.
-    bbm10(ny    )=0.
+    bbm10(1     )=zero
+    bbm10(ny    )=zero
     bbm10(2     )=asjy-csjy
     bbm10(ny-1  )=asjy
     bbm10(3     )=asjy
@@ -1806,32 +1812,32 @@ subroutine implicit_schemes()
        bbm10(2:ny-1) = alsajy/pp2y(3:ny) - xcst*bbm10(2:ny-1)
     endif
     !CL sur bbm10
-    bbm10(1 )=0.
-    bbm10(ny)=0.
+    bbm10(1 )=zero
+    bbm10(ny)=zero
     !
     !DIAG SUP 2
-    ccm10(1     )=0.
-    ccm10(ny    )=0.
+    ccm10(1     )=zero
+    ccm10(ny    )=zero
     ccm10(2     )=bsjy
-    ccm10(ny-1  )=0.
+    ccm10(ny-1  )=zero
     ccm10(3     )=bsjy
     ccm10(ny-2  )=bsjy
     ccm10(4:ny-3)=bsjy
     ccm10 = -xcst*ccm10
     !
     !DIAG SUP 3
-    rrm10(1     )=0.
-    rrm10(ny    )=0.
+    rrm10(1     )=zero
+    rrm10(ny    )=zero
     rrm10(2     )=csjy
-    rrm10(ny-1  )=0.
+    rrm10(ny-1  )=zero
     rrm10(3     )=csjy
-    rrm10(ny-2  )=0.
+    rrm10(ny-2  )=zero
     rrm10(4:ny-3)=csjy
     rrm10 = -xcst*rrm10
     !
     !DIAG INF 1
-    ddm10(1     )=0.
-    ddm10(ny    )=0.
+    ddm10(1     )=zero
+    ddm10(ny    )=zero
     ddm10(2     )=asjy
     ddm10(ny-1  )=asjy-csjy
     ddm10(3     )=asjy-csjy
@@ -1843,13 +1849,13 @@ subroutine implicit_schemes()
        ddm10(2:ny-1) = alsajy/pp2y(1:ny-2) - xcst*ddm10(2:ny-1)
     endif
     !CL sur ddm10
-    ddm10(1 )=0.
-    ddm10(ny)=0.
+    ddm10(1 )=zero
+    ddm10(ny)=zero
     !
     !DIAG INF 2
-    eem10(1     )=0.
-    eem10(ny    )=0.
-    eem10(2     )=0.
+    eem10(1     )=zero
+    eem10(ny    )=zero
+    eem10(2     )=zero
     eem10(ny-1  )=bsjy
     eem10(3     )=bsjy
     eem10(ny-2  )=bsjy
@@ -1857,11 +1863,11 @@ subroutine implicit_schemes()
     eem10 = -xcst*eem10
     !
     !DIAG INF 3
-    qqm10(1     )=0.
-    qqm10(ny    )=0.
-    qqm10(2     )=0.
+    qqm10(1     )=zero
+    qqm10(ny    )=zero
+    qqm10(2     )=zero
     qqm10(ny-1  )=csjy
-    qqm10(3     )=0.
+    qqm10(3     )=zero
     qqm10(ny-2  )=csjy
     qqm10(4:ny-3)=csjy
     qqm10 = -xcst*qqm10
@@ -1869,20 +1875,20 @@ subroutine implicit_schemes()
   !!! NCL = 1, npaire=1, neumann imposé, fonction paire
     !
     ! DIAG
-    aam11(1     )=-2.*(asjy+bsjy+csjy)
+    aam11(1     )=-two*(asjy+bsjy+csjy)
     aam11(ny    )=aam11(1)
-    aam11(2     )=-2.*asjy-bsjy-2.*csjy
+    aam11(2     )=-two*asjy-bsjy-two*csjy
     aam11(ny-1  )=aam11(2)
-    aam11(3:ny-2)=-2.*(asjy+bsjy+csjy)
+    aam11(3:ny-2)=-two*(asjy+bsjy+csjy)
     if (istret==0) then
-       aam11 = 1. - xcst*aam11
+       aam11 = one - xcst*aam11
     else
-       aam11 = 1./pp2y - xcst*aam11
+       aam11 = one/pp2y - xcst*aam11
     endif
     !
     !DIAG SUP 1
-    bbm11(1     )=2.*asjy
-    bbm11(ny    )=0.
+    bbm11(1     )=two*asjy
+    bbm11(ny    )=zero
     bbm11(2     )=asjy+csjy
     bbm11(ny-1  )=asjy
     bbm11(3     )=asjy
@@ -1899,31 +1905,31 @@ subroutine implicit_schemes()
     else
        bbm11(1 )=bbm11(1)+alsajy/pp2y(2)
     endif
-    bbm11(ny)=0.
+    bbm11(ny)=zero
     !
     !DIAG SUP 2
-    ccm11(1     )=2.*bsjy
-    ccm11(ny    )=0.
+    ccm11(1     )=two*bsjy
+    ccm11(ny    )=zero
     ccm11(2     )=bsjy
-    ccm11(ny-1  )=0.
+    ccm11(ny-1  )=zero
     ccm11(3     )=bsjy
     ccm11(ny-2  )=bsjy
     ccm11(4:ny-3)=bsjy
     ccm11 = -xcst*ccm11
     !
     !DIAG SUP 3
-    rrm11(1     )=2.*csjy
-    rrm11(ny    )=0.
+    rrm11(1     )=two*csjy
+    rrm11(ny    )=zero
     rrm11(2     )=csjy
-    rrm11(ny-1  )=0.
+    rrm11(ny-1  )=zero
     rrm11(3     )=csjy
-    rrm11(ny-2  )=0.
+    rrm11(ny-2  )=zero
     rrm11(4:ny-3)=csjy
     rrm11 = -xcst*rrm11
     !
     !DIAG INF 1
-    ddm11(1     )=0.
-    ddm11(ny    )=2.*asjy
+    ddm11(1     )=zero
+    ddm11(ny    )=two*asjy
     ddm11(2     )=asjy
     ddm11(ny-1  )=asjy+csjy
     ddm11(3     )=asjy+csjy
@@ -1935,7 +1941,7 @@ subroutine implicit_schemes()
        ddm11(2:ny) = alsajy/pp2y(1:ny-1) - xcst*ddm11(2:ny)
     endif
     !CL sur ddm11
-    ddm11(1 )=0.
+    ddm11(1 )=zero
     if (istret==0) then
        ddm11(ny)=ddm11(ny)+alsajy!a1
     else
@@ -1943,9 +1949,9 @@ subroutine implicit_schemes()
     endif
     !
     !DIAG INF 2
-    eem11(1     )=0.
-    eem11(ny    )=2.*bsjy
-    eem11(2     )=0.
+    eem11(1     )=zero
+    eem11(ny    )=two*bsjy
+    eem11(2     )=zero
     eem11(ny-1  )=bsjy
     eem11(3     )=bsjy
     eem11(ny-2  )=bsjy
@@ -1953,11 +1959,11 @@ subroutine implicit_schemes()
     eem11 = -xcst*eem11
     !
     !DIAG INF 3
-    qqm11(1     )=0.
-    qqm11(ny    )=2.*csjy
-    qqm11(2     )=0.
+    qqm11(1     )=zero
+    qqm11(ny    )=two*csjy
+    qqm11(2     )=zero
     qqm11(ny-1  )=csjy
-    qqm11(3     )=0.
+    qqm11(3     )=zero
     qqm11(ny-2  )=csjy
     qqm11(4:ny-3)=csjy
     qqm11 = -xcst*qqm11
@@ -1965,9 +1971,9 @@ subroutine implicit_schemes()
   !!! NXL = 0
     !DIAG
     if (istret==0) then
-       aam0 = 1.-xcst*(-2.*(asjy+bsjy+csjy))
+       aam0 = one-xcst*(-two*(asjy+bsjy+csjy))
     else
-       aam0 = 1./pp2y-xcst*(-2.*(asjy+bsjy+csjy))
+       aam0 = one/pp2y-xcst*(-two*(asjy+bsjy+csjy))
     endif
     !
     !DIAG SUP 1
@@ -2054,9 +2060,9 @@ subroutine scalarimp(ux1,uy1,uz1,phi1,dphi1,is)
   real(mytype),dimension(ysize(1),2,ysize(3)) :: mytmptemp
 !#endif
 
-  tg1=0.;th1=0.;ti1=0.;td1=0.
-  ta2=0.;tb2=0.;tc2=0.;td2=0.
-  ta3=0.;tb3=0.
+  tg1=zero;th1=zero;ti1=zero;td1=zero
+  ta2=zero;tb2=zero;tc2=zero;td2=zero
+  ta3=zero;tb3=zero
 
   nvect1=xsize(1)*xsize(2)*xsize(3)
   nvect2=ysize(1)*ysize(2)*ysize(3)
@@ -2168,7 +2174,7 @@ subroutine scalarimp(ux1,uy1,uz1,phi1,dphi1,is)
            do k=1,xsize(3)
               do j=1,xsize(2)
                  do i=1,xsize(1)
-                    td1(i,j,k)= 1.5*dt*tg1(i,j,k)-0.5*dt*dphi1(i,j,k,2)
+                    td1(i,j,k)= onepfive*dt*tg1(i,j,k)-half*dt*dphi1(i,j,k,2)
                     dphi1(i,j,k,3)=dphi1(i,j,k,2)
                     dphi1(i,j,k,2)= tg1(i,j,k)
                  enddo
@@ -2307,7 +2313,7 @@ subroutine multmatrix7T(td2,ta2,ux2)
 
      elseif (ncly1.eq.2) then
 
-        td2(:,1,:) = 0.
+        td2(:,1,:) = zero
         td2(:,2,:) = alsa2y*ta2(:,1,:) + ta2(:,2,:) + alsa2y*ta2(:,3,:)
         td2(:,3,:) = alsa3y*ta2(:,2,:) + ta2(:,3,:) + alsa3y*ta2(:,4,:)
         do j=4,ysize(2)-3
@@ -2315,7 +2321,7 @@ subroutine multmatrix7T(td2,ta2,ux2)
         enddo
         td2(:,ysize(2)-2,:) = alsaty*ta2(:,ysize(2)-3,:) + ta2(:,ysize(2)-2,:) + alsaty*ta2(:,ysize(2)-1,:)
         td2(:,ysize(2)-1,:) = alsamy*ta2(:,ysize(2)-2,:) + ta2(:,ysize(2)-1,:) + alsamy*ta2(:,ysize(2),:)
-        td2(:,ysize(2),:) = 0.
+        td2(:,ysize(2),:) = zero
         ta2=td2
 
      endif
@@ -2324,7 +2330,7 @@ subroutine multmatrix7T(td2,ta2,ux2)
      do k=1,ysize(3)
         do i=1,ysize(1)
 
-           td2(i,1,k)= 0.
+           td2(i,1,k)= zero
            td2(i,2,k)=alsa2y*ta2(i,1,k)+ta2(i,2,k)+alsa2y*ta2(i,3,k)
            td2(i,3,k)=alsa3y*ta2(i,2,k)+ta2(i,3,k)+alsa3y*ta2(i,4,k)
            do j=4,ysize(2)-3
@@ -2332,7 +2338,7 @@ subroutine multmatrix7T(td2,ta2,ux2)
            enddo
            td2(i,ysize(2)-2,k)=alsaty*ta2(i,ysize(2)-3,k)+ta2(i,ysize(2)-2,k)+alsaty*ta2(i,ysize(2)-1,k)
            td2(i,ysize(2)-1,k)=alsamy*ta2(i,ysize(2)-2,k)+ta2(i,ysize(2)-1,k)+alsamy*ta2(i,ysize(2),k)
-           td2(i,ysize(2),k)=0.!
+           td2(i,ysize(2),k)=zero
 
         enddo
      enddo
@@ -2395,7 +2401,7 @@ subroutine multmatrix7T(td2,ta2,ux2)
 
      elseif (ncly1.eq.2) then
 
-        td2(:,1,:) = 0.
+        td2(:,1,:) = zero
         td2(:,2,:) = alsa2y*ux2(:,1,:) + ux2(:,2,:) + alsa2y*ux2(:,3,:) &
              + xcst_pr*td2(:,2,:)
         td2(:,3,:) = alsa3y*ux2(:,2,:) + ux2(:,3,:) + alsa3y*ux2(:,4,:) &
@@ -2408,7 +2414,7 @@ subroutine multmatrix7T(td2,ta2,ux2)
              + xcst_pr*td2(:,ysize(2)-2,:)
         td2(:,ysize(2)-1,:) = alsamy*ux2(:,ysize(2)-2,:) + ux2(:,ysize(2)-1,:) + alsamy*ux2(:,ysize(2),:) &
              + xcst_pr*td2(:,ysize(2)-1,:)
-        td2(:,ysize(2),:) = 0.
+        td2(:,ysize(2),:) = zero
 
      endif
 
@@ -2420,7 +2426,7 @@ subroutine multmatrix7T(td2,ta2,ux2)
            do i=1,ysize(1)
 
               !for ux
-              td2(i,1,k)= 0.
+              td2(i,1,k)= zero
 
               td2(i,2,k)= (alsa2y+xcst_pr*as2y)*ux2(i,1,k)+(1.-xcst_pr*2.*as2y)*ux2(i,2,k)+(alsa2y+xcst_pr*as2y)*ux2(i,3,k)
 
@@ -2437,7 +2443,7 @@ subroutine multmatrix7T(td2,ta2,ux2)
                    +xcst_pr*bsty*ux2(i,ysize(2),k)
               td2(i,ysize(2)-1,k)=(alsamy+xcst_pr*asmy)*ux2(i,ysize(2)-2,k)+(1.-xcst_pr*2.*asmy)*ux2(i,ysize(2)-1,k) &
                    +(alsamy+xcst_pr*asmy)*ux2(i,ysize(2),k)
-              td2(i,ysize(2),k)=0.
+              td2(i,ysize(2),k)=zero
 
            enddo
         enddo
@@ -2448,27 +2454,27 @@ subroutine multmatrix7T(td2,ta2,ux2)
            do i=1,ysize(1)
 
               !for ux
-              td2(i,1,k)= 0.
-              td2(i,2,k)=(alsa2y+xcst_pr*as2y*pp2y(2))*ux2(i,1,k)+(1.-xcst_pr*2.*as2y*pp2y(2))*ux2(i,2,k)&
+              td2(i,1,k)= zero
+              td2(i,2,k)=(alsa2y+xcst_pr*as2y*pp2y(2))*ux2(i,1,k)+(1.-xcst_pr*two*as2y*pp2y(2))*ux2(i,2,k)&
                    +(alsa2y+xcst_pr*as2y*pp2y(2))*ux2(i,3,k)
               td2(i,3,k)=xcst_pr*bs3y*ux2(i,1,k)*pp2y(3)+(alsa3y+xcst_pr*as3y*pp2y(3))*ux2(i,2,k) &
-                   + (1.-xcst_pr*2.*(as3y+bs3y)*pp2y(3))*ux2(i,3,k) + (alsa3y+xcst_pr*as3y*pp2y(3))*ux2(i,4,k) &
+                   + (one-xcst_pr*two*(as3y+bs3y)*pp2y(3))*ux2(i,3,k) + (alsa3y+xcst_pr*as3y*pp2y(3))*ux2(i,4,k) &
                    +xcst_pr*bs3y*ux2(i,5,k)*pp2y(3)
               do j=4,ysize(2)-3
                  td2(i,j,k)=xcst_pr*csjyt*ux2(i,j-3,k)*pp2y(j)+xcst_pr*bsjyt*ux2(i,j-2,k)*pp2y(j) &
                       +(alsajyt+xcst_pr*asjyt*pp2y(j))*ux2(i,j-1,k) &
-                      + (1.-xcst_pr*2.*(asjyt+bsjyt+csjyt)*pp2y(j))*ux2(i,j,k) + (alsajyt+xcst_pr*asjyt*pp2y(j))*ux2(i,j+1,k) &
+                      + (one-xcst_pr*two*(asjyt+bsjyt+csjyt)*pp2y(j))*ux2(i,j,k) + (alsajyt+xcst_pr*asjyt*pp2y(j))*ux2(i,j+1,k) &
                       +xcst_pr*bsjyt*ux2(i,j+2,k)*pp2y(j)+xcst_pr*csjyt*ux2(i,j+3,k)*pp2y(j)
               enddo
               td2(i,ysize(2)-2,k)=xcst_pr*bsty*ux2(i,ysize(2)-4,k)*pp2y(ysize(2)-2)+ &
                    (alsaty+xcst_pr*asty*pp2y(ysize(2)-2))*ux2(i,ysize(2)-3,k) &
-                   + (1.-xcst_pr*2.*(asty+bsty)*pp2y(ysize(2)-2))*ux2(i,ysize(2)-2,k) &
+                   + (one-xcst_pr*two*(asty+bsty)*pp2y(ysize(2)-2))*ux2(i,ysize(2)-2,k) &
                    + (alsaty+xcst_pr*asty*pp2y(ysize(2)-2))*ux2(i,ysize(2)-1,k) &
                    +xcst_pr*bsty*ux2(i,ysize(2),k)*pp2y(ysize(2)-2)
               td2(i,ysize(2)-1,k)=(alsamy+xcst_pr*asmy*pp2y(ysize(2)-1))*ux2(i,ysize(2)-2,k)+ &
-                   (1.-xcst_pr*2.*asmy*pp2y(ysize(2)-1))*ux2(i,ysize(2)-1,k) &
+                   (one-xcst_pr*two*asmy*pp2y(ysize(2)-1))*ux2(i,ysize(2)-1,k) &
                    +(alsamy+xcst_pr*asmy*pp2y(ysize(2)-1))*ux2(i,ysize(2),k)
-              td2(i,ysize(2),k)=0.
+              td2(i,ysize(2),k)=zero
 
            enddo
         enddo
@@ -2529,7 +2535,7 @@ subroutine multmatrix9T(td2,ta2,ux2)
 
      elseif (ncly1.eq.2) then
 
-        td2(:,1,:) = 0.
+        td2(:,1,:) = zero
         td2(:,2,:) = alsa2y*ta2(:,1,:) + ta2(:,2,:) + alsa2y*ta2(:,3,:)
         td2(:,3,:) = alsa3y*ta2(:,2,:) + ta2(:,3,:) + alsa3y*ta2(:,4,:)
         td2(:,4,:) = alsa4y*ta2(:,3,:) + ta2(:,4,:) + alsa4y*ta2(:,5,:)
@@ -2539,7 +2545,7 @@ subroutine multmatrix9T(td2,ta2,ux2)
         td2(:,ysize(2)-3,:) = alsatty*ta2(:,ysize(2)-4,:) + ta2(:,ysize(2)-3,:) + alsatty*ta2(:,ysize(2)-2,:)
         td2(:,ysize(2)-2,:) = alsaty*ta2(:,ysize(2)-3,:) + ta2(:,ysize(2)-2,:) + alsaty*ta2(:,ysize(2)-1,:)
         td2(:,ysize(2)-1,:) = alsamy*ta2(:,ysize(2)-2,:) + ta2(:,ysize(2)-1,:) + alsamy*ta2(:,ysize(2),:)
-        td2(:,ysize(2),:) = 0.
+        td2(:,ysize(2),:) = zero
         ta2=td2
 
      endif
@@ -2593,7 +2599,7 @@ subroutine multmatrix9T(td2,ta2,ux2)
 
      elseif (ncly1.eq.2) then
 
-        td2(:,1,:) = 0.
+        td2(:,1,:) = zero
         td2(:,2,:) = alsa2y*ux2(:,1,:) + ux2(:,2,:) + alsa2y*ux2(:,3,:) &
              + xcst*td2(:,2,:)
         td2(:,3,:) = alsa3y*ux2(:,2,:) + ux2(:,3,:) + alsa3y*ux2(:,4,:) &
@@ -2610,7 +2616,7 @@ subroutine multmatrix9T(td2,ta2,ux2)
              + xcst*td2(:,ysize(2)-2,:)
         td2(:,ysize(2)-1,:) = alsamy*ux2(:,ysize(2)-2,:) + ux2(:,ysize(2)-1,:) + alsamy*ux2(:,ysize(2),:) &
              + xcst*td2(:,ysize(2)-1,:)
-        td2(:,ysize(2),:) = 0.
+        td2(:,ysize(2),:) = zero
 
      endif
 
@@ -2643,21 +2649,21 @@ subroutine derxxt(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
                 -ux(1,j,k)+ux(nx-1,j,k))&
                 +csixt*(ux(4,j,k)-ux(1   ,j,k)&
                 -ux(1,j,k)+ux(nx-2,j,k))
-           rx(1,j,k)=-1.
+           rx(1,j,k)=-one
            tx(2,j,k)=asixt*(ux(3,j,k)-ux(2   ,j,k)&
                 -ux(2,j,k)+ux(1   ,j,k))&
                 +bsixt*(ux(4,j,k)-ux(2   ,j,k)&
                 -ux(2,j,k)+ux(nx  ,j,k))&
                 +csixt*(ux(5,j,k)-ux(2   ,j,k)&
                 -ux(2,j,k)+ux(nx-1,j,k))
-           rx(2,j,k)=0.
+           rx(2,j,k)=zero
            tx(3,j,k)=asixt*(ux(4,j,k)-ux(3 ,j,k)&
                 -ux(3,j,k)+ux(2 ,j,k))&
                 +bsixt*(ux(5,j,k)-ux(3 ,j,k)&
                 -ux(3,j,k)+ux(1 ,j,k))&
                 +csixt*(ux(6,j,k)-ux(3 ,j,k)&
                 -ux(3,j,k)+ux(nx,j,k))
-           rx(3,j,k)=0.
+           rx(3,j,k)=zero
            do i=4,nx-3
               tx(i,j,k)=asixt*(ux(i+1,j,k)-ux(i  ,j,k)&
                    -ux(i  ,j,k)+ux(i-1,j,k))&
@@ -2665,7 +2671,7 @@ subroutine derxxt(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
                    -ux(i  ,j,k)+ux(i-2,j,k))&
                    +csixt*(ux(i+3,j,k)-ux(i  ,j,k)&
                    -ux(i  ,j,k)+ux(i-3,j,k))
-              rx(i,j,k)=0.
+              rx(i,j,k)=zero
            enddo
            tx(nx-2,j,k)=asixt*(ux(nx-1,j,k)-ux(nx-2,j,k)&
                 -ux(nx-2,j,k)+ux(nx-3,j,k))&
@@ -2673,14 +2679,14 @@ subroutine derxxt(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
                 -ux(nx-2,j,k)+ux(nx-4,j,k))&
                 +csixt*(ux(1   ,j,k)-ux(nx-2,j,k)&
                 -ux(nx-2,j,k)+ux(nx-5,j,k))
-           rx(nx-2,j,k)=0.
+           rx(nx-2,j,k)=zero
            tx(nx-1,j,k)=asixt*(ux(nx  ,j,k)-ux(nx-1,j,k)&
                 -ux(nx-1,j,k)+ux(nx-2,j,k))&
                 +bsixt*(ux(1   ,j,k)-ux(nx-1,j,k)&
                 -ux(nx-1,j,k)+ux(nx-3,j,k))&
                 +csixt*(ux(2   ,j,k)-ux(nx-1,j,k)&
                 -ux(nx-1,j,k)+ux(nx-4,j,k))
-           rx(nx-1,j,k)=0.
+           rx(nx-1,j,k)=zero
            tx(nx  ,j,k)=asixt*(ux(1 ,j,k)-ux(nx  ,j,k)&
                 -ux(nx,j,k)+ux(nx-1,j,k))&
                 +bsixt*(ux(2 ,j,k)-ux(nx  ,j,k)&
@@ -2768,7 +2774,7 @@ subroutine derxxt(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
      if (npaire==0) then
         do k=1,nz
            do j=1,ny
-              tx(1,j,k)=0.
+              tx(1,j,k)=zero
               tx(2,j,k)=asixt*(ux(3,j,k)-ux(2,j,k)&
                    -ux(2,j,k)+ux(1,j,k))&
                    +bsixt*(ux(4,j,k)-ux(2,j,k)&
@@ -2801,7 +2807,7 @@ subroutine derxxt(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
                    -ux(nx-1,j,k)+ux(nx-3,j,k))&
                    +csixt*(-ux(nx-2,j,k)-ux(nx-1,j,k)&
                    -ux(nx-1,j,k)+ux(nx-4,j,k))
-              tx(nx  ,j,k)=0.
+              tx(nx  ,j,k)=zero
               do i=2,nx
                  tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*ssx(i)
               enddo
@@ -2880,21 +2886,21 @@ subroutine deryyt(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
                 -uy(i,1,k)+uy(i,ny-1,k))&
                 +csjyt*(uy(i,4,k)-uy(i,1,k)&
                 -uy(i,1,k)+uy(i,ny-2,k))
-           ry(i,1,k)=-1.
+           ry(i,1,k)=-one
            ty(i,2,k)=asjyt*(uy(i,3,k)-uy(i,2,k)&
                 -uy(i,2,k)+uy(i,1,k))&
                 +bsjyt*(uy(i,4,k)-uy(i,2,k)&
                 -uy(i,2,k)+uy(i,ny,k))&
                 +csjyt*(uy(i,5,k)-uy(i,2,k)&
                 -uy(i,2,k)+uy(i,ny-1,k))
-           ry(i,2,k)=0.
+           ry(i,2,k)=zero
            ty(i,3,k)=asjyt*(uy(i,4,k)-uy(i,3,k)&
                 -uy(i,3,k)+uy(i,2,k))&
                 +bsjyt*(uy(i,5,k)-uy(i,3,k)&
                 -uy(i,3,k)+uy(i,1,k))&
                 +csjyt*(uy(i,6,k)-uy(i,3,k)&
                 -uy(i,3,k)+uy(i,ny,k))
-           ry(i,3,k)=0.
+           ry(i,3,k)=zero
         enddo
      enddo
      do k=1,nz
@@ -2906,7 +2912,7 @@ subroutine deryyt(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
                    -uy(i,j,k)+uy(i,j-2,k))&
                    +csjyt*(uy(i,j+3,k)-uy(i,j,k)&
                    -uy(i,j,k)+uy(i,j-3,k))
-              ry(i,j,k)=0.
+              ry(i,j,k)=zero
            enddo
         enddo
      enddo
@@ -2918,14 +2924,14 @@ subroutine deryyt(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
                 -uy(i,ny-2,k)+uy(i,ny-4,k))&
                 +csjyt*(uy(i,1   ,k)-uy(i,ny-2,k)&
                 -uy(i,ny-2,k)+uy(i,ny-5,k))
-           ry(i,ny-2,k)=0.
+           ry(i,ny-2,k)=zero
            ty(i,ny-1,k)=asjyt*(uy(i,ny  ,k)-uy(i,ny-1,k)&
                 -uy(i,ny-1,k)+uy(i,ny-2,k))&
                 +bsjyt*(uy(i,1   ,k)-uy(i,ny-1,k)&
                 -uy(i,ny-1,k)+uy(i,ny-3,k))&
                 +csjyt*(uy(i,2   ,k)-uy(i,ny-1,k)&
                 -uy(i,ny-1,k)+uy(i,ny-4,k))
-           ry(i,ny-1,k)=0.
+           ry(i,ny-1,k)=zero
            ty(i,ny  ,k)=asjyt*(uy(i,1 ,k)-uy(i,ny  ,k)&
                 -uy(i,ny,k)+uy(i,ny-1,k))&
                 +bsjyt*(uy(i,2 ,k)-uy(i,ny  ,k)&
@@ -3055,7 +3061,7 @@ subroutine deryyt(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
      if (npaire==0) then
         do k=1,nz
            do i=1,nx
-              ty(i,1,k)=0.
+              ty(i,1,k)=zero
               ty(i,2,k)=asjyt*(uy(i,3,k)-uy(i,2,k)&
                    -uy(i,2,k)+uy(i,1,k))&
                    +bsjyt*(uy(i,4,k)-uy(i,2,k)&
@@ -3096,7 +3102,7 @@ subroutine deryyt(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
                    -uy(i,ny-1,k)+uy(i,ny-3,k))&
                    +csjyt*(-uy(i,ny-2,k)-uy(i,ny-1,k)&
                    -uy(i,ny-1,k)+uy(i,ny-4,k))
-              ty(i,ny  ,k)=0.
+              ty(i,ny  ,k)=zero
            enddo
         enddo
         if (itimescheme.eq.7) return
@@ -3209,21 +3215,21 @@ subroutine derzzt(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
                 -uz(i,j,1)+uz(i,j,nz-1))&
                 +cskzt*(uz(i,j,4)-uz(i,j,1   )&
                 -uz(i,j,1)+uz(i,j,nz-2))
-           rz(i,j,1)=-1.
+           rz(i,j,1)=-one
            tz(i,j,2)=askzt*(uz(i,j,3)-uz(i,j,2 )&
                 -uz(i,j,2)+uz(i,j,1 ))&
                 +bskzt*(uz(i,j,4)-uz(i,j,2 )&
                 -uz(i,j,2)+uz(i,j,nz))&
                 +cskzt*(uz(i,j,5)-uz(i,j,2 )&
                 -uz(i,j,2)+uz(i,j,nz-1))
-           rz(i,j,2)=0.
+           rz(i,j,2)=zero
            tz(i,j,3)=askzt*(uz(i,j,4)-uz(i,j,3 )&
                 -uz(i,j,3)+uz(i,j,2 ))&
                 +bskzt*(uz(i,j,5)-uz(i,j,3 )&
                 -uz(i,j,3)+uz(i,j,1 ))&
                 +cskzt*(uz(i,j,6)-uz(i,j,3 )&
                 -uz(i,j,3)+uz(i,j,nz))
-           rz(i,j,3)=0.
+           rz(i,j,3)=zero
         enddo
      enddo
      do k=4,nz-3
@@ -3235,7 +3241,7 @@ subroutine derzzt(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
                    -uz(i,j,k  )+uz(i,j,k-2))&
                    +cskzt*(uz(i,j,k+3)-uz(i,j,k  )&
                    -uz(i,j,k  )+uz(i,j,k-3))
-              rz(i,j,k)=0.
+              rz(i,j,k)=zero
            enddo
         enddo
      enddo
@@ -3247,14 +3253,14 @@ subroutine derzzt(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
                 -uz(i,j,nz-2)+uz(i,j,nz-4))&
                 +cskzt*(uz(i,j,1   )-uz(i,j,nz-2)&
                 -uz(i,j,nz-2)+uz(i,j,nz-5))
-           rz(i,j,nz-2)=0.
+           rz(i,j,nz-2)=zero
            tz(i,j,nz-1)=askzt*(uz(i,j,nz  )-uz(i,j,nz-1)&
                 -uz(i,j,nz-1)+uz(i,j,nz-2))&
                 +bskzt*(uz(i,j,1   )-uz(i,j,nz-1)&
                 -uz(i,j,nz-1)+uz(i,j,nz-3))&
                 +cskzt*(uz(i,j,2   )-uz(i,j,nz-1)&
                 -uz(i,j,nz-1)+uz(i,j,nz-4))
-           rz(i,j,nz-1)=0.
+           rz(i,j,nz-1)=zero
            tz(i,j,nz  )=askzt*(uz(i,j,1 )-uz(i,j,nz  )&
                 -uz(i,j,nz)+uz(i,j,nz-1))&
                 +bskzt*(uz(i,j,2 )-uz(i,j,nz  )&
@@ -3382,7 +3388,7 @@ subroutine derzzt(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
      if (npaire==0) then
         do j=1,ny
            do i=1,nx
-              tz(i,j,1)=0.
+              tz(i,j,1)=zero
               tz(i,j,2)=askzt*(uz(i,j,3)-uz(i,j,2)&
                    -uz(i,j,2)+uz(i,j,1))&
                    +bskzt*(uz(i,j,4)-uz(i,j,2)&
@@ -3423,7 +3429,7 @@ subroutine derzzt(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
                    -uz(i,j,nz-1)+uz(i,j,nz-3))&
                    +cskzt*(-uz(i,j,nz-2)-uz(i,j,nz-1)&
                    -uz(i,j,nz-1)+uz(i,j,nz-4))
-              tz(i,j,nz  )=0.
+              tz(i,j,nz  )=zero
            enddo
         enddo
         do k=2,nz
@@ -3533,7 +3539,7 @@ subroutine scalar_schemes(fpi2t,is)
   real(mytype), dimension(ny) :: rrmt11,qqmt11,vvmt11,ssmt11
 
   !xcst_pr=xnu*dt*0.5/sc
-  xcst_pr=xnu*dt*0.5/sc(is)
+  xcst_pr=xnu*dt*half/sc(is)
 
   !alsaixt=(45.*fpi2t*pi*pi-272.)/(2.*(45.*fpi2t*pi*pi-208.))
   !asixt  =((6.-9.*alsaixt)/4.)/dx2
@@ -3573,20 +3579,20 @@ subroutine scalar_schemes(fpi2t,is)
      sfxt(2)   =alsaixt
      sfxt(nx-2)=alsaixt
      sfxt(nx-1)=alsaixt
-     sfxt(nx)  =0.
-     scxt(1)   =2.
-     scxt(2)   =1.
-     scxt(nx-2)=1.
-     scxt(nx-1)=1.
-     scxt(nx  )=1.+alsaixt*alsaixt
+     sfxt(nx)  =zero
+     scxt(1)   =two
+     scxt(2)   =one
+     scxt(nx-2)=one
+     scxt(nx-1)=one
+     scxt(nx  )=one+alsaixt*alsaixt
      sbxt(1)   =alsaixt
      sbxt(2)   =alsaixt
      sbxt(nx-2)=alsaixt
      sbxt(nx-1)=alsaixt
-     sbxt(nx  )=0.
+     sbxt(nx  )=zero
      do i=3,nx-3
         sfxt(i)=alsaixt
-        scxt(i)=1.
+        scxt(i)=one
         sbxt(i)=alsaixt
      enddo
   endif
@@ -3596,20 +3602,20 @@ subroutine scalar_schemes(fpi2t,is)
      sfxt(2)   =alsaixt
      sfxt(nx-2)=alsaixt
      sfxt(nx-1)=alsaixt
-     sfxt(nx)  =0.
-     scxt(1)   =1.
-     scxt(2)   =1.
-     scxt(nx-2)=1.
-     scxt(nx-1)=1.
-     scxt(nx  )=1.
+     sfxt(nx)  =zero
+     scxt(1)   =one
+     scxt(2)   =one
+     scxt(nx-2)=one
+     scxt(nx-1)=one
+     scxt(nx  )=one
      sbxt(1)   =alsaixt
      sbxt(2)   =alsaixt
      sbxt(nx-2)=alsaixt
      sbxt(nx-1)=alsaixt+alsaixt
-     sbxt(nx  )=0.
+     sbxt(nx  )=zero
      do i=3,nx-3
         sfxt(i)=alsaixt
-        scxt(i)=1.
+        scxt(i)=one
         sbxt(i)=alsaixt
      enddo
   endif
@@ -3621,24 +3627,24 @@ subroutine scalar_schemes(fpi2t,is)
      sfxt(nx-3)=alsaixt
      sfxt(nx-2)=alsatx
      sfxt(nx-1)=alsamx
-     sfxt(nx)  =0.
-     scxt(1)   =1.
-     scxt(2)   =1.
-     scxt(3)   =1.
-     scxt(nx-3)=1.
-     scxt(nx-2)=1.
-     scxt(nx-1)=1.
-     scxt(nx  )=1.
+     sfxt(nx)  =zero
+     scxt(1)   =one
+     scxt(2)   =one
+     scxt(3)   =one
+     scxt(nx-3)=one
+     scxt(nx-2)=one
+     scxt(nx-1)=one
+     scxt(nx  )=one
      sbxt(1)   =alsa2x
      sbxt(2)   =alsa3x
      sbxt(3)   =alsaixt
      sbxt(nx-3)=alsatx
      sbxt(nx-2)=alsamx
      sbxt(nx-1)=alsanx
-     sbxt(nx  )=0.
+     sbxt(nx  )=zero
      do i=4,nx-4
         sfxt(i)=alsaixt
-        scxt(i)=1.
+        scxt(i)=one
         sbxt(i)=alsaixt
      enddo
   endif
@@ -3648,20 +3654,20 @@ subroutine scalar_schemes(fpi2t,is)
      sfyt(2)   =alsajyt
      sfyt(ny-2)=alsajyt
      sfyt(ny-1)=alsajyt
-     sfyt(ny)  =0.
-     scyt(1)   =2.
-     scyt(2)   =1.
-     scyt(ny-2)=1.
-     scyt(ny-1)=1.
-     scyt(ny  )=1.+alsajyt*alsajyt
+     sfyt(ny)  =zero
+     scyt(1)   =two
+     scyt(2)   =one
+     scyt(ny-2)=one
+     scyt(ny-1)=one
+     scyt(ny  )=one+alsajyt*alsajyt
      sbyt(1)   =alsajyt
      sbyt(2)   =alsajyt
      sbyt(ny-2)=alsajyt
      sbyt(ny-1)=alsajyt
-     sbyt(ny  )=0.
+     sbyt(ny  )=zero
      do j=3,ny-3
         sfyt(j)=alsajyt
-        scyt(j)=1.
+        scyt(j)=one
         sbyt(j)=alsajyt
      enddo
   endif
@@ -3671,20 +3677,20 @@ subroutine scalar_schemes(fpi2t,is)
      sfyt(2)   =alsajyt
      sfyt(ny-2)=alsajyt
      sfyt(ny-1)=alsajyt
-     sfyt(ny)  =0.
-     scyt(1)   =1.
-     scyt(2)   =1.
-     scyt(ny-2)=1.
-     scyt(ny-1)=1.
-     scyt(ny  )=1.
+     sfyt(ny)  =zero
+     scyt(1)   =one
+     scyt(2)   =one
+     scyt(ny-2)=one
+     scyt(ny-1)=one
+     scyt(ny  )=one
      sbyt(1)   =alsajyt
      sbyt(2)   =alsajyt
      sbyt(ny-2)=alsajyt
      sbyt(ny-1)=alsajyt+alsajyt
-     sbyt(ny  )=0.
+     sbyt(ny  )=zero
      do j=3,ny-3
         sfyt(j)=alsajyt
-        scyt(j)=1.
+        scyt(j)=one
         sbyt(j)=alsajyt
      enddo
   endif
@@ -3696,24 +3702,24 @@ subroutine scalar_schemes(fpi2t,is)
      sfyt(ny-3)=alsajyt
      sfyt(ny-2)=alsaty
      sfyt(ny-1)=alsamy
-     sfyt(ny)  =0.
-     scyt(1)   =1.
-     scyt(2)   =1.
-     scyt(3)   =1.
-     scyt(ny-3)=1.
-     scyt(ny-2)=1.
-     scyt(ny-1)=1.
-     scyt(ny  )=1.
+     sfyt(ny)  =zero
+     scyt(1)   =one
+     scyt(2)   =one
+     scyt(3)   =one
+     scyt(ny-3)=one
+     scyt(ny-2)=one
+     scyt(ny-1)=one
+     scyt(ny  )=one
      sbyt(1)   =alsa2y
      sbyt(2)   =alsa3y
      sbyt(3)   =alsajyt
      sbyt(ny-3)=alsaty
      sbyt(ny-2)=alsamy
      sbyt(ny-1)=alsany
-     sbyt(ny  )=0.
+     sbyt(ny  )=zero
      do j=4,ny-4
         sfyt(j)=alsajyt
-        scyt(j)=1.
+        scyt(j)=one
         sbyt(j)=alsajyt
      enddo
   endif
@@ -3723,20 +3729,20 @@ subroutine scalar_schemes(fpi2t,is)
      sfzt(2)   =alsakzt
      sfzt(nz-2)=alsakzt
      sfzt(nz-1)=alsakzt
-     sfzt(nz)  =0.
-     sczt(1)   =2.
-     sczt(2)   =1.
-     sczt(nz-2)=1.
-     sczt(nz-1)=1.
-     sczt(nz  )=1.+alsakzt*alsakzt
+     sfzt(nz)  =zero
+     sczt(1)   =two
+     sczt(2)   =one
+     sczt(nz-2)=one
+     sczt(nz-1)=one
+     sczt(nz  )=one+alsakzt*alsakzt
      sbzt(1)   =alsakzt
      sbzt(2)   =alsakzt
      sbzt(nz-2)=alsakzt
      sbzt(nz-1)=alsakzt
-     sbzt(nz  )=0.
+     sbzt(nz  )=zero
      do k=3,nz-3
         sfzt(k)=alsakzt
-        sczt(k)=1.
+        sczt(k)=one
         sbzt(k)=alsakzt
      enddo
   endif
@@ -3746,20 +3752,20 @@ subroutine scalar_schemes(fpi2t,is)
      sfzt(2)   =alsakzt
      sfzt(nz-2)=alsakzt
      sfzt(nz-1)=alsakzt
-     sfzt(nz)  =0.
-     sczt(1)   =1.
-     sczt(2)   =1.
-     sczt(nz-2)=1.
-     sczt(nz-1)=1.
-     sczt(nz  )=1.
+     sfzt(nz)  =zero
+     sczt(1)   =one
+     sczt(2)   =one
+     sczt(nz-2)=one
+     sczt(nz-1)=one
+     sczt(nz  )=one
      sbzt(1)   =alsakzt
      sbzt(2)   =alsakzt
      sbzt(nz-2)=alsakzt
      sbzt(nz-1)=alsakzt+alsakzt
-     sbzt(nz  )=0.
+     sbzt(nz  )=zero
      do k=3,nz-3
         sfzt(k)=alsakzt
-        sczt(k)=1.
+        sczt(k)=one
         sbzt(k)=alsakzt
      enddo
   endif
@@ -3771,36 +3777,36 @@ subroutine scalar_schemes(fpi2t,is)
      sfzt(nz-3)=alsakzt
      sfzt(nz-2)=alsatz
      sfzt(nz-1)=alsamz
-     sfzt(nz)  =0.
-     sczt(1)   =1.
-     sczt(2)   =1.
-     sczt(3)   =1.
-     sczt(nz-3)=1.
-     sczt(nz-2)=1.
-     sczt(nz-1)=1.
-     sczt(nz  )=1.
+     sfzt(nz)  =zero
+     sczt(1)   =one
+     sczt(2)   =one
+     sczt(3)   =one
+     sczt(nz-3)=one
+     sczt(nz-2)=one
+     sczt(nz-1)=one
+     sczt(nz  )=one
      sbzt(1)   =alsa2z
      sbzt(2)   =alsa3z
      sbzt(3)   =alsakzt
      sbzt(nz-3)=alsatz
      sbzt(nz-2)=alsamz
      sbzt(nz-1)=alsanz
-     sbzt(nz  )=0.
+     sbzt(nz  )=zero
      do k=4,nz-4
         sfzt(k)=alsakzt
-        sczt(k)=1.
+        sczt(k)=one
         sbzt(k)=alsakzt
      enddo
   endif
 
   if (nclx1.eq.1) then
-     sfxt(1)=0.
+     sfxt(1)=zero
   endif
   if (ncly1.eq.1) then
-     sfyt(1)=0.
+     sfyt(1)=zero
   endif
   if (nclz1.eq.1) then
-     sfzt(1)=0.
+     sfzt(1)=zero
   endif
 
   call prepare (sbxt,scxt,sfxt,ssxt,swxt,nx)
@@ -3812,15 +3818,15 @@ subroutine scalar_schemes(fpi2t,is)
   call prepare (sbzt,sczt,sfzpt,sszpt,swzpt,nz)
 
   if (nclx1.eq.1) then
-     sbxt(nx-1)=0.
+     sbxt(nx-1)=zero
      call prepare (sbxt,scxt,sfxt,ssxt,swxt,nx)
   endif
   if (ncly1.eq.1) then
-     sbyt(ny-1)=0.
+     sbyt(ny-1)=zero
      call prepare (sbyt,scyt,sfyt,ssyt,swyt,ny)
   endif
   if (nclz1.eq.1) then
-     sbzt(nz-1)=0.
+     sbzt(nz-1)=zero
      call prepare (sbzt,sczt,sfzt,sszt,swzt,nz)
   endif
 
@@ -3835,23 +3841,23 @@ subroutine scalar_schemes(fpi2t,is)
     !DIAG
     aamt(1     )=as1y
     aamt(ny    )=asny
-    aamt(2     )=-2.*as2y
-    aamt(ny-1  )=-2.*asmy
-    aamt(3     )=-2.*(as3y+bs3y)
-    aamt(ny-2  )=-2.*(asty+bsty)
-    aamt(4:ny-3)=-2.*(asjyt+bsjyt+csjyt)
+    aamt(2     )=-two*as2y
+    aamt(ny-1  )=-two*asmy
+    aamt(3     )=-two*(as3y+bs3y)
+    aamt(ny-2  )=-two*(asty+bsty)
+    aamt(4:ny-3)=-two*(asjyt+bsjyt+csjyt)
     if (istret==0) then
-       aamt = 1.-xcst_pr*aamt
+       aamt = one-xcst_pr*aamt
     else
-       aamt = 1./pp2y-xcst_pr*aamt
+       aamt = one/pp2y-xcst_pr*aamt
     endif
     !CL sur aamt
     if (istret==0) then
-       aamt(1 )=1.!alpha_0+beta_0*(11./6./dy)
-       aamt(ny)=1.!alpha_n+beta_n*(11./6./dy)
+       aamt(1 )=one!alpha_0+beta_0*(11./6./dy)
+       aamt(ny)=one!alpha_n+beta_n*(11./6./dy)
     else
-       aamt(1 )=1.!alpha_0+beta_0*ppy(1 )*(11./6./dy)
-       aamt(ny)=1.!alpha_n+beta_n*ppy(ny)*(11./6./dy)
+       aamt(1 )=one!alpha_0+beta_0*ppy(1 )*(11./6./dy)
+       aamt(ny)=one!alpha_n+beta_n*ppy(ny)*(11./6./dy)
     endif
     !
     !DIAG SUP 1
@@ -3878,47 +3884,47 @@ subroutine scalar_schemes(fpi2t,is)
     endif
     !CL sur bbmt
     if (istret==0) then
-       bbmt(1 )=0.!beta_0*(-18./6./dy)
-       bbmt(ny)=0.
+       bbmt(1 )=zero!beta_0*(-18./6./dy)
+       bbmt(ny)=zero
     else
-       bbmt(1 )=0.!beta_0*ppy(1)*(-18./6./dy)
-       bbmt(ny)=0.
+       bbmt(1 )=zero!beta_0*ppy(1)*(-18./6./dy)
+       bbmt(ny)=zero
     endif
     !
     !DIAG SUP 2
     ccmt(1     )=cs1y
     ccmt(ny    )=csny
-    ccmt(2     )=0.
-    ccmt(ny-1  )=0.
+    ccmt(2     )=zero
+    ccmt(ny-1  )=zero
     ccmt(3     )=bs3y
     ccmt(ny-2  )=bsty
     ccmt(4:ny-3)=bsjyt
     ccmt = -xcst_pr*ccmt
     !CL sur ccmt
     if (istret==0) then
-       ccmt(1 )=0.!beta_0*(9./6./dy)
-       ccmt(ny)=0.
+       ccmt(1 )=zero!beta_0*(9./6./dy)
+       ccmt(ny)=zero
     else
-       ccmt(1 )=0.!beta_0*ppy(1)*(9./6./dy)
-       ccmt(ny)=0.
+       ccmt(1 )=zero!beta_0*ppy(1)*(9./6./dy)
+       ccmt(ny)=zero
     endif
     !
     !DIAG SUP 3
     rrmt(1     )=ds1y
     rrmt(ny    )=dsny
-    rrmt(2     )=0.
-    rrmt(ny-1  )=0.
-    rrmt(3     )=0.
-    rrmt(ny-2  )=0.
+    rrmt(2     )=zero
+    rrmt(ny-1  )=zero
+    rrmt(3     )=zero
+    rrmt(ny-2  )=zero
     rrmt(4:ny-3)=csjyt
     rrmt = -xcst_pr*rrmt
     !CL sur rrmt
     if (istret==0) then
-       rrmt(1 )=0.!beta_0*(-2./6./dy)
-       rrmt(ny)=0.
+       rrmt(1 )=zero!beta_0*(-2./6./dy)
+       rrmt(ny)=zero
     else
-       rrmt(1 )=0.!beta_0*ppy(1)*(-2./6./dy)
-       rrmt(ny)=0.
+       rrmt(1 )=zero!beta_0*ppy(1)*(-2./6./dy)
+       rrmt(ny)=zero
     endif
     !
     !DIAG INF 1
@@ -3941,52 +3947,52 @@ subroutine scalar_schemes(fpi2t,is)
     endif
     !CL sur ddmt
     if (istret==0) then
-       ddmt(1 )=0.
-       ddmt(ny)=0.!beta_n*(-18./6./dy)
+       ddmt(1 )=zero
+       ddmt(ny)=zero!beta_n*(-18./6./dy)
     else
-       ddmt(1 )=0.
-       ddmt(ny)=0.!beta_n*ppy(ny)*(-18./6./dy)
+       ddmt(1 )=zero
+       ddmt(ny)=zero!beta_n*ppy(ny)*(-18./6./dy)
     endif
     !
     !DIAG INF 2
     eemt=ccmt
     !CL sur eemt
     if (istret==0) then
-       eemt(1)=0.
-       eemt(ny)=0.!beta_n*(9./6./dy)
+       eemt(1)=zero
+       eemt(ny)=zero!beta_n*(9./6./dy)
     else
-       eemt(1)=0.
-       eemt(ny)=0.!beta_n*ppy(ny)*(9./6./dy)
+       eemt(1)=zero
+       eemt(ny)=zero!beta_n*ppy(ny)*(9./6./dy)
     endif
     !
     !DIAG INF 3
     qqmt=rrmt
     !CL sur qqmt
     if (istret==0) then
-       qqmt(1)=0.
-       qqmt(ny)=0.!beta_n*(-2./6./dy)
+       qqmt(1)=zero
+       qqmt(ny)=zero!beta_n*(-2./6./dy)
     else
-       qqmt(1)=0.
-       qqmt(ny)=0.!beta_n*ppy(ny)*(-2./6./dy)
+       qqmt(1)=zero
+       qqmt(ny)=zero!beta_n*ppy(ny)*(-2./6./dy)
     endif
 
     !!! NCL = 1, npaire=0, dirichlet imposé, fonction impaire
     !
     ! DIAG
-    aamt10(1     )=0.
-    aamt10(ny    )=0.
-    aamt10(2     )=-2.*asjyt-3.*bsjyt-2.*csjyt
+    aamt10(1     )=zero
+    aamt10(ny    )=zero
+    aamt10(2     )=-two*asjyt-three*bsjyt-two*csjyt
     aamt10(ny-1  )=aamt10(2)
-    aamt10(3:ny-2)=-2.*(asjyt+bsjyt+csjyt)
+    aamt10(3:ny-2)=-two*(asjyt+bsjyt+csjyt)
     if (istret==0) then
-       aamt10 = 1. - xcst_pr*aamt10
+       aamt10 = one - xcst_pr*aamt10
     else
-       aamt10 = 1./pp2y - xcst_pr*aamt10
+       aamt10 = one/pp2y - xcst_pr*aamt10
     endif
     !
     !DIAG SUP 1
-    bbmt10(1     )=0.
-    bbmt10(ny    )=0.
+    bbmt10(1     )=zero
+    bbmt10(ny    )=zero
     bbmt10(2     )=asjyt-csjyt
     bbmt10(ny-1  )=asjyt
     bbmt10(3     )=asjyt
@@ -3998,32 +4004,32 @@ subroutine scalar_schemes(fpi2t,is)
        bbmt10(2:ny-1) = alsajyt/pp2y(3:ny) - xcst_pr*bbmt10(2:ny-1)
     endif
     !CL sur bbm10t
-    bbmt10(1 )=0.
-    bbmt10(ny)=0.
+    bbmt10(1 )=zero
+    bbmt10(ny)=zero
     !
     !DIAG SUP 2
-    ccmt10(1     )=0.
-    ccmt10(ny    )=0.
+    ccmt10(1     )=zero
+    ccmt10(ny    )=zero
     ccmt10(2     )=bsjyt
-    ccmt10(ny-1  )=0.
+    ccmt10(ny-1  )=zero
     ccmt10(3     )=bsjyt
     ccmt10(ny-2  )=bsjyt
     ccmt10(4:ny-3)=bsjyt
     ccmt10 = -xcst_pr*ccmt10
     !
     !DIAG SUP 3
-    rrmt10(1     )=0.
-    rrmt10(ny    )=0.
+    rrmt10(1     )=zero
+    rrmt10(ny    )=zero
     rrmt10(2     )=csjyt
-    rrmt10(ny-1  )=0.
+    rrmt10(ny-1  )=zero
     rrmt10(3     )=csjyt
-    rrmt10(ny-2  )=0.
+    rrmt10(ny-2  )=zero
     rrmt10(4:ny-3)=csjyt
     rrmt10 = -xcst_pr*rrmt10
     !
     !DIAG INF 1
-    ddmt10(1     )=0.
-    ddmt10(ny    )=0.
+    ddmt10(1     )=zero
+    ddmt10(ny    )=zero
     ddmt10(2     )=asjyt
     ddmt10(ny-1  )=asjyt-csjyt
     ddmt10(3     )=asjyt-csjyt
@@ -4035,13 +4041,13 @@ subroutine scalar_schemes(fpi2t,is)
        ddmt10(2:ny-1) = alsajyt/pp2y(1:ny-2) - xcst_pr*ddmt10(2:ny-1)
     endif
     !CL sur ddmt10
-    ddmt10(1 )=0.
-    ddmt10(ny)=0.
+    ddmt10(1 )=zero
+    ddmt10(ny)=zero
     !
     !DIAG INF 2
-    eemt10(1     )=0.
-    eemt10(ny    )=0.
-    eemt10(2     )=0.
+    eemt10(1     )=zero
+    eemt10(ny    )=zero
+    eemt10(2     )=zero
     eemt10(ny-1  )=bsjyt
     eemt10(3     )=bsjyt
     eemt10(ny-2  )=bsjyt
@@ -4049,11 +4055,11 @@ subroutine scalar_schemes(fpi2t,is)
     eemt10 = -xcst_pr*eemt10
     !
     !DIAG INF 3
-    qqmt10(1     )=0.
-    qqmt10(ny    )=0.
-    qqmt10(2     )=0.
+    qqmt10(1     )=zero
+    qqmt10(ny    )=zero
+    qqmt10(2     )=zero
     qqmt10(ny-1  )=csjyt
-    qqmt10(3     )=0.
+    qqmt10(3     )=zero
     qqmt10(ny-2  )=csjyt
     qqmt10(4:ny-3)=csjyt
     qqmt10 = -xcst_pr*qqmt10
@@ -4061,20 +4067,20 @@ subroutine scalar_schemes(fpi2t,is)
     !!! NCL = 1, npaire=1, neumann imposé, fonction paire
     !
     ! DIAG
-    aamt11(1     )=-2.*(asjyt+bsjyt+csjyt)
+    aamt11(1     )=-two*(asjyt+bsjyt+csjyt)
     aamt11(ny    )=aamt11(1)
-    aamt11(2     )=-2.*asjyt-bsjyt-2.*csjyt
+    aamt11(2     )=-two*asjyt-bsjyt-two*csjyt
     aamt11(ny-1  )=aamt11(2)
-    aamt11(3:ny-2)=-2.*(asjyt+bsjyt+csjyt)
+    aamt11(3:ny-2)=-two*(asjyt+bsjyt+csjyt)
     if (istret==0) then
-       aamt11 = 1. - xcst_pr*aamt11
+       aamt11 = one - xcst_pr*aamt11
     else
-       aamt11 = 1./pp2y - xcst_pr*aamt11
+       aamt11 = one/pp2y - xcst_pr*aamt11
     endif
     !
     !DIAG SUP 1
-    bbmt11(1     )=2.*asjyt
-    bbmt11(ny    )=0.
+    bbmt11(1     )=two*asjyt
+    bbmt11(ny    )=zero
     bbmt11(2     )=asjyt+csjyt
     bbmt11(ny-1  )=asjyt
     bbmt11(3     )=asjyt
@@ -4091,31 +4097,31 @@ subroutine scalar_schemes(fpi2t,is)
     else
        bbmt11(1 )=bbmt11(1)+alsajyt/pp2y(2)
     endif
-    bbmt11(ny)=0.
+    bbmt11(ny)=zero
     !
     !DIAG SUP 2
-    ccmt11(1     )=2.*bsjyt
-    ccmt11(ny    )=0.
+    ccmt11(1     )=two*bsjyt
+    ccmt11(ny    )=zero
     ccmt11(2     )=bsjyt
-    ccmt11(ny-1  )=0.
+    ccmt11(ny-1  )=zero
     ccmt11(3     )=bsjyt
     ccmt11(ny-2  )=bsjyt
     ccmt11(4:ny-3)=bsjyt
     ccmt11 = -xcst_pr*ccmt11
     !
     !DIAG SUP 3
-    rrmt11(1     )=2.*csjyt
-    rrmt11(ny    )=0.
+    rrmt11(1     )=two*csjyt
+    rrmt11(ny    )=zero
     rrmt11(2     )=csjyt
-    rrmt11(ny-1  )=0.
+    rrmt11(ny-1  )=zero
     rrmt11(3     )=csjyt
-    rrmt11(ny-2  )=0.
+    rrmt11(ny-2  )=zero
     rrmt11(4:ny-3)=csjyt
     rrmt11 = -xcst_pr*rrmt11
     !
     !DIAG INF 1
-    ddmt11(1     )=0.
-    ddmt11(ny    )=2.*asjyt
+    ddmt11(1     )=zero
+    ddmt11(ny    )=two*asjyt
     ddmt11(2     )=asjyt
     ddmt11(ny-1  )=asjyt+csjyt
     ddmt11(3     )=asjyt+csjyt
@@ -4127,7 +4133,7 @@ subroutine scalar_schemes(fpi2t,is)
        ddmt11(2:ny) = alsajyt/pp2y(1:ny-1) - xcst_pr*ddmt11(2:ny)
     endif
     !CL sur ddmt11
-    ddmt11(1 )=0.
+    ddmt11(1 )=zero
     if (istret==0) then
        ddmt11(ny)=ddmt11(ny)+alsajyt!a1
     else
@@ -4135,9 +4141,9 @@ subroutine scalar_schemes(fpi2t,is)
     endif
     !
     !DIAG INF 2
-    eemt11(1     )=0.
-    eemt11(ny    )=2.*bsjyt
-    eemt11(2     )=0.
+    eemt11(1     )=zero
+    eemt11(ny    )=two*bsjyt
+    eemt11(2     )=zero
     eemt11(ny-1  )=bsjyt
     eemt11(3     )=bsjyt
     eemt11(ny-2  )=bsjyt
@@ -4145,11 +4151,11 @@ subroutine scalar_schemes(fpi2t,is)
     eemt11 = -xcst_pr*eemt11
     !
     !DIAG INF 3
-    qqmt11(1     )=0.
-    qqmt11(ny    )=2.*csjyt
-    qqmt11(2     )=0.
+    qqmt11(1     )=zero
+    qqmt11(ny    )=two*csjyt
+    qqmt11(2     )=zero
     qqmt11(ny-1  )=csjyt
-    qqmt11(3     )=0.
+    qqmt11(3     )=zero
     qqmt11(ny-2  )=csjyt
     qqmt11(4:ny-3)=csjyt
     qqmt11 = -xcst_pr*qqmt11
@@ -4157,9 +4163,9 @@ subroutine scalar_schemes(fpi2t,is)
     !!! NXL = 0
     !DIAG
     if (istret==0) then
-       aamt0 = 1.-xcst_pr*(-2.*(asjyt+bsjyt+csjyt))
+       aamt0 = one-xcst_pr*(-two*(asjyt+bsjyt+csjyt))
     else
-       aamt0 = 1./pp2y-xcst_pr*(-2.*(asjyt+bsjyt+csjyt))
+       aamt0 = one/pp2y-xcst_pr*(-two*(asjyt+bsjyt+csjyt))
     endif
     !
     !DIAG SUP 1
@@ -4201,21 +4207,21 @@ subroutine scalar_schemes(fpi2t,is)
   !DIAG
     aamt(1     )=as1y
     aamt(ny    )=asny
-    aamt(2     )=-2.*as2y
-    aamt(ny-1  )=-2.*asmy
-    aamt(3     )=-2.*(as3y+bs3y)
-    aamt(4     )=-2.*(as4y+bs4y+cs4y)
-    aamt(ny-2  )=-2.*(asty+bsty)
-    aamt(ny-3  )=-2.*(astty+bstty+cstty)
-    aamt(5:ny-4)=-2.*(asjyt+bsjyt+csjyt+dsjyt)
+    aamt(2     )=-two*as2y
+    aamt(ny-1  )=-two*asmy
+    aamt(3     )=-two*(as3y+bs3y)
+    aamt(4     )=-two*(as4y+bs4y+cs4y)
+    aamt(ny-2  )=-two*(asty+bsty)
+    aamt(ny-3  )=-two*(astty+bstty+cstty)
+    aamt(5:ny-4)=-two*(asjyt+bsjyt+csjyt+dsjyt)
     if (istret==0) then
-       aamt = 1.-xcst_pr*aamt
+       aamt = one-xcst_pr*aamt
     else
-       aamt = 1./pp2y-xcst_pr*aamt
+       aamt = one/pp2y-xcst_pr*aamt
     endif
     !CL sur aamt
-    aamt(1 )=1.
-    aamt(ny)=1.
+    aamt(1 )=one
+    aamt(ny)=one
     !
     !DIAG SUP 1
     bbmt(1     )=bs1y
@@ -4246,14 +4252,14 @@ subroutine scalar_schemes(fpi2t,is)
        bbmt(5:ny-4)=bbmt(5:ny-4)+alsajyt/pp2y(6:ny-3)
     endif
     !CL sur bbmt
-    bbmt(1 )=0.
-    bbmt(ny)=0.
+    bbmt(1 )=zero
+    bbmt(ny)=zero
     !
     !DIAG SUP 2
     ccmt(1     )=cs1y
     ccmt(ny    )=csny
-    ccmt(2     )=0.
-    ccmt(ny-1  )=0.
+    ccmt(2     )=zero
+    ccmt(ny-1  )=zero
     ccmt(3     )=bs3y
     ccmt(ny-2  )=bsty
     ccmt(4     )=bs4y
@@ -4261,38 +4267,38 @@ subroutine scalar_schemes(fpi2t,is)
     ccmt(5:ny-4)=bsjyt
     ccmt = -xcst_pr*ccmt
     !CL sur ccmt
-    ccmt(1 )=0.
-    ccmt(ny)=0.
+    ccmt(1 )=zero
+    ccmt(ny)=zero
     !
     !DIAG SUP 3
     rrmt(1     )=ds1y
     rrmt(ny    )=dsny
-    rrmt(2     )=0.
-    rrmt(ny-1  )=0.
-    rrmt(3     )=0.
-    rrmt(ny-2  )=0.
+    rrmt(2     )=zero
+    rrmt(ny-1  )=zero
+    rrmt(3     )=zero
+    rrmt(ny-2  )=zero
     rrmt(4     )=cs4y
     rrmt(ny-3  )=cstty
     rrmt(5:ny-4)=csjyt
     rrmt = -xcst_pr*rrmt
     !CL sur rrmt
-    rrmt(1 )=0.
-    rrmt(ny)=0.
+    rrmt(1 )=zero
+    rrmt(ny)=zero
 
     !DIAG SUP 4
-    ttmt(1     )=0.
-    ttmt(ny    )=0.
-    ttmt(2     )=0.
-    ttmt(ny-1  )=0.
-    ttmt(3     )=0.!ds3y
-    ttmt(ny-2  )=0.!dsty
-    ttmt(4     )=0.!ds4y
-    ttmt(ny-3  )=0.!dstty
+    ttmt(1     )=zero
+    ttmt(ny    )=zero
+    ttmt(2     )=zero
+    ttmt(ny-1  )=zero
+    ttmt(3     )=zero!ds3y
+    ttmt(ny-2  )=zero!dsty
+    ttmt(4     )=zero!ds4y
+    ttmt(ny-3  )=zero!dstty
     ttmt(5:ny-4)=dsjyt
     ttmt = -xcst*ttmt
     !CL sur ttm
-    ttmt(1 )=0.
-    ttmt(ny)=0.
+    ttmt(1 )=zero
+    ttmt(ny)=zero
     !
     !DIAG INF 1
     if (istret==0) then
@@ -4317,8 +4323,8 @@ subroutine scalar_schemes(fpi2t,is)
        ddmt(5:ny-4)=ddmt(5:ny-4)+alsajyt/pp2y(4:ny-5)
     endif
     !CL sur ddmt
-    ddmt(1 )=0.
-    ddmt(ny)=0.
+    ddmt(1 )=zero
+    ddmt(ny)=zero
     !
     !DIAG INF 2
     eemt=ccmt
@@ -4331,20 +4337,20 @@ subroutine scalar_schemes(fpi2t,is)
   !!! NCL = 1, npaire=0, dirichlet imposé, fonction impaire
     !
     ! DIAG
-    aamt10(1     )=0.
-    aamt10(ny    )=0.
-    aamt10(2     )=-2.*asjyt-3.*bsjyt-2.*csjyt
+    aamt10(1     )=zero
+    aamt10(ny    )=zero
+    aamt10(2     )=-two*asjyt-three*bsjyt-two*csjyt
     aamt10(ny-1  )=aamt10(2)
-    aamt10(3:ny-2)=-2.*(asjyt+bsjyt+csjyt)
+    aamt10(3:ny-2)=-two*(asjyt+bsjyt+csjyt)
     if (istret==0) then
-       aamt10 = 1. - xcst_pr*aamt10
+       aamt10 = one - xcst_pr*aamt10
     else
-       aamt10 = 1./pp2y - xcst_pr*aamt10
+       aamt10 = one/pp2y - xcst_pr*aamt10
     endif
     !
     !DIAG SUP 1
-    bbmt10(1     )=0.
-    bbmt10(ny    )=0.
+    bbmt10(1     )=zero
+    bbmt10(ny    )=zero
     bbmt10(2     )=asjyt-csjyt
     bbmt10(ny-1  )=asjyt
     bbmt10(3     )=asjyt
@@ -4356,32 +4362,32 @@ subroutine scalar_schemes(fpi2t,is)
        bbmt10(2:ny-1) = alsajyt/pp2y(3:ny) - xcst_pr*bbmt10(2:ny-1)
     endif
     !CL sur bbm10t
-    bbmt10(1 )=0.
-    bbmt10(ny)=0.
+    bbmt10(1 )=zero
+    bbmt10(ny)=zero
     !
     !DIAG SUP 2
-    ccmt10(1     )=0.
-    ccmt10(ny    )=0.
+    ccmt10(1     )=zero
+    ccmt10(ny    )=zero
     ccmt10(2     )=bsjyt
-    ccmt10(ny-1  )=0.
+    ccmt10(ny-1  )=zero
     ccmt10(3     )=bsjyt
     ccmt10(ny-2  )=bsjyt
     ccmt10(4:ny-3)=bsjyt
     ccmt10 = -xcst_pr*ccmt10
     !
     !DIAG SUP 3
-    rrmt10(1     )=0.
-    rrmt10(ny    )=0.
+    rrmt10(1     )=zero
+    rrmt10(ny    )=zero
     rrmt10(2     )=csjyt
-    rrmt10(ny-1  )=0.
+    rrmt10(ny-1  )=zero
     rrmt10(3     )=csjyt
-    rrmt10(ny-2  )=0.
+    rrmt10(ny-2  )=zero
     rrmt10(4:ny-3)=csjyt
     rrmt10 = -xcst_pr*rrmt10
     !
     !DIAG INF 1
-    ddmt10(1     )=0.
-    ddmt10(ny    )=0.
+    ddmt10(1     )=zero
+    ddmt10(ny    )=zero
     ddmt10(2     )=asjyt
     ddmt10(ny-1  )=asjyt-csjyt
     ddmt10(3     )=asjyt-csjyt
@@ -4393,13 +4399,13 @@ subroutine scalar_schemes(fpi2t,is)
        ddmt10(2:ny-1) = alsajyt/pp2y(1:ny-2) - xcst_pr*ddmt10(2:ny-1)
     endif
     !CL sur ddmt10
-    ddmt10(1 )=0.
-    ddmt10(ny)=0.
+    ddmt10(1 )=zero
+    ddmt10(ny)=zero
     !
     !DIAG INF 2
-    eemt10(1     )=0.
-    eemt10(ny    )=0.
-    eemt10(2     )=0.
+    eemt10(1     )=zero
+    eemt10(ny    )=zero
+    eemt10(2     )=zero
     eemt10(ny-1  )=bsjyt
     eemt10(3     )=bsjyt
     eemt10(ny-2  )=bsjyt
@@ -4407,11 +4413,11 @@ subroutine scalar_schemes(fpi2t,is)
     eemt10 = -xcst_pr*eemt10
     !
     !DIAG INF 3
-    qqmt10(1     )=0.
-    qqmt10(ny    )=0.
-    qqmt10(2     )=0.
+    qqmt10(1     )=zero
+    qqmt10(ny    )=zero
+    qqmt10(2     )=zero
     qqmt10(ny-1  )=csjyt
-    qqmt10(3     )=0.
+    qqmt10(3     )=zero
     qqmt10(ny-2  )=csjyt
     qqmt10(4:ny-3)=csjyt
     qqmt10 = -xcst_pr*qqmt10
@@ -4419,20 +4425,20 @@ subroutine scalar_schemes(fpi2t,is)
   !!! NCL = 1, npaire=1, neumann imposé, fonction paire
     !
     ! DIAG
-    aamt11(1     )=-2.*(asjyt+bsjyt+csjyt)
+    aamt11(1     )=-two*(asjyt+bsjyt+csjyt)
     aamt11(ny    )=aamt11(1)
-    aamt11(2     )=-2.*asjyt-bsjyt-2.*csjyt
+    aamt11(2     )=-two*asjyt-bsjyt-two*csjyt
     aamt11(ny-1  )=aamt11(2)
-    aamt11(3:ny-2)=-2.*(asjyt+bsjyt+csjyt)
+    aamt11(3:ny-2)=-two*(asjyt+bsjyt+csjyt)
     if (istret==0) then
-       aamt11 = 1. - xcst_pr*aamt11
+       aamt11 = one - xcst_pr*aamt11
     else
-       aamt11 = 1./pp2y - xcst_pr*aamt11
+       aamt11 = one/pp2y - xcst_pr*aamt11
     endif
     !
     !DIAG SUP 1
-    bbmt11(1     )=2.*asjyt
-    bbmt11(ny    )=0.
+    bbmt11(1     )=two*asjyt
+    bbmt11(ny    )=zero
     bbmt11(2     )=asjyt+csjyt
     bbmt11(ny-1  )=asjyt
     bbmt11(3     )=asjyt
@@ -4449,31 +4455,31 @@ subroutine scalar_schemes(fpi2t,is)
     else
        bbmt11(1 )=bbmt11(1)+alsajyt/pp2y(2)
     endif
-    bbmt11(ny)=0.
+    bbmt11(ny)=zero
     !
     !DIAG SUP 2
-    ccmt11(1     )=2.*bsjyt
-    ccmt11(ny    )=0.
+    ccmt11(1     )=two*bsjyt
+    ccmt11(ny    )=zero
     ccmt11(2     )=bsjyt
-    ccmt11(ny-1  )=0.
+    ccmt11(ny-1  )=zero
     ccmt11(3     )=bsjyt
     ccmt11(ny-2  )=bsjyt
     ccmt11(4:ny-3)=bsjyt
     ccmt11 = -xcst_pr*ccmt11
     !
     !DIAG SUP 3
-    rrmt11(1     )=2.*csjyt
-    rrmt11(ny    )=0.
+    rrmt11(1     )=two*csjyt
+    rrmt11(ny    )=zero
     rrmt11(2     )=csjyt
-    rrmt11(ny-1  )=0.
+    rrmt11(ny-1  )=zero
     rrmt11(3     )=csjyt
-    rrmt11(ny-2  )=0.
+    rrmt11(ny-2  )=zero
     rrmt11(4:ny-3)=csjyt
     rrmt11 = -xcst_pr*rrmt11
     !
     !DIAG INF 1
-    ddmt11(1     )=0.
-    ddmt11(ny    )=2.*asjyt
+    ddmt11(1     )=zero
+    ddmt11(ny    )=two*asjyt
     ddmt11(2     )=asjyt
     ddmt11(ny-1  )=asjyt+csjyt
     ddmt11(3     )=asjyt+csjyt
@@ -4485,7 +4491,7 @@ subroutine scalar_schemes(fpi2t,is)
        ddmt11(2:ny) = alsajyt/pp2y(1:ny-1) - xcst_pr*ddmt11(2:ny)
     endif
     !CL sur ddmt11
-    ddmt11(1 )=0.
+    ddmt11(1 )=zero
     if (istret==0) then
        ddmt11(ny)=ddmt11(ny)+alsajyt!a1
     else
@@ -4493,9 +4499,9 @@ subroutine scalar_schemes(fpi2t,is)
     endif
     !
     !DIAG INF 2
-    eemt11(1     )=0.
-    eemt11(ny    )=2.*bsjyt
-    eemt11(2     )=0.
+    eemt11(1     )=zero
+    eemt11(ny    )=two*bsjyt
+    eemt11(2     )=zero
     eemt11(ny-1  )=bsjyt
     eemt11(3     )=bsjyt
     eemt11(ny-2  )=bsjyt
@@ -4503,11 +4509,11 @@ subroutine scalar_schemes(fpi2t,is)
     eemt11 = -xcst_pr*eemt11
     !
     !DIAG INF 3
-    qqmt11(1     )=0.
-    qqmt11(ny    )=2.*csjyt
-    qqmt11(2     )=0.
+    qqmt11(1     )=zero
+    qqmt11(ny    )=two*csjyt
+    qqmt11(2     )=zero
     qqmt11(ny-1  )=csjyt
-    qqmt11(3     )=0.
+    qqmt11(3     )=zero
     qqmt11(ny-2  )=csjyt
     qqmt11(4:ny-3)=csjyt
     qqmt11 = -xcst_pr*qqmt11
@@ -4515,9 +4521,9 @@ subroutine scalar_schemes(fpi2t,is)
   !!! NXL = 0
     !DIAG
     if (istret==0) then
-       aamt0 = 1.-xcst_pr*(-2.*(asjyt+bsjyt+csjyt))
+       aamt0 = one-xcst_pr*(-two*(asjyt+bsjyt+csjyt))
     else
-       aamt0 = 1./pp2y-xcst_pr*(-2.*(asjyt+bsjyt+csjyt))
+       aamt0 = one/pp2y-xcst_pr*(-two*(asjyt+bsjyt+csjyt))
     endif
     !
     !DIAG SUP 1
