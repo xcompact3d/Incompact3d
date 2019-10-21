@@ -175,8 +175,8 @@ subroutine parameter(input_i3d)
   ! !! These are the 'optional'/model parameters
   ! read(10, nml=ScalarParam)
   if(ilesmod==0) then
-    nu0nu=four
-    cnu=0.44_mytype
+     nu0nu=four
+     cnu=0.44_mytype
   endif
   if(ilesmod.ne.0) read(10, nml=LESModel)
   ! read(10, nml=TurbulenceWallModel)

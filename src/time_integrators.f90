@@ -193,10 +193,10 @@ contains
        DO is = 1, numscalar
           IF (is.NE.primary_species) THEN
              IF (itimescheme.ne.7) THEN
-               CALL intt(phi1(:,:,:,is), dphi1(:,:,:,:,is))
+                CALL intt(phi1(:,:,:,is), dphi1(:,:,:,:,is))
              ELSE
-               CALL scalar_schemes(nu0nu,is)
-               CALL scalarimp(ux1,uy1,uz1,phi1(:,:,:,is),dphi1(:,:,:,:,is),is)
+                CALL scalar_schemes(nu0nu,is)
+                CALL scalarimp(ux1,uy1,uz1,phi1(:,:,:,is),dphi1(:,:,:,:,is),is)
              ENDIF
 
              DO k = 1, xsize(3)

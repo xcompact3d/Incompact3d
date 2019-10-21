@@ -37,7 +37,7 @@ CONTAINS
     !! Scalar equations
     !! XXX Not yet LMN!!!
     if (itimescheme.ne.7) then
-      CALL scalar(dphi1, rho1, ux1, phi1)
+       CALL scalar(dphi1, rho1, ux1, phi1)
     endif
 
     !! Other (LMN, ...)

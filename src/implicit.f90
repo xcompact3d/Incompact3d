@@ -570,15 +570,15 @@ contains
     sssm(4)=rrm(4)-zzzm(4)*ttm(3)
 
     do j=5,ny
-      vvm(j)= uum(j)/ggm(j-4)
-      wwm(j)=(qqm(j)-vvm(j)*hhm(j-4))/ggm(j-3)
-      zzm(j)=(eem(j)-wwm(j)*hhm(j-3)-vvm(j)*ssm(j-4))/ggm(j-2)
-      zzzm(j)=(ddm(j)-zzm(j)*hhm(j-2)-wwm(j)*ssm(j-3)-vvm(j)*sssm(j-4))/ggm(j-1)
+       vvm(j)= uum(j)/ggm(j-4)
+       wwm(j)=(qqm(j)-vvm(j)*hhm(j-4))/ggm(j-3)
+       zzm(j)=(eem(j)-wwm(j)*hhm(j-3)-vvm(j)*ssm(j-4))/ggm(j-2)
+       zzzm(j)=(ddm(j)-zzm(j)*hhm(j-2)-wwm(j)*ssm(j-3)-vvm(j)*sssm(j-4))/ggm(j-1)
 
-      ggm(j)=aam(j)-vvm(j)*ttm(j-4)-wwm(j)*sssm(j-3)-zzm(j)*ssm(j-2)-zzzm(j)*hhm(j-1)
-      hhm(j)=bbm(j)-wwm(j)*ttm(j-3)-zzm(j)*sssm(j-2)-zzzm(j)*ssm(j-1)
-      ssm(j)=ccm(j)-zzm(j)*ttm(j-2)-zzzm(j)*sssm(j-1)
-      sssm(j)=rrm(j)-zzzm(j)*ttm(j-1)
+       ggm(j)=aam(j)-vvm(j)*ttm(j-4)-wwm(j)*sssm(j-3)-zzm(j)*ssm(j-2)-zzzm(j)*hhm(j-1)
+       hhm(j)=bbm(j)-wwm(j)*ttm(j-3)-zzm(j)*sssm(j-2)-zzzm(j)*ssm(j-1)
+       ssm(j)=ccm(j)-zzm(j)*ttm(j-2)-zzzm(j)*sssm(j-1)
+       sssm(j)=rrm(j)-zzzm(j)*ttm(j-1)
 
     enddo
   end subroutine ludecomp9_12
@@ -779,7 +779,7 @@ contains
 
           do j=5,ny
              xSol(i,j,k)=bbb(i,j,k)-vvm(j)*xSol(i,j-4,k)-wwm(j)*xSol(i,j-3,k) &
-             -zzm(j)*xSol(i,j-2,k)-zzzm(j)*xSol(i,j-1,k);
+                  -zzm(j)*xSol(i,j-2,k)-zzzm(j)*xSol(i,j-1,k);
           enddo
           !
 
@@ -788,11 +788,11 @@ contains
           xSol(i,ny-1,k)=(xSol(i,ny-1,k)-hhm(ny-1)*xSol(i,ny,k))/ggm(ny-1);
           xSol(i,ny-2,k)=(xSol(i,ny-2,k)-hhm(ny-2)*xSol(i,ny-1,k)-ssm(ny-2)*xSol(i,ny,k))/ggm(ny-2);
           xSol(i,ny-3,k)=(xSol(i,ny-3,k)-hhm(ny-3)*xSol(i,ny-2,k)-ssm(ny-3)*xSol(i,ny-1,k) &
-          -sssm(ny-3)*xSol(i,ny,k))/ggm(ny-3);
+               -sssm(ny-3)*xSol(i,ny,k))/ggm(ny-3);
 
           do j=ny-4,1,-1
              xSol(i,j,k)=(xSol(i,j,k)-hhm(j)*xSol(i,j+1,k)-ssm(j)*xSol(i,j+2,k) &
-             -sssm(j)*xSol(i,j+3,k)-ttm(j)*xSol(i,j+4,k))/ggm(j);
+                  -sssm(j)*xSol(i,j+3,k)-ttm(j)*xSol(i,j+4,k))/ggm(j);
           enddo
 
        enddo
@@ -926,11 +926,11 @@ subroutine  inttimp (var1,dvar1,forcing1)
 
   elseif (ncly1.eq.1) then
   elseif (ncly1.eq.2) then
-    if (isecondder.ne.5) then
-     call multmatrix7(td2,ta2,tb2)
-    else
-     call multmatrix9(td2,ta2,tb2)
-    endif
+     if (isecondder.ne.5) then
+        call multmatrix7(td2,ta2,tb2)
+     else
+        call multmatrix9(td2,ta2,tb2)
+     endif
   endif
 
   !SECOND MEMBRE COMPLET BBB=A uhat+(A+xcst.B)u^n
@@ -949,9 +949,9 @@ subroutine  inttimp (var1,dvar1,forcing1)
      call septinv(tb2,ta2,ggm11,hhm11,ssm11,rrm11,vvm11,wwm11,zzm11,ysize(1),ysize(2),ysize(3))
   elseif (ncly1.eq.2) then
      if (isecondder.ne.5) then
-       call septinv(tb2,ta2,ggm,hhm,ssm,rrm,vvm,wwm,zzm,ysize(1),ysize(2),ysize(3))
+        call septinv(tb2,ta2,ggm,hhm,ssm,rrm,vvm,wwm,zzm,ysize(1),ysize(2),ysize(3))
      else
-       call nonainv(tb2,ta2,ggm,hhm,ssm,sssm,ttm,zzzm,zzm,wwm,vvm,ysize(1),ysize(2),ysize(3))
+        call nonainv(tb2,ta2,ggm,hhm,ssm,sssm,ttm,zzzm,zzm,wwm,vvm,ysize(1),ysize(2),ysize(3))
      endif
   endif
 
@@ -1198,97 +1198,97 @@ subroutine multmatrix9(td2,ta2,ux2)
 
   !A.uhat
 
-     if (istret.ne.0) then
-        do j=1,ysize(2)
-           ta2(:,j,:)=ta2(:,j,:)/pp2y(j)
-        enddo
-     endif
+  if (istret.ne.0) then
+     do j=1,ysize(2)
+        ta2(:,j,:)=ta2(:,j,:)/pp2y(j)
+     enddo
+  endif
 
-     if (ncly1.eq.0) then
+  if (ncly1.eq.0) then
 
-        td2(:,1,:) = alsajy*ta2(:,2,:) + ta2(:,1,:) + alsajy*ta2(:,ysize(2),:)
-        do j=2,ysize(2)-1
-           td2(:,j,:) = alsajy*ta2(:,j-1,:) + ta2(:,j,:) + alsajy*ta2(:,j+1,:)
-        enddo
-        td2(:,ysize(2),:) = alsajy*ta2(:,ysize(2)-1,:) + ta2(:,ysize(2),:) + alsajy*ta2(:,1,:)
-        ta2=td2
+     td2(:,1,:) = alsajy*ta2(:,2,:) + ta2(:,1,:) + alsajy*ta2(:,ysize(2),:)
+     do j=2,ysize(2)-1
+        td2(:,j,:) = alsajy*ta2(:,j-1,:) + ta2(:,j,:) + alsajy*ta2(:,j+1,:)
+     enddo
+     td2(:,ysize(2),:) = alsajy*ta2(:,ysize(2)-1,:) + ta2(:,ysize(2),:) + alsajy*ta2(:,1,:)
+     ta2=td2
 
-     elseif (ncly1.eq.1) then
+  elseif (ncly1.eq.1) then
 
 
-     elseif (ncly1.eq.2) then
+  elseif (ncly1.eq.2) then
 
-        td2(:,1,:) = 0.
-        td2(:,2,:) = alsa2y*ta2(:,1,:) + ta2(:,2,:) + alsa2y*ta2(:,3,:)
-        td2(:,3,:) = alsa3y*ta2(:,2,:) + ta2(:,3,:) + alsa3y*ta2(:,4,:)
-        td2(:,4,:) = alsa4y*ta2(:,3,:) + ta2(:,4,:) + alsa4y*ta2(:,5,:)
-        do j=5,ysize(2)-4
-           td2(:,j,:) = alsajy*ta2(:,j-1,:) + ta2(:,j,:) + alsajy*ta2(:,j+1,:)
-        enddo
-        td2(:,ysize(2)-3,:) = alsatty*ta2(:,ysize(2)-4,:) + ta2(:,ysize(2)-3,:) + alsatty*ta2(:,ysize(2)-2,:)
-        td2(:,ysize(2)-2,:) = alsaty*ta2(:,ysize(2)-3,:) + ta2(:,ysize(2)-2,:) + alsaty*ta2(:,ysize(2)-1,:)
-        td2(:,ysize(2)-1,:) = alsamy*ta2(:,ysize(2)-2,:) + ta2(:,ysize(2)-1,:) + alsamy*ta2(:,ysize(2),:)
-        td2(:,ysize(2),:) = 0.
-        ta2=td2
+     td2(:,1,:) = 0.
+     td2(:,2,:) = alsa2y*ta2(:,1,:) + ta2(:,2,:) + alsa2y*ta2(:,3,:)
+     td2(:,3,:) = alsa3y*ta2(:,2,:) + ta2(:,3,:) + alsa3y*ta2(:,4,:)
+     td2(:,4,:) = alsa4y*ta2(:,3,:) + ta2(:,4,:) + alsa4y*ta2(:,5,:)
+     do j=5,ysize(2)-4
+        td2(:,j,:) = alsajy*ta2(:,j-1,:) + ta2(:,j,:) + alsajy*ta2(:,j+1,:)
+     enddo
+     td2(:,ysize(2)-3,:) = alsatty*ta2(:,ysize(2)-4,:) + ta2(:,ysize(2)-3,:) + alsatty*ta2(:,ysize(2)-2,:)
+     td2(:,ysize(2)-2,:) = alsaty*ta2(:,ysize(2)-3,:) + ta2(:,ysize(2)-2,:) + alsaty*ta2(:,ysize(2)-1,:)
+     td2(:,ysize(2)-1,:) = alsamy*ta2(:,ysize(2)-2,:) + ta2(:,ysize(2)-1,:) + alsamy*ta2(:,ysize(2),:)
+     td2(:,ysize(2),:) = 0.
+     ta2=td2
 
-     endif
+  endif
 
   !(A+nu*dt.B).un
 
-     if (ncly1.eq.0) then
+  if (ncly1.eq.0) then
 
-        call deryy(td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+     call deryy(td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
 
-     elseif (ncly1.eq.1) then
+  elseif (ncly1.eq.1) then
 
 
-     elseif (ncly1.eq.2) then
+  elseif (ncly1.eq.2) then
 
-        call deryy(td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+     call deryy(td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
 
-     endif
+  endif
 
-     if (istret.ne.0) then
-        do j=1,ysize(2)
-           ux2(:,j,:)=ux2(:,j,:)/pp2y(j)
-        enddo
-     endif
+  if (istret.ne.0) then
+     do j=1,ysize(2)
+        ux2(:,j,:)=ux2(:,j,:)/pp2y(j)
+     enddo
+  endif
 
-     if (ncly1.eq.0) then
+  if (ncly1.eq.0) then
 
-        td2(:,1,:) = alsajy*ux2(:,2,:) + ux2(:,1,:) + alsajy*ux2(:,ysize(2),:) &
-             + xcst*td2(:,1,:)
-        do j=2,ysize(2)-1
-           td2(:,j,:) = alsajy*ux2(:,j-1,:) + ux2(:,j,:) + alsajy*ux2(:,j+1,:) &
-                + xcst*td2(:,j,:)
-        enddo
-        td2(:,ysize(2),:) = alsajy*ux2(:,ysize(2)-1,:) + ux2(:,ysize(2),:) + alsajy*ux2(:,1,:) &
-             + xcst*td2(:,ysize(2),:)
+     td2(:,1,:) = alsajy*ux2(:,2,:) + ux2(:,1,:) + alsajy*ux2(:,ysize(2),:) &
+          + xcst*td2(:,1,:)
+     do j=2,ysize(2)-1
+        td2(:,j,:) = alsajy*ux2(:,j-1,:) + ux2(:,j,:) + alsajy*ux2(:,j+1,:) &
+             + xcst*td2(:,j,:)
+     enddo
+     td2(:,ysize(2),:) = alsajy*ux2(:,ysize(2)-1,:) + ux2(:,ysize(2),:) + alsajy*ux2(:,1,:) &
+          + xcst*td2(:,ysize(2),:)
 
-     elseif (ncly1.eq.1) then
+  elseif (ncly1.eq.1) then
 
-     elseif (ncly1.eq.2) then
+  elseif (ncly1.eq.2) then
 
-        td2(:,1,:) = 0.
-        td2(:,2,:) = alsa2y*ux2(:,1,:) + ux2(:,2,:) + alsa2y*ux2(:,3,:) &
-             + xcst*td2(:,2,:)
-        td2(:,3,:) = alsa3y*ux2(:,2,:) + ux2(:,3,:) + alsa3y*ux2(:,4,:) &
-             + xcst*td2(:,3,:)
-        td2(:,4,:) = alsa4y*ux2(:,3,:) + ux2(:,4,:) + alsa4y*ux2(:,5,:) &
-             + xcst*td2(:,4,:)
-        do j=5,ysize(2)-4
-           td2(:,j,:) = alsajy*ux2(:,j-1,:) + ux2(:,j,:) + alsajy*ux2(:,j+1,:) &
-                + xcst*td2(:,j,:)
-        enddo
-        td2(:,ysize(2)-3,:) = alsatty*ux2(:,ysize(2)-4,:) + ux2(:,ysize(2)-3,:) + alsatty*ux2(:,ysize(2)-2,:) &
-                          + xcst*td2(:,ysize(2)-3,:)
-        td2(:,ysize(2)-2,:) = alsaty*ux2(:,ysize(2)-3,:) + ux2(:,ysize(2)-2,:) + alsaty*ux2(:,ysize(2)-1,:) &
-             + xcst*td2(:,ysize(2)-2,:)
-        td2(:,ysize(2)-1,:) = alsamy*ux2(:,ysize(2)-2,:) + ux2(:,ysize(2)-1,:) + alsamy*ux2(:,ysize(2),:) &
-             + xcst*td2(:,ysize(2)-1,:)
-        td2(:,ysize(2),:) = 0.
+     td2(:,1,:) = 0.
+     td2(:,2,:) = alsa2y*ux2(:,1,:) + ux2(:,2,:) + alsa2y*ux2(:,3,:) &
+          + xcst*td2(:,2,:)
+     td2(:,3,:) = alsa3y*ux2(:,2,:) + ux2(:,3,:) + alsa3y*ux2(:,4,:) &
+          + xcst*td2(:,3,:)
+     td2(:,4,:) = alsa4y*ux2(:,3,:) + ux2(:,4,:) + alsa4y*ux2(:,5,:) &
+          + xcst*td2(:,4,:)
+     do j=5,ysize(2)-4
+        td2(:,j,:) = alsajy*ux2(:,j-1,:) + ux2(:,j,:) + alsajy*ux2(:,j+1,:) &
+             + xcst*td2(:,j,:)
+     enddo
+     td2(:,ysize(2)-3,:) = alsatty*ux2(:,ysize(2)-4,:) + ux2(:,ysize(2)-3,:) + alsatty*ux2(:,ysize(2)-2,:) &
+          + xcst*td2(:,ysize(2)-3,:)
+     td2(:,ysize(2)-2,:) = alsaty*ux2(:,ysize(2)-3,:) + ux2(:,ysize(2)-2,:) + alsaty*ux2(:,ysize(2)-1,:) &
+          + xcst*td2(:,ysize(2)-2,:)
+     td2(:,ysize(2)-1,:) = alsamy*ux2(:,ysize(2)-2,:) + ux2(:,ysize(2)-1,:) + alsamy*ux2(:,ysize(2),:) &
+          + xcst*td2(:,ysize(2)-1,:)
+     td2(:,ysize(2),:) = 0.
 
-     endif
+  endif
 
 end subroutine multmatrix9
 
@@ -1323,699 +1323,699 @@ subroutine implicit_schemes()
 
 
   if (isecondder.ne.5) then
-        !!!!!!!!!!!!!!!!!!!!!!
-    !7-DIAG !!
-    !!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!
+     !7-DIAG !!
+!!!!!!!!!!!!!!!!!!!!!!
 
-    !!! NCL = 2, dirichlet imposé, fonction nulle à la paroi
-    !
-    !DIAG
-    aam(1     )=as1y
-    aam(ny    )=asny
-    aam(2     )=-two*as2y
-    aam(ny-1  )=-two*asmy
-    aam(3     )=-two*(as3y+bs3y)
-    aam(ny-2  )=-two*(asty+bsty)
-    aam(4:ny-3)=-two*(asjy+bsjy+csjy)
-    if (istret==0) then
-       aam = 1.-xcst*aam
-    else
-       aam = one/pp2y -xcst*aam
-    endif
-    !CL sur aam
-    aam(1 )=one
-    aam(ny)=one
-    !
-    !DIAG SUP 1
-    bbm(1     )=bs1y
-    bbm(ny    )=bsny
-    bbm(2     )=as2y
-    bbm(ny-1  )=asmy
-    bbm(3     )=as3y
-    bbm(ny-2  )=asty
-    bbm(4:ny-3)=asjy
-    bbm = -xcst*bbm
-    if (istret==0) then
-      bbm(2     )=bbm(2     )+alsa2y
-      bbm(ny-1  )=bbm(ny-1  )+alsamy
-      bbm(3     )=bbm(3     )+alsa3y
-      bbm(ny-2  )=bbm(ny-2  )+alsaty
-      bbm(4:ny-3)=bbm(4:ny-3)+alsajy
-    else
-      bbm(2     )=bbm(2     )+alsa2y/pp2y(3)
-      bbm(ny-1  )=bbm(ny-1  )+alsamy/pp2y(ny)
-      bbm(3     )=bbm(3     )+alsa3y/pp2y(4)
-      bbm(ny-2  )=bbm(ny-2  )+alsaty/pp2y(ny-1)
-      bbm(4:ny-3)=bbm(4:ny-3)+alsajy/pp2y(5:ny-2)
-    endif
-    !CL sur bbm
-    bbm(1 )=zero
-    bbm(ny)=zero
-    !
-    !DIAG SUP 2
-    ccm(1     )=cs1y
-    ccm(ny    )=csny
-    ccm(2     )=zero
-    ccm(ny-1  )=zero
-    ccm(3     )=bs3y
-    ccm(ny-2  )=bsty
-    ccm(4:ny-3)=bsjy
-    ccm = -xcst*ccm
-    !CL sur ccm
-    ccm(1 )=zero
-    ccm(ny)=zero
-    !
-    !DIAG SUP 3
-    rrm(1     )=ds1y
-    rrm(ny    )=dsny
-    rrm(2     )=zero
-    rrm(ny-1  )=zero
-    rrm(3     )=zero
-    rrm(ny-2  )=zero
-    rrm(4:ny-3)=csjy
-    rrm = -xcst*rrm
-    !CL sur rrm
-    rrm(1 )=zero
-    rrm(ny)=zero
-    !
-    !DIAG INF 1
-    if (istret==0) then
-      ddm=bbm
-    else
-      ddm(1     )=bs1y
-      ddm(ny    )=bsny
-      ddm(2     )=as2y
-      ddm(ny-1  )=asmy
-      ddm(3     )=as3y
-      ddm(ny-2  )=asty
-      ddm(4:ny-3)=asjy
-      ddm = -xcst*ddm
-      ddm(2     )=ddm(2     )+alsa2y/pp2y(1)
-      ddm(ny-1  )=ddm(ny-1  )+alsamy/pp2y(ny-2)
-      ddm(3     )=ddm(3     )+alsa3y/pp2y(2)
-      ddm(ny-2  )=ddm(ny-2  )+alsaty/pp2y(ny-3)
-      ddm(4:ny-3)=ddm(4:ny-3)+alsajy/pp2y(3:ny-4)
-      !CL sur ddm
-      ddm(1 )=zero
-      ddm(ny)=zero
-    endif
-    !
-    !DIAG INF 2
-    eem=ccm
-    !
-    !DIAG INF 3
-    qqm=rrm
+!!! NCL = 2, dirichlet imposé, fonction nulle à la paroi
+     !
+     !DIAG
+     aam(1     )=as1y
+     aam(ny    )=asny
+     aam(2     )=-two*as2y
+     aam(ny-1  )=-two*asmy
+     aam(3     )=-two*(as3y+bs3y)
+     aam(ny-2  )=-two*(asty+bsty)
+     aam(4:ny-3)=-two*(asjy+bsjy+csjy)
+     if (istret==0) then
+        aam = 1.-xcst*aam
+     else
+        aam = one/pp2y -xcst*aam
+     endif
+     !CL sur aam
+     aam(1 )=one
+     aam(ny)=one
+     !
+     !DIAG SUP 1
+     bbm(1     )=bs1y
+     bbm(ny    )=bsny
+     bbm(2     )=as2y
+     bbm(ny-1  )=asmy
+     bbm(3     )=as3y
+     bbm(ny-2  )=asty
+     bbm(4:ny-3)=asjy
+     bbm = -xcst*bbm
+     if (istret==0) then
+        bbm(2     )=bbm(2     )+alsa2y
+        bbm(ny-1  )=bbm(ny-1  )+alsamy
+        bbm(3     )=bbm(3     )+alsa3y
+        bbm(ny-2  )=bbm(ny-2  )+alsaty
+        bbm(4:ny-3)=bbm(4:ny-3)+alsajy
+     else
+        bbm(2     )=bbm(2     )+alsa2y/pp2y(3)
+        bbm(ny-1  )=bbm(ny-1  )+alsamy/pp2y(ny)
+        bbm(3     )=bbm(3     )+alsa3y/pp2y(4)
+        bbm(ny-2  )=bbm(ny-2  )+alsaty/pp2y(ny-1)
+        bbm(4:ny-3)=bbm(4:ny-3)+alsajy/pp2y(5:ny-2)
+     endif
+     !CL sur bbm
+     bbm(1 )=zero
+     bbm(ny)=zero
+     !
+     !DIAG SUP 2
+     ccm(1     )=cs1y
+     ccm(ny    )=csny
+     ccm(2     )=zero
+     ccm(ny-1  )=zero
+     ccm(3     )=bs3y
+     ccm(ny-2  )=bsty
+     ccm(4:ny-3)=bsjy
+     ccm = -xcst*ccm
+     !CL sur ccm
+     ccm(1 )=zero
+     ccm(ny)=zero
+     !
+     !DIAG SUP 3
+     rrm(1     )=ds1y
+     rrm(ny    )=dsny
+     rrm(2     )=zero
+     rrm(ny-1  )=zero
+     rrm(3     )=zero
+     rrm(ny-2  )=zero
+     rrm(4:ny-3)=csjy
+     rrm = -xcst*rrm
+     !CL sur rrm
+     rrm(1 )=zero
+     rrm(ny)=zero
+     !
+     !DIAG INF 1
+     if (istret==0) then
+        ddm=bbm
+     else
+        ddm(1     )=bs1y
+        ddm(ny    )=bsny
+        ddm(2     )=as2y
+        ddm(ny-1  )=asmy
+        ddm(3     )=as3y
+        ddm(ny-2  )=asty
+        ddm(4:ny-3)=asjy
+        ddm = -xcst*ddm
+        ddm(2     )=ddm(2     )+alsa2y/pp2y(1)
+        ddm(ny-1  )=ddm(ny-1  )+alsamy/pp2y(ny-2)
+        ddm(3     )=ddm(3     )+alsa3y/pp2y(2)
+        ddm(ny-2  )=ddm(ny-2  )+alsaty/pp2y(ny-3)
+        ddm(4:ny-3)=ddm(4:ny-3)+alsajy/pp2y(3:ny-4)
+        !CL sur ddm
+        ddm(1 )=zero
+        ddm(ny)=zero
+     endif
+     !
+     !DIAG INF 2
+     eem=ccm
+     !
+     !DIAG INF 3
+     qqm=rrm
 
-    !!! NCL = 1, npaire=0, dirichlet imposé, fonction impaire
-    !
-    ! DIAG
-    aam10(1     )=zero
-    aam10(ny    )=zero
-    aam10(2     )=-two*asjy-three*bsjy-two*csjy
-    aam10(ny-1  )=aam10(2)
-    aam10(3:ny-2)=-two*(asjy+bsjy+csjy)
-    if (istret==0) then
-       aam10 = one - xcst*aam10
-    else
-       aam10 = one/pp2y - xcst*aam10
-    endif
-    !
-    !DIAG SUP 1
-    bbm10(1     )=zero
-    bbm10(ny    )=zero
-    bbm10(2     )=asjy-csjy
-    bbm10(ny-1  )=asjy
-    bbm10(3     )=asjy
-    bbm10(ny-2  )=asjy-csjy
-    bbm10(4:ny-3)=asjy
-    if (istret==0) then
-       bbm10 = alsajy - xcst*bbm10
-    else
-       bbm10(2:ny-1) = alsajy/pp2y(3:ny) - xcst*bbm10(2:ny-1)
-    endif
-    !CL sur bbm10
-    bbm10(1 )=zero
-    bbm10(ny)=zero
-    !
-    !DIAG SUP 2
-    ccm10(1     )=zero
-    ccm10(ny    )=zero
-    ccm10(2     )=bsjy
-    ccm10(ny-1  )=zero
-    ccm10(3     )=bsjy
-    ccm10(ny-2  )=bsjy
-    ccm10(4:ny-3)=bsjy
-    ccm10 = -xcst*ccm10
-    !
-    !DIAG SUP 3
-    rrm10(1     )=zero
-    rrm10(ny    )=zero
-    rrm10(2     )=csjy
-    rrm10(ny-1  )=zero
-    rrm10(3     )=csjy
-    rrm10(ny-2  )=zero
-    rrm10(4:ny-3)=csjy
-    rrm10 = -xcst*rrm10
-    !
-    !DIAG INF 1
-    ddm10(1     )=zero
-    ddm10(ny    )=zero
-    ddm10(2     )=asjy
-    ddm10(ny-1  )=asjy-csjy
-    ddm10(3     )=asjy-csjy
-    ddm10(ny-2  )=asjy
-    ddm10(4:ny-3)=asjy
-    if (istret==0) then
-       ddm10 = alsajy - xcst*ddm10
-    else
-       ddm10(2:ny-1) = alsajy/pp2y(1:ny-2) - xcst*ddm10(2:ny-1)
-    endif
-    !CL sur ddm10
-    ddm10(1 )=zero
-    ddm10(ny)=zero
-    !
-    !DIAG INF 2
-    eem10(1     )=zero
-    eem10(ny    )=zero
-    eem10(2     )=zero
-    eem10(ny-1  )=bsjy
-    eem10(3     )=bsjy
-    eem10(ny-2  )=bsjy
-    eem10(4:ny-3)=bsjy
-    eem10 = -xcst*eem10
-    !
-    !DIAG INF 3
-    qqm10(1     )=zero
-    qqm10(ny    )=zero
-    qqm10(2     )=zero
-    qqm10(ny-1  )=csjy
-    qqm10(3     )=zero
-    qqm10(ny-2  )=csjy
-    qqm10(4:ny-3)=csjy
-    qqm10 = -xcst*qqm10
+!!! NCL = 1, npaire=0, dirichlet imposé, fonction impaire
+     !
+     ! DIAG
+     aam10(1     )=zero
+     aam10(ny    )=zero
+     aam10(2     )=-two*asjy-three*bsjy-two*csjy
+     aam10(ny-1  )=aam10(2)
+     aam10(3:ny-2)=-two*(asjy+bsjy+csjy)
+     if (istret==0) then
+        aam10 = one - xcst*aam10
+     else
+        aam10 = one/pp2y - xcst*aam10
+     endif
+     !
+     !DIAG SUP 1
+     bbm10(1     )=zero
+     bbm10(ny    )=zero
+     bbm10(2     )=asjy-csjy
+     bbm10(ny-1  )=asjy
+     bbm10(3     )=asjy
+     bbm10(ny-2  )=asjy-csjy
+     bbm10(4:ny-3)=asjy
+     if (istret==0) then
+        bbm10 = alsajy - xcst*bbm10
+     else
+        bbm10(2:ny-1) = alsajy/pp2y(3:ny) - xcst*bbm10(2:ny-1)
+     endif
+     !CL sur bbm10
+     bbm10(1 )=zero
+     bbm10(ny)=zero
+     !
+     !DIAG SUP 2
+     ccm10(1     )=zero
+     ccm10(ny    )=zero
+     ccm10(2     )=bsjy
+     ccm10(ny-1  )=zero
+     ccm10(3     )=bsjy
+     ccm10(ny-2  )=bsjy
+     ccm10(4:ny-3)=bsjy
+     ccm10 = -xcst*ccm10
+     !
+     !DIAG SUP 3
+     rrm10(1     )=zero
+     rrm10(ny    )=zero
+     rrm10(2     )=csjy
+     rrm10(ny-1  )=zero
+     rrm10(3     )=csjy
+     rrm10(ny-2  )=zero
+     rrm10(4:ny-3)=csjy
+     rrm10 = -xcst*rrm10
+     !
+     !DIAG INF 1
+     ddm10(1     )=zero
+     ddm10(ny    )=zero
+     ddm10(2     )=asjy
+     ddm10(ny-1  )=asjy-csjy
+     ddm10(3     )=asjy-csjy
+     ddm10(ny-2  )=asjy
+     ddm10(4:ny-3)=asjy
+     if (istret==0) then
+        ddm10 = alsajy - xcst*ddm10
+     else
+        ddm10(2:ny-1) = alsajy/pp2y(1:ny-2) - xcst*ddm10(2:ny-1)
+     endif
+     !CL sur ddm10
+     ddm10(1 )=zero
+     ddm10(ny)=zero
+     !
+     !DIAG INF 2
+     eem10(1     )=zero
+     eem10(ny    )=zero
+     eem10(2     )=zero
+     eem10(ny-1  )=bsjy
+     eem10(3     )=bsjy
+     eem10(ny-2  )=bsjy
+     eem10(4:ny-3)=bsjy
+     eem10 = -xcst*eem10
+     !
+     !DIAG INF 3
+     qqm10(1     )=zero
+     qqm10(ny    )=zero
+     qqm10(2     )=zero
+     qqm10(ny-1  )=csjy
+     qqm10(3     )=zero
+     qqm10(ny-2  )=csjy
+     qqm10(4:ny-3)=csjy
+     qqm10 = -xcst*qqm10
 
-    !!! NCL = 1, npaire=1, neumann imposé, fonction paire
-    !
-    ! DIAG
-    aam11(1     )=-two*(asjy+bsjy+csjy)
-    aam11(ny    )=aam11(1)
-    aam11(2     )=-two*asjy-bsjy-two*csjy
-    aam11(ny-1  )=aam11(2)
-    aam11(3:ny-2)=-two*(asjy+bsjy+csjy)
-    if (istret==0) then
-       aam11 = one - xcst*aam11
-    else
-       aam11 = one/pp2y - xcst*aam11
-    endif
-    !
-    !DIAG SUP 1
-    bbm11(1     )=two*asjy
-    bbm11(ny    )=zero
-    bbm11(2     )=asjy+csjy
-    bbm11(ny-1  )=asjy
-    bbm11(3     )=asjy
-    bbm11(ny-2  )=asjy+csjy
-    bbm11(4:ny-3)=asjy
-    if (istret==0) then
-       bbm11 = alsajy - xcst*bbm11
-    else
-       bbm11(1:ny-1) = alsajy/pp2y(2:ny) - xcst*bbm11(1:ny-1)
-    endif
-    !CL sur bbm11
-    if (istret==0) then
-      bbm11(1 )=bbm11(1)+alsajy
-    else
-      bbm11(1 )=bbm11(1)+alsajy/pp2y(2)
-    endif
-    bbm11(ny)=zero
-    !
-    !DIAG SUP 2
-    ccm11(1     )=two*bsjy
-    ccm11(ny    )=zero
-    ccm11(2     )=bsjy
-    ccm11(ny-1  )=zero
-    ccm11(3     )=bsjy
-    ccm11(ny-2  )=bsjy
-    ccm11(4:ny-3)=bsjy
-    ccm11 = -xcst*ccm11
-    !
-    !DIAG SUP 3
-    rrm11(1     )=two*csjy
-    rrm11(ny    )=zero
-    rrm11(2     )=csjy
-    rrm11(ny-1  )=zero
-    rrm11(3     )=csjy
-    rrm11(ny-2  )=zero
-    rrm11(4:ny-3)=csjy
-    rrm11 = -xcst*rrm11
-    !
-    !DIAG INF 1
-    ddm11(1     )=zero
-    ddm11(ny    )=two*asjy
-    ddm11(2     )=asjy
-    ddm11(ny-1  )=asjy+csjy
-    ddm11(3     )=asjy+csjy
-    ddm11(ny-2  )=asjy
-    ddm11(4:ny-3)=asjy
-    if (istret==0) then
-       ddm11 = alsajy - xcst*ddm11
-    else
-       ddm11(2:ny) = alsajy/pp2y(1:ny-1) - xcst*ddm11(2:ny)
-    endif
-    !CL sur ddm11
-    ddm11(1 )=zero
-    if (istret==0) then
-       ddm11(ny)=ddm11(ny)+alsajy!a1
-    else
-       ddm11(ny)=ddm11(ny)+alsajy/pp2y(ny-1)!a1
-    endif
-    !
-    !DIAG INF 2
-    eem11(1     )=zero
-    eem11(ny    )=two*bsjy
-    eem11(2     )=zero
-    eem11(ny-1  )=bsjy
-    eem11(3     )=bsjy
-    eem11(ny-2  )=bsjy
-    eem11(4:ny-3)=bsjy
-    eem11 = -xcst*eem11
-    !
-    !DIAG INF 3
-    qqm11(1     )=zero
-    qqm11(ny    )=two*csjy
-    qqm11(2     )=zero
-    qqm11(ny-1  )=csjy
-    qqm11(3     )=zero
-    qqm11(ny-2  )=csjy
-    qqm11(4:ny-3)=csjy
-    qqm11 = -xcst*qqm11
+!!! NCL = 1, npaire=1, neumann imposé, fonction paire
+     !
+     ! DIAG
+     aam11(1     )=-two*(asjy+bsjy+csjy)
+     aam11(ny    )=aam11(1)
+     aam11(2     )=-two*asjy-bsjy-two*csjy
+     aam11(ny-1  )=aam11(2)
+     aam11(3:ny-2)=-two*(asjy+bsjy+csjy)
+     if (istret==0) then
+        aam11 = one - xcst*aam11
+     else
+        aam11 = one/pp2y - xcst*aam11
+     endif
+     !
+     !DIAG SUP 1
+     bbm11(1     )=two*asjy
+     bbm11(ny    )=zero
+     bbm11(2     )=asjy+csjy
+     bbm11(ny-1  )=asjy
+     bbm11(3     )=asjy
+     bbm11(ny-2  )=asjy+csjy
+     bbm11(4:ny-3)=asjy
+     if (istret==0) then
+        bbm11 = alsajy - xcst*bbm11
+     else
+        bbm11(1:ny-1) = alsajy/pp2y(2:ny) - xcst*bbm11(1:ny-1)
+     endif
+     !CL sur bbm11
+     if (istret==0) then
+        bbm11(1 )=bbm11(1)+alsajy
+     else
+        bbm11(1 )=bbm11(1)+alsajy/pp2y(2)
+     endif
+     bbm11(ny)=zero
+     !
+     !DIAG SUP 2
+     ccm11(1     )=two*bsjy
+     ccm11(ny    )=zero
+     ccm11(2     )=bsjy
+     ccm11(ny-1  )=zero
+     ccm11(3     )=bsjy
+     ccm11(ny-2  )=bsjy
+     ccm11(4:ny-3)=bsjy
+     ccm11 = -xcst*ccm11
+     !
+     !DIAG SUP 3
+     rrm11(1     )=two*csjy
+     rrm11(ny    )=zero
+     rrm11(2     )=csjy
+     rrm11(ny-1  )=zero
+     rrm11(3     )=csjy
+     rrm11(ny-2  )=zero
+     rrm11(4:ny-3)=csjy
+     rrm11 = -xcst*rrm11
+     !
+     !DIAG INF 1
+     ddm11(1     )=zero
+     ddm11(ny    )=two*asjy
+     ddm11(2     )=asjy
+     ddm11(ny-1  )=asjy+csjy
+     ddm11(3     )=asjy+csjy
+     ddm11(ny-2  )=asjy
+     ddm11(4:ny-3)=asjy
+     if (istret==0) then
+        ddm11 = alsajy - xcst*ddm11
+     else
+        ddm11(2:ny) = alsajy/pp2y(1:ny-1) - xcst*ddm11(2:ny)
+     endif
+     !CL sur ddm11
+     ddm11(1 )=zero
+     if (istret==0) then
+        ddm11(ny)=ddm11(ny)+alsajy!a1
+     else
+        ddm11(ny)=ddm11(ny)+alsajy/pp2y(ny-1)!a1
+     endif
+     !
+     !DIAG INF 2
+     eem11(1     )=zero
+     eem11(ny    )=two*bsjy
+     eem11(2     )=zero
+     eem11(ny-1  )=bsjy
+     eem11(3     )=bsjy
+     eem11(ny-2  )=bsjy
+     eem11(4:ny-3)=bsjy
+     eem11 = -xcst*eem11
+     !
+     !DIAG INF 3
+     qqm11(1     )=zero
+     qqm11(ny    )=two*csjy
+     qqm11(2     )=zero
+     qqm11(ny-1  )=csjy
+     qqm11(3     )=zero
+     qqm11(ny-2  )=csjy
+     qqm11(4:ny-3)=csjy
+     qqm11 = -xcst*qqm11
 
-    !!! NXL = 0
-    !DIAG
-    if (istret==0) then
-       aam0 = one-xcst*(-two*(asjy+bsjy+csjy))
-    else
-       aam0 = one/pp2y-xcst*(-two*(asjy+bsjy+csjy))
-    endif
-    !
-    !DIAG SUP 1
-    if (istret==0) then
-       bbm0 = alsajy-xcst*asjy
-    else
-       bbm0(1:ny-1) = alsajy/pp2y(2:ny) -xcst*asjy
-       bbm0(ny) = alsajy/pp2y(1) -xcst*asjy
-    endif
-    !
-    !DIAG SUP 2
-    ccm0 = -xcst*bsjy
-    !
-    !DIAG SUP 3
-    rrm0 = -xcst*csjy
-    !
-    !DIAG INF 1
-    if (istret==0) then
-      ddm0=bbm0
-    else
-       ddm0(1) = alsajy/pp2y(ny) -xcst*asjy
-       ddm0(2:ny) = alsajy/pp2y(1:ny-1) -xcst*asjy
-    endif
-    !
-    !DIAG INF 2
-    eem0=ccm0
-    !
-    !DIAG INF 3
-    qqm0=rrm0
+!!! NXL = 0
+     !DIAG
+     if (istret==0) then
+        aam0 = one-xcst*(-two*(asjy+bsjy+csjy))
+     else
+        aam0 = one/pp2y-xcst*(-two*(asjy+bsjy+csjy))
+     endif
+     !
+     !DIAG SUP 1
+     if (istret==0) then
+        bbm0 = alsajy-xcst*asjy
+     else
+        bbm0(1:ny-1) = alsajy/pp2y(2:ny) -xcst*asjy
+        bbm0(ny) = alsajy/pp2y(1) -xcst*asjy
+     endif
+     !
+     !DIAG SUP 2
+     ccm0 = -xcst*bsjy
+     !
+     !DIAG SUP 3
+     rrm0 = -xcst*csjy
+     !
+     !DIAG INF 1
+     if (istret==0) then
+        ddm0=bbm0
+     else
+        ddm0(1) = alsajy/pp2y(ny) -xcst*asjy
+        ddm0(2:ny) = alsajy/pp2y(1:ny-1) -xcst*asjy
+     endif
+     !
+     !DIAG INF 2
+     eem0=ccm0
+     !
+     !DIAG INF 3
+     qqm0=rrm0
 
   else
 !!!!!!!!!!!!!!!!!!!!!!
-  !9-DIAG !!
+     !9-DIAG !!
 !!!!!!!!!!!!!!!!!!!!!!
 
-  !!! NCL = 2, dirichlet imposé, fonction nulle à la paroi
-    !
-    !DIAG
-    aam(1     )=as1y
-    aam(ny    )=asny
-    aam(2     )=-two*as2y
-    aam(ny-1  )=-two*asmy
-    aam(3     )=-two*(as3y+bs3y)
-    aam(4     )=-two*(as4y+bs4y+cs4y)
-    aam(ny-2  )=-two*(asty+bsty)
-    aam(ny-3  )=-two*(astty+bstty+cstty)
-    aam(5:ny-4)=-two*(asjy+bsjy+csjy+dsjy)
-    if (istret==0) then
-       aam = one-xcst*aam
-    else
-       aam = one/pp2y -xcst*aam
-    endif
-    !CL sur aam
-    aam(1 )=one
-    aam(ny)=one
-    !
-    !DIAG SUP 1
-    bbm(1     )=bs1y
-    bbm(ny    )=bsny
-    bbm(2     )=as2y
-    bbm(ny-1  )=asmy
-    bbm(3     )=as3y
-    bbm(ny-2  )=asty
-    bbm(4     )=as4y
-    bbm(ny-3  )=astty
-    bbm(5:ny-4)=asjy
-    bbm = -xcst*bbm
-    if (istret==0) then
-      bbm(2     )=bbm(2     )+alsa2y
-      bbm(ny-1  )=bbm(ny-1  )+alsamy
-      bbm(3     )=bbm(3     )+alsa3y
-      bbm(ny-2  )=bbm(ny-2  )+alsaty
-      bbm(4     )=bbm(4     )+alsa4y
-      bbm(ny-3  )=bbm(ny-3  )+alsatty
-      bbm(5:ny-4)=bbm(5:ny-4)+alsajy
-    else
-      bbm(2     )=bbm(2     )+alsa2y/pp2y(3)
-      bbm(ny-1  )=bbm(ny-1  )+alsamy/pp2y(ny)
-      bbm(3     )=bbm(3     )+alsa3y/pp2y(4)
-      bbm(ny-2  )=bbm(ny-2  )+alsaty/pp2y(ny-1)
-      bbm(4     )=bbm(4     )+alsa4y/pp2y(5)
-      bbm(ny-3  )=bbm(ny-3  )+alsatty/pp2y(ny-2)
-      bbm(5:ny-4)=bbm(5:ny-4)+alsajy/pp2y(6:ny-3)
-    endif
-    !CL sur bbm
-    bbm(1 )=zero
-    bbm(ny)=zero
-    !
-    !DIAG SUP 2
-    ccm(1     )=cs1y
-    ccm(ny    )=csny
-    ccm(2     )=0.!bs2y
-    ccm(ny-1  )=0.!bsmy
-    ccm(3     )=bs3y
-    ccm(ny-2  )=bsty
-    ccm(4     )=bs4y
-    ccm(ny-3  )=bstty
-    ccm(5:ny-4)=bsjy
-    ccm = -xcst*ccm
-    !CL sur ccm
-    ccm(1 )=zero
-    ccm(ny)=zero
-    !
-    !DIAG SUP 3
-    rrm(1     )=ds1y
-    rrm(ny    )=dsny
-    rrm(2     )=zero!cs2y
-    rrm(ny-1  )=zero!csmy
-    rrm(3     )=zero!cs3y
-    rrm(ny-2  )=zero!csty
-    rrm(4     )=cs4y
-    rrm(ny-3  )=cstty
-    rrm(5:ny-4)=csjy
-    rrm = -xcst*rrm
-    !CL sur rrm
-    rrm(1 )=zero
-    rrm(ny)=zero
-    !
-    !DIAG SUP 4
-    ttm(1     )=zero
-    ttm(ny    )=zero
-    ttm(2     )=zero
-    ttm(ny-1  )=zero
-    ttm(3     )=zero!ds3y
-    ttm(ny-2  )=zero!dsty
-    ttm(4     )=zero!ds4y
-    ttm(ny-3  )=zero!dstty
-    ttm(5:ny-4)=dsjy
-    ttm = -xcst*ttm
-    !CL sur ttm
-    ttm(1 )=zero
-    ttm(ny)=zero
-    !
-    !DIAG INF 1
-    if (istret==0) then
-       ddm=bbm
-    else
-      ddm(1     )=bs1y
-      ddm(ny    )=bsny
-      ddm(2     )=as2y
-      ddm(ny-1  )=asmy
-      ddm(3     )=as3y
-      ddm(ny-2  )=asty
-      ddm(4     )=as4y
-      ddm(ny-3  )=astty
-      ddm(5:ny-4)=asjy
-      ddm = -xcst*ddm
-      ddm(2     )=ddm(2     )+alsa2y/pp2y(1)
-      ddm(ny-1  )=ddm(ny-1  )+alsamy/pp2y(ny-2)
-      ddm(3     )=ddm(3     )+alsa3y/pp2y(2)
-      ddm(ny-2  )=ddm(ny-2  )+alsaty/pp2y(ny-3)
-      ddm(4     )=ddm(4     )+alsa4y/pp2y(3)
-      ddm(ny-3  )=ddm(ny-3  )+alsatty/pp2y(ny-4)
-      ddm(5:ny-4)=ddm(5:ny-4)+alsajy/pp2y(4:ny-5)
-      !CL sur ddm
-      ddm(1 )=zero
-      ddm(ny)=zero
-    endif
-    !
-    !DIAG INF 2
-    eem=ccm
-    !
-    !DIAG INF 3
-    qqm=rrm
+!!! NCL = 2, dirichlet imposé, fonction nulle à la paroi
+     !
+     !DIAG
+     aam(1     )=as1y
+     aam(ny    )=asny
+     aam(2     )=-two*as2y
+     aam(ny-1  )=-two*asmy
+     aam(3     )=-two*(as3y+bs3y)
+     aam(4     )=-two*(as4y+bs4y+cs4y)
+     aam(ny-2  )=-two*(asty+bsty)
+     aam(ny-3  )=-two*(astty+bstty+cstty)
+     aam(5:ny-4)=-two*(asjy+bsjy+csjy+dsjy)
+     if (istret==0) then
+        aam = one-xcst*aam
+     else
+        aam = one/pp2y -xcst*aam
+     endif
+     !CL sur aam
+     aam(1 )=one
+     aam(ny)=one
+     !
+     !DIAG SUP 1
+     bbm(1     )=bs1y
+     bbm(ny    )=bsny
+     bbm(2     )=as2y
+     bbm(ny-1  )=asmy
+     bbm(3     )=as3y
+     bbm(ny-2  )=asty
+     bbm(4     )=as4y
+     bbm(ny-3  )=astty
+     bbm(5:ny-4)=asjy
+     bbm = -xcst*bbm
+     if (istret==0) then
+        bbm(2     )=bbm(2     )+alsa2y
+        bbm(ny-1  )=bbm(ny-1  )+alsamy
+        bbm(3     )=bbm(3     )+alsa3y
+        bbm(ny-2  )=bbm(ny-2  )+alsaty
+        bbm(4     )=bbm(4     )+alsa4y
+        bbm(ny-3  )=bbm(ny-3  )+alsatty
+        bbm(5:ny-4)=bbm(5:ny-4)+alsajy
+     else
+        bbm(2     )=bbm(2     )+alsa2y/pp2y(3)
+        bbm(ny-1  )=bbm(ny-1  )+alsamy/pp2y(ny)
+        bbm(3     )=bbm(3     )+alsa3y/pp2y(4)
+        bbm(ny-2  )=bbm(ny-2  )+alsaty/pp2y(ny-1)
+        bbm(4     )=bbm(4     )+alsa4y/pp2y(5)
+        bbm(ny-3  )=bbm(ny-3  )+alsatty/pp2y(ny-2)
+        bbm(5:ny-4)=bbm(5:ny-4)+alsajy/pp2y(6:ny-3)
+     endif
+     !CL sur bbm
+     bbm(1 )=zero
+     bbm(ny)=zero
+     !
+     !DIAG SUP 2
+     ccm(1     )=cs1y
+     ccm(ny    )=csny
+     ccm(2     )=0.!bs2y
+     ccm(ny-1  )=0.!bsmy
+     ccm(3     )=bs3y
+     ccm(ny-2  )=bsty
+     ccm(4     )=bs4y
+     ccm(ny-3  )=bstty
+     ccm(5:ny-4)=bsjy
+     ccm = -xcst*ccm
+     !CL sur ccm
+     ccm(1 )=zero
+     ccm(ny)=zero
+     !
+     !DIAG SUP 3
+     rrm(1     )=ds1y
+     rrm(ny    )=dsny
+     rrm(2     )=zero!cs2y
+     rrm(ny-1  )=zero!csmy
+     rrm(3     )=zero!cs3y
+     rrm(ny-2  )=zero!csty
+     rrm(4     )=cs4y
+     rrm(ny-3  )=cstty
+     rrm(5:ny-4)=csjy
+     rrm = -xcst*rrm
+     !CL sur rrm
+     rrm(1 )=zero
+     rrm(ny)=zero
+     !
+     !DIAG SUP 4
+     ttm(1     )=zero
+     ttm(ny    )=zero
+     ttm(2     )=zero
+     ttm(ny-1  )=zero
+     ttm(3     )=zero!ds3y
+     ttm(ny-2  )=zero!dsty
+     ttm(4     )=zero!ds4y
+     ttm(ny-3  )=zero!dstty
+     ttm(5:ny-4)=dsjy
+     ttm = -xcst*ttm
+     !CL sur ttm
+     ttm(1 )=zero
+     ttm(ny)=zero
+     !
+     !DIAG INF 1
+     if (istret==0) then
+        ddm=bbm
+     else
+        ddm(1     )=bs1y
+        ddm(ny    )=bsny
+        ddm(2     )=as2y
+        ddm(ny-1  )=asmy
+        ddm(3     )=as3y
+        ddm(ny-2  )=asty
+        ddm(4     )=as4y
+        ddm(ny-3  )=astty
+        ddm(5:ny-4)=asjy
+        ddm = -xcst*ddm
+        ddm(2     )=ddm(2     )+alsa2y/pp2y(1)
+        ddm(ny-1  )=ddm(ny-1  )+alsamy/pp2y(ny-2)
+        ddm(3     )=ddm(3     )+alsa3y/pp2y(2)
+        ddm(ny-2  )=ddm(ny-2  )+alsaty/pp2y(ny-3)
+        ddm(4     )=ddm(4     )+alsa4y/pp2y(3)
+        ddm(ny-3  )=ddm(ny-3  )+alsatty/pp2y(ny-4)
+        ddm(5:ny-4)=ddm(5:ny-4)+alsajy/pp2y(4:ny-5)
+        !CL sur ddm
+        ddm(1 )=zero
+        ddm(ny)=zero
+     endif
+     !
+     !DIAG INF 2
+     eem=ccm
+     !
+     !DIAG INF 3
+     qqm=rrm
 
-    !DIAG INF 4
-    uum=ttm
+     !DIAG INF 4
+     uum=ttm
 
-  !!! NCL = 1, npaire=0, dirichlet imposé, fonction impaire
-    !
-    ! DIAG
-    aam10(1     )=zero
-    aam10(ny    )=zero
-    aam10(2     )=-two*asjy-three*bsjy-two*csjy
-    aam10(ny-1  )=aam10(2)
-    aam10(3:ny-2)=-two*(asjy+bsjy+csjy)
-    if (istret==0) then
-       aam10 = one - xcst*aam10
-    else
-       aam10 = one/pp2y - xcst*aam10
-    endif
-    !
-    !DIAG SUP 1
-    bbm10(1     )=zero
-    bbm10(ny    )=zero
-    bbm10(2     )=asjy-csjy
-    bbm10(ny-1  )=asjy
-    bbm10(3     )=asjy
-    bbm10(ny-2  )=asjy-csjy
-    bbm10(4:ny-3)=asjy
-    if (istret==0) then
-       bbm10 = alsajy - xcst*bbm10
-    else
-       bbm10(2:ny-1) = alsajy/pp2y(3:ny) - xcst*bbm10(2:ny-1)
-    endif
-    !CL sur bbm10
-    bbm10(1 )=zero
-    bbm10(ny)=zero
-    !
-    !DIAG SUP 2
-    ccm10(1     )=zero
-    ccm10(ny    )=zero
-    ccm10(2     )=bsjy
-    ccm10(ny-1  )=zero
-    ccm10(3     )=bsjy
-    ccm10(ny-2  )=bsjy
-    ccm10(4:ny-3)=bsjy
-    ccm10 = -xcst*ccm10
-    !
-    !DIAG SUP 3
-    rrm10(1     )=zero
-    rrm10(ny    )=zero
-    rrm10(2     )=csjy
-    rrm10(ny-1  )=zero
-    rrm10(3     )=csjy
-    rrm10(ny-2  )=zero
-    rrm10(4:ny-3)=csjy
-    rrm10 = -xcst*rrm10
-    !
-    !DIAG INF 1
-    ddm10(1     )=zero
-    ddm10(ny    )=zero
-    ddm10(2     )=asjy
-    ddm10(ny-1  )=asjy-csjy
-    ddm10(3     )=asjy-csjy
-    ddm10(ny-2  )=asjy
-    ddm10(4:ny-3)=asjy
-    if (istret==0) then
-       ddm10 = alsajy - xcst*ddm10
-    else
-       ddm10(2:ny-1) = alsajy/pp2y(1:ny-2) - xcst*ddm10(2:ny-1)
-    endif
-    !CL sur ddm10
-    ddm10(1 )=zero
-    ddm10(ny)=zero
-    !
-    !DIAG INF 2
-    eem10(1     )=zero
-    eem10(ny    )=zero
-    eem10(2     )=zero
-    eem10(ny-1  )=bsjy
-    eem10(3     )=bsjy
-    eem10(ny-2  )=bsjy
-    eem10(4:ny-3)=bsjy
-    eem10 = -xcst*eem10
-    !
-    !DIAG INF 3
-    qqm10(1     )=zero
-    qqm10(ny    )=zero
-    qqm10(2     )=zero
-    qqm10(ny-1  )=csjy
-    qqm10(3     )=zero
-    qqm10(ny-2  )=csjy
-    qqm10(4:ny-3)=csjy
-    qqm10 = -xcst*qqm10
+!!! NCL = 1, npaire=0, dirichlet imposé, fonction impaire
+     !
+     ! DIAG
+     aam10(1     )=zero
+     aam10(ny    )=zero
+     aam10(2     )=-two*asjy-three*bsjy-two*csjy
+     aam10(ny-1  )=aam10(2)
+     aam10(3:ny-2)=-two*(asjy+bsjy+csjy)
+     if (istret==0) then
+        aam10 = one - xcst*aam10
+     else
+        aam10 = one/pp2y - xcst*aam10
+     endif
+     !
+     !DIAG SUP 1
+     bbm10(1     )=zero
+     bbm10(ny    )=zero
+     bbm10(2     )=asjy-csjy
+     bbm10(ny-1  )=asjy
+     bbm10(3     )=asjy
+     bbm10(ny-2  )=asjy-csjy
+     bbm10(4:ny-3)=asjy
+     if (istret==0) then
+        bbm10 = alsajy - xcst*bbm10
+     else
+        bbm10(2:ny-1) = alsajy/pp2y(3:ny) - xcst*bbm10(2:ny-1)
+     endif
+     !CL sur bbm10
+     bbm10(1 )=zero
+     bbm10(ny)=zero
+     !
+     !DIAG SUP 2
+     ccm10(1     )=zero
+     ccm10(ny    )=zero
+     ccm10(2     )=bsjy
+     ccm10(ny-1  )=zero
+     ccm10(3     )=bsjy
+     ccm10(ny-2  )=bsjy
+     ccm10(4:ny-3)=bsjy
+     ccm10 = -xcst*ccm10
+     !
+     !DIAG SUP 3
+     rrm10(1     )=zero
+     rrm10(ny    )=zero
+     rrm10(2     )=csjy
+     rrm10(ny-1  )=zero
+     rrm10(3     )=csjy
+     rrm10(ny-2  )=zero
+     rrm10(4:ny-3)=csjy
+     rrm10 = -xcst*rrm10
+     !
+     !DIAG INF 1
+     ddm10(1     )=zero
+     ddm10(ny    )=zero
+     ddm10(2     )=asjy
+     ddm10(ny-1  )=asjy-csjy
+     ddm10(3     )=asjy-csjy
+     ddm10(ny-2  )=asjy
+     ddm10(4:ny-3)=asjy
+     if (istret==0) then
+        ddm10 = alsajy - xcst*ddm10
+     else
+        ddm10(2:ny-1) = alsajy/pp2y(1:ny-2) - xcst*ddm10(2:ny-1)
+     endif
+     !CL sur ddm10
+     ddm10(1 )=zero
+     ddm10(ny)=zero
+     !
+     !DIAG INF 2
+     eem10(1     )=zero
+     eem10(ny    )=zero
+     eem10(2     )=zero
+     eem10(ny-1  )=bsjy
+     eem10(3     )=bsjy
+     eem10(ny-2  )=bsjy
+     eem10(4:ny-3)=bsjy
+     eem10 = -xcst*eem10
+     !
+     !DIAG INF 3
+     qqm10(1     )=zero
+     qqm10(ny    )=zero
+     qqm10(2     )=zero
+     qqm10(ny-1  )=csjy
+     qqm10(3     )=zero
+     qqm10(ny-2  )=csjy
+     qqm10(4:ny-3)=csjy
+     qqm10 = -xcst*qqm10
 
-  !!! NCL = 1, npaire=1, neumann imposé, fonction paire
-    !
-    ! DIAG
-    aam11(1     )=-two*(asjy+bsjy+csjy)
-    aam11(ny    )=aam11(1)
-    aam11(2     )=-two*asjy-bsjy-two*csjy
-    aam11(ny-1  )=aam11(2)
-    aam11(3:ny-2)=-two*(asjy+bsjy+csjy)
-    if (istret==0) then
-       aam11 = one - xcst*aam11
-    else
-       aam11 = one/pp2y - xcst*aam11
-    endif
-    !
-    !DIAG SUP 1
-    bbm11(1     )=two*asjy
-    bbm11(ny    )=zero
-    bbm11(2     )=asjy+csjy
-    bbm11(ny-1  )=asjy
-    bbm11(3     )=asjy
-    bbm11(ny-2  )=asjy+csjy
-    bbm11(4:ny-3)=asjy
-    if (istret==0) then
-       bbm11 = alsajy - xcst*bbm11
-    else
-       bbm11(1:ny-1) = alsajy/pp2y(2:ny) - xcst*bbm11(1:ny-1)
-    endif
-    !CL sur bbm11
-    if (istret==0) then
-       bbm11(1 )=bbm11(1)+alsajy
-    else
-       bbm11(1 )=bbm11(1)+alsajy/pp2y(2)
-    endif
-    bbm11(ny)=zero
-    !
-    !DIAG SUP 2
-    ccm11(1     )=two*bsjy
-    ccm11(ny    )=zero
-    ccm11(2     )=bsjy
-    ccm11(ny-1  )=zero
-    ccm11(3     )=bsjy
-    ccm11(ny-2  )=bsjy
-    ccm11(4:ny-3)=bsjy
-    ccm11 = -xcst*ccm11
-    !
-    !DIAG SUP 3
-    rrm11(1     )=two*csjy
-    rrm11(ny    )=zero
-    rrm11(2     )=csjy
-    rrm11(ny-1  )=zero
-    rrm11(3     )=csjy
-    rrm11(ny-2  )=zero
-    rrm11(4:ny-3)=csjy
-    rrm11 = -xcst*rrm11
-    !
-    !DIAG INF 1
-    ddm11(1     )=zero
-    ddm11(ny    )=two*asjy
-    ddm11(2     )=asjy
-    ddm11(ny-1  )=asjy+csjy
-    ddm11(3     )=asjy+csjy
-    ddm11(ny-2  )=asjy
-    ddm11(4:ny-3)=asjy
-    if (istret==0) then
-       ddm11 = alsajy - xcst*ddm11
-    else
-       ddm11(2:ny) = alsajy/pp2y(1:ny-1) - xcst*ddm11(2:ny)
-    endif
-    !CL sur ddm11
-    ddm11(1 )=zero
-    if (istret==0) then
-       ddm11(ny)=ddm11(ny)+alsajy!a1
-    else
-       ddm11(ny)=ddm11(ny)+alsajy/pp2y(ny-1)!a1
-    endif
-    !
-    !DIAG INF 2
-    eem11(1     )=zero
-    eem11(ny    )=two*bsjy
-    eem11(2     )=zero
-    eem11(ny-1  )=bsjy
-    eem11(3     )=bsjy
-    eem11(ny-2  )=bsjy
-    eem11(4:ny-3)=bsjy
-    eem11 = -xcst*eem11
-    !
-    !DIAG INF 3
-    qqm11(1     )=zero
-    qqm11(ny    )=two*csjy
-    qqm11(2     )=zero
-    qqm11(ny-1  )=csjy
-    qqm11(3     )=zero
-    qqm11(ny-2  )=csjy
-    qqm11(4:ny-3)=csjy
-    qqm11 = -xcst*qqm11
+!!! NCL = 1, npaire=1, neumann imposé, fonction paire
+     !
+     ! DIAG
+     aam11(1     )=-two*(asjy+bsjy+csjy)
+     aam11(ny    )=aam11(1)
+     aam11(2     )=-two*asjy-bsjy-two*csjy
+     aam11(ny-1  )=aam11(2)
+     aam11(3:ny-2)=-two*(asjy+bsjy+csjy)
+     if (istret==0) then
+        aam11 = one - xcst*aam11
+     else
+        aam11 = one/pp2y - xcst*aam11
+     endif
+     !
+     !DIAG SUP 1
+     bbm11(1     )=two*asjy
+     bbm11(ny    )=zero
+     bbm11(2     )=asjy+csjy
+     bbm11(ny-1  )=asjy
+     bbm11(3     )=asjy
+     bbm11(ny-2  )=asjy+csjy
+     bbm11(4:ny-3)=asjy
+     if (istret==0) then
+        bbm11 = alsajy - xcst*bbm11
+     else
+        bbm11(1:ny-1) = alsajy/pp2y(2:ny) - xcst*bbm11(1:ny-1)
+     endif
+     !CL sur bbm11
+     if (istret==0) then
+        bbm11(1 )=bbm11(1)+alsajy
+     else
+        bbm11(1 )=bbm11(1)+alsajy/pp2y(2)
+     endif
+     bbm11(ny)=zero
+     !
+     !DIAG SUP 2
+     ccm11(1     )=two*bsjy
+     ccm11(ny    )=zero
+     ccm11(2     )=bsjy
+     ccm11(ny-1  )=zero
+     ccm11(3     )=bsjy
+     ccm11(ny-2  )=bsjy
+     ccm11(4:ny-3)=bsjy
+     ccm11 = -xcst*ccm11
+     !
+     !DIAG SUP 3
+     rrm11(1     )=two*csjy
+     rrm11(ny    )=zero
+     rrm11(2     )=csjy
+     rrm11(ny-1  )=zero
+     rrm11(3     )=csjy
+     rrm11(ny-2  )=zero
+     rrm11(4:ny-3)=csjy
+     rrm11 = -xcst*rrm11
+     !
+     !DIAG INF 1
+     ddm11(1     )=zero
+     ddm11(ny    )=two*asjy
+     ddm11(2     )=asjy
+     ddm11(ny-1  )=asjy+csjy
+     ddm11(3     )=asjy+csjy
+     ddm11(ny-2  )=asjy
+     ddm11(4:ny-3)=asjy
+     if (istret==0) then
+        ddm11 = alsajy - xcst*ddm11
+     else
+        ddm11(2:ny) = alsajy/pp2y(1:ny-1) - xcst*ddm11(2:ny)
+     endif
+     !CL sur ddm11
+     ddm11(1 )=zero
+     if (istret==0) then
+        ddm11(ny)=ddm11(ny)+alsajy!a1
+     else
+        ddm11(ny)=ddm11(ny)+alsajy/pp2y(ny-1)!a1
+     endif
+     !
+     !DIAG INF 2
+     eem11(1     )=zero
+     eem11(ny    )=two*bsjy
+     eem11(2     )=zero
+     eem11(ny-1  )=bsjy
+     eem11(3     )=bsjy
+     eem11(ny-2  )=bsjy
+     eem11(4:ny-3)=bsjy
+     eem11 = -xcst*eem11
+     !
+     !DIAG INF 3
+     qqm11(1     )=zero
+     qqm11(ny    )=two*csjy
+     qqm11(2     )=zero
+     qqm11(ny-1  )=csjy
+     qqm11(3     )=zero
+     qqm11(ny-2  )=csjy
+     qqm11(4:ny-3)=csjy
+     qqm11 = -xcst*qqm11
 
-  !!! NXL = 0
-    !DIAG
-    if (istret==0) then
-       aam0 = one-xcst*(-two*(asjy+bsjy+csjy))
-    else
-       aam0 = one/pp2y-xcst*(-two*(asjy+bsjy+csjy))
-    endif
-    !
-    !DIAG SUP 1
-    if (istret==0) then
-       bbm0 = alsajy-xcst*asjy
-    else
-       bbm0(1:ny-1) = alsajy/pp2y(2:ny) -xcst*asjy
-       bbm0(ny) = alsajy/pp2y(1) -xcst*asjy
-    endif
-    !
-    !DIAG SUP 2
-    ccm0 = -xcst*bsjy
-    !
-    !DIAG SUP 3
-    rrm0 = -xcst*csjy
-    !
-    !DIAG INF 1
-    if (istret==0) then
-       ddm0=bbm0
-    else
-       ddm0(1) = alsajy/pp2y(ny) -xcst*asjy
-       ddm0(2:ny) = alsajy/pp2y(1:ny-1) -xcst*asjy
-    endif
-    !
-    !DIAG INF 2
-    eem0=ccm0
-    !
-    !DIAG INF 3
-    qqm0=rrm0
+!!! NXL = 0
+     !DIAG
+     if (istret==0) then
+        aam0 = one-xcst*(-two*(asjy+bsjy+csjy))
+     else
+        aam0 = one/pp2y-xcst*(-two*(asjy+bsjy+csjy))
+     endif
+     !
+     !DIAG SUP 1
+     if (istret==0) then
+        bbm0 = alsajy-xcst*asjy
+     else
+        bbm0(1:ny-1) = alsajy/pp2y(2:ny) -xcst*asjy
+        bbm0(ny) = alsajy/pp2y(1) -xcst*asjy
+     endif
+     !
+     !DIAG SUP 2
+     ccm0 = -xcst*bsjy
+     !
+     !DIAG SUP 3
+     rrm0 = -xcst*csjy
+     !
+     !DIAG INF 1
+     if (istret==0) then
+        ddm0=bbm0
+     else
+        ddm0(1) = alsajy/pp2y(ny) -xcst*asjy
+        ddm0(2:ny) = alsajy/pp2y(1:ny-1) -xcst*asjy
+     endif
+     !
+     !DIAG INF 2
+     eem0=ccm0
+     !
+     !DIAG INF 3
+     qqm0=rrm0
   endif
 
   if (isecondder.ne.5) then
-    call ludecomp7(aam,bbm,ccm,ddm,eem,qqm,ggm,hhm,ssm,rrm,&
-         vvm,wwm,zzm,ny)
-    call ludecomp7(aam10,bbm10,ccm10,ddm10,eem10,qqm10,ggm10,hhm10,ssm10,rrm10,&
-         vvm10,wwm10,zzm10,ny)
-    call ludecomp7(aam11,bbm11,ccm11,ddm11,eem11,qqm11,ggm11,hhm11,ssm11,rrm11,&
-         vvm11,wwm11,zzm11,ny)
-    call ludecomp7(aam0,bbm0,ccm0,ddm0,eem0,qqm0,ggm0,hhm0,ssm0,rrm0,&
-         vvm0,wwm0,zzm0,l1m,l2m,l3m,u1m,u2m,u3m,ny)
+     call ludecomp7(aam,bbm,ccm,ddm,eem,qqm,ggm,hhm,ssm,rrm,&
+          vvm,wwm,zzm,ny)
+     call ludecomp7(aam10,bbm10,ccm10,ddm10,eem10,qqm10,ggm10,hhm10,ssm10,rrm10,&
+          vvm10,wwm10,zzm10,ny)
+     call ludecomp7(aam11,bbm11,ccm11,ddm11,eem11,qqm11,ggm11,hhm11,ssm11,rrm11,&
+          vvm11,wwm11,zzm11,ny)
+     call ludecomp7(aam0,bbm0,ccm0,ddm0,eem0,qqm0,ggm0,hhm0,ssm0,rrm0,&
+          vvm0,wwm0,zzm0,l1m,l2m,l3m,u1m,u2m,u3m,ny)
   else
-    call ludecomp9(aam,bbm,ccm,ddm,eem,qqm,ggm,hhm,ssm,rrm,vvm,wwm,zzm,ttm,uum,sssm,zzzm,ny)
+     call ludecomp9(aam,bbm,ccm,ddm,eem,qqm,ggm,hhm,ssm,rrm,vvm,wwm,zzm,ttm,uum,sssm,zzzm,ny)
   endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -2056,9 +2056,9 @@ subroutine scalarimp(ux1,uy1,uz1,phi1,dphi1,is)
   !parametres CL
   real(mytype) :: x,y,z,r,lambda,phislbda,adiab,tjet,liss
 
-!#ifdef my_mod_solide
+  !#ifdef my_mod_solide
   real(mytype),dimension(ysize(1),2,ysize(3)) :: mytmptemp
-!#endif
+  !#endif
 
   tg1=zero;th1=zero;ti1=zero;td1=zero
   ta2=zero;tb2=zero;tc2=zero;td2=zero
@@ -2202,38 +2202,38 @@ subroutine scalarimp(ux1,uy1,uz1,phi1,dphi1,is)
   call transpose_x_to_y(phi1,phi2)
   call transpose_x_to_y(td1,ta2)
 
-!#ifdef my_mod_solide
+  !#ifdef my_mod_solide
   !mytmptemp(:,1,:)=phi2(:,1,:)
   !mytmptemp(:,2,:)=phi2(:,ysize(2),:)
-!#endif
+  !#endif
 
   !ta2: A.T_hat
   !td2:(A+xcstB).Tn
   if (isecondder.ne.5) then
-    call multmatrix7T(td2,ta2,phi2)
+     call multmatrix7T(td2,ta2,phi2)
   else
-    call multmatrix9T(td2,ta2,phi2)
+     call multmatrix9T(td2,ta2,phi2)
   endif
   !right hand side
   ta2(:,:,:) = ta2(:,:,:) + td2(:,:,:)
   !if (ncly1==2) then
-!#ifdef my_mod_solide
-     !ta2(:,1,:) = 0.5*(mytmptemp(:,1,:)+temp_bot(:,ny_sol_bot+3,:))
-     !ta2(:,ysize(2),:) = 0.5*(mytmptemp(:,2,:)+temp_top(:,1,:))
+  !#ifdef my_mod_solide
+  !ta2(:,1,:) = 0.5*(mytmptemp(:,1,:)+temp_bot(:,ny_sol_bot+3,:))
+  !ta2(:,ysize(2),:) = 0.5*(mytmptemp(:,2,:)+temp_top(:,1,:))
 
-!#else
-     !ta2(:,1       ,:)=1.!g_0
-     !ta2(:,ysize(2),:)=1.!g_n
-!#endif
+  !#else
+  !ta2(:,1       ,:)=1.!g_0
+  !ta2(:,ysize(2),:)=1.!g_n
+  !#endif
   !endif
 
   if (nclyS1.eq.2) then
-    ta2(:,1       ,:)=one
+     ta2(:,1       ,:)=one
   endif
 
   if (nclySn.eq.2) then
-    !ta2(:,ysize(2),:)=one
-    ta2(:,ysize(2),:)=zero
+     !ta2(:,ysize(2),:)=one
+     ta2(:,ysize(2),:)=zero
   endif
 
   !Inversion systeme lineaire Mx=b: (A-xcst.B)u^n+1=uhat+(A+xcst.B)u^n
@@ -2243,20 +2243,20 @@ subroutine scalarimp(ux1,uy1,uz1,phi1,dphi1,is)
   elseif (ncly1==1) then
      call septinv(phi2,ta2,ggmt1,hhmt1,ssmt1,rrmt1,vvmt1,wwmt1,zzmt1,ysize(1),ysize(2),ysize(3))
   elseif (ncly1==2) then
-    if (isecondder.ne.5) then
-      call septinv(phi2,ta2,ggmt,hhmt,ssmt,rrmt,vvmt,wwmt,zzmt,ysize(1),ysize(2),ysize(3))
-    else
-      call nonainv(phi2,ta2,ggmt,hhmt,ssmt,sssmt,ttmt,zzzmt,zzmt,wwmt,vvmt,ysize(1),ysize(2),ysize(3))
-    endif
+     if (isecondder.ne.5) then
+        call septinv(phi2,ta2,ggmt,hhmt,ssmt,rrmt,vvmt,wwmt,zzmt,ysize(1),ysize(2),ysize(3))
+     else
+        call nonainv(phi2,ta2,ggmt,hhmt,ssmt,sssmt,ttmt,zzzmt,zzmt,wwmt,vvmt,ysize(1),ysize(2),ysize(3))
+     endif
   endif
 
-!#ifdef my_mod_solide
+  !#ifdef my_mod_solide
   !call dery (tc2,phi2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0) ! npaire=0
   !cl_bot(:,1,:)=tc2(:,1       ,:)
   !cl_top(:,1,:)=tc2(:,ysize(2),:)
 
   !call update_temp_solide()
-!#endif
+  !#endif
 
   call transpose_y_to_x(phi2,phi1)
 
@@ -2507,118 +2507,118 @@ subroutine multmatrix9T(td2,ta2,ux2)
 
   !A.uhat
 
-     if (istret.ne.0) then
-        do j=1,ysize(2)
-           ta2(:,j,:)=ta2(:,j,:)/pp2y(j)
-        enddo
-     endif
+  if (istret.ne.0) then
+     do j=1,ysize(2)
+        ta2(:,j,:)=ta2(:,j,:)/pp2y(j)
+     enddo
+  endif
 
-     if (ncly1.eq.0) then
+  if (ncly1.eq.0) then
 
-        td2(:,1,:) = alsajyt*ta2(:,2,:) + ta2(:,1,:) + alsajyt*ta2(:,ysize(2),:)
-        do j=2,ysize(2)-1
-           td2(:,j,:) = alsajyt*ta2(:,j-1,:) + ta2(:,j,:) + alsajyt*ta2(:,j+1,:)
-        enddo
-        td2(:,ysize(2),:) = alsajyt*ta2(:,ysize(2)-1,:) + ta2(:,ysize(2),:) + alsajyt*ta2(:,1,:)
-        ta2=td2
+     td2(:,1,:) = alsajyt*ta2(:,2,:) + ta2(:,1,:) + alsajyt*ta2(:,ysize(2),:)
+     do j=2,ysize(2)-1
+        td2(:,j,:) = alsajyt*ta2(:,j-1,:) + ta2(:,j,:) + alsajyt*ta2(:,j+1,:)
+     enddo
+     td2(:,ysize(2),:) = alsajyt*ta2(:,ysize(2)-1,:) + ta2(:,ysize(2),:) + alsajyt*ta2(:,1,:)
+     ta2=td2
 
-     elseif (ncly1.eq.1) then
+  elseif (ncly1.eq.1) then
 
-        !      td2(:,1,:) = 2.*alsajyt*ta2(:,2,:) + ta2(:,1,:) ! npaire=1
-        td2(:,1,:) = ta2(:,1,:) ! npaire=0
-        do j=2,ysize(2)-1
-           td2(:,j,:) = alsajyt*ta2(:,j-1,:) + ta2(:,j,:) + alsajyt*ta2(:,j+1,:)
-        enddo
-        !      td2(:,ysize(2),:) = 2.*alsajyt*ta2(:,ysize(2)-1,:) + ta2(:,ysize(2),:) ! npaire=1
-        td2(:,ysize(2),:) = ta2(:,ysize(2),:) ! npaire=0
-        ta2=td2
+     !      td2(:,1,:) = 2.*alsajyt*ta2(:,2,:) + ta2(:,1,:) ! npaire=1
+     td2(:,1,:) = ta2(:,1,:) ! npaire=0
+     do j=2,ysize(2)-1
+        td2(:,j,:) = alsajyt*ta2(:,j-1,:) + ta2(:,j,:) + alsajyt*ta2(:,j+1,:)
+     enddo
+     !      td2(:,ysize(2),:) = 2.*alsajyt*ta2(:,ysize(2)-1,:) + ta2(:,ysize(2),:) ! npaire=1
+     td2(:,ysize(2),:) = ta2(:,ysize(2),:) ! npaire=0
+     ta2=td2
 
-     elseif (ncly1.eq.2) then
+  elseif (ncly1.eq.2) then
 
-        td2(:,1,:) = zero
-        td2(:,2,:) = alsa2y*ta2(:,1,:) + ta2(:,2,:) + alsa2y*ta2(:,3,:)
-        td2(:,3,:) = alsa3y*ta2(:,2,:) + ta2(:,3,:) + alsa3y*ta2(:,4,:)
-        td2(:,4,:) = alsa4y*ta2(:,3,:) + ta2(:,4,:) + alsa4y*ta2(:,5,:)
-        do j=5,ysize(2)-4
-           td2(:,j,:) = alsajy*ta2(:,j-1,:) + ta2(:,j,:) + alsajy*ta2(:,j+1,:)
-        enddo
-        td2(:,ysize(2)-3,:) = alsatty*ta2(:,ysize(2)-4,:) + ta2(:,ysize(2)-3,:) + alsatty*ta2(:,ysize(2)-2,:)
-        td2(:,ysize(2)-2,:) = alsaty*ta2(:,ysize(2)-3,:) + ta2(:,ysize(2)-2,:) + alsaty*ta2(:,ysize(2)-1,:)
-        td2(:,ysize(2)-1,:) = alsamy*ta2(:,ysize(2)-2,:) + ta2(:,ysize(2)-1,:) + alsamy*ta2(:,ysize(2),:)
-        td2(:,ysize(2),:) = zero
-        ta2=td2
+     td2(:,1,:) = zero
+     td2(:,2,:) = alsa2y*ta2(:,1,:) + ta2(:,2,:) + alsa2y*ta2(:,3,:)
+     td2(:,3,:) = alsa3y*ta2(:,2,:) + ta2(:,3,:) + alsa3y*ta2(:,4,:)
+     td2(:,4,:) = alsa4y*ta2(:,3,:) + ta2(:,4,:) + alsa4y*ta2(:,5,:)
+     do j=5,ysize(2)-4
+        td2(:,j,:) = alsajy*ta2(:,j-1,:) + ta2(:,j,:) + alsajy*ta2(:,j+1,:)
+     enddo
+     td2(:,ysize(2)-3,:) = alsatty*ta2(:,ysize(2)-4,:) + ta2(:,ysize(2)-3,:) + alsatty*ta2(:,ysize(2)-2,:)
+     td2(:,ysize(2)-2,:) = alsaty*ta2(:,ysize(2)-3,:) + ta2(:,ysize(2)-2,:) + alsaty*ta2(:,ysize(2)-1,:)
+     td2(:,ysize(2)-1,:) = alsamy*ta2(:,ysize(2)-2,:) + ta2(:,ysize(2)-1,:) + alsamy*ta2(:,ysize(2),:)
+     td2(:,ysize(2),:) = zero
+     ta2=td2
 
-     endif
+  endif
 
   !(A+nu*dt.B).un
 
-     if (ncly1.eq.0) then
+  if (ncly1.eq.0) then
 
-        call deryyt(td2,ux2,di2,sy,sfyt,ssyt,swyt,ysize(1),ysize(2),ysize(3),0)
+     call deryyt(td2,ux2,di2,sy,sfyt,ssyt,swyt,ysize(1),ysize(2),ysize(3),0)
 
-     elseif (ncly1.eq.1) then
+  elseif (ncly1.eq.1) then
 
-        !      call deryyt(td2,ux2,di2,sy,sfypt,ssypt,swypt,ysize(1),ysize(2),ysize(3),1) ! npaire=1
-        call deryyt(td2,ux2,di2,sy,sfyt,ssyt,swyt,ysize(1),ysize(2),ysize(3),0) ! npaire=0
+     !      call deryyt(td2,ux2,di2,sy,sfypt,ssypt,swypt,ysize(1),ysize(2),ysize(3),1) ! npaire=1
+     call deryyt(td2,ux2,di2,sy,sfyt,ssyt,swyt,ysize(1),ysize(2),ysize(3),0) ! npaire=0
 
-     elseif (ncly1.eq.2) then
+  elseif (ncly1.eq.2) then
 
-        call deryyt(td2,ux2,di2,sy,sfyt,ssyt,swyt,ysize(1),ysize(2),ysize(3),0)
+     call deryyt(td2,ux2,di2,sy,sfyt,ssyt,swyt,ysize(1),ysize(2),ysize(3),0)
 
-     endif
+  endif
 
-     if (istret.ne.0) then
-        do j=1,ysize(2)
-           ux2(:,j,:)=ux2(:,j,:)/pp2y(j)
-        enddo
-     endif
+  if (istret.ne.0) then
+     do j=1,ysize(2)
+        ux2(:,j,:)=ux2(:,j,:)/pp2y(j)
+     enddo
+  endif
 
-     if (ncly1.eq.0) then
+  if (ncly1.eq.0) then
 
-        td2(:,1,:) = alsajyt*ux2(:,2,:) + ux2(:,1,:) + alsajyt*ux2(:,ysize(2),:) &
-             + xcst_pr*td2(:,1,:)
-        do j=2,ysize(2)-1
-           td2(:,j,:) = alsajyt*ux2(:,j-1,:) + ux2(:,j,:) + alsajyt*ux2(:,j+1,:) &
-                + xcst_pr*td2(:,j,:)
-        enddo
-        td2(:,ysize(2),:) = alsajyt*ux2(:,ysize(2)-1,:) + ux2(:,ysize(2),:) + alsajyt*ux2(:,1,:) &
-             + xcst_pr*td2(:,ysize(2),:)
+     td2(:,1,:) = alsajyt*ux2(:,2,:) + ux2(:,1,:) + alsajyt*ux2(:,ysize(2),:) &
+          + xcst_pr*td2(:,1,:)
+     do j=2,ysize(2)-1
+        td2(:,j,:) = alsajyt*ux2(:,j-1,:) + ux2(:,j,:) + alsajyt*ux2(:,j+1,:) &
+             + xcst_pr*td2(:,j,:)
+     enddo
+     td2(:,ysize(2),:) = alsajyt*ux2(:,ysize(2)-1,:) + ux2(:,ysize(2),:) + alsajyt*ux2(:,1,:) &
+          + xcst_pr*td2(:,ysize(2),:)
 
-     elseif (ncly1.eq.1) then
+  elseif (ncly1.eq.1) then
 
-        !      td2(:,1,:) = 2.*alsajyt*ux2(:,2,:) + ux2(:,1,:) & ! npaire=1
-        td2(:,1,:) = ux2(:,1,:) & ! npaire=0
-             + xcst_pr*td2(:,1,:)
-        do j=2,ysize(2)-1
-           td2(:,j,:) = alsajyt*ux2(:,j-1,:) + ux2(:,j,:) + alsajyt*ux2(:,j+1,:) &
-                + xcst_pr*td2(:,j,:)
-        enddo
-        !      td2(:,ysize(2),:) = 2.*alsajyt*ux2(:,ysize(2)-1,:) + ux2(:,ysize(2),:) & ! npaire=1
-        td2(:,ysize(2),:) = ux2(:,ysize(2),:) & ! npaire=0
-             + xcst_pr*td2(:,ysize(2),:)
+     !      td2(:,1,:) = 2.*alsajyt*ux2(:,2,:) + ux2(:,1,:) & ! npaire=1
+     td2(:,1,:) = ux2(:,1,:) & ! npaire=0
+          + xcst_pr*td2(:,1,:)
+     do j=2,ysize(2)-1
+        td2(:,j,:) = alsajyt*ux2(:,j-1,:) + ux2(:,j,:) + alsajyt*ux2(:,j+1,:) &
+             + xcst_pr*td2(:,j,:)
+     enddo
+     !      td2(:,ysize(2),:) = 2.*alsajyt*ux2(:,ysize(2)-1,:) + ux2(:,ysize(2),:) & ! npaire=1
+     td2(:,ysize(2),:) = ux2(:,ysize(2),:) & ! npaire=0
+          + xcst_pr*td2(:,ysize(2),:)
 
-     elseif (ncly1.eq.2) then
+  elseif (ncly1.eq.2) then
 
-        td2(:,1,:) = zero
-        td2(:,2,:) = alsa2y*ux2(:,1,:) + ux2(:,2,:) + alsa2y*ux2(:,3,:) &
-             + xcst*td2(:,2,:)
-        td2(:,3,:) = alsa3y*ux2(:,2,:) + ux2(:,3,:) + alsa3y*ux2(:,4,:) &
-             + xcst*td2(:,3,:)
-        td2(:,4,:) = alsa4y*ux2(:,3,:) + ux2(:,4,:) + alsa4y*ux2(:,5,:) &
-             + xcst*td2(:,4,:)
-        do j=5,ysize(2)-4
-           td2(:,j,:) = alsajy*ux2(:,j-1,:) + ux2(:,j,:) + alsajy*ux2(:,j+1,:) &
-                + xcst*td2(:,j,:)
-        enddo
-        td2(:,ysize(2)-3,:) = alsatty*ux2(:,ysize(2)-4,:) + ux2(:,ysize(2)-3,:) + alsatty*ux2(:,ysize(2)-2,:) &
-                          + xcst*td2(:,ysize(2)-3,:)
-        td2(:,ysize(2)-2,:) = alsaty*ux2(:,ysize(2)-3,:) + ux2(:,ysize(2)-2,:) + alsaty*ux2(:,ysize(2)-1,:) &
-             + xcst*td2(:,ysize(2)-2,:)
-        td2(:,ysize(2)-1,:) = alsamy*ux2(:,ysize(2)-2,:) + ux2(:,ysize(2)-1,:) + alsamy*ux2(:,ysize(2),:) &
-             + xcst*td2(:,ysize(2)-1,:)
-        td2(:,ysize(2),:) = zero
+     td2(:,1,:) = zero
+     td2(:,2,:) = alsa2y*ux2(:,1,:) + ux2(:,2,:) + alsa2y*ux2(:,3,:) &
+          + xcst*td2(:,2,:)
+     td2(:,3,:) = alsa3y*ux2(:,2,:) + ux2(:,3,:) + alsa3y*ux2(:,4,:) &
+          + xcst*td2(:,3,:)
+     td2(:,4,:) = alsa4y*ux2(:,3,:) + ux2(:,4,:) + alsa4y*ux2(:,5,:) &
+          + xcst*td2(:,4,:)
+     do j=5,ysize(2)-4
+        td2(:,j,:) = alsajy*ux2(:,j-1,:) + ux2(:,j,:) + alsajy*ux2(:,j+1,:) &
+             + xcst*td2(:,j,:)
+     enddo
+     td2(:,ysize(2)-3,:) = alsatty*ux2(:,ysize(2)-4,:) + ux2(:,ysize(2)-3,:) + alsatty*ux2(:,ysize(2)-2,:) &
+          + xcst*td2(:,ysize(2)-3,:)
+     td2(:,ysize(2)-2,:) = alsaty*ux2(:,ysize(2)-3,:) + ux2(:,ysize(2)-2,:) + alsaty*ux2(:,ysize(2)-1,:) &
+          + xcst*td2(:,ysize(2)-2,:)
+     td2(:,ysize(2)-1,:) = alsamy*ux2(:,ysize(2)-2,:) + ux2(:,ysize(2)-1,:) + alsamy*ux2(:,ysize(2),:) &
+          + xcst*td2(:,ysize(2)-1,:)
+     td2(:,ysize(2),:) = zero
 
-     endif
+  endif
 
 
 end subroutine multmatrix9T
@@ -3832,742 +3832,742 @@ subroutine scalar_schemes(fpi2t,is)
 
   if (isecondder.ne.5) then
 
-      !!!!!!!!!!!!!!!!!!!!!!
-    !7-DIAG !!
-    !!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!
+     !7-DIAG !!
+!!!!!!!!!!!!!!!!!!!!!!
 
-    !!! NCL = 2, dirichlet imposé, fonction nulle à la paroi
-    !
-    !DIAG
-    aamt(1     )=as1y
-    aamt(ny    )=asny
-    aamt(2     )=-two*as2y
-    aamt(ny-1  )=-two*asmy
-    aamt(3     )=-two*(as3y+bs3y)
-    aamt(ny-2  )=-two*(asty+bsty)
-    aamt(4:ny-3)=-two*(asjyt+bsjyt+csjyt)
-    if (istret==0) then
-       aamt = one-xcst_pr*aamt
-    else
-       aamt = one/pp2y-xcst_pr*aamt
-    endif
-    !CL sur aamt
-    if (istret==0) then
-       aamt(1 )=one!alpha_0+beta_0*(11./6./dy)
-       aamt(ny)=one!alpha_n+beta_n*(11./6./dy)
-    else
-       aamt(1 )=one!alpha_0+beta_0*ppy(1 )*(11./6./dy)
-       aamt(ny)=one!alpha_n+beta_n*ppy(ny)*(11./6./dy)
-    endif
-    !
-    !DIAG SUP 1
-    bbmt(1     )=bs1y
-    bbmt(ny    )=bsny
-    bbmt(2     )=as2y
-    bbmt(ny-1  )=asmy
-    bbmt(3     )=as3y
-    bbmt(ny-2  )=asty
-    bbmt(4:ny-3)=asjyt
-    bbmt = -xcst_pr*bbmt
-    if (istret==0) then
-      bbmt(2     )=bbmt(2     )+alsa2y
-      bbmt(ny-1  )=bbmt(ny-1  )+alsamy
-      bbmt(3     )=bbmt(3     )+alsa3y
-      bbmt(ny-2  )=bbmt(ny-2  )+alsaty
-      bbmt(4:ny-3)=bbmt(4:ny-3)+alsajyt
-    else
-      bbmt(2     )=bbmt(2     )+alsa2y/pp2y(3)
-      bbmt(ny-1  )=bbmt(ny-1  )+alsamy/pp2y(ny)
-      bbmt(3     )=bbmt(3     )+alsa3y/pp2y(4)
-      bbmt(ny-2  )=bbmt(ny-2  )+alsaty/pp2y(ny-1)
-      bbmt(4:ny-3)=bbmt(4:ny-3)+alsajyt/pp2y(5:ny-2)
-    endif
-    !CL sur bbmt
-    if (istret==0) then
-       bbmt(1 )=zero!beta_0*(-18./6./dy)
-       bbmt(ny)=zero
-    else
-       bbmt(1 )=zero!beta_0*ppy(1)*(-18./6./dy)
-       bbmt(ny)=zero
-    endif
-    !
-    !DIAG SUP 2
-    ccmt(1     )=cs1y
-    ccmt(ny    )=csny
-    ccmt(2     )=zero
-    ccmt(ny-1  )=zero
-    ccmt(3     )=bs3y
-    ccmt(ny-2  )=bsty
-    ccmt(4:ny-3)=bsjyt
-    ccmt = -xcst_pr*ccmt
-    !CL sur ccmt
-    if (istret==0) then
-       ccmt(1 )=zero!beta_0*(9./6./dy)
-       ccmt(ny)=zero
-    else
-       ccmt(1 )=zero!beta_0*ppy(1)*(9./6./dy)
-       ccmt(ny)=zero
-    endif
-    !
-    !DIAG SUP 3
-    rrmt(1     )=ds1y
-    rrmt(ny    )=dsny
-    rrmt(2     )=zero
-    rrmt(ny-1  )=zero
-    rrmt(3     )=zero
-    rrmt(ny-2  )=zero
-    rrmt(4:ny-3)=csjyt
-    rrmt = -xcst_pr*rrmt
-    !CL sur rrmt
-    if (istret==0) then
-       rrmt(1 )=zero!beta_0*(-2./6./dy)
-       rrmt(ny)=zero
-    else
-       rrmt(1 )=zero!beta_0*ppy(1)*(-2./6./dy)
-       rrmt(ny)=zero
-    endif
-    !
-    !DIAG INF 1
-    if (istret==0) then
-      ddmt=bbmt
-    else
-      ddmt(1     )=bs1y
-      ddmt(ny    )=bsny
-      ddmt(2     )=as2y
-      ddmt(ny-1  )=asmy
-      ddmt(3     )=as3y
-      ddmt(ny-2  )=asty
-      ddmt(4:ny-3)=asjyt
-      ddmt = -xcst_pr*ddmt
-      ddmt(2     )=ddmt(2     )+alsa2y/pp2y(1)
-      ddmt(ny-1  )=ddmt(ny-1  )+alsamy/pp2y(ny-2)
-      ddmt(3     )=ddmt(3     )+alsa3y/pp2y(2)
-      ddmt(ny-2  )=ddmt(ny-2  )+alsaty/pp2y(ny-3)
-      ddmt(4:ny-3)=ddmt(4:ny-3)+alsajyt/pp2y(3:ny-4)
-    endif
-    !CL sur ddmt
-    if (istret==0) then
-       ddmt(1 )=zero
-       ddmt(ny)=zero!beta_n*(-18./6./dy)
-    else
-       ddmt(1 )=zero
-       ddmt(ny)=zero!beta_n*ppy(ny)*(-18./6./dy)
-    endif
-    !
-    !DIAG INF 2
-    eemt=ccmt
-    !CL sur eemt
-    if (istret==0) then
-       eemt(1)=zero
-       eemt(ny)=zero!beta_n*(9./6./dy)
-    else
-       eemt(1)=zero
-       eemt(ny)=zero!beta_n*ppy(ny)*(9./6./dy)
-    endif
-    !
-    !DIAG INF 3
-    qqmt=rrmt
-    !CL sur qqmt
-    if (istret==0) then
-       qqmt(1)=zero
-       qqmt(ny)=zero!beta_n*(-2./6./dy)
-    else
-       qqmt(1)=zero
-       qqmt(ny)=zero!beta_n*ppy(ny)*(-2./6./dy)
-    endif
+!!! NCL = 2, dirichlet imposé, fonction nulle à la paroi
+     !
+     !DIAG
+     aamt(1     )=as1y
+     aamt(ny    )=asny
+     aamt(2     )=-two*as2y
+     aamt(ny-1  )=-two*asmy
+     aamt(3     )=-two*(as3y+bs3y)
+     aamt(ny-2  )=-two*(asty+bsty)
+     aamt(4:ny-3)=-two*(asjyt+bsjyt+csjyt)
+     if (istret==0) then
+        aamt = one-xcst_pr*aamt
+     else
+        aamt = one/pp2y-xcst_pr*aamt
+     endif
+     !CL sur aamt
+     if (istret==0) then
+        aamt(1 )=one!alpha_0+beta_0*(11./6./dy)
+        aamt(ny)=one!alpha_n+beta_n*(11./6./dy)
+     else
+        aamt(1 )=one!alpha_0+beta_0*ppy(1 )*(11./6./dy)
+        aamt(ny)=one!alpha_n+beta_n*ppy(ny)*(11./6./dy)
+     endif
+     !
+     !DIAG SUP 1
+     bbmt(1     )=bs1y
+     bbmt(ny    )=bsny
+     bbmt(2     )=as2y
+     bbmt(ny-1  )=asmy
+     bbmt(3     )=as3y
+     bbmt(ny-2  )=asty
+     bbmt(4:ny-3)=asjyt
+     bbmt = -xcst_pr*bbmt
+     if (istret==0) then
+        bbmt(2     )=bbmt(2     )+alsa2y
+        bbmt(ny-1  )=bbmt(ny-1  )+alsamy
+        bbmt(3     )=bbmt(3     )+alsa3y
+        bbmt(ny-2  )=bbmt(ny-2  )+alsaty
+        bbmt(4:ny-3)=bbmt(4:ny-3)+alsajyt
+     else
+        bbmt(2     )=bbmt(2     )+alsa2y/pp2y(3)
+        bbmt(ny-1  )=bbmt(ny-1  )+alsamy/pp2y(ny)
+        bbmt(3     )=bbmt(3     )+alsa3y/pp2y(4)
+        bbmt(ny-2  )=bbmt(ny-2  )+alsaty/pp2y(ny-1)
+        bbmt(4:ny-3)=bbmt(4:ny-3)+alsajyt/pp2y(5:ny-2)
+     endif
+     !CL sur bbmt
+     if (istret==0) then
+        bbmt(1 )=zero!beta_0*(-18./6./dy)
+        bbmt(ny)=zero
+     else
+        bbmt(1 )=zero!beta_0*ppy(1)*(-18./6./dy)
+        bbmt(ny)=zero
+     endif
+     !
+     !DIAG SUP 2
+     ccmt(1     )=cs1y
+     ccmt(ny    )=csny
+     ccmt(2     )=zero
+     ccmt(ny-1  )=zero
+     ccmt(3     )=bs3y
+     ccmt(ny-2  )=bsty
+     ccmt(4:ny-3)=bsjyt
+     ccmt = -xcst_pr*ccmt
+     !CL sur ccmt
+     if (istret==0) then
+        ccmt(1 )=zero!beta_0*(9./6./dy)
+        ccmt(ny)=zero
+     else
+        ccmt(1 )=zero!beta_0*ppy(1)*(9./6./dy)
+        ccmt(ny)=zero
+     endif
+     !
+     !DIAG SUP 3
+     rrmt(1     )=ds1y
+     rrmt(ny    )=dsny
+     rrmt(2     )=zero
+     rrmt(ny-1  )=zero
+     rrmt(3     )=zero
+     rrmt(ny-2  )=zero
+     rrmt(4:ny-3)=csjyt
+     rrmt = -xcst_pr*rrmt
+     !CL sur rrmt
+     if (istret==0) then
+        rrmt(1 )=zero!beta_0*(-2./6./dy)
+        rrmt(ny)=zero
+     else
+        rrmt(1 )=zero!beta_0*ppy(1)*(-2./6./dy)
+        rrmt(ny)=zero
+     endif
+     !
+     !DIAG INF 1
+     if (istret==0) then
+        ddmt=bbmt
+     else
+        ddmt(1     )=bs1y
+        ddmt(ny    )=bsny
+        ddmt(2     )=as2y
+        ddmt(ny-1  )=asmy
+        ddmt(3     )=as3y
+        ddmt(ny-2  )=asty
+        ddmt(4:ny-3)=asjyt
+        ddmt = -xcst_pr*ddmt
+        ddmt(2     )=ddmt(2     )+alsa2y/pp2y(1)
+        ddmt(ny-1  )=ddmt(ny-1  )+alsamy/pp2y(ny-2)
+        ddmt(3     )=ddmt(3     )+alsa3y/pp2y(2)
+        ddmt(ny-2  )=ddmt(ny-2  )+alsaty/pp2y(ny-3)
+        ddmt(4:ny-3)=ddmt(4:ny-3)+alsajyt/pp2y(3:ny-4)
+     endif
+     !CL sur ddmt
+     if (istret==0) then
+        ddmt(1 )=zero
+        ddmt(ny)=zero!beta_n*(-18./6./dy)
+     else
+        ddmt(1 )=zero
+        ddmt(ny)=zero!beta_n*ppy(ny)*(-18./6./dy)
+     endif
+     !
+     !DIAG INF 2
+     eemt=ccmt
+     !CL sur eemt
+     if (istret==0) then
+        eemt(1)=zero
+        eemt(ny)=zero!beta_n*(9./6./dy)
+     else
+        eemt(1)=zero
+        eemt(ny)=zero!beta_n*ppy(ny)*(9./6./dy)
+     endif
+     !
+     !DIAG INF 3
+     qqmt=rrmt
+     !CL sur qqmt
+     if (istret==0) then
+        qqmt(1)=zero
+        qqmt(ny)=zero!beta_n*(-2./6./dy)
+     else
+        qqmt(1)=zero
+        qqmt(ny)=zero!beta_n*ppy(ny)*(-2./6./dy)
+     endif
 
-    !!! NCL = 1, npaire=0, dirichlet imposé, fonction impaire
-    !
-    ! DIAG
-    aamt10(1     )=zero
-    aamt10(ny    )=zero
-    aamt10(2     )=-two*asjyt-three*bsjyt-two*csjyt
-    aamt10(ny-1  )=aamt10(2)
-    aamt10(3:ny-2)=-two*(asjyt+bsjyt+csjyt)
-    if (istret==0) then
-       aamt10 = one - xcst_pr*aamt10
-    else
-       aamt10 = one/pp2y - xcst_pr*aamt10
-    endif
-    !
-    !DIAG SUP 1
-    bbmt10(1     )=zero
-    bbmt10(ny    )=zero
-    bbmt10(2     )=asjyt-csjyt
-    bbmt10(ny-1  )=asjyt
-    bbmt10(3     )=asjyt
-    bbmt10(ny-2  )=asjyt-csjyt
-    bbmt10(4:ny-3)=asjyt
-    if (istret==0) then
-       bbmt10 = alsajyt - xcst_pr*bbmt10
-    else
-       bbmt10(2:ny-1) = alsajyt/pp2y(3:ny) - xcst_pr*bbmt10(2:ny-1)
-    endif
-    !CL sur bbm10t
-    bbmt10(1 )=zero
-    bbmt10(ny)=zero
-    !
-    !DIAG SUP 2
-    ccmt10(1     )=zero
-    ccmt10(ny    )=zero
-    ccmt10(2     )=bsjyt
-    ccmt10(ny-1  )=zero
-    ccmt10(3     )=bsjyt
-    ccmt10(ny-2  )=bsjyt
-    ccmt10(4:ny-3)=bsjyt
-    ccmt10 = -xcst_pr*ccmt10
-    !
-    !DIAG SUP 3
-    rrmt10(1     )=zero
-    rrmt10(ny    )=zero
-    rrmt10(2     )=csjyt
-    rrmt10(ny-1  )=zero
-    rrmt10(3     )=csjyt
-    rrmt10(ny-2  )=zero
-    rrmt10(4:ny-3)=csjyt
-    rrmt10 = -xcst_pr*rrmt10
-    !
-    !DIAG INF 1
-    ddmt10(1     )=zero
-    ddmt10(ny    )=zero
-    ddmt10(2     )=asjyt
-    ddmt10(ny-1  )=asjyt-csjyt
-    ddmt10(3     )=asjyt-csjyt
-    ddmt10(ny-2  )=asjyt
-    ddmt10(4:ny-3)=asjyt
-    if (istret==0) then
-       ddmt10 = alsajyt - xcst_pr*ddmt10
-    else
-       ddmt10(2:ny-1) = alsajyt/pp2y(1:ny-2) - xcst_pr*ddmt10(2:ny-1)
-    endif
-    !CL sur ddmt10
-    ddmt10(1 )=zero
-    ddmt10(ny)=zero
-    !
-    !DIAG INF 2
-    eemt10(1     )=zero
-    eemt10(ny    )=zero
-    eemt10(2     )=zero
-    eemt10(ny-1  )=bsjyt
-    eemt10(3     )=bsjyt
-    eemt10(ny-2  )=bsjyt
-    eemt10(4:ny-3)=bsjyt
-    eemt10 = -xcst_pr*eemt10
-    !
-    !DIAG INF 3
-    qqmt10(1     )=zero
-    qqmt10(ny    )=zero
-    qqmt10(2     )=zero
-    qqmt10(ny-1  )=csjyt
-    qqmt10(3     )=zero
-    qqmt10(ny-2  )=csjyt
-    qqmt10(4:ny-3)=csjyt
-    qqmt10 = -xcst_pr*qqmt10
+!!! NCL = 1, npaire=0, dirichlet imposé, fonction impaire
+     !
+     ! DIAG
+     aamt10(1     )=zero
+     aamt10(ny    )=zero
+     aamt10(2     )=-two*asjyt-three*bsjyt-two*csjyt
+     aamt10(ny-1  )=aamt10(2)
+     aamt10(3:ny-2)=-two*(asjyt+bsjyt+csjyt)
+     if (istret==0) then
+        aamt10 = one - xcst_pr*aamt10
+     else
+        aamt10 = one/pp2y - xcst_pr*aamt10
+     endif
+     !
+     !DIAG SUP 1
+     bbmt10(1     )=zero
+     bbmt10(ny    )=zero
+     bbmt10(2     )=asjyt-csjyt
+     bbmt10(ny-1  )=asjyt
+     bbmt10(3     )=asjyt
+     bbmt10(ny-2  )=asjyt-csjyt
+     bbmt10(4:ny-3)=asjyt
+     if (istret==0) then
+        bbmt10 = alsajyt - xcst_pr*bbmt10
+     else
+        bbmt10(2:ny-1) = alsajyt/pp2y(3:ny) - xcst_pr*bbmt10(2:ny-1)
+     endif
+     !CL sur bbm10t
+     bbmt10(1 )=zero
+     bbmt10(ny)=zero
+     !
+     !DIAG SUP 2
+     ccmt10(1     )=zero
+     ccmt10(ny    )=zero
+     ccmt10(2     )=bsjyt
+     ccmt10(ny-1  )=zero
+     ccmt10(3     )=bsjyt
+     ccmt10(ny-2  )=bsjyt
+     ccmt10(4:ny-3)=bsjyt
+     ccmt10 = -xcst_pr*ccmt10
+     !
+     !DIAG SUP 3
+     rrmt10(1     )=zero
+     rrmt10(ny    )=zero
+     rrmt10(2     )=csjyt
+     rrmt10(ny-1  )=zero
+     rrmt10(3     )=csjyt
+     rrmt10(ny-2  )=zero
+     rrmt10(4:ny-3)=csjyt
+     rrmt10 = -xcst_pr*rrmt10
+     !
+     !DIAG INF 1
+     ddmt10(1     )=zero
+     ddmt10(ny    )=zero
+     ddmt10(2     )=asjyt
+     ddmt10(ny-1  )=asjyt-csjyt
+     ddmt10(3     )=asjyt-csjyt
+     ddmt10(ny-2  )=asjyt
+     ddmt10(4:ny-3)=asjyt
+     if (istret==0) then
+        ddmt10 = alsajyt - xcst_pr*ddmt10
+     else
+        ddmt10(2:ny-1) = alsajyt/pp2y(1:ny-2) - xcst_pr*ddmt10(2:ny-1)
+     endif
+     !CL sur ddmt10
+     ddmt10(1 )=zero
+     ddmt10(ny)=zero
+     !
+     !DIAG INF 2
+     eemt10(1     )=zero
+     eemt10(ny    )=zero
+     eemt10(2     )=zero
+     eemt10(ny-1  )=bsjyt
+     eemt10(3     )=bsjyt
+     eemt10(ny-2  )=bsjyt
+     eemt10(4:ny-3)=bsjyt
+     eemt10 = -xcst_pr*eemt10
+     !
+     !DIAG INF 3
+     qqmt10(1     )=zero
+     qqmt10(ny    )=zero
+     qqmt10(2     )=zero
+     qqmt10(ny-1  )=csjyt
+     qqmt10(3     )=zero
+     qqmt10(ny-2  )=csjyt
+     qqmt10(4:ny-3)=csjyt
+     qqmt10 = -xcst_pr*qqmt10
 
-    !!! NCL = 1, npaire=1, neumann imposé, fonction paire
-    !
-    ! DIAG
-    aamt11(1     )=-two*(asjyt+bsjyt+csjyt)
-    aamt11(ny    )=aamt11(1)
-    aamt11(2     )=-two*asjyt-bsjyt-two*csjyt
-    aamt11(ny-1  )=aamt11(2)
-    aamt11(3:ny-2)=-two*(asjyt+bsjyt+csjyt)
-    if (istret==0) then
-       aamt11 = one - xcst_pr*aamt11
-    else
-       aamt11 = one/pp2y - xcst_pr*aamt11
-    endif
-    !
-    !DIAG SUP 1
-    bbmt11(1     )=two*asjyt
-    bbmt11(ny    )=zero
-    bbmt11(2     )=asjyt+csjyt
-    bbmt11(ny-1  )=asjyt
-    bbmt11(3     )=asjyt
-    bbmt11(ny-2  )=asjyt+csjyt
-    bbmt11(4:ny-3)=asjyt
-    if (istret==0) then
-       bbmt11 = alsajyt - xcst_pr*bbmt11
-    else
-       bbmt11(1:ny-1) = alsajyt/pp2y(2:ny) - xcst_pr*bbmt11(1:ny-1)
-    endif
-    !CL sur bbm11t
-    if (istret==0) then
-       bbmt11(1 )=bbmt11(1)+alsajyt
-    else
-       bbmt11(1 )=bbmt11(1)+alsajyt/pp2y(2)
-    endif
-    bbmt11(ny)=zero
-    !
-    !DIAG SUP 2
-    ccmt11(1     )=two*bsjyt
-    ccmt11(ny    )=zero
-    ccmt11(2     )=bsjyt
-    ccmt11(ny-1  )=zero
-    ccmt11(3     )=bsjyt
-    ccmt11(ny-2  )=bsjyt
-    ccmt11(4:ny-3)=bsjyt
-    ccmt11 = -xcst_pr*ccmt11
-    !
-    !DIAG SUP 3
-    rrmt11(1     )=two*csjyt
-    rrmt11(ny    )=zero
-    rrmt11(2     )=csjyt
-    rrmt11(ny-1  )=zero
-    rrmt11(3     )=csjyt
-    rrmt11(ny-2  )=zero
-    rrmt11(4:ny-3)=csjyt
-    rrmt11 = -xcst_pr*rrmt11
-    !
-    !DIAG INF 1
-    ddmt11(1     )=zero
-    ddmt11(ny    )=two*asjyt
-    ddmt11(2     )=asjyt
-    ddmt11(ny-1  )=asjyt+csjyt
-    ddmt11(3     )=asjyt+csjyt
-    ddmt11(ny-2  )=asjyt
-    ddmt11(4:ny-3)=asjyt
-    if (istret==0) then
-       ddmt11 = alsajyt - xcst_pr*ddmt11
-    else
-       ddmt11(2:ny) = alsajyt/pp2y(1:ny-1) - xcst_pr*ddmt11(2:ny)
-    endif
-    !CL sur ddmt11
-    ddmt11(1 )=zero
-    if (istret==0) then
-       ddmt11(ny)=ddmt11(ny)+alsajyt!a1
-    else
-       ddmt11(ny)=ddmt11(ny)+alsajyt/pp2y(ny-1)!a1
-    endif
-    !
-    !DIAG INF 2
-    eemt11(1     )=zero
-    eemt11(ny    )=two*bsjyt
-    eemt11(2     )=zero
-    eemt11(ny-1  )=bsjyt
-    eemt11(3     )=bsjyt
-    eemt11(ny-2  )=bsjyt
-    eemt11(4:ny-3)=bsjyt
-    eemt11 = -xcst_pr*eemt11
-    !
-    !DIAG INF 3
-    qqmt11(1     )=zero
-    qqmt11(ny    )=two*csjyt
-    qqmt11(2     )=zero
-    qqmt11(ny-1  )=csjyt
-    qqmt11(3     )=zero
-    qqmt11(ny-2  )=csjyt
-    qqmt11(4:ny-3)=csjyt
-    qqmt11 = -xcst_pr*qqmt11
+!!! NCL = 1, npaire=1, neumann imposé, fonction paire
+     !
+     ! DIAG
+     aamt11(1     )=-two*(asjyt+bsjyt+csjyt)
+     aamt11(ny    )=aamt11(1)
+     aamt11(2     )=-two*asjyt-bsjyt-two*csjyt
+     aamt11(ny-1  )=aamt11(2)
+     aamt11(3:ny-2)=-two*(asjyt+bsjyt+csjyt)
+     if (istret==0) then
+        aamt11 = one - xcst_pr*aamt11
+     else
+        aamt11 = one/pp2y - xcst_pr*aamt11
+     endif
+     !
+     !DIAG SUP 1
+     bbmt11(1     )=two*asjyt
+     bbmt11(ny    )=zero
+     bbmt11(2     )=asjyt+csjyt
+     bbmt11(ny-1  )=asjyt
+     bbmt11(3     )=asjyt
+     bbmt11(ny-2  )=asjyt+csjyt
+     bbmt11(4:ny-3)=asjyt
+     if (istret==0) then
+        bbmt11 = alsajyt - xcst_pr*bbmt11
+     else
+        bbmt11(1:ny-1) = alsajyt/pp2y(2:ny) - xcst_pr*bbmt11(1:ny-1)
+     endif
+     !CL sur bbm11t
+     if (istret==0) then
+        bbmt11(1 )=bbmt11(1)+alsajyt
+     else
+        bbmt11(1 )=bbmt11(1)+alsajyt/pp2y(2)
+     endif
+     bbmt11(ny)=zero
+     !
+     !DIAG SUP 2
+     ccmt11(1     )=two*bsjyt
+     ccmt11(ny    )=zero
+     ccmt11(2     )=bsjyt
+     ccmt11(ny-1  )=zero
+     ccmt11(3     )=bsjyt
+     ccmt11(ny-2  )=bsjyt
+     ccmt11(4:ny-3)=bsjyt
+     ccmt11 = -xcst_pr*ccmt11
+     !
+     !DIAG SUP 3
+     rrmt11(1     )=two*csjyt
+     rrmt11(ny    )=zero
+     rrmt11(2     )=csjyt
+     rrmt11(ny-1  )=zero
+     rrmt11(3     )=csjyt
+     rrmt11(ny-2  )=zero
+     rrmt11(4:ny-3)=csjyt
+     rrmt11 = -xcst_pr*rrmt11
+     !
+     !DIAG INF 1
+     ddmt11(1     )=zero
+     ddmt11(ny    )=two*asjyt
+     ddmt11(2     )=asjyt
+     ddmt11(ny-1  )=asjyt+csjyt
+     ddmt11(3     )=asjyt+csjyt
+     ddmt11(ny-2  )=asjyt
+     ddmt11(4:ny-3)=asjyt
+     if (istret==0) then
+        ddmt11 = alsajyt - xcst_pr*ddmt11
+     else
+        ddmt11(2:ny) = alsajyt/pp2y(1:ny-1) - xcst_pr*ddmt11(2:ny)
+     endif
+     !CL sur ddmt11
+     ddmt11(1 )=zero
+     if (istret==0) then
+        ddmt11(ny)=ddmt11(ny)+alsajyt!a1
+     else
+        ddmt11(ny)=ddmt11(ny)+alsajyt/pp2y(ny-1)!a1
+     endif
+     !
+     !DIAG INF 2
+     eemt11(1     )=zero
+     eemt11(ny    )=two*bsjyt
+     eemt11(2     )=zero
+     eemt11(ny-1  )=bsjyt
+     eemt11(3     )=bsjyt
+     eemt11(ny-2  )=bsjyt
+     eemt11(4:ny-3)=bsjyt
+     eemt11 = -xcst_pr*eemt11
+     !
+     !DIAG INF 3
+     qqmt11(1     )=zero
+     qqmt11(ny    )=two*csjyt
+     qqmt11(2     )=zero
+     qqmt11(ny-1  )=csjyt
+     qqmt11(3     )=zero
+     qqmt11(ny-2  )=csjyt
+     qqmt11(4:ny-3)=csjyt
+     qqmt11 = -xcst_pr*qqmt11
 
-    !!! NXL = 0
-    !DIAG
-    if (istret==0) then
-       aamt0 = one-xcst_pr*(-two*(asjyt+bsjyt+csjyt))
-    else
-       aamt0 = one/pp2y-xcst_pr*(-two*(asjyt+bsjyt+csjyt))
-    endif
-    !
-    !DIAG SUP 1
-    if (istret==0) then
-       bbmt0 = alsajyt-xcst_pr*asjyt
-    else
-       bbmt0(1:ny-1) = alsajyt/pp2y(2:ny)-xcst_pr*asjyt
-       bbmt0(ny) = alsajyt/pp2y(1)-xcst_pr*asjyt
-    endif
-    !
-    !DIAG SUP 2
-    ccmt0 = -xcst_pr*bsjyt
-    !
-    !DIAG SUP 3
-    rrmt0 = -xcst_pr*csjyt
-    !
-    !DIAG INF 1
-    if (istret==0) then
-       ddmt0=bbmt0
-    else
-       ddmt0(1)=alsajyt/pp2y(ny) -xcst_pr*asjyt
-       ddmt0(2:ny)=alsajyt/pp2y(1:ny-1) -xcst_pr*asjyt
-    endif
-    !
-    !DIAG INF 2
-    eemt0=ccmt0
-    !
-    !DIAG INF 3
-    qqmt0=rrmt0
+!!! NXL = 0
+     !DIAG
+     if (istret==0) then
+        aamt0 = one-xcst_pr*(-two*(asjyt+bsjyt+csjyt))
+     else
+        aamt0 = one/pp2y-xcst_pr*(-two*(asjyt+bsjyt+csjyt))
+     endif
+     !
+     !DIAG SUP 1
+     if (istret==0) then
+        bbmt0 = alsajyt-xcst_pr*asjyt
+     else
+        bbmt0(1:ny-1) = alsajyt/pp2y(2:ny)-xcst_pr*asjyt
+        bbmt0(ny) = alsajyt/pp2y(1)-xcst_pr*asjyt
+     endif
+     !
+     !DIAG SUP 2
+     ccmt0 = -xcst_pr*bsjyt
+     !
+     !DIAG SUP 3
+     rrmt0 = -xcst_pr*csjyt
+     !
+     !DIAG INF 1
+     if (istret==0) then
+        ddmt0=bbmt0
+     else
+        ddmt0(1)=alsajyt/pp2y(ny) -xcst_pr*asjyt
+        ddmt0(2:ny)=alsajyt/pp2y(1:ny-1) -xcst_pr*asjyt
+     endif
+     !
+     !DIAG INF 2
+     eemt0=ccmt0
+     !
+     !DIAG INF 3
+     qqmt0=rrmt0
 
 
   else
 !!!!!!!!!!!!!!!!!!!!!!
-  !9-DIAG !!
+     !9-DIAG !!
 !!!!!!!!!!!!!!!!!!!!!!
 
 !!! NCL = 2, dirichlet imposé, fonction nulle à la paroi
-  !
-  !DIAG
-    aamt(1     )=as1y
-    aamt(ny    )=asny
-    aamt(2     )=-two*as2y
-    aamt(ny-1  )=-two*asmy
-    aamt(3     )=-two*(as3y+bs3y)
-    aamt(4     )=-two*(as4y+bs4y+cs4y)
-    aamt(ny-2  )=-two*(asty+bsty)
-    aamt(ny-3  )=-two*(astty+bstty+cstty)
-    aamt(5:ny-4)=-two*(asjyt+bsjyt+csjyt+dsjyt)
-    if (istret==0) then
-       aamt = one-xcst_pr*aamt
-    else
-       aamt = one/pp2y-xcst_pr*aamt
-    endif
-    !CL sur aamt
-    aamt(1 )=one
-    aamt(ny)=one
-    !
-    !DIAG SUP 1
-    bbmt(1     )=bs1y
-    bbmt(ny    )=bsny
-    bbmt(2     )=as2y
-    bbmt(ny-1  )=asmy
-    bbmt(3     )=as3y
-    bbmt(ny-2  )=asty
-    bbmt(4     )=as4y
-    bbmt(ny-3  )=astty
-    bbmt(5:ny-4)=asjyt
-    bbmt = -xcst_pr*bbmt
-    if (istret==0) then
-       bbmt(2     )=bbmt(2     )+alsa2y
-       bbmt(ny-1  )=bbmt(ny-1  )+alsamy
-       bbmt(3     )=bbmt(3     )+alsa3y
-       bbmt(ny-2  )=bbmt(ny-2  )+alsaty
-       bbmt(4     )=bbmt(4     )+alsa4y
-       bbmt(ny-3  )=bbmt(ny-3  )+alsatty
-       bbmt(5:ny-4)=bbmt(5:ny-4)+alsajyt
-    else
-       bbmt(2     )=bbmt(2     )+alsa2y/pp2y(3)
-       bbmt(ny-1  )=bbmt(ny-1  )+alsamy/pp2y(ny)
-       bbmt(3     )=bbmt(3     )+alsa3y/pp2y(4)
-       bbmt(ny-2  )=bbmt(ny-2  )+alsaty/pp2y(ny-1)
-       bbmt(4     )=bbmt(4     )+alsa4y/pp2y(5)
-       bbmt(ny-3  )=bbmt(ny-3  )+alsatty/pp2y(ny-2)
-       bbmt(5:ny-4)=bbmt(5:ny-4)+alsajyt/pp2y(6:ny-3)
-    endif
-    !CL sur bbmt
-    bbmt(1 )=zero
-    bbmt(ny)=zero
-    !
-    !DIAG SUP 2
-    ccmt(1     )=cs1y
-    ccmt(ny    )=csny
-    ccmt(2     )=zero
-    ccmt(ny-1  )=zero
-    ccmt(3     )=bs3y
-    ccmt(ny-2  )=bsty
-    ccmt(4     )=bs4y
-    ccmt(ny-3  )=bstty
-    ccmt(5:ny-4)=bsjyt
-    ccmt = -xcst_pr*ccmt
-    !CL sur ccmt
-    ccmt(1 )=zero
-    ccmt(ny)=zero
-    !
-    !DIAG SUP 3
-    rrmt(1     )=ds1y
-    rrmt(ny    )=dsny
-    rrmt(2     )=zero
-    rrmt(ny-1  )=zero
-    rrmt(3     )=zero
-    rrmt(ny-2  )=zero
-    rrmt(4     )=cs4y
-    rrmt(ny-3  )=cstty
-    rrmt(5:ny-4)=csjyt
-    rrmt = -xcst_pr*rrmt
-    !CL sur rrmt
-    rrmt(1 )=zero
-    rrmt(ny)=zero
+     !
+     !DIAG
+     aamt(1     )=as1y
+     aamt(ny    )=asny
+     aamt(2     )=-two*as2y
+     aamt(ny-1  )=-two*asmy
+     aamt(3     )=-two*(as3y+bs3y)
+     aamt(4     )=-two*(as4y+bs4y+cs4y)
+     aamt(ny-2  )=-two*(asty+bsty)
+     aamt(ny-3  )=-two*(astty+bstty+cstty)
+     aamt(5:ny-4)=-two*(asjyt+bsjyt+csjyt+dsjyt)
+     if (istret==0) then
+        aamt = one-xcst_pr*aamt
+     else
+        aamt = one/pp2y-xcst_pr*aamt
+     endif
+     !CL sur aamt
+     aamt(1 )=one
+     aamt(ny)=one
+     !
+     !DIAG SUP 1
+     bbmt(1     )=bs1y
+     bbmt(ny    )=bsny
+     bbmt(2     )=as2y
+     bbmt(ny-1  )=asmy
+     bbmt(3     )=as3y
+     bbmt(ny-2  )=asty
+     bbmt(4     )=as4y
+     bbmt(ny-3  )=astty
+     bbmt(5:ny-4)=asjyt
+     bbmt = -xcst_pr*bbmt
+     if (istret==0) then
+        bbmt(2     )=bbmt(2     )+alsa2y
+        bbmt(ny-1  )=bbmt(ny-1  )+alsamy
+        bbmt(3     )=bbmt(3     )+alsa3y
+        bbmt(ny-2  )=bbmt(ny-2  )+alsaty
+        bbmt(4     )=bbmt(4     )+alsa4y
+        bbmt(ny-3  )=bbmt(ny-3  )+alsatty
+        bbmt(5:ny-4)=bbmt(5:ny-4)+alsajyt
+     else
+        bbmt(2     )=bbmt(2     )+alsa2y/pp2y(3)
+        bbmt(ny-1  )=bbmt(ny-1  )+alsamy/pp2y(ny)
+        bbmt(3     )=bbmt(3     )+alsa3y/pp2y(4)
+        bbmt(ny-2  )=bbmt(ny-2  )+alsaty/pp2y(ny-1)
+        bbmt(4     )=bbmt(4     )+alsa4y/pp2y(5)
+        bbmt(ny-3  )=bbmt(ny-3  )+alsatty/pp2y(ny-2)
+        bbmt(5:ny-4)=bbmt(5:ny-4)+alsajyt/pp2y(6:ny-3)
+     endif
+     !CL sur bbmt
+     bbmt(1 )=zero
+     bbmt(ny)=zero
+     !
+     !DIAG SUP 2
+     ccmt(1     )=cs1y
+     ccmt(ny    )=csny
+     ccmt(2     )=zero
+     ccmt(ny-1  )=zero
+     ccmt(3     )=bs3y
+     ccmt(ny-2  )=bsty
+     ccmt(4     )=bs4y
+     ccmt(ny-3  )=bstty
+     ccmt(5:ny-4)=bsjyt
+     ccmt = -xcst_pr*ccmt
+     !CL sur ccmt
+     ccmt(1 )=zero
+     ccmt(ny)=zero
+     !
+     !DIAG SUP 3
+     rrmt(1     )=ds1y
+     rrmt(ny    )=dsny
+     rrmt(2     )=zero
+     rrmt(ny-1  )=zero
+     rrmt(3     )=zero
+     rrmt(ny-2  )=zero
+     rrmt(4     )=cs4y
+     rrmt(ny-3  )=cstty
+     rrmt(5:ny-4)=csjyt
+     rrmt = -xcst_pr*rrmt
+     !CL sur rrmt
+     rrmt(1 )=zero
+     rrmt(ny)=zero
 
-    !DIAG SUP 4
-    ttmt(1     )=zero
-    ttmt(ny    )=zero
-    ttmt(2     )=zero
-    ttmt(ny-1  )=zero
-    ttmt(3     )=zero!ds3y
-    ttmt(ny-2  )=zero!dsty
-    ttmt(4     )=zero!ds4y
-    ttmt(ny-3  )=zero!dstty
-    ttmt(5:ny-4)=dsjyt
-    ttmt = -xcst*ttmt
-    !CL sur ttm
-    ttmt(1 )=zero
-    ttmt(ny)=zero
-    !
-    !DIAG INF 1
-    if (istret==0) then
-       ddmt=bbmt
-    else
-       ddmt(1     )=bs1y
-       ddmt(ny    )=bsny
-       ddmt(2     )=as2y
-       ddmt(ny-1  )=asmy
-       ddmt(3     )=as3y
-       ddmt(ny-2  )=asty
-       ddmt(4     )=as4y
-       ddmt(ny-3  )=astty
-       ddmt(5:ny-4)=asjyt
-       ddmt = -xcst_pr*ddmt
-       ddmt(2     )=ddmt(2     )+alsa2y/pp2y(1)
-       ddmt(ny-1  )=ddmt(ny-1  )+alsamy/pp2y(ny-2)
-       ddmt(3     )=ddmt(3     )+alsa3y/pp2y(2)
-       ddmt(ny-2  )=ddmt(ny-2  )+alsaty/pp2y(ny-3)
-       ddmt(4     )=ddmt(4     )+alsa4y/pp2y(3)
-       ddmt(ny-3  )=ddmt(ny-3  )+alsatty/pp2y(ny-4)
-       ddmt(5:ny-4)=ddmt(5:ny-4)+alsajyt/pp2y(4:ny-5)
-    endif
-    !CL sur ddmt
-    ddmt(1 )=zero
-    ddmt(ny)=zero
-    !
-    !DIAG INF 2
-    eemt=ccmt
+     !DIAG SUP 4
+     ttmt(1     )=zero
+     ttmt(ny    )=zero
+     ttmt(2     )=zero
+     ttmt(ny-1  )=zero
+     ttmt(3     )=zero!ds3y
+     ttmt(ny-2  )=zero!dsty
+     ttmt(4     )=zero!ds4y
+     ttmt(ny-3  )=zero!dstty
+     ttmt(5:ny-4)=dsjyt
+     ttmt = -xcst*ttmt
+     !CL sur ttm
+     ttmt(1 )=zero
+     ttmt(ny)=zero
+     !
+     !DIAG INF 1
+     if (istret==0) then
+        ddmt=bbmt
+     else
+        ddmt(1     )=bs1y
+        ddmt(ny    )=bsny
+        ddmt(2     )=as2y
+        ddmt(ny-1  )=asmy
+        ddmt(3     )=as3y
+        ddmt(ny-2  )=asty
+        ddmt(4     )=as4y
+        ddmt(ny-3  )=astty
+        ddmt(5:ny-4)=asjyt
+        ddmt = -xcst_pr*ddmt
+        ddmt(2     )=ddmt(2     )+alsa2y/pp2y(1)
+        ddmt(ny-1  )=ddmt(ny-1  )+alsamy/pp2y(ny-2)
+        ddmt(3     )=ddmt(3     )+alsa3y/pp2y(2)
+        ddmt(ny-2  )=ddmt(ny-2  )+alsaty/pp2y(ny-3)
+        ddmt(4     )=ddmt(4     )+alsa4y/pp2y(3)
+        ddmt(ny-3  )=ddmt(ny-3  )+alsatty/pp2y(ny-4)
+        ddmt(5:ny-4)=ddmt(5:ny-4)+alsajyt/pp2y(4:ny-5)
+     endif
+     !CL sur ddmt
+     ddmt(1 )=zero
+     ddmt(ny)=zero
+     !
+     !DIAG INF 2
+     eemt=ccmt
 
-    !DIAG INF 3
-    qqmt=rrmt
-    !CL sur qqmt
-    uumt=ttmt
+     !DIAG INF 3
+     qqmt=rrmt
+     !CL sur qqmt
+     uumt=ttmt
 
-  !!! NCL = 1, npaire=0, dirichlet imposé, fonction impaire
-    !
-    ! DIAG
-    aamt10(1     )=zero
-    aamt10(ny    )=zero
-    aamt10(2     )=-two*asjyt-three*bsjyt-two*csjyt
-    aamt10(ny-1  )=aamt10(2)
-    aamt10(3:ny-2)=-two*(asjyt+bsjyt+csjyt)
-    if (istret==0) then
-       aamt10 = one - xcst_pr*aamt10
-    else
-       aamt10 = one/pp2y - xcst_pr*aamt10
-    endif
-    !
-    !DIAG SUP 1
-    bbmt10(1     )=zero
-    bbmt10(ny    )=zero
-    bbmt10(2     )=asjyt-csjyt
-    bbmt10(ny-1  )=asjyt
-    bbmt10(3     )=asjyt
-    bbmt10(ny-2  )=asjyt-csjyt
-    bbmt10(4:ny-3)=asjyt
-    if (istret==0) then
-       bbmt10 = alsajyt - xcst_pr*bbmt10
-    else
-       bbmt10(2:ny-1) = alsajyt/pp2y(3:ny) - xcst_pr*bbmt10(2:ny-1)
-    endif
-    !CL sur bbm10t
-    bbmt10(1 )=zero
-    bbmt10(ny)=zero
-    !
-    !DIAG SUP 2
-    ccmt10(1     )=zero
-    ccmt10(ny    )=zero
-    ccmt10(2     )=bsjyt
-    ccmt10(ny-1  )=zero
-    ccmt10(3     )=bsjyt
-    ccmt10(ny-2  )=bsjyt
-    ccmt10(4:ny-3)=bsjyt
-    ccmt10 = -xcst_pr*ccmt10
-    !
-    !DIAG SUP 3
-    rrmt10(1     )=zero
-    rrmt10(ny    )=zero
-    rrmt10(2     )=csjyt
-    rrmt10(ny-1  )=zero
-    rrmt10(3     )=csjyt
-    rrmt10(ny-2  )=zero
-    rrmt10(4:ny-3)=csjyt
-    rrmt10 = -xcst_pr*rrmt10
-    !
-    !DIAG INF 1
-    ddmt10(1     )=zero
-    ddmt10(ny    )=zero
-    ddmt10(2     )=asjyt
-    ddmt10(ny-1  )=asjyt-csjyt
-    ddmt10(3     )=asjyt-csjyt
-    ddmt10(ny-2  )=asjyt
-    ddmt10(4:ny-3)=asjyt
-    if (istret==0) then
-       ddmt10 = alsajyt - xcst_pr*ddmt10
-    else
-       ddmt10(2:ny-1) = alsajyt/pp2y(1:ny-2) - xcst_pr*ddmt10(2:ny-1)
-    endif
-    !CL sur ddmt10
-    ddmt10(1 )=zero
-    ddmt10(ny)=zero
-    !
-    !DIAG INF 2
-    eemt10(1     )=zero
-    eemt10(ny    )=zero
-    eemt10(2     )=zero
-    eemt10(ny-1  )=bsjyt
-    eemt10(3     )=bsjyt
-    eemt10(ny-2  )=bsjyt
-    eemt10(4:ny-3)=bsjyt
-    eemt10 = -xcst_pr*eemt10
-    !
-    !DIAG INF 3
-    qqmt10(1     )=zero
-    qqmt10(ny    )=zero
-    qqmt10(2     )=zero
-    qqmt10(ny-1  )=csjyt
-    qqmt10(3     )=zero
-    qqmt10(ny-2  )=csjyt
-    qqmt10(4:ny-3)=csjyt
-    qqmt10 = -xcst_pr*qqmt10
+!!! NCL = 1, npaire=0, dirichlet imposé, fonction impaire
+     !
+     ! DIAG
+     aamt10(1     )=zero
+     aamt10(ny    )=zero
+     aamt10(2     )=-two*asjyt-three*bsjyt-two*csjyt
+     aamt10(ny-1  )=aamt10(2)
+     aamt10(3:ny-2)=-two*(asjyt+bsjyt+csjyt)
+     if (istret==0) then
+        aamt10 = one - xcst_pr*aamt10
+     else
+        aamt10 = one/pp2y - xcst_pr*aamt10
+     endif
+     !
+     !DIAG SUP 1
+     bbmt10(1     )=zero
+     bbmt10(ny    )=zero
+     bbmt10(2     )=asjyt-csjyt
+     bbmt10(ny-1  )=asjyt
+     bbmt10(3     )=asjyt
+     bbmt10(ny-2  )=asjyt-csjyt
+     bbmt10(4:ny-3)=asjyt
+     if (istret==0) then
+        bbmt10 = alsajyt - xcst_pr*bbmt10
+     else
+        bbmt10(2:ny-1) = alsajyt/pp2y(3:ny) - xcst_pr*bbmt10(2:ny-1)
+     endif
+     !CL sur bbm10t
+     bbmt10(1 )=zero
+     bbmt10(ny)=zero
+     !
+     !DIAG SUP 2
+     ccmt10(1     )=zero
+     ccmt10(ny    )=zero
+     ccmt10(2     )=bsjyt
+     ccmt10(ny-1  )=zero
+     ccmt10(3     )=bsjyt
+     ccmt10(ny-2  )=bsjyt
+     ccmt10(4:ny-3)=bsjyt
+     ccmt10 = -xcst_pr*ccmt10
+     !
+     !DIAG SUP 3
+     rrmt10(1     )=zero
+     rrmt10(ny    )=zero
+     rrmt10(2     )=csjyt
+     rrmt10(ny-1  )=zero
+     rrmt10(3     )=csjyt
+     rrmt10(ny-2  )=zero
+     rrmt10(4:ny-3)=csjyt
+     rrmt10 = -xcst_pr*rrmt10
+     !
+     !DIAG INF 1
+     ddmt10(1     )=zero
+     ddmt10(ny    )=zero
+     ddmt10(2     )=asjyt
+     ddmt10(ny-1  )=asjyt-csjyt
+     ddmt10(3     )=asjyt-csjyt
+     ddmt10(ny-2  )=asjyt
+     ddmt10(4:ny-3)=asjyt
+     if (istret==0) then
+        ddmt10 = alsajyt - xcst_pr*ddmt10
+     else
+        ddmt10(2:ny-1) = alsajyt/pp2y(1:ny-2) - xcst_pr*ddmt10(2:ny-1)
+     endif
+     !CL sur ddmt10
+     ddmt10(1 )=zero
+     ddmt10(ny)=zero
+     !
+     !DIAG INF 2
+     eemt10(1     )=zero
+     eemt10(ny    )=zero
+     eemt10(2     )=zero
+     eemt10(ny-1  )=bsjyt
+     eemt10(3     )=bsjyt
+     eemt10(ny-2  )=bsjyt
+     eemt10(4:ny-3)=bsjyt
+     eemt10 = -xcst_pr*eemt10
+     !
+     !DIAG INF 3
+     qqmt10(1     )=zero
+     qqmt10(ny    )=zero
+     qqmt10(2     )=zero
+     qqmt10(ny-1  )=csjyt
+     qqmt10(3     )=zero
+     qqmt10(ny-2  )=csjyt
+     qqmt10(4:ny-3)=csjyt
+     qqmt10 = -xcst_pr*qqmt10
 
-  !!! NCL = 1, npaire=1, neumann imposé, fonction paire
-    !
-    ! DIAG
-    aamt11(1     )=-two*(asjyt+bsjyt+csjyt)
-    aamt11(ny    )=aamt11(1)
-    aamt11(2     )=-two*asjyt-bsjyt-two*csjyt
-    aamt11(ny-1  )=aamt11(2)
-    aamt11(3:ny-2)=-two*(asjyt+bsjyt+csjyt)
-    if (istret==0) then
-       aamt11 = one - xcst_pr*aamt11
-    else
-       aamt11 = one/pp2y - xcst_pr*aamt11
-    endif
-    !
-    !DIAG SUP 1
-    bbmt11(1     )=two*asjyt
-    bbmt11(ny    )=zero
-    bbmt11(2     )=asjyt+csjyt
-    bbmt11(ny-1  )=asjyt
-    bbmt11(3     )=asjyt
-    bbmt11(ny-2  )=asjyt+csjyt
-    bbmt11(4:ny-3)=asjyt
-    if (istret==0) then
-       bbmt11 = alsajyt - xcst_pr*bbmt11
-    else
-       bbmt11(1:ny-1) = alsajyt/pp2y(2:ny) - xcst_pr*bbmt11(1:ny-1)
-    endif
-    !CL sur bbm11t
-    if (istret==0) then
-       bbmt11(1 )=bbmt11(1)+alsajyt
-    else
-       bbmt11(1 )=bbmt11(1)+alsajyt/pp2y(2)
-    endif
-    bbmt11(ny)=zero
-    !
-    !DIAG SUP 2
-    ccmt11(1     )=two*bsjyt
-    ccmt11(ny    )=zero
-    ccmt11(2     )=bsjyt
-    ccmt11(ny-1  )=zero
-    ccmt11(3     )=bsjyt
-    ccmt11(ny-2  )=bsjyt
-    ccmt11(4:ny-3)=bsjyt
-    ccmt11 = -xcst_pr*ccmt11
-    !
-    !DIAG SUP 3
-    rrmt11(1     )=two*csjyt
-    rrmt11(ny    )=zero
-    rrmt11(2     )=csjyt
-    rrmt11(ny-1  )=zero
-    rrmt11(3     )=csjyt
-    rrmt11(ny-2  )=zero
-    rrmt11(4:ny-3)=csjyt
-    rrmt11 = -xcst_pr*rrmt11
-    !
-    !DIAG INF 1
-    ddmt11(1     )=zero
-    ddmt11(ny    )=two*asjyt
-    ddmt11(2     )=asjyt
-    ddmt11(ny-1  )=asjyt+csjyt
-    ddmt11(3     )=asjyt+csjyt
-    ddmt11(ny-2  )=asjyt
-    ddmt11(4:ny-3)=asjyt
-    if (istret==0) then
-       ddmt11 = alsajyt - xcst_pr*ddmt11
-    else
-       ddmt11(2:ny) = alsajyt/pp2y(1:ny-1) - xcst_pr*ddmt11(2:ny)
-    endif
-    !CL sur ddmt11
-    ddmt11(1 )=zero
-    if (istret==0) then
-       ddmt11(ny)=ddmt11(ny)+alsajyt!a1
-    else
-       ddmt11(ny)=ddmt11(ny)+alsajyt/pp2y(ny-1)!a1
-    endif
-    !
-    !DIAG INF 2
-    eemt11(1     )=zero
-    eemt11(ny    )=two*bsjyt
-    eemt11(2     )=zero
-    eemt11(ny-1  )=bsjyt
-    eemt11(3     )=bsjyt
-    eemt11(ny-2  )=bsjyt
-    eemt11(4:ny-3)=bsjyt
-    eemt11 = -xcst_pr*eemt11
-    !
-    !DIAG INF 3
-    qqmt11(1     )=zero
-    qqmt11(ny    )=two*csjyt
-    qqmt11(2     )=zero
-    qqmt11(ny-1  )=csjyt
-    qqmt11(3     )=zero
-    qqmt11(ny-2  )=csjyt
-    qqmt11(4:ny-3)=csjyt
-    qqmt11 = -xcst_pr*qqmt11
+!!! NCL = 1, npaire=1, neumann imposé, fonction paire
+     !
+     ! DIAG
+     aamt11(1     )=-two*(asjyt+bsjyt+csjyt)
+     aamt11(ny    )=aamt11(1)
+     aamt11(2     )=-two*asjyt-bsjyt-two*csjyt
+     aamt11(ny-1  )=aamt11(2)
+     aamt11(3:ny-2)=-two*(asjyt+bsjyt+csjyt)
+     if (istret==0) then
+        aamt11 = one - xcst_pr*aamt11
+     else
+        aamt11 = one/pp2y - xcst_pr*aamt11
+     endif
+     !
+     !DIAG SUP 1
+     bbmt11(1     )=two*asjyt
+     bbmt11(ny    )=zero
+     bbmt11(2     )=asjyt+csjyt
+     bbmt11(ny-1  )=asjyt
+     bbmt11(3     )=asjyt
+     bbmt11(ny-2  )=asjyt+csjyt
+     bbmt11(4:ny-3)=asjyt
+     if (istret==0) then
+        bbmt11 = alsajyt - xcst_pr*bbmt11
+     else
+        bbmt11(1:ny-1) = alsajyt/pp2y(2:ny) - xcst_pr*bbmt11(1:ny-1)
+     endif
+     !CL sur bbm11t
+     if (istret==0) then
+        bbmt11(1 )=bbmt11(1)+alsajyt
+     else
+        bbmt11(1 )=bbmt11(1)+alsajyt/pp2y(2)
+     endif
+     bbmt11(ny)=zero
+     !
+     !DIAG SUP 2
+     ccmt11(1     )=two*bsjyt
+     ccmt11(ny    )=zero
+     ccmt11(2     )=bsjyt
+     ccmt11(ny-1  )=zero
+     ccmt11(3     )=bsjyt
+     ccmt11(ny-2  )=bsjyt
+     ccmt11(4:ny-3)=bsjyt
+     ccmt11 = -xcst_pr*ccmt11
+     !
+     !DIAG SUP 3
+     rrmt11(1     )=two*csjyt
+     rrmt11(ny    )=zero
+     rrmt11(2     )=csjyt
+     rrmt11(ny-1  )=zero
+     rrmt11(3     )=csjyt
+     rrmt11(ny-2  )=zero
+     rrmt11(4:ny-3)=csjyt
+     rrmt11 = -xcst_pr*rrmt11
+     !
+     !DIAG INF 1
+     ddmt11(1     )=zero
+     ddmt11(ny    )=two*asjyt
+     ddmt11(2     )=asjyt
+     ddmt11(ny-1  )=asjyt+csjyt
+     ddmt11(3     )=asjyt+csjyt
+     ddmt11(ny-2  )=asjyt
+     ddmt11(4:ny-3)=asjyt
+     if (istret==0) then
+        ddmt11 = alsajyt - xcst_pr*ddmt11
+     else
+        ddmt11(2:ny) = alsajyt/pp2y(1:ny-1) - xcst_pr*ddmt11(2:ny)
+     endif
+     !CL sur ddmt11
+     ddmt11(1 )=zero
+     if (istret==0) then
+        ddmt11(ny)=ddmt11(ny)+alsajyt!a1
+     else
+        ddmt11(ny)=ddmt11(ny)+alsajyt/pp2y(ny-1)!a1
+     endif
+     !
+     !DIAG INF 2
+     eemt11(1     )=zero
+     eemt11(ny    )=two*bsjyt
+     eemt11(2     )=zero
+     eemt11(ny-1  )=bsjyt
+     eemt11(3     )=bsjyt
+     eemt11(ny-2  )=bsjyt
+     eemt11(4:ny-3)=bsjyt
+     eemt11 = -xcst_pr*eemt11
+     !
+     !DIAG INF 3
+     qqmt11(1     )=zero
+     qqmt11(ny    )=two*csjyt
+     qqmt11(2     )=zero
+     qqmt11(ny-1  )=csjyt
+     qqmt11(3     )=zero
+     qqmt11(ny-2  )=csjyt
+     qqmt11(4:ny-3)=csjyt
+     qqmt11 = -xcst_pr*qqmt11
 
-  !!! NXL = 0
-    !DIAG
-    if (istret==0) then
-       aamt0 = one-xcst_pr*(-two*(asjyt+bsjyt+csjyt))
-    else
-       aamt0 = one/pp2y-xcst_pr*(-two*(asjyt+bsjyt+csjyt))
-    endif
-    !
-    !DIAG SUP 1
-    if (istret==0) then
-       bbmt0 = alsajyt-xcst_pr*asjyt
-    else
-       bbmt0(1:ny-1) = alsajyt/pp2y(2:ny)-xcst_pr*asjyt
-       bbmt0(ny) = alsajyt/pp2y(1)-xcst_pr*asjyt
-    endif
-    !
-    !DIAG SUP 2
-    ccmt0 = -xcst_pr*bsjyt
-    !
-    !DIAG SUP 3
-    rrmt0 = -xcst_pr*csjyt
-    !
-    !DIAG INF 1
-    if (istret==0) then
-       ddmt0=bbmt0
-    else
-       ddmt0(1)=alsajyt/pp2y(ny) -xcst_pr*asjyt
-       ddmt0(2:ny)=alsajyt/pp2y(1:ny-1) -xcst_pr*asjyt
-    endif
-    !
-    !DIAG INF 2
-    eemt0=ccmt0
-    !
-    !DIAG INF 3
-    qqmt0=rrmt0
+!!! NXL = 0
+     !DIAG
+     if (istret==0) then
+        aamt0 = one-xcst_pr*(-two*(asjyt+bsjyt+csjyt))
+     else
+        aamt0 = one/pp2y-xcst_pr*(-two*(asjyt+bsjyt+csjyt))
+     endif
+     !
+     !DIAG SUP 1
+     if (istret==0) then
+        bbmt0 = alsajyt-xcst_pr*asjyt
+     else
+        bbmt0(1:ny-1) = alsajyt/pp2y(2:ny)-xcst_pr*asjyt
+        bbmt0(ny) = alsajyt/pp2y(1)-xcst_pr*asjyt
+     endif
+     !
+     !DIAG SUP 2
+     ccmt0 = -xcst_pr*bsjyt
+     !
+     !DIAG SUP 3
+     rrmt0 = -xcst_pr*csjyt
+     !
+     !DIAG INF 1
+     if (istret==0) then
+        ddmt0=bbmt0
+     else
+        ddmt0(1)=alsajyt/pp2y(ny) -xcst_pr*asjyt
+        ddmt0(2:ny)=alsajyt/pp2y(1:ny-1) -xcst_pr*asjyt
+     endif
+     !
+     !DIAG INF 2
+     eemt0=ccmt0
+     !
+     !DIAG INF 3
+     qqmt0=rrmt0
 
   endif
 
   if (isecondder.ne.5) then
-    call ludecomp7(aamt,bbmt,ccmt,ddmt,eemt,qqmt,ggmt,hhmt,ssmt,rrmt,&
-         vvmt,wwmt,zzmt,ny)
-    call ludecomp7(aamt10,bbmt10,ccmt10,ddmt10,eemt10,qqmt10,ggmt10,hhmt10,ssmt10,rrmt10,&
-         vvmt10,wwmt10,zzmt10,ny)
-    call ludecomp7(aamt11,bbmt11,ccmt11,ddmt11,eemt11,qqmt11,ggmt11,hhmt11,ssmt11,rrmt11,&
-         vvmt11,wwmt11,zzmt11,ny)
-    call ludecomp7(aamt0,bbmt0,ccmt0,ddmt0,eemt0,qqmt0,ggmt0,hhmt0,ssmt0,rrmt0,&
-         vvmt0,wwmt0,zzmt0,l1mt,l2mt,l3mt,u1mt,u2mt,u3mt,ny)
+     call ludecomp7(aamt,bbmt,ccmt,ddmt,eemt,qqmt,ggmt,hhmt,ssmt,rrmt,&
+          vvmt,wwmt,zzmt,ny)
+     call ludecomp7(aamt10,bbmt10,ccmt10,ddmt10,eemt10,qqmt10,ggmt10,hhmt10,ssmt10,rrmt10,&
+          vvmt10,wwmt10,zzmt10,ny)
+     call ludecomp7(aamt11,bbmt11,ccmt11,ddmt11,eemt11,qqmt11,ggmt11,hhmt11,ssmt11,rrmt11,&
+          vvmt11,wwmt11,zzmt11,ny)
+     call ludecomp7(aamt0,bbmt0,ccmt0,ddmt0,eemt0,qqmt0,ggmt0,hhmt0,ssmt0,rrmt0,&
+          vvmt0,wwmt0,zzmt0,l1mt,l2mt,l3mt,u1mt,u2mt,u3mt,ny)
   else
-    call ludecomp9(aamt,bbmt,ccmt,ddmt,eemt,qqmt,ggmt,hhmt,ssmt,rrmt,vvmt,wwmt,&
-         zzmt,ttmt,uumt,sssmt,zzzmt,ny)
+     call ludecomp9(aamt,bbmt,ccmt,ddmt,eemt,qqmt,ggmt,hhmt,ssmt,rrmt,vvmt,wwmt,&
+          zzmt,ttmt,uumt,sssmt,zzzmt,ny)
   endif
 
   ! npaire=0

@@ -804,21 +804,21 @@ subroutine tbl_tripping(tb,ta)
      INQUIRE(FILE='restart.nc',exist=exist)
      !if ((ilit==1).AND.(exist)) then
      !if (exist) then
-        !print*, 'h_coeff1 and phase1 already read from restart.nc'
-        !print*, 'h_coeff2 and phase2 already read from restart.nc'
-        !nxt_itr=int(t/ts_tr_tbl)
+     !print*, 'h_coeff1 and phase1 already read from restart.nc'
+     !print*, 'h_coeff2 and phase2 already read from restart.nc'
+     !nxt_itr=int(t/ts_tr_tbl)
      !else
-        nxt_itr=1
-        do j=1,z_modes
-           call random_number(randx)
-           h_coeff1(j)=1.0*(randx-0.5)/sqrt(DBLE(z_modes))
-           call random_number(randx)
-           phase1(j) = 2.0*pi*randx
-           call random_number(randx)
-           h_coeff2(j)=1.0*(randx-0.5)/sqrt(DBLE(z_modes))
-           call random_number(randx)
-           phase2(j) = 2.0*pi*randx
-        enddo
+     nxt_itr=1
+     do j=1,z_modes
+        call random_number(randx)
+        h_coeff1(j)=1.0*(randx-0.5)/sqrt(DBLE(z_modes))
+        call random_number(randx)
+        phase1(j) = 2.0*pi*randx
+        call random_number(randx)
+        h_coeff2(j)=1.0*(randx-0.5)/sqrt(DBLE(z_modes))
+        call random_number(randx)
+        phase2(j) = 2.0*pi*randx
+     enddo
      !endif
   endif
 
