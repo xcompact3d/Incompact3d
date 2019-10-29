@@ -1,6 +1,3 @@
-# xcompact3d_developers
-Developers repository for xcompact3d 
-=======
 <a name="logo"/>
 <div align="center">
 <a href="https://www.incompact3d.com" target="_blank">
