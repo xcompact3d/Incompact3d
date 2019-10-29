@@ -1,0 +1,52 @@
+#
+# INCOMPACT 3D parameters - 3D Taylor-Green vortices problem
+#
+32      #nx
+32      #ny
+32     #nz
+1      #nphi
+1      #p_row
+1      #p_col
+#
+# INCOMPACT 3D Flow parameters
+#
+1.      #xlx, yly, zlz over pi # (Adimensional size in every)
+5000.   #re        # Reynolds number
+0.00    #ri
+0.00    #noise     # Intensity for initial condition (0.01=1%,1=100%) (t=0) (for lock and temporal)
+0.0005  #dt        # Time step
+#
+# INCOMPACT3D Flow configuration
+#
+0      #iscalar
+0      #cont_phi
+0      #jLES
+1      #iin        # Initial condition (0: empty, 1: prescribed)
+1      #ifirst     # First iteration
+1      #ilast      # Last iteration
+2      #nscheme    # Temporal scheme (1:AB2, 2: RK3, 3:RK4, 4:AB3)
+#velocity
+2      #nclx1
+2      #nclxn
+2     #ncly1
+2      #nclyn
+2      #nclz1
+2      #nclzn
+#scalar
+0      #nclxS1     #Boundary condition in x=0  (0: Periodic, 1:No-flux, 2: Dirichlet)
+0      #nclxSn     #Boundary condition in x=Lx (0: Periodic, 1:No-flux, 2: Dirichlet)
+0      #nclyS1     #Boundary condition in y=0  (0: Periodic, 1:No-flux, 2: Dirichlet)
+0      #nclySn     #Boundary condition in y=Ly (0: Periodic, 1:No-flux, 2: Dirichlet)
+0      #nclzS1     #Boundary condition in z=0  (0: Periodic, 1:No-flux, 2: Dirichlet)
+0      #nclzSn     #Boundary condition in z=Lz (0: Periodic, 1:No-flux, 2: Dirichlet)
+#
+# INCOMPACT 3D File parameters
+#
+0      # ilit      # Read initial flow field? (0:no, 1:yes)
+50000  # isave     # Frequency for writing backup file (sauve.dat)
+500    # imodulo   # Frequency for visualization for VISU_INSTA
+100    # imodulo2   #
+#
+# NUMERICAL DISSIPATION
+#
+1.     # npi2
