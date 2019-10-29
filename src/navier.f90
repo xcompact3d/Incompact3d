@@ -1065,7 +1065,7 @@ contains
        !! Compute rho0
        rhomin = MINVAL(rho1)
 
-       CALL MPI_ALLREDUCE(rhomin,rho0,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
+       CALL MPI_ALLREDUCE(rhomin,rho0,1,real_type,MPI_MIN,MPI_COMM_WORLD,ierr)
     ENDIF
 
     ta1(:,:,:) = (one - rho0 / rho1(:,:,:,1)) * px1(:,:,:)
