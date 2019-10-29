@@ -129,7 +129,7 @@ SmagWallDamp = 1      ! Smagorinsky damping function for ABL if 1
 !================
 
 cex=5.        !when simulating a cylinder x coordinate of the center
-cey=6.        !when simulating a cylinder y coordinate of the center
+cey=5.        !when simulating a cylinder y coordinate of the center
 ra=0.5        !when simulating a cylinder, radius
 nraf=10       !level of refinement for iibm==2 to find the surface of the immersed object
 nobjmax=2     !number of immersed objects (DO NOT USE ZERO OBJECTS)
@@ -141,8 +141,8 @@ nvol=1        !Number of volumes for computing force balance
 
 xld(1) = 4.0
 xrd(1) = 6.0
-yld(1) = 5.0
-yud(1) = 7.0
+yld(1) = 4.0
+yud(1) = 6.0
 
 /End
 
