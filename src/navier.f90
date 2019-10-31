@@ -440,6 +440,7 @@ contains
     USE param
     USE var
     USE MPI
+    USE TBL, ONLY:tbl_flrt
 
     implicit none
 
@@ -482,6 +483,8 @@ contains
        enddo
 
     endif
+
+    if (itype.eq.itype_tbl) call tbl_flrt(ux,uy,uz)
 
     if (nclx1==2) then
        do k=1,xsize(3)

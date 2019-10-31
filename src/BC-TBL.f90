@@ -26,7 +26,7 @@ module tbl
   real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_tbl, boundary_conditions_tbl, postprocess_tbl
+  PUBLIC :: init_tbl, boundary_conditions_tbl, postprocess_tbl, tbl_flrt
 
 contains
 
@@ -70,13 +70,18 @@ contains
     !modulation of the random noise + initial velocity profile
     do k=1,xsize(3)
        do j=1,xsize(2)
-          if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy-yly/two
-          if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/two
+          !if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy-yly/two
+          !if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/two
+          if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy-yly
+          if (istret.ne.0) y=yp(j+xstart(2)-1)-yly
           um=exp(-16*y*y)
           do i=1,xsize(1)
-             ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)
-             uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
-             uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
+             !ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)
+             !uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
+             !uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
+             ux1(i,j,k)=um*ux1(i,j,k)
+             uy1(i,j,k)=um*uy1(i,j,k)
+             uz1(i,j,k)=um*uz1(i,j,k)
           enddo
        enddo
     enddo
@@ -130,10 +135,10 @@ contains
           do j=1,xsize(2)
              if (istret.eq.0) y=(j+xstart(2)-1-1)*dy-1.
              if (istret.ne.0) y=yp(j+xstart(2)-1)-1.
-             um=exp(-16*y*y)
-             bxx1(j,k)=bxx1(j,k)+bxo(j,k)*inflow_noise*um*0.
-             bxy1(j,k)=bxy1(j,k)+byo(j,k)*inflow_noise*um*0.
-             bxz1(j,k)=bxz1(j,k)+bzo(j,k)*inflow_noise*um*0.
+             !um=exp(-16*y*y)
+             !bxx1(j,k)=bxx1(j,k)+bxo(j,k)*inflow_noise*um*0.
+             !bxy1(j,k)=bxy1(j,k)+byo(j,k)*inflow_noise*um*0.
+             !bxz1(j,k)=bxz1(j,k)+bzo(j,k)*inflow_noise*um*0.
           enddo
        enddo
        !if (iscalar==1) then
@@ -166,14 +171,41 @@ contains
        enddo
     enddo
 
-    if (nclyn == 2) THEN
-       do k = 1, xsize(3)
-          do i = 1, xsize(1)
-             byxn(i, k) = ux(i, xsize(2) - 1, k)
-             byyn(i, k) = zero
-             byzn(i, k) = uz(i, xsize(2) - 1, k)
-          enddo
-       enddo
+    !if (nclyn == 2) THEN
+       !do k = 1, xsize(3)
+          !do i = 1, xsize(1)
+             !byxn(i, k) = ux(i, xsize(2) - 1, k)
+             !byyn(i, k) = zero
+             !byzn(i, k) = uz(i, xsize(2) - 1, k)
+          !enddo
+       !enddo
+    !endif
+
+    !! Bottom Boundary
+    if (ncly1 == 2) THEN
+      do k = 1, xsize(3)
+        do i = 1, xsize(1)
+          byx1(i, k) = zero
+          byy1(i, k) = zero
+          byz1(i, k) = zero
+        enddo
+      enddo
+    endif
+    !! Top Boundary
+    if (yend(2)==ny) then
+      if (nclyn == 2) then
+         do k = 1, xsize(3)
+            do i = 1, xsize(1)
+               byxn(i, k) = ux(i, xsize(2) - 1, k)
+               byyn(i, k) = uy(i, xsize(2) - 1, k)
+               byzn(i, k) = uz(i, xsize(2) - 1, k)
+            enddo
+         enddo
+      endif
+    else
+      byxn(:,:)=zero
+      byyn(:,:)=zero
+      byzn(:,:)=zero
     endif
 
     !SCALAR
@@ -187,11 +219,98 @@ contains
           phi(i,:,:,:) = phi(i - 1,:,:,:)
        endif
     endif
-
+    call tbl_flrt(ux,uy,uz)
     return
   end subroutine boundary_conditions_tbl
 
   !********************************************************************
+
+  !********************************************************************
+!
+subroutine tbl_flrt (ux1,uy1,uz1)
+  !
+  !********************************************************************
+
+  USE decomp_2d
+  USE decomp_2d_poisson
+  USE variables
+  USE param
+  USE MPI
+
+  implicit none
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
+  real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux2,uy2,uz2
+
+  integer :: j,i,k,code
+  real(mytype) :: can,ut1,ut2,ut3,ut4,utt1,utt2,utt3,utt4,udif
+
+  ux1(1,:,:)=bxx1(:,:)
+  ux1(nx,:,:)=bxxn(:,:)
+
+  call transpose_x_to_y(ux1,ux2)
+  call transpose_x_to_y(uy1,uy2)
+  ! Flow rate at the inlet
+  ut1=zero;utt1=zero
+  if (ystart(1)==1) then !! CPUs at the inlet
+    do k=1,ysize(3)
+      do j=1,ysize(2)-1
+        ut1=ut1+(yp(j+1)-yp(j))*(ux2(1,j+1,k)-half*(ux2(1,j+1,k)-ux2(1,j,k)))
+      enddo
+    enddo
+    ! ut1=ut1/real(ysize(3),mytype)
+  endif
+  call MPI_ALLREDUCE(ut1,utt1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+  utt1=utt1/real(nz,mytype) !! Volume flow rate per unit spanwise dist
+  ! Flow rate at the outlet
+  ut2=zero;utt2=zero
+  if (yend(1)==nx) then !! CPUs at the outlet
+    do k=1,ysize(3)
+      do j=1,ysize(2)-1
+        ut2=ut2+(yp(j+1)-yp(j))*(ux2(ysize(1),j+1,k)-half*(ux2(ysize(1),j+1,k)-ux2(ysize(1),j,k)))
+      enddo
+    enddo
+    ! ut2=ut2/real(ysize(3),mytype)
+  endif
+
+  call MPI_ALLREDUCE(ut2,utt2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+  utt2=utt2/real(nz,mytype) !! Volume flow rate per unit spanwise dist
+
+  ! Flow rate at the top and bottom
+  ut3=zero
+  ut4=zero
+  do k=1,ysize(3)
+    do i=1,ysize(1)
+      ut3=ut3+uy2(i,1,k)
+      ut4=ut4+uy2(i,ny,k)
+    enddo
+  enddo
+  call MPI_ALLREDUCE(ut3,utt3,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+  call MPI_ALLREDUCE(ut4,utt4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+  utt3=utt3/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
+  utt4=utt4/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
+
+  !! velocity correction
+  udif=(utt1-utt2+utt3-utt4)/yly
+  if (nrank==0 .and. mod(itime,1)==0) then
+    write(*,"(' Mass balance: L-BC, R-BC,',2f12.6)") utt1,utt2
+    write(*,"(' Mass balance: B-BC, T-BC, Crr-Vel',3f11.5)") utt3,utt4,udif
+  endif
+  ! do k=1,xsize(3)
+  !   do j=1,xsize(2)
+  !     ux1(nx,i,k)=ux1(nx,i,k)+udif
+  !   enddo
+  ! enddo
+  do k=1,xsize(3)
+    do j=1,xsize(2)
+      bxxn(j,k)=bxxn(j,k)+udif
+    enddo
+  enddo
+
+
+  return
+end subroutine tbl_flrt
+
+!********************************************************************
   subroutine ecoule(ux1,uy1,uz1,phi1)
 
 

@@ -312,6 +312,7 @@ module param
   !module tripping
   integer ::  z_modes, nxt_itr, itrip
   real(mytype) :: x0_tr, xs_tr, ys_tr, ts_tr, zs_param, zs_tr, randomseed, A_trip
+  real(mytype) :: x0_tr_tbl, xs_tr_tbl, ys_tr_tbl, ts_tr_tbl, A_tr
   real(mytype), allocatable, dimension(:) :: h_coeff, h_nxt,h_i
   !module TBL tripping
   !integer ::  z_modes, nxt_itr, itrip

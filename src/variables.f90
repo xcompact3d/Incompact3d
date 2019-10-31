@@ -483,8 +483,8 @@ contains
     rho1(:,:,:,:) = one
     call alloc_z(divu3, opt_global=.true.) !global indices
 
-    ! !TRIPPING 
-    A_trip=1.
+    ! !TRIPPING
+    !A_trip=1.
     zs_param=1.7
     randomseed=4600
     zs_tr=zs_param/2.853

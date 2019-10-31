@@ -76,7 +76,7 @@ subroutine parameter(input_i3d)
        scalar_lbound, scalar_ubound
   NAMELIST /LESModel/ jles, smagcst, walecst, maxdsmagcst, iwall
   NAMELIST /WallModel/ smagwalldamp
-
+  NAMELIST /Tripping/ A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
   NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf,nvol
   NAMELIST /ForceCVs/ xld, xrd, yld, yud
   NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, &
@@ -179,6 +179,7 @@ subroutine parameter(input_i3d)
      cnu=0.44_mytype
   endif
   if(ilesmod.ne.0) read(10, nml=LESModel)
+  if (itype.eq.itype_tbl) read(10, nml=Tripping)
   ! read(10, nml=TurbulenceWallModel)
   read(10, nml=CASE) !! Read case-specific variables
   close(10)
@@ -357,6 +358,8 @@ subroutine parameter(input_i3d)
      endif
   endif
 
+  if (itype.eq.itype_tbl.and.A_tr .gt. 0.0)  print *, "TBL tripping is active"
+
 #ifdef DOUBLE_PREC
   anglex = dsin(pi*angle/180._mytype)
   angley = dcos(pi*angle/180._mytype)
@@ -495,5 +498,12 @@ subroutine parameter_defaults()
 
   !! CASE specific variables
   tgv_twod = .FALSE.
+
+  !! TRIPPING
+  A_tr=0.0
+  xs_tr_tbl=1.402033
+  ys_tr_tbl=0.350508
+  ts_tr_tbl=1.402033
+  x0_tr_tbl=3.505082
 
 end subroutine parameter_defaults
