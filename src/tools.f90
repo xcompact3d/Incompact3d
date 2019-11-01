@@ -1325,6 +1325,8 @@ contains
           xdt = gdt(1)
        elseif (itimescheme.eq.5) then
           xdt=gdt(3)
+       elseif (itimescheme.eq.7) then
+          xdt=gdt(1)
        else
           if (nrank.eq.0) then
              print *, "Timescheme not implemented!"
