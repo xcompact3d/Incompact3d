@@ -12,14 +12,14 @@ p_row=0               ! Row partition
 p_col=0               ! Column partition
 
 ! Mesh
-nx=77               ! X-direction nodes
+nx=769               ! X-direction nodes
 ny=257                 ! Y-direction nodes
 nz=64                 ! Z-direction nodes
 istret = 3            ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
-beta = 1.    ! Refinement parameter (beta)
+beta = 0.7    ! Refinement parameter (beta)
 
 ! Domain
-xlx = 37.      ! Lx (Size of the box in x-direction)
+xlx = 357.      ! Lx (Size of the box in x-direction)
 yly = 80.            ! Ly (Size of the box in y-direction)
 zlz = 15.            ! Lz (Size of the box in z-direction)
 
@@ -27,7 +27,7 @@ zlz = 15.            ! Lz (Size of the box in z-direction)
 nclx1 = 2
 nclxn = 2
 ncly1 = 2
-nclyn = 1
+nclyn = 2
 nclz1 = 0
 nclzn = 0
 
@@ -40,9 +40,9 @@ init_noise = 0.0   ! Turbulence intensity (1=100%) !! Initial condition
 inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
 
 ! Time stepping
-dt = 0.014              ! Time step
+dt = 0.016              ! Time step
 ifirst = 1            ! First iteration
-ilast = 1000000       ! Last iteration
+ilast = 312500       ! Last iteration
 
 ! Enable modelling tools
 ilesmod=1            ! if 0 then DNS
@@ -65,7 +65,7 @@ itimescheme = 7       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4
 
 ! Dissipation control
 nu0nu = 9.0             ! Ratio between hyperviscosity/viscosity at nu
-cnu = 0.32               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
+cnu = 0.33               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 
 /End
 
@@ -75,8 +75,8 @@ cnu = 0.32               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 
 ! Basic I/O
 irestart = 0          ! Read initial flow field ?
-icheckpoint = 1000    ! Frequency for writing backup file
-ioutput = 1000        ! Frequency for visualization
+icheckpoint = 5000    ! Frequency for writing backup file
+ioutput = 20000        ! Frequency for visualization
 nvisu = 1             ! Size for visualisation collection
 
 /End
@@ -86,9 +86,9 @@ nvisu = 1             ! Size for visualisation collection
 !=================
 
 wrotation = 0.12      ! rotation speed to trigger turbulence
-spinup_time = 5000    ! number of time steps with a rotation to trigger turbulence
+spinup_time = 0 !10000    ! number of time steps with a rotation to trigger turbulence
 nstat = 1             ! Size arrays for statistic collection
-initstat = 50000      ! Time steps after which statistics are collected 
+initstat = 31250      ! Time steps after which statistics are collected 
 
 /End
 
