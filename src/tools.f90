@@ -649,7 +649,7 @@ end subroutine inversion5_v2
 
 
 !********************************************************************
-subroutine tripping(tb,ta) 
+subroutine tripping(tb,ta)
 
   USE param
   USE variables
@@ -661,7 +661,7 @@ subroutine tripping(tb,ta)
   integer :: i,j,k
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: tb, ta
   integer :: seed0, ii, code
-  real(mytype) :: z_pos, randx, p_tr, b_tr, x_pos, y_pos, A_tr
+  real(mytype) :: z_pos, randx, p_tr, b_tr, x_pos, y_pos!, A_tr
 
   !Done in X-Pencils
   seed0=randomseed !Seed for random number
@@ -781,20 +781,20 @@ subroutine tbl_tripping(tb,ta)
   integer :: i,j,k
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: tb, ta
   integer :: seed0, ii, code
-  real(mytype) :: x0_tr_tbl, xs_tr_tbl,ys_tr_tbl,ts_tr_tbl !Scales related with maximum wave numbers
-  real(mytype) :: z_pos, randx, p_tr,b_tr,A_tr, x_pos, y_pos
+  !real(mytype) :: x0_tr_tbl, xs_tr_tbl,ys_tr_tbl,ts_tr_tbl !Scales related with maximum wave numbers
+  real(mytype) :: z_pos, randx, p_tr,b_tr, x_pos, y_pos
   logical :: exist
 
 
   !Done in X-Pencils
 
   seed0=randomseed !Seed for random number
-  xs_tr_tbl=4.0/2.853
-  ys_tr_tbl=1.0/2.853
-  ts_tr_tbl=4.0/2.853
-  x0_tr_tbl=10.0/2.853
+  !xs_tr_tbl=4.0/2.853
+  !ys_tr_tbl=1.0/2.853
+  !ts_tr_tbl=4.0/2.853
+  !x0_tr_tbl=10.0/2.853
 
-  A_tr =  0.75/(ts_tr_tbl) !0.3/(ts_tr)
+  !A_tr =  0.75/(ts_tr_tbl) !0.3/(ts_tr)
 
 
   if ((itime.eq.ifirst).and.(nrank.eq.0)) then
@@ -1325,6 +1325,8 @@ contains
           xdt = gdt(1)
        elseif (itimescheme.eq.5) then
           xdt=gdt(3)
+       elseif (itimescheme.eq.7) then
+          xdt=gdt(1)
        else
           if (nrank.eq.0) then
              print *, "Timescheme not implemented!"
