@@ -181,7 +181,7 @@ contains
        else
           stop
        endif
-       
+
        do k=1,xsize(3)
           do j=1,xsize(2)
              phi(nx,j,k,:)=phi(nx,j,k,:)-cx*(phi(nx,j,k,:)-phi(nx-1,j,k,:))
@@ -396,7 +396,7 @@ contains
 994 format('vort',I3.3)
     write(filename, 994) itime/ioutput
     call decomp_2d_write_one(1,uvisu,filename,2)
-    
+
     return
   end subroutine postprocess_cyl
   !############################################################################

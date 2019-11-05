@@ -41,6 +41,7 @@ MODULE case
   USE dbg_schemes
   USE channel
   USE lockexch
+  USE tbl
 
   USE var, ONLY : nzmsize
 
@@ -69,7 +70,7 @@ CONTAINS
     px1(:,:,:) = zero
     py1(:,:,:) = zero
     pz1(:,:,:) = zero
-    
+
     !! Default density and pressure0 to one
     pressure0 = one
     rho1(:,:,:,:) = one
@@ -97,6 +98,10 @@ CONTAINS
     ELSEIF (itype.EQ.itype_dbg) THEN
 
        CALL init_dbg (ux1, uy1, uz1, ep1, phi1)
+
+    ELSEIF (itype.EQ.itype_tbl) THEN
+
+       CALL init_tbl (ux1, uy1, uz1, ep1, phi1)
 
     ENDIF
 
@@ -150,12 +155,17 @@ CONTAINS
 
        CALL boundary_conditions_dbg (ux, uy, uz, phi)
 
+    ELSEIF (itype.EQ.itype_tbl) THEN
+
+       CALL boundary_conditions_tbl (ux, uy, uz, phi)
+
     ENDIF
 
   END SUBROUTINE boundary_conditions
 
   SUBROUTINE postprocess_case(rho,ux,uy,uz,pp,phi,ep)
 
+    USE forces
     USE var, ONLY : nzmsize
     USE param, ONLY : npress
 
@@ -189,7 +199,16 @@ CONTAINS
 
        CALL postprocess_dbg (ux, uy, uz, phi, ep)
 
+    ELSEIF (itype.EQ.itype_tbl) THEN
+
+       CALL postprocess_tbl (ux, uy, uz, pp, phi, ep)
+
     ENDIF
+
+    if(iforces) then
+       call force(ux,uy,ep)
+       call restart_forces(1)
+    endif
 
   END SUBROUTINE postprocess_case
 
@@ -227,9 +246,9 @@ CONTAINS
     if (itype.eq.itype_lockexch) then
 
        call set_fluid_properties_lockexch(rho1, mu1)
-       
+
     endif
-    
+
   endsubroutine set_fluid_properties
 
 END MODULE case

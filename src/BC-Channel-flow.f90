@@ -132,27 +132,14 @@ contains
           i = xsize(1)
           phi(i,:,:,:) = phi(i - 1,:,:,:)
        endif
-
-       if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
-          !! Generate a hot patch on bottom boundary
-          do k = 1, xsize(3)
-             z = real(k + xstart(3) - 2, mytype) * dz - half * zlz
-             if (abs(z).lt.zlz/four) then
-                j = 1
-                do i = 1, xsize(1)
-                   x = real(i + xstart(1) - 2, mytype) * dx
-                   if ((x.gt.0.1*xlx).and.(x.lt.0.3*xlx)) then
-                      do is = 1, numscalar
-                         phi(i, j, k, is) = one
-                      enddo
-                   else
-                      do is = 1, numscalar
-                         phi(i, j, k, is) = zero
-                      enddo
-                   endif
-                enddo
-             endif
-          enddo
+       if (itimescheme.ne.7) then
+          if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
+             !! Generate a hot patch on bottom boundary
+             phi(:,1,:,:) = one
+          endif
+          if ((nclySn.eq.2).and.(xend(2).eq.ny)) THEN
+             phi(:,xsize(2),:,:) = zero
+          endif
        endif
     endif
 
@@ -278,7 +265,7 @@ contains
     endif
     close(10)
 
-#ifdef DEBG 
+#ifdef DEBG
     if (nrank .eq. 0) print *,'# init_post ok'
 #endif
 
@@ -294,7 +281,7 @@ contains
     USE var, only : ta1, pp1, di1
     USE var, only : ppi3, dip3
     USE var, only : pp2, ppi2, dip2
-    
+
     USE var, ONLY : nxmsize, nymsize, nzmsize
     USE param, ONLY : npress
 
