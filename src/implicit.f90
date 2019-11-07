@@ -862,7 +862,7 @@ subroutine  inttimp (var1,dvar1,forcing1)
            do j=1,xsize(2)
               do i=1,xsize(1)
                  !uhat
-                 ta1(i,j,k) = dt*dvar1(i,j,k,1)
+                 ta1(i,j,k) = dt*dvar1(i,j,k,1)-forcing1(i,j,k)
 
                  !save (N+Lxz)(n-1)
                  dvar1(i,j,k,2)=dvar1(i,j,k,1)
