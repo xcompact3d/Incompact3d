@@ -57,9 +57,9 @@ contains
     endif
     ux1=zero;uy1=zero;uz1=zero
 
-    call ecoule(ux1,uy1,uz1,phi1)
-
     !a blasius profile is created in ecoule and then duplicated for the all domain
+    call blasius()
+
     do k=1,xsize(3)
        do j=1,xsize(2)
           do i=1,xsize(1)
@@ -95,7 +95,7 @@ contains
 
     !INFLOW with an update of bxx1, byy1 and bzz1 at the inlet
 
-    call ecoule(ux,uy,uz,phi)
+    call blasius()
 
 
     !OUTFLOW based on a 1D convection equation
@@ -246,7 +246,7 @@ subroutine tbl_flrt (ux1,uy1,uz1)
 end subroutine tbl_flrt
 
 !********************************************************************
-  subroutine ecoule(ux1,uy1,uz1,phi1)
+  subroutine blasius()
 
 
     USE decomp_2d
@@ -256,9 +256,6 @@ end subroutine tbl_flrt
     USE MPI
 
     implicit none
-
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
     real(mytype) :: eta_bl, f_bl, g_bl, x_bl,h_bl
     real(mytype) :: delta_int, delta_eta, eps_eta
@@ -371,7 +368,7 @@ end subroutine tbl_flrt
     g_bl_inf=g_bl_inf/1.000546554
 
     return
-  end subroutine ecoule
+  end subroutine blasius
 
   !############################################################################
   subroutine init_post(ep1)
