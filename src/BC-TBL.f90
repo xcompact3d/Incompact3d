@@ -56,39 +56,10 @@ contains
 
     endif
     ux1=zero;uy1=zero;uz1=zero
-    if (iin.ne.0) then
-       call system_clock(count=code)
-       if (iin.eq.2) code=0
-       call random_seed(size = ii)
-       call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /))
-
-       call random_number(ux1)
-       call random_number(uy1)
-       call random_number(uz1)
-    endif
-
-    !modulation of the random noise + initial velocity profile
-    do k=1,xsize(3)
-       do j=1,xsize(2)
-          !if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy-yly/two
-          !if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/two
-          if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy-yly
-          if (istret.ne.0) y=yp(j+xstart(2)-1)-yly
-          um=exp(-16*y*y)
-          do i=1,xsize(1)
-             !ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)
-             !uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
-             !uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
-             ux1(i,j,k)=um*ux1(i,j,k)
-             uy1(i,j,k)=um*uy1(i,j,k)
-             uz1(i,j,k)=um*uz1(i,j,k)
-          enddo
-       enddo
-    enddo
 
     call ecoule(ux1,uy1,uz1,phi1)
 
-    !INIT FOR G AND U=MEAN FLOW + NOISE
+    !a blasius profile is created in ecoule and then duplicated for the all domain
     do k=1,xsize(3)
        do j=1,xsize(2)
           do i=1,xsize(1)
@@ -122,35 +93,12 @@ contains
 
     integer :: i, j, k, is
 
-    !INFLOW
+    !INFLOW with an update of bxx1, byy1 and bzz1 at the inlet
 
     call ecoule(ux,uy,uz,phi)
 
-    call random_number(bxo)
-    call random_number(byo)
-    call random_number(bzo)
 
-    if (iin.eq.1) then
-       do k=1,xsize(3)
-          do j=1,xsize(2)
-             if (istret.eq.0) y=(j+xstart(2)-1-1)*dy-1.
-             if (istret.ne.0) y=yp(j+xstart(2)-1)-1.
-             !um=exp(-16*y*y)
-             !bxx1(j,k)=bxx1(j,k)+bxo(j,k)*inflow_noise*um*0.
-             !bxy1(j,k)=bxy1(j,k)+byo(j,k)*inflow_noise*um*0.
-             !bxz1(j,k)=bxz1(j,k)+bzo(j,k)*inflow_noise*um*0.
-          enddo
-       enddo
-       !if (iscalar==1) then
-       !do k=1,xsize(3)
-       !do j=1,xsize(2)
-       !bxo(j,k)=phi(xsize(1)/4,j,k)
-       !enddo
-       !enddo
-       !endif
-    endif
-
-    !OUTFLOW
+    !OUTFLOW based on a 1D convection equation
 
     udx=one/dx
     udy=one/dy
@@ -171,16 +119,6 @@ contains
        enddo
     enddo
 
-    !if (nclyn == 2) THEN
-       !do k = 1, xsize(3)
-          !do i = 1, xsize(1)
-             !byxn(i, k) = ux(i, xsize(2) - 1, k)
-             !byyn(i, k) = zero
-             !byzn(i, k) = uz(i, xsize(2) - 1, k)
-          !enddo
-       !enddo
-    !endif
-
     !! Bottom Boundary
     if (ncly1 == 2) THEN
       do k = 1, xsize(3)
@@ -192,20 +130,14 @@ contains
       enddo
     endif
     !! Top Boundary
-    if (yend(2)==ny) then
-      if (nclyn == 2) then
-         do k = 1, xsize(3)
-            do i = 1, xsize(1)
-               byxn(i, k) = ux(i, xsize(2) - 1, k)
-               byyn(i, k) = uy(i, xsize(2) - 1, k)
-               byzn(i, k) = uz(i, xsize(2) - 1, k)
-            enddo
-         enddo
-      endif
-    else
-      byxn(:,:)=zero
-      byyn(:,:)=zero
-      byzn(:,:)=zero
+    if (nclyn == 2) then
+       do k = 1, xsize(3)
+          do i = 1, xsize(1)
+             byxn(i, k) = ux(i, xsize(2) - 1, k)
+             byyn(i, k) = uy(i, xsize(2) - 1, k)
+             byzn(i, k) = uz(i, xsize(2) - 1, k)
+          enddo
+       enddo
     endif
 
     !SCALAR
@@ -219,7 +151,10 @@ contains
           phi(i,:,:,:) = phi(i - 1,:,:,:)
        endif
     endif
+
+    !update of the flow rate (what is coming in the domain is getting out)
     call tbl_flrt(ux,uy,uz)
+
     return
   end subroutine boundary_conditions_tbl
 
