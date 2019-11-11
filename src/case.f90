@@ -40,6 +40,7 @@ MODULE case
   USE cyl
   USE dbg_schemes
   USE channel
+  USE mixlayer
   USE lockexch
   USE tbl
 
@@ -102,6 +103,17 @@ CONTAINS
     ELSEIF (itype.EQ.itype_tbl) THEN
 
        CALL init_tbl (ux1, uy1, uz1, ep1, phi1)
+
+    ELSEIF (itype.EQ.itype_mixlayer) THEN
+
+       CALL init_mixlayer (rho1, ux1, uy1, uz1, phi1)
+
+    ELSE
+
+       if (nrank.eq.0) then
+          print *, "ERROR: Unknown itype: ", itype
+          STOP
+       endif
 
     ENDIF
 
