@@ -56,8 +56,8 @@ iibm=0                ! Flag for immersed boundary method
 !====================
 
 ! Spatial derivatives
-ifirstder = 4         ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact)
-isecondder = 5        ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact, 5->hyperviscous 6th)
+ifirstder = 4         ! (1->2nd central, 4-> 6th compact)
+isecondder = 5        ! (1->2nd central, 4-> 6th compact, 5->hyperviscous 6th)
 ipinter = 1           ! interpolation scheme (1: classic, 2: optimized, 3: optimized agressive)
 
 ! Time scheme

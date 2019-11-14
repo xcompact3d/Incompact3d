@@ -286,13 +286,15 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
      afi  = one/(two*d)
      bfi  = zero
   elseif(ifirstder==2) then ! Fourth-order central
-     alfai= zero
-     afi  = four/(six*d)
-     bfi  = -one/(twelve*d)
+     if (nrank.eq.0) then
+        print *, "Fourth order central scheme not implemented!"
+        STOP
+     endif
   elseif(ifirstder==3) then ! Fourth-order compact
-     alfai= one/four
-     afi  = (three/four)/d
-     bfi  = zero
+     if (nrank.eq.0) then
+        print *, "Fourth order compact scheme not implemented!"
+        STOP
+     endif
   elseif(ifirstder==4) then ! Sixth-order compact
      alfai= one/three
      afi  = (seven/nine)/d
@@ -463,37 +465,15 @@ subroutine second_derivative(alsa1,as1,bs1,&
      bstt = bsi
      cstt = csi
   elseif(isecondder==2) then ! Fourth-order central
-     alsai=zero !(45._mytype*fpi2*pi*pi-272._mytype)/(two*(45._mytype*fpi2*pi*pi-208._mytype))
-     asi  = four/three/d2 !((six-nine*alsai)/four)/d2
-     bsi  = -one/three/(four*d2) !((-three+twentyfour*alsai)/five)/(four*d2)
-     csi  = zero !((two-eleven*alsai)/twenty)/(nine*d2)
-     dsi  = zero
-
-     alsa4= alsai
-     as4  = asi
-     bs4  = bsi
-     cs4  = csi
-
-     alsatt = alsai
-     astt = asi
-     bstt = bsi
-     cstt = csi
+     if (nrank.eq.0) then
+        print *, "Fourth-order central scheme not implemented!"
+        STOP
+     endif
   elseif(isecondder==3) then ! Fourth-order compact
-     alsai= one/ten  !(45._mytype*fpi2*pi*pi-272._mytype)/(two*(45._mytype*fpi2*pi*pi-208._mytype))
-     asi  = six/five/d2 !((six-nine*alsai)/four)/d2
-     bsi  = zero !((-three+twentyfour*alsai)/five)/(four*d2)
-     csi  = zero !((two-eleven*alsai)/twenty)/(nine*d2)
-     dsi  = zero
-
-     alsa4= alsai
-     as4  = asi
-     bs4  = bsi
-     cs4  = csi
-
-     alsatt = alsai
-     astt = asi
-     bstt = bsi
-     cstt = csi
+     if (nrank.eq.0) then
+        print *, "Fourth-order compact scheme not implemented!"
+        STOP
+     endif
   elseif(isecondder==4) then ! Sixth-order compact
      !BASE LELE
      !alsai= 2./11.
