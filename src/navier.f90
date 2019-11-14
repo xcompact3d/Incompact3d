@@ -1094,7 +1094,8 @@ contains
 
     !! LOCALS
     INTEGER :: nlock, ierr
-    REAL(mytype) :: rhomin, rho0
+    REAL(mytype) :: rhomin
+    REAL(mytype), SAVE :: rho0
 
     IF (poissiter.EQ.0) THEN
        !! Compute rho0
