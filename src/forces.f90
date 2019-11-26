@@ -190,7 +190,7 @@ subroutine force(ux1,uy1,ep1)
   use var, only : ux2, uy2, ta2, tb2, tc2, td2, di2
 
   implicit none
-  character(len=30) :: filename
+  character(len=30) :: filename, filename2
   integer :: nzmsize
   integer                                             :: i, iv, j, k, kk, code
   integer                                             :: nvect1,nvect2,nvect3
@@ -489,17 +489,42 @@ subroutine force(ux1,uy1,ep1)
      !Edited by F. Schuch
      xDrag_mean = sum(xDrag(:))/real(nz,mytype)
      yLift_mean = sum(yLift(:))/real(nz,mytype)
-     if ((nrank .eq. 0).and.(itime.gt.0)) then
-        write(filename,"('./out/aerof_avr',I1.1)") iv
-        open(67,file=filename,status='unknown',form='formatted',access='direct',recl=43) !43 = 3*14+1
+
+     if (itime==ifirst) then
+        if (nrank .eq. 0) then
+        write(filename,"('aerof',I1.1)") iv
+        open(67+(iv-1),file=filename,status='unknown',form='formatted')
+        endif
+     endif
+     if (nrank .eq. 0) then
+        write(67+(iv-1),*) t,xDrag_mean,yLift_mean
+     endif
+     if (itime==ilast) then
+        if (nrank .eq. 0) then
+           close(67+(iv-1))
+           write(filename,"('aerof',I1.1)") iv
+           write(filename2,"('aerof',I1.1,'-',I7.7)") iv, itime
+           call system("mv " //filename //filename2)
+        endif
+     endif
+     
+     
+!    if ((nrank .eq. 0).and.(itime.g)) then
+!        write(filename,"('aerof',I1.1)") iv
+!        open(67,file=filename,status='unknown',form='formatted')
+!     endif
+!     if (nrank .eq. 0) then
+!!        open(67,file=filename,status='unknown',form='formatted',access='direct',recl=43) !43 = 3*14+1!
+!
         !Using the direct access, each value for the coefficients will be written
         !in the line itime-2, eliminating any problems with possible restart
-        write(67,'(3E14.6,A)',rec=itime-2) t,&                     !1
-             xDrag_mean,&                                          !2
-             yLift_mean,&                                          !3
-             char(10) !new line character                          !+1
-        close(67)
-     endif
+!        write(67,'(3E14.6,A)',rec=itime-2) t,&                     !1
+!             xDrag_mean,&                                          !2
+ !            yLift_mean,&                                          !3
+!             char(10) !new line character                          !+1
+ !            endif
+ !            close(67)
+ !    endif
   enddo
 
   do k = 1, xsize(3)
