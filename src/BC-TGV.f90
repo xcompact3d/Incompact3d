@@ -457,9 +457,11 @@ contains
     call MPI_ALLREDUCE(temp1,eps2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     eps2=eps2/(nxc*nyc*nzc)
 
+    if (itime.ne.0.) then
     if (nrank==0) then
        write(42,'(20e20.12)') (itime-1)*dt,eek,eps,enst,eps2
        call flush(42)
+    endif
     endif
 
   end subroutine postprocess_tgv
