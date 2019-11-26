@@ -50,7 +50,7 @@ program xcompact3d
      t=itime*dt
      call simu_stats(2)
 
-     do itr=1,iadvance_time
+    do itr=1,iadvance_time
 
         call set_fluid_properties(rho1,mu1)
         call boundary_conditions(rho1,ux1,uy1,uz1,phi1,ep1)
@@ -176,9 +176,11 @@ subroutine init_xcompact3d()
      call body(ux1,uy1,uz1,ep1,0)
   endif
 
-  if (iforces) then
+  if (iforces.eq.1) then
      call init_forces()
-     if (irestart==1) call restart_forces(0)
+     if (irestart==1) then
+        call restart_forces(0)
+     endif
   endif
 
   if (irestart==0) then

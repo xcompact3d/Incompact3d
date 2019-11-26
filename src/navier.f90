@@ -57,6 +57,7 @@ contains
     USE param, ONLY : ntime, nrhotime, npress
     USE param, ONLY : ilmn, ivarcoeff
 
+
     IMPLICIT NONE
 
     !! Inputs
@@ -358,7 +359,7 @@ contains
     USE var, only: pp1,pgy1,pgz1,di1,pp2,ppi2,pgy2,pgz2,pgzi2,dip2,&
          pgz3,ppi3,dip3,nxmsize,nymsize,nzmsize
 
-    USE forces, only : ppi1
+    USE forces, only : iforces, ppi1
 
     implicit none
 
@@ -397,7 +398,7 @@ contains
     call interxpv(pz1,pgz1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
          nxmsize,xsize(1),xsize(2),xsize(3),1)
 
-    if (iforces) then
+    if (iforces.eq.1) then
        call interxpv(ppi1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
             nxmsize,xsize(1),xsize(2),xsize(3),1)
     endif

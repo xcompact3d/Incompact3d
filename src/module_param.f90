@@ -283,7 +283,6 @@ module param
   integer :: ntime ! How many (sub)timestpeps do we need to store?
   integer :: icheckpoint,irestart,idebmod,ioutput,imodulo2,idemarre,icommence,irecord
   integer :: iscalar,nxboite,istat,iread,iadvance_time,irotation,iibm
-  logical :: iforces
   integer :: npif,izap
   integer :: ivisu, ipost, initstat
   real(mytype) :: xlx,yly,zlz,dx,dy,dz,dx2,dy2,dz2,t,xxk1,xxk2

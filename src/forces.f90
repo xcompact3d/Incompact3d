@@ -44,7 +44,7 @@ module forces
   USE decomp_2d
   implicit none
 
-  integer :: nvol
+  integer :: nvol,iforces
   real(mytype),save,allocatable,dimension(:,:,:) :: ux01, uy01, ux11, uy11, ppi1
   real(mytype),allocatable,dimension(:) :: xld,xrd,yld,yud
   integer,allocatable,dimension(:) :: icvlf,icvrt,jcvlw,jcvup
@@ -132,8 +132,8 @@ contains
     character(len=30) :: filename, filestart
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
 
-    write(filename, "('sauve-forces',I7.7)") itime
-    write(filestart,"('sauve-forces',I7.7)") ifirst-1
+    write(filename, "('restart-forces',I7.7)") itime
+    write(filestart,"('restart-forces',I7.7)") ifirst-1
 
     if (itest1==1) then !write
        if (mod(itime, icheckpoint).ne.0) then
@@ -490,18 +490,18 @@ subroutine force(ux1,uy1,ep1)
      xDrag_mean = sum(xDrag(:))/real(nz,mytype)
      yLift_mean = sum(yLift(:))/real(nz,mytype)
 
-     if (itime==ifirst) then
+     if ((itime==ifirst).or.(itime==0)) then
         if (nrank .eq. 0) then
         write(filename,"('aerof',I1.1)") iv
-        open(67+(iv-1),file=filename,status='unknown',form='formatted')
+        open(38+(iv-1),file=filename,status='unknown',form='formatted')
         endif
      endif
      if (nrank .eq. 0) then
-        write(67+(iv-1),*) t,xDrag_mean,yLift_mean
+        write(38+(iv-1),*) t,xDrag_mean,yLift_mean
      endif
      if (itime==ilast) then
         if (nrank .eq. 0) then
-           close(67+(iv-1))
+           close(38+(iv-1))
            write(filename,"('aerof',I1.1)") iv
            write(filename2,"('aerof',I1.1,'-',I7.7)") iv, itime
            call system("mv " //filename //filename2)
