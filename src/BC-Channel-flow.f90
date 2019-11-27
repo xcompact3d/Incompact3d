@@ -79,7 +79,14 @@ contains
     if (iscalar==1) then
 
        phi1(:,:,:,:) = zero !change as much as you want
-
+                 if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
+             !! Generate a hot patch on bottom boundary
+             phi1(:,1,:,:) = one
+          endif
+          if ((nclySn.eq.2).and.(xend(2).eq.ny)) THEN
+             phi1(:,xsize(2),:,:) = zero
+          endif
+       
     endif
     ux1=zero;uy1=zero;uz1=zero
     if (iin.ne.0) then
@@ -146,14 +153,14 @@ contains
     call transpose_y_to_x(gx,ux)
 
     if (iscalar.ne.0) then
-       if (nclxS1.eq.2) then
-          i = 1
-          phi(i,:,:,:) = zero
-       endif
-       if (nclxSn.eq.2) then
-          i = xsize(1)
-          phi(i,:,:,:) = phi(i - 1,:,:,:)
-       endif
+!       if (nclxS1.eq.2) then
+!          i = 1
+!          phi(i,:,:,:) = zero
+!       endif
+!       if (nclxSn.eq.2) then
+!          i = xsize(1)
+!          phi(i,:,:,:) = phi(i - 1,:,:,:)
+!       endif
        if (itimescheme.ne.7) then
           if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
              !! Generate a hot patch on bottom boundary

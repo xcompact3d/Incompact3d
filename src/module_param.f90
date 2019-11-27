@@ -101,14 +101,6 @@ module variables
   real(mytype), save, allocatable, dimension(:,:) :: sy,vy
   real(mytype), save, allocatable, dimension(:,:) :: sz,vz
 
-  !module scalar
-  real(mytype),allocatable,dimension(:) :: sfxt,scxt,sbxt,ssxt,swxt
-  real(mytype),allocatable,dimension(:) :: sfxpt,ssxpt,swxpt
-  real(mytype),allocatable,dimension(:) :: sfyt,scyt,sbyt,ssyt,swyt
-  real(mytype),allocatable,dimension(:) :: sfypt,ssypt,swypt
-  real(mytype),allocatable,dimension(:) :: sfzt,sczt,sbzt,sszt,swzt
-  real(mytype),allocatable,dimension(:) :: sfzpt,sszpt,swzpt
-
 
   !module implicit
   real(mytype), allocatable,dimension(:) :: aam,bbm,ccm,ddm,eem,ggm,hhm,wwm,zzm !!TIME IMPLICIT, ncl=2
@@ -120,13 +112,13 @@ module variables
   real(mytype), allocatable,dimension(:) :: rrm11,qqm11,vvm11,ssm11 !!TIME IMPLICIT (with HPL), ncl=1, npaire=1
   real(mytype), allocatable,dimension(:) :: aam0,bbm0,ccm0,ddm0,eem0,ggm0,hhm0,wwm0,zzm0 !!TIME IMPLICIT, ncl=0
   real(mytype), allocatable,dimension(:) :: rrm0,qqm0,vvm0,ssm0,l1m,l2m,l3m,u1m,u2m,u3m !!TIME IMPLICIT (with HPL), ncl=0
-  real(mytype), allocatable,dimension(:) :: aamt,bbmt,ccmt,ddmt,eemt,ggmt,hhmt,wwmt,zzmt !!TIME IMPLICIT SCALAR, ncl=2
-  real(mytype), allocatable,dimension(:) :: uumt,ttmt,sssmt,zzzmt !!TIME IMPLICIT SCALAR, Nona
-  real(mytype), allocatable,dimension(:) :: rrmt,qqmt,vvmt,ssmt !!TIME IMPLICIT SCALAR (with HPL), ncl=2
-  real(mytype), allocatable,dimension(:) :: aamt1,bbmt1,ccmt1,ddmt1,eemt1,ggmt1,hhmt1,wwmt1,zzmt1 !!TIME IMPLICIT SCALAR, ncl=1
-  real(mytype), allocatable,dimension(:) :: rrmt1,qqmt1,vvmt1,ssmt1 !!TIME IMPLICIT SCALAR (with HPL), ncl=1
-  real(mytype), allocatable,dimension(:) :: aamt0,bbmt0,ccmt0,ddmt0,eemt0,ggmt0,hhmt0,wwmt0,zzmt0 !!TIME IMPLICIT SCALAR, ncl=0
-  real(mytype), allocatable,dimension(:) :: rrmt0,qqmt0,vvmt0,ssmt0,l1mt,l2mt,l3mt,u1mt,u2mt,u3mt !!TIME IMPLICIT SCALAR (with HPL), ncl=0
+!  real(mytype), allocatable,dimension(:) :: aamt,bbmt,ccmt,ddmt,eemt,ggmt,hhmt,wwmt,zzmt !!TIME IMPLICIT SCALAR, ncl=2
+!  real(mytype), allocatable,dimension(:) :: uumt,ttmt,sssmt,zzzmt !!TIME IMPLICIT SCALAR, Nona
+!  real(mytype), allocatable,dimension(:) :: rrmt,qqmt,vvmt,ssmt !!TIME IMPLICIT SCALAR (with HPL), ncl=2
+!  real(mytype), allocatable,dimension(:) :: aamt1,bbmt1,ccmt1,ddmt1,eemt1,ggmt1,hhmt1,wwmt1,zzmt1 !!TIME IMPLICIT SCALAR, ncl=1
+!  real(mytype), allocatable,dimension(:) :: rrmt1,qqmt1,vvmt1,ssmt1 !!TIME IMPLICIT SCALAR (with HPL), ncl=1
+!  real(mytype), allocatable,dimension(:) :: aamt0,bbmt0,ccmt0,ddmt0,eemt0,ggmt0,hhmt0,wwmt0,zzmt0 !!TIME IMPLICIT SCALAR, ncl=0
+!  real(mytype), allocatable,dimension(:) :: rrmt0,qqmt0,vvmt0,ssmt0,l1mt,l2mt,l3mt,u1mt,u2mt,u3mt !!TIME IMPLICIT SCALAR (with HPL), ncl=0
 
 
 

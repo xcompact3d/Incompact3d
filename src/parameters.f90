@@ -278,7 +278,6 @@ subroutine parameter(input_i3d)
         write(*,"(' Prandtl number Re  : ',F15.8)") prandtl
      endif
      write(*,"(' Time step dt       : ',F15.8)") dt
-     write (*,"(' Spatial scheme     : ',F15.8)") fpi2
      if (ilesmod.ne.0) then
         print *,'                   : DNS'
      else
