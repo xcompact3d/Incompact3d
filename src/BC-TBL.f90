@@ -75,7 +75,14 @@ contains
 
     if (iscalar==1) then
 
-       phi1(:,:,:,:) = zero !change as much as you want
+       phi1(:,:,:,:) = 0.25 !change as much as you want
+          if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
+             !! Generate a hot patch on bottom boundary
+             phi1(:,1,:,:) = one
+          endif
+          if ((nclySn.eq.2).and.(xend(2).eq.ny)) THEN
+             phi1(:,xsize(2),:,:) = 0.25
+          endif
 
     endif
     ux1=zero;uy1=zero;uz1=zero
@@ -119,7 +126,20 @@ contains
     !INFLOW with an update of bxx1, byy1 and bzz1 at the inlet
 
     call blasius()
-
+    !INLET FOR SCALAR, TO BE CONSISTENT WITH INITIAL CONDITION
+    if (iscalar.eq.1) then
+       do k=1,xsize(3)
+          do j=1,xsize(2)
+             phi(1,:,:,:)=0.25
+             if ((xstart(2).eq.1)) then
+                phi(:,1,:,:) = one
+             endif
+             if ((xend(2).eq.ny)) THEN
+                phi(:,xsize(2),:,:) = 0.25
+             endif
+          enddo
+       enddo
+    endif
 
     !OUTFLOW based on a 1D convection equation
 
@@ -139,7 +159,8 @@ contains
           bxxn(j,k)=ux(nx,j,k)-cx*(ux(nx,j,k)-ux(nx-1,j,k))
           bxyn(j,k)=uy(nx,j,k)-cx*(uy(nx,j,k)-uy(nx-1,j,k))
           bxzn(j,k)=uz(nx,j,k)-cx*(uz(nx,j,k)-uz(nx-1,j,k))
-       enddo
+          if (iscalar.eq.1) phi(nx,:,:,:) =  phi(nx,:,:,:) - cx*(phi(nx,:,:,:)-phi(nx-1,:,:,:))
+          enddo
     enddo
 
     !! Bottom Boundary
@@ -163,16 +184,17 @@ contains
        enddo
     endif
 
-    !SCALAR
+    !SCALAR   
+    if (itimescheme.ne.7) then
     if (iscalar.ne.0) then
-       if (nclxS1.eq.2) then
-          i = 1
-          phi(i,:,:,:) = zero
-       endif
-       if (nclxSn.eq.2) then
-          i = xsize(1)
-          phi(i,:,:,:) = phi(i - 1,:,:,:)
-       endif
+          if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
+             !! Generate a hot patch on bottom boundary
+             phi(1,1,:,:) = one
+          endif
+          if ((nclySn.eq.2).and.(xend(2).eq.ny)) THEN
+             phi(1,xsize(2),:,:) = phi(1,xsize(2)-1,:,:)
+          endif
+    endif
     endif
 
     !update of the flow rate (what is coming in the domain is getting out)
@@ -394,26 +416,62 @@ end subroutine tbl_flrt
   end subroutine blasius
 
   !############################################################################
-  subroutine postprocess_tbl(ux1,uy1,uz1,pp3,phi1,ep1) !By Felipe Schuch
+  subroutine postprocess_tbl(ux1,uy1,uz1,ep1) !By Felipe Schuch
 
     USE MPI
     USE decomp_2d
     USE decomp_2d_io
-    USE var, only : umean,vmean,wmean,pmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
-    USE var, only : phimean, phiphimean
-    USE var, only : ta1, pp1, di1
-    USE var, only : ppi3, dip3
-    USE var, only : pp2, ppi2, dip2
-
-    USE var, ONLY : nxmsize, nymsize, nzmsize
-    USE param, ONLY : npress
+    USE var, only : umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
+    USE var, only : uvisu
+    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-    real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
     character(len=30) :: filename
 
-    integer :: is
+       !! Write vorticity as an example of post processing
+    !x-derivatives
+    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    !y-derivatives
+    call transpose_x_to_y(ux1,td2)
+    call transpose_x_to_y(uy1,te2)
+    call transpose_x_to_y(uz1,tf2)
+    call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+    call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    !!z-derivatives
+    call transpose_y_to_z(td2,td3)
+    call transpose_y_to_z(te2,te3)
+    call transpose_y_to_z(tf2,tf3)
+    call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+    call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+    call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+    !!all back to x-pencils
+    call transpose_z_to_y(ta3,td2)
+    call transpose_z_to_y(tb3,te2)
+    call transpose_z_to_y(tc3,tf2)
+    call transpose_y_to_x(td2,tg1)
+    call transpose_y_to_x(te2,th1)
+    call transpose_y_to_x(tf2,ti1)
+    call transpose_y_to_x(ta2,td1)
+    call transpose_y_to_x(tb2,te1)
+    call transpose_y_to_x(tc2,tf1)
+    !du/dx=ta1 du/dy=td1 and du/dz=tg1
+    !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
+    !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
+
+    di1(:,:,:)=sqrt((tf1(:,:,:)-th1(:,:,:))**2+(tg1(:,:,:)-tc1(:,:,:))**2+&
+         (tb1(:,:,:)-td1(:,:,:))**2)
+    if (iibm==2) then
+       di1(:,:,:) = (one - ep1(:,:,:)) * di1(:,:,:)
+    endif
+    uvisu=0.
+    call fine_to_coarseV(1,di1,uvisu)
+994 format('vort',I3.3)
+    write(filename, 994) itime/ioutput
+    call decomp_2d_write_one(1,uvisu,filename,2)
 
     return
   end subroutine postprocess_tbl
