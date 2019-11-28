@@ -214,7 +214,7 @@ CONTAINS
 
     ELSEIF (itype.EQ.itype_tbl) THEN
 
-       CALL postprocess_tbl (ux, uy, uz, pp, phi, ep)
+       CALL postprocess_tbl (ux, uy, uz, ep)
 
     ENDIF
 

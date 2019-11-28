@@ -96,8 +96,6 @@ $(OBJ):$(SRCDIR)%.o : $(SRCDIR)%.f90
 
 .PHONY: clean
 
-visualize :
-	$(FC) $(SRCDIR)/paraview_incompact3d.f90 -o visualize
 
 clean:
 	rm -f $(DECOMPDIR)/*.o $(DECOMPDIR)/*.mod

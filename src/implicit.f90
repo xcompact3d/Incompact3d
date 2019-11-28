@@ -2073,7 +2073,10 @@ subroutine scalarimp(ux1,uy1,uz1,phi1,dphi1,is)
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dphi1
   integer :: is
 
-  real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: uy2,uz2,uz3,phi2,phi3
+  real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: uy2,uz2,phi2
+  real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: uz3,phi3
+  real(mytype),dimension(ysize(1),ysize(3)) :: bc1
+  
   integer :: ijk,nvect1,nvect2,nvect3,i,j,k,nxyz,code
 
   !parametres CL
@@ -2225,11 +2228,13 @@ subroutine scalarimp(ux1,uy1,uz1,phi1,dphi1,is)
   call transpose_x_to_y(phi1,phi2)
   call transpose_x_to_y(td1,ta2)
 
-  !#ifdef my_mod_solide
-  !mytmptemp(:,1,:)=phi2(:,1,:)
-  !mytmptemp(:,2,:)=phi2(:,ysize(2),:)
-  !#endif
 
+  !BC FOR THE SCALAR
+  if (itype.eq.itype_tbl) then
+     bc1(:,:)=phi2(:,ny-1,:)
+     !in order to mimick a Neumann BC at the top of the domain for the TBL
+  endif
+  
   !ta2: A.T_hat
   !td2:(A+xcstB).Tn
   if (isecondder.ne.5) then
@@ -2255,8 +2260,9 @@ subroutine scalarimp(ux1,uy1,uz1,phi1,dphi1,is)
   endif
 
   if (nclySn.eq.2) then
-     !ta2(:,ysize(2),:)=one
-     ta2(:,ysize(2),:)=zero
+     !BC at the top for the SCALAR
+!     ta2(:,ysize(2),:)=one
+     ta2(:,ysize(2),:)=bc1(:,:)
   endif
 
   !Inversion systeme lineaire Mx=b: (A-xcst.B)u^n+1=uhat+(A+xcst.B)u^n

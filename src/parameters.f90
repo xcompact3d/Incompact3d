@@ -76,8 +76,8 @@ subroutine parameter(input_i3d)
        scalar_lbound, scalar_ubound
   NAMELIST /LESModel/ jles, smagcst, walecst, maxdsmagcst, iwall
   NAMELIST /WallModel/ smagwalldamp
-  NAMELIST /Tripping/ A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
-  NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf,nvol
+  NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
+  NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf,nvol,iforces
   NAMELIST /ForceCVs/ xld, xrd, yld, yud
   NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, &
        massfrac, mol_weight, imultispecies, primary_species, &
@@ -114,6 +114,11 @@ subroutine parameter(input_i3d)
   read(10, nml=Statistics)
   if (iibm.ne.0) then
      read(10, nml=ibmstuff)
+  endif
+
+  if (iforces.eq.1) then
+     allocate(xld(nvol), xrd(nvol), yld(nvol), yud(nvol))
+     read(10, nml=ForceCVs)
   endif
 
   if (numscalar.ne.0) then
