@@ -1113,7 +1113,8 @@ contains
           print *,'Phi'//char(48+is)//' min max=', real(phimin1,4), real(phimax1,4)
 
           if (abs(phimax1).ge.10.) then !if phi control turned off
-             stop 'Scalar diverged! FATALITY!'
+             print *,'Scalar diverged! SIMULATION IS STOPPED!'
+             call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
           endif
        endif
 
@@ -1177,7 +1178,8 @@ contains
        !print *,'CFL=',real(abs(max(uxmax1,uymax1,uzmax1)*dt)/min(dx,dy,dz),4)
 
        if((abs(uxmax1).ge.10.).OR.(abs(uymax1).ge.10.).OR.(abs(uzmax1).ge.10.)) then
-          stop 'Velocity diverged! FATALITY!'
+         print *,'Velocity diverged! SIMULATION IS STOPPED!'
+         call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop      
        endif
 
     endif

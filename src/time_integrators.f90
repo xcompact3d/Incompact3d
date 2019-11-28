@@ -218,7 +218,7 @@ contains
              IF (itimescheme.ne.7) THEN
                 CALL intt(phi1(:,:,:,is), dphi1(:,:,:,:,is))
              ELSE
-                CALL scalar_schemes(nu0nu,is)
+            !!TO BE DONE: when sc is not one
                 CALL scalarimp(ux1,uy1,uz1,phi1(:,:,:,is),dphi1(:,:,:,:,is),is)
              ENDIF
 

@@ -52,7 +52,7 @@ subroutine parameter(input_i3d)
 
   USE lockexch, ONLY : pfront
 
-  USE forces, ONLY : nvol, xld, xrd, yld, yud
+  USE forces, ONLY : iforces, nvol, xld, xrd, yld, yud
 
   implicit none
 
@@ -209,6 +209,8 @@ subroutine parameter(input_i3d)
   dy=yly/real(nym,mytype)
   dz=zlz/real(nzm,mytype)
 
+  if (nrank==0) call system('mkdir data out probes 2> /dev/null')
+
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter input.i3d done'
 #endif
@@ -275,7 +277,6 @@ subroutine parameter(input_i3d)
         write(*,"(' Prandtl number Re  : ',F15.8)") prandtl
      endif
      write(*,"(' Time step dt       : ',F15.8)") dt
-     write (*,"(' Spatial scheme     : ',F15.8)") fpi2
      if (ilesmod.ne.0) then
         print *,'                   : DNS'
      else
@@ -388,6 +389,8 @@ subroutine parameter_defaults()
   USE decomp_2d
   USE complex_geometry
 
+  USE forces, ONLY : iforces, nvol
+
   IMPLICIT NONE
 
   integer :: i
@@ -405,15 +408,17 @@ subroutine parameter_defaults()
   beta = 0
   iscalar = 0
   cont_phi = 0
+  filepath = './data/'
   irestart = 0
+  datapath = './data/'
   fpi2 = (48._mytype / seven) / (PI**2)
 
   !! IBM stuff
   nraf = 0
   nobjmax = 0
 
-  iforces = .FALSE.
-
+  nvol = 0
+  iforces = 0
   itrip = 0
   wrotation = zero
   irotation = 0
