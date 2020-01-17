@@ -1179,7 +1179,7 @@ contains
 
        if((abs(uxmax1).ge.10.).OR.(abs(uymax1).ge.10.).OR.(abs(uzmax1).ge.10.)) then
          print *,'Velocity diverged! SIMULATION IS STOPPED!'
-         call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop      
+         call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
        endif
 
     endif
@@ -1240,7 +1240,15 @@ contains
     endif
 
   end subroutine simu_stats
-
+  !##############################################################################
+    !!
+    !!  SUBROUTINE: restart
+    !! DESCRIPTION: reads or writes restart file
+    !!
+    !!      AUTHOR: ?
+    !!    MODIFIED: Kay Schäfer
+    !!
+  !##############################################################################
   subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1,iresflg)
 
     USE decomp_2d
@@ -1248,6 +1256,7 @@ contains
     USE variables
     USE param
     USE MPI
+    use navier, only : gradp
 
     implicit none
 
@@ -1290,22 +1299,32 @@ contains
        call decomp_2d_write_var(fh,disp,1,ux1)
        call decomp_2d_write_var(fh,disp,1,uy1)
        call decomp_2d_write_var(fh,disp,1,uz1)
-       call decomp_2d_write_var(fh,disp,1,ep1)
-       do is=1, ntime
-          call decomp_2d_write_var(fh,disp,1,dux1(:,:,:,is))
-          call decomp_2d_write_var(fh,disp,1,duy1(:,:,:,is))
-          call decomp_2d_write_var(fh,disp,1,duz1(:,:,:,is))
-       end do
-       call decomp_2d_write_var(fh,disp,1,px1)
-       call decomp_2d_write_var(fh,disp,1,py1)
-       call decomp_2d_write_var(fh,disp,1,pz1)
+       ! write previous time-step if necessary for AB2 or AB3
+       if ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.7)) then
+         call decomp_2d_write_var(fh,disp,1,dux1(:,:,:,2))
+         call decomp_2d_write_var(fh,disp,1,duy1(:,:,:,2))
+         call decomp_2d_write_var(fh,disp,1,duz1(:,:,:,2))
+       end if
+       ! for AB3 one more previous time-step
+       if ((itimescheme.eq.3).or.(itimescheme.eq.7)) then
+         call decomp_2d_write_var(fh,disp,1,dux1(:,:,:,3))
+         call decomp_2d_write_var(fh,disp,1,duy1(:,:,:,3))
+         call decomp_2d_write_var(fh,disp,1,duz1(:,:,:,3))
+       end if
+       !
        call decomp_2d_write_var(fh,disp,1,pp3,phG)
+       !
        if (iscalar==1) then
           do is=1, numscalar
              call decomp_2d_write_var(fh,disp,1,phi1(:,:,:,is))
-             do it = 1, ntime
-                call decomp_2d_write_var(fh,disp,1,dphi1(:,:,:,it,is))
-             enddo
+             ! previous time-steps
+             if ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB2 or AB3
+               call decomp_2d_write_var(fh,disp,1,dphi1(:,:,:,2,is))
+             end if
+             !
+             if ((itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB3
+               call decomp_2d_write_var(fh,disp,1,dphi1(:,:,:,3,is))
+             end if
           end do
        endif
        call MPI_FILE_CLOSE(fh,ierror)
@@ -1318,22 +1337,32 @@ contains
        call decomp_2d_read_var(fh,disp,1,ux1)
        call decomp_2d_read_var(fh,disp,1,uy1)
        call decomp_2d_read_var(fh,disp,1,uz1)
-       call decomp_2d_read_var(fh,disp,1,ep1)
-       do is=1, ntime
-          call decomp_2d_read_var(fh,disp,1,dux1(:,:,:,is))
-          call decomp_2d_read_var(fh,disp,1,duy1(:,:,:,is))
-          call decomp_2d_read_var(fh,disp,1,duz1(:,:,:,is))
-       end do
-       call decomp_2d_read_var(fh,disp,1,px1)
-       call decomp_2d_read_var(fh,disp,1,py1)
-       call decomp_2d_read_var(fh,disp,1,pz1)
+       ! read previous time-step if necessary for AB2 or AB3
+       if ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB2 or AB3
+         call decomp_2d_read_var(fh,disp,1,dux1(:,:,:,2))
+         call decomp_2d_read_var(fh,disp,1,duy1(:,:,:,2))
+         call decomp_2d_read_var(fh,disp,1,duz1(:,:,:,2))
+       end if
+       ! for AB3 one more previous time-step
+       if ((itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB3
+         call decomp_2d_read_var(fh,disp,1,dux1(:,:,:,3))
+         call decomp_2d_read_var(fh,disp,1,duy1(:,:,:,3))
+         call decomp_2d_read_var(fh,disp,1,duz1(:,:,:,3))
+       end if
+       !
        call decomp_2d_read_var(fh,disp,1,pp3,phG)
+       !
        if (iscalar==1) then
           do is=1, numscalar
              call decomp_2d_read_var(fh,disp,1,phi1(:,:,:,is))
-             do it = 1, ntime
-                call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,it,is))
-             enddo
+             ! previous time-steps
+             if ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB2 or AB3
+               call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,2,is))
+             end if
+             !
+             if ((itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB3
+               call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,3,is))
+             end if
           end do
        endif
        call MPI_FILE_CLOSE(fh,ierror_o)
@@ -1348,93 +1377,11 @@ contains
        endif
     endif
 
+    ! reconstruction of the dp/dx, dp/dy and dp/dz from pp3
     if (iresflg==0) then
-       ! reconstruction of the dp/dx, dp/dy and dp/dz from px1,py1 and pz1
-       ! Temporal scheme (1:EULER, 2:AB2, 3: AB3, 4:AB4, 5:RK3, 6:RK4)
-       if (itimescheme.eq.1) then
-          xdt=gdt(1)
-       elseif (itimescheme.eq.2) then
-          xdt=gdt(1)
-       elseif (itimescheme.eq.3) then
-          xdt = gdt(1)
-       elseif (itimescheme.eq.5) then
-          xdt=gdt(3)
-       elseif (itimescheme.eq.7) then
-          xdt=gdt(1)
-       else
-          if (nrank.eq.0) then
-             print *, "Timescheme not implemented!"
-             stop
-          endif
-       endif
-
-       do k=1,xsize(3)
-          do j=1,xsize(2)
-             dpdyx1(j,k)=py1(1,j,k)/xdt
-             dpdzx1(j,k)=pz1(1,j,k)/xdt
-             dpdyxn(j,k)=py1(nx,j,k)/xdt
-             dpdzxn(j,k)=pz1(nx,j,k)/xdt
-          enddo
-       enddo
-
-       if (xsize(3)==1) then
-          do j=1,xsize(2)
-             do i=1,xsize(1)
-                dpdxz1(i,j)=px1(i,j,1)/xdt
-                dpdyz1(i,j)=py1(i,j,1)/xdt
-             enddo
-          enddo
-       endif
-       if (xsize(3)==nz) then
-          do j=1,xsize(2)
-             do i=1,xsize(1)
-                dpdxzn(i,j)=px1(i,j,nz)/xdt
-                dpdyzn(i,j)=py1(i,j,nz)/xdt
-             enddo
-          enddo
-       endif
-
-       ! determine the processor grid in use
-       call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, &
-            dims, dummy_periods, dummy_coords, code)
-
-       if (dims(1)==1) then
-          do k=1,xsize(3)
-             do i=1,xsize(1)
-                dpdxy1(i,k)=px1(i,1,k)/xdt
-                dpdzy1(i,k)=pz1(i,1,k)/xdt
-             enddo
-          enddo
-          do k=1,xsize(3)
-             do i=1,xsize(1)
-                dpdxyn(i,k)=px1(i,xsize(2),k)/xdt
-                dpdzyn(i,k)=pz1(i,xsize(2),k)/xdt
-             enddo
-          enddo
-       else
-          !find j=1 and j=ny
-          if (xstart(2)==1) then
-             do k=1,xsize(3)
-                do i=1,xsize(1)
-                   dpdxy1(i,k)=px1(i,1,k)/xdt
-                   dpdzy1(i,k)=pz1(i,1,k)/xdt
-                enddo
-             enddo
-          endif
-          !      print *,nrank,xstart(2),ny-(nym/p_row)
-          if (ny-(nym/dims(1))==xstart(2)) then
-             do k=1,xsize(3)
-                do i=1,xsize(1)
-                   dpdxyn(i,k)=px1(i,xsize(2),k)/xdt
-                   dpdzyn(i,k)=pz1(i,xsize(2),k)/xdt
-                enddo
-             enddo
-          endif
-
-       endif
-
+       call gradp(px1,py1,pz1,pp3)
        if (nrank==0) print *,'reconstruction pressure gradients done!'
-    endif
+    end if
 
     if (iresflg .eq. 1 ) then !Writing restart
        if (nrank==0) then
@@ -1446,5 +1393,5 @@ contains
     end if
 
   end subroutine restart
-
+  !##############################################################################
 end module tools

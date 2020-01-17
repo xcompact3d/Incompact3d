@@ -39,6 +39,7 @@ module navier
   public :: solve_poisson, divergence, calc_divu_constraint
   public :: pre_correc, cor_vel
   public :: lmn_t_to_rho_trans, momentum_to_velocity, velocity_to_momentum
+  public :: gradp
 
 contains
 
