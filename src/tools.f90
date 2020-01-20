@@ -1273,6 +1273,7 @@ contains
     integer, dimension(2) :: dims, dummy_coords
     logical, dimension(2) :: dummy_periods
     character(len=30) :: filename, filestart
+    character(len=32) :: fmt2,fmt3
 
     if (iresflg .eq. 1 ) then !Writing restart
        if (mod(itime, icheckpoint).ne.0) then
@@ -1328,6 +1329,31 @@ contains
           end do
        endif
        call MPI_FILE_CLOSE(fh,ierror)
+       ! Write info file for restart - Kay Schäfer
+       if (nrank.eq.0) then
+         write(filename,"('restart',I7.7,'.info')") itime
+         write(fmt2,'("(A,I16)")')
+         write(fmt3,'("(A,F16.10)")')
+         !
+         open (111,file=filename,action='write',status='replace')
+         write(111,'(A)')'!==================='
+         write(111,'(A)')'&Time'
+         write(111,'(A)')'!==================='
+         write(111,fmt3) 'tfield=',t
+         write(111,fmt2) 'itime= ',itime
+         write(111,'(A)')'/End'
+         write(111,'(A)')'!==================='
+         write(111,'(A)')'&NumParam'
+         write(111,'(A)')'!==================='
+         write(111,fmt2) 'nx=    ',nx
+         write(111,fmt2) 'ny=    ',ny
+         write(111,fmt2) 'nz=    ',nz
+         write(111,fmt2) 'istret=',istret
+         write(111,fmt3) 'beta=  ',beta
+         write(111,'(A,I11)') 'itimescheme=',itimescheme
+         write(111,'(A)')'/End'
+         close(111)
+       end if
     else
        if (nrank==0) print *,'RESTART from file:', filestart
        call MPI_FILE_OPEN(MPI_COMM_WORLD, filestart, &
