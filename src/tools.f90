@@ -1405,6 +1405,9 @@ contains
 
     ! reconstruction of the dp/dx, dp/dy and dp/dz from pp3
     if (iresflg==0) then
+       if (itimescheme.le.4) itr=1
+       if (itimescheme.eq.5) itr=3
+       if (itimescheme.eq.6) itr=5    
        call gradp(px1,py1,pz1,pp3)
        if (nrank==0) print *,'reconstruction pressure gradients done!'
     end if
