@@ -307,6 +307,7 @@ contains
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     character(len=30) :: filename
 
+    if ((ivisu.ne.0).and.(mod(itime, ioutput).eq.0)) then
     !! Write vorticity as an example of post processing
     !x-derivatives
     call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
@@ -350,7 +351,8 @@ contains
 994 format('vort',I3.3)
     write(filename, 994) itime/ioutput
     call decomp_2d_write_one(1,uvisu,filename,2)
-
+    endif
+    
     return
   end subroutine postprocess_cyl
   !############################################################################
