@@ -82,7 +82,17 @@ CONTAINS
     ENDIF
 
   END SUBROUTINE calculate_transeq_rhs
-
+  !############################################################################
+  !############################################################################
+  !!
+  !!  SUBROUTINE: momentum_rhs_eq
+  !!      AUTHOR: ?
+  !!    MODIFIED: Kay Schäfer
+  !! DESCRIPTION: Calculation of convective and diffusion terms of momentum
+  !!              equation
+  !!
+  !############################################################################
+  !############################################################################
   subroutine momentum_rhs_eq(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
     USE param
@@ -123,24 +133,22 @@ CONTAINS
     call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
     call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
 
-    ta1(:,:,:) = td1(:,:,:) + rho1(:,:,:,1) * ux1(:,:,:) * ta1(:,:,:)
-    tb1(:,:,:) = te1(:,:,:) + rho1(:,:,:,1) * ux1(:,:,:) * tb1(:,:,:)
-    tc1(:,:,:) = tf1(:,:,:) + rho1(:,:,:,1) * ux1(:,:,:) * tc1(:,:,:)
+    ! Convective terms of x-pencil are stored in tg1,th1,ti1
+    tg1(:,:,:) = td1(:,:,:) + rho1(:,:,:,1) * ux1(:,:,:) * ta1(:,:,:)
+    th1(:,:,:) = te1(:,:,:) + rho1(:,:,:,1) * ux1(:,:,:) * tb1(:,:,:)
+    ti1(:,:,:) = tf1(:,:,:) + rho1(:,:,:,1) * ux1(:,:,:) * tc1(:,:,:)
 
     if (ilmn) then
        !! Quasi-skew symmetric terms
        call derx (td1,rho1(:,:,:,1),di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-       ta1(:,:,:) = ta1(:,:,:) + ux1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
-       tb1(:,:,:) = tb1(:,:,:) + uy1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
-       tc1(:,:,:) = tc1(:,:,:) + uz1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
+       tg1(:,:,:) = tg1(:,:,:) + ux1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
+       th1(:,:,:) = th1(:,:,:) + uy1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
+       ti1(:,:,:) = ti1(:,:,:) + uz1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
     endif
 
     call transpose_x_to_y(ux1,ux2)
     call transpose_x_to_y(uy1,uy2)
     call transpose_x_to_y(uz1,uz2)
-    call transpose_x_to_y(ta1,ta2)
-    call transpose_x_to_y(tb1,tb2)
-    call transpose_x_to_y(tc1,tc2)
 
     if (ilmn) then
        call transpose_x_to_y(rho1(:,:,:,1),rho2)
@@ -160,24 +168,22 @@ CONTAINS
     call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
     call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
 
-    ta2(:,:,:) = ta2(:,:,:) + (tg2(:,:,:) + rho2(:,:,:) * uy2(:,:,:) * td2(:,:,:))
-    tb2(:,:,:) = tb2(:,:,:) + (th2(:,:,:) + rho2(:,:,:) * uy2(:,:,:) * te2(:,:,:))
-    tc2(:,:,:) = tc2(:,:,:) + (ti2(:,:,:) + rho2(:,:,:) * uy2(:,:,:) * tf2(:,:,:))
+    ! Convective terms of y-pencil in tg2,th2,ti2
+    tg2(:,:,:) = (tg2(:,:,:) + rho2(:,:,:) * uy2(:,:,:) * td2(:,:,:))
+    th2(:,:,:) = (th2(:,:,:) + rho2(:,:,:) * uy2(:,:,:) * te2(:,:,:))
+    ti2(:,:,:) = (ti2(:,:,:) + rho2(:,:,:) * uy2(:,:,:) * tf2(:,:,:))
 
     if (ilmn) then
        !! Quasi-skew symmetric terms
        call dery (te2,rho2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-       ta2(:,:,:) = ta2(:,:,:) + ux2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
-       tb2(:,:,:) = tb2(:,:,:) + uy2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
-       tc2(:,:,:) = tc2(:,:,:) + uz2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
+       tg2(:,:,:) = tg2(:,:,:) + ux2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
+       th2(:,:,:) = th2(:,:,:) + uy2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
+       ti2(:,:,:) = ti2(:,:,:) + uz2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
     endif
 
     call transpose_y_to_z(ux2,ux3)
     call transpose_y_to_z(uy2,uy3)
     call transpose_y_to_z(uz2,uz3)
-    call transpose_y_to_z(ta2,ta3)
-    call transpose_y_to_z(tb2,tb3)
-    call transpose_y_to_z(tc2,tc3)
 
     if (ilmn) then
        call transpose_y_to_z(rho2,rho3)
@@ -197,9 +203,10 @@ CONTAINS
     call derz (te3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
     call derz (tf3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
 
-    ta3(:,:,:) = ta3(:,:,:) + (tg3(:,:,:) + rho3(:,:,:) * uz3(:,:,:) * td3(:,:,:))
-    tb3(:,:,:) = tb3(:,:,:) + (th3(:,:,:) + rho3(:,:,:) * uz3(:,:,:) * te3(:,:,:))
-    tc3(:,:,:) = tc3(:,:,:) + (ti3(:,:,:) + rho3(:,:,:) * uz3(:,:,:) * tf3(:,:,:))
+    ! Convective terms of z-pencil in ta3,tb3,tc3
+    ta3(:,:,:) = (tg3(:,:,:) + rho3(:,:,:) * uz3(:,:,:) * td3(:,:,:))
+    tb3(:,:,:) = (th3(:,:,:) + rho3(:,:,:) * uz3(:,:,:) * te3(:,:,:))
+    tc3(:,:,:) = (ti3(:,:,:) + rho3(:,:,:) * uz3(:,:,:) * tf3(:,:,:))
 
     if (ilmn) then
        !! Quasi-skew symmetric terms
@@ -214,15 +221,10 @@ CONTAINS
        tc3(:,:,:) = tc3(:,:,:) + rho3(:,:,:) * uz3(:,:,:) * divu3(:,:,:)
     endif
 
-    !! Skew symmetric - need to multiply by half
-    ta3(:,:,:) = half * ta3(:,:,:)
-    tb3(:,:,:) = half * tb3(:,:,:)
-    tc3(:,:,:) = half * tc3(:,:,:)
-
-    !ALL THE CONVECTIVE TERMS ARE IN TA3, TB3 and TC3
-    td3 = ta3
-    te3 = tb3
-    tf3 = tc3
+    ! Convective terms of z-pencil are in ta3 -> td3, tb3 -> te3, tc3 -> tf3
+    td3(:,:,:) = ta3(:,:,:)
+    te3(:,:,:) = tb3(:,:,:)
+    tf3(:,:,:) = tc3(:,:,:)
 
     !DIFFUSIVE TERMS IN Z
     call derzz (ta3,ux3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
@@ -237,9 +239,10 @@ CONTAINS
     call transpose_z_to_y(te3,te2)
     call transpose_z_to_y(tf3,tf2)
 
-    tg2 = td2
-    th2 = te2
-    ti2 = tf2
+    ! Sum of convective terms of y-pencil (tg2,th2,ti2) and z-pencil (td2,te2,tf2) are now in tg2, th2, ti2
+    tg2(:,:,:) = tg2(:,:,:) + td2(:,:,:)
+    th2(:,:,:) = th2(:,:,:) + te2(:,:,:)
+    ti2(:,:,:) = ti2(:,:,:) + tf2(:,:,:)
 
     !DIFFUSIVE TERMS IN Y
     if (itimescheme.ne.7) then
@@ -315,9 +318,9 @@ CONTAINS
        endif
     endif
 
-    ta2 = ta2 + td2
-    tb2 = tb2 + te2
-    tc2 = tc2 + tf2
+    ta2(:,:,:) = ta2(:,:,:) + td2(:,:,:)
+    tb2(:,:,:) = tb2(:,:,:) + te2(:,:,:)
+    tc2(:,:,:) = tc2(:,:,:) + tf2(:,:,:)
 
     !WORK X-PENCILS
     call transpose_y_to_x(ta2,ta1)
@@ -327,9 +330,15 @@ CONTAINS
     call transpose_y_to_x(th2,te1)
     call transpose_y_to_x(ti2,tf1) !conv
 
-    tg1 = td1
-    th1 = te1
-    ti1 = tf1
+    ! Sum of convective terms of x-pencil (tg1,th1,ti1) and y- & z-pencil (td1,te1,tf1) are now in tg1, th1, ti1
+    tg1(:,:,:) = tg1(:,:,:) + td1(:,:,:)
+    th1(:,:,:) = th1(:,:,:) + te1(:,:,:)
+    ti1(:,:,:) = ti1(:,:,:) + tf1(:,:,:)
+
+    !! Skew symmetric - need to multiply by half
+    tg1(:,:,:) = half * tg1(:,:,:)
+    th1(:,:,:) = half * th1(:,:,:)
+    ti1(:,:,:) = half * ti1(:,:,:)
 
     !DIFFUSIVE TERMS IN X
     call derxx (td1,ux1,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0)
