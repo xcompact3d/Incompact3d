@@ -716,26 +716,38 @@ CONTAINS
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: phi1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
-    REAL(mytype), INTENT(IN) :: schmidt
+    real(mytype), INTENT(IN) :: schmidt
 
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dphi1
 
     !! LOCALS
     integer :: i, j, k
+    real(mytype) :: xalpha
+
+    xalpha = xnu/schmidt
 
     !X PENCILS
     call derxS (tb1,phi1(:,:,:),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1)
-    tb1(:,:,:) = rho1(:,:,:,1) * ux1(:,:,:) * tb1(:,:,:)
+    if (ilmn) then
+      tb1(:,:,:) = rho1(:,:,:,1) * ux1(:,:,:) * tb1(:,:,:)
+    else
+      tb1(:,:,:) = ux1(:,:,:) * tb1(:,:,:)
+    endif
+
     call derxxS (ta1,phi1(:,:,:),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1)
+
+    ! Add convective and diffusive scalar terms of x-pencil
+    ta1(:,:,:) = xalpha*ta1(:,:,:) - tb1(:,:,:)
+
     call transpose_x_to_y(phi1(:,:,:),td2(:,:,:))
 
     !Y PENCILS
-    call deryS (tb2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
-    tb2(:,:,:) = rho2(:,:,:) * uy2(:,:,:) * tb2(:,:,:)
+    call deryS (tc2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
     call deryyS (ta2,td2(:,:,:),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
+
     if (istret.ne.0) then
-       call deryS (tc2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
+       !call deryS (tc2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
        do k = 1,ysize(3)
           do j = 1,ysize(2)
              do i = 1,ysize(1)
@@ -744,31 +756,48 @@ CONTAINS
           enddo
        enddo
     endif
+
+    if (ilmn) then
+      tb2(:,:,:) = rho2(:,:,:) * uy2(:,:,:) * tc2(:,:,:)
+    else
+      tb2(:,:,:) = uy2(:,:,:) * tc2(:,:,:)
+    endif
+
+    ! Add convective and diffusive scalar terms of y-pencil
+    tc2(:,:,:) = xalpha*ta2(:,:,:) - tb2(:,:,:)
+
     call transpose_y_to_z(td2(:,:,:),td3(:,:,:))
 
     !Z PENCILS
     call derzS (tb3,td3(:,:,:),di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1)
-    tb3(:,:,:) = rho3(:,:,:) * uz3(:,:,:) * tb3(:,:,:)
     call derzzS (ta3,td3(:,:,:),di3,sz,sfzpS,sszpS,swzpS,zsize(1),zsize(2),zsize(3),1)
 
-    call transpose_z_to_y(ta3,tc2)
-    call transpose_z_to_y(tb3,td2)
+    ! convective terms
+    if (ilmn) then
+      tb3(:,:,:) = rho3(:,:,:) * uz3(:,:,:) * tb3(:,:,:)
+    else
+      tb3(:,:,:) = uz3(:,:,:) * tb3(:,:,:)
+    endif
 
-    !Y PENCILS ADD TERMS
-    tc2 = tc2+ta2
-    td2 = td2+tb2
+    ! Add convective and diffusive scalar terms of z-pencil
+    ta3(:,:,:) = xalpha*ta3(:,:,:) - tb3(:,:,:)
+
+    call transpose_z_to_y(ta3,ta2)
+
+    !Y PENCILS
+    ! Add convective and diffusive scalar terms of z-pencil to y-pencil
+    tc2(:,:,:) = tc2(:,:,:) + ta2(:,:,:)
 
     call transpose_y_to_x(tc2,tc1)
-    call transpose_y_to_x(td2,td1)
 
-    !X PENCILS ADD TERMS
-    ta1 = ta1+tc1 !SECOND DERIVATIVE
-    tb1 = tb1+td1 !FIRST DERIVATIVE
-
-    dphi1(:,:,:,1) = (xnu/schmidt)*ta1(:,:,:) - tb1(:,:,:)
+    !X PENCILS
+    ! Add convective and diffusive scalar terms to final sum
+    dphi1(:,:,:,1) = ta1(:,:,:) + tc1(:,:,:)
 
     !! XXX We have computed rho dphidt, want dphidt
-    dphi1(:,:,:,1) = dphi1(:,:,:,1) / rho1(:,:,:,1)
+    if (ilmn) then
+      dphi1(:,:,:,1) = dphi1(:,:,:,1) / rho1(:,:,:,1)
+    endif
 
   endsubroutine scalar_transport_eq
 
