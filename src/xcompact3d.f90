@@ -111,6 +111,8 @@ subroutine init_xcompact3d()
 
   use les, only: init_explicit_les
 
+  use visu, only : visu_init
+  
   implicit none
 
   integer :: ierr
@@ -184,6 +186,8 @@ subroutine init_xcompact3d()
      endif
   endif
   !####################################################################
+  ! initialise visu
+  if (ivisu.ne.0) call visu_init()
   ! compute diffusion number of simulation
   call compute_cfldiff()
   !####################################################################

@@ -1058,7 +1058,8 @@ module tools
   public :: test_flow, test_speed_min_max, test_scalar_min_max, &
        restart, &
        simu_stats, &
-       compute_cfldiff, compute_cfl
+       compute_cfldiff, compute_cfl, &
+       rescale_pressure
 
 contains
   !##################################################################
@@ -1552,5 +1553,26 @@ contains
       !write(*,"(' CFL_sum                : ',F17.8)") cflmax_out(4)*dt
     end if
   end subroutine compute_cfl
+  !##################################################################
+  !##################################################################
+  ! Rescale pressure to physical pressure
+  ! Written by Kay Schäfer 2019
+  !##################################################################
+  subroutine rescale_pressure(pre1)
+
+    use decomp_2d, only : nrank, mytype, xsize, ysize, zsize
+    use param, only : itimescheme, gdt
+    implicit none
+
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(inout) :: pre1
+
+    ! Adjust pressure to physical pressure
+    if  ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.5).or.(itimescheme.eq.7)) then !AB2, AB3, RK3, Semi-Impl. AB3
+       pre1=pre1 / gdt(3) ! multiply pressure by factor of time-scheme (gdt = 1  / (dt * c_k) ) to get pyhsical pressure
+    else
+       if (nrank .eq. 0) print *,'WARNING: No scaling of pressure defined!!!'
+    endif
+
+  end subroutine
   !##################################################################
 end module tools
