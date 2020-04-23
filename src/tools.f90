@@ -1060,7 +1060,7 @@ module tools
        simu_stats
 
 contains
-
+  !##################################################################
   subroutine test_flow(rho1,ux1,uy1,uz1,phi1,ep1,drho1,divu3)
 
     use decomp_2d
@@ -1085,11 +1085,11 @@ contains
     endif
 
   endsubroutine test_flow
-
+  !##################################################################
+  !##################################################################
   subroutine test_scalar_min_max(phi)
 
     USE decomp_2d
-    USE decomp_2d_poisson
     USE variables
     USE param
     USE var
@@ -1097,36 +1097,51 @@ contains
 
     implicit none
 
-    integer :: code,ierror,i,j,k,is
+    integer :: code,ierror,i,j,k,is,jglob
     real(mytype) :: phimax,phimin,phimax1,phimin1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
+    real(mytype),dimension(2,numscalar) :: phimaxin,phimaxout
 
     do is=1, numscalar
-       phimax = maxval(phi(:,:,:,is))
-       phimin = minval(phi(:,:,:,is))
 
-       call MPI_REDUCE(phimax,phimax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-       call MPI_REDUCE(phimin,phimin1,1,real_type,MPI_MIN,0,MPI_COMM_WORLD,code)
+      ta1(:,:,:) = phi(:,:,:,is)
+      ! ibm
+      if (iibm.gt.0) then
+        ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+      endif
 
-       if (nrank.eq.0) then
+      phimax=-1609.; phimin=1609.
+      phimax = maxval(ta1(:,:,:))
+      phimin =-minval(ta1(:,:,:))
+      phimaxin(:,is) =  (/phimin, phimax /)
+    enddo
 
-          print *,'Phi'//char(48+is)//' min max=', real(phimin1,4), real(phimax1,4)
+    !call MPI_REDUCE(phimax,phimax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
+    !call MPI_REDUCE(phimin,phimin1,1,real_type,MPI_MIN,0,MPI_COMM_WORLD,code)
+    call MPI_REDUCE(phimaxin,phimaxout,numscalar*2,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
 
-          if (abs(phimax1).ge.10.) then !if phi control turned off
-             print *,'Scalar diverged! SIMULATION IS STOPPED!'
-             call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
-          endif
-       endif
+    do is=1,numscalar
+      if (nrank.eq.0) then
+        phimin1 = -phimaxout(1,is)
+        phimax1 =  phimaxout(2,is)
+
+        print *,'Phi'//char(48+is)//' min max=', real(phimin1,4), real(phimax1,4)
+
+        if (abs(phimax1).ge.10.) then !if phi control turned off
+           print *,'Scalar diverged! SIMULATION IS STOPPED!'
+           call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
+        endif
+      endif
 
     enddo
 
     return
   end subroutine test_scalar_min_max
-
+  !##################################################################
+  !##################################################################
   subroutine test_speed_min_max(ux,uy,uz)
 
     USE decomp_2d
-    USE decomp_2d_poisson
     USE variables
     USE param
     USE var
@@ -1138,38 +1153,33 @@ contains
     real(mytype) :: uxmax,uymax,uzmax,uxmin,uymin,uzmin
     real(mytype) :: uxmax1,uymax1,uzmax1,uxmin1,uymin1,uzmin1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
+    real(mytype),dimension(6) :: umaxin, umaxout
+
+    if (iibm.gt.0) then
+       ux(:,:,:) = (one - ep1(:,:,:)) * ux(:,:,:)
+       uy(:,:,:) = (one - ep1(:,:,:)) * uy(:,:,:)
+       uz(:,:,:) = (one - ep1(:,:,:)) * uz(:,:,:)
+    endif
 
     uxmax=-1609.;uymax=-1609.;uzmax=-1609.;uxmin=1609.;uymin=1609.;uzmin=1609.
-    do k = 1, xsize(3)
-       do j = 1, xsize(2)
-          do i = 1, xsize(1)
-             if ((iibm.eq.0).or.(ep1(i,j,k).eq.zero)) then
-                if (ux(i,j,k).gt.uxmax) then
-                   uxmax=ux(i,j,k)
-                elseif (ux(i,j,k).lt.uxmin) then
-                   uxmin=ux(i,j,k)
-                endif
-                if (uy(i,j,k).gt.uymax) then
-                   uymax=uy(i,j,k)
-                elseif (uy(i,j,k).lt.uymin) then
-                   uymin=uy(i,j,k)
-                endif
-                if (uz(i,j,k).gt.uzmax) then
-                   uzmax=uz(i,j,k)
-                elseif (uz(i,j,k).lt.uzmin) then
-                   uzmin=uz(i,j,k)
-                endif
-             endif
-          enddo
-       enddo
-    enddo
+    !
+    ! More efficient version
+    uxmax=maxval(ux)
+    uymax=maxval(uy)
+    uzmax=maxval(uz)
+    uxmin=-minval(ux)
+    uymin=-minval(uy)
+    uzmin=-minval(uz)
 
-    call MPI_REDUCE(uxmax,uxmax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-    call MPI_REDUCE(uymax,uymax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-    call MPI_REDUCE(uzmax,uzmax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-    call MPI_REDUCE(uxmin,uxmin1,1,real_type,MPI_MIN,0,MPI_COMM_WORLD,code)
-    call MPI_REDUCE(uymin,uymin1,1,real_type,MPI_MIN,0,MPI_COMM_WORLD,code)
-    call MPI_REDUCE(uzmin,uzmin1,1,real_type,MPI_MIN,0,MPI_COMM_WORLD,code)
+    umaxin = (/uxmax, uymax, uzmax, uxmin, uymin, uzmin/)
+    call MPI_REDUCE(umaxin,umaxout,6,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
+
+    uxmax1= umaxout(1)
+    uymax1= umaxout(2)
+    uzmax1= umaxout(3)
+    uxmin1=-umaxout(4)
+    uymin1=-umaxout(5)
+    uzmin1=-umaxout(6)
 
     if (nrank.eq.0) then
 
@@ -1184,11 +1194,10 @@ contains
 
     endif
 
-    !if (mod(itime,imodulo).eq.0) call cfl_compute(uxmax,uymax,uzmax)
-
     return
   end subroutine test_speed_min_max
-
+  !##################################################################
+  !##################################################################
   subroutine simu_stats(iwhen)
 
     USE decomp_2d
