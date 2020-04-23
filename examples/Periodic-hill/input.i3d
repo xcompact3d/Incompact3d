@@ -106,7 +106,7 @@ Sc = 0.2              ! Schmidt number
 /End
 
 !================
-&TurbulenceModel
+&LESModel
 !================
 
 iles = 0              ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Smag, 4: iSVV, 5: dyn SEV)
@@ -117,7 +117,7 @@ iwall = 0             ! Enable wall modeling
 /End
 
 !================
-&TurbulenceWallModel
+&WallModel
 !================
 
 SmagWallDamp = 1      ! Smagorinsky damping function for ABL if 1
