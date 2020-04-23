@@ -34,32 +34,9 @@ module visu
   implicit none
 
   private
-  public :: postprocessing, visu_init
+  public :: visu_init, write_snapshot
 
 contains
-  !############################################################################
-  subroutine postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
-
-    use decomp_2d, only : mytype, xsize, ph1
-    use case, only : postprocess_case
-
-    use stats, only : overall_statistic
-
-    use var, only : nzmsize
-    use var, only : itime
-    use var, only : numscalar, nrhotime, npress
-
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux1, uy1, uz1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(in) :: phi1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime), intent(in) :: rho1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ep1
-    real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
-
-    call write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime)
-    call postprocess_case(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
-    call overall_statistic(ux1, uy1, uz1, phi1, pp3, ep1)
-
-  end subroutine postprocessing
   !############################################################################
   !############################################################################
   subroutine visu_init()

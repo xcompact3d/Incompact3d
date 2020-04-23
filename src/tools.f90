@@ -35,40 +35,13 @@ module tools
 
   private
 
-  public :: test_flow, test_speed_min_max, test_scalar_min_max, &
+  public :: test_speed_min_max, test_scalar_min_max, &
        restart, &
        simu_stats, &
        compute_cfldiff, compute_cfl, &
        rescale_pressure, mean_plane_x, mean_plane_y, mean_plane_z
 
 contains
-  !##################################################################
-  subroutine test_flow(rho1,ux1,uy1,uz1,phi1,ep1,drho1,divu3)
-
-    use decomp_2d
-    use param
-
-    use navier, only : divergence
-
-    use var, only : numscalar, dv3
-
-    implicit none
-
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: ux1, uy1, uz1, ep1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), nrhotime), intent(in) :: rho1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar), intent(in) :: phi1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime), intent(in) :: drho1
-    real(mytype), dimension(zsize(1), zsize(2), zsize(3)), intent(in) :: divu3
-
-    if ((mod(itime,10)==0).and.(itr.eq.iadvance_time)) then
-       call divergence(dv3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,2)
-       call test_speed_min_max(ux1,uy1,uz1)
-       call compute_cfl(ux1,uy1,uz1)
-       if (iscalar==1) call test_scalar_min_max(phi1)
-
-    endif
-
-  endsubroutine test_flow
   !##################################################################
   !##################################################################
   subroutine test_scalar_min_max(phi)

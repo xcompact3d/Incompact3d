@@ -39,8 +39,7 @@ program xcompact3d
   use time_integrators, only : int_time
   use navier, only : velocity_to_momentum, momentum_to_velocity, pre_correc, &
        calc_divu_constraint, solve_poisson, cor_vel
-  use tools, only : test_flow, restart, simu_stats
-  use visu, only : postprocessing
+  use tools, only : restart, simu_stats
 
   implicit none
 
@@ -100,8 +99,6 @@ subroutine init_xcompact3d()
        restart, &
        simu_stats, compute_cfldiff
 
-  use visu, only : postprocessing
-
   use param, only : ilesmod, jles
   use param, only : irestart
 
@@ -112,7 +109,7 @@ subroutine init_xcompact3d()
   use les, only: init_explicit_les
 
   use visu, only : visu_init
-  
+
   implicit none
 
   integer :: ierr
@@ -194,7 +191,7 @@ subroutine init_xcompact3d()
   if (irestart==0) then
      call init(rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,dphi1,pp3,px1,py1,pz1)
      itime = 0
-     call postprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
+     call preprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
   else
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,0)
   endif
