@@ -1269,11 +1269,18 @@ contains
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
     real(mytype), dimension(phG%zst(1):phG%zen(1),phG%zst(2):phG%zen(2),phG%zst(3):phG%zen(3)) :: pp3
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
-    real(mytype) :: xdt
+    real(mytype) :: xdt,tfield
     integer, dimension(2) :: dims, dummy_coords
     logical, dimension(2) :: dummy_periods
+    logical :: fexists
     character(len=30) :: filename, filestart
-    character(len=32) :: fmt2,fmt3
+    character(len=32) :: fmt2,fmt3,fmt4
+    character(len=7) :: fmt1
+    NAMELIST /Time/ tfield, itime
+    NAMELIST /NumParam/ nx, ny, nz, istret, beta, dt, itimescheme
+
+    write(filename,"('restart',I7.7)") itime
+    write(filestart,"('restart',I7.7)") ifirst-1
 
     if (iresflg .eq. 1 ) then !Writing restart
        if (mod(itime, icheckpoint).ne.0) then
@@ -1282,13 +1289,10 @@ contains
 
        if (nrank==0) then
           print *,'===========================================================<<<<<'
-          print *,'Writing restart point',itime/icheckpoint
+          print *,'Writing restart point ',filename !itime/icheckpoint
           ! print *,'File size',real((s3df*16.)*1e-9,4),'GB'
        endif
     end if
-
-    write(filename,"('restart',I7.7)") itime
-    write(filestart,"('restart',I7.7)") ifirst-1
 
     if (iresflg==1) then !write
        call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
@@ -1313,7 +1317,7 @@ contains
          call decomp_2d_write_var(fh,disp,1,duz1(:,:,:,3))
        end if
        !
-       call decomp_2d_write_var(fh,disp,1,pp3,phG)
+       call decomp_2d_write_var(fh,disp,3,pp3,phG)
        !
        if (iscalar==1) then
           do is=1, numscalar
@@ -1333,29 +1337,41 @@ contains
        if (nrank.eq.0) then
          write(filename,"('restart',I7.7,'.info')") itime
          write(fmt2,'("(A,I16)")')
-         write(fmt3,'("(A,F16.10)")')
+         write(fmt3,'("(A,F16.4)")')
+         write(fmt4,'("(A,F16.12)")')
          !
          open (111,file=filename,action='write',status='replace')
-         write(111,'(A)')'!==================='
+         write(111,'(A)')'!========================='
          write(111,'(A)')'&Time'
-         write(111,'(A)')'!==================='
-         write(111,fmt3) 'tfield=',t
-         write(111,fmt2) 'itime= ',itime
+         write(111,'(A)')'!========================='
+         write(111,fmt3) 'tfield=   ',t
+         write(111,fmt2) 'itime=    ',itime
          write(111,'(A)')'/End'
-         write(111,'(A)')'!==================='
+         write(111,'(A)')'!========================='
          write(111,'(A)')'&NumParam'
-         write(111,'(A)')'!==================='
-         write(111,fmt2) 'nx=    ',nx
-         write(111,fmt2) 'ny=    ',ny
-         write(111,fmt2) 'nz=    ',nz
-         write(111,fmt2) 'istret=',istret
-         write(111,fmt3) 'beta=  ',beta
-         write(111,'(A,I11)') 'itimescheme=',itimescheme
+         write(111,'(A)')'!========================='
+         write(111,fmt2) 'nx=       ',nx
+         write(111,fmt2) 'ny=       ',ny
+         write(111,fmt2) 'nz=       ',nz
+         write(111,fmt3) 'Lx=       ',xlx
+         write(111,fmt3) 'Ly=       ',yly
+         write(111,fmt3) 'Lz=       ',zlz
+         write(111,fmt2) 'istret=   ',istret
+         write(111,fmt4) 'beta=     ',beta
+         write(111,fmt2) 'iscalar=  ',iscalar
+         write(111,fmt2) 'numscalar=',numscalar
+         write(111,'(A,I14)') 'itimescheme=',itimescheme
          write(111,'(A)')'/End'
+         write(111,'(A)')'!========================='
+
          close(111)
        end if
     else
-       if (nrank==0) print *,'RESTART from file:', filestart
+       if (nrank==0) then
+         print *,'==========================================================='
+         print *,'RESTART from file:', filestart
+         print *,'==========================================================='
+       end if
        call MPI_FILE_OPEN(MPI_COMM_WORLD, filestart, &
             MPI_MODE_RDONLY, MPI_INFO_NULL, &
             fh, ierror_o)
@@ -1376,7 +1392,7 @@ contains
          call decomp_2d_read_var(fh,disp,1,duz1(:,:,:,3))
        end if
        !
-       call decomp_2d_read_var(fh,disp,1,pp3,phG)
+       call decomp_2d_read_var(fh,disp,3,pp3,phG)
        !
        if (iscalar==1) then
           do is=1, numscalar
@@ -1407,14 +1423,15 @@ contains
     if (iresflg==0) then
        if (itimescheme.le.4) itr=1
        if (itimescheme.eq.5) itr=3
-       if (itimescheme.eq.6) itr=5    
+       if (itimescheme.eq.6) itr=5
        call gradp(px1,py1,pz1,pp3)
        if (nrank==0) print *,'reconstruction pressure gradients done!'
     end if
 
     if (iresflg .eq. 1 ) then !Writing restart
        if (nrank==0) then
-          print *,'Restart point',itime/icheckpoint,'saved successfully!'
+          write(fmt1,"(I7.7)") itime
+          print *,'Restart point restart',fmt1,' saved successfully!'!itime/icheckpoint,'saved successfully!'
           ! print *,'Elapsed time (s)',real(trestart,4)
           ! print *,'Aproximated writing speed (MB/s)',real(((s3df*16.)*1e-6)/trestart,4)
           print *,'If necesseary restart from:',itime+1
@@ -1422,5 +1439,6 @@ contains
     end if
 
   end subroutine restart
-  !##############################################################################
+  !##################################################################
+  !##################################################################
 end module tools
