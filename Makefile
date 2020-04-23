@@ -21,7 +21,7 @@ DEFS = -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"
 LCL = local# local,lad,sdu,archer
 IVER = 17# 15,16,17,18
 CMP = gcc# intel,gcc
-FFT = generic# generic,fftw3
+FFT = generic# generic,fftw3,mkl
 
 #######Minimum defs###########
 ifeq ($(FLOW_TYPE),Channel-flow)
@@ -41,7 +41,7 @@ DEFS2 += -DVISU
 ifeq ($(CMP),intel)
 FC = mpiifort
 #FFLAGS = -fpp -O3 -xHost -heap-arrays -shared-intel -mcmodel=large -safe-cray-ptr -g -traceback
-FFLAGS = -fpp -O3 -xSSE4.2 -axAVX,CORE-AVX-I,CORE-AVX2 -ipo -fp-model fast=2 -mcmodel=large -safe-cray-ptr
+FFLAGS = -fpp -O3 -xSSE4.2 -axAVX,CORE-AVX-I,CORE-AVX2 -ipo -fp-model fast=2 -mcmodel=large -safe-cray-ptr -I$(MPI_ROOT)/lib
 ##debuggin test: -check all -check bounds -chintel eck uninit -gen-interfaces -warn interfaces
 else ifeq ($(CMP),gcc)
 FC = mpif90
@@ -88,6 +88,10 @@ else ifeq ($(FFT),fftw3_f03)
 else ifeq ($(FFT),generic)
   INC=
   LIBFFT=
+else ifeq ($(FFT),mkl)
+  SRCDECOMP := $(DECOMPDIR)/mkl_dfti.f90 $(SRCDECOMP)
+  LIBFFT=-Wl,--start-group $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a $(MKLROOT)/lib/intel64/libmkl_sequential.a $(MKLROOT)/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread
+	INC=-I$(MKLROOT)/include
 endif
 
 #######OPTIONS settings###########
