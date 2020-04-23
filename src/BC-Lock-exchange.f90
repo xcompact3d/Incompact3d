@@ -189,7 +189,7 @@ contains
        !lock-exchange
        do k=1,xsize(3)
           do j=1,xsize(2)
-             do i=1,xsize(1)        
+             do i=1,xsize(1)
                 x=real(i-1,mytype)*dx-pfront
                 um=exp(-twentyfive*x*x)*init_noise
                 ux1(i,j,k)=um*(two*ux1(i,j,k)-one)
@@ -260,7 +260,7 @@ contains
        endif
     endif
 
-#ifdef DEBG 
+#ifdef DEBG
     if (nrank .eq. 0) print *,'# init end ok'
 #endif
 
@@ -274,6 +274,7 @@ contains
 
     use var, only : phi2, rho2
     use var, only : phi3, rho3
+    use tools, only : mean_plane_z
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
@@ -334,7 +335,7 @@ contains
     enddo
 
     do is = 2, numscalar
-       phim3(:,:,1) = phim3(:,:,1) + phim3(:,:,is) 
+       phim3(:,:,1) = phim3(:,:,1) + phim3(:,:,is)
     enddo
 
     if (ilmn) then
@@ -406,6 +407,8 @@ contains
     use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
     use var, only : ta2,tb2,tc2,td2,te2,tf2,di2
     use var, only : ta3,tb3,tc3,di3
+
+    use tools, only : mean_plane_z
 
     implicit none
 
@@ -610,7 +613,7 @@ contains
 
        tempdep2=zero
 
-       do k=ystart(3),yend(3) 
+       do k=ystart(3),yend(3)
           do i=ystart(1),yend(1)
              tempdep2(i,1,k,is) = phi2(i,1,k,is)*uset(is)
              dep2(i,k,is) = tempdep2(i,1,k,is)
@@ -690,7 +693,7 @@ contains
     xp(2,:) = real(nrank,mytype)
     xp(1,:)=zero
     xp1=zero
-    kloop: do k=xstart(3),xend(3) 
+    kloop: do k=xstart(3),xend(3)
        jloop: do j=xstart(2),xend(2)
           iloop: do i=xend(1), xstart(1), -1
              if ( phisum1(i,j,k) .ge. 0.01_mytype) then

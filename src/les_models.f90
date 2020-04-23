@@ -37,7 +37,7 @@ contains
   subroutine init_explicit_les
     !================================================================================
     !
-    !  SUBROUTINE: init_explicit_les 
+    !  SUBROUTINE: init_explicit_les
     ! DESCRIPTION: Initialises the explicit LES parameters
     !      AUTHOR: G. Deskos <g.deskos14@imperial.ac.uk>
     !
@@ -81,8 +81,8 @@ contains
   subroutine Compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,iconservative)
     !================================================================================
     !
-    !  SUBROUTINE: Compute_SGS 
-    ! DESCRIPTION: computes the SGS terms (divergence of the SGS stresses) used in the 
+    !  SUBROUTINE: Compute_SGS
+    ! DESCRIPTION: computes the SGS terms (divergence of the SGS stresses) used in the
     !              momentum equation
     !      AUTHOR: G. Deskos <g.deskos14@imperial.ac.uk>
     !
@@ -128,8 +128,8 @@ contains
   subroutine smag(nut1,ux1,uy1,uz1)
     !================================================================================
     !
-    !  SUBROUTINE: smag 
-    ! DESCRIPTION: Calculates the eddy-viscosity nut according to the standard 
+    !  SUBROUTINE: smag
+    ! DESCRIPTION: Calculates the eddy-viscosity nut according to the standard
     !              Smagorinsky model
     !      AUTHOR: G. Deskos <g.deskos14@imperial.ac.uk>
     !
@@ -144,7 +144,7 @@ contains
     USE var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
     USE var, only : sxx1,syy1,szz1,sxy1,sxz1,syz1,srt_smag
     USE var, only : gxx1,gyx1,gzx1,gxy2,gyy2,gzy2,gxz3,gyz3,gzz3
-    USE var, only : gxy1,gyy1,gzy1,gxz2,gyz2,gzz2,gxz1,gyz1,gzz1 
+    USE var, only : gxy1,gyy1,gzy1,gxz2,gyz2,gzz2,gxz1,gyz1,gzz1
     USE var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2,srt_smag2,nut2
     USE var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
 
@@ -159,7 +159,7 @@ contains
 
     ! INFO about the auxillary arrays
     !--------------------------------------------------------
-    ! gxx= dux/dx; gyx=duy/dx; gzx=duz/dx; 
+    ! gxx= dux/dx; gyx=duy/dx; gzx=duz/dx;
     ! gxy= dux/dy; gyy=duy/dy; gzy=duz/dy;
     ! gxz= dux/dz; gyz=duy/dz; gzz=duz/dz
 
@@ -247,8 +247,8 @@ contains
   subroutine dynsmag(nut1,ux1,uy1,uz1,ep1)
     !================================================================================
     !
-    !  SUBROUTINE: dynsmag 
-    ! DESCRIPTION: Calculates the eddy-viscosity nut according to the Lilly-Germano 
+    !  SUBROUTINE: dynsmag
+    ! DESCRIPTION: Calculates the eddy-viscosity nut according to the Lilly-Germano
     !              dynamic Smagorinsky model
     !      AUTHOR: G. Deskos <g.deskos14@imperial.ac.uk>
     !
@@ -265,6 +265,7 @@ contains
     USE var, only : sxx1,syy1,szz1,sxy1,sxz1,syz1,srt_smag
     USE var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2,srt_smag2,nut2
     USE var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
+    use tools, only : mean_plane_z
 
     implicit none
 
@@ -801,8 +802,8 @@ contains
   subroutine sgs_mom_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
     !================================================================================
     !
-    !  SUBROUTINE: sgs_mom_nonconservative 
-    ! DESCRIPTION: Calculates the divergence of the sub-grid-scale stresses  
+    !  SUBROUTINE: sgs_mom_nonconservative
+    ! DESCRIPTION: Calculates the divergence of the sub-grid-scale stresses
     !              using a non-conservative formulation
     !      AUTHOR: G. Deskos <g.deskos14@imperial.ac.uk>
     !
@@ -938,7 +939,7 @@ contains
 
     call transpose_y_to_x(sgsx2, sgsx1)
     call transpose_y_to_x(sgsy2, sgsy1)
-    call transpose_y_to_x(sgsz2, sgsz1) 
+    call transpose_y_to_x(sgsz2, sgsz1)
 
     if(iibm==1) then
        do k=1,xsize(3)

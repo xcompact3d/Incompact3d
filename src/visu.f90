@@ -29,7 +29,6 @@
 !    problems with up to 0(10^5) computational cores, Int. J. of Numerical
 !    Methods in Fluids, vol 67 (11), pp 1735-1757
 !################################################################################
-
 module visu
 
   implicit none
@@ -277,6 +276,8 @@ contains
     USE decomp_2d
     USE decomp_2d_io
 
+    use tools, only : mean_plane_z
+
     implicit none
 
     integer :: nxmsize,nymsize,nzmsize
@@ -327,51 +328,3 @@ contains
   end subroutine VISU_PRE
 !############################################################################
 end module visu
-!######################################################################################
-subroutine mean_plane_x (f1,nx,ny,nz,fm1)
-
-  use param, only : mytype, zero
-
-  implicit none
-
-  integer,intent(in) :: nx, ny, nz
-  real(mytype),intent(in),dimension(nx,ny,nz) :: f1
-  real(mytype),intent(out),dimension(ny,nz) :: fm1
-  integer :: i,j,k
-
-  fm1 = sum(f1,DIM=1)/real(nx,mytype)
-  return
-
-end subroutine mean_plane_x
-!!######################################################################################
-subroutine mean_plane_y (f2,nx,ny,nz,fm2)
-
-  use param, only : mytype, zero
-
-  implicit none
-
-  integer,intent(in) :: nx, ny, nz
-  real(mytype),intent(in),dimension(nx,ny,nz) :: f2
-  real(mytype),intent(out),dimension(nx,nz) :: fm2
-  integer :: i,j,k
-
-  fm2 = sum(f2,DIM=2)/real(ny,mytype)
-  return
-
-end subroutine mean_plane_y
-!######################################################################################
-subroutine mean_plane_z (f3,nx,ny,nz,fm3)
-
-  use param, only : mytype, zero
-
-  implicit none
-
-  integer,intent(in) :: nx, ny, nz
-  real(mytype),intent(in),dimension(nx,ny,nz) :: f3
-  real(mytype),intent(out),dimension(nx,ny) :: fm3
-  integer :: i,j,k
-
-  fm3 = sum(f3,DIM=3)/real(nz,mytype)
-  return
-
-end subroutine mean_plane_z
