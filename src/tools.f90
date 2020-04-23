@@ -1057,7 +1057,8 @@ module tools
 
   public :: test_flow, test_speed_min_max, test_scalar_min_max, &
        restart, &
-       simu_stats
+       simu_stats, &
+       compute_cfldiff, compute_cfl
 
 contains
   !##################################################################
@@ -1078,10 +1079,12 @@ contains
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime), intent(in) :: drho1
     real(mytype), dimension(zsize(1), zsize(2), zsize(3)), intent(in) :: divu3
 
-    if (mod(itime,10)==0) then
+    if ((mod(itime,10)==0).and.(itr.eq.iadvance_time)) then
        call divergence(dv3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,2)
        call test_speed_min_max(ux1,uy1,uz1)
+       call compute_cfl(ux1,uy1,uz1)
        if (iscalar==1) call test_scalar_min_max(phi1)
+
     endif
 
   endsubroutine test_flow
@@ -1449,5 +1452,105 @@ contains
 
   end subroutine restart
   !##################################################################
+  !##################################################################
+  !##################################################################
+    !!  SUBROUTINE: compute_cfldiff
+    !! DESCRIPTION: Computes Diffusion/Fourier number
+    !!      AUTHOR: Kay Schäfer
+  !##################################################################
+  subroutine compute_cfldiff()
+     use param, only : xnu,dt,dx,dy,dz,istret
+     use param, only : cfl_diff_sum, cfl_diff_x, cfl_diff_y, cfl_diff_z
+     use variables, only : dyp
+     use decomp_2d, only : nrank
+
+     implicit none
+
+     cfl_diff_x = xnu*dt/(dx**2)
+     cfl_diff_z = xnu*dt/(dz**2)
+
+     if (istret.eq.0) then
+        cfl_diff_y   = xnu*dt/(dy**2)
+     else
+        cfl_diff_y = xnu*dt/(minval(dyp)**2)
+     end if
+
+     cfl_diff_sum = cfl_diff_x + cfl_diff_y + cfl_diff_z
+
+     if (nrank==0) then
+        print *,'==========================================================='
+        print *,'Diffusion number'
+        write(*,"(' cfl_diff_x             :        ',F13.8)") cfl_diff_x
+        write(*,"(' cfl_diff_y             :        ',F13.8)") cfl_diff_y
+        write(*,"(' cfl_diff_z             :        ',F13.8)") cfl_diff_z
+        write(*,"(' cfl_diff_sum           :        ',F13.8)") cfl_diff_sum
+        print *,'==========================================================='
+     endif
+
+     return
+  end subroutine compute_cfldiff
+  !##################################################################
+    !!  SUBROUTINE: compute_cfl
+    !! DESCRIPTION: Computes CFl number for stretched mesh
+    !!      AUTHOR: Kay Schäfer
+  !##################################################################
+  subroutine compute_cfl(ux,uy,uz)
+    use param, only : dx,dy,dz,dt,istret
+    use decomp_2d, only : nrank, mytype, xsize, xstart, xend, real_type
+    use mpi
+    use variables, only : dyp
+
+    implicit none
+
+    integer      :: code, i,j,k,jloc
+    real(mytype) :: value_x, value_y, value_z, value_sum
+    real(mytype) :: maxvalue_sum, maxvalue_sum_out, maxvalue_x, maxvalue_y,  maxvalue_z
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
+    real(mytype),dimension(4) :: cflmax_in, cflmax_out
+    !
+    maxvalue_x  =-1609.
+    maxvalue_y  =-1609.
+    maxvalue_z  =-1609.
+    maxvalue_sum=-1609.
+    !
+    if (istret.eq.0) then
+       do j = xstart(2),xend(2)
+          jloc = j-xstart(2)+1
+          value_x    = maxval(abs(ux(:,jloc,:))/dx)
+          value_y    = maxval(abs(uy(:,jloc,:))/dy)
+          value_z    = maxval(abs(uz(:,jloc,:))/dz)
+          value_sum  = maxval(abs(ux(:,jloc,:))/dx + abs(uy(:,jloc,:))/dy +    abs(uz(:,jloc,:))/dz)
+          !
+          maxvalue_x   = maxval((/maxvalue_x,   value_x /))
+          maxvalue_y   = maxval((/maxvalue_y,   value_y /))
+          maxvalue_z   = maxval((/maxvalue_z,   value_z /))
+          maxvalue_sum = maxval((/maxvalue_sum, value_sum /))
+       end do
+    else
+       do j = xstart(2),xend(2)
+          jloc = j-xstart(2)+1
+          value_x    = maxval(abs(ux(:,jloc,:))/dx)
+          value_y    = maxval(abs(uy(:,jloc,:))/dyp(j))
+          value_z    = maxval(abs(uz(:,jloc,:))/dz)
+          value_sum  = maxval(abs(ux(:,jloc,:))/dx + abs(uy(:,jloc,:))/ dyp(j) + abs(uz(:,jloc,:))/dz)
+          !
+          maxvalue_x   = maxval((/maxvalue_x,   value_x /))
+          maxvalue_y   = maxval((/maxvalue_y,   value_y /))
+          maxvalue_z   = maxval((/maxvalue_z,   value_z /))
+          maxvalue_sum = maxval((/maxvalue_sum, value_sum /))
+       end do
+    end if
+
+    cflmax_in =  (/maxvalue_x, maxvalue_y, maxvalue_z, maxvalue_sum/)
+
+    call    MPI_REDUCE(cflmax_in,cflmax_out,4,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
+
+    if (nrank.eq.0) then
+      write(*,"(' CFL_x                  : ',F17.8)") cflmax_out(1)*dt
+      write(*,"(' CFL_y                  : ',F17.8)") cflmax_out(2)*dt
+      write(*,"(' CFL_z                  : ',F17.8)") cflmax_out(3)*dt
+      !write(*,"(' CFL_sum                : ',F17.8)") cflmax_out(4)*dt
+    end if
+  end subroutine compute_cfl
   !##################################################################
 end module tools

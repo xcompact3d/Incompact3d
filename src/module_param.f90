@@ -239,7 +239,7 @@ module variables
   !module mesh
   real(mytype),allocatable,dimension(:) :: ppy,pp2y,pp4y
   real(mytype),allocatable,dimension(:) :: ppyi,pp2yi,pp4yi
-  real(mytype),allocatable,dimension(:) :: yp,ypi,del
+  real(mytype),allocatable,dimension(:) :: xp,xpi,yp,ypi,dyp,zp,zpi,del
   real(mytype),allocatable,dimension(:) :: yeta,yetai
   real(mytype) :: alpha,beta
 
@@ -285,6 +285,10 @@ module param
   !! Numerics control
   integer :: ifirstder,isecondder,ipinter
 
+  !! CFL_diffusion parameter
+  real(mytype) :: cfl_diff_x,cfl_diff_y,cfl_diff_z,cfl_diff_sum
+
+  !!
   real(mytype) :: xcst, xcst_pr
   real(mytype) :: alpha_0, beta_0, g_0, alpha_n, beta_n, g_n, g_bl_inf, f_bl_inf
 

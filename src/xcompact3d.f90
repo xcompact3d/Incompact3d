@@ -98,7 +98,8 @@ subroutine init_xcompact3d()
   use navier, only : calc_divu_constraint
   use tools, only : test_speed_min_max, test_scalar_min_max, &
        restart, &
-       simu_stats
+       simu_stats, compute_cfldiff
+
   use visu, only : postprocessing
 
   use param, only : ilesmod, jles
@@ -182,7 +183,10 @@ subroutine init_xcompact3d()
         call restart_forces(0)
      endif
   endif
-
+  !####################################################################
+  ! compute diffusion number of simulation
+  call compute_cfldiff()
+  !####################################################################
   if (irestart==0) then
      call init(rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,dphi1,pp3,px1,py1,pz1)
      itime = 0
