@@ -172,7 +172,7 @@ contains
     else if (iwhen.eq.2) then !AT THE START OF A TIME STEP
        call cpu_time(time1)
        if (nrank==0) then
-          print *,'-----------------------------------------------------------'
+          print *,'==========================================================='
           write(*,"(' Time step =',i7,'/',i7,', Time unit =',F9.4)") itime,ilast,t
        endif
     else if ((iwhen.eq.3).and.(itime.gt.ifirst)) then !AT THE END OF A TIME STEP
