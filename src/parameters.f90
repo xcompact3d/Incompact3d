@@ -39,19 +39,19 @@
 !###########################################################################
 subroutine parameter(input_i3d)
 
-  USE iso_fortran_env
+  use iso_fortran_env
 
-  USE param
-  USE variables
-  USE complex_geometry
-  USE decomp_2d
-  USE ibm
+  use param
+  use variables
+  use complex_geometry
+  use decomp_2d
+  use ibm
 
-  USE var, ONLY : dphi1
+  use var, only : dphi1
 
-  USE lockexch, ONLY : pfront
+  use lockexch, only : pfront
 
-  USE forces, ONLY : iforces, nvol, xld, xrd, yld, yud
+  use forces, only : iforces, nvol, xld, xrd, yld, yud
 
   implicit none
 
@@ -66,7 +66,8 @@ subroutine parameter(input_i3d)
        ilesmod, iscalar, &
        nclx1, nclxn, ncly1, nclyn, nclz1, nclzn, &
        ivisu, ipost, &
-       gravx, gravy, gravz
+       gravx, gravy, gravz, &
+       icpg, icfr
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, nu0nu, cnu, fpi2, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu, iprocessing
   NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat
@@ -213,6 +214,13 @@ subroutine parameter(input_i3d)
   dz2 = dz * dz
 
   xnu=one/re
+  !! Constant pressure gradient, re = Re_tau -> use to compute Re_centerline
+  if (icpg.eq.one) then
+    re_cent = (re/0.116)**(1.0/0.88)
+    xnu = one/re_cent ! viscosity based on Re_cent to keep same scaling as CFR
+    !
+    fcpg = two/yly * (re/re_cent)**2
+  end if
 
   if (ilmn) then
      if (ivarcoeff) then
@@ -267,8 +275,15 @@ subroutine parameter(input_i3d)
      endif
      print *,'==========================================================='
      if (itype.eq.itype_channel) then
-       print *,'Channel forcing with constant flow rate (CFR)'
-       write(*,"(' Re_cl                  : ',F17.3)") re
+       if (icpg.eq.zero) then
+         print *,'Channel forcing with constant flow rate (CFR)'
+         write(*,"(' Re_cl                  : ',F17.3)") re
+       else if (icpg.eq.one) then
+         print *,'Channel forcing with constant pressure gradient (CPG)'
+         write(*,"(' Re_tau                 : ',F17.3)") re
+         write(*,"(' Re_cl (estimated)      : ',F17.3)") re_cent
+         write(*,"(' fcpg                   : ',F17.8)") fcpg
+       end if
      else
        write(*,"(' Reynolds number Re     : ',F17.3)") re
      endif
@@ -439,14 +454,14 @@ end subroutine parameter
 !###########################################################################
 subroutine parameter_defaults()
 
-  USE param
-  USE variables
-  USE decomp_2d
-  USE complex_geometry
+  use param
+  use variables
+  use decomp_2d
+  use complex_geometry
 
-  USE forces, ONLY : iforces, nvol
+  use forces, only : iforces, nvol
 
-  IMPLICIT NONE
+  implicit none
 
   integer :: i
 
@@ -499,6 +514,10 @@ subroutine parameter_defaults()
   ibirman_eos = .FALSE.
 
   primary_species = -1
+
+  !! Channel
+  icpg = 0
+  icfr = 1
 
   !! IO
   ivisu = 1

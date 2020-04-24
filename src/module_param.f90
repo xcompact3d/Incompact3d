@@ -29,7 +29,6 @@
 !    problems with up to 0(10^5) computational cores, Int. J. of Numerical
 !    Methods in Fluids, vol 67 (11), pp 1735-1757
 !################################################################################
-
 module variables
   !USE param
   !USE var
@@ -243,7 +242,8 @@ module variables
   real(mytype) :: alpha,beta
 
 end module variables
-
+!############################################################################
+!############################################################################
 module param
 
   use decomp_2d, only : mytype
@@ -280,6 +280,10 @@ module param
   real(mytype) :: dt,re,xnu,init_noise,inflow_noise,u1,u2,angle,anglex,angley
   real(mytype) :: wrotation,ro
   real(mytype) :: dens1, dens2
+
+  !! Channel flow
+  integer :: icpg, icfr
+  real(mytype) :: re_cent, fcpg
 
   !! Numerics control
   integer :: ifirstder,isecondder,ipinter
@@ -421,7 +425,8 @@ module param
 #endif
 
 end module param
-
+!############################################################################
+!############################################################################
 module complex_geometry
 
   use decomp_2d,only : mytype
@@ -432,7 +437,8 @@ module complex_geometry
   real(mytype),allocatable,dimension(:,:,:) :: xi,xf,yi,yf,zi,zf
   integer :: nxraf,nyraf,nzraf,nraf,nobjmax
 end module complex_geometry
-
+!############################################################################
+!############################################################################
 module derivX
 
   use decomp_2d, only : mytype
@@ -451,7 +457,8 @@ module derivX
   real(mytype) :: alsaixt,asixt,bsixt,csixt,dsixt
 
 end module derivX
-
+!############################################################################
+!############################################################################
 module derivY
 
   use decomp_2d, only : mytype
@@ -470,7 +477,8 @@ module derivY
   real(mytype) :: alsajyt,asjyt,bsjyt,csjyt,dsjyt
 
 end module derivY
-
+!############################################################################
+!############################################################################
 module derivZ
 
   use decomp_2d, only : mytype
@@ -490,7 +498,8 @@ module derivZ
 
 
 end module derivZ
-
+!############################################################################
+!############################################################################
 ! Describes the parameters for the discrete filters in X-Pencil
 module parfiX
   use decomp_2d, only : mytype
@@ -502,7 +511,8 @@ module parfiX
   real(mytype) :: fialmx, fiamx, fibmx, ficmx, fidmx, fiemx, fifmx  ! Coefficient for filter at boundary point m=n-1
   real(mytype) :: fialpx, fiapx, fibpx, ficpx, fidpx, fiepx, fifpx  ! Coefficient for filter at boundary point p=n-2
 end module parfiX
-!
+!############################################################################
+!############################################################################
 module parfiY
 
   use decomp_2d, only : mytype
@@ -514,7 +524,8 @@ module parfiY
   real(mytype) :: fialmy, fiamy, fibmy, ficmy, fidmy, fiemy, fifmy ! Coefficient for filter at boundary point m=n-1
   real(mytype) :: fialpy, fiapy, fibpy, ficpy, fidpy, fiepy, fifpy ! Coefficient for filter at boundary point p=n-2
 end module parfiY
-
+!############################################################################
+!############################################################################
 module parfiZ
 
   use decomp_2d, only : mytype
@@ -526,12 +537,15 @@ module parfiZ
   real(mytype) :: fialmz, fiamz, fibmz, ficmz, fidmz, fiemz, fifmz ! Coefficient for filter at boundary point m=n-1
   real(mytype) :: fialpz, fiapz, fibpz, ficpz, fidpz, fiepz, fifpz ! Coefficient for filter at boundary point p=n-2
 end module parfiZ
-
+!############################################################################
+!############################################################################
 module simulation_stats
   real(8) :: tstart,time1,trank,tranksum,ttotal,tremaining,telapsed
 end module simulation_stats
-
+!############################################################################
+!############################################################################
 module ibm
   use decomp_2d, only : mytype
   real(mytype) :: cex,cey,ra
 end module ibm
+!############################################################################

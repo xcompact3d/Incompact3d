@@ -39,7 +39,8 @@ module tools
        restart, &
        simu_stats, &
        compute_cfldiff, compute_cfl, &
-       rescale_pressure, mean_plane_x, mean_plane_y, mean_plane_z
+       rescale_pressure, mean_plane_x, mean_plane_y, mean_plane_z, &
+       channel_cfr
 
 contains
   !##################################################################
@@ -405,7 +406,78 @@ contains
     end if
 
   end subroutine restart
-  !##################################################################
+  !############################################################################
+  !############################################################################
+  !!
+  !!  SUBROUTINE: channel_cfr
+  !!      AUTHOR: Kay Schäfer
+  !! DESCRIPTION: Inforces constant flow rate without need of data transposition
+  !!
+  !############################################################################
+  subroutine channel_cfr (ux,constant)
+
+    use decomp_2d
+    use decomp_2d_poisson
+    use variables
+    use param
+    use var
+    use MPI
+
+    implicit none
+
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux
+    real(mytype) :: constant
+
+    integer :: code,i,j,k,jloc
+    real(mytype) :: can,ub,uball, dyloc
+    !
+    ub = zero
+    uball = zero
+    !
+    do k=1,xsize(3)
+       do j=xstart(2)+1,xend(2)-1
+          jloc = j-xstart(2)+1
+          dyloc  = (yp(j+1)-yp(j-1))
+          do i=1,xsize(1)
+            ub = ub + ux(i,jloc,k) * half * dyloc
+          enddo
+       enddo
+    enddo
+
+    ! Check if first and last index of subarray is at domain boundary
+    if ( xstart(2)==1) then ! bottom point -> half distance
+       ub = ub + sum(ux(:,1,:)) * yp(2)*half
+    else
+       ub = ub + sum(ux(:,1,:)) * (yp(xstart(2)+1)-yp(xstart(2)-1))*half
+    end if
+    !
+    if (xend(2)==ny) then ! top point
+       jloc = xend(2)-xstart(2)+1
+       ub = ub + sum(ux(:,jloc,:)) * (yp(xend(2))-yp(xend(2)-1))*half
+    else
+       jloc = xend(2)-xstart(2)+1
+       ub = ub + sum(ux(:,jloc,:)) * (yp(xend(2)+1)-yp(xend(2)-1))*half
+    end if
+    !
+    ub = ub/(yly*(real(nx*nz,mytype)))
+
+    call MPI_ALLREDUCE(ub,uball,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+
+    can=-(constant-uball)
+
+    if (nrank==0) print *,nrank,'UT',uball,can
+
+    do k=1,xsize(3)
+      do j=1,xsize(2)
+        do i=1,xsize(1)
+          ux(i,j,k)=ux(i,j,k)-can
+        enddo
+      enddo
+    enddo
+
+    return
+  end subroutine channel_cfr
+  !############################################################################
   !##################################################################
   !##################################################################
     !!  SUBROUTINE: compute_cfldiff
