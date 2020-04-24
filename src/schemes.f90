@@ -494,7 +494,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
      astt = asi
      bstt = bsi
      cstt = csi
-  elseif(isecondder==4) then ! Sixth-order compact
+  elseif(isecondder==4) then ! Sixth-order compact with numerical dissipation
      !BASE LELE
      !alsai= 2./11.
      !asi  = (12./11.)/d2
@@ -506,6 +506,23 @@ subroutine second_derivative(alsa1,as1,bs1,&
      asi  =((six-nine*alsai)/four)/d2
      bsi  =((-three+twentyfour*alsai)/five)/(four*d2)
      csi  =((two-eleven*alsai)/twenty)/(nine*d2)
+     dsi = zero
+
+     alsa4= alsai
+     as4  = asi
+     bs4  = bsi
+     cs4  = csi
+
+     alsatt = alsai
+     astt = asi
+     bstt = bsi
+     cstt = csi
+  elseif(isecondder==41) then ! Sixth-order compact classical of Lele
+     !BASE LELE
+     alsai= 2./11.
+     asi  = (12./11.)/d2
+     bsi  = (3./44. )/d2
+     csi  = 0.
      dsi = zero
 
      alsa4= alsai
