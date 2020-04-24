@@ -544,8 +544,8 @@ module simulation_stats
 end module simulation_stats
 !############################################################################
 !############################################################################
-module ibm
+module ibm_param
   use decomp_2d, only : mytype
   real(mytype) :: cex,cey,ra
-end module ibm
+end module ibm_param
 !############################################################################

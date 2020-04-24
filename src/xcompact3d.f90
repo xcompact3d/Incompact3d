@@ -83,7 +83,8 @@ program xcompact3d
   call finalise_xcompact3d()
 
 end program xcompact3d
-
+!########################################################################
+!########################################################################
 subroutine init_xcompact3d()
 
   use MPI
@@ -109,6 +110,9 @@ subroutine init_xcompact3d()
   use les, only: init_explicit_les
 
   use visu, only : visu_init
+
+  use genepsi, only : genepsi3d, epsi_init
+  use ibm, only : body
 
   implicit none
 
@@ -173,7 +177,8 @@ subroutine init_xcompact3d()
   if (iibm.eq.2) then
      call genepsi3d(ep1)
   else if (iibm.eq.1) then
-     call body(ux1,uy1,uz1,ep1,0)
+     call epsi_init(ep1)
+     call body(ux1,uy1,uz1,ep1)
   endif
 
   if (iforces.eq.1) then
@@ -209,7 +214,8 @@ subroutine init_xcompact3d()
   endif
 
 endsubroutine init_xcompact3d
-
+!########################################################################
+!########################################################################
 subroutine finalise_xcompact3d()
 
   use MPI
