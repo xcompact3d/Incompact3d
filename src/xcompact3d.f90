@@ -46,7 +46,8 @@ program xcompact3d
   call init_xcompact3d()
 
   do itime=ifirst,ilast
-     t=itime*dt
+     !t=itime*dt
+     t=t0 + (itime0 + itime + 1 - ifirst)*dt
      call simu_stats(2)
 
     do itr=1,iadvance_time

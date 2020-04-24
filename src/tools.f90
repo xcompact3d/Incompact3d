@@ -375,6 +375,23 @@ contains
           end do
        endif
        call MPI_FILE_CLOSE(fh,ierror_o)
+
+       !! Read time of restart file
+       write(filename,"('restart',I7.7,'.info')") ifirst-1
+       inquire(file=filename, exist=fexists)
+       if (nrank.eq.0) print *,filename
+       ! file exists???
+       if (fexists) then
+         open(111, file=filename)
+         read(111, nml=Time)
+         close(111)
+         t0 = tfield
+         itime0 = 0
+       else
+         t0 = zero
+         itime0 = ifirst-1
+       end if
+       
     endif
 
     if (nrank.eq.0) then

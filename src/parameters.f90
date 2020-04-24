@@ -480,6 +480,8 @@ subroutine parameter_defaults()
   cont_phi = 0
   filepath = './data/'
   irestart = 0
+  itime0 = 0
+  t0 = zero
   datapath = './data/'
   fpi2 = (48._mytype / seven) / (PI**2)
 
