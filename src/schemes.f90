@@ -501,7 +501,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
      !bsi  = (3./44. )/d2
      !csi  = 0.
      !NUMERICAL DISSIPATION (see publications for help)
-     fpi2=(48./7)/(pi*pi)
+     !fpi2=(48./7)/(pi*pi)
      alsai=(45._mytype*fpi2*pi*pi-272._mytype)/(two*(45._mytype*fpi2*pi*pi-208._mytype))
      asi  =((six-nine*alsai)/four)/d2
      bsi  =((-three+twentyfour*alsai)/five)/(four*d2)

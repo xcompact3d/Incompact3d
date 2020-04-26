@@ -50,7 +50,7 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:) :: ep1, diss1, pre1, depo, depof, kine
   real(mytype), save, allocatable, dimension(:,:,:,:) :: dux1,duy1,duz1  ! Output of convdiff
   real(mytype), save, allocatable, dimension(:,:,:,:,:) :: dphi1
-  real(mytype), save, allocatable, dimension(:,:,:) :: mu1
+  real(mytype), save, allocatable, dimension(:,:,:) :: mu1,mu2,mu3
 
   !arrays for post processing
   real(mytype), save, allocatable, dimension(:,:,:) :: f1,fm1
@@ -145,8 +145,10 @@ contains
     call alloc_x(td1);call alloc_x(te1);call alloc_x(tf1)
     call alloc_x(tg1);call alloc_x(th1);call alloc_x(ti1)
     call alloc_x(di1);call alloc_x(ep1)
-    call alloc_x(mu1)
-    mu1(:,:,:) = one
+    if (ilmn) then
+      call alloc_x(mu1)
+      mu1(:,:,:) = one
+    endif
 
     allocate(pp1(nxmsize,xsize(2),xsize(3)))
     allocate(pgy1(nxmsize,xsize(2),xsize(3)))
@@ -236,7 +238,10 @@ contains
     allocate(dipp2(ph1%yst(1):ph1%yen(1),ysize(2),ysize(3)))
     allocate(upi2(ph1%yst(1):ph1%yen(1),nymsize,ysize(3)))
     allocate(duydypi2(ph1%yst(1):ph1%yen(1),nymsize,ysize(3)))
-
+    if (ilmn) then
+      call alloc_y(mu2)
+      mu2(:,:,:) = one
+    endif
     !Z PENCILS
     call alloc_z(ux3);call alloc_z(uy3);call alloc_z(uz3)
     call alloc_z(ta3);call alloc_z(tb3);call alloc_z(tc3)
@@ -251,7 +256,10 @@ contains
     allocate(duxydxyp3(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),zsize(3)))
     allocate(uzp3(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),zsize(3)))
     allocate(dipp3(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),zsize(3)))
-
+    if (ilmn) then
+      call alloc_z(mu3)
+      mu3(:,:,:) = one
+    endif
     ! if all periodic
     !   allocate (pp3(ph%zst(1):ph%zen(1),ph%zst(2):ph%zen(2),ph%zst(3):ph%zen(3)))
     !   allocate (dv3(ph%zst(1):ph%zen(1),ph%zst(2):ph%zen(2),ph%zst(3):ph%zen(3)))
