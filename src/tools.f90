@@ -29,7 +29,647 @@
 !    problems with up to 0(10^5) computational cores, Int. J. of Numerical
 !    Methods in Fluids, vol 67 (11), pp 1735-1757
 !################################################################################
+module tools
 
+  implicit none
+
+  private
+
+  public :: test_speed_min_max, test_scalar_min_max, &
+       restart, &
+       simu_stats, &
+       compute_cfldiff, compute_cfl, &
+       rescale_pressure, mean_plane_x, mean_plane_y, mean_plane_z, &
+       channel_cfr
+
+contains
+  !##################################################################
+  !##################################################################
+  subroutine test_scalar_min_max(phi)
+
+    USE decomp_2d
+    USE variables
+    USE param
+    USE var
+    USE MPI
+
+    implicit none
+
+    integer :: code,ierror,i,j,k,is,jglob
+    real(mytype) :: phimax,phimin,phimax1,phimin1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
+    real(mytype),dimension(2,numscalar) :: phimaxin,phimaxout
+
+    do is=1, numscalar
+
+      ta1(:,:,:) = phi(:,:,:,is)
+      ! ibm
+      if (iibm.gt.0) then
+        ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+      endif
+
+      phimax=-1609.; phimin=1609.
+      phimax = maxval(ta1(:,:,:))
+      phimin =-minval(ta1(:,:,:))
+      phimaxin(:,is) =  (/phimin, phimax /)
+    enddo
+
+    !call MPI_REDUCE(phimax,phimax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
+    !call MPI_REDUCE(phimin,phimin1,1,real_type,MPI_MIN,0,MPI_COMM_WORLD,code)
+    call MPI_REDUCE(phimaxin,phimaxout,numscalar*2,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
+
+    do is=1,numscalar
+      if (nrank.eq.0) then
+        phimin1 = -phimaxout(1,is)
+        phimax1 =  phimaxout(2,is)
+
+        print *,'Phi'//char(48+is)//' min max=', real(phimin1,4), real(phimax1,4)
+
+        if (abs(phimax1).ge.10.) then !if phi control turned off
+           print *,'Scalar diverged! SIMULATION IS STOPPED!'
+           call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
+        endif
+      endif
+
+    enddo
+
+    return
+  end subroutine test_scalar_min_max
+  !##################################################################
+  !##################################################################
+  subroutine test_speed_min_max(ux,uy,uz)
+
+    USE decomp_2d
+    USE variables
+    USE param
+    USE var
+    USE MPI
+
+    implicit none
+
+    integer :: code,ierror,i,j,k
+    real(mytype) :: uxmax,uymax,uzmax,uxmin,uymin,uzmin
+    real(mytype) :: uxmax1,uymax1,uzmax1,uxmin1,uymin1,uzmin1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
+    real(mytype),dimension(6) :: umaxin, umaxout
+
+    if (iibm.gt.0) then
+       ux(:,:,:) = (one - ep1(:,:,:)) * ux(:,:,:)
+       uy(:,:,:) = (one - ep1(:,:,:)) * uy(:,:,:)
+       uz(:,:,:) = (one - ep1(:,:,:)) * uz(:,:,:)
+    endif
+
+    uxmax=-1609.;uymax=-1609.;uzmax=-1609.;uxmin=1609.;uymin=1609.;uzmin=1609.
+    !
+    ! More efficient version
+    uxmax=maxval(ux)
+    uymax=maxval(uy)
+    uzmax=maxval(uz)
+    uxmin=-minval(ux)
+    uymin=-minval(uy)
+    uzmin=-minval(uz)
+
+    umaxin = (/uxmax, uymax, uzmax, uxmin, uymin, uzmin/)
+    call MPI_REDUCE(umaxin,umaxout,6,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
+
+    uxmax1= umaxout(1)
+    uymax1= umaxout(2)
+    uzmax1= umaxout(3)
+    uxmin1=-umaxout(4)
+    uymin1=-umaxout(5)
+    uzmin1=-umaxout(6)
+
+    if (nrank.eq.0) then
+
+       print *,'U,V,W min=',real(uxmin1,4),real(uymin1,4),real(uzmin1,4)
+       print *,'U,V,W max=',real(uxmax1,4),real(uymax1,4),real(uzmax1,4)
+       !print *,'CFL=',real(abs(max(uxmax1,uymax1,uzmax1)*dt)/min(dx,dy,dz),4)
+
+       if((abs(uxmax1).ge.10.).OR.(abs(uymax1).ge.10.).OR.(abs(uzmax1).ge.10.)) then
+         print *,'Velocity diverged! SIMULATION IS STOPPED!'
+         call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
+       endif
+
+    endif
+
+    return
+  end subroutine test_speed_min_max
+  !##################################################################
+  !##################################################################
+  subroutine simu_stats(iwhen)
+
+    USE decomp_2d
+    USE simulation_stats
+    USE var
+    USE MPI
+
+    implicit none
+
+    integer :: iwhen
+
+    if (iwhen.eq.1) then !AT THE START OF THE SIMULATION
+       tstart=zero;time1=zero;trank=zero;tranksum=zero;ttotal=zero
+       call cpu_time(tstart)
+    else if (iwhen.eq.2) then !AT THE START OF A TIME STEP
+       call cpu_time(time1)
+       if (nrank==0) then
+          print *,'==========================================================='
+          write(*,"(' Time step =',i7,'/',i7,', Time unit =',F9.4)") itime,ilast,t
+       endif
+    else if ((iwhen.eq.3).and.(itime.gt.ifirst)) then !AT THE END OF A TIME STEP
+       call cpu_time(trank)
+       if (nrank==0) print *,'Time for this time step (s):',real(trank-time1)
+       telapsed = (trank-tstart)/thirtysixthousand
+       tremaining  = telapsed*(ilast-itime)/(itime-ifirst)
+       if (nrank==0) then
+          write(*,"(' Remaining time:',I8,' h ',I2,' min')") int(tremaining), int((tremaining-int(tremaining))*sixty)
+          write(*,"(' Elapsed time:  ',I8,' h ',I2,' min')") int(telapsed), int((telapsed-int(telapsed))*sixty)
+       endif
+    else if (iwhen.eq.4) then !AT THE END OF THE SIMULATION
+       call cpu_time(trank); ttotal=trank-tstart
+       if (nrank==0) then
+          print *,'==========================================================='
+          print *,''
+          print *,'Good job! Xcompact3d finished successfully!'
+          print *,''
+          print *,'2DECOMP with p_row*p_col=',p_row,p_col
+          print *,''
+          print *,'nx*ny*nz=',nx*ny*nz
+          print *,'nx,ny,nz=',nx,ny,nz
+          print *,'dx,dy,dz=',dx,dy,dz
+          print *,''
+          print *,'Averaged time per step (s):',real(ttotal/(ilast-(ifirst-1)),4)
+          print *,'Total wallclock (s):',real(ttotal,4)
+          print *,'Total wallclock (m):',real(ttotal/sixty,4)
+          print *,'Total wallclock (h):',real(ttotal/thirtysixthousand,4)
+          print *,''
+       endif
+    endif
+
+  end subroutine simu_stats
+  !##############################################################################
+    !!
+    !!  SUBROUTINE: restart
+    !! DESCRIPTION: reads or writes restart file
+    !!
+    !!      AUTHOR: ?
+    !!    MODIFIED: Kay Schäfer
+    !!
+  !##############################################################################
+  subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1,iresflg)
+
+    USE decomp_2d
+    USE decomp_2d_io
+    USE variables
+    USE param
+    USE MPI
+    use navier, only : gradp
+
+    implicit none
+
+    integer :: i,j,k,iresflg,nzmsize,fh,ierror,is,it,code
+    integer :: ierror_o=0 !error to open sauve file during restart
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: px1,py1,pz1
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
+    real(mytype), dimension(phG%zst(1):phG%zen(1),phG%zst(2):phG%zen(2),phG%zst(3):phG%zen(3)) :: pp3
+    integer (kind=MPI_OFFSET_KIND) :: filesize, disp
+    real(mytype) :: xdt,tfield
+    integer, dimension(2) :: dims, dummy_coords
+    logical, dimension(2) :: dummy_periods
+    logical :: fexists
+    character(len=30) :: filename, filestart
+    character(len=32) :: fmt2,fmt3,fmt4
+    character(len=7) :: fmt1
+    NAMELIST /Time/ tfield, itime
+    NAMELIST /NumParam/ nx, ny, nz, istret, beta, dt, itimescheme
+
+    write(filename,"('restart',I7.7)") itime
+    write(filestart,"('restart',I7.7)") ifirst-1
+
+    if (iresflg .eq. 1 ) then !Writing restart
+       if (mod(itime, icheckpoint).ne.0) then
+          return
+       endif
+
+       if (nrank==0) then
+          print *,'===========================================================<<<<<'
+          print *,'Writing restart point ',filename !itime/icheckpoint
+          ! print *,'File size',real((s3df*16.)*1e-9,4),'GB'
+       endif
+    end if
+
+    if (iresflg==1) then !write
+       call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
+            MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
+            fh, ierror)
+       filesize = 0_MPI_OFFSET_KIND
+       call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
+       disp = 0_MPI_OFFSET_KIND
+       call decomp_2d_write_var(fh,disp,1,ux1)
+       call decomp_2d_write_var(fh,disp,1,uy1)
+       call decomp_2d_write_var(fh,disp,1,uz1)
+       ! write previous time-step if necessary for AB2 or AB3
+       if ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.7)) then
+         call decomp_2d_write_var(fh,disp,1,dux1(:,:,:,2))
+         call decomp_2d_write_var(fh,disp,1,duy1(:,:,:,2))
+         call decomp_2d_write_var(fh,disp,1,duz1(:,:,:,2))
+       end if
+       ! for AB3 one more previous time-step
+       if ((itimescheme.eq.3).or.(itimescheme.eq.7)) then
+         call decomp_2d_write_var(fh,disp,1,dux1(:,:,:,3))
+         call decomp_2d_write_var(fh,disp,1,duy1(:,:,:,3))
+         call decomp_2d_write_var(fh,disp,1,duz1(:,:,:,3))
+       end if
+       !
+       call decomp_2d_write_var(fh,disp,3,pp3,phG)
+       !
+       if (iscalar==1) then
+          do is=1, numscalar
+             call decomp_2d_write_var(fh,disp,1,phi1(:,:,:,is))
+             ! previous time-steps
+             if ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB2 or AB3
+               call decomp_2d_write_var(fh,disp,1,dphi1(:,:,:,2,is))
+             end if
+             !
+             if ((itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB3
+               call decomp_2d_write_var(fh,disp,1,dphi1(:,:,:,3,is))
+             end if
+          end do
+       endif
+       call MPI_FILE_CLOSE(fh,ierror)
+       ! Write info file for restart - Kay Schäfer
+       if (nrank.eq.0) then
+         write(filename,"('restart',I7.7,'.info')") itime
+         write(fmt2,'("(A,I16)")')
+         write(fmt3,'("(A,F16.4)")')
+         write(fmt4,'("(A,F16.12)")')
+         !
+         open (111,file=filename,action='write',status='replace')
+         write(111,'(A)')'!========================='
+         write(111,'(A)')'&Time'
+         write(111,'(A)')'!========================='
+         write(111,fmt3) 'tfield=   ',t
+         write(111,fmt2) 'itime=    ',itime
+         write(111,'(A)')'/End'
+         write(111,'(A)')'!========================='
+         write(111,'(A)')'&NumParam'
+         write(111,'(A)')'!========================='
+         write(111,fmt2) 'nx=       ',nx
+         write(111,fmt2) 'ny=       ',ny
+         write(111,fmt2) 'nz=       ',nz
+         write(111,fmt3) 'Lx=       ',xlx
+         write(111,fmt3) 'Ly=       ',yly
+         write(111,fmt3) 'Lz=       ',zlz
+         write(111,fmt2) 'istret=   ',istret
+         write(111,fmt4) 'beta=     ',beta
+         write(111,fmt2) 'iscalar=  ',iscalar
+         write(111,fmt2) 'numscalar=',numscalar
+         write(111,'(A,I14)') 'itimescheme=',itimescheme
+         write(111,'(A)')'/End'
+         write(111,'(A)')'!========================='
+
+         close(111)
+       end if
+    else
+       if (nrank==0) then
+         print *,'==========================================================='
+         print *,'RESTART from file:', filestart
+         print *,'==========================================================='
+       end if
+       call MPI_FILE_OPEN(MPI_COMM_WORLD, filestart, &
+            MPI_MODE_RDONLY, MPI_INFO_NULL, &
+            fh, ierror_o)
+       disp = 0_MPI_OFFSET_KIND
+       call decomp_2d_read_var(fh,disp,1,ux1)
+       call decomp_2d_read_var(fh,disp,1,uy1)
+       call decomp_2d_read_var(fh,disp,1,uz1)
+       ! read previous time-step if necessary for AB2 or AB3
+       if ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB2 or AB3
+         call decomp_2d_read_var(fh,disp,1,dux1(:,:,:,2))
+         call decomp_2d_read_var(fh,disp,1,duy1(:,:,:,2))
+         call decomp_2d_read_var(fh,disp,1,duz1(:,:,:,2))
+       end if
+       ! for AB3 one more previous time-step
+       if ((itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB3
+         call decomp_2d_read_var(fh,disp,1,dux1(:,:,:,3))
+         call decomp_2d_read_var(fh,disp,1,duy1(:,:,:,3))
+         call decomp_2d_read_var(fh,disp,1,duz1(:,:,:,3))
+       end if
+       !
+       call decomp_2d_read_var(fh,disp,3,pp3,phG)
+       !
+       if (iscalar==1) then
+          do is=1, numscalar
+             call decomp_2d_read_var(fh,disp,1,phi1(:,:,:,is))
+             ! previous time-steps
+             if ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB2 or AB3
+               call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,2,is))
+             end if
+             !
+             if ((itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB3
+               call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,3,is))
+             end if
+          end do
+       endif
+       call MPI_FILE_CLOSE(fh,ierror_o)
+
+       !! Read time of restart file
+       write(filename,"('restart',I7.7,'.info')") ifirst-1
+       inquire(file=filename, exist=fexists)
+       if (nrank.eq.0) print *,filename
+       ! file exists???
+       if (fexists) then
+         open(111, file=filename)
+         read(111, nml=Time)
+         close(111)
+         t0 = tfield
+         itime0 = 0
+       else
+         t0 = zero
+         itime0 = ifirst-1
+       end if
+       
+    endif
+
+    if (nrank.eq.0) then
+       if (ierror_o .ne. 0) then !Included by Felipe Schuch
+          print *,'==========================================================='
+          print *,'Error: Impossible to read '//trim(filestart)
+          print *,'==========================================================='
+          call MPI_ABORT(MPI_COMM_WORLD,code,ierror)
+       endif
+    endif
+
+    ! reconstruction of the dp/dx, dp/dy and dp/dz from pp3
+    if (iresflg==0) then
+       if (itimescheme.le.4) itr=1
+       if (itimescheme.eq.5) itr=3
+       if (itimescheme.eq.6) itr=5
+       call gradp(px1,py1,pz1,pp3)
+       if (nrank==0) print *,'reconstruction pressure gradients done!'
+    end if
+
+    if (iresflg .eq. 1 ) then !Writing restart
+       if (nrank==0) then
+          write(fmt1,"(I7.7)") itime
+          print *,'Restart point restart',fmt1,' saved successfully!'!itime/icheckpoint,'saved successfully!'
+          ! print *,'Elapsed time (s)',real(trestart,4)
+          ! print *,'Aproximated writing speed (MB/s)',real(((s3df*16.)*1e-6)/trestart,4)
+          print *,'If necesseary restart from:',itime+1
+       endif
+    end if
+
+  end subroutine restart
+  !############################################################################
+  !############################################################################
+  !!
+  !!  SUBROUTINE: channel_cfr
+  !!      AUTHOR: Kay Schäfer
+  !! DESCRIPTION: Inforces constant flow rate without need of data transposition
+  !!
+  !############################################################################
+  subroutine channel_cfr (ux,constant)
+
+    use decomp_2d
+    use decomp_2d_poisson
+    use variables
+    use param
+    use var
+    use MPI
+
+    implicit none
+
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux
+    real(mytype) :: constant
+
+    integer :: code,i,j,k,jloc
+    real(mytype) :: can,ub,uball, dyloc
+    !
+    ub = zero
+    uball = zero
+    !
+    do k=1,xsize(3)
+       do j=xstart(2)+1,xend(2)-1
+          jloc = j-xstart(2)+1
+          dyloc  = (yp(j+1)-yp(j-1))
+          do i=1,xsize(1)
+            ub = ub + ux(i,jloc,k) * half * dyloc
+          enddo
+       enddo
+    enddo
+
+    ! Check if first and last index of subarray is at domain boundary
+    if ( xstart(2)==1) then ! bottom point -> half distance
+       ub = ub + sum(ux(:,1,:)) * yp(2)*half
+    else
+       ub = ub + sum(ux(:,1,:)) * (yp(xstart(2)+1)-yp(xstart(2)-1))*half
+    end if
+    !
+    if (xend(2)==ny) then ! top point
+       jloc = xend(2)-xstart(2)+1
+       ub = ub + sum(ux(:,jloc,:)) * (yp(xend(2))-yp(xend(2)-1))*half
+    else
+       jloc = xend(2)-xstart(2)+1
+       ub = ub + sum(ux(:,jloc,:)) * (yp(xend(2)+1)-yp(xend(2)-1))*half
+    end if
+    !
+    ub = ub/(yly*(real(nx*nz,mytype)))
+
+    call MPI_ALLREDUCE(ub,uball,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+
+    can=-(constant-uball)
+
+    if (nrank==0) print *,nrank,'UT',uball,can
+
+    do k=1,xsize(3)
+      do j=1,xsize(2)
+        do i=1,xsize(1)
+          ux(i,j,k)=ux(i,j,k)-can
+        enddo
+      enddo
+    enddo
+
+    return
+  end subroutine channel_cfr
+  !############################################################################
+  !##################################################################
+  !##################################################################
+    !!  SUBROUTINE: compute_cfldiff
+    !! DESCRIPTION: Computes Diffusion/Fourier number
+    !!      AUTHOR: Kay Schäfer
+  !##################################################################
+  subroutine compute_cfldiff()
+     use param, only : xnu,dt,dx,dy,dz,istret
+     use param, only : cfl_diff_sum, cfl_diff_x, cfl_diff_y, cfl_diff_z
+     use variables, only : dyp
+     use decomp_2d, only : nrank
+
+     implicit none
+
+     cfl_diff_x = xnu*dt/(dx**2)
+     cfl_diff_z = xnu*dt/(dz**2)
+
+     if (istret.eq.0) then
+        cfl_diff_y   = xnu*dt/(dy**2)
+     else
+        cfl_diff_y = xnu*dt/(minval(dyp)**2)
+     end if
+
+     cfl_diff_sum = cfl_diff_x + cfl_diff_y + cfl_diff_z
+
+     if (nrank==0) then
+        print *,'==========================================================='
+        print *,'Diffusion number'
+        write(*,"(' cfl_diff_x             :        ',F13.8)") cfl_diff_x
+        write(*,"(' cfl_diff_y             :        ',F13.8)") cfl_diff_y
+        write(*,"(' cfl_diff_z             :        ',F13.8)") cfl_diff_z
+        write(*,"(' cfl_diff_sum           :        ',F13.8)") cfl_diff_sum
+        print *,'==========================================================='
+     endif
+
+     return
+  end subroutine compute_cfldiff
+  !##################################################################
+    !!  SUBROUTINE: compute_cfl
+    !! DESCRIPTION: Computes CFl number for stretched mesh
+    !!      AUTHOR: Kay Schäfer
+  !##################################################################
+  subroutine compute_cfl(ux,uy,uz)
+    use param, only : dx,dy,dz,dt,istret
+    use decomp_2d, only : nrank, mytype, xsize, xstart, xend, real_type
+    use mpi
+    use variables, only : dyp
+
+    implicit none
+
+    integer      :: code, i,j,k,jloc
+    real(mytype) :: value_x, value_y, value_z, value_sum
+    real(mytype) :: maxvalue_sum, maxvalue_sum_out, maxvalue_x, maxvalue_y,  maxvalue_z
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
+    real(mytype),dimension(4) :: cflmax_in, cflmax_out
+    !
+    maxvalue_x  =-1609.
+    maxvalue_y  =-1609.
+    maxvalue_z  =-1609.
+    maxvalue_sum=-1609.
+    !
+    if (istret.eq.0) then
+       do j = xstart(2),xend(2)
+          jloc = j-xstart(2)+1
+          value_x    = maxval(abs(ux(:,jloc,:))/dx)
+          value_y    = maxval(abs(uy(:,jloc,:))/dy)
+          value_z    = maxval(abs(uz(:,jloc,:))/dz)
+          value_sum  = maxval(abs(ux(:,jloc,:))/dx + abs(uy(:,jloc,:))/dy +    abs(uz(:,jloc,:))/dz)
+          !
+          maxvalue_x   = maxval((/maxvalue_x,   value_x /))
+          maxvalue_y   = maxval((/maxvalue_y,   value_y /))
+          maxvalue_z   = maxval((/maxvalue_z,   value_z /))
+          maxvalue_sum = maxval((/maxvalue_sum, value_sum /))
+       end do
+    else
+       do j = xstart(2),xend(2)
+          jloc = j-xstart(2)+1
+          value_x    = maxval(abs(ux(:,jloc,:))/dx)
+          value_y    = maxval(abs(uy(:,jloc,:))/dyp(j))
+          value_z    = maxval(abs(uz(:,jloc,:))/dz)
+          value_sum  = maxval(abs(ux(:,jloc,:))/dx + abs(uy(:,jloc,:))/ dyp(j) + abs(uz(:,jloc,:))/dz)
+          !
+          maxvalue_x   = maxval((/maxvalue_x,   value_x /))
+          maxvalue_y   = maxval((/maxvalue_y,   value_y /))
+          maxvalue_z   = maxval((/maxvalue_z,   value_z /))
+          maxvalue_sum = maxval((/maxvalue_sum, value_sum /))
+       end do
+    end if
+
+    cflmax_in =  (/maxvalue_x, maxvalue_y, maxvalue_z, maxvalue_sum/)
+
+    call    MPI_REDUCE(cflmax_in,cflmax_out,4,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
+
+    if (nrank.eq.0) then
+      write(*,"(' CFL_x                  : ',F17.8)") cflmax_out(1)*dt
+      write(*,"(' CFL_y                  : ',F17.8)") cflmax_out(2)*dt
+      write(*,"(' CFL_z                  : ',F17.8)") cflmax_out(3)*dt
+      !write(*,"(' CFL_sum                : ',F17.8)") cflmax_out(4)*dt
+    end if
+  end subroutine compute_cfl
+  !##################################################################
+  !##################################################################
+  ! Rescale pressure to physical pressure
+  ! Written by Kay Schäfer 2019
+  !##################################################################
+  subroutine rescale_pressure(pre1)
+
+    use decomp_2d, only : nrank, mytype, xsize, ysize, zsize
+    use param, only : itimescheme, gdt
+    implicit none
+
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(inout) :: pre1
+
+    ! Adjust pressure to physical pressure
+    if  ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.5).or.(itimescheme.eq.7)) then !AB2, AB3, RK3, Semi-Impl. AB3
+       pre1=pre1 / gdt(3) ! multiply pressure by factor of time-scheme (gdt = 1  / (dt * c_k) ) to get pyhsical pressure
+    else
+       if (nrank .eq. 0) print *,'WARNING: No scaling of pressure defined!!!'
+    endif
+
+  end subroutine
+  !##################################################################
+  !##################################################################
+  subroutine mean_plane_x (f1,nx,ny,nz,fm1)
+
+    use param, only : mytype, zero
+
+    implicit none
+
+    integer,intent(in) :: nx, ny, nz
+    real(mytype),intent(in),dimension(nx,ny,nz) :: f1
+    real(mytype),intent(out),dimension(ny,nz) :: fm1
+    integer :: i,j,k
+
+    fm1 = sum(f1,DIM=1)/real(nx,mytype)
+    return
+
+  end subroutine mean_plane_x
+  !##################################################################
+  !##################################################################
+  subroutine mean_plane_y (f2,nx,ny,nz,fm2)
+
+    use param, only : mytype, zero
+
+    implicit none
+
+    integer,intent(in) :: nx, ny, nz
+    real(mytype),intent(in),dimension(nx,ny,nz) :: f2
+    real(mytype),intent(out),dimension(nx,nz) :: fm2
+    integer :: i,j,k
+
+    fm2 = sum(f2,DIM=2)/real(ny,mytype)
+    return
+
+  end subroutine mean_plane_y
+  !##################################################################
+  !##################################################################
+  subroutine mean_plane_z (f3,nx,ny,nz,fm3)
+
+    use param, only : mytype, zero
+
+    implicit none
+
+    integer,intent(in) :: nx, ny, nz
+    real(mytype),intent(in),dimension(nx,ny,nz) :: f3
+    real(mytype),intent(out),dimension(nx,ny) :: fm3
+    integer :: i,j,k
+
+    fm3 = sum(f3,DIM=3)/real(nz,mytype)
+    return
+
+  end subroutine mean_plane_z
+end module tools
+!##################################################################
+!##################################################################
 subroutine stabiltemp() !from Erik, adapted by Leonardo Romero Monteiro
 
   use param
@@ -150,11 +790,12 @@ subroutine stabiltemp() !from Erik, adapted by Leonardo Romero Monteiro
   close(10)
 
 end subroutine stabiltemp
-!*******************************************************************
+!##################################################################
 !===================================================
 ! Subroutine for computing the local and global CFL
 ! number, according to Lele 1992.
 !===================================================
+!##################################################################
 subroutine cfl_compute(uxmax,uymax,uzmax)
 
   use param
@@ -207,14 +848,10 @@ subroutine cfl_compute(uxmax,uymax,uzmax)
   endif
 
 end subroutine cfl_compute
-!*******************************************************************
-!*******************************************************************
-!
-!*******************************************************************
+!##################################################################
+!##################################################################
 subroutine stretching()
-  !
-  !*******************************************************************
-  !
+
   USE decomp_2d
   !USE decomp_2d_poisson
   USE variables
@@ -393,12 +1030,9 @@ subroutine stretching()
   endif
 
 end subroutine stretching
-
-!*****************************************************************
-!
+!##################################################################
+!##################################################################
 subroutine inversion5_v1(aaa,eee,spI)
-  !
-  !*****************************************************************
 
   USE decomp_2d
   !USE decomp_2d_poisson
@@ -536,12 +1170,9 @@ subroutine inversion5_v1(aaa,eee,spI)
   return
 
 end subroutine inversion5_v1
-
-!*****************************************************************
-!
+!##################################################################
+!##################################################################
 subroutine inversion5_v2(aaa,eee,spI)
-  !
-  !*****************************************************************
 
   USE decomp_2d
   !USE decomp_2d_poisson
@@ -677,10 +1308,8 @@ subroutine inversion5_v2(aaa,eee,spI)
   return
 
 end subroutine inversion5_v2
-
-
-
-!********************************************************************
+!##################################################################
+!##################################################################
 subroutine tripping(tb,ta)
 
   USE param
@@ -766,7 +1395,6 @@ subroutine tripping(tb,ta)
      enddo
   endif
 
-
   !Time coefficient
   p_tr=t/ts_tr-i
   b_tr=3.0*p_tr**2-2.0*p_tr**3
@@ -797,10 +1425,10 @@ subroutine tripping(tb,ta)
 
   return
 end subroutine tripping
-!********************************************************************
-!********************************************************************
+!##################################################################
+!##################################################################
 !!TRIPPING SUBROUTINE FOR TURBULENT BOUNDARY LAYERS
-
+!##################################################################
 subroutine tbl_tripping(tb,ta)
 
   USE param
@@ -928,7 +1556,8 @@ subroutine tbl_tripping(tb,ta)
 
   return
 end subroutine tbl_tripping
-!********************************************************************
+!##################################################################
+!##################################################################
 function rl(complexnumber)
 
   USE param
@@ -941,7 +1570,8 @@ function rl(complexnumber)
   rl = real(complexnumber, kind=mytype)
 
 end function rl
-!********************************************************************
+!##################################################################
+!##################################################################
 function iy(complexnumber)
 
   USE param
@@ -954,7 +1584,8 @@ function iy(complexnumber)
   iy = aimag(complexnumber)
 
 end function iy
-!********************************************************************
+!##################################################################
+!##################################################################
 function cx(realpart,imaginarypart)
 
   USE param
@@ -967,8 +1598,8 @@ function cx(realpart,imaginarypart)
   cx = cmplx(realpart, imaginarypart, kind=mytype)
 
 end function cx
-!********************************************************************
-
+!##################################################################
+!##################################################################
 SUBROUTINE calc_temp_eos(temp, rho, phi, mweight, xlen, ylen, zlen)
 
   USE decomp_2d
@@ -995,7 +1626,8 @@ SUBROUTINE calc_temp_eos(temp, rho, phi, mweight, xlen, ylen, zlen)
   ENDIF
 
 ENDSUBROUTINE calc_temp_eos
-
+!##################################################################
+!##################################################################
 SUBROUTINE calc_rho_eos(rho, temp, phi, mweight, xlen, ylen, zlen)
 
   USE decomp_2d
@@ -1022,7 +1654,8 @@ SUBROUTINE calc_rho_eos(rho, temp, phi, mweight, xlen, ylen, zlen)
   ENDIF
 
 ENDSUBROUTINE calc_rho_eos
-
+!##################################################################
+!##################################################################
 SUBROUTINE calc_mweight(mweight, phi, xlen, ylen, zlen)
 
   USE decomp_2d
@@ -1048,379 +1681,5 @@ SUBROUTINE calc_mweight(mweight, phi, xlen, ylen, zlen)
   mweight(:,:,:) = one / mweight(:,:,:)
 
 ENDSUBROUTINE calc_mweight
-
-module tools
-
-  implicit none
-
-  private
-
-  public :: test_flow, test_speed_min_max, test_scalar_min_max, &
-       restart, &
-       simu_stats
-
-contains
-
-  subroutine test_flow(rho1,ux1,uy1,uz1,phi1,ep1,drho1,divu3)
-
-    use decomp_2d
-    use param
-
-    use navier, only : divergence
-
-    use var, only : numscalar, dv3
-
-    implicit none
-
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: ux1, uy1, uz1, ep1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), nrhotime), intent(in) :: rho1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar), intent(in) :: phi1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime), intent(in) :: drho1
-    real(mytype), dimension(zsize(1), zsize(2), zsize(3)), intent(in) :: divu3
-
-    if (mod(itime,10)==0) then
-       call divergence(dv3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,2)
-       call test_speed_min_max(ux1,uy1,uz1)
-       if (iscalar==1) call test_scalar_min_max(phi1)
-    endif
-
-  endsubroutine test_flow
-
-  subroutine test_scalar_min_max(phi)
-
-    USE decomp_2d
-    USE decomp_2d_poisson
-    USE variables
-    USE param
-    USE var
-    USE MPI
-
-    implicit none
-
-    integer :: code,ierror,i,j,k,is
-    real(mytype) :: phimax,phimin,phimax1,phimin1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
-
-    do is=1, numscalar
-       phimax = maxval(phi(:,:,:,is))
-       phimin = minval(phi(:,:,:,is))
-
-       call MPI_REDUCE(phimax,phimax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-       call MPI_REDUCE(phimin,phimin1,1,real_type,MPI_MIN,0,MPI_COMM_WORLD,code)
-
-       if (nrank.eq.0) then
-
-          print *,'Phi'//char(48+is)//' min max=', real(phimin1,4), real(phimax1,4)
-
-          if (abs(phimax1).ge.10.) then !if phi control turned off
-             print *,'Scalar diverged! SIMULATION IS STOPPED!'
-             call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
-          endif
-       endif
-
-    enddo
-
-    return
-  end subroutine test_scalar_min_max
-
-  subroutine test_speed_min_max(ux,uy,uz)
-
-    USE decomp_2d
-    USE decomp_2d_poisson
-    USE variables
-    USE param
-    USE var
-    USE MPI
-
-    implicit none
-
-    integer :: code,ierror,i,j,k
-    real(mytype) :: uxmax,uymax,uzmax,uxmin,uymin,uzmin
-    real(mytype) :: uxmax1,uymax1,uzmax1,uxmin1,uymin1,uzmin1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
-
-    uxmax=-1609.;uymax=-1609.;uzmax=-1609.;uxmin=1609.;uymin=1609.;uzmin=1609.
-    do k = 1, xsize(3)
-       do j = 1, xsize(2)
-          do i = 1, xsize(1)
-             if ((iibm.eq.0).or.(ep1(i,j,k).eq.zero)) then
-                if (ux(i,j,k).gt.uxmax) then
-                   uxmax=ux(i,j,k)
-                elseif (ux(i,j,k).lt.uxmin) then
-                   uxmin=ux(i,j,k)
-                endif
-                if (uy(i,j,k).gt.uymax) then
-                   uymax=uy(i,j,k)
-                elseif (uy(i,j,k).lt.uymin) then
-                   uymin=uy(i,j,k)
-                endif
-                if (uz(i,j,k).gt.uzmax) then
-                   uzmax=uz(i,j,k)
-                elseif (uz(i,j,k).lt.uzmin) then
-                   uzmin=uz(i,j,k)
-                endif
-             endif
-          enddo
-       enddo
-    enddo
-
-    call MPI_REDUCE(uxmax,uxmax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-    call MPI_REDUCE(uymax,uymax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-    call MPI_REDUCE(uzmax,uzmax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-    call MPI_REDUCE(uxmin,uxmin1,1,real_type,MPI_MIN,0,MPI_COMM_WORLD,code)
-    call MPI_REDUCE(uymin,uymin1,1,real_type,MPI_MIN,0,MPI_COMM_WORLD,code)
-    call MPI_REDUCE(uzmin,uzmin1,1,real_type,MPI_MIN,0,MPI_COMM_WORLD,code)
-
-    if (nrank.eq.0) then
-
-       print *,'U,V,W min=',real(uxmin1,4),real(uymin1,4),real(uzmin1,4)
-       print *,'U,V,W max=',real(uxmax1,4),real(uymax1,4),real(uzmax1,4)
-       !print *,'CFL=',real(abs(max(uxmax1,uymax1,uzmax1)*dt)/min(dx,dy,dz),4)
-
-       if((abs(uxmax1).ge.10.).OR.(abs(uymax1).ge.10.).OR.(abs(uzmax1).ge.10.)) then
-         print *,'Velocity diverged! SIMULATION IS STOPPED!'
-         call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
-       endif
-
-    endif
-
-    !if (mod(itime,imodulo).eq.0) call cfl_compute(uxmax,uymax,uzmax)
-
-    return
-  end subroutine test_speed_min_max
-
-  subroutine simu_stats(iwhen)
-
-    USE decomp_2d
-    USE simulation_stats
-    USE var
-    USE MPI
-
-    implicit none
-
-    integer :: iwhen
-
-    if (iwhen.eq.1) then !AT THE START OF THE SIMULATION
-       tstart=zero;time1=zero;trank=zero;tranksum=zero;ttotal=zero
-       call cpu_time(tstart)
-    else if (iwhen.eq.2) then !AT THE START OF A TIME STEP
-       call cpu_time(time1)
-       if (nrank==0) then
-          print *,'-----------------------------------------------------------'
-          write(*,"(' Time step =',i7,'/',i7,', Time unit =',F9.4)") itime,ilast,t
-       endif
-    else if ((iwhen.eq.3).and.(itime.gt.ifirst)) then !AT THE END OF A TIME STEP
-       call cpu_time(trank)
-       if (nrank==0) print *,'Time for this time step (s):',real(trank-time1)
-       telapsed = (trank-tstart)/thirtysixthousand
-       tremaining  = telapsed*(ilast-itime)/(itime-ifirst)
-       if (nrank==0) then
-          write(*,"(' Remaining time:',I8,' h ',I2,' min')") int(tremaining), int((tremaining-int(tremaining))*sixty)
-          write(*,"(' Elapsed time:  ',I8,' h ',I2,' min')") int(telapsed), int((telapsed-int(telapsed))*sixty)
-       endif
-    else if (iwhen.eq.4) then !AT THE END OF THE SIMULATION
-       call cpu_time(trank); ttotal=trank-tstart
-       if (nrank==0) then
-          print *,'==========================================================='
-          print *,''
-          print *,'Good job! Xcompact3d finished successfully!'
-          print *,''
-          print *,'2DECOMP with p_row*p_col=',p_row,p_col
-          print *,''
-          print *,'nx*ny*nz=',nx*ny*nz
-          print *,'nx,ny,nz=',nx,ny,nz
-          print *,'dx,dy,dz=',dx,dy,dz
-          print *,''
-          print *,'Averaged time per step (s):',real(ttotal/(ilast-(ifirst-1)),4)
-          print *,'Total wallclock (s):',real(ttotal,4)
-          print *,'Total wallclock (m):',real(ttotal/sixty,4)
-          print *,'Total wallclock (h):',real(ttotal/thirtysixthousand,4)
-          print *,''
-       endif
-    endif
-
-  end subroutine simu_stats
-  !##############################################################################
-    !!
-    !!  SUBROUTINE: restart
-    !! DESCRIPTION: reads or writes restart file
-    !!
-    !!      AUTHOR: ?
-    !!    MODIFIED: Kay Schäfer
-    !!
-  !##############################################################################
-  subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1,iresflg)
-
-    USE decomp_2d
-    USE decomp_2d_io
-    USE variables
-    USE param
-    USE MPI
-    use navier, only : gradp
-
-    implicit none
-
-    integer :: i,j,k,iresflg,nzmsize,fh,ierror,is,it,code
-    integer :: ierror_o=0 !error to open sauve file during restart
-    real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-    real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: px1,py1,pz1
-    real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
-    real(mytype), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-    real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
-    real(mytype), dimension(phG%zst(1):phG%zen(1),phG%zst(2):phG%zen(2),phG%zst(3):phG%zen(3)) :: pp3
-    integer (kind=MPI_OFFSET_KIND) :: filesize, disp
-    real(mytype) :: xdt
-    integer, dimension(2) :: dims, dummy_coords
-    logical, dimension(2) :: dummy_periods
-    character(len=30) :: filename, filestart
-    character(len=32) :: fmt2,fmt3
-
-    if (iresflg .eq. 1 ) then !Writing restart
-       if (mod(itime, icheckpoint).ne.0) then
-          return
-       endif
-
-       if (nrank==0) then
-          print *,'===========================================================<<<<<'
-          print *,'Writing restart point',itime/icheckpoint
-          ! print *,'File size',real((s3df*16.)*1e-9,4),'GB'
-       endif
-    end if
-
-    write(filename,"('restart',I7.7)") itime
-    write(filestart,"('restart',I7.7)") ifirst-1
-
-    if (iresflg==1) then !write
-       call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
-            MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
-            fh, ierror)
-       filesize = 0_MPI_OFFSET_KIND
-       call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
-       disp = 0_MPI_OFFSET_KIND
-       call decomp_2d_write_var(fh,disp,1,ux1)
-       call decomp_2d_write_var(fh,disp,1,uy1)
-       call decomp_2d_write_var(fh,disp,1,uz1)
-       ! write previous time-step if necessary for AB2 or AB3
-       if ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.7)) then
-         call decomp_2d_write_var(fh,disp,1,dux1(:,:,:,2))
-         call decomp_2d_write_var(fh,disp,1,duy1(:,:,:,2))
-         call decomp_2d_write_var(fh,disp,1,duz1(:,:,:,2))
-       end if
-       ! for AB3 one more previous time-step
-       if ((itimescheme.eq.3).or.(itimescheme.eq.7)) then
-         call decomp_2d_write_var(fh,disp,1,dux1(:,:,:,3))
-         call decomp_2d_write_var(fh,disp,1,duy1(:,:,:,3))
-         call decomp_2d_write_var(fh,disp,1,duz1(:,:,:,3))
-       end if
-       !
-       call decomp_2d_write_var(fh,disp,1,pp3,phG)
-       !
-       if (iscalar==1) then
-          do is=1, numscalar
-             call decomp_2d_write_var(fh,disp,1,phi1(:,:,:,is))
-             ! previous time-steps
-             if ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB2 or AB3
-               call decomp_2d_write_var(fh,disp,1,dphi1(:,:,:,2,is))
-             end if
-             !
-             if ((itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB3
-               call decomp_2d_write_var(fh,disp,1,dphi1(:,:,:,3,is))
-             end if
-          end do
-       endif
-       call MPI_FILE_CLOSE(fh,ierror)
-       ! Write info file for restart - Kay Schäfer
-       if (nrank.eq.0) then
-         write(filename,"('restart',I7.7,'.info')") itime
-         write(fmt2,'("(A,I16)")')
-         write(fmt3,'("(A,F16.10)")')
-         !
-         open (111,file=filename,action='write',status='replace')
-         write(111,'(A)')'!==================='
-         write(111,'(A)')'&Time'
-         write(111,'(A)')'!==================='
-         write(111,fmt3) 'tfield=',t
-         write(111,fmt2) 'itime= ',itime
-         write(111,'(A)')'/End'
-         write(111,'(A)')'!==================='
-         write(111,'(A)')'&NumParam'
-         write(111,'(A)')'!==================='
-         write(111,fmt2) 'nx=    ',nx
-         write(111,fmt2) 'ny=    ',ny
-         write(111,fmt2) 'nz=    ',nz
-         write(111,fmt2) 'istret=',istret
-         write(111,fmt3) 'beta=  ',beta
-         write(111,'(A,I11)') 'itimescheme=',itimescheme
-         write(111,'(A)')'/End'
-         close(111)
-       end if
-    else
-       if (nrank==0) print *,'RESTART from file:', filestart
-       call MPI_FILE_OPEN(MPI_COMM_WORLD, filestart, &
-            MPI_MODE_RDONLY, MPI_INFO_NULL, &
-            fh, ierror_o)
-       disp = 0_MPI_OFFSET_KIND
-       call decomp_2d_read_var(fh,disp,1,ux1)
-       call decomp_2d_read_var(fh,disp,1,uy1)
-       call decomp_2d_read_var(fh,disp,1,uz1)
-       ! read previous time-step if necessary for AB2 or AB3
-       if ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB2 or AB3
-         call decomp_2d_read_var(fh,disp,1,dux1(:,:,:,2))
-         call decomp_2d_read_var(fh,disp,1,duy1(:,:,:,2))
-         call decomp_2d_read_var(fh,disp,1,duz1(:,:,:,2))
-       end if
-       ! for AB3 one more previous time-step
-       if ((itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB3
-         call decomp_2d_read_var(fh,disp,1,dux1(:,:,:,3))
-         call decomp_2d_read_var(fh,disp,1,duy1(:,:,:,3))
-         call decomp_2d_read_var(fh,disp,1,duz1(:,:,:,3))
-       end if
-       !
-       call decomp_2d_read_var(fh,disp,1,pp3,phG)
-       !
-       if (iscalar==1) then
-          do is=1, numscalar
-             call decomp_2d_read_var(fh,disp,1,phi1(:,:,:,is))
-             ! previous time-steps
-             if ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB2 or AB3
-               call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,2,is))
-             end if
-             !
-             if ((itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB3
-               call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,3,is))
-             end if
-          end do
-       endif
-       call MPI_FILE_CLOSE(fh,ierror_o)
-    endif
-
-    if (nrank.eq.0) then
-       if (ierror_o .ne. 0) then !Included by Felipe Schuch
-          print *,'==========================================================='
-          print *,'Error: Impossible to read '//trim(filestart)
-          print *,'==========================================================='
-          call MPI_ABORT(MPI_COMM_WORLD,code,ierror)
-       endif
-    endif
-
-    ! reconstruction of the dp/dx, dp/dy and dp/dz from pp3
-    if (iresflg==0) then
-       if (itimescheme.le.4) itr=1
-       if (itimescheme.eq.5) itr=3
-       if (itimescheme.eq.6) itr=5    
-       call gradp(px1,py1,pz1,pp3)
-       if (nrank==0) print *,'reconstruction pressure gradients done!'
-    end if
-
-    if (iresflg .eq. 1 ) then !Writing restart
-       if (nrank==0) then
-          print *,'Restart point',itime/icheckpoint,'saved successfully!'
-          ! print *,'Elapsed time (s)',real(trestart,4)
-          ! print *,'Aproximated writing speed (MB/s)',real(((s3df*16.)*1e-6)/trestart,4)
-          print *,'If necesseary restart from:',itime+1
-       endif
-    end if
-
-  end subroutine restart
-  !##############################################################################
-end module tools
+!##################################################################
+!##################################################################

@@ -29,7 +29,6 @@
 !    problems with up to 0(10^5) computational cores, Int. J. of Numerical
 !    Methods in Fluids, vol 67 (11), pp 1735-1757
 !################################################################################
-
 module variables
   !USE param
   !USE var
@@ -53,8 +52,7 @@ module variables
 
   !Possible n points: 3 5 7 9 11 13 17 19 21 25 31 33 37 41 49 51 55 61 65 73 81 91 97 101 109 121 129 145 151 161 163 181 193 201 217 241 251 257 271 289 301 321 325 361 385 401 433 451 481 487 501 513 541 577 601 641 649 721 751 769 801 811 865 901 961 973 1001 1025 1081 1153 1201 1251 1281 1297 1351 1441 1459 1501 1537 1601 1621 1729 1801 1921 1945 2001 2049 2161 2251 2305 2401 2431 2501 2561 2593 2701 2881 2917 3001 3073 3201 3241 3457 3601 3751 3841 3889 4001 4051 4097 4321 4375 4501 4609 4801 4861 5001 5121 5185 5401 5761 5833 6001 6145 6251 6401 6481 6751 6913 7201 7291 7501 7681 7777 8001 8101 8193 8641 8749 9001 9217 9601 9721 enough
 
-  integer :: nx,ny,nz,numscalar,p_row,p_col,nxm,nym,nzm
-  real :: spinup_time
+  integer :: nx,ny,nz,numscalar,p_row,p_col,nxm,nym,nzm,spinup_time
   integer :: nstat=1,nvisu=1,nprobe=1,nlength=1
 
   real(mytype),allocatable,dimension(:) :: sc,uset,cp,ri,group
@@ -239,12 +237,13 @@ module variables
   !module mesh
   real(mytype),allocatable,dimension(:) :: ppy,pp2y,pp4y
   real(mytype),allocatable,dimension(:) :: ppyi,pp2yi,pp4yi
-  real(mytype),allocatable,dimension(:) :: yp,ypi,del
+  real(mytype),allocatable,dimension(:) :: xp,xpi,yp,ypi,dyp,zp,zpi,del
   real(mytype),allocatable,dimension(:) :: yeta,yetai
   real(mytype) :: alpha,beta
 
 end module variables
-
+!############################################################################
+!############################################################################
 module param
 
   use decomp_2d, only : mytype
@@ -274,17 +273,26 @@ module param
   integer :: iin,itimescheme,ifirst,ilast,iles,iimplicit
   integer :: ntime ! How many (sub)timestpeps do we need to store?
   integer :: icheckpoint,irestart,idebmod,ioutput,imodulo2,idemarre,icommence,irecord
+  integer :: itime0
   integer :: iscalar,nxboite,istat,iread,iadvance_time,irotation,iibm
   integer :: npif,izap
   integer :: ivisu, ipost, initstat
-  real(mytype) :: xlx,yly,zlz,dx,dy,dz,dx2,dy2,dz2,t,xxk1,xxk2
+  real(mytype) :: xlx,yly,zlz,dx,dy,dz,dx2,dy2,dz2,t,xxk1,xxk2,t0
   real(mytype) :: dt,re,xnu,init_noise,inflow_noise,u1,u2,angle,anglex,angley
   real(mytype) :: wrotation,ro
   real(mytype) :: dens1, dens2
 
+  !! Channel flow
+  integer :: icpg, icfr
+  real(mytype) :: re_cent, fcpg
+
   !! Numerics control
   integer :: ifirstder,isecondder,ipinter
 
+  !! CFL_diffusion parameter
+  real(mytype) :: cfl_diff_x,cfl_diff_y,cfl_diff_z,cfl_diff_sum
+
+  !!
   real(mytype) :: xcst, xcst_pr
   real(mytype) :: alpha_0, beta_0, g_0, alpha_n, beta_n, g_n, g_bl_inf, f_bl_inf
 
@@ -418,7 +426,8 @@ module param
 #endif
 
 end module param
-
+!############################################################################
+!############################################################################
 module complex_geometry
 
   use decomp_2d,only : mytype
@@ -429,7 +438,8 @@ module complex_geometry
   real(mytype),allocatable,dimension(:,:,:) :: xi,xf,yi,yf,zi,zf
   integer :: nxraf,nyraf,nzraf,nraf,nobjmax
 end module complex_geometry
-
+!############################################################################
+!############################################################################
 module derivX
 
   use decomp_2d, only : mytype
@@ -448,7 +458,8 @@ module derivX
   real(mytype) :: alsaixt,asixt,bsixt,csixt,dsixt
 
 end module derivX
-
+!############################################################################
+!############################################################################
 module derivY
 
   use decomp_2d, only : mytype
@@ -467,7 +478,8 @@ module derivY
   real(mytype) :: alsajyt,asjyt,bsjyt,csjyt,dsjyt
 
 end module derivY
-
+!############################################################################
+!############################################################################
 module derivZ
 
   use decomp_2d, only : mytype
@@ -487,7 +499,8 @@ module derivZ
 
 
 end module derivZ
-
+!############################################################################
+!############################################################################
 ! Describes the parameters for the discrete filters in X-Pencil
 module parfiX
   use decomp_2d, only : mytype
@@ -499,7 +512,8 @@ module parfiX
   real(mytype) :: fialmx, fiamx, fibmx, ficmx, fidmx, fiemx, fifmx  ! Coefficient for filter at boundary point m=n-1
   real(mytype) :: fialpx, fiapx, fibpx, ficpx, fidpx, fiepx, fifpx  ! Coefficient for filter at boundary point p=n-2
 end module parfiX
-!
+!############################################################################
+!############################################################################
 module parfiY
 
   use decomp_2d, only : mytype
@@ -511,7 +525,8 @@ module parfiY
   real(mytype) :: fialmy, fiamy, fibmy, ficmy, fidmy, fiemy, fifmy ! Coefficient for filter at boundary point m=n-1
   real(mytype) :: fialpy, fiapy, fibpy, ficpy, fidpy, fiepy, fifpy ! Coefficient for filter at boundary point p=n-2
 end module parfiY
-
+!############################################################################
+!############################################################################
 module parfiZ
 
   use decomp_2d, only : mytype
@@ -523,12 +538,15 @@ module parfiZ
   real(mytype) :: fialmz, fiamz, fibmz, ficmz, fidmz, fiemz, fifmz ! Coefficient for filter at boundary point m=n-1
   real(mytype) :: fialpz, fiapz, fibpz, ficpz, fidpz, fiepz, fifpz ! Coefficient for filter at boundary point p=n-2
 end module parfiZ
-
+!############################################################################
+!############################################################################
 module simulation_stats
   real(8) :: tstart,time1,trank,tranksum,ttotal,tremaining,telapsed
 end module simulation_stats
-
-module ibm
+!############################################################################
+!############################################################################
+module ibm_param
   use decomp_2d, only : mytype
   real(mytype) :: cex,cey,ra
-end module ibm
+end module ibm_param
+!############################################################################

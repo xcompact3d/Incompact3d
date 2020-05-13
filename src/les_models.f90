@@ -271,6 +271,7 @@ contains
     USE var, only : sxx1,syy1,szz1,sxy1,sxz1,syz1,srt_smag
     USE var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2,srt_smag2,nut2
     USE var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
+    use tools, only : mean_plane_z
 
     implicit none
 

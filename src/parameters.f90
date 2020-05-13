@@ -29,30 +29,29 @@
 !    problems with up to 0(10^5) computational cores, Int. J. of Numerical
 !    Methods in Fluids, vol 67 (11), pp 1735-1757
 !################################################################################
-
-!================================================================================
+!###########################################################################
 !
 !  SUBROUTINE: parameter
 ! DESCRIPTION: Reads the input.i3d file and sets the parameters of the
 !              simulation.
 !      AUTHOR: Paul Bartholomew <paul.bartholomew08@imperial.ac.uk>
 !
-!================================================================================
+!###########################################################################
 subroutine parameter(input_i3d)
 
-  USE iso_fortran_env
+  use iso_fortran_env
 
-  USE param
-  USE variables
-  USE complex_geometry
-  USE decomp_2d
-  USE ibm
+  use param
+  use variables
+  use complex_geometry
+  use decomp_2d
+  use ibm_param
 
-  USE var, ONLY : dphi1
+  use var, only : dphi1
 
-  USE lockexch, ONLY : pfront
+  use lockexch, only : pfront
 
-  USE forces, ONLY : iforces, nvol, xld, xrd, yld, yud
+  use forces, only : iforces, nvol, xld, xrd, yld, yud
 
   implicit none
 
@@ -67,7 +66,8 @@ subroutine parameter(input_i3d)
        ilesmod, iscalar, &
        nclx1, nclxn, ncly1, nclyn, nclz1, nclzn, &
        ivisu, ipost, &
-       gravx, gravy, gravz
+       gravx, gravy, gravz, &
+       icpg, icfr
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, nu0nu, cnu, fpi2, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu, iprocessing
   NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat
@@ -209,13 +209,46 @@ subroutine parameter(input_i3d)
   dy=yly/real(nym,mytype)
   dz=zlz/real(nzm,mytype)
 
+  dx2 = dx * dx
+  dy2 = dy * dy
+  dz2 = dz * dz
+
+  xnu=one/re
+  !! Constant pressure gradient, re = Re_tau -> use to compute Re_centerline
+  if (icpg.eq.one) then
+    re_cent = (re/0.116)**(1.0/0.88)
+    xnu = one/re_cent ! viscosity based on Re_cent to keep same scaling as CFR
+    !
+    fcpg = two/yly * (re/re_cent)**2
+  end if
+
+  if (ilmn) then
+     if (ivarcoeff) then
+        npress = 2 !! Need current pressure and previous iterate
+     else
+        npress = 1
+     endif
+  endif
+
+  if (itype.eq.itype_tbl.and.A_tr .gt. 0.0)  print *, "TBL tripping is active"
+
+#ifdef DOUBLE_PREC
+  anglex = dsin(pi*angle/180._mytype)
+  angley = dcos(pi*angle/180._mytype)
+#else
+  anglex = sin(pi*angle/180._mytype)
+  angley = cos(pi*angle/180._mytype)
+#endif
+  !###########################################################################
+  ! Log-output
+  !###########################################################################
   if (nrank==0) call system('mkdir data out probes 2> /dev/null')
 
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter input.i3d done'
 #endif
   if (nrank==0) then
-     print *,''
+     print *,'==========================================================='
      if (itype.eq.itype_user) then
         print *,'User-defined simulation'
      elseif (itype.eq.itype_lockexch) then
@@ -240,12 +273,132 @@ subroutine parameter(input_i3d)
         print *,'Unknown itype: ', itype
         stop
      endif
-     print *,'(lx,ly,lz)=',xlx,yly,zlz
-     print *,'(nx,ny,nz)=',nx,ny,nz
-     print *,'(dx,dy,dz)=',dx,dy,dz
-     print *,'(nx*ny*nz)=',nx*ny*nz
-     print *,'(p_row,p_col)=',p_row,p_col
-     print *,''
+     print *,'==========================================================='
+     if (itype.eq.itype_channel) then
+       if (icpg.eq.zero) then
+         print *,'Channel forcing with constant flow rate (CFR)'
+         write(*,"(' Re_cl                  : ',F17.3)") re
+       else if (icpg.eq.one) then
+         print *,'Channel forcing with constant pressure gradient (CPG)'
+         write(*,"(' Re_tau                 : ',F17.3)") re
+         write(*,"(' Re_cl (estimated)      : ',F17.3)") re_cent
+         write(*,"(' fcpg                   : ',F17.8)") fcpg
+       end if
+     else
+       write(*,"(' Reynolds number Re     : ',F17.3)") re
+     endif
+     write(*,"(' xnu                    : ',F17.8)") xnu
+     print *,'==========================================================='
+     write(*,"(' p_row, p_col           : ',I9, I8)") p_row, p_col
+     print *,'==========================================================='
+     write(*,"(' Time step dt           : ',F17.8)") dt
+     !
+     if (itimescheme.eq.1) then
+       !print *,'Temporal scheme        : Forwards Euler'
+       write(*,"(' Temporal scheme        : ',A20)") "Forwards Euler"
+     elseif (itimescheme.eq.2) then
+       !print *,'Temporal scheme        : Adams-bashforth 2'
+       write(*,"(' Temporal scheme        : ',A20)") "Adams-bashforth 2"
+     elseif (itimescheme.eq.3) then
+       !print *,'Temporal scheme        : Adams-bashforth 3'
+       write(*,"(' Temporal scheme        : ',A20)") "Adams-bashforth 3"
+     elseif (itimescheme.eq.4) then
+       !print *,'Temporal scheme        : Adams-bashforth 4'
+       write(*,"(' Temporal scheme        : ',A20)") "Adams-bashforth 4"
+       print *,'Error: Adams-bashforth 4 not implemented!'
+       stop
+     elseif (itimescheme.eq.5) then
+       !print *,'Temporal scheme        : Runge-kutta 3'
+       write(*,"(' Temporal scheme        : ',A20)") "Runge-kutta 3"
+     elseif (itimescheme.eq.6) then
+       !print *,'Temporal scheme        : Runge-kutta 4'
+       write(*,"(' Temporal scheme        : ',A20)") "Runge-kutta 4"
+       print *,'Error: Runge-kutta 4 not implemented!'
+       stop
+     elseif (itimescheme.eq.7) then
+       !print *,'Temporal scheme        : Semi-implicit'
+       write(*,"(' Temporal scheme        : ',A20)") "Semi-implict CN+AB3"
+     elseif (itimescheme.eq.8) then
+       !print *,'Temporal scheme        : Semi-implicit'
+       write(*,"(' Temporal scheme        : ',A20)") "Semi-implict CN+RK3"
+     else
+       print *,'Error: itimescheme must be specified as 1-7'
+       stop
+     endif
+     !
+     if (ilesmod.ne.0) then
+       print *,'                   : DNS'
+     else
+       if (jLES.eq.1) then
+          print *,'                   : Phys Smag'
+       else if (jLES.eq.2) then
+          print *,'                   : Phys WALE'
+       else if (jLES.eq.3) then
+          print *,'                   : Phys dyn. Smag'
+       else if (jLES.eq.4) then
+          print *,'                   : iSVV'
+       else
+       endif
+     endif
+     print *,'==========================================================='
+     write(*,"(' ifirst                 : ',I17)") ifirst
+     write(*,"(' ilast                  : ',I17)") ilast
+     print *,'==========================================================='
+     write(*,"(' Lx                     : ',F17.8)") xlx
+     write(*,"(' Ly                     : ',F17.8)") yly
+     write(*,"(' Lz                     : ',F17.8)") zlz
+     write(*,"(' nx                     : ',I17)") nx
+     write(*,"(' ny                     : ',I17)") ny
+     write(*,"(' nz                     : ',I17)") nz
+     print *,'==========================================================='
+     write(*,"(' istret                 : ',I17)") istret
+     write(*,"(' beta                   : ',F17.8)") beta
+     print *,'==========================================================='
+     write(*,"(' fpi2                   : ',F17.8)") fpi2
+     write(*,"(' nu0nu                  : ',F17.8)") nu0nu
+     write(*,"(' cnu                    : ',F17.8)") cnu
+     print *,'==========================================================='
+     if (iscalar.eq.0) write(*,"(' Scalar                 : ',A17)") "off"
+     if (iscalar.eq.1) write(*,"(' Scalar                 : ',A17)") "on"
+     write(*,"(' numscalar              : ',I17)") numscalar
+     if (iscalar.eq.1) then
+       do is=1, numscalar
+          write(*,"(' Schmidt number sc(',I2,')  : ',F17.8)") is, sc(is)
+          write(*,"(' Richardson n.  ri(',I2,')  : ',F17.8)") is, ri(is)
+       end do
+     endif
+     print *,'==========================================================='
+     write(*,"(' spinup_time            : ',I17)") spinup_time
+     write(*,"(' wrotation              : ',F17.8)") wrotation
+     print *,'==========================================================='
+     if (iibm.eq.0) write(*,"(' Immersed boundary      : ',A17)") "off"
+     if (iibm.gt.1) then
+      write(*,"(' Immersed boundary      : ',A17)") "on"
+      write(*,"(' iibm                   : ',I17)") iibm
+     end if
+     if (iibm.eq.1) print *,'Simple immersed boundary method'
+     if (iibm.eq.2) then
+       print *,'Lagrangian polynomial reconstruction'
+       print *,'==========================================================='
+       write(*,"(' npif                   : ',I17)") npif
+       write(*,"(' izap                   : ',I17)") izap
+       write(*,"(' nraf                   : ',I17)") nraf
+       write(*,"(' nobjmax                : ',I17)") nobjmax
+     end if
+     print *,'==========================================================='
+     write(*,"(' Boundary condition velocity field: ')")
+     write(*,"(' nclx1, nclxn           : ',I15,',',I1 )") nclx1,nclxn
+     write(*,"(' ncly1, nclyn           : ',I15,',',I1 )") ncly1,nclyn
+     write(*,"(' nclz1, nclzn           : ',I15,',',I1 )") nclz1,nclzn
+     print *,'==========================================================='
+     if (iscalar.eq.1) then
+       write(*,"(' Boundary condition scalar field: ')")
+       write(*,"(' nclxS1, nclxSn         : ',I15,',',I1 )") nclxS1,nclxSn
+       write(*,"(' nclyS1, nclySn         : ',I15,',',I1 )") nclyS1,nclySn
+       write(*,"(' nclzS1, nclzSn         : ',I15,',',I1 )") nclzS1,nclzSn
+       print *,'==========================================================='
+     endif
+
 #ifdef DOUBLE_PREC
 #ifdef SAVE_SINGLE
      print *,'Numerical precision: Double, saving in single'
@@ -255,11 +408,8 @@ subroutine parameter(input_i3d)
 #else
      print *,'Numerical precision: Single'
 #endif
-     write(*,"(' Boundary condition : (nclx1 ,nclxn )=(',I1,',',I1,')')") nclx1,nclxn
-     write(*,"('                      (ncly1 ,nclyn )=(',I1,',',I1,')')") ncly1,nclyn
-     write(*,"('                      (nclz1 ,nclzn )=(',I1,',',I1,')')") nclz1,nclzn
+     print *,'==========================================================='
      write(*,"(' High and low speed : u1=',F6.2,' and u2=',F6.2)") u1,u2
-     write(*,"(' Reynolds number Re : ',F15.8)") re
      write(*,"(' Gravity vector     : (gx, gy, gz)=(',F15.8,',',F15.8,',',F15.8,')')") gravx, gravy, gravz
      if (ilmn) then
         print *, "LMN                : Enabled"
@@ -276,63 +426,6 @@ subroutine parameter(input_i3d)
         write(*,"(' dens1 and dens2    : ',F6.2' ',F6.2)") dens1, dens2
         write(*,"(' Prandtl number Re  : ',F15.8)") prandtl
      endif
-     write(*,"(' Time step dt       : ',F15.8)") dt
-     if (ilesmod.ne.0) then
-        print *,'                   : DNS'
-     else
-        if (jLES.eq.1) then
-           print *,'                   : Phys Smag'
-        else if (jLES.eq.2) then
-           print *,'                   : Phys WALE'
-        else if (jLES.eq.3) then
-           print *,'                   : Phys dyn. Smag'
-        else if (jLES.eq.4) then
-           print *,'                   : iSVV'
-        else
-        endif
-     endif
-     if (itimescheme.eq.1) then
-        print *,'Temporal scheme    : Forwards Euler'
-     elseif (itimescheme.eq.2) then
-        print *,'Temporal scheme    : Adams-bashforth 2'
-     elseif (itimescheme.eq.3) then
-        print *,'Temporal scheme    : Adams-bashforth 3'
-     elseif (itimescheme.eq.4) then
-        print *,'Temporal scheme    : Adams-bashforth 4'
-        print *,'Error: Adams-bashforth 4 not implemented!'
-        stop
-     elseif (itimescheme.eq.5) then
-        print *,'Temporal scheme    : Runge-kutta 3'
-     elseif (itimescheme.eq.6) then
-        print *,'Temporal scheme    : Runge-kutta 4'
-        print *,'Error: Runge-kutta 4 not implemented!'
-        stop
-     elseif (itimescheme.eq.7) then
-        print *,'Temporal scheme    : Semi-implicit'
-     else
-        print *,'Error: itimescheme must be specified as 1-7'
-        stop
-     endif
-     if (iscalar.eq.0) then
-        print *,'Scalar             : off'
-     else
-        print *,'Scalar             : on'
-        write(*,"(' Boundary condition : (nclxS1,nclxSn)=(',I1,',',I1,')')") nclxS1,nclxSn
-        write(*,"('                      (nclyS1,nclySn)=(',I1,',',I1,')')") nclyS1,nclySn
-        write(*,"('                      (nclzS1,nclzSn)=(',I1,',',I1,')')") nclzS1,nclzSn
-        do is=1, numscalar
-           write (*,"(' Scalar             : #',I1)") is
-           write (*,"(' Schmidt number     : ',F15.8)") sc(is)
-           write (*,"(' Richardson number  : ',F15.8)") ri(is)
-        end do
-     endif
-     if (iibm.eq.0) then
-        print *,'Immersed boundary  : off'
-     elseif (iibm.eq.1) then
-        print *,'Immersed boundary  : old school'
-     elseif (iibm.eq.2) then
-        print *,'Immersed boundary  : on with Lagrangian Poly'
-     endif
      if (angle.ne.0.) write(*,"(' Solid rotation     : ',F6.2)") angle
      print *,''
 
@@ -342,31 +435,8 @@ subroutine parameter(input_i3d)
      elseif (itype==itype_tgv) then
         print *, "TGV 2D: ", tgv_twod
      endif
+     print *,'==========================================================='
   endif
-
-  xnu=one/re
-
-  if (ilmn) then
-     if (ivarcoeff) then
-        npress = 2 !! Need current pressure and previous iterate
-     else
-        npress = 1
-     endif
-  endif
-
-  if (itype.eq.itype_tbl.and.A_tr .gt. 0.0)  print *, "TBL tripping is active"
-
-#ifdef DOUBLE_PREC
-  anglex = dsin(pi*angle/180._mytype)
-  angley = dcos(pi*angle/180._mytype)
-#else
-  anglex = sin(pi*angle/180._mytype)
-  angley = cos(pi*angle/180._mytype)
-#endif
-
-  dx2 = dx * dx
-  dy2 = dy * dy
-  dz2 = dz * dz
 
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter done'
@@ -375,23 +445,23 @@ subroutine parameter(input_i3d)
   return
 end subroutine parameter
 
-!================================================================================
+!###########################################################################
 !
 !  SUBROUTINE: parameter_defaults
 ! DESCRIPTION: Sets the default simulation parameters.
 !      AUTHOR: Paul Bartholomew <paul.bartholomew08@imperial.ac.uk>
 !
-!================================================================================
+!###########################################################################
 subroutine parameter_defaults()
 
-  USE param
-  USE variables
-  USE decomp_2d
-  USE complex_geometry
+  use param
+  use variables
+  use decomp_2d
+  use complex_geometry
 
-  USE forces, ONLY : iforces, nvol
+  use forces, only : iforces, nvol
 
-  IMPLICIT NONE
+  implicit none
 
   integer :: i
 
@@ -410,6 +480,8 @@ subroutine parameter_defaults()
   cont_phi = 0
   filepath = './data/'
   irestart = 0
+  itime0 = 0
+  t0 = zero
   datapath = './data/'
   fpi2 = (48._mytype / seven) / (PI**2)
 
@@ -444,6 +516,10 @@ subroutine parameter_defaults()
   ibirman_eos = .FALSE.
 
   primary_species = -1
+
+  !! Channel
+  icpg = 0
+  icfr = 1
 
   !! IO
   ivisu = 1

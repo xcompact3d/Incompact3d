@@ -29,63 +29,61 @@
 !    problems with up to 0(10^5) computational cores, Int. J. of Numerical
 !    Methods in Fluids, vol 67 (11), pp 1735-1757
 !################################################################################
+module transeq
 
-MODULE transeq
+  private
+  public :: calculate_transeq_rhs
 
-  PRIVATE
-  PUBLIC :: calculate_transeq_rhs
-
-CONTAINS
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+contains
+  !############################################################################
   !!  SUBROUTINE: calculate_transeq_rhs
   !!      AUTHOR: Paul Bartholomew
   !! DESCRIPTION: Calculates the right hand sides of all transport
   !!              equations - momentum, scalar transport, etc.
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
+  !############################################################################
+  subroutine calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
-    USE decomp_2d, ONLY : mytype, xsize, zsize
-    USE variables, ONLY : numscalar
-    USE param, ONLY : ntime, ilmn, nrhotime, ilmn_solve_temp,itimescheme
+    use decomp_2d, only : mytype, xsize, zsize
+    use variables, only : numscalar
+    use param, only : ntime, ilmn, nrhotime, ilmn_solve_temp,itimescheme
 
-    IMPLICIT NONE
+    implicit none
 
     !! Inputs
-    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
-    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime), INTENT(IN) :: rho1
-    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar), INTENT(IN) :: phi1
-    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ep1
-    REAL(mytype), DIMENSION(zsize(1), zsize(2), zsize(3)), INTENT(IN) :: divu3
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: ux1, uy1, uz1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), nrhotime), intent(in) :: rho1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar), intent(in) :: phi1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: ep1
+    real(mytype), dimension(zsize(1), zsize(2), zsize(3)), intent(in) :: divu3
 
     !! Outputs
-    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
-    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1
-    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime, numscalar) :: dphi1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: drho1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime, numscalar) :: dphi1
 
     !! Momentum equations
-    CALL momentum_rhs_eq(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
+    call momentum_rhs_eq(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
     !! Scalar equations
     !! XXX Not yet LMN!!!
     if (itimescheme.ne.7) then
-       CALL scalar(dphi1, rho1, ux1, phi1)
+       call scalar(dphi1, rho1, ux1, uy1, uz1, phi1)
     endif
 
     !! Other (LMN, ...)
-    IF (ilmn) THEN
-       IF (ilmn_solve_temp) THEN
-          CALL temperature_rhs_eq(drho1, rho1, ux1, phi1)
-       ELSE
-          CALL continuity_rhs_eq(drho1, rho1, ux1, divu3)
-       ENDIF
-    ENDIF
+    if (ilmn) THEN
+       if (ilmn_solve_temp) THEN
+          call temperature_rhs_eq(drho1, rho1, ux1, uy1, uz1, phi1)
+       else
+          call continuity_rhs_eq(drho1, rho1, ux1, divu3)
+       endif
+    endif
 
-  END SUBROUTINE calculate_transeq_rhs
+  end subroutine calculate_transeq_rhs
   !############################################################################
   !############################################################################
   !!
-  !!  SUBROUTINE: momentum_rhs_eq
+  !!  subroutine: momentum_rhs_eq
   !!      AUTHOR: ?
   !!    MODIFIED: Kay Schäfer
   !! DESCRIPTION: Calculation of convective and diffusion terms of momentum
@@ -95,16 +93,16 @@ CONTAINS
   !############################################################################
   subroutine momentum_rhs_eq(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
-    USE param
-    USE variables
-    USE decomp_2d
-    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,mu1,mu2,mu3
-    USE var, only : rho2,ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2
-    USE var, only : rho3,ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
-    USE var, only : sgsx1,sgsy1,sgsz1
-    USE les, only : compute_SGS
+    use param
+    use variables
+    use decomp_2d
+    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,mu1,mu2,mu3
+    use var, only : rho2,ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2
+    use var, only : rho3,ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
+    use var, only : sgsx1,sgsy1,sgsz1
+    use les, only : compute_SGS
 
-    USE case, ONLY : momentum_forcing
+    use case, only : momentum_forcing
 
     implicit none
 
@@ -417,13 +415,15 @@ CONTAINS
        duz1(:,:,:,1) = duz1(:,:,:,1) + sgsz1(:,:,:)
     endif
 
-    !! Gravity
-    if ((Fr**2).gt.zero) then
-       call momentum_gravity(dux1, duy1, duz1, rho1(:,:,:,1) - one, one / Fr**2)
+    if (ilmn) then
+      !! Gravity
+      if ((Fr**2).gt.zero) then
+        call momentum_gravity(dux1, duy1, duz1, rho1(:,:,:,1) - one, one / Fr**2)
+      endif
+      do is = 1, numscalar
+        call momentum_gravity(dux1, duy1, duz1, phi1(:,:,:,is), ri(is))
+      enddo
     endif
-    do is = 1, numscalar
-       call momentum_gravity(dux1, duy1, duz1, phi1(:,:,:,is), ri(is))
-    enddo
 
     !! Additional forcing
     call momentum_forcing(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
@@ -435,9 +435,8 @@ CONTAINS
     endif
 
   end subroutine momentum_rhs_eq
-  !************************************************************
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !############################################################################
+  !############################################################################
   !!
   !!  SUBROUTINE: momentum_full_viscstress_tensor
   !!      AUTHOR: Paul Bartholomew
@@ -454,24 +453,24 @@ CONTAINS
   !!              contributions not accounted for in the
   !!              incompressible solver.
   !!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !############################################################################
   subroutine momentum_full_viscstress_tensor(dux1, duy1, duz1, divu3, mu1)
 
-    USE param
-    USE variables
-    USE decomp_2d
+    use param
+    use variables
+    use decomp_2d
 
-    USE var, only : ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-    USE var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,di2
-    USE var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
+    use var, only : ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    use var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,di2
+    use var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
 
-    IMPLICIT NONE
+    implicit none
 
-    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: dux1, duy1, duz1
-    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: mu1
-    REAL(mytype), DIMENSION(zsize(1), zsize(2), zsize(3)), INTENT(IN) :: divu3
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: dux1, duy1, duz1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: mu1
+    real(mytype), dimension(zsize(1), zsize(2), zsize(3)), intent(in) :: divu3
 
-    REAL(mytype) :: one_third
+    real(mytype) :: one_third
 
     one_third = one / three
 
@@ -561,7 +560,8 @@ CONTAINS
 
 
   end subroutine momentum_full_viscstress_tensor
-
+  !############################################################################
+  !############################################################################
   subroutine momentum_gravity(dux1, duy1, duz1, peculiar_density1, richardson)
 
     use decomp_2d
@@ -699,24 +699,26 @@ CONTAINS
 
 
   end subroutine momentum_gravity
+  !############################################################################
+  !############################################################################
+  subroutine scalar_transport_eq(dphi1, rho1, ux1, uy1, uz1, phi1, schmidt)
 
-  subroutine scalar_transport_eq(dphi1, rho1, ux1, phi1, schmidt)
+    use param
+    use variables
+    use decomp_2d
+    use case, only : scalar_forcing
 
-    USE param
-    USE variables
-    USE decomp_2d
-
-    USE var, ONLY : ta1,tb1,tc1,td1,di1
-    USE var, ONLY : rho2,uy2,ta2,tb2,tc2,td2,di2
-    USE var, ONLY : rho3,uz3,ta3,tb3,td3,di3
+    use var, only : ta1,tb1,tc1,td1,di1
+    use var, only : rho2,uy2,ta2,tb2,tc2,td2,di2
+    use var, only : rho3,uz3,ta3,tb3,td3,di3
 
     implicit none
 
     !! INPUTS
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: phi1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
-    real(mytype), INTENT(IN) :: schmidt
+    real(mytype), intent(in) :: schmidt
 
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dphi1
@@ -794,25 +796,28 @@ CONTAINS
     ! Add convective and diffusive scalar terms to final sum
     dphi1(:,:,:,1) = ta1(:,:,:) + tc1(:,:,:)
 
+    !! Additional forcing
+    call scalar_forcing(dphi1, rho1, ux1, uy1, uz1, phi1)
+
     !! XXX We have computed rho dphidt, want dphidt
     if (ilmn) then
       dphi1(:,:,:,1) = dphi1(:,:,:,1) / rho1(:,:,:,1)
     endif
 
   endsubroutine scalar_transport_eq
+  !############################################################################
+  !############################################################################
+  subroutine scalar(dphi1, rho1, ux1, uy1, uz1, phi1)
 
-  !************************************************************
-  subroutine scalar(dphi1, rho1, ux1, phi1)
-
-    USE param
-    USE variables
-    USE decomp_2d
-    USE var, ONLY : sgsphi1
+    use param
+    use variables
+    use decomp_2d
+    use var, only : sgsphi1
 
     implicit none
 
     !! INPUTS
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
 
@@ -830,7 +835,7 @@ CONTAINS
        if (is.ne.primary_species) then
           !! For mass fractions enforce primary species Y_p = 1 - sum_s Y_s
           !! So don't solve a transport equation
-          call scalar_transport_eq(dphi1(:,:,:,:,is), rho1, ux1, phi1(:,:,:,is), sc(is))
+          call scalar_transport_eq(dphi1(:,:,:,:,is), rho1, ux1, uy1, uz1, phi1(:,:,:,is), sc(is))
           if (uset(is).ne.zero) then
              call scalar_settling(dphi1, phi1(:,:,:,is), is)
           endif
@@ -853,16 +858,17 @@ CONTAINS
     endif
 
   end subroutine scalar
-
+  !############################################################################
+  !############################################################################
   subroutine scalar_settling(dphi1, phi1, is)
 
-    USE param
-    USE variables
-    USE decomp_2d
+    use param
+    use variables
+    use decomp_2d
 
-    USE var, only : ta1, di1
-    USE var, only : ta2, tb2, di2, phi2 => tc2
-    USE var, only : ta3, di3, phi3 => tb3
+    use var, only : ta1, di1
+    use var, only : ta2, tb2, di2, phi2 => tc2
+    use var, only : ta3, di3, phi3 => tb3
 
     implicit none
 
@@ -876,35 +882,36 @@ CONTAINS
     call transpose_x_to_y(phi1, phi2)
     call transpose_y_to_z(phi2, phi3)
 
-    CALL derz (ta3, phi3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
+    call derz (ta3, phi3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
     ta3(:,:,:) = uset(is) * gravz * ta3(:,:,:)
 
     call transpose_z_to_y(ta3, tb2)
 
-    CALL dery (ta2, phi2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
+    call dery (ta2, phi2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
     ta2(:,:,:) = uset(is) * gravy * ta2(:,:,:)
     ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
 
     call transpose_y_to_x(ta2, ta1)
 
     dphi1(:,:,:,1,is) = dphi1(:,:,:,1,is) - ta1(:,:,:)
-    CALL derx (ta1, phi1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1)
+    call derx (ta1, phi1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1)
     dphi1(:,:,:,1,is) = dphi1(:,:,:,1,is) - uset(is) * gravx * ta1(:,:,:)
 
   endsubroutine scalar_settling
+  !############################################################################
+  !############################################################################
+  subroutine temperature_rhs_eq(drho1, rho1, ux1, uy1, uz1, phi1)
 
-  subroutine temperature_rhs_eq(drho1, rho1, ux1, phi1)
+    use param
+    use variables
+    use decomp_2d
 
-    USE param
-    USE variables
-    USE decomp_2d
-
-    USE var, ONLY : te1, tb1
+    use var, only : te1, tb1
 
     implicit none
 
     !! INPUTS
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
@@ -912,68 +919,69 @@ CONTAINS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
 
     !! Get temperature
-    CALL calc_temp_eos(te1, rho1(:,:,:,1), phi1, tb1, xsize(1), xsize(2), xsize(3))
+    call calc_temp_eos(te1, rho1(:,:,:,1), phi1, tb1, xsize(1), xsize(2), xsize(3))
 
     !!=====================================================================
     !! XXX It is assumed that ux,uy,uz are already updated in all pencils!
     !!=====================================================================
-    call scalar_transport_eq(drho1, rho1, ux1, te1, prandtl)
+    call scalar_transport_eq(drho1, rho1, ux1, uy1, uz1, te1, prandtl)
 
   end subroutine temperature_rhs_eq
+  !############################################################################
+  !############################################################################
+  subroutine continuity_rhs_eq(drho1, rho1, ux1, divu3)
 
+    use decomp_2d, only : mytype, xsize, ysize, zsize
+    use decomp_2d, only : transpose_z_to_y, transpose_y_to_x
+    use param, only : ntime, nrhotime, ibirman_eos
+    use param, only : xnu, prandtl
+    use variables
 
-  SUBROUTINE continuity_rhs_eq(drho1, rho1, ux1, divu3)
+    use var, only : ta1, tb1, di1
+    use var, only : rho2, uy2, ta2, tb2, di2
+    use var, only : rho3, uz3, ta3, di3
 
-    USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
-    USE decomp_2d, ONLY : transpose_z_to_y, transpose_y_to_x
-    USE param, ONLY : ntime, nrhotime, ibirman_eos
-    USE param, ONLY : xnu, prandtl
-    USE variables
+    implicit none
 
-    USE var, ONLY : ta1, tb1, di1
-    USE var, ONLY : rho2, uy2, ta2, tb2, di2
-    USE var, ONLY : rho3, uz3, ta3, di3
+    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1
+    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
+    real(mytype), intent(in), dimension(zsize(1), zsize(2), zsize(3)) :: divu3
 
-    IMPLICIT NONE
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: drho1
 
-    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1
-    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
-    REAL(mytype), INTENT(IN), DIMENSION(zsize(1), zsize(2), zsize(3)) :: divu3
-
-    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1
-
-    REAL(mytype) :: invpe
+    real(mytype) :: invpe
 
     invpe = xnu / prandtl
 
     !! XXX All variables up to date - no need to transpose
 
-    CALL derz (ta3, rho3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
+    call derz (ta3, rho3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
     ta3(:,:,:) = uz3(:,:,:) * ta3(:,:,:) + rho3(:,:,:) * divu3(:,:,:)
 
-    CALL transpose_z_to_y(ta3, tb2)
-    CALL dery (ta2, rho2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
+    call transpose_z_to_y(ta3, tb2)
+    call dery (ta2, rho2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
     ta2(:,:,:) = uy2(:,:,:) * ta2(:,:,:) + tb2(:,:,:)
 
-    CALL transpose_y_to_x(ta2, ta1)
-    CALL derx (drho1(:,:,:,1), rho1(:,:,:,1), &
+    call transpose_y_to_x(ta2, ta1)
+    call derx (drho1(:,:,:,1), rho1(:,:,:,1), &
          di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1)
     drho1(:,:,:,1) = -(ux1(:,:,:) * drho1(:,:,:,1) + ta1(:,:,:))
 
-    IF (ibirman_eos) THEN !! Add a diffusion term
-       CALL derzz (ta3,rho3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
-       CALL transpose_z_to_y(ta3, tb2)
+    if (ibirman_eos) THEN !! Add a diffusion term
+       call derzz (ta3,rho3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
+       call transpose_z_to_y(ta3, tb2)
 
-       CALL deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+       call deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
        ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
-       CALL transpose_y_to_x(ta2, ta1)
+       call transpose_y_to_x(ta2, ta1)
 
-       CALL derxx (tb1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+       call derxx (tb1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
        ta1(:,:,:) = ta1(:,:,:) + tb1(:,:,:)
 
        drho1(:,:,:,1) = drho1(:,:,:,1) + invpe * ta1(:,:,:)
-    ENDIF
+    endif
 
-  ENDSUBROUTINE continuity_rhs_eq
-
-END MODULE transeq
+  end subroutine continuity_rhs_eq
+  !############################################################################
+  !############################################################################
+end module transeq

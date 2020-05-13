@@ -388,9 +388,17 @@ contains
     !module mesh
     allocate(ppy(ny),pp2y(ny),pp4y(ny))
     allocate(ppyi(ny),pp2yi(ny),pp4yi(ny))
+    allocate(xp(nx),xpi(nx))
     allocate(yp(ny),ypi(ny),del(ny))
+    allocate(zp(nz),zpi(nz))
     allocate(yeta(ny),yetai(ny))
 
+    ! x-position
+    do i=1,nx
+      xp(i)=real(i-1,mytype)*dx
+      xpi(i)=(real(i,mytype)-half)*dx
+    enddo
+    ! y-position
     if (istret.eq.0) then
        do j=1,ny
           yp(j)=real(j-1,mytype)*dy
@@ -398,8 +406,21 @@ contains
        enddo
     else
        call stretching()
-    endif
 
+       allocate(dyp(ny))
+       ! compute dy for stretched mesh - Kay
+       do j=2,ny-1
+          dyp(j) = 0.5*(yp(j+1)-yp(j-1))
+       enddo
+       dyp(1)  = yp(2) -yp(1)
+       dyp(ny) = yp(ny)-yp(ny-1)
+    endif
+    ! z-position
+    do k=1,nz
+       zp(k)=real(k-1,mytype)*dz
+       zpi(k)=(real(k,mytype)-half)*dz
+    enddo
+    !
     adt(:)=zero ; bdt(:)=zero ; cdt(:)=zero ; gdt(:)=zero
     if (itimescheme.eq.1) then ! Euler
        iadvance_time=1

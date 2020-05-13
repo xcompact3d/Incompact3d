@@ -29,15 +29,13 @@
 !    problems with up to 0(10^5) computational cores, Int. J. of Numerical
 !    Methods in Fluids, vol 67 (11), pp 1735-1757
 !################################################################################
-
-
 module channel
 
-  USE decomp_2d
-  USE variables
-  USE param
+  use decomp_2d
+  use variables
+  use param
 
-  IMPLICIT NONE
+  implicit none
 
   integer :: FS
   character(len=100) :: fileformat
@@ -55,14 +53,14 @@ module channel
        geomcomplex_channel
 
 contains
-
+  !############################################################################
   subroutine init_channel (ux1,uy1,uz1,ep1,phi1)
 
-    USE decomp_2d
-    USE decomp_2d_io
-    USE variables
-    USE param
-    USE MPI
+    use decomp_2d
+    use decomp_2d_io
+    use variables
+    use param
+    use MPI
 
     implicit none
 
@@ -77,17 +75,27 @@ contains
     integer, dimension (:), allocatable :: seed
 
     if (iscalar==1) then
+      if (nrank.eq.0) print *,'Imposing linear temperature profile'
+      do k=1,xsize(3)
+         do j=1,xsize(2)
+            if (istret.eq.0) y=real(j+xstart(2)-2,mytype)*dy
+            if (istret.ne.0) y=yp(j+xstart(2)-1)
+            do i=1,xsize(1)
+               phi1(i,j,k,:) = 1. - y/yly
+            enddo
+         enddo
+      enddo
 
-       phi1(:,:,:,:) = zero !change as much as you want
-                 if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
-             !! Generate a hot patch on bottom boundary
-             phi1(:,1,:,:) = one
-          endif
-          if ((nclySn.eq.2).and.(xend(2).eq.ny)) THEN
-             phi1(:,xsize(2),:,:) = zero
-          endif
-       
+      phi1(:,:,:,:) = zero !change as much as you want
+      if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
+        !! Generate a hot patch on bottom boundary
+        phi1(:,1,:,:) = one
+      endif
+      if ((nclySn.eq.2).and.(xend(2).eq.ny)) then
+        phi1(:,xsize(2),:,:) = zero
+      endif
     endif
+
     ux1=zero;uy1=zero;uz1=zero
     if (iin.ne.0) then
        call system_clock(count=code)
@@ -131,12 +139,14 @@ contains
 
     return
   end subroutine init_channel
-  !********************************************************************
+  !############################################################################
+  !############################################################################
   subroutine boundary_conditions_channel (ux,uy,uz,phi)
 
-    USE param
-    USE variables
-    USE decomp_2d
+    use param
+    use variables
+    use decomp_2d
+    use tools, only : channel_cfr
 
     implicit none
 
@@ -148,19 +158,17 @@ contains
     real(mytype) :: x, y, z
     integer :: i, j, k, is
 
-    call transpose_x_to_y(ux,gx)
-    call channel_flrt(gx,two/three)
-    call transpose_y_to_x(gx,ux)
+    if (icpg.ne.one) then ! if not constant pressure gradient
+      if (icfr.eq.one) then ! constant flow rate without transposition
+        call channel_cfr(ux,two/three)
+      else if (icfr.eq.two) then
+        call transpose_x_to_y(ux,gx)
+        call channel_flrt(gx,two/three)
+        call transpose_y_to_x(gx,ux)
+      end if
+    end if
 
     if (iscalar.ne.0) then
-!       if (nclxS1.eq.2) then
-!          i = 1
-!          phi(i,:,:,:) = zero
-!       endif
-!       if (nclxSn.eq.2) then
-!          i = xsize(1)
-!          phi(i,:,:,:) = phi(i - 1,:,:,:)
-!       endif
        if (itimescheme.ne.7) then
           if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
              !! Generate a hot patch on bottom boundary
@@ -174,19 +182,16 @@ contains
 
     return
   end subroutine boundary_conditions_channel
-
-  !********************************************************************
-  !
+  !############################################################################
+  !############################################################################
   subroutine channel_flrt (ux,constant)
-    !
-    !********************************************************************
 
-    USE decomp_2d
-    USE decomp_2d_poisson
-    USE variables
-    USE param
-    USE var
-    USE MPI
+    use decomp_2d
+    use decomp_2d_poisson
+    use variables
+    use param
+    use var
+    use MPI
 
     implicit none
 
@@ -229,22 +234,21 @@ contains
 
     return
   end subroutine channel_flrt
-  !********************************************************************
-
+  !############################################################################
   !############################################################################
   subroutine postprocess_channel(ux1,uy1,uz1,pp3,phi1,ep1) !By Felipe Schuch
 
-    USE MPI
-    USE decomp_2d
-    USE decomp_2d_io
-    USE var, only : umean,vmean,wmean,pmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
-    USE var, only : phimean, phiphimean
-    USE var, only : ta1, pp1, di1
-    USE var, only : ppi3, dip3
-    USE var, only : pp2, ppi2, dip2
+    use MPI
+    use decomp_2d
+    use decomp_2d_io
+    use var, only : umean,vmean,wmean,pmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
+    use var, only : phimean, phiphimean
+    use var, only : ta1, pp1, di1
+    use var, only : ppi3, dip3
+    use var, only : pp2, ppi2, dip2
 
-    USE var, ONLY : nxmsize, nymsize, nzmsize
-    USE param, ONLY : npress
+    use var, ONLY : nxmsize, nymsize, nzmsize
+    use param, ONLY : npress
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
@@ -256,20 +260,24 @@ contains
     return
   end subroutine postprocess_channel
   !############################################################################
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !############################################################################
   !!
   !!  SUBROUTINE: momentum_forcing
   !!      AUTHOR: Paul Bartholomew
   !! DESCRIPTION: Applies rotation for t < spinup_time.
   !!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE momentum_forcing_channel(dux1, duy1, ux1, uy1)
+  !############################################################################
+  subroutine momentum_forcing_channel(dux1, duy1, ux1, uy1)
 
-    IMPLICIT NONE
+    implicit none
 
-    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1
-    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1
+    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1
+
+    if (icpg.eq.one) then
+        !! fcpg: add constant pressure gradient in streamwise direction
+        dux1(:,:,:,1) = dux1(:,:,:,1) + fcpg !* (re/re_cent)**2
+    endif
 
     if (itime.lt.spinup_time) then
        if (nrank==0) print *,'Rotating turbulent channel at speed ',wrotation
@@ -277,8 +285,9 @@ contains
        duy1(:,:,:,1) = duy1(:,:,:,1) + wrotation*ux1(:,:,:)
     endif
 
-  ENDSUBROUTINE momentum_forcing_channel
-
+  end subroutine momentum_forcing_channel
+  !############################################################################
+  !############################################################################
   subroutine geomcomplex_channel(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,yp,remp)
 
     use decomp_2d, only : mytype
@@ -314,5 +323,5 @@ contains
 
     return
   end subroutine geomcomplex_channel
-
+  !############################################################################
 end module channel

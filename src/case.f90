@@ -30,42 +30,44 @@
 !    Methods in Fluids, vol 67 (11), pp 1735-1757
 !################################################################################
 
-MODULE case
+module case
 
-  USE param
-  USE decomp_2d
-  USE variables
+  use param
+  use decomp_2d
+  use variables
 
-  USE user_sim
-  USE tgv
-  USE cyl
-  USE hill
-  USE dbg_schemes
-  USE channel
-  USE mixlayer
-  USE jet
-  USE lockexch
-  USE tbl
+  use user_sim
+  use tgv
+  use cyl
+  use hill
+  use dbg_schemes
+  use channel
+  use mixlayer
+  use jet
+  use lockexch
+  use tbl
 
-  USE var, ONLY : nzmsize
+  use var, only : nzmsize
 
-  IMPLICIT NONE
+  implicit none
 
-  PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init, boundary_conditions, postprocess_case, momentum_forcing, set_fluid_properties
+  private ! All functions/subroutines private by default
+  public :: init, boundary_conditions, &
+            momentum_forcing, scalar_forcing, set_fluid_properties, &
+            test_flow, preprocessing, postprocessing
 
-CONTAINS
-
-  SUBROUTINE init (rho1, ux1, uy1, uz1, ep1, phi1, drho1, dux1, duy1, duz1, dphi1, &
+contains
+  !##################################################################
+  subroutine init (rho1, ux1, uy1, uz1, ep1, phi1, drho1, dux1, duy1, duz1, dphi1, &
        pp3, px1, py1, pz1)
 
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1,drho1
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
-    REAL(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)) :: px1, py1, pz1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1,drho1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
+    real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: px1, py1, pz1
 
     INTEGER :: it, is
 
@@ -79,47 +81,47 @@ CONTAINS
     pressure0 = one
     rho1(:,:,:,:) = one
 
-    IF (itype.EQ.itype_user) THEN
+    if (itype.eq.itype_user) then
 
-       CALL init_user (ux1, uy1, uz1, ep1, phi1)
+       call init_user (ux1, uy1, uz1, ep1, phi1)
 
-    ELSEIF (itype.EQ.itype_lockexch) THEN
+    elseif (itype.eq.itype_lockexch) then
 
-       CALL init_lockexch(rho1, ux1, uy1, uz1, ep1, phi1)
+       call init_lockexch(rho1, ux1, uy1, uz1, ep1, phi1)
 
-    ELSEIF (itype.EQ.itype_tgv) THEN
+    elseif (itype.eq.itype_tgv) then
 
-       CALL init_tgv (ux1, uy1, uz1, ep1, phi1)
+       call init_tgv (ux1, uy1, uz1, ep1, phi1)
 
-    ELSEIF (itype.EQ.itype_channel) THEN
+    elseif (itype.eq.itype_channel) then
 
-       CALL init_channel (ux1, uy1, uz1, ep1, phi1)
+       call init_channel (ux1, uy1, uz1, ep1, phi1)
 
-    ELSEIF (itype.EQ.itype_hill) THEN
+    elseif (itype.eq.itype_hill) then
 
-       CALL  init_hill (ux1,uy1,uz1,ep1,phi1)
+       call  init_hill (ux1,uy1,uz1,ep1,phi1)
 
-    ELSEIF (itype.EQ.itype_cyl) THEN
+    elseif (itype.eq.itype_cyl) then
 
-       CALL init_cyl (ux1, uy1, uz1, phi1)
+       call init_cyl (ux1, uy1, uz1, phi1)
 
-    ELSEIF (itype.EQ.itype_dbg) THEN
+    elseif (itype.eq.itype_dbg) then
 
-       CALL init_dbg (ux1, uy1, uz1, ep1, phi1)
+       call init_dbg (ux1, uy1, uz1, ep1, phi1)
 
-    ELSEIF (itype.EQ.itype_mixlayer) THEN
+    elseif (itype.eq.itype_mixlayer) then
 
-       CALL init_mixlayer(rho1, ux1, uy1, uz1)
+       call init_mixlayer(rho1, ux1, uy1, uz1)
 
-    ELSEIF (itype.EQ.itype_jet) THEN
+    elseif (itype.eq.itype_jet) then
 
-       CALL init_jet(rho1, ux1, uy1, uz1, ep1, phi1)
+       call init_jet(rho1, ux1, uy1, uz1, ep1, phi1)
 
-    ELSEIF (itype.EQ.itype_tbl) THEN
+    elseif (itype.eq.itype_tbl) then
 
-       CALL init_tbl (ux1, uy1, uz1, ep1, phi1)
+       call init_tbl (ux1, uy1, uz1, ep1, phi1)
 
-    ENDIF
+    endif
 
     !! Setup old arrays
     do it = 1, ntime
@@ -139,139 +141,207 @@ CONTAINS
        enddo
     enddo
 
-  END SUBROUTINE init
+  end subroutine init
+  !##################################################################
+  !##################################################################
+  subroutine boundary_conditions (rho,ux,uy,uz,phi,ep)
 
-  SUBROUTINE boundary_conditions (rho,ux,uy,uz,phi,ep)
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,ep
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho
 
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,ep
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),numscalar) :: phi
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),nrhotime) :: rho
+    if (itype.eq.itype_user) then
 
-    IF (itype.EQ.itype_user) THEN
+       call boundary_conditions_user (ux,uy,uz,phi,ep)
 
-       CALL boundary_conditions_user (ux,uy,uz,phi,ep)
+    elseif (itype.eq.itype_lockexch) then
 
-    ELSEIF (itype.EQ.itype_lockexch) THEN
+       call boundary_conditions_lockexch(rho, phi)
 
-       CALL boundary_conditions_lockexch(rho, phi)
+    elseif (itype.eq.itype_tgv) then
 
-    ELSEIF (itype.EQ.itype_tgv) THEN
+       call boundary_conditions_tgv (ux, uy, uz, phi)
 
-       CALL boundary_conditions_tgv (ux, uy, uz, phi)
+    elseif (itype.eq.itype_channel) then
 
-    ELSEIF (itype.EQ.itype_channel) THEN
+       call boundary_conditions_channel (ux, uy, uz, phi)
 
-       CALL boundary_conditions_channel (ux, uy, uz, phi)
+    elseif (itype.eq.itype_hill) then
 
-    ELSEIF (itype.EQ.itype_hill) THEN
+       call boundary_conditions_hill (ux,uy,uz,phi,ep)
 
-       CALL boundary_conditions_hill (ux,uy,uz,phi,ep)
+    elseif (itype.eq.itype_cyl) then
 
-    ELSEIF (itype.EQ.itype_cyl) THEN
+       call boundary_conditions_cyl (ux, uy, uz, phi)
 
-       CALL boundary_conditions_cyl (ux, uy, uz, phi)
+    elseif (itype.eq.itype_dbg) then
 
-    ELSEIF (itype.EQ.itype_dbg) THEN
+       call boundary_conditions_dbg (ux, uy, uz, phi)
 
-       CALL boundary_conditions_dbg (ux, uy, uz, phi)
+    elseif (itype.eq.itype_jet) then
 
-    ELSEIF (itype.EQ.itype_jet) THEN
+       call boundary_conditions_jet (rho,ux,uy,uz,phi)
 
-       CALL boundary_conditions_jet (rho,ux,uy,uz,phi)
+    elseif (itype.eq.itype_tbl) then
 
-    ELSEIF (itype.EQ.itype_tbl) THEN
+       call boundary_conditions_tbl (ux, uy, uz, phi)
 
-       CALL boundary_conditions_tbl (ux, uy, uz, phi)
+    endif
 
-    ENDIF
+  end subroutine boundary_conditions
+  !##################################################################
+  !##################################################################
+  subroutine preprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
 
-  END SUBROUTINE boundary_conditions
+    use decomp_2d, only : mytype, xsize, ph1
+    use visu, only  : write_snapshot
+    use stats, only : overall_statistic
 
-  SUBROUTINE postprocess_case(rho,ux,uy,uz,pp,phi,ep)
+    use var, only : nzmsize
+    use var, only : itime
+    use var, only : numscalar, nrhotime, npress
 
-    USE forces
-    USE var, ONLY : nzmsize
-    USE param, ONLY : npress
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux1, uy1, uz1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(in) :: phi1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime), intent(in) :: rho1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ep1
+    real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
 
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),numscalar) :: phi
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3),nrhotime) :: rho
-    REAL(mytype),DIMENSION(xsize(1),xsize(2),xsize(3)) :: ep
+    !call write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime)
+    !call postprocess_case(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
+    !call overall_statistic(ux1, uy1, uz1, phi1, pp3, ep1)
+
+  end subroutine preprocessing
+  !##################################################################
+  !##################################################################
+  subroutine postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
+
+    use decomp_2d, only : mytype, xsize, ph1
+    use visu, only  : write_snapshot
+
+    use var, only : nzmsize
+    use var, only : itime
+    use var, only : numscalar, nrhotime, npress
+
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux1, uy1, uz1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(in) :: phi1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime), intent(in) :: rho1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ep1
+    real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
+
+    if ((ivisu.ne.zero).and.(mod(itime, ioutput).eq.0)) then
+      call write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime)
+    end if
+
+    call postprocess_case(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
+
+  end subroutine postprocessing
+  !##################################################################
+  !##################################################################
+  subroutine postprocess_case(rho,ux,uy,uz,pp,phi,ep)
+
+    use forces
+    use var, only : nzmsize
+    use param, only : npress
+
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep
     real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp
 
-    IF (itype.EQ.itype_user) THEN
+    if (itype.eq.itype_user) then
 
-       CALL postprocess_user (ux, uy, uz, phi, ep)
+       call postprocess_user (ux, uy, uz, phi, ep)
 
-    ELSEIF (itype.EQ.itype_lockexch) THEN
+    elseif (itype.eq.itype_lockexch) then
 
-       CALL postprocess_lockexch(rho, ux, uy, uz, phi, ep)
+       call postprocess_lockexch(rho, ux, uy, uz, phi, ep)
 
-    ELSEIF (itype.EQ.itype_tgv) THEN
+    elseif (itype.eq.itype_tgv) then
 
-       CALL postprocess_tgv (ux, uy, uz, phi, ep)
+       call postprocess_tgv (ux, uy, uz, phi, ep)
 
-    ELSEIF (itype.EQ.itype_channel) THEN
+    elseif (itype.eq.itype_channel) then
 
-       CALL postprocess_channel (ux, uy, uz, pp, phi, ep)
+       call postprocess_channel (ux, uy, uz, pp, phi, ep)
 
-    ELSEIF (itype.EQ.itype_hill) THEN
+    elseif (itype.eq.itype_hill) then
 
-       CALL postprocess_hill(ux, uy, uz, phi, ep)
+       call postprocess_hill(ux, uy, uz, phi, ep)
 
-    ELSEIF (itype.EQ.itype_cyl) THEN
+    elseif (itype.eq.itype_cyl) then
 
-       CALL postprocess_cyl (ux, uy, uz, ep)
+       call postprocess_cyl (ux, uy, uz, ep)
 
-    ELSEIF (itype.EQ.itype_dbg) THEN
+    elseif (itype.eq.itype_dbg) then
 
-       CALL postprocess_dbg (ux, uy, uz, phi, ep)
+       call postprocess_dbg (ux, uy, uz, phi, ep)
 
-    ELSEIF (itype.EQ.itype_jet) THEN
+    elseif (itype.eq.itype_jet) then
 
-       CALL postprocess_jet (ux, uy, uz, phi, ep)
+       call postprocess_jet (ux, uy, uz, phi, ep)
 
-    ELSEIF (itype.EQ.itype_tbl) THEN
+    elseif (itype.eq.itype_tbl) then
 
-       CALL postprocess_tbl (ux, uy, uz, ep)
+       call postprocess_tbl (ux, uy, uz, ep)
 
-    ENDIF
+    endif
 
     if (iforces.eq.1) then
        call force(ux,uy,ep)
        call restart_forces(1)
     endif
 
-  END SUBROUTINE postprocess_case
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  end subroutine postprocess_case
+  !##################################################################
   !!
   !!  SUBROUTINE: momentum_forcing
   !!      AUTHOR: Paul Bartholomew
   !! DESCRIPTION: Calls case-specific forcing functions for the
   !!              momentum equations.
   !!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE momentum_forcing(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
+  !##################################################################
+  subroutine momentum_forcing(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
 
-    IMPLICIT NONE
+    implicit none
 
-    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
-    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
-    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
+    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
 
-    IF (itype.EQ.itype_channel) THEN
+    if (itype.eq.itype_channel) then
 
-       CALL momentum_forcing_channel(dux1, duy1, ux1, uy1)
+       call momentum_forcing_channel(dux1, duy1, ux1, uy1)
 
-    ELSEIF (itype.EQ.itype_jet) THEN
+    elseif (itype.eq.itype_jet) then
 
-       CALL momentum_forcing_jet(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
+       call momentum_forcing_jet(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
 
-    ENDIF
+    endif
 
-  ENDSUBROUTINE momentum_forcing
+  end subroutine momentum_forcing
+  !##################################################################
+  !##################################################################
+  !!
+  !!  SUBROUTINE: scalar_forcing
+  !!      AUTHOR: Kay Schäfer
+  !! DESCRIPTION: Calls case-specific forcing functions for the
+  !!              scalar transport equations.
+  !!
+  !##################################################################
+  subroutine scalar_forcing(dphi1, rho1, ux1, uy1, uz1, phi1)
 
+    implicit none
+
+    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, phi1
+    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dphi1
+
+
+  end subroutine scalar_forcing
+  !##################################################################
+  !##################################################################
   subroutine set_fluid_properties(rho1, mu1)
 
     implicit none
@@ -286,8 +356,36 @@ CONTAINS
     endif
 
   endsubroutine set_fluid_properties
+  !##################################################################
+  !##################################################################
+  subroutine test_flow(rho1,ux1,uy1,uz1,phi1,ep1,drho1,divu3)
 
-END MODULE case
+    use decomp_2d
+    use param
+
+    use navier, only : divergence
+
+    use var, only : numscalar, dv3
+    use tools, only : test_speed_min_max, compute_cfl, test_scalar_min_max
+    implicit none
+
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: ux1, uy1, uz1, ep1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), nrhotime), intent(in) :: rho1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar), intent(in) :: phi1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime), intent(in) :: drho1
+    real(mytype), dimension(zsize(1), zsize(2), zsize(3)), intent(in) :: divu3
+
+    if ((mod(itime,10)==0).and.(itr.eq.iadvance_time)) then
+       call divergence(dv3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,2)
+       call test_speed_min_max(ux1,uy1,uz1)
+       call compute_cfl(ux1,uy1,uz1)
+       if (iscalar==1) call test_scalar_min_max(phi1)
+    endif
+
+  end subroutine test_flow
+  !##################################################################
+  !##################################################################
+end module case
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!! case.f90 ends here
