@@ -315,7 +315,7 @@ contains
 
     nvect1=xsize(1)*xsize(2)*xsize(3)
 
-    if(iibm==1) then
+    if((iibm==1).or.(iibm==2)) then
        ta1 = ux1 * (one - ep1)
        tb1 = uy1 * (one - ep1)
        tc1 = uz1 * (one - ep1)
@@ -351,7 +351,7 @@ contains
        if (nrank==0) print *, "filx ux= ", maxval(ta1), maxval(ux1f), maxval(ta1) - maxval(ux1f)
     endif
 
-    if(iibm==1) then
+   if((iibm==1).or.(iibm==2)) then
        ux1f = ux1f * (one - ep1)
        uy1f = uy1f * (one - ep1)
        uz1f = uz1f * (one - ep1)
@@ -390,7 +390,7 @@ contains
        if (nrank==0) print *, "fily ux= ", maxval(ta2), maxval(ux2f), maxval(ta2) - maxval(ux2f)
     endif
 
-    if(iibm==1) then
+    if((iibm==1).or.(iibm==2)) then   
        ux2f = ux2f * (one - ep2)
        uy2f = uy2f * (one - ep2)
        uz2f = uz2f * (one - ep2)
@@ -460,7 +460,7 @@ contains
     call transpose_y_to_x(uxz2f, uxz1f)
     call transpose_y_to_x(uyz2f, uyz1f)
 
-    if(iibm==1) then
+    if((iibm==1).or.(iibm==2)) then
        ux1f = ux1f * (one - ep1)
        uy1f = uy1f * (one - ep1)
        uz1f = uz1f * (one - ep1)
@@ -544,7 +544,7 @@ contains
     axz1 = -two * sqrt(two * (sxx1 * sxx1 + syy1 * syy1 + szz1 * szz1 + two * sxy1 * sxy1 + two * sxz1 * sxz1 + two * syz1 * syz1)) * sxz1
     ayz1 = -two * sqrt(two * (sxx1 * sxx1 + syy1 * syy1 + szz1 * szz1 + two * sxy1 * sxy1 + two * sxz1 * sxz1 + two * syz1 * syz1)) * syz1
 
-    if(iibm==1) then
+    if((iibm==1).or.(iibm==2)) then
        bbxx1 = bbxx1 * (one - ep1)
        bbyy1 = bbyy1 * (one - ep1)
        bbzz1 = bbzz1 * (one - ep1)
@@ -619,7 +619,7 @@ contains
        if (nrank==0) print *, "filx axx1= ", maxval(axx1), maxval(axx1f), maxval(axx1) - maxval(axx1f)
     endif
 
-    if(iibm==1) then
+    if((iibm==1).or.(iibm==2)) then
        axx1f = axx1f * (one - ep1)
        ayy1f = ayy1f * (one - ep1)
        azz1f = azz1f * (one - ep1)
@@ -647,7 +647,7 @@ contains
        if (nrank==0) print *, "fily axx2= ", maxval(ta2), maxval(axx2f), maxval(ta2) - maxval(axx2f)
     endif
 
-    if(iibm==1) then
+    if((iibm==1).or.(iibm==2)) then
        axx2f = axx2f * (one - ep2)
        ayy2f = ayy2f * (one - ep2)
        azz2f = azz2f * (one - ep2)
@@ -696,7 +696,7 @@ contains
     call transpose_y_to_x(axz2f, axz1f)
     call transpose_y_to_x(ayz2f, ayz1f)
 
-    if(iibm==1) then
+    if((iibm==1).or.(iibm==2)) then
        axx1f = axx1f * (one - ep1)
        ayy1f = ayy1f * (one - ep1)
        azz1f = azz1f * (one - ep1)
@@ -718,7 +718,7 @@ contains
     lyy1 = lyy1 - (lxx1 + lyy1 + lzz1) / three
     lzz1 = lzz1 - (lxx1 + lyy1 + lzz1) / three
 
-    if(iibm==1) then
+    if((iibm==1).or.(iibm==2)) then
        do ijk = 1, nvect1
           if (ep1(ijk, 1, 1) .eq. one) then
              ta1(ijk, 1, 1) = zero
@@ -1126,7 +1126,7 @@ end subroutine wale
     call transpose_y_to_x(sgsy2, sgsy1)
     call transpose_y_to_x(sgsz2, sgsz1)
 
-    if(iibm==1) then
+    if((iibm==1).or.(iibm==2)) then
        do k=1,xsize(3)
           do j=1,xsize(2)
              do i=1,xsize(1)
