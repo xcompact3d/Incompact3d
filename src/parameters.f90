@@ -108,17 +108,17 @@ subroutine parameter(input_i3d)
   open(10, file=input_i3d)
 
   !! These are the 'essential' parameters
-  read(10, nml=BasicParam)
-  read(10, nml=NumOptions)
-  read(10, nml=InOutParam)
-  read(10, nml=Statistics)
+  read(10, nml=BasicParam); rewind(10)
+  read(10, nml=NumOptions); rewind(10)
+  read(10, nml=InOutParam); rewind(10)
+  read(10, nml=Statistics); rewind(10)
   if (iibm.ne.0) then
-     read(10, nml=ibmstuff)
+     read(10, nml=ibmstuff); rewind(10)
   endif
 
   if (iforces.eq.1) then
      allocate(xld(nvol), xrd(nvol), yld(nvol), yud(nvol))
-     read(10, nml=ForceCVs)
+     read(10, nml=ForceCVs); rewind(10)
   endif
 
   if (numscalar.ne.0) then
@@ -144,7 +144,7 @@ subroutine parameter(input_i3d)
   endif
 
   if (ilmn) then
-     read(10, nml=LMN)
+     read(10, nml=LMN); rewind(10)
 
      do is = 1, numscalar
         if (massfrac(is)) then
@@ -167,7 +167,7 @@ subroutine parameter(input_i3d)
      endif
   endif
   if (numscalar.ne.0) then
-     read(10, nml=ScalarParam)
+     read(10, nml=ScalarParam); rewind(10)
   endif
   ! !! These are the 'optional'/model parameters
   ! read(10, nml=ScalarParam)
@@ -175,10 +175,14 @@ subroutine parameter(input_i3d)
      nu0nu=four
      cnu=0.44_mytype
   endif
-  if(ilesmod.ne.0) read(10, nml=LESModel)
-  if (itype.eq.itype_tbl) read(10, nml=Tripping)
+  if(ilesmod.ne.0) then
+     read(10, nml=LESModel); rewind(10)
+  endif
+  if (itype.eq.itype_tbl) then
+     read(10, nml=Tripping); rewind(10)
+  endif
   ! read(10, nml=TurbulenceWallModel)
-  read(10, nml=CASE) !! Read case-specific variables
+  read(10, nml=CASE); rewind(10) !! Read case-specific variables
   close(10)
 
   ! allocate(sc(numscalar),cp(numscalar),ri(numscalar),group(numscalar))
