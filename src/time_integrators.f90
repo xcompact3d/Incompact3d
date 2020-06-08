@@ -253,7 +253,7 @@ contains
 
        IF (ilmn.and.ilmn_solve_temp) THEN
           !! Compute rho
-          call calc_temp_eos(rho1(:,:,:,1), ta1, phi1, tb1, xsize(1), xsize(2), xsize(3))
+          call calc_rho_eos(rho1(:,:,:,1), ta1, phi1, tb1, xsize(1), xsize(2), xsize(3))
        ENDIF
     ENDIF
 
