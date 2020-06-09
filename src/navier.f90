@@ -54,7 +54,7 @@ contains
     USE var, ONLY : nzmsize
     USE var, ONLY : dv3
     USE param, ONLY : ntime, nrhotime, npress
-    USE param, ONLY : ilmn, ivarcoeff
+    USE param, ONLY : ilmn, ivarcoeff, one
 
 
     IMPLICIT NONE
@@ -73,11 +73,12 @@ contains
     !! Locals
     INTEGER :: nlock, poissiter
     LOGICAL :: converged
-    REAL(mytype) :: atol, rtol
+    REAL(mytype) :: atol, rtol, rho0
 
     nlock = 1 !! Corresponds to computing div(u*)
     converged = .FALSE.
     poissiter = 0
+    rho0 = one
 
     atol = 1.0e-14_mytype !! Absolute tolerance for Poisson solver
     rtol = 1.0e-14_mytype !! Relative tolerance for Poisson solver
@@ -101,7 +102,7 @@ contains
 
           IF (.NOT.converged) THEN
              !! Evaluate additional RHS terms
-             CALL calc_varcoeff_rhs(pp3(:,:,:,1), rho1, px1, py1, pz1, dv3, drho1, ep1, divu3, &
+             CALL calc_varcoeff_rhs(pp3(:,:,:,1), rho1, px1, py1, pz1, dv3, drho1, ep1, divu3, rho0, &
                   poissiter)
           ENDIF
        ENDIF
@@ -178,7 +179,7 @@ contains
              ta1(:,:,:) = ta1(:,:,:) + phi1(:,:,:,is) / mol_weight(is)
           ENDIF
        ENDDO
-       drho1(:,:,:) = ta1(:,:,:) * drho1(:,:,:) !! XXX ta1 is the inverse molecular weight
+       drho1(:,:,:) = drho1(:,:,:) / ta1(:,:,:)  !! XXX ta1 is the inverse molecular weight
     ENDIF
 
     CALL calc_temp_eos(ta1, rho1, phi1, tb1, xsize(1), xsize(2), xsize(3))
@@ -1076,7 +1077,7 @@ contains
   !! DESCRIPTION: Computes RHS of the variable-coefficient Poisson solver
   !!
   !############################################################################
-  SUBROUTINE calc_varcoeff_rhs(pp3, rho1, px1, py1, pz1, dv3, drho1, ep1, divu3, poissiter)
+  SUBROUTINE calc_varcoeff_rhs(pp3, rho1, px1, py1, pz1, dv3, drho1, ep1, divu3, rho0, poissiter)
 
     USE MPI
 
@@ -1098,13 +1099,14 @@ contains
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ep1
     REAL(mytype), INTENT(IN), DIMENSION(zsize(1), zsize(2), zsize(3)) :: divu3
     REAL(mytype), INTENT(IN), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: dv3
+    real(mytype) :: rho0
 
     !! OUTPUTS
     REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: pp3
 
     !! LOCALS
     INTEGER :: nlock, ierr
-    REAL(mytype) :: rhomin, rho0
+    REAL(mytype) :: rhomin
 
     IF (poissiter.EQ.0) THEN
        !! Compute rho0

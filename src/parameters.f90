@@ -120,13 +120,14 @@ subroutine parameter(input_i3d)
      allocate(xld(nvol), xrd(nvol), yld(nvol), yud(nvol))
      read(10, nml=ForceCVs); rewind(10)
   endif
-
+  
+  !! Set Scalar BCs same as fluid (may be overridden) [DEFAULT]
+  nclxS1 = nclx1; nclxSn = nclxn
+  nclyS1 = ncly1; nclySn = nclyn
+  nclzS1 = nclz1; nclzSn = nclzn
+  
   if (numscalar.ne.0) then
      iscalar = 1
-     !! Set Scalar BCs same as fluid (may be overridden)
-     nclxS1 = nclx1; nclxSn = nclxn
-     nclyS1 = ncly1; nclySn = nclyn
-     nclzS1 = nclz1; nclzSn = nclzn
 
      !! Allocate scalar arrays and set sensible defaults
      allocate(massfrac(numscalar))
@@ -395,7 +396,7 @@ subroutine parameter(input_i3d)
      write(*,"(' ncly1, nclyn           : ',I15,',',I1 )") ncly1,nclyn
      write(*,"(' nclz1, nclzn           : ',I15,',',I1 )") nclz1,nclzn
      print *,'==========================================================='
-     if (iscalar.eq.1) then
+     if ((iscalar.eq.1).or.(ilmn)) then
        write(*,"(' Boundary condition scalar field: ')")
        write(*,"(' nclxS1, nclxSn         : ',I15,',',I1 )") nclxS1,nclxSn
        write(*,"(' nclyS1, nclySn         : ',I15,',',I1 )") nclyS1,nclySn
