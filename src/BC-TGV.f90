@@ -101,9 +101,15 @@ contains
                 if (.not.tgv_twod) then
                    ux1(i,j,k)=+sin(x)*cos(y)*cos(z)
                    uy1(i,j,k)=-cos(x)*sin(y)*cos(z)
+                   if (iscalar==1) then
+                      phi1(i,j,k,1:numscalar)=sin(x)*sin(y)*cos(z)
+                   endif
                 else
                    ux1(i,j,k)=+sin(x)*cos(y)
                    uy1(i,j,k)=-cos(x)*sin(y)
+                   if (iscalar==1) then
+                      phi1(i,j,k,1:numscalar)=sin(x)*sin(y)
+                   endif
                 endif
                 uz1(i,j,k)=zero
              enddo

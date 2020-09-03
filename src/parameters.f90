@@ -370,6 +370,12 @@ subroutine parameter(input_i3d)
        do is=1, numscalar
           write(*,"(' Schmidt number sc(',I2,')  : ',F17.8)") is, sc(is)
           write(*,"(' Richardson n.  ri(',I2,')  : ',F17.8)") is, ri(is)
+          if (scalar_lbound(is).gt.-huge(one)) then
+             write(*,"(' Lower bound      (',I2,')  : ',F17.8)") is, scalar_lbound(is)
+          endif
+          if (scalar_ubound(is).lt.huge(one)) then
+             write(*,"(' Upper bound      (',I2,')  : ',F17.8)") is, scalar_ubound(is)
+          endif
        end do
      endif
      print *,'==========================================================='

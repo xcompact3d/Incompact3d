@@ -19,9 +19,9 @@ istret = 0            ! y mesh refinement (0:no, 1:center, 2:both sides, 3:botto
 beta = 0.259065151    ! Refinement parameter (beta)
 
 ! Domain
-xlx = 3.14159265358979 ! Lx (Size of the box in x-direction)
-yly = 3.14159265358979 ! Ly (Size of the boy in y-direction)
-zlz = 3.14159265358979 ! Lz (Size of the boz in z-direction)
+xlx = 6.283185307179586 ! Lx (Size of the box in x-direction)
+yly = 6.283185307179586 ! Ly (Size of the boy in y-direction)
+zlz = 6.283185307179586 ! Lz (Size of the boz in z-direction)
 
 ! Boundary conditions
 nclx1 = 1 
