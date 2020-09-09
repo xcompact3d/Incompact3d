@@ -470,6 +470,12 @@ contains
     endif
     endif
 
+    ! Compute analytical and discrete errors for 2D TGV
+    ! Discrete error valid only for explicit Euler
+    if (tgv_twod) then
+      call error_tgv2D(ux1,uy1,phi1)
+    endif
+
   end subroutine postprocess_tgv
   !############################################################################
   subroutine suspended(phi1,vol1,mp1)
@@ -538,4 +544,259 @@ contains
     return
 
   end subroutine dissipation
+  !############################################################################
+  subroutine error_tgv2D(ux1,uy1,phi1)
+
+    USE decomp_2d
+    USE MPI
+    USE param, only : one, two, xnu, ifirst, itime
+    USE variables, only : sc
+
+    implicit none
+
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+
+    ! Analytical error
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: errx, erry
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: errs
+    ! Time-discrete error
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: errxd1, erryd1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: errsd1
+    ! Space-time discrete error
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: errxd2, erryd2
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: errsd2
+    ! Temporary storage array
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: tmp
+
+    integer :: i,j,k,l,it
+    real(mytype) :: x, y, xl1, xl2, xlinf, yl1, yl2, ylinf, ktgv, k2tgv
+    real(mytype) :: solx0, soly0, sols0
+    real(mytype) :: solxt, solyt, solst, solxd, solyd, solsd, solxdd, solydd, solsdd
+
+    ! Compute the wavenumbers
+    ktgv = one
+    call compute_k2(ktgv, k2tgv)
+
+    ! Compute solutions and errors
+    do k = 1,xsize(3)
+      do j = 1,xsize(2)
+        y = (j+xstart(2)-1-1)*dy
+        do i = 1,xsize(1)
+          x = (i+xstart(1)-1-1)*dx
+          ! Initial solution
+          solx0 = sin(x) * cos(y)
+          soly0 = - cos(x) * sin(y)
+          ! Analytical solution
+          solxt = solx0
+          solyt = soly0
+          do it = ifirst, itime
+            solxt = solxt * exp(-two*dt*xnu)
+            solyt = solyt * exp(-two*dt*xnu)
+          enddo
+          ! Time discrete solution
+          !   Euler time scheme
+          solxd = solx0
+          solyd = soly0
+          do it = ifirst, itime
+            solxd = solxd * (one - two*dt*xnu)
+            solyd = solyd * (one - two*dt*xnu)
+          enddo
+          ! Space-time discrete solution
+          !   Euler time scheme
+          solxdd = solx0
+          solydd = soly0
+          do it = ifirst, itime
+            solxdd = solxdd * (one - two*k2tgv*dt*xnu)
+            solydd = solydd * (one - two*k2tgv*dt*xnu)
+          enddo
+          ! Errors
+          errx(i,j,k) = ux1(i,j,k) - solxt
+          erry(i,j,k) = uy1(i,j,k) - solyt
+          errxd1(i,j,k) = ux1(i,j,k) - solxd
+          erryd1(i,j,k) = uy1(i,j,k) - solyd
+          errxd2(i,j,k) = ux1(i,j,k) - solxdd
+          erryd2(i,j,k) = uy1(i,j,k) - solydd
+        enddo
+      enddo
+    enddo
+    if (iscalar==1) then
+    do l = 1, numscalar
+      do k = 1,xsize(3)
+        do j = 1,xsize(2)
+          y = (j+xstart(2)-1-1)*dy
+          do i = 1,xsize(1)
+            x = (i+xstart(1)-1-1)*dx
+            ! Initial solution
+            sols0 = sin(x) * sin(y)
+            ! Analytical solution
+            solst = sols0
+            do it = ifirst, itime
+              solst = solst * exp(-two*dt*xnu/sc(l))
+            enddo
+            ! Time discrete solution
+            !   Euler time scheme
+            solsd = sols0
+            do it = ifirst, itime
+              solsd = solsd * (one - two*dt*xnu/sc(l))
+            enddo
+            ! Space-time discrete solution
+            !   Euler time scheme
+            solsdd = sols0
+            do it = ifirst, itime
+              solsdd = solsdd * (one - two*k2tgv*dt*xnu/sc(l))
+            enddo
+            ! Errors
+            errs(i,j,k,l) = phi1(i,j,k,l) - solst
+            errsd1(i,j,k,l) = phi1(i,j,k,l) - solsd
+            errsd2(i,j,k,l) = phi1(i,j,k,l) - solsdd
+          enddo
+        enddo
+      enddo
+    enddo
+    endif
+
+    !
+    ! Compute and print synthetic errors indicator
+    !
+    ! Magnitude of the solution
+    call error_L1_L2_Linf(ux1, xl1, xl2, xlinf)
+    call error_L1_L2_Linf(uy1, yl1, yl2, ylinf)
+    if (nrank==0) then
+      write(*,*) "2D Taylor-Green errors:"
+      write(*,*) "  Solution amplitude, L1, sqrt(L2), Linf:"
+      write(*,*) "            ", xl1, xl2, xlinf
+      write(*,*) "            ", yl1, yl2, ylinf
+    endif
+    if (iscalar==1) then
+    do l = 1, numscalar
+      tmp(:,:,:) = phi1(:,:,:,l)
+      call error_L1_L2_Linf(tmp, xl1, xl2, xlinf)
+      if (nrank==0) then
+        write(*,*) "            ", xl1, xl2, xlinf
+      endif
+    enddo
+    endif
+    ! Analytical solution
+    call error_L1_L2_Linf(errx, xl1, xl2, xlinf)
+    call error_L1_L2_Linf(erry, yl1, yl2, ylinf)
+    if (nrank==0) then
+      write(*,*) "  1: Analytical, L1, sqrt(L2), Linf:"
+      write(*,*) "     XERROR ", xl1, xl2, xlinf
+      write(*,*) "     YERROR ", yl1, yl2, ylinf
+    endif
+    if (iscalar==1) then
+    do l = 1, numscalar
+      tmp(:,:,:) = errs(:,:,:,l)
+      call error_L1_L2_Linf(tmp, xl1, xl2, xlinf)
+      if (nrank==0) then
+        write(*,*) "            ", xl1, xl2, xlinf
+      endif
+    enddo
+    endif
+    ! Time discrete solution
+    call error_L1_L2_Linf(errxd1, xl1, xl2, xlinf)
+    call error_L1_L2_Linf(erryd1, yl1, yl2, ylinf)
+    if (nrank==0) then
+      write(*,*) "  2: Time-discrete, L1, sqrt(L2), Linf:"                                 
+      write(*,*) "     XERROR ", xl1, xl2, xlinf
+      write(*,*) "     YERROR ", yl1, yl2, ylinf
+    endif
+    if (iscalar==1) then
+    do l = 1, numscalar
+      tmp(:,:,:) = errsd1(:,:,:,l)
+      call error_L1_L2_Linf(tmp, xl1, xl2, xlinf)
+      if (nrank==0) then
+        write(*,*) "            ", xl1, xl2, xlinf
+      endif
+    enddo
+    endif
+    ! Space-time discrete solution
+    call error_L1_L2_Linf(errxd2, xl1, xl2, xlinf)
+    call error_L1_L2_Linf(erryd2, yl1, yl2, ylinf)
+    if (nrank==0) then
+      write(*,*) "  3: Time-space-discrete, L1, sqrt(L2), Linf:"
+      write(*,*) "     XERROR ", xl1, xl2, xlinf
+      write(*,*) "     YERROR ", yl1, yl2, ylinf
+    endif
+    if (iscalar==1) then
+    do l = 1, numscalar
+      tmp(:,:,:) = errsd2(:,:,:,l)
+      call error_L1_L2_Linf(tmp, xl1, xl2, xlinf)
+      if (nrank==0) then
+        write(*,*) "            ", xl1, xl2, xlinf
+      endif
+    enddo
+    endif
+
+  end subroutine error_tgv2D
+
+  ! Compute the modified wavenumber for the second derivative
+  ! Warning : we use the X momentum wavenumber for Y momentum and for the scalars
+  subroutine compute_k2(kin, k2out)
+
+  USE decomp_2d, only : mytype
+  USE param
+  USE derivX, only : alsaix, asix, bsix, csix, dsix
+  USE derivY, only : alsajy, asjy, bsjy, csjy, dsjy
+
+  implicit none
+
+  real(mytype), intent(in) :: kin
+  real(mytype), intent(out) :: k2out
+
+  if (kin.lt.zero .or. kin.gt.pi/min(dx,dy)) then
+    if (nrank==0) then
+      write(*,*) "TGV2D: Warning, incorrect wavenumber provided."
+    endif
+  endif
+
+  k2out = asix * two * (one - cos(kin*dx)) &
+        + four * bsix * half * (one - cos(two*kin*dx)) &
+        + nine * csix * (two / nine) * (one - cos(three*kin*dx)) &
+        + 16.d0 * dsix * (one / eight) * (one - cos(four*kin*dx))
+  k2out = k2out / (one + two * alsaix * cos(kin*dx))
+
+  end subroutine compute_k2
+
+  ! Compute L1, L2 and Linf norm of given 3D array
+  subroutine error_L1_L2_Linf(err, l1, l2, linf)
+
+    USE decomp_2d
+    USE MPI
+    
+    implicit none
+      
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: err
+    real(mytype),intent(out) :: l1, l2, linf
+
+    integer :: i,j,k,code
+    real(mytype) :: ll1, ll2, llinf, ntot
+
+    ll1 = zero
+    ll2 = zero
+    llinf = zero
+    ntot = nx*ny*nz
+
+    do k = 1,xsize(3)
+      do j = 1,xsize(2)
+        do i = 1,xsize(1)
+          ll1 = ll1 + abs(err(i,j,k))
+          ll2 = ll2 + err(i,j,k)*err(i,j,k)
+          llinf = max(llinf, abs(err(i,j,k)))
+        enddo
+      enddo
+    enddo
+
+    ! Parallel
+    call MPI_ALLREDUCE(ll1,l1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(ll2,l2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(llinf,linf,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+
+    ! Rescaling
+    l1 = l1 / ntot
+    l2 = sqrt(l2 / ntot)
+
+  end subroutine error_L1_L2_Linf
+
 end module tgv
