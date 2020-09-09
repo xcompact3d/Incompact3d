@@ -100,8 +100,9 @@ nstat = 1             ! Size arrays for statistic collection
 ! Schmidt numbers
 sc(1) = 1.0
 sc(2) = 2.0
-! Scalar bounds
-scalar_lbound(1) = -20
+! Odd/even
+sc_even(1)=F
+sc_even(2)=F
 
 /End
 

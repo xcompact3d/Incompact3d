@@ -73,7 +73,7 @@ subroutine parameter(input_i3d)
   NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat
   NAMELIST /ScalarParam/ sc, ri, uset, cp, &
        nclxS1, nclxSn, nclyS1, nclySn, nclzS1, nclzSn, &
-       scalar_lbound, scalar_ubound
+       scalar_lbound, scalar_ubound, sc_even
   NAMELIST /LESModel/ jles, smagcst, walecst, maxdsmagcst, iwall
   NAMELIST /WallModel/ smagwalldamp
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
@@ -138,6 +138,10 @@ subroutine parameter(input_i3d)
      ri(:) = zero
      uset(:) = zero
      cp(:) = zero
+
+     ! In case of symmetry, scalars are even by default
+     allocate(sc_even(numscalar))
+     sc_even(:) = .true.
 
      allocate(scalar_lbound(numscalar), scalar_ubound(numscalar))
      scalar_lbound(:) = -huge(one)
@@ -375,6 +379,17 @@ subroutine parameter(input_i3d)
           endif
           if (scalar_ubound(is).lt.huge(one)) then
              write(*,"(' Upper bound      (',I2,')  : ',F17.8)") is, scalar_ubound(is)
+          endif
+          if (iscalar.eq.1) then
+          if (nclxS1.eq.1 .or. nclxSn.eq.1 .or. &
+              nclyS1.eq.1 .or. nclySn.eq.1 .or. &
+              nclzS1.eq.1 .or. nclzSn.eq.1) then
+             if (sc_even(is)) then
+                write(*,"(' Scalar ',I2,' is even, zero bdy flux')") is
+             else
+                write(*,"(' Scalar ',I2,' is odd, zero bdy value')") is
+             endif
+          endif
           endif
        end do
      endif
