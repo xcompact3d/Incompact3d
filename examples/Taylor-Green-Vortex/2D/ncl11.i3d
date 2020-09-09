@@ -46,7 +46,7 @@ ilast = 2             ! Last iteration
 
 ! Enable modelling tools
 ilesmod=0             ! if 0 then DNS
-numscalar=2           ! If iscalar=0 (no scalar), if iscalar=1 (scalar)
+numscalar=3           ! If iscalar=0 (no scalar), if iscalar=1 (scalar)
 iibm=0                ! Flag for immersed boundary method
 
 ! Enable io
@@ -99,10 +99,14 @@ nstat = 1             ! Size arrays for statistic collection
 
 ! Schmidt numbers
 sc(1) = 1.0
-sc(2) = 2.0
+sc(2) = 1.0
+sc(3) = 2.0
 ! Odd/even
 sc_even(1)=F
 sc_even(2)=F
+sc_even(3)=F
+! Skew_symmetric convection
+sc_skew(2)=T
 
 /End
 

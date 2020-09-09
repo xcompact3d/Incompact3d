@@ -701,7 +701,7 @@ contains
   end subroutine momentum_gravity
   !############################################################################
   !############################################################################
-  subroutine scalar_transport_eq(dphi1, rho1, ux1, uy1, uz1, phi1, schmidt, is_even)
+  subroutine scalar_transport_eq(dphi1, rho1, ux1, uy1, uz1, phi1, schmidt, is_even, is_skew)
 
     use param
     use variables
@@ -709,8 +709,8 @@ contains
     use case, only : scalar_forcing
 
     use var, only : ta1,tb1,tc1,td1,di1
-    use var, only : rho2,uy2,ta2,tb2,tc2,td2,di2
-    use var, only : rho3,uz3,ta3,tb3,td3,di3
+    use var, only : rho2,uy2,ta2,tb2,tc2,td2,te2,di2
+    use var, only : rho3,uz3,ta3,tb3,tc3,td3,di3
 
     implicit none
 
@@ -719,13 +719,13 @@ contains
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: phi1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
     real(mytype), intent(in) :: schmidt
-    logical, optional, intent(in) :: is_even
+    logical, optional, intent(in) :: is_even, is_skew
 
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dphi1
 
     !! LOCALS
-    logical :: evensc
+    logical :: evensc, skewsc
     integer :: i, j, k
     real(mytype) :: xalpha
 
@@ -735,20 +735,31 @@ contains
         evensc = .false.
       endif
     endif
+    skewsc = .false.
+    if (present(is_skew)) then
+      if (is_skew) then
+        skewsc = .true.
+      endif
+    endif
 
     xalpha = xnu/schmidt
 
     !X PENCILS
+    if (skewsc) ta1(:,:,:) = ux1(:,:,:) * phi1(:,:,:)
     if (evensc) then
       call derxS (tb1,phi1(:,:,:),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1)
+      if (skewsc) call derxS (tc1,ta1,di1,sx,ffxS,fsxS,fwxS,xsize(1),xsize(2),xsize(3),0)
     else
       call derxS (tb1,phi1(:,:,:),di1,sx,ffxS,fsxS,fwxS,xsize(1),xsize(2),xsize(3),0)
+      if (skewsc) call derxS (tc1,ta1,di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1) 
     endif
     if (ilmn) then
       tb1(:,:,:) = rho1(:,:,:,1) * ux1(:,:,:) * tb1(:,:,:)
+      if (skewsc) tc1(:,:,:) = rho1(:,:,:,1) * tc1(:,:,:)
     else
       tb1(:,:,:) = ux1(:,:,:) * tb1(:,:,:)
     endif
+    if (skewsc) tb1(:,:,:) = tb1(:,:,:) + half * (tc1(:,:,:) - tb1(:,:,:))
 
     if (evensc) then
       call derxxS (ta1,phi1(:,:,:),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1)
@@ -762,11 +773,14 @@ contains
     call transpose_x_to_y(phi1(:,:,:),td2(:,:,:))
 
     !Y PENCILS
+    if (skewsc) tb2(:,:,:) = uy2(:,:,:) * td2(:,:,:)
     if (evensc) then
       call deryS (tc2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
+      if (skewsc) call deryS (te2,tb2,di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0)
       call deryyS (ta2,td2(:,:,:),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
     else
       call deryS (tc2,td2(:,:,:),di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0)
+      if (skewsc) call deryS (te2,tb2,di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
       call deryyS (ta2,td2(:,:,:),di2,sy,sfyS,ssyS,swyS,ysize(1),ysize(2),ysize(3),0)
     endif
 
@@ -782,10 +796,12 @@ contains
     endif
 
     if (ilmn) then
-      tb2(:,:,:) = rho2(:,:,:) * uy2(:,:,:) * tc2(:,:,:)
+       tb2(:,:,:) = rho2(:,:,:) * uy2(:,:,:) * tc2(:,:,:)
+       if (skewsc) te2(:,:,:) = rho2(:,:,:) * te2(:,:,:)
     else
-      tb2(:,:,:) = uy2(:,:,:) * tc2(:,:,:)
+       tb2(:,:,:) = uy2(:,:,:) * tc2(:,:,:)
     endif
+    if (skewsc) tb2(:,:,:) = tb2(:,:,:) + half * (te2(:,:,:) - tb2(:,:,:))
 
     ! Add convective and diffusive scalar terms of y-pencil
     tc2(:,:,:) = xalpha*ta2(:,:,:) - tb2(:,:,:)
@@ -793,19 +809,29 @@ contains
     call transpose_y_to_z(td2(:,:,:),td3(:,:,:))
 
     !Z PENCILS
+    if (skewsc) ta3(:,:,:) = uz3(:,:,:) * td3(:,:,:)
     if (evensc) then
       call derzS (tb3,td3(:,:,:),di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1)
-      call derzzS (ta3,td3(:,:,:),di3,sz,sfzpS,sszpS,swzpS,zsize(1),zsize(2),zsize(3),1)
+      if (skewsc) call derzS (tc3,ta3,di3,sz,ffzS,fszS,fwzS,zsize(1),zsize(2),zsize(3),0)
     else
       call derzS (tb3,td3(:,:,:),di3,sz,ffzS,fszS,fwzS,zsize(1),zsize(2),zsize(3),0)
-      call derzzS (ta3,td3(:,:,:),di3,sz,sfzS,sszS,swzS,zsize(1),zsize(2),zsize(3),0)
+      if (skewsc) call derzS (tc3,ta3,di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1)
     endif
 
     ! convective terms
     if (ilmn) then
       tb3(:,:,:) = rho3(:,:,:) * uz3(:,:,:) * tb3(:,:,:)
+      if (skewsc) tc3(:,:,:) = rho3(:,:,:) * tc3(:,:,:)
     else
       tb3(:,:,:) = uz3(:,:,:) * tb3(:,:,:)
+    endif
+    if (skewsc) tb3(:,:,:) = tb3(:,:,:) + half * (tc3(:,:,:) - tb3(:,:,:))
+
+    ! diffusive terms
+    if (evensc) then
+      call derzzS (ta3,td3(:,:,:),di3,sz,sfzpS,sszpS,swzpS,zsize(1),zsize(2),zsize(3),1)
+    else
+      call derzzS (ta3,td3(:,:,:),di3,sz,sfzS,sszS,swzS,zsize(1),zsize(2),zsize(3),0)
     endif
 
     ! Add convective and diffusive scalar terms of z-pencil
@@ -862,7 +888,7 @@ contains
        if (is.ne.primary_species) then
           !! For mass fractions enforce primary species Y_p = 1 - sum_s Y_s
           !! So don't solve a transport equation
-          call scalar_transport_eq(dphi1(:,:,:,:,is), rho1, ux1, uy1, uz1, phi1(:,:,:,is), sc(is), sc_even(is))
+          call scalar_transport_eq(dphi1(:,:,:,:,is), rho1, ux1, uy1, uz1, phi1(:,:,:,is), sc(is), is_even=sc_even(is), is_skew=sc_skew(is))
           if (uset(is).ne.zero) then
              call scalar_settling(dphi1, phi1(:,:,:,is), is)
           endif
