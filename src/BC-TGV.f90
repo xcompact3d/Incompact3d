@@ -754,7 +754,7 @@ contains
   k2out = asix * two * (one - cos(kin*dx)) &
         + four * bsix * half * (one - cos(two*kin*dx)) &
         + nine * csix * (two / nine) * (one - cos(three*kin*dx)) &
-        + 16.d0 * dsix * (one / eight) * (one - cos(four*kin*dx))
+        + sixteen * dsix * (one / eight) * (one - cos(four*kin*dx))
   k2out = k2out / (one + two * alsaix * cos(kin*dx))
 
   end subroutine compute_k2
