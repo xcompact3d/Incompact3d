@@ -550,7 +550,7 @@ contains
     USE decomp_2d
     USE MPI
     USE param, only : one, two, xnu, ifirst, itime
-    USE variables, only : sc
+    USE variables, only : numscalar, sc
 
     implicit none
 
@@ -570,13 +570,13 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: tmp
 
     integer :: i,j,k,l,it
-    real(mytype) :: x, y, xl1, xl2, xlinf, yl1, yl2, ylinf, ktgv, k2tgv
+    real(mytype) :: x, y, xl1, xl2, xlinf, yl1, yl2, ylinf
     real(mytype) :: solx0, soly0, sols0
     real(mytype) :: solxt, solyt, solst, solxd, solyd, solsd, solxdd, solydd, solsdd
+    real(mytype) :: xdamping(3), ydamping(3), sdamping(3,numscalar)
 
-    ! Compute the wavenumbers
-    ktgv = one
-    call compute_k2(ktgv, k2tgv)
+    ! Compute the errors
+    call compute_tgv2D_errors(xdamping, ydamping, sdamping)
 
     ! Compute solutions and errors
     do k = 1,xsize(3)
@@ -588,28 +588,14 @@ contains
           solx0 = sin(x) * cos(y)
           soly0 = - cos(x) * sin(y)
           ! Analytical solution
-          solxt = solx0
-          solyt = soly0
-          do it = ifirst, itime
-            solxt = solxt * exp(-two*dt*xnu)
-            solyt = solyt * exp(-two*dt*xnu)
-          enddo
+          solxt = solx0 * xdamping(1)
+          solyt = soly0 * ydamping(1)
           ! Time discrete solution
-          !   Euler time scheme
-          solxd = solx0
-          solyd = soly0
-          do it = ifirst, itime
-            solxd = solxd * (one - two*dt*xnu)
-            solyd = solyd * (one - two*dt*xnu)
-          enddo
+          solxd = solx0 * xdamping(2)
+          solyd = soly0 * ydamping(2)
           ! Space-time discrete solution
-          !   Euler time scheme
-          solxdd = solx0
-          solydd = soly0
-          do it = ifirst, itime
-            solxdd = solxdd * (one - two*k2tgv*dt*xnu)
-            solydd = solydd * (one - two*k2tgv*dt*xnu)
-          enddo
+          solxdd = solx0 * xdamping(3)
+          solydd = soly0 * ydamping(3)
           ! Errors
           errx(i,j,k) = ux1(i,j,k) - solxt
           erry(i,j,k) = uy1(i,j,k) - solyt
@@ -630,22 +616,11 @@ contains
             ! Initial solution
             sols0 = sin(x) * sin(y)
             ! Analytical solution
-            solst = sols0
-            do it = ifirst, itime
-              solst = solst * exp(-two*dt*xnu/sc(l))
-            enddo
+            solst = sols0 * sdamping(1,l)
             ! Time discrete solution
-            !   Euler time scheme
-            solsd = sols0
-            do it = ifirst, itime
-              solsd = solsd * (one - two*dt*xnu/sc(l))
-            enddo
+            solsd = sols0 * sdamping(2,l)
             ! Space-time discrete solution
-            !   Euler time scheme
-            solsdd = sols0
-            do it = ifirst, itime
-              solsdd = solsdd * (one - two*k2tgv*dt*xnu/sc(l))
-            enddo
+            solsdd = sols0 * sdamping(3,l)
             ! Errors
             errs(i,j,k,l) = phi1(i,j,k,l) - solst
             errsd1(i,j,k,l) = phi1(i,j,k,l) - solsd
@@ -731,6 +706,74 @@ contains
 
   end subroutine error_tgv2D
 
+  ! Compute the damping factors
+  subroutine compute_tgv2D_errors(xdamping, ydamping, sdamping)
+
+    use decomp_2d
+    use param, only : one, two, xnu, ifirst, itime, itimescheme
+    use variables, only : numscalar, sc
+
+    implicit none
+
+    real(mytype), intent(out) :: xdamping(3), ydamping(3), sdamping(3, numscalar)
+
+    integer :: it, l
+    real(mytype) :: ktgv, k2tgv
+
+    ! Compute modified wavenumber
+    ktgv = one
+    call compute_k2(ktgv, k2tgv)
+
+    ! Init
+    xdamping(:) = one
+    ydamping(:) = one
+    sdamping(:,:) = one
+
+    ! Compute analytical damping
+    do it = ifirst, itime
+      xdamping(1) = xdamping(1) * exp(-two*dt*xnu)
+      ydamping(1) = ydamping(1) * exp(-two*dt*xnu)
+      do l = 1, numscalar
+        sdamping(1,l) = sdamping(1,l) * exp(-two*dt*xnu/sc(l))
+      enddo
+    enddo
+
+    ! Compute time and space-time discrete damping
+    !
+    ! Explicit Euler
+    if (itimescheme.eq.1) then
+
+      ! Time discrete errors
+      do it = ifirst, itime
+        xdamping(2) = xdamping(2) * (one - two*dt*xnu)
+        ydamping(2) = ydamping(2) * (one - two*dt*xnu)
+        do l = 1, numscalar
+          sdamping(2,l) = sdamping(2,l) * (one - two*dt*xnu/sc(l))
+        enddo
+      enddo
+
+      ! Space-time discrete errors
+      do it = ifirst, itime
+        xdamping(3) = xdamping(3) * (one - two*k2tgv*dt*xnu)
+        ydamping(3) = ydamping(3) * (one - two*k2tgv*dt*xnu)
+        do l = 1, numscalar
+          sdamping(3,l) = sdamping(3,l) * (one - two*k2tgv*dt*xnu/sc(l))
+        enddo
+      enddo
+
+    else
+
+      if (nrank==0) print *, "TGV2D: No discrete error implemented for this time scheme."
+      xdamping(2:) = xdamping(1)
+      ydamping(2:) = ydamping(1)
+      do l = 1, numscalar
+        sdamping(2:,l) = sdamping(1,l)
+      enddo
+
+    endif
+
+  end subroutine compute_tgv2D_errors
+
   ! Compute the modified wavenumber for the second derivative
   ! Warning : we use the X momentum wavenumber for Y momentum and for the scalars
   subroutine compute_k2(kin, k2out)
@@ -738,7 +781,6 @@ contains
   USE decomp_2d, only : mytype
   USE param
   USE derivX, only : alsaix, asix, bsix, csix, dsix
-  USE derivY, only : alsajy, asjy, bsjy, csjy, dsjy
 
   implicit none
 

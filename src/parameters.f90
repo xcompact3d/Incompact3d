@@ -380,16 +380,20 @@ subroutine parameter(input_i3d)
           write(*,"(' Richardson n.  ri(',I2,')  : ',F17.8)") is, ri(is)
           if (scalar_lbound(is).gt.-huge(one)) then
              write(*,"(' Lower bound      (',I2,')  : ',F17.8)") is, scalar_lbound(is)
+          else
+             ! This is the default option, no information printed in the listing
           endif
           if (scalar_ubound(is).lt.huge(one)) then
              write(*,"(' Upper bound      (',I2,')  : ',F17.8)") is, scalar_ubound(is)
+          else
+             ! This is the default option, no information printed in the listing
           endif
           if (iscalar.eq.1) then
              if (nclxS1.eq.1 .or. nclxSn.eq.1 .or. &
                  nclyS1.eq.1 .or. nclySn.eq.1 .or. &
                  nclzS1.eq.1 .or. nclzSn.eq.1) then
                 if (sc_even(is)) then
-                   write(*,"(' Scalar ',I2,' is even')") is
+                   ! This is the default option, no information printed in the listing
                 else
                    write(*,"(' Scalar ',I2,' is odd')") is
                 endif
@@ -397,6 +401,7 @@ subroutine parameter(input_i3d)
              if (sc_skew(is)) then
                 write(*,"(' Scalar ',I2,' with skew-symmetric convection')") is
              else
+                ! This is the default option, no information printed in the listing
              endif
           endif
        end do
