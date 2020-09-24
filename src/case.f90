@@ -218,6 +218,7 @@ contains
 
     use decomp_2d, only : mytype, xsize, ph1
     use visu, only  : write_snapshot
+    use stats, only : overall_statistic
 
     use var, only : nzmsize
     use var, only : itime
@@ -234,7 +235,8 @@ contains
     end if
 
     call postprocess_case(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
-
+    call overall_statistic(ux1, uy1, uz1, phi1, pp3, ep1)
+    
   end subroutine postprocessing
   !##################################################################
   !##################################################################
