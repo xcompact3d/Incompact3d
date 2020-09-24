@@ -298,6 +298,7 @@ module param
 
 
   !! Scalars
+  logical, allocatable, dimension(:) :: sc_even, sc_skew
   real(mytype), allocatable, dimension(:) :: scalar_lbound, scalar_ubound
 
   !! LES modelling flag
