@@ -12,6 +12,7 @@
 *~
 sauve*
 incompact3d
+xcompact3d
 post
 data/
 out/
@@ -19,3 +20,6 @@ stats/
 planes/
 .DS_Store
 TAGS
+lint.txt
+\#*\#
+*.log
