@@ -39,15 +39,15 @@ program xcompact3d
   use time_integrators, only : int_time
   use navier, only : velocity_to_momentum, momentum_to_velocity, pre_correc, &
        calc_divu_constraint, solve_poisson, cor_vel
-  use tools, only : test_flow, restart, simu_stats
-  use visu, only : postprocessing
+  use tools, only : restart, simu_stats
 
   implicit none
 
   call init_xcompact3d()
 
   do itime=ifirst,ilast
-     t=itime*dt
+     !t=itime*dt
+     t=t0 + (itime0 + itime + 1 - ifirst)*dt
      call simu_stats(2)
 
     do itr=1,iadvance_time
@@ -84,7 +84,8 @@ program xcompact3d
   call finalise_xcompact3d()
 
 end program xcompact3d
-
+!########################################################################
+!########################################################################
 subroutine init_xcompact3d()
 
   use MPI
@@ -98,8 +99,7 @@ subroutine init_xcompact3d()
   use navier, only : calc_divu_constraint
   use tools, only : test_speed_min_max, test_scalar_min_max, &
        restart, &
-       simu_stats
-  use visu, only : postprocessing
+       simu_stats, compute_cfldiff
 
   use param, only : ilesmod, jles
   use param, only : irestart
@@ -109,6 +109,11 @@ subroutine init_xcompact3d()
   use variables, only : nstat, nvisu, nprobe
 
   use les, only: init_explicit_les
+
+  use visu, only : visu_init
+
+  use genepsi, only : genepsi3d, epsi_init
+  use ibm, only : body
 
   implicit none
 
@@ -173,7 +178,8 @@ subroutine init_xcompact3d()
   if (iibm.eq.2) then
      call genepsi3d(ep1)
   else if (iibm.eq.1) then
-     call body(ux1,uy1,uz1,ep1,0)
+     call epsi_init(ep1)
+     call body(ux1,uy1,uz1,ep1)
   endif
 
   if (iforces.eq.1) then
@@ -182,11 +188,16 @@ subroutine init_xcompact3d()
         call restart_forces(0)
      endif
   endif
-
+  !####################################################################
+  ! initialise visu
+  if (ivisu.ne.0) call visu_init()
+  ! compute diffusion number of simulation
+  call compute_cfldiff()
+  !####################################################################
   if (irestart==0) then
      call init(rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,dphi1,pp3,px1,py1,pz1)
      itime = 0
-     call postprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
+     call preprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
   else
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,0)
   endif
@@ -204,7 +215,8 @@ subroutine init_xcompact3d()
   endif
 
 endsubroutine init_xcompact3d
-
+!########################################################################
+!########################################################################
 subroutine finalise_xcompact3d()
 
   use MPI

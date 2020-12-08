@@ -37,7 +37,8 @@ subroutine derx_00(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivX
+  use derivX
+  use ibm, only : lagpolx
 
   implicit none
 
@@ -95,7 +96,8 @@ subroutine derx_11(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivX
+  use derivX
+  use ibm, only : lagpolx
 
   implicit none
 
@@ -165,7 +167,8 @@ subroutine derx_12(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivX
+  use derivX
+  use ibm, only : lagpolx
 
   implicit none
 
@@ -232,7 +235,8 @@ subroutine derx_21(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivX
+  use derivX
+  use ibm, only : lagpolx
 
   implicit none
 
@@ -299,7 +303,8 @@ subroutine derx_22(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivX
+  use derivX
+  use ibm, only : lagpolx
 
   implicit none
 
@@ -340,7 +345,8 @@ subroutine dery_00(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivY
+  use derivY
+  use ibm, only : lagpoly
 
   implicit none
 
@@ -435,7 +441,8 @@ subroutine dery_11(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivY
+  use derivY
+  use ibm, only : lagpoly
 
   implicit none
 
@@ -554,7 +561,8 @@ subroutine dery_12(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivY
+  use derivY
+  use ibm, only : lagpoly
 
   implicit none
 
@@ -670,7 +678,8 @@ subroutine dery_21(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivY
+  use derivY
+  use ibm, only : lagpoly
 
   implicit none
 
@@ -786,7 +795,8 @@ subroutine dery_22(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivY
+  use derivY
+  use ibm, only : lagpoly
 
   implicit none
 
@@ -858,7 +868,8 @@ subroutine derz_00(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivZ
+  use derivZ
+  use ibm, only : lagpolz
 
   implicit none
 
@@ -943,7 +954,8 @@ subroutine derz_11(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivZ
+  use derivZ
+  use ibm, only : lagpolz
 
   implicit none
 
@@ -1053,7 +1065,8 @@ subroutine derz_12(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivZ
+  use derivZ
+  use ibm, only : lagpolz
 
   implicit none
 
@@ -1162,7 +1175,8 @@ subroutine derz_21(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivZ
+  use derivZ
+  use ibm, only : lagpolz
 
   implicit none
 
@@ -1271,7 +1285,8 @@ subroutine derz_22(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivZ
+  use derivZ
+  use ibm, only : lagpolz
 
   implicit none
 
@@ -1334,7 +1349,8 @@ subroutine derxx_00(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivX
+  use derivX
+  use ibm, only : lagpolx
 
   implicit none
 
@@ -1458,7 +1474,8 @@ subroutine derxx_11(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivX
+  use derivX
+  use ibm, only : lagpolx
 
   implicit none
 
@@ -1640,7 +1657,8 @@ subroutine derxx_12(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivX
+  use derivX
+  use ibm, only : lagpolx
 
   implicit none
 
@@ -1793,7 +1811,8 @@ subroutine derxx_21(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivX
+  use derivX
+  use ibm, only : lagpolx
 
   implicit none
 
@@ -1946,7 +1965,8 @@ subroutine derxx_22(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivX
+  use derivX
+  use ibm, only : lagpolx
 
   implicit none
 
@@ -2017,7 +2037,8 @@ subroutine deryy_00(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivY
+  use derivY
+  use ibm, only : lagpoly
 
   implicit none
 
@@ -2169,7 +2190,8 @@ subroutine deryy_11(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivY
+  use derivY
+  use ibm, only : lagpoly
 
   implicit none
 
@@ -2392,7 +2414,8 @@ subroutine deryy_12(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivY
+  use derivY
+  use ibm, only : lagpoly
 
   implicit none
 
@@ -2587,7 +2610,8 @@ subroutine deryy_21(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivY
+  use derivY
+  use ibm, only : lagpoly
 
   implicit none
 
@@ -2782,7 +2806,8 @@ subroutine deryy_22(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivY
+  use derivY
+  use ibm, only : lagpoly
 
   implicit none
 
@@ -2873,7 +2898,8 @@ subroutine derzz_00(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivZ
+  use derivZ
+  use ibm, only : lagpolz
 
   implicit none
 
@@ -3024,7 +3050,8 @@ subroutine derzz_11(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivZ
+  use derivZ
+  use ibm, only : lagpolz
 
   implicit none
 
@@ -3246,7 +3273,8 @@ subroutine derzz_12(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivZ
+  use derivZ
+  use ibm, only : lagpolz
 
   implicit none
 
@@ -3439,7 +3467,8 @@ subroutine derzz_21(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivZ
+  use derivZ
+  use ibm, only : lagpolz
 
   implicit none
 
@@ -3632,7 +3661,8 @@ subroutine derzz_22(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivZ
+  use derivZ
+  use ibm, only : lagpolz
 
   implicit none
 
@@ -3727,7 +3757,7 @@ subroutine derxvp(tx,ux,rx,sx,cfx6,csx6,cwx6,nx,nxm,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivX
+  use derivX
 
   implicit none
 
@@ -3842,7 +3872,7 @@ subroutine interxvp(tx,ux,rx,sx,cifx6,cisx6,ciwx6,nx,nxm,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivX
+  use derivX
 
   implicit none
 
@@ -3973,7 +4003,7 @@ subroutine derxpv(tx,ux,rx,sx,cfi6,csi6,cwi6,cfx6,csx6,cwx6,nxm,nx,ny,nz,npaire)
   !********************************************************************
 
   USE param
-  USE derivX
+  use derivX
 
   implicit none
 
@@ -4059,7 +4089,7 @@ subroutine interxpv(tx,ux,rx,sx,cifi6,cisi6,ciwi6,cifx6,cisx6,ciwx6,&
   !********************************************************************
 
   USE param
-  USE derivX
+  use derivX
 
   implicit none
 

@@ -43,7 +43,7 @@ module mixlayer
 
 contains
 
-  subroutine init_mixlayer (rho1,ux1,uy1,uz1,phi1)
+  subroutine init_mixlayer (rho1,ux1,uy1,uz1)
 
     USE decomp_2d, ONLY : mytype, xsize
     USE param, ONLY : u1, u2, dens1, dens2
@@ -55,9 +55,8 @@ contains
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
-    integer :: i, j, k, is, it
+    integer :: i, j, k, is
     real(mytype) :: x, y, z
 
     real(mytype) :: M, rspech, heatcap
@@ -80,19 +79,12 @@ contains
        ux1=zero; uy1=zero; uz1=zero
 
        !! Compute flow for zero convective velocity
-       if (ilmn) then
-          rhomin = MIN(dens1, dens2)
-          rhomax = MAX(dens1, dens2)
-          u1 = SQRT(dens2 / dens1) / (SQRT(dens2 / dens1) + one)
-          u2 = -SQRT(dens1 / dens2) / (one + SQRT(dens1 / dens2))
-       else
-          rhomin = one
-          rhomax = one
-          u1 = half
-          u2 = -half
-       endif
+       rhomin = MIN(dens1, dens2)
+       rhomax = MAX(dens1, dens2)
        T1 = pressure0 / dens1
        T2 = pressure0 / dens2
+       u1 = SQRT(dens2 / dens1) / (SQRT(dens2 / dens1) + one)
+       u2 = -SQRT(dens1 / dens2) / (one + SQRT(dens1 / dens2))
        M = 0.2_mytype
        rspech = 1.4_mytype
        heatcap = (one / (T2 * (rspech - one))) * ((u1 - u2) / M)**2

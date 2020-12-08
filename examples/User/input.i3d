@@ -60,8 +60,8 @@ ipost=1               ! Do online postprocessing
 !====================
 
 ! Spatial derivatives
-ifirstder = 4         ! (1->2nd central, 4-> 6th compact)
-isecondder = 4        ! (1->2nd central, 4-> 6th compact, 5->hyperviscous 6th)
+ifirstder = 4         ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact)
+isecondder = 4        ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact, 5->hyperviscous 6th)
 
 ! Time scheme
 itimescheme = 5       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4)
