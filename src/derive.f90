@@ -2144,7 +2144,7 @@ subroutine deryy_00(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
         ry(i,ny  ,k)=alsajy
      enddo
   enddo
-  if (itimescheme.eq.7) return
+  if (iimplicit.ge.1) return
   do k=1,nz
      do j=2,ny
         do i=1,nx
@@ -2289,7 +2289,7 @@ subroutine deryy_11(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
                 -uy(i,ny  ,k)+uy(i,ny-4,k))
         enddo
      enddo
-     if (itimescheme.eq.7) return
+     if (iimplicit.ge.1) return
      do k=1,nz
         do j=2,ny
            do i=1,nx
@@ -2383,7 +2383,7 @@ subroutine deryy_11(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
            ty(i,ny  ,k)=zero
         enddo
      enddo
-     if (itimescheme.eq.7) return
+     if (iimplicit.ge.1) return
      do k=1,nz
         do j=2,ny
            do i=1,nx
@@ -2495,7 +2495,7 @@ subroutine deryy_12(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
                 +csny*uy(i,ny-2,k)+dsny*uy(i,ny-3,k)
         enddo
      enddo
-     if (itimescheme.eq.7) return
+     if (iimplicit.ge.1) return
      do k=1,nz
         do j=2,ny
            do i=1,nx
@@ -2578,7 +2578,7 @@ subroutine deryy_12(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
                 +csny*uy(i,ny-2,k)+dsny*uy(i,ny-3,k)
         enddo
      enddo
-     if (itimescheme.eq.7) return
+     if (iimplicit.ge.1) return
      do k=1,nz
         do j=2,ny
            do i=1,nx
@@ -2691,7 +2691,7 @@ subroutine deryy_21(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
                 -uy(i,ny  ,k)+uy(i,ny-4,k))
         enddo
      enddo
-     if (itimescheme.eq.7) return
+     if (iimplicit.ge.1) return
      do k=1,nz
         do j=2,ny
            do i=1,nx
@@ -2774,7 +2774,7 @@ subroutine deryy_21(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
            ty(i,ny  ,k)=zero
         enddo
      enddo
-     if (itimescheme.eq.7) return
+     if (iimplicit.ge.1) return
      do k=1,nz
         do j=2,ny
            do i=1,nx
@@ -2868,7 +2868,7 @@ subroutine deryy_22(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
              +csny*uy(i,ny-2,k)+dsny*uy(i,ny-3,k)
      enddo
   enddo
-  if (itimescheme.eq.7) return
+  if (iimplicit.ge.1) return
   do k=1,nz
      do j=2,ny
         do i=1,nx

@@ -410,7 +410,7 @@ contains
        allocate(dyp(ny))
        ! compute dy for stretched mesh - Kay
        do j=2,ny-1
-          dyp(j) = 0.5*(yp(j+1)-yp(j-1))
+          dyp(j) = half*(yp(j+1)-yp(j-1))
        enddo
        dyp(1)  = yp(2) -yp(1)
        dyp(ny) = yp(ny)-yp(ny-1)
@@ -425,7 +425,7 @@ contains
     if (itimescheme.eq.1) then ! Euler
        iadvance_time=1
        adt(1)=1.0_mytype*dt
-       bdt(1)=0.0_mytype*dt
+       bdt(1)=zero
        gdt(1)=adt(1)+bdt(1)
        gdt(3)=gdt(1)
 
@@ -433,8 +433,8 @@ contains
        nrhotime = 2
     elseif (itimescheme.eq.2) then ! AB2
        iadvance_time=1
-       adt(1)=1.5_mytype*dt
-       bdt(1)=-0.5_mytype*dt
+       adt(1)=onepfive*dt
+       bdt(1)=-half*dt
        gdt(1)=adt(1)+bdt(1)
        gdt(3)=gdt(1)
 
@@ -464,7 +464,7 @@ contains
     elseif(itimescheme.eq.5) then !RK3
        iadvance_time=3
        adt(1)=(8._mytype/15._mytype)*dt
-       bdt(1)=0._mytype
+       bdt(1)=zero
        gdt(1)=adt(1)
        adt(2)=(5._mytype/12._mytype)*dt
        bdt(2)=(-17._mytype/60._mytype)*dt
@@ -477,7 +477,7 @@ contains
        nrhotime = 3
     elseif(itimescheme.eq.6) then !RK4 Carpenter and Kennedy
        iadvance_time=5
-       adt(1)=0.0_mytype
+       adt(1)=zero
        adt(2)=-0.4178904745_mytype
        adt(3)=-1.192151694643_mytype
        adt(4)=-1.697784692471_mytype
@@ -496,16 +496,6 @@ contains
        ntime = 2
        nrhotime = 5 ! (A guess)
 
-    elseif(itimescheme.eq.7) then !Semi-implicit
-       iadvance_time=1
-       adt(1)= (23./12.)*dt
-       bdt(1)=-(16./12.)*dt
-       cdt(1)= ( 5./12.)*dt
-       gdt(1)=adt(1)+bdt(1)+cdt(1)
-       gdt(3)=gdt(1)
-
-       ntime = 3
-       nrhotime = 4
     endif
     allocate(dux1(xsize(1),xsize(2),xsize(3),ntime))
     allocate(duy1(xsize(1),xsize(2),xsize(3),ntime))

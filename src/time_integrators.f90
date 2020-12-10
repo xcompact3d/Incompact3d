@@ -39,27 +39,51 @@ module time_integrators
 
 contains
 
-  subroutine intt(var1,dvar1,forcing1)
+  subroutine intt(var1,dvar1,npaire,isc,forcing1)
 
+    USE MPI
     USE param
     USE variables
     USE decomp_2d
+    USE ydiff_implicit, only : inttimp
+
     implicit none
 
-    !! INPUTS
+    !! INPUT / OUTPUT
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: var1
-
-    !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dvar1
 
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), optional :: forcing1
+    !! INPUTS
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in), optional :: forcing1
+    integer, intent(in), optional :: npaire, isc
+
+    !! LOCAL
+    integer :: is, code, ierror
 
 #ifdef DEBG
     if (nrank .eq. 0) print *,'# intt start'
 #endif
 
-    if (itimescheme.eq.1) then
+    if (iimplicit.ge.1) then
+       !>>> (semi)implicit Y diffusion
+
+       if (present(isc)) then
+          is = isc
+       else
+          is = 0
+       endif
+       if (present(npaire).and.present(forcing1)) then
+          call inttimp(var1, dvar1, npaire=npaire, isc=is, forcing1=forcing1)
+       else if (present(npaire)) then
+          call inttimp(var1, dvar1, npaire=npaire, isc=is)
+       else
+          if (nrank.eq.0) print *, "Error in intt call."
+          call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
+       endif
+
+    elseif (itimescheme.eq.1) then
        !>>> Euler
+
        var1(:,:,:)=gdt(itr)*dvar1(:,:,:,1)+var1(:,:,:)
     elseif(itimescheme.eq.2) then
        !>>> Adam-Bashforth second order (AB2)
@@ -151,10 +175,6 @@ contains
           print *, "RK4 not implemented!"
           STOP
        endif
-       !>>> Semi-implicit
-    elseif(itimescheme.eq.7) then
-
-       call inttimp(var1,dvar1,forcing1)
 
     else
 
@@ -178,6 +198,7 @@ contains
     USE decomp_2d, ONLY : mytype, xsize
     USE param, ONLY : zero, one
     USE param, ONLY : ntime, nrhotime, ilmn, iscalar, ilmn_solve_temp,itimescheme
+    USE param, ONLY : iimplicit, sc_even
     USE param, ONLY : primary_species, massfrac
     use param, only : scalar_lbound, scalar_ubound
     USE variables, ONLY : numscalar,nu0nu
@@ -215,11 +236,15 @@ contains
 
        DO is = 1, numscalar
           IF (is.NE.primary_species) THEN
-             IF (itimescheme.ne.7) THEN
-                CALL intt(phi1(:,:,:,is), dphi1(:,:,:,:,is))
+             IF (iimplicit.ge.1) then
+                if (sc_even(is)) then
+                   k = 1
+                else
+                   k = 0
+                endif
+                CALL intt(phi1(:,:,:,is), dphi1(:,:,:,:,is), npaire=k, isc=is)
              ELSE
-            !!TO BE DONE: when sc is not one
-                CALL scalarimp(ux1,uy1,uz1,phi1(:,:,:,is),dphi1(:,:,:,:,is),is)
+                CALL intt(phi1(:,:,:,is), dphi1(:,:,:,:,is))
              ENDIF
 
              DO k = 1, xsize(3)
@@ -285,10 +310,10 @@ contains
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1, duy1, duz1
 
-    if (itimescheme.eq.7) then
-       call intt(ux1, dux1, px1)
-       call intt(uy1, duy1, py1)
-       call intt(uz1, duz1, pz1)
+    if (iimplicit.ge.1) then
+       call intt(ux1, dux1, npaire=1, isc=0, forcing1=px1)
+       call intt(uy1, duy1, npaire=0, isc=0, forcing1=py1)
+       call intt(uz1, duz1, npaire=1, isc=0, forcing1=pz1)
     else
        call intt(ux1, dux1)
        call intt(uy1, duy1)

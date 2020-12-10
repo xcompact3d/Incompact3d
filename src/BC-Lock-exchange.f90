@@ -389,6 +389,8 @@ contains
     USE decomp_2d_io
     USE MPI
 
+    use param, only : iimplicit
+
     use variables, only : derx, dery, derys, derz
     use variables, only : derxx, deryy, derzz
     use variables, only : derxxs, deryys, derzzs
@@ -507,7 +509,9 @@ contains
 
        call deryS (dphiy2,phi2(:,:,:,is),di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),1)
 
+       iimplicit = -iimplicit
        call deryyS (dphiyy2,phi2(:,:,:,is),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
+       iimplicit = -iimplicit
 
        call transpose_y_to_z(phi2(:,:,:,is),phi3(:,:,:,is))
 
@@ -537,7 +541,9 @@ contains
        call transpose_x_to_y(ta1, ta2)
        call transpose_x_to_y(rho1(:,:,:,1), rho2)
 
+       iimplicit = -iimplicit
        call deryy(tb2, rho2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
+       iimplicit = -iimplicit
        call transpose_y_to_z(rho2, rho3)
 
        call derzz(ta3, rho3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)

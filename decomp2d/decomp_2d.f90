@@ -426,7 +426,7 @@ contains
     write(10,*) 'row communicator detais:'
     call print_smp_info(decomp_main%ROW_INFO)
     write(10,*)' '
-    write(10,*)'Buffer count and dispalcement of per-core buffers'
+    write(10,*)'Buffer count and displacement of per-core buffers'
     write(10,*)'x1cnts:',decomp_main%x1cnts
     write(10,*)'y1cnts:',decomp_main%y1cnts
     write(10,*)'y2cnts:',decomp_main%y2cnts
@@ -436,7 +436,7 @@ contains
     write(10,*)'y2disp:',decomp_main%y2disp
     write(10,*)'z2disp:',decomp_main%z2disp
     write(10,*)' '
-    write(10,*)'Buffer count and dispalcement of shared buffers'
+    write(10,*)'Buffer count and displacement of shared buffers'
     write(10,*)'x1cnts:',decomp_main%x1cnts_s
     write(10,*)'y1cnts:',decomp_main%y1cnts_s
     write(10,*)'y2cnts:',decomp_main%y2cnts_s

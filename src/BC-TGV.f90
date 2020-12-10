@@ -421,9 +421,11 @@ contains
     call transpose_x_to_y(ux1,td2)
     call transpose_x_to_y(uy1,te2)
     call transpose_x_to_y(uz1,tf2)
-    call deryy (ta2,td2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1) 
-    call deryy (tb2,te2,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0) 
-    call deryy (tc2,tf2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1) 
+    iimplicit = -iimplicit
+    call deryy (ta2,td2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+    call deryy (tb2,te2,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0)
+    call deryy (tc2,tf2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+    iimplicit = -iimplicit
     !!z-derivatives
     call transpose_y_to_z(td2,td3)
     call transpose_y_to_z(te2,te3)
@@ -710,7 +712,7 @@ contains
   subroutine compute_tgv2D_errors(xdamping, ydamping, sdamping)
 
     use decomp_2d
-    use param, only : one, two, xnu, ifirst, itime, itimescheme
+    use param, only : one, two, xnu, ifirst, itime, itimescheme, iimplicit
     use variables, only : numscalar, sc
 
     implicit none
@@ -718,7 +720,7 @@ contains
     real(mytype), intent(out) :: xdamping(3), ydamping(3), sdamping(3, numscalar)
 
     integer :: it, l
-    real(mytype) :: ktgv, k2tgv
+    real(mytype) :: ktgv, k2tgv, coef(numscalar+1)
 
     ! Compute modified wavenumber
     ktgv = one
@@ -730,9 +732,10 @@ contains
     sdamping(:,:) = one
 
     ! Compute analytical damping
+    coef(1) = exp(-two*dt*xnu)
     do it = ifirst, itime
-      xdamping(1) = xdamping(1) * exp(-two*dt*xnu)
-      ydamping(1) = ydamping(1) * exp(-two*dt*xnu)
+      xdamping(1) = xdamping(1) * coef(1)
+      ydamping(1) = ydamping(1) * coef(1)
       do l = 1, numscalar
         sdamping(1,l) = sdamping(1,l) * exp(-two*dt*xnu/sc(l))
       enddo
@@ -744,20 +747,52 @@ contains
     if (itimescheme.eq.1) then
 
       ! Time discrete errors
-      do it = ifirst, itime
-        xdamping(2) = xdamping(2) * (one - two*dt*xnu)
-        ydamping(2) = ydamping(2) * (one - two*dt*xnu)
+      if (iimplicit.eq.0) then
+        coef(1) = (one - two*dt*xnu)
         do l = 1, numscalar
-          sdamping(2,l) = sdamping(2,l) * (one - two*dt*xnu/sc(l))
+          coef(1+l) = one - two*dt*xnu/sc(l)
+        enddo
+      else if (iimplicit.eq.1) then
+        coef(1) = (one - dt*xnu) / (one + dt*xnu)
+        do l = 1, numscalar
+          coef(1+l) = (one - dt*xnu/sc(l)) / (one + dt*xnu/sc(l))
+        enddo
+      else if (iimplicit.eq.2) then
+        coef(1) = (one - onepfive*dt*xnu) / (one + half*dt*xnu)
+        do l = 1, numscalar
+          coef(1+l) = (one - onepfive*dt*xnu/sc(l)) / (one + half*dt*xnu/sc(l))
+        enddo
+      endif
+      do it = ifirst, itime
+        xdamping(2) = xdamping(2) * coef(1)
+        ydamping(2) = ydamping(2) * coef(1)
+        do l = 1, numscalar
+          sdamping(2,l) = sdamping(2,l) * coef(1+l)
         enddo
       enddo
 
       ! Space-time discrete errors
-      do it = ifirst, itime
-        xdamping(3) = xdamping(3) * (one - two*k2tgv*dt*xnu)
-        ydamping(3) = ydamping(3) * (one - two*k2tgv*dt*xnu)
+      if (iimplicit.eq.0) then
+        coef(1) = (one - two*k2tgv*dt*xnu)
         do l = 1, numscalar
-          sdamping(3,l) = sdamping(3,l) * (one - two*k2tgv*dt*xnu/sc(l))
+          coef(1+l) = one - two*k2tgv*dt*xnu/sc(l)
+        enddo
+      else if (iimplicit.eq.1) then
+        coef(1) = (one - k2tgv*dt*xnu) / (one + k2tgv*dt*xnu)
+        do l = 1, numscalar
+          coef(1+l) = (one - k2tgv*dt*xnu/sc(l)) / (one + k2tgv*dt*xnu/sc(l))
+        enddo
+      else if (iimplicit.eq.2) then
+        coef(1) = (one - onepfive*k2tgv*dt*xnu) / (one + half*k2tgv*dt*xnu)
+        do l = 1, numscalar
+          coef(1+l) = (one - onepfive*k2tgv*dt*xnu/sc(l)) / (one + half*k2tgv*dt*xnu/sc(l))
+        enddo
+      endif
+      do it = ifirst, itime
+        xdamping(3) = xdamping(3) * coef(1)
+        ydamping(3) = ydamping(3) * coef(1)
+        do l = 1, numscalar
+          sdamping(3,l) = sdamping(3,l) * coef(1+l)
         enddo
       enddo
 

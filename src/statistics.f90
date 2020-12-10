@@ -87,93 +87,24 @@ contains
     call transpose_y_to_x(ppi2,pp1,ph2) !nxm ny nz
     call interxpv(ta1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
          nxmsize,xsize(1),xsize(2),xsize(3),1)
-    if (iibm==2) then
-       ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
-    endif
-    call fine_to_coarseS(1,ta1,tmean)
-    pmean=pmean+tmean
+    call update_average_scalar(pmean, ta1, ep1)
 
     !! Mean velocity
-    if (iibm==2) then
-       ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)
-    else
-       ta1(:,:,:) = ux1(:,:,:)
-    endif
-    call fine_to_coarseS(1,ta1,tmean)
-    umean=umean+tmean
-    if (iibm==2) then
-       ta1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:)
-    else
-       ta1(:,:,:) = uy1(:,:,:)
-    endif
-    call fine_to_coarseS(1,ta1,tmean)
-    vmean=vmean+tmean
-    if (iibm==2) then
-       ta1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:)
-    else
-       ta1(:,:,:) = uz1(:,:,:)
-    endif
-    call fine_to_coarseS(1,ta1,tmean)
-    wmean=wmean+tmean
+    call update_average_vector(umean, vmean, wmean, &
+                               ux1, uy1, uz1, ep1)
 
-    !! Second-rder velocity moments
-    ta1=ux1*ux1
-    if (iibm==2) then
-       ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
-    endif
-    call fine_to_coarseS(1,ta1,tmean)
-    uumean=uumean+tmean
-    ta1=uy1*uy1
-    if (iibm==2) then
-       ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
-    endif
-    call fine_to_coarseS(1,ta1,tmean)
-    vvmean=vvmean+tmean
-    ta1=uz1*uz1
-    if (iibm==2) then
-       ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
-    endif
-    call fine_to_coarseS(1,ta1,tmean)
-    wwmean=wwmean+tmean
-
-    ta1=ux1*uy1
-    if (iibm==2) then
-       ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
-    endif
-    call fine_to_coarseS(1,ta1,tmean)
-    uvmean=uvmean+tmean
-    ta1=ux1*uz1
-    if (iibm==2) then
-       ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
-    endif
-    call fine_to_coarseS(1,ta1,tmean)
-    uwmean=uwmean+tmean
-    ta1=uy1*uz1
-    if (iibm==2) then
-       ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
-    endif
-    call fine_to_coarseS(1,ta1,tmean)
-    vwmean=vwmean+tmean
+    !! Second-order velocity moments
+    call update_variance_vector(uumean, vvmean, wwmean, uvmean, uwmean, vwmean, &
+                                ux1, uy1, uz1, ep1)
 
     !! Scalar statistics
     if (iscalar==1) then
        do is=1, numscalar
           !pmean=phi1
-          if (iibm==2) then
-             ta1(:,:,:) = (one - ep1(:,:,:)) * phi1(:,:,:,is)
-          else
-             ta1(:,:,:) = phi1(:,:,:,is)
-          endif
-          call fine_to_coarseS(1,ta1,tmean)
-          phimean(:,:,:,is)=phimean(:,:,:,is)+tmean
+          call update_average_scalar(phimean(:,:,:,is), phi1(:,:,:,is), ep1)
 
           !phiphimean=phi1*phi1
-          ta1=phi1(:,:,:,is)*phi1(:,:,:,is)
-          if (iibm == 2) then
-             ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
-          endif
-          call fine_to_coarseS(1,ta1,tmean)
-          phiphimean(:,:,:,is)=phiphimean(:,:,:,is)+tmean
+          call update_average_scalar(phiphimean(:,:,:,is), phi1(:,:,:,is)*phi1(:,:,:,is), ep1)
        enddo
     endif
 
@@ -227,6 +158,88 @@ contains
     endif
 
   end subroutine overall_statistic
+
+  !
+  ! Basic function, can be applied to arrays
+  !
+  elemental real(mytype) function one_minus_ep1(var, ep1)
+
+    use decomp_2d, only : mytype
+    use param, only : iibm, one
+
+    implicit none
+
+    ! inputs
+    real(mytype), intent(in) :: var, ep1
+
+    if (iibm==2) then
+      one_minus_ep1 = (one - ep1) * var
+    else
+      one_minus_ep1 = var
+    endif
+
+  end function one_minus_ep1
+
+  !
+  ! Update um, the average of ux
+  !
+  subroutine update_average_scalar(um, ux, ep)
+
+    use decomp_2d, only : mytype, xsize, xstS, xenS, fine_to_coarseS
+    use var, only : di1, tmean
+
+    implicit none
+
+    ! inputs
+    real(mytype), dimension(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)), intent(inout) :: um
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux, ep
+
+    di1 = one_minus_ep1(ux, ep)
+    call fine_to_coarseS(1, di1, tmean)
+    um = um + tmean
+
+  end subroutine update_average_scalar
+
+  !
+  ! Update (um, vm, wm), the average of (ux, uy, uz)
+  !
+  subroutine update_average_vector(um, vm, wm, ux, uy, uz, ep)
+
+    use decomp_2d, only : mytype, xsize, xstS, xenS
+
+    implicit none
+
+    ! inputs
+    real(mytype), dimension(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)), intent(inout) :: um, vm, wm
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux, uy, uz, ep
+
+    call update_average_scalar(um, ux, ep)
+    call update_average_scalar(vm, uy, ep)
+    call update_average_scalar(wm, uz, ep)
+
+  end subroutine update_average_vector
+
+  !
+  ! Update (uum, vvm, wwm, uvm, uwm, vwm), the variance of the vector (ux, uy, uz)
+  !
+  subroutine update_variance_vector(uum, vvm, wwm, uvm, uwm, vwm, ux, uy, uz, ep)
+
+    use decomp_2d, only : mytype, xsize, xstS, xenS
+
+    implicit none
+
+    ! inputs
+    real(mytype), dimension(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)), intent(inout) :: uum, vvm, wwm, uvm, uwm, vwm
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux, uy, uz, ep
+
+    call update_average_scalar(uum, ux*ux, ep)
+    call update_average_scalar(vvm, uy*uy, ep)
+    call update_average_scalar(wwm, uz*uz, ep)
+    call update_average_scalar(uvm, ux*uy, ep)
+    call update_average_scalar(uwm, ux*uz, ep)
+    call update_average_scalar(vwm, uy*uz, ep)
+
+  end subroutine update_variance_vector
 
 endmodule stats
 

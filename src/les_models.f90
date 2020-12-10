@@ -1046,6 +1046,7 @@ end subroutine wale
 
     !-->for ux
     td2 = zero
+    iimplicit = -iimplicit
     if (istret.ne.0) then
        call deryy (td2, ux2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
        call dery (te2, ux2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
@@ -1091,6 +1092,7 @@ end subroutine wale
     else
        call deryy (tf2, uz2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
     endif
+    iimplicit = -iimplicit
 
     sgsx2 = sgsx2 + nut2 * td2 + two * sxy2 * ta2
     sgsy2 = sgsy2 + nut2 * te2 + two * syy2 * ta2

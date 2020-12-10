@@ -246,8 +246,10 @@ contains
     enddo
     call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0)
     call dery (dfdyp2,fyp2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    iimplicit = -iimplicit
     call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0)
     call deryy (dfdyyp2,fyp2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+    iimplicit = -iimplicit
     if (nrank.eq.0) then
        write(filename,"('schemes_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
        open(67,file=trim(filename),status='unknown',form='formatted')
@@ -480,7 +482,9 @@ contains
        enddo
     enddo
     call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0)
+    iimplicit = -iimplicit
     call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0)
+    iimplicit = -iimplicit
     if (nrank.eq.0) then
        write(filename,"('schemes_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
        open(67,file=trim(filename),status='unknown',form='formatted')
@@ -638,8 +642,10 @@ contains
     enddo
     call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0)
     call dery (dfdyp2,fyp2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    iimplicit = -iimplicit
     call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0)
     call deryy (dfdyyp2,fyp2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+    iimplicit = -iimplicit
     if (nrank.eq.0) then
        write(filename,"('schemes_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
        open(67,file=trim(filename),status='unknown',form='formatted')
@@ -805,8 +811,10 @@ contains
     enddo
     call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0)
     call dery (dfdyp2,fyp2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    iimplicit = -iimplicit
     call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0)
     call deryy (dfdyyp2,fyp2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+    iimplicit = -iimplicit
     if (nrank.eq.0) then
        write(filename,"('schemes_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
        open(67,file=trim(filename),status='unknown',form='formatted')
@@ -1030,7 +1038,9 @@ contains
        enddo
     enddo
     call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0)
+    iimplicit = -iimplicit
     call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0)
+    iimplicit = -iimplicit
     if (nrank.eq.0) then
        write(filename,"('schemes_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
        open(67,file=trim(filename),status='unknown',form='formatted')

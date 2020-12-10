@@ -272,13 +272,13 @@ contains
        call decomp_2d_write_var(fh,disp,1,uy1)
        call decomp_2d_write_var(fh,disp,1,uz1)
        ! write previous time-step if necessary for AB2 or AB3
-       if ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.7)) then
+       if ((itimescheme.eq.2).or.(itimescheme.eq.3)) then
          call decomp_2d_write_var(fh,disp,1,dux1(:,:,:,2))
          call decomp_2d_write_var(fh,disp,1,duy1(:,:,:,2))
          call decomp_2d_write_var(fh,disp,1,duz1(:,:,:,2))
        end if
        ! for AB3 one more previous time-step
-       if ((itimescheme.eq.3).or.(itimescheme.eq.7)) then
+       if (itimescheme.eq.3) then
          call decomp_2d_write_var(fh,disp,1,dux1(:,:,:,3))
          call decomp_2d_write_var(fh,disp,1,duy1(:,:,:,3))
          call decomp_2d_write_var(fh,disp,1,duz1(:,:,:,3))
@@ -290,11 +290,11 @@ contains
           do is=1, numscalar
              call decomp_2d_write_var(fh,disp,1,phi1(:,:,:,is))
              ! previous time-steps
-             if ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB2 or AB3
+             if ((itimescheme.eq.2).or.(itimescheme.eq.3)) then ! AB2 or AB3
                call decomp_2d_write_var(fh,disp,1,dphi1(:,:,:,2,is))
              end if
              !
-             if ((itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB3
+             if (itimescheme.eq.3) then ! AB3
                call decomp_2d_write_var(fh,disp,1,dphi1(:,:,:,3,is))
              end if
           end do
@@ -328,6 +328,7 @@ contains
          write(111,fmt2) 'iscalar=  ',iscalar
          write(111,fmt2) 'numscalar=',numscalar
          write(111,'(A,I14)') 'itimescheme=',itimescheme
+         write(111,fmt2) 'iimplicit=',iimplicit
          write(111,'(A)')'/End'
          write(111,'(A)')'!========================='
 
@@ -347,13 +348,13 @@ contains
        call decomp_2d_read_var(fh,disp,1,uy1)
        call decomp_2d_read_var(fh,disp,1,uz1)
        ! read previous time-step if necessary for AB2 or AB3
-       if ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB2 or AB3
+       if ((itimescheme.eq.2).or.(itimescheme.eq.3)) then ! AB2 or AB3
          call decomp_2d_read_var(fh,disp,1,dux1(:,:,:,2))
          call decomp_2d_read_var(fh,disp,1,duy1(:,:,:,2))
          call decomp_2d_read_var(fh,disp,1,duz1(:,:,:,2))
        end if
        ! for AB3 one more previous time-step
-       if ((itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB3
+       if (itimescheme.eq.3) then ! AB3
          call decomp_2d_read_var(fh,disp,1,dux1(:,:,:,3))
          call decomp_2d_read_var(fh,disp,1,duy1(:,:,:,3))
          call decomp_2d_read_var(fh,disp,1,duz1(:,:,:,3))
@@ -365,11 +366,11 @@ contains
           do is=1, numscalar
              call decomp_2d_read_var(fh,disp,1,phi1(:,:,:,is))
              ! previous time-steps
-             if ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB2 or AB3
+             if ((itimescheme.eq.2).or.(itimescheme.eq.3)) then ! AB2 or AB3
                call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,2,is))
              end if
              !
-             if ((itimescheme.eq.3).or.(itimescheme.eq.7)) then ! AB3
+             if (itimescheme.eq.3) then ! AB3
                call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,3,is))
              end if
           end do
@@ -609,7 +610,7 @@ contains
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(inout) :: pre1
 
     ! Adjust pressure to physical pressure
-    if  ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.5).or.(itimescheme.eq.7)) then !AB2, AB3, RK3, Semi-Impl. AB3
+    if  ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.5)) then !AB2, AB3, RK3
        pre1=pre1 / gdt(3) ! multiply pressure by factor of time-scheme (gdt = 1  / (dt * c_k) ) to get pyhsical pressure
     else
        if (nrank .eq. 0) print *,'WARNING: No scaling of pressure defined!!!'
