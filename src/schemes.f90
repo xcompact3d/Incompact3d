@@ -121,7 +121,7 @@ subroutine schemes()
        alsakz,askz,bskz,cskz,dskz,&
        sfz,ssz,swz,sfzp,sszp,swzp,dz2,nz,nclz1,nclzn)
 
-  if (iscalar.ne.0) then
+  if (iscalar.ne.0 .or. (ilmn)) then
      !Scalar
      ! First derivative
      if (nclxS1.eq.0.and.nclxSn.eq.0) derxS => derx_00
@@ -286,15 +286,13 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
      afi  = one/(two*d)
      bfi  = zero
   elseif(ifirstder==2) then ! Fourth-order central
-     if (nrank.eq.0) then
-        print *, "Fourth order central scheme not implemented!"
-        STOP
-     endif
+     alfai= zero
+     afi  = four/(six*d)
+     bfi  = -one/(twelve*d)
   elseif(ifirstder==3) then ! Fourth-order compact
-     if (nrank.eq.0) then
-        print *, "Fourth order compact scheme not implemented!"
-        STOP
-     endif
+     alfai= one/four
+     afi  = (three/four)/d
+     bfi  = zero
   elseif(ifirstder==4) then ! Sixth-order compact
      alfai= one/three
      afi  = (seven/nine)/d
@@ -465,27 +463,66 @@ subroutine second_derivative(alsa1,as1,bs1,&
      bstt = bsi
      cstt = csi
   elseif(isecondder==2) then ! Fourth-order central
-     if (nrank.eq.0) then
-        print *, "Fourth-order central scheme not implemented!"
-        STOP
-     endif
+     alsai=zero !(45._mytype*fpi2*pi*pi-272._mytype)/(two*(45._mytype*fpi2*pi*pi-208._mytype))
+     asi  = four/three/d2 !((six-nine*alsai)/four)/d2
+     bsi  = -one/three/(four*d2) !((-three+twentyfour*alsai)/five)/(four*d2)
+     csi  = zero !((two-eleven*alsai)/twenty)/(nine*d2)
+     dsi  = zero
+
+     alsa4= alsai
+     as4  = asi
+     bs4  = bsi
+     cs4  = csi
+
+     alsatt = alsai
+     astt = asi
+     bstt = bsi
+     cstt = csi
   elseif(isecondder==3) then ! Fourth-order compact
-     if (nrank.eq.0) then
-        print *, "Fourth-order compact scheme not implemented!"
-        STOP
-     endif
-  elseif(isecondder==4) then ! Sixth-order compact
+     alsai= one/ten  !(45._mytype*fpi2*pi*pi-272._mytype)/(two*(45._mytype*fpi2*pi*pi-208._mytype))
+     asi  = six/five/d2 !((six-nine*alsai)/four)/d2
+     bsi  = zero !((-three+twentyfour*alsai)/five)/(four*d2)
+     csi  = zero !((two-eleven*alsai)/twenty)/(nine*d2)
+     dsi  = zero
+
+     alsa4= alsai
+     as4  = asi
+     bs4  = bsi
+     cs4  = csi
+
+     alsatt = alsai
+     astt = asi
+     bstt = bsi
+     cstt = csi
+  elseif(isecondder==4) then ! Sixth-order compact with numerical dissipation
      !BASE LELE
      !alsai= 2./11.
      !asi  = (12./11.)/d2
      !bsi  = (3./44. )/d2
      !csi  = 0.
      !NUMERICAL DISSIPATION (see publications for help)
-     fpi2=(48./7)/(pi*pi)
+     !fpi2=(48./7)/(pi*pi)
      alsai=(45._mytype*fpi2*pi*pi-272._mytype)/(two*(45._mytype*fpi2*pi*pi-208._mytype))
      asi  =((six-nine*alsai)/four)/d2
      bsi  =((-three+twentyfour*alsai)/five)/(four*d2)
      csi  =((two-eleven*alsai)/twenty)/(nine*d2)
+     dsi = zero
+
+     alsa4= alsai
+     as4  = asi
+     bs4  = bsi
+     cs4  = csi
+
+     alsatt = alsai
+     astt = asi
+     bstt = bsi
+     cstt = csi
+  elseif(isecondder==41) then ! Sixth-order compact classical of Lele
+     !BASE LELE
+     alsai= 2./11.
+     asi  = (12./11.)/d2
+     bsi  = (3./44. )/d2
+     csi  = 0.
      dsi = zero
 
      alsa4= alsai

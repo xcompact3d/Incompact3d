@@ -57,7 +57,7 @@ contains
 
     use decomp_2d, only : mytype
     use param, only : one, two
-    use ibm
+    use ibm_param
 
     implicit none
 
@@ -122,9 +122,9 @@ contains
     integer  :: j,k,is
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
-    call random_number(bxo)
-    call random_number(byo)
-    call random_number(bzo)
+    !call random_number(bxo)
+    !call random_number(byo)
+    !call random_number(bzo)
     do k=1,xsize(3)
        do j=1,xsize(2)
           bxx1(j,k)=one+bxo(j,k)*inflow_noise
@@ -307,6 +307,7 @@ contains
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     character(len=30) :: filename
 
+    if ((ivisu.ne.0).and.(mod(itime, ioutput).eq.0)) then
     !! Write vorticity as an example of post processing
     !x-derivatives
     call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
@@ -347,12 +348,12 @@ contains
     endif
     uvisu=0.
     call fine_to_coarseV(1,di1,uvisu)
-994 format('vort',I3.3)
+994 format('./data/vort',I5.5)
     write(filename, 994) itime/ioutput
     call decomp_2d_write_one(1,uvisu,filename,2)
+    endif
 
     return
   end subroutine postprocess_cyl
   !############################################################################
 end module cyl
-

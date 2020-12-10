@@ -37,7 +37,7 @@ contains
   subroutine init_explicit_les
     !================================================================================
     !
-    !  SUBROUTINE: init_explicit_les 
+    !  SUBROUTINE: init_explicit_les
     ! DESCRIPTION: Initialises the explicit LES parameters
     !      AUTHOR: G. Deskos <g.deskos14@imperial.ac.uk>
     !
@@ -67,6 +67,9 @@ contains
           write(*, *) ' Classic Smagorinsky is used ... '
           write(*, *) ' Smagorinsky constant = ', smagcst
        else if (jLES==2) then
+          write(*, *) ' WALE SGS model is used ... '
+          write(*, *) ' Max value for the WALE constant  = ', walecst
+       else if (jLES==3) then
           write(*, *) ' Dynamic Smagorinsky is used ... '
           write(*, *) ' Max value for the dynamic constant field = ', maxdsmagcst
        endif
@@ -81,8 +84,8 @@ contains
   subroutine Compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,iconservative)
     !================================================================================
     !
-    !  SUBROUTINE: Compute_SGS 
-    ! DESCRIPTION: computes the SGS terms (divergence of the SGS stresses) used in the 
+    !  SUBROUTINE: Compute_SGS
+    ! DESCRIPTION: computes the SGS terms (divergence of the SGS stresses) used in the
     !              momentum equation
     !      AUTHOR: G. Deskos <g.deskos14@imperial.ac.uk>
     !
@@ -104,7 +107,10 @@ contains
 
        call smag(nut1,ux1,uy1,uz1)
 
-    elseif(jLES.eq.2) then ! Lilly-style Dynamic Smagorinsky
+    elseif(jLES.eq.2) then ! Wall-adapting local eddy-viscosity (WALE) model
+       call wale(nut1,ux1,uy1,uz1)
+
+    elseif(jLES.eq.3) then ! Lilly-style Dynamic Smagorinsky
        call dynsmag(nut1,ux1,uy1,uz1,ep1)
 
     endif
@@ -128,8 +134,8 @@ contains
   subroutine smag(nut1,ux1,uy1,uz1)
     !================================================================================
     !
-    !  SUBROUTINE: smag 
-    ! DESCRIPTION: Calculates the eddy-viscosity nut according to the standard 
+    !  SUBROUTINE: smag
+    ! DESCRIPTION: Calculates the eddy-viscosity nut according to the standard
     !              Smagorinsky model
     !      AUTHOR: G. Deskos <g.deskos14@imperial.ac.uk>
     !
@@ -144,7 +150,7 @@ contains
     USE var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
     USE var, only : sxx1,syy1,szz1,sxy1,sxz1,syz1,srt_smag
     USE var, only : gxx1,gyx1,gzx1,gxy2,gyy2,gzy2,gxz3,gyz3,gzz3
-    USE var, only : gxy1,gyy1,gzy1,gxz2,gyz2,gzz2,gxz1,gyz1,gzz1 
+    USE var, only : gxy1,gyy1,gzy1,gxz2,gyz2,gzz2,gxz1,gyz1,gzz1
     USE var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2,srt_smag2,nut2
     USE var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
 
@@ -159,7 +165,7 @@ contains
 
     ! INFO about the auxillary arrays
     !--------------------------------------------------------
-    ! gxx= dux/dx; gyx=duy/dx; gzx=duz/dx; 
+    ! gxx= dux/dx; gyx=duy/dx; gzx=duz/dx;
     ! gxy= dux/dy; gyy=duy/dy; gzy=duz/dy;
     ! gxz= dux/dz; gyz=duy/dz; gzz=duz/dz
 
@@ -237,7 +243,7 @@ contains
 
     if (mod(itime, ioutput).eq.0) then
 
-       write(filename, "('./nut_smag',I4.4)") itime / ioutput
+       write(filename, "('./data/nut_smag',I4.4)") itime / ioutput
        call decomp_2d_write_one(1, nut1, filename, 2)
 
     endif
@@ -247,8 +253,8 @@ contains
   subroutine dynsmag(nut1,ux1,uy1,uz1,ep1)
     !================================================================================
     !
-    !  SUBROUTINE: dynsmag 
-    ! DESCRIPTION: Calculates the eddy-viscosity nut according to the Lilly-Germano 
+    !  SUBROUTINE: dynsmag
+    ! DESCRIPTION: Calculates the eddy-viscosity nut according to the Lilly-Germano
     !              dynamic Smagorinsky model
     !      AUTHOR: G. Deskos <g.deskos14@imperial.ac.uk>
     !
@@ -265,6 +271,7 @@ contains
     USE var, only : sxx1,syy1,szz1,sxy1,sxz1,syz1,srt_smag
     USE var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2,srt_smag2,nut2
     USE var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
+    use tools, only : mean_plane_z
 
     implicit none
 
@@ -308,7 +315,7 @@ contains
 
     nvect1=xsize(1)*xsize(2)*xsize(3)
 
-    if(iibm==1) then
+    if((iibm==1).or.(iibm==2)) then
        ta1 = ux1 * (one - ep1)
        tb1 = uy1 * (one - ep1)
        tc1 = uz1 * (one - ep1)
@@ -344,7 +351,7 @@ contains
        if (nrank==0) print *, "filx ux= ", maxval(ta1), maxval(ux1f), maxval(ta1) - maxval(ux1f)
     endif
 
-    if(iibm==1) then
+   if((iibm==1).or.(iibm==2)) then
        ux1f = ux1f * (one - ep1)
        uy1f = uy1f * (one - ep1)
        uz1f = uz1f * (one - ep1)
@@ -383,7 +390,7 @@ contains
        if (nrank==0) print *, "fily ux= ", maxval(ta2), maxval(ux2f), maxval(ta2) - maxval(ux2f)
     endif
 
-    if(iibm==1) then
+    if((iibm==1).or.(iibm==2)) then   
        ux2f = ux2f * (one - ep2)
        uy2f = uy2f * (one - ep2)
        uz2f = uz2f * (one - ep2)
@@ -453,7 +460,7 @@ contains
     call transpose_y_to_x(uxz2f, uxz1f)
     call transpose_y_to_x(uyz2f, uyz1f)
 
-    if(iibm==1) then
+    if((iibm==1).or.(iibm==2)) then
        ux1f = ux1f * (one - ep1)
        uy1f = uy1f * (one - ep1)
        uz1f = uz1f * (one - ep1)
@@ -537,7 +544,7 @@ contains
     axz1 = -two * sqrt(two * (sxx1 * sxx1 + syy1 * syy1 + szz1 * szz1 + two * sxy1 * sxy1 + two * sxz1 * sxz1 + two * syz1 * syz1)) * sxz1
     ayz1 = -two * sqrt(two * (sxx1 * sxx1 + syy1 * syy1 + szz1 * szz1 + two * sxy1 * sxy1 + two * sxz1 * sxz1 + two * syz1 * syz1)) * syz1
 
-    if(iibm==1) then
+    if((iibm==1).or.(iibm==2)) then
        bbxx1 = bbxx1 * (one - ep1)
        bbyy1 = bbyy1 * (one - ep1)
        bbzz1 = bbzz1 * (one - ep1)
@@ -612,7 +619,7 @@ contains
        if (nrank==0) print *, "filx axx1= ", maxval(axx1), maxval(axx1f), maxval(axx1) - maxval(axx1f)
     endif
 
-    if(iibm==1) then
+    if((iibm==1).or.(iibm==2)) then
        axx1f = axx1f * (one - ep1)
        ayy1f = ayy1f * (one - ep1)
        azz1f = azz1f * (one - ep1)
@@ -640,7 +647,7 @@ contains
        if (nrank==0) print *, "fily axx2= ", maxval(ta2), maxval(axx2f), maxval(ta2) - maxval(axx2f)
     endif
 
-    if(iibm==1) then
+    if((iibm==1).or.(iibm==2)) then
        axx2f = axx2f * (one - ep2)
        ayy2f = ayy2f * (one - ep2)
        azz2f = azz2f * (one - ep2)
@@ -689,7 +696,7 @@ contains
     call transpose_y_to_x(axz2f, axz1f)
     call transpose_y_to_x(ayz2f, ayz1f)
 
-    if(iibm==1) then
+    if((iibm==1).or.(iibm==2)) then
        axx1f = axx1f * (one - ep1)
        ayy1f = ayy1f * (one - ep1)
        azz1f = azz1f * (one - ep1)
@@ -711,7 +718,7 @@ contains
     lyy1 = lyy1 - (lxx1 + lyy1 + lzz1) / three
     lzz1 = lzz1 - (lxx1 + lyy1 + lzz1) / three
 
-    if(iibm==1) then
+    if((iibm==1).or.(iibm==2)) then
        do ijk = 1, nvect1
           if (ep1(ijk, 1, 1) .eq. one) then
              ta1(ijk, 1, 1) = zero
@@ -798,11 +805,190 @@ contains
 
   end subroutine dynsmag
 
+  subroutine wale(nut1,ux1,uy1,uz1)
+  !================================================================================
+  !
+  !  SUBROUTINE: wale
+  ! DESCRIPTION: Calculates the eddy-viscosity nut according to the wall-adapting
+  !              local eddy-viscosity (WALE) model:
+  !
+  !              Nicoud, F. and Ducros, F., 1999. Subgrid-scale stress modelling
+  !              based on the square of the velocity gradient tensor.
+  !              Flow, turbulence and Combustion, 62(3), pp.183-200.
+  !
+  !      AUTHOR: Arash Hamzehloo <a.hamzehloo@imperial.ac.uk>
+  !
+  !================================================================================
+
+  USE param
+  USE variables
+  USE decomp_2d
+  USE decomp_2d_io
+  USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+  USE var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,di2
+  USE var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
+  USE var, only : sxx1,syy1,szz1,sxy1,sxz1,syz1
+  USE var, only : gxx1,gyx1,gzx1,gxy2,gyy2,gzy2,gxz3,gyz3,gzz3
+  USE var, only : gxy1,gyy1,gzy1,gxz2,gyz2,gzz2,gxz1,gyz1,gzz1
+  USE var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2,srt_smag2,nut2
+  USE var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
+  USE var, only : sdxx1,sdyy1,sdzz1,sdxy1,sdxz1,sdyz1
+  USE var, only : sdxx2,sdyy2,sdzz2,sdxy2,sdxz2,sdyz2
+  USE var, only : sdxx3,sdyy3,sdzz3,sdxy3,sdxz3,sdyz3
+  USE var, only : srt_wale,srt_wale2,srt_wale3,srt_wale4
+
+  implicit none
+
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1
+
+  integer :: i, j, k
+  character(len = 30) :: filename
+
+
+  ! INFO about the auxillary arrays
+  !--------------------------------------------------------
+  ! gxx= dux/dx; gyx=duy/dx; gzx=duz/dx;
+  ! gxy= dux/dy; gyy=duy/dy; gzy=duz/dy;
+  ! gxz= dux/dz; gyz=duy/dz; gzz=duz/dz
+
+  call derx (gxx1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+  call derx (gyx1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+  call derx (gzx1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+
+  sxx1(:,:,:) = gxx1(:,:,:)
+
+  !WORK Y-PENCILS
+  call transpose_x_to_y(ux1,ux2)
+  call transpose_x_to_y(uy1,uy2)
+  call transpose_x_to_y(uz1,uz2)
+  call transpose_x_to_y(gyx1,ta2)
+
+  call dery (gxy2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+  call dery (gyy2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+  call dery (gzy2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+
+  syy2(:,:,:)=gyy2(:,:,:)
+  sxy2(:,:,:)=half*(gxy2(:,:,:)+ta2(:,:,:))
+
+
+  !WORK Z-PENCILS
+  call transpose_y_to_z(ux2,ux3)
+  call transpose_y_to_z(uy2,uy3)
+  call transpose_y_to_z(uz2,uz3)
+  call transpose_y_to_z(gzy2,ta3)
+
+  call derz(gxz3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+  call derz(gyz3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+  call derz(gzz3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+
+  szz3(:,:,:)=gzz3(:,:,:)
+  syz3(:,:,:)=half*(gyz3(:,:,:)+ta3(:,:,:))
+
+  !WORK Y-PENCILS
+  call transpose_z_to_y(syz3,syz2)
+  call transpose_z_to_y(szz3,szz2)
+
+  call transpose_z_to_y(sdyz3,sdyz2)
+  call transpose_z_to_y(sdzz3,sdzz2)
+
+  call transpose_z_to_y(gxz3,gxz2)
+  call transpose_z_to_y(gyz3,gyz2)
+  call transpose_z_to_y(gzz3,gzz2)
+
+  !WORK X-PENCILS
+  call transpose_y_to_x(sxy2,sxy1)
+  call transpose_y_to_x(syy2,syy1)
+  call transpose_y_to_x(syz2,syz1)
+  call transpose_y_to_x(szz2,szz1)
+
+  call transpose_y_to_x(sdxy2,sdxy1)
+  call transpose_y_to_x(sdyy2,sdyy1)
+  call transpose_y_to_x(sdyz2,sdyz1)
+  call transpose_y_to_x(sdzz2,sdzz1)
+
+  call transpose_y_to_x(gxy2,gxy1)
+  call transpose_y_to_x(gyy2,gyy1)
+  call transpose_y_to_x(gzy2,gzy1)
+  call transpose_y_to_x(gxz2,gxz1)
+  call transpose_y_to_x(gyz2,gyz1)
+  call transpose_y_to_x(gzz2,gzz1)
+
+  sxz1(:,:,:)=half*(gzx1(:,:,:)+gxz1(:,:,:))
+
+  sdxx1(:,:,:)=gxx1(:,:,:)*gxx1(:,:,:)+gxy1(:,:,:)*gyx1(:,:,:)+&
+       gxz1(:,:,:)*gzx1(:,:,:)-(one/three)*(gxx1(:,:,:)*gxx1(:,:,:)+&
+       gyy1(:,:,:)*gyy1(:,:,:)+gzz1(:,:,:)*gzz1(:,:,:)+&
+       two*gxy1(:,:,:)*gyx1(:,:,:)+two*gxz1(:,:,:)*gzx1(:,:,:)+&
+       two*gzy1(:,:,:)*gyz1(:,:,:))
+
+  sdxy1(:,:,:)=half*(gxx1(:,:,:)*gxy1(:,:,:)+gxy1(:,:,:)*gyy1(:,:,:)+&
+       gxz1(:,:,:)*gzy1(:,:,:)+gyx1(:,:,:)*gxx1(:,:,:)+&
+       gyy1(:,:,:)*gyx1(:,:,:)+gyz1(:,:,:)*gzx1(:,:,:))
+
+  sdxz1(:,:,:)=half*(gxx1(:,:,:)*gxz1(:,:,:)+gxy1(:,:,:)*gyz1(:,:,:)+&
+       gxz1(:,:,:)*gzz1(:,:,:)+gzx1(:,:,:)*gxx1(:,:,:)+&
+       gzy1(:,:,:)*gyx1(:,:,:)+gzz1(:,:,:)*gzx1(:,:,:))
+
+  sdyy1(:,:,:)=gyx1(:,:,:)*gxy1(:,:,:)+gyy1(:,:,:)*gyy1(:,:,:)+&
+       gyz1(:,:,:)*gzy1(:,:,:)-(one/three)*(gxx1(:,:,:)*gxx1(:,:,:)+&
+       gyy1(:,:,:)*gyy1(:,:,:)+gzz1(:,:,:)*gzz1(:,:,:)+&
+       two*gxy1(:,:,:)*gyx1(:,:,:)+two*gxz1(:,:,:)*gzx1(:,:,:)+&
+       two*gzy1(i,j,k)*gyz1(i,j,k))
+
+  sdyz1(:,:,:)=half*(gyx1(:,:,:)*gxz1(:,:,:)+gyy1(:,:,:)*gyz1(:,:,:)+&
+       gyz1(:,:,:)*gzz1(:,:,:)+gzx1(:,:,:)*gxy1(:,:,:)+&
+       gzy1(:,:,:)*gyy1(:,:,:)+gzz1(:,:,:)*gzy1(:,:,:))
+
+  sdzz1(:,:,:)=gzx1(:,:,:)*gxz1(:,:,:)+gzy1(:,:,:)*gyz1(:,:,:)+&
+       gzz1(:,:,:)*gzz1(:,:,:)-(one/three)*(gxx1(:,:,:)*gxx1(:,:,:)+&
+       gyy1(:,:,:)*gyy1(:,:,:)+gzz1(:,:,:)*gzz1(:,:,:)+&
+       two*gxy1(:,:,:)*gyx1(:,:,:)+two*gxz1(:,:,:)*gzx1(:,:,:)+&
+       two*gzy1(:,:,:)*gyz1(:,:,:))
+
+  srt_wale = zero
+  srt_wale2 = zero
+  srt_wale3 = zero
+  srt_wale4 = zero
+
+  srt_wale = sxx1 * sxx1 + syy1 * syy1 + szz1 * szz1 + two * sxy1 * sxy1 &
+           + two * sxz1 * sxz1 + two * syz1 * syz1
+
+  srt_wale3 = sdxx1 * sdxx1 + sdyy1 * sdyy1 + sdzz1 * sdzz1 + two * sdxy1 * sdxy1 &
+            + two * sdxz1 * sdxz1 + two * sdyz1 * sdyz1
+
+  nut1 = zero; nut2 = zero
+  call transpose_x_to_y(srt_wale, srt_wale2)
+  call transpose_x_to_y(srt_wale3, srt_wale4)
+  do k = 1, ysize(3)
+     do j = 1, ysize(2)
+        do i = 1, ysize(1)
+           nut2(i, j, k) = ((walecst * del(j))**two) * ((srt_wale4(i, j, k)**(three/two))/((srt_wale2(i, j, k)**(five/two)) &
+                         +(srt_wale4(i, j, k)**(five/four))))
+        enddo
+     enddo
+  enddo
+  call transpose_y_to_x(nut2, nut1)
+
+  if (nrank==0) print *, "WALE SS min max= ", minval(srt_wale), maxval(srt_wale)
+  if (nrank==0) print *, "WALE SdSd min max= ", minval(srt_wale3), maxval(srt_wale3)
+  if (nrank==0) print *, "WALE nut1     min max= ", minval(nut1), maxval(nut1)
+
+  if (mod(itime, ioutput).eq.0) then
+
+     write(filename, "('./data/nut_wale',I4.4)") itime / ioutput
+     call decomp_2d_write_one(1, nut1, filename, 2)
+
+  endif
+
+end subroutine wale
+
+
   subroutine sgs_mom_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
     !================================================================================
     !
-    !  SUBROUTINE: sgs_mom_nonconservative 
-    ! DESCRIPTION: Calculates the divergence of the sub-grid-scale stresses  
+    !  SUBROUTINE: sgs_mom_nonconservative
+    ! DESCRIPTION: Calculates the divergence of the sub-grid-scale stresses
     !              using a non-conservative formulation
     !      AUTHOR: G. Deskos <g.deskos14@imperial.ac.uk>
     !
@@ -938,9 +1124,9 @@ contains
 
     call transpose_y_to_x(sgsx2, sgsx1)
     call transpose_y_to_x(sgsy2, sgsy1)
-    call transpose_y_to_x(sgsz2, sgsz1) 
+    call transpose_y_to_x(sgsz2, sgsz1)
 
-    if(iibm==1) then
+    if((iibm==1).or.(iibm==2)) then
        do k=1,xsize(3)
           do j=1,xsize(2)
              do i=1,xsize(1)

@@ -50,7 +50,7 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:) :: ep1, diss1, pre1, depo, depof, kine
   real(mytype), save, allocatable, dimension(:,:,:,:) :: dux1,duy1,duz1  ! Output of convdiff
   real(mytype), save, allocatable, dimension(:,:,:,:,:) :: dphi1
-  real(mytype), save, allocatable, dimension(:,:,:) :: mu1
+  real(mytype), save, allocatable, dimension(:,:,:) :: mu1,mu2,mu3
 
   !arrays for post processing
   real(mytype), save, allocatable, dimension(:,:,:) :: f1,fm1
@@ -89,12 +89,18 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:) :: sgsx1,sgsy1,sgsz1,nut1,sxx1,syy1,szz1,sxy1,sxz1,syz1
   real(mytype), save, allocatable, dimension(:,:,:) :: sgsx2,sgsy2,sgsz2,nut2,sxx2,syy2,szz2,sxy2,sxz2,syz2
   real(mytype), save, allocatable, dimension(:,:,:) :: sgsx3,sgsy3,sgsz3,nut3,sxx3,syy3,szz3,sxy3,sxz3,syz3
+
+  real(mytype), save, allocatable, dimension(:,:,:) :: sdxx1,sdyy1,sdzz1,sdxy1,sdxz1,sdyz1
+  real(mytype), save, allocatable, dimension(:,:,:) :: sdxx2,sdyy2,sdzz2,sdxy2,sdxz2,sdyz2
+  real(mytype), save, allocatable, dimension(:,:,:) :: sdxx3,sdyy3,sdzz3,sdxy3,sdxz3,sdyz3
+
   real(mytype), save, allocatable, dimension(:,:,:) :: gxx1,gyx1,gzx1,gxy1,gyy1,gzy1,gxz1,gyz1,gzz1
   real(mytype), save, allocatable, dimension(:,:,:) :: gxy2,gyy2,gzy2,gxz2,gyz2,gzz2
   real(mytype), save, allocatable, dimension(:,:,:) :: gxz3,gyz3,gzz3
   real(mytype), save, allocatable, dimension(:,:,:,:) :: sgsphi1,sgsphi2,sgsphi3
 
-  real(mytype), save, allocatable, dimension(:,:,:) :: srt_smag, srt_smag2, srt_wale, srt_wale2
+  real(mytype), save, allocatable, dimension(:,:,:) :: srt_smag, srt_smag2
+  real(mytype), save, allocatable, dimension(:,:,:) :: srt_wale, srt_wale2, srt_wale3, srt_wale4
 
 contains
 
@@ -145,8 +151,10 @@ contains
     call alloc_x(td1);call alloc_x(te1);call alloc_x(tf1)
     call alloc_x(tg1);call alloc_x(th1);call alloc_x(ti1)
     call alloc_x(di1);call alloc_x(ep1)
-    call alloc_x(mu1)
-    mu1(:,:,:) = one
+    if (ilmn) then
+      call alloc_x(mu1)
+      mu1(:,:,:) = one
+    endif
 
     allocate(pp1(nxmsize,xsize(2),xsize(3)))
     allocate(pgy1(nxmsize,xsize(2),xsize(3)))
@@ -236,7 +244,10 @@ contains
     allocate(dipp2(ph1%yst(1):ph1%yen(1),ysize(2),ysize(3)))
     allocate(upi2(ph1%yst(1):ph1%yen(1),nymsize,ysize(3)))
     allocate(duydypi2(ph1%yst(1):ph1%yen(1),nymsize,ysize(3)))
-
+    if (ilmn) then
+      call alloc_y(mu2)
+      mu2(:,:,:) = one
+    endif
     !Z PENCILS
     call alloc_z(ux3);call alloc_z(uy3);call alloc_z(uz3)
     call alloc_z(ta3);call alloc_z(tb3);call alloc_z(tc3)
@@ -251,7 +262,10 @@ contains
     allocate(duxydxyp3(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),zsize(3)))
     allocate(uzp3(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),zsize(3)))
     allocate(dipp3(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),zsize(3)))
-
+    if (ilmn) then
+      call alloc_z(mu3)
+      mu3(:,:,:) = one
+    endif
     ! if all periodic
     !   allocate (pp3(ph%zst(1):ph%zen(1),ph%zst(2):ph%zen(2),ph%zst(3):ph%zen(3)))
     !   allocate (dv3(ph%zst(1):ph%zen(1),ph%zst(2):ph%zen(2),ph%zst(3):ph%zen(3)))
@@ -264,14 +278,21 @@ contains
        call alloc_x(sgsx1);call alloc_x(sgsy1); call alloc_x(sgsz1)
        call alloc_x(sxx1);call alloc_x(syy1); call alloc_x(szz1)
        call alloc_x(sxy1);call alloc_x(sxz1); call alloc_x(syz1)
+       call alloc_x(sdxx1);call alloc_x(sdyy1); call alloc_x(sdzz1)
+       call alloc_x(sdxy1);call alloc_x(sdxz1); call alloc_x(sdyz1)
        call alloc_x(nut1);call alloc_x(srt_smag); call alloc_x(srt_wale)
        call alloc_y(sgsx2);call alloc_y(sgsy2); call alloc_y(sgsz2)
-       call alloc_y(sxx2) ;call alloc_y(syy2);  call alloc_y(szz2)
-       call alloc_y(sxy2) ;call alloc_y(sxz2);  call alloc_y(syz2)
-       call alloc_y(nut2) ;call alloc_y(srt_smag2); call alloc_y(srt_wale2)
+       call alloc_y(sxx2); call alloc_y(syy2);  call alloc_y(szz2)
+       call alloc_y(sxy2); call alloc_y(sxz2);  call alloc_y(syz2)
+       call alloc_y(sdxx2) ;call alloc_y(sdyy2);  call alloc_y(sdzz2)
+       call alloc_y(sdxy2) ;call alloc_y(sdxz2);  call alloc_y(sdyz2)
+       call alloc_y(nut2); call alloc_y(srt_smag2); call alloc_y(srt_wale2)
+       call alloc_y(srt_wale3); call alloc_y(srt_wale4)
        call alloc_z(sgsx3);call alloc_z(sgsy3); call alloc_z(sgsz3)
-       call alloc_z(sxx3) ;call alloc_z(syy3);  call alloc_z(szz3)
-       call alloc_z(sxy3) ;call alloc_z(sxz3);  call alloc_z(syz3)
+       call alloc_z(sxx3); call alloc_z(syy3);  call alloc_z(szz3)
+       call alloc_z(sxy3); call alloc_z(sxz3);  call alloc_z(syz3)
+       call alloc_z(sdxx3); call alloc_z(sdyy3);  call alloc_z(sdzz3)
+       call alloc_z(sdxy3); call alloc_z(sdxz3);  call alloc_z(sdyz3)
        call alloc_z(nut3)
        call alloc_x(gxx1); call alloc_x(gyx1); call alloc_x(gzx1); call alloc_x(gxy1)
        call alloc_x(gyy1); call alloc_x(gzy1); call alloc_x(gxz1); call alloc_x(gyz1); call alloc_x(gzz1)
@@ -367,9 +388,17 @@ contains
     !module mesh
     allocate(ppy(ny),pp2y(ny),pp4y(ny))
     allocate(ppyi(ny),pp2yi(ny),pp4yi(ny))
+    allocate(xp(nx),xpi(nx))
     allocate(yp(ny),ypi(ny),del(ny))
+    allocate(zp(nz),zpi(nz))
     allocate(yeta(ny),yetai(ny))
 
+    ! x-position
+    do i=1,nx
+      xp(i)=real(i-1,mytype)*dx
+      xpi(i)=(real(i,mytype)-half)*dx
+    enddo
+    ! y-position
     if (istret.eq.0) then
        do j=1,ny
           yp(j)=real(j-1,mytype)*dy
@@ -377,8 +406,21 @@ contains
        enddo
     else
        call stretching()
-    endif
 
+       allocate(dyp(ny))
+       ! compute dy for stretched mesh - Kay
+       do j=2,ny-1
+          dyp(j) = 0.5*(yp(j+1)-yp(j-1))
+       enddo
+       dyp(1)  = yp(2) -yp(1)
+       dyp(ny) = yp(ny)-yp(ny-1)
+    endif
+    ! z-position
+    do k=1,nz
+       zp(k)=real(k-1,mytype)*dz
+       zpi(k)=(real(k,mytype)-half)*dz
+    enddo
+    !
     adt(:)=zero ; bdt(:)=zero ; cdt(:)=zero ; gdt(:)=zero
     if (itimescheme.eq.1) then ! Euler
        iadvance_time=1

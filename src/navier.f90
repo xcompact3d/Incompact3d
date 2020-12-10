@@ -29,7 +29,6 @@
 !    problems with up to 0(10^5) computational cores, Int. J. of Numerical
 !    Methods in Fluids, vol 67 (11), pp 1735-1757
 !################################################################################
-
 module navier
 
   implicit none
@@ -39,15 +38,15 @@ module navier
   public :: solve_poisson, divergence, calc_divu_constraint
   public :: pre_correc, cor_vel
   public :: lmn_t_to_rho_trans, momentum_to_velocity, velocity_to_momentum
+  public :: gradp
 
 contains
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !############################################################################
   !!  SUBROUTINE: solve_poisson
   !!      AUTHOR: Paul Bartholomew
   !! DESCRIPTION: Takes the intermediate momentum field as input,
   !!              computes div and solves pressure-Poisson equation.
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !############################################################################
   SUBROUTINE solve_poisson(pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
 
     USE decomp_2d, ONLY : mytype, xsize, zsize, ph1
@@ -55,7 +54,8 @@ contains
     USE var, ONLY : nzmsize
     USE var, ONLY : dv3
     USE param, ONLY : ntime, nrhotime, npress
-    USE param, ONLY : ilmn, ivarcoeff
+    USE param, ONLY : ilmn, ivarcoeff, one
+
 
     IMPLICIT NONE
 
@@ -73,11 +73,12 @@ contains
     !! Locals
     INTEGER :: nlock, poissiter
     LOGICAL :: converged
-    REAL(mytype) :: atol, rtol
+    REAL(mytype) :: atol, rtol, rho0
 
     nlock = 1 !! Corresponds to computing div(u*)
     converged = .FALSE.
     poissiter = 0
+    rho0 = one
 
     atol = 1.0e-14_mytype !! Absolute tolerance for Poisson solver
     rtol = 1.0e-14_mytype !! Relative tolerance for Poisson solver
@@ -101,7 +102,7 @@ contains
 
           IF (.NOT.converged) THEN
              !! Evaluate additional RHS terms
-             CALL calc_varcoeff_rhs(pp3(:,:,:,1), rho1, px1, py1, pz1, dv3, drho1, ep1, divu3, &
+             CALL calc_varcoeff_rhs(pp3(:,:,:,1), rho1, px1, py1, pz1, dv3, drho1, ep1, divu3, rho0, &
                   poissiter)
           ENDIF
        ENDIF
@@ -130,8 +131,7 @@ contains
     ENDIF
 
   END SUBROUTINE solve_poisson
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !############################################################################
   !!
   !!  SUBROUTINE: lmn_t_to_rho_trans
   !! DESCRIPTION: Converts the temperature transient to the density transient
@@ -141,7 +141,7 @@ contains
   !!     OUTPUTS:  drho1 - the RHS of the density equation.
   !!      AUTHOR: Paul Bartholomew
   !!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !############################################################################
   SUBROUTINE lmn_t_to_rho_trans(drho1, dtemp1, rho1, dphi1, phi1)
 
     USE decomp_2d
@@ -179,7 +179,7 @@ contains
              ta1(:,:,:) = ta1(:,:,:) + phi1(:,:,:,is) / mol_weight(is)
           ENDIF
        ENDDO
-       drho1(:,:,:) = ta1(:,:,:) * drho1(:,:,:) !! XXX ta1 is the inverse molecular weight
+       drho1(:,:,:) = drho1(:,:,:) / ta1(:,:,:)  !! XXX ta1 is the inverse molecular weight
     ENDIF
 
     CALL calc_temp_eos(ta1, rho1, phi1, tb1, xsize(1), xsize(2), xsize(3))
@@ -188,15 +188,14 @@ contains
     drho1(:,:,:) = rho1(:,:,:) * drho1(:,:,:)
 
   ENDSUBROUTINE lmn_t_to_rho_trans
-
-  !********************************************************************
+  !############################################################################
   !subroutine COR_VEL
   !Correction of u* by the pressure gradient to get a divergence free
   !field
   ! input : px,py,pz
   ! output : ux,uy,uz
   !written by SL 2018
-  !********************************************************************
+  !############################################################################
   subroutine cor_vel (ux,uy,uz,px,py,pz)
 
     USE decomp_2d
@@ -214,13 +213,13 @@ contains
 
     return
   end subroutine cor_vel
-  !********************************************************************
+  !############################################################################
   !subroutine DIVERGENCe
   !Calculation of div u* for nlock=1 and of div u^{n+1} for nlock=2
   ! input : ux1,uy1,uz1,ep1 (on velocity mesh)
   ! output : pp3 (on pressure mesh)
   !written by SL 2018
-  !********************************************************************
+  !############################################################################
   subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
 
     USE param
@@ -334,9 +333,7 @@ contains
 
     return
   end subroutine divergence
-
-
-  !********************************************************************
+  !############################################################################
   !subroutine GRADP
   !Computation of the pressure gradient from the pressure mesh to the
   !velocity mesh
@@ -348,7 +345,7 @@ contains
   ! input: pp3 - pressure field (on pressure mesh)
   ! output: px1, py1, pz1 - pressure gradients (on velocity mesh)
   !written by SL 2018
-  !********************************************************************
+  !############################################################################
   subroutine gradp(px1,py1,pz1,pp3)
 
     USE param
@@ -357,6 +354,8 @@ contains
     USE MPI
     USE var, only: pp1,pgy1,pgz1,di1,pp2,ppi2,pgy2,pgz2,pgzi2,dip2,&
          pgz3,ppi3,dip3,nxmsize,nymsize,nzmsize
+
+    USE forces, only : iforces, ppi1
 
     implicit none
 
@@ -394,6 +393,11 @@ contains
          nxmsize,xsize(1),xsize(2),xsize(3),1)
     call interxpv(pz1,pgz1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
          nxmsize,xsize(1),xsize(2),xsize(3),1)
+
+    if (iforces.eq.1) then
+       call interxpv(ppi1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
+            nxmsize,xsize(1),xsize(2),xsize(3),1)
+    endif
 
     !we are in X pencils:
     if (nclx1.eq.2) then
@@ -457,7 +461,8 @@ contains
 
     return
   end subroutine gradp
-  !*******************************************************************
+  !############################################################################
+  !############################################################################
   subroutine pre_correc(ux,uy,uz,ep)
 
     USE decomp_2d
@@ -466,6 +471,7 @@ contains
     USE var
     USE MPI
     USE TBL, ONLY:tbl_flrt
+    use ibm, only : corgp_ibm, body
 
     implicit none
 
@@ -687,14 +693,14 @@ contains
 
     if (iibm==1) then !solid body old school
        call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,1)
-       call body(ux1,uy1,uz1,ep1,1)
+       call body(ux1,uy1,uz1,ep1)
        call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,2)
     endif
 
     return
   end subroutine pre_correc
-  !*******************************************************************
-
+  !############################################################################
+  !############################################################################
   !! Convert to/from conserved/primary variables
   SUBROUTINE primary_to_conserved(rho1, var1)
 
@@ -709,6 +715,8 @@ contains
     var1(:,:,:) = rho1(:,:,:,1) * var1(:,:,:)
 
   ENDSUBROUTINE primary_to_conserved
+  !############################################################################
+  !############################################################################
   SUBROUTINE velocity_to_momentum (rho1, ux1, uy1, uz1)
 
     USE decomp_2d, ONLY : mytype, xsize
@@ -729,6 +737,8 @@ contains
     CALL primary_to_conserved(rho1, uz1)
 
   ENDSUBROUTINE velocity_to_momentum
+  !############################################################################
+  !############################################################################
   SUBROUTINE conserved_to_primary(rho1, var1)
 
     USE decomp_2d, ONLY : mytype, xsize
@@ -742,6 +752,8 @@ contains
     var1(:,:,:) = var1(:,:,:) / rho1(:,:,:,1)
 
   ENDSUBROUTINE conserved_to_primary
+  !############################################################################
+  !############################################################################
   SUBROUTINE momentum_to_velocity (rho1, ux1, uy1, uz1)
 
     USE decomp_2d, ONLY : mytype, xsize
@@ -762,7 +774,8 @@ contains
     CALL conserved_to_primary(rho1, uz1)
 
   ENDSUBROUTINE momentum_to_velocity
-
+  !############################################################################
+  !############################################################################
   !! Calculate velocity-divergence constraint
   SUBROUTINE calc_divu_constraint(divu3, rho1, phi1)
 
@@ -987,14 +1000,13 @@ contains
     drhodt1_next(:,:,:) = drhodt1_next(:,:,:) - invpe * td1(:,:,:)
 
   ENDSUBROUTINE birman_drhodt_corr
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !############################################################################
   !!
   !!  SUBROUTINE: test_varcoeff
   !!      AUTHOR: Paul Bartholomew
   !! DESCRIPTION: Tests convergence of the variable-coefficient Poisson solver
   !!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !############################################################################
   SUBROUTINE test_varcoeff(converged, pp3, dv3, atol, rtol, poissiter)
 
     USE MPI
@@ -1058,15 +1070,14 @@ contains
     ENDIF
 
   ENDSUBROUTINE test_varcoeff
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !############################################################################
   !!
   !!  SUBROUTINE: calc_varcoeff_rhs
   !!      AUTHOR: Paul Bartholomew
   !! DESCRIPTION: Computes RHS of the variable-coefficient Poisson solver
   !!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE calc_varcoeff_rhs(pp3, rho1, px1, py1, pz1, dv3, drho1, ep1, divu3, poissiter)
+  !############################################################################
+  SUBROUTINE calc_varcoeff_rhs(pp3, rho1, px1, py1, pz1, dv3, drho1, ep1, divu3, rho0, poissiter)
 
     USE MPI
 
@@ -1088,6 +1099,7 @@ contains
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ep1
     REAL(mytype), INTENT(IN), DIMENSION(zsize(1), zsize(2), zsize(3)) :: divu3
     REAL(mytype), INTENT(IN), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: dv3
+    real(mytype) :: rho0
 
     !! OUTPUTS
     REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: pp3
@@ -1095,7 +1107,6 @@ contains
     !! LOCALS
     INTEGER :: nlock, ierr
     REAL(mytype) :: rhomin
-    REAL(mytype), SAVE :: rho0
 
     IF (poissiter.EQ.0) THEN
        !! Compute rho0
@@ -1116,5 +1127,5 @@ contains
     pp3(:,:,:) = pp3(:,:,:) + rho0 * dv3(:,:,:)
 
   ENDSUBROUTINE calc_varcoeff_rhs
-
+  !############################################################################
 endmodule navier

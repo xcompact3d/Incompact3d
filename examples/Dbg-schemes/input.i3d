@@ -56,8 +56,8 @@ iibm=0                ! Flag for immersed boundary method
 !====================
 
 ! Spatial derivatives
-ifirstder  = 4            ! (1->2nd central, 4-> 6th compact)
-isecondder = 4            ! (1->2nd central, 4-> 6th compact, 5->hyperviscous 6th)
+ifirstder  = 4            ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact)
+isecondder = 4            ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact, 5->hyperviscous 6th)
 
 ! Time scheme
 itimescheme = 2       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4)
@@ -103,7 +103,7 @@ Sc = 0.2              ! Schmidt number
 /End
 
 !================
-&TurbulenceModel
+&LESModel
 !================
 
 iles = 4              ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Smag, 4: iSVV, 5: dyn SEV)
@@ -115,12 +115,9 @@ iwall = 0             ! Enable wall modeling
 /End
 
 !================
-&TurbulenceWallModel
+&WallModel
 !================
 
 SmagWallDamp = 1      ! Smagorinsky damping function for ABL if 1
 
-/End
-
-&CASE
 /End
