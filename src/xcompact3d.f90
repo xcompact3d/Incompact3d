@@ -115,6 +115,8 @@ subroutine init_xcompact3d()
   use genepsi, only : genepsi3d, epsi_init
   use ibm, only : body
 
+  use probes, only : init_probes
+
   implicit none
 
   integer :: ierr
@@ -205,6 +207,7 @@ subroutine init_xcompact3d()
 
   call calc_divu_constraint(divu3, rho1, phi1)
 
+  call init_probes(ep1)
 
   if(nrank.eq.0)then
      open(42,file='time_evol.dat',form='formatted')

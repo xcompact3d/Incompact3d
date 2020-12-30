@@ -43,10 +43,6 @@ module tgv
   character(len=100) :: fileformat
   character(len=1),parameter :: NL=char(10) !new line character
 
-  !probes !só vai funcionar se a impressão for em relação ao lapis X!
-  integer :: nprobes
-  integer, save, allocatable, dimension(:) :: rankprobes, nxprobes, nyprobes, nzprobes
-
   PRIVATE ! All functions/subroutines private by default
   PUBLIC :: init_tgv, boundary_conditions_tgv, postprocess_tgv
 
@@ -209,7 +205,7 @@ contains
     USE MPI
 
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ep1
-    real(mytype) :: dxdydz, dxdz, x, xprobes, yprobes, zprobes
+    real(mytype) :: dxdydz
     integer :: i,j,k,code
     character :: a
 
