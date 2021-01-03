@@ -1028,6 +1028,11 @@ subroutine stretching()
         write(10,*)yp(j)
      enddo
      close(10)
+     open(10,file='ypi.dat', form='formatted')
+     do j=1,nym
+        write(10,*)ypi(j)
+     enddo
+     close(10)
   endif
 
 end subroutine stretching
