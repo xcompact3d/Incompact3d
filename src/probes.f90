@@ -35,7 +35,7 @@ contains
   subroutine init_probes(ep1)
 
     USE MPI
-    USE param, only : nclx, ncly, nclz, xlx, yly, zlz, istret, one, half
+    USE param, only : dx, dy, dz, nclx, ncly, nclz, xlx, yly, zlz, istret, one, half
     USE variables, only : nx, nxm, ny, yp, nym, ypi, nz, nzm
 
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ep1
@@ -103,9 +103,9 @@ contains
        ! 1 <= nxprobes(i) <= nx
        ! x = (nxprobes(i) - 1) * Lx / (nx-1)
        if (nclx) then
-          nxprobes(i) = int(nx*xprobes/xlx) + 1
+          nxprobes(i) = int(xprobes/dx) + 1
        else
-          nxprobes(i) = nint((nx-1)*xprobes/xlx) + 1
+          nxprobes(i) = nint(xprobes/dx) + 1
        endif
        ! 1 <= nxprobesP(i) <= nxm
        ! xp = (nxprobesP(i) - 1 + 0.5) * Lx / nxm
@@ -114,9 +114,9 @@ contains
        !y
        if (istret.eq.0) then
           if (ncly) then
-             nyprobes(i) = int(ny*yprobes/yly) + 1
+             nyprobes(i) = int(yprobes/dy) + 1
           else
-             nyprobes(i) = nint((ny-1)*yprobes/yly) + 1
+             nyprobes(i) = nint(yprobes/dy) + 1
           endif
           nyprobesP(i) = nint(nym*yprobes/yly-half) + 1
        else
@@ -147,9 +147,9 @@ contains
 
        !z
        if (nclz) then
-          nzprobes(i) = int(nz*zprobes/zlz) + 1
+          nzprobes(i) = int(zprobes/dz) + 1
        else
-          nzprobes(i) = nint((nz-1)*zprobes/zlz) + 1
+          nzprobes(i) = nint(zprobes/dz) + 1
        endif
        nzprobesP(i) = nint(nzm*zprobes/zlz-half) + 1
 
@@ -238,8 +238,8 @@ contains
 
   subroutine log_probes_position()
 
-    use param, only : nclx, nclz, xlx, zlz, half
-    use variables, only : nx, nxm, yp, ypi, nz, nzm
+    use param, only : xlx, zlz, dx, dz, half
+    use variables, only : nxm, yp, ypi, nzm
 
     integer :: iounit, i
     real(mytype) :: x, y, z, xpp, ypp, zpp
@@ -251,19 +251,11 @@ contains
     write(iounit, *) "# Probe Id, xvel, yvel, zvel, xp, yp, zp"
     write(iounit, *) "#"
     do i = 1, nprobes
-       if (nclx) then
-          x = real(nxprobes(i) - 1, mytype) * xlx / real(nx, mytype)
-       else
-          x = real(nxprobes(i) - 1, mytype) * xlx / real(nx - 1, mytype)
-       endif
+       x = real(nxprobes(i) - 1, mytype) * dx
        xpp = real(nxprobesP(i) - half, mytype) * xlx / real(nxm, mytype)
        y = yp(nyprobes(i))
        ypp = ypi(nyprobesP(i))
-       if (nclz) then
-          z = real(nzprobes(i) - 1, mytype) * zlz / real(nz, mytype)
-       else
-          z = real(nzprobes(i) - 1, mytype) * zlz / real(nz - 1, mytype)
-       endif
+       z = real(nzprobes(i) - 1, mytype) * dz
        zpp = real(nzprobesP(i) - half, mytype) * zlz / real(nzm, mytype)
        write(iounit, *) i, x, y, z, xpp, ypp, zpp
     enddo
