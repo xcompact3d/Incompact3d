@@ -242,8 +242,10 @@ subroutine prepare (b,c,f,s,w,n)
 
   implicit none
 
-  integer :: i,n
-  real(mytype), dimension(n) :: b,c,f,s,w
+  integer, intent(in) :: n
+  real(mytype), dimension(n), intent(in) :: b,c,f
+  real(mytype), dimension(n), intent(out) :: s,w
+  integer :: i
 
   do i=1,n
      w(i)=c(i)
