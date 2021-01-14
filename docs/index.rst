@@ -3,6 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+======================================
 Welcome to Xcompact3d's documentation!
 ======================================
 
@@ -21,7 +22,7 @@ To reach realistic Reynolds numbers, an implicit LES strategy can be implemented
 
 **More information about the parallel strategy of the code can be found in:**
 
-* Laizet, S., & Li, N. (2011). Incompact3d: A powerful tool to tackle turbulence problems with up to O (105) computational cores. International Journal for Numerical Methods in Fluids, 67(11), 1735-1757.
+* Laizet, S., & Li, N. (2011). Incompact3d: A powerful tool to tackle turbulence problems with up to O (10\ :sup:`5`\ ) computational cores. International Journal for Numerical Methods in Fluids, 67(11), 1735-1757.
 
 * Li, N., & Laizet, S. (2010, May). 2DECOMP & FFT-a highly scalable 2d decomposition library and FFT interface. In Cray User Group 2010 conference (pp. 1-13).
 
@@ -43,9 +44,8 @@ To reach realistic Reynolds numbers, an implicit LES strategy can be implemented
    :maxdepth: 2
    :caption: Contents:
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   pages/installation.rst
+   pages/tutorials.rst
+   pages/benchmark_cases.rst
+   pages/user_guide.rst
+   pages/methodology.rst
