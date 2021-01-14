@@ -5,4 +5,3 @@ sphinx-rtd-theme>=0.5
 sphinx-copybutton>=0.3
 pygments>=2.6
 sphinx-autobuild
-sphinxcontrib.gist
