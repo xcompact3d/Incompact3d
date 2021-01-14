@@ -257,6 +257,7 @@ contains
 
     USE decomp_2d
     USE decomp_2d_io
+    USE variables, only: nx,ny,nz
     USE MPI
     USE var, only: nut1, srt_smag 
     USE var, only : uvisu
@@ -265,10 +266,6 @@ contains
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1,ep1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-
-!    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,ep1,diss1
-!    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2
-!    real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
     real(mytype) :: mp(numscalar),mps(numscalar),vl,es,es1,ek,ek1,ds,ds1
     real(mytype) :: temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9
 
@@ -278,7 +275,40 @@ contains
     integer :: i,j,k,is,code,nvect1
     character(len=30) :: filename
 
-    if ((ivisu.ne.0).and.(mod(itime, ioutput).eq.0)) then
+    if (nclx1==1.and.xend(1)==nx) then
+       xsize1=xsize(1)-1
+    else
+       xsize1=xsize(1)
+    endif
+    if (ncly1==1.and.xend(2)==ny) then
+       xsize2=xsize(2)-1
+    else
+       xsize2=xsize(2)
+    endif
+    if (nclz1==1.and.xend(3)==nz) then
+       xsize3=xsize(3)-1
+    else
+       xsize3=xsize(3)
+    endif
+    if (nclx1==1) then
+       nxc=nxm
+    else
+       nxc=nx
+    endif
+    if (ncly1==1) then
+       nyc=nym
+    else
+       nyc=ny
+    endif
+    if (nclz1==1) then
+       nzc=nzm
+    else
+       nzc=nz
+    endif
+
+
+    !we only collect statistics every 10 time steps to save computational time
+    if (mod(itime, 10).eq.0) then
     !! Write vorticity as an example of post processing
     !x-derivatives
     call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
@@ -311,17 +341,67 @@ contains
     !du/dx=ta1 du/dy=td1 and du/dz=tg1
     !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
     !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
-    !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
-    di1=0.
-    di1(:,:,:)=-0.5*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2)-&
-        td1(:,:,:)*tb1(:,:,:)-&
-        tg1(:,:,:)*tc1(:,:,:)-&
-        th1(:,:,:)*tf1(:,:,:)
-    uvisu=0.
-    call fine_to_coarseV(1,di1,uvisu)
-    994 format('./data/critq',I5.5)
-    write(filename, 994) itime/ioutput
-    call decomp_2d_write_one(1,uvisu,filename,2)
+       if ((ivisu.ne.0).and.(mod(itime, ioutput).eq.0)) then
+       !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
+       di1=0.
+       di1(:,:,:)=-0.5*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2)-&
+           td1(:,:,:)*tb1(:,:,:)-&
+           tg1(:,:,:)*tc1(:,:,:)-&
+           th1(:,:,:)*tf1(:,:,:)
+       uvisu=0.
+       call fine_to_coarseV(1,di1,uvisu)
+       994 format('./data/critq',I5.5)
+       write(filename, 994) itime/ioutput
+       call decomp_2d_write_one(1,uvisu,filename,2)
+       endif
+
+      !SPATIALLY-AVERAGED ENSTROPHY
+      temp1=0.
+      do k=1,xsize3
+      do j=1,xsize2
+      do i=1,xsize1
+         temp1=temp1+0.5*((tf1(i,j,k)-th1(i,j,k))**2+&
+         (tg1(i,j,k)-tc1(i,j,k))**2+&
+         (tb1(i,j,k)-td1(i,j,k))**2)
+      enddo
+      enddo
+      enddo
+      call MPI_ALLREDUCE(temp1,enst,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+      enst=enst/(nxc*nyc*nzc)
+      
+      !SPATIALLY-AVERAGED ENERGY DISSIPATION
+      temp1=0.
+      do k=1,xsize3
+      do j=1,xsize2
+      do i=1,xsize1
+         temp1=temp1+half*xnu*((two*ta1(i,j,k))**two+(two*te1(i,j,k))**two+&
+         (two*ti1(i,j,k))**two+two*(td1(i,j,k)+tb1(i,j,k))**two+&
+         two*(tg1(i,j,k)+tc1(i,j,k))**two+&
+         two*(th1(i,j,k)+tf1(i,j,k))**two)
+         if(ilesmod.ne.0.and.jLES.gt.0) then
+            temp1=temp1+two*nut1(i,j,k)*srt_smag(i,j,k)
+         endif
+      enddo
+      enddo
+      enddo
+      call MPI_ALLREDUCE(temp1,eps,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+      eps=eps/(nxc*nyc*nzc)
+
+      !SPATIALLY-AVERAGED TKE of velocity fields
+       temp1=0.
+       do k=1,xsize3
+       do j=1,xsize2
+       do i=1,xsize1
+          temp1=temp1+0.5*((ux1(i,j,k))**2+(uy1(i,j,k))**2+(uz1(i,j,k))**2)
+       enddo
+       enddo
+       enddo
+       call MPI_ALLREDUCE(temp1,eek,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       eek=eek/(nxc*nyc*nzc)
+       if (nrank==0) then
+          write(42,'(20e20.12)') (itime-1)*dt,eek,eps,enst
+          call flush(42)
+       endif
     endif
 
   end subroutine postprocess_tgv
