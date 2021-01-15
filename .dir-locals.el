@@ -1,5 +1,6 @@
 ((nil . ((eval . (setq flycheck-fortran-gfortran-executable "mpif90"))
-	 (eval . (setq flycheck-gfortran-args "-fcray-pointer -cpp"))
+	 (eval . (setq flycheck-gfortran-args '("-fcray-pointer"
+						"-cpp")))
 	 ;; (eval . (setq flycheck-gfortran-include-path
 	 ;; 	       ;; Find this file and use it as the project root directory.
 	 ;; 	       (list (file-name-directory
