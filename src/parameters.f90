@@ -68,12 +68,14 @@ subroutine parameter(input_i3d)
        ivisu, ipost, &
        gravx, gravy, gravz, &
        icpg, icfr
-  NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, nu0nu, cnu, fpi2, ipinter
+  NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, iimplicit, &
+       nu0nu, cnu, fpi2, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu, iprocessing
   NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat
   NAMELIST /ScalarParam/ sc, ri, uset, cp, &
        nclxS1, nclxSn, nclyS1, nclySn, nclzS1, nclzSn, &
-       scalar_lbound, scalar_ubound, sc_even, sc_skew
+       scalar_lbound, scalar_ubound, sc_even, sc_skew, &
+       alpha_sc, beta_sc, g_sc
   NAMELIST /LESModel/ jles, smagcst, walecst, maxdsmagcst, iwall
   NAMELIST /WallModel/ smagwalldamp
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
@@ -138,6 +140,15 @@ subroutine parameter(input_i3d)
      ri(:) = zero
      uset(:) = zero
      cp(:) = zero
+     if (iimplicit.gt.0) then
+        allocate(xcst_sc(numscalar))
+        xcst_sc(:) = zero
+        allocate(alpha_sc(numscalar,2), beta_sc(numscalar,2), g_sc(numscalar,2))
+        ! Default scalar BC : dirichlet BC, zero value
+        alpha_sc = one
+        beta_sc = zero
+        g_sc = zero
+     endif
 
      ! In case of symmetry, scalars are even by default
      allocate(sc_even(numscalar))
@@ -243,6 +254,25 @@ subroutine parameter(input_i3d)
      endif
   endif
 
+  if (iimplicit.ne.0) then
+     if ((itimescheme.eq.5).or.(itimescheme.eq.6)) then
+        print *,'Error: implicit Y diffusion not yet compatible with RK time schemes'
+        stop
+     endif
+     if (isecondder.eq.5) then
+        print *, "Warning : support for implicit Y diffusion and isecondder=5 is experimental"
+     endif
+     if (iimplicit.eq.1) then
+        xcst = dt * xnu
+     else if (iimplicit.eq.2) then
+        xcst = dt * xnu * half
+     else
+        print *, 'Error: wrong value for iimplicit ', iimplicit
+        stop
+     endif
+     if (iscalar.eq.1) xcst_sc = xcst / sc
+  endif
+
   if (itype.eq.itype_tbl.and.A_tr .gt. 0.0)  print *, "TBL tripping is active"
 
 #ifdef DOUBLE_PREC
@@ -328,15 +358,17 @@ subroutine parameter(input_i3d)
        write(*,"(' Temporal scheme        : ',A20)") "Runge-kutta 4"
        print *,'Error: Runge-kutta 4 not implemented!'
        stop
-     elseif (itimescheme.eq.7) then
-       !print *,'Temporal scheme        : Semi-implicit'
-       write(*,"(' Temporal scheme        : ',A20)") "Semi-implict CN+AB3"
-     elseif (itimescheme.eq.8) then
-       !print *,'Temporal scheme        : Semi-implicit'
-       write(*,"(' Temporal scheme        : ',A20)") "Semi-implict CN+RK3"
      else
-       print *,'Error: itimescheme must be specified as 1-7'
+       print *,'Error: itimescheme must be specified as 1-6'
        stop
+     endif
+     !
+     if (iimplicit.ne.0) then
+       if (iimplicit.eq.1) then
+         write(*,"('                          ',A40)") "With backward Euler for Y diffusion"
+       else if (iimplicit.eq.2) then
+         write(*,"('                          ',A40)") "With CN for Y diffusion"
+       endif
      endif
      !
      if (ilesmod.ne.0) then
@@ -512,6 +544,7 @@ subroutine parameter_defaults()
   inflow_noise = zero
   iin = 0
   itimescheme = 4
+  iimplicit = 0
   istret = 0
   ipinter=3
   beta = 0

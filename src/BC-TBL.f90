@@ -42,12 +42,6 @@ module tbl
   character(len=100) :: fileformat
   character(len=1),parameter :: NL=char(10) !new line character
 
-  !probes
-  integer, save :: nprobes, ntimes1, ntimes2
-  integer, save, allocatable, dimension(:) :: rankprobes, nxprobes, nyprobes, nzprobes
-
-  real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
-
   PRIVATE ! All functions/subroutines private by default
   PUBLIC :: init_tbl, boundary_conditions_tbl, postprocess_tbl, tbl_flrt
 

@@ -45,7 +45,7 @@ contains
 
     use decomp_2d, only : mytype, xsize, zsize
     use variables, only : numscalar
-    use param, only : ntime, ilmn, nrhotime, ilmn_solve_temp,itimescheme
+    use param, only : ntime, ilmn, nrhotime, ilmn_solve_temp
 
     implicit none
 
@@ -66,9 +66,7 @@ contains
 
     !! Scalar equations
     !! XXX Not yet LMN!!!
-    if (itimescheme.ne.7) then
-       call scalar(dphi1, rho1, ux1, uy1, uz1, phi1)
-    endif
+    call scalar(dphi1, rho1, ux1, uy1, uz1, phi1)
 
     !! Other (LMN, ...)
     if (ilmn) THEN
@@ -288,7 +286,7 @@ contains
     ti2(:,:,:) = tf2(:,:,:) - half * ti2(:,:,:)
 
     !DIFFUSIVE TERMS IN Y
-    if (itimescheme.ne.7) then
+    if (iimplicit.le.0) then
        !-->for ux
        call deryy (td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
        if (istret.ne.0) then
@@ -327,7 +325,7 @@ contains
              enddo
           enddo
        endif
-    else !Semi-implicit
+    else ! (semi)implicit Y diffusion
        if (istret.ne.0) then
 
           !-->for ux
@@ -358,6 +356,12 @@ contains
              enddo
           enddo
 
+       else
+       
+          td2(:,:,:) = zero
+          te2(:,:,:) = zero
+          tf2(:,:,:) = zero
+          
        endif
     endif
 
@@ -759,7 +763,12 @@ contains
     else
       tb1(:,:,:) = ux1(:,:,:) * tb1(:,:,:)
     endif
-    if (skewsc) tb1(:,:,:) = tb1(:,:,:) + half * (tc1(:,:,:) - tb1(:,:,:))
+    if (skewsc) then
+      ! (1 - 0.5) * ux.dTdx + 0.5 * (d(ux.T)dx - T.duxdx)
+      tb1(:,:,:) = tb1(:,:,:) + half * (tc1(:,:,:) - tb1(:,:,:))
+      call derx (tc1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+      tb1(:,:,:) = tb1(:,:,:) - half * tc1(:,:,:) * phi1(:,:,:)
+    endif
 
     if (evensc) then
       call derxxS (ta1,phi1(:,:,:),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1)
@@ -774,25 +783,50 @@ contains
 
     !Y PENCILS
     if (skewsc) tb2(:,:,:) = uy2(:,:,:) * td2(:,:,:)
-    if (evensc) then
-      call deryS (tc2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
-      if (skewsc) call deryS (te2,tb2,di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0)
-      call deryyS (ta2,td2(:,:,:),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
-    else
-      call deryS (tc2,td2(:,:,:),di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0)
-      if (skewsc) call deryS (te2,tb2,di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
-      call deryyS (ta2,td2(:,:,:),di2,sy,sfyS,ssyS,swyS,ysize(1),ysize(2),ysize(3),0)
-    endif
+    ! Explicit viscous diffusion
+    if (iimplicit.le.0) then
+      if (evensc) then
+        call deryS (tc2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
+        if (skewsc) call deryS (te2,tb2,di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0)
+        call deryyS (ta2,td2(:,:,:),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
+      else
+        call deryS (tc2,td2(:,:,:),di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0)
+        if (skewsc) call deryS (te2,tb2,di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
+        call deryyS (ta2,td2(:,:,:),di2,sy,sfyS,ssyS,swyS,ysize(1),ysize(2),ysize(3),0)
+      endif
 
-    if (istret.ne.0) then
-       !call deryS (tc2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
-       do k = 1,ysize(3)
-          do j = 1,ysize(2)
-             do i = 1,ysize(1)
-                ta2(i,j,k) = ta2(i,j,k)*pp2y(j)-pp4y(j)*tc2(i,j,k)
-             enddo
-          enddo
-       enddo
+      if (istret.ne.0) then
+         do k = 1,ysize(3)
+            do j = 1,ysize(2)
+               do i = 1,ysize(1)
+                  ta2(i,j,k) = ta2(i,j,k)*pp2y(j)-pp4y(j)*tc2(i,j,k)
+               enddo
+            enddo
+         enddo
+      endif
+
+    ! (semi)implicit Y viscous diffusion
+    else
+      if (evensc) then
+        call deryS (tc2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
+        if (skewsc) call deryS (te2,tb2,di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0)
+      else      
+        call deryS (tc2,td2(:,:,:),di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0)
+        if (skewsc) call deryS (te2,tb2,di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
+      endif                                                                             
+       
+      if (istret.ne.0) then
+         do k = 1,ysize(3)                                                              
+            do j = 1,ysize(2)
+               do i = 1,ysize(1)
+                  ta2(i,j,k) = -pp4y(j)*tc2(i,j,k)                    
+               enddo
+            enddo
+         enddo
+      else
+         ta2(:,:,:) = zero
+      endif     
+
     endif
 
     if (ilmn) then
@@ -801,7 +835,12 @@ contains
     else
        tb2(:,:,:) = uy2(:,:,:) * tc2(:,:,:)
     endif
-    if (skewsc) tb2(:,:,:) = tb2(:,:,:) + half * (te2(:,:,:) - tb2(:,:,:))
+    if (skewsc) then
+      ! (1-0.5) * uy.dTdy + 0.5 * (d(uy.T)dy - T.duydy)
+      tb2(:,:,:) = tb2(:,:,:) + half * (te2(:,:,:) - tb2(:,:,:))
+      call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+      tb2(:,:,:) = tb2(:,:,:) - half * te2(:,:,:) * td2(:,:,:)
+    endif
 
     ! Add convective and diffusive scalar terms of y-pencil
     tc2(:,:,:) = xalpha*ta2(:,:,:) - tb2(:,:,:)
@@ -825,7 +864,12 @@ contains
     else
       tb3(:,:,:) = uz3(:,:,:) * tb3(:,:,:)
     endif
-    if (skewsc) tb3(:,:,:) = tb3(:,:,:) + half * (tc3(:,:,:) - tb3(:,:,:))
+    if (skewsc) then
+      ! (1-0.5) * uz.dTdz + 0.5 * (d(uz.T)dz - T.duzdz)
+      tb3(:,:,:) = tb3(:,:,:) + half * (tc3(:,:,:) - tb3(:,:,:))
+      call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+      tb3(:,:,:) = tb3(:,:,:) - half * tc3(:,:,:) * td3(:,:,:)
+    endif
 
     ! diffusive terms
     if (evensc) then
@@ -988,6 +1032,7 @@ contains
     use decomp_2d, only : transpose_z_to_y, transpose_y_to_x
     use param, only : ntime, nrhotime, ibirman_eos
     use param, only : xnu, prandtl
+    use param, only : iimplicit
     use variables
 
     use var, only : ta1, tb1, di1
@@ -1024,7 +1069,9 @@ contains
        call derzz (ta3,rho3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
        call transpose_z_to_y(ta3, tb2)
 
+       iimplicit = -iimplicit
        call deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+       iimplicit = -iimplicit
        ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
        call transpose_y_to_x(ta2, ta1)
 

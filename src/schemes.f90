@@ -42,6 +42,7 @@ subroutine schemes()
   USE derivZ
   USE variables
   USE var
+  USE ydiff_implicit, only : init_implicit, implicit_schemes
 
   implicit none
 
@@ -218,7 +219,8 @@ subroutine schemes()
        cwi6z,cifi6z,cici6z,cibi6z,cifip6z,&
        cisip6z,ciwip6z,cisi6z,ciwi6z)
 
-  if (itimescheme.eq.7) then
+  if (iimplicit.ne.0) then
+     call init_implicit()
      call implicit_schemes()
   endif
 
@@ -240,8 +242,10 @@ subroutine prepare (b,c,f,s,w,n)
 
   implicit none
 
-  integer :: i,n
-  real(mytype), dimension(n) :: b,c,f,s,w
+  integer, intent(in) :: n
+  real(mytype), dimension(n), intent(in) :: b,c,f
+  real(mytype), dimension(n), intent(out) :: s,w
+  integer :: i
 
   do i=1,n
      w(i)=c(i)

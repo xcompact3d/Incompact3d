@@ -224,6 +224,8 @@ contains
     use var, only : itime
     use var, only : numscalar, nrhotime, npress
 
+    use probes, only : write_probes
+
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux1, uy1, uz1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(in) :: phi1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime), intent(in) :: rho1
@@ -236,6 +238,8 @@ contains
 
     call postprocess_case(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
     call overall_statistic(ux1, uy1, uz1, phi1, pp3, ep1)
+
+    call write_probes(ux1, uy1, uz1, pp3, phi1)
     
   end subroutine postprocessing
   !##################################################################

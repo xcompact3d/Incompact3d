@@ -38,8 +38,6 @@ module dbg_schemes
 
   IMPLICIT NONE
 
-  integer :: nprobes
-
   PRIVATE ! All functions/subroutines private by default
   PUBLIC :: init_dbg, boundary_conditions_dbg, postprocess_dbg
 
@@ -246,8 +244,10 @@ contains
     enddo
     call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0)
     call dery (dfdyp2,fyp2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    iimplicit = -iimplicit
     call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0)
     call deryy (dfdyyp2,fyp2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+    iimplicit = -iimplicit
     if (nrank.eq.0) then
        write(filename,"('schemes_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
        open(67,file=trim(filename),status='unknown',form='formatted')
@@ -480,7 +480,9 @@ contains
        enddo
     enddo
     call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0)
+    iimplicit = -iimplicit
     call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0)
+    iimplicit = -iimplicit
     if (nrank.eq.0) then
        write(filename,"('schemes_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
        open(67,file=trim(filename),status='unknown',form='formatted')
@@ -638,8 +640,10 @@ contains
     enddo
     call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0)
     call dery (dfdyp2,fyp2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    iimplicit = -iimplicit
     call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0)
     call deryy (dfdyyp2,fyp2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+    iimplicit = -iimplicit
     if (nrank.eq.0) then
        write(filename,"('schemes_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
        open(67,file=trim(filename),status='unknown',form='formatted')
@@ -805,8 +809,10 @@ contains
     enddo
     call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0)
     call dery (dfdyp2,fyp2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    iimplicit = -iimplicit
     call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0)
     call deryy (dfdyyp2,fyp2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+    iimplicit = -iimplicit
     if (nrank.eq.0) then
        write(filename,"('schemes_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
        open(67,file=trim(filename),status='unknown',form='formatted')
@@ -1030,7 +1036,9 @@ contains
        enddo
     enddo
     call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0)
+    iimplicit = -iimplicit
     call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0)
+    iimplicit = -iimplicit
     if (nrank.eq.0) then
        write(filename,"('schemes_y',I1.1,I1.1,I1.1,I4.4)") jLES,ncly1,nclyn,ny
        open(67,file=trim(filename),status='unknown',form='formatted')
@@ -1203,12 +1211,5 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
 
   end subroutine postprocess_dbg
-
-  subroutine write_probes(ux1,uy1,uz1,phi1)
-
-    real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ux1, uy1, uz1
-    real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),numscalar) :: phi1
-
-  end subroutine write_probes
 
 end module dbg_schemes
