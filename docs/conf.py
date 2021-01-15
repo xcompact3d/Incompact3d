@@ -47,6 +47,7 @@ extensions = [
     "sphinx_copybutton",
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
+    "sphinx.ext.autosectionlabel",
 ]
 
 intersphinx_mapping = {

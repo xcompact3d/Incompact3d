@@ -1,5 +1,5 @@
 # xcompact3d_developers
-Developers repository for xcompact3d 
+Developers repository for xcompact3d
 =======
 <a name="logo"/>
 <div align="center">
@@ -8,7 +8,9 @@ Developers repository for xcompact3d
 </a>
 </div>
 
-Linux [![Build Status](https://travis-ci.org/xcompact3d/Incompact3d.svg?branch=master)](https://travis-ci.org/xcompact3d/Incompact3d)
+[![Build Status](https://travis-ci.org/xcompact3d/Incompact3d.svg?branch=master)](https://travis-ci.org/xcompact3d/Incompact3d)
+![Build Status](https://github.com/xcompact3d/Incompact3d/workflows/Build/badge.svg)
+[![Documentation Status](https://readthedocs.org/projects/xcompact3d/badge/?version=latest)](https://xcompact3d.readthedocs.io/en/latest/?badge=latest)
 
 ## The Incompact3d code
 
@@ -35,7 +37,7 @@ New users and developers are welcome to join.
 
 - [**Twitter**](https://twitter.com/incompact3d)
 
-### Main improvements/changes ### 
+### Main improvements/changes ###
 
 - [**Wiki**](https://github.com/xcompact3d/Incompact3d/wiki/New-Features)
 
@@ -54,7 +56,7 @@ We estabilished a solid and easy way to run a range of benchmark test cases to v
 
 
 ## New compiling FLAGS
-If the flags are not specified in the Makefile, the compile ignore the sections related to each flag. For example, if you do not need IBM in your simulation, do not compile the code with -DIBM, 
+If the flags are not specified in the Makefile, the compile ignore the sections related to each flag. For example, if you do not need IBM in your simulation, do not compile the code with -DIBM,
 
    -DDOUBLE_PREC - use double-precision
    -DSAVE_SINGLE - save 3D data in single-precision
@@ -85,15 +87,15 @@ Then, acquire the source code by cloning the git repository:
 
 Be sure to also configure your system to use the appropriate proxy settings, e.g. by setting the `https_proxy` and `http_proxy` variables.)
 
-By default you will be building the latest unstable version of Incompact3d. However, most users should use the most recent stable version of Incompact3d, which is currently the `2.0` series of releases. You can get this version by changing to the Incompact3d directory and running
+By default you will be building the latest unstable version of Incompact3d. However, most users should use the most recent stable version of Incompact3d, which is currently the `3.0` series of releases. You can get this version by changing to the Incompact3d directory and running
 
-    git checkout v2.0.1
+    git checkout v3.0
 
 Now run `make` to build the `Incompact3d` executable. To perform a parallel build, use `make -j N` and supply the maximum number of concurrent processes. (See [Platform Specific Build Notes] for details.)
 This takes a while, but only has to be done once. If the defaults in the build do not work for you, and you need to set specific make parameters, you can save them in `Make.user`. The build will automatically check for the existence of `Makefile` and use it if it exists.
 Building Incompact3d requires very little of disk space and virtual memory.
 
-**Note:** The compiling process 
+**Note:** The compiling process
 
 Once it is built, you can run the `Incompact3d` executable using its full path in the directory created above (the `Incompact3d` directory).
 
@@ -175,7 +177,7 @@ After installation, for a 64-bit architecture, the environment should be set up 
 
     # bash
     source /path/to/intel/bin/compilervars.sh intel64
-        
+
 You also need to activate the shared memory copy [LMT mechanism](https://software.intel.com/en-us/mpi-developer-reference-linux-shared-memory-control)
 
     export I_MPI_SHM_LMT=shm
@@ -187,9 +189,9 @@ If you eish to compile the code with Intel Compiler use:
       IVER = 17# 15,16,17,18
       CMP = intel
       FFT = mkl
-      
- If you have a non-standard installation the supercomputer you're using, you have to edit and create a custom flag. 
-      
+
+ If you have a non-standard installation the supercomputer you're using, you have to edit and create a custom flag.
+
 ## GitHub Configuration
 
 To add you SSH key to your GitHub account please follow the steps https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/ or just copy the content of the id_rsa.pub file to your clipboard, go to Personal settings and add a new SSH key:
