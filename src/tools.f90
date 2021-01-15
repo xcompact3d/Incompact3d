@@ -189,20 +189,20 @@ contains
        call cpu_time(trank); ttotal=trank-tstart
        if (nrank==0) then
           print *,'==========================================================='
-          print *,''
+          print *, ' '
           print *,'Good job! Xcompact3d finished successfully!'
-          print *,''
+          print *, ' '
           print *,'2DECOMP with p_row*p_col=',p_row,p_col
-          print *,''
+          print *, ' '
           print *,'nx*ny*nz=',nx*ny*nz
           print *,'nx,ny,nz=',nx,ny,nz
           print *,'dx,dy,dz=',dx,dy,dz
-          print *,''
+          print *, ' '
           print *,'Averaged time per step (s):',real(ttotal/(ilast-(ifirst-1)),4)
           print *,'Total wallclock (s):',real(ttotal,4)
           print *,'Total wallclock (m):',real(ttotal/sixty,4)
           print *,'Total wallclock (h):',real(ttotal/thirtysixthousand,4)
-          print *,''
+          print *, ' '
        endif
     endif
 
