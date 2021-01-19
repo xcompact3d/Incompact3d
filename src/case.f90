@@ -245,13 +245,16 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: T
 
     T=0.
+    !P=0.
     ! Recover temperature and pressure when decomposed
     if (itype.eq.itype_abl.and.ibuoyancy.eq.1) then
       do j=1,xsize(2) 
         T(:,j,:,1)=phi1(:,j,:,1)+Tstat(j,1)
+        !P = pp3 - gravv*y*(1.+0.5*(T_wall-Tstat(j,1))/T_wall)
       enddo
     else
       T=phi1
+      !P=pp3
     endif
 
     if ((ivisu.ne.zero).and.(mod(itime, ioutput).eq.0)) then
