@@ -67,7 +67,8 @@ subroutine parameter(input_i3d)
        nclx1, nclxn, ncly1, nclyn, nclz1, nclzn, &
        ivisu, ipost, &
        gravx, gravy, gravz, &
-       icpg, icfr
+       icpg, icfr, &
+       ifilter, C_filter
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, iimplicit, &
        nu0nu, cnu, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu, iprocessing
@@ -75,8 +76,8 @@ subroutine parameter(input_i3d)
   NAMELIST /ScalarParam/ sc, ri, uset, cp, &
        nclxS1, nclxSn, nclyS1, nclySn, nclzS1, nclzSn, &
        scalar_lbound, scalar_ubound, sc_even, sc_skew, &
-       alpha_sc, beta_sc, g_sc
-  NAMELIST /LESModel/ jles, smagcst, walecst, maxdsmagcst, iwall
+       alpha_sc, beta_sc, g_sc, Tref
+  NAMELIST /LESModel/ jles, smagcst, smagwalldamp, nSmag, walecst, maxdsmagcst, iwall
   NAMELIST /WallModel/ smagwalldamp
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
   NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf,nvol,iforces
@@ -84,6 +85,9 @@ subroutine parameter(input_i3d)
   NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, &
        massfrac, mol_weight, imultispecies, primary_species, &
        Fr, ibirman_eos
+  NAMELIST /ABL/ z_zero, iwallmodel, k_roughness, ustar, dBL, &
+       imassconserve, ibuoyancy, iPressureGradient, iCoriolis, CoriolisFreq, &
+       istrat, idamping, iheight, initsbl, TempRate, TempFlux, itherm, gravv, UG 
   NAMELIST /CASE/ tgv_twod, pfront
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter start'
@@ -201,6 +205,9 @@ subroutine parameter(input_i3d)
   if (itype.eq.itype_tbl) then
      read(10, nml=Tripping); rewind(10)
   endif
+  if (itype.eq.itype_abl) then
+     read(10, nml=ABL); rewind(10)
+  endif
   ! read(10, nml=TurbulenceWallModel)
   read(10, nml=CASE); rewind(10) !! Read case-specific variables
   close(10)
@@ -312,6 +319,8 @@ subroutine parameter(input_i3d)
         print *,'Jet'
      elseif (itype.eq.itype_tbl) then
         print *,'Turbulent boundary layer'
+     elseif (itype.eq.itype_abl) then
+        print *,'Atmospheric boundary layer'
      else
         print *,'Unknown itype: ', itype
         stop
@@ -555,6 +564,10 @@ subroutine parameter_defaults()
   t0 = zero
   datapath = './data/'
 
+  !! LES stuff
+  SmagWallDamp=0
+  nSmag=1
+
   !! IBM stuff
   nraf = 0
   nobjmax = 0
@@ -590,6 +603,24 @@ subroutine parameter_defaults()
   !! Channel
   icpg = 0
   icfr = 1
+
+  !! ABL
+  z_zero=0.1
+  k_roughness=0.4
+  ustar=0.45
+  dBL=250
+  iPressureGradient=1
+  iwallmodel=0
+  imassconserve=0
+  ibuoyancy=1
+  initsbl=1
+  iheight=1
+  itherm=1
+  idamping=0
+  gravv=9.81
+  TempRate=-0.25/3600
+  TempFlux=0.24
+  UG=[0d0,0d0,0d0]
 
   !! IO
   ivisu = 1

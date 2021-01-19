@@ -66,6 +66,10 @@ contains
        if(jles==1) then
           write(*, *) ' Classic Smagorinsky is used ... '
           write(*, *) ' Smagorinsky constant = ', smagcst
+          if (itype==itype_abl) then
+             write(*,*) ' with Mason and Thomson damping function ... '
+             write(*,*) ' n = ', nSmag
+          endif
        else if (jles==2) then
           write(*, *) ' WALE SGS model is used ... '
           write(*, *) ' Max value for the WALE constant  = ', walecst
@@ -81,7 +85,7 @@ contains
 
   end subroutine init_explicit_les
   !************************************************************
-  subroutine Compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,ep1,iconservative)
+  subroutine Compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,phi1,ep1,iconservative)
     !================================================================================
     !
     !  SUBROUTINE: Compute_SGS
@@ -96,15 +100,17 @@ contains
     USE decomp_2d
     USE decomp_2d_io
     use var, only: nut1
+    USE abl, only: wall_sgs
     implicit none
 
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, ep1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sgsx1, sgsy1, sgsz1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: wallfluxx1, wallfluxy1, wallfluxz1
     integer :: iconservative
 
     ! Calculate eddy-viscosity
     if(jles.eq.1) then ! Smagorinsky
-
        call smag(nut1,ux1,uy1,uz1)
 
     elseif(jles.eq.2) then ! Wall-adapting local eddy-viscosity (WALE) model
@@ -124,6 +130,16 @@ contains
 
        ! Call les_conservative
 
+    endif
+
+    ! SGS correction for ABL
+    if(itype.eq.itype_abl) then
+       call wall_sgs(ux1,uy1,uz1,phi1,nut1,wallfluxx1,wallfluxy1,wallfluxz1)
+       if (xstart(2)==1) then
+          sgsx1(:,1,:) = wallfluxx1(:,1,:)
+          sgsy1(:,1,:) = wallfluxy1(:,1,:)
+          sgsz1(:,1,:) = wallfluxz1(:,1,:)
+       endif
     endif
 
     return
@@ -158,6 +174,7 @@ contains
 
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1
+    real(mytype) :: smag_constant, y, length
 
     integer :: i, j, k
     character(len = 30) :: filename
@@ -232,7 +249,17 @@ contains
     do k = 1, ysize(3)
        do j = 1, ysize(2)
           do i = 1, ysize(1)
-             nut2(i, j, k) = ((smagcst * del(j))**two) * sqrt(two * srt_smag2(i, j, k))
+             if(itype.eq.itype_abl) then
+                !Mason and Thomson damping coefficient
+                if (istret.eq.0) y=(j+ystart(2)-1-1)*dy
+                if (istret.ne.0) y=yp(j+ystart(2)-1)
+                smag_constant=(smagcst**(-nSmag)+(k_roughness*(y/del(j)+z_zero/del(j)))**(-nSmag))**(-1./nSmag)
+                length=smag_constant*del(j)
+             else
+                length=smagcst*del(j)
+             endif
+             !Calculate eddy visc nu_t
+             nut2(i, j, k) = ((length)**two) * sqrt(two * srt_smag2(i, j, k))
           enddo
        enddo
     enddo
@@ -1145,54 +1172,67 @@ end subroutine wale
   end subroutine sgs_mom_nonconservative
 
   !************************************************************
-  subroutine sgs_scalar_nonconservative(sgsphi1,kappat1,phi1)
+  subroutine sgs_scalar_nonconservative(sgsphi1,nut1,phi1)
 
     USE param
     USE variables
     USE decomp_2d
 
-    USE var, only: di1,tb1,di2,tb2,di3,tb3
-    !USE var, only : dkappat1 => tb1
+    USE var, only: di1,tb1,di2,tb2,di3,tb3,tc1,tc2,tc3
+    USE abl, only: wall_sgs_scalar
 
     implicit none
 
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: sgsphi1, phi1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: dphidy1
     real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: phi2, sgsphi2
     real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: phi3, sgsphi3
 
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: kappat1, dkappat1
-    real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: kappat2, dkappat2
-    real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: kappat3, dkappat3
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1, dnut1
+    real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: nut2, dnut2
+    real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: nut3, dnut3
 
+    real(mytype) :: Pr
     integer :: is
 
     sgsphi1 = zero; sgsphi2 = zero; sgsphi3 = zero
 
-    call derxS (dkappat1, kappat1, di1, sx, ffxpS, fsxpS, fwxpS, xsize(1), xsize(2), xsize(3), 1)
-    call transpose_x_to_y(kappat1, kappat2)
-    call deryS (dkappat2, kappat2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1)
-    call transpose_y_to_z(kappat2, kappat3)
-    call derzS (dkappat3, kappat3, di3, sz, ffzpS, fszpS, fwzpS, zsize(1), zsize(2), zsize(3), 1)
+    call derxS (dnut1, nut1, di1, sx, ffxpS, fsxpS, fwxpS, xsize(1), xsize(2), xsize(3), 1)
+    call transpose_x_to_y(nut1, nut2)
+    call deryS (dnut2, nut2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1)
+    call transpose_y_to_z(nut2, nut3)
+    call derzS (dnut3, nut3, di3, sz, ffzpS, fszpS, fwzpS, zsize(1), zsize(2), zsize(3), 1)
 
     do is = 1, numscalar
+       ! kappat = nut/Pr
+       Pr = Sc(is)
 
        call derxS (tb1, phi1(:, :, :, is), di1, sx, ffxpS, fsxpS, fwxpS, xsize(1), xsize(2), xsize(3), 1)
-       sgsphi1(:, :, :, is) = tb1 * dkappat1 !d(phi)/dx * d(kappa_t)/dx
+       call derxxS(tc1, phi1(:, :, :, is), di1, sx, sfxpS, ssxpS, swxpS, xsize(1), xsize(2), xsize(3), 1)
+       sgsphi1(:, :, :, is) = tb1 * (dnut1/Pr) + tc1 * (nut1/Pr)
 
        call transpose_x_to_y(phi1(:, :, :, is), phi2)
        call transpose_x_to_y(sgsphi1(:, :, :, is),sgsphi2)
 
        call deryS (tb2, phi2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1)
-       sgsphi2 = sgsphi2 + tb2 * dkappat2 !d(phi)/dy * d(kappa_t)/dy
+       call deryyS(tc2, phi2, di2, sy, sfypS, ssypS, swypS, ysize(1), ysize(2), ysize(3), 1)
+       sgsphi2 = sgsphi2 + tb2 * (dnut2/Pr) + tc2 * (nut2/Pr)
 
        call transpose_y_to_z(phi2, phi3)
        call transpose_y_to_z(sgsphi2, sgsphi3)
 
        call derzS (tb3, phi3, di3, sz, ffzpS, fszpS, fwzpS, zsize(1), zsize(2), zsize(3), 1)
-       sgsphi3 = sgsphi3 + tb3 * dkappat3 !d(phi)/dz * d(kappa_t)/dz
+       call derzzS(tc3, phi3, di3, sz, sfzpS, sszpS, swzpS, zsize(1), zsize(2), zsize(3), 1)
+       sgsphi3 = sgsphi3 + tb3 * (dnut3/Pr) + tc3 * (nut3/Pr)
 
        call transpose_z_to_y(sgsphi3, sgsphi2)
        call transpose_y_to_x(sgsphi2, sgsphi1(:, :, :, is))
+
+       ! SGS correction for ABL
+       if (itype.eq.itype_abl.and.is==1) then
+          call transpose_y_to_x(tb2,dphidy1)
+          call wall_sgs_scalar(sgsphi1,nut1,dphidy1)
+       endif
     end do
 
   end subroutine sgs_scalar_nonconservative

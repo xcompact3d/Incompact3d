@@ -300,7 +300,8 @@ module param
        itype_dbg = 6, &
        itype_mixlayer = 7, &
        itype_jet = 8, &
-       itype_tbl = 9
+       itype_tbl = 9, &
+       itype_abl = 10
 
   integer :: cont_phi,itr,itime,itest,iprocessing
   integer :: ifft,istret,iforc_entree,iturb
@@ -311,10 +312,12 @@ module param
   integer :: iscalar,nxboite,istat,iread,iadvance_time,irotation,iibm
   integer :: npif,izap
   integer :: ivisu, ipost, initstat
+  integer :: ifilter
   real(mytype) :: xlx,yly,zlz,dx,dy,dz,dx2,dy2,dz2,t,xxk1,xxk2,t0
   real(mytype) :: dt,re,xnu,init_noise,inflow_noise,u1,u2,angle,anglex,angley
   real(mytype) :: wrotation,ro
   real(mytype) :: dens1, dens2
+  real(mytype) :: C_filter
 
   !! Channel flow
   integer :: icpg, icfr
@@ -336,6 +339,8 @@ module param
   !! Scalars
   logical, allocatable, dimension(:) :: sc_even, sc_skew
   real(mytype), allocatable, dimension(:) :: scalar_lbound, scalar_ubound
+  real(mytype) :: Tref
+  real(mytype), save :: T_wall, T_top
 
   !! LES modelling flag
   integer :: ilesmod, iwall
@@ -343,7 +348,7 @@ module param
   !LES
   integer :: jles
   integer :: smagwalldamp
-  real(mytype) :: smagcst,walecst,FSGS,pr_t,maxdsmagcst
+  real(mytype) :: smagcst,nSmag,walecst,FSGS,pr_t,maxdsmagcst
 
   !! Gravity field (vector components)
   real(mytype) :: gravx, gravy, gravz
@@ -360,6 +365,13 @@ module param
   integer :: primary_species
 
   logical :: ibirman_eos
+
+  !! ABL
+  integer :: iwallmodel, iPressureGradient, imassconserve, ibuoyancy, iStrat, iCoriolis, idamping, iheight, initsbl, itherm
+  real(mytype) :: z_zero, k_roughness, u_shear, ustar, dBL, CoriolisFreq, TempRate, TempFlux, gravv
+  real(mytype), dimension(3) :: UG
+  real(mytype), save, allocatable, dimension(:,:) :: Tstat
+  real(mytype), save, allocatable, dimension(:,:) :: PsiM, PsiH
 
   !! Case-specific variables
   logical :: tgv_twod
