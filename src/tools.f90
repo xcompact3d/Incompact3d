@@ -670,128 +670,7 @@ contains
   end subroutine mean_plane_z
 end module tools
 !##################################################################
-!##################################################################
-subroutine stabiltemp() !from Erik, adapted by Leonardo Romero Monteiro
 
-  use param
-  use variables
-  use var
-
-  implicit none
-
-  complex(mytype) :: z,eit,ei2t,ei3t,eimt,eim2t,eim3t
-  real(mytype) :: theta, dtheta, cc, fourier, cfl
-  real(mytype) :: xkm, xk, xkp, xks, xkf, x, y
-  real(mytype) :: am1, a0, a1, a2, a3
-  real(mytype) :: bm1, b0, b1, b2, b3
-  real(mytype) :: alpha1, c1, c11
-  real(mytype) :: alpha2, c2
-  real(mytype) :: alpha3, beta3, c3, d3
-  integer :: i,ntheta,order
-
-  ntheta=360
-  dtheta=twopi/(ntheta-1.)
-  xk=(fpi2+1.)*pi*pi
-  order = 6   ! ordem da hiperviscosidade 0 = sem hiperviscosidade; 4 = 4a ordem com 2 formados;  6 = 6a ordem com 1 formado
-
-  print *,'Writing stability data!'
-
-  if (itimescheme==0) then !Euler (not implemented)
-     am1=0; a0=1.; a1=0.; a2=0.
-  endif
-
-  if (itimescheme.eq.1) then !AB2
-     am1=0; a0=1.5; a1=-0.5; a2=0.; a3=0.; bm1=1.; b0=-1.; b1=0.; b2=0.; b3=0.
-  endif
-
-  if (itimescheme.eq.3) then !RK3
-     if (nrank==0) write(*,*) "Non implemented for RK3"
-  endif
-
-  if (itimescheme.eq.2) then !AB3
-     am1=0.; a0=23./12.; a1=-16./12.; a2=5./12; a0=3./2+a2; a1=-1./2-2*a2; a3=0.; bm1=1.; b0=-1.; b1=0.; b2=0.; b3=0.
-  endif
-
-  open(10,file='stabiltemp_1.dat',form='formatted')
-  do i=1,ntheta
-     theta=(i-1)*dtheta
-
-     eit=exp(cmplx(0.,1.)*theta)
-     ei2t=eit*eit
-     ei3t=eit*eit*eit
-     eimt=1./eit
-     eim2t=1./ei2t
-     eim3t=1./ei3t
-     !z=(eit-1.)/a0
-     !z=(eit*(eit-1.))/(a0*eit+a1)
-     !z=(ei3t-ei2t)/(a0*ei2t+a1*eit+a2)
-     z=(bm1*eit+b0+b1*eimt+b2*eim2t+b3*eim3t)/(a0+a1*eimt+a2*eim2t+a3*eim3t)
-     !z=(eit-1.)/(am1*eit+a0+a1*eimt)
-     !z=(eit-1.)/(am1*eit+a0+a1*eimt+a2*eim2t)
-
-     write(10,*) real(z),imag(z)
-  enddo
-  close(10)
-
-
-  alpha1=1./3.
-  a1=(alpha1+9.)/6.
-  b1=(32.*alpha1-9.)/15.
-  c1=(-3.*alpha1+1.)/10.
-
-  if (order.eq.0) then
-
-     alpha2=2./11
-     a2=12./11
-     b2=3./11
-     c2=0.
-
-  elseif (order.eq.4) then
-
-     c11=exp(-((pi-2.*pi/3.)/(0.3*pi-2.*pi/3.))**2 )
-     xkm=(c11*fpi2+1.)*(4./9.)*pi*pi
-
-     alpha2=(64.*xkm-27.*xk-96.)/(64.*xkm-54.*xk+48.)
-     a2 = (54.*xk-15.*xkm*xk+12.)/(64.*xkm-54.*xk+48.)
-     b2 = (192.*xkm-216.*xk+24.*xkm*xk-48.)/(64.*xkm-54.*xk+48.)
-     c2 = 3.*(18.*xk -3.*xkm*xk-36.)/(64.*xkm-54.*xk+48.)
-
-  elseif(order.eq.6) then
-
-     alpha2=(45.*xk-272.)/(2*(45.*xk-208.))
-     c2=(2.-11.*alpha2)/20.
-     a2=(6.-9.*alpha2)/4.
-     b2=(-3.+24.*alpha2)/5.
-
-  endif
-
-  !alpha3=0.45
-  !beta3=(3.-2.*alpha3)/10.
-  !a3=(2.+3.*alpha3)/4.
-  !b3=(6.+7*alpha3)/8.
-  !c3=(6.+alpha3)/20.
-  !d3=(2-3.*alpha3)/40.
-
-  cc=4.
-  fourier=xnu*dt/(dx*dx)
-  cfl=cc*dt/dx
-
-  open(10,file='stabiltemp_2.dat',form='formatted')
-  do i=1,ntheta
-     theta=(i-1)*dtheta
-
-     xkp=(a1*sin(theta)+(b1/2)*sin(2*theta) +(c1/3)*sin(3*theta))/(1+2*alpha1*cos(theta))
-     xks=(2*a2*(1-cos(theta))+(b2/2)*(1-cos(2*theta)) +(2*c2/9)*(1-cos(3*theta)))/(1+2*alpha2*cos(theta))
-     !xkf=(a3+b3*cos(theta)+c3*cos(2*theta)+d3*cos(3*theta)) /(1+2*alpha3*cos(theta)+2*beta3*cos(2*theta))
-     x=-fourier*xks
-     y=-cfl*xkp!*xkf
-
-     write(10,*) x,y
-  enddo
-  close(10)
-
-end subroutine stabiltemp
-!##################################################################
 !===================================================
 ! Subroutine for computing the local and global CFL
 ! number, according to Lele 1992.
@@ -818,7 +697,7 @@ subroutine cfl_compute(uxmax,uymax,uzmax)
   if(jles==0) then
      visc=xnu
   elseif (jles==1) then
-     visc=20*fpi2*xnu
+     visc=xnu
   endif
 
   ! This is considering 1D peridic boundaries
