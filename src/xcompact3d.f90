@@ -39,7 +39,7 @@ program xcompact3d
   use time_integrators, only : int_time
   use navier, only : velocity_to_momentum, momentum_to_velocity, pre_correc, &
        calc_divu_constraint, solve_poisson, cor_vel
-  use tools, only : restart, simu_stats
+  use tools, only : restart, simu_stats, apply_spatial_filter
 
   implicit none
 
@@ -50,9 +50,14 @@ program xcompact3d
      t=t0 + (itime0 + itime + 1 - ifirst)*dt
      call simu_stats(2)
 
-    do itr=1,iadvance_time
+     if (ifilter.ne.0.and.ilesmod.ne.0) then
+        call filter(C_filter)
+        call apply_spatial_filter(ux1,uy1,uz1,phi1)
+     endif
 
-        call set_fluid_properties(rho1,mu1)
+     do itr=1,iadvance_time
+
+        !call set_fluid_properties(rho1,mu1)
         call boundary_conditions(rho1,ux1,uy1,uz1,phi1,ep1)
         call calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
