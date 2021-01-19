@@ -364,21 +364,18 @@ contains
        call decomp_2d_read_var(fh,disp,3,pp3,phG)
        !
        if (iscalar==1) then
-         if ((itype.ne.itype_abl).or.(itype.eq.itype_abl.and.initsbl.eq.0)) then
-           do is=1, numscalar
-             call decomp_2d_read_var(fh,disp,1,phi1(:,:,:,is))
-             ! previous time-steps
-             if ((itimescheme.eq.2).or.(itimescheme.eq.3)) then ! AB2 or AB3
-               call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,2,is))
-             end if
-             !
-             if (itimescheme.eq.3) then ! AB3
-               call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,3,is))
-             end if
-           end do
-         elseif (itype.eq.itype_abl.and.initsbl.eq.1) then
-           do is=1, numscalar
-             call decomp_2d_read_var(fh,disp,1,phi1(:,:,:,is))
+         do is=1, numscalar
+           call decomp_2d_read_var(fh,disp,1,phi1(:,:,:,is))
+           ! previous time-steps
+           if ((itimescheme.eq.2).or.(itimescheme.eq.3)) then ! AB2 or AB3
+             call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,2,is))
+           end if
+           !
+           if (itimescheme.eq.3) then ! AB3
+             call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,3,is))
+           end if
+           ! ABL 
+           if (itype.eq.itype_abl.and.ibuoyancy.eq.1) then
              T_wall=Tref
              if (istrat==0) T_top = T_wall+(yly-100)*1./100
              if (istrat==1) T_top = 310.814 !_wall+(yly-100)*1./100
@@ -387,8 +384,8 @@ contains
                if (istret.ne.0) y = yp(j+xstart(2)-1)
                Tstat(j,1) = T_wall - (T_wall-T_top)*y/yly
              enddo
-           enddo
-         endif
+           endif
+         end do
        endif
        call MPI_FILE_CLOSE(fh,ierror_o)
 
