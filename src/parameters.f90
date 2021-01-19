@@ -69,7 +69,7 @@ subroutine parameter(input_i3d)
        gravx, gravy, gravz, &
        icpg, icfr
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, iimplicit, &
-       nu0nu, cnu, fpi2, ipinter
+       nu0nu, cnu, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu, iprocessing
   NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat
   NAMELIST /ScalarParam/ sc, ri, uset, cp, &
@@ -374,13 +374,13 @@ subroutine parameter(input_i3d)
      if (ilesmod.ne.0) then
        print *,'                   : DNS'
      else
-       if (jLES.eq.1) then
+       if (jles.eq.1) then
           print *,'                   : Phys Smag'
-       else if (jLES.eq.2) then
+       else if (jles.eq.2) then
           print *,'                   : Phys WALE'
-       else if (jLES.eq.3) then
+       else if (jles.eq.3) then
           print *,'                   : Phys dyn. Smag'
-       else if (jLES.eq.4) then
+       else if (jles.eq.4) then
           print *,'                   : iSVV'
        else
        endif
@@ -399,7 +399,6 @@ subroutine parameter(input_i3d)
      write(*,"(' istret                 : ',I17)") istret
      write(*,"(' beta                   : ',F17.8)") beta
      print *,'==========================================================='
-     write(*,"(' fpi2                   : ',F17.8)") fpi2
      write(*,"(' nu0nu                  : ',F17.8)") nu0nu
      write(*,"(' cnu                    : ',F17.8)") cnu
      print *,'==========================================================='
@@ -555,7 +554,6 @@ subroutine parameter_defaults()
   itime0 = 0
   t0 = zero
   datapath = './data/'
-  fpi2 = (48._mytype / seven) / (PI**2)
 
   !! IBM stuff
   nraf = 0

@@ -63,13 +63,13 @@ contains
        write(*, *) ' '
        write(*, *) '++++++++++++++++++++++++++++++++'
        write(*, *) 'LES Modelling'
-       if(jLES==1) then
+       if(jles==1) then
           write(*, *) ' Classic Smagorinsky is used ... '
           write(*, *) ' Smagorinsky constant = ', smagcst
-       else if (jLES==2) then
+       else if (jles==2) then
           write(*, *) ' WALE SGS model is used ... '
           write(*, *) ' Max value for the WALE constant  = ', walecst
-       else if (jLES==3) then
+       else if (jles==3) then
           write(*, *) ' Dynamic Smagorinsky is used ... '
           write(*, *) ' Max value for the dynamic constant field = ', maxdsmagcst
        endif
@@ -103,14 +103,14 @@ contains
     integer :: iconservative
 
     ! Calculate eddy-viscosity
-    if(jLES.eq.1) then ! Smagorinsky
+    if(jles.eq.1) then ! Smagorinsky
 
        call smag(nut1,ux1,uy1,uz1)
 
-    elseif(jLES.eq.2) then ! Wall-adapting local eddy-viscosity (WALE) model
+    elseif(jles.eq.2) then ! Wall-adapting local eddy-viscosity (WALE) model
        call wale(nut1,ux1,uy1,uz1)
 
-    elseif(jLES.eq.3) then ! Lilly-style Dynamic Smagorinsky
+    elseif(jles.eq.3) then ! Lilly-style Dynamic Smagorinsky
        call dynsmag(nut1,ux1,uy1,uz1,ep1)
 
     endif

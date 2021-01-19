@@ -274,7 +274,7 @@ contains
     call alloc_z(dv3,ph,.true.)
     call alloc_z(po3,ph,.true.)
 
-    if(ilesmod.ne.0.and.jLES.gt.0) then
+    if(ilesmod.ne.0.and.jles.gt.0) then
        call alloc_x(sgsx1);call alloc_x(sgsy1); call alloc_x(sgsz1)
        call alloc_x(sxx1);call alloc_x(syy1); call alloc_x(szz1)
        call alloc_x(sxy1);call alloc_x(sxz1); call alloc_x(syz1)

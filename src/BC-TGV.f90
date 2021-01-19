@@ -374,7 +374,7 @@ contains
          (two*ti1(i,j,k))**two+two*(td1(i,j,k)+tb1(i,j,k))**two+&
          two*(tg1(i,j,k)+tc1(i,j,k))**two+&
          two*(th1(i,j,k)+tf1(i,j,k))**two)
-         if(ilesmod.ne.0.and.jLES.gt.0) then
+         if(ilesmod.ne.0.and.jles.le.3) then
             temp1=temp1+two*nut1(i,j,k)*srt_smag(i,j,k)
          endif
       enddo
@@ -394,8 +394,58 @@ contains
        enddo
        call MPI_ALLREDUCE(temp1,eek,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        eek=eek/(nxc*nyc*nzc)
+
+       !SECOND DERIVATIVES
+       !x-derivatives
+       call derxx (ta1,ux1,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0)
+       call derxx (tb1,uy1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+       call derxx (tc1,uz1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+       !y-derivatives
+       call transpose_x_to_y(ux1,td2)
+       call transpose_x_to_y(uy1,te2)
+       call transpose_x_to_y(uz1,tf2)
+       call deryy (ta2,td2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1) 
+       call deryy (tb2,te2,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0) 
+       call deryy (tc2,tf2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1) 
+       !!z-derivatives
+       call transpose_y_to_z(td2,td3)
+       call transpose_y_to_z(te2,te3)
+       call transpose_y_to_z(tf2,tf3)
+       call derzz(ta3,td3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
+       call derzz(tb3,te3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
+       call derzz(tc3,tf3,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0)
+       !!all back to x-pencils
+       call transpose_z_to_y(ta3,td2)
+       call transpose_z_to_y(tb3,te2)
+       call transpose_z_to_y(tc3,tf2)
+       call transpose_y_to_x(td2,tg1)
+       call transpose_y_to_x(te2,th1)
+       call transpose_y_to_x(tf2,ti1)
+       call transpose_y_to_x(ta2,td1)
+       call transpose_y_to_x(tb2,te1)
+       call transpose_y_to_x(tc2,tf1)
+       !d2u/dx2=ta1 d2u/dy2=td1 and d2u/dz2=tg1
+       !d2v/dx2=tb1 d2v/dy2=te1 and d2v/dz2=th1
+       !d2w/dx2=tc1 d2w/dy2=tf1 and d2w/dz2=ti1
+       !SPATIALLY-AVERAGED ENERGY DISSIPATION WITH SECOND DERIVATIVES
+       temp1=0.
+       di1=0.
+       do k=1,xsize3
+       do j=1,xsize2
+       do i=1,xsize1
+          di1(i,j,k)=(-xnu)*( ux1(i,j,k)*(ta1(i,j,k)+td1(i,j,k)+tg1(i,j,k))+ &
+          uy1(i,j,k)*(tb1(i,j,k)+te1(i,j,k)+th1(i,j,k))+ &
+          uz1(i,j,k)*(tc1(i,j,k)+tf1(i,j,k)+ti1(i,j,k)) )
+          temp1=temp1+di1(i,j,k)
+       enddo
+       enddo
+       enddo
+       call MPI_ALLREDUCE(temp1,eps2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       eps2=eps2/(nxc*nyc*nzc)
+       
+       
        if (nrank==0) then
-          write(42,'(20e20.12)') (itime-1)*dt,eek,eps,enst
+          write(42,'(20e20.12)') (itime-1)*dt,eek,eps,eps2,enst
           call flush(42)
        endif
     endif

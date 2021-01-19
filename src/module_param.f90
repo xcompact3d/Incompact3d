@@ -56,7 +56,7 @@ module variables
   integer :: nstat=1,nvisu=1,nprobe=1,nlength=1
 
   real(mytype),allocatable,dimension(:) :: sc,uset,cp,ri,group
-  real(mytype) :: fpi2, nu0nu, cnu
+  real(mytype) :: nu0nu, cnu
 
 #ifndef DOUBLE_PREC
   integer,parameter :: prec = 4
@@ -341,7 +341,7 @@ module param
   integer :: ilesmod, iwall
 
   !LES
-  integer :: jLES
+  integer :: jles
   integer :: smagwalldamp
   real(mytype) :: smagcst,walecst,FSGS,pr_t,maxdsmagcst
 

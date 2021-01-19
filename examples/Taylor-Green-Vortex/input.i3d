@@ -40,9 +40,9 @@ init_noise  = 0.0     ! Turbulence intensity (1=100%) !! Initial condition
 inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
 
 ! Time stepping
-dt = 0.001            ! Time step
+dt = 0.005            ! Time step
 ifirst = 1            ! First iteration
-ilast = 20         ! Last iteration
+ilast = 4000         ! Last iteration
 
 ! Enable modelling tools
 ilesmod=0             ! if 0 then DNS
@@ -61,14 +61,10 @@ ipost=1               ! Do online postprocessing
 
 ! Spatial derivatives
 ifirstder = 4         ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact)
-isecondder = 4        ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact, 5->hyperviscous 6th)
+isecondder = 5        ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact, 5->hyperviscous 6th)
 
 ! Time scheme
 itimescheme = 5       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4)
-
-! Dissipation control
-nu0nu = 4.0             ! Ratio between hyperviscosity/viscosity at nu
-cnu = 0.44               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 
 /End
 
@@ -78,7 +74,7 @@ cnu = 0.44               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 
 ! Basic I/O
 irestart = 0          ! Read initial flow field ?
-icheckpoint = 5    ! Frequency for writing backup file
+icheckpoint = 1000    ! Frequency for writing backup file
 ioutput = 1000        ! Frequency for visualization
 nvisu = 1             ! Size for visualisation collection
 
@@ -88,7 +84,6 @@ nvisu = 1             ! Size for visualisation collection
 &Statistics
 !=================
 
-spinup_time = 0      ! Time after which statistics are collected (in seconds)
 nstat = 1             ! Size arrays for statistic collection
 
 /End

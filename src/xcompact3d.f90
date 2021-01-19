@@ -164,8 +164,6 @@ subroutine init_xcompact3d()
 
   call schemes()
 
-  !if (nrank==0) call stabiltemp()
-
   call decomp_2d_poisson_init()
   call decomp_info_init(nxm,nym,nzm,phG)
 
