@@ -117,15 +117,16 @@ contains
     enddo
 
     ! Initialize temperature profiles
-    if (iscalar==1) then
-      T_wall=Tref
-      if (istrat==0) T_top =T_wall+(yly-100)*1./100
-      if (istrat==1) T_top =310.814
+    if (iscalar.eq.1) then
       do j=1,xsize(2)
         if (istret.eq.0) y=(j + xstart(2)-1-1)*dy
         if (istret.ne.0) y=yp(j+xstart(2)-1)
-        Tstat(j,1)=T_wall + (T_top-T_wall)*y/yly
-        ! Initialize GABLS-1 Case
+        if (ibuoyancy.eq.1) then 
+          Tstat(j,1)=T_wall + (T_top-T_wall)*y/yly
+        else 
+          Tstat(j,1)=0.
+        endif
+        ! Initialize GABLS-1 case
         if (istrat==0) then
           if (y>100.) then
             phi1(:,j,:,1)=T_wall-Tstat(j,1) + (y-100.)*1./100.
@@ -148,15 +149,15 @@ contains
       do j=1,xsize(2)
         if (istret.eq.0) y=(j + xstart(2)-1-1)*dy
         if (istret.ne.0) y=yp(j+xstart(2)-1)
-        if (y.lt.50) then 
-          do k=1,xsize(3)
-          do i=1,xsize(1)
-            call random_number(phinoise)
-            phinoise=0.1*(phinoise*2.-1.)
-            phi1(i,j,k,1)=phi1(i,j,k,1)+phinoise
-          enddo
-          enddo
-        endif
+        !if (y.lt.50) then 
+        !  do k=1,xsize(3)
+        !  do i=1,xsize(1)
+        !    call random_number(phinoise)
+        !    phinoise=0.1*(phinoise*2.-1.)
+        !    phi1(i,j,k,1)=phi1(i,j,k,1)+phinoise
+        !  enddo
+        !  enddo
+        !endif
       enddo
     endif
 
@@ -205,7 +206,6 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3), numscalar) :: phi1
 
     integer :: j
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: T_diff
    
     !! BL Forcing (Pressure gradient or geostrophic wind)
     if (iPressureGradient.eq.1) then
@@ -228,10 +228,7 @@ contains
 
     !! Buoyancy terms
     if (iscalar.eq.1.and.ibuoyancy.eq.1) then
-       do j=1,xsize(2)
-         T_diff(:,j,:)=phi1(:,j,:,1)+Tstat(j,1)
-       end do
-       duy1(:,:,:,1)=duy1(:,:,:,1)+gravv*(phi1(:,:,:,1)/T_wall)
+       duy1(:,:,:,1)=duy1(:,:,:,1)+gravv*phi1(:,:,:,1)/Tref
     endif
 
     return
@@ -332,7 +329,11 @@ contains
     S_HAve=sqrt(ux_HAve**2.+uz_HAve**2.)
     if (iscalar==1) then 
       Phi_HAve=Phi_HAve/p_col
-      Tstat12 =T_wall + (T_top-T_wall)*delta/yly
+      if (ibuoyancy.eq.1) then 
+        Tstat12 =T_wall + (T_top-T_wall)*delta/yly
+      else 
+        Tstat12 =0.
+      endif
       Phi_HAve=Phi_HAve + Tstat12
     endif
 
@@ -342,7 +343,7 @@ contains
     wallfluxz=0.
 
     ! Initialize stratification variables
-    if (iscalar==1.and.xstart(2)==1) then 
+    if (iscalar==1.and.ibuoyancy.eq.1.and.xstart(2)==1) then 
       PsiM_HAve=0.
       PsiH_HAve=0.
       ii   = 0

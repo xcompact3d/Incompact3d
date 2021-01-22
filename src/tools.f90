@@ -375,14 +375,15 @@ contains
              call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,3,is))
            end if
            ! ABL 
-           if (itype.eq.itype_abl.and.ibuoyancy.eq.1) then
-             T_wall=Tref
-             if (istrat==0) T_top = T_wall+(yly-100)*1./100
-             if (istrat==1) T_top = 310.814 !_wall+(yly-100)*1./100
+           if (itype.eq.itype_abl) then
              do j=1,xsize(2)
                if (istret.eq.0) y = (j + xstart(2)-1-1)*dy
                if (istret.ne.0) y = yp(j+xstart(2)-1)
-               Tstat(j,1) = T_wall - (T_wall-T_top)*y/yly
+               if (ibuoyancy.eq.1) then
+                 Tstat(j,1) = T_wall - (T_wall-T_top)*y/yly
+               else
+                 Tstat(j,1) = 0.
+               endif
              enddo
            endif
          end do
