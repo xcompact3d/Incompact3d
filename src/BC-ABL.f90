@@ -1,6 +1,34 @@
-! Subroutines for computing the wall stresses for the ABL
-! Part of xcompact3d
-! Adapted from WInc3D framework by Amy Hodgkin
+!################################################################################
+!This file is part of Xcompact3d.
+!
+!Xcompact3d
+!Copyright (c) 2012 Eric Lamballais and Sylvain Laizet
+!eric.lamballais@univ-poitiers.fr / sylvain.laizet@gmail.com
+!
+!    Xcompact3d is free software: you can redistribute it and/or modify
+!    it under the terms of the GNU General Public License as published by
+!    the Free Software Foundation.
+!
+!    Xcompact3d is distributed in the hope that it will be useful,
+!    but WITHOUT ANY WARRANTY; without even the implied warranty of
+!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+!    GNU General Public License for more details.
+!
+!    You should have received a copy of the GNU General Public License
+!    along with the code.  If not, see <http://www.gnu.org/licenses/>.
+!-------------------------------------------------------------------------------
+!-------------------------------------------------------------------------------
+!    We kindly request that you cite Xcompact3d/Incompact3d in your
+!    publications and presentations. The following citations are suggested:
+!
+!    1-Laizet S. & Lamballais E., 2009, High-order compact schemes for
+!    incompressible flows: a simple and efficient method with the quasi-spectral
+!    accuracy, J. Comp. Phys.,  vol 228 (15), pp 5989-6015
+!
+!    2-Laizet S. & Li N., 2011, Incompact3d: a powerful tool to tackle turbulence
+!    problems with up to 0(10^5) computational cores, Int. J. of Numerical
+!    Methods in Fluids, vol 67 (11), pp 1735-1757
+!################################################################################
 
 module abl
 
@@ -199,7 +227,7 @@ contains
     endif
 
     !! Buoyancy terms
-    if (ibuoyancy.eq.1.and.numscalar.ne.0) then
+    if (iscalar.eq.1.and.ibuoyancy.eq.1) then
        do j=1,xsize(2)
          T_diff(:,j,:)=phi1(:,j,:,1)+Tstat(j,1)
        end do
@@ -230,7 +258,7 @@ contains
     endif
 
     ! Terms from decomposition
-    if (ibuoyancy.eq.1.and.numscalar.ne.0) then
+    if (ibuoyancy.eq.1) then
        !call transpose_y_to_x(uy2,uy1)
        dphi1(:,:,:,1) = dphi1(:,:,:,1) + (T_wall-T_top)*uy1(:,:,:)/yly
     endif
@@ -369,7 +397,6 @@ contains
            S12=sqrt(ux12**2.+uz12**2.)
            if (iscalar.eq.1) then
              Phi12= 0.5*(phif1(i,1,k)+ phif1(i,2,k)) + Tstat12
- !nbeb is below iteration sufficient? probably....
              do ii=1,10
                 if (itherm==1) heatflux(i,k)=-k_roughness**2.0*S12*(Phi12-(T_wall+TempRate*t))/((log(delta/z_zero)-PsiM(i,k))*(log(delta/z_zero)-PsiH(i,k)))
                 Obukhov(i,k)=-(k_roughness*S12/(log(delta/z_zero)-PsiM(i,k)))**3.0*Phi12/(k_roughness*gravv*heatflux(i,k))
@@ -473,7 +500,7 @@ contains
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: nut1, dphidy1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar),intent(inout) :: sgsphi1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(inout) :: sgsphi1
 
     real(mytype) :: delta, Pr
     integer ::  i,k
@@ -485,7 +512,7 @@ contains
        if (istret.eq.0) delta=dy/2.
        do k=1,xsize(3)
        do i=1,xsize(1)
-          sgsphi1(i,1,k,1) =-(-1./2.*(-nut1(i,3,k)*dphidy1(i,3,k))/Pr+&
+          sgsphi1(i,1,k) =-(-1./2.*(-nut1(i,3,k)*dphidy1(i,3,k))/Pr+&
           2.*(-nut1(i,2,k)*dphidy1(i,2,k))/Pr-3./2.*heatflux(i,k))/(2.*delta)
        enddo
        enddo
@@ -530,7 +557,7 @@ contains
     ! Flow rate for a logarithmic profile
     can=-(ustar/k_roughness*yly*(log(yly/z_zero)-1.)-ut4)
 
-    if (nrank==0) print *,nrank,'UT',ut4,can
+    if (nrank==0) print *,nrank,'correction to ensure constant flow rate',ut4,can
 
     do k=1,ysize(3)
     do i=1,ysize(1)
@@ -602,7 +629,7 @@ contains
     real(mytype) :: damp_lo, coeff
 
     damp_lo = 300.
-    coeff   = 0!0.0016
+    coeff   = 0.!0.0016
 
     do k=1,xsize(3)
     do j=1,xsize(2)

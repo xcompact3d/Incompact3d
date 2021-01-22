@@ -604,16 +604,20 @@ subroutine parameter_defaults()
   icpg = 0
   icfr = 1
 
+  !! Filter
+  ifilter=0
+  C_filter=0.49
+
   !! ABL
   z_zero=0.1
   k_roughness=0.4
   ustar=0.45
   dBL=250
   iPressureGradient=1
-  iwallmodel=0
+  iwallmodel=1
   imassconserve=0
   ibuoyancy=1
-  iheight=1
+  iheight=0
   itherm=1
   idamping=0
   gravv=9.81

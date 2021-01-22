@@ -939,7 +939,7 @@ contains
           endif
           ! If LES modelling is enabled, add the SGS stresses
           if (ilesmod.ne.0.and.jles.le.3.and.jles.gt.0) then
-             call sgs_scalar_nonconservative(sgsphi1,nut1,phi1)
+             call sgs_scalar_nonconservative(sgsphi1(:,:,:,is),nut1,phi1(:,:,:,is),is)
              dphi1(:,:,:,1,is) = dphi1(:,:,:,1,is) + sgsphi1(:,:,:,is)
           endif
        endif
