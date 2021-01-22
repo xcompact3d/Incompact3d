@@ -155,7 +155,7 @@ itherm=0              ! 0: Surface flux 1: Surface temperature
 icoriolis=0           ! Coriolis forces
 coriolisfreq=1e-04 
 iheight=0             ! Compute BL height
-imassconserve=0       ! Enforce mass conservation
+imassconserve=1       ! Enforce mass conservation
 T_wall=300.           ! Initial wall temperature
 T_top=310.814         ! Temperature at domain top
 /End
