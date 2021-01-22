@@ -87,7 +87,7 @@ subroutine parameter(input_i3d)
        Fr, ibirman_eos
   NAMELIST /ABL/ z_zero, iwallmodel, k_roughness, ustar, dBL, &
        imassconserve, ibuoyancy, iPressureGradient, iCoriolis, CoriolisFreq, &
-       istrat, idamping, iheight, TempRate, TempFlux, itherm, gravv, UG 
+       istrat, idamping, iheight, TempRate, TempFlux, itherm, gravv, UG, T_wall, T_top 
   NAMELIST /CASE/ tgv_twod, pfront
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter start'

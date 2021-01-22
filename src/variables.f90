@@ -516,7 +516,7 @@ contains
     allocate(heatflux(xsize(1),xsize(3)))
     allocate(PsiM(xsize(1),xsize(3)))
     allocate(PsiH(xsize(1),xsize(3)))
-    allocate(Tstat(xsize(2),2))
+    allocate(Tstat(xsize(2),1))
 
     !! LMN
     if (.not.ilmn) then

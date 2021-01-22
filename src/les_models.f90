@@ -1228,7 +1228,7 @@ end subroutine wale
     call transpose_y_to_x(sgsphi2, sgsphi1)
 
     ! SGS correction for ABL
-    if (itype.eq.itype_abl.and.is==1) then
+    if (itype.eq.itype_abl.and.is==1.and.ibuoyancy.eq.1) then
        call transpose_y_to_x(tb2,dphidy1)
        call wall_sgs_scalar(sgsphi1,nut1,dphidy1)
     endif

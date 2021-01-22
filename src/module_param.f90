@@ -340,7 +340,6 @@ module param
   logical, allocatable, dimension(:) :: sc_even, sc_skew
   real(mytype), allocatable, dimension(:) :: scalar_lbound, scalar_ubound
   real(mytype) :: Tref
-  real(mytype), save :: T_wall, T_top
 
   !! LES modelling flag
   integer :: ilesmod, iwall
@@ -368,7 +367,7 @@ module param
 
   !! ABL
   integer :: iwallmodel, iPressureGradient, imassconserve, ibuoyancy, iStrat, iCoriolis, idamping, iheight, itherm
-  real(mytype) :: z_zero, k_roughness, u_shear, ustar, dBL, CoriolisFreq, TempRate, TempFlux, gravv
+  real(mytype) :: z_zero, k_roughness, u_shear, ustar, dBL, CoriolisFreq, TempRate, TempFlux, gravv, T_wall, T_top
   real(mytype), dimension(3) :: UG
   real(mytype), save, allocatable, dimension(:,:) :: Tstat
   real(mytype), save, allocatable, dimension(:,:) :: PsiM, PsiH
