@@ -1172,7 +1172,7 @@ end subroutine wale
   end subroutine sgs_mom_nonconservative
 
   !************************************************************
-  subroutine sgs_scalar_nonconservative(sgsphi1,nut1,phi1)
+  subroutine sgs_scalar_nonconservative(sgsphi1,nut1,phi1,is)
 
     USE param
     USE variables
@@ -1183,7 +1183,7 @@ end subroutine wale
 
     implicit none
 
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: sgsphi1, phi1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sgsphi1, phi1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: dphidy1
     real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: phi2, sgsphi2
     real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: phi3, sgsphi3
@@ -1203,37 +1203,35 @@ end subroutine wale
     call transpose_y_to_z(nut2, nut3)
     call derzS (dnut3, nut3, di3, sz, ffzpS, fszpS, fwzpS, zsize(1), zsize(2), zsize(3), 1)
 
-    do is = 1, numscalar
-       ! kappat = nut/Pr
-       Pr = Sc(is)
+    ! kappat = nut/Pr
+    Pr = Sc(is)
 
-       call derxS (tb1, phi1(:, :, :, is), di1, sx, ffxpS, fsxpS, fwxpS, xsize(1), xsize(2), xsize(3), 1)
-       call derxxS(tc1, phi1(:, :, :, is), di1, sx, sfxpS, ssxpS, swxpS, xsize(1), xsize(2), xsize(3), 1)
-       sgsphi1(:, :, :, is) = tb1 * (dnut1/Pr) + tc1 * (nut1/Pr)
+    call derxS (tb1, phi1, di1, sx, ffxpS, fsxpS, fwxpS, xsize(1), xsize(2), xsize(3), 1)
+    call derxxS(tc1, phi1, di1, sx, sfxpS, ssxpS, swxpS, xsize(1), xsize(2), xsize(3), 1)
+    sgsphi1 = tb1 * (dnut1/Pr) + tc1 * (nut1/Pr)
 
-       call transpose_x_to_y(phi1(:, :, :, is), phi2)
-       call transpose_x_to_y(sgsphi1(:, :, :, is),sgsphi2)
+    call transpose_x_to_y(phi1, phi2)
+    call transpose_x_to_y(sgsphi1, sgsphi2)
 
-       call deryS (tb2, phi2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1)
-       call deryyS(tc2, phi2, di2, sy, sfypS, ssypS, swypS, ysize(1), ysize(2), ysize(3), 1)
-       sgsphi2 = sgsphi2 + tb2 * (dnut2/Pr) + tc2 * (nut2/Pr)
+    call deryS (tb2, phi2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1)
+    call deryyS(tc2, phi2, di2, sy, sfypS, ssypS, swypS, ysize(1), ysize(2), ysize(3), 1)
+    sgsphi2 = sgsphi2 + tb2 * (dnut2/Pr) + tc2 * (nut2/Pr)
 
-       call transpose_y_to_z(phi2, phi3)
-       call transpose_y_to_z(sgsphi2, sgsphi3)
+    call transpose_y_to_z(phi2, phi3)
+    call transpose_y_to_z(sgsphi2, sgsphi3)
 
-       call derzS (tb3, phi3, di3, sz, ffzpS, fszpS, fwzpS, zsize(1), zsize(2), zsize(3), 1)
-       call derzzS(tc3, phi3, di3, sz, sfzpS, sszpS, swzpS, zsize(1), zsize(2), zsize(3), 1)
-       sgsphi3 = sgsphi3 + tb3 * (dnut3/Pr) + tc3 * (nut3/Pr)
+    call derzS (tb3, phi3, di3, sz, ffzpS, fszpS, fwzpS, zsize(1), zsize(2), zsize(3), 1)
+    call derzzS(tc3, phi3, di3, sz, sfzpS, sszpS, swzpS, zsize(1), zsize(2), zsize(3), 1)
+    sgsphi3 = sgsphi3 + tb3 * (dnut3/Pr) + tc3 * (nut3/Pr)
 
-       call transpose_z_to_y(sgsphi3, sgsphi2)
-       call transpose_y_to_x(sgsphi2, sgsphi1(:, :, :, is))
+    call transpose_z_to_y(sgsphi3, sgsphi2)
+    call transpose_y_to_x(sgsphi2, sgsphi1)
 
-       ! SGS correction for ABL
-       if (itype.eq.itype_abl.and.is==1) then
-          call transpose_y_to_x(tb2,dphidy1)
-          call wall_sgs_scalar(sgsphi1,nut1,dphidy1)
-       endif
-    end do
+    ! SGS correction for ABL
+    if (itype.eq.itype_abl.and.is==1) then
+       call transpose_y_to_x(tb2,dphidy1)
+       call wall_sgs_scalar(sgsphi1,nut1,dphidy1)
+    endif
 
   end subroutine sgs_scalar_nonconservative
 
