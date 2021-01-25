@@ -8,34 +8,12 @@
 # generate a Git version string
 GIT_VERSION := $(shell git describe --tag --long --always)
 
-#######Select Flow Type#######
-# FLOW_TYPE = Lock-exchange
- FLOW_TYPE = TGV
-#  FLOW_TYPE = Channel-flow
-# FLOW_TYPE = Periodic-hill
-# FLOW_TYPE = Cylinder
-# FLOW_TYPE = dbg-schemes
-
 DEFS = -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"
 
 LCL = local# local,lad,sdu,archer
 IVER = 17# 15,16,17,18
 CMP = gcc# intel,gcc
 FFT = generic# generic,fftw3,mkl
-
-#######Minimum defs###########
-ifeq ($(FLOW_TYPE),Channel-flow)
-DEFS2 = -DSTRETCHING -DPOST
-else ifeq ($(FLOW_TYPE),Cylinder)
-DEFS2 = -DFORCES
-else ifeq ($(FLOW_TYPE),Lock-exchange)
-DEFS2 = -DPOST
-else ifeq ($(FLOW_TYPE),Periodic-hill)
-DEFS2 = -DSTRETCHING -DPOST
-else ifeq ($(FLOW_TYPE),TGV)
-DEFS2 = -DPOST
-endif
-DEFS2 += -DVISU
 
 #######CMP settings###########
 ifeq ($(CMP),intel)
@@ -46,7 +24,7 @@ FFLAGS = -fpp -O3 -xSSE4.2 -axAVX,CORE-AVX-I,CORE-AVX2 -ipo -fp-model fast=2 -mc
 else ifeq ($(CMP),gcc)
 FC = mpif90
 #FFLAGS = -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -x f95-cpp-input
-FFLAGS = -cpp -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none
+FFLAGS = -cpp -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none
 #-ffpe-trap=invalid,zero
 else ifeq ($(CMP),nagfor)
 FC = mpinagfor
@@ -67,10 +45,8 @@ SRCDECOMP = $(DECOMPDIR)/decomp_2d.f90 $(DECOMPDIR)/glassman.f90 $(DECOMPDIR)/ff
 OBJDECOMP = $(SRCDECOMP:%.f90=%.o)
 SRC = $(SRCDIR)/module_param.f90 $(SRCDIR)/variables.f90 $(SRCDIR)/poisson.f90 $(SRCDIR)/derive.f90 $(SRCDIR)/implicit.f90 $(SRCDIR)/schemes.f90 $(SRCDIR)/parameters.f90 $(SRCDIR)/*.f90
 OBJ = $(SRC:%.f90=%.o)
-SRC = $(SRCDIR)/module_param.f90 $(SRCDIR)/variables.f90 $(SRCDIR)/poisson.f90 $(SRCDIR)/ibm.f90 $(SRCDIR)/derive.f90 $(SRCDIR)/implicit.f90 $(SRCDIR)/schemes.f90 $(SRCDIR)/forces.f90 $(SRCDIR)/probes.f90 $(SRCDIR)/BC-TBL.f90 $(SRCDIR)/navier.f90 $(SRCDIR)/tools.f90 $(SRCDIR)/les_models.f90  $(SRCDIR)/BC-Lock-exchange.f90  $(SRCDIR)/time_integrators.f90 $(SRCDIR)/filters.f90 $(SRCDIR)/parameters.f90 $(SRCDIR)/BC-User.f90 $(SRCDIR)/BC-TGV.f90 $(SRCDIR)/BC-Channel-flow.f90 $(SRCDIR)/BC-Periodic-hill.f90 $(SRCDIR)/BC-Cylinder.f90 $(SRCDIR)/BC-Mixing-layer.f90 $(SRCDIR)/BC-Jet.f90 $(SRCDIR)/BC-dbg-schemes.f90  $(SRCDIR)/statistics.f90 $(SRCDIR)/visu.f90 $(SRCDIR)/case.f90 $(SRCDIR)/transeq.f90 $(SRCDIR)/genepsi3d.f90 $(SRCDIR)/xcompact3d.f90
+SRC = $(SRCDIR)/module_param.f90 $(SRCDIR)/variables.f90 $(SRCDIR)/poisson.f90 $(SRCDIR)/ibm.f90 $(SRCDIR)/derive.f90 $(SRCDIR)/implicit.f90 $(SRCDIR)/schemes.f90 $(SRCDIR)/forces.f90 $(SRCDIR)/probes.f90 $(SRCDIR)/BC-TBL.f90 $(SRCDIR)/navier.f90 $(SRCDIR)/tools.f90 $(SRCDIR)/BC-ABL.f90 $(SRCDIR)/les_models.f90  $(SRCDIR)/BC-Lock-exchange.f90  $(SRCDIR)/time_integrators.f90 $(SRCDIR)/filters.f90 $(SRCDIR)/parameters.f90 $(SRCDIR)/BC-User.f90 $(SRCDIR)/BC-TGV.f90 $(SRCDIR)/BC-Channel-flow.f90 $(SRCDIR)/BC-Periodic-hill.f90 $(SRCDIR)/BC-Cylinder.f90 $(SRCDIR)/BC-Mixing-layer.f90 $(SRCDIR)/BC-Jet.f90 $(SRCDIR)/BC-dbg-schemes.f90  $(SRCDIR)/statistics.f90 $(SRCDIR)/visu.f90 $(SRCDIR)/case.f90 $(SRCDIR)/transeq.f90 $(SRCDIR)/genepsi3d.f90 $(SRCDIR)/xcompact3d.f90
 
-### List of files for the post-processing code
-PSRC = decomp_2d.f90 module_param.f90 io.f90 variables.f90 schemes.f90 derive.f90 BC-$(FLOW_TYPE).f90 parameters.f90 tools.f90 visu.f90 post.f90
 
 #######FFT settings##########
 ifeq ($(FFT),fftw3)
