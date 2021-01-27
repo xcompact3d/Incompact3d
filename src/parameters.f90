@@ -71,7 +71,8 @@ subroutine parameter(input_i3d)
        ifilter, C_filter
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, iimplicit, &
        nu0nu, cnu, ipinter
-  NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu, iprocessing
+  NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu, iprocessing, &
+       ninflows, ntimesteps, inflowpath, ioutflow
   NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat
   NAMELIST /ScalarParam/ sc, ri, uset, cp, &
        nclxS1, nclxSn, nclyS1, nclySn, nclzS1, nclzSn, &
@@ -630,6 +631,10 @@ subroutine parameter_defaults()
   ipost = 0
   iprocessing = huge(i)
   initstat = huge(i)
+  ninflows=1
+  ntimesteps=1
+  inflowpath='./'
+  ioutflow=0
 
   save_ux = 0
   save_uy = 0

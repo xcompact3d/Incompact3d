@@ -308,6 +308,7 @@ module param
   integer :: iin,itimescheme,iimplicit,ifirst,ilast,iles
   integer :: ntime ! How many (sub)timestpeps do we need to store?
   integer :: icheckpoint,irestart,idebmod,ioutput,imodulo2,idemarre,icommence,irecord
+  integer :: ioutflow, ninflows, ntimesteps
   integer :: itime0
   integer :: iscalar,nxboite,istat,iread,iadvance_time,irotation,iibm
   integer :: npif,izap
@@ -318,6 +319,7 @@ module param
   real(mytype) :: wrotation,ro
   real(mytype) :: dens1, dens2
   real(mytype) :: C_filter
+  character(len=100) :: inflowpath
 
   !! Channel flow
   integer :: icpg, icfr

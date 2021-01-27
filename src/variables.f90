@@ -106,6 +106,10 @@ module var
   ! working arrays for ABL
   real(mytype), save, allocatable, dimension(:,:) :: heatflux
 
+  ! arrays for inflow/outflow - precursor simulations
+  real(mytype), save, allocatable, dimension(:,:,:) :: ux_inflow, uy_inflow, uz_inflow
+  real(mytype), save, allocatable, dimension(:,:,:) :: ux_recoutflow, uy_recoutflow, uz_recoutflow
+
 contains
 
   subroutine init_variables
@@ -187,6 +191,19 @@ contains
     bxxn=zero;bxyn=zero;bxzn=zero
     byxn=zero;byyn=zero;byzn=zero
     bzxn=zero;bzyn=zero;bzzn=zero
+
+    !inflow/outflow arrays (precursor simulations)
+    if (iin.eq.3) then
+       allocate(ux_inflow(ntimesteps,xsize(2),xsize(3)))
+       allocate(uy_inflow(ntimesteps,xsize(2),xsize(3)))
+       allocate(uz_inflow(ntimesteps,xsize(2),xsize(3)))
+    endif
+
+    if (ioutflow.eq.1) then
+       allocate(ux_recoutflow(ntimesteps,xsize(2),xsize(3)))
+       allocate(uy_recoutflow(ntimesteps,xsize(2),xsize(3)))
+       allocate(uz_recoutflow(ntimesteps,xsize(2),xsize(3)))
+    endif
 
     !pre_correc 2d array
     allocate(dpdyx1(xsize(2),xsize(3)),dpdyxn(xsize(2),xsize(3)))
