@@ -39,7 +39,7 @@ program xcompact3d
   use time_integrators, only : int_time
   use navier, only : velocity_to_momentum, momentum_to_velocity, pre_correc, &
        calc_divu_constraint, solve_poisson, cor_vel
-  use tools, only : restart, simu_stats, apply_spatial_filter
+  use tools, only : restart, simu_stats, apply_spatial_filter, read_inflow
 
   implicit none
 
@@ -49,6 +49,10 @@ program xcompact3d
      !t=itime*dt
      t=t0 + (itime0 + itime + 1 - ifirst)*dt
      call simu_stats(2)
+
+     if (iin.eq.3.and.mod(itime,ntimesteps)==0) then
+        call read_inflow(ux_inflow,uy_inflow,uz_inflow,itime/ntimesteps)
+     endif
 
      if (itype.eq.itype_abl.and.ifilter.ne.0.and.ilesmod.ne.0) then
         call filter(C_filter)
@@ -104,7 +108,7 @@ subroutine init_xcompact3d()
   use navier, only : calc_divu_constraint
   use tools, only : test_speed_min_max, test_scalar_min_max, &
        restart, &
-       simu_stats, compute_cfldiff
+       simu_stats, compute_cfldiff, read_inflow
 
   use param, only : ilesmod, jles
   use param, only : irestart
@@ -188,6 +192,10 @@ subroutine init_xcompact3d()
      if (irestart==1) then
         call restart_forces(0)
      endif
+  endif
+
+  if (iin.eq.3) then
+     call read_inflow(ux_inflow,uy_inflow,uz_inflow,0)
   endif
   !####################################################################
   ! initialise visu
