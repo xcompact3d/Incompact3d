@@ -36,14 +36,14 @@ contains
 
     USE MPI
     USE param, only : dx, dy, dz, nclx, ncly, nclz, xlx, yly, zlz, istret, one, half
-    USE variables, only : nx, nxm, ny, yp, nym, ypi, nz, nzm
+    USE variables, only : nxm, ny, yp, nym, ypi, nzm
 
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ep1
 
     logical :: fexists
     double precision :: xprobes, yprobes, zprobes, xyzprobes(3)
     integer :: iounit
-    integer :: i,j,k,code
+    integer :: i,j,code
     character :: a
 
 #ifdef DEBG

@@ -197,11 +197,11 @@ contains
 
     USE decomp_2d, ONLY : mytype, xsize
     USE param, ONLY : zero, one
-    USE param, ONLY : ntime, nrhotime, ilmn, iscalar, ilmn_solve_temp,itimescheme
+    USE param, ONLY : ntime, nrhotime, ilmn, iscalar, ilmn_solve_temp
     USE param, ONLY : iimplicit, sc_even
     USE param, ONLY : primary_species, massfrac
     use param, only : scalar_lbound, scalar_ubound
-    USE variables, ONLY : numscalar,nu0nu
+    USE variables, ONLY : numscalar
     USE var, ONLY : ta1, tb1
 
     IMPLICIT NONE

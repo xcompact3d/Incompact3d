@@ -673,7 +673,7 @@ contains
   !##################################################################
   subroutine rescale_pressure(pre1)
 
-    use decomp_2d, only : nrank, mytype, xsize, ysize, zsize
+    use decomp_2d, only : nrank, mytype, xsize
     use param, only : itimescheme, gdt
     implicit none
 
@@ -681,7 +681,7 @@ contains
 
     ! Adjust pressure to physical pressure
     if  ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.5)) then !AB2, AB3, RK3
-       pre1=pre1 / gdt(3) ! multiply pressure by factor of time-scheme (gdt = 1  / (dt * c_k) ) to get pyhsical pressure
+       pre1 = pre1 / gdt(3) ! multiply pressure by factor of time-scheme (gdt = 1  / (dt * c_k) ) to get pyhsical pressure
     else
        if (nrank .eq. 0) print *,'WARNING: No scaling of pressure defined!!!'
     endif

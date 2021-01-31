@@ -47,8 +47,6 @@ subroutine parameter(input_i3d)
   use decomp_2d
   use ibm_param
 
-  use var, only : dphi1
-
   use lockexch, only : pfront
 
   use forces, only : iforces, nvol, xld, xrd, yld, yud
@@ -56,8 +54,7 @@ subroutine parameter(input_i3d)
   implicit none
 
   character(len=80), intent(in) :: input_i3d
-  real(mytype) :: theta, cfl,cf2
-  integer :: longueur ,impi,j, is, total
+  integer :: is
 
   NAMELIST /BasicParam/ p_row, p_col, nx, ny, nz, istret, beta, xlx, yly, zlz, &
        itype, iin, re, u1, u2, init_noise, inflow_noise, &

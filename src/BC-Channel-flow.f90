@@ -37,8 +37,6 @@ module channel
 
   implicit none
 
-  integer :: FS
-  character(len=100) :: fileformat
   character(len=1),parameter :: NL=char(10) !new line character
 
   PRIVATE ! All functions/subroutines private by default
@@ -230,15 +228,13 @@ contains
     USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
     USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
 
-    use var, ONLY : nxmsize, nymsize, nzmsize
+    use var, ONLY : nzmsize
     use param, ONLY : npress
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
     character(len=30) :: filename
-
-    integer :: is
 
     if ((ivisu.ne.0).and.(mod(itime, ioutput).eq.0)) then
           !! Write vorticity as an example of post processing

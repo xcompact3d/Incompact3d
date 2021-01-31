@@ -1053,7 +1053,7 @@ contains
     nx = nx_global - 1
     ny = ny_global - 1
 
-    if (bcz==1) then	
+    if (bcz==1) then
        nz = nz_global - 1
     else if (bcz==0) then
        nz = nz_global
