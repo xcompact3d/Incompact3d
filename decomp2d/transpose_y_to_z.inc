@@ -432,6 +432,7 @@ subroutine mem_split_yz_complex(in,n1,n2,n3,out,iproc,dist,decomp)
 end subroutine mem_split_yz_complex
 
 
+#if defined SHM || defined EVEN
 subroutine mem_merge_yz_real(in,n1,n2,n3,out,iproc,dist,decomp)
 
   implicit none
@@ -476,8 +477,10 @@ subroutine mem_merge_yz_real(in,n1,n2,n3,out,iproc,dist,decomp)
 
   return
 end subroutine mem_merge_yz_real
+#endif
 
 
+#if defined SHM || defined EVEN
 subroutine mem_merge_yz_complex(in,n1,n2,n3,out,iproc,dist,decomp)
 
   implicit none
@@ -522,3 +525,4 @@ subroutine mem_merge_yz_complex(in,n1,n2,n3,out,iproc,dist,decomp)
 
   return
 end subroutine mem_merge_yz_complex
+#endif
