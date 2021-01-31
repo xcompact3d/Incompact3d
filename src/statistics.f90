@@ -51,7 +51,6 @@ contains
     use var, only : pp2, ppi2, dip2
     use var, only : pp1, ta1, di1
 
-    use var, only : tmean
     use var, only : pmean
     use var, only : umean, uumean
     use var, only : vmean, vvmean
