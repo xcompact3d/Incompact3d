@@ -712,7 +712,7 @@ contains
     use decomp_2d
     use case, only : scalar_forcing
 
-    use var, only : ta1,tb1,tc1,td1,di1
+    use var, only : ta1,tb1,tc1,di1
     use var, only : rho2,uy2,ta2,tb2,tc2,td2,te2,di2
     use var, only : rho3,uz3,ta3,tb3,tc3,td3,di3
 
