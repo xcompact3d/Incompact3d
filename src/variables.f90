@@ -160,9 +160,11 @@ contains
       mu1(:,:,:) = one
     endif
 
-    call alloc_x(uxf1);call alloc_x(uyf1);call alloc_x(uzf1);call alloc_x(phif1);
+    if (itype.eq.itype_abl.and.ifilter.ne.0.and.ilesmod.ne.0) then
+       call alloc_x(uxf1);call alloc_x(uyf1);call alloc_x(uzf1);call alloc_x(phif1);
+    endif
 
-    allocate(pp1(nxmsize,xsize(2),xsize(3)))
+    allocate(pp0(nxmsize,xsize(2),xsize(3)))
     allocate(pgy1(nxmsize,xsize(2),xsize(3)))
     allocate(pgz1(nxmsize,xsize(2),xsize(3)))
 
@@ -236,7 +238,9 @@ contains
     call alloc_y(td2);call alloc_y(te2);call alloc_y(tf2)
     call alloc_y(tg2);call alloc_y(th2);call alloc_y(ti2)
     call alloc_y(tj2);call alloc_y(di2)
-    call alloc_y(uxf2);call alloc_y(uyf2);call alloc_y(uzf2); call alloc_y(phif2)
+    if (itype.eq.itype_abl.and.ifilter.ne.0.and.ilesmod.ne.0) then
+       call alloc_y(uxf2);call alloc_y(uyf2);call alloc_y(uzf2); call alloc_y(phif2)
+    endif
     allocate(phi2(ysize(1),ysize(2),ysize(3),1:numscalar))
     allocate(pgz2(ph3%yst(1):ph3%yen(1),nymsize,ysize(3)))
     allocate(pp2(ph3%yst(1):ph3%yen(1),nymsize,ysize(3)))
@@ -261,7 +265,9 @@ contains
     call alloc_z(td3);call alloc_z(te3);call alloc_z(tf3)
     call alloc_z(tg3);call alloc_z(th3);call alloc_z(ti3)
     call alloc_z(di3)
-    call alloc_z(uxf3);call alloc_z(uyf3);call alloc_z(uzf3); call alloc_z(phif3)
+    if (itype.eq.itype_abl.and.ifilter.ne.0.and.ilesmod.ne.0) then
+       call alloc_z(uxf3);call alloc_z(uyf3);call alloc_z(uzf3); call alloc_z(phif3)
+    endif
     allocate(phi3(zsize(1),zsize(2),zsize(3),1:numscalar))
     allocate(pgz3(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),zsize(3)))
     allocate(ppi3(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),zsize(3)))
