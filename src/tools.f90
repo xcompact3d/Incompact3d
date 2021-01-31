@@ -536,55 +536,32 @@ contains
 
     implicit none
 
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux
-    real(mytype) :: constant
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(inout) :: ux
+    real(mytype), intent(in) :: constant
 
     integer :: code,i,j,k,jloc
-    real(mytype) :: can,ub,uball, dyloc
-    !
+    real(mytype) :: can, ub, uball, coeff
+
     ub = zero
     uball = zero
-    !
-    do k=1,xsize(3)
-       do j=xstart(2)+1,xend(2)-1
-          jloc = j-xstart(2)+1
-          dyloc  = (yp(j+1)-yp(j-1))
-          do i=1,xsize(1)
-            ub = ub + ux(i,jloc,k) * half * dyloc
-          enddo
+    coeff = dy / (yly * real(nx*nz,mytype))
+
+    do k = 1, xsize(3)
+       do jloc = 1, xsize(2)
+          j = jloc + xstart(2) - 1
+          ub = ub + sum(ux(:,jloc,k)) / ppy(j)
        enddo
     enddo
 
-    ! Check if first and last index of subarray is at domain boundary
-    if ( xstart(2)==1) then ! bottom point -> half distance
-       ub = ub + sum(ux(:,1,:)) * yp(2)*half
-    else
-       ub = ub + sum(ux(:,1,:)) * (yp(xstart(2)+1)-yp(xstart(2)-1))*half
-    end if
-    !
-    if (xend(2)==ny) then ! top point
-       jloc = xend(2)-xstart(2)+1
-       ub = ub + sum(ux(:,jloc,:)) * (yp(xend(2))-yp(xend(2)-1))*half
-    else
-       jloc = xend(2)-xstart(2)+1
-       ub = ub + sum(ux(:,jloc,:)) * (yp(xend(2)+1)-yp(xend(2)-1))*half
-    end if
-    !
-    ub = ub/(yly*(real(nx*nz,mytype)))
+    ub = ub * coeff
 
     call MPI_ALLREDUCE(ub,uball,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
-    can=-(constant-uball)
+    can = - (constant - uball)
 
     if (nrank==0) print *,nrank,'UT',uball,can
 
-    do k=1,xsize(3)
-      do j=1,xsize(2)
-        do i=1,xsize(1)
-          ux(i,j,k)=ux(i,j,k)-can
-        enddo
-      enddo
-    enddo
+    ux(:,:,:) = ux(:,:,:) - can
 
     return
   end subroutine channel_cfr

@@ -58,15 +58,12 @@ contains
 
     implicit none
 
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(out) :: ux1,uy1,uz1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(out) :: phi1
 
-    real(mytype) :: y,r,um,r3,x,z,h,ct
-    real(mytype) :: cx0,cy0,cz0,hg,lg
-    integer :: k,j,i,fh,ierror,ii,is,it,code
-    integer (kind=MPI_OFFSET_KIND) :: disp
-
-    integer, dimension (:), allocatable :: seed
+    real(mytype) :: y, um
+    integer :: k, j, i, ii, code
 
     if (iscalar==1) then
       if (nrank.eq.0) print *,'Imposing linear temperature profile'
@@ -137,27 +134,23 @@ contains
   subroutine boundary_conditions_channel (ux,uy,uz,phi)
 
     use param
+    use var, only : di2
     use variables
     use decomp_2d
     use tools, only : channel_cfr
 
     implicit none
 
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
-!!$  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ut
-
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: gx
-    real(mytype) :: x, y, z
-    integer :: i, j, k, is
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(inout) :: ux,uy,uz
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(inout) :: phi
 
     if (icpg.ne.one) then ! if not constant pressure gradient
       if (icfr.eq.one) then ! constant flow rate without transposition
         call channel_cfr(ux,two/three)
       else if (icfr.eq.two) then
-        call transpose_x_to_y(ux,gx)
-        call channel_flrt(gx,two/three)
-        call transpose_y_to_x(gx,ux)
+        call transpose_x_to_y(ux,di2)
+        call channel_flrt(di2,two/three)
+        call transpose_y_to_x(di2,ux)
       end if
     end if
 
@@ -198,42 +191,31 @@ contains
 
     implicit none
 
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux
-    real(mytype) :: constant
+    real(mytype),dimension(ysize(1),ysize(2),ysize(3)), intent(inout) :: ux
+    real(mytype), intent(in) :: constant
 
     integer :: j,i,k,code
-    real(mytype) :: can,ut3,ut,ut4
+    real(mytype) :: can, ut3, ut4, coeff
 
-    ut3=zero
-    do k=1,ysize(3)
-       do i=1,ysize(1)
-          ut=zero
-          do j=1,ny-1
-             if (istret.eq.0) then
-                ut=ut+dy*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
-             else
-                ut=ut+(yp(j+1)-yp(j))*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
-             endif
-          enddo
-          ut=ut/yly
-          ut3=ut3+ut
+    ut3 = zero
+    ut4 = zero
+    coeff = dy / (yly * real(nx*nz,mytype))
+
+    do k = 1, ysize(3)
+       do j = 1, ysize(2)
+          ut3 = ut3 + sum(ux(:,j,k)) / ppy(j)
        enddo
     enddo
-    ut3=ut3/(real(nx*nz,mytype))
+
+    ut3 = ut3 * coeff
 
     call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
-    can=-(constant-ut4)
+    can = - (constant - ut4)
 
     if (nrank==0) print *,nrank,'correction to ensure constant flow rate',ut4,can
 
-    do k=1,ysize(3)
-       do i=1,ysize(1)
-          do j=2,ny-1
-             ux(i,j,k)=ux(i,j,k)-can
-          enddo
-       enddo
-    enddo
+    ux(:,2:(ny-1),:) = ux(:,2:(ny-1),:) - can
 
     return
   end subroutine channel_flrt
@@ -319,7 +301,7 @@ contains
     implicit none
 
     real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1
+    real(mytype), intent(inout), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1
 
     if (icpg.eq.one) then
         !! fcpg: add constant pressure gradient in streamwise direction
