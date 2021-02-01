@@ -173,6 +173,15 @@ contains
     endif
 
   end subroutine restart_forces
+
+subroutine finalize_forces                                                                           
+  
+  implicit none
+  
+  deallocate(xld, xrd, yld, yud)
+  
+end subroutine finalize_forces
+
 end module forces
 
 !***********************************************************************

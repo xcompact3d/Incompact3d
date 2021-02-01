@@ -65,7 +65,6 @@ contains
     real(mytype) :: cx0,cy0,cz0,hg,lg
     integer :: k,j,i,fh,ierror,is,code
     integer (kind=MPI_OFFSET_KIND) :: disp
-    integer, dimension (:), allocatable :: seed
     integer ::  isize
 
     if (iscalar==1) then
@@ -112,10 +111,8 @@ contains
           enddo
        enddo
 
-       call random_seed(size=isize)
-       allocate (seed(isize))
-       seed(:)=67
-       call random_seed(put=seed)
+       call random_seed(size = isize)
+       call random_seed(put = (/ (67, i = 1, isize) /))
        !     call random_number(ux1)
        !     call random_number(uy1)
        ! call random_number(uz1)
