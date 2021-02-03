@@ -66,6 +66,7 @@ else ifeq ($(FFT),generic)
   LIBFFT=
 else ifeq ($(FFT),mkl)
   SRCDECOMP := $(DECOMPDIR)/mkl_dfti.f90 $(SRCDECOMP)
+  OBJDECOMP := $(DECOMPDIR)/mkl_dfti.o $(OBJDECOMP)
   LIBFFT=-Wl,--start-group $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a $(MKLROOT)/lib/intel64/libmkl_sequential.a $(MKLROOT)/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread
 	INC=-I$(MKLROOT)/include
 endif
@@ -84,17 +85,54 @@ xcompact3d : $(OBJDECOMP) $(OBJ)
 $(OBJDECOMP):$(DECOMPDIR)%.o : $(DECOMPDIR)%.f90
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(DEFS2) $(INC) -c $<
 	mv $(@F) ${DECOMPDIR}
-	#mv *.mod ${DECOMPDIR}
-
 
 $(OBJ):$(SRCDIR)%.o : $(SRCDIR)%.f90
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(DEFS2) $(INC) -c $<
 	mv $(@F) ${SRCDIR}
-	#mv *.mod ${SRCDIR}
 
-## This %.o : %.f90 doesn't appear to be called...
-%.o : %.f90
-	$(FC) $(FFLAGS) $(DEFS) $(DEFS2) $(INC) -c $<
+#
+# Explicit dependencies allow parallel make
+#
+# Decomp 2D
+#
+$(DECOMPDIR)/glassman.o: $(DECOMPDIR)/decomp_2d.o
+$(DECOMPDIR)/io.o: $(DECOMPDIR)/decomp_2d.o
+$(DECOMPDIR)/fft_$(FFT).o: $(DECOMPDIR)/glassman.o
+#
+# X3D
+#
+$(SRCDIR)/BC-ABL.o: $(SRCDIR)/poisson.o
+$(SRCDIR)/BC-Channel-flow.o: $(SRCDIR)/tools.o
+$(SRCDIR)/BC-Cylinder.o: $(SRCDIR)/variables.o
+$(SRCDIR)/BC-dbg-schemes.o: $(SRCDIR)/variables.o
+$(SRCDIR)/BC-Jet.o: $(SRCDIR)/poisson.o
+$(SRCDIR)/BC-Lock-exchange.o: $(SRCDIR)/tools.o
+$(SRCDIR)/BC-Mixing-layer.o: $(SRCDIR)/module_param.o
+$(SRCDIR)/BC-Periodic-hill.o: $(SRCDIR)/poisson.o
+$(SRCDIR)/BC-TBL.o: $(SRCDIR)/poisson.o
+$(SRCDIR)/BC-TGV.o: $(SRCDIR)/variables.o
+$(SRCDIR)/BC-User.o: $(SRCDIR)/module_param.o $(DECOMPDIR)/io.o
+$(SRCDIR)/case.o: $(SRCDIR)/BC-Lock-exchange.o $(SRCDIR)/BC-Channel-flow.o
+$(SRCDIR)/derive.o: $(SRCDIR)/ibm.o
+$(SRCDIR)/filters.o: $(SRCDIR)/ibm.o
+$(SRCDIR)/forces.o: $(SRCDIR)/module_param.o $(DECOMPDIR)/io.o
+$(SRCDIR)/genepsi3d.o: $(SRCDIR)/BC-Channel-flow.o
+$(SRCDIR)/ibm.o: $(SRCDIR)/module_param.o
+$(SRCDIR)/implicit.o: $(SRCDIR)/variables.o
+$(SRCDIR)/les_models.o: $(SRCDIR)/BC-ABL.o $(SRCDIR)/tools.o
+$(SRCDIR)/module_param.o: $(DECOMPDIR)/decomp_2d.o
+$(SRCDIR)/navier.o: $(SRCDIR)/BC-TBL.o
+$(SRCDIR)/parameters.o: $(SRCDIR)/BC-Lock-exchange.o
+$(SRCDIR)/poisson.o: $(SRCDIR)/variables.o
+$(SRCDIR)/probes.o: $(SRCDIR)/variables.o
+$(SRCDIR)/schemes.o: $(SRCDIR)/implicit.o
+$(SRCDIR)/statistics.o: $(SRCDIR)/variables.o
+$(SRCDIR)/time_integrators.o: $(SRCDIR)/implicit.o $(SRCDIR)/navier.o
+$(SRCDIR)/tools.o: $(SRCDIR)/navier.o
+$(SRCDIR)/transeq.o: $(SRCDIR)/case.o $(SRCDIR)/les_models.o
+$(SRCDIR)/variables.o: $(SRCDIR)/module_param.o
+$(SRCDIR)/visu.o: $(SRCDIR)/tools.o
+$(SRCDIR)/xcompact3d.o: $(SRCDIR)/transeq.o
 
 .PHONY: post
 post:
