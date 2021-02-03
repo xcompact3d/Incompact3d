@@ -47,6 +47,7 @@ module case
   use lockexch
   use tbl
   use abl
+  use uniform
 
   use var, only : nzmsize
 
@@ -126,6 +127,10 @@ contains
 
        call init_abl (ux1, uy1, uz1, ep1, phi1)
 
+    elseif (itype.eq.itype_uniform) then
+
+       call init_uniform (ux1, uy1, uz1, ep1, phi1)
+
     endif
 
     !! Setup old arrays
@@ -195,6 +200,10 @@ contains
 
        call boundary_conditions_abl (ux, uy, uz, phi)
 
+    elseif (itype.eq.itype_uniform) then
+
+       call boundary_conditions_uniform (ux, uy, uz, phi)
+
     endif
 
   end subroutine boundary_conditions
@@ -233,13 +242,14 @@ contains
     use var, only : itime
     use var, only : numscalar, nrhotime, npress
 
+    use turbine, only : turbine_output
     use probes, only : write_probes
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux1, uy1, uz1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(in) :: phi1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime), intent(in) :: rho1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ep1
-    real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
+    real(mytype),dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
 
     integer :: j
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: T
@@ -260,6 +270,10 @@ contains
 
     call postprocess_case(rho1, ux1, uy1, uz1, pp3, T, ep1)
     call overall_statistic(ux1, uy1, uz1, T, pp3, ep1)
+
+    if (iturbine.ne.0) then 
+      call turbine_output()
+    endif
 
     call write_probes(ux1, uy1, uz1, pp3, phi1)
     
@@ -317,6 +331,10 @@ contains
     elseif (itype.eq.itype_abl) then
 
        call postprocess_abl (ux, uy, uz, ep)
+
+    elseif (itype.eq.itype_uniform) then
+
+       call postprocess_uniform (ux, uy, uz, ep)
 
     endif
 

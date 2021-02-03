@@ -40,6 +40,7 @@ program xcompact3d
   use navier, only : velocity_to_momentum, momentum_to_velocity, pre_correc, &
        calc_divu_constraint, solve_poisson, cor_vel
   use tools, only : restart, simu_stats, apply_spatial_filter, read_inflow
+  use turbine, only : compute_turbines
 
   implicit none
 
@@ -50,11 +51,13 @@ program xcompact3d
      t=t0 + (itime0 + itime + 1 - ifirst)*dt
      call simu_stats(2)
 
+     if (iturbine.ne.0) call compute_turbines(ux1, uy1, uz1)
+
      if (iin.eq.3.and.mod(itime,ntimesteps)==0) then
         call read_inflow(ux_inflow,uy_inflow,uz_inflow,itime/ntimesteps)
      endif
 
-     if (itype.eq.itype_abl.and.ifilter.ne.0.and.ilesmod.ne.0) then
+     if ((itype.eq.itype_abl.or.iturbine.ne.0).and.(ifilter.ne.0).and.(ilesmod.ne.0)) then
         call filter(C_filter)
         call apply_spatial_filter(ux1,uy1,uz1,phi1)
      endif
@@ -118,6 +121,7 @@ subroutine init_xcompact3d()
   use variables, only : nstat, nvisu, nprobe
 
   use les, only: init_explicit_les
+  use turbine, only: init_turbines
 
   use visu, only : visu_init
 
@@ -219,6 +223,8 @@ subroutine init_xcompact3d()
   call calc_divu_constraint(divu3, rho1, phi1)
 
   call init_probes(ep1)
+
+  if (iturbine.ne.0) call init_turbines(ux1, uy1, uz1)
 
   if(nrank.eq.0)then
      open(42,file='time_evol.dat',form='formatted')
