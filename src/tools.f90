@@ -536,7 +536,7 @@ contains
     character(20) :: fninflow
 
     ! Recirculate inflows 
-    if (ifileinflow>ninflows) then 
+    if (ifileinflow>=ninflows) then 
       ifileinflow=mod(ifileinflow,ninflows)
     endif
 

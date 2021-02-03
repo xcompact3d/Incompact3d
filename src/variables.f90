@@ -106,6 +106,10 @@ module var
   ! working arrays for ABL
   real(mytype), save, allocatable, dimension(:,:) :: heatflux
 
+  ! arrays for turbine modelling
+  real(mytype), save, allocatable, dimension(:,:,:) :: FTx, FTy, FTz, Fdiscx, Fdiscy, Fdiscz
+  real(mytype), save, allocatable, dimension(:,:,:,:) ::  GammaDisc
+
   ! arrays for inflow/outflow - precursor simulations
   real(mytype), save, allocatable, dimension(:,:,:) :: ux_inflow, uy_inflow, uz_inflow
   real(mytype), save, allocatable, dimension(:,:,:) :: ux_recoutflow, uy_recoutflow, uz_recoutflow
@@ -534,6 +538,18 @@ contains
     allocate(PsiM(xsize(1),xsize(3)))
     allocate(PsiH(xsize(1),xsize(3)))
     allocate(Tstat(xsize(2),1))
+
+    !! Turbine Modelling
+    if (iturbine.eq.1) then
+       allocate(FTx(xsize(1),xsize(2),xsize(3)))
+       allocate(FTy(xsize(1),xsize(2),xsize(3)))
+       allocate(FTz(xsize(1),xsize(2),xsize(3)))
+    else if (iturbine.eq.2) then
+       allocate(Fdiscx(xsize(1),xsize(2),xsize(3)))
+       allocate(Fdiscy(xsize(1),xsize(2),xsize(3)))
+       allocate(Fdiscz(xsize(1),xsize(2),xsize(3)))
+       allocate(Gammadisc(xsize(1),xsize(2),xsize(3),Ndiscs))
+    endif
 
     !! LMN
     if (.not.ilmn) then

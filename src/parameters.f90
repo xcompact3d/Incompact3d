@@ -68,7 +68,7 @@ subroutine parameter(input_i3d)
        ivisu, ipost, &
        gravx, gravy, gravz, &
        icpg, icfr, &
-       ifilter, C_filter
+       ifilter, C_filter, iturbine
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, iimplicit, &
        nu0nu, cnu, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu, iprocessing, &
@@ -90,6 +90,9 @@ subroutine parameter(input_i3d)
        imassconserve, ibuoyancy, iPressureGradient, iCoriolis, CoriolisFreq, &
        istrat, idamping, iheight, TempRate, TempFlux, itherm, gravv, UG, T_wall, T_top 
   NAMELIST /CASE/ tgv_twod, pfront
+  NAMELIST/ALMParam/ialmrestart,filealmrestart,iturboutput,NTurbines,TurbinesPath,NActuatorlines,ActuatorlinesPath,eps_factor,rho_air
+  NAMELIST/ADMParam/Ndiscs,ADMcoords,C_T,aind,iturboutput,rho_air
+
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter start'
 #endif
@@ -209,6 +212,11 @@ subroutine parameter(input_i3d)
   if (itype.eq.itype_abl) then
      read(10, nml=ABL); rewind(10)
   endif
+  if (iturbine.eq.1) then
+     read(10, nml=ALMParam); rewind(10)
+  else if (iturbine.eq.2) then
+     read(10, nml=ADMParam); rewind(10)
+  endif
   ! read(10, nml=TurbulenceWallModel)
   read(10, nml=CASE); rewind(10) !! Read case-specific variables
   close(10)
@@ -322,6 +330,8 @@ subroutine parameter(input_i3d)
         print *,'Turbulent boundary layer'
      elseif (itype.eq.itype_abl) then
         print *,'Atmospheric boundary layer'
+     elseif (itype.eq.itype_uniform) then
+        print *,'Uniform flow'
      else
         print *,'Unknown itype: ', itype
         stop
@@ -625,6 +635,10 @@ subroutine parameter_defaults()
   TempRate=-0.25/3600
   TempFlux=0.24
   UG=[0d0,0d0,0d0]
+
+  !! Turbine modelling
+  iturbine=0
+  rho_air=1.0
 
   !! IO
   ivisu = 1
