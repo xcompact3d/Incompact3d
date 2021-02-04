@@ -542,7 +542,7 @@ contains
 
     ! Read inflow
     write(fninflow,'(i20)') ifileinflow+1
-    if (nrank==0) print *,'READING INFLOW from ',trim(inflowpath)//'inflow'//trim(adjustl(fninflow))
+    if (nrank==0) print *,'READING INFLOW FROM ',trim(inflowpath)//'inflow'//trim(adjustl(fninflow))
     call MPI_FILE_OPEN(MPI_COMM_WORLD, trim(inflowpath)//'inflow'//trim(adjustl(fninflow)), &
          MPI_MODE_RDONLY, MPI_INFO_NULL, &
          fh, ierror)
@@ -598,8 +598,8 @@ contains
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     character(20) :: fnoutflow
     
-    if (nrank==0) print *,'WRITING OUTFLOW'
     write(fnoutflow,'(i20)') ifileoutflow
+    if (nrank==0) print *,'WRITING OUTFLOW TO ','./out/inflow'//trim(adjustl(fnoutflow))
     call MPI_FILE_OPEN(MPI_COMM_WORLD, './out/inflow'//trim(adjustl(fnoutflow)), &
          MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
          fh, ierror)
