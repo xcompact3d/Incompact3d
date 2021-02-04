@@ -53,7 +53,7 @@ program xcompact3d
 
      if (iturbine.ne.0) call compute_turbines(ux1, uy1, uz1)
 
-     if (iin.eq.3.and.mod(itime,ntimesteps)==0) then
+     if (iin.eq.3.and.mod(itime,ntimesteps)==1) then
         call read_inflow(ux_inflow,uy_inflow,uz_inflow,itime/ntimesteps)
      endif
 
@@ -111,7 +111,7 @@ subroutine init_xcompact3d()
   use navier, only : calc_divu_constraint
   use tools, only : test_speed_min_max, test_scalar_min_max, &
        restart, &
-       simu_stats, compute_cfldiff, read_inflow
+       simu_stats, compute_cfldiff
 
   use param, only : ilesmod, jles
   use param, only : irestart
@@ -198,9 +198,6 @@ subroutine init_xcompact3d()
      endif
   endif
 
-  if (iin.eq.3) then
-     call read_inflow(ux_inflow,uy_inflow,uz_inflow,0)
-  endif
   !####################################################################
   ! initialise visu
   if (ivisu.ne.0) call visu_init()

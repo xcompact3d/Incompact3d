@@ -172,19 +172,19 @@ contains
       enddo
     else if (iin.eq.3) then
       ! Reading from files (when precursor simulations exist)
-      if (nrank==0) print *,'READ inflow from a file'
-      itime_input=mod(itime,NTimeSteps)
-      if (nrank==0) print *,'Reading time step', itime_input
+      itime_input=mod(itime,ntimesteps)
+      if (itime_input==0) itime_input=ntimesteps
+      if (nrank==0) print *,'Reading inflow from a file, time step: ', itime_input
       do k=1,xsize(3)
       do j=1,xsize(2)
         ! Case 1: Inflow is turbulence added to mean flow profile
-        !bxx1(j,k)=bxx1(j,k)+ux_inflow(NTimeSteps-itime_input,j,k)
-        !bxy1(j,k)=bxy1(j,k)+uy_inflow(NTimeSteps-itime_input,j,k)
-        !bxz1(j,k)=bxz1(j,k)+uz_inflow(NTimeSteps-itime_input,j,k)
+        !bxx1(j,k)=bxx1(j,k)+ux_inflow(itime_input,j,k)
+        !bxy1(j,k)=bxy1(j,k)+uy_inflow(itime_input,j,k)
+        !bxz1(j,k)=bxz1(j,k)+uz_inflow(itime_input,j,k)
         ! Case 2: Inflow is full velocity field
-        bxx1(j,k)=ux_inflow(NTimeSteps-itime_input,j,k)
-        bxy1(j,k)=uy_inflow(NTimeSteps-itime_input,j,k)
-        bxz1(j,k)=uz_inflow(NTimeSteps-itime_input,j,k)
+        bxx1(j,k)=ux_inflow(itime_input,j,k)
+        bxy1(j,k)=uy_inflow(itime_input,j,k)
+        bxz1(j,k)=uz_inflow(itime_input,j,k)
       enddo
       enddo
     endif
