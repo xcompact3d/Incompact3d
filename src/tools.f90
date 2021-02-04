@@ -38,6 +38,7 @@ module tools
   public :: test_speed_min_max, test_scalar_min_max, &
        restart, &
        simu_stats, &
+       apply_spatial_filter, &
        compute_cfldiff, compute_cfl, &
        rescale_pressure, mean_plane_x, mean_plane_y, mean_plane_z, &
        channel_cfr
@@ -85,7 +86,7 @@ contains
 
         print *,'Phi'//char(48+is)//' min max=', real(phimin1,4), real(phimax1,4)
 
-        if (abs(phimax1).ge.10.) then !if phi control turned off
+        if (abs(phimax1).ge.100.) then !if phi control turned off
            print *,'Scalar diverged! SIMULATION IS STOPPED!'
            call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
         endif
@@ -145,7 +146,7 @@ contains
        print *,'U,V,W max=',real(uxmax1,4),real(uymax1,4),real(uzmax1,4)
        !print *,'CFL=',real(abs(max(uxmax1,uymax1,uzmax1)*dt)/min(dx,dy,dz),4)
 
-       if((abs(uxmax1).ge.10.).OR.(abs(uymax1).ge.10.).OR.(abs(uzmax1).ge.10.)) then
+       if((abs(uxmax1).ge.100.).OR.(abs(uymax1).ge.100.).OR.(abs(uzmax1).ge.100.)) then
          print *,'Velocity diverged! SIMULATION IS STOPPED!'
          call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
        endif
@@ -236,7 +237,7 @@ contains
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
     real(mytype), dimension(phG%zst(1):phG%zen(1),phG%zst(2):phG%zen(2),phG%zst(3):phG%zen(3)) :: pp3
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
-    real(mytype) :: xdt,tfield
+    real(mytype) :: xdt,tfield,y
     integer, dimension(2) :: dims, dummy_coords
     logical, dimension(2) :: dummy_periods
     logical :: fexists
@@ -363,17 +364,29 @@ contains
        call decomp_2d_read_var(fh,disp,3,pp3,phG)
        !
        if (iscalar==1) then
-          do is=1, numscalar
-             call decomp_2d_read_var(fh,disp,1,phi1(:,:,:,is))
-             ! previous time-steps
-             if ((itimescheme.eq.2).or.(itimescheme.eq.3)) then ! AB2 or AB3
-               call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,2,is))
-             end if
-             !
-             if (itimescheme.eq.3) then ! AB3
-               call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,3,is))
-             end if
-          end do
+         do is=1, numscalar
+           call decomp_2d_read_var(fh,disp,1,phi1(:,:,:,is))
+           ! previous time-steps
+           if ((itimescheme.eq.2).or.(itimescheme.eq.3)) then ! AB2 or AB3
+             call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,2,is))
+           end if
+           !
+           if (itimescheme.eq.3) then ! AB3
+             call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,3,is))
+           end if
+           ! ABL 
+           if (itype.eq.itype_abl) then
+             do j=1,xsize(2)
+               if (istret.eq.0) y = (j + xstart(2)-1-1)*dy
+               if (istret.ne.0) y = yp(j+xstart(2)-1)
+               if (ibuoyancy.eq.1) then
+                 Tstat(j,1) = T_wall - (T_wall-T_top)*y/yly
+               else
+                 Tstat(j,1) = 0.
+               endif
+             enddo
+           endif
+         end do
        endif
        call MPI_FILE_CLOSE(fh,ierror_o)
 
@@ -424,6 +437,86 @@ contains
     end if
 
   end subroutine restart
+  !############################################################################
+  !!  SUBROUTINE: apply_spatial_filter
+  !############################################################################
+  subroutine apply_spatial_filter(ux1,uy1,uz1,phi1)
+
+    USE decomp_2d
+    USE param
+    USE var, only: uxf1,uyf1,uzf1,uxf2,uyf2,uzf2,uxf3,uyf3,uzf3,di1,di2,di3,phif1,phif2,phif3
+    USE variables
+
+    implicit none
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(inout) :: ux1,uy1,uz1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3), numscalar), intent(inout) :: phi1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: phi11
+    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux2,uy2,uz2, phi2
+    real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: ux3,uy3,uz3, phi3
+
+    integer :: i,j,k,npaire
+
+    !if (iscalar.eq.1) phi11=phi1(:,:,:,1) !currently only first scalar
+
+    if (ifilter.eq.1.or.ifilter.eq.2) then
+      call filx(uxf1,ux1,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0)
+      call filx(uyf1,uy1,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1)
+      call filx(uzf1,uz1,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1)
+      !if (iscalar.eq.1) call filx(phif1,phi11,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0)
+    else
+      uxf1=ux1
+      uyf1=uy1
+      uzf1=uz1
+      !if (iscalar.eq.1) phif1=phi11
+    end if
+
+    call transpose_x_to_y(uxf1,ux2)
+    call transpose_x_to_y(uyf1,uy2)
+    call transpose_x_to_y(uzf1,uz2)
+    !if (iscalar.eq.1) call transpose_x_to_y(phif1,phi2)
+
+    if (ifilter.eq.1.or.ifilter.eq.3) then ! all filter or y filter
+      call fily(uxf2,ux2,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1)
+      call fily(uyf2,uy2,di2,fisy,fiffy,fifsy,fifwy,ysize(1),ysize(2),ysize(3),0)
+      call fily(uzf2,uz2,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1)
+      !if (iscalar.eq.1) call fily(phif2,phi2,di2,fisy,fiffy,fifsy,fifwy,ysize(1),ysize(2),ysize(3),0)
+    else
+      uxf2=ux2
+      uyf2=uy2
+      uzf2=uz2
+      !if (iscalar.eq.1) phif2=phi2
+    end if
+
+    call transpose_y_to_z(uxf2,ux3)
+    call transpose_y_to_z(uyf2,uy3)
+    call transpose_y_to_z(uzf2,uz3)
+    !if (iscalar.eq.1) call transpose_y_to_z(phif2,phi3)
+
+    if (ifilter.eq.1.or.ifilter.eq.2) then
+      call filz(uxf3,ux3,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1)
+      call filz(uyf3,uy3,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1)
+      call filz(uzf3,uz3,di3,fisz,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),0)
+      !if (iscalar.eq.1) call filz(phif3,phi3,di3,fisz,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),0)
+    else
+      uxf3=ux3
+      uyf3=uy3
+      uzf3=uz3
+      !if (iscalar.eq.1) phif3=phi3
+    end if
+
+    call transpose_z_to_y(uxf3,ux2)
+    call transpose_z_to_y(uyf3,uy2)
+    call transpose_z_to_y(uzf3,uz2)
+    !if (iscalar.eq.1) call transpose_z_to_y(phif3,phi2)
+
+    call transpose_y_to_x(ux2,ux1)
+    call transpose_y_to_x(uy2,uy1)
+    call transpose_y_to_x(uz2,uz1)
+    !if (iscalar.eq.1) call transpose_y_to_x(phi2,phi11)
+
+    !if (iscalar.eq.1) phi1(:,:,:,1)=phi11
+
+  end subroutine apply_spatial_filter
   !############################################################################
   !############################################################################
   !!
