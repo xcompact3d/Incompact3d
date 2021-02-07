@@ -1182,7 +1182,9 @@ end subroutine wale
 
     implicit none
 
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sgsphi1, phi1
+    integer, intent(in) :: is
+    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: phi1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sgsphi1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: dphidy1
     real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: phi2, sgsphi2
     real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: phi3, sgsphi3
@@ -1192,7 +1194,6 @@ end subroutine wale
     real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: nut3, dnut3
 
     real(mytype) :: Pr
-    integer :: is
 
     sgsphi1 = zero; sgsphi2 = zero; sgsphi3 = zero
 
@@ -1209,18 +1210,20 @@ end subroutine wale
     call derxxS(tc1, phi1, di1, sx, sfxpS, ssxpS, swxpS, xsize(1), xsize(2), xsize(3), 1)
     sgsphi1 = tb1 * (dnut1/Pr) + tc1 * (nut1/Pr)
 
-    call transpose_x_to_y(phi1, phi2)
+    call transpose_x_to_y(phi1, phi2(:,:,:,is))
     call transpose_x_to_y(sgsphi1, sgsphi2)
 
-    call deryS (tb2, phi2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1)
-    call deryyS(tc2, phi2, di2, sy, sfypS, ssypS, swypS, ysize(1), ysize(2), ysize(3), 1)
+    call deryS (tb2, phi2(:,:,:,is), di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1)
+    iimplicit = - iimplicit
+    call deryyS(tc2, phi2(:,:,:,is), di2, sy, sfypS, ssypS, swypS, ysize(1), ysize(2), ysize(3), 1)
+    iimplicit = - iimplicit
     sgsphi2 = sgsphi2 + tb2 * (dnut2/Pr) + tc2 * (nut2/Pr)
 
-    call transpose_y_to_z(phi2, phi3)
+    call transpose_y_to_z(phi2(:,:,:,is), phi3(:,:,:,is))
     call transpose_y_to_z(sgsphi2, sgsphi3)
 
-    call derzS (tb3, phi3, di3, sz, ffzpS, fszpS, fwzpS, zsize(1), zsize(2), zsize(3), 1)
-    call derzzS(tc3, phi3, di3, sz, sfzpS, sszpS, swzpS, zsize(1), zsize(2), zsize(3), 1)
+    call derzS (tb3, phi3(:,:,:,is), di3, sz, ffzpS, fszpS, fwzpS, zsize(1), zsize(2), zsize(3), 1)
+    call derzzS(tc3, phi3(:,:,:,is), di3, sz, sfzpS, sszpS, swzpS, zsize(1), zsize(2), zsize(3), 1)
     sgsphi3 = sgsphi3 + tb3 * (dnut3/Pr) + tc3 * (nut3/Pr)
 
     call transpose_z_to_y(sgsphi3, sgsphi2)
