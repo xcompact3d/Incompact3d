@@ -22,6 +22,7 @@ FC = mpiifort
 FFLAGS = -fpp -O3 -xSSE4.2 -axAVX,CORE-AVX-I,CORE-AVX2 -ipo -fp-model fast=2 -mcmodel=large -safe-cray-ptr -I$(MPI_ROOT)/lib
 ##debuggin test: -check all -check bounds -chintel eck uninit -gen-interfaces -warn interfaces
 else ifeq ($(CMP),gcc)
+CC = mpicc
 FC = mpif90
 #FFLAGS = -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -x f95-cpp-input
 FFLAGS = -cpp -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none
@@ -41,6 +42,8 @@ DECOMPDIR = ./decomp2d
 SRCDIR = ./src
 
 ### List of files for the main code
+SRCSIG = $(SRCDIR)/signal.c
+OBJSIG = $(SRCSIG:%.c=%.o)
 SRCDECOMP = $(DECOMPDIR)/decomp_2d.f90 $(DECOMPDIR)/glassman.f90 $(DECOMPDIR)/fft_$(FFT).f90 $(DECOMPDIR)/io.f90
 OBJDECOMP = $(SRCDECOMP:%.f90=%.o)
 SRC = $(SRCDIR)/module_param.f90 $(SRCDIR)/variables.f90 $(SRCDIR)/poisson.f90 $(SRCDIR)/derive.f90 $(SRCDIR)/implicit.f90 $(SRCDIR)/schemes.f90 $(SRCDIR)/parameters.f90 $(SRCDIR)/*.f90
@@ -66,7 +69,6 @@ else ifeq ($(FFT),generic)
   LIBFFT=
 else ifeq ($(FFT),mkl)
   SRCDECOMP := $(DECOMPDIR)/mkl_dfti.f90 $(SRCDECOMP)
-  OBJDECOMP := $(DECOMPDIR)/mkl_dfti.o $(OBJDECOMP)
   LIBFFT=-Wl,--start-group $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a $(MKLROOT)/lib/intel64/libmkl_sequential.a $(MKLROOT)/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread
 	INC=-I$(MKLROOT)/include
 endif
@@ -79,8 +81,8 @@ LINKOPT = $(FFLAGS)
 
 all: xcompact3d
 
-xcompact3d : $(OBJDECOMP) $(OBJ)
-	$(FC) -o $@ $(LINKOPT) $(OBJDECOMP) $(OBJ) $(LIBFFT)
+xcompact3d : $(OBJDECOMP) $(OBJ) $(OBJSIG)
+	$(FC) -o $@ $(LINKOPT) $(OBJDECOMP) $(OBJ) $(OBJSIG) $(LIBFFT)
 
 $(OBJDECOMP):$(DECOMPDIR)%.o : $(DECOMPDIR)%.f90
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(DEFS2) $(INC) -c $<
@@ -88,6 +90,10 @@ $(OBJDECOMP):$(DECOMPDIR)%.o : $(DECOMPDIR)%.f90
 
 $(OBJ):$(SRCDIR)%.o : $(SRCDIR)%.f90
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(DEFS2) $(INC) -c $<
+	mv $(@F) ${SRCDIR}
+
+$(OBJSIG):$(SRCDIR)%.o : $(SRCDIR)%.c
+	$(CC) $(DEFS) $(DEFS2) -c $<
 	mv $(@F) ${SRCDIR}
 
 #

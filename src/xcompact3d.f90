@@ -84,6 +84,9 @@ program xcompact3d
 
      call postprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
 
+     ! This is needed if ilast is modified during the simulation
+     if (itime.ge.ilast) exit
+
   enddo !! End time loop
 
   call finalise_xcompact3d()
@@ -124,6 +127,10 @@ subroutine init_xcompact3d()
 
   implicit none
 
+  external catch_sigusr1, catch_sigusr2
+
+  ! This should be valid for ARM and X86. See "man 7 signal"
+  integer, parameter :: SIGUSR1 = 10, SIGUSR2 = 12
   integer :: ierr
 
   integer :: nargin, FNLength, status, DecInd
@@ -134,6 +141,10 @@ subroutine init_xcompact3d()
   call MPI_INIT(ierr)
   call MPI_COMM_RANK(MPI_COMM_WORLD,nrank,ierr)
   call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,ierr)
+
+  ! Install signal handler
+  call signal(SIGUSR1, catch_sigusr1)
+  call signal(SIGUSR2, catch_sigusr2)
 
   ! Handle input file like a boss -- GD
   nargin=command_argument_count()
@@ -251,3 +262,33 @@ subroutine finalise_xcompact3d()
   CALL MPI_FINALIZE(ierr)
 
 endsubroutine finalise_xcompact3d
+!########################################################################
+!########################################################################
+subroutine catch_sigusr1
+
+  use param, only : itime, ilast
+
+  implicit none
+
+  ! Stop at the end of the next iteration
+  ilast = itime + 1
+
+  return
+
+end subroutine catch_sigusr1
+!########################################################################
+!########################################################################
+subroutine catch_sigusr2
+
+  use param, only : itime, ilast, icheckpoint
+
+  implicit none
+
+  ! Stop at the end of the next iteration
+  ilast = itime + 1
+  ! Write checkpoint at the end of the next iteration
+  icheckpoint = ilast
+
+  return
+
+end subroutine catch_sigusr2
