@@ -99,14 +99,13 @@ contains
     USE variables
     USE decomp_2d
     USE decomp_2d_io
-    use var, only: nut1
+    use var, only: nut1, wallfluxx1, wallfluxy1, wallfluxz1
     USE abl, only: wall_sgs
     implicit none
 
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, ep1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sgsx1, sgsy1, sgsz1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: wallfluxx1, wallfluxy1, wallfluxz1
     integer :: iconservative
 
     ! Calculate eddy-viscosity
