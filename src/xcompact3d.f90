@@ -224,10 +224,11 @@ subroutine finalise_xcompact3d()
   use MPI
   use decomp_2d
   use decomp_2d_poisson, only : decomp_2d_poisson_finalize
-
   use tools, only : simu_stats
   use var, only : finalize_variables
   use forces, only : iforces, finalize_forces
+  use param, only : iimplicit
+  use ydiff_implicit, only : finalize_implicit
 
   implicit none
 
@@ -238,6 +239,7 @@ subroutine finalise_xcompact3d()
   endif
   call simu_stats(4)
   if (iforces.eq.1) call finalize_forces()
+  if (iimplicit.ne.0) call finalize_implicit()
   call finalize_variables()
   call decomp_info_finalize(ph1)
   call decomp_info_finalize(ph4)
