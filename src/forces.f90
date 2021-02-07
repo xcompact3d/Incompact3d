@@ -499,41 +499,22 @@ subroutine force(ux1,uy1,ep1)
      xDrag_mean = sum(xDrag(:))/real(nz,mytype)
      yLift_mean = sum(yLift(:))/real(nz,mytype)
 
-     if ((itime==ifirst).or.(itime==0)) then
-        if (nrank .eq. 0) then
-        write(filename,"('aerof',I1.1)") iv
-        open(38+(iv-1),file=filename,status='unknown',form='formatted')
-        endif
-     endif
-     if (nrank .eq. 0) then
-        write(38+(iv-1),*) t,xDrag_mean,yLift_mean
-     endif
-     if (itime==ilast) then
-        if (nrank .eq. 0) then
-           close(38+(iv-1))
-           write(filename,"('aerof',I1.1)") iv
-           write(filename2,"('aerof',I1.1,'-',I7.7)") iv, itime
-           call system("mv " //filename //filename2)
-        endif
-     endif
-     
-     
-!    if ((nrank .eq. 0).and.(itime.g)) then
+!     if ((itime==ifirst).or.(itime==0)) then
+!        if (nrank .eq. 0) then
 !        write(filename,"('aerof',I1.1)") iv
-!        open(67,file=filename,status='unknown',form='formatted')
+!        open(38+(iv-1),file=filename,status='unknown',form='formatted')
+!        endif
 !     endif
-!     if (nrank .eq. 0) then
-!!        open(67,file=filename,status='unknown',form='formatted',access='direct',recl=43) !43 = 3*14+1!
-!
-        !Using the direct access, each value for the coefficients will be written
-        !in the line itime-2, eliminating any problems with possible restart
-!        write(67,'(3E14.6,A)',rec=itime-2) t,&                     !1
-!             xDrag_mean,&                                          !2
- !            yLift_mean,&                                          !3
-!             char(10) !new line character                          !+1
- !            endif
- !            close(67)
- !    endif
+     if (nrank .eq. 0) then
+        write(38,*) t,xDrag_mean,yLift_mean
+        call flush(38)
+     endif
+     if (mod(itime, icheckpoint).eq.0) then
+        if (nrank .eq. 0) then
+           write(filename,"('forces.dat',I7.7)") itime
+           call system("cp forces.dat " //filename)
+        endif
+     endif
   enddo
 
   do k = 1, xsize(3)

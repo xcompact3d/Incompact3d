@@ -109,7 +109,7 @@ subroutine init_xcompact3d()
        restart, &
        simu_stats, compute_cfldiff
 
-  use param, only : ilesmod, jles
+  use param, only : ilesmod, jles,itype
   use param, only : irestart
 
   use variables, only : nx, ny, nz, nxm, nym, nzm
@@ -223,8 +223,15 @@ subroutine init_xcompact3d()
 
   call init_probes(ep1)
 
+  if (itype==2) then
   if(nrank.eq.0)then
      open(42,file='time_evol.dat',form='formatted')
+  endif
+  endif
+  if (itype==5) then
+  if(nrank.eq.0)then
+     open(38,file='forces.dat',form='formatted')
+  endif
   endif
 
 endsubroutine init_xcompact3d
@@ -238,16 +245,24 @@ subroutine finalise_xcompact3d()
   use tools, only : simu_stats
   use var, only : finalize_variables
   use forces, only : iforces, finalize_forces
-  use param, only : iimplicit
+  use param, only : iimplicit, itype
   use ydiff_implicit, only : finalize_implicit
 
   implicit none
 
   integer :: ierr
-
-  if(nrank.eq.0)then
-     close(42)
+  
+  if (itype==2) then
+     if(nrank.eq.0)then
+        close(42)
+     endif
   endif
+  if (itype==5) then
+     if(nrank.eq.0)then
+        close(38)
+     endif
+  endif
+  
   call simu_stats(4)
   if (iforces.eq.1) call finalize_forces()
   if (iimplicit.ne.0) call finalize_implicit()
