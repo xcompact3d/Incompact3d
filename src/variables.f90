@@ -526,10 +526,12 @@ contains
     allocate(dphi1(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),ntime,1:numscalar)) !global indices
 
     !! ABL
-    allocate(heatflux(xsize(1),xsize(3)))
-    allocate(PsiM(xsize(1),xsize(3)))
-    allocate(PsiH(xsize(1),xsize(3)))
-    allocate(Tstat(xsize(2),1))
+    if (itype.eq.itype_abl) then
+      allocate(heatflux(xsize(1),xsize(3)))
+      allocate(PsiM(xsize(1),xsize(3)))
+      allocate(PsiH(xsize(1),xsize(3)))
+      allocate(Tstat(xsize(2),1))
+    endif
 
     !! LMN
     if (.not.ilmn) then
@@ -663,7 +665,9 @@ contains
 
     deallocate(dux1,duy1,duz1,dphi1)
 
-    deallocate(heatflux,PsiM,PsiH,Tstat)
+    if (itype.eq.itype_abl) then
+       deallocate(heatflux,PsiM,PsiH,Tstat)
+    endif
     deallocate(rho1,rho2,rho3,drho1,divu3)
 
     deallocate(h_coeff1,h_coeff2,phase1,phase2,h_1,h_2)
