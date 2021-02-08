@@ -148,9 +148,6 @@ contains
     call alloc_x(pz1, opt_global=.true.) !global indices
     call alloc_x(px1, opt_global=.true.) !global indices
     call alloc_x(py1, opt_global=.true.) !global indices
-    call alloc_x(diss1, opt_global=.true.) !global indices
-    call alloc_x(pre1, opt_global=.true.) !global indices
-
     allocate(phi1(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),1:numscalar)) !global indices
 
     call alloc_x(ta1);call alloc_x(tb1);call alloc_x(tc1)
@@ -225,20 +222,21 @@ contains
     allocate(uvisu(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
 
     !arrays statistics
-    allocate (umean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
-    allocate (vmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
-    allocate (wmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
-    allocate (pmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
-    allocate (uumean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
-    allocate (vvmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
-    allocate (wwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
-    allocate (uvmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
-    allocate (uwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
-    allocate (vwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
-    allocate (phimean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
-    allocate (phiphimean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
-    allocate (tmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
-
+    if (ilast.ge.initstat) then
+      allocate (umean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+      allocate (vmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+      allocate (wmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+      allocate (pmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+      allocate (uumean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+      allocate (vvmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+      allocate (wwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+      allocate (uvmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+      allocate (uwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+      allocate (vwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+      allocate (phimean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
+      allocate (phiphimean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
+      allocate (tmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    endif
 
     !Y PENCILS
     call alloc_y(ux2);call alloc_y(uy2);call alloc_y(uz2)
@@ -575,7 +573,7 @@ contains
 
     implicit none
 
-    deallocate(ux1, uy1, uz1, px1, py1, pz1, diss1, pre1)
+    deallocate(ux1, uy1, uz1, px1, py1, pz1)
     deallocate(phi1)
     deallocate(ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,ep1)
     if (ilmn) deallocate(mu1)
@@ -598,9 +596,13 @@ contains
     deallocate(dpdxy1,dpdxyn,dpdzy1,dpdzyn)
     deallocate(dpdxz1,dpdxzn,dpdyz1,dpdyzn)
 
-    deallocate(uvisu,umean,vmean,wmean,pmean)
-    deallocate(uumean,vvmean,wwmean,uvmean,uwmean,vwmean)
-    deallocate(phimean,phiphimean,tmean)
+    deallocate(uvisu)
+
+    if (ilast.ge.initstat) then
+      deallocate(umean,vmean,wmean,pmean)
+      deallocate(uumean,vvmean,wwmean,uvmean,uwmean,vwmean)
+      deallocate(phimean,phiphimean,tmean)
+    endif
 
     deallocate(ux2,uy2,uz2)
     deallocate(ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2)
