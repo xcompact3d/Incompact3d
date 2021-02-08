@@ -425,10 +425,10 @@ contains
           ypi(j)=(real(j,mytype)-half)*dy
           ppy(j) = one
        enddo
-       if (ncly1.eq.2) then
+       if (ncly1.eq.1.or.ncly1.eq.2) then
           ppy(1) = two
        endif
-       if (nclyn.eq.2) then
+       if (nclyn.eq.1.or.nclyn.eq.2) then
           ppy(ny) = two
        endif
     else
