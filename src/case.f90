@@ -232,6 +232,7 @@ contains
     use var, only : nzmsize
     use var, only : itime
     use var, only : numscalar, nrhotime, npress
+    use var, only : T_tmp
 
     use probes, only : write_probes
 
@@ -242,15 +243,13 @@ contains
     real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
 
     integer :: i, j, k
-    real(mytype), allocatable, dimension(:,:,:,:) :: T
 
     ! Recover temperature when decomposed (pressure to be recovered externally)
     if (itype.eq.itype_abl.and.ibuoyancy.eq.1) then
-      allocate(T(xsize(1),xsize(2),xsize(3),1))
       do k = 1, xsize(3)
       do j = 1, xsize(2) 
       do i = 1, xsize(1)
-        T(i,j,k,1) = phi1(i,j,k,1)
+        T_tmp(i,j,k,1) = phi1(i,j,k,1)
         phi1(i,j,k,1) = phi1(i,j,k,1) + Tstat(j,1)
       enddo
       enddo
@@ -267,8 +266,7 @@ contains
     call write_probes(ux1, uy1, uz1, pp3, phi1)
 
     if (itype.eq.itype_abl.and.ibuoyancy.eq.1) then
-      phi1(:,:,:,1) = T(:,:,:,1)
-      deallocate(T)
+      phi1(:,:,:,1) = T_tmp(:,:,:,1)
     endif
     
   end subroutine postprocessing

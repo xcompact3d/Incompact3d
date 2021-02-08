@@ -106,6 +106,7 @@ module var
   ! working arrays for ABL
   real(mytype), save, allocatable, dimension(:,:) :: heatflux
   real(mytype), save, allocatable, dimension(:,:,:) :: wallfluxx1, wallfluxy1, wallfluxz1
+  real(mytype), save, allocatable, dimension(:,:,:,:) :: T_tmp
 
 contains
 
@@ -164,8 +165,11 @@ contains
     if (itype.eq.itype_abl.and.ifilter.ne.0.and.ilesmod.ne.0) then
        call alloc_x(uxf1);call alloc_x(uyf1);call alloc_x(uzf1);call alloc_x(phif1);
     endif
-    if (itype.eq.abl.and.ilesmod.ne.0.and.jles.le.3.and.jles.gt.0) then
+    if (itype.eq.itype_abl.and.ilesmod.ne.0.and.jles.le.3.and.jles.gt.0) then
        call alloc_x(wallfluxx1); call alloc_x(wallfluxy1); call alloc_x(wallfluxz1);
+    endif
+    if (itype.eq.itype_abl.and.ibuoyancy.eq.1) then
+       allocate(T_tmp(xsize(1),xsize(2),xsize(3),1))
     endif
 
     allocate(pp1(nxmsize,xsize(2),xsize(3)))
@@ -580,6 +584,9 @@ contains
     endif
     if (itype.eq.itype_abl.and.ilesmod.ne.0.and.jles.le.3.and.jles.gt.0) then
       deallocate(wallfluxx1, wallfluxy1, wallfluxz1)
+    endif
+    if (itype.eq.itype_abl.and.ibuoyancy.eq.1) then
+       deallocate(T_tmp)
     endif
     deallocate(pp1,pgy1,pgz1)
 

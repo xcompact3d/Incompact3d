@@ -1177,7 +1177,7 @@ end subroutine wale
     USE variables
     USE decomp_2d
 
-    USE var, only: di1,tb1,di2,tb2,di3,tb3,tc1,tc2,tc3
+    USE var, only: tb1,tc1,di1,tb2,tc2,di2,tb3,tc3,di3,phi2,phi3
     USE abl, only: wall_sgs_scalar
 
     implicit none
@@ -1186,8 +1186,8 @@ end subroutine wale
     real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: phi1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sgsphi1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: dphidy1
-    real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: phi2, sgsphi2
-    real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: phi3, sgsphi3
+    real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: sgsphi2
+    real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: sgsphi3
 
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1, dnut1
     real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: nut2, dnut2
