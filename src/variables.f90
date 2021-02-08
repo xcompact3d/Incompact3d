@@ -164,7 +164,7 @@ contains
     if (itype.eq.itype_abl.and.ifilter.ne.0.and.ilesmod.ne.0) then
        call alloc_x(uxf1);call alloc_x(uyf1);call alloc_x(uzf1);call alloc_x(phif1);
     endif
-    if (itype.eq.abl.and.ilesmod.ne.0.and.jles.le.3.and.jles.gt.0)
+    if (itype.eq.abl.and.ilesmod.ne.0.and.jles.le.3.and.jles.gt.0) then
        call alloc_x(wallfluxx1); call alloc_x(wallfluxy1); call alloc_x(wallfluxz1);
     endif
 
@@ -578,7 +578,7 @@ contains
     if (itype.eq.itype_abl.and.ifilter.ne.0.and.ilesmod.ne.0) then
       deallocate(uxf1,uyf1,uzf1,phif1)
     endif
-    if (itype.eq.abl.and.ilesmod.ne.0.and.jles.le.3.and.jles.gt.0) then
+    if (itype.eq.itype_abl.and.ilesmod.ne.0.and.jles.le.3.and.jles.gt.0) then
       deallocate(wallfluxx1, wallfluxy1, wallfluxz1)
     endif
     deallocate(pp1,pgy1,pgz1)
