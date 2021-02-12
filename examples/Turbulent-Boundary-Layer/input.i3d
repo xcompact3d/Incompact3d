@@ -41,7 +41,7 @@ inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
 
 ! Time stepping
 dt = 0.01              ! Time step
-ifirst = 10001            ! First iteration
+ifirst = 1            ! First iteration
 ilast = 25000       ! Last iteration
 
 ! Enable modelling tools
@@ -61,7 +61,8 @@ isecondder = 5        ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th
 ipinter = 1           ! interpolation scheme (1: classic, 2: optimized, 3: optimized agressive)
 
 ! Time scheme
-itimescheme = 7       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4, 7->Semi-implicit)
+iimplicit = 2
+itimescheme = 3
 
 ! Dissipation control
 nu0nu = 4.0             ! Ratio between hyperviscosity/viscosity at nu
@@ -74,7 +75,7 @@ cnu = 0.33               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 !=================
 
 ! Basic I/O
-irestart = 1          ! Read initial flow field ?
+irestart = 0          ! Read initial flow field ?
 icheckpoint = 500    ! Frequency for writing backup file
 ioutput = 500        ! Frequency for visualization
 nvisu = 1             ! Size for visualisation collection

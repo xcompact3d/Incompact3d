@@ -293,7 +293,6 @@ contains
     USE MPI
     USE decomp_2d
     USE decomp_2d_io
-    USE var, only : umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
     USE var, only : uvisu
     USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
     USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
@@ -334,7 +333,7 @@ contains
     !du/dx=ta1 du/dy=td1 and du/dz=tg1
     !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
     !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
-
+    !VORTICITY FIELD
     di1(:,:,:)=sqrt((tf1(:,:,:)-th1(:,:,:))**2+(tg1(:,:,:)-tc1(:,:,:))**2+&
          (tb1(:,:,:)-td1(:,:,:))**2)
     if (iibm==2) then
@@ -344,6 +343,20 @@ contains
     call fine_to_coarseV(1,di1,uvisu)
 994 format('./data/vort',I5.5)
     write(filename, 994) itime/ioutput
+    call decomp_2d_write_one(1,uvisu,filename,2)
+    !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
+    di1=0.
+    di1(:,:,:)=-0.5*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2)-&
+         td1(:,:,:)*tb1(:,:,:)-&
+         tg1(:,:,:)*tc1(:,:,:)-&
+         th1(:,:,:)*tf1(:,:,:)
+    if (iibm==2) then
+       di1(:,:,:) = (one - ep1(:,:,:)) * di1(:,:,:)
+    endif
+    uvisu=0.
+    call fine_to_coarseV(1,di1,uvisu)
+995 format('./data/critq',I5.5)
+    write(filename, 995) itime/ioutput
     call decomp_2d_write_one(1,uvisu,filename,2)
     endif
 

@@ -961,7 +961,7 @@ contains
        gyz1(:,:,:)*gzy1(:,:,:)-(one/three)*(gxx1(:,:,:)*gxx1(:,:,:)+&
        gyy1(:,:,:)*gyy1(:,:,:)+gzz1(:,:,:)*gzz1(:,:,:)+&
        two*gxy1(:,:,:)*gyx1(:,:,:)+two*gxz1(:,:,:)*gzx1(:,:,:)+&
-       two*gzy1(i,j,k)*gyz1(i,j,k))
+       two*gzy1(:,:,:)*gyz1(:,:,:))
 
   sdyz1(:,:,:)=half*(gyx1(:,:,:)*gxz1(:,:,:)+gyy1(:,:,:)*gyz1(:,:,:)+&
        gyz1(:,:,:)*gzz1(:,:,:)+gzx1(:,:,:)*gxy1(:,:,:)+&
