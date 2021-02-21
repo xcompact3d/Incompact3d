@@ -1,12 +1,8 @@
-((nil . ((eval . (setq flycheck-fortran-gfortran-executable "mpif90"))
-	 (eval . (setq flycheck-gfortran-args '("-fcray-pointer"
-						"-cpp")))
-	 ;; (eval . (setq flycheck-gfortran-include-path
-	 ;; 	       ;; Find this file and use it as the project root directory.
-	 ;; 	       (list (file-name-directory
-	 ;; 		      (let ((d (dir-locals-find-file ".")))
-	 ;; 			(if (stringp d)
-	 ;; 			    d
-	 ;; 			  (car d)))))))
-	 (eval . (setq flycheck-gfortran-language-standard "f2003"))
-	 (eval . (setq fortran-comment-indent-style 'relative)))))
+;;; Directory Local Variables
+;;; For more information see (info "(emacs) Directory Variables")
+
+((f90-mode
+  (fortan-comment-indent-style . 'relative)
+  (flycheck-gfortran-language-standard . "f2003")
+  (flycheck-gfortran-args . ("-fcray-pointer" "-cpp"))
+  (flycheck-fortran-gfortran-executable . "mpif90")))
