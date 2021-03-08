@@ -32,13 +32,13 @@
 
 module tbl
 
-  USE decomp_2d
-  USE variables
-  USE param
+  use decomp_2d
+  use variables
+  use param
 
-  IMPLICIT NONE
+  implicit none
 
-  integer :: FS
+  integer :: fs
   character(len=100) :: fileformat
   character(len=1),parameter :: NL=char(10) !new line character
 
@@ -49,11 +49,11 @@ contains
 
   subroutine init_tbl (ux1,uy1,uz1,ep1,phi1)
 
-    USE decomp_2d
-    USE decomp_2d_io
-    USE variables
-    USE param
-    USE MPI
+    use decomp_2d
+    use decomp_2d_io
+    use variables
+    use param
+    use MPI
 
     implicit none
 
@@ -67,15 +67,15 @@ contains
 
     integer, dimension (:), allocatable :: seed
 
-    if (iscalar==1) then
+    if (iscalar == 1) then
 
-       phi1(:,:,:,:) = 0.25 !change as much as you want
-          if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
+       phi1(:,:,:,:) = zptwofive !change as much as you want
+          if ((nclyS1 == 2).and.(xstart(2) == 1)) then
              !! Generate a hot patch on bottom boundary
              phi1(:,1,:,:) = one
           endif
-          if ((nclySn.eq.2).and.(xend(2).eq.ny)) THEN
-             phi1(:,xsize(2),:,:) = 0.25
+          if ((nclySn == 2).and.(xend(2) == ny)) THEN
+             phi1(:,xsize(2),:,:) = zptwofive
           endif
 
     endif
@@ -95,7 +95,7 @@ contains
     enddo
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init end ok'
+    if (nrank  ==  0) write(*,*) '# init end ok'
 #endif
 
     return
@@ -121,15 +121,15 @@ contains
 
     call blasius()
     !INLET FOR SCALAR, TO BE CONSISTENT WITH INITIAL CONDITION
-    if (iscalar.eq.1) then
+    if (iscalar == 1) then
        do k=1,xsize(3)
           do j=1,xsize(2)
-             phi(1,:,:,:)=0.25
-             if ((xstart(2).eq.1)) then
+             phi(1,:,:,:)=zptwofive
+             if ((xstart(2) == 1)) then
                 phi(:,1,:,:) = one
              endif
-             if ((xend(2).eq.ny)) THEN
-                phi(:,xsize(2),:,:) = 0.25
+             if ((xend(2) == ny)) THEN
+                phi(:,xsize(2),:,:) = zptwofive
              endif
           enddo
        enddo
@@ -149,16 +149,16 @@ contains
 
           cx=ux(nx,j,k)*gdt(itr)*udx
 
-          if (cx.LT.0.0) cx=0.0
+          if (cx <= zero) cx=zero
           bxxn(j,k)=ux(nx,j,k)-cx*(ux(nx,j,k)-ux(nx-1,j,k))
           bxyn(j,k)=uy(nx,j,k)-cx*(uy(nx,j,k)-uy(nx-1,j,k))
           bxzn(j,k)=uz(nx,j,k)-cx*(uz(nx,j,k)-uz(nx-1,j,k))
-          if (iscalar.eq.1) phi(nx,:,:,:) =  phi(nx,:,:,:) - cx*(phi(nx,:,:,:)-phi(nx-1,:,:,:))
+          if (iscalar == 1) phi(nx,:,:,:) =  phi(nx,:,:,:) - cx*(phi(nx,:,:,:)-phi(nx-1,:,:,:))
           enddo
     enddo
 
     !! Bottom Boundary
-    if (ncly1 == 2) THEN
+    if (ncly1 == 2) then
       do k = 1, xsize(3)
         do i = 1, xsize(1)
           byx1(i, k) = zero
@@ -179,13 +179,13 @@ contains
     endif
 
     !SCALAR   
-    if (itimescheme.ne.7) then
-    if (iscalar.ne.0) then
-          if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
+    if (itimescheme /= 7) then
+    if (iscalar /= 0) then
+          if ((nclyS1 == 2).and.(xstart(2) == 1)) then
              !! Generate a hot patch on bottom boundary
              phi(1,1,:,:) = one
           endif
-          if ((nclySn.eq.2).and.(xend(2).eq.ny)) THEN
+          if ((nclySn == 2).and.(xend(2) == ny)) THEN
              phi(1,xsize(2),:,:) = phi(1,xsize(2)-1,:,:)
           endif
     endif
@@ -200,99 +200,99 @@ contains
   !********************************************************************
 
   !********************************************************************
-!
-subroutine tbl_flrt (ux1,uy1,uz1)
+  !
+  subroutine tbl_flrt (ux1,uy1,uz1)
   !
   !********************************************************************
 
-  USE decomp_2d
-  USE decomp_2d_poisson
-  USE variables
-  USE param
-  USE MPI
+    use decomp_2d
+    use decomp_2d_poisson
+    use variables
+    use param
+    use MPI
 
-  implicit none
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
-  real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux2,uy2,uz2
+    implicit none
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
+    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux2,uy2,uz2
 
-  integer :: j,i,k,code
-  real(mytype) :: can,ut1,ut2,ut3,ut4,utt1,utt2,utt3,utt4,udif
+    integer :: j,i,k,code
+    real(mytype) :: can,ut1,ut2,ut3,ut4,utt1,utt2,utt3,utt4,udif
 
-  ux1(1,:,:)=bxx1(:,:)
-  ux1(nx,:,:)=bxxn(:,:)
+    ux1(1,:,:)=bxx1(:,:)
+    ux1(nx,:,:)=bxxn(:,:)
 
-  call transpose_x_to_y(ux1,ux2)
-  call transpose_x_to_y(uy1,uy2)
-  ! Flow rate at the inlet
-  ut1=zero;utt1=zero
-  if (ystart(1)==1) then !! CPUs at the inlet
+    call transpose_x_to_y(ux1,ux2)
+    call transpose_x_to_y(uy1,uy2)
+    ! Flow rate at the inlet
+    ut1=zero;utt1=zero
+    if (ystart(1) == 1) then !! CPUs at the inlet
+      do k=1,ysize(3)
+        do j=1,ysize(2)-1
+          ut1=ut1+(yp(j+1)-yp(j))*(ux2(1,j+1,k)-half*(ux2(1,j+1,k)-ux2(1,j,k)))
+        enddo
+      enddo
+      ! ut1=ut1/real(ysize(3),mytype)
+    endif
+    call MPI_ALLREDUCE(ut1,utt1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    utt1=utt1/real(nz,mytype) !! Volume flow rate per unit spanwise dist
+    ! Flow rate at the outlet
+    ut2=zero;utt2=zero
+    if (yend(1) == nx) then !! CPUs at the outlet
+      do k=1,ysize(3)
+        do j=1,ysize(2)-1
+          ut2=ut2+(yp(j+1)-yp(j))*(ux2(ysize(1),j+1,k)-half*(ux2(ysize(1),j+1,k)-ux2(ysize(1),j,k)))
+        enddo
+      enddo
+      ! ut2=ut2/real(ysize(3),mytype)
+    endif
+
+    call MPI_ALLREDUCE(ut2,utt2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    utt2=utt2/real(nz,mytype) !! Volume flow rate per unit spanwise dist
+
+    ! Flow rate at the top and bottom
+    ut3=zero
+    ut4=zero
     do k=1,ysize(3)
-      do j=1,ysize(2)-1
-        ut1=ut1+(yp(j+1)-yp(j))*(ux2(1,j+1,k)-half*(ux2(1,j+1,k)-ux2(1,j,k)))
+      do i=1,ysize(1)
+        ut3=ut3+uy2(i,1,k)
+        ut4=ut4+uy2(i,ny,k)
       enddo
     enddo
-    ! ut1=ut1/real(ysize(3),mytype)
-  endif
-  call MPI_ALLREDUCE(ut1,utt1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-  utt1=utt1/real(nz,mytype) !! Volume flow rate per unit spanwise dist
-  ! Flow rate at the outlet
-  ut2=zero;utt2=zero
-  if (yend(1)==nx) then !! CPUs at the outlet
-    do k=1,ysize(3)
-      do j=1,ysize(2)-1
-        ut2=ut2+(yp(j+1)-yp(j))*(ux2(ysize(1),j+1,k)-half*(ux2(ysize(1),j+1,k)-ux2(ysize(1),j,k)))
+    call MPI_ALLREDUCE(ut3,utt3,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(ut4,utt4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    utt3=utt3/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
+    utt4=utt4/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
+
+    !! velocity correction
+    udif=(utt1-utt2+utt3-utt4)/yly
+    if (nrank == 0 .and. mod(itime,1) == 0) then
+      write(*,"(' Mass balance: L-BC, R-BC,',2f12.6)") utt1,utt2
+      write(*,"(' Mass balance: B-BC, T-BC, Crr-Vel',3f11.5)") utt3,utt4,udif
+    endif
+    ! do k=1,xsize(3)
+    !   do j=1,xsize(2)
+    !     ux1(nx,i,k)=ux1(nx,i,k)+udif
+    !   enddo
+    ! enddo
+    do k=1,xsize(3)
+      do j=1,xsize(2)
+        bxxn(j,k)=bxxn(j,k)+udif
       enddo
     enddo
-    ! ut2=ut2/real(ysize(3),mytype)
-  endif
-
-  call MPI_ALLREDUCE(ut2,utt2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-  utt2=utt2/real(nz,mytype) !! Volume flow rate per unit spanwise dist
-
-  ! Flow rate at the top and bottom
-  ut3=zero
-  ut4=zero
-  do k=1,ysize(3)
-    do i=1,ysize(1)
-      ut3=ut3+uy2(i,1,k)
-      ut4=ut4+uy2(i,ny,k)
-    enddo
-  enddo
-  call MPI_ALLREDUCE(ut3,utt3,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-  call MPI_ALLREDUCE(ut4,utt4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-  utt3=utt3/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
-  utt4=utt4/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
-
-  !! velocity correction
-  udif=(utt1-utt2+utt3-utt4)/yly
-  if (nrank==0 .and. mod(itime,1)==0) then
-    write(*,"(' Mass balance: L-BC, R-BC,',2f12.6)") utt1,utt2
-    write(*,"(' Mass balance: B-BC, T-BC, Crr-Vel',3f11.5)") utt3,utt4,udif
-  endif
-  ! do k=1,xsize(3)
-  !   do j=1,xsize(2)
-  !     ux1(nx,i,k)=ux1(nx,i,k)+udif
-  !   enddo
-  ! enddo
-  do k=1,xsize(3)
-    do j=1,xsize(2)
-      bxxn(j,k)=bxxn(j,k)+udif
-    enddo
-  enddo
 
 
-  return
-end subroutine tbl_flrt
-
-!********************************************************************
+    return
+  end subroutine tbl_flrt
+  !********************************************************************
   subroutine blasius()
 
 
-    USE decomp_2d
-    USE decomp_2d_io
-    USE variables
-    USE param
-    USE MPI
+    use decomp_2d
+    use decomp_2d_io
+    use variables
+    use param
+    use MPI
+    use dbg_schemes, only: exp_prec, sqrt_prec
 
     implicit none
 
@@ -305,57 +305,57 @@ end subroutine tbl_flrt
 
     do k=1,xsize(3)
        do j=1,xsize(2)
-          if (istret.eq.0) y=(j+xstart(2)-1-1)*dy
-          if (istret.ne.0) y=yp(j+xstart(2)-1)
+          if (istret == 0) y=(j+xstart(2)-1-1)*dy
+          if (istret /= 0) y=yp(j+xstart(2)-1)
 
-          eta_bl=y*4.91/9.0
+          eta_bl=y*4.91_mytype/nine
 
           !OLD POLYNOMIAL FITTING
 
-          delta_eta=0.0
-          eps_eta=0.0
-          delta_int=0.2
+          delta_eta = zero
+          eps_eta   = zero
+          delta_int = zptwo
 
-          if (eta_bl .ge. (7.5/9.0)) then
-             delta_eta=eta_bl-7.5/9.0
-             eta_bl=7.5/9.0
-             eps_eta=0.00015
+          if (eta_bl == (7.5_mytype/nine)) then
+             delta_eta=eta_bl-7.5_mytype/nine
+             eta_bl   =       7.5_mytype/nine
+             eps_eta  =   0.00015_mytype
           end if
 
-          f_bl=1678.64209592595*eta_bl**14-11089.6925017429*eta_bl**13 &
-               +31996.4350140670*eta_bl**12-52671.5249779799*eta_bl**11 &
-               +54176.1691167667*eta_bl**10-35842.8204706097*eta_bl**9  &
-               +15201.3088871240*eta_bl**8 -4080.17137935648*eta_bl**7  &
-               +702.129634528103*eta_bl**6 -56.2063925805318*eta_bl**5  &
-               -17.0181128273914*eta_bl**4 +0.819582894357566*eta_bl**3  &
-               -0.0601348202321954*eta_bl**2 +2.98973991270405*eta_bl**1
+          f_bl=1678.64209592595000_mytype*eta_bl**14-11089.69250174290_mytype*eta_bl**13 &
+               +31996.435014067000_mytype*eta_bl**12-52671.52497797990_mytype*eta_bl**11 &
+               +54176.169116766700_mytype*eta_bl**10-35842.82047060970_mytype*eta_bl**9  &
+               +15201.308887124000_mytype*eta_bl**8 -4080.171379356480_mytype*eta_bl**7  &
+               +702.12963452810300_mytype*eta_bl**6 -56.20639258053180_mytype*eta_bl**5  &
+               -17.018112827391400_mytype*eta_bl**4 +0.819582894357566_mytype*eta_bl**3  &
+               -0.0601348202321954_mytype*eta_bl**2 +2.989739912704050_mytype*eta_bl**1
 
-          f_bl=f_bl+(1-exp(-delta_eta/delta_int))*eps_eta
+          f_bl=f_bl+(1-exp_prec(-delta_eta/delta_int))*eps_eta
 
 
-          if (eta_bl .ge. (7.15/9.0)) then
-             delta_int=0.8
-             delta_eta=eta_bl-7.15/9.0
-             eta_bl=7.15/9.0
-             eps_eta=0.0005
+          if (eta_bl == (7.15_mytype/nine)) then
+             delta_int=zpeight
+             delta_eta=eta_bl-7.15_mytype/nine
+             eta_bl   =       7.15_mytype/nine
+             eps_eta  =     0.0005_mytype
           end if
 
-          g_bl=4924.05284779754*eta_bl**14-34686.2970972733*eta_bl**13 &
-               +108130.253843618*eta_bl**12-195823.099139525*eta_bl**11 &
-               +227305.908339065*eta_bl**10-176106.001047617*eta_bl**9  &
-               +92234.5885895112*eta_bl**8 -32700.3687158807*eta_bl**7  &
-               +7923.51008739107*eta_bl**6 -1331.09245288739*eta_bl**5  &
-               +130.109496961069*eta_bl**4 -7.64507811014497*eta_bl**3  &
-               +6.94303207046209*eta_bl**2 -0.00209716712558639*eta_bl**1 ! &
+          g_bl=4924.052847797540_mytype*eta_bl**14-34686.2970972733000_mytype*eta_bl**13 &
+               +108130.253843618_mytype*eta_bl**12-195823.099139525000_mytype*eta_bl**11 &
+               +227305.908339065_mytype*eta_bl**10-176106.001047617000_mytype*eta_bl**9  &
+               +92234.5885895112_mytype*eta_bl**8 -32700.3687158807000_mytype*eta_bl**7  &
+               +7923.51008739107_mytype*eta_bl**6 -1331.09245288739000_mytype*eta_bl**5  &
+               +130.109496961069_mytype*eta_bl**4 -7.64507811014497000_mytype*eta_bl**3  &
+               +6.94303207046209_mytype*eta_bl**2 -0.00209716712558639_mytype*eta_bl**1 ! &
 
-          g_bl=g_bl+(1-exp(-delta_eta/delta_int))*eps_eta
+          g_bl=g_bl+(1-exp_prec(-delta_eta/delta_int))*eps_eta
 
 
           x_bl=1.0/(4.91**2*xnu)
 
-          bxx1(j,k)=f_bl/1.0002014996204402/1.0000000359138641 !To assure 1.0 in infinity
-          bxy1(j,k)=g_bl*sqrt(xnu/x_bl)/1.000546554
-          bxz1(j,k)=0.0
+          bxx1(j,k)=f_bl/1.0002014996204402_mytype/1.0000000359138641_mytype !To assure 1.0 in infinity
+          bxy1(j,k)=g_bl*sqrt_prec(xnu/x_bl)/1.000546554_mytype
+          bxz1(j,k)=zero
 
        enddo
     enddo
@@ -363,48 +363,48 @@ end subroutine tbl_flrt
     !STORE VALUE F_BL_INF G_BL_INF (ONLY ONE MORE TIME)------------------
 
     y=yly
-    eta_bl=y*4.91/9.0  !The 9 is due to interpolation
+    eta_bl=y*4.91_mytype/nine  !The 9 is due to interpolation
 
-    delta_eta=0.0
-    eps_eta=0.0
-    delta_int=0.2
+    delta_eta=zero
+    eps_eta=zero
+    delta_int=zptwo
 
-    if (eta_bl .ge. (7.5/9.0)) then
-       delta_eta=eta_bl-7.5/9.0
-       eta_bl=7.5/9.0
-       eps_eta=0.00015
+    if (eta_bl == (7.5_mytype/nine)) then
+       delta_eta=eta_bl-7.5_mytype/nine
+       eta_bl   =       7.5_mytype/nine
+       eps_eta  =   0.00015_mytype
     end if
 
-    f_bl_inf=1678.64209592595*eta_bl**14-11089.6925017429*eta_bl**13 &
-         +31996.4350140670*eta_bl**12-52671.5249779799*eta_bl**11 &
-         +54176.1691167667*eta_bl**10-35842.8204706097*eta_bl**9  &
-         +15201.3088871240*eta_bl**8 -4080.17137935648*eta_bl**7  &
-         +702.129634528103*eta_bl**6 -56.2063925805318*eta_bl**5  &
-         -17.0181128273914*eta_bl**4 +0.819582894357566*eta_bl**3  &
-         -0.0601348202321954*eta_bl**2 +2.98973991270405*eta_bl**1
+    f_bl_inf=1678.6420959259500_mytype*eta_bl**14-11089.69250174290_mytype*eta_bl**13 &
+            +31996.435014067000_mytype*eta_bl**12-52671.52497797990_mytype*eta_bl**11 &
+            +54176.169116766700_mytype*eta_bl**10-35842.82047060970_mytype*eta_bl**9  &
+            +15201.308887124000_mytype*eta_bl**8 -4080.171379356480_mytype*eta_bl**7  &
+            +702.12963452810300_mytype*eta_bl**6 -56.20639258053180_mytype*eta_bl**5  &
+            -17.018112827391400_mytype*eta_bl**4 +0.819582894357566_mytype*eta_bl**3  &
+            -0.0601348202321954_mytype*eta_bl**2 +2.989739912704050_mytype*eta_bl**1
 
 
-    f_bl_inf=f_bl_inf+(1-exp(-delta_eta/delta_int))*eps_eta
-    f_bl_inf=f_bl_inf/1.0002014996204402/1.0000000359138641 !To assure 1.0 in infinity
+    f_bl_inf=f_bl_inf+(1-exp_prec(-delta_eta/delta_int))*eps_eta
+    f_bl_inf=f_bl_inf/1.0002014996204402_mytype/1.0000000359138641_mytype !To assure 1.0 in infinity
 
-    if (eta_bl .ge. (7.15/9.0)) then
-       delta_int=0.8
-       delta_eta=eta_bl-7.15/9.0
-       eta_bl=7.15/9.0
-       eps_eta=0.0005
+    if (eta_bl == (7.15_mytype/nine)) then
+       delta_int=zpeight
+       delta_eta=eta_bl-7.15_mytype/nine
+       eta_bl=          7.15_mytype/nine
+       eps_eta=       0.0005_mytype
     end if
 
-    g_bl_inf=4924.05284779754*eta_bl**14-34686.2970972733*eta_bl**13 &
-         +108130.253843618*eta_bl**12-195823.099139525*eta_bl**11 &
-         +227305.908339065*eta_bl**10-176106.001047617*eta_bl**9  &
-         +92234.5885895112*eta_bl**8 -32700.3687158807*eta_bl**7  &
-         +7923.51008739107*eta_bl**6 -1331.09245288739*eta_bl**5  &
-         +130.109496961069*eta_bl**4 -7.64507811014497*eta_bl**3  &
-         +6.94303207046209*eta_bl**2 -0.00209716712558639*eta_bl**1
+    g_bl_inf=4924.05284779754_mytype*eta_bl**14-34686.2970972733000_mytype*eta_bl**13 &
+            +108130.253843618_mytype*eta_bl**12-195823.099139525000_mytype*eta_bl**11 &
+            +227305.908339065_mytype*eta_bl**10-176106.001047617000_mytype*eta_bl**9  &
+            +92234.5885895112_mytype*eta_bl**8 -32700.3687158807000_mytype*eta_bl**7  &
+            +7923.51008739107_mytype*eta_bl**6 -1331.09245288739000_mytype*eta_bl**5  &
+            +130.109496961069_mytype*eta_bl**4 -7.64507811014497000_mytype*eta_bl**3  &
+            +6.94303207046209_mytype*eta_bl**2 -0.00209716712558639_mytype*eta_bl**1
 
 
-    g_bl_inf=g_bl_inf+(1-exp(-delta_eta/delta_int))*eps_eta
-    g_bl_inf=g_bl_inf/1.000546554
+    g_bl_inf=g_bl_inf+(1-exp_prec(-delta_eta/delta_int))*eps_eta
+    g_bl_inf=g_bl_inf/1.000546554_mytype
 
     return
   end subroutine blasius
@@ -412,18 +412,18 @@ end subroutine tbl_flrt
   !############################################################################
   subroutine postprocess_tbl(ux1,uy1,uz1,ep1) !By Felipe Schuch
 
-    USE MPI
-    USE decomp_2d
-    USE decomp_2d_io
-    USE var, only : umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
-    USE var, only : uvisu
-    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-    USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+    use MPI
+    use decomp_2d
+    use decomp_2d_io
+    use var, only : umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
+    use var, only : uvisu
+    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    use var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     character(len=30) :: filename
 
-       !! Write vorticity as an example of post processing
+    !! Write vorticity as an example of post processing
     !x-derivatives
     call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
     call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)

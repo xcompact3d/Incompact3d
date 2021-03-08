@@ -71,7 +71,7 @@ contains
     integer :: is
     character(len=30) :: filename
 
-    if (itime.lt.initstat) then
+    if (itime < initstat) then
        return
     endif
 

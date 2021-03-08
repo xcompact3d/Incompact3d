@@ -11,8 +11,8 @@ contains
     implicit none
     integer :: i,j,k,nlock
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,px,py,pz
-    if (nlock.eq.1) then
-       if (nz.gt.1) then
+    if (nlock == 1) then
+       if (nz > 1) then
           do k = 1, xsize(3)
              do j = 1, xsize(2)
                 do i = 1, xsize(1)
@@ -31,8 +31,8 @@ contains
           enddo
        endif
     endif
-    if (nlock.eq.2) then
-       if (nz.gt.1) then
+    if (nlock == 2) then
+       if (nz > 1) then
           do k = 1, xsize(3)
              do j = 1, xsize(2)
                 do i = 1, xsize(1)
@@ -58,7 +58,7 @@ contains
   !############################################################################
   subroutine body(ux1,uy1,uz1,ep1)
     USE param, only : zero, one, dx, dz
-    USE decomp_2d, only : xstart, xend, xsize, mytype
+    USE decomp_2d, only : xstart, xend, xsize, mytype, nrank
     !USE decomp_2d_io
     USE variables, only : ny
     implicit none
@@ -66,7 +66,7 @@ contains
     integer :: i,j,k
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# body start'
+    if (nrank  ==  0) write(*,*) '# body start'
 #endif
 
     do k = 1, xsize(3)
@@ -80,7 +80,7 @@ contains
     enddo
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# body done'
+    if (nrank  ==  0) write(*,*) '# body done'
 #endif
 
     return
@@ -115,14 +115,14 @@ contains
                 nxpif=npif
                 ia=ia+1
                 xa(ia)=xi(i,j,k)
-                ya(ia)=0.
-                if(xi(i,j,k).gt.0.)then!objet immergé
+                ya(ia)=zero
+                if(xi(i,j,k) > zero)then!objet immergé
                    ix=xi(i,j,k)/dx+1
                    ipoli=ix+1
-                   if(nxipif(i,j,k).lt.npif)nxpif=nxipif(i,j,k)
+                   if(nxipif(i,j,k) < npif)nxpif=nxipif(i,j,k)
                    do ipif=1,nxpif
                       ia=ia+1
-                      if(izap.eq.1)then!zapping
+                      if(izap == 1)then!zapping
                          xa(ia)=(ix-1)*dx-ipif*dx
                          ya(ia)=u(ix-ipif,j,k)
                       else             !no zapping
@@ -137,14 +137,14 @@ contains
                 nxpif=npif
                 ia=ia+1
                 xa(ia)=xf(i,j,k)
-                ya(ia)=0.
-                if(xf(i,j,k).lt.xlx)then!objet immergé
+                ya(ia)=zero
+                if(xf(i,j,k) < xlx)then!objet immergé
                    ix=(xf(i,j,k)+dx)/dx+1
                    ipolf=ix-1
-                   if(nxfpif(i,j,k).lt.npif)nxpif=nxfpif(i,j,k)
+                   if(nxfpif(i,j,k) < npif)nxpif=nxfpif(i,j,k)
                    do ipif=1,nxpif
                       ia=ia+1
-                      if(izap.eq.1)then!zapping
+                      if(izap == 1)then!zapping
                          xa(ia)=(ix-1)*dx+ipif*dx
                          ya(ia)=u(ix+ipif,j,k)
                       else             !no zapping
@@ -200,18 +200,18 @@ contains
                 nypif=npif
                 ia=ia+1
                 xa(ia)=yi(j,i,k)
-                ya(ia)=0.
-                if(yi(j,i,k).gt.0.)then!objet immergé
+                ya(ia)=zero
+                if(yi(j,i,k) > zero)then!objet immergé
                    jy=1!jy=yi(j,i,k)/dy+1
-                   do while(yp(jy).lt.yi(j,i,k))
+                   do while(yp(jy) < yi(j,i,k))
                       jy=jy+1
                    enddo
                    jy=jy-1
                    jpoli=jy+1
-                   if(nyipif(j,i,k).lt.npif)nypif=nyipif(j,i,k)
+                   if(nyipif(j,i,k) < npif)nypif=nyipif(j,i,k)
                    do jpif=1,nypif
                       ia=ia+1
-                      if(izap.eq.1)then!zapping
+                      if(izap == 1)then!zapping
                          xa(ia)=yp(jy-jpif)!(jy-1)*dy-jpif*dy
                          ya(ia)=u(i,jy-jpif,k)
                       else             !no zapping
@@ -226,17 +226,17 @@ contains
                 nypif=npif
                 ia=ia+1
                 xa(ia)=yf(j,i,k)
-                ya(ia)=0.
-                if(yf(j,i,k).lt.yly)then!objet immergé
+                ya(ia)=zero
+                if(yf(j,i,k) < yly)then!objet immergé
                    jy=1!jy=(yf(j,i,k)+dy)/dy+1
-                   do while(yp(jy).lt.yf(j,i,k))  !there was a bug here yi<-->yf
+                   do while(yp(jy) < yf(j,i,k))  !there was a bug here yi<-->yf
                       jy=jy+1
                    enddo
                    jpolf=jy-1
-                   if(nyfpif(j,i,k).lt.npif)nypif=nyfpif(j,i,k)
+                   if(nyfpif(j,i,k) < npif)nypif=nyfpif(j,i,k)
                    do jpif=1,nypif
                       ia=ia+1
-                      if(izap.eq.1)then!zapping
+                      if(izap == 1)then!zapping
                          xa(ia)=yp(jy+jpif)!(jy-1)*dy+jpif*dy
                          ya(ia)=u(i,jy+jpif,k)
                       else             !no zapping
@@ -292,14 +292,14 @@ contains
                 nzpif=npif
                 ia=ia+1
                 xa(ia)=zi(k,i,j)
-                ya(ia)=0.
-                if(zi(k,i,j).gt.0.)then!objet immergé
+                ya(ia)=zero
+                if(zi(k,i,j) > zero)then!objet immergé
                    kz=zi(k,i,j)/dz+1
                    kpoli=kz+1
-                   if(nzipif(k,i,j).lt.npif)nzpif=nzipif(k,i,j)
+                   if(nzipif(k,i,j) < npif)nzpif=nzipif(k,i,j)
                    do kpif=1,nzpif
                       ia=ia+1
-                      if(izap.eq.1)then!zapping
+                      if(izap == 1)then!zapping
                          xa(ia)=(kz-1)*dz-kpif*dz
                          ya(ia)=u(i,j,kz-kpif)
                       else             !no zapping
@@ -314,14 +314,14 @@ contains
                 nzpif=npif
                 ia=ia+1
                 xa(ia)=zf(k,i,j)
-                ya(ia)=0.
-                if(zf(k,i,j).lt.zlz)then!objet immergé
+                ya(ia)=zero
+                if(zf(k,i,j) < zlz)then!objet immergé
                    kz=(zf(k,i,j)+dz)/dz+1
                    kpolf=kz-1
-                   if(nzfpif(k,i,j).lt.npif)nzpif=nzfpif(k,i,j)
+                   if(nzfpif(k,i,j) < npif)nzpif=nzfpif(k,i,j)
                    do kpif=1,nzpif
                       ia=ia+1
-                      if(izap.eq.1)then!zapping
+                      if(izap == 1)then!zapping
                          xa(ia)=(kz-1)*dz+kpif*dz
                          ya(ia)=u(i,j,kz+kpif)
                       else             !no zapping
@@ -364,7 +364,7 @@ contains
     dif=abs(x-xa(1))
     do i=1,n
        dift=abs(x-xa(i))
-       if(dift.lt.dif)then
+       if(dift < dif)then
           ns=i
           dif=dift
        endif
@@ -379,12 +379,12 @@ contains
           hp=xa(i+m)-x
           w=c(i+1)-d(i)
           den=ho-hp
-          !         if(den.eq.0)read(*,*)
+          !         if(den == 0)read(*,*)
           den=w/den
           d(i)=hp*den
           c(i)=ho*den
        enddo
-       if (2*ns.lt.n-m)then
+       if (2*ns < n-m)then
           dy=c(ns+1)
        else
           dy=d(ns)
