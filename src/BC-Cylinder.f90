@@ -42,6 +42,12 @@ module cyl
   character(len=100) :: fileformat
   character(len=1),parameter :: NL=char(10) !new line character
 
+  !probes
+  integer, save :: nprobes, ntimes1, ntimes2
+  integer, save, allocatable, dimension(:) :: rankprobes, nxprobes, nyprobes, nzprobes
+
+  real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
+
   PRIVATE ! All functions/subroutines private by default
   PUBLIC :: init_cyl, boundary_conditions_cyl, postprocess_cyl, geomcomplex_cyl
 
@@ -50,7 +56,7 @@ contains
   subroutine geomcomplex_cyl(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,remp)
 
     use decomp_2d, only : mytype
-    use param, only : one, two
+    use param, only : one, two, ten
     use ibm_param
 
     implicit none
@@ -68,7 +74,7 @@ contains
     do while ((one + zeromach / two) .gt. one)
        zeromach = zeromach/two
     end do
-    zeromach = 1.0e1*zeromach
+    zeromach = ten*zeromach
 
     do k=nzi,nzf
        do j=nyi,nyf
@@ -121,7 +127,7 @@ contains
     !call random_number(bzo)
     do k=1,xsize(3)
        do j=1,xsize(2)
-          bxx1(j,k)=one+bxo(j,k)*inflow_noise
+          bxx1(j,k)= one+bxo(j,k)*inflow_noise
           bxy1(j,k)=zero+byo(j,k)*inflow_noise
           bxz1(j,k)=zero+bzo(j,k)*inflow_noise
        enddo
@@ -156,8 +162,8 @@ contains
 
     udx=one/dx; udy=one/dy; udz=one/dz; uddx=half/dx; uddy=half/dy; uddz=half/dz
 
-    uxmax=-1609.
-    uxmin=1609.
+    uxmax=-1609._mytype
+    uxmin=1609._mytype
     do k=1,xsize(3)
        do j=1,xsize(2)
           if (ux(nx-1,j,k).gt.uxmax) uxmax=ux(nx-1,j,k)
@@ -168,11 +174,11 @@ contains
     call MPI_ALLREDUCE(uxmax,uxmax1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
     call MPI_ALLREDUCE(uxmin,uxmin1,1,real_type,MPI_MIN,MPI_COMM_WORLD,code)
 
-    if (u1.eq.zero) then
+    if (u1 == zero) then
        cx=(half*(uxmax1+uxmin1))*gdt(itr)*udx
-    elseif (u1.eq.one) then
+    elseif (u1 == one) then
        cx=uxmax1*gdt(itr)*udx
-    elseif (u1.eq.two) then
+    elseif (u1 == two) then
        cx=u2*gdt(itr)*udx    !works better
     else
        stop
@@ -186,12 +192,12 @@ contains
        enddo
     enddo
 
-    if (iscalar==1) then
-       if (u2.eq.zero) then
+    if (iscalar == 1) then
+       if (u2 == zero) then
           cx=(half*(uxmax1+uxmin1))*gdt(itr)*udx
-       elseif (u2.eq.one) then
+       elseif (u2 == one) then
           cx=uxmax1*gdt(itr)*udx
-       elseif (u2.eq.two) then
+       elseif (u2 == two) then
           cx=u2*gdt(itr)*udx    !works better
        else
           stop
@@ -216,6 +222,7 @@ contains
     USE variables
     USE param
     USE MPI
+    use dbg_schemes, only: exp_prec
 
     implicit none
 
@@ -258,7 +265,7 @@ contains
           do j=1,xsize(2)
              if (istret.eq.0) y=(j+xstart(2)-1-1)*dy-yly/2.
              if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/2.
-             um=exp(-zptwo*y*y)
+             um=exp_prec(-zptwo*y*y)
              do i=1,xsize(1)
                 ux1(i,j,k)=um*ux1(i,j,k)
                 uy1(i,j,k)=um*uy1(i,j,k)
@@ -280,7 +287,7 @@ contains
     enddo
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init end ok'
+    if (nrank .eq. 0) write(*,*) '# init end ok'
 #endif
 
     return
@@ -290,74 +297,75 @@ contains
   !############################################################################
   subroutine postprocess_cyl(ux1,uy1,uz1,ep1) !By Felipe Schuch
 
-    USE MPI
-    USE decomp_2d
-    USE decomp_2d_io
-    USE var, only : uvisu
-    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-    USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+    use mpi
+    use decomp_2d
+    use decomp_2d_io
+    use var, only : uvisu
+    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    use var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     character(len=30) :: filename
 
     if ((ivisu.ne.0).and.(mod(itime, ioutput).eq.0)) then
-    !! Write vorticity as an example of post processing
-    !x-derivatives
-    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
-    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-    !y-derivatives
-    call transpose_x_to_y(ux1,td2)
-    call transpose_x_to_y(uy1,te2)
-    call transpose_x_to_y(uz1,tf2)
-    call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-    call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-    call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-    !!z-derivatives
-    call transpose_y_to_z(td2,td3)
-    call transpose_y_to_z(te2,te3)
-    call transpose_y_to_z(tf2,tf3)
-    call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
-    !!all back to x-pencils
-    call transpose_z_to_y(ta3,td2)
-    call transpose_z_to_y(tb3,te2)
-    call transpose_z_to_y(tc3,tf2)
-    call transpose_y_to_x(td2,tg1)
-    call transpose_y_to_x(te2,th1)
-    call transpose_y_to_x(tf2,ti1)
-    call transpose_y_to_x(ta2,td1)
-    call transpose_y_to_x(tb2,te1)
-    call transpose_y_to_x(tc2,tf1)
-    !du/dx=ta1 du/dy=td1 and du/dz=tg1
-    !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
-    !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
-    !VORTICITY FIELD
-    di1(:,:,:)=sqrt((tf1(:,:,:)-th1(:,:,:))**2+(tg1(:,:,:)-tc1(:,:,:))**2+&
-         (tb1(:,:,:)-td1(:,:,:))**2)
-    if (iibm==2) then
-       di1(:,:,:) = (one - ep1(:,:,:)) * di1(:,:,:)
-    endif
-    uvisu=0.
-    call fine_to_coarseV(1,di1,uvisu)
-994 format('./data/vort',I5.5)
-    write(filename, 994) itime/ioutput
-    call decomp_2d_write_one(1,uvisu,filename,2)
-    !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
-    di1=0.
-    di1(:,:,:)=-0.5*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2)-&
-         td1(:,:,:)*tb1(:,:,:)-&
-         tg1(:,:,:)*tc1(:,:,:)-&
-         th1(:,:,:)*tf1(:,:,:)
-    if (iibm==2) then
-       di1(:,:,:) = (one - ep1(:,:,:)) * di1(:,:,:)
-    endif
-    uvisu=0.
-    call fine_to_coarseV(1,di1,uvisu)
-995 format('./data/critq',I5.5)
-    write(filename, 995) itime/ioutput
-    call decomp_2d_write_one(1,uvisu,filename,2)
+       !! Write vorticity as an example of post processing
+       !x-derivatives
+       call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+       call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+       call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+       !y-derivatives
+       call transpose_x_to_y(ux1,td2)
+       call transpose_x_to_y(uy1,te2)
+       call transpose_x_to_y(uz1,tf2)
+       call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+       call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+       call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+       !!z-derivatives
+       call transpose_y_to_z(td2,td3)
+       call transpose_y_to_z(te2,te3)
+       call transpose_y_to_z(tf2,tf3)
+       call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+       call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+       call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+       !!all back to x-pencils
+       call transpose_z_to_y(ta3,td2)
+       call transpose_z_to_y(tb3,te2)
+       call transpose_z_to_y(tc3,tf2)
+       call transpose_y_to_x(td2,tg1)
+       call transpose_y_to_x(te2,th1)
+       call transpose_y_to_x(tf2,ti1)
+       call transpose_y_to_x(ta2,td1)
+       call transpose_y_to_x(tb2,te1)
+       call transpose_y_to_x(tc2,tf1)
+       !du/dx=ta1 du/dy=td1 and du/dz=tg1
+       !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
+       !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
+       ! SR This needs to be checked
+       di1(:,:,:)=sqrt((tf1(:,:,:)-th1(:,:,:))**2+&
+                       (tg1(:,:,:)-tc1(:,:,:))**2+&
+                       (tb1(:,:,:)-td1(:,:,:))**2)
+       if (iibm==2) then
+          di1(:,:,:) = (one - ep1(:,:,:)) * di1(:,:,:)
+       endif
+       uvisu=zero
+       call fine_to_coarseV(1,di1,uvisu)
+994    format('./data/vort',I5.5)
+       write(filename, 994) itime/ioutput
+       call decomp_2d_write_one(1,uvisu,filename,2)
+       !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
+       di1=zero
+       di1(:,:,:)=-zpfive*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2)-&
+                           td1(:,:,:)*tb1(:,:,:)-&
+                           tg1(:,:,:)*tc1(:,:,:)-&
+                           th1(:,:,:)*tf1(:,:,:)
+       if (iibm==2) then
+          di1(:,:,:) = (one - ep1(:,:,:)) * di1(:,:,:)
+       endif
+       uvisu=0.
+       call fine_to_coarseV(1,di1,uvisu)
+995    format('./data/critq',I5.5)
+       write(filename, 995) itime/ioutput
+       call decomp_2d_write_one(1,uvisu,filename,2)
     endif
 
     return

@@ -9,9 +9,9 @@
 
 module probes
 
-  USE decomp_2d, only : ph1, nrank, mytype, xstart, xend
+  use decomp_2d, only : ph1, nrank, mytype, xstart, xend
 
-  IMPLICIT NONE
+  implicit none
 
   ! Number of probes
   integer, save :: nprobes
@@ -34,9 +34,9 @@ contains
   !############################################################################
   subroutine init_probes(ep1)
 
-    USE MPI
-    USE param, only : dx, dy, dz, nclx, ncly, nclz, xlx, yly, zlz, istret, one, half
-    USE variables, only : nx, nxm, ny, yp, nym, ypi, nz, nzm
+    use MPI
+    use param, only : dx, dy, dz, nclx, ncly, nclz, xlx, yly, zlz, istret, one, half
+    use variables, only : nx, nxm, ny, yp, nym, ypi, nz, nzm
 
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ep1
 
@@ -47,7 +47,7 @@ contains
     character :: a
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init_probes start'
+    if (nrank == 0) print *,'# init_probes start'
 #endif
 
 ! ???
@@ -63,7 +63,7 @@ contains
 !    vvsum=zero;vwsum=zero;wwsum=zero
 
     ! Master rank reads number of probes
-    if (nrank.eq.0) then
+    if (nrank == 0) then
        inquire(file='probes.prm', exist=fexists)
        if (fexists) then
           open (newunit=iounit,file='probes.prm',status='unknown',form='formatted')
@@ -77,7 +77,7 @@ contains
     call MPI_BCAST(nprobes,1,MPI_INTEGER,0,MPI_COMM_WORLD,code)
 
     ! Exit if no file or no probes
-    if (nprobes.le.0) return
+    if (nprobes <= 0) return
 
     ! Probes on the velocity grid
     allocate(nxprobes(nprobes), nyprobes(nprobes), nzprobes(nprobes), rankprobes(nprobes))
@@ -88,7 +88,7 @@ contains
 
     do i = 1, nprobes
        ! Master rank reads position of probe i
-       if (nrank.eq.0) then
+       if (nrank==0) then
           read (iounit,*) xprobes, yprobes, zprobes
           xyzprobes = (/xprobes, yprobes, zprobes/)
        end if
@@ -112,7 +112,7 @@ contains
        nxprobesP(i) = nint(nxm*xprobes/xlx-half) + 1
 
        !y
-       if (istret.eq.0) then
+       if (istret==0) then
           if (ncly) then
              nyprobes(i) = int(yprobes/dy) + 1
           else
@@ -120,24 +120,24 @@ contains
           endif
           nyprobesP(i) = nint(nym*yprobes/yly-half) + 1
        else
-          if (yprobes.le.ypi(1)) then
+          if (yprobes <= ypi(1)) then
              nyprobes(i) = 1
           else if (yprobes.ge.ypi(nym)) then
              nyprobes(i) = ny
           else
              do j = 1, nym-1
-                if (ypi(j).le.yprobes .and. yprobes.lt.ypi(j+1)) then
+                if (ypi(j) <= yprobes .and. yprobes.lt.ypi(j+1)) then
                    nyprobes(i) = j + 1
                 end if
              end do
           endif
-          if (yprobes.le.yp(2)) then
+          if (yprobes <= yp(2)) then
              nyprobesP(i) = 1
           elseif (yprobes.ge.yp(ny-1)) then
              nyprobesP(i) = nym
           else
              do j = 3, ny-2
-                if (yp(j).le.yprobes .and. yprobes.lt.yp(j+1)) then
+                if (yp(j) <= yprobes .and. yprobes.lt.yp(j+1)) then
                    nyprobesP(i) = j - 1
                    exit
                 end if
@@ -154,16 +154,16 @@ contains
        nzprobesP(i) = nint(nzm*zprobes/zlz-half) + 1
 
        ! Flag the rank with the probe
-       if       (xstart(1) .le. nxprobes(i) .and. nxprobes(i) .le. xend(1)) then
-          if    (xstart(2) .le. nyprobes(i) .and. nyprobes(i) .le. xend(2)) then
-             if (xstart(3) .le. nzprobes(i) .and. nzprobes(i) .le. xend(3)) then
+       if       (xstart(1)  <=  nxprobes(i) .and. nxprobes(i)  <=  xend(1)) then
+          if    (xstart(2)  <=  nyprobes(i) .and. nyprobes(i)  <=  xend(2)) then
+             if (xstart(3)  <=  nzprobes(i) .and. nzprobes(i)  <=  xend(3)) then
                 rankprobes(i) = .true.
              endif
           endif
        endif
-       if       (ph1%zst(1) .le. nxprobesP(i) .and. nxprobesP(i) .le. ph1%zen(1)) then
-          if    (ph1%zst(2) .le. nyprobesP(i) .and. nyprobesP(i) .le. ph1%zen(2)) then
-             if (ph1%zst(3) .le. nzprobesP(i) .and. nzprobesP(i) .le. ph1%zen(3)) then
+       if       (ph1%zst(1)  <=  nxprobesP(i) .and. nxprobesP(i)  <=  ph1%zen(1)) then
+          if    (ph1%zst(2)  <=  nyprobesP(i) .and. nyprobesP(i)  <=  ph1%zen(2)) then
+             if (ph1%zst(3)  <=  nzprobesP(i) .and. nzprobesP(i)  <=  ph1%zen(3)) then
                 rankprobesP(i) = .true.
              endif
           endif
@@ -171,13 +171,13 @@ contains
     enddo
 
     ! Master rank closes file
-    if (nrank.eq.0) close(iounit)
+    if (nrank==0) close(iounit)
 
     ! Log the real position of the probes in a file
-    if (nrank.eq.0) call log_probes_position()
+    if (nrank==0) call log_probes_position()
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init_probes ok'
+    if (nrank == 0) print *,'# init_probes ok'
 #endif
 
   end subroutine init_probes
@@ -199,7 +199,7 @@ contains
     character(len=1),parameter :: NL=char(10) !new line character
     character(len=30) :: filename
 
-    if (nprobes.le.0) return
+    if (nprobes <= 0) return
 
     ! Number of columns
     FS = 1+3+numscalar

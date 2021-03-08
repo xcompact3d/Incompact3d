@@ -32,29 +32,30 @@
 
 module tgv
 
-  USE decomp_2d
-  USE variables
-  USE param
+  use decomp_2d
+  use variables
+  use param
 
-  IMPLICIT NONE
+  implicit none
 
   real(mytype), save, allocatable, dimension(:,:,:) :: vol1,volSimps1
   integer :: FS
   character(len=100) :: fileformat
   character(len=1),parameter :: NL=char(10) !new line character
 
-  PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_tgv, boundary_conditions_tgv, postprocess_tgv
+  private ! All functions/subroutines private by default
+  public :: init_tgv, boundary_conditions_tgv, postprocess_tgv
 
 contains
 
   subroutine init_tgv (ux1,uy1,uz1,ep1,phi1)
 
-    USE decomp_2d
-    USE decomp_2d_io
-    USE variables
-    USE param
-    USE MPI
+    use decomp_2d
+    use decomp_2d_io
+    use variables
+    use param
+    use MPI
+    use dbg_schemes, only: sin_prec, cos_prec
 
     implicit none
 
@@ -68,12 +69,12 @@ contains
     integer, dimension (:), allocatable :: seed
     integer ::  isize
 
-    if (iscalar==1) then
+    if (iscalar == 1) then
 
        phi1(:,:,:,:) = zero
     endif
 
-    if (iin.eq.0) then !empty domain
+    if (iin == 0) then !empty domain
 
        if (nrank==0) write(*,*) "Empty initial domain!"
 
@@ -81,9 +82,9 @@ contains
 
     endif
 
-    if (iin.eq.1) then !generation of a random noise
+    if (iin == 1) then !generation of a random noise
 
-       if (nrank==0) write(*,*) "Filled initial domain!"
+       if (nrank == 0) write(*,*) "Filled initial domain!"
 
        ux1=zero; uy1=zero; uz1=zero
 
@@ -95,16 +96,16 @@ contains
                 x=real(i-1,mytype)*dx
 
                 if (.not.tgv_twod) then
-                   ux1(i,j,k)=+sin(x)*cos(y)*cos(z)
-                   uy1(i,j,k)=-cos(x)*sin(y)*cos(z)
-                   if (iscalar==1) then
-                      phi1(i,j,k,1:numscalar)=sin(x)*sin(y)*cos(z)
+                   ux1(i,j,k)=+sin_prec(x)*cos_prec(y)*cos_prec(z)
+                   uy1(i,j,k)=-cos_prec(x)*sin_prec(y)*cos_prec(z)
+                   if (iscalar == 1) then
+                      phi1(i,j,k,1:numscalar)=sin_prec(x)*sin_prec(y)*cos_prec(z)
                    endif
                 else
-                   ux1(i,j,k)=+sin(x)*cos(y)
-                   uy1(i,j,k)=-cos(x)*sin(y)
-                   if (iscalar==1) then
-                      phi1(i,j,k,1:numscalar)=sin(x)*sin(y)
+                   ux1(i,j,k)=+sin_prec(x)*cos_prec(y)
+                   uy1(i,j,k)=-cos_prec(x)*sin_prec(y)
+                   if (iscalar == 1) then
+                      phi1(i,j,k,1:numscalar)=sin_prec(x)*sin_prec(y)
                    endif
                 endif
                 uz1(i,j,k)=zero
@@ -133,7 +134,7 @@ contains
        !     !modulation of the random noise
        !     do k=1,xsize(3)
        !        do j=1,xsize(2)
-       !           if (istret.eq.0) y=(j+xstart(2)-1-1)*dy-yly/two
+       !           if (istret == 0) y=(j+xstart(2)-1-1)*dy-yly/two
        !           if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/two
        !           um=exp(-0.2*y*y)
        !           do i=1,xsize(1)
@@ -162,7 +163,7 @@ contains
     enddo
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init end ok'
+    if (nrank  ==  0) write(*,*) '# init end ok'
 #endif
 
     return
@@ -180,20 +181,20 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
-    IF (nclx1.EQ.2) THEN
-    ENDIF
-    IF (nclxn.EQ.2) THEN
-    ENDIF
+    if (nclx1 == 2) then
+    endif
+    if (nclxn == 2) then
+    endif
 
-    IF (ncly1.EQ.2) THEN
-    ENDIF
-    IF (nclyn.EQ.2) THEN
-    ENDIF
+    if (ncly1 == 2) then
+    endif
+    if (nclyn == 2) then
+    endif
 
-    IF (nclz1.EQ.2) THEN
-    ENDIF
-    IF (nclzn.EQ.2) THEN
-    ENDIF
+    if (nclz1 == 2) then
+    endif
+    if (nclzn == 2) then
+    endif
 
   end subroutine boundary_conditions_tgv
 
@@ -221,9 +222,9 @@ contains
        do j=xstart(2),xend(2)
           do i=xstart(1),xend(1)
              vol1(i,j,k)=dxdydz
-             if (i .eq. 1   .or. i .eq. nx) vol1(i,j,k) = vol1(i,j,k)/two
-             if (j .eq. 1   .or. j .eq. ny)  vol1(i,j,k) = vol1(i,j,k)/two
-             if (k .eq. 1   .or. k .eq. nz)  vol1(i,j,k) = vol1(i,j,k)/two
+             if (i  ==  1   .or. i  ==  nx) vol1(i,j,k) = vol1(i,j,k)/two
+             if (j  ==  1   .or. j  ==  ny) vol1(i,j,k) = vol1(i,j,k)/two
+             if (k  ==  1   .or. k  ==  nz) vol1(i,j,k) = vol1(i,j,k)/two
           end do
        end do
     end do
@@ -233,32 +234,32 @@ contains
        do j=xstart(2),xend(2)
           do i=xstart(1),xend(1)
              volSimps1(i,j,k)=dxdydz
-             if (i .eq. 1   .or. i .eq. nx) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
-             if (j .eq. 1   .or. j .eq. ny) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
-             if (k .eq. 1   .or. k .eq. nz) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
-             if (i .eq. 2   .or. i .eq. nx-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
-             if (j .eq. 2   .or. j .eq. ny-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
-             if (k .eq. 2   .or. k .eq. nz-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
+             if (i  ==  1   .or. i  ==  nx) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
+             if (j  ==  1   .or. j  ==  ny) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
+             if (k  ==  1   .or. k  ==  nz) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
+             if (i  ==  2   .or. i  ==  nx-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
+             if (j  ==  2   .or. j  ==  ny-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
+             if (k  ==  2   .or. k  ==  nz-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
           end do
        end do
     end do
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init_post ok'
+    if (nrank == 0) write(*,*) '# init_post ok'
 #endif
 
   end subroutine init_post
   !############################################################################
   subroutine postprocess_tgv(ux1,uy1,uz1,phi1,ep1)
 
-    USE decomp_2d
-    USE decomp_2d_io
-    USE variables, only: nx,ny,nz
-    USE MPI
-    USE var, only: nut1, srt_smag 
-    USE var, only : uvisu
-    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-    USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+    use decomp_2d
+    use decomp_2d_io
+    use variables, only: nx,ny,nz
+    use mpi
+    use var, only: nut1, srt_smag 
+    use var, only : uvisu
+    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    use var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1,ep1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
@@ -304,93 +305,93 @@ contains
 
 
     !we only collect statistics every 10 time steps to save computational time
-    if (mod(itime, 10).eq.0) then
-    !! Write vorticity as an example of post processing
-    !x-derivatives
-    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
-    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-    !y-derivatives
-    call transpose_x_to_y(ux1,td2)
-    call transpose_x_to_y(uy1,te2)
-    call transpose_x_to_y(uz1,tf2)
-    call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-    call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-    call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-    !!z-derivatives
-    call transpose_y_to_z(td2,td3)
-    call transpose_y_to_z(te2,te3)
-    call transpose_y_to_z(tf2,tf3)
-    call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
-    !!all back to x-pencils
-    call transpose_z_to_y(ta3,td2)
-    call transpose_z_to_y(tb3,te2)
-    call transpose_z_to_y(tc3,tf2)
-    call transpose_y_to_x(td2,tg1)
-    call transpose_y_to_x(te2,th1)
-    call transpose_y_to_x(tf2,ti1)
-    call transpose_y_to_x(ta2,td1)
-    call transpose_y_to_x(tb2,te1)
-    call transpose_y_to_x(tc2,tf1)
-    !du/dx=ta1 du/dy=td1 and du/dz=tg1
-    !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
-    !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
-       if ((ivisu.ne.0).and.(mod(itime, ioutput).eq.0)) then
+    if (mod(itime, 10) == 0) then
+       !! Write vorticity as an example of post processing
+       !x-derivatives
+       call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+       call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+       call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+       !y-derivatives
+       call transpose_x_to_y(ux1,td2)
+       call transpose_x_to_y(uy1,te2)
+       call transpose_x_to_y(uz1,tf2)
+       call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+       call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+       call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+       !!z-derivatives
+       call transpose_y_to_z(td2,td3)
+       call transpose_y_to_z(te2,te3)
+       call transpose_y_to_z(tf2,tf3)
+       call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+       call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+       call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+       !!all back to x-pencils
+       call transpose_z_to_y(ta3,td2)
+       call transpose_z_to_y(tb3,te2)
+       call transpose_z_to_y(tc3,tf2)
+       call transpose_y_to_x(td2,tg1)
+       call transpose_y_to_x(te2,th1)
+       call transpose_y_to_x(tf2,ti1)
+       call transpose_y_to_x(ta2,td1)
+       call transpose_y_to_x(tb2,te1)
+       call transpose_y_to_x(tc2,tf1)
+       !du/dx=ta1 du/dy=td1 and du/dz=tg1
+       !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
+       !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
+       if ((ivisu.ne.0).and.(mod(itime, ioutput) == 0)) then
        !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
-       di1=0.
+       di1=zero
        di1(:,:,:)=-0.5*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2)-&
            td1(:,:,:)*tb1(:,:,:)-&
            tg1(:,:,:)*tc1(:,:,:)-&
            th1(:,:,:)*tf1(:,:,:)
-       uvisu=0.
+       uvisu=zero
        call fine_to_coarseV(1,di1,uvisu)
        994 format('./data/critq',I5.5)
        write(filename, 994) itime/ioutput
        call decomp_2d_write_one(1,uvisu,filename,2)
        endif
 
-      !SPATIALLY-AVERAGED ENSTROPHY
-      temp1=0.
-      do k=1,xsize3
-      do j=1,xsize2
-      do i=1,xsize1
-         temp1=temp1+0.5*((tf1(i,j,k)-th1(i,j,k))**2+&
-         (tg1(i,j,k)-tc1(i,j,k))**2+&
-         (tb1(i,j,k)-td1(i,j,k))**2)
-      enddo
-      enddo
-      enddo
-      call MPI_ALLREDUCE(temp1,enst,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-      enst=enst/(nxc*nyc*nzc)
-      
-      !SPATIALLY-AVERAGED ENERGY DISSIPATION
-      temp1=0.
-      do k=1,xsize3
-      do j=1,xsize2
-      do i=1,xsize1
-         temp1=temp1+half*xnu*((two*ta1(i,j,k))**two+(two*te1(i,j,k))**two+&
-         (two*ti1(i,j,k))**two+two*(td1(i,j,k)+tb1(i,j,k))**two+&
-         two*(tg1(i,j,k)+tc1(i,j,k))**two+&
-         two*(th1(i,j,k)+tf1(i,j,k))**two)
-         if(ilesmod.ne.0.and.jles.le.3) then
-            temp1=temp1+two*nut1(i,j,k)*srt_smag(i,j,k)
-         endif
-      enddo
-      enddo
-      enddo
-      call MPI_ALLREDUCE(temp1,eps,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-      eps=eps/(nxc*nyc*nzc)
-
-      !SPATIALLY-AVERAGED TKE of velocity fields
-       temp1=0.
+       !SPATIALLY-AVERAGED ENSTROPHY
+       temp1=zero
        do k=1,xsize3
-       do j=1,xsize2
-       do i=1,xsize1
-          temp1=temp1+0.5*((ux1(i,j,k))**2+(uy1(i,j,k))**2+(uz1(i,j,k))**2)
+          do j=1,xsize2
+             do i=1,xsize1
+                temp1=temp1+zpfive*((tf1(i,j,k)-th1(i,j,k))**2+&
+                                    (tg1(i,j,k)-tc1(i,j,k))**2+&
+                                    (tb1(i,j,k)-td1(i,j,k))**2)
+             enddo
+          enddo
        enddo
+       call MPI_ALLREDUCE(temp1,enst,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       enst=enst/(nxc*nyc*nzc)
+       
+       !SPATIALLY-AVERAGED ENERGY DISSIPATION
+       temp1=zero
+       do k=1,xsize3
+          do j=1,xsize2
+             do i=1,xsize1
+                temp1=temp1+half*xnu*((two*ta1(i,j,k))**two+(two*te1(i,j,k))**two+&
+                                      (two*ti1(i,j,k))**two+two*(td1(i,j,k)+tb1(i,j,k))**two+&
+                                                            two*(tg1(i,j,k)+tc1(i,j,k))**two+&
+                                                            two*(th1(i,j,k)+tf1(i,j,k))**two)
+                if (ilesmod /= 0 .and. jles <= 3) then
+                   temp1=temp1+two*nut1(i,j,k)*srt_smag(i,j,k)
+                endif
+             enddo
+          enddo
        enddo
+       call MPI_ALLREDUCE(temp1,eps,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       eps=eps/(nxc*nyc*nzc)
+
+       !SPATIALLY-AVERAGED TKE of velocity fields
+       temp1=zero
+       do k=1,xsize3
+          do j=1,xsize2
+             do i=1,xsize1
+                temp1=temp1+zpfive*((ux1(i,j,k))**2+(uy1(i,j,k))**2+(uz1(i,j,k))**2)
+             enddo
+          enddo
        enddo
        call MPI_ALLREDUCE(temp1,eek,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        eek=eek/(nxc*nyc*nzc)
@@ -428,17 +429,17 @@ contains
        !d2v/dx2=tb1 d2v/dy2=te1 and d2v/dz2=th1
        !d2w/dx2=tc1 d2w/dy2=tf1 and d2w/dz2=ti1
        !SPATIALLY-AVERAGED ENERGY DISSIPATION WITH SECOND DERIVATIVES
-       temp1=0.
-       di1=0.
+       temp1=zero
+       di1  =zero
        do k=1,xsize3
-       do j=1,xsize2
-       do i=1,xsize1
-          di1(i,j,k)=(-xnu)*( ux1(i,j,k)*(ta1(i,j,k)+td1(i,j,k)+tg1(i,j,k))+ &
-          uy1(i,j,k)*(tb1(i,j,k)+te1(i,j,k)+th1(i,j,k))+ &
-          uz1(i,j,k)*(tc1(i,j,k)+tf1(i,j,k)+ti1(i,j,k)) )
-          temp1=temp1+di1(i,j,k)
-       enddo
-       enddo
+          do j=1,xsize2
+             do i=1,xsize1
+                di1(i,j,k)=(-xnu)*( ux1(i,j,k)*(ta1(i,j,k)+td1(i,j,k)+tg1(i,j,k))+ &
+                                    uy1(i,j,k)*(tb1(i,j,k)+te1(i,j,k)+th1(i,j,k))+ &
+                                    uz1(i,j,k)*(tc1(i,j,k)+tf1(i,j,k)+ti1(i,j,k)) )
+                temp1=temp1+di1(i,j,k)
+             enddo
+          enddo
        enddo
        call MPI_ALLREDUCE(temp1,eps2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        eps2=eps2/(nxc*nyc*nzc)
@@ -454,8 +455,8 @@ contains
   !############################################################################
   subroutine suspended(phi1,vol1,mp1)
 
-    USE decomp_2d_io
-    USE MPI
+    use decomp_2d_io
+    use MPI
 
     implicit none
 
@@ -481,9 +482,9 @@ contains
   !############################################################################
   subroutine dissipation (ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,diss1)
 
-    USE param
-    USE variables
-    USE decomp_2d
+    use param
+    use variables
+    use decomp_2d
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,diss1
@@ -521,10 +522,11 @@ contains
   !############################################################################
   subroutine error_tgv2D(ux1,uy1,phi1)
 
-    USE decomp_2d
-    USE MPI
-    USE param, only : one, two, xnu, ifirst, itime
-    USE variables, only : numscalar, sc
+    use decomp_2d
+    use MPI
+    use param, only : one, two, xnu, ifirst, itime
+    use variables, only : numscalar, sc
+    use dbg_schemes, only: sin_prec, cos_prec
 
     implicit none
 
@@ -554,55 +556,55 @@ contains
 
     ! Compute solutions and errors
     do k = 1,xsize(3)
-      do j = 1,xsize(2)
-        y = (j+xstart(2)-1-1)*dy
-        do i = 1,xsize(1)
-          x = (i+xstart(1)-1-1)*dx
-          ! Initial solution
-          solx0 = sin(x) * cos(y)
-          soly0 = - cos(x) * sin(y)
-          ! Analytical solution
-          solxt = solx0 * xdamping(1)
-          solyt = soly0 * ydamping(1)
-          ! Time discrete solution
-          solxd = solx0 * xdamping(2)
-          solyd = soly0 * ydamping(2)
-          ! Space-time discrete solution
-          solxdd = solx0 * xdamping(3)
-          solydd = soly0 * ydamping(3)
-          ! Errors
-          errx(i,j,k) = ux1(i,j,k) - solxt
-          erry(i,j,k) = uy1(i,j,k) - solyt
-          errxd1(i,j,k) = ux1(i,j,k) - solxd
-          erryd1(i,j,k) = uy1(i,j,k) - solyd
-          errxd2(i,j,k) = ux1(i,j,k) - solxdd
-          erryd2(i,j,k) = uy1(i,j,k) - solydd
-        enddo
-      enddo
+       do j = 1,xsize(2)
+          y = real(j+xstart(2)-1-1,mytype)*dy
+          do i = 1,xsize(1)
+            x = real(i+xstart(1)-1-1,mytype)*dx
+            ! Initial solution
+            solx0 = sin_prec(x) * cos_prec(y)
+            soly0 = - cos_prec(x) * sin_prec(y)
+            ! Analytical solution
+            solxt = solx0 * xdamping(1)
+            solyt = soly0 * ydamping(1)
+            ! Time discrete solution
+            solxd = solx0 * xdamping(2)
+            solyd = soly0 * ydamping(2)
+            ! Space-time discrete solution
+            solxdd = solx0 * xdamping(3)
+            solydd = soly0 * ydamping(3)
+            ! Errors
+            errx(i,j,k) = ux1(i,j,k) - solxt
+            erry(i,j,k) = uy1(i,j,k) - solyt
+            errxd1(i,j,k) = ux1(i,j,k) - solxd
+            erryd1(i,j,k) = uy1(i,j,k) - solyd
+            errxd2(i,j,k) = ux1(i,j,k) - solxdd
+            erryd2(i,j,k) = uy1(i,j,k) - solydd
+          enddo
+       enddo
     enddo
     if (iscalar==1) then
-    do l = 1, numscalar
-      do k = 1,xsize(3)
-        do j = 1,xsize(2)
-          y = (j+xstart(2)-1-1)*dy
-          do i = 1,xsize(1)
-            x = (i+xstart(1)-1-1)*dx
-            ! Initial solution
-            sols0 = sin(x) * sin(y)
-            ! Analytical solution
-            solst = sols0 * sdamping(1,l)
-            ! Time discrete solution
-            solsd = sols0 * sdamping(2,l)
-            ! Space-time discrete solution
-            solsdd = sols0 * sdamping(3,l)
-            ! Errors
-            errs(i,j,k,l) = phi1(i,j,k,l) - solst
-            errsd1(i,j,k,l) = phi1(i,j,k,l) - solsd
-            errsd2(i,j,k,l) = phi1(i,j,k,l) - solsdd
+       do l = 1, numscalar
+          do k = 1,xsize(3)
+             do j = 1,xsize(2)
+                y = real(j+xstart(2)-1-1,mytype)*dy
+                do i = 1,xsize(1)
+                  x = real(i+xstart(1)-1-1,mytype)*dx
+                  ! Initial solution
+                  sols0 = sin_prec(x) * sin_prec(y)
+                  ! Analytical solution
+                  solst = sols0 * sdamping(1,l)
+                  ! Time discrete solution
+                  solsd = sols0 * sdamping(2,l)
+                  ! Space-time discrete solution
+                  solsdd = sols0 * sdamping(3,l)
+                  ! Errors
+                  errs(i,j,k,l) = phi1(i,j,k,l) - solst
+                  errsd1(i,j,k,l) = phi1(i,j,k,l) - solsd
+                  errsd2(i,j,k,l) = phi1(i,j,k,l) - solsdd
+                enddo
+             enddo
           enddo
-        enddo
-      enddo
-    enddo
+       enddo
     endif
 
     !
@@ -612,70 +614,70 @@ contains
     call error_L1_L2_Linf(ux1, xl1, xl2, xlinf)
     call error_L1_L2_Linf(uy1, yl1, yl2, ylinf)
     if (nrank==0) then
-      write(*,*) "2D Taylor-Green errors:"
-      write(*,*) "  Solution amplitude, L1, sqrt(L2), Linf:"
-      write(*,*) "            ", xl1, xl2, xlinf
-      write(*,*) "            ", yl1, yl2, ylinf
+       write(*,*) "2D Taylor-Green errors:"
+       write(*,*) "  Solution amplitude, L1, sqrt(L2), Linf:"
+       write(*,*) "            ", xl1, xl2, xlinf
+       write(*,*) "            ", yl1, yl2, ylinf
     endif
     if (iscalar==1) then
-    do l = 1, numscalar
-      tmp(:,:,:) = phi1(:,:,:,l)
-      call error_L1_L2_Linf(tmp, xl1, xl2, xlinf)
-      if (nrank==0) then
-        write(*,*) "            ", xl1, xl2, xlinf
-      endif
-    enddo
+       do l = 1, numscalar
+          tmp(:,:,:) = phi1(:,:,:,l)
+          call error_L1_L2_Linf(tmp, xl1, xl2, xlinf)
+          if (nrank==0) then
+             write(*,*) "            ", xl1, xl2, xlinf
+          endif
+       enddo
     endif
     ! Analytical solution
     call error_L1_L2_Linf(errx, xl1, xl2, xlinf)
     call error_L1_L2_Linf(erry, yl1, yl2, ylinf)
     if (nrank==0) then
-      write(*,*) "  1: Analytical, L1, sqrt(L2), Linf:"
-      write(*,*) "     XERROR ", xl1, xl2, xlinf
-      write(*,*) "     YERROR ", yl1, yl2, ylinf
+       write(*,*) "  1: Analytical, L1, sqrt(L2), Linf:"
+       write(*,*) "     XERROR ", xl1, xl2, xlinf
+       write(*,*) "     YERROR ", yl1, yl2, ylinf
     endif
     if (iscalar==1) then
-    do l = 1, numscalar
-      tmp(:,:,:) = errs(:,:,:,l)
-      call error_L1_L2_Linf(tmp, xl1, xl2, xlinf)
-      if (nrank==0) then
-        write(*,*) "            ", xl1, xl2, xlinf
-      endif
-    enddo
+       do l = 1, numscalar
+          tmp(:,:,:) = errs(:,:,:,l)
+          call error_L1_L2_Linf(tmp, xl1, xl2, xlinf)
+          if (nrank==0) then
+            write(*,*) "            ", xl1, xl2, xlinf
+          endif
+       enddo
     endif
     ! Time discrete solution
     call error_L1_L2_Linf(errxd1, xl1, xl2, xlinf)
     call error_L1_L2_Linf(erryd1, yl1, yl2, ylinf)
     if (nrank==0) then
-      write(*,*) "  2: Time-discrete, L1, sqrt(L2), Linf:"                                 
-      write(*,*) "     XERROR ", xl1, xl2, xlinf
-      write(*,*) "     YERROR ", yl1, yl2, ylinf
+       write(*,*) "  2: Time-discrete, L1, sqrt(L2), Linf:"                                 
+       write(*,*) "     XERROR ", xl1, xl2, xlinf
+       write(*,*) "     YERROR ", yl1, yl2, ylinf
     endif
     if (iscalar==1) then
-    do l = 1, numscalar
-      tmp(:,:,:) = errsd1(:,:,:,l)
-      call error_L1_L2_Linf(tmp, xl1, xl2, xlinf)
-      if (nrank==0) then
-        write(*,*) "            ", xl1, xl2, xlinf
-      endif
-    enddo
+       do l = 1, numscalar
+          tmp(:,:,:) = errsd1(:,:,:,l)
+          call error_L1_L2_Linf(tmp, xl1, xl2, xlinf)
+          if (nrank==0) then
+            write(*,*) "            ", xl1, xl2, xlinf
+          endif
+       enddo
     endif
     ! Space-time discrete solution
     call error_L1_L2_Linf(errxd2, xl1, xl2, xlinf)
     call error_L1_L2_Linf(erryd2, yl1, yl2, ylinf)
     if (nrank==0) then
-      write(*,*) "  3: Time-space-discrete, L1, sqrt(L2), Linf:"
-      write(*,*) "     XERROR ", xl1, xl2, xlinf
-      write(*,*) "     YERROR ", yl1, yl2, ylinf
+       write(*,*) "  3: Time-space-discrete, L1, sqrt(L2), Linf:"
+       write(*,*) "     XERROR ", xl1, xl2, xlinf
+       write(*,*) "     YERROR ", yl1, yl2, ylinf
     endif
     if (iscalar==1) then
-    do l = 1, numscalar
-      tmp(:,:,:) = errsd2(:,:,:,l)
-      call error_L1_L2_Linf(tmp, xl1, xl2, xlinf)
-      if (nrank==0) then
-        write(*,*) "            ", xl1, xl2, xlinf
-      endif
-    enddo
+       do l = 1, numscalar
+          tmp(:,:,:) = errsd2(:,:,:,l)
+          call error_L1_L2_Linf(tmp, xl1, xl2, xlinf)
+          if (nrank==0) then
+            write(*,*) "            ", xl1, xl2, xlinf
+          endif
+       enddo
     endif
 
   end subroutine error_tgv2D
@@ -686,6 +688,7 @@ contains
     use decomp_2d
     use param, only : one, two, xnu, ifirst, itime, itimescheme, iimplicit
     use variables, only : numscalar, sc
+    use dbg_schemes, only: exp_prec
 
     implicit none
 
@@ -704,32 +707,32 @@ contains
     sdamping(:,:) = one
 
     ! Compute analytical damping
-    coef(1) = exp(-two*dt*xnu)
+    coef(1) = exp_prec(-two*dt*xnu)
     do it = ifirst, itime
-      xdamping(1) = xdamping(1) * coef(1)
-      ydamping(1) = ydamping(1) * coef(1)
-      do l = 1, numscalar
-        sdamping(1,l) = sdamping(1,l) * exp(-two*dt*xnu/sc(l))
-      enddo
+       xdamping(1) = xdamping(1) * coef(1)
+       ydamping(1) = ydamping(1) * coef(1)
+       do l = 1, numscalar
+         sdamping(1,l) = sdamping(1,l) * exp_prec(-two*dt*xnu/sc(l))
+       enddo
     enddo
 
     ! Compute time and space-time discrete damping
     !
     ! Explicit Euler
-    if (itimescheme.eq.1) then
+    if (itimescheme == 1) then
 
       ! Time discrete errors
-      if (iimplicit.eq.0) then
+      if (iimplicit == 0) then
         coef(1) = (one - two*dt*xnu)
         do l = 1, numscalar
           coef(1+l) = one - two*dt*xnu/sc(l)
         enddo
-      else if (iimplicit.eq.1) then
+      else if (iimplicit == 1) then
         coef(1) = (one - dt*xnu) / (one + dt*xnu)
         do l = 1, numscalar
           coef(1+l) = (one - dt*xnu/sc(l)) / (one + dt*xnu/sc(l))
         enddo
-      else if (iimplicit.eq.2) then
+      else if (iimplicit == 2) then
         coef(1) = (one - onepfive*dt*xnu) / (one + half*dt*xnu)
         do l = 1, numscalar
           coef(1+l) = (one - onepfive*dt*xnu/sc(l)) / (one + half*dt*xnu/sc(l))
@@ -744,17 +747,17 @@ contains
       enddo
 
       ! Space-time discrete errors
-      if (iimplicit.eq.0) then
+      if (iimplicit == 0) then
         coef(1) = (one - two*k2tgv*dt*xnu)
         do l = 1, numscalar
           coef(1+l) = one - two*k2tgv*dt*xnu/sc(l)
         enddo
-      else if (iimplicit.eq.1) then
+      else if (iimplicit == 1) then
         coef(1) = (one - k2tgv*dt*xnu) / (one + k2tgv*dt*xnu)
         do l = 1, numscalar
           coef(1+l) = (one - k2tgv*dt*xnu/sc(l)) / (one + k2tgv*dt*xnu/sc(l))
         enddo
-      else if (iimplicit.eq.2) then
+      else if (iimplicit == 2) then
         coef(1) = (one - onepfive*k2tgv*dt*xnu) / (one + half*k2tgv*dt*xnu)
         do l = 1, numscalar
           coef(1+l) = (one - onepfive*k2tgv*dt*xnu/sc(l)) / (one + half*k2tgv*dt*xnu/sc(l))
@@ -770,7 +773,7 @@ contains
 
     else
 
-      if (nrank==0) print *, "TGV2D: No discrete error implemented for this time scheme."
+      if (nrank==0) write(*,*)  "TGV2D: No discrete error implemented for this time scheme."
       xdamping(2:) = xdamping(1)
       ydamping(2:) = ydamping(1)
       do l = 1, numscalar
@@ -785,34 +788,35 @@ contains
   ! Warning : we use the X momentum wavenumber for Y momentum and for the scalars
   subroutine compute_k2(kin, k2out)
 
-  USE decomp_2d, only : mytype
-  USE param
-  USE derivX, only : alsaix, asix, bsix, csix, dsix
+    use decomp_2d, only : mytype
+    use param
+    use derivx, only : alsaix, asix, bsix, csix, dsix
+    use dbg_schemes, only: cos_prec
 
-  implicit none
+    implicit none
 
-  real(mytype), intent(in) :: kin
-  real(mytype), intent(out) :: k2out
+    real(mytype), intent(in) :: kin
+    real(mytype), intent(out) :: k2out
 
-  if (kin.lt.zero .or. kin.gt.pi/min(dx,dy)) then
-    if (nrank==0) then
-      write(*,*) "TGV2D: Warning, incorrect wavenumber provided."
+    if (kin.lt.zero .or. kin.gt.pi/min(dx,dy)) then
+      if (nrank==0) then
+        write(*,*) "TGV2D: Warning, incorrect wavenumber provided."
+      endif
     endif
-  endif
 
-  k2out = asix * two * (one - cos(kin*dx)) &
-        + four * bsix * half * (one - cos(two*kin*dx)) &
-        + nine * csix * (two / nine) * (one - cos(three*kin*dx)) &
-        + sixteen * dsix * (one / eight) * (one - cos(four*kin*dx))
-  k2out = k2out / (one + two * alsaix * cos(kin*dx))
+    k2out = asix * two * (one - cos_prec(kin*dx)) &
+          + four * bsix * half * (one - cos_prec(two*kin*dx)) &
+          + nine * csix * (two / nine) * (one - cos_prec(three*kin*dx)) &
+          + sixteen * dsix * (one / eight) * (one - cos_prec(four*kin*dx))
+    k2out = k2out / (one + two * alsaix * cos_prec(kin*dx))
 
   end subroutine compute_k2
 
   ! Compute L1, L2 and Linf norm of given 3D array
   subroutine error_L1_L2_Linf(err, l1, l2, linf)
 
-    USE decomp_2d
-    USE MPI
+    use decomp_2d
+    use mpi
     
     implicit none
       

@@ -84,10 +84,10 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
 
-    if (xstart(2).eq.1) then
+    if (xstart(2) == 1) then
        j = 1
 
-       if (ncly1.eq.2) then !! Set velocity BCs
+       if (ncly1 == 2) then !! Set velocity BCs
           byx1(:,:) = zero
           byy1(:,:) = zero
           byz1(:,:) = zero
@@ -99,13 +99,13 @@ contains
           enddo
        endif
 
-       if (nclyS1.eq.2) then !! Set scalar BCs
+       if (nclyS1 == 2) then !! Set scalar BCs
           do is=1, numscalar
              do k=1,xsize(3)
                 do i=1,xsize(1)
                    !phi2(i,yend(2),k)= phi2(i,yend(2)-1,k) / (1.+uset(is)*dy*sc(is)/xnu) !Robin on top BC
 
-                   if ((uset(is).ne.zero).and.&
+                   if ((uset(is) /= zero).and.&
                         (phi1(i,j+1,k,is).gt.phi1(i,j,k,is))) then
                       phi1(i,j,k,is) = phi1(i,j,k,is) - &
                            ((uset(is)*gdt(itr))*gravy/dy)*(phi1(i,j+1,k,is)-phi1(i,j,k,is)) !Deposit on bottom BC
@@ -123,11 +123,12 @@ contains
 
   subroutine init_lockexch (rho1,ux1,uy1,uz1,ep1,phi1)
 
-    USE decomp_2d
-    USE decomp_2d_io
-    USE variables
-    USE param
-    USE MPI
+    use decomp_2d
+    use decomp_2d_io
+    use variables
+    use param
+    use mpi
+    use dbg_schemes, only: exp_prec, tanh_prec
 
     USE var, only : mu1
 
@@ -145,9 +146,9 @@ contains
           do i=1,xsize(1)
              x=real(i+xstart(1)-1-1,mytype)*dx-pfront
              do is=1,numscalar
-                phi1(i,j,k,is)=half * (one - tanh((sc(is) / xnu)**(half) * x)) * cp(is)
+                phi1(i,j,k,is)=half * (one - tanh_prec((sc(is) / xnu)**(half) * x)) * cp(is)
              enddo
-             rho1(i,j,k,1) = half * (one - tanh((prandtl / xnu)**half * x)) &
+             rho1(i,j,k,1) = half * (one - tanh_prec((prandtl / xnu)**half * x)) &
                   * (dens1 - dens2) + dens2
           enddo
        enddo
@@ -176,9 +177,9 @@ contains
 
     ux1=zero; uy1=zero; uz1=zero
 
-    if (iin.ne.0) then
+    if (iin /= 0) then
        call system_clock(count=code)
-       if (iin.eq.2) code=0
+       if (iin == 2) code=0
        call random_seed(size = ii)
        call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /))
 
@@ -191,7 +192,7 @@ contains
           do j=1,xsize(2)
              do i=1,xsize(1)
                 x=real(i-1,mytype)*dx-pfront
-                um=exp(-twentyfive*x*x)*init_noise
+                um=exp_prec(-twentyfive*x*x)*init_noise
                 ux1(i,j,k)=um*(two*ux1(i,j,k)-one)
                 uy1(i,j,k)=um*(two*uy1(i,j,k)-one)
                 uz1(i,j,k)=um*(two*uz1(i,j,k)-one)
@@ -220,7 +221,7 @@ contains
           enddo
        enddo
 
-       if (ilmn.and.((Fr**2).gt.zero)) then
+       if (ilmn.and.((Fr**2) > zero)) then
           do k = 1, xsize(3)
              do j = 1, xsize(2)
                 y = (j + xstart(2) - 2) * dy
@@ -234,7 +235,7 @@ contains
        call MPI_ALLREDUCE(ek,ekg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,code)
        call MPI_ALLREDUCE(ep,epg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,code)
 
-       if ((epg.ne.zero).and.(ekg.ne.zero)) then
+       if ((epg /= zero).and.(ekg /= zero)) then
           um = ekg / epg
           um = init_noise / um
           um = sqrt(um)
@@ -254,14 +255,14 @@ contains
           enddo
           call MPI_ALLREDUCE(ek,ekg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,code)
 
-          if (nrank.eq.0) then
-             print *, "Ek / Ep: ", ekg / epg, ekg, epg
+          if (nrank == 0) then
+             write(*,*)  "Ek / Ep: ", ekg / epg, ekg, epg
           endif
        endif
     endif
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init end ok'
+    if (nrank  ==  0) write(*,*) '# init end ok'
 #endif
 
     return
@@ -294,12 +295,12 @@ contains
           do j=xstart(2),xend(2)
              do i=xstart(1),xend(1)
                 vol1(i,j,k)=dx*dy*dz
-                if (i .eq. 1 .or. i .eq. nx) vol1(i,j,k) = vol1(i,j,k) * half !five/twelve
-                if (j .eq. 1 .or. j .eq. ny) vol1(i,j,k) = vol1(i,j,k) * half !five/twelve
-                if (k .eq. 1 .or. k .eq. nz) vol1(i,j,k) = vol1(i,j,k) * half !five/twelve
-                ! if (i .eq. 2 .or. i .eq. nx-1) vol1(i,j,k) = vol1(i,j,k) * thirteen/twelve
-                ! if (j .eq. 2 .or. j .eq. ny-1) vol1(i,j,k) = vol1(i,j,k) * thirteen/twelve
-                ! if (k .eq. 2 .or. k .eq. nz-1) vol1(i,j,k) = vol1(i,j,k) * thirteen/twelve
+                if (i  ==  1 .or. i  ==  nx) vol1(i,j,k) = vol1(i,j,k) * half !five/twelve
+                if (j  ==  1 .or. j  ==  ny) vol1(i,j,k) = vol1(i,j,k) * half !five/twelve
+                if (k  ==  1 .or. k  ==  nz) vol1(i,j,k) = vol1(i,j,k) * half !five/twelve
+                ! if (i  ==  2 .or. i  ==  nx-1) vol1(i,j,k) = vol1(i,j,k) * thirteen/twelve
+                ! if (j  ==  2 .or. j  ==  ny-1) vol1(i,j,k) = vol1(i,j,k) * thirteen/twelve
+                ! if (k  ==  2 .or. k  ==  nz-1) vol1(i,j,k) = vol1(i,j,k) * thirteen/twelve
              end do
           end do
        end do
@@ -308,15 +309,15 @@ contains
        area2=dx*dz
        do k=ystart(3),yend(3)
           do i=ystart(1),yend(1)
-             if (i .eq. 1 .or. i .eq. nx) area2(i,k) = area2(i,k)/two
-             if (k .eq. 1 .or. k .eq. nz)  area2(i,k) = area2(i,k)/two
+             if (i  ==  1 .or. i  ==  nx) area2(i,k) = area2(i,k)/two
+             if (k  ==  1 .or. k  ==  nz)  area2(i,k) = area2(i,k)/two
           end do
        end do
 
        init = .TRUE.
     endif
 
-    if (mod(itime,iprocessing).ne.0) return
+    if (mod(itime,iprocessing) /= 0) return
 
     mp=zero; dms=zero; xf=zero; xf2d=zero
 
@@ -366,7 +367,7 @@ contains
        call front2d(rhom3(:,:),xf2d)
     endif
 
-    if (nrank .eq. 0) then
+    if (nrank  ==  0) then
        FS = 1+numscalar+numscalar+3+2 !Number of columns
        write(fileformat, '( "(",I4,"(E14.6),A)" )' ) FS
        FS = FS*14+1  !Line width
@@ -500,7 +501,7 @@ contains
     !    ilag=0
     ! endif
     do is=1, numscalar
-       if (ri(is) .eq. zero) cycle
+       if (ri(is)  ==  zero) cycle
        call derxxS (dphixx1,phi1(:,:,:,is),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1)
 
        call transpose_x_to_y(dphixx1,dphixx2)
@@ -543,7 +544,6 @@ contains
 
        iimplicit = -iimplicit
        call deryy(tb2, rho2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
-       iimplicit = -iimplicit
        call transpose_y_to_z(rho2, rho3)
 
        call derzz(ta3, rho3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
@@ -571,22 +571,22 @@ contains
     call MPI_REDUCE(ep,ep1,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,MPI_COMM_WORLD,code)
     call MPI_REDUCE(dep,dep1,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,MPI_COMM_WORLD,code)
 
-    if (nrank .eq. 0) then
+    if (nrank  ==  0) then
        open(67,file='./out/budget',status='unknown',form='formatted',&
             access='direct',recl=71) !71=5*14+1
        write(67,"(5E14.6,A)",rec=itime/iprocessing+1) t,ek1,dek1,ep1,dep1,NL
        close(67)
     end if
 
-    if (mod(itime,ioutput).eq.0) then
-       !if (save_diss.eq.1) then
+    if (mod(itime,ioutput) == 0) then
+       !if (save_diss == 1) then
        uvisu=zero
        call fine_to_coarseV(1,diss1,uvisu)
        write(filename,"('./data/diss',I4.4)") itime/ioutput
        call decomp_2d_write_one(1,uvisu,filename,2)
        !endif
 
-       !if (save_dissm.eq.1) then
+       !if (save_dissm == 1) then
        call transpose_x_to_y (diss1,temp2)
        call transpose_y_to_z (temp2,temp3)
        call mean_plane_z(temp3,zsize(1),zsize(2),zsize(3),temp3(:,:,1))
@@ -614,7 +614,7 @@ contains
 
     dep2 = zero
     do is=1, numscalar
-       if (uset(is) .eq. zero) cycle
+       if (uset(is)  ==  zero) cycle
        call transpose_x_to_y(phi1(:,:,:,is),phi2(:,:,:,is))
 
        tempdep2=zero
@@ -673,7 +673,7 @@ contains
 
     dms=zero; dms1=zero
     do is=1, numscalar
-       if (uset(is) .eq. zero) cycle
+       if (uset(is)  ==  zero) cycle
        do k=ystart(3),yend(3)
           do i=ystart(1),yend(1)
              dms(is)=dms(is)+dep2(i,k,is)*area2(i,k)

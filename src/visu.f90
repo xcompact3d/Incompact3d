@@ -68,7 +68,7 @@ contains
       !
       nsnapout = 4
       if (ilmn)         nsnapout = nsnapout + 1
-      if (iscalar.ne.0) nsnapout = nsnapout + numscalar
+      if (iscalar /= 0) nsnapout = nsnapout + numscalar
       !
       memout = nx*ny*nz*prec*nsnapout*noutput
       print *,'==========================================================='
@@ -202,7 +202,7 @@ contains
     !###################################################################
     !! Scalars
     !###################################################################
-    if (iscalar.ne.0) then
+    if (iscalar /= 0) then
 996     format('./data/phi',i1.1,I5.5)
       do is = 1, numscalar
         uvisu=0.
