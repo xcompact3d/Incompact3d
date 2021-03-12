@@ -215,7 +215,7 @@ subroutine tbl_flrt (ux1,uy1,uz1)
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
   real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux2,uy2,uz2
 
-  integer :: j,i,k,code
+  integer :: j,i,k,code,ierr2
   real(mytype) :: can,ut1,ut2,ut3,ut4,utt1,utt2,utt3,utt4,udif
 
   ux1(1,:,:)=bxx1(:,:)
@@ -234,6 +234,11 @@ subroutine tbl_flrt (ux1,uy1,uz1)
     ! ut1=ut1/real(ysize(3),mytype)
   endif
   call MPI_ALLREDUCE(ut1,utt1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+  if (code.ne.0) then
+    if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+    call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+  endif
+
   utt1=utt1/real(nz,mytype) !! Volume flow rate per unit spanwise dist
   ! Flow rate at the outlet
   ut2=zero;utt2=zero
@@ -247,6 +252,10 @@ subroutine tbl_flrt (ux1,uy1,uz1)
   endif
 
   call MPI_ALLREDUCE(ut2,utt2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+  if (code.ne.0) then
+    if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+    call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+  endif
   utt2=utt2/real(nz,mytype) !! Volume flow rate per unit spanwise dist
 
   ! Flow rate at the top and bottom
@@ -259,7 +268,15 @@ subroutine tbl_flrt (ux1,uy1,uz1)
     enddo
   enddo
   call MPI_ALLREDUCE(ut3,utt3,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+  if (code.ne.0) then
+    if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+    call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+  endif
   call MPI_ALLREDUCE(ut4,utt4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+  if (code.ne.0) then
+    if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+    call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+  endif
   utt3=utt3/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
   utt4=utt4/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
 

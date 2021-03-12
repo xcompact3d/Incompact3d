@@ -127,8 +127,7 @@ contains
 
     implicit none
 
-    integer :: fh,ierror,code,itest1
-    integer :: ierror_o=0 !error to open sauve file during restart
+    integer :: fh,code,ierr2,itest1
     character(len=30) :: filename, filestart
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
 
@@ -142,33 +141,60 @@ contains
 
        call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
             MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
-            fh, ierror)
+            fh, code)
+       if (code.ne.0) then
+          if (nrank.eq.0) then
+             print *,'==========================================================='
+             print *,'Error: MPI_FILE_OPEN : '//trim(filename)
+             print *,'==========================================================='
+          endif
+          call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+       endif
        filesize = 0_MPI_OFFSET_KIND
-       call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
+       call MPI_FILE_SET_SIZE(fh,filesize,code)  ! guarantee overwriting
+       if (code.ne.0) then
+          if (nrank.eq.0) print *, "Error in MPI_FILE_SET_SIZE"
+          call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+       endif
        disp = 0_MPI_OFFSET_KIND
        call decomp_2d_write_var(fh,disp,1,ux01)
        call decomp_2d_write_var(fh,disp,1,uy01)
        call decomp_2d_write_var(fh,disp,1,ux11)
        call decomp_2d_write_var(fh,disp,1,uy11)
-       call MPI_FILE_CLOSE(fh,ierror)
+       call MPI_FILE_CLOSE(fh,code)
+       if (code.ne.0) then
+          if (nrank.eq.0) then
+             print *,'==========================================================='
+             print *,'Error: MPI_FILE_CLOSE : '//trim(filename)
+             print *,'==========================================================='
+          endif
+          call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+       endif
     else !read
        call MPI_FILE_OPEN(MPI_COMM_WORLD, filestart, &
             MPI_MODE_RDONLY, MPI_INFO_NULL, &
-            fh, ierror_o)
+            fh, code)
+       if (code.ne.0) then
+          if (nrank.eq.0) then
+             print *,'==========================================================='
+             print *,'Error: MPI_FILE_OPEN : '//trim(filestart)
+             print *,'==========================================================='
+          endif
+          call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+       endif
        disp = 0_MPI_OFFSET_KIND
        call decomp_2d_read_var(fh,disp,1,ux01)
        call decomp_2d_read_var(fh,disp,1,uy01)
        call decomp_2d_read_var(fh,disp,1,ux11)
        call decomp_2d_read_var(fh,disp,1,uy11)
-       call MPI_FILE_CLOSE(fh,ierror_o)
-    endif
-
-    if (nrank.eq.0) then
-       if (ierror_o .ne. 0) then !Included by Felipe Schuch
-          print *,'==========================================================='
-          print *,'Error: Impossible to read '//trim(filestart)
-          print *,'==========================================================='
-          call MPI_ABORT(MPI_COMM_WORLD,code,ierror)
+       call MPI_FILE_CLOSE(fh,code)
+       if (code .ne. 0) then
+          if (nrank.eq.0) then
+             print *,'==========================================================='
+             print *,'Error: MPI_FILE_CLOSE : '//trim(filestart)
+             print *,'==========================================================='
+          endif
+          call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
        endif
     endif
 
@@ -201,8 +227,8 @@ subroutine force(ux1,uy1,ep1)
   implicit none
   character(len=30) :: filename, filename2
   integer :: nzmsize
-  integer                                             :: i, iv, j, k, kk, code
-  integer                                             :: nvect1,nvect2,nvect3
+  integer :: i, iv, j, k, kk, code, ierr2
+  integer :: nvect1,nvect2,nvect3
 
   real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1, uy1
   real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ep1
@@ -310,7 +336,15 @@ subroutine force(ux1,uy1,ep1)
         tunstyl(xstart(3)-1+k)=tsumy
      enddo
      call MPI_ALLREDUCE(tunstxl,tunstx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+     if (code.ne.0) then
+        if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+        call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+     endif
      call MPI_ALLREDUCE(tunstyl,tunsty,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+     if (code.ne.0) then
+        if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+        call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+     endif
 
 !!$!*********************************************************************************
 !!$!     Secondly, the surface momentum fluxes
@@ -477,11 +511,35 @@ subroutine force(ux1,uy1,ep1)
         enddo
      endif
      call MPI_ALLREDUCE(tconvxl,tconvx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+     if (code.ne.0) then
+        if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+        call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+     endif
      call MPI_ALLREDUCE(tconvyl,tconvy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+     if (code.ne.0) then
+        if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+        call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+     endif
      call MPI_ALLREDUCE(tpresxl,tpresx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+     if (code.ne.0) then
+        if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+        call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+     endif
      call MPI_ALLREDUCE(tpresyl,tpresy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+     if (code.ne.0) then
+        if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+        call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+     endif
      call MPI_ALLREDUCE(tdiffxl,tdiffx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+     if (code.ne.0) then
+        if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+        call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+     endif
      call MPI_ALLREDUCE(tdiffyl,tdiffy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+     if (code.ne.0) then
+        if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+        call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+     endif
 
      do k=1,zsize(3)
 

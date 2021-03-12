@@ -265,7 +265,7 @@ contains
     real(mytype) :: eek, enst, eps, eps2
     integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
 
-    integer :: i,j,k,is,code,nvect1
+    integer :: i,j,k,is,code,ierr2,nvect1
     character(len=30) :: filename
 
     if (nclx1==1.and.xend(1)==nx) then
@@ -360,6 +360,10 @@ contains
       enddo
       enddo
       call MPI_ALLREDUCE(temp1,enst,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+      if (code.ne.0) then
+         if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+         call MPI_ABORT(MPI_COMM_WORLD, code, ierr2)
+      endif
       enst=enst/(nxc*nyc*nzc)
       
       !SPATIALLY-AVERAGED ENERGY DISSIPATION
@@ -378,6 +382,10 @@ contains
       enddo
       enddo
       call MPI_ALLREDUCE(temp1,eps,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+      if (code.ne.0) then
+         if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+         call MPI_ABORT(MPI_COMM_WORLD, code, ierr2)
+      endif
       eps=eps/(nxc*nyc*nzc)
 
       !SPATIALLY-AVERAGED TKE of velocity fields
@@ -390,6 +398,10 @@ contains
        enddo
        enddo
        call MPI_ALLREDUCE(temp1,eek,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       if (code.ne.0) then
+         if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+         call MPI_ABORT(MPI_COMM_WORLD, code, ierr2)
+       endif
        eek=eek/(nxc*nyc*nzc)
 
        !SECOND DERIVATIVES
@@ -438,6 +450,10 @@ contains
        enddo
        enddo
        call MPI_ALLREDUCE(temp1,eps2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       if (code.ne.0) then
+         if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+         call MPI_ABORT(MPI_COMM_WORLD, code, ierr2)
+       endif
        eps2=eps2/(nxc*nyc*nzc)
        
        
@@ -462,7 +478,7 @@ contains
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: temp1
     real(mytype) :: mp(1:numscalar)
-    integer :: is,code
+    integer :: is,code,ierr2
 
     mp=zero; mp1=zero
 
@@ -472,6 +488,10 @@ contains
     end do
 
     call MPI_REDUCE(mp,mp1,numscalar,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+       if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+       call MPI_ABORT(MPI_COMM_WORLD, code, ierr2)
+    endif
 
     return
   end subroutine suspended
@@ -816,7 +836,7 @@ contains
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: err
     real(mytype),intent(out) :: l1, l2, linf
 
-    integer :: i,j,k,code
+    integer :: i,j,k,code,ierr2
     real(mytype) :: ll1, ll2, llinf, ntot
 
     ll1 = zero
@@ -836,8 +856,20 @@ contains
 
     ! Parallel
     call MPI_ALLREDUCE(ll1,l1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+       if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+       call MPI_ABORT(MPI_COMM_WORLD, code, ierr2)
+    endif
     call MPI_ALLREDUCE(ll2,l2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+       if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+       call MPI_ABORT(MPI_COMM_WORLD, code, ierr2)
+    endif
     call MPI_ALLREDUCE(llinf,linf,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+       if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+       call MPI_ABORT(MPI_COMM_WORLD, code, ierr2)
+    endif
 
     ! Rescaling
     l1 = l1 / ntot

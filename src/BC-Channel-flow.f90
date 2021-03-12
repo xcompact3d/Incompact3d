@@ -192,7 +192,7 @@ contains
     real(mytype),dimension(ysize(1),ysize(2),ysize(3)), intent(inout) :: ux
     real(mytype), intent(in) :: constant
 
-    integer :: j,i,k,code
+    integer :: j,i,k,code,ierr2
     real(mytype) :: can, ut3, ut4, coeff
 
     ut3 = zero
@@ -208,6 +208,10 @@ contains
     ut3 = ut3 * coeff
 
     call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+       if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+       call MPI_ABORT(MPI_COMM_WORLD, code, ierr2)
+    endif
 
     can = - (constant - ut4)
 

@@ -138,7 +138,7 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
     real(mytype) :: um,x,y,ek,ep,ekg,epg
-    integer :: k,j,i,ii,is,it,code
+    integer :: k,j,i,ii,is,it,code,ierr2
 
     do k=1,xsize(3)
        do j=1,xsize(2)
@@ -232,7 +232,15 @@ contains
        endif
 
        call MPI_ALLREDUCE(ek,ekg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,code)
+       if (code.ne.0) then
+          if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+          call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+       endif
        call MPI_ALLREDUCE(ep,epg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,code)
+       if (code.ne.0) then
+          if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+          call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+       endif
 
        if ((epg.ne.zero).and.(ekg.ne.zero)) then
           um = ekg / epg
@@ -253,6 +261,10 @@ contains
              enddo
           enddo
           call MPI_ALLREDUCE(ek,ekg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,code)
+          if (code.ne.0) then
+             if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+             call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+          endif
 
           if (nrank.eq.0) then
              print *, "Ek / Ep: ", ekg / epg, ekg, epg
@@ -427,7 +439,7 @@ contains
     real(mytype),dimension(xszV(1),xszV(2),xszV(3)) :: uvisu
 
     real(8) :: ek,ek1,dek,dek1,ep,ep1,dep,dep1,xvol
-    integer :: ijk,i,j,k,l,m,is,code
+    integer :: ijk,i,j,k,l,m,is,code,ierr2
     character(len=30) :: filename
 
     real(mytype) :: y
@@ -567,9 +579,25 @@ contains
     ! endif
 
     call MPI_REDUCE(ek,ek1,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+       if (nrank.eq.0) print *, "Error in MPI_REDUCE"
+       call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
     call MPI_REDUCE(dek,dek1,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+       if (nrank.eq.0) print *, "Error in MPI_REDUCE"
+       call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
     call MPI_REDUCE(ep,ep1,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+       if (nrank.eq.0) print *, "Error in MPI_REDUCE"
+       call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
     call MPI_REDUCE(dep,dep1,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+       if (nrank.eq.0) print *, "Error in MPI_REDUCE"
+       call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
 
     if (nrank .eq. 0) then
        open(67,file='./out/budget',status='unknown',form='formatted',&
@@ -646,7 +674,7 @@ contains
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: temp1
     real(mytype) :: mp(1:numscalar)
-    integer :: is,code
+    integer :: is,code,ierr2
 
     mp=zero; mp1=zero
 
@@ -656,6 +684,10 @@ contains
     end do
 
     call MPI_REDUCE(mp,mp1,numscalar,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+       if (nrank.eq.0) print *, "Error in MPI_REDUCE"
+       call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
 
     return
   end subroutine suspended
@@ -669,7 +701,7 @@ contains
     real(mytype),intent(out) :: dms1(numscalar)
 
     real(mytype) :: dms(numscalar)
-    integer :: i,k,is,code
+    integer :: i,k,is,code,ierr2
 
     dms=zero; dms1=zero
     do is=1, numscalar
@@ -682,6 +714,10 @@ contains
     enddo
 
     call MPI_REDUCE(dms,dms1,numscalar,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+       if (nrank.eq.0) print *, "Error in MPI_REDUCE"
+       call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
 
   end subroutine depositrate
 
@@ -694,7 +730,7 @@ contains
     real(mytype),intent(out) :: xp(1:2,1:3)
 
     real(mytype) :: xp1(1:2)
-    integer :: i, j ,k, code
+    integer :: i, j ,k, code, ierr2
 
     xp(2,:) = real(nrank,mytype)
     xp(1,:)=zero
@@ -711,7 +747,15 @@ contains
     end do kloop
 
     call MPI_ALLREDUCE(xp(:,1),xp1,1,real2_type,MPI_MAXLOC,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+       if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+       call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
     call MPI_Bcast(xp(1,:), 3,real_type, int(xp1(2)), MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+       if (nrank.eq.0) print *, "Error in MPI_BCAST"
+       call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
 
   end subroutine front
 
@@ -723,7 +767,7 @@ contains
     real(mytype),intent(in),dimension(zstart(1):zend(1),zstart(2):zend(2)) :: phim3
     real(mytype),intent(out) :: xp(1:2,1:2)
     real(mytype) :: xp1(1:2),y
-    integer :: i, j, code
+    integer :: i, j, code, ierr2
 
     xp(2,:) = real(nrank,mytype)
     xp(1,:) = zero
@@ -739,7 +783,15 @@ contains
     end do jloop
 
     call MPI_ALLREDUCE(xp(:,1),xp1,1,real2_type,MPI_MAXLOC,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+       if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+       call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
     call MPI_Bcast(xp(1,:), 2,real_type, int(xp1(2)), MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+       if (nrank.eq.0) print *, "Error in MPI_BCAST"
+       call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
 
   end subroutine front2d
 

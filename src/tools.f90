@@ -56,7 +56,7 @@ contains
 
     implicit none
 
-    integer :: code,ierror,i,j,k,is,jglob
+    integer :: code,ierr2,i,j,k,is,jglob
     real(mytype) :: phimax,phimin,phimax1,phimin1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
     real(mytype),dimension(2,numscalar) :: phimaxin,phimaxout
@@ -78,6 +78,10 @@ contains
     !call MPI_REDUCE(phimax,phimax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
     !call MPI_REDUCE(phimin,phimin1,1,real_type,MPI_MIN,0,MPI_COMM_WORLD,code)
     call MPI_REDUCE(phimaxin,phimaxout,numscalar*2,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+       if (nrank.eq.0) print *, "Error in MPI_REDUCE"
+       call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
 
     do is=1,numscalar
       if (nrank.eq.0) then
@@ -88,7 +92,7 @@ contains
 
         if (abs(phimax1).ge.100.) then !if phi control turned off
            print *,'Scalar diverged! SIMULATION IS STOPPED!'
-           call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
+           call MPI_ABORT(MPI_COMM_WORLD,code,ierr2); stop
         endif
       endif
 
@@ -108,7 +112,7 @@ contains
 
     implicit none
 
-    integer :: code,ierror,i,j,k
+    integer :: code,ierr2,i,j,k
     real(mytype) :: uxmax,uymax,uzmax,uxmin,uymin,uzmin
     real(mytype) :: uxmax1,uymax1,uzmax1,uxmin1,uymin1,uzmin1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
@@ -132,6 +136,10 @@ contains
 
     umaxin = (/uxmax, uymax, uzmax, uxmin, uymin, uzmin/)
     call MPI_REDUCE(umaxin,umaxout,6,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+       if (nrank.eq.0) print *, "Error in MPI_REDUCE"
+       call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
 
     uxmax1= umaxout(1)
     uymax1= umaxout(2)
@@ -148,7 +156,7 @@ contains
 
        if((abs(uxmax1).ge.100.).OR.(abs(uymax1).ge.100.).OR.(abs(uzmax1).ge.100.)) then
          print *,'Velocity diverged! SIMULATION IS STOPPED!'
-         call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
+         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2); stop
        endif
 
     endif
@@ -228,8 +236,7 @@ contains
 
     implicit none
 
-    integer :: i,j,k,iresflg,nzmsize,fh,ierror,is,it,code
-    integer :: ierror_o=0 !error to open sauve file during restart
+    integer :: i,j,k,iresflg,nzmsize,fh,code,ierr2,is,it
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: px1,py1,pz1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
@@ -265,9 +272,22 @@ contains
     if (iresflg==1) then !write
        call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
             MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
-            fh, ierror)
+            fh, code)
+       if (code.ne.0) then
+         if (nrank.eq.0) then
+           print *,'==========================================================='
+           print *, "Error: Impossible to open "//trim(filename)
+           print *,'==========================================================='
+         endif
+         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+       endif
+
        filesize = 0_MPI_OFFSET_KIND
-       call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
+       call MPI_FILE_SET_SIZE(fh,filesize,code)  ! guarantee overwriting
+       if (code.ne.0) then
+         if (nrank.eq.0) print *, "Error in MPI_FILE_SET_SIZE"
+         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+       endif
        disp = 0_MPI_OFFSET_KIND
        call decomp_2d_write_var(fh,disp,1,ux1)
        call decomp_2d_write_var(fh,disp,1,uy1)
@@ -300,7 +320,15 @@ contains
              end if
           end do
        endif
-       call MPI_FILE_CLOSE(fh,ierror)
+       call MPI_FILE_CLOSE(fh,code)
+       if (code.ne.0) then
+         if (nrank.eq.0) then
+           print *,'==========================================================='
+           print *, "Error: Impossible to close "//trim(filename)
+           print *,'==========================================================='
+         endif
+         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+       endif
        ! Write info file for restart - Kay Schäfer
        if (nrank.eq.0) then
          write(filename,"('restart',I7.7,'.info')") itime
@@ -343,7 +371,15 @@ contains
        end if
        call MPI_FILE_OPEN(MPI_COMM_WORLD, filestart, &
             MPI_MODE_RDONLY, MPI_INFO_NULL, &
-            fh, ierror_o)
+            fh, code)
+       if (code.ne.0) then
+         if (nrank.eq.0) then
+           print *,'==========================================================='
+           print *, "Error: Impossible to open "//trim(filestart)
+           print *,'==========================================================='
+         endif
+         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+       endif
        disp = 0_MPI_OFFSET_KIND
        call decomp_2d_read_var(fh,disp,1,ux1)
        call decomp_2d_read_var(fh,disp,1,uy1)
@@ -376,7 +412,15 @@ contains
            end if
          end do
        endif
-       call MPI_FILE_CLOSE(fh,ierror_o)
+       call MPI_FILE_CLOSE(fh,code)
+       if (code.ne.0) then
+         if (nrank.eq.0) then
+           print *,'==========================================================='
+           print *, "Error: Impossible to close "//trim(filestart)
+           print *,'==========================================================='
+         endif
+         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+       endif
 
        !! Read time of restart file
        write(filename,"('restart',I7.7,'.info')") ifirst-1
@@ -407,15 +451,6 @@ contains
          enddo
        endif
 
-    endif
-
-    if (nrank.eq.0) then
-       if (ierror_o .ne. 0) then !Included by Felipe Schuch
-          print *,'==========================================================='
-          print *,'Error: Impossible to read '//trim(filestart)
-          print *,'==========================================================='
-          call MPI_ABORT(MPI_COMM_WORLD,code,ierror)
-       endif
     endif
 
     ! reconstruction of the dp/dx, dp/dy and dp/dz from pp3

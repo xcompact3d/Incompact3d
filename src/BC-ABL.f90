@@ -283,7 +283,7 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(out) :: wallfluxx,wallfluxy,wallfluxz
     real(mytype),dimension(xsize(1),xsize(3)) :: tauwallxy, tauwallzy
     real(mytype),dimension(xsize(1),xsize(3)) :: Obukhov, zeta
-    integer :: i,j,k,ii,code
+    integer :: i,j,k,ii,code,ierr2
     real(mytype) :: delta
     real(mytype) :: ux_HAve_local, uz_HAve_local, Phi_HAve_local
     real(mytype) :: ux_HAve, uz_HAve,S_HAve,Phi_HAve,ux12,uz12,S12,Phi12,Tstat12
@@ -321,8 +321,22 @@ contains
     endif
 
     call MPI_ALLREDUCE(ux_HAve_local,ux_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+      if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
     call MPI_ALLREDUCE(uz_HAve_local,uz_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (iscalar==1) call MPI_ALLREDUCE(Phi_HAve_local,Phi_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+      if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
+    if (iscalar==1) then
+      call MPI_ALLREDUCE(Phi_HAve_local,Phi_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+      if (code.ne.0) then
+        if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+        call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+      endif
+    endif
 
     ux_HAve=ux_HAve/p_col
     uz_HAve=uz_HAve/p_col
@@ -447,9 +461,25 @@ contains
       Q_HAve_local=Q_HAve_local/xsize(3)/xsize(1)
 
       call MPI_ALLREDUCE(PsiM_HAve_local,PsiM_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+      if (code.ne.0) then
+         if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+      endif
       call MPI_ALLREDUCE(PsiH_HAve_local,PsiH_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+      if (code.ne.0) then
+         if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+      endif
       call MPI_ALLREDUCE(L_HAve_local,L_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+      if (code.ne.0) then
+         if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+      endif
       call MPI_ALLREDUCE(Q_HAve_local,Q_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+      if (code.ne.0) then
+         if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+      endif
 
       PsiM_HAve=PsiM_HAve/p_col
       PsiH_HAve=PsiH_HAve/p_col
@@ -536,7 +566,7 @@ contains
     implicit none
 
     real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux
-    integer :: j,i,k,code
+    integer :: j,i,k,code,ierr2
     real(mytype) :: can,ut3,ut,ut4
 
     ut3=0.
@@ -553,6 +583,10 @@ contains
     ut3=ut3/ysize(1)/ysize(3)
 
     call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+      if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
     ut4=ut4/nproc
 
     ! Flow rate for a logarithmic profile
@@ -668,7 +702,7 @@ contains
     real(mytype), dimension(ny) :: uxy_HAve_local, uxy_HAve, uyz_HAve_local, uyz_HAve, momfl
     real(mytype), dimension(ny) :: txy_HAve_local, txy_HAve, tyz_HAve_local, tyz_HAve
     real(mytype) :: h, hBL
-    integer :: i,j,k,code
+    integer :: i,j,k,code,ierr2
 
     ! Convective BL: buoyancy flux (not implemented)
     !if (iscalar==1.and.istrat==1) then
@@ -713,12 +747,40 @@ contains
     tyz_HAve_local=tyz_HAve_local/xsize(3)/xsize(1)
 
     call MPI_ALLREDUCE(u_HAve_local,u_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+      if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
     call MPI_ALLREDUCE(v_HAve_local,v_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+      if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
     call MPI_ALLREDUCE(w_HAve_local,w_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+      if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
     call MPI_ALLREDUCE(uxy_HAve_local,uxy_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+      if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
     call MPI_ALLREDUCE(uyz_HAve_local,uyz_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+      if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
     call MPI_ALLREDUCE(txy_HAve_local,txy_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+      if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
     call MPI_ALLREDUCE(tyz_HAve_local,tyz_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+      if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
     u_HAve=u_HAve/p_col
     v_HAve=v_HAve/p_col
     w_HAve=w_HAve/p_col

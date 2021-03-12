@@ -143,13 +143,17 @@ contains
     real(mytype) :: inflow, perturbation
     real(mytype) :: timeswitch
 
-    integer :: ierr
+    integer :: code,ierr2
     integer, dimension(2) :: dims, dummy_coords
     logical, dimension(2) :: dummy_periods
 
     real(mytype) :: uu1,uv1,uw1,x2,y1,y2,ya,y,xc,zc,yc
 
-    call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, dims, dummy_periods, dummy_coords, ierr)
+    call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, dims, dummy_periods, dummy_coords, code)
+    if (code.ne.0) then
+       if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+       call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
 
     D = one
     perturbation = zero
@@ -595,7 +599,11 @@ contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !! Compute outflow
-    call MPI_ALLREDUCE(inflow,outflow,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
+    call MPI_ALLREDUCE(inflow,outflow,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+      if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
     outflow = outflow / nx / nz
     if (xend(2).eq.ny) then
        j = xsize(2)
@@ -657,7 +665,7 @@ contains
     real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux
     real(mytype) :: constant
 
-    integer :: j,i,k,code
+    integer :: j,i,k,code,ierr2
     real(mytype) :: can,ut3,ut,ut4
 
     ut3=zero
@@ -678,6 +686,10 @@ contains
     ut3=ut3/(real(nx*nz,mytype))
 
     call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) then
+      if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
+      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+    endif
 
     can=-(constant-ut4)
 
