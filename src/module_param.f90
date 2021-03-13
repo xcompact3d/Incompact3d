@@ -301,13 +301,15 @@ module param
        itype_mixlayer = 7, &
        itype_jet = 8, &
        itype_tbl = 9, &
-       itype_abl = 10
+       itype_abl = 10, &
+       itype_uniform = 11
 
   integer :: cont_phi,itr,itime,itest,iprocessing
   integer :: ifft,istret,iforc_entree,iturb
   integer :: iin,itimescheme,iimplicit,ifirst,ilast,iles
   integer :: ntime ! How many (sub)timestpeps do we need to store?
   integer :: icheckpoint,irestart,idebmod,ioutput,imodulo2,idemarre,icommence,irecord
+  integer :: ioutflow, ninflows, ntimesteps
   integer :: itime0
   integer :: iscalar,nxboite,istat,iread,iadvance_time,irotation,iibm
   integer :: npif,izap
@@ -318,6 +320,7 @@ module param
   real(mytype) :: wrotation,ro
   real(mytype) :: dens1, dens2
   real(mytype) :: C_filter
+  character(len=100) :: inflowpath
 
   !! Channel flow
   integer :: icpg, icfr
@@ -372,6 +375,21 @@ module param
   real(mytype), save, allocatable, dimension(:,:) :: Tstat
   real(mytype), save, allocatable, dimension(:,:) :: PsiM, PsiH
 
+  !! Turbine modelling
+  integer :: iturbine        ! 1: Actuator line, 2: actuator disk
+  integer :: iturboutput     ! Steps for turbine output
+  real(mytype) :: rho_air
+  ! Actuator disk
+  character(len=100) :: admCoords
+  integer :: Ndiscs          ! number of actuator discs
+  real(mytype) :: C_T, aind
+  ! Actuator line
+  integer :: NTurbines, NActuatorlines
+  integer :: ialmrestart
+  character, dimension(100) :: TurbinesPath*80, ActuatorlinesPath*80
+  character(len=100) :: filealmrestart
+  real(mytype) :: eps_factor ! Smoothing factor
+  
   !! Case-specific variables
   logical :: tgv_twod
 

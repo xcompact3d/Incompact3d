@@ -108,6 +108,14 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:) :: wallfluxx1, wallfluxy1, wallfluxz1
   real(mytype), save, allocatable, dimension(:,:,:,:) :: T_tmp
 
+  ! arrays for turbine modelling
+  real(mytype), save, allocatable, dimension(:,:,:) :: FTx, FTy, FTz, Fdiscx, Fdiscy, Fdiscz
+  real(mytype), save, allocatable, dimension(:,:,:,:) ::  GammaDisc
+
+  ! arrays for inflow/outflow - precursor simulations
+  real(mytype), save, allocatable, dimension(:,:,:) :: ux_inflow, uy_inflow, uz_inflow
+  real(mytype), save, allocatable, dimension(:,:,:) :: ux_recoutflow, uy_recoutflow, uz_recoutflow
+
 contains
 
   subroutine init_variables
@@ -194,6 +202,19 @@ contains
     bxxn=zero;bxyn=zero;bxzn=zero
     byxn=zero;byyn=zero;byzn=zero
     bzxn=zero;bzyn=zero;bzzn=zero
+
+    !inflow/outflow arrays (precursor simulations)
+    if (iin.eq.3) then
+       allocate(ux_inflow(ntimesteps,xsize(2),xsize(3)))
+       allocate(uy_inflow(ntimesteps,xsize(2),xsize(3)))
+       allocate(uz_inflow(ntimesteps,xsize(2),xsize(3)))
+    endif
+
+    if (ioutflow.eq.1) then
+       allocate(ux_recoutflow(ntimesteps,xsize(2),xsize(3)))
+       allocate(uy_recoutflow(ntimesteps,xsize(2),xsize(3)))
+       allocate(uz_recoutflow(ntimesteps,xsize(2),xsize(3)))
+    endif
 
     !pre_correc 2d array
     allocate(dpdyx1(xsize(2),xsize(3)),dpdyxn(xsize(2),xsize(3)))
@@ -537,6 +558,18 @@ contains
       allocate(PsiM(xsize(1),xsize(3)))
       allocate(PsiH(xsize(1),xsize(3)))
       allocate(Tstat(xsize(2),1))
+    endif
+
+    !! Turbine Modelling
+    if (iturbine.eq.1) then
+       allocate(FTx(xsize(1),xsize(2),xsize(3)))
+       allocate(FTy(xsize(1),xsize(2),xsize(3)))
+       allocate(FTz(xsize(1),xsize(2),xsize(3)))
+    else if (iturbine.eq.2) then
+       allocate(Fdiscx(xsize(1),xsize(2),xsize(3)))
+       allocate(Fdiscy(xsize(1),xsize(2),xsize(3)))
+       allocate(Fdiscz(xsize(1),xsize(2),xsize(3)))
+       allocate(Gammadisc(xsize(1),xsize(2),xsize(3),Ndiscs))
     endif
 
     !! LMN

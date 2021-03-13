@@ -38,7 +38,7 @@ module tools
   public :: test_speed_min_max, test_scalar_min_max, &
        restart, &
        simu_stats, &
-       apply_spatial_filter, &
+       apply_spatial_filter, read_inflow, append_outflow, write_outflow, &
        compute_cfldiff, compute_cfl, &
        rescale_pressure, mean_plane_x, mean_plane_y, mean_plane_z, &
        channel_cfr
@@ -553,6 +553,101 @@ contains
     !if (iscalar.eq.1) phi1(:,:,:,1)=phi11
 
   end subroutine apply_spatial_filter
+  !############################################################################
+  !!  SUBROUTINE: read_inflow
+  !############################################################################
+  subroutine read_inflow(ux1,uy1,uz1,ifileinflow)
+
+    use decomp_2d
+    use decomp_2d_io
+    use var, only: ux_inflow, uy_inflow, uz_inflow
+    use param
+    use MPI
+
+    implicit none
+
+    integer :: fh,ierror,ifileinflow
+    real(mytype), dimension(NTimeSteps,xsize(2),xsize(3)) :: ux1,uy1,uz1
+    integer (kind=MPI_OFFSET_KIND) :: disp
+    character(20) :: fninflow
+
+    ! Recirculate inflows 
+    if (ifileinflow>=ninflows) then 
+      ifileinflow=mod(ifileinflow,ninflows)
+    endif
+
+    ! Read inflow
+    write(fninflow,'(i20)') ifileinflow+1
+    if (nrank==0) print *,'READING INFLOW FROM ',trim(inflowpath)//'inflow'//trim(adjustl(fninflow))
+    call MPI_FILE_OPEN(MPI_COMM_WORLD, trim(inflowpath)//'inflow'//trim(adjustl(fninflow)), &
+         MPI_MODE_RDONLY, MPI_INFO_NULL, &
+         fh, ierror)
+    disp = 0_MPI_OFFSET_KIND
+    call decomp_2d_read_inflow(fh,disp,ntimesteps,ux_inflow)
+    call decomp_2d_read_inflow(fh,disp,ntimesteps,uy_inflow)
+    call decomp_2d_read_inflow(fh,disp,ntimesteps,uz_inflow)
+    call MPI_FILE_CLOSE(fh,ierror)
+
+  end subroutine read_inflow
+  !############################################################################
+  !!  SUBROUTINE: append_outflow
+  !############################################################################
+  subroutine append_outflow(ux,uy,uz,timestep)
+ 
+    use decomp_2d
+    use decomp_2d_io
+    use var, only: ux_recoutflow, uy_recoutflow, uz_recoutflow
+    use param
+
+    implicit none
+
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
+    integer, intent(in) :: timestep
+    integer :: j,k
+
+    if (nrank==0) print *, 'Appending outflow', timestep 
+    do k=1,xsize(3)
+    do j=1,xsize(2)
+      ux_recoutflow(timestep,j,k)=ux(xend(1),j,k)
+      uy_recoutflow(timestep,j,k)=uy(xend(1),j,k)
+      uz_recoutflow(timestep,j,k)=uz(xend(1),j,k)
+    enddo
+    enddo
+
+    return
+  end subroutine append_outflow
+  !############################################################################
+  !!  SUBROUTINE: write_outflow
+  !############################################################################
+  subroutine write_outflow(ifileoutflow)
+
+    use decomp_2d
+    use decomp_2d_io
+    use param
+    use var, only: ux_recoutflow, uy_recoutflow, uz_recoutflow
+    use MPI
+
+    implicit none
+
+    integer,intent(in) :: ifileoutflow
+    integer :: fh, ierror
+    integer (kind=MPI_OFFSET_KIND) :: filesize, disp
+    character(20) :: fnoutflow
+    
+    write(fnoutflow,'(i20)') ifileoutflow
+    if (nrank==0) print *,'WRITING OUTFLOW TO ','./out/inflow'//trim(adjustl(fnoutflow))
+    call MPI_FILE_OPEN(MPI_COMM_WORLD, './out/inflow'//trim(adjustl(fnoutflow)), &
+         MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
+         fh, ierror)
+    filesize = 0_MPI_OFFSET_KIND
+    call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
+    disp = 0_MPI_OFFSET_KIND
+    call decomp_2d_write_outflow(fh,disp,ntimesteps,ux_recoutflow)
+    call decomp_2d_write_outflow(fh,disp,ntimesteps,uy_recoutflow)
+    call decomp_2d_write_outflow(fh,disp,ntimesteps,uz_recoutflow)
+    call MPI_FILE_CLOSE(fh,ierror)
+    
+  end subroutine write_outflow
   !############################################################################
   !############################################################################
   !!
