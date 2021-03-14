@@ -243,7 +243,7 @@ contains
     real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: pp3
 
     integer :: nvect3,i,j,k,nlock
-    integer :: code,ierr2
+    integer :: code
     real(mytype) :: tmax,tmoy,tmax1,tmoy1
 
     nvect3=(ph1%zen(1)-ph1%zst(1)+1)*(ph1%zen(2)-ph1%zst(2)+1)*nzmsize
@@ -321,15 +321,9 @@ contains
     tmoy=tmoy/nvect3
 
     call MPI_REDUCE(tmax,tmax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-       if (nrank.eq.0) print *, "Error in MPI_REDUCE"
-       call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
     call MPI_REDUCE(tmoy,tmoy1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-       if (nrank.eq.0) print *, "Error in MPI_REDUCE"
-       call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
 
     if ((nrank==0).and.(nlock.gt.0)) then
        if (nlock==2) then
@@ -487,15 +481,12 @@ contains
     integer :: i,j,k,is
     real(mytype) :: ut,ut1,utt,ut11
 
-    integer :: code,ierr2
+    integer :: code
     integer, dimension(2) :: dims, dummy_coords
     logical, dimension(2) :: dummy_periods
 
     call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, dims, dummy_periods, dummy_coords, code)
-    if (code.ne.0) then
-       if (nrank.eq.0) print *, "Error in MPI_REDUCE"
-       call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_CART_GET")
 
     !********NCLX==2*************************************
     !we are in X pencils:
@@ -509,10 +500,7 @@ contains
           enddo
        enddo
        call MPI_ALLREDUCE(ut1,ut11,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (code.ne.0) then
-          if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
-          call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-       endif
+       if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
        ut11=ut11/(real(ny*nz,mytype))
        ut=zero
        do k=1,xsize(3)
@@ -521,10 +509,7 @@ contains
           enddo
        enddo
        call MPI_ALLREDUCE(ut,utt,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (code.ne.0) then
-          if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
-          call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-       endif
+       if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
        utt=utt/(real(ny*nz,mytype))
        if (nrank==0) print *,'Flow rate x I/O/O-I',real(ut11,4),real(utt,4),real(utt-ut11,4)
        do k=1,xsize(3)
@@ -1038,7 +1023,7 @@ contains
   SUBROUTINE test_varcoeff(converged, pp3, dv3, atol, rtol, poissiter)
 
     USE MPI
-    USE decomp_2d, ONLY: mytype, ph1, real_type, nrank
+    USE decomp_2d, ONLY: mytype, ph1, real_type, nrank, decomp_2d_abort
     USE var, ONLY : nzmsize
     USE param, ONLY : npress
     USE variables, ONLY : nxm, nym, nzm
@@ -1055,16 +1040,13 @@ contains
     LOGICAL, INTENT(OUT) :: converged
 
     !! LOCALS
-    INTEGER :: ierr,ierr2
+    INTEGER :: code
     REAL(mytype) :: errloc, errglob, divup3norm
 
     IF (poissiter.EQ.0) THEN
        errloc = SUM(dv3**2)
-       CALL MPI_ALLREDUCE(errloc,divup3norm,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
-       if (ierr.ne.0) then
-          if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
-          call MPI_ABORT(MPI_COMM_WORLD,ierr,ierr2)
-       endif
+       CALL MPI_ALLREDUCE(errloc,divup3norm,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
        divup3norm = SQRT(divup3norm / nxm / nym / nzm)
 
        IF (nrank.EQ.0) THEN
@@ -1074,11 +1056,8 @@ contains
     ELSE
        !! Compute RMS change
        errloc = SUM((pp3(:,:,:,1) - pp3(:,:,:,2))**2)
-       CALL MPI_ALLREDUCE(errloc,errglob,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
-       if (ierr.ne.0) then
-          if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
-          call MPI_ABORT(MPI_COMM_WORLD,ierr,ierr2)
-       endif
+       CALL MPI_ALLREDUCE(errloc,errglob,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
        errglob = SQRT(errglob / nxm / nym / nzm)
 
        IF (nrank.EQ.0) THEN
@@ -1141,18 +1120,15 @@ contains
     REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: pp3
 
     !! LOCALS
-    INTEGER :: nlock, ierr, ierr2
+    INTEGER :: nlock, code
     REAL(mytype) :: rhomin
 
     IF (poissiter.EQ.0) THEN
        !! Compute rho0
        rhomin = MINVAL(rho1)
 
-       CALL MPI_ALLREDUCE(rhomin,rho0,1,real_type,MPI_MIN,MPI_COMM_WORLD,ierr)
-       if (ierr.ne.0) then
-          if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
-          call MPI_ABORT(MPI_COMM_WORLD,ierr,ierr2)
-       endif
+       CALL MPI_ALLREDUCE(rhomin,rho0,1,real_type,MPI_MIN,MPI_COMM_WORLD,code)
+       if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     ENDIF
 
     ta1(:,:,:) = (one - rho0 / rho1(:,:,:,1)) * px1(:,:,:)

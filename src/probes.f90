@@ -9,7 +9,7 @@
 
 module probes
 
-  USE decomp_2d, only : ph1, nrank, mytype, xstart, xend
+  USE decomp_2d, only : ph1, nrank, mytype, xstart, xend, decomp_2d_abort
 
   IMPLICIT NONE
 
@@ -43,7 +43,7 @@ contains
     logical :: fexists
     double precision :: xprobes, yprobes, zprobes, xyzprobes(3)
     integer :: iounit
-    integer :: i,j,code,ierr2
+    integer :: i,j,code
     character :: a
 
 #ifdef DEBG
@@ -75,10 +75,7 @@ contains
     endif
     ! Broadcast
     call MPI_BCAST(nprobes,1,MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-       if (nrank.eq.0) print *, "Error in MPI_BCAST"
-       call MPI_ABORT(MPI_COMM_WORLD, code, ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
 
     ! Exit if no file or no probes
     if (nprobes.le.0) return
@@ -98,10 +95,7 @@ contains
        end if
        ! Broadcast
        call MPI_BCAST(xyzprobes,3,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,code)
-       if (code.ne.0) then
-          if (nrank.eq.0) print *, "Error in MPI_BCAST"
-          call MPI_ABORT(MPI_COMM_WORLD, code, ierr2)
-       endif
+       if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
        ! Enforce bounds
        xprobes = max(epsilon(xlx), min(xlx*(one-epsilon(xlx)), xyzprobes(1)))
        yprobes = max(epsilon(xlx), min(yly*(one-epsilon(xlx)), xyzprobes(2)))

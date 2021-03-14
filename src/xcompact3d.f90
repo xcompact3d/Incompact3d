@@ -139,28 +139,19 @@ subroutine init_xcompact3d()
 
   ! This should be valid for ARM and X86. See "man 7 signal"
   integer, parameter :: SIGUSR1 = 10, SIGUSR2 = 12
-  integer :: ierr, ierr2
+  integer :: code
 
   integer :: nargin, FNLength, status, DecInd
   logical :: back
   character(len=80) :: InputFN, FNBase
 
   !! Initialise MPI
-  call MPI_INIT(ierr)
-  if (ierr.ne.0) then
-    if (nrank.eq.0) print *, "Error in MPI_INIT"
-    call MPI_ABORT(MPI_COMM_WORLD, ierr, ierr2)
-  endif
-  call MPI_COMM_RANK(MPI_COMM_WORLD,nrank,ierr)
-  if (ierr.ne.0) then
-    if (nrank.eq.0) print *, "Error in MPI_COMM_RANK"
-    call MPI_ABORT(MPI_COMM_WORLD, ierr, ierr2)
-  endif
-  call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,ierr)
-  if (ierr.ne.0) then
-    if (nrank.eq.0) print *, "Error in MPI_COMM_SIZE"
-    call MPI_ABORT(MPI_COMM_WORLD, ierr, ierr2)
-  endif
+  call MPI_INIT(code)
+  if (code.ne.0) call decomp_2d_abort(code, "MPI_INIT")
+  call MPI_COMM_RANK(MPI_COMM_WORLD,nrank,code)
+  if (code.ne.0) call decomp_2d_abort(code, "MPI_COMM_RANK")
+  call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,code)
+  if (code.ne.0) call decomp_2d_abort(code, "MPI_COMM_SIZE")
 
   ! Install signal handler
   call signal(SIGUSR1, catch_sigusr1)
@@ -273,7 +264,7 @@ subroutine finalise_xcompact3d()
 
   implicit none
 
-  integer :: ierr, ierr2
+  integer :: code
   
   if (itype==2) then
      if(nrank.eq.0)then
@@ -297,11 +288,8 @@ subroutine finalise_xcompact3d()
   call decomp_info_finalize(phG)
   call decomp_2d_finalize()
   call decomp_2d_poisson_finalize()
-  CALL MPI_FINALIZE(ierr)
-  if (ierr.ne.0) then
-    if (nrank.eq.0) print *, "Error in MPI_FINALIZE"
-    call MPI_ABORT(MPI_COMM_WORLD, ierr, ierr2)
-  endif
+  CALL MPI_FINALIZE(code)
+  if (code.ne.0) call decomp_2d_abort(code, "MPI_FINALIZE")
 
 endsubroutine finalise_xcompact3d
 !########################################################################

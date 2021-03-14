@@ -222,7 +222,9 @@ contains
     enddo
 
     call MPI_ALLREDUCE(uxmax,uxmax1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(uxmin,uxmin1,1,real_type,MPI_MIN,MPI_COMM_WORLD,code)
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
     cx=0.5*(uxmax1+uxmin1)*gdt(itr)*udx
     do k=1,xsize(3)

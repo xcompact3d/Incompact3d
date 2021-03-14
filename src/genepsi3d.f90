@@ -38,7 +38,7 @@ contains
   subroutine epsi_init(ep1)
 
     USE param, only : zero, one, dx, dz
-    USE decomp_2d, only : xstart, xend, xsize, mytype, nrank
+    USE decomp_2d, only : xstart, xend, xsize, mytype, nrank, decomp_2d_abort
     !USE decomp_2d_io
     USE variables, only : yp, ny
 
@@ -197,7 +197,7 @@ contains
     integer                          :: ifinraf,jfinraf,kfinraf
     character(len=4) suffixe
     integer                          :: numvis
-    integer                          :: mpi_aux_i, code, ierr2
+    integer                          :: mpi_aux_i, code
 
     !x-pencil
     ep1=zero
@@ -258,10 +258,7 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjxmax,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_REDUCE"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
     if (nrank==0) print*,'        nobjxmax=',mpi_aux_i
 
     nobjxraf(:,:)=0
@@ -290,16 +287,10 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjxmaxraf,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_REDUCE"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
     if (nrank==0) print*,'        nobjxmaxraf=',mpi_aux_i
     call MPI_REDUCE(ibug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_REDUCE"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
     if (nrank==0) print*,'        ibug=',mpi_aux_i
     if (nrank==0) print*,'    step 5'
 
@@ -326,10 +317,7 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjymax,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_REDUCE"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
     if (nrank==0) print*,'        nobjymax=',mpi_aux_i
 
     nobjyraf(:,:)=0
@@ -358,16 +346,10 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjymaxraf,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_REDUCE"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
     if (nrank==0) print*,'        nobjymaxraf=',mpi_aux_i
     call MPI_REDUCE(jbug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_REDUCE"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
     if (nrank==0) print*,'        jbug=',mpi_aux_i
     if (nrank==0) print*,'    step 6'
 
@@ -394,10 +376,7 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjzmax,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_REDUCE"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
     if (nrank==0) print*,'        nobjzmax=',mpi_aux_i
 
     nobjzraf(:,:)=0
@@ -426,16 +405,10 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjzmaxraf,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_REDUCE"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
     if (nrank==0) print*,'        nobjzmaxraf=',mpi_aux_i
     call MPI_REDUCE(kbug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_REDUCE"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
     if (nrank==0) print*,'        kbug=',mpi_aux_i
     if (nrank==0) print*,'    step 7'
 
@@ -758,7 +731,7 @@ contains
     integer                            :: inum ,jnum ,knum
     integer                            :: iflu ,jflu ,kflu
     integer                            :: ising,jsing,ksing,itest
-    integer                            :: mpi_aux_i, code, ierr2
+    integer                            :: mpi_aux_i, code
 
     !x-pencil
     nxipif(:,:,:)=npif
@@ -799,10 +772,7 @@ contains
        enddo
     enddo
     call MPI_REDUCE(ising,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_REDUCE"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
     if (nrank==0) print*,'        number of points with potential problem in X :',mpi_aux_i
     if (nrank==0) print*,'    step 11'
 
@@ -846,10 +816,7 @@ contains
        enddo
     enddo
     call MPI_REDUCE(jsing,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_REDUCE"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
     if (nrank==0) print*,'        number of points with potential problem in Y :',mpi_aux_i
     if (nrank==0) print*,'    step 12'
 
@@ -894,10 +861,7 @@ contains
           enddo
        enddo
        call MPI_REDUCE(ksing,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-       if (code.ne.0) then
-          if (nrank.eq.0) print *, "Error in MPI_REDUCE"
-          call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-       endif
+       if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
        if (nrank==0) print*,'        number of points with potential problem in Z :',mpi_aux_i
     endif
     if (nrank==0) print*,'    step 13'
@@ -1038,7 +1002,7 @@ contains
     implicit none
     !
     integer :: i,j,k
-    integer :: code, ierr2
+    integer :: code
     !
     if(nrank.eq.0)then
        open(11,file='nobjx.dat'  ,form='formatted', status='old')
@@ -1050,10 +1014,7 @@ contains
        close(11)
     endif
     call MPI_BCAST(nobjx,ny*nz,MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_BCAST"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
     if(nrank.eq.0)then
        open(12,file='nobjy.dat'  ,form='formatted', status='old')
        do k=1,nz
@@ -1064,10 +1025,7 @@ contains
        close(12)
     endif
     call MPI_BCAST(nobjy,nx*nz,MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_BCAST"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
     if(nrank.eq.0)then
        open(13,file='nobjz.dat'  ,form='formatted', status='old')
        do j=1,ny
@@ -1078,10 +1036,7 @@ contains
        close(13)
     endif
     call MPI_BCAST(nobjz,nx*ny,MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_BCAST"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
     if(nrank.eq.0)then
        open(21,file='nxifpif.dat',form='formatted', status='old')
        do k=1,nz
@@ -1094,15 +1049,9 @@ contains
        close(21)
     endif
     call MPI_BCAST(nxipif,ny*nz*(nobjmax+1),MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_BCAST"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
     call MPI_BCAST(nxfpif,ny*nz*(nobjmax+1),MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_BCAST"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
     if(nrank.eq.0)then
        open(22,file='nyifpif.dat',form='formatted', status='old')
        do k=1,nz
@@ -1115,15 +1064,9 @@ contains
        close(22)
     endif
     call MPI_BCAST(nyipif,nx*nz*(nobjmax+1),MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_BCAST"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
     call MPI_BCAST(nyfpif,nx*nz*(nobjmax+1),MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_BCAST"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
     if(nrank.eq.0)then
        open(23,file='nzifpif.dat',form='formatted', status='old')
        do j=1,ny
@@ -1136,15 +1079,9 @@ contains
        close(23)
     endif
     call MPI_BCAST(nzipif,nx*ny*(nobjmax+1),MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_BCAST"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
     call MPI_BCAST(nzfpif,nx*ny*(nobjmax+1),MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_BCAST"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
     if(nrank.eq.0)then
        open(31,file='xixf.dat'   ,form='formatted', status='old')
        do k=1,nz
@@ -1157,15 +1094,9 @@ contains
        close(31)
     endif
     call MPI_BCAST(xi,ny*nz*nobjmax,MPI_REAL,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_BCAST"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
     call MPI_BCAST(xf,ny*nz*nobjmax,MPI_REAL,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_BCAST"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
     if(nrank.eq.0)then
        open(32,file='yiyf.dat'   ,form='formatted', status='old')
        do k=1,nz
@@ -1178,15 +1109,9 @@ contains
        close(32)
     endif
     call MPI_BCAST(yi,nx*nz*nobjmax,MPI_REAL,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_BCAST"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
     call MPI_BCAST(yf,nx*nz*nobjmax,MPI_REAL,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_BCAST"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
     if(nrank.eq.0)then
        open(33,file='zizf.dat'   ,form='formatted', status='old')
        do j=1,ny
@@ -1199,15 +1124,9 @@ contains
        close(33)
     endif
     call MPI_BCAST(zi,nx*ny*nobjmax,MPI_REAL,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_BCAST"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
     call MPI_BCAST(zf,nx*ny*nobjmax,MPI_REAL,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_BCAST"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
     !
     return
   end subroutine read_geomcomplex

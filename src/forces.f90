@@ -152,10 +152,7 @@ contains
        endif
        filesize = 0_MPI_OFFSET_KIND
        call MPI_FILE_SET_SIZE(fh,filesize,code)  ! guarantee overwriting
-       if (code.ne.0) then
-          if (nrank.eq.0) print *, "Error in MPI_FILE_SET_SIZE"
-          call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-       endif
+       if (code.ne.0) call decomp_2d_abort(code, "MPI_FILE_SET_SIZE")
        disp = 0_MPI_OFFSET_KIND
        call decomp_2d_write_var(fh,disp,1,ux01)
        call decomp_2d_write_var(fh,disp,1,uy01)
@@ -227,7 +224,7 @@ subroutine force(ux1,uy1,ep1)
   implicit none
   character(len=30) :: filename, filename2
   integer :: nzmsize
-  integer :: i, iv, j, k, kk, code, ierr2
+  integer :: i, iv, j, k, kk, code
   integer :: nvect1,nvect2,nvect3
 
   real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1, uy1
@@ -336,15 +333,9 @@ subroutine force(ux1,uy1,ep1)
         tunstyl(xstart(3)-1+k)=tsumy
      enddo
      call MPI_ALLREDUCE(tunstxl,tunstx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code.ne.0) then
-        if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
-        call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-     endif
+     if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
      call MPI_ALLREDUCE(tunstyl,tunsty,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code.ne.0) then
-        if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
-        call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-     endif
+     if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
 !!$!*********************************************************************************
 !!$!     Secondly, the surface momentum fluxes
@@ -511,35 +502,17 @@ subroutine force(ux1,uy1,ep1)
         enddo
      endif
      call MPI_ALLREDUCE(tconvxl,tconvx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code.ne.0) then
-        if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
-        call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-     endif
+     if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
      call MPI_ALLREDUCE(tconvyl,tconvy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code.ne.0) then
-        if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
-        call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-     endif
+     if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
      call MPI_ALLREDUCE(tpresxl,tpresx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code.ne.0) then
-        if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
-        call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-     endif
+     if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
      call MPI_ALLREDUCE(tpresyl,tpresy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code.ne.0) then
-        if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
-        call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-     endif
+     if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
      call MPI_ALLREDUCE(tdiffxl,tdiffx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code.ne.0) then
-        if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
-        call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-     endif
+     if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
      call MPI_ALLREDUCE(tdiffyl,tdiffy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code.ne.0) then
-        if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
-        call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-     endif
+     if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
      do k=1,zsize(3)
 

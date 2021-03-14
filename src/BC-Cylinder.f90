@@ -149,7 +149,7 @@ contains
 
     implicit none
 
-    integer :: j,k,code,ierr2
+    integer :: j,k,code
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
     real(mytype) :: udx,udy,udz,uddx,uddy,uddz,cx,uxmin,uxmax,uxmin1,uxmax1
@@ -166,15 +166,9 @@ contains
     enddo
 
     call MPI_ALLREDUCE(uxmax,uxmax1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(uxmin,uxmin1,1,real_type,MPI_MIN,MPI_COMM_WORLD,code)
-    if (code.ne.0) then
-      if (nrank.eq.0) print *, "Error in MPI_ALLREDUCE"
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
     if (u1.eq.zero) then
        cx=(half*(uxmax1+uxmin1))*gdt(itr)*udx
