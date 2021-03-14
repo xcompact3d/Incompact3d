@@ -56,7 +56,7 @@ contains
 
     implicit none
 
-    integer :: code,i,j,k,is,jglob
+    integer :: code,ierr2,i,j,k,is,jglob
     real(mytype) :: phimax,phimin,phimax1,phimin1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
     real(mytype),dimension(2,numscalar) :: phimaxin,phimaxout
@@ -89,7 +89,7 @@ contains
 
         if (abs(phimax1).ge.100.) then !if phi control turned off
            print *,'Scalar diverged! SIMULATION IS STOPPED!'
-           call MPI_ABORT(MPI_COMM_WORLD,code,code); stop
+           call MPI_ABORT(MPI_COMM_WORLD,code,ierr2); stop
         endif
       endif
 
@@ -109,7 +109,7 @@ contains
 
     implicit none
 
-    integer :: code,i,j,k
+    integer :: code,ierr2,i,j,k
     real(mytype) :: uxmax,uymax,uzmax,uxmin,uymin,uzmin
     real(mytype) :: uxmax1,uymax1,uzmax1,uxmin1,uymin1,uzmin1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
@@ -150,7 +150,7 @@ contains
 
        if((abs(uxmax1).ge.100.).OR.(abs(uymax1).ge.100.).OR.(abs(uzmax1).ge.100.)) then
          print *,'Velocity diverged! SIMULATION IS STOPPED!'
-         call MPI_ABORT(MPI_COMM_WORLD,code,code); stop
+         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2); stop
        endif
 
     endif
