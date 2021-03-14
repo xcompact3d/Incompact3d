@@ -108,7 +108,17 @@ $(DECOMPDIR)/fft_$(FFT).o: $(DECOMPDIR)/glassman.o
 #
 # X3D
 #
-$(SRCDIR)/BC-ABL.o: $(SRCDIR)/poisson.o
+$(SRCDIR)/acl_controller.o: $(DECOMPDIR)/decomp_2d.o
+$(SRCDIR)/acl_elem.o: $(SRCDIR)/dynstall_legacy.o
+$(SRCDIR)/acl_farm_controller.o: $(SRCDIR)/acl_turb.o
+$(SRCDIR)/acl_model.o: $(SRCDIR)/acl_elem.o $(SRCDIR)/acl_out.o
+$(SRCDIR)/acl_out.o: $(SRCDIR)/acl_turb.o
+$(SRCDIR)/acl_source.o: $(SRCDIR)/acl_model.o $(SRCDIR)/acl_utils.o
+$(SRCDIR)/acl_turb.o: $(SRCDIR)/module_param.o $(SRCDIR)/acl_elem.o
+$(SRCDIR)/acl_utils.o: $(DECOMPDIR)/decomp_2d.o
+$(SRCDIR)/adm.o: $(SRCDIR)/airfoils.o
+$(SRCDIR)/airfoils.o: $(SRCDIR)/acl_utils.o
+$(SRCDIR)/BC-ABL.o: $(SRCDIR)/poisson.o $(SRCDIR)/tools.o
 $(SRCDIR)/BC-Channel-flow.o: $(SRCDIR)/tools.o
 $(SRCDIR)/BC-Cylinder.o: $(SRCDIR)/variables.o
 $(SRCDIR)/BC-dbg-schemes.o: $(SRCDIR)/variables.o
@@ -118,9 +128,13 @@ $(SRCDIR)/BC-Mixing-layer.o: $(SRCDIR)/module_param.o
 $(SRCDIR)/BC-Periodic-hill.o: $(SRCDIR)/poisson.o
 $(SRCDIR)/BC-TBL.o: $(SRCDIR)/poisson.o
 $(SRCDIR)/BC-TGV.o: $(SRCDIR)/variables.o
+$(SRCDIR)/BC-Uniform.o: $(SRCDIR)/variables.o
 $(SRCDIR)/BC-User.o: $(SRCDIR)/module_param.o $(DECOMPDIR)/io.o
-$(SRCDIR)/case.o: $(SRCDIR)/BC-Lock-exchange.o $(SRCDIR)/BC-Channel-flow.o
+$(SRCDIR)/case.o: $(SRCDIR)/BC-Lock-exchange.o $(SRCDIR)/BC-Channel-flow.o $(SRCDIR)/acl_turb.o
+$(SRCDIR)/constants.o: $(DECOMPDIR)/decomp_2d.o
 $(SRCDIR)/derive.o: $(SRCDIR)/ibm.o
+$(SRCDIR)/dynstall.o: $(SRCDIR)/airfoils.o
+$(SRCDIR)/dynstall_legacy.o: $(SRCDIR)/airfoils.o
 $(SRCDIR)/filters.o: $(SRCDIR)/ibm.o
 $(SRCDIR)/forces.o: $(SRCDIR)/module_param.o $(DECOMPDIR)/io.o
 $(SRCDIR)/genepsi3d.o: $(SRCDIR)/BC-Channel-flow.o
@@ -137,6 +151,7 @@ $(SRCDIR)/statistics.o: $(SRCDIR)/variables.o
 $(SRCDIR)/time_integrators.o: $(SRCDIR)/implicit.o $(SRCDIR)/navier.o
 $(SRCDIR)/tools.o: $(SRCDIR)/navier.o
 $(SRCDIR)/transeq.o: $(SRCDIR)/case.o $(SRCDIR)/les_models.o
+$(SRCDIR)/turbine.o: $(SRCDIR)/acl_model.o $(SRCDIR)/acl_source.o
 $(SRCDIR)/variables.o: $(SRCDIR)/module_param.o
 $(SRCDIR)/visu.o: $(SRCDIR)/tools.o
 $(SRCDIR)/xcompact3d.o: $(SRCDIR)/transeq.o
