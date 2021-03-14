@@ -162,25 +162,33 @@ ilength = level * s1
 ijump = s1*(s2+2*level)
 call MPI_TYPE_VECTOR(icount, ilength, ijump, &
 data_type, halo12, ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_VECTOR")
 call MPI_TYPE_COMMIT(halo12, ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
 ! receive from south
 call MPI_IRECV(out(xs,ys,zs), 1, halo12, &
 neighbour(1,4), tag_s, DECOMP_2D_COMM_CART_X, &
 requests(1), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_IRECV")
 ! receive from north
 call MPI_IRECV(out(xs,ye-level+1,zs), 1, halo12, &
 neighbour(1,3), tag_n, DECOMP_2D_COMM_CART_X, &
 requests(2), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_IRECV")
 ! send to south
 call MPI_ISSEND(out(xs,ys+level,zs), 1, halo12, &
 neighbour(1,4), tag_s, DECOMP_2D_COMM_CART_X, &
 requests(3), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ISSEND")
 ! send to north
 call MPI_ISSEND(out(xs,ye-level-level+1,zs), 1, halo12, &
 neighbour(1,3), tag_n, DECOMP_2D_COMM_CART_X, &
 requests(4), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ISSEND")
 call MPI_WAITALL(4, requests, status, ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_WAITALL")
 call MPI_TYPE_FREE(halo12, ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
 #ifdef HALO_DEBUG
 if (nrank==4) then
 write(*,*) 'After exchange in Y'
@@ -205,19 +213,24 @@ icount = (s1 * (s2+2*level)) * level
 call MPI_IRECV(out(xs,ys,zs), icount, data_type, &
 neighbour(1,6), tag_b, DECOMP_2D_COMM_CART_X, &
 requests(1), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_IRECV")
 ! receive from top
 call MPI_IRECV(out(xs,ys,ze-level+1), icount, data_type, &
 neighbour(1,5), tag_t, DECOMP_2D_COMM_CART_X, &
 requests(2), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_IRECV")
 ! send to bottom
 call MPI_ISSEND(out(xs,ys,zs+level), icount, data_type, &
 neighbour(1,6), tag_b, DECOMP_2D_COMM_CART_X, &
 requests(3), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ISSEND")
 ! send to top
 call MPI_ISSEND(out(xs,ys,ze-level-level+1), icount, data_type, &
 neighbour(1,5), tag_t, DECOMP_2D_COMM_CART_X, &
 requests(4), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ISSEND")
 call MPI_WAITALL(4, requests, status, ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_WAITALL")
 #ifdef HALO_DEBUG       
 if (nrank==4) then
 write(*,*) 'After exchange in Z'
@@ -255,25 +268,33 @@ ilength = level
 ijump = s1+2*level
 call MPI_TYPE_VECTOR(icount, ilength, ijump, &
 data_type, halo21, ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_VECTOR")
 call MPI_TYPE_COMMIT(halo21, ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
 ! receive from west
 call MPI_IRECV(out(xs,ys,zs), 1, halo21, &
 neighbour(2,2), tag_w, DECOMP_2D_COMM_CART_Y, &
 requests(1), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_IRECV")
 ! receive from east
 call MPI_IRECV(out(xe-level+1,ys,zs), 1, halo21, &
 neighbour(2,1), tag_e, DECOMP_2D_COMM_CART_Y, &
 requests(2), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_IRECV")
 ! send to west
 call MPI_ISSEND(out(xs+level,ys,zs), 1, halo21, &
 neighbour(2,2), tag_w, DECOMP_2D_COMM_CART_Y, &
 requests(3), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ISSEND")
 ! send to east
 call MPI_ISSEND(out(xe-level-level+1,ys,zs), 1, halo21, &
 neighbour(2,1), tag_e, DECOMP_2D_COMM_CART_Y, &
 requests(4), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ISSEND")
 call MPI_WAITALL(4, requests, status, ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_WAITALL")
 call MPI_TYPE_FREE(halo21, ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
 #ifdef HALO_DEBUG       
 if (nrank==4) then
 write(*,*) 'After exchange in X'
@@ -301,19 +322,24 @@ icount = (s2 * (s1+2*level)) * level
 call MPI_IRECV(out(xs,ys,zs), icount, data_type, &
 neighbour(2,6), tag_b, DECOMP_2D_COMM_CART_Y, &
 requests(1), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_IRECV")
 ! receive from top
 call MPI_IRECV(out(xs,ys,ze-level+1), icount, data_type, &
 neighbour(2,5), tag_t, DECOMP_2D_COMM_CART_Y, &
 requests(2), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_IRECV")
 ! send to bottom
 call MPI_ISSEND(out(xs,ys,zs+level), icount, data_type, &
 neighbour(2,6), tag_b, DECOMP_2D_COMM_CART_Y, &
 requests(3), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ISSEND")
 ! send to top
 call MPI_ISSEND(out(xs,ys,ze-level-level+1), icount, data_type, &
 neighbour(2,5), tag_t, DECOMP_2D_COMM_CART_Y, &
 requests(4), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ISSEND")
 call MPI_WAITALL(4, requests, status, ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_WAITALL")
 #ifdef HALO_DEBUG
 if (nrank==4) then
 write(*,*) 'After exchange in Z'
@@ -351,25 +377,33 @@ ilength = level
 ijump = s1+2*level
 call MPI_TYPE_VECTOR(icount, ilength, ijump, &
 data_type, halo31, ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_VECTOR")
 call MPI_TYPE_COMMIT(halo31, ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
 ! receive from west
 call MPI_IRECV(out(xs,ys,zs), 1, halo31, &
 neighbour(3,2), tag_w, DECOMP_2D_COMM_CART_Z, &
 requests(1), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_IRECV")
 ! receive from east
 call MPI_IRECV(out(xe-level+1,ys,zs), 1, halo31, &
 neighbour(3,1), tag_e, DECOMP_2D_COMM_CART_Z, &
 requests(2), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_IRECV")
 ! send to west
 call MPI_ISSEND(out(xs+level,ys,zs), 1, halo31, &
 neighbour(3,2), tag_w, DECOMP_2D_COMM_CART_Z, &
 requests(3), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ISSEND")
 ! send to east
 call MPI_ISSEND(out(xe-level-level+1,ys,zs), 1, halo31, &
 neighbour(3,1), tag_e, DECOMP_2D_COMM_CART_Z, &
 requests(4), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ISSEND")
 call MPI_WAITALL(4, requests, status, ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_WAITALL")
 call MPI_TYPE_FREE(halo31, ierror)       
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
 #ifdef HALO_DEBUG
 if (nrank==4) then
 write(*,*) 'After exchange in X'
@@ -391,25 +425,33 @@ ilength = level * (s1+2*level)
 ijump = (s1+2*level) * (s2+2*level)
 call MPI_TYPE_VECTOR(icount, ilength, ijump, &
 data_type, halo32, ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_VECTOR")
 call MPI_TYPE_COMMIT(halo32, ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
 ! receive from south
 call MPI_IRECV(out(xs,ys,zs), 1, halo32, &
 neighbour(3,4), tag_s, DECOMP_2D_COMM_CART_Z, &
 requests(1), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_IRECV")
 ! receive from north
 call MPI_IRECV(out(xs,ye-level+1,zs), 1, halo32, &
 neighbour(3,3), tag_n, DECOMP_2D_COMM_CART_Z, &
 requests(2), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_IRECV")
 ! send to south
 call MPI_ISSEND(out(xs,ys+level,zs), 1, halo32, &
 neighbour(3,4), tag_s, DECOMP_2D_COMM_CART_Z, &
 requests(3), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ISSEND")
 ! send to north
 call MPI_ISSEND(out(xs,ye-level-level+1,zs), 1, halo32, &
 neighbour(3,3), tag_n, DECOMP_2D_COMM_CART_Z, &
 requests(4), ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ISSEND")
 call MPI_WAITALL(4, requests, status, ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_WAITALL")
 call MPI_TYPE_FREE(halo32, ierror)
+if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
 #ifdef HALO_DEBUG
 if (nrank==4) then
 write(*,*) 'After exchange in Y'

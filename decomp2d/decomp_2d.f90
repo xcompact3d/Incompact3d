@@ -358,22 +358,28 @@ contains
     call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
          .false., &  ! do not reorder rank
          DECOMP_2D_COMM_CART_X, ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_CREATE")
     periodic(1) = periodic_x
     periodic(2) = periodic_z
     call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
          .false., DECOMP_2D_COMM_CART_Y, ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_CREATE")
     periodic(1) = periodic_x
     periodic(2) = periodic_y
     call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
          .false., DECOMP_2D_COMM_CART_Z, ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_CREATE")
 
     call MPI_CART_COORDS(DECOMP_2D_COMM_CART_X,nrank,2,coord,ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_COORDS")
 
     ! derive communicators defining sub-groups for ALLTOALL(V)
     call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.true.,.false./), &
          DECOMP_2D_COMM_COL,ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_SUB")
     call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.false.,.true./), &
          DECOMP_2D_COMM_ROW,ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_SUB")
 
     ! gather information for halo-cell support code
     call init_neighbour
@@ -453,6 +459,7 @@ contains
     ! do not use 'mytype' which is compiler dependent
     ! also possible to use inquire(iolength=...) 
     call MPI_TYPE_SIZE(real_type,mytype_bytes,ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_SIZE")
 
 #ifdef EVEN
     if (nrank==0) write(*,*) 'Padded ALLTOALL optimisation on'
@@ -1295,7 +1302,9 @@ contains
 
     C%MPI_COMM = MPI_COMM
     CALL MPI_COMM_SIZE(MPI_COMM,C%NCPU,ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_COMM_SIZE")
     CALL MPI_COMM_RANK(MPI_COMM,C%NODE_ME,ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_RANK")
     C%SMP_COMM  = MPI_COMM_NULL
     C%CORE_COMM = MPI_COMM_NULL
     C%SMP_ME= 0
@@ -1319,7 +1328,9 @@ contains
     COLOR = MYCORE
     IF (COLOR.GT.0) COLOR = MPI_UNDEFINED
     CALL MPI_Comm_split(C%MPI_COMM, COLOR, MYSMP, C%SMP_COMM, ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_COMM_SPLIT")
     CALL MPI_Comm_split(C%MPI_COMM, MYSMP, MYCORE, C%CORE_COMM, ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_COMM_SPLIT")
     ! - allocate work space
     ALLOCATE(KTBL(C%MAXCORE,C%NSMP),NARY(C%NCPU,C%NCORE))
     ALLOCATE(KTBLALL(C%MAXCORE,C%NSMP))
@@ -1328,6 +1339,7 @@ contains
     KTBL(C%CORE_ME,C%SMP_ME) = C%NODE_ME + 1
     CALL MPI_ALLREDUCE(KTBL,KTBLALL,C%NSMP*C%MAXCORE,MPI_INTEGER, &
          MPI_SUM,MPI_COMM,ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
     KTBL=KTBLALL
     !  IF (SUM(KTBL) /= C%NCPU*(C%NCPU+1)/2) &
     !       CALL MPI_ABORT(...
@@ -1372,16 +1384,21 @@ contains
     ! for others extra_comm = MPI_COMM_NULL
     if (extra_comm /= MPI_COMM_NULL) then
        call MPI_COMM_SIZE(extra_comm,  nnodes, ierror)
+       if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_COMM_SIZE")
        call MPI_COMM_RANK(extra_comm, my_node, ierror)
+       if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_COMM_RANK")
     end if
 
     ! other ranks share the same information as their leaders
     call MPI_BCAST( nnodes, 1, MPI_INTEGER, 0, intra_comm, ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_BCAST")
     call MPI_BCAST(my_node, 1, MPI_INTEGER, 0, intra_comm, ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_BCAST")
 
     ! maxcor
     call MPI_ALLREDUCE(ncores, maxcor, 1, MPI_INTEGER, MPI_MAX, &
          MPI_COMM_WORLD, ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
 
     call FIPC_finalize(ierror)
 
@@ -1413,6 +1430,7 @@ contains
             stat=status)
        CALL MPI_Allgather(decomp%x1cnts, C%NCPU, MPI_INTEGER, &
             NARY, C%NCPU, MPI_INTEGER, C%CORE_COMM, ierror)
+       if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLGATHER")
        PTR = 0
        DO i=1,C%NSMP
           decomp%x1disp_s(i) = PTR
@@ -1437,6 +1455,7 @@ contains
             stat=status)
        CALL MPI_Allgather(decomp%y2cnts, C%NCPU, MPI_INTEGER, &
             NARY, C%NCPU, MPI_INTEGER, C%CORE_COMM, ierror)
+       if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLGATHER")
        PTR = 0
        DO i=1,C%NSMP
           decomp%y2disp_s(i) = PTR
@@ -1464,6 +1483,7 @@ contains
             stat=status)
        CALL MPI_Allgather(decomp%y1cnts, C%NCPU, MPI_INTEGER, &
             NARY, C%NCPU, MPI_INTEGER, C%CORE_COMM, ierror)
+       if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLGATHER")
        PTR = 0
        DO i=1,C%NSMP
           decomp%y1disp_s(i) = PTR
@@ -1488,6 +1508,7 @@ contains
             stat=status)
        CALL MPI_Allgather(decomp%z2cnts, C%NCPU, MPI_INTEGER, &
             NARY, C%NCPU, MPI_INTEGER, C%CORE_COMM, ierror)
+       if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLGATHER")
        PTR = 0
        DO i=1,C%NSMP
           decomp%z2disp_s(i) = PTR
@@ -1617,13 +1638,17 @@ contains
           periodic(2) = .false.
           call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
                .false.,DECOMP_2D_COMM_CART_X, ierror)
+          if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_CREATE")
           call MPI_CART_COORDS(DECOMP_2D_COMM_CART_X,nrank,2,coord,ierror)
+          if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_COORDS")
 
           ! communicators defining sub-groups for ALLTOALL(V)
           call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.true.,.false./), &
                DECOMP_2D_COMM_COL,ierror)
+          if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_SUB")
           call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.false.,.true./), &
                DECOMP_2D_COMM_ROW,ierror)
+          if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_SUB")
 
           ! generate 2D decomposition information for this row*col
           call decomp_info_init(nx_global,ny_global,nz_global,decomp)
@@ -1646,6 +1671,7 @@ contains
 
           call MPI_ALLREDUCE(t2,t1,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
                MPI_COMM_WORLD,ierror)
+          if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
           t1 = t1 / dble(nproc)
 
           if (nrank==0) then
