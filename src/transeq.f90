@@ -776,10 +776,7 @@ contains
       tb1(:,:,:) = ux1(:,:,:) * tb1(:,:,:)
     endif
     if (skewsc) then
-      ! (1 - 0.5) * ux.dTdx + 0.5 * (d(ux.T)dx - T.duxdx)
       tb1(:,:,:) = tb1(:,:,:) + half * (tc1(:,:,:) - tb1(:,:,:))
-      call derx (tc1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
-      tb1(:,:,:) = tb1(:,:,:) - half * tc1(:,:,:) * phi1(:,:,:)
     endif
 
     if (evensc) then
@@ -848,10 +845,7 @@ contains
        tb2(:,:,:) = uy2(:,:,:) * tc2(:,:,:)
     endif
     if (skewsc) then
-      ! (1-0.5) * uy.dTdy + 0.5 * (d(uy.T)dy - T.duydy)
       tb2(:,:,:) = tb2(:,:,:) + half * (te2(:,:,:) - tb2(:,:,:))
-      call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-      tb2(:,:,:) = tb2(:,:,:) - half * te2(:,:,:) * td2(:,:,:)
     endif
 
     ! Add convective and diffusive scalar terms of y-pencil
@@ -877,10 +871,7 @@ contains
       tb3(:,:,:) = uz3(:,:,:) * tb3(:,:,:)
     endif
     if (skewsc) then
-      ! (1-0.5) * uz.dTdz + 0.5 * (d(uz.T)dz - T.duzdz)
       tb3(:,:,:) = tb3(:,:,:) + half * (tc3(:,:,:) - tb3(:,:,:))
-      call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
-      tb3(:,:,:) = tb3(:,:,:) - half * tc3(:,:,:) * td3(:,:,:)
     endif
 
     ! diffusive terms
