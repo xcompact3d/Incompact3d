@@ -588,8 +588,23 @@ contains
        if (allocated(work1_c)) deallocate(work1_c)
        if (allocated(work2_c)) deallocate(work2_c)
        allocate(work1_r(buf_size), STAT=status)
+       if (status /= 0) then
+          errorcode = 2
+          call decomp_2d_abort(errorcode, &
+               'Out of memory when allocating 2DECOMP workspace')
+       end if
        allocate(work2_r(buf_size), STAT=status)
+       if (status /= 0) then
+          errorcode = 2
+          call decomp_2d_abort(errorcode, &
+               'Out of memory when allocating 2DECOMP workspace')
+       end if
        allocate(work1_c(buf_size), STAT=status)
+       if (status /= 0) then
+          errorcode = 2
+          call decomp_2d_abort(errorcode, &
+               'Out of memory when allocating 2DECOMP workspace')
+       end if
        allocate(work2_c(buf_size), STAT=status)
        if (status /= 0) then
           errorcode = 2
