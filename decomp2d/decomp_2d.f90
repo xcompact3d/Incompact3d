@@ -196,22 +196,30 @@ module decomp_2d
 
   interface transpose_x_to_y
      module procedure transpose_x_to_y_real
+     module procedure transpose_x_to_y_real_s
      module procedure transpose_x_to_y_complex
+     module procedure transpose_x_to_y_complex_s
   end interface transpose_x_to_y
 
   interface transpose_y_to_z
      module procedure transpose_y_to_z_real
+     module procedure transpose_y_to_z_real_s
      module procedure transpose_y_to_z_complex
+     module procedure transpose_y_to_z_complex_s
   end interface transpose_y_to_z
 
   interface transpose_z_to_y
      module procedure transpose_z_to_y_real
+     module procedure transpose_z_to_y_real_s
      module procedure transpose_z_to_y_complex
+     module procedure transpose_z_to_y_complex_s
   end interface transpose_z_to_y
 
   interface transpose_y_to_x
      module procedure transpose_y_to_x_real
+     module procedure transpose_y_to_x_real_s
      module procedure transpose_y_to_x_complex
+     module procedure transpose_y_to_x_complex_s
   end interface transpose_y_to_x
 
 #ifdef OCC
