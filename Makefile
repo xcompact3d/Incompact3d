@@ -115,7 +115,7 @@ $(SRCDIR)/acl_model.o: $(SRCDIR)/acl_elem.o $(SRCDIR)/acl_out.o
 $(SRCDIR)/acl_out.o: $(SRCDIR)/acl_turb.o
 $(SRCDIR)/acl_source.o: $(SRCDIR)/acl_model.o $(SRCDIR)/acl_utils.o
 $(SRCDIR)/acl_turb.o: $(SRCDIR)/module_param.o $(SRCDIR)/acl_elem.o
-$(SRCDIR)/acl_utils.o: $(DECOMPDIR)/decomp_2d.o
+$(SRCDIR)/acl_utils.o: $(DECOMPDIR)/decomp_2d.o $(SRCDIR)/constants.o
 $(SRCDIR)/adm.o: $(SRCDIR)/airfoils.o $(SRCDIR)/variables.o
 $(SRCDIR)/airfoils.o: $(SRCDIR)/acl_utils.o
 $(SRCDIR)/BC-ABL.o: $(SRCDIR)/poisson.o $(SRCDIR)/tools.o
