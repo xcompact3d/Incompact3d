@@ -25,7 +25,7 @@ else ifeq ($(CMP),gcc)
 CC = mpicc
 FC = mpif90
 #FFLAGS = -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -x f95-cpp-input
-FFLAGS = -cpp -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none
+FFLAGS = -cpp -O0 -funroll-loops -floop-optimize -g -fno-inline -finstrument-functions -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none
 #-ffpe-trap=invalid,zero
 else ifeq ($(CMP),nagfor)
 FC = mpinagfor
@@ -116,7 +116,7 @@ $(SRCDIR)/acl_out.o: $(SRCDIR)/acl_turb.o
 $(SRCDIR)/acl_source.o: $(SRCDIR)/acl_model.o $(SRCDIR)/acl_utils.o
 $(SRCDIR)/acl_turb.o: $(SRCDIR)/module_param.o $(SRCDIR)/acl_elem.o
 $(SRCDIR)/acl_utils.o: $(DECOMPDIR)/decomp_2d.o
-$(SRCDIR)/adm.o: $(SRCDIR)/airfoils.o
+$(SRCDIR)/adm.o: $(SRCDIR)/airfoils.o $(SRCDIR)/variables.o
 $(SRCDIR)/airfoils.o: $(SRCDIR)/acl_utils.o
 $(SRCDIR)/BC-ABL.o: $(SRCDIR)/poisson.o $(SRCDIR)/tools.o
 $(SRCDIR)/BC-Channel-flow.o: $(SRCDIR)/tools.o
