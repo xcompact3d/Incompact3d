@@ -175,7 +175,7 @@ contains
     if (use_xdmf) call write_xdmf_header(".", "snapshot", trim(num))
 
     ! Write velocity
-    call write_field(abs(ux1), ".", "ux", trim(num))
+    call write_field(ux1, ".", "ux", trim(num))
     call write_field(uy1, ".", "uy", trim(num))
     call write_field(uz1, ".", "uz", trim(num))
 
