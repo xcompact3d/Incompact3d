@@ -296,12 +296,18 @@ endsubroutine finalise_xcompact3d
 !########################################################################
 subroutine catch_sigusr1
 
+  use MPI
+  use decomp_2d, only : decomp_2d_abort
   use param, only : itime, ilast
 
   implicit none
 
+  integer :: code
+
   ! Stop at the end of the next iteration
   ilast = itime + 1
+  call MPI_ALLREDUCE(MPI_IN_PLACE, ilast, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD, code)
+  if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
   return
 
@@ -310,12 +316,19 @@ end subroutine catch_sigusr1
 !########################################################################
 subroutine catch_sigusr2
 
+  use MPI
+  use decomp_2d, only : decomp_2d_abort
   use param, only : itime, ilast, icheckpoint
 
   implicit none
 
+  integer :: code
+
   ! Stop at the end of the next iteration
   ilast = itime + 1
+  call MPI_ALLREDUCE(MPI_IN_PLACE, ilast, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD, code)
+  if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+
   ! Write checkpoint at the end of the next iteration
   icheckpoint = ilast
 
