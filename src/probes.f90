@@ -15,16 +15,12 @@ module probes
 
   ! Number of probes
   integer, save :: nprobes
-  ! ???
-!  integer, save :: ntimes1, ntimes2
   ! Probes location on the velocity grid
   logical, save, allocatable, dimension(:) :: rankprobes
   integer, save, allocatable, dimension(:) :: nxprobes, nyprobes, nzprobes
   ! Probes location on the pressure grid
   logical, save, allocatable, dimension(:) :: rankprobesP
   integer, save, allocatable, dimension(:) :: nxprobesP, nyprobesP, nzprobesP
-  ! ???
-!  real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
 
   PRIVATE ! All functions/subroutines private by default
   PUBLIC :: init_probes, write_probes
@@ -35,13 +31,14 @@ contains
   subroutine init_probes(ep1)
 
     USE MPI
+    USE decomp_2d, only : real_type
     USE param, only : dx, dy, dz, nclx, ncly, nclz, xlx, yly, zlz, istret, one, half
     USE variables, only : nxm, ny, yp, nym, ypi, nzm
 
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ep1
 
     logical :: fexists
-    double precision :: xprobes, yprobes, zprobes, xyzprobes(3)
+    real(mytype) :: xprobes, yprobes, zprobes, xyzprobes(3)
     integer :: iounit
     integer :: i,j,code
     character :: a
@@ -49,18 +46,6 @@ contains
 #ifdef DEBG
     if (nrank .eq. 0) print *,'# init_probes start'
 #endif
-
-! ???
-!    ntimes1 = 0
-!    ntimes2 = 0
-
-! ???
-!    allocate(usum(ysize(2)),vsum(ysize(2)),wsum(ysize(2)))
-!    allocate(uusum(ysize(2)),uvsum(ysize(2)),uwsum(ysize(2)))
-!    allocate(vvsum(ysize(2)),vwsum(ysize(2)),wwsum(ysize(2)))
-!    usum=zero;vsum=zero;wsum=zero
-!    uusum=zero;uvsum=zero;uwsum=zero
-!    vvsum=zero;vwsum=zero;wwsum=zero
 
     ! Master rank reads number of probes
     if (nrank.eq.0) then
@@ -94,7 +79,7 @@ contains
           xyzprobes = (/xprobes, yprobes, zprobes/)
        end if
        ! Broadcast
-       call MPI_BCAST(xyzprobes,3,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,code)
+       call MPI_BCAST(xyzprobes,3,real_type,0,MPI_COMM_WORLD,code)
        if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
        ! Enforce bounds
        xprobes = max(epsilon(xlx), min(xlx*(one-epsilon(xlx)), xyzprobes(1)))
