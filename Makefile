@@ -31,8 +31,7 @@ FC = mpinagfor
 FFLAGS = -fpp
 else ifeq ($(CMP),cray)
 FC = ftn
-FFLAGS = -cpp -xHost -O3 -ipo -heaparrays -safe-cray-ptr -g -traceback
-PLATFORM=intel
+FFLAGS = -eF -g -O3 -N 1023
 endif
 
 
