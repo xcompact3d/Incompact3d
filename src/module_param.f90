@@ -323,7 +323,7 @@ module param
   character(len=100) :: inflowpath
 
   !! Channel flow
-  integer :: icpg, icfr
+  integer :: icpg, icfr, idir_stream
   real(mytype) :: re_cent, fcpg
 
   !! Numerics control

@@ -363,7 +363,7 @@ contains
 
     if (itype == itype_channel) then
 
-       call momentum_forcing_channel(dux1, duy1, ux1, uy1)
+       call momentum_forcing_channel(dux1, duy1, duz1, ux1, uy1, uz1)
 
     elseif (itype == itype_jet) then
 
