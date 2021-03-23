@@ -4,7 +4,6 @@ include_directories(${CMAKE_SOURCE_DIR}/decomp2d
 message(STATUS "CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
 message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 
-#file(GLOB files_xcompact src/module_param.f90
 add_executable(xcompact3d 
                     acl_controller.f90 
                     acl_elem.f90 
@@ -60,16 +59,7 @@ if (MPI_FOUND)
   target_link_libraries(xcompact3d PRIVATE MPI::MPI_Fortran)
 endif (MPI_FOUND)
 
-add_executable(xcompact3d_post
-	       paraview_incompact3d.f90)
-
 install(TARGETS xcompact3d
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-
-install(TARGETS xcompact3d_post
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

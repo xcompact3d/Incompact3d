@@ -68,7 +68,7 @@ subroutine parameter(input_i3d)
        nclx1, nclxn, ncly1, nclyn, nclz1, nclzn, &
        ivisu, ipost, &
        gravx, gravy, gravz, &
-       icpg, icfr, &
+       icpg, icfr, idir_stream, &
        ifilter, C_filter
   namelist /NumOptions/ ifirstder, isecondder, itimescheme, iimplicit, &
        nu0nu, cnu, fpi2, ipinter
@@ -254,7 +254,7 @@ subroutine parameter(input_i3d)
 
   xnu=one/re
   !! Constant pressure gradient, re = Re_tau -> use to compute Re_centerline
-  if (icpg==one) then
+  if (icpg==1) then
     re_cent = (re/0.116_mytype)**(1.0_mytype/0.88_mytype)
     xnu = one/re_cent ! viscosity based on Re_cent to keep same scaling as CFR
     !
@@ -332,10 +332,10 @@ subroutine parameter(input_i3d)
      endif
      write(*,*) '==========================================================='
      if (itype==itype_channel) then
-       if (icpg==zero) then
+       if (icpg==0) then
          write(*,*) 'Channel forcing with constant flow rate (CFR)'
          write(*,"(' Re_cl                  : ',F17.3)") re
-       else if (icpg==one) then
+       else if (icpg==1) then
          write(*,*) 'Channel forcing with constant pressure gradient (CPG)'
          write(*,"(' Re_tau                 : ',F17.3)") re
          write(*,"(' Re_cl (estimated)      : ',F17.3)") re_cent
@@ -606,6 +606,7 @@ subroutine parameter_defaults()
   !! Channel
   icpg = 0
   icfr = 1
+  idir_stream = 1
 
   !! Filter
   ifilter=0

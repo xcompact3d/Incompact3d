@@ -41,7 +41,7 @@ module tools
        apply_spatial_filter, read_inflow, append_outflow, write_outflow, &
        compute_cfldiff, compute_cfl, &
        rescale_pressure, mean_plane_x, mean_plane_y, mean_plane_z, &
-       channel_cfr_x, channel_cfr_z, &
+       channel_cfr, &
        avg3d
 
 contains
@@ -618,13 +618,12 @@ contains
   end subroutine write_outflow
   !############################################################################
   !!
-  !!  SUBROUTINE: channel_cfr_x
-  !!      AUTHOR: Kay Schäfer (Modified by Charles Moulenec)
-  !! DESCRIPTION: Inforces constant flow rate (x direction)
-  !!              without need of data transposition
+  !!  SUBROUTINE: channel_cfr
+  !!      AUTHOR: Kay Schäfer
+  !! DESCRIPTION: Inforces constant flow rate without need of data transposition
   !!
   !############################################################################
-  subroutine channel_cfr_x (ux,constant)
+  subroutine channel_cfr (u_stream,constant)
 
     use decomp_2d
     use decomp_2d_poisson
@@ -635,77 +634,38 @@ contains
 
     implicit none
 
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(inout) :: u_stream
     real(mytype) :: constant
 
-    integer :: code,i,j,k,jloc,kloc
-    real(mytype) :: can,ub,uball,dyloc,dzloc
+    integer :: code,i,j,k,jloc
+    real(mytype) :: can,ub,uball, dyloc
     !
-
-    !!! CM: Drop this.
-    real(mytype) :: sum1, sumjloc
-
     ub = zero
     uball = zero
-    !
-    goto 111 !!! CM: To be improved. Some bugs in there.
-    do k = xstart(3) + 1, xend(3)
-       dzloc = zp(k) - zp(k - 1)
-       kloc = k - xstart(3) + 1
-       do j = xstart(2) + 1, xend(2) - 1
-          dyloc = yp(j) - yp(j-1)
-          jloc = j - xstart(2) + 1
-          do i = 1, xsize(1)
-            ub = ub &
-               + 0.25_mytype * (ux(i, jloc, kloc) + ux(i, jloc - 1, kloc) &
-                              + ux(i, jloc, kloc - 1) + ux(i, jloc - 1, kloc - 1)) &
-                              * dyloc * dzloc
-          enddo
-       enddo
-    enddo
-    !
-    ! Check if first and last index of subarray is at domain boundary
-    !
-    sum1 = sum(ux(:,1,:))
-    if (xstart(2) == 1) then ! bottom point -> half distance
-       ub = ub + sum1 * (yp(2) - yp(1)) * half
-    else
-       ub = ub + sum1 * (yp(xstart(2) + 1) - yp(xstart(2) - 1)) * half
-    end if
-    !
-    jloc = xend(2) - xstart(2) + 1
-    sumjloc = sum(ux(:,jloc,:))
-    if (xend(2) == ny) then ! top point
-       ub = ub + sumjloc * (yp(xend(2)) - yp(xend(2) - 1)) * half
-    else
-       ub = ub + sumjloc * (yp(xend(2) + 1) - yp(xend(2) - 1)) * half
-    end if
-    !
-111 continue
     !
     do k=1,xsize(3)
        do j=xstart(2)+1,xend(2)-1
           jloc = j-xstart(2)+1
           dyloc  = (yp(j+1)-yp(j-1))
           do i=1,xsize(1)
-            ub = ub + ux(i,jloc,k) * half * dyloc
+            ub = ub + u_stream(i,jloc,k) * half * dyloc
           enddo
        enddo
     enddo
 
     ! Check if first and last index of subarray is at domain boundary
     if ( xstart(2)==1) then ! bottom point -> half distance
-       ub = ub + sum(ux(:,1,:)) * yp(2)*half
+       ub = ub + sum(u_stream(:,1,:)) * yp(2)*half
     else
-       ub = ub + sum(ux(:,1,:)) * (yp(xstart(2)+1)-yp(xstart(2)-1))*half
+       ub = ub + sum(u_stream(:,1,:)) * (yp(xstart(2)+1)-yp(xstart(2)-1))*half
     end if
     !
     if (xend(2)==ny) then ! top point
        jloc = xend(2)-xstart(2)+1
-       ub = ub + sum(ux(:,jloc,:)) * (yp(xend(2))-yp(xend(2)-1))*half
+       ub = ub + sum(u_stream(:,jloc,:)) * (yp(xend(2))-yp(xend(2)-1))*half
     else
        jloc = xend(2)-xstart(2)+1
-       ub = ub + sum(ux(:,jloc,:)) * (yp(xend(2)+1)-yp(xend(2)-1))*half
+       ub = ub + sum(u_stream(:,jloc,:)) * (yp(xend(2)+1)-yp(xend(2)-1))*half
     end if
     !
     ub = ub / (yly * (real(nx*nz,mytype)))
@@ -720,112 +680,13 @@ contains
     do k = 1, xsize(3)
       do j = 1, xsize(2)
         do i = 1, xsize(1)
-          ux(i,j,k) = ux(i,j,k) - can
+          u_stream(i,j,k) = u_stream(i,j,k) - can
         enddo
       enddo
     enddo
 
     return
-  end subroutine channel_cfr_x
-  !############################################################################
-  !############################################################################
-  !!
-  !!  SUBROUTINE: channel_cfr_z
-  !!      AUTHOR: Kay Schäfer (Modified by Charles Moulinec)
-  !! DESCRIPTION: Inforces constant flow rate (z direction)
-  !!              without need of data transposition
-  !!
-  !############################################################################
-  subroutine channel_cfr_z (uz,constant)
-
-    use decomp_2d
-    use decomp_2d_poisson
-    use variables
-    use param
-    use var
-    use MPI
-
-    implicit none
-
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: uz
-    real(mytype) :: constant
-
-    integer :: code,i,j,k,jloc
-    real(mytype) :: can,ub,uball, dyloc
-    !
-
-    real(mytype) :: uball_tmp
-
-    ub = zero
-    uball = zero
-    !
-
-    do k=1,xsize(3)
-       do j=1,xsize(2)
-          do i=1,xsize(1)
-             write(860 + nrank, *) uz(i, j, k)
-             uball = uball + uz(i, j, k)
-          enddo
-       enddo
-    enddo
-    write(*,*) "CM uball part", uball, sum(uz), nrank
-
-    call MPI_ALLREDUCE(uball,uball_tmp,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-
-    !write(*, *) "CM: In channel_cfr_z, 1 - uball_tmp ", uball_tmp, ub, nrank
-
-    do k = 1, xsize(3)
-       do j = xstart(2)+1, xend(2)-1
-          jloc = j-xstart(2)+1
-          dyloc  = (yp(j+1)-yp(j-1))
-          do i=1,xsize(1)
-            ub = ub + uz(i,jloc,k) * half * dyloc
-          enddo
-       enddo
-    enddo
-
-    ! Check if first and last index of subarray is at domain boundary
-    if ( xstart(2) == 1) then ! bottom point -> half distance
-       ub = ub + sum(uz(:,1,:)) * yp(2) * half
-    else
-       ub = ub + sum(uz(:,1,:)) * (yp(xstart(2)+1) - yp(xstart(2)-1)) * half
-    end if
-    !
-
-    if (xend(2)==ny) then ! top point
-       jloc = xend(2)-xstart(2)+1
-       ub = ub + sum(uz(:,jloc,:)) * (yp(xend(2)) - yp(xend(2)-1)) * half
-    else
-       jloc = xend(2)-xstart(2)+1
-       ub = ub + sum(uz(:,jloc,:)) * (yp(xend(2)+1) - yp(xend(2)-1)) * half
-    end if
-    !
-
-    write(*, *) "CM: In channel_cfr_z, 3 - ub ", ub, yly * (real(nx*nz,mytype)), nrank
-
-    ub = ub / (yly * (real(nx*nz,mytype)))
-
-    write(*, *) "CM: In channel_cfr_z, 4 - ub ", ub, nrank
-
-    call MPI_ALLREDUCE(ub,uball,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-
-    can = uball - constant
-
-    write(*, *) "CM: In channel_cfr_z, 1 - uball ", uball, constant, nrank
-
-    if (nrank == 0 .and. (mod(itime, ilist) == 0 .or. itime == ifirst .or. itime==ilast)) &
-            write(*,*) nrank, 'UT', uball, can
-
-    do k = 1, xsize(3)
-      do j = 1, xsize(2)
-        do i = 1, xsize(1)
-          uz(i,j,k) = uz(i,j,k) - can
-        enddo
-      enddo
-    enddo
-
-    return
-  end subroutine channel_cfr_z
+  end subroutine channel_cfr
   !############################################################################
   !##################################################################
   !##################################################################
@@ -1058,12 +919,14 @@ contains
     do k=1,xsize3
        do j=1,xsize2
           do i=1,xsize1
-             dep=dep+var(i,j,k)**2
+             !dep=dep+var(i,j,k)**2
+             dep=dep+var(i,j,k)
           enddo
        enddo
     enddo
     call MPI_ALLREDUCE(dep,avg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    avg=sqrt_prec(avg)/(nxc*nyc*nzc)
+    !avg=sqrt_prec(avg)/(nxc*nyc*nzc)
+    avg=avg/(nxc*nyc*nzc)
 
     return
 
@@ -2157,6 +2020,14 @@ function r8_random ( s1, s2, s3 )
   return
 end
 !##################################################################
+function return_30k(x) result(y)
+
+  integer ( kind = 4 ), intent(in) :: x
+  integer ( kind = 4 )             :: y
+  integer ( kind = 4 ), parameter  :: xmax = 30000
+
+  y = iabs(x) - int(iabs(x)/xmax)*xmax
+end function return_30k
 !##################################################################
 function r8_uni ( s1, s2 )
 

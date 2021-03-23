@@ -827,8 +827,6 @@ contains
 
     else
 
-       !!! CM call matrice_refinement()
-
        if (istret /= 3) then
           cw2 = zero
           cw2c = zero
@@ -1213,8 +1211,6 @@ contains
 
     else
 
-       !!! CM call matrice_refinement()
-
        ! the stretching is only working in Y pencils
 
        call transpose_x_to_y(cw1b,cw2b,sp)
@@ -1514,8 +1510,6 @@ contains
 
     real(mytype) :: ytt_rl,xtt_rl,ztt_rl,yt1_rl,xt1_rl,zt1_rl
     real(mytype) :: xtt1_rl,ytt1_rl,ztt1_rl
-
-    !!! CM real(mytype) :: tmp1_rl,tmp2_rl,tmp3_rl,tmp4_rl,tmp5_rl,tmp6_rl
 
     complex(mytype) :: cx
     real(mytype) :: rl, iy

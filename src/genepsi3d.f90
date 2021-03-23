@@ -156,7 +156,7 @@ contains
        nclx,ncly,nclz,nxraf,nyraf,nzraf   ,&
        xi,xf,yi,yf,zi,zf,nobjx,nobjy,nobjz,&
        nobjmax,yp,nraf)
-    use param
+    use param, only : zero,one, zpfive
     use decomp_2d
     use MPI
     implicit none
@@ -615,7 +615,7 @@ contains
        xi,xf,yi,yf,zi,zf,nobjmax,dx,dz,epm,&
        xlx,yly,zlz,yp)
 
-    use param
+    use param, only : zero, one, two
     
     implicit none
     !
@@ -665,7 +665,7 @@ contains
              if(epsi(i,j,k) == one .and.&
                 nobjy (i,k)  > 0)then
                 y=yp(j)
-                ye=epm*(yp(j+1)-yp(j-1))/2.
+                ye=epm*(yp(j+1)-yp(j-1))/two
                 do jy=1,nobjy(i,k)
                    if(   y >= yi(jy,i,k)    .and.&
                          y <= yi(jy,i,k)+ye .and.&

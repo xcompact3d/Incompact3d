@@ -112,6 +112,9 @@ add_subdirectory(decomp2d)
 # Create the Xcompact3d executable
 add_subdirectory(src)
 
+# Create the Xcompact3d executable
+add_subdirectory(post)
+
 # Create an example dir with all input.i3d example files
 option(BUILD_TESTING "Build with tests" ON)
 set(test_dir "${PROJECT_BINARY_DIR}/Test")
@@ -121,53 +124,7 @@ if (${BUILD_TESTING})
   include(CTest)
   message(STATUS "MPI INCL ALSO FOUND: ${MPI_INCLUDE_PATH}")
   message(STATUS "MPI EXEC: ${MPIEXEC_EXECUTABLE}")
-  add_test(NAME TGvortex COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input.i3d WORKING_DIRECTORY ${test_dir}/TGV)
-  add_test(NAME Channel-Flow COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input.i3d WORKING_DIRECTORY ${test_dir}/Channel-Flow)
+  add_test(NAME TGvortex COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test.i3d WORKING_DIRECTORY ${test_dir}/TGV)
+  add_test(NAME Channel-Flow COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test.i3d WORKING_DIRECTORY ${test_dir}/Channel-Flow)
 endif()
 
-#=========================
-# minimal version
-#set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp  -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none")
-#set(CMAKE_Fortran_FLAGS "-cpp  -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none")
-#add_compile_options(-cpp  -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none)
-#add_compile_options(-cpp -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none -DDOUBLE_PREC -DPOST -DVISU)
-#add_compile_options(-cpp -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none)
-#include_directories(src decomp2d)
-
-#add_library(decomp_2d OBJECT decomp2d/decomp_2d.f90)
-#add_executable(xcompact3d
-#	decomp2d/decomp_2d.f90
-#	decomp2d/glassman.f90
-#	decomp2d/fft_generic.f90
-#	decomp2d/io.f90
-#	src/module_param.f90
-#	src/variables.f90
-#	src/poisson.f90
-#	src/ibm.f90
-#	src/derive.f90
-#	src/schemes.f90
-#	src/implicit.f90
-#	src/forces.f90
-#	src/BC-TBL.f90
-#	src/navier.f90
-#	src/tools.f90
-#	src/les_models.f90
-#	src/BC-Lock-exchange.f90
-#	src/time_integrators.f90
-#	src/filters.f90
-#	src/parameters.f90
-#	src/BC-User.f90
-#	src/BC-TGV.f90
-#	src/BC-Channel-flow.f90
-#	src/BC-Periodic-hill.f90
-#	src/BC-Cylinder.f90
-#	src/BC-Mixing-layer.f90
-#	src/BC-Jet.f90
-#	src/BC-dbg-schemes.f90
-#	src/statistics.f90
-#	src/visu.f90
-#	src/case.f90
-#	src/transeq.f90
-#	src/genepsi3d.f90
-#	src/xcompact3d.f90)
-#target_link_libraries(xcompact3d PRIVATE MPI::MPI_Fortran)
