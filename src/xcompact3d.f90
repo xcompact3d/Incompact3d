@@ -224,14 +224,14 @@ subroutine init_xcompact3d()
   if (iturbine.ne.0) call init_turbines(ux1, uy1, uz1)
 
   if (itype==2) then
-  if(nrank.eq.0)then
-     open(42,file='time_evol.dat',form='formatted')
-  endif
+     if(nrank.eq.0)then
+        open(42,file='time_evol.dat',form='formatted')
+     endif
   endif
   if (itype==5) then
-  if(nrank.eq.0)then
-     open(38,file='forces.dat',form='formatted')
-  endif
+     if(nrank.eq.0)then
+        open(38,file='forces.dat',form='formatted')
+     endif
   endif
 
 endsubroutine init_xcompact3d
