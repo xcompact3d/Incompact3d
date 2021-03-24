@@ -48,6 +48,7 @@ module case
   use tbl
   use abl
   use uniform
+  use cavity
 
   use var, only : nzmsize
 
@@ -56,7 +57,7 @@ module case
   private ! All functions/subroutines private by default
   public :: init, boundary_conditions, &
             momentum_forcing, scalar_forcing, set_fluid_properties, &
-            test_flow, preprocessing, postprocessing
+            test_flow, preprocessing, postprocessing, finalize_case
 
 contains
   !##################################################################
@@ -131,6 +132,10 @@ contains
 
        call init_uniform (ux1, uy1, uz1, ep1, phi1)
 
+    elseif (itype.eq.itype_cavity) then
+
+       call init_cavity (ux1, uy1, uz1, ep1, phi1)
+
     endif
 
     !! Setup old arrays
@@ -203,6 +208,10 @@ contains
     elseif (itype.eq.itype_uniform) then
 
        call boundary_conditions_uniform (ux, uy, uz, phi)
+
+    elseif (itype.eq.itype_cavity) then
+
+       call boundary_conditions_cavity (ux, uy, uz, phi)
 
     endif
 
@@ -342,6 +351,10 @@ contains
 
        call postprocess_uniform (ux, uy, uz, ep)
 
+    elseif (itype.eq.itype_cavity) then
+
+       call postprocess_cavity(ux, uy, uz, pp, phi)
+
     endif
 
     if (iforces.eq.1) then
@@ -378,6 +391,10 @@ contains
     elseif (itype.eq.itype_abl) then
 
        call momentum_forcing_abl(dux1, duy1, duz1, ux1, uy1, uz1, phi1)
+
+    elseif (itype.eq.itype_cavity) then
+
+       call momentum_forcing_cavity(duy1, phi1)
 
     endif
 
@@ -450,7 +467,22 @@ contains
 
   end subroutine test_flow
   !##################################################################
+  !!
+  !!  SUBROUTINE: finalize_case
+  !!      AUTHOR: Cédric Flageul
+  !! DESCRIPTION: Calls case-specific functions to close units
+  !!              and free memory
+  !!
   !##################################################################
+  subroutine finalize_case()
+
+    implicit none
+
+    if (itype.eq.itype_cavity) then
+       call finalize_cavity()
+    endif
+
+  end subroutine finalize_case
 end module case
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

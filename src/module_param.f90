@@ -302,7 +302,8 @@ module param
        itype_jet = 8, &
        itype_tbl = 9, &
        itype_abl = 10, &
-       itype_uniform = 11
+       itype_uniform = 11, &
+       itype_cavity = 12
 
   integer :: cont_phi,itr,itime,itest,iprocessing
   integer :: ifft,istret,iforc_entree,iturb

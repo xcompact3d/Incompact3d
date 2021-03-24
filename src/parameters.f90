@@ -329,6 +329,8 @@ subroutine parameter(input_i3d)
         print *,'Atmospheric boundary layer'
      elseif (itype.eq.itype_uniform) then
         print *,'Uniform flow'
+     elseif (itype.eq.itype_cavity) then
+        print *,'Cavity'
      else
         print *,'Unknown itype: ', itype
         stop
