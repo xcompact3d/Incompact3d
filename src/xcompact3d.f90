@@ -233,7 +233,6 @@ subroutine init_xcompact3d()
         open(38,file='forces.dat',form='formatted')
      endif
   endif
-  endif
 
 endsubroutine init_xcompact3d
 !########################################################################
