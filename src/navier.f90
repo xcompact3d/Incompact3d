@@ -73,7 +73,7 @@ contains
     !! Locals
     INTEGER :: nlock, poissiter
     LOGICAL :: converged
-    REAL(mytype) :: atol, rtol, rho0
+    REAL(mytype) :: atol, rtol, rho0, divup3norm
 
     nlock = 1 !! Corresponds to computing div(u*)
     converged = .FALSE.
@@ -98,7 +98,7 @@ contains
        IF (ivarcoeff) THEN
 
           !! Test convergence
-          CALL test_varcoeff(converged, pp3, dv3, atol, rtol, poissiter)
+          CALL test_varcoeff(converged, divup3norm, pp3, dv3, atol, rtol, poissiter)
 
           IF (.NOT.converged) THEN
              !! Evaluate additional RHS terms
@@ -1020,7 +1020,7 @@ contains
   !! DESCRIPTION: Tests convergence of the variable-coefficient Poisson solver
   !!
   !############################################################################
-  SUBROUTINE test_varcoeff(converged, pp3, dv3, atol, rtol, poissiter)
+  SUBROUTINE test_varcoeff(converged, divup3norm, pp3, dv3, atol, rtol, poissiter)
 
     USE MPI
     USE decomp_2d, ONLY: mytype, ph1, real_type, nrank, decomp_2d_abort
@@ -1038,10 +1038,11 @@ contains
 
     !! OUTPUTS
     LOGICAL, INTENT(OUT) :: converged
+    REAL(mytype) :: divup3norm
 
     !! LOCALS
     INTEGER :: code
-    REAL(mytype) :: errloc, errglob, divup3norm
+    REAL(mytype) :: errloc, errglob
 
     IF (poissiter.EQ.0) THEN
        errloc = SUM(dv3**2)

@@ -516,7 +516,7 @@ subroutine parameter(input_i3d)
         write(*,"(' Prandtl number Re  : ',F15.8)") prandtl
      endif
      if (angle.ne.0.) write(*,"(' Solid rotation     : ',F6.2)") angle
-     print *,''
+     print *, ' '
 
      !! Print case-specific information
      if (itype==itype_lockexch) then
