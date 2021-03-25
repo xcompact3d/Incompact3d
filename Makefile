@@ -10,7 +10,7 @@ GIT_VERSION := $(shell git describe --tag --long --always)
 
 DEFS = -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"
 
-LCL = local# local,lad,sdu,archer
+LCL = local# local,lad,sdu,archer 
 IVER = 17# 15,16,17,18
 CMP = gcc# intel,gcc
 FFT = generic# generic,fftw3,mkl
