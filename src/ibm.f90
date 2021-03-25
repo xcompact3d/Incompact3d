@@ -11,8 +11,13 @@ contains
     implicit none
     integer :: i,j,k,nlock
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,px,py,pz
+
+    if (nz.eq.1) then
+       print *, "2D currently unsupported - see ibm.f90"
+       stop
+    endif
+
     if (nlock.eq.1) then
-       if (nz.gt.1) then
           do k = 1, xsize(3)
              do j = 1, xsize(2)
                 do i = 1, xsize(1)
@@ -22,17 +27,8 @@ contains
                 enddo
              enddo
           enddo
-       else
-          do j = 1, xsize(2)
-             do i = 1, xsize(1)
-                ux(i,j,k)=-px(i,j,k)+ux(i,j,k)
-                uy(i,j,k)=-py(i,j,k)+uy(i,j,k)
-             enddo
-          enddo
-       endif
     endif
     if (nlock.eq.2) then
-       if (nz.gt.1) then
           do k = 1, xsize(3)
              do j = 1, xsize(2)
                 do i = 1, xsize(1)
@@ -42,14 +38,6 @@ contains
                 enddo
              enddo
           enddo
-       else
-          do j = 1, xsize(2)
-             do i = 1, xsize(1)
-                ux(i,j,k)=px(i,j,k)+ux(i,j,k)
-                uy(i,j,k)=py(i,j,k)+uy(i,j,k)
-             enddo
-          enddo
-       endif
     endif
 
     return
