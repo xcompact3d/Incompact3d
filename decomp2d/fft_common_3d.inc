@@ -46,7 +46,6 @@ if (dims(1)>1) then
 call transpose_x_to_y(in,wk2_c2c,ph)
 #else
 call transpose_x_to_y(wk1,wk2_c2c,ph)
-deallocate(wk1)
 #endif
 call c2c_1m_y(wk2_c2c,isign,ph)
 else
@@ -65,7 +64,6 @@ else
 call transpose_y_to_z(in,out,ph)
 #else
 call transpose_y_to_z(wk1,out,ph)
-deallocate(wk1)
 #endif
 end if
 call c2c_1m_z(out,isign,ph)
@@ -89,7 +87,6 @@ if (dims(1)>1) then
 call transpose_z_to_y(in,wk2_c2c,ph)
 #else
 call transpose_z_to_y(wk1,wk2_c2c,ph)
-deallocate(wk1)
 #endif
 call c2c_1m_y(wk2_c2c,isign,ph)
 else  ! out==wk2_c2c if 1D decomposition
@@ -97,7 +94,6 @@ else  ! out==wk2_c2c if 1D decomposition
 call transpose_z_to_y(in,out,ph)
 #else
 call transpose_z_to_y(wk1,out,ph)
-deallocate(wk1)
 #endif
 call c2c_1m_y(out,isign,ph)
 end if
@@ -201,7 +197,6 @@ call c2c_1m_z(wk1,1,sp)
 call transpose_z_to_y(in_c,wk2_r2c,sp)
 #else
 call transpose_z_to_y(wk1,wk2_r2c,sp)
-deallocate(wk1)
 #endif
 call c2c_1m_y(wk2_r2c,1,sp)
 
@@ -230,7 +225,6 @@ if (dims(1)>1) then
 call transpose_x_to_y(in_c,wk2_r2c,sp)
 #else
 call transpose_x_to_y(wk1,wk2_r2c,sp)
-deallocate(wk1)
 #endif
 call c2c_1m_y(wk2_r2c,1,sp)
 else  ! in_c==wk2_r2c if 1D decomposition
@@ -249,7 +243,6 @@ else
 call transpose_y_to_z(in_c,wk13,sp)
 #else
 call transpose_y_to_z(wk1,wk13,sp)
-deallocate(wk1)
 #endif
 end if
 call c2r_1m_z(wk13,out_r)
