@@ -106,6 +106,11 @@ call c2c_1m_x(out,isign,ph)
 
 end if
 
+#ifndef OVERWRITE
+! Free memory
+if (allocated(wk1)) deallocate(wk1)
+#endif
+
 return
 end subroutine fft_3d_c2c
 
@@ -248,6 +253,11 @@ end if
 call c2r_1m_z(wk13,out_r)
 
 end if
+
+#ifndef OVERWRITE
+! Free memory
+if (allocated(wk1)) deallocate(wk1)
+#endif
 
 return
 end subroutine fft_3d_c2r
