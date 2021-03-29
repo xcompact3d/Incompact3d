@@ -71,26 +71,27 @@ jobs:
     #
     # Runs a set of commands using the runners shell
     - name: Chdir
-      run: chmod +x xcompact3d; cd examples/Taylor-Green-Vortex/
+      run: chmod +x xcompact3d; cd examples/Taylor-Green-Vortex/; ls -l ./; ls -l ../; ls -l ../../
     #
     # Run 2D case, periodic, 1 time step
     - name: ncl00
-      run: echo "ncl00" > ~/log_tgv2d.txt; ../../xcompact3d 2D-ncl00.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
+      run: echo "ncl00" > ~/log_tgv2d.txt; mpirun -np 1 ../../xcompact3d 2D-ncl00.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
     #
     # Run 2D case, symmetry, 1 time step
     - name: ncl11
-      run: echo "ncl11" >> ~/log_tgv2d.txt; ../../xcompact3d 2D-ncl11.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
+      run: echo "ncl11" >> ~/log_tgv2d.txt; mpirun -np 1 ../../xcompact3d 2D-ncl11.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
     #
     # Run 2D case, periodic, time-implicit Y diffusion, 1 time step
     - name: ncl00_imp
-      run: echo "ncl00_imp" >> ~/log_tgv2d.txt; ../../xcompact3d 2D-ncl00_imp1.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
+      run: echo "ncl00_imp" >> ~/log_tgv2d.txt; mpirun -np 1 ../../xcompact3d 2D-ncl00_imp1.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
     #
     # Run 2D case, symmetry, time-implicit Y diffusion, 1 time step
     - name: ncl11_imp
-      run: echo "ncl11_imp" >> ~/log_tgv2d.txt; ../../xcompact3d 2D-ncl11_imp2.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
+      run: echo "ncl11_imp" >> ~/log_tgv2d.txt; mpirun -np 1 ../../xcompact3d 2D-ncl11_imp2.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
     #
     # Keep the log
     - uses: actions/upload-artifact@v2
       with:
         name: my-artifact
         path: ~/log_tgv2d.txt
+
