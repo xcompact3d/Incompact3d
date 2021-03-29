@@ -35,43 +35,9 @@ jobs:
     - name: Compile
       run: make -j
     #
-    # Keep the compiled program
-    - uses: actions/upload-artifact@v2
-      with:
-        name: my-artifact
-        path: xcompact3d
-  #
-  # TGV2D
-  tgv2D:
-    #
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-    #
-    # Use the compiled program
-    needs: build
-    #
-    # Keep the end of the listing
-    outputs:
-      log: ~/log_tgv2d.txt
-    #
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v2
-    #
-    # Use the compiled program
-    - uses: actions/download-artifact@v2
-      with:
-        name: my-artifact
-    #
-    # Runs a single command using the runners shell
-    - name: Install requirements
-      run: |
-        sudo apt-get update; sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev
-    #
     # Runs a set of commands using the runners shell
     - name: Chdir
-      run: chmod +x xcompact3d; cd examples/Taylor-Green-Vortex/; ls -l ./; ls -l ../; ls -l ../../
+      run: cd examples/Taylor-Green-Vortex/
     #
     # Run 2D case, periodic, 1 time step
     - name: ncl00
