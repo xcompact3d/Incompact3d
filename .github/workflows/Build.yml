@@ -29,4 +29,4 @@ jobs:
 
     # Runs a set of commands using the runners shell
     - name: Compile
-      run: make
+      run: make -j
