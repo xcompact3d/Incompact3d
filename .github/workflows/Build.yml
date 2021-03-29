@@ -67,11 +67,11 @@ jobs:
     # Runs a single command using the runners shell
     - name: Install requirements
       run: |
-        pwd; ls; sudo apt-get update; sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev
+        sudo apt-get update; sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev
     #
     # Runs a set of commands using the runners shell
     - name: Chdir
-      run: cd examples/Taylor-Green-Vortex/; ls -l ../; ls -l ../../
+      run: chmod +x xcompact3d; cd examples/Taylor-Green-Vortex/
     #
     # Run 2D case, periodic, 1 time step
     - name: ncl00
@@ -82,11 +82,11 @@ jobs:
       run: echo "ncl11" >> ~/log_tgv2d.txt; ../../xcompact3d 2D-ncl11.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
     #
     # Run 2D case, periodic, time-implicit Y diffusion, 1 time step
-    - name: ncl00
+    - name: ncl00_imp
       run: echo "ncl00_imp" >> ~/log_tgv2d.txt; ../../xcompact3d 2D-ncl00_imp1.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
     #
     # Run 2D case, symmetry, time-implicit Y diffusion, 1 time step
-    - name: ncl11
+    - name: ncl11_imp
       run: echo "ncl11_imp" >> ~/log_tgv2d.txt; ../../xcompact3d 2D-ncl11_imp2.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
     #
     # Keep the log
