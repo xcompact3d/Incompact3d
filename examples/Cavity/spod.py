@@ -80,9 +80,9 @@ dataND = np.zeros((len(file_t), nx, ny, len(variables)))
 for ivar, flist in enumerate(files):
     for it, ff in enumerate(flist):
         data2D = np.fromfile(open(os.path.join("data",ff), 'rb'), np.float)
-    for i in range(nx):
-        for j in range(ny):
-            dataND[it, i, j, ivar] = data2D[i + j * nx]
+        for i in range(nx):
+            for j in range(ny):
+                dataND[it, i, j, ivar] = data2D[i + j * nx]
 
 #
 # Computing after
