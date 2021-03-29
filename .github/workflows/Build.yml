@@ -68,20 +68,16 @@ jobs:
     #
     # Run 2D case, periodic, 1 time step
     - name: ncl00
-      echo "ncl00" > ~/log_tgv2d.txt
-      run: ../../xcompact3d 2D-ncl00.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
+      run: echo "ncl00" > ~/log_tgv2d.txt; ../../xcompact3d 2D-ncl00.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
     #
     # Run 2D case, symmetry, 1 time step
     - name: ncl11
-      echo "ncl11" >> ~/log_tgv2d.txt
-      run: ../../xcompact3d 2D-ncl11.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
+      run: echo "ncl11" >> ~/log_tgv2d.txt; ../../xcompact3d 2D-ncl11.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
     #
     # Run 2D case, periodic, time-implicit Y diffusion, 1 time step
     - name: ncl00
-      echo "ncl00_imp" >> ~/log_tgv2d.txt
-      run: ../../xcompact3d 2D-ncl00_imp1.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
+      run: echo "ncl00_imp" >> ~/log_tgv2d.txt; ../../xcompact3d 2D-ncl00_imp1.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
     #
     # Run 2D case, symmetry, time-implicit Y diffusion, 1 time step
     - name: ncl11
-      echo "ncl11_imp" >> ~/log_tgv2d.txt
-      run: ../../xcompact3d 2D-ncl11_imp2.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
+      run: echo "ncl11_imp" >> ~/log_tgv2d.txt; ../../xcompact3d 2D-ncl11_imp2.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
