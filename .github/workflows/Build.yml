@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     #
     # Use the compiled program
-    needs: build.x3d
+    needs: build
     #
     # Keep the end of the listing
     outputs:
