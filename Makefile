@@ -25,7 +25,7 @@ else ifeq ($(CMP),gcc)
 CC = mpicc
 FC = mpif90
 #FFLAGS = -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -x f95-cpp-input
-FFLAGS = -cpp -O2 -funroll-loops -floop-optimize -g -fno-inline -finstrument-functions -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none -msse4.1 -msse4.2 -mavx2
+FFLAGS = -cpp -O0 -funroll-loops -floop-optimize -g -fno-inline -finstrument-functions -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none -msse4.1 -msse4.2 -mavx2
 #-ffpe-trap=invalid,zero
 else ifeq ($(CMP),nagfor)
 FC = mpinagfor
@@ -129,7 +129,7 @@ $(SRCDIR)/BC-TBL.o: $(SRCDIR)/poisson.o
 $(SRCDIR)/BC-TGV.o: $(SRCDIR)/variables.o
 $(SRCDIR)/BC-Uniform.o: $(SRCDIR)/variables.o
 $(SRCDIR)/BC-User.o: $(SRCDIR)/module_param.o $(DECOMPDIR)/io.o
-$(SRCDIR)/BC-Cavity.o: $(SRCDIR)/module_param.o
+$(SRCDIR)/BC-Cavity.o: $(SRCDIR)/module_param.o $(DECOMPDIR)/io.o
 $(SRCDIR)/case.o: $(SRCDIR)/BC-Lock-exchange.o $(SRCDIR)/BC-Channel-flow.o $(SRCDIR)/acl_turb.o $(SRCDIR)/visu.o
 $(SRCDIR)/constants.o: $(DECOMPDIR)/decomp_2d.o
 $(SRCDIR)/derive.o: $(SRCDIR)/ibm.o
