@@ -451,6 +451,12 @@ contains
        endif
     endif
 
+    ! Compute analytical and discrete errors for 2D TGV
+    ! Discrete error valid only for explicit Euler
+    if (tgv_twod) then
+      call error_tgv2D(ux1,uy1,phi1)
+    endif
+
   end subroutine postprocess_tgv
   !############################################################################
   subroutine suspended(phi1,vol1,mp1)
