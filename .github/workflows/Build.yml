@@ -12,25 +12,76 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
+  #
+  # This workflow contains a job called "build" and a job called TGV2D
+  #
+  # Build first
   build:
+    #
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
+    #
     # Keep the compiled program
     outputs:
       x3d: ./xcompact3d
-
+    #
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
-
+    #
     # Runs a single command using the runners shell
     - name: Install requirements
       run: |
         sudo apt-get update; sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev
-
+    #
     # Runs a set of commands using the runners shell
     - name: Compile
       run: make -j
+  #
+  # TGV2D
+  tgv2D:
+    #
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    #
+    # Use the compiled program
+    needs: build.x3d
+    #
+    # Keep the end of the listing
+    outputs:
+      log: ~/log_tgv2d.txt
+    #
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+    #
+    # Runs a single command using the runners shell
+    - name: Install requirements
+      run: |
+        sudo apt-get update; sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev
+    #
+    # Runs a set of commands using the runners shell
+    - name: Chdir
+      run: cd examples/Taylor-Green-Vortex/
+    #
+    # Run 2D case, periodic, 1 time step
+    - name: ncl00
+      echo "ncl00" > ~/log_tgv2d.txt
+      run: ../../xcompact3d 2D-ncl00.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
+    #
+    # Run 2D case, symmetry, 1 time step
+    - name: ncl11
+      echo "ncl11" >> ~/log_tgv2d.txt
+      run: ../../xcompact3d 2D-ncl11.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
+    #
+    # Run 2D case, periodic, time-implicit Y diffusion, 1 time step
+    - name: ncl00
+      echo "ncl00_imp" >> ~/log_tgv2d.txt
+      run: ../../xcompact3d 2D-ncl00_imp1.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
+    #
+    # Run 2D case, symmetry, time-implicit Y diffusion, 1 time step
+    - name: ncl11
+      echo "ncl11_imp" >> ~/log_tgv2d.txt
+      run: ../../xcompact3d 2D-ncl11_imp2.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
