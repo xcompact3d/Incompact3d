@@ -141,9 +141,8 @@ subroutine init_xcompact3d()
   integer, parameter :: SIGUSR1 = 10, SIGUSR2 = 12
   integer :: code
 
-  integer :: nargin, FNLength, status, DecInd
-  logical :: back
-  character(len=80) :: InputFN, FNBase
+  integer :: nargin, FNLength, status
+  character(len=80) :: InputFN
 
   !! Initialise MPI
   call MPI_INIT(code)
@@ -161,18 +160,14 @@ subroutine init_xcompact3d()
   nargin=command_argument_count()
   if (nargin <1) then
      InputFN='input.i3d'
-     if (nrank==0) print*, 'Xcompact3d is run with the default file -->', InputFN
   elseif (nargin.ge.1) then
-     if (nrank==0) print*, 'Program is run with the provided file -->', InputFN
-
      call get_command_argument(1,InputFN,FNLength,status)
-     back=.true.
-     FNBase=inputFN((index(InputFN,'/',back)+1):len(InputFN))
-     DecInd=index(FNBase,'.',back)
-     if (DecInd >1) then
-        FNBase=FNBase(1:(DecInd-1))
-     end if
+     if (status.ne.0) then
+        if (nrank.eq.0) print*, 'InputFN is too small for the given input file'
+        call decomp_2d_abort(status, "get_command_argument")
+     endif
   endif
+  if (nrank==0) print*, 'Program is run with the provided file -->', InputFN
 
   call parameter(InputFN)
 
