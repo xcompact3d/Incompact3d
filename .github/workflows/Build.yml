@@ -67,11 +67,11 @@ jobs:
     # Runs a single command using the runners shell
     - name: Install requirements
       run: |
-        pwd; ls; gunzip my-artifact.zip; sudo apt-get update; sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev
+        pwd; ls; sudo apt-get update; sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev
     #
     # Runs a set of commands using the runners shell
     - name: Chdir
-      run: cd examples/Taylor-Green-Vortex/
+      run: cd examples/Taylor-Green-Vortex/; ls -l ../; ls -l ../../
     #
     # Run 2D case, periodic, 1 time step
     - name: ncl00
