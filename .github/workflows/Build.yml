@@ -41,7 +41,7 @@ jobs:
     #
     # Run 2D case, periodic, 1 time step
     - name: ncl00
-      run: echo "ncl00" > ~/log_tgv2d.txt; mpirun -np 1 ./xcompact3d 2D-ncl00.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
+      run: echo "ncl00" > ~/log_tgv2d.txt; ./xcompact3d 2D-ncl00.i3d; mpirun -np 1 ./xcompact3d 2D-ncl00.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
     #
     # Run 2D case, symmetry, 1 time step
     - name: ncl11
