@@ -21,10 +21,6 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     #
-    # Keep the compiled program
-    outputs:
-      x3d: ./xcompact3d
-    #
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -38,6 +34,12 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: Compile
       run: make -j
+    #
+    # Keep the compiled program
+    - uses: actions/upload-artifact@v2
+      with:
+        name: my-artifact
+        path: xcompact3d
   #
   # TGV2D
   tgv2D:
@@ -56,6 +58,11 @@ jobs:
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
+    #
+    # Use the compiled program
+    - uses: actions/download-artifact@v2
+      with:
+        name: my-artifact
     #
     # Runs a single command using the runners shell
     - name: Install requirements
@@ -81,3 +88,9 @@ jobs:
     # Run 2D case, symmetry, time-implicit Y diffusion, 1 time step
     - name: ncl11
       run: echo "ncl11_imp" >> ~/log_tgv2d.txt; ../../xcompact3d 2D-ncl11_imp2.i3d > log; tail -n40 log >> ~/log_tgv2d.txt
+    #
+    # Keep the log
+    - uses: actions/upload-artifact@v2
+      with:
+        name: my-artifact
+        path: ~/log_tgv2d.txt
