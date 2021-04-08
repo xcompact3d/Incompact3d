@@ -488,6 +488,7 @@ subroutine parameter(input_i3d)
        print *,'==========================================================='
      endif
 
+     print *, 'Detection of compile flags'
 #ifdef DOUBLE_PREC
 #ifdef SAVE_SINGLE
      print *,'Numerical precision: Double, saving in single'
@@ -496,6 +497,30 @@ subroutine parameter(input_i3d)
 #endif
 #else
      print *,'Numerical precision: Single'
+#endif
+#ifdef SHM
+     print *, 'SHM flag activated'
+#endif
+#ifdef EVEN
+     print *, 'EVEN flag activated'
+#endif
+#ifdef OCC
+     print *, 'OCC flag activated'
+#endif
+#ifdef OVERWRITE
+     print *, 'OVERWRITE flag activated'
+#endif
+#ifdef HALO_DEBUG
+     print *, 'HALO_DEBUG flag activated'
+#endif
+#ifdef T3PIO
+     print *, 'T3PIO flag activated'
+#endif
+#ifdef DEBG
+     print *, 'DEBG flag activated'
+#endif
+#ifdef DEBUG
+     print *, 'DEBUG flag activated'
 #endif
      print *,'==========================================================='
      write(*,"(' High and low speed : u1=',F6.2,' and u2=',F6.2)") u1,u2
