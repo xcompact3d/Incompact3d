@@ -1193,7 +1193,7 @@ end subroutine wale
     real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: nut3, dnut3
 
     real(mytype) :: Pr
-    integer :: is
+    integer :: is, i, j, k
 
     sgsphi1 = zero; sgsphi2 = zero; sgsphi3 = zero
 
@@ -1214,7 +1214,18 @@ end subroutine wale
     call transpose_x_to_y(sgsphi1, sgsphi2)
 
     call deryS (tb2, phi2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1)
+    iimplicit = - iimplicit
     call deryyS(tc2, phi2, di2, sy, sfypS, ssypS, swypS, ysize(1), ysize(2), ysize(3), 1)
+    iimplicit = - iimplicit
+    if (istret.ne.0) then
+       do k = 1, ysize(3)
+       do j = 1, ysize(2)
+       do i = 1, ysize(1)
+          tc2(i,j,k) = tc2(i,j,k)*pp2y(j)-pp4y(j)*tb2(i,j,k)
+       enddo
+       enddo
+       enddo
+    endif
     sgsphi2 = sgsphi2 + tb2 * (dnut2/Pr) + tc2 * (nut2/Pr)
 
     call transpose_y_to_z(phi2, phi3)
