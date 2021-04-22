@@ -31,7 +31,8 @@ contains
 
     subroutine actuator_disc_model_init(Ndiscs,admCoords,C_T,aind)
         
-        USE var, only: Fdiscx, Fdiscy, Fdiscz, GammaDisc
+        USE var, only: Fdiscx, Fdiscy, Fdiscz, GammaDisc, yp
+        use param, only: dx,dy,dz,istret
         USE decomp_2d
         USE decomp_2d_io
         USE MPI
@@ -41,7 +42,8 @@ contains
         character(len=100),intent(in) :: admCoords
         character(1000) :: ReadLine
         real(mytype) :: C_T, aind
-        integer :: idisc
+        integer :: idisc,i,j,k
+        real(mytype) :: xmesh,ymesh,zmesh,deltax,deltay,deltaz,deltar,dr
 
         !### Specify the actuator discs
         Nad=Ndiscs
@@ -62,6 +64,39 @@ contains
             ActuatorDisc(idisc)%alpha=aind
           enddo
           close(15)
+          
+          ! Compute Gamma
+          GammaDisc=0.
+          do idisc=1,Nad
+            do k=1,xsize(3)
+              zmesh=(xstart(3)+k-1-1)*dz
+              do j=1,xsize(2)
+                if (istret.eq.0) ymesh=(xstart(2)+j-1-1)*dy
+                if (istret.ne.0) ymesh=yp(xstart(2)+j)
+                do i=1,xsize(1)
+                  xmesh=(xstart(1)+i-1-1)*dx
+                  deltax=abs(xmesh-actuatordisc(idisc)%COR(1))
+                  deltay=abs(ymesh-actuatordisc(idisc)%COR(2))
+                  deltaz=abs(zmesh-actuatordisc(idisc)%COR(3))
+                  deltar=sqrt(deltay**2.+deltaz**2.)
+                  dr=sqrt(dy**2.+dz**2.)
+
+                  if(deltax>dx/2.) then
+                    GammaDisc(i,j,k,idisc)=0.
+                  elseif (deltax<=dx/2.) then
+                    if(deltar<=actuatordisc(idisc)%D/2.0) then
+                      GammaDisc(i,j,k,idisc)=1.
+                    elseif(deltar>actuatordisc(idisc)%D/2..and. deltar<=actuatordisc(idisc)%D/2.+dr) then
+                      GammaDisc(i,j,k,idisc)=1.-(deltar-actuatordisc(idisc)%D/2.)/dr
+                    else
+                      GammaDisc(i,j,k,idisc)=0.
+                    endif
+                  endif
+
+                enddo
+              enddo
+            enddo
+          enddo
         endif
 
         return
@@ -72,51 +107,18 @@ contains
         
         use decomp_2d, only: mytype, nproc, xstart, xend, xsize, update_halo
         use MPI
-        use param, only: dx,dy,dz,istret,dt,itime,initstat,rho_air,dBL,ustar
+        use param, only: dx,dy,dz,istret,dt,itime,initstat,rho_air,dBL,ustar,ifirst
         use var, only: FDiscx, FDiscy, FDiscz, GammaDisc, yp
         
         implicit none
         real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1       
-        real(mytype) :: xmesh, ymesh,zmesh,deltax,deltay,deltaz,deltar,dr,DiscsTotalArea
+        real(mytype) :: xmesh, ymesh,zmesh,deltax,deltay,deltaz,deltar,DiscsTotalArea
         real(mytype) :: uave,CTprime, T_relax, alpha_relax, Uinf, CTave,Ratio,sumforce,Sumforce_partial
         real(mytype), allocatable, dimension(:) :: Udisc_partial
         integer,allocatable, dimension(:) :: counter, counter_total
         integer :: i,j,k, idisc, ierr
 
-        ! First compute Gamma
-        GammaDisc=0.
-        do idisc=1,Nad
-          do k=1,xsize(3)
-            zmesh=(xstart(3)+k-1-1)*dz
-            do j=1,xsize(2)
-              if (istret.eq.0) ymesh=(xstart(2)+j-1-1)*dy
-              if (istret.ne.0) ymesh=yp(xstart(2)+j)
-              do i=1,xsize(1)
-                xmesh=(xstart(1)+i-1-1)*dx
-                deltax=abs(xmesh-actuatordisc(idisc)%COR(1))
-                deltay=abs(ymesh-actuatordisc(idisc)%COR(2))
-                deltaz=abs(zmesh-actuatordisc(idisc)%COR(3))
-                deltar=sqrt(deltay**2.+deltaz**2.)
-                dr=sqrt(dy**2.+dz**2.)
-
-                if(deltax>dx/2.) then
-                  GammaDisc(i,j,k,idisc)=0.
-                elseif (deltax<=dx/2.) then
-                  if(deltar<=actuatordisc(idisc)%D/2.0) then
-                    GammaDisc(i,j,k,idisc)=1.
-                  elseif(deltar>actuatordisc(idisc)%D/2..and. deltar<=actuatordisc(idisc)%D/2.+dr) then
-                    GammaDisc(i,j,k,idisc)=1.-(deltar-actuatordisc(idisc)%D/2.)/dr
-                  else
-                    GammaDisc(i,j,k,idisc)=0.
-                  endif
-                endif
-
-              enddo
-            enddo
-          enddo
-        enddo
-        
-        ! Then compute disc-averaged velocity
+        ! Compute disc-averaged velocity
         allocate(Udisc_partial(Nad))
         allocate(counter(Nad))
         allocate(counter_total(Nad))
@@ -128,16 +130,15 @@ contains
           do k=1,xsize(3)
             zmesh=(xstart(3)+k-1-1)*dz 
             do j=1,xsize(2)
-              if (istret.eq.0) ymesh=(xstart(2)+j-1-2)*dy
-              if (istret.ne.0) ymesh=yp(xstart(2)+j)
+              if (istret.eq.0) ymesh=(xstart(2)+j-1-1)*dy
+              if (istret.ne.0) ymesh=yp(xstart(2)+j-1)
               do i=1,xsize(1)
                 xmesh=(i-1)*dx
                 deltax=abs(xmesh-actuatordisc(idisc)%COR(1))
                 deltay=abs(ymesh-actuatordisc(idisc)%COR(2))
                 deltaz=abs(zmesh-actuatordisc(idisc)%COR(3))
                 deltar=sqrt(deltay**2.+deltaz**2.)
-                dr=sqrt(dy**2.+dz**2.)
-                if(deltar<=actuatordisc(idisc)%D/2.) then
+                if(deltar<=actuatordisc(idisc)%D/2. .and. deltax<=dx/2.) then
                   ! Take the inner product to compute the rotor-normal velocity
                   uave=uave+&!sqrt(ux1(i,j,k)**2.+uy1(i,j,k)**2.+uz1(i,j,k)**2.)
                        ux1(i,j,k)*actuatordisc(idisc)%RotN(1)+&
@@ -167,15 +168,15 @@ contains
         deallocate(Udisc_partial,counter,counter_total)
 
         ! Time relaxation -- low pass filter
-        if (itime==0) then
+        T_relax= 0.27*dBL/ustar !5.0, 5.0*dt
+        alpha_relax=(dt/T_relax)/(1.+dt/T_relax)
+        if (itime==ifirst) then
           do idisc=1,Nad
             actuatordisc(idisc)%UF=actuatordisc(idisc)%Udisc
             !actuatordisc(idisc)%UF_prev=actuatordisc(idisc)%Udisc
           enddo
         else
           do idisc=1,Nad
-            T_relax= 5.! 0.27*dBL/ustar
-            alpha_relax=(dt/T_relax)/(1.+dt/T_relax)
             actuatordisc(idisc)%UF=alpha_relax*actuatordisc(idisc)%Udisc+(1.-alpha_relax)*actuatordisc(idisc)%UF
             !actuatordisc(idisc)%UF=alpha_relax*actuatordisc(idisc)%UF+(1.-alpha_relax)*actuatordisc(idisc)%UF_prev
             !actuatordisc(idisc)%UF_prev=actuatordisc(idisc)%Udisc
@@ -235,7 +236,7 @@ contains
         implicit none
         integer,intent(in) :: dump_no
         integer :: idisc
-        character(len=100) :: dir, Format
+        character(len=300) :: dir, Format
 
         if (Nad>0) then
           open(2020,File='discs_time'//trim(int2str(dump_no))//'.adm')
