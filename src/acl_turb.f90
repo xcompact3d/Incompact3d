@@ -347,11 +347,11 @@ contains
                 write(*,*) "Only Glauret and ShenEtAl2005 are available at the moment"
                 stop
             endif
+            Ftip=2.0/pi*dacos(dexp(-g1*turbine%Nblades/2.0*(1.0/rroot-1.0)/dsin(phi)))
             if (dabs(dexp(-g1*turbine%Nblades/2.0*(1.0/rroot-1.0)/dsin(phi)))>1.) then
                 if (nrank==0) print *, "Something went wrong with the tip correction model -- phi =", phi
                 Ftip=1.
             endif
-            Ftip=2.0/pi*dacos(dexp(-g1*turbine%Nblades/2.0*(1.0/rroot-1.0)/dsin(phi)))
         endif
         if (turbine%do_root_correction) then
             if (turbine%EndEffectModel_is_Glauret) then
@@ -362,7 +362,11 @@ contains
                 write(*,*) "Only Glauret and ShenEtAl2005 are available at the moment"
                 stop
             endif
-            Froot=2.0/pi*acos(exp(-g1*turbine%Nblades/2.0*(1.0/rtip-1.0)/sin(phi)))
+            Froot=2.0/pi*dacos(dexp(-g1*turbine%Nblades/2.0*(1.0/rtip-1.0)/dsin(phi)))
+            if (dabs(dexp(-g1*turbine%Nblades/2.0*(1.0/rtip-1.0)/dsin(phi)))>1.) then
+                if (nrank==0) print *, "Something went wrong with the root correction model -- phi =", phi
+                Froot=1.
+            endif
         endif
 
             turbine%blade(iblade)%EEndeffects_factor(ielem)=Ftip*Froot 
