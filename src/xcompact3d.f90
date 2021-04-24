@@ -258,6 +258,7 @@ subroutine finalise_xcompact3d()
   use param, only : iimplicit, itype
   use ydiff_implicit, only : finalize_implicit
   use case, only : finalize_case
+  use probes, only : finalize_probes
 
   implicit none
 
@@ -278,6 +279,7 @@ subroutine finalise_xcompact3d()
   if (iforces.eq.1) call finalize_forces()
   if (iimplicit.ne.0) call finalize_implicit()
   call finalize_case()
+  call finalize_probes()
   call finalize_variables()
   call decomp_info_finalize(ph1)
   call decomp_info_finalize(ph4)
