@@ -98,10 +98,12 @@ contains
     use var, only : rho2,ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2
     use var, only : rho3,ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
     use var, only : sgsx1,sgsy1,sgsz1
+    use var, only : px1, py1, pz1
     use var, only : FTx, FTy, FTz, Fdiscx, Fdiscy, Fdiscz
     use les, only : compute_SGS
 
     use case, only : momentum_forcing
+    use probes, only : flag_extra_probes, write_extra_probes_vel, write_extra_probes_pre
 
     implicit none
 
@@ -450,6 +452,27 @@ contains
        if (nrank == 0) print *,'TRIPPING!!'
     endif
 
+    ! Monitor velocity and pressure gradients at the first sub-iteration only
+    if (flag_extra_probes .and. itr.eq.1) then
+       call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+       call dery (td2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+       call derz (td3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+       call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+       call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+       call derz (te3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+       call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+       call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+       call derz (tf3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+       call write_extra_probes_vel(ta1, td2, td3, tb1, te2, te3, tc1, tf2, tf3)
+       if (irestart.eq.1 .or. itime.gt.1) then
+          call write_extra_probes_pre(px1, py1, pz1)
+       else
+          ! This looks like a bad workaround
+          ta1 = zero; tb1 = zero; tc1 = zero
+          call write_extra_probes_pre(ta1, tb1, tc1)
+       endif
+    endif
+
   end subroutine momentum_rhs_eq
   !############################################################################
   !############################################################################
@@ -717,14 +740,15 @@ contains
   end subroutine momentum_gravity
   !############################################################################
   !############################################################################
-  subroutine scalar_transport_eq(dphi1, rho1, ux1, uy1, uz1, phi1, schmidt, is_even, is_skew)
+  subroutine scalar_transport_eq(dphi1, rho1, ux1, uy1, uz1, phi1, schmidt, is)
 
     use param
     use variables
     use decomp_2d
     use case, only : scalar_forcing
+    use probes, only : flag_extra_probes, write_extra_probes_scal
 
-    use var, only : ta1,tb1,tc1,td1,di1
+    use var, only : ta1,tb1,tc1,di1
     use var, only : rho2,uy2,ta2,tb2,tc2,td2,te2,di2
     use var, only : rho3,uz3,ta3,tb3,tc3,td3,di3
 
@@ -735,7 +759,7 @@ contains
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: phi1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
     real(mytype), intent(in) :: schmidt
-    logical, optional, intent(in) :: is_even, is_skew
+    integer, optional, intent(in) :: is
 
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dphi1
@@ -746,14 +770,14 @@ contains
     real(mytype) :: xalpha
 
     evensc = .true.
-    if (present(is_even)) then
-      if (.not.is_even) then
+    if (present(is)) then
+      if (.not.sc_even(is)) then
         evensc = .false.
       endif
     endif
     skewsc = .false.
-    if (present(is_skew)) then
-      if (is_skew) then
+    if (present(is)) then
+      if (sc_skew(is)) then
         skewsc = .true.
       endif
     endif
@@ -904,6 +928,20 @@ contains
       dphi1(:,:,:,1) = dphi1(:,:,:,1) / rho1(:,:,:,1)
     endif
 
+    ! Monitor scalar gradient at the first sub-iteration only
+    if (flag_extra_probes .and. itr.eq.1 .and. present(is)) then
+      if (evensc) then
+        call derxS (tb1,phi1(:,:,:),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1)
+        call deryS (tc2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
+        call derzS (tb3,td3(:,:,:),di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1)
+      else
+        call derxS (tb1,phi1(:,:,:),di1,sx,ffxS,fsxS,fwxS,xsize(1),xsize(2),xsize(3),0)
+        call deryS (tc2,td2(:,:,:),di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0)
+        call derzS (tb3,td3(:,:,:),di3,sz,ffzS,fszS,fwzS,zsize(1),zsize(2),zsize(3),0)
+      endif
+      call write_extra_probes_scal(is, tb1, tc2, tb3)
+    endif
+
   endsubroutine scalar_transport_eq
   !############################################################################
   !############################################################################
@@ -936,7 +974,7 @@ contains
        if (is.ne.primary_species) then
           !! For mass fractions enforce primary species Y_p = 1 - sum_s Y_s
           !! So don't solve a transport equation
-          call scalar_transport_eq(dphi1(:,:,:,:,is), rho1, ux1, uy1, uz1, phi1(:,:,:,is), sc(is), is_even=sc_even(is), is_skew=sc_skew(is))
+          call scalar_transport_eq(dphi1(:,:,:,:,is), rho1, ux1, uy1, uz1, phi1(:,:,:,is), sc(is), is=is)
           if (uset(is).ne.zero) then
              call scalar_settling(dphi1, phi1(:,:,:,is), is)
           endif

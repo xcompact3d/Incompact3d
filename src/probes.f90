@@ -9,65 +9,67 @@
 
 module probes
 
-  USE decomp_2d, only : ph1, nrank, mytype, xstart, xend
+  USE decomp_2d, only : ph1, nrank, mytype
+  USE decomp_2d, only : xstart, xend, ystart, yend, zstart, zend
+  USE decomp_2d, only : decomp_2d_abort
 
   IMPLICIT NONE
 
   ! Number of probes
   integer, save :: nprobes
-  ! ???
-!  integer, save :: ntimes1, ntimes2
+  ! Offset in case of restart without probes
+  integer, save :: main_probes_offset, extra_probes_offset
+  ! Flag to monitor velocity, scalar(s) and pressure gradients
+  logical, save :: flag_extra_probes = .false.
   ! Probes location on the velocity grid
-  logical, save, allocatable, dimension(:) :: rankprobes
+  logical, save, allocatable, dimension(:) :: rankprobes, rankprobesY, rankprobesZ
   integer, save, allocatable, dimension(:) :: nxprobes, nyprobes, nzprobes
   ! Probes location on the pressure grid
   logical, save, allocatable, dimension(:) :: rankprobesP
   integer, save, allocatable, dimension(:) :: nxprobesP, nyprobesP, nzprobesP
-  ! ???
-!  real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
+  ! Arrays used to monitor gradients
+  real(mytype), save, allocatable, dimension(:,:) :: dfdx, dfdy, dfdz
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_probes, write_probes
+  PUBLIC :: init_probes, write_probes, flag_extra_probes, &
+            write_extra_probes_vel, write_extra_probes_scal, &
+            write_extra_probes_pre, finalize_probes
 
 contains
 
   !############################################################################
+  !
+  ! This subroutine is used to initialize the probes module
+  !
   subroutine init_probes(ep1)
 
+    USE decomp_2d, only : real_type
     USE MPI
     USE param, only : dx, dy, dz, nclx, ncly, nclz, xlx, yly, zlz, istret, one, half
-    USE variables, only : nx, nxm, ny, yp, nym, ypi, nz, nzm
+    USE param, only : irestart, ifirst
+    USE variables, only : nxm, ny, yp, nym, ypi, nzm, numscalar
 
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ep1
 
     logical :: fexists
-    double precision :: xprobes, yprobes, zprobes, xyzprobes(3)
+    real(mytype) :: xprobes, yprobes, zprobes, xyzprobes(3)
     integer :: iounit
-    integer :: i,j,k,code
+    integer :: i,j,code
     character :: a
+    character(len=30) :: filename
 
 #ifdef DEBG
     if (nrank .eq. 0) print *,'# init_probes start'
 #endif
-
-! ???
-!    ntimes1 = 0
-!    ntimes2 = 0
-
-! ???
-!    allocate(usum(ysize(2)),vsum(ysize(2)),wsum(ysize(2)))
-!    allocate(uusum(ysize(2)),uvsum(ysize(2)),uwsum(ysize(2)))
-!    allocate(vvsum(ysize(2)),vwsum(ysize(2)),wwsum(ysize(2)))
-!    usum=zero;vsum=zero;wsum=zero
-!    uusum=zero;uvsum=zero;uwsum=zero
-!    vvsum=zero;vwsum=zero;wwsum=zero
 
     ! Master rank reads number of probes
     if (nrank.eq.0) then
        inquire(file='probes.prm', exist=fexists)
        if (fexists) then
           open (newunit=iounit,file='probes.prm',status='unknown',form='formatted')
+          ! Skip first line of the file
           read (iounit,*) a
+          ! Read the number of probes
           read (iounit,*) nprobes
        else
           nprobes = 0
@@ -77,13 +79,53 @@ contains
     call MPI_BCAST(nprobes,1,MPI_INTEGER,0,MPI_COMM_WORLD,code)
 
     ! Exit if no file or no probes
-    if (nprobes.le.0) return
+    if (nprobes.le.0) then
+       if (nrank.eq.0) close(iounit)
+       flag_extra_probes = .false. 
+       return
+    endif
+
+    ! In case of restart, check existence of previous probes results
+    main_probes_offset = 0
+    extra_probes_offset = 0
+    !
+    if (irestart.ne.0) then
+
+       ! Basic probes
+       if (nrank.eq.0) then
+          write(filename,"('./probes/probe',I4.4)") 1
+          inquire(file=filename, exist=fexists)
+          if (.not.fexists) then
+             main_probes_offset = ifirst - 1
+          endif
+       endif
+       ! Broadcast
+       call MPI_BCAST(main_probes_offset,1,MPI_INTEGER,0,MPI_COMM_WORLD,code)
+
+       ! Extra probes
+       if (flag_extra_probes) then
+          if (nrank.eq.0) then
+             write(filename,"('./probes/probe_dx_',I4.4)") 1
+             inquire(file=filename, exist=fexists)
+             if (.not.fexists) then
+                extra_probes_offset = ifirst - 1
+             endif
+          endif
+          ! Broadcast
+          call MPI_BCAST(extra_probes_offset,1,MPI_INTEGER,0,MPI_COMM_WORLD,code)
+       endif
+
+    endif
 
     ! Probes on the velocity grid
-    allocate(nxprobes(nprobes), nyprobes(nprobes), nzprobes(nprobes), rankprobes(nprobes))
+    allocate(nxprobes(nprobes), nyprobes(nprobes), nzprobes(nprobes))
+    allocate(rankprobes(nprobes), rankprobesY(nprobes), rankprobesZ(nprobes))
     rankprobes(:) = .false.
+    rankprobesY(:) = .false.
+    rankprobesZ(:) = .false.
     ! Probes on the pressure grid
-    allocate(nxprobesP(nprobes), nyprobesP(nprobes), nzprobesP(nprobes), rankprobesP(nprobes))
+    allocate(nxprobesP(nprobes), nyprobesP(nprobes), nzprobesP(nprobes))
+    allocate(rankprobesP(nprobes))
     rankprobesP(:) = .false.
 
     do i = 1, nprobes
@@ -93,7 +135,7 @@ contains
           xyzprobes = (/xprobes, yprobes, zprobes/)
        end if
        ! Broadcast
-       call MPI_BCAST(xyzprobes,3,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,code)
+       call MPI_BCAST(xyzprobes,3,real_type,0,MPI_COMM_WORLD,code)
        ! Enforce bounds
        xprobes = max(epsilon(xlx), min(xlx*(one-epsilon(xlx)), xyzprobes(1)))
        yprobes = max(epsilon(xlx), min(yly*(one-epsilon(xlx)), xyzprobes(2)))
@@ -161,6 +203,20 @@ contains
              endif
           endif
        endif
+       if       (ystart(1) .le. nxprobes(i) .and. nxprobes(i) .le. yend(1)) then
+          if    (ystart(2) .le. nyprobes(i) .and. nyprobes(i) .le. yend(2)) then
+             if (ystart(3) .le. nzprobes(i) .and. nzprobes(i) .le. yend(3)) then
+                rankprobesY(i) = .true.
+             endif
+          endif
+       endif
+       if       (zstart(1) .le. nxprobes(i) .and. nxprobes(i) .le. zend(1)) then
+          if    (zstart(2) .le. nyprobes(i) .and. nyprobes(i) .le. zend(2)) then
+             if (zstart(3) .le. nzprobes(i) .and. nzprobes(i) .le. zend(3)) then
+                rankprobesZ(i) = .true.
+             endif
+          endif
+       endif
        if       (ph1%zst(1) .le. nxprobesP(i) .and. nxprobesP(i) .le. ph1%zen(1)) then
           if    (ph1%zst(2) .le. nyprobesP(i) .and. nyprobesP(i) .le. ph1%zen(2)) then
              if (ph1%zst(3) .le. nzprobesP(i) .and. nzprobesP(i) .le. ph1%zen(3)) then
@@ -176,6 +232,16 @@ contains
     ! Log the real position of the probes in a file
     if (nrank.eq.0) call log_probes_position()
 
+    ! Allocate memory to monitor gradients
+    if (flag_extra_probes) then
+      ! X gradients : velocity + scalar(s) + 3 x pressure
+      allocate(dfdx(nprobes, 3+numscalar+3))
+      ! Y gradients : velocity + scalar(s)
+      allocate(dfdy(nprobes, 3+numscalar))
+      ! Z gradients : velocity + scalar(s)
+      allocate(dfdz(nprobes, 3+numscalar))
+    endif
+
 #ifdef DEBG
     if (nrank .eq. 0) print *,'# init_probes ok'
 #endif
@@ -183,10 +249,13 @@ contains
   end subroutine init_probes
 
   !############################################################################
+  !
+  ! This subroutine is used to monitor velocity, scalar(s) and pressure
+  !
   subroutine write_probes(ux1,uy1,uz1,pp3,phi1)
 
     use param, only : itime, t
-    use param, only :  npress
+    use param, only : npress
     use var, only : nzmsize
     use variables, only : numscalar
 
@@ -215,27 +284,195 @@ contains
           write(filename,"('./probes/probe',I4.4)") i
           open(newunit=iounit,file=trim(filename),status='unknown',form='formatted'&
                ,access='direct',recl=FS)
-          write(iounit,fileformat,rec=itime) t,&                         !1
-               ux1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !2
-               uy1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !3
-               uz1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !4
-               phi1(nxprobes(i),nyprobes(i),nzprobes(i),:),&         !numscalar
-               NL                                                    !+1
+          if (numscalar.ge.1) then
+             write(iounit,fileformat,rec=itime-main_probes_offset) t,&  !1
+                  ux1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !2
+                  uy1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !3
+                  uz1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !4
+                  phi1(nxprobes(i),nyprobes(i),nzprobes(i),:),&         !numscalar
+                  NL                                                    !+1
+          else
+             write(iounit,fileformat,rec=itime-main_probes_offset) t,&  !1
+                  ux1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !2
+                  uy1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !3
+                  uz1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !4
+                  NL                                                    !+1
+          endif
           close(iounit)
        endif
        if (rankprobesP(i)) then
           write(filename,"('./probes/probeP',I4.4)") i
           open(newunit=iounit,file=trim(filename),status='unknown',form='formatted'&
                ,access='direct',recl=FSP)
-          write(iounit,fileformatP,rec=itime) t,&                         !1
-               pp3(nxprobesP(i),nyprobesP(i),nzprobesP(i),1),&            !2
-               NL                                                    !+1
+          write(iounit,fileformatP,rec=itime-main_probes_offset) t,&    !1
+               pp3(nxprobesP(i),nyprobesP(i),nzprobesP(i),1),&          !2
+               NL                                                       !+1
           close(iounit)
        endif
     enddo
 
+    ! Monitor gradients
+    if (flag_extra_probes) then
+       call write_extra_probes()
+    endif
+
   end subroutine write_probes
 
+  !############################################################################
+  !
+  ! This subroutine is used to monitor velocity gradient
+  !
+  subroutine write_extra_probes_vel(duxdx, duxdy, duxdz, duydx, duydy, duydz, duzdx, duzdy, duzdz)
+
+    ! Arguments
+    real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: duxdx, duydx, duzdx
+    real(mytype),intent(in),dimension(ystart(1):yend(1),ystart(2):yend(2),ystart(3):yend(3)) :: duxdy, duydy, duzdy
+    real(mytype),intent(in),dimension(zstart(1):zend(1),zstart(2):zend(2),zstart(3):zend(3)) :: duxdz, duydz, duzdz
+
+    ! Local variables
+    integer :: i
+
+    do i = 1, nprobes
+       if (rankprobes(i)) then
+          dfdx(i,1) = duxdx(nxprobes(i),nyprobes(i),nzprobes(i))
+          dfdx(i,2) = duydx(nxprobes(i),nyprobes(i),nzprobes(i))
+          dfdx(i,3) = duzdx(nxprobes(i),nyprobes(i),nzprobes(i))
+       endif
+       if (rankprobesY(i)) then
+          dfdy(i,1) = duxdy(nxprobes(i),nyprobes(i),nzprobes(i))
+          dfdy(i,2) = duydy(nxprobes(i),nyprobes(i),nzprobes(i))
+          dfdy(i,3) = duzdy(nxprobes(i),nyprobes(i),nzprobes(i))
+       endif
+       if (rankprobesZ(i)) then
+          dfdz(i,1) = duxdz(nxprobes(i),nyprobes(i),nzprobes(i))
+          dfdz(i,2) = duydz(nxprobes(i),nyprobes(i),nzprobes(i))
+          dfdz(i,3) = duzdz(nxprobes(i),nyprobes(i),nzprobes(i))
+       endif
+    enddo
+
+  end subroutine write_extra_probes_vel
+
+  !############################################################################
+  !
+  ! This subroutine is used to monitor scalar(s) gradient
+  !
+  subroutine write_extra_probes_scal(is, dphidx, dphidy, dphidz)
+
+    use variables, only : numscalar
+
+    ! Arguments
+    integer, intent(in) :: is
+    real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: dphidx
+    real(mytype),intent(in),dimension(ystart(1):yend(1),ystart(2):yend(2),ystart(3):yend(3)) :: dphidy
+    real(mytype),intent(in),dimension(zstart(1):zend(1),zstart(2):zend(2),zstart(3):zend(3)) :: dphidz
+
+    ! Local variables
+    integer :: i
+
+    do i = 1, nprobes
+       if (rankprobes(i)) then
+          dfdx(i,3+is) = dphidx(nxprobes(i),nyprobes(i),nzprobes(i))
+       endif
+       if (rankprobesY(i)) then                                                                       
+          dfdy(i,3+is) = dphidy(nxprobes(i),nyprobes(i),nzprobes(i))
+       endif
+       if (rankprobesZ(i)) then                                                                       
+          dfdz(i,3+is) = dphidz(nxprobes(i),nyprobes(i),nzprobes(i))
+       endif
+    enddo
+
+  end subroutine write_extra_probes_scal
+
+  !############################################################################
+  !
+  ! This subroutine is used to monitor the pressure gradient
+  !
+  subroutine write_extra_probes_pre(dpdx, dpdy, dpdz)
+
+    use param, only : one, gdt, itimescheme
+    use variables, only : numscalar
+
+    ! Arguments
+    real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: dpdx, dpdy, dpdz
+
+    ! Local variables
+    integer :: i
+    real(mytype) :: fact
+
+    ! Explicit Euler, AB2, AB3, AB4, RK3
+    if (itimescheme.ge.1 .and. itimescheme.le.5) then
+       fact = one / gdt(3)
+    ! RK4
+    elseif (itimescheme.eq.6) then
+       fact = one / gdt(5)
+    else
+       ! We should not be here
+       fact = one
+    endif
+
+    do i = 1, nprobes
+       if (rankprobes(i)) then
+          dfdx(i,3+numscalar+1) = dpdx(nxprobes(i),nyprobes(i),nzprobes(i)) * fact
+          dfdx(i,3+numscalar+2) = dpdy(nxprobes(i),nyprobes(i),nzprobes(i)) * fact
+          dfdx(i,3+numscalar+3) = dpdz(nxprobes(i),nyprobes(i),nzprobes(i)) * fact
+       endif
+    enddo
+
+  end subroutine write_extra_probes_pre
+
+  !############################################################################
+  !
+  ! This subroutine performs IO.
+  ! Gradients are recorded at the beginning of each time step when itr = 1.
+  !
+  subroutine write_extra_probes()
+
+    use param, only : itime, t, dt
+    use variables, only : numscalar
+
+    integer :: iounit, i, FSX, FSY, FSZ
+    character(len=100) :: fileformatX, fileformatY, fileformatZ
+    character(len=1),parameter :: NL=char(10) !new line character
+    character(len=30) :: filename
+
+    ! Number of columns
+    FSX = 1+3+numscalar+3
+    FSY = 1+3+numscalar
+    FSZ = 1+3+numscalar
+    write(fileformatX, '( "(",I4,"(E14.6),A)" )' ) FSX
+    write(fileformatY, '( "(",I4,"(E14.6),A)" )' ) FSY
+    write(fileformatZ, '( "(",I4,"(E14.6),A)" )' ) FSZ
+    FSX = 14*FSX+1
+    FSY = 14*FSY+1
+    FSZ = 14*FSZ+1
+
+    do i = 1, nprobes
+      if (rankprobes(i)) then
+        write(filename,"('./probes/probe_dx_',I4.4)") i
+        open(newunit=iounit,file=trim(filename),status='unknown',form='formatted'&
+             ,access='direct',recl=FSX)
+        write(iounit,fileformatX,rec=itime-extra_probes_offset) t - dt, dfdx(i,:), NL
+        close(iounit)
+      endif
+      if (rankprobesY(i)) then
+        write(filename,"('./probes/probe_dy_',I4.4)") i
+        open(newunit=iounit,file=trim(filename),status='unknown',form='formatted'&
+             ,access='direct',recl=FSY)
+        write(iounit,fileformatY,rec=itime-extra_probes_offset) t - dt, dfdy(i,:), NL
+        close(iounit)
+      endif
+      if (rankprobesZ(i)) then
+        write(filename,"('./probes/probe_dz_',I4.4)") i
+        open(newunit=iounit,file=trim(filename),status='unknown',form='formatted'&
+             ,access='direct',recl=FSZ)
+        write(iounit,fileformatZ,rec=itime-extra_probes_offset) t - dt, dfdz(i,:), NL
+        close(iounit)
+      endif
+    enddo
+
+  end subroutine write_extra_probes
+
+  !############################################################################
   subroutine log_probes_position()
 
     use param, only : xlx, zlz, dx, dz, half
@@ -262,5 +499,25 @@ contains
     close(iounit)
 
   end subroutine log_probes_position
+
+  !############################################################################
+  !
+  ! Free allocated memory at the end of the simulation
+  !
+  subroutine finalize_probes()
+
+    if (nprobes.le.0) return
+
+    deallocate(nxprobes, nyprobes, nzprobes)
+    deallocate(rankprobes, rankprobesY, rankprobesZ)
+    deallocate(nxprobesP, nyprobesP, nzprobesP)
+    deallocate(rankprobesP)
+    if (flag_extra_probes) then
+      deallocate(dfdx)
+      deallocate(dfdy)
+      deallocate(dfdz)
+    endif
+
+  end subroutine finalize_probes
 
 end module probes
