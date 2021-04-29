@@ -799,7 +799,7 @@ contains
 
     IMPLICIT NONE
 
-    INTEGER :: is
+    INTEGER :: is, tmp
 
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
@@ -845,9 +845,10 @@ contains
 
        !!------------------------------------------------------------------------------
        !! Y-pencil
-       iimplicit = -iimplicit
+       tmp = iimplicit
+       iimplicit = 0
        CALL deryy (tc2, ta2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
-       iimplicit = -iimplicit
+       iimplicit = tmp
        IF (imultispecies) THEN
           tc2(:,:,:) = (xnu / prandtl) * tc2(:,:,:) / ta2(:,:,:)
 
@@ -862,9 +863,10 @@ contains
 
           DO is = 1, numscalar
              IF (massfrac(is)) THEN
-                iimplicit = -iimplicit
+                tmp = iimplicit
+                iimplicit = 0
                 CALL deryy (td2, phi2(:,:,:,is), di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
-                iimplicit = -iimplicit
+                iimplicit = tmp
                 tc2(:,:,:) = tc2(:,:,:) + (xnu / sc(is)) * (te2(:,:,:) / mol_weight(is)) * td2(:,:,:)
              ENDIF
           ENDDO
