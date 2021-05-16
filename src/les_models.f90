@@ -894,7 +894,6 @@ contains
     integer :: i, j, k
     character(len = 30) :: filename
 
-
     ! INFO about the auxillary arrays
     !--------------------------------------------------------
     ! gxx= dux/dx; gyx=duy/dx; gzx=duz/dx;

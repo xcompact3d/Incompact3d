@@ -11,12 +11,10 @@ contains
     implicit none
     integer :: i,j,k,nlock
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,px,py,pz
-
     if (nz == 1) then
        print *, "2D currently unsupported - see ibm.f90"
        stop
     endif
-
     if (nlock == 1) then
        if (nz > 1) then
           do k = 1, xsize(3)
