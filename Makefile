@@ -148,7 +148,7 @@ $(SRCDIR)/parameters.o: $(SRCDIR)/BC-Lock-exchange.o
 $(SRCDIR)/poisson.o: $(SRCDIR)/variables.o
 $(SRCDIR)/probes.o: $(SRCDIR)/variables.o
 $(SRCDIR)/schemes.o: $(SRCDIR)/implicit.o
-$(SRCDIR)/statistics.o: $(SRCDIR)/variables.o
+$(SRCDIR)/statistics.o: $(SRCDIR)/variables.o $(SRCDIR)/tools.o
 $(SRCDIR)/time_integrators.o: $(SRCDIR)/implicit.o $(SRCDIR)/navier.o
 $(SRCDIR)/tools.o: $(SRCDIR)/navier.o
 $(SRCDIR)/transeq.o: $(SRCDIR)/case.o $(SRCDIR)/les_models.o $(SRCDIR)/probes.o

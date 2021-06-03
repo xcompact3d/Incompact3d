@@ -39,12 +39,45 @@ module stats
 
 contains
 
+  subroutine init_statistic
+
+    use param, only : zero, iscalar
+    use var, only : tmean
+    use var, only : pmean
+    use var, only : umean, uumean
+    use var, only : vmean, vvmean
+    use var, only : wmean, wwmean
+    use var, only : uvmean, uwmean
+    use var, only : vwmean
+    use var, only : phimean, phiphimean
+
+    implicit none
+
+    tmean = zero
+    pmean = zero
+    umean = zero
+    uumean = zero
+    vmean = zero
+    vvmean = zero
+    wmean = zero
+    wwmean = zero
+    uvmean = zero
+    uwmean = zero
+    vwmean = zero
+    if (iscalar==1) then
+      phimean = zero
+      phiphimean = zero
+    endif
+
+  end subroutine init_statistic
+
   subroutine overall_statistic(ux1,uy1,uz1,phi1,pp3,ep1)
 
     use param
     use variables
     use decomp_2d
     use decomp_2d_io
+    use tools, only : rescale_pressure
 
     use var, only : nxmsize, nymsize, nzmsize
     use var, only : ppi3, dip3
@@ -72,6 +105,8 @@ contains
 
     if (itime.lt.initstat) then
        return
+    elseif (itime.eq.initstat) then
+       call init_statistic()
     endif
 
     !! Mean pressure
@@ -86,6 +121,8 @@ contains
     call transpose_y_to_x(ppi2,pp1,ph2) !nxm ny nz
     call interxpv(ta1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
          nxmsize,xsize(1),xsize(2),xsize(3),1)
+    ! Convert to physical pressure
+    call rescale_pressure(ta1)
     call update_average_scalar(pmean, ta1, ep1)
 
     !! Mean velocity
@@ -185,6 +222,7 @@ contains
   subroutine update_average_scalar(um, ux, ep)
 
     use decomp_2d, only : mytype, xsize, xstS, xenS, fine_to_coarseS
+    use param, only : itime, initstat
     use var, only : di1, tmean
 
     implicit none
@@ -195,7 +233,7 @@ contains
 
     di1 = one_minus_ep1(ux, ep)
     call fine_to_coarseS(1, di1, tmean)
-    um = um + tmean
+    um = um + (tmean - um) / real(itime-initstat+1, kind=mytype)
 
   end subroutine update_average_scalar
 
