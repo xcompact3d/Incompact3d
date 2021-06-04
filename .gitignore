@@ -1,6 +1,7 @@
 *.out
 *.o
 *.mod
+*.smod
 *.xdmf
 .#*
 *.jpg

@@ -335,7 +335,7 @@ contains
     character(len=80) :: config_file="adios2_config.xml"
 
     !! TODO: make this a runtime-option
-    adios2_debug_mode = .false.
+    adios2_debug_mode = .true.
 
     call adios2_init(adios, trim(config_file), MPI_COMM_WORLD, adios2_debug_mode, ierror)
     if (ierror.ne.0) then
