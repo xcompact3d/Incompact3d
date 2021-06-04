@@ -6,6 +6,7 @@
 ! three-dimensional Fast Fourier Transform (FFT).
 !
 ! Copyright (C) 2009-2012 Ning Li, the Numerical Algorithms Group (NAG)
+! Copyright (C) 2021               the University of Edinburgh (UoE)
 !
 !=======================================================================
 
@@ -14,7 +15,10 @@
 module decomp_2d
 
   use MPI
-
+#ifdef ADIOS2
+  use adios2
+#endif
+  
   implicit none
 
   private        ! Make everything private unless declared public
@@ -155,6 +159,11 @@ module decomp_2d
   integer, save :: iskipV, jskipV, kskipV
   integer, save :: iskipP, jskipP, kskipP
 
+  !!===================================================================
+  !! ADIOS2 handles etc.
+#ifdef ADIOS2
+  type(adios2_adios) :: adios
+#endif
 
   ! public user routines
   public :: decomp_2d_init, decomp_2d_finalize, &
@@ -306,6 +315,10 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine decomp_2d_init(nx,ny,nz,p_row,p_col,periodic_bc)
 
+#ifdef ADIOS2
+    use adios2
+#endif
+    
     implicit none
 
     integer, intent(IN) :: nx,ny,nz,p_row,p_col
@@ -315,6 +328,20 @@ contains
 
 #ifdef SHM_DEBUG
     character(len=80) fname
+#endif
+
+#ifdef ADIOS2
+    logical :: adios2_debug_mode
+    character(len=80) :: config_file="adios2_config.xml"
+
+    !! TODO: make this a runtime-option
+    adios2_debug_mode = .false.
+
+    call adios2_init(adios, trim(config_file), MPI_COMM_WORLD, adios2_debug_mode, ierror)
+    if (ierror.ne.0) then
+       print *, "Error initialising ADIOS2 - is adios2_config.xml present and valid?"
+       call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
+    endif
 #endif
 
     nx_global = nx
@@ -467,13 +494,25 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine decomp_2d_finalize
 
+#ifdef ADIOS2
+    use adios2
+#endif
+    
     implicit none
 
+#ifdef ADIOS2
+    integer :: ierr
+#endif
+    
     call decomp_info_finalize(decomp_main)
 
     decomp_buf_size = 0
     deallocate(work1_r, work2_r, work1_c, work2_c)
 
+#ifdef ADIOS2
+    call adios2_finalize(adios, ierr)
+#endif
+    
     return
   end subroutine decomp_2d_finalize
 
