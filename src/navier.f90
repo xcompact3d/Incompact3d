@@ -105,6 +105,7 @@ contains
              CALL calc_varcoeff_rhs(pp3(:,:,:,1), rho1, px1, py1, pz1, dv3, drho1, ep1, divu3, rho0, &
                   poissiter)
           ENDIF
+
        ENDIF
 
        IF (.NOT.converged) THEN
@@ -1121,7 +1122,7 @@ contains
 
     IF (poissiter.EQ.0) THEN
        !! Compute rho0
-       rhomin = MINVAL(rho1)
+       rhomin = MINVAL(rho1(:,:,:,1))
 
        CALL MPI_ALLREDUCE(rhomin,rho0,1,real_type,MPI_MIN,MPI_COMM_WORLD,ierr)
     ENDIF
