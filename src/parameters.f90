@@ -169,6 +169,12 @@ subroutine parameter(input_i3d)
   endif
 
   if (ilmn) then
+     if (istret.ne.0) then
+        if (nrank.eq.0) then
+           print *, "WARNING: LMN solver does not currently support stretching!"
+           stop
+        endif
+     endif
      read(10, nml=LMN); rewind(10)
 
      do is = 1, numscalar
