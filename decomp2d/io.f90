@@ -6,6 +6,7 @@
 ! three-dimensional Fast Fourier Transform (FFT).
 !
 ! Copyright (C) 2009-2013 Ning Li, the Numerical Algorithms Group (NAG)
+! Copyright (C) 2021               the University of Edinburgh (UoE)
 !
 !=======================================================================
 
@@ -18,6 +19,10 @@ module decomp_2d_io
   use MPI
 #ifdef T3PIO
   use t3pio
+#endif
+
+#ifdef ADIOS2
+  use adios2
 #endif
 
   implicit none
@@ -110,6 +115,11 @@ contains
     integer(kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
     integer :: ierror, newtype, fh, data_type, info, gs
+#ifdef ADIOS2
+    type(adios2_variable) :: var_handle
+    integer, parameter :: ndims = 3
+    logical, parameter :: adios2_constant_dims = .true.
+#endif
 
     data_type = real_type
 
@@ -132,6 +142,11 @@ contains
     integer(kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
     integer :: ierror, newtype, fh, data_type, info, gs
+#ifdef ADIOS2
+    type(adios2_variable) :: var_handle
+    integer, parameter :: ndims = 3
+    logical, parameter :: adios2_constant_dims = .true.
+#endif
 
     data_type = complex_type
 
@@ -737,6 +752,12 @@ contains
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
     integer :: i,j,k, ierror, newtype, fh
+#ifdef ADIOS2
+    type(adios2_variable) :: var_handle
+    integer, parameter :: ndims = 3
+    logical, parameter :: adios2_constant_dims = .true.
+    integer :: data_type
+#endif
 
     if (icoarse==1) then
        sizes(1) = xszS(1)
@@ -798,6 +819,8 @@ contains
 
     allocate (varsingle(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
     varsingle=var
+#ifndef ADIOS2
+    !! Original writers
     call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
          MPI_ORDER_FORTRAN, real_type_single, newtype, ierror)
     call MPI_TYPE_COMMIT(newtype,ierror)
@@ -814,6 +837,33 @@ contains
          real_type_single, MPI_STATUS_IGNORE, ierror)
     call MPI_FILE_CLOSE(fh,ierror)
     call MPI_TYPE_FREE(newtype,ierror)
+#else
+    !! ADIOS2
+
+    ! Check if variable already exists, if not create it
+    call adios2_inquire_variable(var_handle, io_write_real_coarse, filename, ierror)
+    if (.not.var_handle%valid) then
+       !! New variable
+   
+       ! Need to set the ADIOS2 data type
+       if (mytype_single.eq.kind(0.0d0)) then
+          !! Double
+          data_type = adios2_type_dp
+       else if (mytype_single.eq.kind(0.0)) then
+          !! Single
+          data_type = adios2_type_real
+       else
+          print *, "Trying to write unknown data type!"
+          call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
+       endif
+
+       call adios2_define_variable(var_handle, io_write_real_coarse, filename, data_type, &
+            ndims, int(sizes, kind=8), int(starts, kind=8) + 1, int(subsizes, kind=8), &
+            adios2_constant_dims, ierror)
+    endif
+
+    call adios2_put(engine_write_real_coarse, var_handle, varsingle, ierror)
+#endif
     deallocate(varsingle)
 
     return
@@ -835,7 +885,6 @@ contains
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(4) :: sizes, subsizes, starts
     integer :: i,j,k, ierror, newtype, fh
-
 
     sizes(1) = xszP(1)
     sizes(2) = yszP(2)

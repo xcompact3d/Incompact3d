@@ -79,6 +79,27 @@ contains
   end subroutine visu_init
   !############################################################################
   !############################################################################
+  function gen_filename(varname, itime) result(filename)
+    !! Generate a filename for the variable being written
+
+    use param, only : ioutput
+    
+    implicit none
+
+    character(*), intent(in) :: varname
+    integer, intent(in) :: itime
+    
+    character(len=80) :: filename
+
+#ifndef ADIOS2
+    write(filename, '( A,A,I5.5)') "./data/", varname, itime / ioutput
+#else
+    !! Using ADIOS2 IO - ADIOS2 has a concept of "steps", no need to explicitly say which step we're
+    !! on
+    filename = varname
+#endif
+  endfunction gen_filename
+  
   subroutine write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime)
 
     use decomp_2d, only : transpose_x_to_y, transpose_y_to_z, transpose_z_to_y, transpose_y_to_x
@@ -86,6 +107,10 @@ contains
     use decomp_2d, only : nrank
     use decomp_2d, only : fine_to_coarsev
     use decomp_2d_io, only : decomp_2d_write_one
+#ifdef ADIOS2
+    use adios2
+    use decomp_2d, only : io_write_real_coarse, engine_write_real_coarse
+#endif
 
     use param, only : ivisu, ioutput, nrhotime, ilmn, iscalar, iibm, istret
     use param, only : xlx, yly, zlz
@@ -111,8 +136,6 @@ contains
 
     implicit none
 
-    character(len=80) :: filename
-
     !! inputs
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: ux1, uy1, uz1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: ep1
@@ -121,14 +144,23 @@ contains
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar), intent(in) :: phi1
     integer, intent(in) :: itime
 
+    character(len=80) :: filename
+    
     integer :: is
     character(len=32) :: fmt2,fmt3,fmt4
     real :: tstart, tend
+    integer :: ierr
+    integer(kind=8) :: curs
     !###################################################################
     if (nrank.eq.0) then
       call cpu_time(tstart)
       print *,'Writing snapshots =>',itime/ioutput
-    end if
+   end if
+#ifdef ADIOS2
+   call adios2_begin_step(engine_write_real_coarse, adios2_step_mode_append, ierr)
+   call adios2_current_step(curs, engine_write_real_coarse, ierr)
+   print *, "Step ", curs
+#endif
     !###################################################################
     !! Write velocity
     !###################################################################
@@ -139,10 +171,7 @@ contains
       ta1(:,:,:) = ux1(:,:,:)
     endif
     call fine_to_coarseV(1,ta1,uvisu)
-990  format('./data/ux',I5.5)
-    write(filename, 990) itime/ioutput
-    call decomp_2d_write_one(1,uvisu,filename,2)
-
+    call decomp_2d_write_one(1,uvisu,gen_filename("ux", itime),2)
     uvisu=0.
     if (iibm==2) then
       ta1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:)
@@ -150,9 +179,7 @@ contains
       ta1(:,:,:) = uy1(:,:,:)
     endif
     call fine_to_coarseV(1,ta1,uvisu)
-991  format('./data/uy',I5.5)
-    write(filename, 991) itime/ioutput
-    call decomp_2d_write_one(1,uvisu,filename,2)
+    call decomp_2d_write_one(1,uvisu,gen_filename("uy", itime),2)
 
     uvisu=0.
     if (iibm==2) then
@@ -161,9 +188,7 @@ contains
       ta1(:,:,:) = uz1(:,:,:)
     endif
     call fine_to_coarseV(1,ta1,uvisu)
-992  format('./data/uz',I5.5)
-    write(filename, 992) itime/ioutput
-    call decomp_2d_write_one(1,uvisu,filename,2)
+    call decomp_2d_write_one(1,uvisu,gen_filename("uz", itime),2)
     !###################################################################
     !! Write pressure
     !###################################################################
@@ -186,31 +211,30 @@ contains
     call rescale_pressure(ta1)
 
     call fine_to_coarseV(1,ta1,uvisu)
-993  format('./data/pp',I5.5)
-    write(filename, 993) itime/ioutput
-    call decomp_2d_write_one(1,uvisu,filename,2)
+    call decomp_2d_write_one(1,uvisu,gen_filename("pp", itime),2)
     !###################################################################
     !! LMN - write out density
     !###################################################################
     if (ilmn) then
       uvisu=0.
       call fine_to_coarsev(1,rho1(:,:,:,1),uvisu)
-995     format('./data/rho',I5.5)
-      write(filename, 995) itime/ioutput
-      call decomp_2d_write_one(1,uvisu,filename,2)
+      call decomp_2d_write_one(1,uvisu,gen_filename("rho", itime),2)
     endif
     !###################################################################
     !! Scalars
     !###################################################################
     if (iscalar.ne.0) then
-996     format('./data/phi',i1.1,I5.5)
-      do is = 1, numscalar
-        uvisu=0.
+       do is = 1, numscalar
+        uvisu=0
         call fine_to_coarsev(1,phi1(:,:,:,is),uvisu)
-        write(filename, 996) is, itime/ioutput
-        call decomp_2d_write_one(1,uvisu,filename,2)
+        write(filename, '( A, I1.1 )') "phi", is
+        call decomp_2d_write_one(1,uvisu,gen_filename(filename, itime),2)
       enddo
     endif
+
+#ifdef ADIOS2
+    call adios2_end_step(engine_write_real_coarse, ierr)
+#endif
 
     !###################################################################
     ! Write ini-file

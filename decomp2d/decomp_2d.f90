@@ -163,6 +163,8 @@ module decomp_2d
   !! ADIOS2 handles etc.
 #ifdef ADIOS2
   type(adios2_adios) :: adios
+  type(adios2_io) :: io_write_one, io_write_real_coarse
+  type(adios2_engine) :: engine_write_one, engine_write_real_coarse
 #endif
 
   ! public user routines
@@ -184,6 +186,9 @@ module decomp_2d
        update_halo, decomp_2d_abort, &
        get_decomp_info
 
+#ifdef ADIOS2
+  public :: adios, io_write_one, io_write_real_coarse, engine_write_one, engine_write_real_coarse
+#endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! These are routines to perform global data transpositions
@@ -342,6 +347,8 @@ contains
        print *, "Error initialising ADIOS2 - is adios2_config.xml present and valid?"
        call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
     endif
+    call adios2_declare_io(io_write_real_coarse, adios, "solution-io", ierror)
+    call adios2_open(engine_write_real_coarse, io_write_real_coarse, "data", adios2_mode_write, ierror)
 #endif
 
     nx_global = nx
@@ -510,6 +517,7 @@ contains
     deallocate(work1_r, work2_r, work1_c, work2_c)
 
 #ifdef ADIOS2
+    call adios2_close(engine_write_real_coarse, ierr)
     call adios2_finalize(adios, ierr)
 #endif
     
