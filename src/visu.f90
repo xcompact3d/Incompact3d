@@ -34,19 +34,20 @@ module visu
   implicit none
 
   ! True to activate the XDMF output
-  logical :: use_xdmf = .true.
-  ! Set to 0 to use the new 
-  integer :: filenamedigits = 0
-  ! Set to 0 for 3D output
+  logical, save :: use_xdmf = .true.
+  ! True to use the new enumeration
+  logical, save :: filenamedigits = .true.
+  ! output2D is defined in the input.i3d file
+  !        0 for 3D output (default)
   !        1 for 2D output with X average
   !        2 for 2D output with Y average
   !        3 for 2D output with Z average
-  integer, parameter :: output2D = 0
+  integer, save :: output2D
   integer :: ioxdmf
   character(len=9) :: ifilenameformat = '(I9.9)'
 
   private
-  public :: visu_init, write_snapshot
+  public :: output2D, visu_init, write_snapshot
 
 contains
 
@@ -163,7 +164,7 @@ contains
     end if
 
     ! Snapshot number
-    if (filenamedigits .eq. 0) then
+    if (filenamedigits) then
       ! New enumeration system, it works integrated with xcompact3d_toolbox
       write(num, ifilenameformat) itime
     else

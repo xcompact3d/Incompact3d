@@ -275,7 +275,7 @@ contains
       enddo
     endif
 
-    if ((ivisu.ne.zero).and.(mod(itime, ioutput).eq.0)) then
+    if ((ivisu.ne.0).and.(mod(itime, ioutput).eq.0)) then
       call write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime)
     end if
 

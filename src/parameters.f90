@@ -48,7 +48,7 @@ subroutine parameter(input_i3d)
   use ibm_param
 
   use lockexch, only : pfront
-
+  use visu, only : output2D
   use forces, only : iforces, nvol, xld, xrd, yld, yud
 
   implicit none
@@ -69,7 +69,7 @@ subroutine parameter(input_i3d)
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, iimplicit, &
        nu0nu, cnu, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu, iprocessing, &
-       ninflows, ntimesteps, inflowpath, ioutflow
+       ninflows, ntimesteps, inflowpath, ioutflow, output2D
   NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat
   NAMELIST /ScalarParam/ sc, ri, uset, cp, &
        nclxS1, nclxSn, nclyS1, nclySn, nclzS1, nclzSn, &
@@ -579,6 +579,7 @@ subroutine parameter_defaults()
   use decomp_2d
   use complex_geometry
 
+  use visu, only : output2D
   use forces, only : iforces, nvol
 
   implicit none
@@ -679,6 +680,7 @@ subroutine parameter_defaults()
   ntimesteps=1
   inflowpath='./'
   ioutflow=0
+  output2D = 0
 
   save_ux = 0
   save_uy = 0
