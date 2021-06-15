@@ -95,7 +95,8 @@ contains
     write(filename, '( A,A,I5.5)') "./data/", varname, itime / ioutput
 #else
     !! Using ADIOS2 IO - ADIOS2 has a concept of "steps", no need to explicitly say which step we're
-    !! on
+    !! on, also the ADIOS2 engine writes into ./data - so we just need the name of the variable as
+    !! our filename.
     filename = varname
 #endif
   endfunction gen_filename

@@ -338,6 +338,7 @@ contains
 #ifdef ADIOS2
     logical :: adios2_debug_mode
     character(len=80) :: config_file="adios2_config.xml"
+    character(len=80) :: outfile
 
     !! TODO: make this a runtime-option
     adios2_debug_mode = .true.
@@ -348,7 +349,15 @@ contains
        call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
     endif
     call adios2_declare_io(io_write_real_coarse, adios, "solution-io", ierror)
-    call adios2_open(engine_write_real_coarse, io_write_real_coarse, "data", adios2_mode_write, ierror)
+    if (io_write_real_coarse % engine_type.eq."BP4") then
+       write(outfile, *) "data.bp4"
+    else if (io_write_real_coarse % engine_type.eq."HDF5") then
+       write(outfile, *) "data.hdf5"
+    else
+       print *, "Unknown engine!"
+       call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
+    endif
+    call adios2_open(engine_write_real_coarse, io_write_real_coarse, trim(outfile), adios2_mode_write, ierror)
 #endif
 
     nx_global = nx

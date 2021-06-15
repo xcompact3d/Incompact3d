@@ -25,3 +25,5 @@ lint.txt
 \#*\#
 *.log
 docs/_build/
+*.bp4
+*.hdf5
