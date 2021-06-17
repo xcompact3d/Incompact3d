@@ -26,7 +26,7 @@ else ifeq ($(CMP),gcc)
 CC = mpicc
 FC = mpif90
 #FFLAGS = -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -x f95-cpp-input
-FFLAGS = -cpp -O0 -funroll-loops -floop-optimize -g -fno-inline -finstrument-functions -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none -msse4.1 -msse4.2 -mavx2
+FFLAGS = -cpp -O0 -funroll-loops -floop-optimize -g -fno-inline -finstrument-functions -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none -fallow-argument-mismatch -msse4.1 -msse4.2 -mavx2
 #-ffpe-trap=invalid,zero
 else ifeq ($(CMP),nagfor)
 FC = mpinagfor
@@ -144,7 +144,7 @@ $(SRCDIR)/implicit.o: $(SRCDIR)/variables.o
 $(SRCDIR)/les_models.o: $(SRCDIR)/BC-ABL.o $(SRCDIR)/tools.o
 $(SRCDIR)/module_param.o: $(DECOMPDIR)/decomp_2d.o
 $(SRCDIR)/navier.o: $(SRCDIR)/BC-TBL.o
-$(SRCDIR)/parameters.o: $(SRCDIR)/BC-Lock-exchange.o
+$(SRCDIR)/parameters.o: $(SRCDIR)/BC-Lock-exchange.o $(SRCDIR)/visu.o
 $(SRCDIR)/poisson.o: $(SRCDIR)/variables.o
 $(SRCDIR)/probes.o: $(SRCDIR)/variables.o
 $(SRCDIR)/schemes.o: $(SRCDIR)/implicit.o
