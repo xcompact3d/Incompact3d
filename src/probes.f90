@@ -277,11 +277,11 @@ contains
     ! Number of columns
     FS = 1+3+numscalar
     FSP = 1+1 ! Pressure grid
-    write(fileformat, '( "(",I4,"(E14.6),A)" )' ) FS
-    write(fileformatP, '( "(",I4,"(E14.6),A)" )' ) FSP
+    write(fileformat, '( "(",I4,"(E24.6),A)" )' ) FS
+    write(fileformatP, '( "(",I4,"(E24.6),A)" )' ) FSP
     ! Line width
-    FS = FS*14+1
-    FSP = FSP*14+1
+    FS = FS*24+1
+    FSP = FSP*24+1
 
     do i=1, nprobes
        if (rankprobes(i)) then
@@ -443,12 +443,12 @@ contains
     FSX = 1+3+numscalar+3
     FSY = 1+3+numscalar
     FSZ = 1+3+numscalar
-    write(fileformatX, '( "(",I4,"(E14.6),A)" )' ) FSX
-    write(fileformatY, '( "(",I4,"(E14.6),A)" )' ) FSY
-    write(fileformatZ, '( "(",I4,"(E14.6),A)" )' ) FSZ
-    FSX = 14*FSX+1
-    FSY = 14*FSY+1
-    FSZ = 14*FSZ+1
+    write(fileformatX, '( "(",I4,"(E24.6),A)" )' ) FSX
+    write(fileformatY, '( "(",I4,"(E24.6),A)" )' ) FSY
+    write(fileformatZ, '( "(",I4,"(E24.6),A)" )' ) FSZ
+    FSX = 24*FSX+1
+    FSY = 24*FSY+1
+    FSZ = 24*FSZ+1
 
     do i = 1, nprobes
       if (rankprobes(i)) then
