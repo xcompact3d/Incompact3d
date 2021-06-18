@@ -809,7 +809,7 @@ contains
     if (itimescheme <= 5) then
        pre1 = pre1 / gdt(3)
     ! RK4
-    else then
+    else
        pre1 = pre1 / gdt(5)
     endif
 
