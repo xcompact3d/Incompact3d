@@ -264,7 +264,7 @@ contains
       T=phi1
     endif
 
-    if ((ivisu.ne.zero).and.(mod(itime, ioutput).eq.0)) then
+    if ((ivisu.ne.0).and.(mod(itime, ioutput).eq.0)) then
       call write_snapshot(rho1, ux1, uy1, uz1, pp3, T, ep1, itime)
     end if
 
