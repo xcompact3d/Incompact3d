@@ -51,6 +51,7 @@ subroutine parameter(input_i3d)
 
   use lockexch, only : pfront
 
+  use probes, only : nprobes, setup_probes, flag_all_digits, flag_extra_probes, xyzprobes
   use forces, only : iforces, nvol, xld, xrd, yld, yud
 
   implicit none
@@ -72,8 +73,9 @@ subroutine parameter(input_i3d)
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, iimplicit, &
        nu0nu, cnu, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu, iprocessing, &
-       ninflows, ntimesteps, inflowpath, ioutflow
+       ninflows, ntimesteps, inflowpath, ioutflow, nprobes
   NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat
+  NAMELIST /ProbesParam/ flag_all_digits, flag_extra_probes, xyzprobes
   NAMELIST /ScalarParam/ sc, ri, uset, cp, &
        nclxS1, nclxSn, nclyS1, nclySn, nclzS1, nclzSn, &
        scalar_lbound, scalar_ubound, sc_even, sc_skew, &
@@ -125,7 +127,10 @@ subroutine parameter(input_i3d)
   if (iibm.ne.0) then
      read(10, nml=ibmstuff); rewind(10)
   endif
-
+  if (nprobes.gt.0) then
+     call setup_probes()
+     read(10, nml=ProbesParam); rewind(10)
+  endif
   if (iforces.eq.1) then
      allocate(xld(nvol), xrd(nvol), yld(nvol), yud(nvol))
      read(10, nml=ForceCVs); rewind(10)
@@ -555,6 +560,7 @@ subroutine parameter_defaults()
   use decomp_2d
   use complex_geometry
 
+  use probes, only : nprobes, flag_all_digits, flag_extra_probes
   use forces, only : iforces, nvol
 
   implicit none
@@ -655,6 +661,11 @@ subroutine parameter_defaults()
   ntimesteps=1
   inflowpath='./'
   ioutflow=0
+  nprobes=0
+
+  !! PROBES
+  flag_all_digits = .false.
+  flag_extra_probes = .false.
 
   save_ux = 0
   save_uy = 0

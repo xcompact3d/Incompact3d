@@ -219,7 +219,7 @@ subroutine init_xcompact3d()
 
   call calc_divu_constraint(divu3, rho1, phi1)
 
-  call init_probes(ep1)
+  call init_probes()
 
   if (iturbine.ne.0) call init_turbines(ux1, uy1, uz1)
 

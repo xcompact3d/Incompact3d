@@ -103,7 +103,6 @@ contains
     use les, only : compute_SGS
 
     use case, only : momentum_forcing
-    use probes, only : flag_extra_probes, write_extra_probes_vel, write_extra_probes_pre
 
     implicit none
 
@@ -725,7 +724,6 @@ contains
     use variables
     use decomp_2d
     use case, only : scalar_forcing
-    use probes, only : flag_extra_probes, write_extra_probes_scal
 
     use var, only : ta1,tb1,tc1,di1
     use var, only : rho2,uy2,ta2,tb2,tc2,td2,te2,di2
