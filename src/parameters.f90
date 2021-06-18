@@ -52,6 +52,7 @@ subroutine parameter(input_i3d)
   use lockexch, only : pfront
 
   use probes, only : nprobes, setup_probes, flag_all_digits, flag_extra_probes, xyzprobes
+  use visu, only : output2D
   use forces, only : iforces, nvol, xld, xrd, yld, yud
 
   implicit none
@@ -73,7 +74,7 @@ subroutine parameter(input_i3d)
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, iimplicit, &
        nu0nu, cnu, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu, iprocessing, &
-       ninflows, ntimesteps, inflowpath, ioutflow, nprobes
+       ninflows, ntimesteps, inflowpath, ioutflow, output2D, nprobes
   NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat
   NAMELIST /ProbesParam/ flag_all_digits, flag_extra_probes, xyzprobes
   NAMELIST /ScalarParam/ sc, ri, uset, cp, &
@@ -561,6 +562,7 @@ subroutine parameter_defaults()
   use complex_geometry
 
   use probes, only : nprobes, flag_all_digits, flag_extra_probes
+  use visu, only : output2D
   use forces, only : iforces, nvol
 
   implicit none
@@ -661,6 +663,7 @@ subroutine parameter_defaults()
   ntimesteps=1
   inflowpath='./'
   ioutflow=0
+  output2D = 0
   nprobes=0
 
   !! PROBES
