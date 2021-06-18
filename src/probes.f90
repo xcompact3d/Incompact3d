@@ -256,20 +256,37 @@ contains
   !
   subroutine write_probes(ux1,uy1,uz1,pp3,phi1)
 
-    use param, only : itime, t
+    use decomp_2d, only : xsize, ysize, zsize
+    use param, only : itime, irestart, itr, t
     use param, only : npress
     use var, only : nzmsize
     use variables, only : numscalar
+    use variables, only : derx, dery, derz, derxs, derys, derzs
+    use var, only : transpose_x_to_y, transpose_y_to_z
+    use var, only : di1, di2, di3
+    use var, only : ffx, ffxp, ffxS, ffxpS, fwxpS, fsx, fsxp, fsxpS, fsxS, fwx, fwxp, fwxS, sx
+    use var, only : ffy, ffyp, ffyS, ffypS, fwypS, fsy, fsyp, fsypS, fsyS, fwy, fwyp, fwyS, sy, ppy
+    use var, only : ffz, ffzp, ffzS, ffzpS, fwzpS, fsz, fszp, fszpS, fszS, fwz, fwzp, fwzS, sz
+
+    use var, only : zero
+    use var, only : ux2, uy2, uz2
+    use var, only : ux3, uy3, uz3
+    use var, only : px1, py1, pz1
+    use var, only : ta1, tb1, tc1, td1, te1, tf1
+    use var, only : tc2, td2, te2, tf2
+    use var, only : tb3, td3, te3, tf3
+    use var, only : sc_even
 
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ux1, uy1, uz1
     real(mytype), intent(in),dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),numscalar) :: phi1
 
-    integer :: iounit, i, FS, FSP
+    integer :: iounit, i, FS, FSP, is
     character(len=100) :: fileformat, fileformatP
     character(len=1),parameter :: NL=char(10) !new line character
     character(len=30) :: filename
-
+    logical :: evensc
+    
     if (nprobes.le.0) return
 
     ! Number of columns
@@ -325,6 +342,47 @@ contains
     ! Monitor gradients
     if (flag_extra_probes) then
        call write_extra_probes()
+
+       ! Monitor velocity and pressure gradients at the first sub-iteration only
+       call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+       call dery (td2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+       call derz (td3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+       call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+       call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+       call derz (te3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+       call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+       call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+       call derz (tf3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+       call write_extra_probes_vel(ta1, td2, td3, tb1, te2, te3, tc1, tf2, tf3)
+       if (irestart.eq.1 .or. itime.gt.1) then
+          call write_extra_probes_pre(px1, py1, pz1)
+       else
+          ! This looks like a bad workaround
+          ta1 = zero; tb1 = zero; tc1 = zero
+          call write_extra_probes_pre(ta1, tb1, tc1)
+       endif
+
+       ! Monitor scalar gradient at the first sub-iteration only
+       do is = 1, numscalar
+          evensc = .true.
+          if (.not.sc_even(is)) then
+             evensc = .false.
+          endif
+          
+          !! Need to do a transpose here...
+          call transpose_x_to_y(phi1(:,:,:,is),td2)
+          call transpose_y_to_z(td2,td3)
+          if (evensc) then
+             call derxS (tb1,phi1(:,:,:, is),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1)
+             call deryS (tc2,td2,di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
+             call derzS (tb3,td3,di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1)
+          else
+             call derxS (tb1,phi1(:,:,:, is),di1,sx,ffxS,fsxS,fwxS,xsize(1),xsize(2),xsize(3),0)
+             call deryS (tc2,td2,di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0)
+             call derzS (tb3,td3,di3,sz,ffzS,fszS,fwzS,zsize(1),zsize(2),zsize(3),0)
+          endif
+          call write_extra_probes_scal(is, tb1, tc2, tb3)
+       end do
     endif
 
   end subroutine write_probes
