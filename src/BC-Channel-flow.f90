@@ -142,10 +142,10 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(inout) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(inout) :: phi
 
-    if (icpg.ne.one) then ! if not constant pressure gradient
-      if (icfr.eq.one) then ! constant flow rate without transposition
+    if (icpg.ne.1) then ! if not constant pressure gradient
+      if (icfr.eq.1) then ! constant flow rate without transposition
         call channel_cfr(ux,two/three)
-      else if (icfr.eq.two) then
+      else if (icfr.eq.2) then
         call transpose_x_to_y(ux,di2)
         call channel_flrt(di2,two/three)
         call transpose_y_to_x(di2,ux)
@@ -300,7 +300,7 @@ contains
     real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1
     real(mytype), intent(inout), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1
 
-    if (icpg.eq.one) then
+    if (icpg.eq.1) then
         !! fcpg: add constant pressure gradient in streamwise direction
         dux1(:,:,:,1) = dux1(:,:,:,1) + fcpg !* (re/re_cent)**2
     endif

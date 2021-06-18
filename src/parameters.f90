@@ -258,7 +258,7 @@ subroutine parameter(input_i3d)
 
   xnu=one/re
   !! Constant pressure gradient, re = Re_tau -> use to compute Re_centerline
-  if (icpg.eq.one) then
+  if (icpg.eq.1) then
     re_cent = (re/0.116)**(1.0/0.88)
     xnu = one/re_cent ! viscosity based on Re_cent to keep same scaling as CFR
     !
@@ -343,10 +343,10 @@ subroutine parameter(input_i3d)
      endif
      print *,'==========================================================='
      if (itype.eq.itype_channel) then
-       if (icpg.eq.zero) then
+       if (icpg.eq.0) then
          print *,'Channel forcing with constant flow rate (CFR)'
          write(*,"(' Re_cl                  : ',F17.3)") re
-       else if (icpg.eq.one) then
+       else if (icpg.eq.1) then
          print *,'Channel forcing with constant pressure gradient (CPG)'
          write(*,"(' Re_tau                 : ',F17.3)") re
          write(*,"(' Re_cl (estimated)      : ',F17.3)") re_cent
