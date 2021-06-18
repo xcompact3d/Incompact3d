@@ -277,8 +277,8 @@ contains
     ! Number of columns
     FS = 1+3+numscalar
     FSP = 1+1 ! Pressure grid
-    write(fileformat, '( "(",I4,"(E24.6),A)" )' ) FS
-    write(fileformatP, '( "(",I4,"(E24.6),A)" )' ) FSP
+    write(fileformat, '( "(",I4,"(E24.16),A)" )' ) FS
+    write(fileformatP, '( "(",I4,"(E24.16),A)" )' ) FSP
     ! Line width
     FS = FS*24+1
     FSP = FSP*24+1
@@ -443,9 +443,9 @@ contains
     FSX = 1+3+numscalar+3
     FSY = 1+3+numscalar
     FSZ = 1+3+numscalar
-    write(fileformatX, '( "(",I4,"(E24.6),A)" )' ) FSX
-    write(fileformatY, '( "(",I4,"(E24.6),A)" )' ) FSY
-    write(fileformatZ, '( "(",I4,"(E24.6),A)" )' ) FSZ
+    write(fileformatX, '( "(",I4,"(E24.16),A)" )' ) FSX
+    write(fileformatY, '( "(",I4,"(E24.16),A)" )' ) FSY
+    write(fileformatZ, '( "(",I4,"(E24.16),A)" )' ) FSZ
     FSX = 24*FSX+1
     FSY = 24*FSY+1
     FSZ = 24*FSZ+1
