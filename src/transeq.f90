@@ -98,7 +98,6 @@ contains
     use var, only : rho2,ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2
     use var, only : rho3,ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
     use var, only : sgsx1,sgsy1,sgsz1
-    use var, only : px1, py1, pz1
     use var, only : FTx, FTy, FTz, Fdiscx, Fdiscy, Fdiscz
     use les, only : compute_SGS
 
