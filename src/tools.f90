@@ -789,13 +789,13 @@ contains
   ! Rescale pressure to physical pressure
   ! Written by Kay Schäfer 2019
   !##################################################################
-  subroutine rescale_pressure(pre1)
+  elemental subroutine rescale_pressure(pre1)
 
-    use decomp_2d, only : nrank, mytype, xsize
+    use decomp_2d, only : mytype
     use param, only : itimescheme, gdt
     implicit none
 
-    real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(inout) :: pre1
+    real(mytype), intent(inout) :: pre1
 
     ! Adjust pressure to physical pressure
     ! Multiply pressure by factor of time-scheme
@@ -807,8 +807,6 @@ contains
     ! RK4
     elseif (itimescheme.eq.6) then
        pre1 = pre1 / gdt(5)
-    else
-       if (nrank .eq. 0) print *,'WARNING: No scaling of pressure defined!!!'
     endif
 
   end subroutine
