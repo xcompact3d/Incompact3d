@@ -16,28 +16,26 @@ contains
        stop
     endif
     if (nlock == 1) then
-       if (nz > 1) then
-          do k = 1, xsize(3)
-             do j = 1, xsize(2)
-                do i = 1, xsize(1)
-                   ux(i,j,k)=-px(i,j,k)+ux(i,j,k)
-                   uy(i,j,k)=-py(i,j,k)+uy(i,j,k)
-                   uz(i,j,k)=-pz(i,j,k)+uz(i,j,k)
-                enddo
+       do k = 1, xsize(3)
+          do j = 1, xsize(2)
+             do i = 1, xsize(1)
+                ux(i,j,k)=-px(i,j,k)+ux(i,j,k)
+                uy(i,j,k)=-py(i,j,k)+uy(i,j,k)
+                uz(i,j,k)=-pz(i,j,k)+uz(i,j,k)
              enddo
           enddo
+       enddo
     endif
     if (nlock == 2) then
-       if (nz > 1) then
-          do k = 1, xsize(3)
-             do j = 1, xsize(2)
-                do i = 1, xsize(1)
-                   ux(i,j,k)=px(i,j,k)+ux(i,j,k)
-                   uy(i,j,k)=py(i,j,k)+uy(i,j,k)
-                   uz(i,j,k)=pz(i,j,k)+uz(i,j,k)
-                enddo
+       do k = 1, xsize(3)
+          do j = 1, xsize(2)
+             do i = 1, xsize(1)
+                ux(i,j,k)=px(i,j,k)+ux(i,j,k)
+                uy(i,j,k)=py(i,j,k)+uy(i,j,k)
+                uz(i,j,k)=pz(i,j,k)+uz(i,j,k)
              enddo
           enddo
+       enddo
     endif
 
     return
