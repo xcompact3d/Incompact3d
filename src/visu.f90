@@ -36,7 +36,7 @@ module visu
   ! True to activate the XDMF output
   logical, save :: use_xdmf = .true.
   ! True to use the new enumeration
-  logical, save :: filenamedigits = .true.
+  logical, save :: filenamedigits = .false.
   ! output2D is defined in the input.i3d file
   !        0 for 3D output (default)
   !        1 for 2D output with X average
@@ -44,7 +44,7 @@ module visu
   !        3 for 2D output with Z average
   integer, save :: output2D
   integer :: ioxdmf
-  character(len=9) :: ifilenameformat = '(I9.9)'
+  character(len=9) :: ifilenameformat = '(I3.3)'
 
   private
   public :: output2D, visu_init, write_snapshot
