@@ -793,19 +793,24 @@ contains
   ! Rescale pressure to physical pressure
   ! Written by Kay Schäfer 2019
   !##################################################################
-  subroutine rescale_pressure(pre1)
+  elemental subroutine rescale_pressure(pre1)
 
-    use decomp_2d, only : nrank, mytype, xsize, ysize, zsize
+    use decomp_2d, only : mytype
     use param, only : itimescheme, gdt
     implicit none
 
-    real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(inout) :: pre1
+    real(mytype), intent(inout) :: pre1
 
     ! Adjust pressure to physical pressure
-    if  ((itimescheme == 2).or.(itimescheme == 3).or.(itimescheme == 5).or.(itimescheme == 7)) then !AB2, AB3, RK3, Semi-Impl. AB3
-       pre1 = pre1 / gdt(3) ! multiply pressure by factor of time-scheme (gdt = 1  / (dt * c_k) ) to get pyhsical pressure
-    else
-       if (nrank == 0) write(*,*) 'WARNING: No scaling of pressure defined!!!'
+    ! Multiply pressure by factor of time-scheme
+    ! 1/gdt = 1  / (dt * c_k)
+    !
+    ! Explicit Euler, AB2, AB3, AB4, RK3
+    if (itimescheme <= 5) then
+       pre1 = pre1 / gdt(3)
+    ! RK4
+    else then
+       pre1 = pre1 / gdt(5)
     endif
 
   end subroutine
