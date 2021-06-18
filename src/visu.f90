@@ -133,7 +133,7 @@ contains
     !! Write velocity
     !###################################################################
     uvisu=0.
-    if (iibm==2) then
+    if ((iibm==2).or.(iibm==1).or.(iibm==3)) then
       ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)
     else
       ta1(:,:,:) = ux1(:,:,:)
@@ -144,7 +144,7 @@ contains
     call decomp_2d_write_one(1,uvisu,filename,2)
 
     uvisu=0.
-    if (iibm==2) then
+    if ((iibm==2).or.(iibm==1).or.(iibm==3)) then
       ta1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:)
     else
       ta1(:,:,:) = uy1(:,:,:)
@@ -155,7 +155,7 @@ contains
     call decomp_2d_write_one(1,uvisu,filename,2)
 
     uvisu=0.
-    if (iibm==2) then
+    if ((iibm==2).or.(iibm==1).or.(iibm==3)) then
       ta1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:)
     else
       ta1(:,:,:) = uz1(:,:,:)
@@ -180,9 +180,9 @@ contains
             nxmsize,xsize(1),xsize(2),xsize(3),1)
 
     uvisu=0._mytype
-    !if (iibm==2) then
-    !  ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
-    !endif
+    if ((iibm==2).or.(iibm==1).or.(iibm==3)) then
+      ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+    endif
     call rescale_pressure(ta1)
 
     call fine_to_coarseV(1,ta1,uvisu)

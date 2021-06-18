@@ -1,0 +1,470 @@
+ Xcompact3d is run with the default file -->
+ input.i3d                                                                      
+  
+ ===========================================================
+ ======================Xcompact3D===========================
+ ===Copyright (c) 2018 Eric Lamballais and Sylvain Laizet===
+ ===Modified by Felipe Schuch and Ricardo Frantz============
+ ===Modified by Paul Bartholomew, Georgios Deskos and=======
+ ===Sylvain Laizet -- 2018- ================================
+ ===========================================================
+ Git version        : 
+ 
+ Simulating Sphere
+ (lx,ly,lz)=   15.0000000000000        6.00000000000000     
+   6.00000000000000     
+ (nx,ny,nz)=        4097        4096        4096
+ (dx,dy,dz)=  3.662109375000000E-003  1.464843750000000E-003
+  1.464843750000000E-003
+ (nx*ny*nz)=    16777216
+ (p_row,p_col)=         128         256
+ 
+ Numerical precision: Double
+ Boundary condition : (nclx1 ,nclxn )=(2,2)
+                      (ncly1 ,nclyn )=(0,0)
+                      (nclz1 ,nclzn )=(0,0)
+ High and low speed : u1=  1.00 and u2=  1.00
+ Reynolds number Re :   3700.00000000
+ Gravity vector     : (gx, gy, gz)=(     0.00000000,     0.00000000,     0.00000000)
+ Time step dt       :      0.00010000
+ Temporal scheme    : Adams-bashforth 2
+ Scalar             : off
+ Immersed boundary   : on with Cubic Spline Reconstruction
+ 
+ Initializing variables...
+ Generating the geometry!
+ Generating the geometry!
+ U,V,W min=  0.9375000     -6.2500000E-02 -6.2499985E-02
+ U,V,W max=   1.062500      6.2499993E-02  6.2499993E-02
+ -----------------------------------------------------------
+ Time step =      1/     50, Time unit =   0.0001
+ Outflow velocity ux nx=n min max=  0.9375016       1.062499    
+ Generating the geometry!
+ DIV U* max mean=   958.3710       38.17074    
+  
+ ***** Using the generic FFT engine *****
+  
+ -----------------------------------------------------------
+ Time step =      2/     50, Time unit =   0.0002
+ Outflow velocity ux nx=n min max=  0.9062205       1.089828    
+ Generating the geometry!
+ DIV U* max mean=   662.1094       2.945405    
+ Time for this time step (s):   17.58110    
+ Remaining time:       0 h 27 min
+ Elapsed time:         0 h  0 min
+ -----------------------------------------------------------
+ Time step =      3/     50, Time unit =   0.0003
+ Outflow velocity ux nx=n min max=  0.9022442       1.098567    
+ Generating the geometry!
+ DIV U* max mean=   522.8871      0.1839159    
+ Time for this time step (s):   17.30508    
+ Remaining time:       0 h 20 min
+ Elapsed time:         0 h  0 min
+ -----------------------------------------------------------
+ Time step =      4/     50, Time unit =   0.0004
+ Outflow velocity ux nx=n min max=  0.8957357       1.108318    
+ Generating the geometry!
+ DIV U* max mean=   568.4727      0.1672537    
+ Time for this time step (s):   17.70911    
+ Remaining time:       0 h 17 min
+ Elapsed time:         0 h  1 min
+ -----------------------------------------------------------
+ Time step =      5/     50, Time unit =   0.0005
+ Outflow velocity ux nx=n min max=  0.8903027       1.115719    
+ Generating the geometry!
+ DIV U* max mean=   604.6025      0.1516557    
+ Time for this time step (s):   17.36909    
+ Remaining time:       0 h 16 min
+ Elapsed time:         0 h  1 min
+ -----------------------------------------------------------
+ Time step =      6/     50, Time unit =   0.0006
+ Outflow velocity ux nx=n min max=  0.8845637       1.121183    
+ Generating the geometry!
+ DIV U* max mean=   470.2939      0.1371036    
+ Time for this time step (s):   17.69311    
+ Remaining time:       0 h 15 min
+ Elapsed time:         0 h  1 min
+ -----------------------------------------------------------
+ Time step =      7/     50, Time unit =   0.0007
+ Outflow velocity ux nx=n min max=  0.8804486       1.125070    
+ Generating the geometry!
+ DIV U* max mean=   455.7410      0.1236818    
+ Time for this time step (s):   17.31708    
+ Remaining time:       0 h 14 min
+ Elapsed time:         0 h  2 min
+ -----------------------------------------------------------
+ Time step =      8/     50, Time unit =   0.0008
+ Outflow velocity ux nx=n min max=  0.8772608       1.127658    
+ Generating the geometry!
+ DIV U* max mean=   397.7325      0.1113776    
+ Time for this time step (s):   17.76511    
+ Remaining time:       0 h 13 min
+ Elapsed time:         0 h  2 min
+ -----------------------------------------------------------
+ Time step =      9/     50, Time unit =   0.0009
+ Outflow velocity ux nx=n min max=  0.8753365       1.129175    
+ Generating the geometry!
+ DIV U* max mean=   361.6110      0.1002916    
+ Time for this time step (s):   17.80911    
+ Remaining time:       0 h 13 min
+ Elapsed time:         0 h  2 min
+ -----------------------------------------------------------
+ Time step =     10/     50, Time unit =   0.0010
+ Outflow velocity ux nx=n min max=  0.8735020       1.129808    
+ Generating the geometry!
+ DIV U* max mean=   353.5030      9.0528607E-02
+ DIV U  max mean=   307.1444      5.4525132E-03
+ U,V,W min= -0.7635998      -1.343219      -1.339636    
+ U,V,W max=   2.055510       1.326713       1.331024    
+ Time for this time step (s):   19.06919    
+ Remaining time:       0 h 13 min
+ Elapsed time:         0 h  2 min
+ -----------------------------------------------------------
+ Time step =     11/     50, Time unit =   0.0011
+ Outflow velocity ux nx=n min max=  0.8712220       1.129715    
+ Generating the geometry!
+ DIV U* max mean=   342.6760      8.2168162E-02
+ Time for this time step (s):   17.90112    
+ Remaining time:       0 h 12 min
+ Elapsed time:         0 h  3 min
+ -----------------------------------------------------------
+ Time step =     12/     50, Time unit =   0.0012
+ Outflow velocity ux nx=n min max=  0.8699113       1.129023    
+ Generating the geometry!
+ DIV U* max mean=   313.0271      7.5254567E-02
+ Time for this time step (s):   17.44109    
+ Remaining time:       0 h 12 min
+ Elapsed time:         0 h  3 min
+ -----------------------------------------------------------
+ Time step =     13/     50, Time unit =   0.0013
+ Outflow velocity ux nx=n min max=  0.8694002       1.127842    
+ Generating the geometry!
+ DIV U* max mean=   320.8326      6.9675237E-02
+ Time for this time step (s):   17.41709    
+ Remaining time:       0 h 11 min
+ Elapsed time:         0 h  3 min
+ -----------------------------------------------------------
+ Time step =     14/     50, Time unit =   0.0014
+ Outflow velocity ux nx=n min max=  0.8695478       1.126262    
+ Generating the geometry!
+ DIV U* max mean=   283.8833      6.5117069E-02
+ Time for this time step (s):   17.74111    
+ Remaining time:       0 h 11 min
+ Elapsed time:         0 h  4 min
+ -----------------------------------------------------------
+ Time step =     15/     50, Time unit =   0.0015
+ Outflow velocity ux nx=n min max=  0.8702364       1.124360    
+ Generating the geometry!
+ DIV U* max mean=   280.1082      6.1217286E-02
+ Time for this time step (s):   17.66510    
+ Remaining time:       0 h 11 min
+ Elapsed time:         0 h  4 min
+ -----------------------------------------------------------
+ Time step =     16/     50, Time unit =   0.0016
+ Outflow velocity ux nx=n min max=  0.8713678       1.122198    
+ Generating the geometry!
+ DIV U* max mean=   277.1847      5.7710461E-02
+ Time for this time step (s):   17.67710    
+ Remaining time:       0 h 10 min
+ Elapsed time:         0 h  4 min
+ -----------------------------------------------------------
+ Time step =     17/     50, Time unit =   0.0017
+ Outflow velocity ux nx=n min max=  0.8728594       1.119832    
+ Generating the geometry!
+ DIV U* max mean=   264.5199      5.4453436E-02
+ Time for this time step (s):   17.48509    
+ Remaining time:       0 h 10 min
+ Elapsed time:         0 h  4 min
+ -----------------------------------------------------------
+ Time step =     18/     50, Time unit =   0.0018
+ Outflow velocity ux nx=n min max=  0.8746422       1.117305    
+ Generating the geometry!
+ DIV U* max mean=   257.5789      5.1393569E-02
+ Time for this time step (s):   17.40509    
+ Remaining time:       0 h  9 min
+ Elapsed time:         0 h  5 min
+ -----------------------------------------------------------
+ Time step =     19/     50, Time unit =   0.0019
+ Outflow velocity ux nx=n min max=  0.8766581       1.114656    
+ Generating the geometry!
+ DIV U* max mean=   255.0678      4.8517812E-02
+ Time for this time step (s):   17.54510    
+ Remaining time:       0 h  9 min
+ Elapsed time:         0 h  5 min
+ -----------------------------------------------------------
+ Time step =     20/     50, Time unit =   0.0020
+ Outflow velocity ux nx=n min max=  0.8788582       1.112409    
+ Generating the geometry!
+ DIV U* max mean=   248.3935      4.5796275E-02
+ DIV U  max mean=   237.0240      3.2757376E-03
+ U,V,W min= -0.5941265      -1.282196      -1.274014    
+ U,V,W max=   1.925311       1.267170       1.266715    
+ Time for this time step (s):   18.98119    
+ Remaining time:       0 h  9 min
+ Elapsed time:         0 h  5 min
+ -----------------------------------------------------------
+ Time step =     21/     50, Time unit =   0.0021
+ Outflow velocity ux nx=n min max=  0.8812016       1.110176    
+ Generating the geometry!
+ DIV U* max mean=   243.9547      4.3294527E-02
+ Time for this time step (s):   17.70111    
+ Remaining time:       0 h  8 min
+ Elapsed time:         0 h  6 min
+ -----------------------------------------------------------
+ Time step =     22/     50, Time unit =   0.0022
+ Outflow velocity ux nx=n min max=  0.8836541       1.107863    
+ Generating the geometry!
+ DIV U* max mean=   238.9747      4.1016512E-02
+ Time for this time step (s):   17.53710    
+ Remaining time:       0 h  8 min
+ Elapsed time:         0 h  6 min
+ -----------------------------------------------------------
+ Time step =     23/     50, Time unit =   0.0023
+ Outflow velocity ux nx=n min max=  0.8861866       1.105494    
+ Generating the geometry!
+ DIV U* max mean=   230.8750      3.8965262E-02
+ Time for this time step (s):   17.59310    
+ Remaining time:       0 h  8 min
+ Elapsed time:         0 h  6 min
+ -----------------------------------------------------------
+ Time step =     24/     50, Time unit =   0.0024
+ Outflow velocity ux nx=n min max=  0.8887750       1.103088    
+ Generating the geometry!
+ DIV U* max mean=   227.0133      3.7137963E-02
+ Time for this time step (s):   17.45309    
+ Remaining time:       0 h  7 min
+ Elapsed time:         0 h  7 min
+ -----------------------------------------------------------
+ Time step =     25/     50, Time unit =   0.0025
+ Outflow velocity ux nx=n min max=  0.8913988       1.100662    
+ Generating the geometry!
+ DIV U* max mean=   224.6787      3.5513811E-02
+ Time for this time step (s):   17.38509    
+ Remaining time:       0 h  7 min
+ Elapsed time:         0 h  7 min
+ -----------------------------------------------------------
+ Time step =     26/     50, Time unit =   0.0026
+ Outflow velocity ux nx=n min max=  0.8940411       1.098230    
+ Generating the geometry!
+ DIV U* max mean=   221.4891      3.4078900E-02
+ Time for this time step (s):   17.54510    
+ Remaining time:       0 h  7 min
+ Elapsed time:         0 h  7 min
+ -----------------------------------------------------------
+ Time step =     27/     50, Time unit =   0.0027
+ Outflow velocity ux nx=n min max=  0.8966876       1.095802    
+ Generating the geometry!
+ DIV U* max mean=   217.9941      3.2771006E-02
+ Time for this time step (s):   17.56910    
+ Remaining time:       0 h  7 min
+ Elapsed time:         0 h  7 min
+ -----------------------------------------------------------
+ Time step =     28/     50, Time unit =   0.0028
+ Outflow velocity ux nx=n min max=  0.8993263       1.093387    
+ Generating the geometry!
+ DIV U* max mean=   212.7297      3.1559169E-02
+ Time for this time step (s):   17.60910    
+ Remaining time:       0 h  6 min
+ Elapsed time:         0 h  8 min
+ -----------------------------------------------------------
+ Time step =     29/     50, Time unit =   0.0029
+ Outflow velocity ux nx=n min max=  0.9019474       1.090994    
+ Generating the geometry!
+ DIV U* max mean=   207.9706      3.0444611E-02
+ Time for this time step (s):   17.52509    
+ Remaining time:       0 h  6 min
+ Elapsed time:         0 h  8 min
+ -----------------------------------------------------------
+ Time step =     30/     50, Time unit =   0.0030
+ Outflow velocity ux nx=n min max=  0.9045429       1.088628    
+ Generating the geometry!
+ DIV U* max mean=   203.5116      2.9393988E-02
+ DIV U  max mean=   193.0949      2.4836783E-03
+ U,V,W min= -0.5353761      -1.229430      -1.234437    
+ U,V,W max=   1.841460       1.232441       1.235365    
+ Time for this time step (s):   19.06519    
+ Remaining time:       0 h  6 min
+ Elapsed time:         0 h  8 min
+ -----------------------------------------------------------
+ Time step =     31/     50, Time unit =   0.0031
+ Outflow velocity ux nx=n min max=  0.9071060       1.086294    
+ Generating the geometry!
+ DIV U* max mean=   200.0218      2.8415013E-02
+ Time for this time step (s):   18.04513    
+ Remaining time:       0 h  5 min
+ Elapsed time:         0 h  9 min
+ -----------------------------------------------------------
+ Time step =     32/     50, Time unit =   0.0032
+ Outflow velocity ux nx=n min max=  0.9096314       1.083995    
+ Generating the geometry!
+ DIV U* max mean=   197.8401      2.7490372E-02
+ Time for this time step (s):   17.77311    
+ Remaining time:       0 h  5 min
+ Elapsed time:         0 h  9 min
+ -----------------------------------------------------------
+ Time step =     33/     50, Time unit =   0.0033
+ Outflow velocity ux nx=n min max=  0.9121146       1.081736    
+ Generating the geometry!
+ DIV U* max mean=   192.0883      2.6632415E-02
+ Time for this time step (s):   17.69311    
+ Remaining time:       0 h  5 min
+ Elapsed time:         0 h  9 min
+ -----------------------------------------------------------
+ Time step =     34/     50, Time unit =   0.0034
+ Outflow velocity ux nx=n min max=  0.9145522       1.079519    
+ Generating the geometry!
+ DIV U* max mean=   185.4547      2.5828341E-02
+ Time for this time step (s):   17.32508    
+ Remaining time:       0 h  4 min
+ Elapsed time:         0 h 10 min
+ -----------------------------------------------------------
+ Time step =     35/     50, Time unit =   0.0035
+ Outflow velocity ux nx=n min max=  0.9169056       1.077578    
+ Generating the geometry!
+ DIV U* max mean=   179.7438      2.5067162E-02
+ Time for this time step (s):   17.52910    
+ Remaining time:       0 h  4 min
+ Elapsed time:         0 h 10 min
+ -----------------------------------------------------------
+ Time step =     36/     50, Time unit =   0.0036
+ Outflow velocity ux nx=n min max=  0.9185874       1.076320    
+ Generating the geometry!
+ DIV U* max mean=   175.5831      2.4347898E-02
+ Time for this time step (s):   17.62510    
+ Remaining time:       0 h  4 min
+ Elapsed time:         0 h 10 min
+ -----------------------------------------------------------
+ Time step =     37/     50, Time unit =   0.0037
+ Outflow velocity ux nx=n min max=  0.9202472       1.075182    
+ Generating the geometry!
+ DIV U* max mean=   171.8443      2.3669951E-02
+ Time for this time step (s):   17.53710    
+ Remaining time:       0 h  3 min
+ Elapsed time:         0 h 10 min
+ -----------------------------------------------------------
+ Time step =     38/     50, Time unit =   0.0038
+ Outflow velocity ux nx=n min max=  0.9218838       1.074051    
+ Generating the geometry!
+ DIV U* max mean=   171.0563      2.3019750E-02
+ Time for this time step (s):   17.50909    
+ Remaining time:       0 h  3 min
+ Elapsed time:         0 h 11 min
+ -----------------------------------------------------------
+ Time step =     39/     50, Time unit =   0.0039
+ Outflow velocity ux nx=n min max=  0.9234961       1.072928    
+ Generating the geometry!
+ DIV U* max mean=   170.6982      2.2394158E-02
+ Time for this time step (s):   17.40509    
+ Remaining time:       0 h  3 min
+ Elapsed time:         0 h 11 min
+ -----------------------------------------------------------
+ Time step =     40/     50, Time unit =   0.0040
+ Outflow velocity ux nx=n min max=  0.9250835       1.071811    
+ Generating the geometry!
+ DIV U* max mean=   167.1454      2.1803977E-02
+ DIV U  max mean=   157.9023      2.0628772E-03
+ U,V,W min= -0.5426521      -1.214648      -1.214972    
+ U,V,W max=   1.789777       1.213018       1.212156    
+ Time for this time step (s):   19.33321    
+ Remaining time:       0 h  3 min
+ Elapsed time:         0 h 11 min
+ -----------------------------------------------------------
+ Time step =     41/     50, Time unit =   0.0041
+ Outflow velocity ux nx=n min max=  0.9266451       1.070701    
+ Generating the geometry!
+ DIV U* max mean=   167.5856      2.1236913E-02
+ Time for this time step (s):   17.75711    
+ Remaining time:       0 h  2 min
+ Elapsed time:         0 h 12 min
+ -----------------------------------------------------------
+ Time step =     42/     50, Time unit =   0.0042
+ Outflow velocity ux nx=n min max=  0.9281808       1.069599    
+ Generating the geometry!
+ DIV U* max mean=   175.5806      2.0707270E-02
+ Time for this time step (s):   17.46909    
+ Remaining time:       0 h  2 min
+ Elapsed time:         0 h 12 min
+ -----------------------------------------------------------
+ Time step =     43/     50, Time unit =   0.0043
+ Outflow velocity ux nx=n min max=  0.9296902       1.068505    
+ Generating the geometry!
+ DIV U* max mean=   162.2045      2.0206789E-02
+ Time for this time step (s):   17.31708    
+ Remaining time:       0 h  2 min
+ Elapsed time:         0 h 12 min
+ -----------------------------------------------------------
+ Time step =     44/     50, Time unit =   0.0044
+ Outflow velocity ux nx=n min max=  0.9311732       1.067418    
+ Generating the geometry!
+ DIV U* max mean=   163.3407      1.9733492E-02
+ Time for this time step (s):   17.60910    
+ Remaining time:       0 h  1 min
+ Elapsed time:         0 h 12 min
+ -----------------------------------------------------------
+ Time step =     45/     50, Time unit =   0.0045
+ Outflow velocity ux nx=n min max=  0.9326298       1.066339    
+ Generating the geometry!
+ DIV U* max mean=   157.6098      1.9287305E-02
+ Time for this time step (s):   17.50109    
+ Remaining time:       0 h  1 min
+ Elapsed time:         0 h 13 min
+ -----------------------------------------------------------
+ Time step =     46/     50, Time unit =   0.0046
+ Outflow velocity ux nx=n min max=  0.9340601       1.065268    
+ Generating the geometry!
+ DIV U* max mean=   161.5043      1.8870687E-02
+ Time for this time step (s):   17.32508    
+ Remaining time:       0 h  1 min
+ Elapsed time:         0 h 13 min
+ -----------------------------------------------------------
+ Time step =     47/     50, Time unit =   0.0047
+ Outflow velocity ux nx=n min max=  0.9354643       1.064204    
+ Generating the geometry!
+ DIV U* max mean=   145.4726      1.8464882E-02
+ Time for this time step (s):   17.38909    
+ Remaining time:       0 h  0 min
+ Elapsed time:         0 h 13 min
+ -----------------------------------------------------------
+ Time step =     48/     50, Time unit =   0.0048
+ Outflow velocity ux nx=n min max=  0.9368425       1.063149    
+ Generating the geometry!
+ DIV U* max mean=   151.6742      1.8079687E-02
+ Time for this time step (s):   17.62110    
+ Remaining time:       0 h  0 min
+ Elapsed time:         0 h 14 min
+ -----------------------------------------------------------
+ Time step =     49/     50, Time unit =   0.0049
+ Outflow velocity ux nx=n min max=  0.9380330       1.062101    
+ Generating the geometry!
+ DIV U* max mean=   142.2829      1.7706245E-02
+ Time for this time step (s):   17.33308    
+ Remaining time:       0 h  0 min
+ Elapsed time:         0 h 14 min
+ -----------------------------------------------------------
+ Time step =     50/     50, Time unit =   0.0050
+ Outflow velocity ux nx=n min max=  0.9391273       1.061062    
+ Generating the geometry!
+ DIV U* max mean=   140.0089      1.7339008E-02
+ DIV U  max mean=   126.0473      1.7855646E-03
+ U,V,W min= -0.5431530      -1.198400      -1.199759    
+ U,V,W max=   1.781579       1.193467       1.204037    
+ Time for this time step (s):   18.70517    
+ Remaining time:       0 h  0 min
+ Elapsed time:         0 h 14 min
+ ===========================================================
+ 
+ Good job! Xcompact3d finished successfully!
+ 
+ 2DECOMP with p_row*p_col=         128         256
+ 
+ nx*ny*nz=    16777216
+ nx,ny,nz=        4097        4096        4096
+ dx,dy,dz=  3.662109375000000E-003  1.464843750000000E-003
+  1.464843750000000E-003
+ 
+ Averaged time per step (s):   17.69359    
+ Total wallclock (s):   884.6793    
+ Total wallclock (m):   14.74465    
+ Total wallclock (h):  0.2457442    
+ 
+Application 41536299 resources: utime ~31665391s, stime ~114495s, Rss ~2167420, inblocks ~50150146, outblocks ~66715644

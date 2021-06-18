@@ -41,6 +41,9 @@ program xcompact3d
        calc_divu_constraint, solve_poisson, cor_vel
   use tools, only : restart, simu_stats, apply_spatial_filter, read_inflow
   use turbine, only : compute_turbines
+  use ibm_param
+  use ibm, only : body
+  use genepsi, only : genepsi3d
 
   implicit none
 
@@ -66,6 +69,14 @@ program xcompact3d
 
         call set_fluid_properties(rho1,mu1)
         call boundary_conditions(rho1,ux1,uy1,uz1,phi1,ep1)
+
+if (imove.eq.1) then ! update epsi for moving objects
+  if ((iibm.eq.2).or.(iibm.eq.3)) then
+     call genepsi3d(ep1)
+  else if (iibm.eq.1) then
+     call body(ux1,uy1,uz1,ep1)
+  endif
+endif
         call calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
         !! XXX N.B. from this point, X-pencil velocity arrays contain momentum.
@@ -184,7 +195,7 @@ subroutine init_xcompact3d()
      if (jles.gt.0)  call init_explicit_les()
   endif
 
-  if (iibm.eq.2) then
+  if ((iibm.eq.2).or.(iibm.eq.3)) then
      call genepsi3d(ep1)
   else if (iibm.eq.1) then
      call epsi_init(ep1)
@@ -209,7 +220,15 @@ subroutine init_xcompact3d()
      itime = 0
      call preprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
   else
+     itr=1
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,0)
+!     ux1(:,:,:)=ux1(:,:,:)-0.5
+  endif
+
+  if ((iibm.eq.2).or.(iibm.eq.3)) then
+     call genepsi3d(ep1)
+  else if ((iibm.eq.1).or.(iibm.eq.3)) then
+     call body(ux1,uy1,uz1,ep1)
   endif
 
   call test_speed_min_max(ux1,uy1,uz1)
