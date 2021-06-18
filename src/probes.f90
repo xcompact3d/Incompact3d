@@ -21,6 +21,8 @@ module probes
   integer, save :: main_probes_offset, extra_probes_offset
   ! Flag to monitor velocity, scalar(s) and pressure gradients
   logical, save :: flag_extra_probes = .false.
+  ! Flag to print 16 digits, only 6 digits by default
+  logical, save :: flag_all_digits = .false.
   ! Probes location on the velocity grid
   logical, save, allocatable, dimension(:) :: rankprobes, rankprobesY, rankprobesZ
   integer, save, allocatable, dimension(:) :: nxprobes, nyprobes, nzprobes
@@ -273,11 +275,20 @@ contains
     ! Number of columns
     FS = 1+3+numscalar
     FSP = 1+1 ! Pressure grid
-    write(fileformat, '( "(",I4,"(E14.6),A)" )' ) FS
-    write(fileformatP, '( "(",I4,"(E14.6),A)" )' ) FSP
-    ! Line width
-    FS = FS*14+1
-    FSP = FSP*14+1
+    ! All digits or only 6 digits
+    if (flag_all_digits) then
+       write(fileformat, '( "(",I4,"(E24.16),A)" )' ) FS
+       write(fileformatP, '( "(",I4,"(E24.16),A)" )' ) FSP
+       ! Line width
+       FS = FS*24+1
+       FSP = FSP*24+1
+    else
+       write(fileformat, '( "(",I4,"(E14.6),A)" )' ) FS
+       write(fileformatP, '( "(",I4,"(E14.6),A)" )' ) FSP
+       ! Line width
+       FS = FS*14+1
+       FSP = FSP*14+1
+    endif
 
     do i=1, nprobes
        if (rankprobes(i)) then
@@ -439,12 +450,22 @@ contains
     FSX = 1+3+numscalar+3
     FSY = 1+3+numscalar
     FSZ = 1+3+numscalar
-    write(fileformatX, '( "(",I4,"(E14.6),A)" )' ) FSX
-    write(fileformatY, '( "(",I4,"(E14.6),A)" )' ) FSY
-    write(fileformatZ, '( "(",I4,"(E14.6),A)" )' ) FSZ
-    FSX = 14*FSX+1
-    FSY = 14*FSY+1
-    FSZ = 14*FSZ+1
+    ! All digits or only 6 digits
+    if (flag_all_digits) then
+       write(fileformatX, '( "(",I4,"(E24.16),A)" )' ) FSX
+       write(fileformatY, '( "(",I4,"(E24.16),A)" )' ) FSY
+       write(fileformatZ, '( "(",I4,"(E24.16),A)" )' ) FSZ
+       FSX = 24*FSX+1
+       FSY = 24*FSY+1
+       FSZ = 24*FSZ+1
+    else
+       write(fileformatX, '( "(",I4,"(E14.6),A)" )' ) FSX
+       write(fileformatY, '( "(",I4,"(E14.6),A)" )' ) FSY
+       write(fileformatZ, '( "(",I4,"(E14.6),A)" )' ) FSZ
+       FSX = 14*FSX+1
+       FSY = 14*FSY+1
+       FSZ = 14*FSZ+1
+    endif
 
     do i = 1, nprobes
       if (rankprobes(i)) then
