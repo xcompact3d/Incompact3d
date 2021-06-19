@@ -61,12 +61,8 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
-    real(mytype) :: y,r,um,r3,x,z,h,ct
-    real(mytype) :: cx0,cy0,cz0,hg,lg
-    integer :: k,j,i,fh,ierror,ii,is,it,code
-    integer (kind=MPI_OFFSET_KIND) :: disp
-
-    integer, dimension (:), allocatable :: seed
+    real(mytype) :: y,um
+    integer :: k,j,i,ii,code
 
     if (iscalar==1) then
       if (nrank.eq.0) print *,'Imposing linear temperature profile'
@@ -75,7 +71,7 @@ contains
             if (istret.eq.0) y=real(j+xstart(2)-2,mytype)*dy
             if (istret.ne.0) y=yp(j+xstart(2)-1)
             do i=1,xsize(1)
-               phi1(i,j,k,:) = 1. - y/yly
+               phi1(i,j,k,:) = one - y/yly
             enddo
          enddo
       enddo
@@ -137,27 +133,22 @@ contains
   subroutine boundary_conditions_channel (ux,uy,uz,phi)
 
     use param
+    use var, only : di2
     use variables
     use decomp_2d
-    use tools, only : channel_cfr
 
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
-!!$  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ut
-
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: gx
-    real(mytype) :: x, y, z
-    integer :: i, j, k, is
 
     if (icpg.ne.1) then ! if not constant pressure gradient
       if (icfr.eq.1) then ! constant flow rate without transposition
         call channel_cfr(ux,two/three)
-      else if (icfr.eq.2) then
-        call transpose_x_to_y(ux,gx)
-        call channel_flrt(gx,two/three)
-        call transpose_y_to_x(gx,ux)
+      else if (icfr.eq.2) then ! deprecated
+        call transpose_x_to_y(ux,di2)
+        call channel_flrt(di2,two/three)
+        call transpose_y_to_x(di2,ux)
       end if
     end if
 
@@ -237,6 +228,57 @@ contains
 
     return
   end subroutine channel_flrt
+  !############################################################################
+  !############################################################################
+  !!
+  !!  SUBROUTINE: channel_cfr
+  !!      AUTHOR: Kay Schäfer
+  !! DESCRIPTION: Inforces constant flow rate without need of data transposition
+  !!
+  !############################################################################
+  subroutine channel_cfr (ux, constant)
+
+    use MPI
+
+    implicit none
+
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux
+    real(mytype), intent(in) :: constant
+
+    integer :: code, i, j, k, jloc
+    real(mytype) :: can, ub, uball, coeff
+
+    ub = zero
+    uball = zero
+    coeff = dy / (yly * real(xsize(1) * zsize(3), kind=mytype))
+
+    do k = 1, xsize(3)
+       do jloc = 1, xsize(2)
+          j = jloc + xstart(2) - 1
+          do i = 1, xsize(1)
+            ub = ub + ux(i,jloc,k) / ppy(j)
+          enddo
+       enddo
+    enddo
+
+    ub = ub * coeff
+
+    call MPI_ALLREDUCE(ub,uball,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+
+    can = - (constant - uball)
+
+    if (nrank==0) print *, nrank, 'UT', uball, can
+
+    do k=1,xsize(3)
+      do j=1,xsize(2)
+        do i=1,xsize(1)
+          ux(i,j,k) = ux(i,j,k) - can
+        enddo
+      enddo
+    enddo
+
+    return
+  end subroutine channel_cfr
   !############################################################################
   !############################################################################
   subroutine postprocess_channel(ux1,uy1,uz1,pp3,phi1,ep1) !By Felipe Schuch
