@@ -87,7 +87,7 @@ nvisu = 1             ! Size for visualisation collection
 &Statistics
 !=================
 
-spinup_time = 0.      ! Time after which statistics are collected (in seconds)
+spinup_time = 0      ! Time after which statistics are collected (in seconds)
 nstat = 1             ! Size arrays for statistic collection
 
 /End
@@ -108,3 +108,5 @@ ivarcoeff = .FALSE.   ! Solve variable-coefficient Poisson equation
 !#######################
 ! OPTIONAL PARAMETERS
 !#######################
+&CASE
+/End
