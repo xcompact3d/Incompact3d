@@ -337,6 +337,7 @@ contains
     USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
     use var, ONLY : nxmsize, nymsize, nzmsize
     use visu, only : write_field
+    use ibm_param, only : ubcx,ubcy,ubcz
 
     implicit none
 
