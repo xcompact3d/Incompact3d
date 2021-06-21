@@ -962,6 +962,9 @@ contains
        enddo
     endif
 
+    ! phi1, phi2 and phi3 are no longer synchronized
+    sync_scal_needed = .true.
+
   end subroutine scalar
   !############################################################################
   !############################################################################

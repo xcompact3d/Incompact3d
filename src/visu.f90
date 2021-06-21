@@ -45,9 +45,10 @@ module visu
   integer, save :: output2D
   integer :: ioxdmf
   character(len=9) :: ifilenameformat = '(I3.3)'
+  real, save :: tstart, tend
 
   private
-  public :: output2D, visu_init, write_snapshot
+  public :: output2D, visu_init, write_snapshot, end_snapshot, write_field
 
 contains
 
@@ -112,33 +113,23 @@ contains
   !
   ! Write a snapshot
   !
-  subroutine write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime)
+  subroutine write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime, num)
 
-    use decomp_2d, only : transpose_x_to_y, transpose_y_to_z, transpose_z_to_y, transpose_y_to_x
+    use decomp_2d, only : transpose_z_to_y, transpose_y_to_x
     use decomp_2d, only : mytype, xsize, ysize, zsize
     use decomp_2d, only : nrank
-    use decomp_2d, only : fine_to_coarsev
-    use decomp_2d_io, only : decomp_2d_write_one
 
-    use param, only : ivisu, ioutput, nrhotime, ilmn, iscalar, iibm, istret
-    use param, only : xlx, yly, zlz
+    use param, only : nrhotime, ilmn, iscalar, ioutput
 
-    use variables, only : derx, dery, derz
-    use variables, only : ffx, ffxp, fsx, fsxp, fwx, fwxp
-    use variables, only : ffy, ffyp, fsy, fsyp, fwy, fwyp, ppy
-    use variables, only : ffz, ffzp, fsz, fszp, fwz, fwzp
     use variables, only : sx, cifip6, cisip6, ciwip6, cifx6, cisx6, ciwx6
     use variables, only : sy, cifip6y, cisip6y, ciwip6y, cify6, cisy6, ciwy6
     use variables, only : sz, cifip6z, cisip6z, ciwip6z, cifz6, cisz6, ciwz6
-    use variables, only : nx, ny, nz, beta, numscalar
+    use variables, only : numscalar
 
-    use var, only : one
-    use var, only : uvisu
-    use var, only : pp1, ta1, tb1, tc1, td1, te1, tf1, tg1, th1, ti1, di1, nxmsize
-    use var, only : pp2, ta2, tb2, tc2, td2, te2, tf2, ppi2, di2, dip2, ph2, nymsize
-    use var, only : ppi3, ta3, tb3, tc3, td3, te3, tf3, di3, dip3, ph3, nzmsize
+    use var, only : pp1, ta1, di1, nxmsize
+    use var, only : pp2, ppi2, dip2, ph2, nymsize
+    use var, only : ppi3, dip3, ph3, nzmsize
     use var, only : npress
-    use var, only : dt,t
 
     use tools, only : rescale_pressure
 
@@ -151,11 +142,10 @@ contains
     real(mytype), dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize,npress), intent(in) :: pp3
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar), intent(in) :: phi1
     integer, intent(in) :: itime
+    character(len=32), intent(out) :: num
 
     ! Local variables
     integer :: is
-    character(len=32) :: fmt2, fmt3, fmt4, num
-    real :: tstart, tend
 
     ! Update log file
     if (nrank.eq.0) then
@@ -201,7 +191,7 @@ contains
     call write_field(ta1, ".", "pp", trim(num), .true.)
 
     ! LMN - write density
-    if (ilmn) call write_field(rho1(:,:,:,1), ".", "rho", trim(num), .true.)
+    if (ilmn) call write_field(rho1(:,:,:,1), ".", "rho", trim(num))
 
     ! Write scalars
     if (iscalar.ne.0) then
@@ -210,9 +200,22 @@ contains
       enddo
     endif
 
-    !
-    ! At this location, we could add extra variables in the XDMF file
-    !
+  end subroutine write_snapshot
+
+  subroutine end_snapshot(itime, num)
+
+    use decomp_2d, only : nrank
+    use param, only : istret, xlx, yly, zlz
+    use variables, only : nx, ny, nz, beta
+    use var, only : dt,t
+
+    implicit none
+
+    integer, intent(in) :: itime
+    character(len=32), intent(in) :: num
+
+    character(len=32) :: fmt2, fmt3, fmt4
+    integer :: is
 
     ! Write XDMF footer
     if (use_xdmf) call write_xdmf_footer()
@@ -250,7 +253,7 @@ contains
       write(*,'(" Time for writing snapshots (s): ",F12.8)') tend-tstart
     endif
 
-  end subroutine write_snapshot
+  end subroutine end_snapshot
 
   !
   ! Output binary data associated with the pressure
@@ -444,7 +447,7 @@ contains
   !
   subroutine write_field(f1, pathname, filename, num, skip_ibm)
 
-    use var, only : di1, ep1
+    use var, only : ep1
     use var, only : zero, one
     use var, only : uvisu
     use param, only : iibm
@@ -457,6 +460,8 @@ contains
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: f1
     character(len=*), intent(in) :: pathname, filename, num 
     logical, optional, intent(in) :: skip_ibm
+
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: local_array
 
     if (use_xdmf) then
       if (nrank.eq.0) then
@@ -491,17 +496,17 @@ contains
     endif
 
     if (iibm==2 .and. .not.present(skip_ibm)) then
-      di1(:,:,:) = (one - ep1(:,:,:)) * f1(:,:,:)
+      local_array(:,:,:) = (one - ep1(:,:,:)) * f1(:,:,:)
     else
-      di1(:,:,:) = f1(:,:,:)
+      local_array(:,:,:) = f1(:,:,:)
     endif
 
     if (output2D.eq.0) then
       uvisu = zero
-      call fine_to_coarseV(1,di1,uvisu)
+      call fine_to_coarseV(1,local_array,uvisu)
       call decomp_2d_write_one(1,uvisu,"./data/"//pathname//'/'//filename//'-'//num//'.bin',2)
     else
-      call decomp_2d_write_plane(1,di1,output2D,-1,"./data/"//pathname//'/'//filename//'-'//num//'.bin')
+      call decomp_2d_write_plane(1,local_array,output2D,-1,"./data/"//pathname//'/'//filename//'-'//num//'.bin')
     endif
 
   end subroutine write_field

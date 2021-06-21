@@ -79,8 +79,10 @@ if (imove.eq.1) then ! update epsi for moving objects
 endif
         call calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
-        !! XXX N.B. from this point, X-pencil velocity arrays contain momentum.
-        call velocity_to_momentum(rho1,ux1,uy1,uz1)
+        if (ilmn) then
+           !! XXX N.B. from this point, X-pencil velocity arrays contain momentum (LMN only).
+           call velocity_to_momentum(rho1,ux1,uy1,uz1)
+        endif
 
         call int_time(rho1,ux1,uy1,uz1,phi1,drho1,dux1,duy1,duz1,dphi1)
         call pre_correc(ux1,uy1,uz1,ep1)
@@ -89,9 +91,12 @@ endif
         call solve_poisson(pp3,px1,py1,pz1,rho1,ux1,uy1,uz1,ep1,drho1,divu3)
         call cor_vel(ux1,uy1,uz1,px1,py1,pz1)
 
-        call momentum_to_velocity(rho1,ux1,uy1,uz1)
-        !! XXX N.B. from this point, X-pencil velocity arrays contain velocity.
-
+        if (ilmn) then
+           call momentum_to_velocity(rho1,ux1,uy1,uz1)
+           !! XXX N.B. from this point, X-pencil velocity arrays contain velocity (LMN only).
+           !! Note - all other solvers work on velocity always
+        endif
+        
         call test_flow(rho1,ux1,uy1,uz1,phi1,ep1,drho1,divu3)
 
      enddo !! End sub timesteps

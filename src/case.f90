@@ -56,7 +56,7 @@ module case
   private ! All functions/subroutines private by default
   public :: init, boundary_conditions, &
             momentum_forcing, scalar_forcing, set_fluid_properties, &
-            test_flow, preprocessing, postprocessing
+            test_flow, preprocessing, postprocessing, visu_case
 
 contains
   !##################################################################
@@ -235,7 +235,7 @@ contains
   subroutine postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
 
     use decomp_2d, only : mytype, xsize, ph1
-    use visu, only  : write_snapshot
+    use visu, only  : write_snapshot, end_snapshot
     use stats, only : overall_statistic
 
     use var, only : nzmsize
@@ -252,23 +252,28 @@ contains
     real(mytype),dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
 
     integer :: j
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: T
+    character(len=32) :: num
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: T ! FIXME This can be huge
 
-    T=0.
+    T = zero
+
     ! Recover temperature when decomposed (pressure to be recovered externally)
     if (itype.eq.itype_abl.and.ibuoyancy.eq.1) then
       do j=1,xsize(2) 
-        T(:,j,:,1)=phi1(:,j,:,1)+Tstat(j,1)
+        T(:,j,:,1) = phi1(:,j,:,1) + Tstat(j,1)
       enddo
     else
-      T=phi1
+      T = phi1
     endif
 
     if ((ivisu.ne.0).and.(mod(itime, ioutput).eq.0)) then
-      call write_snapshot(rho1, ux1, uy1, uz1, pp3, T, ep1, itime)
+      call write_snapshot(rho1, ux1, uy1, uz1, pp3, T, ep1, itime, num)
+      call visu_case(rho1, ux1, uy1, uz1, pp3, T, ep1, num)
+      call end_snapshot(itime, num)
     end if
 
     call postprocess_case(rho1, ux1, uy1, uz1, pp3, T, ep1)
+
     call overall_statistic(ux1, uy1, uz1, T, pp3, ep1)
 
     if (iturbine.ne.0) then 
@@ -276,7 +281,7 @@ contains
     endif
 
     call write_probes(ux1, uy1, uz1, pp3, phi1)
-    
+
   end subroutine postprocessing
   !##################################################################
   !##################################################################
@@ -344,6 +349,45 @@ contains
     endif
 
   end subroutine postprocess_case
+  !##################################################################
+  !!
+  !!  SUBROUTINE: visu_case
+  !!      AUTHOR: CF
+  !! DESCRIPTION: Call case-specific visualization
+  !!
+  !##################################################################
+  subroutine visu_case(rho1,ux1,uy1,uz1,pp3,phi1,ep1,num)
+
+    use var, only : nzmsize
+    use param, only : npress
+
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
+    real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
+    character(len=32), intent(in) :: num
+
+    if (itype.eq.itype_user) then
+
+       call visu_user(ux1, uy1, uz1, pp3, phi1, ep1, num)
+
+    elseif (itype.eq.itype_tgv) then
+
+       call visu_tgv(ux1, uy1, uz1, pp3, phi1, ep1, num)
+
+    elseif (itype.eq.itype_channel) then
+
+       call visu_channel(ux1, uy1, uz1, pp3, phi1, ep1, num)
+
+    elseif (itype.eq.itype_cyl) then
+
+       call visu_cyl(ux1, uy1, uz1, pp3, phi1, ep1, num)
+
+    endif
+
+  end subroutine visu_case
+  !##################################################################
   !##################################################################
   !!
   !!  SUBROUTINE: momentum_forcing
