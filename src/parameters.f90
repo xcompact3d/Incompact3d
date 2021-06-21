@@ -52,6 +52,8 @@ subroutine parameter(input_i3d)
 
   use lockexch, only : pfront
 
+  use probes, only : nprobes, setup_probes, flag_all_digits, flag_extra_probes, xyzprobes
+  use visu, only : output2D
   use forces, only : iforces, nvol, xld, xrd, yld, yud
 
   implicit none
@@ -69,11 +71,13 @@ subroutine parameter(input_i3d)
        ivisu, ipost, &
        gravx, gravy, gravz, &
        icpg, icfr, idir_stream, &
-       ifilter, C_filter
+       ifilter, C_filter, iturbine
   namelist /NumOptions/ ifirstder, isecondder, itimescheme, iimplicit, &
-       nu0nu, cnu, fpi2, ipinter
-  namelist /InOutParam/ irestart, icheckpoint, ioutput, nvisu, ilist, iprocessing
+       nu0nu, cnu, ipinter
+  namelist /InOutParam/ irestart, icheckpoint, ioutput, nvisu, ilist, iprocessing, &
+       ninflows, ntimesteps, inflowpath, ioutflow, output2D, nprobes
   namelist /Statistics/ wrotation,spinup_time, nstat, initstat
+  namelist /ProbesParam/ flag_all_digits, flag_extra_probes, xyzprobes
   namelist /ScalarParam/ sc, ri, uset, cp, &
        nclxS1, nclxSn, nclyS1, nclySn, nclzS1, nclzSn, &
        scalar_lbound, scalar_ubound, sc_even, sc_skew, &
@@ -90,8 +94,8 @@ subroutine parameter(input_i3d)
        imassconserve, ibuoyancy, iPressureGradient, iCoriolis, CoriolisFreq, &
        istrat, idamping, iheight, TempRate, TempFlux, itherm, gravv, UG, T_wall, T_top 
   namelist /CASE/ tgv_twod, pfront
-  NAMELIST/ALMParam/ialmrestart,filealmrestart,iturboutput,NTurbines,TurbinesPath,NActuatorlines,ActuatorlinesPath,eps_factor,rho_air
-  NAMELIST/ADMParam/Ndiscs,ADMcoords,C_T,aind,iturboutput,rho_air
+  namelist/ALMParam/ialmrestart,filealmrestart,iturboutput,NTurbines,TurbinesPath,NActuatorlines,ActuatorlinesPath,eps_factor,rho_air
+  namelist/ADMParam/Ndiscs,ADMcoords,C_T,aind,iturboutput,rho_air
 #ifdef DEBG
   if (nrank == 0) write(*,*) '# parameter start'
 #endif
@@ -125,7 +129,11 @@ subroutine parameter(input_i3d)
      read(10, nml=ibmstuff); rewind(10)
   endif
 
-  if (iforces==1) then
+  if (nprobes > 0) then
+     call setup_probes()
+     read(10, nml=ProbesParam); rewind(10)
+  endif
+  if (iforces == 1) then
      allocate(xld(nvol), xrd(nvol), yld(nvol), yud(nvol))
      read(10, nml=ForceCVs); rewind(10)
   endif
@@ -549,6 +557,8 @@ subroutine parameter_defaults()
   use decomp_2d
   use complex_geometry
 
+  use probes, only : nprobes, flag_all_digits, flag_extra_probes
+  use visu, only : output2D
   use forces, only : iforces, nvol
 
   implicit none
@@ -647,6 +657,12 @@ subroutine parameter_defaults()
   ntimesteps=1
   inflowpath='./'
   ioutflow=0
+  output2D = 0
+  nprobes=0
+
+  !! PROBES
+  flag_all_digits = .false.
+  flag_extra_probes = .false.
 
   save_ux = 0
   save_uy = 0
