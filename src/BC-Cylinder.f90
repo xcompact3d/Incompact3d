@@ -51,7 +51,7 @@ contains
   subroutine geomcomplex_cyl(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,remp)
 
     use decomp_2d, only : mytype
-    use param, only : one, two
+    use param, only : zero, one, two
     use ibm_param
 
     implicit none
@@ -62,21 +62,39 @@ contains
     real(mytype)               :: dx
     real(mytype)               :: remp
     integer                    :: i,j,k
-    real(mytype)               :: xm,ym,r
+    real(mytype)               :: xm,ym,r,rads2,kcon
     real(mytype)               :: zeromach
+    real(mytype)               :: cexx,ceyy,dist_axi
 
     zeromach=one
     do while ((one + zeromach / two) .gt. one)
        zeromach = zeromach/two
     end do
     zeromach = 1.0e1*zeromach
+    ! Intitialise epsi
+    epsi(:,:,:)=zero
 
+    ! Update center of moving Cylinder
+!    cexx=cex+ubcx*t
+!    ceyy=cey+ubcy*t
+    ! Update center of moving Cylinder
+    if (t.ne.0.) then
+       cexx=cex+ubcx*(t-ifirst*dt)
+       ceyy=cey+ubcy*(t-ifirst*dt)
+    else
+       cexx=cex
+       ceyy=cey
+    endif
+    !
+    ! Define adjusted smoothing constant
+!    kcon = log((one-0.0001)/0.0001)/(smoopar*0.5*dx) ! 0.0001 is the y-value, smoopar: desired number of affected points 
+!
     do k=nzi,nzf
        do j=nyi,nyf
           ym=yp(j)
           do i=nxi,nxf
              xm=real(i-1,mytype)*dx
-             r=sqrt((xm-cex)**two+(ym-cey)**two)
+             r=sqrt((xm-cexx)**two+(ym-ceyy)**two)
              if (r-ra.gt.zeromach) then
                 cycle
              endif
@@ -111,6 +129,7 @@ contains
     USE param
     USE variables
     USE decomp_2d
+    USE ibm_param
 
     implicit none
 
@@ -122,7 +141,7 @@ contains
     !call random_number(bzo)
     do k=1,xsize(3)
        do j=1,xsize(2)
-          bxx1(j,k)=one+bxo(j,k)*inflow_noise
+          bxx1(j,k)=u1+bxo(j,k)*inflow_noise
           bxy1(j,k)=zero+byo(j,k)*inflow_noise
           bxz1(j,k)=zero+bzo(j,k)*inflow_noise
        enddo
@@ -147,6 +166,7 @@ contains
     USE variables
     USE decomp_2d
     USE MPI
+    USE ibm_param
 
     implicit none
 
@@ -176,7 +196,7 @@ contains
     elseif (u1.eq.two) then
        cx=u2*gdt(itr)*udx    !works better
     else
-       stop
+       cx=(half*(u1+u2))*gdt(itr)*udx
     endif
 
     do k=1,xsize(3)
@@ -273,7 +293,7 @@ contains
     do k=1,xsize(3)
        do j=1,xsize(2)
           do i=1,xsize(1)
-             ux1(i,j,k)=ux1(i,j,k)+one
+             ux1(i,j,k)=ux1(i,j,k)+u1
              uy1(i,j,k)=uy1(i,j,k)
              uz1(i,j,k)=uz1(i,j,k)
           enddo
@@ -297,7 +317,8 @@ contains
     USE var, only : uvisu
     USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
     USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
-
+    USE ibm_param
+    
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
 
   end subroutine postprocess_cyl
@@ -339,17 +360,17 @@ contains
     endif
 
     !x-derivatives
-    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
-    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
     !y-derivatives
-    call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-    call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-    call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+    call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+    call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
     !!z-derivatives
-    call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+    call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+    call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+    call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
     !!all back to x-pencils
     call transpose_z_to_y(ta3,td2)
     call transpose_z_to_y(tb3,te2)

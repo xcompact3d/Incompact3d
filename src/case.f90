@@ -344,7 +344,7 @@ contains
     endif
 
     if (iforces.eq.1) then
-       call force(ux,uy,ep)
+       call force(ux,uy,uz,ep)
        call restart_forces(1)
     endif
 

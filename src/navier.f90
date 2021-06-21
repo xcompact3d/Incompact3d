@@ -232,6 +232,7 @@ contains
          duxdxp2, uyp2, uzp2, duydypi2, upi2, ta2, dipp2, &
          duxydxyp3, uzp3, po3, dipp3, nxmsize, nymsize, nzmsize
     USE MPI
+    USE ibm_param
 
     implicit none
 
@@ -256,9 +257,9 @@ contains
        tb1(:,:,:) = uy1(:,:,:)
        tc1(:,:,:) = uz1(:,:,:)
     else
-       ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)
-       tb1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:)
-       tc1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:)
+       ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:) + ep1(:,:,:)*ubcx
+       tb1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:) + ep1(:,:,:)*ubcy
+       tc1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:) + ep1(:,:,:)*ubcz
     endif
 
     !WORK X-PENCILS
@@ -794,7 +795,7 @@ contains
     USE var, ONLY : ta1, tb1, tc1, td1, di1
     USE var, ONLY : phi2, ta2, tb2, tc2, td2, te2, di2
     USE var, ONLY : phi3, ta3, tb3, tc3, td3, rho3, di3
-
+    USE param, only : zero
     IMPLICIT NONE
 
     INTEGER :: is, tmp
@@ -810,7 +811,7 @@ contains
        !! We need temperature
        CALL calc_temp_eos(ta1, rho1(:,:,:,1), phi1, tb1, xsize(1), xsize(2), xsize(3))
 
-       CALL derxx (tb1, ta1, di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1)
+       CALL derxx (tb1, ta1, di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1, zero)
        IF (imultispecies) THEN
           tb1(:,:,:) = (xnu / prandtl) * tb1(:,:,:) / ta1(:,:,:)
 
@@ -825,7 +826,7 @@ contains
 
           DO is = 1, numscalar
              IF (massfrac(is)) THEN
-                CALL derxx (tc1, phi1(:,:,:,is), di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1)
+                CALL derxx (tc1, phi1(:,:,:,is), di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1, zero)
                 tb1(:,:,:) = tb1(:,:,:) + (xnu / sc(is)) * (td1(:,:,:) / mol_weight(is)) * tc1(:,:,:)
              ENDIF
           ENDDO
@@ -845,7 +846,7 @@ contains
        !! Y-pencil
        tmp = iimplicit
        iimplicit = 0
-       CALL deryy (tc2, ta2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
+       CALL deryy (tc2, ta2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1, zero)
        iimplicit = tmp
        IF (imultispecies) THEN
           tc2(:,:,:) = (xnu / prandtl) * tc2(:,:,:) / ta2(:,:,:)
@@ -863,7 +864,7 @@ contains
              IF (massfrac(is)) THEN
                 tmp = iimplicit
                 iimplicit = 0
-                CALL deryy (td2, phi2(:,:,:,is), di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
+                CALL deryy (td2, phi2(:,:,:,is), di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1, zero)
                 iimplicit = tmp
                 tc2(:,:,:) = tc2(:,:,:) + (xnu / sc(is)) * (te2(:,:,:) / mol_weight(is)) * td2(:,:,:)
              ENDIF
@@ -883,7 +884,7 @@ contains
 
        !!------------------------------------------------------------------------------
        !! Z-pencil
-       CALL derzz (divu3, ta3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
+       CALL derzz (divu3, ta3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1, zero)
        IF (imultispecies) THEN
           divu3(:,:,:) = (xnu / prandtl) * divu3(:,:,:) / ta3(:,:,:)
 
@@ -898,7 +899,7 @@ contains
 
           DO is = 1, numscalar
              IF (massfrac(is)) THEN
-                CALL derzz (tc3, phi3(:,:,:,is), di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
+                CALL derzz (tc3, phi3(:,:,:,is), di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1, zero)
                 divu3(:,:,:) = divu3(:,:,:) + (xnu / sc(is)) * (td3(:,:,:) / mol_weight(is)) * tc3(:,:,:)
              ENDIF
           ENDDO
@@ -984,7 +985,7 @@ contains
     USE var, ONLY : td1, te1, di1, sx, sfxp, ssxp, swxp
     USE var, ONLY : rho2, ta2, tb2, di2, sy, sfyp, ssyp, swyp
     USE var, ONLY : rho3, ta3, di3, sz, sfzp, sszp, swzp
-
+    USE param, only : zero
     IMPLICIT NONE
 
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
@@ -998,16 +999,16 @@ contains
     CALL transpose_y_to_z(rho2, rho3)
 
     !! Diffusion term
-    CALL derzz (ta3,rho3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
+    CALL derzz (ta3,rho3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1, zero)
     CALL transpose_z_to_y(ta3, tb2)
 
     iimplicit = -iimplicit
-    CALL deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+    CALL deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1, zero)
     iimplicit = -iimplicit
     ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
     CALL transpose_y_to_x(ta2, te1)
 
-    CALL derxx (td1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+    CALL derxx (td1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1, zero)
     td1(:,:,:) = td1(:,:,:) + te1(:,:,:)
 
     drhodt1_next(:,:,:) = drhodt1_next(:,:,:) - invpe * td1(:,:,:)

@@ -19,7 +19,7 @@ istret = 0           ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom
 beta = 0.259065151   ! Refinement parameter (beta)
 
 ! Domain
-xlx = 20.            ! Lx (Size of the box in x-direction)
+xlx = 50.            ! Lx (Size of the box in x-direction)
 yly = 6.            ! Ly (Size of the box in y-direction)
 zlz = 6.             ! Lz (Size of the box in z-direction)
 
@@ -35,8 +35,8 @@ nclzn = 0
 ! Flow parameters
 iin = 1               ! Inflow conditions (1: classic, 2: turbinit)
 re  = 300.             ! nu=1/re (Kinematic Viscosity)
-u1  = 1.0              ! u1 (max velocity) (for inflow condition)
-u2  = 1.0              ! u2 (min velocity) (for inflow condition)
+u1  = 0.5              ! u1 (max velocity) (for inflow condition)
+u2  = 0.5              ! u2 (min velocity) (for inflow condition)
 init_noise  = 0.125     ! Turbulence intensity (1=100%) !! Initial condition
 inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
 
@@ -123,12 +123,12 @@ SmagWallDamp = 1      ! Smagorinsky damping function for ABL if 1
 !================
 &ibmstuff
 !================
- imove = 0      ! (0: Stationary Objects, 1: Moving Objects)
- ubcx=0.0      ! Prescribed Velocity (ux)
+ imove = 1      ! (0: Stationary Objects, 1: Moving Objects)
+ ubcx=-0.5      ! Prescribed Velocity (ux)
  ubcy=0.0       ! Prescribed Velocity (uy)
  ubcz=0.0       ! Prescribed Velocity (uz)
 
- cex=5.        ! when simulating a cylinder x coordinate of the center
+ cex=47.        ! when simulating a cylinder x coordinate of the center
  cey=3.        ! when simulating a cylinder y coordinate of the center
  ra=0.5         ! when simulating a cylinder, radius
  nraf=10         ! level of refinement for (iibm=2 0r iibm=4) to find the surface of the immersed object
