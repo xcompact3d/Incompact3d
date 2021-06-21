@@ -238,7 +238,7 @@ subroutine init_xcompact3d()
 
   call calc_divu_constraint(divu3, rho1, phi1)
 
-  call init_probes(ep1)
+  call init_probes()
 
   if (iturbine.ne.0) call init_turbines(ux1, uy1, uz1)
 
@@ -263,6 +263,7 @@ subroutine finalise_xcompact3d()
 
   use tools, only : simu_stats
   use param, only : itype
+  use probes, only : finalize_probes
 
   implicit none
 
@@ -280,6 +281,7 @@ subroutine finalise_xcompact3d()
   endif
   
   call simu_stats(4)
+  call finalize_probes()
   call decomp_2d_finalize
   CALL MPI_FINALIZE(ierr)
 

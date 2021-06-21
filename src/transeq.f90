@@ -719,14 +719,14 @@ contains
   end subroutine momentum_gravity
   !############################################################################
   !############################################################################
-  subroutine scalar_transport_eq(dphi1, rho1, ux1, uy1, uz1, phi1, schmidt, is_even, is_skew)
+  subroutine scalar_transport_eq(dphi1, rho1, ux1, uy1, uz1, phi1, schmidt, is)
 
     use param
     use variables
     use decomp_2d
     use case, only : scalar_forcing
 
-    use var, only : ta1,tb1,tc1,td1,di1
+    use var, only : ta1,tb1,tc1,di1
     use var, only : rho2,uy2,ta2,tb2,tc2,td2,te2,di2
     use var, only : rho3,uz3,ta3,tb3,tc3,td3,di3
 
@@ -737,7 +737,7 @@ contains
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: phi1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
     real(mytype), intent(in) :: schmidt
-    logical, optional, intent(in) :: is_even, is_skew
+    integer, optional, intent(in) :: is
 
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dphi1
@@ -748,14 +748,14 @@ contains
     real(mytype) :: xalpha
 
     evensc = .true.
-    if (present(is_even)) then
-      if (.not.is_even) then
+    if (present(is)) then
+      if (.not.sc_even(is)) then
         evensc = .false.
       endif
     endif
     skewsc = .false.
-    if (present(is_skew)) then
-      if (is_skew) then
+    if (present(is)) then
+      if (sc_skew(is)) then
         skewsc = .true.
       endif
     endif
@@ -939,7 +939,7 @@ contains
        if (is.ne.primary_species) then
           !! For mass fractions enforce primary species Y_p = 1 - sum_s Y_s
           !! So don't solve a transport equation
-          call scalar_transport_eq(dphi1(:,:,:,:,is), rho1, ux1, uy1, uz1, phi1(:,:,:,is), sc(is), is_even=sc_even(is), is_skew=sc_skew(is))
+          call scalar_transport_eq(dphi1(:,:,:,:,is), rho1, ux1, uy1, uz1, phi1(:,:,:,is), sc(is), is=is)
           if (uset(is).ne.zero) then
              call scalar_settling(dphi1, phi1(:,:,:,is), is)
           endif
