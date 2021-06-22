@@ -43,7 +43,7 @@ module tbl
   character(len=1),parameter :: NL=char(10) !new line character
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_tbl, boundary_conditions_tbl, postprocess_tbl!, visu_tbl
+  PUBLIC :: init_tbl, boundary_conditions_tbl, postprocess_tbl, visu_tbl
 
 contains
 
