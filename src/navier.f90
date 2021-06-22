@@ -38,7 +38,7 @@ module navier
   public :: solve_poisson, divergence, calc_divu_constraint
   public :: pre_correc, cor_vel
   public :: lmn_t_to_rho_trans, momentum_to_velocity, velocity_to_momentum
-  public :: gradp
+  public :: gradp, tbl_flrt
 
 contains
   !############################################################################
@@ -474,7 +474,6 @@ contains
     USE param
     USE var
     USE MPI
-    USE TBL, ONLY:tbl_flrt
     use ibm, only : corgp_ibm, body
 
     implicit none
@@ -1143,4 +1142,87 @@ contains
 
   ENDSUBROUTINE calc_varcoeff_rhs
   !############################################################################
+  !********************************************************************
+  !
+  subroutine tbl_flrt (ux1,uy1,uz1)
+  !
+  !********************************************************************
+
+    USE decomp_2d
+    USE decomp_2d_poisson
+    USE variables
+    USE param
+    USE MPI
+
+    implicit none
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
+    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux2,uy2,uz2
+
+    integer :: j,i,k,code
+    real(mytype) :: can,ut1,ut2,ut3,ut4,utt1,utt2,utt3,utt4,udif
+
+    ux1(1,:,:)=bxx1(:,:)
+    ux1(nx,:,:)=bxxn(:,:)
+
+    call transpose_x_to_y(ux1,ux2)
+    call transpose_x_to_y(uy1,uy2)
+    ! Flow rate at the inlet
+    ut1=zero;utt1=zero
+    if (ystart(1)==1) then !! CPUs at the inlet
+      do k=1,ysize(3)
+        do j=1,ysize(2)-1
+          ut1=ut1+(yp(j+1)-yp(j))*(ux2(1,j+1,k)-half*(ux2(1,j+1,k)-ux2(1,j,k)))
+        enddo
+      enddo
+      ! ut1=ut1/real(ysize(3),mytype)
+    endif
+    call MPI_ALLREDUCE(ut1,utt1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    utt1=utt1/real(nz,mytype) !! Volume flow rate per unit spanwise dist
+    ! Flow rate at the outlet
+    ut2=zero;utt2=zero
+    if (yend(1)==nx) then !! CPUs at the outlet
+      do k=1,ysize(3)
+        do j=1,ysize(2)-1
+          ut2=ut2+(yp(j+1)-yp(j))*(ux2(ysize(1),j+1,k)-half*(ux2(ysize(1),j+1,k)-ux2(ysize(1),j,k)))
+        enddo
+      enddo
+      ! ut2=ut2/real(ysize(3),mytype)
+    endif
+
+    call MPI_ALLREDUCE(ut2,utt2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    utt2=utt2/real(nz,mytype) !! Volume flow rate per unit spanwise dist
+
+    ! Flow rate at the top and bottom
+    ut3=zero
+    ut4=zero
+    do k=1,ysize(3)
+      do i=1,ysize(1)
+        ut3=ut3+uy2(i,1,k)
+        ut4=ut4+uy2(i,ny,k)
+      enddo
+    enddo
+    call MPI_ALLREDUCE(ut3,utt3,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(ut4,utt4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    utt3=utt3/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
+    utt4=utt4/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
+
+    !! velocity correction
+    udif=(utt1-utt2+utt3-utt4)/yly
+    if (nrank==0 .and. mod(itime,1)==0) then
+      write(*,"(' Mass balance: L-BC, R-BC,',2f12.6)") utt1,utt2
+      write(*,"(' Mass balance: B-BC, T-BC, Crr-Vel',3f11.5)") utt3,utt4,udif
+    endif
+    ! do k=1,xsize(3)
+    !   do j=1,xsize(2)
+    !     ux1(nx,i,k)=ux1(nx,i,k)+udif
+    !   enddo
+    ! enddo
+    do k=1,xsize(3)
+      do j=1,xsize(2)
+        bxxn(j,k)=bxxn(j,k)+udif
+      enddo
+    enddo
+
+  end subroutine tbl_flrt
+
 endmodule navier

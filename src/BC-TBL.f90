@@ -43,16 +43,13 @@ module tbl
   character(len=1),parameter :: NL=char(10) !new line character
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_tbl, boundary_conditions_tbl, postprocess_tbl, tbl_flrt
+  PUBLIC :: init_tbl, boundary_conditions_tbl, postprocess_tbl!, visu_tbl
 
 contains
 
   subroutine init_tbl (ux1,uy1,uz1,ep1,phi1)
 
-    USE decomp_2d
     USE decomp_2d_io
-    USE variables
-    USE param
     USE MPI
 
     implicit none
@@ -103,9 +100,7 @@ contains
   !********************************************************************
   subroutine boundary_conditions_tbl (ux,uy,uz,phi)
 
-    USE param
-    USE variables
-    USE decomp_2d
+    use navier, only : tbl_flrt
 
     implicit none
 
@@ -199,99 +194,10 @@ contains
 
   !********************************************************************
 
-  !********************************************************************
-!
-subroutine tbl_flrt (ux1,uy1,uz1)
-  !
-  !********************************************************************
-
-  USE decomp_2d
-  USE decomp_2d_poisson
-  USE variables
-  USE param
-  USE MPI
-
-  implicit none
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
-  real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux2,uy2,uz2
-
-  integer :: j,i,k,code
-  real(mytype) :: can,ut1,ut2,ut3,ut4,utt1,utt2,utt3,utt4,udif
-
-  ux1(1,:,:)=bxx1(:,:)
-  ux1(nx,:,:)=bxxn(:,:)
-
-  call transpose_x_to_y(ux1,ux2)
-  call transpose_x_to_y(uy1,uy2)
-  ! Flow rate at the inlet
-  ut1=zero;utt1=zero
-  if (ystart(1)==1) then !! CPUs at the inlet
-    do k=1,ysize(3)
-      do j=1,ysize(2)-1
-        ut1=ut1+(yp(j+1)-yp(j))*(ux2(1,j+1,k)-half*(ux2(1,j+1,k)-ux2(1,j,k)))
-      enddo
-    enddo
-    ! ut1=ut1/real(ysize(3),mytype)
-  endif
-  call MPI_ALLREDUCE(ut1,utt1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-  utt1=utt1/real(nz,mytype) !! Volume flow rate per unit spanwise dist
-  ! Flow rate at the outlet
-  ut2=zero;utt2=zero
-  if (yend(1)==nx) then !! CPUs at the outlet
-    do k=1,ysize(3)
-      do j=1,ysize(2)-1
-        ut2=ut2+(yp(j+1)-yp(j))*(ux2(ysize(1),j+1,k)-half*(ux2(ysize(1),j+1,k)-ux2(ysize(1),j,k)))
-      enddo
-    enddo
-    ! ut2=ut2/real(ysize(3),mytype)
-  endif
-
-  call MPI_ALLREDUCE(ut2,utt2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-  utt2=utt2/real(nz,mytype) !! Volume flow rate per unit spanwise dist
-
-  ! Flow rate at the top and bottom
-  ut3=zero
-  ut4=zero
-  do k=1,ysize(3)
-    do i=1,ysize(1)
-      ut3=ut3+uy2(i,1,k)
-      ut4=ut4+uy2(i,ny,k)
-    enddo
-  enddo
-  call MPI_ALLREDUCE(ut3,utt3,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-  call MPI_ALLREDUCE(ut4,utt4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-  utt3=utt3/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
-  utt4=utt4/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
-
-  !! velocity correction
-  udif=(utt1-utt2+utt3-utt4)/yly
-  if (nrank==0 .and. mod(itime,1)==0) then
-    write(*,"(' Mass balance: L-BC, R-BC,',2f12.6)") utt1,utt2
-    write(*,"(' Mass balance: B-BC, T-BC, Crr-Vel',3f11.5)") utt3,utt4,udif
-  endif
-  ! do k=1,xsize(3)
-  !   do j=1,xsize(2)
-  !     ux1(nx,i,k)=ux1(nx,i,k)+udif
-  !   enddo
-  ! enddo
-  do k=1,xsize(3)
-    do j=1,xsize(2)
-      bxxn(j,k)=bxxn(j,k)+udif
-    enddo
-  enddo
-
-
-  return
-end subroutine tbl_flrt
-
 !********************************************************************
   subroutine blasius()
 
-
-    USE decomp_2d
     USE decomp_2d_io
-    USE variables
-    USE param
     USE MPI
 
     implicit none
@@ -410,10 +316,9 @@ end subroutine tbl_flrt
   end subroutine blasius
 
   !############################################################################
-  subroutine postprocess_tbl(ux1,uy1,uz1,ep1) !By Felipe Schuch
+  subroutine postprocess_tbl(ux1,uy1,uz1,ep1)
 
     USE MPI
-    USE decomp_2d
     USE decomp_2d_io
     USE var, only : umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
     USE var, only : uvisu
@@ -424,25 +329,57 @@ end subroutine tbl_flrt
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     character(len=30) :: filename
 
-       !! Write vorticity as an example of post processing
+  end subroutine postprocess_tbl
+
+  !############################################################################
+  !!
+  !!  SUBROUTINE: visu_tbl
+  !!      AUTHOR: FS
+  !! DESCRIPTION: Performs TBL-specific visualization
+  !!
+  !############################################################################
+  subroutine visu_tbl(ux1, uy1, uz1, pp3, phi1, ep1, num)
+
+    use var, only : ux2, uy2, uz2, ux3, uy3, uz3
+    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+    use var, ONLY : nxmsize, nymsize, nzmsize
+    use visu, only : write_field
+    use ibm_param, only : ubcx,ubcy,ubcz
+
+    implicit none
+
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1
+    real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
+    character(len=32), intent(in) :: num
+
+    ! Write vorticity as an example of post processing
+
+    ! Perform communications if needed
+    if (sync_vel_needed) then
+      call transpose_x_to_y(ux1,ux2)
+      call transpose_x_to_y(uy1,uy2)
+      call transpose_x_to_y(uz1,uz2)
+      call transpose_y_to_z(ux2,ux3)
+      call transpose_y_to_z(uy2,uy3)
+      call transpose_y_to_z(uz2,uz3)
+      sync_vel_needed = .false.
+    endif
+
     !x-derivatives
     call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
     call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
     call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
     !y-derivatives
-    call transpose_x_to_y(ux1,td2)
-    call transpose_x_to_y(uy1,te2)
-    call transpose_x_to_y(uz1,tf2)
-    call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
-    call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
-    call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
+    call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+    call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+    call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
     !!z-derivatives
-    call transpose_y_to_z(td2,td3)
-    call transpose_y_to_z(te2,te3)
-    call transpose_y_to_z(tf2,tf3)
-    call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
-    call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
-    call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
+    call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+    call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+    call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
     !!all back to x-pencils
     call transpose_z_to_y(ta3,td2)
     call transpose_z_to_y(tb3,te2)
@@ -457,18 +394,13 @@ end subroutine tbl_flrt
     !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
     !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
 
-    di1(:,:,:)=sqrt((tf1(:,:,:)-th1(:,:,:))**2+(tg1(:,:,:)-tc1(:,:,:))**2+&
-         (tb1(:,:,:)-td1(:,:,:))**2)
-    if (iibm==2) then
-       di1(:,:,:) = (one - ep1(:,:,:)) * di1(:,:,:)
-    endif
-    uvisu=0.
-    call fine_to_coarseV(1,di1,uvisu)
-994 format('vort',I3.3)
-    write(filename, 994) itime/ioutput
-    call decomp_2d_write_one(1,uvisu,filename,2)
+    !VORTICITY FIELD
+    di1 = zero
+    di1(:,:,:)=sqrt(  (tf1(:,:,:)-th1(:,:,:))**2 &
+                    + (tg1(:,:,:)-tc1(:,:,:))**2 &
+                    + (tb1(:,:,:)-td1(:,:,:))**2)
+    call write_field(di1, ".", "vort", trim(num))
 
-    return
-  end subroutine postprocess_tbl
+  end subroutine visu_tbl
 
 end module tbl
