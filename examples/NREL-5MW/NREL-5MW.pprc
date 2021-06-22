@@ -1,0 +1,19 @@
+&PostProcess
+    nx=129               ! X-direction nodes
+    ny=97                ! Y-direction nodes
+    nz=96                ! Z-direction nodes
+    xlx=1008          ! Lx (Size of the box in x-direction)
+    yly=756           ! Ly (Size of the box in y-direction)
+    zlz=756           ! Lz (Size of the box in z-direction)
+    nclx  = 2              ! nclx (BC)
+    ncly  = 1              ! ncly (BC) 
+    nclz  = 0              ! nclz (BC)
+    nfiles=1
+    file1=1
+    filen=10
+    istret=0
+    ialm=0
+    jles=2
+    ibuoyancy=0
+/End
+
