@@ -14,7 +14,7 @@ BasicParam
 
 * ``xlx``, ``yly`` & ``zlz`` are the domain size;
 
-* ``itype`` sets the flow configuration, each one is specified in a different ``BC.<flow-configuration>.f90`` file. They are:
+* ``itype`` sets the flow configuration, each one is specified in a different ``BC-<flow-configuration>.f90`` file. They are:
 
     - 0 - :ref:`User Custom Configuration`;
     - 1 - :ref:`Turbidity Current in Lock-Release`;
@@ -25,7 +25,9 @@ BasicParam
     - 6 - Debug Schemes (for developers);
     - 7 - Mixing Layer;
     - 8 - Turbulent Jet;
-    - 9 - :ref:`Turbulent Boundary Layer`.
+    - 9 - :ref:`Turbulent Boundary Layer`;
+    - 10 - Atmospheric Boundary Layer;
+    - 11 - Uniform flow.
 
 * ``istret`` controls mesh refinement in y:
 
@@ -87,6 +89,12 @@ BasicParam
 
 * ``gravx``, ``gravy`` & ``gravz`` are the three components of the unitary vector pointing in the gravity's direction;
 
+* ``icpg`` & ``icfr`` are parameters for the momentum source term (Turbulent Channel only). The former (latter) corresponds to an imposed pressure gradient (flow rate);
+
+* ``ifilter`` & ``C_filter`` 
+
+* ``iturbine`` 
+
 NumOptions
 ----------
 
@@ -116,9 +124,17 @@ NumOptions
     - 7 - Semi-implict CN+AB3;
     - 8 - Semi-implict CN+RK3.
 
+* ``iimplicit`` Time integration scheme for the Y-diffusive term:
+
+    - 0 - Explicit, default
+    - 1 - Euler implicit
+    - 2 - Crank-Nicolson
+
 * ``nu0nu`` Ratio between hyperviscosity/viscosity at nu;
 
 * ``cnu`` Ratio between hypervisvosity at :math:`k_m=2/3\pi` and :math:`k_c= \pi`.
+
+* ``ipinter`` 
 
 InOutParam
 ----------
@@ -128,12 +144,33 @@ InOutParam
 * ``ioutput`` Frequency for visualization;
 * ``nvisu`` Size for visual collection;
 * ``iprocessing`` Frequency for online postprocessing.
+* ``ninflows`` 
+* ``ntimesteps`` 
+* ``inflowpath`` 
+* ``ioutflow`` 
+* ``output2D`` Shape of the visualization snapshots
+
+    - 0 - 3D, default
+    - 1 - 2D, averaged over X
+    - 2 - 2D, averaged over Y
+    - 3 - 2D, averaged over Z
+
+* ``nprobes`` Number of probes inside the domain (see :ref:`ProbesParam`). Default is 0.
 
 Statistics
 ----------
 
-* ``spinup_time`` Time after which statistics are collected (in seconds);
-* ``nstat`` Size arrays for statistic collection.
+* ``wrotation`` Amplitude of the rotation source term (Channel Flow only);
+* ``spinup_time`` Time after which the rotation source term is removed (Channel Flow only, in seconds);
+* ``nstat`` Size arrays for statistic collection;
+* ``initstat`` Time step when collection of statistics starts.
+
+ProbesParam
+-----------
+
+* ``flag_all_digits`` When False (default), 6 digits are recorded. Set to True to record 16 digits;
+* ``flag_extra_probes`` Default is False. Set to True to monitor the velocity / pressure / scalars gradients;
+* ``xyzprobes`` Array of size (3,nprobes) containing the location of the probes.
 
 ScalarParam
 -----------
@@ -145,10 +182,14 @@ ScalarParam
 * ``nclxS1``, ``nclxSn``, ``nclyS1``, ``nclySn``, ``nclzS1`` & ``nclzSn`` define the scalar's boundary condition:
 
     - 0 - Periodic;
-    - 1 - No-flux;
+    - 1 - Odd or Even (default, no-flux);
     - 2 - Dirichlet.
 
 * ``scalar_lbound`` & ``scalar_ubound`` are the Scalar bounds;
+* ``sc_even`` True (default) if the scalar is even. False if it is odd;
+* ``sc_skew`` Default is False. True to activate the skew-symmetric convection for a scalar;
+* ``alpha_sc``, ``beta_sc``, ``g_sc`` are used only when ``iimplicit > 0``. They define the boundary condition for the scalar at the top and bottom walls;
+* ``Tref``
 * ``iibmS`` Flag for the scalar treatment at the Immersed Boundary Method (pre-release):
 
     - 0 - Off (default);
@@ -186,7 +227,20 @@ LMN
 
 dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, massfrac, mol_weight, imultispecies, primary_species, Fr, ibirman_eos
 
+ABL
+---
+z_zero, iwallmodel, k_roughness, ustar, dBL, imassconserve, ibuoyancy, iPressureGradient, iCoriolis, CoriolisFreq, istrat, idamping, iheight, TempRate, TempFlux, itherm, gravv, UG, T_wall, T_top
+
 CASE
 ----
 
-tgv_twod, pfront
+* ``tgv_twod`` Flag used to initialize the Taylor-Green Vortices case with a 2D / 3D initial condition
+* ``pfront``
+
+ALMParam
+--------
+ialmrestart,filealmrestart,iturboutput,NTurbines,TurbinesPath,NActuatorlines,ActuatorlinesPath,eps_factor,rho_air
+
+ADMParam
+--------
+Ndiscs,ADMcoords,C_T,aind,iturboutput,rho_air
