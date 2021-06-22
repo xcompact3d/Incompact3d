@@ -69,7 +69,7 @@ subroutine parameter(input_i3d)
        nclx1, nclxn, ncly1, nclyn, nclz1, nclzn, &
        ivisu, ipost, &
        gravx, gravy, gravz, &
-       icpg, icfr, &
+       cpg, cfr, &
        ifilter, C_filter, iturbine
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, iimplicit, &
        nu0nu, cnu, ipinter
@@ -630,8 +630,8 @@ subroutine parameter_defaults()
   primary_species = -1
 
   !! Channel
-  icpg = 0
-  icfr = 1
+  cpg = .false.
+  cfr = .true.
 
   !! Filter
   ifilter=0
