@@ -142,14 +142,8 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
-    if (icpg.ne.1) then ! if not constant pressure gradient
-      if (icfr.eq.1) then ! constant flow rate without transposition
+    if (.not.cpg) then ! if not constant pressure gradient
         call channel_cfr(ux,two/three)
-      else if (icfr.eq.2) then ! deprecated
-        call transpose_x_to_y(ux,di2)
-        call channel_flrt(di2,two/three)
-        call transpose_y_to_x(di2,ux)
-      end if
     end if
 
     if (iscalar.ne.0) then
@@ -174,60 +168,7 @@ contains
        endif
     endif
 
-    return
   end subroutine boundary_conditions_channel
-  !############################################################################
-  !############################################################################
-  subroutine channel_flrt (ux,constant)
-
-    use decomp_2d
-    use decomp_2d_poisson
-    use variables
-    use param
-    use var
-    use MPI
-
-    implicit none
-
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux
-    real(mytype) :: constant
-
-    integer :: j,i,k,code
-    real(mytype) :: can,ut3,ut,ut4
-
-    ut3=zero
-    do k=1,ysize(3)
-       do i=1,ysize(1)
-          ut=zero
-          do j=1,ny-1
-             if (istret.eq.0) then
-                ut=ut+dy*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
-             else
-                ut=ut+(yp(j+1)-yp(j))*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
-             endif
-          enddo
-          ut=ut/yly
-          ut3=ut3+ut
-       enddo
-    enddo
-    ut3=ut3/(real(nx*nz,mytype))
-
-    call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-
-    can=-(constant-ut4)
-
-    if (nrank==0) print *,nrank,'correction to ensure constant flow rate',ut4,can
-
-    do k=1,ysize(3)
-       do i=1,ysize(1)
-          do j=2,ny-1
-             ux(i,j,k)=ux(i,j,k)-can
-          enddo
-       enddo
-    enddo
-
-    return
-  end subroutine channel_flrt
   !############################################################################
   !!
   !!  SUBROUTINE: channel_cfr
@@ -276,7 +217,6 @@ contains
       enddo
     enddo
 
-    return
   end subroutine channel_cfr
   !############################################################################
   !############################################################################
@@ -379,7 +319,7 @@ contains
     real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1
 
-    if (icpg.eq.1) then
+    if (cpg) then
         !! fcpg: add constant pressure gradient in streamwise direction
         dux1(:,:,:,1) = dux1(:,:,:,1) + fcpg !* (re/re_cent)**2
     endif

@@ -25,7 +25,7 @@ zlz = 4.            ! Lz (Size of the box in z-direction)
 
 ! Flow parameters
 re  = 4200. ! nu=1/re (Kinematic Viscosity)
-icpg = 0    ! if icpg=1, then re is friction Reynolds number
+cpg = F    ! if cpg=T, then re is friction Reynolds number
 
 ! Time stepping
 dt = 0.005              ! Time step
