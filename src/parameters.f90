@@ -282,6 +282,9 @@ subroutine parameter(input_i3d)
      endif
   endif
 
+  ! 2D snapshot is not compatible with coarse visualization
+  if (output2D.ne.0) nvisu = 1
+
   if (iimplicit.ne.0) then
      if ((itimescheme.eq.5).or.(itimescheme.eq.6)) then
         print *,'Error: implicit Y diffusion not yet compatible with RK time schemes'
