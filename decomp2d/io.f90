@@ -842,13 +842,13 @@ contains
 
     ! Check if variable already exists, if not create it
     call adios2_inquire_variable(var_handle, io_write_real_coarse, filename, ierror)
-    if (.not.var_handle%valid) then
+    if (.not.var_handle % valid) then
        !! New variable
    
        ! Need to set the ADIOS2 data type
        if (mytype_single.eq.kind(0.0d0)) then
           !! Double
-          data_type = adios2_type_dp
+          data_type = adios2_type_real8
        else if (mytype_single.eq.kind(0.0)) then
           !! Single
           data_type = adios2_type_real
@@ -858,7 +858,7 @@ contains
        endif
 
        call adios2_define_variable(var_handle, io_write_real_coarse, filename, data_type, &
-            ndims, int(sizes, kind=8), int(starts, kind=8) + 1, int(subsizes, kind=8), &
+            ndims, int(sizes, kind=8), int(starts, kind=8), int(subsizes, kind=8), &
             adios2_constant_dims, ierror)
     endif
 
