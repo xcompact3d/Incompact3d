@@ -120,7 +120,7 @@ contains
     use decomp_2d, only : nrank
 #ifdef ADIOS2
     use adios2
-    use decomp_2d, only : io_write_real_coarse, engine_write_real_coarse
+    use decomp_2d, only : engine_write_real_coarse
 #endif
 
     use param, only : nrhotime, ilmn, iscalar, ioutput
@@ -208,10 +208,6 @@ contains
       enddo
     endif
 
-#ifdef ADIOS2
-    call adios2_end_step(engine_write_real_coarse, ierr)
-#endif
-
   end subroutine write_snapshot
 
   subroutine end_snapshot(itime, num)
@@ -220,6 +216,10 @@ contains
     use param, only : istret, xlx, yly, zlz
     use variables, only : nx, ny, nz, beta
     use var, only : dt,t
+#ifdef ADIOS2
+    use adios2
+    use decomp_2d, only : engine_write_real_coarse
+#endif
 
     implicit none
 
@@ -228,6 +228,7 @@ contains
 
     character(len=32) :: fmt2, fmt3, fmt4
     integer :: is
+    integer :: ierr
     
     ! Write XDMF footer
     if (use_xdmf) call write_xdmf_footer()
@@ -258,6 +259,10 @@ contains
 
       endif
     endif
+
+#ifdef ADIOS2
+    call adios2_end_step(engine_write_real_coarse, ierr)
+#endif
 
     ! Update log file
     if (nrank.eq.0) then
