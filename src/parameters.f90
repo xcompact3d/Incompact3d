@@ -51,7 +51,9 @@ subroutine parameter(input_i3d)
 
   use lockexch, only : pfront
 
-  use forces, only : iforces, nvol, xld, xrd, yld, yud
+  use probes, only : nprobes, setup_probes, flag_all_digits, flag_extra_probes, xyzprobes
+  use visu, only : output2D
+  use forces, only : iforces, nvol, xld, xrd, yld, yud!, zld, zrd
 
   implicit none
 
@@ -67,13 +69,14 @@ subroutine parameter(input_i3d)
        nclx1, nclxn, ncly1, nclyn, nclz1, nclzn, &
        ivisu, ipost, &
        gravx, gravy, gravz, &
-       icpg, icfr, &
+       cpg, &
        ifilter, C_filter, iturbine
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, iimplicit, &
        nu0nu, cnu, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu, iprocessing, &
-       ninflows, ntimesteps, inflowpath, ioutflow
+       ninflows, ntimesteps, inflowpath, ioutflow, output2D, nprobes
   NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat
+  NAMELIST /ProbesParam/ flag_all_digits, flag_extra_probes, xyzprobes
   NAMELIST /ScalarParam/ sc, ri, uset, cp, &
        nclxS1, nclxSn, nclyS1, nclySn, nclzS1, nclzSn, &
        scalar_lbound, scalar_ubound, sc_even, sc_skew, &
@@ -81,8 +84,8 @@ subroutine parameter(input_i3d)
   NAMELIST /LESModel/ jles, smagcst, smagwalldamp, nSmag, walecst, maxdsmagcst, iwall
   NAMELIST /WallModel/ smagwalldamp
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
-  NAMELIST /ibmstuff/ cex,cey,ra,nobjmax,nraf,nvol,iforces
-  NAMELIST /ForceCVs/ xld, xrd, yld, yud
+  NAMELIST /ibmstuff/ cex,cey,cez,ra,nobjmax,nraf,nvol,iforces, npif, izap, ianal, imove, thickness, chord, omega ,ubcx,ubcy,ubcz,rads, c_air
+  NAMELIST /ForceCVs/ xld, xrd, yld, yud!, zld, zrd
   NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, &
        massfrac, mol_weight, imultispecies, primary_species, &
        Fr, ibirman_eos
@@ -125,9 +128,12 @@ subroutine parameter(input_i3d)
   if (iibm.ne.0) then
      read(10, nml=ibmstuff); rewind(10)
   endif
-
+  if (nprobes.gt.0) then
+     call setup_probes()
+     read(10, nml=ProbesParam); rewind(10)
+  endif
   if (iforces.eq.1) then
-     allocate(xld(nvol), xrd(nvol), yld(nvol), yud(nvol))
+     allocate(xld(nvol), xrd(nvol), yld(nvol), yud(nvol))!, zld(nvol), zrd(nvol))
      read(10, nml=ForceCVs); rewind(10)
   endif
   
@@ -261,7 +267,7 @@ subroutine parameter(input_i3d)
 
   xnu=one/re
   !! Constant pressure gradient, re = Re_tau -> use to compute Re_centerline
-  if (icpg.eq.one) then
+  if (cpg) then
     re_cent = (re/0.116)**(1.0/0.88)
     xnu = one/re_cent ! viscosity based on Re_cent to keep same scaling as CFR
     !
@@ -275,6 +281,9 @@ subroutine parameter(input_i3d)
         npress = 1
      endif
   endif
+
+  ! 2D snapshot is not compatible with coarse visualization
+  if (output2D.ne.0) nvisu = 1
 
   if (iimplicit.ne.0) then
      if ((itimescheme.eq.5).or.(itimescheme.eq.6)) then
@@ -344,10 +353,10 @@ subroutine parameter(input_i3d)
      endif
      print *,'==========================================================='
      if (itype.eq.itype_channel) then
-       if (icpg.eq.zero) then
+       if (.not.cpg) then
          print *,'Channel forcing with constant flow rate (CFR)'
          write(*,"(' Re_cl                  : ',F17.3)") re
-       else if (icpg.eq.one) then
+       else
          print *,'Channel forcing with constant pressure gradient (CPG)'
          write(*,"(' Re_tau                 : ',F17.3)") re
          write(*,"(' Re_cl (estimated)      : ',F17.3)") re_cent
@@ -533,6 +542,10 @@ subroutine parameter(input_i3d)
      endif
      print *,'==========================================================='
   endif
+  
+  if (iibm.eq.3) then ! This is only for the Cubic Spline Reconstruction
+  npif=npif+1
+  endif
 
 #ifdef DEBG
   if (nrank .eq. 0) print *,'# parameter done'
@@ -555,6 +568,8 @@ subroutine parameter_defaults()
   use decomp_2d
   use complex_geometry
 
+  use probes, only : nprobes, flag_all_digits, flag_extra_probes
+  use visu, only : output2D
   use forces, only : iforces, nvol
 
   implicit none
@@ -618,8 +633,7 @@ subroutine parameter_defaults()
   primary_species = -1
 
   !! Channel
-  icpg = 0
-  icfr = 1
+  cpg = .false.
 
   !! Filter
   ifilter=0
@@ -655,6 +669,12 @@ subroutine parameter_defaults()
   ntimesteps=1
   inflowpath='./'
   ioutflow=0
+  output2D = 0
+  nprobes=0
+
+  !! PROBES
+  flag_all_digits = .false.
+  flag_extra_probes = .false.
 
   save_ux = 0
   save_uy = 0

@@ -38,7 +38,7 @@ module navier
   public :: solve_poisson, divergence, calc_divu_constraint
   public :: pre_correc, cor_vel
   public :: lmn_t_to_rho_trans, momentum_to_velocity, velocity_to_momentum
-  public :: gradp
+  public :: gradp, tbl_flrt
 
 contains
   !############################################################################
@@ -212,6 +212,8 @@ contains
     uy(:,:,:)=uy(:,:,:)-py(:,:,:)
     uz(:,:,:)=uz(:,:,:)-pz(:,:,:)
 
+    sync_vel_needed = .true.
+
     return
   end subroutine cor_vel
   !############################################################################
@@ -230,6 +232,7 @@ contains
          duxdxp2, uyp2, uzp2, duydypi2, upi2, ta2, dipp2, &
          duxydxyp3, uzp3, po3, dipp3, nxmsize, nymsize, nzmsize
     USE MPI
+    USE ibm_param
 
     implicit none
 
@@ -254,9 +257,9 @@ contains
        tb1(:,:,:) = uy1(:,:,:)
        tc1(:,:,:) = uz1(:,:,:)
     else
-       ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)
-       tb1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:)
-       tc1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:)
+       ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:) + ep1(:,:,:)*ubcx
+       tb1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:) + ep1(:,:,:)*ubcy
+       tc1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:) + ep1(:,:,:)*ubcz
     endif
 
     !WORK X-PENCILS
@@ -471,7 +474,6 @@ contains
     USE param
     USE var
     USE MPI
-    USE TBL, ONLY:tbl_flrt
     use ibm, only : corgp_ibm, body
 
     implicit none
@@ -792,7 +794,7 @@ contains
     USE var, ONLY : ta1, tb1, tc1, td1, di1
     USE var, ONLY : phi2, ta2, tb2, tc2, td2, te2, di2
     USE var, ONLY : phi3, ta3, tb3, tc3, td3, rho3, di3
-
+    USE param, only : zero
     IMPLICIT NONE
 
     INTEGER :: is, tmp
@@ -808,7 +810,7 @@ contains
        !! We need temperature
        CALL calc_temp_eos(ta1, rho1(:,:,:,1), phi1, tb1, xsize(1), xsize(2), xsize(3))
 
-       CALL derxx (tb1, ta1, di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1)
+       CALL derxx (tb1, ta1, di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1, zero)
        IF (imultispecies) THEN
           tb1(:,:,:) = (xnu / prandtl) * tb1(:,:,:) / ta1(:,:,:)
 
@@ -823,7 +825,7 @@ contains
 
           DO is = 1, numscalar
              IF (massfrac(is)) THEN
-                CALL derxx (tc1, phi1(:,:,:,is), di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1)
+                CALL derxx (tc1, phi1(:,:,:,is), di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1, zero)
                 tb1(:,:,:) = tb1(:,:,:) + (xnu / sc(is)) * (td1(:,:,:) / mol_weight(is)) * tc1(:,:,:)
              ENDIF
           ENDDO
@@ -843,7 +845,7 @@ contains
        !! Y-pencil
        tmp = iimplicit
        iimplicit = 0
-       CALL deryy (tc2, ta2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
+       CALL deryy (tc2, ta2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1, zero)
        iimplicit = tmp
        IF (imultispecies) THEN
           tc2(:,:,:) = (xnu / prandtl) * tc2(:,:,:) / ta2(:,:,:)
@@ -861,7 +863,7 @@ contains
              IF (massfrac(is)) THEN
                 tmp = iimplicit
                 iimplicit = 0
-                CALL deryy (td2, phi2(:,:,:,is), di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
+                CALL deryy (td2, phi2(:,:,:,is), di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1, zero)
                 iimplicit = tmp
                 tc2(:,:,:) = tc2(:,:,:) + (xnu / sc(is)) * (te2(:,:,:) / mol_weight(is)) * td2(:,:,:)
              ENDIF
@@ -881,7 +883,7 @@ contains
 
        !!------------------------------------------------------------------------------
        !! Z-pencil
-       CALL derzz (divu3, ta3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
+       CALL derzz (divu3, ta3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1, zero)
        IF (imultispecies) THEN
           divu3(:,:,:) = (xnu / prandtl) * divu3(:,:,:) / ta3(:,:,:)
 
@@ -896,7 +898,7 @@ contains
 
           DO is = 1, numscalar
              IF (massfrac(is)) THEN
-                CALL derzz (tc3, phi3(:,:,:,is), di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
+                CALL derzz (tc3, phi3(:,:,:,is), di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1, zero)
                 divu3(:,:,:) = divu3(:,:,:) + (xnu / sc(is)) * (td3(:,:,:) / mol_weight(is)) * tc3(:,:,:)
              ENDIF
           ENDDO
@@ -982,7 +984,7 @@ contains
     USE var, ONLY : td1, te1, di1, sx, sfxp, ssxp, swxp
     USE var, ONLY : rho2, ta2, tb2, di2, sy, sfyp, ssyp, swyp
     USE var, ONLY : rho3, ta3, di3, sz, sfzp, sszp, swzp
-
+    USE param, only : zero
     IMPLICIT NONE
 
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
@@ -996,16 +998,16 @@ contains
     CALL transpose_y_to_z(rho2, rho3)
 
     !! Diffusion term
-    CALL derzz (ta3,rho3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
+    CALL derzz (ta3,rho3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1, zero)
     CALL transpose_z_to_y(ta3, tb2)
 
     iimplicit = -iimplicit
-    CALL deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+    CALL deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1, zero)
     iimplicit = -iimplicit
     ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
     CALL transpose_y_to_x(ta2, te1)
 
-    CALL derxx (td1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+    CALL derxx (td1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1, zero)
     td1(:,:,:) = td1(:,:,:) + te1(:,:,:)
 
     drhodt1_next(:,:,:) = drhodt1_next(:,:,:) - invpe * td1(:,:,:)
@@ -1140,4 +1142,87 @@ contains
 
   ENDSUBROUTINE calc_varcoeff_rhs
   !############################################################################
+  !********************************************************************
+  !
+  subroutine tbl_flrt (ux1,uy1,uz1)
+  !
+  !********************************************************************
+
+    USE decomp_2d
+    USE decomp_2d_poisson
+    USE variables
+    USE param
+    USE MPI
+
+    implicit none
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
+    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux2,uy2,uz2
+
+    integer :: j,i,k,code
+    real(mytype) :: can,ut1,ut2,ut3,ut4,utt1,utt2,utt3,utt4,udif
+
+    ux1(1,:,:)=bxx1(:,:)
+    ux1(nx,:,:)=bxxn(:,:)
+
+    call transpose_x_to_y(ux1,ux2)
+    call transpose_x_to_y(uy1,uy2)
+    ! Flow rate at the inlet
+    ut1=zero;utt1=zero
+    if (ystart(1)==1) then !! CPUs at the inlet
+      do k=1,ysize(3)
+        do j=1,ysize(2)-1
+          ut1=ut1+(yp(j+1)-yp(j))*(ux2(1,j+1,k)-half*(ux2(1,j+1,k)-ux2(1,j,k)))
+        enddo
+      enddo
+      ! ut1=ut1/real(ysize(3),mytype)
+    endif
+    call MPI_ALLREDUCE(ut1,utt1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    utt1=utt1/real(nz,mytype) !! Volume flow rate per unit spanwise dist
+    ! Flow rate at the outlet
+    ut2=zero;utt2=zero
+    if (yend(1)==nx) then !! CPUs at the outlet
+      do k=1,ysize(3)
+        do j=1,ysize(2)-1
+          ut2=ut2+(yp(j+1)-yp(j))*(ux2(ysize(1),j+1,k)-half*(ux2(ysize(1),j+1,k)-ux2(ysize(1),j,k)))
+        enddo
+      enddo
+      ! ut2=ut2/real(ysize(3),mytype)
+    endif
+
+    call MPI_ALLREDUCE(ut2,utt2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    utt2=utt2/real(nz,mytype) !! Volume flow rate per unit spanwise dist
+
+    ! Flow rate at the top and bottom
+    ut3=zero
+    ut4=zero
+    do k=1,ysize(3)
+      do i=1,ysize(1)
+        ut3=ut3+uy2(i,1,k)
+        ut4=ut4+uy2(i,ny,k)
+      enddo
+    enddo
+    call MPI_ALLREDUCE(ut3,utt3,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(ut4,utt4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    utt3=utt3/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
+    utt4=utt4/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
+
+    !! velocity correction
+    udif=(utt1-utt2+utt3-utt4)/yly
+    if (nrank==0 .and. mod(itime,1)==0) then
+      write(*,"(' Mass balance: L-BC, R-BC,',2f12.6)") utt1,utt2
+      write(*,"(' Mass balance: B-BC, T-BC, Crr-Vel',3f11.5)") utt3,utt4,udif
+    endif
+    ! do k=1,xsize(3)
+    !   do j=1,xsize(2)
+    !     ux1(nx,i,k)=ux1(nx,i,k)+udif
+    !   enddo
+    ! enddo
+    do k=1,xsize(3)
+      do j=1,xsize(2)
+        bxxn(j,k)=bxxn(j,k)+udif
+      enddo
+    enddo
+
+  end subroutine tbl_flrt
+
 endmodule navier

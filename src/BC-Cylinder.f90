@@ -43,14 +43,15 @@ module cyl
   character(len=1),parameter :: NL=char(10) !new line character
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_cyl, boundary_conditions_cyl, postprocess_cyl, geomcomplex_cyl
+  PUBLIC :: init_cyl, boundary_conditions_cyl, postprocess_cyl, &
+            geomcomplex_cyl, visu_cyl
 
 contains
 
   subroutine geomcomplex_cyl(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,remp)
 
     use decomp_2d, only : mytype
-    use param, only : one, two
+    use param, only : zero, one, two
     use ibm_param
 
     implicit none
@@ -61,21 +62,39 @@ contains
     real(mytype)               :: dx
     real(mytype)               :: remp
     integer                    :: i,j,k
-    real(mytype)               :: xm,ym,r
+    real(mytype)               :: xm,ym,r,rads2,kcon
     real(mytype)               :: zeromach
+    real(mytype)               :: cexx,ceyy,dist_axi
 
     zeromach=one
     do while ((one + zeromach / two) .gt. one)
        zeromach = zeromach/two
     end do
     zeromach = 1.0e1*zeromach
+    ! Intitialise epsi
+    epsi(:,:,:)=zero
 
+    ! Update center of moving Cylinder
+!    cexx=cex+ubcx*t
+!    ceyy=cey+ubcy*t
+    ! Update center of moving Cylinder
+    if (t.ne.0.) then
+       cexx=cex+ubcx*(t-ifirst*dt)
+       ceyy=cey+ubcy*(t-ifirst*dt)
+    else
+       cexx=cex
+       ceyy=cey
+    endif
+    !
+    ! Define adjusted smoothing constant
+!    kcon = log((one-0.0001)/0.0001)/(smoopar*0.5*dx) ! 0.0001 is the y-value, smoopar: desired number of affected points 
+!
     do k=nzi,nzf
        do j=nyi,nyf
           ym=yp(j)
           do i=nxi,nxf
              xm=real(i-1,mytype)*dx
-             r=sqrt((xm-cex)**two+(ym-cey)**two)
+             r=sqrt((xm-cexx)**two+(ym-ceyy)**two)
              if (r-ra.gt.zeromach) then
                 cycle
              endif
@@ -110,6 +129,7 @@ contains
     USE param
     USE variables
     USE decomp_2d
+    USE ibm_param
 
     implicit none
 
@@ -121,7 +141,7 @@ contains
     !call random_number(bzo)
     do k=1,xsize(3)
        do j=1,xsize(2)
-          bxx1(j,k)=one+bxo(j,k)*inflow_noise
+          bxx1(j,k)=u1+bxo(j,k)*inflow_noise
           bxy1(j,k)=zero+byo(j,k)*inflow_noise
           bxz1(j,k)=zero+bzo(j,k)*inflow_noise
        enddo
@@ -146,6 +166,7 @@ contains
     USE variables
     USE decomp_2d
     USE MPI
+    USE ibm_param
 
     implicit none
 
@@ -175,7 +196,7 @@ contains
     elseif (u1.eq.two) then
        cx=u2*gdt(itr)*udx    !works better
     else
-       stop
+       cx=(half*(u1+u2))*gdt(itr)*udx
     endif
 
     do k=1,xsize(3)
@@ -272,7 +293,7 @@ contains
     do k=1,xsize(3)
        do j=1,xsize(2)
           do i=1,xsize(1)
-             ux1(i,j,k)=ux1(i,j,k)+one
+             ux1(i,j,k)=ux1(i,j,k)+u1
              uy1(i,j,k)=uy1(i,j,k)
              uz1(i,j,k)=uz1(i,j,k)
           enddo
@@ -288,7 +309,7 @@ contains
   !********************************************************************
 
   !############################################################################
-  subroutine postprocess_cyl(ux1,uy1,uz1,ep1) !By Felipe Schuch
+  subroutine postprocess_cyl(ux1,uy1,uz1,ep1)
 
     USE MPI
     USE decomp_2d
@@ -296,30 +317,61 @@ contains
     USE var, only : uvisu
     USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
     USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
-
+    USE ibm_param
+    
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
-    character(len=30) :: filename
 
-    if ((ivisu.ne.0).and.(mod(itime, ioutput).eq.0)) then
-    !! Write vorticity as an example of post processing
+  end subroutine postprocess_cyl
+
+  !############################################################################
+  !!
+  !!  SUBROUTINE: visu_cyl
+  !!      AUTHOR: FS
+  !! DESCRIPTION: Performs cylinder-specific visualization
+  !!
+  !############################################################################
+  subroutine visu_cyl(ux1, uy1, uz1, pp3, phi1, ep1, num)
+
+    use var, only : ux2, uy2, uz2, ux3, uy3, uz3
+    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+    use var, ONLY : nxmsize, nymsize, nzmsize
+    use visu, only : write_field
+    use ibm_param, only : ubcx,ubcy,ubcz
+
+    implicit none
+
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1
+    real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
+    character(len=32), intent(in) :: num
+
+    ! Write vorticity as an example of post processing
+
+    ! Perform communications if needed
+    if (sync_vel_needed) then
+      call transpose_x_to_y(ux1,ux2)
+      call transpose_x_to_y(uy1,uy2)
+      call transpose_x_to_y(uz1,uz2)
+      call transpose_y_to_z(ux2,ux3)
+      call transpose_y_to_z(uy2,uy3)
+      call transpose_y_to_z(uz2,uz3)
+      sync_vel_needed = .false.
+    endif
+
     !x-derivatives
-    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
-    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
     !y-derivatives
-    call transpose_x_to_y(ux1,td2)
-    call transpose_x_to_y(uy1,te2)
-    call transpose_x_to_y(uz1,tf2)
-    call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-    call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-    call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+    call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+    call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
     !!z-derivatives
-    call transpose_y_to_z(td2,td3)
-    call transpose_y_to_z(te2,te3)
-    call transpose_y_to_z(tf2,tf3)
-    call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+    call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+    call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+    call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
     !!all back to x-pencils
     call transpose_z_to_y(ta3,td2)
     call transpose_z_to_y(tb3,te2)
@@ -334,33 +386,20 @@ contains
     !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
     !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
     !VORTICITY FIELD
-    di1(:,:,:)=sqrt((tf1(:,:,:)-th1(:,:,:))**2+(tg1(:,:,:)-tc1(:,:,:))**2+&
-         (tb1(:,:,:)-td1(:,:,:))**2)
-    if (iibm==2) then
-       di1(:,:,:) = (one - ep1(:,:,:)) * di1(:,:,:)
-    endif
-    uvisu=0.
-    call fine_to_coarseV(1,di1,uvisu)
-994 format('./data/vort',I5.5)
-    write(filename, 994) itime/ioutput
-    call decomp_2d_write_one(1,uvisu,filename,2)
-    !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
-    di1=0.
-    di1(:,:,:)=-0.5*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2)-&
-         td1(:,:,:)*tb1(:,:,:)-&
-         tg1(:,:,:)*tc1(:,:,:)-&
-         th1(:,:,:)*tf1(:,:,:)
-    if (iibm==2) then
-       di1(:,:,:) = (one - ep1(:,:,:)) * di1(:,:,:)
-    endif
-    uvisu=0.
-    call fine_to_coarseV(1,di1,uvisu)
-995 format('./data/critq',I5.5)
-    write(filename, 995) itime/ioutput
-    call decomp_2d_write_one(1,uvisu,filename,2)
-    endif
+    di1 = zero
+    di1(:,:,:)=sqrt(  (tf1(:,:,:)-th1(:,:,:))**2 &
+                    + (tg1(:,:,:)-tc1(:,:,:))**2 &
+                    + (tb1(:,:,:)-td1(:,:,:))**2)
+    call write_field(di1, ".", "vort", trim(num))
 
-    return
-  end subroutine postprocess_cyl
-  !############################################################################
+    !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
+    di1 = zero
+    di1(:,:,: ) = - 0.5*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2) &
+                  - td1(:,:,:)*tb1(:,:,:) &
+                  - tg1(:,:,:)*tc1(:,:,:) &
+                  - th1(:,:,:)*tf1(:,:,:)
+    call write_field(di1, ".", "critq", trim(num))
+
+  end subroutine visu_cyl
+
 end module cyl

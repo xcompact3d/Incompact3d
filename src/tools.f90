@@ -40,8 +40,7 @@ module tools
        simu_stats, &
        apply_spatial_filter, read_inflow, append_outflow, write_outflow, &
        compute_cfldiff, compute_cfl, &
-       rescale_pressure, mean_plane_x, mean_plane_y, mean_plane_z, &
-       channel_cfr
+       rescale_pressure, mean_plane_x, mean_plane_y, mean_plane_z
 
 contains
   !##################################################################
@@ -446,6 +445,7 @@ contains
     USE param
     USE var, only: uxf1,uyf1,uzf1,uxf2,uyf2,uzf2,uxf3,uyf3,uzf3,di1,di2,di3,phif1,phif2,phif3
     USE variables
+    USE ibm_param, only : ubcx,ubcy,ubcz
 
     implicit none
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(inout) :: ux1,uy1,uz1
@@ -459,9 +459,9 @@ contains
     !if (iscalar.eq.1) phi11=phi1(:,:,:,1) !currently only first scalar
 
     if (ifilter.eq.1.or.ifilter.eq.2) then
-      call filx(uxf1,ux1,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0)
-      call filx(uyf1,uy1,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1)
-      call filx(uzf1,uz1,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1)
+      call filx(uxf1,ux1,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+      call filx(uyf1,uy1,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+      call filx(uzf1,uz1,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
       !if (iscalar.eq.1) call filx(phif1,phi11,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0)
     else
       uxf1=ux1
@@ -476,9 +476,9 @@ contains
     !if (iscalar.eq.1) call transpose_x_to_y(phif1,phi2)
 
     if (ifilter.eq.1.or.ifilter.eq.3) then ! all filter or y filter
-      call fily(uxf2,ux2,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1)
-      call fily(uyf2,uy2,di2,fisy,fiffy,fifsy,fifwy,ysize(1),ysize(2),ysize(3),0)
-      call fily(uzf2,uz2,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1)
+      call fily(uxf2,ux2,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,ubcx)
+      call fily(uyf2,uy2,di2,fisy,fiffy,fifsy,fifwy,ysize(1),ysize(2),ysize(3),0,ubcy)
+      call fily(uzf2,uz2,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,ubcz)
       !if (iscalar.eq.1) call fily(phif2,phi2,di2,fisy,fiffy,fifsy,fifwy,ysize(1),ysize(2),ysize(3),0)
     else
       uxf2=ux2
@@ -493,9 +493,9 @@ contains
     !if (iscalar.eq.1) call transpose_y_to_z(phif2,phi3)
 
     if (ifilter.eq.1.or.ifilter.eq.2) then
-      call filz(uxf3,ux3,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1)
-      call filz(uyf3,uy3,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1)
-      call filz(uzf3,uz3,di3,fisz,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),0)
+      call filz(uxf3,ux3,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+      call filz(uyf3,uy3,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+      call filz(uzf3,uz3,di3,fisz,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),0,ubcz)
       !if (iscalar.eq.1) call filz(phif3,phi3,di3,fisz,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),0)
     else
       uxf3=ux3
@@ -613,78 +613,6 @@ contains
     
   end subroutine write_outflow
   !############################################################################
-  !############################################################################
-  !!
-  !!  SUBROUTINE: channel_cfr
-  !!      AUTHOR: Kay Schäfer
-  !! DESCRIPTION: Inforces constant flow rate without need of data transposition
-  !!
-  !############################################################################
-  subroutine channel_cfr (ux,constant)
-
-    use decomp_2d
-    use decomp_2d_poisson
-    use variables
-    use param
-    use var
-    use MPI
-
-    implicit none
-
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux
-    real(mytype) :: constant
-
-    integer :: code,i,j,k,jloc
-    real(mytype) :: can,ub,uball, dyloc
-    !
-    ub = zero
-    uball = zero
-    !
-    do k=1,xsize(3)
-       do j=xstart(2)+1,xend(2)-1
-          jloc = j-xstart(2)+1
-          dyloc  = (yp(j+1)-yp(j-1))
-          do i=1,xsize(1)
-            ub = ub + ux(i,jloc,k) * half * dyloc
-          enddo
-       enddo
-    enddo
-
-    ! Check if first and last index of subarray is at domain boundary
-    if ( xstart(2)==1) then ! bottom point -> half distance
-       ub = ub + sum(ux(:,1,:)) * yp(2)*half
-    else
-       ub = ub + sum(ux(:,1,:)) * (yp(xstart(2)+1)-yp(xstart(2)-1))*half
-    end if
-    !
-    if (xend(2)==ny) then ! top point
-       jloc = xend(2)-xstart(2)+1
-       ub = ub + sum(ux(:,jloc,:)) * (yp(xend(2))-yp(xend(2)-1))*half
-    else
-       jloc = xend(2)-xstart(2)+1
-       ub = ub + sum(ux(:,jloc,:)) * (yp(xend(2)+1)-yp(xend(2)-1))*half
-    end if
-    !
-    ub = ub/(yly*(real(nx*nz,mytype)))
-
-    call MPI_ALLREDUCE(ub,uball,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-
-    can=-(constant-uball)
-
-    if (nrank==0) print *,nrank,'UT',uball,can
-
-    do k=1,xsize(3)
-      do j=1,xsize(2)
-        do i=1,xsize(1)
-          ux(i,j,k)=ux(i,j,k)-can
-        enddo
-      enddo
-    enddo
-
-    return
-  end subroutine channel_cfr
-  !############################################################################
-  !##################################################################
   !##################################################################
     !!  SUBROUTINE: compute_cfldiff
     !! DESCRIPTION: Computes Diffusion/Fourier number
@@ -789,19 +717,24 @@ contains
   ! Rescale pressure to physical pressure
   ! Written by Kay Schäfer 2019
   !##################################################################
-  subroutine rescale_pressure(pre1)
+  elemental subroutine rescale_pressure(pre1)
 
-    use decomp_2d, only : nrank, mytype, xsize, ysize, zsize
+    use decomp_2d, only : mytype
     use param, only : itimescheme, gdt
     implicit none
 
-    real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(inout) :: pre1
+    real(mytype), intent(inout) :: pre1
 
     ! Adjust pressure to physical pressure
-    if  ((itimescheme.eq.2).or.(itimescheme.eq.3).or.(itimescheme.eq.5)) then !AB2, AB3, RK3
-       pre1=pre1 / gdt(3) ! multiply pressure by factor of time-scheme (gdt = 1  / (dt * c_k) ) to get pyhsical pressure
-    else
-       if (nrank .eq. 0) print *,'WARNING: No scaling of pressure defined!!!'
+    ! Multiply pressure by factor of time-scheme
+    ! 1/gdt = 1  / (dt * c_k)
+    !
+    ! Explicit Euler, AB2, AB3, AB4, RK3
+    if (itimescheme.ge.1 .and. itimescheme.le.5) then
+       pre1 = pre1 / gdt(3)
+    ! RK4
+    elseif (itimescheme.eq.6) then
+       pre1 = pre1 / gdt(5)
     endif
 
   end subroutine
@@ -856,6 +789,7 @@ contains
     return
 
   end subroutine mean_plane_z
+
 end module tools
 !##################################################################
 
