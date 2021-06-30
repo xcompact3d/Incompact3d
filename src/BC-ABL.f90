@@ -73,7 +73,7 @@ contains
     if (iin /= 0) then
       call system_clock(count=code)
       call random_seed(size = ii)
-      call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /)) !
+      call random_seed(put = code+63946*(nrank+1)*(/ (i - 1, i = 1, ii) /)) !
 
       call random_number(ux1)
       call random_number(uy1)

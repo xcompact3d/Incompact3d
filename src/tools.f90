@@ -1589,8 +1589,8 @@ subroutine tripping(tb,ta)
   A_tr = 0.1*dt
 
   if ((itime == ifirst).and.(nrank == 0)) then
-     call random_seed(SIZE=ii)
-     call random_seed(PUT=seed0*(/ (1, i = 1, ii) /))
+     call random_seed(size=ii)
+     call random_seed(put=seed0*(/ (1, i = 1, ii) /))
 
      !DEBUG:
      !call random_number(randx)
@@ -1714,8 +1714,8 @@ subroutine tbl_tripping(tb,ta)
 
 
   if ((itime == ifirst).and.(nrank == 0)) then
-     call random_seed(SIZE=ii)
-     call random_seed(PUT=seed0*(/ (1, i = 1, ii) /))
+     call random_seed(size=ii)
+     call random_seed(put=seed0*(/ (1, i = 1, ii) /))
 
      INQUIRE(FILE='restart.nc',exist=exist)
      !if ((ilit==1).AND.(exist)) then
