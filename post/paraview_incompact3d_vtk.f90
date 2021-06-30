@@ -225,11 +225,11 @@ program visu_vtk
      write(nfil,*)'      <PointData Scalars="scalar">'
      do ivar = 1, nvar
         if (idigits == 3) then
-           input_file = trim(var_name(ivar))//chits3
+           input_file = trim(var_name(ivar))//'-'//chits3//'.bin'
         elseif (idigits == 3) then
-           input_file = trim(var_name(ivar))//chits4
+           input_file = trim(var_name(ivar))//'-'//chits4//'.bin'
         else
-           input_file = trim(var_name(ivar))//chits5
+           input_file = trim(var_name(ivar))//'-'//chits5//'.bin'
         endif
         length_input_file=len_trim(input_file)
 
