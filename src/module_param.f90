@@ -155,33 +155,37 @@ module variables
 
 
   ABSTRACT INTERFACE
-     SUBROUTINE DERIVATIVE_X(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
+     SUBROUTINE DERIVATIVE_X(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
        use decomp_2d, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(ny,nz):: s
        real(mytype), dimension(nx):: ff,fs,fw
+       real(mytype) :: lind
      END SUBROUTINE DERIVATIVE_X
-     SUBROUTINE DERIVATIVE_Y(t,u,r,s,ff,fs,fw,pp,nx,ny,nz,npaire)
+     SUBROUTINE DERIVATIVE_Y(t,u,r,s,ff,fs,fw,pp,nx,ny,nz,npaire,lind)
        use decomp_2d, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,nz):: s
        real(mytype), dimension(ny):: ff,fs,fw,pp
+       real(mytype) :: lind
      END SUBROUTINE DERIVATIVE_Y
-     SUBROUTINE DERIVATIVE_YY(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
+     SUBROUTINE DERIVATIVE_YY(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
        use decomp_2d, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,nz):: s
        real(mytype), dimension(ny):: ff,fs,fw
+       real(mytype) :: lind
      END SUBROUTINE DERIVATIVE_YY
-     SUBROUTINE DERIVATIVE_Z(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
+     SUBROUTINE DERIVATIVE_Z(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
        use decomp_2d, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,ny):: s
        real(mytype), dimension(nz):: ff,fs,fw
+       real(mytype) :: lind
      END SUBROUTINE DERIVATIVE_Z
   END INTERFACE
 
@@ -203,26 +207,29 @@ module variables
   real(mytype),allocatable,dimension(:) :: newrm,newrmt
 
   ABSTRACT INTERFACE
-     SUBROUTINE FILTER_X(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
+     SUBROUTINE FILTER_X(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
        use decomp_2d, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(ny,nz):: s
        real(mytype), dimension(nx):: ff,fs,fw
+       real(mytype) :: lind
      END SUBROUTINE FILTER_X
-     SUBROUTINE FILTER_Y(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
+     SUBROUTINE FILTER_Y(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
        use decomp_2d, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,nz):: s
        real(mytype), dimension(ny):: ff,fs,fw
+       real(mytype) :: lind
      END SUBROUTINE FILTER_Y
-     SUBROUTINE FILTER_Z(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
+     SUBROUTINE FILTER_Z(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
        use decomp_2d, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,ny):: s
        real(mytype), dimension(nz):: ff,fs,fw
+       real(mytype) :: lind
      END SUBROUTINE FILTER_Z
   END INTERFACE
 
@@ -312,7 +319,7 @@ module param
   integer :: ioutflow, ninflows, ntimesteps
   integer :: itime0
   integer :: iscalar,nxboite,istat,iread,iadvance_time,irotation,iibm
-  integer :: npif,izap
+  integer :: npif,izap,ianal
   integer :: ivisu, ipost, initstat
   integer :: ifilter
   real(mytype) :: xlx,yly,zlz,dx,dy,dz,dx2,dy2,dz2,t,xxk1,xxk2,t0
@@ -321,6 +328,10 @@ module param
   real(mytype) :: dens1, dens2
   real(mytype) :: C_filter
   character(len=100) :: inflowpath
+
+  ! Logical, true when synchronization is needed
+  logical, save :: sync_vel_needed = .true.
+  logical, save :: sync_scal_needed = .true.
 
   !! Channel flow
   integer :: icpg, icfr, idir_stream
@@ -456,6 +467,7 @@ module param
   real(mytype),parameter :: eighteen=17._mytype
 
   real(mytype),parameter :: twenty=20._mytype
+  real(mytype),parameter :: twentythree=23._mytype
   real(mytype),parameter :: twentyfour=24._mytype
   real(mytype),parameter :: twentyfive=25._mytype
   real(mytype),parameter :: twentyseven=27._mytype
@@ -628,6 +640,9 @@ end module simulation_stats
 !############################################################################
 module ibm_param
   use decomp_2d, only : mytype
-  real(mytype) :: cex,cey,ra
+  real(mytype) :: cex,cey,cez,ra,ubcx,ubcy,ubcz,rads, c_air
+  real(mytype) :: chord,thickness,omega
+  integer :: inana ! Analytical BC as Input
+  integer :: imove
 end module ibm_param
 !############################################################################

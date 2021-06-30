@@ -41,6 +41,9 @@ program xcompact3d
        calc_divu_constraint, solve_poisson, cor_vel
   use tools, only : restart, simu_stats, apply_spatial_filter, read_inflow, test_speed_min_max
   use turbine, only : compute_turbines
+  use ibm_param
+  use ibm, only : body
+  use genepsi, only : genepsi3d
 
   implicit none
 
@@ -66,10 +69,20 @@ program xcompact3d
 
         call set_fluid_properties(rho1,mu1)
         call boundary_conditions(rho1,ux1,uy1,uz1,phi1,ep1)
+
+if (imove.eq.1) then ! update epsi for moving objects
+  if ((iibm.eq.2).or.(iibm.eq.3)) then
+     call genepsi3d(ep1)
+  else if (iibm.eq.1) then
+     call body(ux1,uy1,uz1,ep1)
+  endif
+endif
         call calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
-        !! XXX N.B. from this point, X-pencil velocity arrays contain momentum.
-        call velocity_to_momentum(rho1,ux1,uy1,uz1)
+        if (ilmn) then
+           !! XXX N.B. from this point, X-pencil velocity arrays contain momentum (LMN only).
+           call velocity_to_momentum(rho1,ux1,uy1,uz1)
+        endif
 
         call int_time(rho1,ux1,uy1,uz1,phi1,drho1,dux1,duy1,duz1,dphi1)
         call pre_correc(ux1,uy1,uz1,ep1)
@@ -78,9 +91,12 @@ program xcompact3d
         call solve_poisson(pp3,px1,py1,pz1,rho1,ux1,uy1,uz1,ep1,drho1,divu3)
         call cor_vel(ux1,uy1,uz1,px1,py1,pz1)
 
-        call momentum_to_velocity(rho1,ux1,uy1,uz1)
-        !! XXX N.B. from this point, X-pencil velocity arrays contain velocity.
-
+        if (ilmn) then
+           call momentum_to_velocity(rho1,ux1,uy1,uz1)
+           !! XXX N.B. from this point, X-pencil velocity arrays contain velocity (LMN only).
+           !! Note - all other solvers work on velocity always
+        endif
+        
         call test_flow(rho1,ux1,uy1,uz1,phi1,ep1,drho1,divu3)
 
      enddo !! End sub timesteps
@@ -186,7 +202,7 @@ subroutine init_xcompact3d()
      if (jles > 0)  call init_explicit_les()
   endif
 
-  if (iibm == 2) then
+  if ((iibm == 2).or.(iibm == 3)) then
      call genepsi3d(ep1)
   else if (iibm == 1) then
      call epsi_init(ep1)
@@ -211,7 +227,15 @@ subroutine init_xcompact3d()
      itime = 0
      call preprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
   else
+     itr=1
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,0)
+!     ux1(:,:,:)=ux1(:,:,:)-0.5
+  endif
+
+  if ((iibm.eq.2).or.(iibm.eq.3)) then
+     call genepsi3d(ep1)
+  else if ((iibm.eq.1).or.(iibm.eq.3)) then
+     call body(ux1,uy1,uz1,ep1)
   endif
 
   if (mod(itime, ilist) == 0 .or. itime == ifirst) then

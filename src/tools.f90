@@ -40,7 +40,7 @@ module tools
        simu_stats, &
        apply_spatial_filter, read_inflow, append_outflow, write_outflow, &
        compute_cfldiff, compute_cfl, &
-       rescale_pressure, mean_plane_x, mean_plane_y, mean_plane_z, &
+       mean_plane_x, mean_plane_y, mean_plane_z, &
        channel_cfr, &
        avg3d
 
@@ -145,7 +145,7 @@ contains
        write(*,*) 'U,V,W min=',uxmin1,uymin1,uzmin1
        write(*,*) 'U,V,W max=',uxmax1,uymax1,uzmax1
 
-       if((abs_prec(uxmax1) >= ten).OR.(abs_prec(uymax1) >= ten).OR.(abs_prec(uzmax1) >= ten)) then
+       if((abs_prec(uxmax1) >= ten).OR.(abs_prec(uymax1) >= onehundred).OR.(abs_prec(uzmax1) >= ten)) then
          write(*,*) 'Velocity diverged! SIMULATION IS STOPPED!'
          call MPI_ABORT(MPI_COMM_WORLD,code,ierror)
          stop
@@ -450,6 +450,7 @@ contains
     use param
     use var, only: uxf1,uyf1,uzf1,uxf2,uyf2,uzf2,uxf3,uyf3,uzf3,di1,di2,di3,phif1,phif2,phif3
     use variables
+    use ibm_param, only : ubcx,ubcy,ubcz
 
     implicit none
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(inout) :: ux1,uy1,uz1
@@ -463,10 +464,9 @@ contains
     !if (iscalar == 1) phi11=phi1(:,:,:,1) !currently only first scalar
 
     if (ifilter == 1.or.ifilter == 2) then
-      call filx(uxf1,ux1,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0)
-      call filx(uyf1,uy1,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1)
-      call filx(uzf1,uz1,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1)
-      !if (iscalar == 1) call filx(phif1,phi11,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0)
+      call filx(uxf1,ux1,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+      call filx(uyf1,uy1,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+      call filx(uzf1,uz1,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
     else
       uxf1=ux1
       uyf1=uy1
@@ -480,10 +480,10 @@ contains
     !if (iscalar == 1) call transpose_x_to_y(phif1,phi2)
 
     if (ifilter == 1.or.ifilter == 3) then ! all filter or y filter
-      call fily(uxf2,ux2,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1)
-      call fily(uyf2,uy2,di2,fisy,fiffy,fifsy,fifwy,ysize(1),ysize(2),ysize(3),0)
-      call fily(uzf2,uz2,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1)
-      !if (iscalar == 1) call fily(phif2,phi2,di2,fisy,fiffy,fifsy,fifwy,ysize(1),ysize(2),ysize(3),0)
+      call fily(uxf2,ux2,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,ubcx)
+      call fily(uyf2,uy2,di2,fisy,fiffy,fifsy,fifwy,ysize(1),ysize(2),ysize(3),0,ubcy)
+      call fily(uzf2,uz2,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,ubcz)
+      !if (iscalar.eq.1) call fily(phif2,phi2,di2,fisy,fiffy,fifsy,fifwy,ysize(1),ysize(2),ysize(3),0)
     else
       uxf2=ux2
       uyf2=uy2
@@ -497,10 +497,10 @@ contains
     !if (iscalar == 1) call transpose_y_to_z(phif2,phi3)
 
     if (ifilter == 1.or.ifilter == 2) then
-      call filz(uxf3,ux3,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1)
-      call filz(uyf3,uy3,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1)
-      call filz(uzf3,uz3,di3,fisz,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),0)
-      !if (iscalar == 1) call filz(phif3,phi3,di3,fisz,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),0)
+      call filz(uxf3,ux3,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+      call filz(uyf3,uy3,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+      call filz(uzf3,uz3,di3,fisz,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),0,ubcz)
+      !if (iscalar.eq.1) call filz(phif3,phi3,di3,fisz,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),0)
     else
       uxf3=ux3
       uyf3=uy3
@@ -788,32 +788,6 @@ contains
       !write(*,"(' CFL_sum                : ',F17.8)") cflmax_out(4)*dt
     end if
   end subroutine compute_cfl
-  !##################################################################
-  !##################################################################
-  ! Rescale pressure to physical pressure
-  ! Written by Kay Schäfer 2019
-  !##################################################################
-  elemental subroutine rescale_pressure(pre1)
-
-    use decomp_2d, only : mytype
-    use param, only : itimescheme, gdt
-    implicit none
-
-    real(mytype), intent(inout) :: pre1
-
-    ! Adjust pressure to physical pressure
-    ! Multiply pressure by factor of time-scheme
-    ! 1/gdt = 1  / (dt * c_k)
-    !
-    ! Explicit Euler, AB2, AB3, AB4, RK3
-    if (itimescheme <= 5) then
-       pre1 = pre1 / gdt(3)
-    ! RK4
-    else
-       pre1 = pre1 / gdt(5)
-    endif
-
-  end subroutine
   !##################################################################
   !##################################################################
   subroutine mean_plane_x (f1,nx,ny,nz,fm1)

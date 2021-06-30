@@ -44,7 +44,7 @@ module tgv
   character(len=1),parameter :: NL=char(10) !new line character
 
   private ! All functions/subroutines private by default
-  public :: init_tgv, boundary_conditions_tgv, postprocess_tgv
+  public :: init_tgv, boundary_conditions_tgv, postprocess_tgv, visu_tgv
 
 contains
 
@@ -255,11 +255,12 @@ contains
     use decomp_2d
     use decomp_2d_io
     use variables, only: nx,ny,nz
-    use mpi
+    use MPI
     use var, only: nut1, srt_smag 
-    use var, only : uvisu
+    use var, only : uvisu, ux2, uy2, uz2, ux3, uy3, uz3
     use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
     use var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+    use ibm_param
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1,ep1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
@@ -306,25 +307,31 @@ contains
 
     !we only collect statistics every 10 time steps to save computational time
     if (mod(itime, 10) == 0) then
+
+       ! Perform communications if needed
+       if (sync_vel_needed) then
+         call transpose_x_to_y(ux1,ux2)
+         call transpose_x_to_y(uy1,uy2)
+         call transpose_x_to_y(uz1,uz2)
+         call transpose_y_to_z(ux2,ux3)
+         call transpose_y_to_z(uy2,uy3)
+         call transpose_y_to_z(uz2,uz3)
+         sync_vel_needed = .false.
+       endif
+
        !! Write vorticity as an example of post processing
        !x-derivatives
-       call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
-       call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-       call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+       call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+       call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+       call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
        !y-derivatives
-       call transpose_x_to_y(ux1,td2)
-       call transpose_x_to_y(uy1,te2)
-       call transpose_x_to_y(uz1,tf2)
-       call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-       call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-       call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+       call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+       call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+       call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
        !!z-derivatives
-       call transpose_y_to_z(td2,td3)
-       call transpose_y_to_z(te2,te3)
-       call transpose_y_to_z(tf2,tf3)
-       call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-       call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-       call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+       call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+       call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+       call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
        !!all back to x-pencils
        call transpose_z_to_y(ta3,td2)
        call transpose_z_to_y(tb3,te2)
@@ -338,19 +345,6 @@ contains
        !du/dx=ta1 du/dy=td1 and du/dz=tg1
        !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
        !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
-       if ((ivisu.ne.0).and.(mod(itime, ioutput) == 0)) then
-       !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
-       di1=zero
-       di1(:,:,:)=-0.5*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2)-&
-           td1(:,:,:)*tb1(:,:,:)-&
-           tg1(:,:,:)*tc1(:,:,:)-&
-           th1(:,:,:)*tf1(:,:,:)
-       uvisu=zero
-       call fine_to_coarseV(1,di1,uvisu)
-       994 format('./data/critq',I5.5)
-       write(filename, 994) itime/ioutput
-       call decomp_2d_write_one(1,uvisu,filename,2)
-       endif
 
        !SPATIALLY-AVERAGED ENSTROPHY
        temp1=zero
@@ -398,23 +392,17 @@ contains
 
        !SECOND DERIVATIVES
        !x-derivatives
-       call derxx (ta1,ux1,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0)
-       call derxx (tb1,uy1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
-       call derxx (tc1,uz1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+       call derxx (ta1,ux1,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0,ubcx)
+       call derxx (tb1,uy1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+       call derxx (tc1,uz1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,ubcz)
        !y-derivatives
-       call transpose_x_to_y(ux1,td2)
-       call transpose_x_to_y(uy1,te2)
-       call transpose_x_to_y(uz1,tf2)
-       call deryy (ta2,td2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1) 
-       call deryy (tb2,te2,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0) 
-       call deryy (tc2,tf2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1) 
+       call deryy (ta2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,ubcx) 
+       call deryy (tb2,uy2,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0,ubcy) 
+       call deryy (tc2,uz2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,ubcz) 
        !!z-derivatives
-       call transpose_y_to_z(td2,td3)
-       call transpose_y_to_z(te2,te3)
-       call transpose_y_to_z(tf2,tf3)
-       call derzz(ta3,td3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
-       call derzz(tb3,te3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
-       call derzz(tc3,tf3,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0)
+       call derzz (ta3,ux3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+       call derzz (tb3,uy3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+       call derzz (tc3,uz3,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0,ubcz)
        !!all back to x-pencils
        call transpose_z_to_y(ta3,td2)
        call transpose_z_to_y(tb3,te2)
@@ -452,6 +440,86 @@ contains
     endif
 
   end subroutine postprocess_tgv
+
+  !############################################################################
+  !!
+  !!  SUBROUTINE: visu_tgv
+  !!      AUTHOR: FS
+  !! DESCRIPTION: Performs TGV-specific visualization
+  !!
+  !############################################################################
+  subroutine visu_tgv(ux1, uy1, uz1, pp3, phi1, ep1, num)
+
+    use var, only : ux2, uy2, uz2, ux3, uy3, uz3
+    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    use var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+    use var, ONLY : nxmsize, nymsize, nzmsize
+    use visu, only : write_field
+    use param, only :  zpfive
+    use ibm_param, only : ubcx,ubcy,ubcz
+
+    implicit none
+
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1
+    real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
+    character(len=32), intent(in) :: num
+
+    ! Write vorticity as an example of post processing
+
+    ! Perform communications if needed
+    if (sync_vel_needed) then
+      call transpose_x_to_y(ux1,ux2)
+      call transpose_x_to_y(uy1,uy2)
+      call transpose_x_to_y(uz1,uz2)
+      call transpose_y_to_z(ux2,ux3)
+      call transpose_y_to_z(uy2,uy3)
+      call transpose_y_to_z(uz2,uz3)
+      sync_vel_needed = .false.
+    endif
+
+    !x-derivatives
+    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
+    !y-derivatives
+    call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+    call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+    call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
+    !!z-derivatives
+    call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+    call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+    call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
+    !!all back to x-pencils
+    call transpose_z_to_y(ta3,td2)
+    call transpose_z_to_y(tb3,te2)
+    call transpose_z_to_y(tc3,tf2)
+    call transpose_y_to_x(td2,tg1)
+    call transpose_y_to_x(te2,th1)
+    call transpose_y_to_x(tf2,ti1)
+    call transpose_y_to_x(ta2,td1)
+    call transpose_y_to_x(tb2,te1)
+    call transpose_y_to_x(tc2,tf1)
+    !du/dx=ta1 du/dy=td1 and du/dz=tg1
+    !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
+    !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
+    !VORTICITY FIELD
+    di1 = zero
+    di1(:,:,:)=sqrt(  (tf1(:,:,:)-th1(:,:,:))**2 &
+                    + (tg1(:,:,:)-tc1(:,:,:))**2 &
+                    + (tb1(:,:,:)-td1(:,:,:))**2)
+    call write_field(di1, ".", "vort", trim(num))
+
+    !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
+    di1 = zero
+    di1(:,:,: ) = - zpfive*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2) &
+                  - td1(:,:,:)*tb1(:,:,:) &
+                  - tg1(:,:,:)*tc1(:,:,:) &
+                  - th1(:,:,:)*tf1(:,:,:)
+    call write_field(di1, ".", "critq", trim(num))
+
+  end subroutine visu_tgv
   !############################################################################
   subroutine suspended(phi1,vol1,mp1)
 

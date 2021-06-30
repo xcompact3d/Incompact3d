@@ -49,8 +49,8 @@ module channel
 
   PRIVATE ! All functions/subroutines private by default
   PUBLIC :: init_channel, boundary_conditions_channel, postprocess_channel, &
-       momentum_forcing_channel, &
-       geomcomplex_channel
+            visu_channel, momentum_forcing_channel, &
+            geomcomplex_channel
 
 contains
   !############################################################################
@@ -300,32 +300,28 @@ contains
   subroutine boundary_conditions_channel (ux,uy,uz,phi)
 
     use param
+    use var, only : di2
     use variables
     use decomp_2d
-    use tools, only : channel_cfr
 
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
-!!$  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ut
-
     real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: gx
-    real(mytype) :: x, y, z
-    integer :: i, j, k, is
 
     if (icpg /= 1) then ! if not constant pressure gradient
-      if (icfr == 1) then ! constant flow rate without transposition
-        if (idir_stream == 1) then
-           call channel_cfr(ux,two/three)
-        else
-           call channel_cfr(uz,two/three)
-        endif
-      else if (icfr == 2) then
-        call transpose_x_to_y(ux,gx)
-        call channel_flrt(gx,two/three)
-        call transpose_y_to_x(gx,ux)
-      end if
+       if (icfr == 1) then ! constant flow rate without transposition
+          if (idir_stream == 1) then
+             call channel_cfr(ux,two/three)
+          else
+             call channel_cfr(uz,two/three)
+          endif
+       else if (icfr == 2) then
+          call transpose_x_to_y(ux,gx)
+          call channel_flrt(gx,two/three)
+          call transpose_y_to_x(gx,ux)
+       end if
     end if
 
     if (iscalar /= 0) then
@@ -405,82 +401,141 @@ contains
     return
   end subroutine channel_flrt
   !############################################################################
+  !!
+  !!  SUBROUTINE: channel_cfr
+  !!      AUTHOR: Kay Schäfer
+  !! DESCRIPTION: Inforces constant flow rate without need of data transposition
+  !!
   !############################################################################
-  subroutine postprocess_channel(ux1,uy1,uz1,pp3,phi1,ep1) !By Felipe Schuch
+  subroutine channel_cfr (ux, constant)
 
     use MPI
-    use decomp_2d
-    use decomp_2d_io
-    ! SR old include files (to fix)
-    !use var, only : umean,vmean,wmean,pmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
-    !use var, only : phimean, phiphimean
-    !use var, only : ta1, pp1, di1
-    !use var, only : ppi3, dip3
-    !use var, only : pp2, ppi2, dip2
-    ! SR New Include (to fix)
-    use var, only : uvisu
-    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-    USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+
+    implicit none
+
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux
+    real(mytype), intent(in) :: constant
+
+    integer :: code, i, j, k, jloc
+    real(mytype) :: can, ub, uball, coeff
+
+    ub = zero
+    uball = zero
+    coeff = dy / (yly * real(xsize(1) * zsize(3), kind=mytype))
+
+    do k = 1, xsize(3)
+       do jloc = 1, xsize(2)
+          j = jloc + xstart(2) - 1
+          do i = 1, xsize(1)
+            ub = ub + ux(i,jloc,k) / ppy(j)
+          enddo
+       enddo
+    enddo
+
+    ub = ub * coeff
+
+    call MPI_ALLREDUCE(ub,uball,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+
+    can = - (constant - uball)
+
+    if (nrank==0) print *, nrank, 'UT', uball, can
+
+    do k=1,xsize(3)
+      do j=1,xsize(2)
+        do i=1,xsize(1)
+          ux(i,j,k) = ux(i,j,k) - can
+        enddo
+      enddo
+    enddo
+
+  end subroutine channel_cfr
+  !############################################################################
+  !############################################################################
+  subroutine postprocess_channel(ux1,uy1,uz1,pp3,phi1,ep1)
+
+    use var, ONLY : nzmsize
+
+    implicit none
+
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
+
+  end subroutine postprocess_channel
+  !############################################################################
+  !!
+  !!  SUBROUTINE: visu_channel
+  !!      AUTHOR: FS
+  !! DESCRIPTION: Performs channel-specific visualization
+  !!
+  !############################################################################
+  subroutine visu_channel(ux1, uy1, uz1, pp3, phi1, ep1, num)
+
+    use var, only : ux2, uy2, uz2, ux3, uy3, uz3
+    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    use var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+    use var, ONLY : nzmsize
+    use visu, only : write_field
+    use param, only :  zpfive
     
+    use ibm_param, only : ubcx,ubcy,ubcz
 
-    use var, ONLY : nxmsize, nymsize, nzmsize
-    use param, ONLY : npress
+    implicit none
 
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-    real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
-    character(len=30) :: filename
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1
+    real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
+    character(len=32), intent(in) :: num
 
-    integer :: is
+    ! Write vorticity as an example of post processing
 
-    if ((ivisu.ne.0).and.(mod(itime, ioutput).eq.0)) then
-       !! Write of Q criterion as a postprecessing example
-       !x-derivatives
-       call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
-       call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-       call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-       !y-derivatives
-       call transpose_x_to_y(ux1,td2)
-       call transpose_x_to_y(uy1,te2)
-       call transpose_x_to_y(uz1,tf2)
-       call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-       call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-       call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-       !!z-derivatives
-       call transpose_y_to_z(td2,td3)
-       call transpose_y_to_z(te2,te3)
-       call transpose_y_to_z(tf2,tf3)
-       call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-       call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-       call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
-       !!all back to x-pencils
-       call transpose_z_to_y(ta3,td2)
-       call transpose_z_to_y(tb3,te2)
-       call transpose_z_to_y(tc3,tf2)
-       call transpose_y_to_x(td2,tg1)
-       call transpose_y_to_x(te2,th1)
-       call transpose_y_to_x(tf2,ti1)
-       call transpose_y_to_x(ta2,td1)
-       call transpose_y_to_x(tb2,te1)
-       call transpose_y_to_x(tc2,tf1)
-       !du/dx=ta1 du/dy=td1 and du/dz=tg1
-       !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
-       !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
-       !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
-       di1=zero
-       di1(:,:,:)=-0.5*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2)-&
-                        td1(:,:,:)*tb1(:,:,:)-&
-                        tg1(:,:,:)*tc1(:,:,:)-&
-                        th1(:,:,:)*tf1(:,:,:)
-       uvisu=zero
-       call fine_to_coarseV(1,di1,uvisu)
-994    format('./data/critq',I5.5)
-       write(filename, 994) itime/ioutput
-       call decomp_2d_write_one(1,uvisu,filename,2)
+    ! Perform communications if needed
+    if (sync_vel_needed) then
+      call transpose_x_to_y(ux1,ux2)
+      call transpose_x_to_y(uy1,uy2)
+      call transpose_x_to_y(uz1,uz2)
+      call transpose_y_to_z(ux2,ux3)
+      call transpose_y_to_z(uy2,uy3)
+      call transpose_y_to_z(uz2,uz3)
+      sync_vel_needed = .false.
     endif
 
-    return
-  end subroutine postprocess_channel
+    !x-derivatives
+    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
+    !y-derivatives
+    call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+    call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+    call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
+    !!z-derivatives
+    call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+    call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+    call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
+    !!all back to x-pencils
+    call transpose_z_to_y(ta3,td2)
+    call transpose_z_to_y(tb3,te2)
+    call transpose_z_to_y(tc3,tf2)
+    call transpose_y_to_x(td2,tg1)
+    call transpose_y_to_x(te2,th1)
+    call transpose_y_to_x(tf2,ti1)
+    call transpose_y_to_x(ta2,td1)
+    call transpose_y_to_x(tb2,te1)
+    call transpose_y_to_x(tc2,tf1)
+    !du/dx=ta1 du/dy=td1 and du/dz=tg1
+    !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
+    !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
+
+    !Q=-0.5*(ta1**2+te1**2+di1**2)-td1*tb1-tg1*tc1-th1*tf1
+    di1 = zero
+    di1(:,:,:) = - zpfive*(ta1(:,:,:)**2 + te1(:,:,:)**2 + ti1(:,:,:)**2) &
+                 - td1(:,:,:) * tb1(:,:,:) &
+                 - tg1(:,:,:) * tc1(:,:,:) &
+                 - th1(:,:,:) * tf1(:,:,:)
+    call write_field(di1, ".", "critq", trim(num))
+
+  end subroutine visu_channel
   !############################################################################
   !############################################################################
   !!

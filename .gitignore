@@ -1,3 +1,5 @@
+*.xcuserstate
+*.pbxproj
 *.out
 *.o
 *.mod

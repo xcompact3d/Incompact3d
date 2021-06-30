@@ -60,7 +60,7 @@ contains
     use variables
     implicit none
 
-    integer :: iv
+    integer :: iv,stp1,stp2,h
 
     call alloc_x(ux01)
     call alloc_x(uy01)
@@ -80,12 +80,28 @@ contains
     !     Definition of the Control Volume
     !*****************************************************************
     !! xld,xrd,yld,yud: limits of control volume (!!don't use cex and cey anymore!!)
+
     do iv=1,nvol
        ! ok for istret=0 (!!to do for istret=1!!)
        icvlf(iv) = nint(xld(iv)/dx)+1
        icvrt(iv) = nint(xrd(iv)/dx)+1
-       jcvlw(iv) = nint(yld(iv)/dy)+1
-       jcvup(iv) = nint(yud(iv)/dy)+1
+       if (istret.eq.0) then 
+         jcvlw(iv) = nint(yld(iv)/dy)+1
+         jcvup(iv) = nint(yud(iv)/dy)+1
+       else
+         stp1=0
+         stp2=0
+         do h = 1, ny-1  
+           if ((-yp(h+1)-yp(h)+two*yld(iv)).lt.(yld(iv)-yp(h)).and.(stp1.eq.0)) then 
+             jcvlw(iv) = h+1
+             stp1=1
+           endif
+           if ((-yp(h+1)-yp(h)+two*yud(iv)).lt.(yud(iv)-yp(h)).and.(stp2.eq.0)) then
+             jcvup(iv) = h
+             stp2=1 
+           endif
+         enddo
+       endif
        icvlf_lx(iv) = icvlf(iv)
        icvrt_lx(iv) = icvrt(iv)
        jcvlw_lx(iv) = max(jcvlw(iv)+1-xstart(2),1)
@@ -185,6 +201,7 @@ subroutine force(ux1,uy1,ep1)
   use variables
   use decomp_2d
   use MPI
+  use ibm_param
 
   use var, only : ta1, tb1, tc1, td1, di1
   use var, only : ux2, uy2, ta2, tb2, tc2, td2, di2
@@ -192,7 +209,7 @@ subroutine force(ux1,uy1,ep1)
   implicit none
   character(len=30) :: filename, filename2
   integer :: nzmsize
-  integer                                             :: i, iv, j, k, kk, code
+  integer                                             :: i, iv, j, k, kk, code, jj
   integer                                             :: nvect1,nvect2,nvect3
 
   real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1, uy1
@@ -202,6 +219,8 @@ subroutine force(ux1,uy1,ep1)
 
   real(mytype), dimension(nz) :: yLift,xDrag
   real(mytype) :: yLift_mean,xDrag_mean
+
+  real(mytype), dimension(ny-1) :: del_y
 
   real(mytype), dimension(nz) :: tunstxl, tunstyl
   real(mytype), dimension(nz) :: tconvxl,tconvyl
@@ -223,7 +242,15 @@ subroutine force(ux1,uy1,ep1)
   nvect2=ysize(1)*ysize(2)*ysize(3)
   nvect3=zsize(1)*zsize(2)*zsize(3)
 
-  if (itime == 1) then
+  do jj = 1, ny-1
+    if (istret.eq.0) then
+      del_y(jj)=dy
+    else
+      del_y(jj)=yp(jj+1)-yp(jj) 
+    endif
+  enddo
+
+  if (itime.eq.1) then
      do k = 1, xsize(3)
         do j = 1, xsize(2)
            do i = 1, xsize(1)
@@ -245,8 +272,8 @@ subroutine force(ux1,uy1,ep1)
      return
   endif
 
-  call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)    ! dudx
-  call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1) ! dvdx
+  call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)    ! dudx
+  call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy) ! dvdx
   call transpose_x_to_y(ta1,ta2) ! dudx
   call transpose_x_to_y(tb1,tb2) ! dvdx
 
@@ -254,8 +281,8 @@ subroutine force(ux1,uy1,ep1)
   call transpose_x_to_y(uy1,uy2)
   call transpose_x_to_y(ppi1,ppi2)
 
-  call dery (tc2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1) ! dudy
-  call dery (td2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)    ! dvdy
+  call dery (tc2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx) ! dudy
+  call dery (td2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)    ! dvdy
   call transpose_y_to_x(tc2,tc1) ! dudy
   call transpose_y_to_x(td2,td1) ! dvdy
 
@@ -288,12 +315,12 @@ subroutine force(ux1,uy1,ep1)
               !     of a "source".
               !         fac   = (1.5*ux1(i,j,k)-2.0*ux01(i,j,k)+0.5*ux11(i,j,k))*epcv1(i,j,k)
               fac   = (onepfive*ux1(i,j,k)-two*ux01(i,j,k)+half*ux11(i,j,k))*(one-ep1(i,j,k))
-              tsumx = tsumx+fac*dx*dy/dt
+              tsumx = tsumx+fac*dx*del_y(j+(xstart(2)-1))/dt    !tsumx+fac*dx*dy/dt
               !sumx(k) = sumx(k)+dudt1*dx*dy
 
               !         fac   = (1.5*uy1(i,j,k)-2.0*uy01(i,j,k)+0.5*uy11(i,j,k))*epcv1(i,j,k)
               fac   = (onepfive*uy1(i,j,k)-two*uy01(i,j,k)+half*uy11(i,j,k))*(one-ep1(i,j,k))
-              tsumy = tsumy+fac*dx*dy/dt
+              tsumy = tsumy+fac*dx*del_y(j+(xstart(2)-1))/dt !tsumy+fac*dx*dy/dt
               !sumy(k) = sumy(k)+dudt1*dx*dy
            enddo
         enddo
@@ -411,19 +438,19 @@ subroutine force(ux1,uy1,ep1)
               !momentum flux
               uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k))
               uymid = half*(uy2(i,j,k)+uy2(i,j+1,k))
-              fcvx= fcvx -uxmid*uxmid*dy
-              fcvy= fcvy -uxmid*uymid*dy
+              fcvx= fcvx -uxmid*uxmid*del_y(j)
+              fcvy= fcvy -uxmid*uymid*del_y(j)
 
               !pressure
               prmid=half*(ppi2(i,j,k)+ppi2(i,j+1,k))
-              fprx = fprx +prmid*dy
+              fprx = fprx +prmid*del_y(j)
 
               !viscous term
               dudxmid = half*(ta2(i,j,k)+ta2(i,j+1,k))
               dudymid = half*(tc2(i,j,k)+tc2(i,j+1,k))
               dvdxmid = half*(tb2(i,j,k)+tb2(i,j+1,k))
-              fdix = fdix -two*xnu*dudxmid*dy
-              fdiy = fdiy -xnu*(dvdxmid+dudymid)*dy
+              fdix = fdix -two*xnu*dudxmid*del_y(j)
+              fdiy = fdiy -xnu*(dvdxmid+dudymid)*del_y(j)
            enddo
            tconvxl(kk)=tconvxl(kk)+fcvx
            tconvyl(kk)=tconvyl(kk)+fcvy
@@ -446,19 +473,19 @@ subroutine force(ux1,uy1,ep1)
               !momentum flux
               uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k))
               uymid = half*(uy2(i,j,k)+uy2(i,j+1,k))
-              fcvx= fcvx +uxmid*uxmid*dy
-              fcvy= fcvy +uxmid*uymid*dy
+              fcvx= fcvx +uxmid*uxmid*del_y(j)
+              fcvy= fcvy +uxmid*uymid*del_y(j)
 
               !pressure
               prmid=half*(ppi2(i,j,k)+ppi2(i,j+1,k))
-              fprx = fprx -prmid*dy
+              fprx = fprx -prmid*del_y(j)
 
               !viscous term
               dudxmid = half*(ta2(i,j,k)+ta2(i,j+1,k))
               dudymid = half*(tc2(i,j,k)+tc2(i,j+1,k))
               dvdxmid = half*(tb2(i,j,k)+tb2(i,j+1,k))
-              fdix = fdix +two*xnu*dudxmid*dy
-              fdiy = fdiy +xnu*(dvdxmid+dudymid)*dy
+              fdix = fdix +two*xnu*dudxmid*del_y(j)
+              fdiy = fdiy +xnu*(dvdxmid+dudymid)*del_y(j)
            enddo
            tconvxl(kk)=tconvxl(kk)+fcvx
            tconvyl(kk)=tconvyl(kk)+fcvy

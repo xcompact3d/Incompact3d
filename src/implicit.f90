@@ -817,7 +817,8 @@ USE param, only : iimplicit, istret, zero, ncly1, nclyn, zero, one, two
 USE variables
 USE derivY
 USE decomp_2d
-
+USE ibm_param, only : ubcx,ubcy,ubcz
+  
 implicit none
 
 integer, intent(in) :: npaire, cly1, clyn
@@ -891,16 +892,16 @@ real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: di2
 
       ! Check if we are solving momentum or scalars
       if (cly1 == ncly1 .and. clyn == nclyn) then
-         call deryy(td2,ux2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0)
+         call deryy(td2,ux2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0, ubcx)
       else
-         call deryyS(td2,ux2,di2,sy,sfyS,ssyS,swyS,ysize(1),ysize(2),ysize(3),0)
+         call deryyS(td2,ux2,di2,sy,sfyS,ssyS,swyS,ysize(1),ysize(2),ysize(3),0, ubcx)
       endif
    else
       ! Check if we are solving momentum or scalars
       if (cly1 == ncly1 .and. clyn == nclyn) then
-         call deryy(td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+         call deryy(td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1, ubcx)
       else
-         call deryyS(td2,ux2,di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
+         call deryyS(td2,ux2,di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1, ubcx)
       endif
 
    endif
@@ -982,7 +983,8 @@ subroutine multmatrix9(td2,ta2,ux2,npaire)
   USE variables
   USE derivY
   USE decomp_2d
-
+  USE ibm_param, only : ubcx,ubcy,ubcz
+  
   implicit none
 
   integer, intent(in) :: npaire
@@ -1037,9 +1039,9 @@ subroutine multmatrix9(td2,ta2,ux2,npaire)
 
   elseif ((ncly1 == 1 .or. nclyn == 1) .and. npaire == 0) then
 
-     call deryy(td2,ux2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0)
+     call deryy(td2,ux2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0, ubcx)
   else
-     call deryy(td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)         
+     call deryy(td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1, ubcx)         
 
   endif
   td2(:,:,:) = xcst * td2(:,:,:)

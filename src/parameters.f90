@@ -54,7 +54,7 @@ subroutine parameter(input_i3d)
 
   use probes, only : nprobes, setup_probes, flag_all_digits, flag_extra_probes, xyzprobes
   use visu, only : output2D
-  use forces, only : iforces, nvol, xld, xrd, yld, yud
+  use forces, only : iforces, nvol, xld, xrd, yld, yud!, zld, zrd
 
   implicit none
 
@@ -85,8 +85,8 @@ subroutine parameter(input_i3d)
   namelist /LESModel/ jles, smagcst, smagwalldamp, nSmag, walecst, maxdsmagcst, iwall
   namelist /WallModel/ smagwalldamp
   namelist /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
-  namelist /ibmstuff/ cex,cey,ra,nobjmax,nraf,nvol,iforces
-  namelist /ForceCVs/ xld, xrd, yld, yud
+  namelist /ibmstuff/ cex,cey,cez,ra,nobjmax,nraf,nvol,iforces, npif, izap, ianal, imove, thickness, chord, omega ,ubcx,ubcy,ubcz,rads, c_air
+  namelist /ForceCVs/ xld, xrd, yld, yud!, zld, zrd
   namelist /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, &
        massfrac, mol_weight, imultispecies, primary_species, &
        Fr, ibirman_eos
@@ -134,7 +134,7 @@ subroutine parameter(input_i3d)
      read(10, nml=ProbesParam); rewind(10)
   endif
   if (iforces == 1) then
-     allocate(xld(nvol), xrd(nvol), yld(nvol), yud(nvol))
+     allocate(xld(nvol), xrd(nvol), yld(nvol), yud(nvol))!, zld(nvol), zrd(nvol))
      read(10, nml=ForceCVs); rewind(10)
   endif
   
@@ -534,6 +534,10 @@ subroutine parameter(input_i3d)
         write(*,*)  "TGV 2D: ", tgv_twod
      endif
      write(*,*) '==========================================================='
+  endif
+  
+  if (iibm.eq.3) then ! This is only for the Cubic Spline Reconstruction
+  npif=npif+1
   endif
 
 #ifdef DEBG

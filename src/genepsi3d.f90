@@ -146,10 +146,11 @@ contains
          nobjmax,yp,nraf)
     call verif_epsi(ep1,npif,izap,nx,ny,nz,nobjmax,&
          nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif)
-    call write_geomcomplex(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
-         nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif,nobjmax,npif)
+ !   call write_geomcomplex(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
+ !        nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif,nobjmax,npif)
     !
   end subroutine genepsi3d
+!
 !############################################################################
 !############################################################################
   subroutine gene_epsi_3D(ep1,nx,ny,nz,dx,dy,dz,xlx,yly,zlz ,&
@@ -161,7 +162,7 @@ contains
     use MPI
     implicit none
     !
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1,smoofun,fbcx,fbcy,fbcz
     real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ep2
     real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: ep3
     integer                                            :: nx,ny,nz,nobjmax
@@ -202,7 +203,7 @@ contains
     !x-pencil
     ep1=zero
     call geomcomplex(ep1,xstart(1),xend(1),ny,xstart(2),xend(2),xstart(3),xend(3),dx,yp,dz,one)
-    if (nrank==0) write(*,*) '    step 1'
+    !if (nrank==0) write(*,*) '    step 1'
     if(nclx)then
        dxraf =xlx/nxraf
     else
@@ -210,7 +211,7 @@ contains
     endif
     xepsi=zero
     call geomcomplex(xepsi,1,nxraf,ny,xstart(2),xend(2),xstart(3),xend(3),dxraf,yp,dz,one)
-    if (nrank==0) write(*,*) '    step 2'
+    !if (nrank==0) write(*,*) '    step 2'
     !y-pencil
     if(ncly)then
        dyraf =yly/nyraf
@@ -225,7 +226,7 @@ contains
     if(.not.ncly)ypraf(nyraf)=yp(ny)
     yepsi=zero
     call geomcomplex(yepsi,ystart(1),yend(1),nyraf,1,nyraf,ystart(3),yend(3),dx,ypraf,dz,one)
-    if (nrank==0) write(*,*) '    step 3'
+    !if (nrank==0) write(*,*) '    step 3'
     !z-pencil
     if(nclz)then
        dzraf=zlz/nzraf
@@ -234,7 +235,7 @@ contains
     endif
     zepsi=zero
     call geomcomplex(zepsi,zstart(1),zend(1),ny,zstart(2),zend(2),1,nzraf,dx,yp,dzraf,one)
-    if (nrank==0) write(*,*) '    step 4'
+    !if (nrank==0) write(*,*) '    step 4'
 
     !x-pencil
     nobjx(:,:)=0
@@ -258,7 +259,7 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjxmax,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (nrank==0) write(*,*) '        nobjxmax=',mpi_aux_i
+    !if (nrank==0) write(*,*) '        nobjxmax=',mpi_aux_i
 
     nobjxraf(:,:)=0
     ibug=0
@@ -286,10 +287,10 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjxmaxraf,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (nrank==0) write(*,*) '        nobjxmaxraf=',mpi_aux_i
+    !if (nrank==0) write(*,*) '        nobjxmaxraf=',mpi_aux_i
     call MPI_REDUCE(ibug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (nrank==0) write(*,*) '        ibug=',mpi_aux_i
-    if (nrank==0) write(*,*) '    step 5'
+    !if (nrank==0) write(*,*) '        ibug=',mpi_aux_i
+    !if (nrank==0) write(*,*) '    step 5'
 
     !y-pencil
     nobjy(:,:)=0
@@ -314,7 +315,7 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjymax,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (nrank==0) write(*,*) '        nobjymax=',mpi_aux_i
+    !if (nrank==0) write(*,*) '        nobjymax=',mpi_aux_i
 
     nobjyraf(:,:)=0
     jbug=0
@@ -342,10 +343,10 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjymaxraf,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (nrank==0) write(*,*) '        nobjymaxraf=',mpi_aux_i
+    !if (nrank==0) write(*,*) '        nobjymaxraf=',mpi_aux_i
     call MPI_REDUCE(jbug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (nrank==0) write(*,*) '        jbug=',mpi_aux_i
-    if (nrank==0) write(*,*) '    step 6'
+    !if (nrank==0) write(*,*) '        jbug=',mpi_aux_i
+    !if (nrank==0) write(*,*) '    step 6'
 
     !z-pencil
     nobjz(:,:)=0
@@ -370,7 +371,7 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjzmax,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (nrank==0) write(*,*) '        nobjzmax=',mpi_aux_i
+    !if (nrank==0) write(*,*) '        nobjzmax=',mpi_aux_i
 
     nobjzraf(:,:)=0
     kbug=0
@@ -398,10 +399,10 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjzmaxraf,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (nrank==0) write(*,*) '        nobjzmaxraf=',mpi_aux_i
+    !if (nrank==0) write(*,*) '        nobjzmaxraf=',mpi_aux_i
     call MPI_REDUCE(kbug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (nrank==0) write(*,*) '        kbug=',mpi_aux_i
-    if (nrank==0) write(*,*) '    step 7'
+    !if (nrank==0) write(*,*) '        kbug=',mpi_aux_i
+    !if (nrank==0) write(*,*) '    step 7'
 
     !x-pencil
     do k=1,xsize(3)
@@ -434,7 +435,7 @@ contains
                 do i=1,nx-1
                    if(ep1(i,j,k) == zero .and. ep1(i+1,j,k) ==  one)iobj=iobj+1
                    if(ep1(i,j,k) == zero .and. ep1(i+1,j,k) == zero)iflu=1
-                   if(ep1(i,j,k) ==  one .and. ep1(i+1,j,k) == zero)isol=1
+                   if(ep1(i,j,k) ==  one .and. ep1(i+1,j,k) ==  one)isol=1
                    do iraf=1,nraf
                       if(xepsi(iraf+nraf*(i-1)  ,j,k) == zero .and.&
                          xepsi(iraf+nraf*(i-1)+1,j,k) ==  one)idebraf=iraf+nraf*(i-1)+1
@@ -469,7 +470,7 @@ contains
           enddo
        enddo
     endif
-    if (nrank==0) write(*,*) '    step 8'
+    !if (nrank==0) write(*,*) '    step 8'
 
     !y-pencil
     do k=1,ysize(3)
@@ -537,7 +538,7 @@ contains
           enddo
        enddo
     endif
-    if (nrank==0) write(*,*) '    step 9'
+    !if (nrank==0) write(*,*) '    step 9'
 
     !z-pencil
     do j=1,zsize(2)
@@ -605,7 +606,7 @@ contains
           enddo
        enddo
     endif
-    if (nrank==0) write(*,*) '    step 10'
+    !if (nrank==0) write(*,*) '    step 10'
     !
     return
   end subroutine gene_epsi_3D
@@ -768,8 +769,8 @@ contains
        enddo
     enddo
     call MPI_REDUCE(ising,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (nrank==0) write(*,*) '        number of points with potential problem in X :',mpi_aux_i
-    if (nrank==0) write(*,*) '    step 11'
+    !if (nrank==0) write(*,*) '        number of points with potential problem in X :',mpi_aux_i
+    !if (nrank==0) write(*,*) '    step 11'
 
     !y-pencil
     call transpose_x_to_y(ep1,ep2)
@@ -811,8 +812,8 @@ contains
        enddo
     enddo
     call MPI_REDUCE(jsing,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (nrank==0) write(*,*) '        number of points with potential problem in Y :',mpi_aux_i
-    if (nrank==0) write(*,*) '    step 12'
+    !if (nrank==0) write(*,*) '        number of points with potential problem in Y :',mpi_aux_i
+    !if (nrank==0) write(*,*) '    step 12'
 
     !z-pencil
     if(nz > 1)then
@@ -855,9 +856,9 @@ contains
           enddo
        enddo
        call MPI_REDUCE(ksing,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-       if (nrank==0) write(*,*) '        number of points with potential problem in Z :',mpi_aux_i
+       !if (nrank==0) write(*,*) '        number of points with potential problem in Z :',mpi_aux_i
     endif
-    if (nrank==0) write(*,*) '    step 13'
+    !if (nrank==0) write(*,*) '    step 13'
     !
     return
   end subroutine verif_epsi
@@ -866,7 +867,7 @@ contains
   subroutine write_geomcomplex(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
        nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif,nobjmax,npif)
     use decomp_2d
-    USE decomp_2d_io
+    use decomp_2d_io
     implicit none
     !
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
@@ -988,9 +989,9 @@ contains
   !############################################################################
   subroutine read_geomcomplex()
     !
-    USE complex_geometry
-    USE decomp_2d
-    USE MPI
+    use complex_geometry
+    use decomp_2d
+    use MPI
     !
     implicit none
     !

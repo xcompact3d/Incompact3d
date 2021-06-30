@@ -380,6 +380,683 @@ contains
     enddo
     return
   end subroutine polint
-  !############################################################################
-  !############################################################################
+!*--------------------------------------------------------------------------*!
+!*                                                                          *!
+!*                      Cubic Spline Reconstruction                         *!
+!*                                                                          *!
+!*--------------------------------------------------------------------------*!
+!***************************************************************************
+!***************************************************************************
+!***************************************************************************
+!
+subroutine cubsplx(u,lind)
+  !
+  USE param
+  USE complex_geometry
+  USE decomp_2d
+  USE variables
+  USE ibm_param
+  !
+  implicit none
+  !
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: u
+  integer                                            :: i,j,k
+  real(mytype)                                       :: x,y,z
+  integer                                            :: ix              ! Counter for Skipping Points
+  integer                                            :: ipif,ipol,nxpif 
+  integer                                            :: ipoli,ipolf     ! Starting and Ending Points for the Reconstruction
+  real(mytype)                                       :: xpol,ypol       ! Position and Value of the Reconstructed Solution 
+  real(mytype),dimension(10)                         :: xa,ya           ! Position and Value of the Input Data Function 
+  integer                                            :: ia,na           
+  real(mytype)                                       :: lind            ! Identifying which BC to Impose
+  real(mytype)                                       :: bcimp           ! Imposed BC 
+  integer                                            :: inxi,inxf
+  real(mytype)                                       :: ana_resi,ana_resf         ! Position of Boundary (Analytically)
+  !
+  ! Initialise Arrays
+  xa(:)=0.
+  ya(:)=0.
+  !
+  ! Impose the Correct BC
+  bcimp=lind  
+  !
+  do k=1,xsize(3)
+     do j=1,xsize(2)
+        if(nobjx(j,k).ne.0)then
+           ia=0
+           do i=1,nobjx(j,k)          
+              !  1st Boundary
+              nxpif=npif
+              ia=ia+1
+              if (ianal.eq.0) then
+                 xa(ia)=xi(i,j,k)
+                 ana_resi=xi(i,j,k)
+              else
+                 call analitic_x(j,xi(i,j,k),ana_resi,k) ! Calculate the position of BC analytically
+                 xa(ia)=ana_resi
+              endif
+              ya(ia)=bcimp
+              if(xi(i,j,k).gt.0.)then ! Immersed Object
+                 inxi=0
+                 ix=xi(i,j,k)/dx+1
+                 ipoli=ix+1
+                 if(nxipif(i,j,k).lt.npif)nxpif=nxipif(i,j,k)
+                 do ipif=1,nxpif
+                    ia=ia+1
+                    if(izap.eq.1)then ! Skip First Points
+                       xa(ia)=(ix-1)*dx-ipif*dx
+                       ya(ia)=u(ix-ipif,j,k)
+                    else              ! Don't Skip any Points
+                       xa(ia)=(ix-1)*dx-(ipif-1)*dx
+                       ya(ia)=u(ix-ipif+1,j,k)
+                    endif
+                 enddo
+              else                    ! Boundary Coincides with Physical Boundary (Inlet)
+                 inxi=1
+                 ipoli=1
+                 ix=xi(i,j,k)/dx
+                 ipoli=ix+1
+                 if(nxipif(i,j,k).lt.npif)nxpif=nxipif(i,j,k)
+                 do ipif=1,nxpif
+                    ia=ia+1
+                    if(izap.eq.1)then ! Skip First Points
+                       xa(ia)=(ix-1)*dx-ipif*dx
+                       ya(ia)=bcimp                   
+                    else              ! Don't Skip any Points
+                       xa(ia)=(ix-1)*dx-(ipif-1)*dx
+                       ya(ia)=bcimp      
+                    endif
+                 enddo
+              endif
+              !
+              !  2nd Boundary
+              nxpif=npif
+              ia=ia+1
+              if (ianal.eq.0) then
+                 xa(ia)=xf(i,j,k)
+                 ana_resf=xf(i,j,k)
+              else
+                 call analitic_x(j,xf(i,j,k),ana_resf,k) ! Calculate the position of BC analytically
+                 xa(ia)=ana_resf
+              endif              
+              ya(ia)=bcimp              
+              if(xf(i,j,k).lt.xlx)then ! Immersed Object
+                 inxf=0
+                 ix=(xf(i,j,k)+dx)/dx+1
+                 ipolf=ix-1
+                 if(nxfpif(i,j,k).lt.npif)nxpif=nxfpif(i,j,k)
+                 do ipif=1,nxpif
+                    ia=ia+1
+                    if(izap.eq.1)then  ! Skip First Points
+                       xa(ia)=(ix-1)*dx+ipif*dx
+                       ya(ia)=u(ix+ipif,j,k)
+                    else               ! Don't Skip any Points
+                       xa(ia)=(ix-1)*dx+(ipif-1)*dx
+                       ya(ia)=u(ix+ipif-1,j,k)
+                    endif
+                 enddo
+              else                     ! Boundary Coincides with Physical Boundary (Outlet)
+                 inxf=1
+                 ipolf=nx
+                 ix=(xf(i,j,k)+dx)/dx+1
+                 ipolf=ix-1
+                 if(nxfpif(i,j,k).lt.npif)nxpif=nxfpif(i,j,k)
+                 do ipif=1,nxpif
+                    ia=ia+1
+                    if(izap.eq.1)then  ! Skip First Points
+                       xa(ia)=(ix-1)*dx+ipif*dx
+                       ya(ia)=bcimp                                   
+                    else               ! Don't Skip any Points
+                       xa(ia)=(ix-1)*dx+(ipif-1)*dx
+                       ya(ia)=bcimp                                   
+                    endif
+                 enddo
+              endif
+              ! Special Case
+              if (xi(i,j,k).eq.xf(i,j,k)) then
+                  u(ipol,j,k)=bcimp                                   
+              else
+              ! Cubic Spline Reconstruction
+		  na=ia
+		  do ipol=ipoli,ipolf
+		     if ((inxf.eq.1).and.(inxi.eq.1)) then ! If the Body Extends from the Inlet to the Outlet (Special Case)
+                 u(ipol,j,k)=bcimp                            
+             else
+		         xpol=dx*(ipol-1)
+		         if (xpol.eq.ana_resi) then
+		            u(ipol,j,k)=bcimp
+		         elseif (xpol.eq.ana_resf) then
+		            u(ipol,j,k)=bcimp
+		         else   
+		            call cubic_spline(xa,ya,na,xpol,ypol)
+		            u(ipol,j,k)=ypol
+		         endif
+		     endif
+		  enddo
+		  ia=0
+	      endif    
+           enddo
+        endif
+     enddo
+  enddo
+  !
+  return
+end subroutine cubsplx
+!
+!***************************************************************************
+!***************************************************************************
+!***************************************************************************
+!
+subroutine cubsply(u,lind)
+  !
+  USE param
+  USE complex_geometry
+  USE decomp_2d
+  USE variables
+  USE ibm_param
+  !
+  implicit none
+  !
+  real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: u
+  integer                                            :: i,j,k
+  real(mytype)                                       :: x,y,z
+  integer                                            :: jy              ! Counter for Skipping Points
+  integer                                            :: jpif,jpol,nypif
+  integer                                            :: jpoli,jpolf     ! Starting and Ending Points for the Reconstruction
+  real(mytype)                                       :: xpol,ypol,dypol ! Position and Value of the Reconstructed Solution 
+  real(mytype),dimension(10)                         :: xa,ya           ! Position and Value of the Input Data Function 
+  integer                                            :: ia,na           
+  real(mytype)                                       :: lind            ! Identifying which BC to Impose
+  real(mytype)                                       :: bcimp           ! Imposed BC 
+  integer                                            :: inxi,inxf  
+  real(mytype)                                       :: ana_resi,ana_resf
+  !
+  ! Initialise Arrays
+  xa(:)=0.
+  ya(:)=0.
+  !
+  ! Impose the Correct BC
+  bcimp=lind  
+  !
+  do k=1,ysize(3)
+     do i=1,ysize(1)
+        if(nobjy(i,k).ne.0)then
+           ia=0
+           do j=1,nobjy(i,k)          
+              !  1st Boundary
+              nypif=npif
+              ia=ia+1
+              if (ianal.eq.0) then
+                 xa(ia)=yi(j,i,k)
+                 ana_resi=yi(j,i,k)
+              else
+                 call analitic_y(i,yi(j,i,k),ana_resi,k) ! Calculate the position of BC analytically
+                 xa(ia)=ana_resi
+              endif  
+              ya(ia)=bcimp
+              if(yi(j,i,k).gt.0.)then ! Immersed Object
+                 jy=1
+                 do while(yp(jy).lt.yi(j,i,k))
+                    jy=jy+1
+                 enddo
+                 jy=jy-1
+                 jpoli=jy+1
+                 if(nyipif(j,i,k).lt.npif)nypif=nyipif(j,i,k)
+                 do jpif=1,nypif
+                    ia=ia+1
+                    if(izap.eq.1)then ! Skip First Points
+                       xa(ia)=yp(jy-jpif)
+                       ya(ia)=u(i,jy-jpif,k)
+                    else              ! Don't Skip any Points
+                       xa(ia)=yp(jy-jpif+1)
+                       ya(ia)=u(i,jy-jpif+1,k)
+                    endif
+                 enddo
+              else                   ! Boundary Coincides with Physical Boundary (Bottom)
+                 jy=1
+                 jpoli=1
+                 do while(yp(jy).lt.yi(j,i,k))
+                    jy=jy+1
+                 enddo
+                 jy=jy-1
+                 jpoli=jy+1
+                 if(nyipif(j,i,k).lt.npif)nypif=nyipif(j,i,k)
+                 do jpif=1,nypif
+                    ia=ia+1
+                    if(izap.eq.1)then ! Skip First Points
+                       xa(ia)=yp(1)-(jpif+1)*dy
+                       ya(ia)=bcimp
+                    else              ! Don't Skip any Points
+                       xa(ia)=yp(1)-(jpif*dy)
+                       ya(ia)=bcimp
+                    endif
+                 enddo
+              endif
+              ! 2nd Boundary
+              nypif=npif
+              ia=ia+1
+              if (ianal.eq.0) then
+                 xa(ia)=yf(j,i,k)
+                 ana_resf=yf(j,i,k)
+              else
+                 call analitic_y(i,yf(j,i,k),ana_resf,k) ! Calculate the position of BC analytically
+                 xa(ia)=ana_resf
+              endif  
+              ya(ia)=bcimp
+              if(yf(j,i,k).lt.yly)then ! Immersed Object
+                 jy=1
+                 do while(yp(jy).lt.yf(j,i,k))  
+                    jy=jy+1
+                 enddo
+                 jpolf=jy-1
+                 if(nyfpif(j,i,k).lt.npif)nypif=nyfpif(j,i,k)
+                 do jpif=1,nypif
+                    ia=ia+1
+                    if(izap.eq.1)then ! Skip First Points
+                       xa(ia)=yp(jy+jpif)
+                       ya(ia)=u(i,jy+jpif,k)
+                    else              ! Don't Skip any Points
+                       xa(ia)=yp(jy+jpif-1)
+                       ya(ia)=u(i,jy+jpif-1,k)
+                    endif
+                 enddo
+              else                   ! Boundary Coincides with Physical Boundary (Top)
+                 jy=1
+                 jpolf=ny
+                 do while(yp(jy).lt.yf(j,i,k))  
+                    jy=jy+1
+                 enddo
+                 jpolf=jy-1
+                 if(nyfpif(j,i,k).lt.npif)nypif=nyfpif(j,i,k)
+                 do jpif=1,nypif
+                    ia=ia+1
+                    if(izap.eq.1)then ! Skip First Points
+                       xa(ia)=yp(ny)+(jpif+1)*dy
+                       ya(ia)=bcimp
+                    else              ! Don't Skip any Points
+                       xa(ia)=yp(ny)+(jpif)*dy
+                       ya(ia)=bcimp
+                    endif
+                 enddo
+              endif
+              ! Special Case
+              if (yi(j,i,k).eq.yf(j,i,k)) then
+                  u(i,jpol,k)=bcimp                                   
+              else
+		  !calcul du polynôme
+		   na=ia
+		   do jpol=jpoli,jpolf
+		         xpol=yp(jpol)
+		         if (xpol.eq.ana_resi) then
+		            u(i,jpol,k)=bcimp
+		         elseif (xpol.eq.ana_resf) then
+		            u(i,jpol,k)=bcimp
+		         else   
+		            call cubic_spline(xa,ya,na,xpol,ypol)
+		            u(i,jpol,k)=ypol
+		         endif
+		   enddo
+		   ia=0
+	      endif    
+           enddo
+        endif
+     enddo
+  enddo
+  !
+  return
+end subroutine cubsply
+!
+!***************************************************************************
+!***************************************************************************
+!***************************************************************************
+!
+subroutine cubsplz(u,lind)
+  !
+  USE param
+  USE complex_geometry
+  USE decomp_2d
+  USE variables
+  USE ibm_param
+  !
+  implicit none
+  !
+  real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: u
+  integer                                            :: i,j,k
+  real(mytype)                                       :: x,y,z
+  integer                                            :: kz              != position du point "zappé"
+  integer                                            :: kpif,kpol,nzpif
+  integer                                            :: kpoli,kpolf     != positions Initiales et Finales du POLynôme considéré
+  real(mytype)                                       :: xpol,ypol,dypol !|variables concernant les polynômes
+  real(mytype),dimension(10)                         :: xa,ya           !|de Lagrange. A mettre imérativement en 
+  integer                                            :: ia,na           !|double précision
+  real(mytype)                                       :: lind            ! Identifying which BC to Impose
+  real(mytype)                                       :: bcimp           ! Imposed BC 
+  integer                                            :: inxi,inxf  
+  real(mytype)                                       :: ana_resi,ana_resf
+  !
+  ! Initialise Arrays
+  xa(:)=0.
+  ya(:)=0.
+  !
+  ! Impose the Correct BC
+  bcimp=lind  
+  !
+  do j=1,zsize(2)
+     do i=1,zsize(1)
+        if(nobjz(i,j).ne.0)then
+           ia=0
+           do k=1,nobjz(i,j)          
+              !  1st Boundary
+              nzpif=npif
+              ia=ia+1
+              if (ianal.eq.0) then
+                 xa(ia)=zi(k,i,j)
+                 ana_resi=zi(k,i,j)
+              else
+!                 call analitic_z(i,zi(k,i,j),ana_resi,j) ! Calculate the position of BC analytically
+                 xa(ia)=ana_resi
+              endif  
+              ya(ia)=bcimp
+              if(zi(k,i,j).gt.0.)then ! Immersed Object
+                 inxi=0
+                 kz=zi(k,i,j)/dz+1
+                 kpoli=kz+1
+                 if(nzipif(k,i,j).lt.npif)nzpif=nzipif(k,i,j)
+                 do kpif=1,nzpif
+                    ia=ia+1
+                    if(izap.eq.1)then ! Skip First Points
+                       xa(ia)=(kz-1)*dz-kpif*dz
+                       ya(ia)=u(i,j,kz-kpif)
+                    else              ! Don't Skip any Points
+                       xa(ia)=(kz-1)*dz-(kpif-1)*dz
+                       ya(ia)=u(i,j,kz-kpif+1)
+                    endif
+                 enddo
+              else                   ! Boundary Coincides with Physical Boundary (Front) 
+                 inxi=1
+                 kz=zi(k,i,j)/dz
+                 kpoli=1
+                 if(nzipif(k,i,j).lt.npif)nzpif=nzipif(k,i,j)
+                 do kpif=1,nzpif
+                    ia=ia+1
+                    if(izap.eq.1)then ! Skip First Points
+                       xa(ia)=(kz-1)*dz-kpif*dz
+                       ya(ia)=bcimp
+                    else              ! Don't Skip any Points
+                       xa(ia)=(kz-1)*dz-(kpif-1)*dz
+                       ya(ia)=bcimp
+                    endif
+                 enddo
+              endif
+              !  2nd Boundary
+              nzpif=npif
+              ia=ia+1
+              if (ianal.eq.0) then
+                 xa(ia)=zf(k,i,j)
+                 ana_resf=zf(k,i,j)
+              else
+!                 call analitic_z(i,zf(k,i,j),ana_resf,j) ! Calculate the position of BC analytically
+                 xa(ia)=ana_resf
+              endif
+              ya(ia)=bcimp
+              if(zf(k,i,j).lt.zlz)then  ! Immersed Object
+                 inxf=0
+                 kz=(zf(k,i,j)+dz)/dz+1
+                 kpolf=kz-1
+                 if(nzfpif(k,i,j).lt.npif)nzpif=nzfpif(k,i,j)
+                 do kpif=1,nzpif
+                    ia=ia+1
+                    if(izap.eq.1)then  ! Skip First Points
+                       xa(ia)=(kz-1)*dz+kpif*dz
+                       ya(ia)=u(i,j,kz+kpif)
+                    else               ! Don't Skip any Points
+                       xa(ia)=(kz-1)*dz+(kpif-1)*dz
+                       ya(ia)=u(i,j,kz+kpif-1)
+                    endif
+                 enddo
+              else                     ! Boundary Coincides with Physical Boundary (Back)
+                 inxf=1
+                 kz=(zf(k,i,j)+dz)/dz+1
+                 kpolf=nz
+                 if(nzfpif(k,i,j).lt.npif)nzpif=nzfpif(k,i,j)
+                 do kpif=1,nzpif
+                    ia=ia+1
+                    if(izap.eq.1)then  ! Skip First Points
+                       xa(ia)=(kz-1)*dz+kpif*dz
+                       ya(ia)=bcimp
+                    else               ! Don't Skip any Points
+                       xa(ia)=(kz-1)*dz+(kpif-1)*dz
+                       ya(ia)=bcimp
+                    endif
+                 enddo
+              endif
+         !     ! Special Case
+         !     if (zi(k,i,j).eq.zf(k,i,j)) then
+         !         u(i,j,kpol)=bcimp                                   
+         !     else              
+    	      ! Cubic Spline Reconstruction
+	            na=ia
+	            do kpol=kpoli,kpolf 
+                          ! Special Case
+                          if (zi(k,i,j).eq.zf(k,i,j)) then
+                                u(i,j,kpol)=bcimp
+                          else
+	                    if ((inxf.eq.1).and.(inxi.eq.1)) then ! If the Body Extends from the Front to the Back (Special Case)
+	                          u(i,j,kpol)=bcimp                            
+	                     else              
+	                          xpol=dz*(kpol-1)
+	                          call cubic_spline(xa,ya,na,xpol,ypol)
+	                          u(i,j,kpol)=ypol
+	                     endif
+                           endif
+	            enddo
+	            ia=0
+         !     endif
+           enddo
+        endif
+     enddo
+  enddo
+  !
+  return
+end subroutine cubsplz
+!
+!***************************************************************************
+!***************************************************************************
+!***************************************************************************
+!
+subroutine cubic_spline(xa,ya,n,x,y)
+  !
+  USE decomp_2d
+  !
+  implicit none
+  !
+  integer                 :: n,i,j,nc,nk
+  real(8)                 :: x,y,xcc
+  real(8),dimension(n)    :: xa,ya
+  real(8),dimension(10)   :: xaa,yaa
+  real(8)                 :: ypri,yprf
+  real(8),dimension(n-2)  :: xx,alpha,cc,zz,ll,aa,yy
+  real(8),dimension(n-3)  :: hh,dd,bb,mm
+  !
+	! Initialise Arrays
+	xaa(:)=0.
+	yaa(:)=0.
+	! Arrange Points in Correct Order (based on x-coor)
+	j=n/2
+	do i=1,n
+		    if (i.le.n/2) then
+		            xaa(i)=xa(j)
+		            yaa(i)=ya(j)
+		            j=j-1
+		    else
+		            xaa(i)=xa(i)
+		            yaa(i)=ya(i)
+		    endif
+	enddo   
+	!
+	ypri=(yaa(3)-yaa(1))/(xaa(3)-xaa(1))
+	yprf=(yaa(n)-yaa(n-2))/(xaa(n)-xaa(n-2))
+	!
+	nk=n-1
+	!
+	do i=2,nk
+		yy(i-1)=yaa(i)
+	enddo
+	!
+	do i=2,nk
+		xx(i-1)=xaa(i)
+	enddo
+	!
+	nc=nk-1
+	!
+	do i=1,nc
+		aa(i)=yy(i)
+	enddo
+	!
+	do i=1,nc-1
+		hh(i)=xx(i+1)-xx(i)
+	enddo
+	!
+	alpha(1)=(3.*(aa(2)-aa(1)))/hh(1) - 3.*ypri
+	alpha(nc)= 3.*yprf - 3.*(aa(nc)-aa(nc-1))/hh(nc-1)
+	!
+	do i=2,nc-1
+		alpha(i)=(3./hh(i))*(aa(i+1)-aa(i))-(3./hh(i-1))*(aa(i)-aa(i-1))
+	enddo
+	ll(1)=2.*hh(1)
+	mm(1)=0.5
+	zz(1)=alpha(1)/ll(1)
+	!
+	do i=2,nc-1
+		ll(i)=2.*(xx(i+1)-xx(i-1))-hh(i-1)*mm(i-1);
+		mm(i)=hh(i)/ll(i);
+		zz(i)=(alpha(i)-hh(i-1)*zz(i-1))/ll(i);
+	enddo
+	!
+	 ll(nc)=hh(nc-1)*(2.-mm(nc-1));
+	 zz(nc)=(alpha(nc)-hh(nc-1)*zz(nc-1))/ll(nc);
+	 cc(nc)=zz(nc);
+	!
+	do j=nc-1,1,-1
+		cc(j)=zz(j)-mm(j)*cc(j+1);
+		bb(j)=(aa(j+1)-aa(j))/hh(j)-(hh(j)/3.)*(cc(j+1)+2.*cc(j));
+		dd(j)=(cc(j+1)-cc(j))/(3.*hh(j));
+	enddo
+	!
+	do j=2,nc
+	xcc=x;
+        if (xcc<=xx(j) .and. xcc>=xx(j-1)) then
+	       y= aa(j-1) + bb(j-1)*(xcc-xx(j-1)) + cc(j-1)*(xcc-xx(j-1))**2 + dd(j-1)*(xcc-xx(j-1))**3;
+	endif
+	enddo 
+	!
+  return
+end subroutine cubic_spline
+!***************************************************************************
+!***************************************************************************
+!***************************************************************************
+!
+subroutine ana_y_cyl(i,y_pos,ana_res)
+  !
+  USE param
+  USE complex_geometry
+  USE decomp_2d
+  USE variables
+  USE ibm_param
+  !
+  implicit none
+  !
+  integer                                            :: i
+  real(mytype)                                       :: y_pos,ana_res 
+  real(mytype)                                       :: cexx,ceyy
+  !
+  if (t.ne.0.) then
+     cexx = cex + ubcx*(t-ifirst*dt)
+     ceyy = cey + ubcy*(t-ifirst*dt)
+  else
+     cexx = cex
+     ceyy = cey
+  endif
+  if (y_pos.gt.ceyy) then     ! Impose analytical BC
+      ana_res=ceyy + sqrt(ra**2.0-((i+ystart(1)-1-1)*dx-cexx)**2.0)
+  else
+      ana_res=ceyy - sqrt(ra**2.0-((i+ystart(1)-1-1)*dx-cexx)**2.0)
+  endif     
+  !
+  return
+end subroutine ana_y_cyl
+!***************************************************************************
+!
+subroutine ana_x_cyl(j,x_pos,ana_res)
+  !
+  USE param
+  USE complex_geometry
+  USE decomp_2d
+  USE variables
+  USE ibm_param
+  !
+  implicit none
+  !
+  integer                                            :: j
+  real(mytype)                                       :: x_pos,ana_res 
+  real(mytype)                                       :: cexx,ceyy
+  !
+  if (t.ne.0.) then
+     cexx = cex + ubcx*(t-ifirst*dt)
+     ceyy = cey + ubcy*(t-ifirst*dt)
+  else
+     cexx = cex
+     ceyy = cey
+  endif
+  if (x_pos.gt.cexx) then     ! Impose analytical BC
+      ana_res = cexx + sqrt(ra**2.0-(yp(j+xstart(2)-1)-ceyy)**2.0)
+  else
+      ana_res = cexx - sqrt(ra**2.0-(yp(j+xstart(2)-1)-ceyy)**2.0)
+  endif     
+  !
+  return
+end subroutine ana_x_cyl
+!*******************************************************************
+SUBROUTINE analitic_x(j,x_pos,ana_res,k)
+
+  USE param, ONLY : itype, itype_cyl
+  USE decomp_2d, ONLY : mytype
+!  USE cyl, ONLY : geomcomplex_cyl
+
+  IMPLICIT NONE
+
+  integer                                            :: j,k
+  real(mytype)                                       :: x_pos,ana_res 
+
+  IF (itype.EQ.itype_cyl) THEN
+
+     CALL ana_x_cyl(j,x_pos,ana_res)
+
+  ENDIF
+
+END SUBROUTINE analitic_x
+!*******************************************************************
+!*******************************************************************
+SUBROUTINE analitic_y(i,y_pos,ana_res,k)
+
+  USE param, ONLY : itype, itype_cyl
+  USE decomp_2d, ONLY : mytype
+!  USE cyl, ONLY : geomcomplex_cyl
+
+  IMPLICIT NONE
+
+  integer                                            :: i,k
+  real(mytype)                                       :: y_pos,ana_res 
+
+  IF (itype.EQ.itype_cyl) THEN
+
+     CALL ana_y_cyl(i,y_pos,ana_res)
+
+  ENDIF
+
+END SUBROUTINE analitic_y
+!*******************************************************************
+!*******************************************************************
+  
+  
 end module ibm

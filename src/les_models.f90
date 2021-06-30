@@ -170,6 +170,7 @@ contains
     use var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2,srt_smag2,nut2
     use var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
     use dbg_schemes, only: sqrt_prec
+    use ibm_param
 
     implicit none
 
@@ -187,9 +188,9 @@ contains
     ! gxy= dux/dy; gyy=duy/dy; gzy=duz/dy;
     ! gxz= dux/dz; gyz=duy/dz; gzz=duz/dz
 
-    call derx (gxx1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
-    call derx (gyx1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-    call derx (gzx1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    call derx (gxx1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+    call derx (gyx1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+    call derx (gzx1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
 
     sxx1(:,:,:) = gxx1(:,:,:)
 
@@ -199,9 +200,9 @@ contains
     call transpose_x_to_y(uz1,uz2)
     call transpose_x_to_y(gyx1,ta2)
 
-    call dery (gxy2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-    call dery (gyy2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-    call dery (gzy2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call dery (gxy2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+    call dery (gyy2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+    call dery (gzy2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
 
     sxy2(:,:,:)=half*(gxy2(:,:,:)+ta2(:,:,:))
     syy2(:,:,:)=gyy2(:,:,:)
@@ -212,9 +213,9 @@ contains
     call transpose_y_to_z(uz2,uz3)
     call transpose_y_to_z(gzy2,ta3)
 
-    call derz(gxz3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    call derz(gyz3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    call derz(gzz3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+    call derz(gxz3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+    call derz(gyz3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcz)
+    call derz(gzz3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
 
     szz3(:,:,:)=gzz3(:,:,:)
     syz3(:,:,:)=half*(gyz3(:,:,:)+ta3(:,:,:))
@@ -301,7 +302,9 @@ contains
     use var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
     use tools, only : mean_plane_z
     use dbg_schemes, only: sqrt_prec
-
+    use ibm_param
+    use param, only : zero
+    
     implicit none
 
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, ep1
@@ -344,7 +347,7 @@ contains
 
     nvect1=xsize(1)*xsize(2)*xsize(3)
 
-    if((iibm==1).or.(iibm==2)) then
+    if((iibm==1).or.(iibm==2).or.(iibm==3)) then
        ta1 = ux1 * (one - ep1)
        tb1 = uy1 * (one - ep1)
        tc1 = uz1 * (one - ep1)
@@ -364,23 +367,23 @@ contains
     ! Initialise the filter
     call filter(zero)
 
-    call filx(ux1f, ta1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0) !ux1
-    call filx(uy1f, tb1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !uy1
-    call filx(uz1f, tc1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !uz1
+    call filx(ux1f, ta1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,ubcx) !ux1
+    call filx(uy1f, tb1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcy) !uy1
+    call filx(uz1f, tc1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcz) !uz1
 
-    call filx(uxx1f, uxx1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !ux1*ux1
-    call filx(uyy1f, uyy1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !uy1*uy1
-    call filx(uzz1f, uzz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !uz1*uz1
+    call filx(uxx1f, uxx1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcx*ubcx) !ux1*ux1
+    call filx(uyy1f, uyy1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcy*ubcy) !uy1*uy1
+    call filx(uzz1f, uzz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcz*ubcz) !uz1*uz1
 
-    call filx(uxy1f, uxy1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0) !ux1*uy1
-    call filx(uxz1f, uxz1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0) !ux1*uz1
-    call filx(uyz1f, uyz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1) !uy1*uz1
+    call filx(uxy1f, uxy1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,ubcx*ubcy) !ux1*uy1
+    call filx(uxz1f, uxz1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,ubcx*ubcz) !ux1*uz1
+    call filx(uyz1f, uyz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcy*ubcz) !uy1*uz1
 
     if (mod(itime, ioutput) == 0) then
        if (nrank==0) write(*,*) "filx ux= ", maxval(ta1), maxval(ux1f), maxval(ta1) - maxval(ux1f)
     endif
 
-   if((iibm==1).or.(iibm==2)) then
+   if((iibm==1).or.(iibm==2).or.(iibm==3)) then
        ux1f = ux1f * (one - ep1)
        uy1f = uy1f * (one - ep1)
        uz1f = uz1f * (one - ep1)
@@ -403,23 +406,23 @@ contains
     call transpose_x_to_y(uxz1f, th2)
     call transpose_x_to_y(uyz1f, ti2)
 
-    call fily(ux2f, ta2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1) !ux2
-    call fily(uy2f, tb2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0) !uy2
-    call fily(uz2f, tc2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1) !uz2
+    call fily(ux2f, ta2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,ubcx) !ux2
+    call fily(uy2f, tb2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,ubcy) !uy2
+    call fily(uz2f, tc2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,ubcz) !uz2
 
-    call fily(uxx2f, td2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1) !ux2*ux2
-    call fily(uyy2f, te2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1) !uy2*uy2
-    call fily(uzz2f, tf2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1) !uz2*uz2
+    call fily(uxx2f, td2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,ubcx*ubcx) !ux2*ux2
+    call fily(uyy2f, te2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,ubcy*ubcy) !uy2*uy2
+    call fily(uzz2f, tf2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,ubcz*ubcz) !uz2*uz2
 
-    call fily(uxy2f, tg2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0) !ux2*uy2
-    call fily(uxz2f, th2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1) !ux2*uz2
-    call fily(uyz2f, ti2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0) !uy2*uz2
+    call fily(uxy2f, tg2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,ubcx*ubcy) !ux2*uy2
+    call fily(uxz2f, th2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,ubcx*ubcz) !ux2*uz2
+    call fily(uyz2f, ti2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,ubcy*ubcz) !uy2*uz2
 
     if (mod(itime, ioutput) == 0) then
        if (nrank==0) write(*,*) "fily ux= ", maxval(ta2), maxval(ux2f), maxval(ta2) - maxval(ux2f)
     endif
 
-    if((iibm==1).or.(iibm==2)) then   
+    if((iibm==1).or.(iibm==2).or.(iibm==3)) then   
        ux2f = ux2f * (one - ep2)
        uy2f = uy2f * (one - ep2)
        uz2f = uz2f * (one - ep2)
@@ -445,17 +448,17 @@ contains
     call transpose_y_to_z(uxz2f, th3)
     call transpose_y_to_z(uyz2f, ti3)
 
-    call filz(ux3f, ta3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1) !ux3
-    call filz(uy3f, tb3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1) !uy3
-    call filz(uz3f, tc3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0) !uz3
+    call filz(ux3f, ta3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,ubcx) !ux3
+    call filz(uy3f, tb3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,ubcy) !uy3
+    call filz(uz3f, tc3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,ubcz) !uz3
 
-    call filz(uxx3f, td3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1) !ux3*ux3
-    call filz(uyy3f, te3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1) !uy3*uy3
-    call filz(uzz3f, tf3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1) !uz3*uz3
+    call filz(uxx3f, td3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,ubcx*ubcx) !ux3*ux3
+    call filz(uyy3f, te3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,ubcy*ubcy) !uy3*uy3
+    call filz(uzz3f, tf3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,ubcz*ubcz) !uz3*uz3
 
-    call filz(uxy3f, tg3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1) !ux3*uy3
-    call filz(uxz3f, th3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0) !ux3*uz3
-    call filz(uyz3f, ti3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0) !uy3*uz3
+    call filz(uxy3f, tg3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,ubcx*ubcy) !ux3*uy3
+    call filz(uxz3f, th3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,ubcx*ubcz) !ux3*uz3
+    call filz(uyz3f, ti3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,ubcy*ubcz) !uy3*uz3
 
     if (mod(itime, ioutput) == 0) then
        if (nrank==0) write(*,*) "filz ux= ", maxval(ta3), maxval(ux3f), maxval(ta3) - maxval(ux3f)
@@ -489,7 +492,7 @@ contains
     call transpose_y_to_x(uxz2f, uxz1f)
     call transpose_y_to_x(uyz2f, uyz1f)
 
-    if((iibm==1).or.(iibm==2)) then
+    if((iibm==1).or.(iibm==2).or.(iibm==3)) then
        ux1f = ux1f * (one - ep1)
        uy1f = uy1f * (one - ep1)
        uz1f = uz1f * (one - ep1)
@@ -509,9 +512,9 @@ contains
     lxz1 = uxz1f - ux1f * uz1f
     lyz1 = uyz1f - uy1f * uz1f
 
-    call derx (gxx1f, ux1f, di1, sx, ffx, fsx, fwx, xsize(1), xsize(2), xsize(3), 0)
-    call derx (gyx1f, uy1f, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1)
-    call derx (gzx1f, uz1f, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1)
+    call derx (gxx1f, ux1f, di1, sx, ffx, fsx, fwx, xsize(1), xsize(2), xsize(3), 0,ubcx)
+    call derx (gyx1f, uy1f, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1,ubcy)
+    call derx (gzx1f, uz1f, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1,ubcz)
 
     sxx1f = gxx1f
 
@@ -521,9 +524,9 @@ contains
     call transpose_x_to_y(uz1f, uz2f)
     call transpose_x_to_y(gyx1f, ta2)
 
-    call dery (gxy2f, ux2f, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
-    call dery (gyy2f, uy2f, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0)
-    call dery (gzy2f, uz2f, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
+    call dery (gxy2f, ux2f, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1,ubcx)
+    call dery (gyy2f, uy2f, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0,ubcy)
+    call dery (gzy2f, uz2f, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1,ubcz)
 
     sxy2f = half * (gxy2f + ta2)
     syy2f = gyy2f
@@ -534,9 +537,9 @@ contains
     call transpose_y_to_z(uz2f, uz3f)
     call transpose_y_to_z(gzy2f, ta3)
 
-    call derz(gxz3f, ux3f, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
-    call derz(gyz3f, uy3f, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
-    call derz(gzz3f, uz3f, di3, sz, ffz, fsz, fwz, zsize(1), zsize(2), zsize(3), 0)
+    call derz(gxz3f, ux3f, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1,ubcx)
+    call derz(gyz3f, uy3f, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1,ubcy)
+    call derz(gzz3f, uz3f, di3, sz, ffz, fsz, fwz, zsize(1), zsize(2), zsize(3), 0,ubcz)
 
     szz3f = gzz3f
     syz3f = half * (gyz3f + ta3)
@@ -593,7 +596,7 @@ contains
     ayz1 = -two * sqrt(two * (sxx1 * sxx1 + syy1 * syy1 + szz1 * szz1 + two * sxy1 * sxy1 + two * sxz1 * sxz1 + two * syz1 * syz1)) * syz1
 #endif
 
-    if((iibm==1).or.(iibm==2)) then
+    if((iibm==1).or.(iibm==2).or.(iibm==3)) then
        bbxx1 = bbxx1 * (one - ep1)
        bbyy1 = bbyy1 * (one - ep1)
        bbzz1 = bbzz1 * (one - ep1)
@@ -656,19 +659,19 @@ contains
 
     !Need to filter Aij components
 
-    call filx(axx1f, axx1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1)
-    call filx(ayy1f, ayy1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1)
-    call filx(azz1f, azz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1)
+    call filx(axx1f, axx1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,zero)
+    call filx(ayy1f, ayy1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,zero)
+    call filx(azz1f, azz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,zero)
 
-    call filx(axy1f, axy1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0)
-    call filx(axz1f, axz1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0)
-    call filx(ayz1f, ayz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1)
+    call filx(axy1f, axy1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,zero)
+    call filx(axz1f, axz1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,zero)
+    call filx(ayz1f, ayz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,zero)
 
     if (mod(itime, ioutput) == 0) then
        if (nrank==0) write(*,*) "filx axx1= ", maxval(axx1), maxval(axx1f), maxval(axx1) - maxval(axx1f)
     endif
 
-    if((iibm==1).or.(iibm==2)) then
+    if((iibm==1).or.(iibm==2).or.(iibm==3)) then
        axx1f = axx1f * (one - ep1)
        ayy1f = ayy1f * (one - ep1)
        azz1f = azz1f * (one - ep1)
@@ -684,19 +687,19 @@ contains
     call transpose_x_to_y(axz1f, te2)
     call transpose_x_to_y(ayz1f, tf2)
 
-    call fily(axx2f, ta2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1)
-    call fily(ayy2f, tb2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1)
-    call fily(azz2f, tc2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1)
+    call fily(axx2f, ta2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,zero)
+    call fily(ayy2f, tb2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,zero)
+    call fily(azz2f, tc2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,zero)
 
-    call fily(axy2f, td2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0)
-    call fily(axz2f, te2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1)
-    call fily(ayz2f, tf2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0)
+    call fily(axy2f, td2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,zero)
+    call fily(axz2f, te2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,zero)
+    call fily(ayz2f, tf2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,zero)
 
     if (mod(itime, ioutput) == 0) then
        if (nrank==0) write(*,*) "fily axx2= ", maxval(ta2), maxval(axx2f), maxval(ta2) - maxval(axx2f)
     endif
 
-    if((iibm==1).or.(iibm==2)) then
+    if((iibm==1).or.(iibm==2).or.(iibm==3)) then
        axx2f = axx2f * (one - ep2)
        ayy2f = ayy2f * (one - ep2)
        azz2f = azz2f * (one - ep2)
@@ -716,13 +719,13 @@ contains
     call transpose_y_to_z(ayz2f, tf3)
 
 
-    call filz(axx3f, ta3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1)
-    call filz(ayy3f, tb3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1)
-    call filz(azz3f, tc3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1)
+    call filz(axx3f, ta3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,zero)
+    call filz(ayy3f, tb3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,zero)
+    call filz(azz3f, tc3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,zero)
 
-    call filz(axy3f, td3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1)
-    call filz(axz3f, te3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0)
-    call filz(ayz3f, tf3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0)
+    call filz(axy3f, td3, di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,zero)
+    call filz(axz3f, te3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,zero)
+    call filz(ayz3f, tf3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,zero)
 
     if (mod(itime, ioutput) == 0) then
        if (nrank==0) write(*,*) "filz axx3= ", maxval(ta3), maxval(axx3f), maxval(ta3) - maxval(axx3f)
@@ -745,7 +748,7 @@ contains
     call transpose_y_to_x(axz2f, axz1f)
     call transpose_y_to_x(ayz2f, ayz1f)
 
-    if((iibm==1).or.(iibm==2)) then
+    if((iibm==1).or.(iibm==2).or.(iibm==3)) then
        axx1f = axx1f * (one - ep1)
        ayy1f = ayy1f * (one - ep1)
        azz1f = azz1f * (one - ep1)
@@ -767,7 +770,7 @@ contains
     lyy1 = lyy1 - (lxx1 + lyy1 + lzz1) / three
     lzz1 = lzz1 - (lxx1 + lyy1 + lzz1) / three
 
-    if((iibm==1).or.(iibm==2)) then
+    if((iibm==1).or.(iibm==2).or.(iibm==3)) then
        do ijk = 1, nvect1
           if (ep1(ijk, 1, 1)  ==  one) then
              ta1(ijk, 1, 1) = zero
@@ -786,13 +789,13 @@ contains
     enddo
 
     !FILTERING THE NON-CONSTANT CONSTANT
-    call filx(smagC1f, smagC1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0)
+    call filx(smagC1f, smagC1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,zero)
 
     call transpose_x_to_y(smagC1f, ta2)
-    call fily(smagC2f, ta2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0)
+    call fily(smagC2f, ta2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,zero)
 
     call transpose_y_to_z(smagC2f, ta3)
-    call filz(smagC3f, ta3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0)
+    call filz(smagC3f, ta3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,zero)
 
     if (mod(itime, ioutput) == 0) then
        if (nrank==0) write(*,*) "filx smagC1= ", maxval(smagC1), maxval(smagC1f), maxval(smagC1) - maxval(smagC1f)
@@ -855,179 +858,219 @@ contains
   end subroutine dynsmag
 
   subroutine wale(nut1,ux1,uy1,uz1)
-    !================================================================================
-    !
-    !  SUBROUTINE: wale
-    ! DESCRIPTION: Calculates the eddy-viscosity nut according to the wall-adapting
-    !              local eddy-viscosity (WALE) model:
-    !
-    !              Nicoud, F. and Ducros, F., 1999. Subgrid-scale stress modelling
-    !              based on the square of the velocity gradient tensor.
-    !              Flow, turbulence and Combustion, 62(3), pp.183-200.
-    !
-    !      AUTHOR: Arash Hamzehloo <a.hamzehloo@imperial.ac.uk>
-    !
-    !================================================================================
+  !================================================================================
+  !
+  !  SUBROUTINE: wale
+  ! DESCRIPTION: Calculates the eddy-viscosity nut according to the wall-adapting
+  !              local eddy-viscosity (WALE) model:
+  !
+  !              Nicoud, F. and Ducros, F., 1999. Subgrid-scale stress modelling
+  !              based on the square of the velocity gradient tensor.
+  !              Flow, turbulence and Combustion, 62(3), pp.183-200.
+  !
+  !      AUTHOR: Arash Hamzehloo <a.hamzehloo@imperial.ac.uk>
+  !
+  !================================================================================
 
-    use param
-    use variables
-    use decomp_2d
-    use decomp_2d_io
-    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-    use var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,di2
-    use var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
-    use var, only : sxx1,syy1,szz1,sxy1,sxz1,syz1
-    use var, only : gxx1,gyx1,gzx1,gxy2,gyy2,gzy2,gxz3,gyz3,gzz3
-    use var, only : gxy1,gyy1,gzy1,gxz2,gyz2,gzz2,gxz1,gyz1,gzz1
-    use var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2,srt_smag2,nut2
-    use var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
-    use var, only : sdxx1,sdyy1,sdzz1,sdxy1,sdxz1,sdyz1
-    use var, only : sdxx2,sdyy2,sdzz2,sdxy2,sdxz2,sdyz2
-    use var, only : sdxx3,sdyy3,sdzz3,sdxy3,sdxz3,sdyz3
-    use var, only : srt_wale,srt_wale2,srt_wale3,srt_wale4
+  use param
+  use variables
+  use decomp_2d
+  use decomp_2d_io
+  use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+  use var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,di2
+  use var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
+  use var, only : sxx1,syy1,szz1,sxy1,sxz1,syz1
+  use var, only : gxx1,gyx1,gzx1,gxy2,gyy2,gzy2,gxz3,gyz3,gzz3
+  use var, only : gxy1,gyy1,gzy1,gxz2,gyz2,gzz2,gxz1,gyz1,gzz1
+  use var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2,srt_smag2,nut2
+  use var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
+  use var, only : sdxx1,sdyy1,sdzz1,sdxy1,sdxz1,sdyz1
+  use var, only : sdxx2,sdyy2,sdzz2,sdxy2,sdxz2,sdyz2
+  use var, only : sdxx3,sdyy3,sdzz3,sdxy3,sdxz3,sdyz3
+  use var, only : srt_wale,srt_wale2,srt_wale3,srt_wale4
+  use ibm_param
+  
+  implicit none
 
-    implicit none
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1
 
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1
-
-    integer :: i, j, k
-    character(len = 30) :: filename
-
-    ! INFO about the auxillary arrays
-    !--------------------------------------------------------
-    ! gxx= dux/dx; gyx=duy/dx; gzx=duz/dx;
-    ! gxy= dux/dy; gyy=duy/dy; gzy=duz/dy;
-    ! gxz= dux/dz; gyz=duy/dz; gzz=duz/dz
-
-    call derx (gxx1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
-    call derx (gyx1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-    call derx (gzx1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-
-    sxx1(:,:,:) = gxx1(:,:,:)
-
-    !WORK Y-PENCILS
-    call transpose_x_to_y(ux1,ux2)
-    call transpose_x_to_y(uy1,uy2)
-    call transpose_x_to_y(uz1,uz2)
-    call transpose_x_to_y(gyx1,ta2)
-
-    call dery (gxy2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-    call dery (gyy2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-    call dery (gzy2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-
-    syy2(:,:,:)=gyy2(:,:,:)
-    sxy2(:,:,:)=half*(gxy2(:,:,:)+ta2(:,:,:))
+  integer :: i, j, k
+  character(len = 30) :: filename
 
 
-    !WORK Z-PENCILS
-    call transpose_y_to_z(ux2,ux3)
-    call transpose_y_to_z(uy2,uy3)
-    call transpose_y_to_z(uz2,uz3)
-    call transpose_y_to_z(gzy2,ta3)
+  ! INFO about the auxillary arrays
+  !--------------------------------------------------------
+  ! gxx= dux/dx; gyx=duy/dx; gzx=duz/dx;
+  ! gxy= dux/dy; gyy=duy/dy; gzy=duz/dy;
+  ! gxz= dux/dz; gyz=duy/dz; gzz=duz/dz
 
-    call derz(gxz3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    call derz(gyz3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    call derz(gzz3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+  call derx (gxx1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+  call derx (gyx1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+  call derx (gzx1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
 
-    szz3(:,:,:)=gzz3(:,:,:)
-    syz3(:,:,:)=half*(gyz3(:,:,:)+ta3(:,:,:))
+  sxx1(:,:,:) = gxx1(:,:,:)
 
-    !WORK Y-PENCILS
-    call transpose_z_to_y(syz3,syz2)
-    call transpose_z_to_y(szz3,szz2)
+  !WORK Y-PENCILS
+  call transpose_x_to_y(ux1,ux2)
+  call transpose_x_to_y(uy1,uy2)
+  call transpose_x_to_y(uz1,uz2)
+  call transpose_x_to_y(gyx1,ta2)
 
-    call transpose_z_to_y(sdyz3,sdyz2)
-    call transpose_z_to_y(sdzz3,sdzz2)
+  call dery (gxy2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+  call dery (gyy2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+  call dery (gzy2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
 
-    call transpose_z_to_y(gxz3,gxz2)
-    call transpose_z_to_y(gyz3,gyz2)
-    call transpose_z_to_y(gzz3,gzz2)
+  syy2(:,:,:)=gyy2(:,:,:)
+  sxy2(:,:,:)=half*(gxy2(:,:,:)+ta2(:,:,:))
 
-    !WORK X-PENCILS
-    call transpose_y_to_x(sxy2,sxy1)
-    call transpose_y_to_x(syy2,syy1)
-    call transpose_y_to_x(syz2,syz1)
-    call transpose_y_to_x(szz2,szz1)
 
-    call transpose_y_to_x(sdxy2,sdxy1)
-    call transpose_y_to_x(sdyy2,sdyy1)
-    call transpose_y_to_x(sdyz2,sdyz1)
-    call transpose_y_to_x(sdzz2,sdzz1)
+  !WORK Z-PENCILS
+  call transpose_y_to_z(ux2,ux3)
+  call transpose_y_to_z(uy2,uy3)
+  call transpose_y_to_z(uz2,uz3)
+  call transpose_y_to_z(gzy2,ta3)
 
-    call transpose_y_to_x(gxy2,gxy1)
-    call transpose_y_to_x(gyy2,gyy1)
-    call transpose_y_to_x(gzy2,gzy1)
-    call transpose_y_to_x(gxz2,gxz1)
-    call transpose_y_to_x(gyz2,gyz1)
-    call transpose_y_to_x(gzz2,gzz1)
+  call derz(gxz3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+  call derz(gyz3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+  call derz(gzz3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
 
-    sxz1(:,:,:)=half*(gzx1(:,:,:)+gxz1(:,:,:))
+  szz3(:,:,:)=gzz3(:,:,:)
+  syz3(:,:,:)=half*(gyz3(:,:,:)+ta3(:,:,:))
 
-    sdxx1(:,:,:)=gxx1(:,:,:)*gxx1(:,:,:)+gxy1(:,:,:)*gyx1(:,:,:)+&
-         gxz1(:,:,:)*gzx1(:,:,:)-(one/three)*(gxx1(:,:,:)*gxx1(:,:,:)+&
-         gyy1(:,:,:)*gyy1(:,:,:)+gzz1(:,:,:)*gzz1(:,:,:)+&
-         two*gxy1(:,:,:)*gyx1(:,:,:)+two*gxz1(:,:,:)*gzx1(:,:,:)+&
-         two*gzy1(:,:,:)*gyz1(:,:,:))
+  !WORK Y-PENCILS
+  call transpose_z_to_y(syz3,syz2)
+  call transpose_z_to_y(szz3,szz2)
 
-    sdxy1(:,:,:)=half*(gxx1(:,:,:)*gxy1(:,:,:)+gxy1(:,:,:)*gyy1(:,:,:)+&
-         gxz1(:,:,:)*gzy1(:,:,:)+gyx1(:,:,:)*gxx1(:,:,:)+&
-         gyy1(:,:,:)*gyx1(:,:,:)+gyz1(:,:,:)*gzx1(:,:,:))
+  call transpose_z_to_y(sdyz3,sdyz2)
+  call transpose_z_to_y(sdzz3,sdzz2)
 
-    sdxz1(:,:,:)=half*(gxx1(:,:,:)*gxz1(:,:,:)+gxy1(:,:,:)*gyz1(:,:,:)+&
-         gxz1(:,:,:)*gzz1(:,:,:)+gzx1(:,:,:)*gxx1(:,:,:)+&
-         gzy1(:,:,:)*gyx1(:,:,:)+gzz1(:,:,:)*gzx1(:,:,:))
+  call transpose_z_to_y(gxz3,gxz2)
+  call transpose_z_to_y(gyz3,gyz2)
+  call transpose_z_to_y(gzz3,gzz2)
 
-    sdyy1(:,:,:)=gyx1(:,:,:)*gxy1(:,:,:)+gyy1(:,:,:)*gyy1(:,:,:)+&
-         gyz1(:,:,:)*gzy1(:,:,:)-(one/three)*(gxx1(:,:,:)*gxx1(:,:,:)+&
-         gyy1(:,:,:)*gyy1(:,:,:)+gzz1(:,:,:)*gzz1(:,:,:)+&
-         two*gxy1(:,:,:)*gyx1(:,:,:)+two*gxz1(:,:,:)*gzx1(:,:,:)+&
-         two*gzy1(:,:,:)*gyz1(:,:,:))
+  !WORK X-PENCILS
+  call transpose_y_to_x(sxy2,sxy1)
+  call transpose_y_to_x(syy2,syy1)
+  call transpose_y_to_x(syz2,syz1)
+  call transpose_y_to_x(szz2,szz1)
 
-    sdyz1(:,:,:)=half*(gyx1(:,:,:)*gxz1(:,:,:)+gyy1(:,:,:)*gyz1(:,:,:)+&
-         gyz1(:,:,:)*gzz1(:,:,:)+gzx1(:,:,:)*gxy1(:,:,:)+&
-         gzy1(:,:,:)*gyy1(:,:,:)+gzz1(:,:,:)*gzy1(:,:,:))
+  call transpose_y_to_x(sdxy2,sdxy1)
+  call transpose_y_to_x(sdyy2,sdyy1)
+  call transpose_y_to_x(sdyz2,sdyz1)
+  call transpose_y_to_x(sdzz2,sdzz1)
 
-    sdzz1(:,:,:)=gzx1(:,:,:)*gxz1(:,:,:)+gzy1(:,:,:)*gyz1(:,:,:)+&
-         gzz1(:,:,:)*gzz1(:,:,:)-(one/three)*(gxx1(:,:,:)*gxx1(:,:,:)+&
-         gyy1(:,:,:)*gyy1(:,:,:)+gzz1(:,:,:)*gzz1(:,:,:)+&
-         two*gxy1(:,:,:)*gyx1(:,:,:)+two*gxz1(:,:,:)*gzx1(:,:,:)+&
-         two*gzy1(:,:,:)*gyz1(:,:,:))
+  call transpose_y_to_x(gxy2,gxy1)
+  call transpose_y_to_x(gyy2,gyy1)
+  call transpose_y_to_x(gzy2,gzy1)
+  call transpose_y_to_x(gxz2,gxz1)
+  call transpose_y_to_x(gyz2,gyz1)
+  call transpose_y_to_x(gzz2,gzz1)
 
-    srt_wale = zero
-    srt_wale2 = zero
-    srt_wale3 = zero
-    srt_wale4 = zero
+  sxz1(:,:,:)=half*(gzx1(:,:,:)+gxz1(:,:,:))
 
-    srt_wale = sxx1 * sxx1 + syy1 * syy1 + szz1 * szz1 + two * sxy1 * sxy1 &
-             + two * sxz1 * sxz1 + two * syz1 * syz1
+  sdxx1(:,:,:)=gxx1(:,:,:)*gxx1(:,:,:)+gxy1(:,:,:)*gyx1(:,:,:)+&
+       gxz1(:,:,:)*gzx1(:,:,:)-(one/three)*(gxx1(:,:,:)*gxx1(:,:,:)+&
+       gyy1(:,:,:)*gyy1(:,:,:)+gzz1(:,:,:)*gzz1(:,:,:)+&
+       two*gxy1(:,:,:)*gyx1(:,:,:)+two*gxz1(:,:,:)*gzx1(:,:,:)+&
+       two*gzy1(:,:,:)*gyz1(:,:,:))
 
-    srt_wale3 = sdxx1 * sdxx1 + sdyy1 * sdyy1 + sdzz1 * sdzz1 + two * sdxy1 * sdxy1 &
-              + two * sdxz1 * sdxz1 + two * sdyz1 * sdyz1
+  sdxy1(:,:,:)=half*(gxx1(:,:,:)*gxy1(:,:,:)+gxy1(:,:,:)*gyy1(:,:,:)+&
+       gxz1(:,:,:)*gzy1(:,:,:)+gyx1(:,:,:)*gxx1(:,:,:)+&
+       gyy1(:,:,:)*gyx1(:,:,:)+gyz1(:,:,:)*gzx1(:,:,:))
 
-    nut1 = zero; nut2 = zero
-    call transpose_x_to_y(srt_wale, srt_wale2)
-    call transpose_x_to_y(srt_wale3, srt_wale4)
-    do k = 1, ysize(3)
-       do j = 1, ysize(2)
-          do i = 1, ysize(1)
-             nut2(i, j, k) = ((walecst * del(j))**two) * ((srt_wale4(i, j, k)**(three/two))/((srt_wale2(i, j, k)**(five/two)) &
-                           +(srt_wale4(i, j, k)**(five/four))))
-          enddo
-       enddo
-    enddo
-    call transpose_y_to_x(nut2, nut1)
+  sdxz1(:,:,:)=half*(gxx1(:,:,:)*gxz1(:,:,:)+gxy1(:,:,:)*gyz1(:,:,:)+&
+       gxz1(:,:,:)*gzz1(:,:,:)+gzx1(:,:,:)*gxx1(:,:,:)+&
+       gzy1(:,:,:)*gyx1(:,:,:)+gzz1(:,:,:)*gzx1(:,:,:))
 
-    if (nrank==0) write(*,*) "WALE SS min max= ", minval(srt_wale), maxval(srt_wale)
-    if (nrank==0) write(*,*) "WALE SdSd min max= ", minval(srt_wale3), maxval(srt_wale3)
-    if (nrank==0) write(*,*) "WALE nut1     min max= ", minval(nut1), maxval(nut1)
+  call transpose_z_to_y(gxz3,gxz2)
+  call transpose_z_to_y(gyz3,gyz2)
+  call transpose_z_to_y(gzz3,gzz2)
 
-    if (mod(itime, ioutput) == 0) then
+  !WORK X-PENCILS
+  call transpose_y_to_x(sxy2,sxy1)
+  call transpose_y_to_x(syy2,syy1)
+  call transpose_y_to_x(syz2,syz1)
+  call transpose_y_to_x(szz2,szz1)
 
-       write(filename, "('./data/nut_wale',I4.4)") itime / ioutput
-       call decomp_2d_write_one(1, nut1, filename, 2)
+  call transpose_y_to_x(sdxy2,sdxy1)
+  call transpose_y_to_x(sdyy2,sdyy1)
+  call transpose_y_to_x(sdyz2,sdyz1)
+  call transpose_y_to_x(sdzz2,sdzz1)
 
-    endif
+  call transpose_y_to_x(gxy2,gxy1)
+  call transpose_y_to_x(gyy2,gyy1)
+  call transpose_y_to_x(gzy2,gzy1)
+  call transpose_y_to_x(gxz2,gxz1)
+  call transpose_y_to_x(gyz2,gyz1)
+  call transpose_y_to_x(gzz2,gzz1)
+
+  sxz1(:,:,:)=half*(gzx1(:,:,:)+gxz1(:,:,:))
+
+  sdxx1(:,:,:)=gxx1(:,:,:)*gxx1(:,:,:)+gxy1(:,:,:)*gyx1(:,:,:)+&
+       gxz1(:,:,:)*gzx1(:,:,:)-(one/three)*(gxx1(:,:,:)*gxx1(:,:,:)+&
+       gyy1(:,:,:)*gyy1(:,:,:)+gzz1(:,:,:)*gzz1(:,:,:)+&
+       two*gxy1(:,:,:)*gyx1(:,:,:)+two*gxz1(:,:,:)*gzx1(:,:,:)+&
+       two*gzy1(:,:,:)*gyz1(:,:,:))
+
+  sdxy1(:,:,:)=half*(gxx1(:,:,:)*gxy1(:,:,:)+gxy1(:,:,:)*gyy1(:,:,:)+&
+       gxz1(:,:,:)*gzy1(:,:,:)+gyx1(:,:,:)*gxx1(:,:,:)+&
+       gyy1(:,:,:)*gyx1(:,:,:)+gyz1(:,:,:)*gzx1(:,:,:))
+
+  sdxz1(:,:,:)=half*(gxx1(:,:,:)*gxz1(:,:,:)+gxy1(:,:,:)*gyz1(:,:,:)+&
+       gxz1(:,:,:)*gzz1(:,:,:)+gzx1(:,:,:)*gxx1(:,:,:)+&
+       gzy1(:,:,:)*gyx1(:,:,:)+gzz1(:,:,:)*gzx1(:,:,:))
+
+  sdyy1(:,:,:)=gyx1(:,:,:)*gxy1(:,:,:)+gyy1(:,:,:)*gyy1(:,:,:)+&
+       gyz1(:,:,:)*gzy1(:,:,:)-(one/three)*(gxx1(:,:,:)*gxx1(:,:,:)+&
+       gyy1(:,:,:)*gyy1(:,:,:)+gzz1(:,:,:)*gzz1(:,:,:)+&
+       two*gxy1(:,:,:)*gyx1(:,:,:)+two*gxz1(:,:,:)*gzx1(:,:,:)+&
+       two*gzy1(:,:,:)*gyz1(:,:,:))
+
+  sdyz1(:,:,:)=half*(gyx1(:,:,:)*gxz1(:,:,:)+gyy1(:,:,:)*gyz1(:,:,:)+&
+       gyz1(:,:,:)*gzz1(:,:,:)+gzx1(:,:,:)*gxy1(:,:,:)+&
+       gzy1(:,:,:)*gyy1(:,:,:)+gzz1(:,:,:)*gzy1(:,:,:))
+
+  sdzz1(:,:,:)=gzx1(:,:,:)*gxz1(:,:,:)+gzy1(:,:,:)*gyz1(:,:,:)+&
+       gzz1(:,:,:)*gzz1(:,:,:)-(one/three)*(gxx1(:,:,:)*gxx1(:,:,:)+&
+       gyy1(:,:,:)*gyy1(:,:,:)+gzz1(:,:,:)*gzz1(:,:,:)+&
+       two*gxy1(:,:,:)*gyx1(:,:,:)+two*gxz1(:,:,:)*gzx1(:,:,:)+&
+       two*gzy1(:,:,:)*gyz1(:,:,:))
+
+  srt_wale = zero
+  srt_wale2 = zero
+  srt_wale3 = zero
+  srt_wale4 = zero
+
+  srt_wale = sxx1 * sxx1 + syy1 * syy1 + szz1 * szz1 + two * sxy1 * sxy1 &
+           + two * sxz1 * sxz1 + two * syz1 * syz1
+
+  srt_wale3 = sdxx1 * sdxx1 + sdyy1 * sdyy1 + sdzz1 * sdzz1 + two * sdxy1 * sdxy1 &
+            + two * sdxz1 * sdxz1 + two * sdyz1 * sdyz1
+
+  nut1 = zero; nut2 = zero
+  call transpose_x_to_y(srt_wale, srt_wale2)
+  call transpose_x_to_y(srt_wale3, srt_wale4)
+  do k = 1, ysize(3)
+     do j = 1, ysize(2)
+        do i = 1, ysize(1)
+           nut2(i, j, k) = ((walecst * del(j))**two) * ((srt_wale4(i, j, k)**(three/two))/((srt_wale2(i, j, k)**(five/two)) &
+                         +(srt_wale4(i, j, k)**(five/four))))
+        enddo
+     enddo
+  enddo
+  call transpose_y_to_x(nut2, nut1)
+
+  if (nrank==0) write(*,*) "WALE SS min max= ", minval(srt_wale), maxval(srt_wale)
+  if (nrank==0) write(*,*) "WALE SdSd min max= ", minval(srt_wale3), maxval(srt_wale3)
+  if (nrank==0) write(*,*) "WALE nut1     min max= ", minval(nut1), maxval(nut1)
+
+  if (mod(itime, ioutput) == 0) then
+
+     write(filename, "('./data/nut_wale',I4.4)") itime / ioutput
+     call decomp_2d_write_one(1, nut1, filename, 2)
+
+  endif
 
   end subroutine wale
 
@@ -1052,6 +1095,7 @@ contains
     use var, only : sgsx3,sgsy3,sgsz3,nut3
     use var, only : sxx1,sxy1,sxz1,syy1,syz1,szz1
     use var, only : sxy2,syy2,syz2,sxz2,szz2,sxz3,syz3,szz3
+    use ibm_param
 
     implicit none
 
@@ -1065,11 +1109,11 @@ contains
     sgsx2=0.;sgsy2=0.;sgsz2=0.
     sgsx3=0.;sgsy3=0.;sgsz3=0.
     !WORK X-PENCILS
-    call derx (ta1,nut1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    call derx (ta1,nut1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,zero)
 
-    call derxx (td1,ux1,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0)
-    call derxx (te1,uy1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
-    call derxx (tf1,uz1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+    call derxx (td1,ux1,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0,zero)
+    call derxx (te1,uy1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,zero)
+    call derxx (tf1,uz1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,zero)
 
     sgsx1 = td1 * nut1 + two * sxx1 * ta1
     sgsy1 = te1 * nut1 + two * sxy1 * ta1
@@ -1090,14 +1134,14 @@ contains
     call transpose_x_to_y(uy1, uy2)
     call transpose_x_to_y(uz1, uz2)
 
-    call dery (ta2, nut2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
+    call dery (ta2, nut2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1,zero)
 
     !-->for ux
     td2 = zero
     iimplicit = -iimplicit
-    if (istret.ne.0) then
-       call deryy (td2, ux2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
-       call dery (te2, ux2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
+    if (istret /= 0) then
+       call deryy (td2, ux2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1,ubcx)
+       call dery (te2, ux2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1,ubcx)
        do k = 1, ysize(3)
           do j = 1, ysize(2)
              do i = 1, ysize(1)
@@ -1106,14 +1150,14 @@ contains
           enddo
        enddo
     else
-       call deryy (td2, ux2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
+       call deryy (td2, ux2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1,ubcx)
     endif
 
     !-->for uy
     te2 = zero
-    if (istret.ne.0) then
-       call deryy (te2, uy2, di2, sy, sfy, ssy, swy, ysize(1), ysize(2), ysize(3), 0)
-       call dery (tf2, uy2, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0)
+    if (istret /= 0) then
+       call deryy (te2, uy2, di2, sy, sfy, ssy, swy, ysize(1), ysize(2), ysize(3), 0,ubcy)
+       call dery (tf2, uy2, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0,ubcy)
        do k = 1, ysize(3)
           do j = 1, ysize(2)
              do i = 1, ysize(1)
@@ -1122,14 +1166,14 @@ contains
           enddo
        enddo
     else
-       call deryy (te2, uy2, di2, sy, sfy, ssy, swy, ysize(1), ysize(2), ysize(3), 0)
+       call deryy (te2, uy2, di2, sy, sfy, ssy, swy, ysize(1), ysize(2), ysize(3), 0,ubcy)
     endif
 
     !-->for uz
     tf2 = zero
-    if (istret.ne.0) then
-       call deryy (tf2, uz2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
-       call dery (tj2, uz2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
+    if (istret /= 0) then
+       call deryy (tf2, uz2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1,ubcz)
+       call dery (tj2, uz2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1,ubcz)
        do k = 1, ysize(3)
           do j = 1, ysize(2)
              do i = 1, ysize(1)
@@ -1138,7 +1182,7 @@ contains
           enddo
        enddo
     else
-       call deryy (tf2, uz2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
+       call deryy (tf2, uz2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1,ubcz)
     endif
     iimplicit = -iimplicit
 
@@ -1158,11 +1202,11 @@ contains
     call transpose_y_to_z(uy2, uy3)
     call transpose_y_to_z(uz2, uz3)
 
-    call derz (ta3, nut3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
+    call derz (ta3, nut3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
 
-    call derzz (td3, ux3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
-    call derzz (te3, uy3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
-    call derzz (tf3, uz3, di3, sz, sfz, ssz, swz, zsize(1), zsize(2), zsize(3), 0)
+    call derzz (td3, ux3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1, ubcx)
+    call derzz (te3, uy3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1, ubcy)
+    call derzz (tf3, uz3, di3, sz, sfz, ssz, swz, zsize(1), zsize(2), zsize(3), 0, ubcz)
 
     sgsx3 = sgsx3 + nut3 * td3 + two * sxz3 * ta3
     sgsy3 = sgsy3 + nut3 * te3 + two * syz3 * ta3
@@ -1176,7 +1220,7 @@ contains
     call transpose_y_to_x(sgsy2, sgsy1)
     call transpose_y_to_x(sgsz2, sgsz1)
 
-    if((iibm==1).or.(iibm==2)) then
+    if((iibm==1).or.(iibm==2).or.(iibm==3)) then
        do k=1,xsize(3)
           do j=1,xsize(2)
              do i=1,xsize(1)
@@ -1218,27 +1262,27 @@ contains
 
     sgsphi1 = zero; sgsphi2 = zero; sgsphi3 = zero
 
-    call derxS (dnut1, nut1, di1, sx, ffxpS, fsxpS, fwxpS, xsize(1), xsize(2), xsize(3), 1)
+    call derxS (dnut1, nut1, di1, sx, ffxpS, fsxpS, fwxpS, xsize(1), xsize(2), xsize(3), 1, zero)
     call transpose_x_to_y(nut1, nut2)
-    call deryS (dnut2, nut2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1)
+    call deryS (dnut2, nut2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
     call transpose_y_to_z(nut2, nut3)
-    call derzS (dnut3, nut3, di3, sz, ffzpS, fszpS, fwzpS, zsize(1), zsize(2), zsize(3), 1)
+    call derzS (dnut3, nut3, di3, sz, ffzpS, fszpS, fwzpS, zsize(1), zsize(2), zsize(3), 1, zero)
 
     ! kappat = nut/Pr
     Pr = Sc(is)
 
-    call derxS (tb1, phi1, di1, sx, ffxpS, fsxpS, fwxpS, xsize(1), xsize(2), xsize(3), 1)
-    call derxxS(tc1, phi1, di1, sx, sfxpS, ssxpS, swxpS, xsize(1), xsize(2), xsize(3), 1)
+    call derxS (tb1, phi1, di1, sx, ffxpS, fsxpS, fwxpS, xsize(1), xsize(2), xsize(3), 1, zero)
+    call derxxS(tc1, phi1, di1, sx, sfxpS, ssxpS, swxpS, xsize(1), xsize(2), xsize(3), 1, zero)
     sgsphi1 = tb1 * (dnut1/Pr) + tc1 * (nut1/Pr)
 
     call transpose_x_to_y(phi1, phi2)
     call transpose_x_to_y(sgsphi1, sgsphi2)
 
-    call deryS (tb2, phi2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1)
+    call deryS (tb2, phi2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
     iimplicit = - iimplicit
-    call deryyS(tc2, phi2, di2, sy, sfypS, ssypS, swypS, ysize(1), ysize(2), ysize(3), 1)
+    call deryyS(tc2, phi2, di2, sy, sfypS, ssypS, swypS, ysize(1), ysize(2), ysize(3), 1, zero)
     iimplicit = - iimplicit
-    if (istret.ne.0) then
+    if (istret /= 0) then
        do k = 1, ysize(3)
        do j = 1, ysize(2)
        do i = 1, ysize(1)
@@ -1252,8 +1296,8 @@ contains
     call transpose_y_to_z(phi2, phi3)
     call transpose_y_to_z(sgsphi2, sgsphi3)
 
-    call derzS (tb3, phi3, di3, sz, ffzpS, fszpS, fwzpS, zsize(1), zsize(2), zsize(3), 1)
-    call derzzS(tc3, phi3, di3, sz, sfzpS, sszpS, swzpS, zsize(1), zsize(2), zsize(3), 1)
+    call derzS (tb3, phi3, di3, sz, ffzpS, fszpS, fwzpS, zsize(1), zsize(2), zsize(3), 1, zero)
+    call derzzS(tc3, phi3, di3, sz, sfzpS, sszpS, swzpS, zsize(1), zsize(2), zsize(3), 1, zero)
     sgsphi3 = sgsphi3 + tb3 * (dnut3/Pr) + tc3 * (nut3/Pr)
 
     call transpose_z_to_y(sgsphi3, sgsphi2)

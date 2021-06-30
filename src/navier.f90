@@ -210,6 +210,8 @@ contains
     uy(:,:,:)=uy(:,:,:)-py(:,:,:)
     uz(:,:,:)=uz(:,:,:)-pz(:,:,:)
 
+    sync_vel_needed = .true.
+
     return
   end subroutine cor_vel
   !############################################################################
@@ -228,6 +230,7 @@ contains
          duxdxp2, uyp2, uzp2, duydypi2, upi2, ta2, dipp2, &
          duxydxyp3, uzp3, po3, dipp3, nxmsize, nymsize, nzmsize
     use mpi
+    use ibm_param
 
     implicit none
 
@@ -252,9 +255,9 @@ contains
        tb1(:,:,:) = uy1(:,:,:)
        tc1(:,:,:) = uz1(:,:,:)
     else
-       ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)
-       tb1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:)
-       tc1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:)
+       ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:) + ep1(:,:,:)*ubcx
+       tb1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:) + ep1(:,:,:)*ubcy
+       tc1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:) + ep1(:,:,:)*ubcz
     endif
 
     !WORK X-PENCILS
@@ -783,7 +786,7 @@ contains
     use param, only : nrhotime, zero, ilmn, pressure0, imultispecies, massfrac, mol_weight
     use param, only : ibirman_eos
     use param, only : xnu, prandtl
-    use param, only : one
+    use param, only : one, zero 
     use param, only : iimplicit
     use variables
 
@@ -806,7 +809,7 @@ contains
        !! We need temperature
        call calc_temp_eos(ta1, rho1(:,:,:,1), phi1, tb1, xsize(1), xsize(2), xsize(3))
 
-       call derxx (tb1, ta1, di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1)
+       call derxx (tb1, ta1, di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1, zero)
        if (imultispecies) then
           tb1(:,:,:) = (xnu / prandtl) * tb1(:,:,:) / ta1(:,:,:)
 
@@ -821,7 +824,7 @@ contains
 
           do is = 1, numscalar
              if (massfrac(is)) then
-                call derxx (tc1, phi1(:,:,:,is), di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1)
+                call derxx (tc1, phi1(:,:,:,is), di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1, zero)
                 tb1(:,:,:) = tb1(:,:,:) + (xnu / sc(is)) * (td1(:,:,:) / mol_weight(is)) * tc1(:,:,:)
              endif
           enddo
@@ -841,7 +844,7 @@ contains
        !! Y-pencil
        tmp = iimplicit
        iimplicit = 0
-       call deryy (tc2, ta2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
+       call deryy (tc2, ta2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1, zero)
        iimplicit = tmp
        if (imultispecies) then
           tc2(:,:,:) = (xnu / prandtl) * tc2(:,:,:) / ta2(:,:,:)
@@ -859,7 +862,7 @@ contains
              if (massfrac(is)) then
                 tmp = iimplicit
                 iimplicit = 0
-                call deryy (td2, phi2(:,:,:,is), di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1)
+                call deryy (td2, phi2(:,:,:,is), di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1, zero)
                 iimplicit = tmp
                 tc2(:,:,:) = tc2(:,:,:) + (xnu / sc(is)) * (te2(:,:,:) / mol_weight(is)) * td2(:,:,:)
              endif
@@ -879,7 +882,7 @@ contains
 
        !!------------------------------------------------------------------------------
        !! Z-pencil
-       call derzz (divu3, ta3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
+       call derzz (divu3, ta3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1, zero)
        if (imultispecies) then
           divu3(:,:,:) = (xnu / prandtl) * divu3(:,:,:) / ta3(:,:,:)
 
@@ -894,7 +897,7 @@ contains
 
           do is = 1, numscalar
              if (massfrac(is)) then
-                call derzz (tc3, phi3(:,:,:,is), di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1)
+                call derzz (tc3, phi3(:,:,:,is), di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1, zero)
                 divu3(:,:,:) = divu3(:,:,:) + (xnu / sc(is)) * (td3(:,:,:) / mol_weight(is)) * tc3(:,:,:)
              endif
           enddo
@@ -984,6 +987,7 @@ contains
     use param, only : nrhotime
     use param, only : xnu, prandtl
     use param, only : iimplicit
+    use param, only : zero
 
     use var, only : td1, te1, di1, sx, sfxp, ssxp, swxp
     use var, only : rho2, ta2, tb2, di2, sy, sfyp, ssyp, swyp
@@ -1002,16 +1006,16 @@ contains
     call transpose_y_to_z(rho2, rho3)
 
     !! Diffusion term
-    call derzz (ta3,rho3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
+    call derzz (ta3,rho3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1, zero)
     call transpose_z_to_y(ta3, tb2)
 
     iimplicit = -iimplicit
-    call deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+    call deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1, zero)
     iimplicit = -iimplicit
     ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
     call transpose_y_to_x(ta2, te1)
 
-    call derxx (td1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+    call derxx (td1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1, zero)
     td1(:,:,:) = td1(:,:,:) + te1(:,:,:)
 
     drhodt1_next(:,:,:) = drhodt1_next(:,:,:) - invpe * td1(:,:,:)

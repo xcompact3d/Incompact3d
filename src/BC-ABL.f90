@@ -276,6 +276,7 @@ contains
     use var, only: uxf1, uzf1, phif1
     use var, only: di1
     use var, only: sxy1, syz1, heatflux
+    use ibm_param, only : ubcx,ubcy,ubcz
     use dbg_schemes, only: log_prec, tanh_prec, sqrt_prec, abs_prec, atan_prec
 
     implicit none
@@ -294,9 +295,9 @@ contains
 
     ! Filter the velocity with twice the grid scale according to Bou-Zeid et al. (2005)
     call filter(zero)
-    call filx(uxf1,ux,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0)
-    call filx(uzf1,uz,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0)
-    if (iscalar==1) call filx(phif1,phi(:,:,:,1),di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0)
+    call filx(uxf1,ux,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+    call filx(uzf1,uz,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,ubcz)
+    if (iscalar==1) call filx(phif1,phi(:,:,:,1),di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,zero)
 
     ! Reset average values
     ux_HAve_local  = zero
@@ -782,54 +783,54 @@ contains
       endif
     endif
 
-    if ((ivisu /= 0).and.(mod(itime,ioutput) == 0)) then
-       !! Write vorticity as an example of post processing
-       !x-derivatives
-       call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
-       call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-       call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-       !y-derivatives
-       call transpose_x_to_y(ux1,td2)
-       call transpose_x_to_y(uy1,te2)
-       call transpose_x_to_y(uz1,tf2)
-       call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-       call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-       call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-       !!z-derivatives
-       call transpose_y_to_z(td2,td3)
-       call transpose_y_to_z(te2,te3)
-       call transpose_y_to_z(tf2,tf3)
-       call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-       call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-       call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
-       !!all back to x-pencils
-       call transpose_z_to_y(ta3,td2)
-       call transpose_z_to_y(tb3,te2)
-       call transpose_z_to_y(tc3,tf2)
-       call transpose_y_to_x(td2,tg1)
-       call transpose_y_to_x(te2,th1)
-       call transpose_y_to_x(tf2,ti1)
-       call transpose_y_to_x(ta2,td1)
-       call transpose_y_to_x(tb2,te1)
-       call transpose_y_to_x(tc2,tf1)
-       !du/dx=ta1 du/dy=td1 and du/dz=tg1
-       !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
-       !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
-
-       ! vorticity
-       di1(:,:,:)=sqrt((tf1(:,:,:)-th1(:,:,:))**2+(tg1(:,:,:)-tc1(:,:,:))**2+&
-            (tb1(:,:,:)-td1(:,:,:))**2)
-
-       if (iibm==2) then
-          di1(:,:,:) = (one - ep1(:,:,:)) * di1(:,:,:)
-       endif
-       uvisu=zero
-       call fine_to_coarseV(1,di1,uvisu)
-994    format('vort',I3.3)
-       write(filename, 994) itime/ioutput
-       call decomp_2d_write_one(1,uvisu,filename,2)
-
-    endif
+!    if ((ivisu /= 0).and.(mod(itime,ioutput) == 0)) then
+!       !! Write vorticity as an example of post processing
+!       !x-derivatives
+!       call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+!       call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+!       call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+!       !y-derivatives
+!       call transpose_x_to_y(ux1,td2)
+!       call transpose_x_to_y(uy1,te2)
+!       call transpose_x_to_y(uz1,tf2)
+!       call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+!       call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+!       call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+!       !!z-derivatives
+!       call transpose_y_to_z(td2,td3)
+!       call transpose_y_to_z(te2,te3)
+!       call transpose_y_to_z(tf2,tf3)
+!       call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+!       call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+!       call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+!       !!all back to x-pencils
+!       call transpose_z_to_y(ta3,td2)
+!       call transpose_z_to_y(tb3,te2)
+!       call transpose_z_to_y(tc3,tf2)
+!       call transpose_y_to_x(td2,tg1)
+!       call transpose_y_to_x(te2,th1)
+!       call transpose_y_to_x(tf2,ti1)
+!       call transpose_y_to_x(ta2,td1)
+!       call transpose_y_to_x(tb2,te1)
+!       call transpose_y_to_x(tc2,tf1)
+!       !du/dx=ta1 du/dy=td1 and du/dz=tg1
+!       !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
+!       !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
+!
+!       ! vorticity
+!       di1(:,:,:)=sqrt((tf1(:,:,:)-th1(:,:,:))**2+(tg1(:,:,:)-tc1(:,:,:))**2+&
+!            (tb1(:,:,:)-td1(:,:,:))**2)
+!
+!       if (iibm==2) then
+!          di1(:,:,:) = (one - ep1(:,:,:)) * di1(:,:,:)
+!       endif
+!       uvisu=zero
+!       call fine_to_coarseV(1,di1,uvisu)
+!994    format('vort',I3.3)
+!       write(filename, 994) itime/ioutput
+!       call decomp_2d_write_one(1,uvisu,filename,2)
+!
+!    endif
 
     return
 

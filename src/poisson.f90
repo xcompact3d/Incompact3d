@@ -240,7 +240,7 @@ contains
 #endif
 
     call waves()
-    call matrice_refinement()
+    if (bcy == 1 .and. istret /= 0) call matrice_refinement()
 
 #ifdef DEBG 
     if (nrank .eq. 0) write(*,*)'# decomp_2d_poisson_init end'
