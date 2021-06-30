@@ -334,7 +334,8 @@ module param
   logical, save :: sync_scal_needed = .true.
 
   !! Channel flow
-  integer :: icpg, icfr, idir_stream
+  integer :: icfr, idir_stream
+  logical :: cpg
   real(mytype) :: re_cent, fcpg
 
   !! Numerics control

@@ -384,6 +384,10 @@ contains
 
        call visu_cyl(ux1, uy1, uz1, pp3, phi1, ep1, num)
 
+    elseif (itype.eq.itype_tbl) then
+
+       call visu_tbl(ux1, uy1, uz1, pp3, phi1, ep1, num)
+
     endif
 
   end subroutine visu_case

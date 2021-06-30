@@ -89,7 +89,7 @@ BasicParam
 
 * ``gravx``, ``gravy`` & ``gravz`` are the three components of the unitary vector pointing in the gravity's direction;
 
-* ``icpg`` & ``icfr`` are parameters for the momentum source term (Turbulent Channel only). The former (latter) corresponds to an imposed pressure gradient (flow rate);
+* ``cpg`` is a logical parameter for the momentum source term (Turbulent Channel only). True (False) for an imposed pressure gradient (flow rate);
 
 * ``ifilter`` & ``C_filter`` 
 

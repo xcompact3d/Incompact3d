@@ -109,25 +109,26 @@ contains
     endif
 
     if (iscalar==1) then
-      if (nrank==0) write(*,*) 'Imposing linear temperature profile'
-      do k=1,xsize(3)
-         do j=1,xsize(2)
-            if (istret==0) y=real(j+xstart(2)-2,mytype)*dy
-            if (istret/=0) y=yp(j+xstart(2)-1)
-            do i=1,xsize(1)
-               phi1(i,j,k,:) = one - y/yly
-            enddo
-         enddo
-      enddo
+       if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) &
+          write(*,*) 'Imposing linear temperature profile'
+       do k=1,xsize(3)
+          do j=1,xsize(2)
+             if (istret==0) y=real(j+xstart(2)-2,mytype)*dy
+             if (istret/=0) y=yp(j+xstart(2)-1)
+             do i=1,xsize(1)
+                phi1(i,j,k,:) = one - y/yly
+             enddo
+          enddo
+       enddo
 
-      phi1(:,:,:,:) = zero !change as much as you want
-      if ((nclyS1 == 2).and.(xstart(2) == 1)) then
-        !! Generate a hot patch on bottom boundary
-        phi1(:,1,:,:) = one
-      endif
-      if ((nclySn == 2).and.(xend(2) == ny)) then
-        phi1(:,xsize(2),:,:) = zero
-      endif
+       phi1(:,:,:,:) = zero !change as much as you want
+       if ((nclyS1 == 2).and.(xstart(2) == 1)) then
+         !! Generate a hot patch on bottom boundary
+         phi1(:,1,:,:) = one
+       endif
+       if ((nclySn == 2).and.(xend(2) == ny)) then
+         phi1(:,xsize(2),:,:) = zero
+       endif
     endif
 !
     ux1=zero
@@ -310,7 +311,7 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
     real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: gx
 
-    if (icpg /= 1) then ! if not constant pressure gradient
+    if (.not. cpg ) then ! if not constant pressure gradient
        if (icfr == 1) then ! constant flow rate without transposition
           if (idir_stream == 1) then
              call channel_cfr(ux,two/three)
@@ -346,7 +347,6 @@ contains
        endif
     endif
 
-    return
   end subroutine boundary_conditions_channel
   !############################################################################
   !############################################################################
@@ -388,7 +388,8 @@ contains
 
     can=-(constant-ut4)
 
-    if (nrank==0) write(*,*) nrank,'correction to ensure constant flow rate',ut4,can
+    if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) &
+      write(*,*) nrank,'correction to ensure constant flow rate',ut4,can
 
     do k=1,ysize(3)
        do i=1,ysize(1)
@@ -438,7 +439,8 @@ contains
 
     can = - (constant - uball)
 
-    if (nrank==0) print *, nrank, 'UT', uball, can
+    if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) &
+       write(*,*) 'UT', uball, can
 
     do k=1,xsize(3)
       do j=1,xsize(2)
@@ -551,7 +553,7 @@ contains
     real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
 
-    if (icpg == 1) then
+    if (cpg) then
         !! fcpg: add constant pressure gradient in streamwise direction
         if (idir_stream == 1) then
            dux1(:,:,:,1) = dux1(:,:,:,1) + fcpg !* (re/re_cent)**2

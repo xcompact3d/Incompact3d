@@ -43,13 +43,12 @@ module tbl
   character(len=1),parameter :: NL=char(10) !new line character
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_tbl, boundary_conditions_tbl, postprocess_tbl, tbl_flrt
+  PUBLIC :: init_tbl, boundary_conditions_tbl, postprocess_tbl, visu_tbl
 
 contains
 
   subroutine init_tbl (ux1,uy1,uz1,ep1,phi1)
 
-    use decomp_2d
     use decomp_2d_io
     use variables
     use param
@@ -103,9 +102,7 @@ contains
   !********************************************************************
   subroutine boundary_conditions_tbl (ux,uy,uz,phi)
 
-    USE param
-    USE variables
-    USE decomp_2d
+    use navier, only : tbl_flrt
 
     implicit none
 
@@ -198,7 +195,6 @@ contains
   end subroutine boundary_conditions_tbl
 
   !********************************************************************
-
   !********************************************************************
   !
   subroutine tbl_flrt (ux1,uy1,uz1)
@@ -410,7 +406,7 @@ contains
   end subroutine blasius
 
   !############################################################################
-  subroutine postprocess_tbl(ux1,uy1,uz1,ep1) !By Felipe Schuch
+  subroutine postprocess_tbl(ux1,uy1,uz1,ep1)
 
     use MPI
     use decomp_2d
