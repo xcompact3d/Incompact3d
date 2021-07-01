@@ -478,6 +478,7 @@ module param
   real(mytype),parameter :: thirtytwo=32._mytype
   real(mytype),parameter :: thirtyfour=34._mytype
   real(mytype),parameter :: thirtysix=36._mytype
+  real(mytype),parameter :: thirtyseven=37._mytype
   !
   real(mytype),parameter :: forty=40._mytype
   real(mytype),parameter :: fortyfour=44._mytype
@@ -487,6 +488,7 @@ module param
   real(mytype),parameter :: fifty=50._mytype
   real(mytype),parameter :: fiftyfour=54._mytype
   real(mytype),parameter :: fiftyfive=55._mytype
+  real(mytype),parameter :: fiftynine=59._mytype
   !
   real(mytype),parameter :: sixty=60._mytype
   real(mytype),parameter :: sixtytwo=62._mytype
