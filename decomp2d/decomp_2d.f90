@@ -15,9 +15,6 @@
 module decomp_2d
 
   use MPI
-#ifdef ADIOS2
-  use adios2
-#endif
   
   implicit none
 
@@ -159,14 +156,6 @@ module decomp_2d
   integer, save :: iskipV, jskipV, kskipV
   integer, save :: iskipP, jskipP, kskipP
 
-  !!===================================================================
-  !! ADIOS2 handles etc.
-#ifdef ADIOS2
-  type(adios2_adios) :: adios
-  type(adios2_io) :: io_write_one, io_write_real_coarse
-  type(adios2_engine) :: engine_write_one, engine_write_real_coarse
-#endif
-
   ! public user routines
   public :: decomp_2d_init, decomp_2d_finalize, &
        transpose_x_to_y, transpose_y_to_z, &
@@ -185,10 +174,6 @@ module decomp_2d
        alloc_x, alloc_y, alloc_z, &
        update_halo, decomp_2d_abort, &
        get_decomp_info
-
-#ifdef ADIOS2
-  public :: adios, io_write_one, io_write_real_coarse, engine_write_one, engine_write_real_coarse
-#endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! These are routines to perform global data transpositions
@@ -319,10 +304,6 @@ contains
   !     library ready to use
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine decomp_2d_init(nx,ny,nz,p_row,p_col,periodic_bc)
-
-#ifdef ADIOS2
-    use adios2
-#endif
     
     implicit none
 
@@ -333,31 +314,6 @@ contains
 
 #ifdef SHM_DEBUG
     character(len=80) fname
-#endif
-
-#ifdef ADIOS2
-    logical :: adios2_debug_mode
-    character(len=80) :: config_file="adios2_config.xml"
-    character(len=80) :: outfile
-
-    !! TODO: make this a runtime-option
-    adios2_debug_mode = .true.
-
-    call adios2_init(adios, trim(config_file), MPI_COMM_WORLD, adios2_debug_mode, ierror)
-    if (ierror.ne.0) then
-       print *, "Error initialising ADIOS2 - is adios2_config.xml present and valid?"
-       call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
-    endif
-    call adios2_declare_io(io_write_real_coarse, adios, "solution-io", ierror)
-    if (io_write_real_coarse % engine_type.eq."BP4") then
-       write(outfile, *) "data.bp4"
-    else if (io_write_real_coarse % engine_type.eq."HDF5") then
-       write(outfile, *) "data.hdf5"
-    else
-       print *, "Unknown engine!"
-       call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
-    endif
-    call adios2_open(engine_write_real_coarse, io_write_real_coarse, trim(outfile), adios2_mode_write, ierror)
 #endif
 
     nx_global = nx
@@ -509,26 +465,13 @@ contains
   ! Routine to be called by applications to clean things up
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine decomp_2d_finalize
-
-#ifdef ADIOS2
-    use adios2
-#endif
     
     implicit none
-
-#ifdef ADIOS2
-    integer :: ierr
-#endif
     
     call decomp_info_finalize(decomp_main)
 
     decomp_buf_size = 0
     deallocate(work1_r, work2_r, work1_c, work2_c)
-
-#ifdef ADIOS2
-    call adios2_close(engine_write_real_coarse, ierr)
-    call adios2_finalize(adios, ierr)
-#endif
     
     return
   end subroutine decomp_2d_finalize

@@ -50,9 +50,6 @@ else if (ipencil == 3) then
    starts(3) = decomp%zst(3)-1
 endif
 
-#ifndef ADIOS2
-!! Original writers
-
 #ifdef T3PIO
 call MPI_INFO_CREATE(info, ierror)
 gs = ceiling(real(sizes(1),mytype)*real(sizes(2),mytype)* &
@@ -84,42 +81,4 @@ call MPI_FILE_CLOSE(fh,ierror)
 call MPI_TYPE_FREE(newtype,ierror)
 #ifdef T3PIO
 call MPI_INFO_FREE(info,ierror)
-#endif
-
-#else
-!! Using ADIOS2
-
-print *, "Trying to use ADIOS2 - interface not completed (WIP), please try again later."
-print *, "For time being, please build without ADIOS2 to use default MPI-IO interface."
-call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
-
-! Check if variable already exists, if not create it
-call adios2_inquire_variable(var_handle, io_write_one, filename, ierror)
-if (.not.var_handle%valid) then
-   !! New variable
-   
-   ! Need to set the ADIOS2 data type
-   if (data_type.eq.MPI_DOUBLE_PRECISION) then
-      !! Double
-      data_type = adios2_type_dp
-   else if (data_type.eq.MPI_REAL) then
-      !! Single
-      data_type = adios2_type_real
-   else if (data_type.eq.MPI_DOUBLE_COMPLEX) then
-      !! Complex double
-      data_type = adios2_type_complex_dp
-   else if (data_type.eq.MPI_COMPLEX) then
-      !! Complex single
-      data_type = adios2_type_complex
-   else
-      print *, "Trying to write unknown data type!"
-      call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
-   endif
-
-   call adios2_define_variable(var_handle, io_write_one, filename, data_type, &
-        ndims, int(sizes, kind=8), int(starts, kind=8), int(subsizes, kind=8), &
-        adios2_constant_dims, ierror)
-endif
-
-call adios2_put(engine_write_one, var_handle, var, ierror)
 #endif

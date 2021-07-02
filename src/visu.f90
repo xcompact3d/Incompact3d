@@ -31,6 +31,10 @@
 !################################################################################
 module visu
 
+#ifdef ADIOS2
+  use adios2
+#endif
+  
   implicit none
 
   ! True to activate the XDMF output
@@ -46,9 +50,14 @@ module visu
   integer :: ioxdmf
   character(len=9) :: ifilenameformat = '(I3.3)'
   real, save :: tstart, tend
+#ifdef ADIOS2
+  type(adios2_adios) :: adios
+  type(adios2_io) :: io_write_real_coarse
+  type(adios2_engine) :: engine_write_real_coarse
+#endif
 
   private
-  public :: output2D, visu_init, write_snapshot, end_snapshot, write_field
+  public :: output2D, visu_init, visu_finalise, write_snapshot, end_snapshot, write_field
 
 contains
 
@@ -61,7 +70,7 @@ contains
     use param, only : ilmn, iscalar, ilast, ifirst, ioutput, istret
     use variables, only : numscalar, prec, nvisu
     use decomp_2d, only : nrank, mytype, xszV, yszV, zszV
-
+    
     implicit none
 
     ! Local variables
@@ -69,7 +78,15 @@ contains
     integer :: noutput, nsnapout
     real(mytype) :: memout
 
+#ifdef ADIOS2
+    integer :: ierror
+    logical :: adios2_debug_mode
+    character(len=80) :: config_file="adios2_config.xml"
+    character(len=80) :: outfile
+#endif
+
     ! Create folder if needed
+    ! XXX: Is this needed for ADIOS2?
     if (nrank==0) then
       inquire(file="data", exist=dir_exists)
       if (.not.dir_exists) then
@@ -108,7 +125,51 @@ contains
       stop
     endif
 
+#ifdef ADIOS2
+
+    !! TODO: make this a runtime-option
+    adios2_debug_mode = .true.
+
+    call adios2_init(adios, trim(config_file), MPI_COMM_WORLD, adios2_debug_mode, ierror)
+    if (ierror.ne.0) then
+       print *, "Error initialising ADIOS2 - is adios2_config.xml present and valid?"
+       call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
+    endif
+    call adios2_declare_io(io_write_real_coarse, adios, "solution-io", ierror)
+    if (io_write_real_coarse % engine_type.eq."BP4") then
+       write(outfile, *) "data.bp4"
+    else if (io_write_real_coarse % engine_type.eq."HDF5") then
+       write(outfile, *) "data.hdf5"
+    else
+       print *, "Unknown engine!"
+       call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
+    endif
+    call adios2_open(engine_write_real_coarse, io_write_real_coarse, trim(outfile), adios2_mode_write, ierror)
+#endif
+
   end subroutine visu_init
+
+  !
+  ! Finalise the visu module
+  ! - Currently only needed to clean up ADIOS2
+  !
+  subroutine visu_finalise()
+    
+#ifdef ADIOS2
+    use adios2
+#endif
+  implicit none
+
+#ifdef ADIOS2
+  integer :: ierr
+#endif
+  
+#ifdef ADIOS2
+    call adios2_close(engine_write_real_coarse, ierr)
+    call adios2_finalize(adios, ierr)
+#endif
+    
+  end subroutine visu_finalise
 
   !
   ! Write a snapshot
@@ -118,10 +179,6 @@ contains
     use decomp_2d, only : transpose_z_to_y, transpose_y_to_x
     use decomp_2d, only : mytype, xsize, ysize, zsize
     use decomp_2d, only : nrank
-#ifdef ADIOS2
-    use adios2
-    use decomp_2d, only : engine_write_real_coarse
-#endif
 
     use param, only : nrhotime, ilmn, iscalar, ioutput
 
@@ -216,10 +273,6 @@ contains
     use param, only : istret, xlx, yly, zlz
     use variables, only : nx, ny, nz, beta
     use var, only : dt,t
-#ifdef ADIOS2
-    use adios2
-    use decomp_2d, only : engine_write_real_coarse
-#endif
 
     implicit none
 
@@ -524,7 +577,7 @@ contains
 #ifndef ADIOS2
        call decomp_2d_write_one(1,uvisu,"./data/"//pathname//'/'//filename//'-'//num//'.bin',2)
 #else
-       call decomp_2d_write_one(1,uvisu,filename,2)
+       call decomp_2d_write_one(1,uvisu,filename,2,engine_write_real_coarse,io_write_real_coarse)
 #endif
     else
        call decomp_2d_write_plane(1,local_array,output2D,-1,"./data/"//pathname//'/'//filename//'-'//num//'.bin')
