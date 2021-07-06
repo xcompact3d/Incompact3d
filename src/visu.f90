@@ -70,6 +70,9 @@ contains
     use param, only : ilmn, iscalar, ilast, ifirst, ioutput, istret
     use variables, only : numscalar, prec, nvisu
     use decomp_2d, only : nrank, mytype, xszV, yszV, zszV
+#ifdef ADIOS2
+    use decomp_2d_io, only : adios2_register_variable
+#endif
     
     implicit none
 
@@ -83,6 +86,7 @@ contains
     logical :: adios2_debug_mode
     character(len=80) :: config_file="adios2_config.xml"
     character(len=80) :: outfile
+    integer :: is
 #endif
 
     ! Create folder if needed
@@ -144,6 +148,21 @@ contains
        print *, "Unknown engine!"
        call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
     endif
+
+    !! Register variables
+    call adios2_register_variable(io_write_real_coarse, "ux", 1, 2)
+    call adios2_register_variable(io_write_real_coarse, "uy", 1, 2)
+    call adios2_register_variable(io_write_real_coarse, "uz", 1, 2)
+    call adios2_register_variable(io_write_real_coarse, "pp", 1, 2)
+    if (ilmn) then
+       call adios2_register_variable(io_write_real_coarse, "rho", 1, 2)
+    endif
+    if (iscalar.ne.0) then
+       do is = 1, numscalar
+          call adios2_register_variable(io_write_real_coarse, "phi"//char(48+is), 1, 2)
+       enddo
+    endif
+    
     call adios2_open(engine_write_real_coarse, io_write_real_coarse, trim(outfile), adios2_mode_write, ierror)
 #endif
 
@@ -517,9 +536,13 @@ contains
   !
   subroutine write_field(f1, pathname, filename, num, skip_ibm)
 
+    use mpi
+    
     use var, only : ep1
     use var, only : zero, one
+#ifndef ADIOS2
     use var, only : uvisu
+#endif
     use param, only : iibm
     use decomp_2d, only : mytype, xsize, xszV, yszV, zszV
     use decomp_2d, only : nrank, fine_to_coarseV
@@ -533,51 +556,61 @@ contains
 
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: local_array
 
+    integer :: ierr
+
     if (use_xdmf) then
-      if (nrank.eq.0) then
-        write(ioxdmf,*)'        <Attribute Name="'//filename//'" Center="Node">'
-        write(ioxdmf,*)'           <DataItem Format="Binary"'
+       if (nrank.eq.0) then
+          write(ioxdmf,*)'        <Attribute Name="'//filename//'" Center="Node">'
+          write(ioxdmf,*)'           <DataItem Format="Binary"'
 #ifdef DOUBLE_PREC
 #ifdef SAVE_SINGLE
-        if (output2D.eq.0) then
-          write(ioxdmf,*)'            DataType="Float" Precision="4" Endian="little" Seek="0"'
-        else
+          if (output2D.eq.0) then
+             write(ioxdmf,*)'            DataType="Float" Precision="4" Endian="little" Seek="0"'
+          else
+             write(ioxdmf,*)'            DataType="Float" Precision="8" Endian="little" Seek="0"'
+          endif
+#else
           write(ioxdmf,*)'            DataType="Float" Precision="8" Endian="little" Seek="0"'
-        endif
-#else
-        write(ioxdmf,*)'            DataType="Float" Precision="8" Endian="little" Seek="0"'
 #endif
 #else
-        write(ioxdmf,*)'            DataType="Float" Precision="4" Endian="little" Seek="0"'
+          write(ioxdmf,*)'            DataType="Float" Precision="4" Endian="little" Seek="0"'
 #endif
-        if (output2D.eq.0) then
-          write(ioxdmf,*)'            Dimensions="',zszV(3),yszV(2),xszV(1),'">'
-        else if (output2D.eq.1) then
-          write(ioxdmf,*)'            Dimensions="',zszV(3),yszV(2),1,'">'
-        else if (output2D.eq.2) then
-          write(ioxdmf,*)'            Dimensions="',zszV(3),1,xszV(1),'">'
-        else if (output2D.eq.3) then
-          write(ioxdmf,*)'            Dimensions="',1,yszV(2),xszV(1),'">'
-        endif
-        write(ioxdmf,*)'              ./'//pathname//"/"//filename//'-'//num//'.bin'
-        write(ioxdmf,*)'           </DataItem>'
-        write(ioxdmf,*)'        </Attribute>'
-      endif
+          if (output2D.eq.0) then
+             write(ioxdmf,*)'            Dimensions="',zszV(3),yszV(2),xszV(1),'">'
+          else if (output2D.eq.1) then
+             write(ioxdmf,*)'            Dimensions="',zszV(3),yszV(2),1,'">'
+          else if (output2D.eq.2) then
+             write(ioxdmf,*)'            Dimensions="',zszV(3),1,xszV(1),'">'
+          else if (output2D.eq.3) then
+             write(ioxdmf,*)'            Dimensions="',1,yszV(2),xszV(1),'">'
+          endif
+#ifndef ADIOS2
+          write(ioxdmf,*)'              ./'//pathname//"/"//filename//'-'//num//'.bin'
+#else
+          write(ioxdmf,*)'              ./data.hdf5:/Step'//num//'/'//filename
+#endif
+          write(ioxdmf,*)'           </DataItem>'
+          write(ioxdmf,*)'        </Attribute>'
+       endif
     endif
-
+    
     if (iibm==2 .and. .not.present(skip_ibm)) then
-      local_array(:,:,:) = (one - ep1(:,:,:)) * f1(:,:,:)
+       local_array(:,:,:) = (one - ep1(:,:,:)) * f1(:,:,:)
     else
-      local_array(:,:,:) = f1(:,:,:)
+       local_array(:,:,:) = f1(:,:,:)
     endif
 
     if (output2D.eq.0) then
+#ifndef ADIOS2
        uvisu = zero
        call fine_to_coarseV(1,local_array,uvisu)
-#ifndef ADIOS2
        call decomp_2d_write_one(1,uvisu,"./data/"//pathname//'/'//filename//'-'//num//'.bin',2)
 #else
-       call decomp_2d_write_one(1,uvisu,filename,2,engine_write_real_coarse,io_write_real_coarse)
+       if (iibm==2 .and. (.not.present(skip_ibm))) then
+          print *, "Not Implemented: currently ADIOS2 IO doesn't support IBM-blanking"
+          call MPI_ABORT(MPI_COMM_WORLD, -1, ierr)
+       endif
+       call decomp_2d_write_one(1,f1,filename,2,adios,engine_write_real_coarse,io_write_real_coarse)
 #endif
     else
        call decomp_2d_write_plane(1,local_array,output2D,-1,"./data/"//pathname//'/'//filename//'-'//num//'.bin')

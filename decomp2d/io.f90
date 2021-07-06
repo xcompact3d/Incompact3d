@@ -35,6 +35,9 @@ module decomp_2d_io
        decomp_2d_write_plane, decomp_2d_write_every, &
        decomp_2d_write_subdomain, &
        decomp_2d_write_outflow, decomp_2d_read_inflow
+#ifdef ADIOS2
+  public :: adios2_register_variable
+#endif
 
   ! Generic interface to handle multiple data types
 
@@ -849,38 +852,30 @@ contains
   end subroutine mpiio_write_real_coarse
 
 #ifdef ADIOS2
-  subroutine adios2_write_real_coarse(ipencil,var,filename,icoarse,engine,io)
-
-    ! USE param
-    ! USE variables
+  subroutine adios2_register_variable(io, varname, ipencil, icoarse)
 
     implicit none
 
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
     integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
-    real(mytype), dimension(:,:,:), intent(IN) :: var
-    type(adios2_engine), intent(in) :: engine
     type(adios2_io), intent(in) :: io
     
-    real(mytype_single), allocatable, dimension(:,:,:) :: varsingle
-    character(len=*) :: filename
+    character*(*), intent(in) :: varname
 
-    integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: i,j,k, ierror, newtype, fh
     type(adios2_variable) :: var_handle
     integer, parameter :: ndims = 3
     logical, parameter :: adios2_constant_dims = .true.
     integer :: data_type
+    integer :: ierror
 
     call coarse_extents(ipencil, icoarse, sizes, subsizes, starts)
-    allocate (varsingle(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
-    varsingle=real(var, mytype_single)
 
     ! Check if variable already exists, if not create it
-    call adios2_inquire_variable(var_handle, io, filename, ierror)
+    call adios2_inquire_variable(var_handle, io, varname, ierror)
     if (.not.var_handle % valid) then
        !! New variable
+       print *, "Registering variable for IO: ", varname
    
        ! Need to set the ADIOS2 data type
        if (mytype_single.eq.kind(0.0d0)) then
@@ -894,13 +889,37 @@ contains
           call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
        endif
 
-       call adios2_define_variable(var_handle, io, filename, data_type, &
+       call adios2_define_variable(var_handle, io, varname, data_type, &
             ndims, int(sizes, kind=8), int(starts, kind=8), int(subsizes, kind=8), &
             adios2_constant_dims, ierror)
     endif
+    
+  end subroutine adios2_register_variable
+  subroutine adios2_write_real_coarse(ipencil,var,varname,icoarse,adios,engine,io)
 
-    call adios2_put(engine, var_handle, varsingle, ierror)
-    deallocate(varsingle)
+    ! USE param
+    ! USE variables
+
+    implicit none
+
+    integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
+    integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
+    real(mytype), dimension(:,:,:), intent(IN) :: var
+    type(adios2_adios), intent(in) :: adios
+    type(adios2_engine), intent(in) :: engine
+    type(adios2_io), intent(in) :: io
+    character*(*), intent(in) :: varname
+    
+    integer (kind=MPI_OFFSET_KIND) :: filesize, disp
+    integer :: i,j,k, ierror, newtype, fh
+    type(adios2_variable) :: var_handle
+
+    call adios2_inquire_variable(var_handle, io, varname, ierror)
+    if (.not.var_handle % valid) then
+       call adios2_register_variable(io, varname, ipencil, icoarse)
+    endif
+
+    call adios2_put(engine, var_handle, var, adios2_mode_deferred, ierror)
 
     return
   end subroutine adios2_write_real_coarse

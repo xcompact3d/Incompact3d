@@ -39,6 +39,8 @@
 !###########################################################################
 subroutine parameter(input_i3d)
 
+  use mpi
+  
   use iso_fortran_env
 
   use param
@@ -284,6 +286,20 @@ subroutine parameter(input_i3d)
 
   ! 2D snapshot is not compatible with coarse visualization
   if (output2D.ne.0) nvisu = 1
+#ifdef ADIOS2
+  if (nvisu .ne. 1) then
+     if (nrank .eq. 0) then
+        print *, "ADIOS2 output is not compatible with coarse visualisation"
+        print *, "disabling coarse visualisation"
+        print *, "To compress the IO, see ADIOS2 options"
+     endif
+     nvisu = 1
+  endif
+#if defined(DOUBLE_PREC) && defined(SAVE_SINGLE)
+  print *, "ADIOS2 does not support mixing the simulation and output precision"
+  call MPI_ABORT(MPI_COMM_WORLD, -1, ierr)
+#endif
+#endif
 
   if (iimplicit.ne.0) then
      if ((itimescheme.eq.5).or.(itimescheme.eq.6)) then
@@ -544,7 +560,7 @@ subroutine parameter(input_i3d)
   endif
   
   if (iibm.eq.3) then ! This is only for the Cubic Spline Reconstruction
-  npif=npif+1
+     npif=npif+1
   endif
 
 #ifdef DEBG
