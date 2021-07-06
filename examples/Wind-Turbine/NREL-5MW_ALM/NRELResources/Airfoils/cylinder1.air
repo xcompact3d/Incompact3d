@@ -1,0 +1,17 @@
+Title: cylinder 
+Thickness to Chord Ratio: 2.0
+Zero Lift AOA (deg):  0 
+Reverse Camber Direction: 0
+
+Reynolds Number: 4e3
+AOA (deg) CL CD Cm25
+-180.00    0.000   0.5   0.0000
+ 0.00    0.000   0.5   0.0000
+ 180.00    0.000   0.5   0.0000
+
+Reynolds Number: 4e8
+AOA (deg) CL CD Cm25
+-180.00    0.000   0.5   0.0000
+ 0.00    0.000   0.5   0.0000
+ 180.00    0.000   0.5   0.0000
+
