@@ -39,6 +39,9 @@ module stats
 
 contains
 
+  !
+  ! Initialize to zero all statistics
+  !
   subroutine init_statistic
 
     use param, only : zero, iscalar
@@ -71,6 +74,140 @@ contains
 
   end subroutine init_statistic
 
+  !
+  ! Read all statistics if possible
+  !
+  subroutine restart_statistic
+
+    use param, only : initstat, irestart, ifirst, zero
+    use variables, only : nvisu
+    use var, only : tmean
+
+    implicit none
+
+    ! Local variables
+    integer :: is
+    character(len=30) :: filename
+
+    ! No reading for statistics when nvisu > 1 or no restart
+    if (nvisu.gt.1 .or. irestart.eq.0) then
+       call init_statistic()
+       initstat = ifirst
+       return
+    endif
+
+    ! Temporary array
+    tmean = zero
+
+    ! Read all statistics
+    call read_or_write_all_stats(.true.)
+
+  end subroutine restart_statistic
+
+  !
+  ! Statistics: perform all IO
+  !
+  subroutine read_or_write_all_stats(flag_read)
+
+    use param, only : iscalar, itime
+    use variables, only : numscalar
+    use decomp_2d, only : nrank
+    use var, only : pmean
+    use var, only : umean, uumean
+    use var, only : vmean, vvmean
+    use var, only : wmean, wwmean
+    use var, only : uvmean, uwmean
+    use var, only : vwmean
+    use var, only : phimean, phiphimean
+
+    implicit none
+
+    ! Argument
+    logical, intent(in) :: flag_read
+
+    ! Local variables
+    integer :: is
+    character(len=30) :: filename
+
+    if (nrank==0) then
+      print *,'==========================================================='
+      if (flag_read) then
+        print *,'Reading stat file', itime
+      else
+        print *,'Writing stat file', itime
+      endif
+    endif
+
+    write(filename,"('pmean.dat',I7.7)") itime
+    call read_or_write_one_stat(flag_read, filename, pmean)
+    write(filename,"('umean.dat',I7.7)") itime
+    call read_or_write_one_stat(flag_read, filename, umean)
+    write(filename,"('vmean.dat',I7.7)") itime
+    call read_or_write_one_stat(flag_read, filename, vmean)
+    write(filename,"('wmean.dat',I7.7)") itime
+    call read_or_write_one_stat(flag_read, filename, wmean)
+
+    write(filename,"('uumean.dat',I7.7)") itime
+    call read_or_write_one_stat(flag_read, filename, uumean)
+    write(filename,"('vvmean.dat',I7.7)") itime
+    call read_or_write_one_stat(flag_read, filename, vvmean)
+    write(filename,"('wwmean.dat',I7.7)") itime
+    call read_or_write_one_stat(flag_read, filename, wwmean)
+
+    write(filename,"('uvmean.dat',I7.7)") itime
+    call read_or_write_one_stat(flag_read, filename, uvmean)
+    write(filename,"('uwmean.dat',I7.7)") itime
+    call read_or_write_one_stat(flag_read, filename, uwmean)
+    write(filename,"('vwmean.dat',I7.7)") itime
+    call read_or_write_one_stat(flag_read, filename, vwmean)
+
+    if (iscalar==1) then
+       do is=1, numscalar
+          write(filename,"('phi',I2.2,'mean.dat',I7.7)") is, itime
+          call read_or_write_one_stat(flag_read, filename, phimean(:,:,:,is))
+          write(filename,"('phiphi',I2.2,'mean.dat',I7.7)") is, itime
+          call read_or_write_one_stat(flag_read, filename, phiphimean(:,:,:,is))
+       enddo
+    endif
+
+    if (nrank==0) then
+      if (flag_read) then
+        print *,'Read stat done!'
+      else
+        print *,'Write stat done!'
+      endif
+      print *,'==========================================================='
+    endif
+
+  end subroutine read_or_write_all_stats
+
+  !
+  ! Statistics: perform one IO
+  !
+  subroutine read_or_write_one_stat(flag_read, filename, array)
+
+    use decomp_2d, only : mytype, xstS, xenS
+    use decomp_2d_io, only : decomp_2d_read_one, decomp_2d_write_one
+
+    implicit none
+
+    ! Arguments
+    logical, intent(in) :: flag_read
+    character(len=*), intent(in) :: filename
+    real(mytype), dimension(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)), intent(inout) :: array
+
+    if (flag_read) then
+      ! There was a check for nvisu = 1 before
+      call decomp_2d_read_one(1, array, filename)
+    else
+      call decomp_2d_write_one(1, array, filename, 1)
+    endif
+
+  end subroutine read_or_write_one_stat
+
+  !
+  ! Statistics : Intialize, update and perform IO
+  !
   subroutine overall_statistic(ux1,uy1,uz1,phi1,pp3,ep1)
 
     use param
@@ -107,6 +244,8 @@ contains
        return
     elseif (itime.eq.initstat) then
        call init_statistic()
+    elseif (itime.eq.ifirst) then
+        call restart_statistic()
     endif
 
     !! Mean pressure
@@ -144,53 +283,9 @@ contains
        enddo
     endif
 
+    ! Write all statistics
     if (mod(itime,icheckpoint)==0) then
-
-       if (nrank==0) then
-          print *,'===========================================================<<<<<'
-          print *,'Writing stat file',itime
-       endif
-
-       write(filename,"('pmean.dat',I7.7)") itime
-       call decomp_2d_write_one(1,pmean,filename,1)
-
-       write(filename,"('umean.dat',I7.7)") itime
-       call decomp_2d_write_one(1,umean,filename,1)
-       write(filename,"('vmean.dat',I7.7)") itime
-       call decomp_2d_write_one(1,vmean,filename,1)
-       write(filename,"('wmean.dat',I7.7)") itime
-       call decomp_2d_write_one(1,wmean,filename,1)
-       write(filename,"('uumean.dat',I7.7)") itime
-
-       call decomp_2d_write_one(1,uumean,filename,1)
-       write(filename,"('vvmean.dat',I7.7)") itime
-       call decomp_2d_write_one(1,vvmean,filename,1)
-       write(filename,"('wwmean.dat',I7.7)") itime
-       call decomp_2d_write_one(1,wwmean,filename,1)
-
-       write(filename,"('uvmean.dat',I7.7)") itime
-       call decomp_2d_write_one(1,uvmean,filename,1)
-       write(filename,"('uwmean.dat',I7.7)") itime
-       call decomp_2d_write_one(1,uwmean,filename,1)
-       write(filename,"('vwmean.dat',I7.7)") itime
-       call decomp_2d_write_one(1,vwmean,filename,1)  
-
-       write(filename,"('kmean.dat',I7.7)") itime
-       call decomp_2d_write_one(1,half*(uumean+vvmean+wwmean),filename,1)
-
-       if (iscalar==1) then
-          do is=1, numscalar
-             write(filename,"('phi',I2.2,'mean.dat',I7.7)") is, itime
-             call decomp_2d_write_one(1,phimean(:,:,:,is),filename,1)
-             write(filename,"('phiphi',I2.2,'mean.dat',I7.7)") is, itime
-             call decomp_2d_write_one(1,phiphimean(:,:,:,is),filename,1)
-          enddo
-       endif
-
-       if (nrank==0) then
-          print *,'write stat done!'
-          print *,'===========================================================<<<<<'
-       endif
+       call read_or_write_all_stats(.false.)
     endif
 
   end subroutine overall_statistic

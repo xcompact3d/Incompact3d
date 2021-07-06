@@ -43,7 +43,7 @@ if (n.ge.1) then
 else
   do k=1,decomp%xsz(3)
   do j=1,decomp%xsz(2)
-  wk2d(1,j,k)=sum(wk(:,j,k))/decomp%xsz(1)
+  wk2d(1,j,k)=sum(wk(:,j,k))/real(decomp%xsz(1),kind=mytype)
   end do
   end do
 endif
@@ -76,7 +76,7 @@ if (n.ge.1) then
 else
   do k=1,decomp%ysz(3)
   do i=1,decomp%ysz(1)
-    wk2d(i,1,k)=sum(wk(i,:,k))/decomp%ysz(2)
+    wk2d(i,1,k)=sum(wk(i,:,k))/real(decomp%ysz(2),kind=mytype)
   end do
   end do
 endif
@@ -112,7 +112,7 @@ if (n.ge.1) then
 else
   do j=1,decomp%zsz(2)
   do i=1,decomp%zsz(1)
-  wk2d(i,j,1)=sum(wk(i,j,:))/decomp%zsz(3)
+  wk2d(i,j,1)=sum(wk(i,j,:))/real(decomp%zsz(3),kind=mytype)
   end do
   end do
 endif

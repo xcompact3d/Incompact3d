@@ -41,16 +41,13 @@ module user_sim
   character(len=1),parameter :: NL=char(10) !new line character
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_user, boundary_conditions_user, postprocess_user
+  PUBLIC :: init_user, boundary_conditions_user, postprocess_user, visu_user
 
 contains
 
   subroutine init_user (ux1,uy1,uz1,ep1,phi1)
 
-    USE decomp_2d
     USE decomp_2d_io
-    USE variables
-    USE param
     USE MPI
 
     implicit none
@@ -98,10 +95,6 @@ contains
 
   subroutine boundary_conditions_user (ux,uy,uz,phi,ep)
 
-    USE param
-    USE variables
-    USE decomp_2d
-
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,ep
@@ -126,12 +119,36 @@ contains
 
   subroutine postprocess_user(ux1,uy1,uz1,phi1,ep1)
 
-    USE decomp_2d
-    USE MPI
+    implicit none
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
   end subroutine postprocess_user
+
+  !############################################################################
+  !!
+  !!  SUBROUTINE: visu_user
+  !!      AUTHOR: CF
+  !! DESCRIPTION: Performs case-specific visualization
+  !!
+  !############################################################################
+  subroutine visu_user(ux1, uy1, uz1, pp3, phi1, ep1, num)
+
+    use var, only : ux2, uy2, uz2, ux3, uy3, uz3
+    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+    use var, ONLY : nxmsize, nymsize, nzmsize
+    use visu, only : write_field
+
+    implicit none
+
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1
+    real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
+    character(len=32), intent(in) :: num
+
+  end subroutine visu_user
 
 end module user_sim

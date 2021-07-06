@@ -276,6 +276,7 @@ contains
     USE var, only: uxf1, uzf1, phif1
     USE var, only: di1
     USE var, only: sxy1, syz1, heatflux
+    USE ibm_param, only : ubcx,ubcy,ubcz
 
     implicit none
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux,uy,uz, nut1
@@ -293,9 +294,9 @@ contains
 
     ! Filter the velocity with twice the grid scale according to Bou-Zeid et al. (2005)
     call filter(0.0d0)
-    call filx(uxf1,ux,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0)
-    call filx(uzf1,uz,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0)
-    if (iscalar==1) call filx(phif1,phi(:,:,:,1),di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0)
+    call filx(uxf1,ux,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+    call filx(uzf1,uz,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,ubcz)
+    if (iscalar==1) call filx(phif1,phi(:,:,:,1),di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,zero)
 
     ! Reset average values
     ux_HAve_local=0.

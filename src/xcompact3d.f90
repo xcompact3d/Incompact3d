@@ -41,6 +41,9 @@ program xcompact3d
        calc_divu_constraint, solve_poisson, cor_vel
   use tools, only : restart, simu_stats, apply_spatial_filter, read_inflow
   use turbine, only : compute_turbines
+  use ibm_param
+  use ibm, only : body
+  use genepsi, only : genepsi3d
 
   implicit none
 
@@ -66,10 +69,21 @@ program xcompact3d
 
         call set_fluid_properties(rho1,mu1)
         call boundary_conditions(rho1,ux1,uy1,uz1,phi1,ep1)
+
+        if (imove.eq.1) then ! update epsi for moving objects
+          if ((iibm.eq.2).or.(iibm.eq.3)) then
+            call genepsi3d(ep1)
+          else if (iibm.eq.1) then
+            call body(ux1,uy1,uz1,ep1)
+          endif
+        endif
+
         call calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
-        !! XXX N.B. from this point, X-pencil velocity arrays contain momentum.
-        call velocity_to_momentum(rho1,ux1,uy1,uz1)
+        if (ilmn) then
+           !! XXX N.B. from this point, X-pencil velocity arrays contain momentum (LMN only).
+           call velocity_to_momentum(rho1,ux1,uy1,uz1)
+        endif
 
         call int_time(rho1,ux1,uy1,uz1,phi1,drho1,dux1,duy1,duz1,dphi1)
         call pre_correc(ux1,uy1,uz1,ep1)
@@ -78,9 +92,12 @@ program xcompact3d
         call solve_poisson(pp3,px1,py1,pz1,rho1,ux1,uy1,uz1,ep1,drho1,divu3)
         call cor_vel(ux1,uy1,uz1,px1,py1,pz1)
 
-        call momentum_to_velocity(rho1,ux1,uy1,uz1)
-        !! XXX N.B. from this point, X-pencil velocity arrays contain velocity.
-
+        if (ilmn) then
+           call momentum_to_velocity(rho1,ux1,uy1,uz1)
+           !! XXX N.B. from this point, X-pencil velocity arrays contain velocity (LMN only).
+           !! Note - all other solvers work on velocity always
+        endif
+        
         call test_flow(rho1,ux1,uy1,uz1,phi1,ep1,drho1,divu3)
 
      enddo !! End sub timesteps
@@ -91,7 +108,7 @@ program xcompact3d
 
      call postprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
 
-     ! This is needed if ilast is modified during the simulation
+     ! This is needed if ilast is modified during the simulation ?
      if (itime.ge.ilast) exit
 
   enddo !! End time loop
@@ -113,8 +130,7 @@ subroutine init_xcompact3d()
 
   use navier, only : calc_divu_constraint
   use tools, only : test_speed_min_max, test_scalar_min_max, &
-       restart, &
-       simu_stats, compute_cfldiff
+                    restart, simu_stats, compute_cfldiff
 
   use param, only : ilesmod, jles,itype
   use param, only : irestart
@@ -194,7 +210,7 @@ subroutine init_xcompact3d()
      if (jles.gt.0)  call init_explicit_les()
   endif
 
-  if (iibm.eq.2) then
+  if ((iibm.eq.2).or.(iibm.eq.3)) then
      call genepsi3d(ep1)
   else if (iibm.eq.1) then
      call epsi_init(ep1)
@@ -222,6 +238,12 @@ subroutine init_xcompact3d()
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,0)
   endif
 
+  if ((iibm.eq.2).or.(iibm.eq.3)) then
+     call genepsi3d(ep1)
+  else if (iibm.eq.1) then
+     call body(ux1,uy1,uz1,ep1)
+  endif
+
   call test_speed_min_max(ux1,uy1,uz1)
   if (iscalar==1) call test_scalar_min_max(phi1)
 
@@ -229,7 +251,7 @@ subroutine init_xcompact3d()
 
   call calc_divu_constraint(divu3, rho1, phi1)
 
-  call init_probes(ep1)
+  call init_probes()
 
   if (iturbine.ne.0) call init_turbines(ux1, uy1, uz1)
 

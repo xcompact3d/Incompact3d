@@ -100,10 +100,10 @@ contains
     use var, only : sgsx1,sgsy1,sgsz1
     use var, only : px1, py1, pz1
     use var, only : FTx, FTy, FTz, Fdiscx, Fdiscy, Fdiscz
+    use ibm_param, only : ubcx,ubcy,ubcz
     use les, only : compute_SGS
 
     use case, only : momentum_forcing
-    use probes, only : flag_extra_probes, write_extra_probes_vel, write_extra_probes_pre
 
     implicit none
 
@@ -131,12 +131,12 @@ contains
       tc1(:,:,:) = ux1(:,:,:) * uz1(:,:,:)
     endif
 
-    call derx (td1,ta1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-    call derx (te1,tb1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
-    call derx (tf1,tc1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
-    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
-    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    call derx (td1,ta1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcx*ubcx)
+    call derx (te1,tb1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx*ubcy)
+    call derx (tf1,tc1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx*ubcz)
+    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
 
     ! Convective terms of x-pencil are stored in tg1,th1,ti1
     if (ilmn) then
@@ -152,7 +152,7 @@ contains
 
     if (ilmn) then
        !! Quasi-skew symmetric terms
-       call derx (td1,rho1(:,:,:,1),di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+       call derx (td1,rho1(:,:,:,1),di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1, zero)
        tg1(:,:,:) = tg1(:,:,:) + ux1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
        th1(:,:,:) = th1(:,:,:) + uy1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
        ti1(:,:,:) = ti1(:,:,:) + uz1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
@@ -180,12 +180,12 @@ contains
       tf2(:,:,:) = uz2(:,:,:) * uy2(:,:,:)
     endif
 
-    call dery (tg2,td2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-    call dery (th2,te2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-    call dery (ti2,tf2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-    call dery (td2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-    call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-    call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call dery (tg2,td2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcx*ubcy)
+    call dery (th2,te2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcy*ubcy)
+    call dery (ti2,tf2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcz*ubcy)
+    call dery (td2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+    call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+    call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
 
     ! Convective terms of y-pencil in tg2,th2,ti2
     if (ilmn) then
@@ -200,7 +200,7 @@ contains
 
     if (ilmn) then
        !! Quasi-skew symmetric terms
-       call dery (te2,rho2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+       call dery (te2,rho2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,zero)
        tg2(:,:,:) = tg2(:,:,:) + ux2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
        th2(:,:,:) = th2(:,:,:) + uy2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
        ti2(:,:,:) = ti2(:,:,:) + uz2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
@@ -225,13 +225,12 @@ contains
     endif
 
 
-
-    call derz (tg3,td3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
-    call derz (th3,te3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
-    call derz (ti3,tf3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    call derz (td3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    call derz (te3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    call derz (tf3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+    call derz (tg3,td3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcx*ubcz)
+    call derz (th3,te3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcy*ubcz)
+    call derz (ti3,tf3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcz*ubcz)
+    call derz (td3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+    call derz (te3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+    call derz (tf3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
 
     ! Convective terms of z-pencil in ta3,tb3,tc3
     if (ilmn) then
@@ -246,7 +245,7 @@ contains
 
     if (ilmn) then
        !! Quasi-skew symmetric terms
-       call derz (tf3,rho3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+       call derz (tf3,rho3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,zero)
        ta3(:,:,:) = ta3(:,:,:) + ux3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
        tb3(:,:,:) = tb3(:,:,:) + uy3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
        tc3(:,:,:) = tc3(:,:,:) + uz3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
@@ -263,9 +262,10 @@ contains
     tf3(:,:,:) = tc3(:,:,:)
 
     !DIFFUSIVE TERMS IN Z
-    call derzz (ta3,ux3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
-    call derzz (tb3,uy3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
-    call derzz (tc3,uz3,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0)
+    call derzz (ta3,ux3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+    call derzz (tb3,uy3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+    call derzz (tc3,uz3,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0,ubcz)
+
 
     ! Add convective and diffusive terms of z-pencil (half for skew-symmetric)
     if (ilmn) then
@@ -291,9 +291,9 @@ contains
     !DIFFUSIVE TERMS IN Y
     if (iimplicit.le.0) then
        !-->for ux
-       call deryy (td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+       call deryy (td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,ubcx)
        if (istret.ne.0) then
-          call dery (te2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+          call dery (te2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
           do k = 1,ysize(3)
              do j = 1,ysize(2)
                 do i = 1,ysize(1)
@@ -304,9 +304,9 @@ contains
        endif
 
        !-->for uy
-       call deryy (te2,uy2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0)
+       call deryy (te2,uy2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0,ubcy)
        if (istret.ne.0) then
-          call dery (tf2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+          call dery (tf2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
           do k = 1,ysize(3)
              do j = 1,ysize(2)
                 do i = 1,ysize(1)
@@ -317,9 +317,9 @@ contains
        endif
 
        !-->for uz
-       call deryy (tf2,uz2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+       call deryy (tf2,uz2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,ubcz)
        if (istret.ne.0) then
-          call dery (tj2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+          call dery (tj2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
           do k = 1,ysize(3)
              do j = 1,ysize(2)
                 do i = 1,ysize(1)
@@ -332,7 +332,7 @@ contains
        if (istret.ne.0) then
 
           !-->for ux
-          call dery (te2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+          call dery (te2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
           do k=1,ysize(3)
              do j=1,ysize(2)
                 do i=1,ysize(1)
@@ -341,7 +341,7 @@ contains
              enddo
           enddo
           !-->for uy
-          call dery (tf2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+          call dery (tf2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
           do k=1,ysize(3)
              do j=1,ysize(2)
                 do i=1,ysize(1)
@@ -350,7 +350,7 @@ contains
              enddo
           enddo
           !-->for uz
-          call dery (tj2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+          call dery (tj2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
           do k=1,ysize(3)
              do j=1,ysize(2)
                 do i=1,ysize(1)
@@ -385,9 +385,9 @@ contains
     call transpose_y_to_x(tc2,tc1) !diff+conv. terms
 
     !DIFFUSIVE TERMS IN X
-    call derxx (td1,ux1,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0)
-    call derxx (te1,uy1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
-    call derxx (tf1,uz1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+    call derxx (td1,ux1,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0,ubcx)
+    call derxx (te1,uy1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+    call derxx (tf1,uz1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,ubcz)
 
     if (ilmn) then
       td1(:,:,:) = mu1(:,:,:) * xnu * td1(:,:,:)
@@ -452,27 +452,6 @@ contains
        if (nrank == 0) print *,'TRIPPING!!'
     endif
 
-    ! Monitor velocity gradients at the first sub-iteration only
-    if (flag_extra_probes .and. itr.eq.1) then
-       call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
-       call dery (td2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-       call derz (td3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-       call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-       call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-       call derz (te3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-       call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-       call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-       call derz (tf3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
-       call write_extra_probes_vel(ta1, td2, td3, tb1, te2, te3, tc1, tf2, tf3)
-       if (irestart.eq.1 .or. itime.gt.1) then
-          call write_extra_probes_pre(px1, py1, pz1)
-       else
-          ! This looks like a bad workaround
-          ta1 = zero; tb1 = zero; tc1 = zero
-          call write_extra_probes_pre(ta1, tb1, tc1)
-       endif
-    endif
-
   end subroutine momentum_rhs_eq
   !############################################################################
   !############################################################################
@@ -502,7 +481,8 @@ contains
     use var, only : ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
     use var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,di2
     use var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
-
+    use ibm_param
+    
     implicit none
 
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: dux1, duy1, duz1
@@ -513,26 +493,26 @@ contains
 
     one_third = one / three
 
-    call derz (tc3,divu3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+    call derz (tc3,divu3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,zero)
     call transpose_z_to_y(tc3, tc2)
     call transpose_z_to_y(divu3, th2)
 
-    call dery(tb2,th2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+    call dery(tb2,th2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,zero)
     call transpose_y_to_x(tb2, te1)
     call transpose_y_to_x(tc2, tf1)
     call transpose_y_to_x(th2, tg1)
 
-    call derx(td1,tg1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+    call derx(td1,tg1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,zero)
 
     dux1(:,:,:) = dux1(:,:,:) + mu1(:,:,:) * one_third * xnu * td1(:,:,:)
     duy1(:,:,:) = duy1(:,:,:) + mu1(:,:,:) * one_third * xnu * te1(:,:,:)
     duz1(:,:,:) = duz1(:,:,:) + mu1(:,:,:) * one_third * xnu * tf1(:,:,:)
 
     !! Variable viscosity part
-    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
-    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-    call derx (td1,mu1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
+    call derx (td1,mu1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,zero)
     ta1(:,:,:) = two * ta1(:,:,:) - (two * one_third) * tg1(:,:,:)
 
     ta1(:,:,:) = td1(:,:,:) * ta1(:,:,:)
@@ -544,13 +524,13 @@ contains
     call transpose_x_to_y(tc1, tc2)
     call transpose_x_to_y(td1, tg2)
 
-    call dery (td2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-    call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-    call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call dery (td2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+    call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+    call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
     te2(:,:,:) = two * te2(:,:,:) - (two * one_third) * th2(:,:,:)
 
     call transpose_x_to_y(mu1, ti2)
-    call dery (th2,ti2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call dery (th2,ti2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,zero)
 
     ta2(:,:,:) = ta2(:,:,:) + th2(:,:,:) * td2(:,:,:)
     tb2(:,:,:) = tb2(:,:,:) + th2(:,:,:) * te2(:,:,:) + tg2(:,:,:) * td2(:,:,:)
@@ -563,14 +543,14 @@ contains
     call transpose_y_to_z(th2, th3) !! dmudy
     call transpose_y_to_z(ti2, ti3) !! mu
 
-    call derz (td3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    call derz (te3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-    call derz (tf3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+    call derz (td3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+    call derz (te3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+    call derz (tf3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
     tf3(:,:,:) = two * tf3(:,:,:) - (two * one_third) * divu3(:,:,:)
 
     tc3(:,:,:) = tc3(:,:,:) + tg3(:,:,:) * td3(:,:,:) + th3(:,:,:) * te3(:,:,:)
 
-    call derz (th3,ti3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+    call derz (th3,ti3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,zero)
 
     ta3(:,:,:) = ta3(:,:,:) + th3(:,:,:) * td3(:,:,:)
     tb3(:,:,:) = tb3(:,:,:) + th3(:,:,:) * te3(:,:,:)
@@ -589,8 +569,8 @@ contains
     call transpose_y_to_x(th2, te1) !! dmudy
     call transpose_y_to_x(ti2, tf1) !! dmudz
 
-    call derx (th1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-    call derx (ti1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    call derx (th1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+    call derx (ti1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
     ta1(:,:,:) = ta1(:,:,:) + te1(:,:,:) * th1(:,:,:) + tf1(:,:,:) * ti1(:,:,:)
 
     dux1(:,:,:) = dux1(:,:,:) + xnu * ta1(:,:,:)
@@ -746,7 +726,6 @@ contains
     use variables
     use decomp_2d
     use case, only : scalar_forcing
-    use probes, only : flag_extra_probes, write_extra_probes_scal
 
     use var, only : ta1,tb1,tc1,di1
     use var, only : rho2,uy2,ta2,tb2,tc2,td2,te2,di2
@@ -787,11 +766,11 @@ contains
     !X PENCILS
     if (skewsc) ta1(:,:,:) = ux1(:,:,:) * phi1(:,:,:)
     if (evensc) then
-      call derxS (tb1,phi1(:,:,:),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1)
-      if (skewsc) call derxS (tc1,ta1,di1,sx,ffxS,fsxS,fwxS,xsize(1),xsize(2),xsize(3),0)
+      call derxS (tb1,phi1(:,:,:),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1,zero)
+      if (skewsc) call derxS (tc1,ta1,di1,sx,ffxS,fsxS,fwxS,xsize(1),xsize(2),xsize(3),0,zero)
     else
-      call derxS (tb1,phi1(:,:,:),di1,sx,ffxS,fsxS,fwxS,xsize(1),xsize(2),xsize(3),0)
-      if (skewsc) call derxS (tc1,ta1,di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1) 
+      call derxS (tb1,phi1(:,:,:),di1,sx,ffxS,fsxS,fwxS,xsize(1),xsize(2),xsize(3),0,zero)
+      if (skewsc) call derxS (tc1,ta1,di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1,zero) 
     endif
     if (ilmn) then
       tb1(:,:,:) = rho1(:,:,:,1) * ux1(:,:,:) * tb1(:,:,:)
@@ -804,9 +783,9 @@ contains
     endif
 
     if (evensc) then
-      call derxxS (ta1,phi1(:,:,:),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1)
+      call derxxS (ta1,phi1(:,:,:),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1,zero)
     else
-      call derxxS (ta1,phi1(:,:,:),di1,sx,sfxS,ssxS,swxS,xsize(1),xsize(2),xsize(3),0)
+      call derxxS (ta1,phi1(:,:,:),di1,sx,sfxS,ssxS,swxS,xsize(1),xsize(2),xsize(3),0,zero)
     endif
 
     ! Add convective and diffusive scalar terms of x-pencil
@@ -819,13 +798,13 @@ contains
     ! Explicit viscous diffusion
     if (iimplicit.le.0) then
       if (evensc) then
-        call deryS (tc2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
-        if (skewsc) call deryS (te2,tb2,di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0)
-        call deryyS (ta2,td2(:,:,:),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
+        call deryS (tc2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1,zero)
+        if (skewsc) call deryS (te2,tb2,di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0,zero)
+        call deryyS (ta2,td2(:,:,:),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1,zero)
       else
-        call deryS (tc2,td2(:,:,:),di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0)
-        if (skewsc) call deryS (te2,tb2,di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
-        call deryyS (ta2,td2(:,:,:),di2,sy,sfyS,ssyS,swyS,ysize(1),ysize(2),ysize(3),0)
+        call deryS (tc2,td2(:,:,:),di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0,zero)
+        if (skewsc) call deryS (te2,tb2,di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1,zero)
+        call deryyS (ta2,td2(:,:,:),di2,sy,sfyS,ssyS,swyS,ysize(1),ysize(2),ysize(3),0,zero)
       endif
 
       if (istret.ne.0) then
@@ -841,11 +820,11 @@ contains
     ! (semi)implicit Y viscous diffusion
     else
       if (evensc) then
-        call deryS (tc2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
-        if (skewsc) call deryS (te2,tb2,di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0)
+        call deryS (tc2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1,zero)
+        if (skewsc) call deryS (te2,tb2,di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0,zero)
       else      
-        call deryS (tc2,td2(:,:,:),di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0)
-        if (skewsc) call deryS (te2,tb2,di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
+        call deryS (tc2,td2(:,:,:),di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0,zero)
+        if (skewsc) call deryS (te2,tb2,di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1,zero)
       endif                                                                             
        
       if (istret.ne.0) then
@@ -880,11 +859,11 @@ contains
     !Z PENCILS
     if (skewsc) ta3(:,:,:) = uz3(:,:,:) * td3(:,:,:)
     if (evensc) then
-      call derzS (tb3,td3(:,:,:),di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1)
-      if (skewsc) call derzS (tc3,ta3,di3,sz,ffzS,fszS,fwzS,zsize(1),zsize(2),zsize(3),0)
+      call derzS (tb3,td3(:,:,:),di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1,zero)
+      if (skewsc) call derzS (tc3,ta3,di3,sz,ffzS,fszS,fwzS,zsize(1),zsize(2),zsize(3),0,zero)
     else
-      call derzS (tb3,td3(:,:,:),di3,sz,ffzS,fszS,fwzS,zsize(1),zsize(2),zsize(3),0)
-      if (skewsc) call derzS (tc3,ta3,di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1)
+      call derzS (tb3,td3(:,:,:),di3,sz,ffzS,fszS,fwzS,zsize(1),zsize(2),zsize(3),0,zero)
+      if (skewsc) call derzS (tc3,ta3,di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1,zero)
     endif
 
     ! convective terms
@@ -900,9 +879,9 @@ contains
 
     ! diffusive terms
     if (evensc) then
-      call derzzS (ta3,td3(:,:,:),di3,sz,sfzpS,sszpS,swzpS,zsize(1),zsize(2),zsize(3),1)
+      call derzzS (ta3,td3(:,:,:),di3,sz,sfzpS,sszpS,swzpS,zsize(1),zsize(2),zsize(3),1,zero)
     else
-      call derzzS (ta3,td3(:,:,:),di3,sz,sfzS,sszS,swzS,zsize(1),zsize(2),zsize(3),0)
+      call derzzS (ta3,td3(:,:,:),di3,sz,sfzS,sszS,swzS,zsize(1),zsize(2),zsize(3),0,zero)
     endif
 
     ! Add convective and diffusive scalar terms of z-pencil
@@ -926,20 +905,6 @@ contains
     !! XXX We have computed rho dphidt, want dphidt
     if (ilmn) then
       dphi1(:,:,:,1) = dphi1(:,:,:,1) / rho1(:,:,:,1)
-    endif
-
-    ! Monitor scalar gradient at the first sub-iteration only
-    if (flag_extra_probes .and. itr.eq.1 .and. present(is)) then
-      if (evensc) then
-        call derxS (tb1,phi1(:,:,:),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1)
-        call deryS (tc2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
-        call derzS (tb3,td3(:,:,:),di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1)
-      else
-        call derxS (tb1,phi1(:,:,:),di1,sx,ffxS,fsxS,fwxS,xsize(1),xsize(2),xsize(3),0)
-        call deryS (tc2,td2(:,:,:),di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0)
-        call derzS (tb3,td3(:,:,:),di3,sz,ffzS,fszS,fwzS,zsize(1),zsize(2),zsize(3),0)
-      endif
-      call write_extra_probes_scal(is, tb1, tc2, tb3)
     endif
 
   endsubroutine scalar_transport_eq
@@ -997,6 +962,9 @@ contains
        enddo
     endif
 
+    ! phi1, phi2 and phi3 are no longer synchronized
+    sync_scal_needed = .true.
+
   end subroutine scalar
   !############################################################################
   !############################################################################
@@ -1022,19 +990,19 @@ contains
     call transpose_x_to_y(phi1, phi2)
     call transpose_y_to_z(phi2, phi3)
 
-    call derz (ta3, phi3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
+    call derz (ta3, phi3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
     ta3(:,:,:) = uset(is) * gravz * ta3(:,:,:)
 
     call transpose_z_to_y(ta3, tb2)
 
-    call dery (ta2, phi2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
+    call dery (ta2, phi2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
     ta2(:,:,:) = uset(is) * gravy * ta2(:,:,:)
     ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
 
     call transpose_y_to_x(ta2, ta1)
 
     dphi1(:,:,:,1,is) = dphi1(:,:,:,1,is) - ta1(:,:,:)
-    call derx (ta1, phi1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1)
+    call derx (ta1, phi1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
     dphi1(:,:,:,1,is) = dphi1(:,:,:,1,is) - uset(is) * gravx * ta1(:,:,:)
 
   endsubroutine scalar_settling
@@ -1073,7 +1041,7 @@ contains
 
     use decomp_2d, only : mytype, xsize, ysize, zsize
     use decomp_2d, only : transpose_z_to_y, transpose_y_to_x
-    use param, only : ntime, nrhotime, ibirman_eos
+    use param, only : ntime, nrhotime, ibirman_eos, zero
     use param, only : xnu, prandtl
     use param, only : iimplicit
     use variables
@@ -1096,29 +1064,29 @@ contains
 
     !! XXX All variables up to date - no need to transpose
 
-    call derz (ta3, rho3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1)
+    call derz (ta3, rho3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
     ta3(:,:,:) = uz3(:,:,:) * ta3(:,:,:) + rho3(:,:,:) * divu3(:,:,:)
 
     call transpose_z_to_y(ta3, tb2)
-    call dery (ta2, rho2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1)
+    call dery (ta2, rho2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
     ta2(:,:,:) = uy2(:,:,:) * ta2(:,:,:) + tb2(:,:,:)
 
     call transpose_y_to_x(ta2, ta1)
     call derx (drho1(:,:,:,1), rho1(:,:,:,1), &
-         di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1)
+         di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
     drho1(:,:,:,1) = -(ux1(:,:,:) * drho1(:,:,:,1) + ta1(:,:,:))
 
     if (ibirman_eos) THEN !! Add a diffusion term
-       call derzz (ta3,rho3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
+       call derzz (ta3,rho3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1, zero)
        call transpose_z_to_y(ta3, tb2)
 
        iimplicit = -iimplicit
-       call deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
+       call deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1, zero)
        iimplicit = -iimplicit
        ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
        call transpose_y_to_x(ta2, ta1)
 
-       call derxx (tb1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+       call derxx (tb1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1, zero)
        ta1(:,:,:) = ta1(:,:,:) + tb1(:,:,:)
 
        drho1(:,:,:,1) = drho1(:,:,:,1) + invpe * ta1(:,:,:)
