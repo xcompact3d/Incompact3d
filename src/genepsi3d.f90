@@ -291,7 +291,7 @@ contains
     if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
   !  if (nrank==0) print*,'        nobjxmaxraf=',mpi_aux_i
     call MPI_REDUCE(ibug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-  !  if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
   !  if (nrank==0) print*,'        ibug=',mpi_aux_i
   !  if (nrank==0) print*,'    step 5'
 
