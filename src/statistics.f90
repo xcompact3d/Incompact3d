@@ -85,10 +85,6 @@ contains
 
     implicit none
 
-    ! Local variables
-    integer :: is
-    character(len=30) :: filename
-
     ! No reading for statistics when nvisu > 1 or no restart
     if (nvisu.gt.1 .or. irestart.eq.0) then
        call init_statistic()
