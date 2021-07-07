@@ -6,6 +6,7 @@
 ! three-dimensional Fast Fourier Transform (FFT).
 !
 ! Copyright (C) 2009-2013 Ning Li, the Numerical Algorithms Group (NAG)
+! Copyright (C) 2021               the University of Edinburgh (UoE)
 !
 !=======================================================================
 
@@ -20,6 +21,10 @@ module decomp_2d_io
   use t3pio
 #endif
 
+#ifdef ADIOS2
+  use adios2
+#endif
+
   implicit none
 
   private        ! Make everything private unless declared public
@@ -30,6 +35,9 @@ module decomp_2d_io
        decomp_2d_write_plane, decomp_2d_write_every, &
        decomp_2d_write_subdomain, &
        decomp_2d_write_outflow, decomp_2d_read_inflow
+#ifdef ADIOS2
+  public :: adios2_register_variable
+#endif
 
   ! Generic interface to handle multiple data types
 
@@ -38,6 +46,9 @@ module decomp_2d_io
      module procedure write_one_complex
      module procedure mpiio_write_real_coarse
      module procedure mpiio_write_real_probe
+#ifdef ADIOS2
+     module procedure adios2_write_real_coarse
+#endif
   end interface decomp_2d_write_one
 
   interface decomp_2d_read_one
@@ -720,24 +731,25 @@ contains
     return
   end subroutine write_every_complex
 
-
-  subroutine mpiio_write_real_coarse(ipencil,var,filename,icoarse)
-
-    ! USE param
-    ! USE variables
+  subroutine coarse_extents(ipencil, icoarse, sizes, subsizes, starts)
 
     implicit none
-
+    
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
     integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
-    real(mytype), dimension(:,:,:), intent(IN) :: var
-    real(mytype_single), allocatable, dimension(:,:,:) :: varsingle
-    character(len=*) :: filename
 
-    integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: i,j,k, ierror, newtype, fh
+    integer :: ierror
 
+    if ((icoarse.lt.1).or.(icoarse.gt.2)) then
+       print *, "Error invalid value of icoarse: ", icoarse
+       call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
+    endif
+    if ((ipencil.lt.1).or.(ipencil.gt.3)) then
+       print *, "Error invalid value of ipencil: ", ipencil
+       call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
+    endif
+    
     if (icoarse==1) then
        sizes(1) = xszS(1)
        sizes(2) = yszS(2)
@@ -765,9 +777,7 @@ contains
           starts(2) = zstS(2)-1
           starts(3) = zstS(3)-1
        endif
-    endif
-
-    if (icoarse==2) then
+    elseif (icoarse==2) then
        sizes(1) = xszV(1)
        sizes(2) = yszV(2)
        sizes(3) = zszV(3)
@@ -795,9 +805,30 @@ contains
           starts(3) = zstV(3)-1
        endif
     endif
+    
+  end subroutine coarse_extents
 
+  subroutine mpiio_write_real_coarse(ipencil,var,filename,icoarse)
+
+    ! USE param
+    ! USE variables
+
+    implicit none
+
+    integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
+    integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
+    real(mytype), dimension(:,:,:), intent(IN) :: var
+    real(mytype_single), allocatable, dimension(:,:,:) :: varsingle
+    character(len=*) :: filename
+
+    integer (kind=MPI_OFFSET_KIND) :: filesize, disp
+    integer, dimension(3) :: sizes, subsizes, starts
+    integer :: i,j,k, ierror, newtype, fh
+
+    call coarse_extents(ipencil, icoarse, sizes, subsizes, starts)
     allocate (varsingle(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
-    varsingle=var
+    varsingle=real(var, mytype_single)
+
     call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
          MPI_ORDER_FORTRAN, real_type_single, newtype, ierror)
     call MPI_TYPE_COMMIT(newtype,ierror)
@@ -814,11 +845,86 @@ contains
          real_type_single, MPI_STATUS_IGNORE, ierror)
     call MPI_FILE_CLOSE(fh,ierror)
     call MPI_TYPE_FREE(newtype,ierror)
+
     deallocate(varsingle)
 
     return
   end subroutine mpiio_write_real_coarse
 
+#ifdef ADIOS2
+  subroutine adios2_register_variable(io, varname, ipencil, icoarse)
+
+    implicit none
+
+    integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
+    integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
+    type(adios2_io), intent(in) :: io
+    
+    character*(*), intent(in) :: varname
+
+    integer, dimension(3) :: sizes, subsizes, starts
+    type(adios2_variable) :: var_handle
+    integer, parameter :: ndims = 3
+    logical, parameter :: adios2_constant_dims = .true.
+    integer :: data_type
+    integer :: ierror
+
+    call coarse_extents(ipencil, icoarse, sizes, subsizes, starts)
+
+    ! Check if variable already exists, if not create it
+    call adios2_inquire_variable(var_handle, io, varname, ierror)
+    if (.not.var_handle % valid) then
+       !! New variable
+       print *, "Registering variable for IO: ", varname
+   
+       ! Need to set the ADIOS2 data type
+       if (mytype_single.eq.kind(0.0d0)) then
+          !! Double
+          data_type = adios2_type_dp
+       else if (mytype_single.eq.kind(0.0)) then
+          !! Single
+          data_type = adios2_type_real
+       else
+          print *, "Trying to write unknown data type!"
+          call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
+       endif
+
+       call adios2_define_variable(var_handle, io, varname, data_type, &
+            ndims, int(sizes, kind=8), int(starts, kind=8), int(subsizes, kind=8), &
+            adios2_constant_dims, ierror)
+    endif
+    
+  end subroutine adios2_register_variable
+  subroutine adios2_write_real_coarse(ipencil,var,varname,icoarse,adios,engine,io)
+
+    ! USE param
+    ! USE variables
+
+    implicit none
+
+    integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
+    integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
+    real(mytype), dimension(:,:,:), intent(IN) :: var
+    type(adios2_adios), intent(in) :: adios
+    type(adios2_engine), intent(in) :: engine
+    type(adios2_io), intent(in) :: io
+    character*(*), intent(in) :: varname
+    
+    integer (kind=MPI_OFFSET_KIND) :: filesize, disp
+    integer :: i,j,k, ierror, newtype, fh
+    type(adios2_variable) :: var_handle
+
+    call adios2_inquire_variable(var_handle, io, varname, ierror)
+    if (.not.var_handle % valid) then
+       call adios2_register_variable(io, varname, ipencil, icoarse)
+    endif
+
+    call adios2_put(engine, var_handle, var, adios2_mode_deferred, ierror)
+
+    return
+  end subroutine adios2_write_real_coarse
+#endif
+  
   subroutine mpiio_write_real_probe(ipencil,var,filename,nlength)
 
     ! USE param
@@ -835,7 +941,6 @@ contains
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(4) :: sizes, subsizes, starts
     integer :: i,j,k, ierror, newtype, fh
-
 
     sizes(1) = xszP(1)
     sizes(2) = yszP(2)
