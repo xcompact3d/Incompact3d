@@ -130,7 +130,6 @@ contains
     endif
 
 #ifdef ADIOS2
-
     !! TODO: make this a runtime-option
     adios2_debug_mode = .true.
 
@@ -234,18 +233,23 @@ contains
       print *,'Writing snapshots =>',itime/ioutput
     end if
 #ifdef ADIOS2
-   call adios2_begin_step(engine_write_real_coarse, adios2_step_mode_append, ierr)
+    call adios2_begin_step(engine_write_real_coarse, adios2_step_mode_append, ierr)
 #endif
 
     ! Snapshot number
+#ifndef ADIOS2
     if (filenamedigits) then
-      ! New enumeration system, it works integrated with xcompact3d_toolbox
-      write(num, ifilenameformat) itime
+       ! New enumeration system, it works integrated with xcompact3d_toolbox
+       write(num, ifilenameformat) itime
     else
-      ! Classic enumeration system
-      write(num, ifilenameformat) itime/ioutput
-   endif
-   
+       ! Classic enumeration system
+       write(num, ifilenameformat) itime/ioutput
+    endif
+#else
+    ! ADIOS2 is zero-indexed
+    write(num, '(I0)') itime/ioutput - 1
+#endif
+    
     ! Write XDMF header
     if (use_xdmf) call write_xdmf_header(".", "snapshot", trim(num))
 
@@ -561,7 +565,11 @@ contains
     if (use_xdmf) then
        if (nrank.eq.0) then
           write(ioxdmf,*)'        <Attribute Name="'//filename//'" Center="Node">'
+#ifndef ADIOS2
           write(ioxdmf,*)'           <DataItem Format="Binary"'
+#else
+          write(ioxdmf,*)'           <DataItem Format="HDF"'
+#endif
 #ifdef DOUBLE_PREC
 #ifdef SAVE_SINGLE
           if (output2D.eq.0) then
@@ -587,7 +595,7 @@ contains
 #ifndef ADIOS2
           write(ioxdmf,*)'              ./'//pathname//"/"//filename//'-'//num//'.bin'
 #else
-          write(ioxdmf,*)'              ./data.hdf5:/Step'//num//'/'//filename
+          write(ioxdmf,*)'              ../data.hdf5:/Step'//num//'/'//filename
 #endif
           write(ioxdmf,*)'           </DataItem>'
           write(ioxdmf,*)'        </Attribute>'
