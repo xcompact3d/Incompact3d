@@ -875,8 +875,10 @@ contains
     call adios2_inquire_variable(var_handle, io, varname, ierror)
     if (.not.var_handle % valid) then
        !! New variable
-       print *, "Registering variable for IO: ", varname
-   
+       if (nrank .eq. 0) then
+          print *, "Registering variable for IO: ", varname
+       endif
+       
        ! Need to set the ADIOS2 data type
        if (mytype_single.eq.kind(0.0d0)) then
           !! Double
