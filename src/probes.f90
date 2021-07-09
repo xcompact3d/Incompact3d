@@ -69,7 +69,6 @@ contains
   !
   subroutine init_probes()
 
-    USE decomp_2d, only : real_type
     USE MPI
     USE decomp_2d, only : real_type
     USE param, only : dx, dy, dz, nclx, ncly, nclz, xlx, yly, zlz, istret, one, half
