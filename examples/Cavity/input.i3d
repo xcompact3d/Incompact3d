@@ -81,6 +81,7 @@ icheckpoint = 400000    ! Frequency for writing backup file
 ioutput = 80        ! Frequency for visualization
 nvisu = 1             ! Size for visualisation collection
 output2D = 3          ! 0: 3D snapshots, 1/2/3: X/Y/Z-average 2D snapshots
+nprobes = 8           ! Number of probes
 
 /End
 
@@ -92,6 +93,39 @@ wrotation = 0.      ! rotation speed to trigger turbulence
 spinup_time = 5000    ! number of time steps with a rotation to trigger turbulence
 nstat = 1             ! Size arrays for statistic collection
 initstat = 300000     ! Time steps after which statistics are collected
+
+/End
+
+!=================
+&ProbesParam
+!=================
+
+flag_all_digits = T     ! By default, only 6 digits, 16 when True
+flag_extra_probes = T   ! By default, gradients are not monitored
+xyzprobes(1,1) = 0.2    ! X position of probe 1
+xyzprobes(2,1) = 2.4    ! Y position of probe 1
+xyzprobes(3,1) = 0.5    ! Z position of probe 1
+xyzprobes(1,2) = 0.4    ! X position of probe 2
+xyzprobes(2,2) = 4.1    ! Y position of probe 2
+xyzprobes(3,2) = 0.5    ! Z position of probe 2
+xyzprobes(1,3) = 0.2    ! X position of probe 3
+xyzprobes(2,3) = 7.1    ! Y position of probe 3
+xyzprobes(3,3) = 0.5    ! Z position of probe 3
+xyzprobes(1,4) = 0.8    ! X position of probe 4
+xyzprobes(2,4) = 0.9    ! Y position of probe 4
+xyzprobes(3,4) = 0.5    ! Z position of probe 4
+xyzprobes(1,5) = 0.18   ! X position of probe 5                                                      
+xyzprobes(2,5) = 5.2    ! Y position of probe 5                                                      
+xyzprobes(3,5) = 0.5    ! Z position of probe 5                                                      
+xyzprobes(1,6) = 0.82   ! X position of probe 6                                                      
+xyzprobes(2,6) = 2.8    ! Y position of probe 6                                                      
+xyzprobes(3,6) = 0.5    ! Z position of probe 6                                                      
+xyzprobes(1,7) = 0.9    ! X position of probe 7                                                      
+xyzprobes(2,7) = 1.3    ! Y position of probe 7                                                      
+xyzprobes(3,7) = 0.5    ! Z position of probe 7                                                      
+xyzprobes(1,8) = 0.1    ! X position of probe 8                                                      
+xyzprobes(2,8) = 6.7    ! Y position of probe 8                                                      
+xyzprobes(3,8) = 0.5    ! Z position of probe 8
 
 /End
 
