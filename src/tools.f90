@@ -74,8 +74,6 @@ contains
       phimaxin(:,is) =  (/phimin, phimax /)
     enddo
 
-    !call MPI_REDUCE(phimax,phimax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-    !call MPI_REDUCE(phimin,phimin1,1,real_type,MPI_MIN,0,MPI_COMM_WORLD,code)
     call MPI_REDUCE(phimaxin,phimaxout,numscalar*2,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
     if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
 
@@ -86,7 +84,7 @@ contains
 
         print *,'Phi'//char(48+is)//' min max=', real(phimin1,4), real(phimax1,4)
 
-        if (abs(phimax1).ge.100.) then !if phi control turned off
+        if (phimin1.lt.uvwt_lbound(4) .or. phimax1.ge.uvwt_ubound(4)) then
            print *,'Scalar diverged! SIMULATION IS STOPPED!'
            call MPI_ABORT(MPI_COMM_WORLD,code,ierr2); stop
         endif
@@ -147,7 +145,9 @@ contains
        print *,'U,V,W max=',real(uxmax1,4),real(uymax1,4),real(uzmax1,4)
        !print *,'CFL=',real(abs(max(uxmax1,uymax1,uzmax1)*dt)/min(dx,dy,dz),4)
 
-       if((abs(uxmax1).ge.100.).OR.(abs(uymax1).ge.100.).OR.(abs(uzmax1).ge.100.)) then
+       if (uxmin1.lt.uvwt_lbound(1) .or. uxmax1.ge.uvwt_ubound(1) .or. &
+           uymin1.lt.uvwt_lbound(2) .or. uymax1.ge.uvwt_ubound(2) .or. &
+           uzmin1.lt.uvwt_lbound(3) .or. uzmax1.ge.uvwt_ubound(3) ) then
          print *,'Velocity diverged! SIMULATION IS STOPPED!'
          call MPI_ABORT(MPI_COMM_WORLD,code,ierr2); stop
        endif
