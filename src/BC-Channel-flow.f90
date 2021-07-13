@@ -37,12 +37,13 @@ module channel
 
   implicit none
 
+  integer, save :: iochannel
   character(len=1),parameter :: NL=char(10) !new line character
 
   PRIVATE ! All functions/subroutines private by default
   PUBLIC :: init_channel, boundary_conditions_channel, postprocess_channel, &
             visu_channel, momentum_forcing_channel, &
-            geomcomplex_channel
+            geomcomplex_channel, finalize_channel
 
 contains
   !############################################################################
@@ -170,6 +171,35 @@ contains
   end subroutine boundary_conditions_channel
   !############################################################################
   !!
+  !! Compute average of given array on the current CPU
+  !!
+  !! MPI call should follow to compute the average over the domain
+  !!
+  !############################################################################
+  function channel_local_average(array)
+
+    implicit none
+
+    ! Argument
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: array
+    ! Output
+    real(mytype) :: channel_local_average
+    ! Local variables
+    integer :: i, j, k, jloc
+
+    channel_local_average = zero
+    do k = 1, xsize(3)
+       do jloc = 1, xsize(2)
+          j = jloc + xstart(2) - 1
+          do i = 1, xsize(1)
+            channel_local_average = channel_local_average + array(i,jloc,k) / ppy(j)
+          enddo
+       enddo
+    enddo
+
+  end function channel_local_average
+  !############################################################################
+  !!
   !!  SUBROUTINE: channel_cfr
   !!      AUTHOR: Kay Schäfer
   !! DESCRIPTION: Inforces constant flow rate without need of data transposition
@@ -187,20 +217,10 @@ contains
     integer :: code, i, j, k, jloc
     real(mytype) :: can, ub, uball, coeff
 
-    ub = zero
     uball = zero
     coeff = dy / (yly * real(xsize(1) * zsize(3), kind=mytype))
 
-    do k = 1, xsize(3)
-       do jloc = 1, xsize(2)
-          j = jloc + xstart(2) - 1
-          do i = 1, xsize(1)
-            ub = ub + ux(i,jloc,k) / ppy(j)
-          enddo
-       enddo
-    enddo
-
-    ub = ub * coeff
+    ub = channel_local_average(ux) * coeff
 
     call MPI_ALLREDUCE(ub,uball,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
@@ -219,16 +239,74 @@ contains
 
   end subroutine channel_cfr
   !############################################################################
+  !!
+  !! Monitor average and variance of the velocity and scalar
+  !!
   !############################################################################
   subroutine postprocess_channel(ux1,uy1,uz1,pp3,phi1,ep1)
 
-    use var, ONLY : nzmsize
+    use var, ONLY : di1, nzmsize
+    use MPI
 
     implicit none
 
+    ! Arguments
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
+
+    ! Local variables
+    integer :: code, is, iref
+    real(mytype) :: array(2*(3+numscalar)), coeff
+    character(len=100) :: fileformat
+
+    ! Init.
+    array = zero
+    coeff = dy / (yly * real(xsize(1) * zsize(3), kind=mytype))
+
+    ! Average
+    iref = 0
+    array(iref+1) = channel_local_average(ux1)
+    array(iref+2) = channel_local_average(uy1)
+    array(iref+3) = channel_local_average(uz1)
+    do is = 1, numscalar
+      array(iref+3+is) = channel_local_average(phi1(:,:,:,is))
+    enddo
+
+    ! Variance
+    iref = 3 + numscalar
+    di1 = ux1**2; array(iref+1) = channel_local_average(di1)
+    di1 = uy1**2; array(iref+2) = channel_local_average(di1)
+    di1 = uz1**2; array(iref+3) = channel_local_average(di1)
+    do is = 1, numscalar
+      di1 = phi1(:,:,:,is)**2
+      array(iref+3+is) = channel_local_average(di1)
+    enddo
+
+    ! Rescaling and MPI communication
+    array = array * coeff
+    if (nrank.eq.0) then
+      call MPI_REDUCE(MPI_IN_PLACE, array, 2*(3+numscalar), real_type, MPI_SUM, 0, MPI_COMM_WORLD, code)
+    else
+      call MPI_REDUCE(array, array, 2*(3+numscalar), real_type, MPI_SUM, 0, MPI_COMM_WORLD, code)
+    endif
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
+
+    ! Compute variance and log
+    if (nrank.eq.0) then
+      ! Compute variance
+      do is = 1, 3 + numscalar
+        array(3+numscalar+is) = array(3+numscalar+is) - array(is)**2
+      enddo
+      ! Print header at the first time step
+      if (itime.eq.ifirst) then
+        open(newunit=iochannel, file='channel.dat', form='formatted')
+        write(iochannel,*) "# <u>, <v>, <w>, <T>, <u'²>, <v'²>, <w'²>, <T'²>"
+      endif
+      ! Use format to avoid printing all the digits
+      write(fileformat, '( "(",I4,"(E18.10),A)" )' ) 2*(3+numscalar)
+      write(iochannel, fileformat) array
+    endif
 
   end subroutine postprocess_channel
   !############################################################################
@@ -324,7 +402,7 @@ contains
         dux1(:,:,:,1) = dux1(:,:,:,1) + fcpg !* (re/re_cent)**2
     endif
 
-    if (itime.lt.spinup_time) then
+    if (irestart.eq.0 .and. itime.lt.spinup_time) then
        if (nrank==0) print *,'Rotating turbulent channel at speed ',wrotation
        dux1(:,:,:,1) = dux1(:,:,:,1) - wrotation*uy1(:,:,:)
        duy1(:,:,:,1) = duy1(:,:,:,1) + wrotation*ux1(:,:,:)
@@ -369,4 +447,18 @@ contains
     return
   end subroutine geomcomplex_channel
   !############################################################################
+  !!
+  !! Finalize the channel case
+  !!
+  !############################################################################
+  subroutine finalize_channel()
+
+    implicit none
+
+    if (nrank.eq.0) then
+      close(iochannel)
+    endif
+
+  end subroutine finalize_channel
+
 end module channel

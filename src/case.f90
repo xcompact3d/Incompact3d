@@ -526,8 +526,14 @@ contains
 
     implicit none
 
-    if (itype.eq.itype_cavity) then
+    if (itype.eq.itype_channel) then
+
+       call finalize_channel()
+
+    elseif (itype.eq.itype_cavity) then
+
        call finalize_cavity()
+
     endif
 
   end subroutine finalize_case
