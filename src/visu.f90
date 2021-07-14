@@ -57,7 +57,7 @@ module visu
 #endif
 
   private
-  public :: output2D, visu_init, visu_finalise, write_snapshot, end_snapshot, write_field
+  public :: output2D, visu_init, finalize_visu, write_snapshot, end_snapshot, write_field
 
 contains
 
@@ -172,7 +172,7 @@ contains
   ! Finalise the visu module
   ! - Currently only needed to clean up ADIOS2
   !
-  subroutine visu_finalise()
+  subroutine finalize_visu()
     
 #ifdef ADIOS2
     use adios2
@@ -189,7 +189,7 @@ contains
     call adios2_finalize(adios, ierr)
 #endif
     
-  end subroutine visu_finalise
+  end subroutine finalize_visu
 
   !
   ! Write a snapshot
@@ -241,11 +241,11 @@ contains
     ! Snapshot number
 #ifndef ADIOS2
     if (filenamedigits) then
-      ! New enumeration system, it works integrated with xcompact3d_toolbox
-      write(num, ifilenameformat) itime
+       ! New enumeration system, it works integrated with xcompact3d_toolbox
+       write(num, ifilenameformat) itime
     else
-      ! Classic enumeration system
-      write(num, ifilenameformat) itime/ioutput
+       ! Classic enumeration system
+       write(num, ifilenameformat) itime/ioutput
     endif
 #else
     ! ADIOS2 is zero-indexed
@@ -569,40 +569,40 @@ contains
 #endif
 #ifdef DOUBLE_PREC
 #ifdef SAVE_SINGLE
-        if (output2D.eq.0) then
-          write(ioxdmf,*)'            DataType="Float" Precision="4" Endian="little" Seek="0"'
-        else
+          if (output2D.eq.0) then
+             write(ioxdmf,*)'            DataType="Float" Precision="4" Endian="little" Seek="0"'
+          else
+             write(ioxdmf,*)'            DataType="Float" Precision="8" Endian="little" Seek="0"'
+          endif
+#else
           write(ioxdmf,*)'            DataType="Float" Precision="8" Endian="little" Seek="0"'
-        endif
-#else
-        write(ioxdmf,*)'            DataType="Float" Precision="8" Endian="little" Seek="0"'
 #endif
 #else
-        write(ioxdmf,*)'            DataType="Float" Precision="4" Endian="little" Seek="0"'
+          write(ioxdmf,*)'            DataType="Float" Precision="4" Endian="little" Seek="0"'
 #endif
-        if (output2D.eq.0) then
-          write(ioxdmf,*)'            Dimensions="',zszV(3),yszV(2),xszV(1),'">'
-        else if (output2D.eq.1) then
-          write(ioxdmf,*)'            Dimensions="',zszV(3),yszV(2),1,'">'
-        else if (output2D.eq.2) then
-          write(ioxdmf,*)'            Dimensions="',zszV(3),1,xszV(1),'">'
-        else if (output2D.eq.3) then
-          write(ioxdmf,*)'            Dimensions="',1,yszV(2),xszV(1),'">'
-        endif
+          if (output2D.eq.0) then
+             write(ioxdmf,*)'            Dimensions="',zszV(3),yszV(2),xszV(1),'">'
+          else if (output2D.eq.1) then
+             write(ioxdmf,*)'            Dimensions="',zszV(3),yszV(2),1,'">'
+          else if (output2D.eq.2) then
+             write(ioxdmf,*)'            Dimensions="',zszV(3),1,xszV(1),'">'
+          else if (output2D.eq.3) then
+             write(ioxdmf,*)'            Dimensions="',1,yszV(2),xszV(1),'">'
+          endif
 #ifndef ADIOS2
-        write(ioxdmf,*)'              ./'//pathname//"/"//filename//'-'//num//'.bin'
+          write(ioxdmf,*)'              ./'//pathname//"/"//filename//'-'//num//'.bin'
 #else
-        write(ioxdmf,*)'              ../data.hdf5:/Step'//num//'/'//filename
+          write(ioxdmf,*)'              ../data.hdf5:/Step'//num//'/'//filename
 #endif
-        write(ioxdmf,*)'           </DataItem>'
-        write(ioxdmf,*)'        </Attribute>'
-      endif
+          write(ioxdmf,*)'           </DataItem>'
+          write(ioxdmf,*)'        </Attribute>'
+       endif
     endif
-
+    
     if (iibm==2 .and. .not.present(skip_ibm)) then
-      local_array(:,:,:) = (one - ep1(:,:,:)) * f1(:,:,:)
+       local_array(:,:,:) = (one - ep1(:,:,:)) * f1(:,:,:)
     else
-      local_array(:,:,:) = f1(:,:,:)
+       local_array(:,:,:) = f1(:,:,:)
     endif
 
     if (output2D.eq.0) then
@@ -618,7 +618,7 @@ contains
        call decomp_2d_write_one(1,f1,filename,2,adios,engine_write_real_coarse,io_write_real_coarse)
 #endif
     else
-      call decomp_2d_write_plane(1,local_array,output2D,-1,"./data/"//pathname//'/'//filename//'-'//num//'.bin')
+       call decomp_2d_write_plane(1,local_array,output2D,-1,"./data/"//pathname//'/'//filename//'-'//num//'.bin')
     endif
 
   end subroutine write_field

@@ -15,7 +15,7 @@
 module decomp_2d
 
   use MPI
-
+  
   implicit none
 
   private        ! Make everything private unless declared public
@@ -312,7 +312,7 @@ contains
   !     library ready to use
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine decomp_2d_init(nx,ny,nz,p_row,p_col,periodic_bc)
-
+    
     implicit none
 
     integer, intent(IN) :: nx,ny,nz,p_row,p_col
@@ -480,14 +480,14 @@ contains
   ! Routine to be called by applications to clean things up
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine decomp_2d_finalize
-
+    
     implicit none
-
+    
     call decomp_info_finalize(decomp_main)
 
     decomp_buf_size = 0
     deallocate(work1_r, work2_r, work1_c, work2_c)
-
+    
     return
   end subroutine decomp_2d_finalize
 
