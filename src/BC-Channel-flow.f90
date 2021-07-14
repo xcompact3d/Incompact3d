@@ -195,23 +195,23 @@ contains
   !! MPI call should follow to compute the average over the domain
   !!
   !############################################################################
-  function channel_local_average(array)
+  function channel_local_average(array) result(avg)
 
     implicit none
 
     ! Argument
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: array
     ! Output
-    real(mytype) :: channel_local_average
+    real(mytype) :: avg
     ! Local variables
     integer :: i, j, k, jloc
 
-    channel_local_average = zero
+    avg = zero
     do k = 1, xsize(3)
        do jloc = 1, xsize(2)
           j = jloc + xstart(2) - 1
           do i = 1, xsize(1)
-            channel_local_average = channel_local_average + array(i,jloc,k) / ppy(j)
+            avg = avg + array(i,jloc,k) / ppy(j)
           enddo
        enddo
     enddo
