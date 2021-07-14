@@ -63,12 +63,14 @@ contains
 
     ! Local variables
     logical :: read_from_file
-    integer :: k, j, i, is
+    integer :: k, j, i, is, code
 
     !
     ! Simulation can start from a 3D snapshot
     !
-    inquire(file="cavity_init_ux", exist=read_from_file)
+    if (nrank.eq.0) inquire(file="cavity_init_ux", exist=read_from_file)
+    call MPI_BCAST(read_from_file,1,MPI_LOGICAL,0,MPI_COMM_WORLD,code)
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
     if (read_from_file) then
 
        if (nrank.eq.0) print *, "Cavity: init from snapshot."
