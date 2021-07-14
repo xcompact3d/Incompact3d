@@ -215,19 +215,18 @@ contains
     real(mytype), intent(in) :: constant
 
     integer :: code, i, j, k, jloc
-    real(mytype) :: can, ub, uball, coeff
+    real(mytype) :: can, ub, coeff
 
-    uball = zero
     coeff = dy / (yly * real(xsize(1) * zsize(3), kind=mytype))
 
     ub = channel_local_average(ux) * coeff
 
-    call MPI_ALLREDUCE(ub,uball,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,ub,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
-    can = - (constant - uball)
+    can = - (constant - ub)
 
-    if (nrank==0) print *, nrank, 'UT', uball, can
+    if (nrank==0) print *, nrank, 'UT', ub, can
 
     do k=1,xsize(3)
       do j=1,xsize(2)
@@ -413,8 +412,6 @@ contains
   !############################################################################
   subroutine geomcomplex_channel(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,yp,remp)
 
-    use decomp_2d, only : mytype
-    use param, only : zero, one, two
     use ibm
 
     implicit none
