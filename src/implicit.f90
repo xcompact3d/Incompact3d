@@ -2167,9 +2167,12 @@ if (isecondder.ne.5) then
      !NEED TO BE DONE: deal with other cases
   endif
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !! END MATRIX M2 TIME IMPLICIT    !!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! END MATRIX M2 TIME IMPLICIT    !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  ! Remove useless arrays
+  call free_useless()
 
 end subroutine implicit_schemes
 
@@ -2267,73 +2270,185 @@ subroutine init_implicit_coef(tab1d, tab2d)
 end subroutine init_implicit_coef
 
 !
+! Deallocate 1D arrays
+!
+subroutine free_useless()
+
+  use param, only : ncly1, nclyn, nclyS1, nclySn
+  use variables
+
+  implicit none
+
+  ! Momentum
+  if (ncly1.ne.0 .or. nclyn.ne.0) then
+    deallocate(aam0,bbm0,ccm0,ddm0,eem0,ggm0,hhm0,wwm0,zzm0)
+    deallocate(rrm0,qqm0,vvm0,ssm0,l1m,l2m,l3m,u1m,u2m,u3m)
+  endif
+  if (ncly1.ne.1 .or. nclyn.ne.1) then
+    deallocate(aam10,bbm10,ccm10,ddm10,eem10,ggm10,hhm10,wwm10,zzm10)
+    deallocate(rrm10,qqm10,vvm10,ssm10)
+    deallocate(aam11,bbm11,ccm11,ddm11,eem11,ggm11,hhm11,wwm11,zzm11)
+    deallocate(rrm11,qqm11,vvm11,ssm11)
+  endif
+  if (ncly1.ne.2 .or. nclyn.ne.2) then
+    deallocate(aam,bbm,ccm,ddm,eem,ggm,hhm,wwm,zzm)
+    deallocate(rrm,qqm,vvm,ssm) 
+    deallocate(sssm,zzzm,ttm,uum)
+  endif
+  if (ncly1.ne.1 .or. nclyn.ne.2) then
+    deallocate(aam120,bbm120,ccm120,ddm120,eem120,ggm120,hhm120,wwm120,zzm120)
+    deallocate(rrm120,qqm120,vvm120,ssm120)
+    deallocate(aam121,bbm121,ccm121,ddm121,eem121,ggm121,hhm121,wwm121,zzm121)
+    deallocate(rrm121,qqm121,vvm121,ssm121)
+  endif
+  if (ncly1.ne.2 .or. nclyn.ne.1) then
+    deallocate(aam210,bbm210,ccm210,ddm210,eem210,ggm210,hhm210,wwm210,zzm210)
+    deallocate(rrm210,qqm210,vvm210,ssm210)
+    deallocate(aam211,bbm211,ccm211,ddm211,eem211,ggm211,hhm211,wwm211,zzm211)
+    deallocate(rrm211,qqm211,vvm211,ssm211)
+  endif
+
+  ! Scalars
+  if (nclyS1.ne.2 .or. nclySn.ne.2) then
+    deallocate(aamt,bbmt,ccmt,ddmt,eemt)
+    deallocate(ggmt,hhmt,wwmt,zzmt)
+    deallocate(rrmt,qqmt,vvmt,ssmt)
+    deallocate(uumt,ttmt,sssmt,zzzmt) ! nona
+  endif
+  if (nclyS1.ne.1 .or. nclySn.ne.1) then
+    ! npaire = 0
+    deallocate(aam10t,bbm10t,ccm10t,ddm10t,eem10t)
+    deallocate(ggm10t,hhm10t,wwm10t,zzm10t)
+    deallocate(rrm10t,qqm10t,vvm10t,ssm10t)
+    ! npaire = 1
+    deallocate(aam11t,bbm11t,ccm11t,ddm11t,eem11t)
+    deallocate(ggm11t,hhm11t,wwm11t,zzm11t)
+    deallocate(rrm11t,qqm11t,vvm11t,ssm11t)
+  endif
+  if (nclyS1.ne.0 .or. nclySn.ne.0) then
+    deallocate(aam0t,bbm0t,ccm0t,ddm0t,eem0t)
+    deallocate(ggm0t,hhm0t,wwm0t,zzm0t)
+    deallocate(rrm0t,qqm0t,vvm0t,ssm0t)
+    deallocate(l1mt,l2mt,l3mt,u1mt,u2mt,u3mt)
+  endif
+  if (nclyS1.ne.1 .or. nclySn.ne.2) then
+    ! npaire = 0
+    deallocate(aam120t,bbm120t,ccm120t,ddm120t,eem120t)
+    deallocate(ggm120t,hhm120t,wwm120t,zzm120t)
+    deallocate(rrm120t,qqm120t,vvm120t,ssm120t)
+    ! npaire = 1
+    deallocate(aam121t,bbm121t,ccm121t,ddm121t,eem121t)
+    deallocate(ggm121t,hhm121t,wwm121t,zzm121t)
+    deallocate(rrm121t,qqm121t,vvm121t,ssm121t)
+  endif
+  if (nclyS1.ne.2 .or. nclySn.ne.1) then
+    ! npaire = 0
+    deallocate(aam210t,bbm210t,ccm210t,ddm210t,eem210t)
+    deallocate(ggm210t,hhm210t,wwm210t,zzm210t)
+    deallocate(rrm210t,qqm210t,vvm210t,ssm210t)
+    ! npaire = 1
+    deallocate(aam211t,bbm211t,ccm211t,ddm211t,eem211t)
+    deallocate(ggm211t,hhm211t,wwm211t,zzm211t)
+    deallocate(rrm211t,qqm211t,vvm211t,ssm211t)
+  endif
+
+end subroutine free_useless
+
+!
 ! Deallocate 1D arrays containing LU decompositions
 !
 subroutine finalize_implicit()
 
+  use param, only : ncly1, nclyn, nclyS1, nclySn
   use variables
 
   implicit none
 
   ! velocity, ncly1 = 2, nclyn = 2
-  deallocate(aam,bbm,ccm,ddm,eem,ggm,hhm,wwm,zzm)
-  deallocate(rrm,qqm,vvm,ssm)
-  deallocate(sssm,zzzm,ttm,uum) ! nona
-  ! velocity, ncly1 = 1, nclyn = 1, npaire = 0
-  deallocate(aam10,bbm10,ccm10,ddm10,eem10,ggm10,hhm10,wwm10,zzm10)
-  deallocate(rrm10,qqm10,vvm10,ssm10)
-  ! velocity, ncly1 = 1, nclyn = 1, npaire = 1
-  deallocate(aam11,bbm11,ccm11,ddm11,eem11,ggm11,hhm11,wwm11,zzm11)
-  deallocate(rrm11,qqm11,vvm11,ssm11)
+  if (ncly1.eq.2 .and. nclyn.eq.2) then
+    deallocate(aam,bbm,ccm,ddm,eem,ggm,hhm,wwm,zzm)
+    deallocate(rrm,qqm,vvm,ssm)
+    deallocate(sssm,zzzm,ttm,uum) ! nona
+  endif
+  ! velocity, ncly1 = 1, nclyn = 1
+  if (ncly1.eq.1 .and. nclyn.eq.1) then
+    ! npaire = 0
+    deallocate(aam10,bbm10,ccm10,ddm10,eem10,ggm10,hhm10,wwm10,zzm10)
+    deallocate(rrm10,qqm10,vvm10,ssm10)
+    ! npaire = 1
+    deallocate(aam11,bbm11,ccm11,ddm11,eem11,ggm11,hhm11,wwm11,zzm11)
+    deallocate(rrm11,qqm11,vvm11,ssm11)
+  endif
   ! velocity, ncly1 = 0, nclyn = 0
-  deallocate(aam0,bbm0,ccm0,ddm0,eem0,ggm0,hhm0,wwm0,zzm0)
-  deallocate(rrm0,qqm0,vvm0,ssm0,l1m,l2m,l3m,u1m,u2m,u3m)
-  ! velocity, ncly1 = 1, nclyn = 2, npaire = 0
-  deallocate(aam120,bbm120,ccm120,ddm120,eem120,ggm120,hhm120,wwm120,zzm120)
-  deallocate(rrm120,qqm120,vvm120,ssm120)
-  ! velocity, ncly1 = 1, nclyn = 2, npaire = 1
-  deallocate(aam121,bbm121,ccm121,ddm121,eem121,ggm121,hhm121,wwm121,zzm121)
-  deallocate(rrm121,qqm121,vvm121,ssm121)
-  ! velocity, ncly1 = 2, nclyn = 1, npaire = 0
-  deallocate(aam210,bbm210,ccm210,ddm210,eem210,ggm210,hhm210,wwm210,zzm210)
-  deallocate(rrm210,qqm210,vvm210,ssm210)
-  ! velocity, ncly1 = 2, nclyn = 1, npaire = 1
-  deallocate(aam211,bbm211,ccm211,ddm211,eem211,ggm211,hhm211,wwm211,zzm211)
-  deallocate(rrm211,qqm211,vvm211,ssm211)
+  if (ncly1.eq.0 .and. nclyn.eq.0) then
+    deallocate(aam0,bbm0,ccm0,ddm0,eem0,ggm0,hhm0,wwm0,zzm0)
+    deallocate(rrm0,qqm0,vvm0,ssm0,l1m,l2m,l3m,u1m,u2m,u3m)
+  endif
+  ! velocity, ncly1 = 1, nclyn = 2
+  if (ncly1.eq.1 .and. nclyn.eq.2) then
+    ! npaire = 0
+    deallocate(aam120,bbm120,ccm120,ddm120,eem120,ggm120,hhm120,wwm120,zzm120)
+    deallocate(rrm120,qqm120,vvm120,ssm120)
+    ! npaire = 1
+    deallocate(aam121,bbm121,ccm121,ddm121,eem121,ggm121,hhm121,wwm121,zzm121)
+    deallocate(rrm121,qqm121,vvm121,ssm121)
+  endif
+  ! velocity, ncly1 = 2, nclyn = 1
+  if (ncly1.eq.2 .and. nclyn.eq.1) then
+    ! npaire = 0
+    deallocate(aam210,bbm210,ccm210,ddm210,eem210,ggm210,hhm210,wwm210,zzm210)
+    deallocate(rrm210,qqm210,vvm210,ssm210)
+    ! npaire = 1
+    deallocate(aam211,bbm211,ccm211,ddm211,eem211,ggm211,hhm211,wwm211,zzm211)
+    deallocate(rrm211,qqm211,vvm211,ssm211)
+  endif
   ! scalar, ncly1 = 2, nclyn = 2
-  deallocate(aamt,bbmt,ccmt,ddmt,eemt)
-  deallocate(ggmt,hhmt,wwmt,zzmt)
-  deallocate(rrmt,qqmt,vvmt,ssmt)
-  deallocate(uumt,ttmt,sssmt,zzzmt) ! nona
-  ! scalar, ncly1 = 1, nclyn = 1, npaire = 0
-  deallocate(aam10t,bbm10t,ccm10t,ddm10t,eem10t)
-  deallocate(ggm10t,hhm10t,wwm10t,zzm10t)
-  deallocate(rrm10t,qqm10t,vvm10t,ssm10t)
-  ! scalar, ncly1 = 1, nclyn = 1, npaire = 1
-  deallocate(aam11t,bbm11t,ccm11t,ddm11t,eem11t)
-  deallocate(ggm11t,hhm11t,wwm11t,zzm11t)
-  deallocate(rrm11t,qqm11t,vvm11t,ssm11t)
+  if (nclyS1.eq.2 .and. nclySn.eq.2) then
+    deallocate(aamt,bbmt,ccmt,ddmt,eemt)
+    deallocate(ggmt,hhmt,wwmt,zzmt)
+    deallocate(rrmt,qqmt,vvmt,ssmt)
+    deallocate(uumt,ttmt,sssmt,zzzmt) ! nona
+  endif
+  ! scalar, ncly1 = 1, nclyn = 1
+  if (nclyS1.eq.1 .and. nclySn.eq.1) then
+    ! npaire = 0
+    deallocate(aam10t,bbm10t,ccm10t,ddm10t,eem10t)
+    deallocate(ggm10t,hhm10t,wwm10t,zzm10t)
+    deallocate(rrm10t,qqm10t,vvm10t,ssm10t)
+    ! npaire = 1
+    deallocate(aam11t,bbm11t,ccm11t,ddm11t,eem11t)
+    deallocate(ggm11t,hhm11t,wwm11t,zzm11t)
+    deallocate(rrm11t,qqm11t,vvm11t,ssm11t)
+  endif
   ! scalar, ncly1 = 0, nclyn = 0
-  deallocate(aam0t,bbm0t,ccm0t,ddm0t,eem0t)
-  deallocate(ggm0t,hhm0t,wwm0t,zzm0t)
-  deallocate(rrm0t,qqm0t,vvm0t,ssm0t)
-  deallocate(l1mt,l2mt,l3mt,u1mt,u2mt,u3mt)
-  ! scalar, ncly1 = 1, nclyn = 2, npaire = 0
-  deallocate(aam120t,bbm120t,ccm120t,ddm120t,eem120t)
-  deallocate(ggm120t,hhm120t,wwm120t,zzm120t)
-  deallocate(rrm120t,qqm120t,vvm120t,ssm120t)
-  ! scalar, ncly1 = 1, nclyn = 2, npaire = 1
-  deallocate(aam121t,bbm121t,ccm121t,ddm121t,eem121t)
-  deallocate(ggm121t,hhm121t,wwm121t,zzm121t)
-  deallocate(rrm121t,qqm121t,vvm121t,ssm121t)
-  ! scalar, ncly1 = 2, nclyn = 1, npaire = 0
-  deallocate(aam210t,bbm210t,ccm210t,ddm210t,eem210t)
-  deallocate(ggm210t,hhm210t,wwm210t,zzm210t)
-  deallocate(rrm210t,qqm210t,vvm210t,ssm210t)
-  ! scalar, ncly1 = 2, nclyn = 1, npaire = 1
-  deallocate(aam211t,bbm211t,ccm211t,ddm211t,eem211t)
-  deallocate(ggm211t,hhm211t,wwm211t,zzm211t)
-  deallocate(rrm211t,qqm211t,vvm211t,ssm211t)
+  if (nclyS1.eq.0 .and. nclySn.eq.0) then
+    deallocate(aam0t,bbm0t,ccm0t,ddm0t,eem0t)
+    deallocate(ggm0t,hhm0t,wwm0t,zzm0t)
+    deallocate(rrm0t,qqm0t,vvm0t,ssm0t)
+    deallocate(l1mt,l2mt,l3mt,u1mt,u2mt,u3mt)
+  endif
+  ! scalar, ncly1 = 1, nclyn = 2
+  if (nclyS1.eq.1 .and. nclySn.eq.2) then
+    ! npaire = 0
+    deallocate(aam120t,bbm120t,ccm120t,ddm120t,eem120t)
+    deallocate(ggm120t,hhm120t,wwm120t,zzm120t)
+    deallocate(rrm120t,qqm120t,vvm120t,ssm120t)
+    ! npaire = 1
+    deallocate(aam121t,bbm121t,ccm121t,ddm121t,eem121t)
+    deallocate(ggm121t,hhm121t,wwm121t,zzm121t)
+    deallocate(rrm121t,qqm121t,vvm121t,ssm121t)
+  endif
+  ! scalar, ncly1 = 2, nclyn = 1
+  if (nclyS1.eq.2 .and. nclySn.eq.1) then
+    ! npaire = 0
+    deallocate(aam210t,bbm210t,ccm210t,ddm210t,eem210t)
+    deallocate(ggm210t,hhm210t,wwm210t,zzm210t)
+    deallocate(rrm210t,qqm210t,vvm210t,ssm210t)
+    ! npaire = 1
+    deallocate(aam211t,bbm211t,ccm211t,ddm211t,eem211t)
+    deallocate(ggm211t,hhm211t,wwm211t,zzm211t)
+    deallocate(rrm211t,qqm211t,vvm211t,ssm211t)
+  endif
 
 end subroutine finalize_implicit
 
