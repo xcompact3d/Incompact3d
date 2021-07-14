@@ -281,6 +281,20 @@ subroutine parameter(input_i3d)
 
   ! 2D snapshot is not compatible with coarse visualization
   if (output2D.ne.0) nvisu = 1
+#ifdef ADIOS2
+  if (nvisu .ne. 1) then
+     if (nrank .eq. 0) then
+        print *, "ADIOS2 output is not compatible with coarse visualisation"
+        print *, "disabling coarse visualisation"
+        print *, "To compress the IO, see ADIOS2 options"
+     endif
+     nvisu = 1
+  endif
+#if defined(DOUBLE_PREC) && defined(SAVE_SINGLE)
+  print *, "ADIOS2 does not support mixing the simulation and output precision"
+  stop
+#endif
+#endif
 
   if (iimplicit.ne.0) then
      if ((itimescheme.eq.5).or.(itimescheme.eq.6)) then
@@ -513,6 +527,9 @@ subroutine parameter(input_i3d)
 #else
      print *,'Numerical precision: Single'
 #endif
+#ifdef ADIOS2
+     print *, 'ADIOS2 flag detected'
+#endif
 #ifdef SHM
      print *, 'SHM flag activated'
 #endif
@@ -537,6 +554,7 @@ subroutine parameter(input_i3d)
 #ifdef DEBUG
      print *, 'DEBUG flag activated'
 #endif
+
      print *,'==========================================================='
      write(*,"(' High and low speed : u1=',F6.2,' and u2=',F6.2)") u1,u2
      write(*,"(' Gravity vector     : (gx, gy, gz)=(',F15.8,',',F15.8,',',F15.8,')')") gravx, gravy, gravz

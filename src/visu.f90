@@ -31,6 +31,10 @@
 !################################################################################
 module visu
 
+#ifdef ADIOS2
+  use adios2
+#endif
+  
   implicit none
 
   ! True to activate the XDMF output
@@ -46,9 +50,14 @@ module visu
   integer :: ioxdmf
   character(len=9) :: ifilenameformat = '(I9.9)'
   real, save :: tstart, tend
+#ifdef ADIOS2
+  type(adios2_adios) :: adios
+  type(adios2_io) :: io_write_real_coarse
+  type(adios2_engine) :: engine_write_real_coarse
+#endif
 
   private
-  public :: output2D, visu_init, write_snapshot, end_snapshot, write_field
+  public :: output2D, visu_init, visu_finalise, write_snapshot, end_snapshot, write_field
 
 contains
 
@@ -61,7 +70,10 @@ contains
     use param, only : ilmn, iscalar, ilast, ifirst, ioutput, istret
     use variables, only : numscalar, prec, nvisu
     use decomp_2d, only : nrank, mytype, xszV, yszV, zszV
-
+#ifdef ADIOS2
+    use decomp_2d_io, only : adios2_register_variable
+#endif
+    
     implicit none
 
     ! Local variables
@@ -69,7 +81,16 @@ contains
     integer :: noutput, nsnapout
     real(mytype) :: memout
 
+#ifdef ADIOS2
+    integer :: code
+    logical :: adios2_debug_mode
+    character(len=80) :: config_file="adios2_config.xml"
+    character(len=80) :: outfile
+    integer :: is
+#endif
+
     ! Create folder if needed
+    ! XXX: Is this needed for ADIOS2?
     if (nrank==0) then
       inquire(file="data", exist=dir_exists)
       if (.not.dir_exists) then
@@ -108,7 +129,67 @@ contains
       stop
     endif
 
+#ifdef ADIOS2
+    !! TODO: make this a runtime-option
+    adios2_debug_mode = .true.
+
+    call adios2_init(adios, trim(config_file), MPI_COMM_WORLD, adios2_debug_mode, code)
+    if (code.ne.0) then
+       print *, "Error initialising ADIOS2 - is adios2_config.xml present and valid?"
+       call decomp_2d_abort(code, "ADIOS2_INIT")
+    endif
+    call adios2_declare_io(io_write_real_coarse, adios, "solution-io", code)
+    if (code.ne.0) call decomp_2d_abort(code, "ADIOS2_DECLARE_IO")
+    if (io_write_real_coarse % engine_type.eq."BP4") then
+       write(outfile, *) "data.bp4"
+    else if (io_write_real_coarse % engine_type.eq."HDF5") then
+       write(outfile, *) "data.hdf5"
+    else
+       print *, "Unknown engine!"
+       call MPI_ABORT(MPI_COMM_WORLD, -1, code)
+    endif
+
+    !! Register variables
+    call adios2_register_variable(io_write_real_coarse, "ux", 1, 2)
+    call adios2_register_variable(io_write_real_coarse, "uy", 1, 2)
+    call adios2_register_variable(io_write_real_coarse, "uz", 1, 2)
+    call adios2_register_variable(io_write_real_coarse, "pp", 1, 2)
+    if (ilmn) then
+       call adios2_register_variable(io_write_real_coarse, "rho", 1, 2)
+    endif
+    if (iscalar.ne.0) then
+       do is = 1, numscalar
+          call adios2_register_variable(io_write_real_coarse, "phi"//char(48+is), 1, 2)
+       enddo
+    endif
+    
+    call adios2_open(engine_write_real_coarse, io_write_real_coarse, trim(outfile), adios2_mode_write, ierror)
+#endif
+
   end subroutine visu_init
+
+  !
+  ! Finalise the visu module
+  ! - Currently only needed to clean up ADIOS2
+  !
+  subroutine visu_finalise()
+    
+#ifdef ADIOS2
+    use adios2
+#endif
+
+  implicit none
+
+#ifdef ADIOS2
+  integer :: ierr
+#endif
+  
+#ifdef ADIOS2
+    call adios2_close(engine_write_real_coarse, ierr)
+    call adios2_finalize(adios, ierr)
+#endif
+    
+  end subroutine visu_finalise
 
   !
   ! Write a snapshot
@@ -145,15 +226,20 @@ contains
     character(len=32), intent(out) :: num
 
     ! Local variables
-    integer :: is
+    integer :: is, code
 
     ! Update log file
     if (nrank.eq.0) then
       call cpu_time(tstart)
       print *,'Writing snapshots =>',itime/ioutput
     end if
+#ifdef ADIOS2
+    call adios2_begin_step(engine_write_real_coarse, adios2_step_mode_append, code)
+    if (code.ne.0) call decomp_2d_abort(code, "ADIOS2_BEGIN_STEP")
+#endif
 
     ! Snapshot number
+#ifndef ADIOS2
     if (filenamedigits) then
       ! New enumeration system, it works integrated with xcompact3d_toolbox
       write(num, ifilenameformat) itime
@@ -161,7 +247,11 @@ contains
       ! Classic enumeration system
       write(num, ifilenameformat) itime/ioutput
     endif
-
+#else
+    ! ADIOS2 is zero-indexed
+    write(num, '(I0)') itime/ioutput - 1
+#endif
+    
     ! Write XDMF header
     if (use_xdmf) call write_xdmf_header(".", "snapshot", trim(num))
 
@@ -214,7 +304,7 @@ contains
     character(len=32), intent(in) :: num
 
     character(len=32) :: fmt2, fmt3, fmt4
-    integer :: is
+    integer :: is, code
 
     ! Write XDMF footer
     if (use_xdmf) call write_xdmf_footer()
@@ -245,6 +335,11 @@ contains
 
       endif
     endif
+
+#ifdef ADIOS2
+    call adios2_end_step(engine_write_real_coarse, code)
+    if (code.ne.0) call decomp_2d_abort(code, "ADIOS2_END_STEP")
+#endif
 
     ! Update log file
     if (nrank.eq.0) then
@@ -448,10 +543,12 @@ contains
 
     use var, only : ep1
     use var, only : zero, one
+#ifndef ADIOS2
     use var, only : uvisu
+#endif
     use param, only : iibm
     use decomp_2d, only : mytype, xsize, xszV, yszV, zszV
-    use decomp_2d, only : nrank, fine_to_coarseV
+    use decomp_2d, only : nrank, fine_to_coarseV, decomp_2d_abort
     use decomp_2d_io, only : decomp_2d_write_one, decomp_2d_write_plane
 
     implicit none
@@ -465,7 +562,11 @@ contains
     if (use_xdmf) then
       if (nrank.eq.0) then
         write(ioxdmf,*)'        <Attribute Name="'//filename//'" Center="Node">'
+#ifndef ADIOS2
         write(ioxdmf,*)'           <DataItem Format="Binary"'
+#else
+        write(ioxdmf,*)'           <DataItem Format="HDF"'
+#endif
 #ifdef DOUBLE_PREC
 #ifdef SAVE_SINGLE
         if (output2D.eq.0) then
@@ -488,7 +589,11 @@ contains
         else if (output2D.eq.3) then
           write(ioxdmf,*)'            Dimensions="',1,yszV(2),xszV(1),'">'
         endif
+#ifndef ADIOS2
         write(ioxdmf,*)'              ./'//pathname//"/"//filename//'-'//num//'.bin'
+#else
+        write(ioxdmf,*)'              ../data.hdf5:/Step'//num//'/'//filename
+#endif
         write(ioxdmf,*)'           </DataItem>'
         write(ioxdmf,*)'        </Attribute>'
       endif
@@ -501,9 +606,17 @@ contains
     endif
 
     if (output2D.eq.0) then
+#ifndef ADIOS2
       uvisu = zero
       call fine_to_coarseV(1,local_array,uvisu)
       call decomp_2d_write_one(1,uvisu,"./data/"//pathname//'/'//filename//'-'//num//'.bin',2)
+#else
+       if (iibm==2 .and. (.not.present(skip_ibm))) then
+          print *, "Not Implemented: currently ADIOS2 IO doesn't support IBM-blanking"
+          call decomp_2d_abort(0, "ADIOS2_IBM")
+       endif
+       call decomp_2d_write_one(1,f1,filename,2,adios,engine_write_real_coarse,io_write_real_coarse)
+#endif
     else
       call decomp_2d_write_plane(1,local_array,output2D,-1,"./data/"//pathname//'/'//filename//'-'//num//'.bin')
     endif

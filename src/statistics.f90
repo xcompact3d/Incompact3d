@@ -34,6 +34,10 @@ module stats
 
   implicit none
 
+  ! Experimental
+  ! .false. requires nstat=1 and xenS(1)=xstS(1)
+  logical, parameter :: flag_3D_IO = .true.
+
   private
   public overall_statistic
 
@@ -81,13 +85,13 @@ contains
   subroutine restart_statistic
 
     use param, only : initstat, irestart, ifirst, zero
-    use variables, only : nvisu
+    use variables, only : nstat
     use var, only : tmean
 
     implicit none
 
-    ! No reading for statistics when nvisu > 1 or no restart
-    if (nvisu.gt.1 .or. irestart.eq.0) then
+    ! No reading for statistics when nstat > 1 or no restart
+    if (nstat.gt.1 .or. irestart.eq.0) then
        call init_statistic()
        initstat = ifirst
        return
@@ -196,10 +200,18 @@ contains
     real(mytype), dimension(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)), intent(inout) :: array
 
     if (flag_read) then
-      ! There was a check for nvisu = 1 before
-      call decomp_2d_read_one(1, array, filename)
+      if (flag_3D_IO) then
+        ! There was a check for nvisu = 1 before
+        call decomp_2d_read_one(1, array, filename)
+      else
+        call decomp_2d_read_plane(1, array, filename)
+      endif
     else
-      call decomp_2d_write_one(1, array, filename, 1)
+      if (flag_3D_IO) then
+        call decomp_2d_write_one(1, array, filename, 1)
+      else
+        call decomp_2d_write_plane(1, array, 1, 1, filename)
+      endif
     endif
 
   end subroutine read_or_write_one_stat
@@ -327,7 +339,11 @@ contains
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux, ep
 
     di1 = one_minus_ep1(ux, ep)
-    call fine_to_coarseS(1, di1, tmean)
+    if (flag_3D_IO) then
+      call fine_to_coarseS(1, di1, tmean)
+    else
+      tmean(xstS(1),:,:) = sum(di1(:,:,:), dim=1)/real(xsize(1),kind=mytype)
+    endif
     um = um + (tmean - um) / real(itime-initstat+1, kind=mytype)
 
   end subroutine update_average_scalar

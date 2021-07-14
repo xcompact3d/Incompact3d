@@ -279,7 +279,11 @@ contains
 
     if ((ivisu.ne.0).and.(mod(itime, ioutput).eq.0)) then
       call write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime, num)
+#ifndef ADIOS2
+       ! XXX: Ultimate goal for ADIOS2 is to pass do all postproc online - do we need this?
+       !      Currently, needs some way to "register" variables for IO
       call visu_case(rho1, ux1, uy1, uz1, pp3, phi1, ep1, num)
+#endif
       call end_snapshot(itime, num)
     end if
 

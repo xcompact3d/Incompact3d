@@ -186,6 +186,18 @@ subroutine init_xcompact3d()
      if (nrank==0) print*, 'Program is run with the provided file -->', InputFN
   endif
 
+#ifdef ADIOS2
+  if (nrank .eq. 0) then
+     print *, " WARNING === WARNING === WARNING === WARNING === WARNING"
+     print *, " WARNING: Running Xcompact3d with ADIOS2"
+     print *, "          this is currently experimental"
+     print *, "          for safety of results it is recommended"
+     print *, "          to run the default build as this feature"
+     print *, "          is developed. Thank you for trying it."
+     print *, " WARNING === WARNING === WARNING === WARNING === WARNING"
+  endif
+#endif
+  
   call parameter(InputFN)
 
   call decomp_2d_init(nx,ny,nz,p_row,p_col)

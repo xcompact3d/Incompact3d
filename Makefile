@@ -57,16 +57,16 @@ ifeq ($(FFT),fftw3)
   #FFTW3_PATH=/usr
   #FFTW3_PATH=/usr/lib64
   FFTW3_PATH=/usr/local/Cellar/fftw/3.3.7_1
-  INC=-I$(FFTW3_PATH)/include
+  INC:=-I$(FFTW3_PATH)/include
   LIBFFT=-L$(FFTW3_PATH) -lfftw3 -lfftw3f
 else ifeq ($(FFT),fftw3_f03)
   FFTW3_PATH=/usr                                #ubuntu # apt install libfftw3-dev
   #FFTW3_PATH=/usr/lib64                         #fedora # dnf install fftw fftw-devel
   #FFTW3_PATH=/usr/local/Cellar/fftw/3.3.7_1     #macOS  # brew install fftw
-  INC=-I$(FFTW3_PATH)/include
+  INC:=-I$(FFTW3_PATH)/include
   LIBFFT=-L$(FFTW3_PATH)/lib -lfftw3 -lfftw3f
 else ifeq ($(FFT),generic)
-  INC=
+  INC:=
   LIBFFT=
 else ifeq ($(FFT),mkl)
   SRCDECOMP := $(DECOMPDIR)/mkl_dfti.f90 $(SRCDECOMP)
@@ -75,15 +75,27 @@ else ifeq ($(FFT),mkl)
 endif
 
 #######OPTIONS settings###########
-OPT = -I$(SRCDIR) -I$(DECOMPDIR) $(FFLAGS)
-LINKOPT = $(FFLAGS)
+OPT := -I$(SRCDIR) -I$(DECOMPDIR) $(FFLAGS)
+LINKOPT := $(FFLAGS)
+
+LIBIO :=
+ADIOS2DIR :=
+ifeq ($(IO),adios2)
+  ifeq ($(ADIOS2DIR),)
+    $(error Set ADIOS2DIR=/path/to/adios2/install/)
+  endif
+  OPT := -DADIOS2 $(OPT)
+  INC := $(INC) $(patsubst $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-libs),,$(shell $(ADIOS2DIR)/bin/adios2-config -f))
+  LIBIO := $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-libs)
+endif
+
 #-----------------------------------------------------------------------
 # Normally no need to change anything below
 
 all: xcompact3d
 
 xcompact3d : $(OBJDECOMP) $(OBJ) $(OBJSIG)
-	$(FC) -o $@ $(LINKOPT) $(OBJDECOMP) $(OBJ) $(OBJSIG) $(LIBFFT)
+	$(FC) -o $@ $(LINKOPT) $(OBJDECOMP) $(OBJ) $(OBJSIG) $(LIBFFT) $(LIBIO)
 
 $(OBJDECOMP):$(DECOMPDIR)%.o : $(DECOMPDIR)%.f90
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(DEFS2) $(INC) -c $<
