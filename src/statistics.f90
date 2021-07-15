@@ -36,7 +36,7 @@ module stats
 
   ! Experimental
   ! .false. requires nstat=1 and xenS(1)=xstS(1)
-  logical, parameter :: flag_3D_IO = .true.
+  logical, parameter :: flag_3D_IO = .false.
 
   private
   public overall_statistic
@@ -127,48 +127,50 @@ contains
     logical, intent(in) :: flag_read
 
     ! Local variables
-    integer :: is
+    integer :: is, it
     character(len=30) :: filename
 
     if (nrank==0) then
       print *,'==========================================================='
       if (flag_read) then
-        print *,'Reading stat file', itime
+        it = itime - 1
+        print *,'Reading stat file', it
       else
-        print *,'Writing stat file', itime
+        it = itime
+        print *,'Writing stat file', it
       endif
     endif
 
-    write(filename,"('pmean.dat',I7.7)") itime
+    write(filename,"('pmean.dat',I7.7)") it
     call read_or_write_one_stat(flag_read, filename, pmean)
-    write(filename,"('umean.dat',I7.7)") itime
+    write(filename,"('umean.dat',I7.7)") it
     call read_or_write_one_stat(flag_read, filename, umean)
-    write(filename,"('vmean.dat',I7.7)") itime
+    write(filename,"('vmean.dat',I7.7)") it
     call read_or_write_one_stat(flag_read, filename, vmean)
-    write(filename,"('wmean.dat',I7.7)") itime
+    write(filename,"('wmean.dat',I7.7)") it
     call read_or_write_one_stat(flag_read, filename, wmean)
 
-    write(filename,"('uumean.dat',I7.7)") itime
+    write(filename,"('uumean.dat',I7.7)") it
     call read_or_write_one_stat(flag_read, filename, uumean)
-    write(filename,"('vvmean.dat',I7.7)") itime
+    write(filename,"('vvmean.dat',I7.7)") it
     call read_or_write_one_stat(flag_read, filename, vvmean)
-    write(filename,"('wwmean.dat',I7.7)") itime
+    write(filename,"('wwmean.dat',I7.7)") it
     call read_or_write_one_stat(flag_read, filename, wwmean)
-    write(filename,"('ppmean.dat',I7.7)") itime
+    write(filename,"('ppmean.dat',I7.7)") it
     call read_or_write_one_stat(flag_read, filename, ppmean)
 
-    write(filename,"('uvmean.dat',I7.7)") itime
+    write(filename,"('uvmean.dat',I7.7)") it
     call read_or_write_one_stat(flag_read, filename, uvmean)
-    write(filename,"('uwmean.dat',I7.7)") itime
+    write(filename,"('uwmean.dat',I7.7)") it
     call read_or_write_one_stat(flag_read, filename, uwmean)
-    write(filename,"('vwmean.dat',I7.7)") itime
+    write(filename,"('vwmean.dat',I7.7)") it
     call read_or_write_one_stat(flag_read, filename, vwmean)
 
     if (iscalar==1) then
        do is=1, numscalar
-          write(filename,"('phi',I2.2,'mean.dat',I7.7)") is, itime
+          write(filename,"('phi',I2.2,'mean.dat',I7.7)") is, it
           call read_or_write_one_stat(flag_read, filename, phimean(:,:,:,is))
-          write(filename,"('phiphi',I2.2,'mean.dat',I7.7)") is, itime
+          write(filename,"('phiphi',I2.2,'mean.dat',I7.7)") is, it
           call read_or_write_one_stat(flag_read, filename, phiphimean(:,:,:,is))
        enddo
     endif
