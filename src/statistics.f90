@@ -130,13 +130,19 @@ contains
     integer :: is, it
     character(len=30) :: filename
 
+    ! Id of the file to read or write
+    if (flag_read) then
+      it = itime - 1
+    else
+      it = itime
+    endif
+
+    ! Listing
     if (nrank==0) then
       print *,'==========================================================='
       if (flag_read) then
-        it = itime - 1
         print *,'Reading stat file', it
       else
-        it = itime
         print *,'Writing stat file', it
       endif
     endif
