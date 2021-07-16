@@ -163,7 +163,8 @@ contains
        enddo
     endif
     
-    call adios2_open(engine_write_real_coarse, io_write_real_coarse, trim(outfile), adios2_mode_write, ierror)
+    call adios2_open(engine_write_real_coarse, io_write_real_coarse, trim(outfile), adios2_mode_write, code)
+    if (code.ne.0) then call decomp_2d_abort(code, "ADIOS2_OPEN")
 #endif
 
   end subroutine visu_init
@@ -181,12 +182,14 @@ contains
   implicit none
 
 #ifdef ADIOS2
-  integer :: ierr
+  integer :: code
 #endif
   
 #ifdef ADIOS2
-    call adios2_close(engine_write_real_coarse, ierr)
-    call adios2_finalize(adios, ierr)
+    call adios2_close(engine_write_real_coarse, code)
+    if (code.ne.0) then call decomp_2d_abort(code, "ADIOS2_CLOSE")
+    call adios2_finalize(adios, code)
+    if (code.ne.0) then call decomp_2d_abort(code, "ADIOS2_FINALIZE")
 #endif
     
   end subroutine finalize_visu
