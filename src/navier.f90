@@ -141,7 +141,7 @@ contains
   !!      AUTHOR: Paul Bartholomew
   !!
   !############################################################################
-  SUBROUTINE lmn_t_to_rho_trans(drho1, dtemp1, rho1, dphi1, phi1)
+  subroutine lmn_t_to_rho_trans(drho1, dtemp1, rho1, dphi1, phi1)
 
     use decomp_2d
     use param, only : zero
@@ -186,7 +186,7 @@ contains
 
     drho1(:,:,:) = rho1(:,:,:) * drho1(:,:,:)
 
-  endsubroutine lmn_t_to_rho_trans
+  end subroutine lmn_t_to_rho_trans
   !############################################################################
   !subroutine COR_VEL
   !Correction of u* by the pressure gradient to get a divergence free

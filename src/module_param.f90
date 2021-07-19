@@ -432,6 +432,7 @@ module param
 
   real(mytype),parameter :: zpone=0.1_mytype
   real(mytype),parameter :: zptwo=0.2_mytype
+  real(mytype),parameter :: zptwoone=0.21_mytype
   real(mytype),parameter :: zptwofive=0.25_mytype
   real(mytype),parameter :: zpthree=0.3_mytype
   real(mytype),parameter :: zpfour=0.4_mytype
@@ -468,6 +469,7 @@ module param
   real(mytype),parameter :: eighteen=17._mytype
 
   real(mytype),parameter :: twenty=20._mytype
+  real(mytype),parameter :: twentyone=21._mytype
   real(mytype),parameter :: twentythree=23._mytype
   real(mytype),parameter :: twentyfour=24._mytype
   real(mytype),parameter :: twentyfive=25._mytype
@@ -500,6 +502,7 @@ module param
   real(mytype),parameter :: onehundred=100._mytype
   real(mytype),parameter :: onehundredtwentysix=126._mytype
   real(mytype),parameter :: onehundredtwentyeight=128._mytype
+  real(mytype),parameter :: onehundredeighty=180._mytype
   !
   real(mytype),parameter :: twohundredsix=206._mytype
   real(mytype),parameter :: twohundredeight=208._mytype
