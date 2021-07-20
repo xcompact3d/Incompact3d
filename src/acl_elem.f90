@@ -202,7 +202,7 @@ end type ActuatorLineType
           ! Populate element Airfoils
           call populate_blade_airfoils(actuatorline%NElem,actuatorline%NAirfoilData,actuatorline%EAirfoil,actuatorline%AirfoilData,actuatorline%ETtoC)
     
-          actuatorline%EAOA_LAST(:)=-666.0_myprec
+          actuatorline%EAOA_LAST(:)=-666.0_mytype
     
           ! If  the Sheng dynamic stall is enabled
           if (actuatorline%do_Sheng_stall) then
@@ -223,7 +223,7 @@ end type ActuatorLineType
        subroutine Compute_ActuatorLine_Forces(act_line,rho_air,visc,dt,time)
        
           use dbg_schemes, only: sqrt_prec, sin_prec, cos_prec
-          use param, only: zpfive, zero, one, two, four, eight
+          use param, only: zpone, zpfive, zero, one, two, four, eight
 
           implicit none
           type(ActuatorLineType),intent(inout) :: act_line
@@ -286,7 +286,7 @@ end type ActuatorLineType
              act_line%EAOA(ielem)=alpha
              act_line%EUn(ielem)=urdn
     
-             if(act_line%EAOA_Last(ielem)<-665.0_myprec) then
+             if(act_line%EAOA_Last(ielem)<-665.0_mytype) then
                 dal=zero
                 dUn=zero
              else
@@ -346,14 +346,14 @@ end type ActuatorLineType
     
              ! Apply Random walk on the Lift and drag forces
              if(act_line%do_random_walk_forcing) then
-                Strouhal=0.17_myprec
-                freq=Strouhal*ur/max(ElemChord,0.0001_myprec)
-                CL=CL*(one+zpone*sin_prex(two*pi*freq*time)+0.05_myprec*(-one+two*rand(ielem)))
-                CD=CD*(one+0.05_myprec*(-one+two*rand(ielem)))
+                Strouhal=0.17_mytype
+                freq=Strouhal*ur/max(ElemChord,0.0001_mytype)
+                CL=CL*(one+zpone*sin_prec(two*pi*freq*time)+0.05_mytype*(-one+two*rand(ielem)))
+                CD=CD*(one+0.05_mytype*(-one+two*rand(ielem)))
              endif
 
              if(act_line%Is_constant_circulation) then
-                CL=two.*act_line%GammaCirc/(ur*ElemChord)
+                CL=two*act_line%GammaCirc/(ur*ElemChord)
                 CD=zero
                 MS=zero
              endif
@@ -413,7 +413,7 @@ end type ActuatorLineType
        subroutine compute_Tower_Forces(tower,rho_air,visc,time,CL,CD,Str)
 
           use param, only : zero, zpfive, one, two
-          use dbg_schemes, only: sin_prec
+          use dbg_schemes, only: sin_prec, cos_prec
 
           implicit none
           type(ActuatorLineType),intent(inout) :: tower
@@ -459,12 +459,12 @@ end type ActuatorLineType
              alpha=atan2(urdn,urdc)
              tower%EAOA(ielem)=alpha
              tower%ERE(ielem)=ur*Diameter/visc
-             freq=Str*ur/max(Diameter,0.0001_myprec)
+             freq=Str*ur/max(Diameter,0.0001_mytype)
              tower%ECL(ielem)=CL*sin_prec(two*freq*pi*time)
-             tower%ECL(ielem)=tower%ECL(ielem)*(one+0.05_myprec*(-one+two*rand(ielem)))
+             tower%ECL(ielem)=tower%ECL(ielem)*(one+0.05_mytype*(-one+two*rand(ielem)))
              tower%ECD(ielem)=CD
-             CN=tower%ECL(ielem)*cos(alpha)+tower%ECD(ielem)*sin(alpha)
-             CT=-tower%ECL(ielem)*sin(alpha)+tower%ECD(ielem)*cos(alpha)
+             CN=tower%ECL(ielem)*cos_prec(alpha)+tower%ECD(ielem)*sin_prec(alpha)
+             CT=-tower%ECL(ielem)*sin_prec(alpha)+tower%ECD(ielem)*cos_prec(alpha)
              !========================================================
              ! Apply Coeffs to calculate tangential and normal Forces
              !========================================================

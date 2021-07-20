@@ -509,7 +509,7 @@ module param
   real(mytype),parameter :: twohundredfiftysix=256._mytype
   real(mytype),parameter :: twohundredseventytwo=272._mytype
   !
-  real(mytype),parameter :: onethousand=2000._mytype
+  real(mytype),parameter :: onethousand=1000._mytype
   real(mytype),parameter :: twothousand=2000._mytype
   real(mytype),parameter :: thirtysixthousand=3600._mytype
   !

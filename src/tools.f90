@@ -1634,7 +1634,7 @@ subroutine tripping(tb,ta)
            call random_number(randx)
            h_coeff(j)=one*(randx-zpfive)
         enddo
-        h_coeff=h_coeff/sqrt_prec(DBLE(z_modes)) !Non-dimensionalization
+        h_coeff=h_coeff/sqrt_prec(real(z_modes,mytype)) !Non-dimensionalization
      end if
 
      call MPI_BCAST(h_coeff,z_modes,real_type,0,MPI_COMM_WORLD,code)
