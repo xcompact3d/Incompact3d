@@ -31,7 +31,16 @@
 !################################################################################
 module tools
 
+#ifdef ADIOS2
+  use adios2
+#endif
+
   implicit none
+
+#ifdef ADIOS2
+  type(adios2_io) :: io_write_restart
+  type(adios2_engine) :: engine_restart
+#endif
 
   private
 
@@ -262,6 +271,7 @@ contains
     end if
 
     if (iresflg==1) then !write
+#ifndef ADIOS2
        call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
             MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
             fh, ierror)
@@ -300,6 +310,9 @@ contains
           end do
        endif
        call MPI_FILE_CLOSE(fh,ierror)
+#else
+       call write_restart_adios2(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1)
+#endif
        ! Write info file for restart - Kay Schäfer
        if (nrank.eq.0) then
          write(filename,"('restart',I7.7,'.info')") itime
@@ -336,10 +349,11 @@ contains
        end if
     else
        if (nrank==0) then
-         print *,'==========================================================='
-         print *,'RESTART from file:', filestart
-         print *,'==========================================================='
+          print *,'==========================================================='
+          print *,'RESTART from file:', filestart
+          print *,'==========================================================='
        end if
+#ifndef ADIOS2
        call MPI_FILE_OPEN(MPI_COMM_WORLD, filestart, &
             MPI_MODE_RDONLY, MPI_INFO_NULL, &
             fh, ierror_o)
@@ -388,7 +402,9 @@ contains
          end do
        endif
        call MPI_FILE_CLOSE(fh,ierror_o)
-
+#else
+       call read_restart_adios2(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1)
+#endif
        !! Read time of restart file
        write(filename,"('restart',I7.7,'.info')") ifirst-1
        inquire(file=filename, exist=fexists)
@@ -436,6 +452,53 @@ contains
     end if
 
   end subroutine restart
+#ifdef ADIOS2
+  subroutine write_restart_adios2(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1)
+
+    use decomp_2d, only : mytype, xsize, phG
+    use decomp_2d_io, only : adios2_register_variable
+    use variables, only : numscalar
+    use param, only : ntime
+    
+    implicit none
+
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux1,uy1,uz1,ep1
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: px1,py1,pz1
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime), intent(in) :: dux1,duy1,duz1
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(in) :: phi1
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar), intent(in) :: dphi1
+    real(mytype), dimension(phG%zst(1):phG%zen(1),phG%zst(2):phG%zen(2),phG%zst(3):phG%zen(3)), intent(in) :: pp3
+
+    call adios2_register_variable(io_write_restart, "ux", 1, 2, mytype)
+    call adios2_register_variable(io_write_restart, "uy", 1, 2, mytype)
+    call adios2_register_variable(io_write_restart, "uz", 1, 2, mytype)
+
+    call adios2_register_variable(io_write_restart, "dux", 1, 2, mytype)
+    call adios2_register_variable(io_write_restart, "duy", 1, 2, mytype)
+    call adios2_register_variable(io_write_restart, "duz", 1, 2, mytype)
+
+    call adios2_register_variable(io_write_restart, "ep", 1, 2, mytype)
+
+    call adios2_register_variable(io_write_restart, "pp", 1, 2, mytype) !! XXX: need some way to handle the different grid here...
+
+  end subroutine write_restart_adios2
+  
+  subroutine read_restart_adios2(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1)
+
+    use decomp_2d, only : mytype, xsize, phG
+    use variables, only : numscalar
+    use param, only : ntime
+    
+    implicit none
+
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(out) :: ux1,uy1,uz1,ep1
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(out) :: px1,py1,pz1
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime), intent(out) :: dux1,duy1,duz1
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(out) :: phi1
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar), intent(out) :: dphi1
+    real(mytype), dimension(phG%zst(1):phG%zen(1),phG%zst(2):phG%zen(2),phG%zst(3):phG%zen(3)), intent(out) :: pp3
+  end subroutine read_restart_adios2
+#endif
   !############################################################################
   !!  SUBROUTINE: apply_spatial_filter
   !############################################################################
