@@ -154,6 +154,12 @@ subroutine init_xcompact3d()
   logical :: back
   character(len=80) :: InputFN, FNBase
 
+#ifdef ADIOS2
+  integer :: ierror
+  logical :: adios2_debug_mode
+  character(len=80) :: config_file="adios2_config.xml"
+#endif
+    
   !! Initialise MPI
   call MPI_INIT(ierr)
   call MPI_COMM_RANK(MPI_COMM_WORLD,nrank,ierr)
@@ -185,6 +191,15 @@ subroutine init_xcompact3d()
      print *, "          to run the default build as this feature"
      print *, "          is developed. Thank you for trying it."
      print *, " WARNING === WARNING === WARNING === WARNING === WARNING"
+  endif
+  
+  !! TODO: make this a runtime-option
+  adios2_debug_mode = .true.
+
+  call adios2_init(adios, trim(config_file), MPI_COMM_WORLD, adios2_debug_mode, ierror)
+  if (ierror.ne.0) then
+     print *, "Error initialising ADIOS2 - is adios2_config.xml present and valid?"
+     call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
   endif
 #endif
   
