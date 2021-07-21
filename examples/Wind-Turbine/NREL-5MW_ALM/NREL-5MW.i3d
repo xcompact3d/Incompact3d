@@ -1,0 +1,158 @@
+! -*- mode: f90 -*-
+
+!===================
+&BasicParam
+!===================
+
+! Flow type (1=Lock-exchange, 2=TGV, 3=Channel, 4=Periodic hill, 5=Cylinder, 6=dbg-schemes, 9=Turbulent-Boundary-Layer, 10=ABL, 11=Uniform)
+itype=11
+
+! Domain decomposition
+p_row=0              ! Row partition
+p_col=0              ! Column partition
+! Obs.: For appropriate performance, the numbers ny/p_row and nz/p_col
+! (or (ny-1)/p_row and (nz-1)/p_col, if no periodic B.C. is used)
+! need to be integers, otherwise the FFT will be computed slowly
+! Mesh
+nx=193               ! X-direction nodes
+ny=97                ! Y-direction nodes
+nz=97                ! Z-direction nodes
+! Obs.: If no periodic boundary conditions is used, this numbers should be odd,
+! as one ghost layer is added in the numerical implementation
+istret = 0           ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
+beta = 0.7           ! Refinement parameter (beta)
+
+! Domain
+xlx=504             ! Lx (Size of the box in x-direction)
+yly=252              ! Ly (Size of the box in y-direction)
+zlz=252              ! Lz (Size of the box in z-direction)
+
+! Boundary conditions
+nclx1 = 2 ! label '2' is for inflow/outflow B.C.
+nclxn = 2
+ncly1 = 1 ! label '1' is for slip B.C.
+nclyn = 1
+nclz1 = 1 ! label '0' is for periodic B.C.
+nclzn = 1
+
+! Flow parameters
+iin = 1              ! Inflow conditions (1: classic, 2: turbinit, 3:turbulence from file)
+re  = 66667.         ! nu=1/re (Kinematic Viscosity)
+u1  = 15             ! u1 (max velocity) (for inflow condition)
+u2  = 15             ! u2 (min velocity) (for inflow condition)
+init_noise = 0.03    ! Turbulence intensity (1=100%) !! Initial condition
+inflow_noise=0.00    ! Turbulence intensity (1=100%) !! Inflow condition
+
+! Time stepping
+dt = 0.02            ! Time step
+ifirst = 1           ! First iteration
+ilast = 2000         ! Last iteration
+
+! Enable modelling tools
+ilesmod=1            ! if 0 then DNS (=1 before)
+numscalar = 0        ! How many scalars? (Set to zero to disable scalars)
+iibm=0               ! Flag for immersed boundary method
+iturbine=1           
+ifilter=1
+C_filter=0.49
+
+/End
+
+!====================
+&NumOptions
+!====================
+
+! Spatial derivatives
+ifirstder = 4         ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact)
+isecondder = 4        ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact, 5->hyperviscous 6th)
+ipinter = 1           ! interpolation scheme (1: classic, 2: optimized, 3: optimized agressive)
+
+! Time scheme
+itimescheme = 2       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4, 7->Semi-implicit)
+
+! Dissipation control
+nu0nu = 100           ! Ratio between hyperviscosity/viscosity at nu
+cnu = 0.44            ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
+
+/End
+
+!=================
+&InOutParam
+!=================
+
+! Basic I/O
+irestart = 0          ! Read initial flow field ?
+icheckpoint = 2000    ! Frequency for writing backup file
+ioutput = 1000        ! Frequency for visualization
+nvisu = 1             ! Size for visualisation collection
+ioutflow=0            ! Outflow flag
+
+/End
+
+!=================
+&Statistics
+!=================
+
+wrotation = 0.12      ! rotation speed to trigger turbulence
+spinup_time = 0       ! number of time steps with a rotation to trigger turbulence
+nstat = 1             ! Size arrays for statistic collection
+initstat = 1000       ! Time steps after which statistics are collected 
+
+/End
+
+!########################
+! OPTIONAL PARAMETERS
+!#######################
+
+!================
+&ScalarParam
+!================
+
+Sc(1) = 1.0           ! Schmidt number
+
+nclxS1 = 0
+nclxSn = 0
+nclyS1 = 2
+nclySn = 2
+nclzS1 = 0
+nclzSn = 0
+Tref = 300.
+/End
+
+!================
+&LESModel
+!================
+
+jles = 1              ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Smag, 4: iSVV, 5: dyn SEV)
+smagcst = 0.14        ! Smagorinsky constant
+SmagWallDamp = 1      ! 1: Mason and Thomson Damping function, otherwise OFF
+nSmag = 3             ! Smag damping coeff (for use with M+T damping
+walecst = 0.5         ! WALES Model Coefficient
+iwall = 0             ! 0: non conservative form SGS divergence
+
+/End
+
+!================
+&TurbulenceWallModel
+!================
+
+SmagWallDamp = 1      ! Smagorinsky damping function for ABL if 1
+
+/End
+
+!================
+&ALMParam
+!================
+
+iturboutput=100       ! frequency for output files for ALM
+eps_factor=2.0        ! Smoothing parameter factor
+Nturbines=1           ! Number of Turbines
+TurbinesPath='NREL-5MW.turb' ! file containing turbine information
+rho_air=1.2           ! density of air
+ialmrestart=0         ! restarting ALM
+filealmrestart='./'   ! restarting ALM
+
+/End
+
+&CASE
+/End

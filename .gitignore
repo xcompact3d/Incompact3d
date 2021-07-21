@@ -4,6 +4,7 @@
 *.out
 *.o
 *.mod
+*.smod
 *.xdmf
 .#*
 *.jpg
@@ -30,3 +31,5 @@ build*
 .cproject
 .project
 .settings
+*.bp4
+*.hdf5
