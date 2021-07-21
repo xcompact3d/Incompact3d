@@ -608,7 +608,7 @@ contains
           print *, "Not Implemented: currently ADIOS2 IO doesn't support IBM-blanking"
           call MPI_ABORT(MPI_COMM_WORLD, -1, ierr)
        endif
-       call decomp_2d_write_one(1,f1,filename,2,adios,engine_write_real_coarse,io_write_real_coarse)
+       call decomp_2d_write_one(1,f1,filename,2,engine_write_real_coarse,io_write_real_coarse)
 #endif
     else
        call decomp_2d_write_plane(1,local_array,output2D,-1,"./data/"//pathname//'/'//filename//'-'//num//'.bin')

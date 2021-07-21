@@ -897,7 +897,7 @@ contains
     endif
     
   end subroutine adios2_register_variable
-  subroutine adios2_write_real_coarse(ipencil,var,varname,icoarse,adios,engine,io)
+  subroutine adios2_write_real_coarse(ipencil,var,varname,icoarse,engine,io)
 
     ! USE param
     ! USE variables
@@ -907,7 +907,6 @@ contains
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
     integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
     real(mytype), dimension(:,:,:), intent(IN) :: var
-    type(adios2_adios), intent(in) :: adios
     type(adios2_engine), intent(in) :: engine
     type(adios2_io), intent(in) :: io
     character*(*), intent(in) :: varname
