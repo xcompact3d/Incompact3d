@@ -730,17 +730,19 @@ contains
     return
   end subroutine write_every_complex
 
-  subroutine coarse_extents(ipencil, icoarse, sizes, subsizes, starts)
+  subroutine coarse_extents(ipencil, icoarse, sizes, subsizes, starts, opt_decomp)
 
     implicit none
     
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
     integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
+    type(decomp_info), intent(in), optional :: opt_decomp
 
     integer, dimension(3) :: sizes, subsizes, starts
     integer :: ierror
+    type(decomp_info) :: decomp
 
-    if ((icoarse.lt.1).or.(icoarse.gt.2)) then
+    if ((icoarse.lt.0).or.(icoarse.gt.2)) then
        print *, "Error invalid value of icoarse: ", icoarse
        call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
     endif
@@ -748,8 +750,31 @@ contains
        print *, "Error invalid value of ipencil: ", ipencil
        call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
     endif
-    
-    if (icoarse==1) then
+
+    if (icoarse==0) then
+       !! Use full fields
+       
+       if (present(opt_decomp)) then
+          decomp = opt_decomp
+       else
+          call get_decomp_info(decomp)
+       endif
+
+       sizes(1) = decomp%xsz(1)
+       sizes(2) = decomp%ysz(2)
+       sizes(3) = decomp%zsz(3)
+
+       if (ipencil == 1) then
+          subsizes(1:3) = decomp%xsz(1:3)
+          starts(1:3) = decomp%xst(1:3) - 1
+       elseif (ipencil == 2) then
+          subsizes(1:3) = decomp%ysz(1:3)
+          starts(1:3) = decomp%yst(1:3) - 1
+       elseif (ipencil == 3) then
+          subsizes(1:3) = decomp%zsz(1:3)
+          starts(1:3) = decomp%zst(1:3) - 1
+       endif
+    elseif (icoarse==1) then
        sizes(1) = xszS(1)
        sizes(2) = yszS(2)
        sizes(3) = zszS(3)
@@ -851,7 +876,7 @@ contains
   end subroutine mpiio_write_real_coarse
 
 #ifdef ADIOS2
-  subroutine adios2_register_variable(io, varname, ipencil, icoarse, type)
+  subroutine adios2_register_variable(io, varname, ipencil, icoarse, type, opt_decomp)
 
     implicit none
 
@@ -859,6 +884,7 @@ contains
     integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
     type(adios2_io), intent(in) :: io
     integer, intent(in) :: type
+    type(decomp_info), intent(in), optional :: opt_decomp
     
     character*(*), intent(in) :: varname
 
@@ -869,8 +895,12 @@ contains
     integer :: data_type
     integer :: ierror
 
-    call coarse_extents(ipencil, icoarse, sizes, subsizes, starts)
-
+    if (present(opt_decomp)) then
+       call coarse_extents(ipencil, icoarse, sizes, subsizes, starts, opt_decomp)
+    else
+       call coarse_extents(ipencil, icoarse, sizes, subsizes, starts)
+    endif
+    
     ! Check if variable already exists, if not create it
     call adios2_inquire_variable(var_handle, io, varname, ierror)
     if (.not.var_handle % valid) then
@@ -897,7 +927,7 @@ contains
     endif
     
   end subroutine adios2_register_variable
-  subroutine adios2_write_real_coarse(ipencil,var,varname,icoarse,engine,io)
+  subroutine adios2_write_real_coarse(ipencil,var,varname,icoarse,engine,io,opt_decomp)
 
     ! USE param
     ! USE variables
@@ -910,14 +940,21 @@ contains
     type(adios2_engine), intent(in) :: engine
     type(adios2_io), intent(in) :: io
     character*(*), intent(in) :: varname
+    type(decomp_info), intent(in), optional :: opt_decomp
     
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     integer :: i,j,k, ierror, newtype, fh
     type(adios2_variable) :: var_handle
+    type(decomp_info) :: decomp
 
     call adios2_inquire_variable(var_handle, io, varname, ierror)
     if (.not.var_handle % valid) then
-       call adios2_register_variable(io, varname, ipencil, icoarse, kind(var))
+       if (present(opt_decomp)) then
+          decomp = opt_decomp
+       else
+          call get_decomp_info(decomp)
+       endif
+       call adios2_register_variable(io, varname, ipencil, icoarse, kind(var), decomp)
     endif
 
     call adios2_put(engine, var_handle, var, adios2_mode_deferred, ierror)

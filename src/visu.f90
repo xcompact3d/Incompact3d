@@ -139,16 +139,16 @@ contains
     endif
 
     !! Register variables
-    call adios2_register_variable(io_write_real_coarse, "ux", 1, 2, mytype)
-    call adios2_register_variable(io_write_real_coarse, "uy", 1, 2, mytype)
-    call adios2_register_variable(io_write_real_coarse, "uz", 1, 2, mytype)
-    call adios2_register_variable(io_write_real_coarse, "pp", 1, 2, mytype)
+    call adios2_register_variable(io_write_real_coarse, "ux", 1, 0, mytype)
+    call adios2_register_variable(io_write_real_coarse, "uy", 1, 0, mytype)
+    call adios2_register_variable(io_write_real_coarse, "uz", 1, 0, mytype)
+    call adios2_register_variable(io_write_real_coarse, "pp", 1, 0, mytype)
     if (ilmn) then
-       call adios2_register_variable(io_write_real_coarse, "rho", 1, 2, mytype)
+       call adios2_register_variable(io_write_real_coarse, "rho", 1, 0, mytype)
     endif
     if (iscalar.ne.0) then
        do is = 1, numscalar
-          call adios2_register_variable(io_write_real_coarse, "phi"//char(48+is), 1, 2, mytype)
+          call adios2_register_variable(io_write_real_coarse, "phi"//char(48+is), 1, 0, mytype)
        enddo
     endif
     
