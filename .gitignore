@@ -27,3 +27,4 @@ lint.txt
 docs/_build/
 *.bp4
 *.hdf5
+checkpoint

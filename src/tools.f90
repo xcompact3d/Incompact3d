@@ -38,8 +38,11 @@ module tools
   implicit none
 
 #ifdef ADIOS2
-  type(adios2_io) :: io_write_restart
+  type(adios2_io) :: io_restart
   type(adios2_engine) :: engine_restart
+  logical, save :: adios2_restart_initialised = .false.
+
+  character(len=*), parameter :: resfile = "checkpoint"
 #endif
 
   private
@@ -453,12 +456,69 @@ contains
 
   end subroutine restart
 #ifdef ADIOS2
+  subroutine init_restart_adios2()
+
+    use decomp_2d, only : mytype, phG
+    use decomp_2d_io, only : adios2_register_variable
+    use variables, only : numscalar
+    use var, only : itimescheme, iibm
+    use var, only : adios
+    
+    implicit none
+
+    integer :: ierror
+    
+    integer :: is
+    character(len=80) :: varname
+
+    call adios2_declare_io(io_restart, adios, "restart-io", ierror)
+    
+    call adios2_register_variable(io_restart, "ux", 1, 0, mytype)
+    call adios2_register_variable(io_restart, "uy", 1, 0, mytype)
+    call adios2_register_variable(io_restart, "uz", 1, 0, mytype)
+
+    call adios2_register_variable(io_restart, "pp", 3, 0, mytype, phG) !! XXX: need some way to handle the different grid here...
+
+    do is = 1, numscalar
+       write(varname,*) "phi-", is
+       call adios2_register_variable(io_restart, trim(varname), 1, 0, mytype)
+    end do
+
+    if ((itimescheme.eq.2) .or. (itimescheme.eq.3)) then
+       call adios2_register_variable(io_restart, "dux-2", 1, 0, mytype)
+       call adios2_register_variable(io_restart, "duy-2", 1, 0, mytype)
+       call adios2_register_variable(io_restart, "duz-2", 1, 0, mytype)
+
+       do is = 1, numscalar
+          write(varname,*) "dphi-", is, "-2"
+          call adios2_register_variable(io_restart, trim(varname), 1, 0, mytype)
+       end do
+
+       if (itimescheme.eq.3) then
+          call adios2_register_variable(io_restart, "dux-3", 1, 0, mytype)
+          call adios2_register_variable(io_restart, "duy-3", 1, 0, mytype)
+          call adios2_register_variable(io_restart, "duz-3", 1, 0, mytype)
+
+          do is = 1, numscalar
+             write(varname,*) "dphi-", is, "-3"
+             call adios2_register_variable(io_restart, trim(varname), 1, 0, mytype)
+          end do
+       endif
+    endif
+
+    if (iibm .ne. 0) then
+       call adios2_register_variable(io_restart, "ep", 1, 0, mytype)
+    endif
+    
+  end subroutine init_restart_adios2
+  
   subroutine write_restart_adios2(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1)
 
     use decomp_2d, only : mytype, xsize, phG
-    use decomp_2d_io, only : adios2_register_variable
+    use decomp_2d_io, only : decomp_2d_write_one
     use variables, only : numscalar
     use param, only : ntime
+    use var, only : itimescheme, iibm
     
     implicit none
 
@@ -469,18 +529,58 @@ contains
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar), intent(in) :: dphi1
     real(mytype), dimension(phG%zst(1):phG%zen(1),phG%zst(2):phG%zen(2),phG%zst(3):phG%zen(3)), intent(in) :: pp3
 
-    call adios2_register_variable(io_write_restart, "ux", 1, 2, mytype)
-    call adios2_register_variable(io_write_restart, "uy", 1, 2, mytype)
-    call adios2_register_variable(io_write_restart, "uz", 1, 2, mytype)
+    integer :: ierror
+    integer :: is
+    character(len=80) :: varname
 
-    call adios2_register_variable(io_write_restart, "dux", 1, 2, mytype)
-    call adios2_register_variable(io_write_restart, "duy", 1, 2, mytype)
-    call adios2_register_variable(io_write_restart, "duz", 1, 2, mytype)
+    if (.not. adios2_restart_initialised) then
+       call init_restart_adios2()
+       adios2_restart_initialised = .true.
+    end if
+    
+    call adios2_open(engine_restart, io_restart, trim(resfile), adios2_mode_write, ierror)
+    call adios2_begin_step(engine_restart, adios2_step_mode_append, ierror)
 
-    call adios2_register_variable(io_write_restart, "ep", 1, 2, mytype)
+    call decomp_2d_write_one(1,ux1,"ux",0,engine_restart,io_restart)
+    call decomp_2d_write_one(1,uy1,"uy",0,engine_restart,io_restart)
+    call decomp_2d_write_one(1,uz1,"uz",0,engine_restart,io_restart)
 
-    call adios2_register_variable(io_write_restart, "pp", 1, 2, mytype) !! XXX: need some way to handle the different grid here...
+    call decomp_2d_write_one(3,pp3,"pp",0,engine_restart,io_restart,phG)
 
+    do is = 1, numscalar
+       write(varname, *) "phi-", is
+       call decomp_2d_write_one(1,phi1(:,:,:,is),varname,0,engine_restart,io_restart)
+    end do
+
+    if ((itimescheme.eq.2) .or. (itimescheme.eq.3)) then
+       call decomp_2d_write_one(1,dux1(:,:,:,2),"dux-2",0,engine_restart,io_restart)
+       call decomp_2d_write_one(1,duy1(:,:,:,2),"duy-2",0,engine_restart,io_restart)
+       call decomp_2d_write_one(1,duz1(:,:,:,2),"duz-2",0,engine_restart,io_restart)
+
+       do is = 1, numscalar
+          write(varname, *) "dphi-", is, "-2"
+          call decomp_2d_write_one(1,dphi1(:,:,:,2,is),varname,0,engine_restart,io_restart)
+       end do
+
+       if (itimescheme.eq.3) then
+          call decomp_2d_write_one(1,dux1(:,:,:,3),"dux-3",0,engine_restart,io_restart)
+          call decomp_2d_write_one(1,duy1(:,:,:,3),"duy-3",0,engine_restart,io_restart)
+          call decomp_2d_write_one(1,duz1(:,:,:,3),"duz-3",0,engine_restart,io_restart)
+
+          do is = 1, numscalar
+             write(varname, *) "dphi-", is, "-3"
+             call decomp_2d_write_one(1,dphi1(:,:,:,3,is),varname,0,engine_restart,io_restart)
+          end do
+       endif
+    endif
+
+    if (iibm .ne. 0) then
+       call decomp_2d_write_one(1,ep1,"ep",0,engine_restart,io_restart)
+    endif
+    
+    call adios2_end_step(engine_restart, ierror)
+    call adios2_close(engine_restart, ierror)
+    
   end subroutine write_restart_adios2
   
   subroutine read_restart_adios2(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1)
@@ -497,6 +597,14 @@ contains
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(out) :: phi1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar), intent(out) :: dphi1
     real(mytype), dimension(phG%zst(1):phG%zen(1),phG%zst(2):phG%zen(2),phG%zst(3):phG%zen(3)), intent(out) :: pp3
+
+    logical, save :: initialised = .false.
+
+    if (.not. adios2_restart_initialised) then
+       call init_restart_adios2()
+       adios2_restart_initialised = .true.
+    end if
+    
   end subroutine read_restart_adios2
 #endif
   !############################################################################
