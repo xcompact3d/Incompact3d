@@ -586,8 +586,10 @@ contains
   subroutine read_restart_adios2(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1)
 
     use decomp_2d, only : mytype, xsize, phG
+    use decomp_2d_io, only : decomp_2d_read_one
     use variables, only : numscalar
     use param, only : ntime
+    use var, only : itimescheme, iibm
     
     implicit none
 
@@ -598,12 +600,59 @@ contains
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar), intent(out) :: dphi1
     real(mytype), dimension(phG%zst(1):phG%zen(1),phG%zst(2):phG%zen(2),phG%zst(3):phG%zen(3)), intent(out) :: pp3
 
+    integer :: ierror
+    integer :: is
+    character(len=80) :: varname
+
     logical, save :: initialised = .false.
 
     if (.not. adios2_restart_initialised) then
        call init_restart_adios2()
        adios2_restart_initialised = .true.
     end if
+    
+    call adios2_open(engine_restart, io_restart, trim(resfile), adios2_mode_read, ierror)
+    call adios2_begin_step(engine_restart, adios2_step_mode_read, ierror)
+
+    call decomp_2d_read_one(1,ux1,"ux",0,engine_restart,io_restart)
+    call decomp_2d_read_one(1,uy1,"uy",0,engine_restart,io_restart)
+    call decomp_2d_read_one(1,uz1,"uz",0,engine_restart,io_restart)
+
+    call decomp_2d_read_one(3,pp3,"pp",0,engine_restart,io_restart,phG)
+
+    do is = 1, numscalar
+       write(varname, *) "phi-", is
+       call decomp_2d_read_one(1,phi1(:,:,:,is),varname,0,engine_restart,io_restart)
+    end do
+
+    if ((itimescheme.eq.2) .or. (itimescheme.eq.3)) then
+       call decomp_2d_read_one(1,dux1(:,:,:,2),"dux-2",0,engine_restart,io_restart)
+       call decomp_2d_read_one(1,duy1(:,:,:,2),"duy-2",0,engine_restart,io_restart)
+       call decomp_2d_read_one(1,duz1(:,:,:,2),"duz-2",0,engine_restart,io_restart)
+
+       do is = 1, numscalar
+          write(varname, *) "dphi-", is, "-2"
+          call decomp_2d_read_one(1,dphi1(:,:,:,2,is),varname,0,engine_restart,io_restart)
+       end do
+
+       if (itimescheme.eq.3) then
+          call decomp_2d_read_one(1,dux1(:,:,:,3),"dux-3",0,engine_restart,io_restart)
+          call decomp_2d_read_one(1,duy1(:,:,:,3),"duy-3",0,engine_restart,io_restart)
+          call decomp_2d_read_one(1,duz1(:,:,:,3),"duz-3",0,engine_restart,io_restart)
+
+          do is = 1, numscalar
+             write(varname, *) "dphi-", is, "-3"
+             call decomp_2d_read_one(1,dphi1(:,:,:,3,is),varname,0,engine_restart,io_restart)
+          end do
+       endif
+    endif
+
+    if (iibm .ne. 0) then
+       call decomp_2d_read_one(1,ep1,"ep",0,engine_restart,io_restart)
+    endif
+    
+    call adios2_end_step(engine_restart, ierror)
+    call adios2_close(engine_restart, ierror)
     
   end subroutine read_restart_adios2
 #endif

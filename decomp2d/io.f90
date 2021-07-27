@@ -54,6 +54,9 @@ module decomp_2d_io
   interface decomp_2d_read_one
      module procedure read_one_real
      module procedure read_one_complex
+#ifdef ADIOS2
+     module procedure adios2_read_one_real
+#endif
   end interface decomp_2d_read_one
 
   interface decomp_2d_write_var
@@ -247,9 +250,44 @@ contains
 #include "io_read_one.inc"
 
     return
+
   end subroutine read_one_complex
 
+#ifdef ADIOS2
+  subroutine adios2_read_one_real(ipencil,var,varname,icoarse,engine,io,opt_decomp)
 
+    implicit none
+
+    integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
+    integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
+    type(adios2_engine), intent(in) :: engine
+    type(adios2_io), intent(in) :: io
+    character*(*), intent(in) :: varname
+    type(decomp_info), intent(in), optional :: opt_decomp
+    real(mytype), dimension(:,:,:), intent(out) :: var
+    
+    integer (kind=MPI_OFFSET_KIND) :: filesize, disp
+    integer :: i,j,k, ierror, newtype, fh
+    type(adios2_variable) :: var_handle
+    type(decomp_info) :: decomp
+
+    call adios2_inquire_variable(var_handle, io, varname, ierror)
+    if (.not.var_handle % valid) then
+       if (present(opt_decomp)) then
+          decomp = opt_decomp
+       else
+          call get_decomp_info(decomp)
+       endif
+       call adios2_register_variable(io, varname, ipencil, icoarse, kind(var), decomp)
+    endif
+
+    call adios2_get(engine, var_handle, var, adios2_mode_deferred, ierror)
+
+    return
+    
+  end subroutine adios2_read_one_real
+#endif
+  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Write a 3D array as part of a big MPI-IO file, starting from 
   !  displacement 'disp'; 'disp' will be updated after the writing
