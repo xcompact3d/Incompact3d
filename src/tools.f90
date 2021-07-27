@@ -314,7 +314,7 @@ contains
        endif
        call MPI_FILE_CLOSE(fh,ierror)
 #else
-       call write_restart_adios2(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1)
+       call write_restart_adios2(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1)
 #endif
        ! Write info file for restart - Kay Schäfer
        if (nrank.eq.0) then
@@ -406,7 +406,7 @@ contains
        endif
        call MPI_FILE_CLOSE(fh,ierror_o)
 #else
-       call read_restart_adios2(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1)
+       call read_restart_adios2(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1)
 #endif
        !! Read time of restart file
        write(filename,"('restart',I7.7,'.info')") ifirst-1
@@ -512,7 +512,7 @@ contains
     
   end subroutine init_restart_adios2
   
-  subroutine write_restart_adios2(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1)
+  subroutine write_restart_adios2(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1)
 
     use decomp_2d, only : mytype, xsize, phG
     use decomp_2d_io, only : decomp_2d_write_one
@@ -523,7 +523,6 @@ contains
     implicit none
 
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux1,uy1,uz1,ep1
-    real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: px1,py1,pz1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime), intent(in) :: dux1,duy1,duz1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(in) :: phi1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar), intent(in) :: dphi1
@@ -583,7 +582,7 @@ contains
     
   end subroutine write_restart_adios2
   
-  subroutine read_restart_adios2(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1)
+  subroutine read_restart_adios2(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1)
 
     use decomp_2d, only : mytype, xsize, phG
     use decomp_2d_io, only : decomp_2d_read_one
@@ -594,7 +593,6 @@ contains
     implicit none
 
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(out) :: ux1,uy1,uz1,ep1
-    real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(out) :: px1,py1,pz1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime), intent(out) :: dux1,duy1,duz1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(out) :: phi1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar), intent(out) :: dphi1
