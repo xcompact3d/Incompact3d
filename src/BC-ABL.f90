@@ -55,13 +55,13 @@ contains
     integer :: k,j,i,ierror,ii,code
     integer, dimension (:), allocatable :: seed
 
-    ux1=0.
-    uy1=0.
-    uz1=0.
-    phi1=0.
-    bxx1=0.;bxy1=0.;bxz1=0.
-    byx1=0.;byy1=0.;byz1=0.
-    bzx1=0.;bzy1=0.;bzz1=0.
+    ux1=zero
+    uy1=zero
+    uz1=zero
+    phi1=zero
+    bxx1=zero;bxy1=zero;bxz1=zero
+    byx1=zero;byy1=zero;byz1=zero
+    bzx1=zero;bzy1=zero;bzz1=zero
 
     ! ABL not yet set up for iLES, stretched grids, and non-constant explicit models. 
     if (ilesmod.eq.0.or.istret.ne.0.or.jles.gt.1) then
@@ -82,9 +82,9 @@ contains
       do k=1,xsize(3)
       do j=1,xsize(2)
       do i=1,xsize(1)
-        ux1(i,j,k)=init_noise*(ux1(i,j,k)*2.-1.)
-        uy1(i,j,k)=init_noise*(uy1(i,j,k)*2.-1.)
-        uz1(i,j,k)=init_noise*(uz1(i,j,k)*2.-1.)
+        ux1(i,j,k)=init_noise*(ux1(i,j,k)*two-one)
+        uy1(i,j,k)=init_noise*(uy1(i,j,k)*two-one)
+        uz1(i,j,k)=init_noise*(uz1(i,j,k)*two-one)
       enddo
       enddo
       enddo
@@ -95,7 +95,7 @@ contains
     do j=1,xsize(2)
        if (istret.eq.0) y=(j+xstart(2)-1-1)*dy
        if (istret.ne.0) y=yp(j)
-       if (iPressureGradient.eq.1) then
+       if (iPressureGradient.eq.1.or.imassconserve.eq.1) then
            bxx1(j,k)=ustar/k_roughness*log((y+z_zero)/z_zero)
        else
            bxx1(j,k)=UG(1)
@@ -109,7 +109,7 @@ contains
     do k=1,xsize(3)
     do j=1,xsize(2)
     do i=1,xsize(1)
-       ux1(i,j,k)=bxx1(j,k)*(1.+ux1(i,j,k))
+       ux1(i,j,k)=bxx1(j,k)*(one+ux1(i,j,k))
        uy1(i,j,k)=uy1(i,j,k)
        uz1(i,j,k)=uz1(i,j,k)
     enddo
@@ -119,12 +119,12 @@ contains
     ! Initialize temperature profiles
     if (iscalar.eq.1) then
       do j=1,xsize(2)
-        if (istret.eq.0) y=(j + xstart(2)-1-1)*dy
+        if (istret.eq.0) y=(j+xstart(2)-1-1)*dy
         if (istret.ne.0) y=yp(j+xstart(2)-1)
         if (ibuoyancy.eq.1) then 
           Tstat(j,1)=T_wall + (T_top-T_wall)*y/yly
         else 
-          Tstat(j,1)=0.
+          Tstat(j,1)=zero
         endif
         ! Initialize GABLS-1 case
         if (istrat==0) then
@@ -147,7 +147,7 @@ contains
 
       ! Add random noise
       do j=1,xsize(2)
-        if (istret.eq.0) y=(j + xstart(2)-1-1)*dy
+        if (istret.eq.0) y=(j+xstart(2)-1-1)*dy
         if (istret.ne.0) y=yp(j+xstart(2)-1)
         !if (y.lt.50) then 
         !  do k=1,xsize(3)
@@ -186,6 +186,10 @@ contains
       call transpose_y_to_x(gx,ux)
     endif
 
+    if ((iconcprec.eq.1).or.(ishiftedper.eq.1)) then
+      call fringe_region(ux,uy,uz)
+    endif
+
     return
   end subroutine boundary_conditions_abl
 
@@ -205,11 +209,18 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3), numscalar) :: phi1
 
-    integer :: j
+    integer :: i
    
-    !! BL Forcing (Pressure gradient or geostrophic wind)
+    ! BL Forcing (Pressure gradient or geostrophic wind)
     if (iPressureGradient.eq.1) then
        dux1(:,:,:,1)=dux1(:,:,:,1)+ustar**2./dBL
+       if (iconcprec.eq.1) then
+          do i=1,xsize(1)
+             if ((i-1)*dx>=pdl) then
+                dux1(i,:,:,1)=dux1(i,:,:,1)-ustar**2./dBL
+             endif
+          enddo
+       endif
     else if (iCoriolis.eq.1.and.iPressureGradient.eq.0) then
        dux1(:,:,:,1)=dux1(:,:,:,1)+CoriolisFreq*(-UG(3))
        duz1(:,:,:,1)=duz1(:,:,:,1)-CoriolisFreq*(-UG(1))
@@ -226,7 +237,7 @@ contains
        call damping_zone(dux1,duy1,duz1,ux1,uy1,uz1)
     endif
 
-    !! Buoyancy terms
+    ! Buoyancy terms
     if (iscalar.eq.1.and.ibuoyancy.eq.1) then
        duy1(:,:,:,1)=duy1(:,:,:,1)+gravv*phi1(:,:,:,1)/Tref
     endif
@@ -256,7 +267,6 @@ contains
 
     ! Terms from decomposition
     if (ibuoyancy.eq.1) then
-       !call transpose_y_to_x(uy2,uy1)
        dphi1(:,:,:,1) = dphi1(:,:,:,1) + (T_wall-T_top)*uy1(:,:,:)/yly
     endif
 
@@ -273,11 +283,11 @@ contains
     USE decomp_2d
     USE param
     USE variables
-    USE var, only: uxf1, uzf1, phif1
-    USE var, only: di1
-    USE var, only: sxy1, syz1, heatflux
-    USE ibm_param, only : ubcx,ubcy,ubcz
-
+    USE var, only: uxf1, uzf1, phif1, uxf3, uzf3, phif3
+    USE var, only: di1, di3
+    USE var, only: sxy1, syz1, heatflux, ta2, tb2, ta3, tb3
+    USE ibm_param, only : ubcx, ubcz
+   
     implicit none
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux,uy,uz, nut1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar),intent(in) :: phi
@@ -293,27 +303,45 @@ contains
     real(mytype) :: Lold, OL_diff
 
     ! Filter the velocity with twice the grid scale according to Bou-Zeid et al. (2005)
-    call filter(0.0d0)
+    call filter(zero)
     call filx(uxf1,ux,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,ubcx)
-    call filx(uzf1,uz,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,ubcz)
-    if (iscalar==1) call filx(phif1,phi(:,:,:,1),di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,zero)
+    call filx(uzf1,uz,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
+    call transpose_x_to_y(uxf1,ta2)
+    call transpose_x_to_y(uzf1,tb2)
+    call transpose_y_to_z(ta2,ta3)
+    call transpose_y_to_z(tb2,tb3)
+    call filz(uxf3,ta3,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+    call filz(uzf3,tb3,di3,fisz,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),0,ubcz)
+    call transpose_z_to_y(uxf3,ta2)
+    call transpose_z_to_y(uzf3,tb2)
+    call transpose_y_to_x(ta2,uxf1)
+    call transpose_y_to_x(tb2,uzf1)
+
+    if (iscalar==1) then
+      call filx(phif1,phi(:,:,:,1),di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,zero)
+      call transpose_x_to_y(phif1,ta2)
+      call transpose_y_to_z(ta2,ta3)
+      call filz(phif3,ta3,di3,fisz,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),0,zero)
+      call transpose_z_to_y(phif3,ta2)
+      call transpose_y_to_x(ta2,phif1)
+    endif
 
     ! Reset average values
-    ux_HAve_local=0.
-    uz_HAve_local=0.
-    Phi_HAve_local=0.
+    ux_HAve_local=zero
+    uz_HAve_local=zero
+    Phi_HAve_local=zero
 
     ! dy to y=1/2
-    if (istret.ne.0) delta=(yp(2)-yp(1))/2.0
-    if (istret.eq.0) delta=dy/2.
+    if (istret.ne.0) delta=(yp(2)-yp(1))/two
+    if (istret.eq.0) delta=dy/two
 
     ! Find horizontally averaged velocities at j=1.5
     if (xstart(2)==1) then
       do k=1,xsize(3)
       do i=1,xsize(1)
-         ux_HAve_local=ux_HAve_local+0.5*(uxf1(i,1,k)+uxf1(i,2,k))
-         uz_HAve_local=uz_HAve_local+0.5*(uzf1(i,1,k)+uzf1(i,2,k))
-         if (iscalar==1) Phi_HAve_local=Phi_HAve_local+0.5*(phif1(i,1,k)+phif1(i,2,k))
+         ux_HAve_local=ux_HAve_local+half*(uxf1(i,1,k)+uxf1(i,2,k))
+         uz_HAve_local=uz_HAve_local+half*(uzf1(i,1,k)+uzf1(i,2,k))
+         if (iscalar==1) Phi_HAve_local=Phi_HAve_local+half*(phif1(i,1,k)+phif1(i,2,k))
       enddo
       enddo
       ux_HAve_local=ux_HAve_local/xsize(3)/xsize(1)
@@ -333,20 +361,20 @@ contains
       if (ibuoyancy.eq.1) then 
         Tstat12 =T_wall + (T_top-T_wall)*delta/yly
       else 
-        Tstat12 =0.
+        Tstat12 =zero
       endif
       Phi_HAve=Phi_HAve + Tstat12
     endif
 
     ! Reset wall flux values
-    wallfluxx=0.
-    wallfluxy=0.
-    wallfluxz=0.
+    wallfluxx=zero
+    wallfluxy=zero
+    wallfluxz=zero
 
     ! Initialize stratification variables
     if (iscalar==1.and.ibuoyancy.eq.1.and.xstart(2)==1) then 
-      PsiM_HAve=0.
-      PsiH_HAve=0.
+      PsiM_HAve=zero
+      PsiH_HAve=zero
       ii   = 0
       OL_diff = 1.
       Lold    = 1.
@@ -376,12 +404,12 @@ contains
       PsiH=PsiH_HAve
       if (istrat==1) zeta=zeta_HAve
     else   
-      heatflux=0.
-      Obukhov=0.
-      PsiM=0.
-      PsiH=0.
-      PsiM_HAve=0.
-      PsiH_HAve=0.
+      heatflux=zero
+      Obukhov=zero
+      PsiM=zero
+      PsiH=zero
+      PsiM_HAve=zero
+      PsiH_HAve=zero
     endif
 
     ! Apply BCs locally
@@ -419,7 +447,7 @@ contains
          ! Below should change for non-uniform grids, same for wall_sgs_scalar
          wallfluxx(i,1,k) = -(-1./2.*(-2.*nut1(i,3,k)*sxy1(i,3,k))+&
          2.*(-2.*nut1(i,2,k)*sxy1(i,2,k))-3./2.*tauwallxy(i,k))/(2.*delta)
-         wallfluxy(i,1,k) = 0.
+         wallfluxy(i,1,k) = zero
          wallfluxz(i,1,k) = -(-1./2.*(-2.*nut1(i,3,k)*syz1(i,3,k))+&
          2.*(-2.*nut1(i,2,k)*syz1(i,2,k))-3./2.*tauwallzy(i,k))/(2.*delta)
       enddo
@@ -427,10 +455,10 @@ contains
     endif
 
     ! Reset average values
-    PsiM_HAve_local=0.
-    PsiH_HAve_local=0.
-    L_HAve_local=0.
-    Q_HAve_local=0.
+    PsiM_HAve_local=zero
+    PsiH_HAve_local=zero
+    L_HAve_local=zero
+    Q_HAve_local=zero
 
     ! Find horizontally averaged values
     if (iscalar==1) then
@@ -510,8 +538,8 @@ contains
     Pr=Sc(1)
 
     if (xstart(2)==1) then
-       if (istret.ne.0) delta=(yp(2)-yp(1))/2.0
-       if (istret.eq.0) delta=dy/2.
+       if (istret.ne.0) delta=(yp(2)-yp(1))/two
+       if (istret.eq.0) delta=dy/two
        do k=1,xsize(3)
        do i=1,xsize(1)
           sgsphi1(i,1,k) =-(-1./2.*(-nut1(i,3,k)*dphidy1(i,3,k))/Pr+&
@@ -524,7 +552,7 @@ contains
 
   !*******************************************************************************
   !
-  subroutine forceabl (ux) ! Routine to force the ABL in periodic boundary conditions
+  subroutine forceabl (ux) ! Routine to force constant flow rate
   !
   !*******************************************************************************
 
@@ -538,39 +566,152 @@ contains
 
     real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux
     integer :: j,i,k,code
-    real(mytype) :: can,ut3,ut,ut4
+    real(mytype) :: can,ut3,ut,ut4,xloc
 
-    ut3=0.
+    ut3=zero
     do k=1,ysize(3)
     do i=1,ysize(1)
-      ut=0.
-      do j=1,ny-1
-        if (istret.ne.0) ut=ut+(yp(j+1)-yp(j))*(ux(i,j+1,k)-0.5*(ux(i,j+1,k)-ux(i,j,k)))
-        if (istret.eq.0) ut=ut+(yly/(ny-1))*(ux(i,j+1,k)-0.5*(ux(i,j+1,k)-ux(i,j,k)))
-      enddo
-      ut3=ut3+ut
+      xloc=(i+ystart(1)-1-1)*dx
+      if (iconcprec.eq.1.and.xloc>=pdl) then
+        continue  
+      else
+        ut=zero
+        do j=1,ny-1
+          if (istret.ne.0) ut=ut+(yp(j+1)-yp(j))*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
+          if (istret.eq.0) ut=ut+(yly/(ny-1))*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
+        enddo
+        ut3=ut3+ut
+      endif
     enddo
     enddo
     ut3=ut3/ysize(1)/ysize(3)
 
     call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     ut4=ut4/nproc
+    if (iconcprec.eq.1) ut4=ut4*(xlx/pdl)
 
     ! Flow rate for a logarithmic profile
-    can=-(ustar/k_roughness*yly*(log(yly/z_zero)-1.)-ut4)
+    !can=-(ustar/k_roughness*yly*(log(yly/z_zero)-1.)-ut4)
+    can=-(ustar/k_roughness*(yly*log(dBL/z_zero)-dBL)-ut4)
 
     if (nrank==0) print *,nrank,'correction to ensure constant flow rate',ut4,can
 
     do k=1,ysize(3)
     do i=1,ysize(1)
-    do j=1,ny
-       ux(i,j,k)=ux(i,j,k)-can/yly
-    enddo
+      xloc=(i+ystart(1)-1-1)*dx
+      if (iconcprec.eq.1.and.xloc>=pdl) then
+        continue
+      else
+        do j=1,ny
+          ux(i,j,k)=ux(i,j,k)-can/yly
+        enddo
+      endif
     enddo
     enddo
 
     return
   end subroutine forceabl
+     
+  !*******************************************************************************
+  !
+  subroutine fringe_region (ux,uy,uz)
+  !
+  !*******************************************************************************
+
+    USE decomp_2d
+    USE param
+    USE var
+
+    implicit none
+
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux_s,uy_s,uz_s
+    real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: ux3_s,uy3_s,uz3_s
+    integer :: i, j, k, nshift, npe, nfe
+    real(mytype) :: dshift, x, edl, frl, fre, frs, frd, lambda
+
+    if (ishiftedper==1) then
+      ! Shifting distance
+      dshift = zlz/8 ! could be yly/4 etc..
+      nshift = int(dshift/dz)
+
+      ! Compute spanwise-shifted velocity field
+      call transpose_x_to_y(ux,td2)
+      call transpose_x_to_y(uy,te2)
+      call transpose_x_to_y(uz,tf2)
+      call transpose_y_to_z(td2,td3)
+      call transpose_y_to_z(te2,te3)
+      call transpose_y_to_z(tf2,tf3)
+
+      do k=1,nz-nshift
+        ux3_s(:,:,k+nshift) = td3(:,:,k)
+        uy3_s(:,:,k+nshift) = te3(:,:,k)
+        uz3_s(:,:,k+nshift) = tf3(:,:,k)
+      enddo
+      do k=1,nshift
+        ux3_s(:,:,k) = td3(:,:,nz-nshift+k)
+        uy3_s(:,:,k) = te3(:,:,nz-nshift+k)
+        uz3_s(:,:,k) = tf3(:,:,nz-nshift+k)
+      enddo 
+
+      call transpose_z_to_y(ux3_s,td2)
+      call transpose_z_to_y(uy3_s,te2)
+      call transpose_z_to_y(uz3_s,tf2)
+      call transpose_y_to_x(td2,ux_s)
+      call transpose_y_to_x(te2,uy_s)
+      call transpose_y_to_x(tf2,uz_s)
+    else
+      ux_s=ux
+      uy_s=uy
+      uz_s=uz
+    endif
+
+    ! Fringe region(s) parameters
+    edl = 2./3. 
+    frl = 1./6.
+    if (ishiftedper==1.and.iconcprec==0) then
+      fre = xlx*edl
+      npe = nx
+    elseif (ishiftedper==1.and.iconcprec==1) then
+      fre = pdl*edl
+      npe = int(nx*pdl/xlx)
+    elseif (ishiftedper==0.and.iconcprec==1) then
+      fre = pdl
+    endif
+    frs = fre-fre*frl
+    frd = fre-frs
+    nfe = int(nx*fre/xlx)
+
+    ! Apply fringe region(s)
+    do k=1,xsize(3)
+    do j=1,xsize(2)
+    do i=1,nfe
+      x=(i-1)*dx
+      if (x<frs) then
+        lambda=0.
+      elseif ( (x>=frs) .and. (x<(fre-frd/4.)) ) then
+        lambda=0.5*(1.-cos(4.*pi/3.*(x-frs)/frd))
+      elseif ( (x>=(fre-frd/4.)) .and. (x<fre) ) then
+        lambda=1.
+      else 
+        lambda=0.
+      endif
+      if (ishiftedper==1) then
+        ux(i+npe-nfe,j,k)=lambda*ux_s(i,j,k)+(one-lambda)*ux(i+npe-nfe,j,k)
+        uy(i+npe-nfe,j,k)=lambda*uy_s(i,j,k)+(one-lambda)*uy(i+npe-nfe,j,k)
+        uz(i+npe-nfe,j,k)=lambda*uz_s(i,j,k)+(one-lambda)*uz(i+npe-nfe,j,k)
+      endif
+      if (iconcprec==1) then
+        ux(i+nx-nfe,j,k)=lambda*ux_s(i,j,k)+(one-lambda)*ux(i+nx-nfe,j,k)
+        uy(i+nx-nfe,j,k)=lambda*uy_s(i,j,k)+(one-lambda)*uy(i+nx-nfe,j,k)
+        uz(i+nx-nfe,j,k)=lambda*uz_s(i,j,k)+(one-lambda)*uz(i+nx-nfe,j,k)
+      endif
+    enddo
+    enddo
+    enddo
+
+    return
+  end subroutine fringe_region
 
   !*******************************************************************************
   !
@@ -587,25 +728,48 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1,uy1,uz1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime),intent(inout) :: dux1, duy1, duz1
     integer :: i,j,k
-    real(mytype) :: y, lambda
-    real(mytype) :: damp_lo, coeff
-
-    damp_lo = 300.
-    coeff   = 0.0016 !0.5*ustar/dBL
+    real(mytype) :: y, lambda, xloc
+    real(mytype) :: damp_lo, coeff, wvar, dheight
+   
+    if (ibuoyancy.eq.1) then
+      damp_lo = 300.
+      coeff   = 0.0016 !0.5*ustar/dBL
+    else
+      dheight = 0.1*dBL
+      wvar    = 15.0 !1./(1./k_roughness*(yly*log(yly/dBL)-yly+dBL)/(yly-dBL))
+      coeff   = wvar*ustar/dBL
+    endif
 
     do k=1,xsize(3)
     do j=1,xsize(2)
     do i=1,xsize(1)
       if (istret.eq.0) y=(j+xstart(2)-1-1)*dy
       if (istret.ne.0) y=yp(j+xstart(2)-1)
-      if (y>=damp_lo) then
-        lambda=sin(pi/2.*(y-damp_lo)/(yly-damp_lo))**2.
+      ! Damping for non-neutral ABL
+      if (ibuoyancy.eq.1) then
+        if (y>=damp_lo) then
+          lambda=sin(pi/2.*(y-damp_lo)/(yly-damp_lo))**2.
+        else
+          lambda=zero
+        endif
+        dux1(i,j,k,1)=dux1(i,j,k,1)-coeff*lambda*(ux1(i,j,k)-UG(1))
+        duy1(i,j,k,1)=duy1(i,j,k,1)-coeff*lambda*(uy1(i,j,k)-UG(2))
+        duz1(i,j,k,1)=duz1(i,j,k,1)-coeff*lambda*(uz1(i,j,k)-UG(3))
+      ! Damping for neutral ABL
       else
-        lambda=0.
+        if (y>=(dBL+half*dheight)) then
+          lambda=one
+        elseif (y>=(dBL-half*dheight).and.y<(dBL+half*dheight)) then
+          lambda=0.5*(1.-cos(pi*(y-(dBL-half*dheight))/dheight))
+        else
+         lambda=zero
+        endif
+        xloc=(i-1)*dx
+        if (iconcprec.eq.1.and.xloc.ge.pdl) lambda=0.
+        dux1(i,j,k,1)=dux1(i,j,k,1)-coeff*lambda*(ux1(i,j,k)-ustar/k_roughness*log(dBL/z_zero))
+        duy1(i,j,k,1)=duy1(i,j,k,1)-coeff*lambda*(uy1(i,j,k)-UG(2))
+        duz1(i,j,k,1)=duz1(i,j,k,1)-coeff*lambda*(uz1(i,j,k)-UG(3))
       endif
-      dux1(i,j,k,1)=dux1(i,j,k,1)-coeff*lambda*(ux1(i,j,k)-UG(1))
-      duy1(i,j,k,1)=duy1(i,j,k,1)-coeff*lambda*(uy1(i,j,k)-UG(2))
-      duz1(i,j,k,1)=duz1(i,j,k,1)-coeff*lambda*(uz1(i,j,k)-UG(3))
     enddo
     enddo
     enddo
@@ -641,7 +805,7 @@ contains
       if (y>=damp_lo) then
         lambda=sin(pi/2.*(y-damp_lo)/(yly-damp_lo))**2.
       else
-        lambda=0.
+        lambda=zero
       endif
       dphi1(i,j,k,1)=dphi1(i,j,k,1)-coeff*lambda*(phi1(i,j,k)-0.)
     enddo
