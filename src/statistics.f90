@@ -160,6 +160,10 @@ contains
 
   function gen_statname(stat) result(newname)
 
+    use param, only : itime
+
+    implicit none
+    
     character(len=*), intent(in) :: stat
     character(len=30) :: newname
     
