@@ -32,13 +32,63 @@
 
 module stats
 
+#ifdef ADIOS2
+  use adios2
+  use var, only : adios
+#endif
+
   implicit none
+
+#ifdef ADIOS2
+  type(adios2_io) :: io_statistics
+  type(adios2_engine) :: engine_statistics
+#endif
 
   private
   public overall_statistic
 
 contains
 
+#ifdef ADIOS2
+  subroutine init_statistic_adios2
+
+    use decomp_2d, only : mytype
+    use decomp_2d_io, only : adios2_register_variable
+
+    use var, only : numscalar
+    
+    implicit none
+
+    integer :: ierror
+    character(len=30) :: varname
+    integer :: is
+    
+    call adios2_declare_io(io_statistics, adios, "statistics-io", ierror)
+
+    call adios2_register_variable(io_statistics, "umean", 1, 1, mytype)
+    call adios2_register_variable(io_statistics, "vmean", 1, 1, mytype)
+    call adios2_register_variable(io_statistics, "wmean", 1, 1, mytype)
+    
+    call adios2_register_variable(io_statistics, "pmean", 1, 1, mytype)
+
+    call adios2_register_variable(io_statistics, "uumean", 1, 1, mytype)
+    call adios2_register_variable(io_statistics, "vvmean", 1, 1, mytype)
+    call adios2_register_variable(io_statistics, "wwmean", 1, 1, mytype)
+
+    call adios2_register_variable(io_statistics, "uvmean", 1, 1, mytype)
+    call adios2_register_variable(io_statistics, "uwmean", 1, 1, mytype)
+    call adios2_register_variable(io_statistics, "vwmean", 1, 1, mytype)
+
+    do is=1, numscalar
+       write(varname,"('phi',I2.2)") is
+       call adios2_register_variable(io_statistics, varname, 1, 1, mytype)
+       write(varname,"('phiphi',I2.2)") is
+       call adios2_register_variable(io_statistics, varname, 1, 1, mytype)
+    enddo
+       
+  end subroutine init_statistic_adios2
+#endif
+  
   !
   ! Initialize to zero all statistics
   !
@@ -72,6 +122,9 @@ contains
       phiphimean = zero
     endif
 
+#ifdef ADIOS2
+    call init_statistic_adios2
+#endif
   end subroutine init_statistic
 
   !
@@ -90,7 +143,12 @@ contains
        call init_statistic()
        initstat = ifirst
        return
+    else
+#ifdef ADIOS2
+    call init_statistic_adios2
+#endif
     endif
+
 
     ! Temporary array
     tmean = zero
@@ -99,6 +157,19 @@ contains
     call read_or_write_all_stats(.true.)
 
   end subroutine restart_statistic
+
+  function gen_statname(stat) result(newname)
+
+    character(len=*), intent(in) :: stat
+    character(len=30) :: newname
+    
+#ifndef ADIOS2
+    write(newname, "(A,'.dat',I7.7)") stat, itime
+#else
+    write(newname, *) stat
+#endif
+    
+  end function gen_statname
 
   !
   ! Statistics: perform all IO
@@ -124,7 +195,11 @@ contains
     ! Local variables
     integer :: is
     character(len=30) :: filename
-
+#ifdef ADIOS2
+    integer :: engine_mode
+    integer :: ierror
+#endif
+    
     if (nrank==0) then
       print *,'==========================================================='
       if (flag_read) then
@@ -134,38 +209,43 @@ contains
       endif
     endif
 
-    write(filename,"('pmean.dat',I7.7)") itime
-    call read_or_write_one_stat(flag_read, filename, pmean)
-    write(filename,"('umean.dat',I7.7)") itime
-    call read_or_write_one_stat(flag_read, filename, umean)
-    write(filename,"('vmean.dat',I7.7)") itime
-    call read_or_write_one_stat(flag_read, filename, vmean)
-    write(filename,"('wmean.dat',I7.7)") itime
-    call read_or_write_one_stat(flag_read, filename, wmean)
+#ifdef ADIOS2
+    if (flag_read) then
+       engine_mode = adios2_mode_read
+    else
+       engine_mode = adios2_mode_write
+    endif
+    call adios2_open(engine_statistics, io_statistics, "statistics", engine_mode, ierror)
+    call adios2_begin_step(engine_statistics, ierror)
+#endif
+    
+    call read_or_write_one_stat(flag_read, gen_statname("pmean"), pmean)
+    call read_or_write_one_stat(flag_read, gen_statname("umean"), umean)
+    call read_or_write_one_stat(flag_read, gen_statname("vmean"), vmean)
+    call read_or_write_one_stat(flag_read, gen_statname("wmean"), wmean)
 
-    write(filename,"('uumean.dat',I7.7)") itime
-    call read_or_write_one_stat(flag_read, filename, uumean)
-    write(filename,"('vvmean.dat',I7.7)") itime
-    call read_or_write_one_stat(flag_read, filename, vvmean)
-    write(filename,"('wwmean.dat',I7.7)") itime
-    call read_or_write_one_stat(flag_read, filename, wwmean)
+    call read_or_write_one_stat(flag_read, gen_statname("uumean"), uumean)
+    call read_or_write_one_stat(flag_read, gen_statname("vvmean"), vvmean)
+    call read_or_write_one_stat(flag_read, gen_statname("wwmean"), wwmean)
 
-    write(filename,"('uvmean.dat',I7.7)") itime
-    call read_or_write_one_stat(flag_read, filename, uvmean)
-    write(filename,"('uwmean.dat',I7.7)") itime
-    call read_or_write_one_stat(flag_read, filename, uwmean)
-    write(filename,"('vwmean.dat',I7.7)") itime
-    call read_or_write_one_stat(flag_read, filename, vwmean)
+    call read_or_write_one_stat(flag_read, gen_statname("uvmean"), uvmean)
+    call read_or_write_one_stat(flag_read, gen_statname("uwmean"), uwmean)
+    call read_or_write_one_stat(flag_read, gen_statname("vwmean"), vwmean)
 
     if (iscalar==1) then
        do is=1, numscalar
-          write(filename,"('phi',I2.2,'mean.dat',I7.7)") is, itime
-          call read_or_write_one_stat(flag_read, filename, phimean(:,:,:,is))
-          write(filename,"('phiphi',I2.2,'mean.dat',I7.7)") is, itime
-          call read_or_write_one_stat(flag_read, filename, phiphimean(:,:,:,is))
+          write(filename,"('phi',I2.2)") is
+          call read_or_write_one_stat(flag_read, gen_statname(filename), phimean(:,:,:,is))
+          write(filename,"('phiphi',I2.2)") is
+          call read_or_write_one_stat(flag_read, gen_statname(filename), phiphimean(:,:,:,is))
        enddo
     endif
 
+#ifdef ADIOS2
+    call adios2_end_step(engine_statistics, ierror)
+    call adios2_close(engine_statistics, ierror)
+#endif
+    
     if (nrank==0) then
       if (flag_read) then
         print *,'Read stat done!'
@@ -193,11 +273,19 @@ contains
     real(mytype), dimension(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)), intent(inout) :: array
 
     if (flag_read) then
-      ! There was a check for nvisu = 1 before
-      call decomp_2d_read_one(1, array, filename)
-    else
+       ! There was a check for nvisu = 1 before
+#ifndef ADIOS2
+       call decomp_2d_read_one(1, array, filename)
+#else
+       call decomp_2d_read_one(1, array, filename, 1, engine_statistics, io_statistics)
+#endif
+   else
+#ifndef ADIOS2
       call decomp_2d_write_one(1, array, filename, 1)
-    endif
+#else
+      call decomp_2d_write_one(1, array, filename, 1, engine_statistics, io_statistics)
+#endif
+   endif
 
   end subroutine read_or_write_one_stat
 

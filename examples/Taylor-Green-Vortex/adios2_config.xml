@@ -2,11 +2,6 @@
 <adios-config>
   <io name="solution-io">
     <engine type="BP4">
-      <parameter key="Threads" value="1"/>
-      <parameter key="ProfileUnits" value="Microseconds"/>
-      <parameter key="MaxBufferSize" value="20Mb"/>
-      <parameter key="InitialBufferSize" value="1Mb"/>
-      <parameter key="BufferGrowthFactor" value="2"/>
     </engine>
     <transport type="File">
       <parameter key="Library" value="fstream"/>
@@ -15,11 +10,14 @@
   </io>
   <io name="restart-io">
     <engine type="BP4">
-      <parameter key="Threads" value="1"/>
-      <parameter key="ProfileUnits" value="Microseconds"/>
-      <parameter key="MaxBufferSize" value="20Mb"/>
-      <parameter key="InitialBufferSize" value="1Mb"/>
-      <parameter key="BufferGrowthFactor" value="2"/>
+    </engine>
+    <transport type="File">
+      <parameter key="Library" value="fstream"/>
+      <parameter key="ProfileUnits" value="Milliseconds"/>
+    </transport>
+  </io>
+  <io name="statistics-io">
+    <engine type="BP4">
     </engine>
     <transport type="File">
       <parameter key="Library" value="fstream"/>
