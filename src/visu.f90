@@ -51,10 +51,6 @@ module visu
   integer :: ioxdmf
   character(len=9) :: ifilenameformat = '(I3.3)'
   real, save :: tstart, tend
-#ifdef ADIOS2
-  type(adios2_io) :: io_write_real_coarse
-  type(adios2_engine) :: engine_write_real_coarse
-#endif
 
   private
   public :: output2D, visu_init, visu_finalise, write_snapshot, end_snapshot, write_field
@@ -70,9 +66,8 @@ contains
     use param, only : ilmn, iscalar, ilast, ifirst, ioutput, istret
     use variables, only : numscalar, prec, nvisu
     use decomp_2d, only : nrank, mytype, xszV, yszV, zszV
-#ifdef ADIOS2
-    use decomp_2d_io, only : adios2_register_variable
-#endif
+    use decomp_2d_io, only : decomp_2d_init_io, decomp_2d_open_io, decomp_2d_write_mode
+    use decomp_2d_io, only : decomp_2d_register_variable
     
     implicit none
 
@@ -85,16 +80,8 @@ contains
     integer :: ierror
     character(len=80) :: outfile
     integer :: is
+    type(adios2_io) :: io_handle
 #endif
-
-    ! Create folder if needed
-    ! XXX: Is this needed for ADIOS2?
-    if (nrank==0) then
-      inquire(file="data", exist=dir_exists)
-      if (.not.dir_exists) then
-        call system("mkdir data 2> /dev/null")
-      end if
-    end if
 
     ! HDD usage of visu module
     if (nrank==0) then
@@ -127,33 +114,24 @@ contains
       stop
     endif
 
-#ifdef ADIOS2
-    call adios2_declare_io(io_write_real_coarse, adios, "solution-io", ierror)
-    if (io_write_real_coarse % engine_type.eq."BP4") then
-       write(outfile, *) "data.bp4"
-    else if (io_write_real_coarse % engine_type.eq."HDF5") then
-       write(outfile, *) "data.hdf5"
-    else
-       print *, "Unknown engine!"
-       call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
-    endif
+    call decomp_2d_init_io("solution-io", adios)
+    call adios2_at_io(io_handle, adios, "solution-io", ierror)
 
     !! Register variables
-    call adios2_register_variable(io_write_real_coarse, "ux", 1, 0, mytype)
-    call adios2_register_variable(io_write_real_coarse, "uy", 1, 0, mytype)
-    call adios2_register_variable(io_write_real_coarse, "uz", 1, 0, mytype)
-    call adios2_register_variable(io_write_real_coarse, "pp", 1, 0, mytype)
+    call decomp_2d_register_variable(io_handle, "ux", 1, 0, mytype)
+    call decomp_2d_register_variable(io_handle, "uy", 1, 0, mytype)
+    call decomp_2d_register_variable(io_handle, "uz", 1, 0, mytype)
+    call decomp_2d_register_variable(io_handle, "pp", 1, 0, mytype)
     if (ilmn) then
-       call adios2_register_variable(io_write_real_coarse, "rho", 1, 0, mytype)
+       call decomp_2d_register_variable(io_handle, "rho", 1, 0, mytype)
     endif
     if (iscalar.ne.0) then
        do is = 1, numscalar
-          call adios2_register_variable(io_write_real_coarse, "phi"//char(48+is), 1, 0, mytype)
+          call decomp_2d_register_variable(io_handle, "phi"//char(48+is), 1, 0, mytype)
        enddo
     endif
     
-    call adios2_open(engine_write_real_coarse, io_write_real_coarse, trim(outfile), adios2_mode_write, ierror)
-#endif
+    call decomp_2d_open_io("solution-io", "data", decomp_2d_write_mode, adios)
 
   end subroutine visu_init
 
@@ -162,18 +140,19 @@ contains
   ! - Currently only needed to clean up ADIOS2
   !
   subroutine visu_finalise()
-    
+
+    use decomp_2d_io, only : decomp_2d_close_io
 #ifdef ADIOS2
     use adios2
 #endif
-  implicit none
+    implicit none
 
 #ifdef ADIOS2
-  integer :: ierr
+    integer :: ierr
 #endif
   
+    call decomp_2d_close_io("solution-io", "data")
 #ifdef ADIOS2
-    call adios2_close(engine_write_real_coarse, ierr)
     call adios2_finalize(adios, ierr)
 #endif
     
@@ -187,6 +166,7 @@ contains
     use decomp_2d, only : transpose_z_to_y, transpose_y_to_x
     use decomp_2d, only : mytype, xsize, ysize, zsize
     use decomp_2d, only : nrank
+    use decomp_2d_io, only : decomp_2d_start_io
 
     use param, only : nrhotime, ilmn, iscalar, ioutput
 
@@ -222,9 +202,7 @@ contains
       call cpu_time(tstart)
       print *,'Writing snapshots =>',itime/ioutput
     end if
-#ifdef ADIOS2
-    call adios2_begin_step(engine_write_real_coarse, adios2_step_mode_append, ierr)
-#endif
+    call decomp_2d_start_io("solution-io", "data")
 
     ! Snapshot number
 #ifndef ADIOS2
@@ -283,6 +261,7 @@ contains
   subroutine end_snapshot(itime, num)
 
     use decomp_2d, only : nrank
+    use decomp_2d_io, only : decomp_2d_end_io
     use param, only : istret, xlx, yly, zlz
     use variables, only : nx, ny, nz, beta
     use var, only : dt,t
@@ -326,9 +305,7 @@ contains
       endif
     endif
 
-#ifdef ADIOS2
-    call adios2_end_step(engine_write_real_coarse, ierr)
-#endif
+    call decomp_2d_end_io("solution-io", "data")
 
     ! Update log file
     if (nrank.eq.0) then
@@ -536,6 +513,9 @@ contains
     use var, only : zero, one
 #ifndef ADIOS2
     use var, only : uvisu
+#else
+    use var, only : adios
+    use decomp_2d_io, only : get_engine_ptr
 #endif
     use param, only : iibm
     use decomp_2d, only : mytype, xsize, xszV, yszV, zszV
@@ -550,6 +530,7 @@ contains
 
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: local_array
 
+    type(adios2_io) :: io_handle
     integer :: ierr
 
     if (use_xdmf) then
@@ -608,7 +589,8 @@ contains
           print *, "Not Implemented: currently ADIOS2 IO doesn't support IBM-blanking"
           call MPI_ABORT(MPI_COMM_WORLD, -1, ierr)
        endif
-       call decomp_2d_write_one(1,f1,filename,0,engine_write_real_coarse,io_write_real_coarse)
+       call adios2_at_io(io_handle, adios, "solution-io", ierr)
+       call decomp_2d_write_one(1,f1,filename,0,get_engine_ptr("solution-io", "data"),io_handle)
 #endif
     else
        call decomp_2d_write_plane(1,local_array,output2D,-1,"./data/"//pathname//'/'//filename//'-'//num//'.bin')

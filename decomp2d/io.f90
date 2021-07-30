@@ -27,6 +27,16 @@ module decomp_2d_io
 
   implicit none
 
+  integer, parameter :: decomp_2d_write_mode = 1
+#ifdef ADIOS2
+  integer, parameter :: MAX_ENGINES = 10
+  integer, save :: nreg_io = 0
+  character(len=*), parameter :: io_sep = "::"
+  character(len=80), dimension(MAX_ENGINES), save :: engine_names
+  logical, dimension(MAX_ENGINES), save :: engine_live
+  type(adios2_engine), target, dimension(MAX_ENGINES), save :: engine_registry
+#endif
+  
   private        ! Make everything private unless declared public
 
   public :: decomp_2d_write_one, decomp_2d_read_one, &
@@ -34,10 +44,13 @@ module decomp_2d_io
        decomp_2d_write_scalar, decomp_2d_read_scalar, &
        decomp_2d_write_plane, decomp_2d_write_every, &
        decomp_2d_write_subdomain, &
-       decomp_2d_write_outflow, decomp_2d_read_inflow
-#ifdef ADIOS2
-  public :: adios2_register_variable
-#endif
+       decomp_2d_write_outflow, decomp_2d_read_inflow, &
+       decomp_2d_init_io, &
+       decomp_2d_register_variable, &
+       decomp_2d_open_io, decomp_2d_close_io, &
+       decomp_2d_start_io, decomp_2d_end_io, &
+       decomp_2d_write_mode, &
+       get_engine_ptr
 
   ! Generic interface to handle multiple data types
 
@@ -278,7 +291,7 @@ contains
        else
           call get_decomp_info(decomp)
        endif
-       call adios2_register_variable(io, varname, ipencil, icoarse, kind(var), decomp)
+       call decomp_2d_register_variable(io, varname, ipencil, icoarse, kind(var), decomp)
     endif
 
     call adios2_get(engine, var_handle, var, adios2_mode_deferred, ierror)
@@ -913,8 +926,7 @@ contains
     return
   end subroutine mpiio_write_real_coarse
 
-#ifdef ADIOS2
-  subroutine adios2_register_variable(io, varname, ipencil, icoarse, type, opt_decomp)
+  subroutine decomp_2d_register_variable(io, varname, ipencil, icoarse, type, opt_decomp)
 
     implicit none
 
@@ -964,7 +976,8 @@ contains
             adios2_constant_dims, ierror)
     endif
     
-  end subroutine adios2_register_variable
+  end subroutine decomp_2d_register_variable
+#ifdef ADIOS2
   subroutine adios2_write_real_coarse(ipencil,var,varname,icoarse,engine,io,opt_decomp)
 
     ! USE param
@@ -992,7 +1005,7 @@ contains
        else
           call get_decomp_info(decomp)
        endif
-       call adios2_register_variable(io, varname, ipencil, icoarse, kind(var), decomp)
+       call decomp_2d_register_variable(io, varname, ipencil, icoarse, kind(var), decomp)
     endif
 
     call adios2_put(engine, var_handle, var, adios2_mode_deferred, ierror)
@@ -1270,5 +1283,189 @@ contains
     return
   end subroutine write_subdomain
 
+  subroutine decomp_2d_init_io(io_name, adios)
+
+    implicit none
+
+    character(len=*), intent(in) :: io_name
+    type(adios2_adios), intent(in) :: adios
+    integer :: ierror
+#ifdef ADIOS2
+    type(adios2_io) :: io
+#endif
+    
+    if (nrank .eq. 0) then
+       print *, "Initialising IO for ", io_name
+    end if
+
+#ifdef ADIOS2
+    call adios2_declare_io(io, adios, io_name, ierror)
+#endif
+    
+  end subroutine decomp_2d_init_io
+  
+  subroutine decomp_2d_open_io(io_name, io_dir, mode, adios)
+
+    implicit none
+
+    character(len=*), intent(in) :: io_name, io_dir
+    integer, intent(in) :: mode
+    type(adios2_adios), intent(in) :: adios
+
+#ifdef ADIOS2
+    integer :: idx, ierror
+    type(adios2_io) :: io
+    integer :: adios2_mode
+    character(len=:), allocatable :: full_name
+    character(len=80) :: ext
+#endif
+
+#ifndef ADIOS2
+    ! Create folder if needed
+    if (nrank==0) then
+       inquire(file=io_dir, exist=dir_exists)
+       if (.not.dir_exists) then
+          call system("mkdir"//io_dir//"2> /dev/null")
+       end if
+    end if
+#else
+    idx = get_engine_idx(io_name, io_dir)
+    if (idx .lt. 1) then
+       !! New io/engine combination
+       if (nreg_io .lt. MAX_ENGINES) then
+          nreg_io = nreg_io + 1
+          do idx = 1, MAX_ENGINES
+             if (.not. engine_live(idx)) then
+                engine_live(idx) = .true.
+                exit
+             end if
+          end do
+
+          allocate(character(len=len(trim(io_name)) + len(trim(io_sep)) + len(trim(io_dir))) :: full_name)
+          write(full_name, "(A,A,A)") trim(io_name), trim(io_sep), trim(io_dir)
+          engine_names(idx) = full_name
+          deallocate(full_name)
+
+          if (mode .eq. decomp_2d_write_mode) then
+             adios2_mode = adios2_mode_write
+          else
+             print *, "ERROR: Unknown mode!"
+             stop
+          endif
+          call adios2_at_io(io, adios, io_name, ierror)
+          if (io%engine_type .eq. "BP4") then
+             ext = ".bp4"
+          else if (io%engine_type .eq. "HDF5") then
+             ext = ".hdf5"
+          else
+             print *, "ERROR: Unkown engine type! ", io%engine_type
+             stop
+          endif
+          call adios2_open(engine_registry(idx), io, trim(io_dir)//trim(ext), adios2_mode, ierror)
+       endif
+    endif
+#endif
+    
+  end subroutine decomp_2d_open_io
+
+  subroutine decomp_2d_close_io(io_name, io_dir)
+
+    implicit none
+
+    character(len=*), intent(in) :: io_name, io_dir
+
+    integer :: idx, ierror
+
+#ifdef ADIOS2
+    idx = get_engine_idx(io_name, io_dir)
+    call adios2_close(engine_registry(idx), ierror)
+    engine_names(idx) = ""
+    engine_live(idx) = .false.
+    nreg_io = nreg_io - 1
+#endif
+
+  end subroutine decomp_2d_close_io
+
+  subroutine decomp_2d_start_io(io_name, io_dir)
+
+    implicit none
+
+    character(len=*), intent(in) :: io_name, io_dir
+#ifdef ADIOS2
+    integer :: idx, ierror
+
+    idx = get_engine_idx(io_name, io_dir)
+    call adios2_begin_step(engine_registry(idx), ierror)
+#endif
+    
+  end subroutine decomp_2d_start_io
+
+  subroutine decomp_2d_end_io(io_name, io_dir)
+
+    implicit none
+
+    character(len=*), intent(in) :: io_name, io_dir
+#ifdef ADIOS2
+    integer :: idx, ierror
+
+    idx = get_engine_idx(io_name, io_dir)
+    call adios2_end_step(engine_registry(idx), ierror)
+#endif
+
+  end subroutine decomp_2d_end_io
+  
+#ifdef ADIOS2
+  integer function get_engine_idx(io_name, engine_name)
+
+    implicit none
+
+    character(len=*), intent(in) :: io_name
+    character(len=*), intent(in) :: engine_name
+    type(adios2_engine), pointer :: engine_ptr
+
+    character(len=:), allocatable :: full_name
+    integer :: idx
+    logical :: found
+
+    allocate(character(len=len(trim(io_name)) + len(trim(io_sep)) + len(trim(engine_name))) :: full_name)
+    write(full_name, "(A,A,A)") trim(io_name), trim(io_sep), trim(engine_name)
+    
+    found = .false.
+    do idx = 1, MAX_ENGINES
+       if (engine_names(idx) .eq. full_name) then
+          found = .true.
+          exit
+       end if
+    end do
+
+    if (.not. found) then
+       idx = -1
+    end if
+
+    deallocate(full_name)
+
+    get_engine_idx = idx
+    
+  end function get_engine_idx
+  function get_engine_ptr(io_name, engine_name) result(engine_ptr)
+
+    implicit none
+
+    character(len=*), intent(in) :: io_name
+    character(len=*), intent(in) :: engine_name
+    type(adios2_engine), pointer :: engine_ptr
+
+    integer :: idx
+    
+    idx = get_engine_idx(io_name, engine_name)
+    if (idx .lt. 1) then
+       print *, "Error: trying to access non-existant engine: ", io_name, "::", engine_name
+       stop
+    endif
+    
+    engine_ptr => engine_registry(idx)
+    
+  end function get_engine_ptr
+#endif
 
 end module decomp_2d_io

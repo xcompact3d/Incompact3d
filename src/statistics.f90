@@ -53,7 +53,7 @@ contains
   subroutine init_statistic_adios2
 
     use decomp_2d, only : mytype
-    use decomp_2d_io, only : adios2_register_variable
+    use decomp_2d_io, only : decomp_2d_register_variable
 
     use var, only : numscalar
     
@@ -65,25 +65,25 @@ contains
     
     call adios2_declare_io(io_statistics, adios, "statistics-io", ierror)
 
-    call adios2_register_variable(io_statistics, "umean", 1, 1, mytype)
-    call adios2_register_variable(io_statistics, "vmean", 1, 1, mytype)
-    call adios2_register_variable(io_statistics, "wmean", 1, 1, mytype)
+    call decomp_2d_register_variable(io_statistics, "umean", 1, 1, mytype)
+    call decomp_2d_register_variable(io_statistics, "vmean", 1, 1, mytype)
+    call decomp_2d_register_variable(io_statistics, "wmean", 1, 1, mytype)
     
-    call adios2_register_variable(io_statistics, "pmean", 1, 1, mytype)
+    call decomp_2d_register_variable(io_statistics, "pmean", 1, 1, mytype)
 
-    call adios2_register_variable(io_statistics, "uumean", 1, 1, mytype)
-    call adios2_register_variable(io_statistics, "vvmean", 1, 1, mytype)
-    call adios2_register_variable(io_statistics, "wwmean", 1, 1, mytype)
+    call decomp_2d_register_variable(io_statistics, "uumean", 1, 1, mytype)
+    call decomp_2d_register_variable(io_statistics, "vvmean", 1, 1, mytype)
+    call decomp_2d_register_variable(io_statistics, "wwmean", 1, 1, mytype)
 
-    call adios2_register_variable(io_statistics, "uvmean", 1, 1, mytype)
-    call adios2_register_variable(io_statistics, "uwmean", 1, 1, mytype)
-    call adios2_register_variable(io_statistics, "vwmean", 1, 1, mytype)
+    call decomp_2d_register_variable(io_statistics, "uvmean", 1, 1, mytype)
+    call decomp_2d_register_variable(io_statistics, "uwmean", 1, 1, mytype)
+    call decomp_2d_register_variable(io_statistics, "vwmean", 1, 1, mytype)
 
     do is=1, numscalar
        write(varname,"('phi',I2.2)") is
-       call adios2_register_variable(io_statistics, varname, 1, 1, mytype)
+       call decomp_2d_register_variable(io_statistics, varname, 1, 1, mytype)
        write(varname,"('phiphi',I2.2)") is
-       call adios2_register_variable(io_statistics, varname, 1, 1, mytype)
+       call decomp_2d_register_variable(io_statistics, varname, 1, 1, mytype)
     enddo
        
   end subroutine init_statistic_adios2
