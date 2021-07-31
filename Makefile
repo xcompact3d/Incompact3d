@@ -26,8 +26,11 @@ else ifeq ($(CMP),gcc)
 CC = mpicc
 FC = mpif90
 #FFLAGS = -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -x f95-cpp-input
-FFLAGS = -cpp -O0 -funroll-loops -floop-optimize -g -fno-inline -finstrument-functions -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none -fallow-argument-mismatch -msse4.1 -msse4.2 -mavx2
+FFLAGS = -cpp -O0 -funroll-loops -floop-optimize -g -fno-inline -finstrument-functions -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none -msse4.1 -msse4.2 -mavx2
 #-ffpe-trap=invalid,zero
+ifeq "$(shell expr `gfortran -dumpversion | cut -f1 -d.` \>= 10)" "1"
+    FFLAGS += -fallow-argument-mismatch
+endif
 else ifeq ($(CMP),nagfor)
 FC = mpinagfor
 FFLAGS = -fpp
