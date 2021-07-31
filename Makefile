@@ -27,7 +27,7 @@ FC = mpif90
 FFLAGS = -cpp -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none
 #-ffpe-trap=invalid,zero
 ifeq "$(shell expr `gfortran -dumpversion | cut -f1 -d.` \>= 10)" "1"
-    FFLAGS += -fallow-argument-mismatch
+FFLAGS += -fallow-argument-mismatch
 endif
 else ifeq ($(CMP),nagfor)
 FC = mpinagfor
