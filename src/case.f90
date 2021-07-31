@@ -460,15 +460,20 @@ contains
   !!              scalar transport equations.
   !!
   !##################################################################
-  subroutine scalar_forcing(dphi1, rho1, ux1, uy1, uz1, phi1)
+  subroutine scalar_forcing(dphi1, rho1, ux1, uy1, uz1, phi1, is)
 
     implicit none
 
     real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, phi1
     real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime) :: dphi1
+    integer, optional, intent(in) :: is
 
-    if (itype.eq.itype_abl) then
+    if (itype.eq.itype_channel) then
+
+       call scalar_forcing_channel(dphi1, phi1, is)
+
+    elseif (itype.eq.itype_abl) then
 
        call scalar_forcing_abl(uy1, dphi1, phi1)
 

@@ -42,7 +42,7 @@ module channel
 
   PRIVATE ! All functions/subroutines private by default
   PUBLIC :: init_channel, boundary_conditions_channel, postprocess_channel, &
-            visu_channel, momentum_forcing_channel, &
+            visu_channel, momentum_forcing_channel, scalar_forcing_channel, &
             geomcomplex_channel, finalize_channel
 
 contains
@@ -154,24 +154,48 @@ contains
   !############################################################################
   subroutine boundary_conditions_channel (ux,uy,uz,phi)
 
-    use var, only : di2
-
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
-    if (.not.cpg) then ! if not constant pressure gradient
-        call channel_cfr(ux,two/three)
+    !
+    ! Boundary conditions for velocity are applied after the prediction step
+    ! and before the correction step. This is done in navier.f90/pre_correc
+    ! See comment in the subroutine navier.f90/gradp
+    !
+    ! For implicit Y diffusion, boundary conditions are also applied
+    ! at the end of the correction step. All BC must be consistent.
+    !
+
+    ! Zero velocity at bottom boundary
+    if (ncly1.eq.1) then
+       byx1(:,:) = zero
+       byy1(:,:) = zero
+       byz1(:,:) = zero
+    endif
+
+    ! Zero velocity at top boundary
+    if (nclyn.eq.2) then
+       byxn(:,:) = zero
+       byyn(:,:) = zero
+       byzn(:,:) = zero
+    endif
+
+    ! Imposed flow rate if no constant pressure gradient
+    if (.not.cpg) then
+       call channel_cfr(ux,two/three)
     end if
 
+    ! Boundary conditions for scalars are applied before computing conv. + diff.
     if (iscalar.ne.0) then
        if (iimplicit.le.0) then
+          ! Explicit Y diffusion, bottom boundary
           if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
-             !! Generate a hot patch on bottom boundary
              phi(:,1,:,:) = one
           endif
-          if ((nclySn.eq.2).and.(xend(2).eq.ny)) THEN
+          ! Explicit Y diffusion, top boundary
+          if ((nclySn.eq.2).and.(xend(2).eq.ny)) then
              phi(:,xsize(2),:,:) = zero
           endif
        else
@@ -182,8 +206,10 @@ contains
           !
           ! Bottom temperature if alpha_sc(:,1)=1 and beta_sc(:,1)=0 (default)
           !if (nclyS1.eq.2) g_sc(:,1) = one
+          !
           ! Top temperature if alpha_sc(:,2)=1 and beta_sc(:,2)=0 (default)
           !if (nclySn.eq.2) g_sc(:,2) = zero
+          !
        endif
     endif
 
@@ -428,6 +454,20 @@ contains
 
   end subroutine momentum_forcing_channel
   !############################################################################
+  !!
+  !!  SUBROUTINE: scalar_forcing_channel
+  !! DESCRIPTION: Applies source term in the scalar equation
+  !!
+  !############################################################################
+  subroutine scalar_forcing_channel(dphi1, phi1, is)
+
+    implicit none
+
+    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: phi1
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime) :: dphi1
+    integer, optional, intent(in) :: is
+
+  end subroutine scalar_forcing_channel
   !############################################################################
   subroutine geomcomplex_channel(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,yp,remp)
 

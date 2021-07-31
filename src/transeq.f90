@@ -899,7 +899,7 @@ contains
     dphi1(:,:,:,1) = ta1(:,:,:) + tc1(:,:,:)
 
     !! Additional forcing
-    call scalar_forcing(dphi1, rho1, ux1, uy1, uz1, phi1)
+    call scalar_forcing(dphi1, rho1, ux1, uy1, uz1, phi1, is)
 
     !! XXX We have computed rho dphidt, want dphidt
     if (ilmn) then
