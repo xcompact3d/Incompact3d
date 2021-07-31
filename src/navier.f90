@@ -344,7 +344,7 @@ contains
   !Computation of the pressure gradient from the pressure mesh to the
   !velocity mesh
   !Saving pressure gradients on boundaries for correct imposition of
-  !BCs on u* via the fractional step methodi (it is not possible to
+  !BCs on u* via the fractional step method (it is not possible to
   !impose BC after correction by pressure gradient otherwise lost of
   !incompressibility--> BCs are imposed on u*
   !
