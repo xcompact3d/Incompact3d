@@ -88,7 +88,7 @@ subroutine parameter(input_i3d)
        Fr, ibirman_eos
   NAMELIST /ABL/ z_zero, iwallmodel, k_roughness, ustar, dBL, &
        imassconserve, ibuoyancy, iPressureGradient, iCoriolis, CoriolisFreq, &
-       istrat, idamping, iheight, TempRate, TempFlux, itherm, gravv, UG, T_wall, T_top 
+       istrat, idamping, iheight, TempRate, TempFlux, itherm, gravv, UG, T_wall, T_top, ishiftedper, iconcprec, pdl 
   NAMELIST /CASE/ tgv_twod, pfront
   NAMELIST/ALMParam/ialmrestart,filealmrestart,iturboutput,NTurbines,TurbinesPath,NActuatorlines,ActuatorlinesPath,eps_factor,rho_air
   NAMELIST/ADMParam/Ndiscs,ADMcoords,C_T,aind,iturboutput,rho_air
@@ -705,6 +705,9 @@ subroutine parameter_defaults()
   TempRate=-0.25/3600
   TempFlux=0.24
   UG=[0d0,0d0,0d0]
+  ishiftedper=0
+  iconcprec=0
+  pdl=0.0
 
   !! Turbine modelling
   iturbine=0
