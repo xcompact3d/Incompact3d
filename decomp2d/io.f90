@@ -29,6 +29,7 @@ module decomp_2d_io
 
   integer, parameter :: decomp_2d_write_mode = 1, decomp_2d_read_mode = 2
 #ifdef ADIOS2
+  type(adios2_adios) :: adios
   integer, parameter :: MAX_ENGINES = 10
   integer, save :: nreg_io = 0
   character(len=*), parameter :: io_sep = "::"
@@ -45,12 +46,16 @@ module decomp_2d_io
        decomp_2d_write_plane, decomp_2d_write_every, &
        decomp_2d_write_subdomain, &
        decomp_2d_write_outflow, decomp_2d_read_inflow, &
-       decomp_2d_init_io, &
+       decomp_2d_io_init, decomp_2d_io_finalise, & ! XXX: initialise/finalise 2decomp&fft IO module
+       decomp_2d_init_io, & ! XXX: initialise an io process - awful naming
        decomp_2d_register_variable, &
        decomp_2d_open_io, decomp_2d_close_io, &
        decomp_2d_start_io, decomp_2d_end_io, &
        decomp_2d_write_mode, decomp_2d_read_mode, &
        get_engine_ptr
+#ifdef ADIOS2
+  public :: adios
+#endif
 
   ! Generic interface to handle multiple data types
 
@@ -121,6 +126,44 @@ module decomp_2d_io
 
 contains
 
+  subroutine decomp_2d_io_init()
+
+#ifdef ADIOS2
+  integer :: ierror
+  logical :: adios2_debug_mode
+  character(len=80) :: config_file="adios2_config.xml"
+#endif
+
+#ifdef ADIOS2
+  !! TODO: make this a runtime-option
+  adios2_debug_mode = .true.
+
+  call adios2_init(adios, trim(config_file), MPI_COMM_WORLD, adios2_debug_mode, ierror)
+  if (ierror.ne.0) then
+     print *, "Error initialising ADIOS2 - is adios2_config.xml present and valid?"
+     call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
+  endif
+#endif
+  
+  end subroutine decomp_2d_io_init
+  subroutine decomp_2d_io_finalise()
+
+#ifdef ADIOS2
+    use adios2
+#endif
+
+    implicit none
+
+#ifdef ADIOS2
+    integer :: ierror
+#endif
+    
+#ifdef ADIOS2
+    call adios2_finalize(adios, ierror)
+#endif
+
+  end subroutine decomp_2d_io_finalise
+  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Using MPI-IO library to write a single 3D array to a file
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -144,7 +187,6 @@ contains
 
     return
   end subroutine write_one_real
-
 
   subroutine write_one_complex(ipencil,var,filename,opt_decomp)
 

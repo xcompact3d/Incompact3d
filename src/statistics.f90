@@ -34,7 +34,7 @@ module stats
 
 #ifdef ADIOS2
   use adios2
-  use var, only : adios
+  use decomp_2d_io, only : adios
 #endif
 
   implicit none

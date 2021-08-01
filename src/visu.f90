@@ -33,7 +33,7 @@ module visu
 
 #ifdef ADIOS2
   use adios2
-  use var, only : adios
+  use decomp_2d_io, only : adios
 #endif
   
   implicit none
@@ -142,19 +142,9 @@ contains
   subroutine visu_finalise()
 
     use decomp_2d_io, only : decomp_2d_close_io
-#ifdef ADIOS2
-    use adios2
-#endif
     implicit none
 
-#ifdef ADIOS2
-    integer :: ierr
-#endif
-  
     call decomp_2d_close_io("solution-io", "data")
-#ifdef ADIOS2
-    call adios2_finalize(adios, ierr)
-#endif
     
   end subroutine visu_finalise
 
@@ -514,7 +504,6 @@ contains
 #ifndef ADIOS2
     use var, only : uvisu
 #else
-    use var, only : adios
     use decomp_2d_io, only : get_engine_ptr
 #endif
     use param, only : iibm

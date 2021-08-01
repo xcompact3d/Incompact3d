@@ -36,10 +36,6 @@ module var
   USE variables
   USE param
   USE complex_geometry
-#ifdef ADIOS2
-  USE adios2
-  type(adios2_adios) :: adios
-#endif
   
   ! define all major arrays here
   real(mytype), save, allocatable, dimension(:,:,:) :: ux1, ux2, ux3, po3, dv3

@@ -33,7 +33,7 @@ module tools
 
 #ifdef ADIOS2
   use adios2
-  use var, only : adios
+  use decomp_2d_io, only : adios
 #endif
 
   implicit none
@@ -461,7 +461,6 @@ contains
     use decomp_2d_io, only : decomp_2d_register_variable, decomp_2d_init_io
     use variables, only : numscalar
     use var, only : itimescheme, iibm
-    use var, only : adios
     
     implicit none
 

@@ -118,6 +118,7 @@ subroutine init_xcompact3d()
 
   use MPI
   use decomp_2d
+  use decomp_2d_io, only : decomp_2d_io_init
   USE decomp_2d_poisson, ONLY : decomp_2d_poisson_init
   use case
   use forces
@@ -153,12 +154,6 @@ subroutine init_xcompact3d()
   integer :: nargin, FNLength, status, DecInd
   logical :: back
   character(len=80) :: InputFN, FNBase
-
-#ifdef ADIOS2
-  integer :: ierror
-  logical :: adios2_debug_mode
-  character(len=80) :: config_file="adios2_config.xml"
-#endif
     
   !! Initialise MPI
   call MPI_INIT(ierr)
@@ -192,20 +187,12 @@ subroutine init_xcompact3d()
      print *, "          is developed. Thank you for trying it."
      print *, " WARNING === WARNING === WARNING === WARNING === WARNING"
   endif
-  
-  !! TODO: make this a runtime-option
-  adios2_debug_mode = .true.
-
-  call adios2_init(adios, trim(config_file), MPI_COMM_WORLD, adios2_debug_mode, ierror)
-  if (ierror.ne.0) then
-     print *, "Error initialising ADIOS2 - is adios2_config.xml present and valid?"
-     call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
-  endif
 #endif
   
   call parameter(InputFN)
 
   call decomp_2d_init(nx,ny,nz,p_row,p_col)
+  call decomp_2d_io_init()
   call init_coarser_mesh_statS(nstat,nstat,nstat,.true.)    !start from 1 == true
   call init_coarser_mesh_statV(nvisu,nvisu,nvisu,.true.)    !start from 1 == true
   call init_coarser_mesh_statP(nprobe,nprobe,nprobe,.true.) !start from 1 == true
@@ -292,6 +279,7 @@ subroutine finalise_xcompact3d()
 
   use MPI
   use decomp_2d
+  use decomp_2d_io, only : decomp_2d_io_finalise
 
   use tools, only : simu_stats
   use param, only : itype
@@ -316,6 +304,7 @@ subroutine finalise_xcompact3d()
   call simu_stats(4)
   call finalize_probes()
   call visu_finalise()
+  call decomp_2d_io_finalise()
   call decomp_2d_finalize
   CALL MPI_FINALIZE(ierr)
 
