@@ -27,7 +27,7 @@ module decomp_2d_io
 
   implicit none
 
-  integer, parameter :: decomp_2d_write_mode = 1
+  integer, parameter :: decomp_2d_write_mode = 1, decomp_2d_read_mode = 2
 #ifdef ADIOS2
   integer, parameter :: MAX_ENGINES = 10
   integer, save :: nreg_io = 0
@@ -49,7 +49,7 @@ module decomp_2d_io
        decomp_2d_register_variable, &
        decomp_2d_open_io, decomp_2d_close_io, &
        decomp_2d_start_io, decomp_2d_end_io, &
-       decomp_2d_write_mode, &
+       decomp_2d_write_mode, decomp_2d_read_mode, &
        get_engine_ptr
 
   ! Generic interface to handle multiple data types
@@ -1348,6 +1348,8 @@ contains
 
           if (mode .eq. decomp_2d_write_mode) then
              adios2_mode = adios2_mode_write
+          else if (mode .eq. decomp_2d_read_mode) then
+             adios2_mode = adios2_mode_read
           else
              print *, "ERROR: Unknown mode!"
              stop

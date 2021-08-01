@@ -39,11 +39,6 @@ module stats
 
   implicit none
 
-#ifdef ADIOS2
-  type(adios2_io) :: io_statistics
-  type(adios2_engine) :: engine_statistics
-#endif
-
   private
   public overall_statistic
 
@@ -53,7 +48,7 @@ contains
   subroutine init_statistic_adios2
 
     use decomp_2d, only : mytype
-    use decomp_2d_io, only : decomp_2d_register_variable
+    use decomp_2d_io, only : decomp_2d_register_variable, decomp_2d_init_io
 
     use var, only : numscalar
     
@@ -62,9 +57,11 @@ contains
     integer :: ierror
     character(len=30) :: varname
     integer :: is
+    type(adios2_io) :: io_statistics
     
-    call adios2_declare_io(io_statistics, adios, "statistics-io", ierror)
-
+    call decomp_2d_init_io("statistics-io", adios)
+    call adios2_at_io(io_statistics, adios, "statistics-io", ierror)
+    
     call decomp_2d_register_variable(io_statistics, "umean", 1, 1, mytype)
     call decomp_2d_register_variable(io_statistics, "vmean", 1, 1, mytype)
     call decomp_2d_register_variable(io_statistics, "wmean", 1, 1, mytype)
@@ -183,6 +180,8 @@ contains
     use param, only : iscalar, itime
     use variables, only : numscalar
     use decomp_2d, only : nrank
+    use decomp_2d_io, only : decomp_2d_write_mode, decomp_2d_read_mode, &
+         decomp_2d_open_io, decomp_2d_close_io, decomp_2d_start_io, decomp_2d_end_io
     use var, only : pmean
     use var, only : umean, uumean
     use var, only : vmean, vvmean
@@ -199,10 +198,8 @@ contains
     ! Local variables
     integer :: is
     character(len=30) :: filename
-#ifdef ADIOS2
-    integer :: engine_mode
+    integer :: io_mode
     integer :: ierror
-#endif
     
     if (nrank==0) then
       print *,'==========================================================='
@@ -213,15 +210,13 @@ contains
       endif
     endif
 
-#ifdef ADIOS2
     if (flag_read) then
-       engine_mode = adios2_mode_read
+       io_mode = decomp_2d_write_mode
     else
-       engine_mode = adios2_mode_write
+       io_mode = decomp_2d_read_mode
     endif
-    call adios2_open(engine_statistics, io_statistics, "statistics", engine_mode, ierror)
-    call adios2_begin_step(engine_statistics, ierror)
-#endif
+    call decomp_2d_open_io("statistics-io", "statistics", io_mode, adios)
+    call decomp_2d_start_io("statistics-io", "statistics")
     
     call read_or_write_one_stat(flag_read, gen_statname("pmean"), pmean)
     call read_or_write_one_stat(flag_read, gen_statname("umean"), umean)
@@ -245,10 +240,8 @@ contains
        enddo
     endif
 
-#ifdef ADIOS2
-    call adios2_end_step(engine_statistics, ierror)
-    call adios2_close(engine_statistics, ierror)
-#endif
+    call decomp_2d_end_io("statistics-io", "statistics")
+    call decomp_2d_close_io("statistics-io", "statistics")
     
     if (nrank==0) then
       if (flag_read) then
@@ -267,7 +260,7 @@ contains
   subroutine read_or_write_one_stat(flag_read, filename, array)
 
     use decomp_2d, only : mytype, xstS, xenS
-    use decomp_2d_io, only : decomp_2d_read_one, decomp_2d_write_one
+    use decomp_2d_io, only : decomp_2d_read_one, decomp_2d_write_one, get_engine_ptr
 
     implicit none
 
@@ -275,19 +268,25 @@ contains
     logical, intent(in) :: flag_read
     character(len=*), intent(in) :: filename
     real(mytype), dimension(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)), intent(inout) :: array
+    type(adios2_io) :: io_statistics
+    integer :: ierror
+
+#ifdef ADIOS2
+    call adios2_at_io(io_statistics, adios, "statistics-io", ierror)
+#endif
 
     if (flag_read) then
        ! There was a check for nvisu = 1 before
 #ifndef ADIOS2
        call decomp_2d_read_one(1, array, filename)
 #else
-       call decomp_2d_read_one(1, array, filename, 1, engine_statistics, io_statistics)
+       call decomp_2d_read_one(1, array, filename, 1, get_engine_ptr("statistics-io", "statistics"), io_statistics)
 #endif
    else
 #ifndef ADIOS2
       call decomp_2d_write_one(1, array, filename, 1)
 #else
-      call decomp_2d_write_one(1, array, filename, 1, engine_statistics, io_statistics)
+      call decomp_2d_write_one(1, array, filename, 1, get_engine_ptr("statistics-io", "statistics"), io_statistics)
 #endif
    endif
 
