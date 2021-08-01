@@ -80,6 +80,8 @@ contains
     real(mytype) :: xprobes, yprobes, zprobes
     character(len=30) :: filename
 
+    if (nprobes.le.0) return
+
 #ifdef DEBG
     if (nrank .eq. 0) print *,'# init_probes start'
 #endif
