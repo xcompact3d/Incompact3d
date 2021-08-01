@@ -30,11 +30,6 @@
 !    Methods in Fluids, vol 67 (11), pp 1735-1757
 !################################################################################
 module visu
-
-#ifdef ADIOS2
-  use adios2
-  use decomp_2d_io, only : adios
-#endif
   
   implicit none
 
@@ -51,6 +46,8 @@ module visu
   integer :: ioxdmf
   character(len=9) :: ifilenameformat = '(I3.3)'
   real, save :: tstart, tend
+
+  character(len=*), parameter :: io_name = "solution-io"
 
   private
   public :: output2D, visu_init, visu_finalise, write_snapshot, end_snapshot, write_field
@@ -80,7 +77,6 @@ contains
     integer :: ierror
     character(len=80) :: outfile
     integer :: is
-    type(adios2_io) :: io_handle
 #endif
 
     ! HDD usage of visu module
@@ -114,24 +110,23 @@ contains
       stop
     endif
 
-    call decomp_2d_init_io("solution-io", adios)
-    call adios2_at_io(io_handle, adios, "solution-io", ierror)
+    call decomp_2d_init_io(io_name)
 
     !! Register variables
-    call decomp_2d_register_variable(io_handle, "ux", 1, 0, mytype)
-    call decomp_2d_register_variable(io_handle, "uy", 1, 0, mytype)
-    call decomp_2d_register_variable(io_handle, "uz", 1, 0, mytype)
-    call decomp_2d_register_variable(io_handle, "pp", 1, 0, mytype)
+    call decomp_2d_register_variable(io_name, "ux", 1, 0, mytype)
+    call decomp_2d_register_variable(io_name, "uy", 1, 0, mytype)
+    call decomp_2d_register_variable(io_name, "uz", 1, 0, mytype)
+    call decomp_2d_register_variable(io_name, "pp", 1, 0, mytype)
     if (ilmn) then
-       call decomp_2d_register_variable(io_handle, "rho", 1, 0, mytype)
+       call decomp_2d_register_variable(io_name, "rho", 1, 0, mytype)
     endif
     if (iscalar.ne.0) then
        do is = 1, numscalar
-          call decomp_2d_register_variable(io_handle, "phi"//char(48+is), 1, 0, mytype)
+          call decomp_2d_register_variable(io_name, "phi"//char(48+is), 1, 0, mytype)
        enddo
     endif
     
-    call decomp_2d_open_io("solution-io", "data", decomp_2d_write_mode, adios)
+    call decomp_2d_open_io(io_name, "data", decomp_2d_write_mode)
 
   end subroutine visu_init
 
@@ -144,7 +139,7 @@ contains
     use decomp_2d_io, only : decomp_2d_close_io
     implicit none
 
-    call decomp_2d_close_io("solution-io", "data")
+    call decomp_2d_close_io(io_name, "data")
     
   end subroutine visu_finalise
 
@@ -192,7 +187,7 @@ contains
       call cpu_time(tstart)
       print *,'Writing snapshots =>',itime/ioutput
     end if
-    call decomp_2d_start_io("solution-io", "data")
+    call decomp_2d_start_io(io_name, "data")
 
     ! Snapshot number
 #ifndef ADIOS2
@@ -295,7 +290,7 @@ contains
       endif
     endif
 
-    call decomp_2d_end_io("solution-io", "data")
+    call decomp_2d_end_io(io_name, "data")
 
     ! Update log file
     if (nrank.eq.0) then
@@ -519,7 +514,6 @@ contains
 
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: local_array
 
-    type(adios2_io) :: io_handle
     integer :: ierr
 
     if (use_xdmf) then
@@ -578,8 +572,7 @@ contains
           print *, "Not Implemented: currently ADIOS2 IO doesn't support IBM-blanking"
           call MPI_ABORT(MPI_COMM_WORLD, -1, ierr)
        endif
-       call adios2_at_io(io_handle, adios, "solution-io", ierr)
-       call decomp_2d_write_one(1,f1,filename,0,get_engine_ptr("solution-io", "data"),io_handle)
+       call decomp_2d_write_one(1,f1,filename,0,get_engine_ptr(io_name, "data"),io_name)
 #endif
     else
        call decomp_2d_write_plane(1,local_array,output2D,-1,"./data/"//pathname//'/'//filename//'-'//num//'.bin')

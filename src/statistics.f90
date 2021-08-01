@@ -32,13 +32,10 @@
 
 module stats
 
-#ifdef ADIOS2
-  use adios2
-  use decomp_2d_io, only : adios
-#endif
-
   implicit none
 
+  character(len=*), parameter :: io_statistics = "statistics-io"
+  
   private
   public overall_statistic
 
@@ -57,10 +54,8 @@ contains
     integer :: ierror
     character(len=30) :: varname
     integer :: is
-    type(adios2_io) :: io_statistics
     
-    call decomp_2d_init_io("statistics-io", adios)
-    call adios2_at_io(io_statistics, adios, "statistics-io", ierror)
+    call decomp_2d_init_io(io_statistics)
     
     call decomp_2d_register_variable(io_statistics, "umean", 1, 1, mytype)
     call decomp_2d_register_variable(io_statistics, "vmean", 1, 1, mytype)
@@ -215,8 +210,8 @@ contains
     else
        io_mode = decomp_2d_read_mode
     endif
-    call decomp_2d_open_io("statistics-io", "statistics", io_mode, adios)
-    call decomp_2d_start_io("statistics-io", "statistics")
+    call decomp_2d_open_io(io_statistics, "statistics", io_mode)
+    call decomp_2d_start_io(io_statistics, "statistics")
     
     call read_or_write_one_stat(flag_read, gen_statname("pmean"), pmean)
     call read_or_write_one_stat(flag_read, gen_statname("umean"), umean)
@@ -240,8 +235,8 @@ contains
        enddo
     endif
 
-    call decomp_2d_end_io("statistics-io", "statistics")
-    call decomp_2d_close_io("statistics-io", "statistics")
+    call decomp_2d_end_io(io_statistics, "statistics")
+    call decomp_2d_close_io(io_statistics, "statistics")
     
     if (nrank==0) then
       if (flag_read) then
@@ -268,25 +263,20 @@ contains
     logical, intent(in) :: flag_read
     character(len=*), intent(in) :: filename
     real(mytype), dimension(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)), intent(inout) :: array
-    type(adios2_io) :: io_statistics
     integer :: ierror
-
-#ifdef ADIOS2
-    call adios2_at_io(io_statistics, adios, "statistics-io", ierror)
-#endif
 
     if (flag_read) then
        ! There was a check for nvisu = 1 before
 #ifndef ADIOS2
        call decomp_2d_read_one(1, array, filename)
 #else
-       call decomp_2d_read_one(1, array, filename, 1, get_engine_ptr("statistics-io", "statistics"), io_statistics)
+       call decomp_2d_read_one(1, array, filename, 1, get_engine_ptr(io_statistics, "statistics"), io_statistics)
 #endif
    else
 #ifndef ADIOS2
       call decomp_2d_write_one(1, array, filename, 1)
 #else
-      call decomp_2d_write_one(1, array, filename, 1, get_engine_ptr("statistics-io", "statistics"), io_statistics)
+      call decomp_2d_write_one(1, array, filename, 1, get_engine_ptr(io_statistics, "statistics"), io_statistics)
 #endif
    endif
 

@@ -53,9 +53,6 @@ module decomp_2d_io
        decomp_2d_start_io, decomp_2d_end_io, &
        decomp_2d_write_mode, decomp_2d_read_mode, &
        get_engine_ptr
-#ifdef ADIOS2
-  public :: adios
-#endif
 
   ! Generic interface to handle multiple data types
 
@@ -309,31 +306,33 @@ contains
   end subroutine read_one_complex
 
 #ifdef ADIOS2
-  subroutine adios2_read_one_real(ipencil,var,varname,icoarse,engine,io,opt_decomp)
+  subroutine adios2_read_one_real(ipencil,var,varname,icoarse,engine,io_name,opt_decomp)
 
     implicit none
 
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
     integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
     type(adios2_engine), intent(in) :: engine
-    type(adios2_io), intent(in) :: io
+    character(len=*), intent(in) :: io_name
     character*(*), intent(in) :: varname
     type(decomp_info), intent(in), optional :: opt_decomp
     real(mytype), dimension(:,:,:), intent(out) :: var
     
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     integer :: i,j,k, ierror, newtype, fh
+    type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
     type(decomp_info) :: decomp
 
-    call adios2_inquire_variable(var_handle, io, varname, ierror)
+    call adios2_at_io(io_handle, adios, io_name, ierror)
+    call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
     if (.not.var_handle % valid) then
        if (present(opt_decomp)) then
           decomp = opt_decomp
        else
           call get_decomp_info(decomp)
        endif
-       call decomp_2d_register_variable(io, varname, ipencil, icoarse, kind(var), decomp)
+       call decomp_2d_register_variable(io_name, varname, ipencil, icoarse, kind(var), decomp)
     endif
 
     call adios2_get(engine, var_handle, var, adios2_mode_deferred, ierror)
@@ -968,19 +967,20 @@ contains
     return
   end subroutine mpiio_write_real_coarse
 
-  subroutine decomp_2d_register_variable(io, varname, ipencil, icoarse, type, opt_decomp)
+  subroutine decomp_2d_register_variable(io_name, varname, ipencil, icoarse, type, opt_decomp)
 
     implicit none
 
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
     integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
-    type(adios2_io), intent(in) :: io
+    character(len=*), intent(in) :: io_name
     integer, intent(in) :: type
     type(decomp_info), intent(in), optional :: opt_decomp
     
     character*(*), intent(in) :: varname
-
+#ifdef ADIOS2
     integer, dimension(3) :: sizes, subsizes, starts
+    type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
     integer, parameter :: ndims = 3
     logical, parameter :: adios2_constant_dims = .true.
@@ -994,7 +994,8 @@ contains
     endif
     
     ! Check if variable already exists, if not create it
-    call adios2_inquire_variable(var_handle, io, varname, ierror)
+    call adios2_at_io(io_handle, adios, io_name, ierror)
+    call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
     if (.not.var_handle % valid) then
        !! New variable
        if (nrank .eq. 0) then
@@ -1013,14 +1014,15 @@ contains
           call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
        endif
 
-       call adios2_define_variable(var_handle, io, varname, data_type, &
+       call adios2_define_variable(var_handle, io_handle, varname, data_type, &
             ndims, int(sizes, kind=8), int(starts, kind=8), int(subsizes, kind=8), &
             adios2_constant_dims, ierror)
     endif
+#endif
     
   end subroutine decomp_2d_register_variable
 #ifdef ADIOS2
-  subroutine adios2_write_real_coarse(ipencil,var,varname,icoarse,engine,io,opt_decomp)
+  subroutine adios2_write_real_coarse(ipencil,var,varname,icoarse,engine,io_name,opt_decomp)
 
     ! USE param
     ! USE variables
@@ -1031,23 +1033,25 @@ contains
     integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
     real(mytype), dimension(:,:,:), intent(IN) :: var
     type(adios2_engine), intent(in) :: engine
-    type(adios2_io), intent(in) :: io
+    character(len=*), intent(in) :: io_name
     character*(*), intent(in) :: varname
     type(decomp_info), intent(in), optional :: opt_decomp
     
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     integer :: i,j,k, ierror, newtype, fh
+    type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
     type(decomp_info) :: decomp
 
-    call adios2_inquire_variable(var_handle, io, varname, ierror)
+    call adios2_at_io(io_handle, adios, io_name, ierror)
+    call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
     if (.not.var_handle % valid) then
        if (present(opt_decomp)) then
           decomp = opt_decomp
        else
           call get_decomp_info(decomp)
        endif
-       call decomp_2d_register_variable(io, varname, ipencil, icoarse, kind(var), decomp)
+       call decomp_2d_register_variable(io_name, varname, ipencil, icoarse, kind(var), decomp)
     endif
 
     call adios2_put(engine, var_handle, var, adios2_mode_deferred, ierror)
@@ -1325,12 +1329,11 @@ contains
     return
   end subroutine write_subdomain
 
-  subroutine decomp_2d_init_io(io_name, adios)
+  subroutine decomp_2d_init_io(io_name)
 
     implicit none
 
     character(len=*), intent(in) :: io_name
-    type(adios2_adios), intent(in) :: adios
     integer :: ierror
 #ifdef ADIOS2
     type(adios2_io) :: io
@@ -1346,13 +1349,12 @@ contains
     
   end subroutine decomp_2d_init_io
   
-  subroutine decomp_2d_open_io(io_name, io_dir, mode, adios)
+  subroutine decomp_2d_open_io(io_name, io_dir, mode)
 
     implicit none
 
     character(len=*), intent(in) :: io_name, io_dir
     integer, intent(in) :: mode
-    type(adios2_adios), intent(in) :: adios
 
 #ifdef ADIOS2
     integer :: idx, ierror
