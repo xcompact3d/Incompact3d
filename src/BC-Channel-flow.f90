@@ -43,7 +43,7 @@ module channel
 
   PRIVATE ! All functions/subroutines private by default
   PUBLIC :: init_channel, boundary_conditions_channel, postprocess_channel, &
-            visu_channel, momentum_forcing_channel, &
+            visu_channel, visu_channel_init, momentum_forcing_channel, &
             geomcomplex_channel
 
 contains
@@ -231,6 +231,21 @@ contains
     real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
 
   end subroutine postprocess_channel
+  subroutine visu_channel_init(visu_initialised)
+
+    use decomp_2d, only : mytype
+    use decomp_2d_io, only : decomp_2d_register_variable
+    use visu, only : io_name
+    
+    implicit none
+
+    logical, intent(out) :: visu_initialised
+
+    call decomp_2d_register_variable(io_name, "critq", 1, 0, mytype)
+
+    visu_initialised = .true.
+    
+  end subroutine visu_channel_init
   !############################################################################
   !!
   !!  SUBROUTINE: visu_channel

@@ -230,7 +230,11 @@ subroutine init_xcompact3d()
 
   !####################################################################
   ! initialise visu
-  if (ivisu.ne.0) call visu_init()
+  if (ivisu.ne.0) then
+     call visu_init()
+     call visu_case_init() !! XXX: If you get error about uninitialised IO, look here.
+                           !! Ensures additional case-specific variables declared for IO
+  end if
   ! compute diffusion number of simulation
   call compute_cfldiff()
   !####################################################################

@@ -50,7 +50,7 @@ module visu
   character(len=*), parameter :: io_name = "solution-io"
 
   private
-  public :: output2D, visu_init, visu_finalise, write_snapshot, end_snapshot, write_field
+  public :: output2D, visu_init, visu_finalise, write_snapshot, end_snapshot, write_field, io_name
 
 contains
 
@@ -346,8 +346,8 @@ contains
     if (save_pre.eq.1) then
       uvisu = zero
       call fine_to_coarseV(1,pre1,uvisu)
-      write(filename,"('./data/pre',I4.4)") itime/ioutput
-      call decomp_2d_write_one(1,uvisu,filename,2)
+      write(filename,"('pre',I4.4)") itime/ioutput
+      call decomp_2d_write_one(1,uvisu,"data",filename,2,io_name)
     endif
 
     if (save_prem.eq.1) then
@@ -566,13 +566,13 @@ contains
 #ifndef ADIOS2
        uvisu = zero
        call fine_to_coarseV(1,local_array,uvisu)
-       call decomp_2d_write_one(1,uvisu,"./data/"//pathname//'/'//filename//'-'//num//'.bin',2)
+       call decomp_2d_write_one(1,uvisu,"data",//pathname//'/'//filename//'-'//num//'.bin',2,io_name)
 #else
        if (iibm==2 .and. (.not.present(skip_ibm))) then
           print *, "Not Implemented: currently ADIOS2 IO doesn't support IBM-blanking"
           call MPI_ABORT(MPI_COMM_WORLD, -1, ierr)
        endif
-       call decomp_2d_write_one(1,f1,filename,0,get_engine_ptr(io_name, "data"),io_name)
+       call decomp_2d_write_one(1,f1,"data",filename,0,io_name)
 #endif
     else
        call decomp_2d_write_plane(1,local_array,output2D,-1,"./data/"//pathname//'/'//filename//'-'//num//'.bin')

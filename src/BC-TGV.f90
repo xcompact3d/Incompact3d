@@ -44,7 +44,7 @@ module tgv
   character(len=1),parameter :: NL=char(10) !new line character
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_tgv, boundary_conditions_tgv, postprocess_tgv, visu_tgv
+  PUBLIC :: init_tgv, boundary_conditions_tgv, postprocess_tgv, visu_tgv, visu_tgv_init
 
 contains
 
@@ -440,6 +440,29 @@ contains
 
   end subroutine postprocess_tgv
 
+  !############################################################################
+  !!
+  !!  SUBROUTINE: visu_tgv_init
+  !!      AUTHOR: PB
+  !! DESCRIPTION: Initialises TGV-specific visualisation
+  !!
+  !############################################################################
+  subroutine visu_tgv_init (visu_initialised)
+
+    use decomp_2d, only : mytype
+    use decomp_2d_io, only : decomp_2d_register_variable
+    use visu, only : io_name
+    
+    implicit none
+
+    logical, intent(out) :: visu_initialised
+
+    call decomp_2d_register_variable(io_name, "vort", 1, 0, mytype)
+    call decomp_2d_register_variable(io_name, "critq", 1, 0, mytype)
+
+    visu_initialised = .true.
+    
+  end subroutine visu_tgv_init
   !############################################################################
   !!
   !!  SUBROUTINE: visu_tgv

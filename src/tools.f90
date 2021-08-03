@@ -536,41 +536,41 @@ contains
     call decomp_2d_open_io(io_restart, resfile, decomp_2d_write_mode)
     call decomp_2d_start_io(io_restart, resfile)
 
-    call decomp_2d_write_one(1,ux1,"ux",0,get_engine_ptr(io_restart, resfile),io_restart)
-    call decomp_2d_write_one(1,uy1,"uy",0,get_engine_ptr(io_restart, resfile),io_restart)
-    call decomp_2d_write_one(1,uz1,"uz",0,get_engine_ptr(io_restart, resfile),io_restart)
+    call decomp_2d_write_one(1,ux1,resfile,"ux",0,io_restart)
+    call decomp_2d_write_one(1,uy1,resfile,"uy",0,io_restart)
+    call decomp_2d_write_one(1,uz1,resfile,"uz",0,io_restart)
 
-    call decomp_2d_write_one(3,pp3,"pp",0,get_engine_ptr(io_restart, resfile),io_restart,phG)
+    call decomp_2d_write_one(3,pp3,resfile,"pp",0,io_restart,phG)
 
     do is = 1, numscalar
        write(varname, *) "phi-", is
-       call decomp_2d_write_one(1,phi1(:,:,:,is),varname,0,get_engine_ptr(io_restart, resfile),io_restart)
+       call decomp_2d_write_one(1,phi1(:,:,:,is),resfile,varname,0,io_restart)
     end do
 
     if ((itimescheme.eq.2) .or. (itimescheme.eq.3)) then
-       call decomp_2d_write_one(1,dux1(:,:,:,2),"dux-2",0,get_engine_ptr(io_restart, resfile),io_restart)
-       call decomp_2d_write_one(1,duy1(:,:,:,2),"duy-2",0,get_engine_ptr(io_restart, resfile),io_restart)
-       call decomp_2d_write_one(1,duz1(:,:,:,2),"duz-2",0,get_engine_ptr(io_restart, resfile),io_restart)
+       call decomp_2d_write_one(1,dux1(:,:,:,2),resfile,"dux-2",0,io_restart)
+       call decomp_2d_write_one(1,duy1(:,:,:,2),resfile,"duy-2",0,io_restart)
+       call decomp_2d_write_one(1,duz1(:,:,:,2),resfile,"duz-2",0,io_restart)
 
        do is = 1, numscalar
           write(varname, *) "dphi-", is, "-2"
-          call decomp_2d_write_one(1,dphi1(:,:,:,2,is),varname,0,get_engine_ptr(io_restart, resfile),io_restart)
+          call decomp_2d_write_one(1,dphi1(:,:,:,2,is),resfile,varname,0,io_restart)
        end do
 
        if (itimescheme.eq.3) then
-          call decomp_2d_write_one(1,dux1(:,:,:,3),"dux-3",0,get_engine_ptr(io_restart, resfile),io_restart)
-          call decomp_2d_write_one(1,duy1(:,:,:,3),"duy-3",0,get_engine_ptr(io_restart, resfile),io_restart)
-          call decomp_2d_write_one(1,duz1(:,:,:,3),"duz-3",0,get_engine_ptr(io_restart, resfile),io_restart)
+          call decomp_2d_write_one(1,dux1(:,:,:,3),resfile,"dux-3",0,io_restart)
+          call decomp_2d_write_one(1,duy1(:,:,:,3),resfile,"duy-3",0,io_restart)
+          call decomp_2d_write_one(1,duz1(:,:,:,3),resfile,"duz-3",0,io_restart)
 
           do is = 1, numscalar
              write(varname, *) "dphi-", is, "-3"
-             call decomp_2d_write_one(1,dphi1(:,:,:,3,is),varname,0,get_engine_ptr(io_restart, resfile),io_restart)
+             call decomp_2d_write_one(1,dphi1(:,:,:,3,is),resfile,varname,0,io_restart)
           end do
        endif
     endif
 
     if (iibm .ne. 0) then
-       call decomp_2d_write_one(1,ep1,"ep",0,get_engine_ptr(io_restart, resfile),io_restart)
+       call decomp_2d_write_one(1,ep1,resfile,"ep",0,io_restart)
     endif
 
     call decomp_2d_end_io(io_restart, resfile)
@@ -610,41 +610,41 @@ contains
     call decomp_2d_open_io(io_restart, resfile, decomp_2d_read_mode)
     call decomp_2d_start_io(io_restart, resfile)
 
-    call decomp_2d_read_one(1,ux1,"ux",0,get_engine_ptr(io_restart, resfile),io_restart)
-    call decomp_2d_read_one(1,uy1,"uy",0,get_engine_ptr(io_restart, resfile),io_restart)
-    call decomp_2d_read_one(1,uz1,"uz",0,get_engine_ptr(io_restart, resfile),io_restart)
+    call decomp_2d_read_one(1,ux1,resfile,"ux",0,io_restart)
+    call decomp_2d_read_one(1,uy1,resfile,"uy",0,io_restart)
+    call decomp_2d_read_one(1,uz1,resfile,"uz",0,io_restart)
 
-    call decomp_2d_read_one(3,pp3,"pp",0,get_engine_ptr(io_restart, resfile),io_restart,phG)
+    call decomp_2d_read_one(3,pp3,resfile,"pp",0,io_restart,phG)
 
     do is = 1, numscalar
        write(varname, *) "phi-", is
-       call decomp_2d_read_one(1,phi1(:,:,:,is),varname,0,get_engine_ptr(io_restart, resfile),io_restart)
+       call decomp_2d_read_one(1,phi1(:,:,:,is),resfile,varname,0,io_restart)
     end do
 
     if ((itimescheme.eq.2) .or. (itimescheme.eq.3)) then
-       call decomp_2d_read_one(1,dux1(:,:,:,2),"dux-2",0,get_engine_ptr(io_restart, resfile),io_restart)
-       call decomp_2d_read_one(1,duy1(:,:,:,2),"duy-2",0,get_engine_ptr(io_restart, resfile),io_restart)
-       call decomp_2d_read_one(1,duz1(:,:,:,2),"duz-2",0,get_engine_ptr(io_restart, resfile),io_restart)
+       call decomp_2d_read_one(1,dux1(:,:,:,2),resfile,"dux-2",0,io_restart)
+       call decomp_2d_read_one(1,duy1(:,:,:,2),resfile,"duy-2",0,io_restart)
+       call decomp_2d_read_one(1,duz1(:,:,:,2),resfile,"duz-2",0,io_restart)
 
        do is = 1, numscalar
           write(varname, *) "dphi-", is, "-2"
-          call decomp_2d_read_one(1,dphi1(:,:,:,2,is),varname,0,get_engine_ptr(io_restart, resfile),io_restart)
+          call decomp_2d_read_one(1,dphi1(:,:,:,2,is),resfile,varname,0,io_restart)
        end do
 
        if (itimescheme.eq.3) then
-          call decomp_2d_read_one(1,dux1(:,:,:,3),"dux-3",0,get_engine_ptr(io_restart, resfile),io_restart)
-          call decomp_2d_read_one(1,duy1(:,:,:,3),"duy-3",0,get_engine_ptr(io_restart, resfile),io_restart)
-          call decomp_2d_read_one(1,duz1(:,:,:,3),"duz-3",0,get_engine_ptr(io_restart, resfile),io_restart)
+          call decomp_2d_read_one(1,dux1(:,:,:,3),resfile,"dux-3",0,io_restart)
+          call decomp_2d_read_one(1,duy1(:,:,:,3),resfile,"duy-3",0,io_restart)
+          call decomp_2d_read_one(1,duz1(:,:,:,3),resfile,"duz-3",0,io_restart)
 
           do is = 1, numscalar
              write(varname, *) "dphi-", is, "-3"
-             call decomp_2d_read_one(1,dphi1(:,:,:,3,is),varname,0,get_engine_ptr(io_restart, resfile),io_restart)
+             call decomp_2d_read_one(1,dphi1(:,:,:,3,is),resfile,varname,0,io_restart)
           end do
        endif
     endif
 
     if (iibm .ne. 0) then
-       call decomp_2d_read_one(1,ep1,"ep",0,get_engine_ptr(io_restart, resfile),io_restart)
+       call decomp_2d_read_one(1,ep1,resfile,"ep",0,io_restart)
     endif
 
     call decomp_2d_end_io(io_restart, resfile)

@@ -65,6 +65,9 @@ module lockexch
 
   logical, save :: init = .FALSE.
 
+  character(len=*), parameter :: io_bcle = "BC-lock-exchange-io", &
+       bcle_dir = "data-lock-exchange"
+  
   private
   public :: init_lockexch, boundary_conditions_lockexch, postprocess_lockexch, &
        pfront, set_fluid_properties_lockexch
@@ -583,8 +586,8 @@ contains
        !if (save_diss.eq.1) then
        uvisu=zero
        call fine_to_coarseV(1,diss1,uvisu)
-       write(filename,"('./data/diss',I4.4)") itime/ioutput
-       call decomp_2d_write_one(1,uvisu,filename,2)
+       write(filename,"('diss',I4.4)") itime/ioutput
+       call decomp_2d_write_one(1,uvisu,bcle_dir,filename,2,io_bcle)
        !endif
 
        !if (save_dissm.eq.1) then

@@ -34,7 +34,8 @@ module stats
 
   implicit none
 
-  character(len=*), parameter :: io_statistics = "statistics-io"
+  character(len=*), parameter :: io_statistics = "statistics-io", &
+       stat_dir = "statistics"
   
   private
   public overall_statistic
@@ -270,14 +271,10 @@ contains
 #ifndef ADIOS2
        call decomp_2d_read_one(1, array, filename)
 #else
-       call decomp_2d_read_one(1, array, filename, 1, get_engine_ptr(io_statistics, "statistics"), io_statistics)
+       call decomp_2d_read_one(1, array, stat_dir, filename, 1, io_statistics)
 #endif
    else
-#ifndef ADIOS2
-      call decomp_2d_write_one(1, array, filename, 1)
-#else
-      call decomp_2d_write_one(1, array, filename, 1, get_engine_ptr(io_statistics, "statistics"), io_statistics)
-#endif
+      call decomp_2d_write_one(1, array, stat_dir, filename, 1, io_statistics)
    endif
 
   end subroutine read_or_write_one_stat

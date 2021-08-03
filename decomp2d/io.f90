@@ -61,9 +61,6 @@ module decomp_2d_io
      module procedure write_one_complex
      module procedure mpiio_write_real_coarse
      module procedure mpiio_write_real_probe
-#ifdef ADIOS2
-     module procedure adios2_write_real_coarse
-#endif
   end interface decomp_2d_write_one
 
   interface decomp_2d_read_one
@@ -306,13 +303,13 @@ contains
   end subroutine read_one_complex
 
 #ifdef ADIOS2
-  subroutine adios2_read_one_real(ipencil,var,varname,icoarse,engine,io_name,opt_decomp)
+  subroutine adios2_read_one_real(ipencil,var,engine_name,varname,icoarse,io_name,opt_decomp)
 
     implicit none
 
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
     integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
-    type(adios2_engine), intent(in) :: engine
+    character(len=*), intent(in) :: engine_name
     character(len=*), intent(in) :: io_name
     character*(*), intent(in) :: varname
     type(decomp_info), intent(in), optional :: opt_decomp
@@ -323,6 +320,7 @@ contains
     type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
     type(decomp_info) :: decomp
+    integer :: idx
 
     call adios2_at_io(io_handle, adios, io_name, ierror)
     call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
@@ -335,7 +333,8 @@ contains
        call decomp_2d_register_variable(io_name, varname, ipencil, icoarse, kind(var), decomp)
     endif
 
-    call adios2_get(engine, var_handle, var, adios2_mode_deferred, ierror)
+    idx = get_engine_idx(io_name, engine_name)
+    call adios2_get(engine_registry(idx), var_handle, var, adios2_mode_deferred, ierror)
 
     return
     
@@ -924,7 +923,7 @@ contains
     
   end subroutine coarse_extents
 
-  subroutine mpiio_write_real_coarse(ipencil,var,filename,icoarse)
+  subroutine mpiio_write_real_coarse(ipencil,var,dirname,varname,icoarse,io_name,opt_decomp)
 
     ! USE param
     ! USE variables
@@ -935,12 +934,21 @@ contains
     integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
     real(mytype), dimension(:,:,:), intent(IN) :: var
     real(mytype_single), allocatable, dimension(:,:,:) :: varsingle
-    character(len=*) :: filename
+    character(len=*), intent(in) :: dirname, varname, io_name
+    type(decomp_info), intent(in), optional :: opt_decomp
 
+    type(decomp_info) :: decomp
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
     integer :: i,j,k, ierror, newtype, fh
+#ifdef ADIOS2
+    type(adios2_io) :: io_handle
+    type(adios2_variable) :: var_handle
+    integer :: idx
+#endif
 
+#ifndef ADIOS2
+    !! Use original MPIIO writers
     call coarse_extents(ipencil, icoarse, sizes, subsizes, starts)
     allocate (varsingle(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
     varsingle=real(var, mytype_single)
@@ -948,7 +956,7 @@ contains
     call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
          MPI_ORDER_FORTRAN, real_type_single, newtype, ierror)
     call MPI_TYPE_COMMIT(newtype,ierror)
-    call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
+    call MPI_FILE_OPEN(MPI_COMM_WORLD, dirname//"/"//varname, &
          MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
          fh, ierror)
     filesize = 0_MPI_OFFSET_KIND
@@ -961,8 +969,22 @@ contains
          real_type_single, MPI_STATUS_IGNORE, ierror)
     call MPI_FILE_CLOSE(fh,ierror)
     call MPI_TYPE_FREE(newtype,ierror)
-
     deallocate(varsingle)
+#else
+    call adios2_at_io(io_handle, adios, io_name, ierror)
+    call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
+    if (.not.var_handle % valid) then
+       if (present(opt_decomp)) then
+          decomp = opt_decomp
+       else
+          call get_decomp_info(decomp)
+       endif
+       call decomp_2d_register_variable(io_name, varname, ipencil, icoarse, kind(var), decomp)
+    endif
+
+    idx = get_engine_idx(io_name, dirname)
+    call adios2_put(engine_registry(idx), var_handle, var, adios2_mode_deferred, ierror)
+#endif
 
     return
   end subroutine mpiio_write_real_coarse
@@ -1021,44 +1043,6 @@ contains
 #endif
     
   end subroutine decomp_2d_register_variable
-#ifdef ADIOS2
-  subroutine adios2_write_real_coarse(ipencil,var,varname,icoarse,engine,io_name,opt_decomp)
-
-    ! USE param
-    ! USE variables
-
-    implicit none
-
-    integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
-    integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
-    real(mytype), dimension(:,:,:), intent(IN) :: var
-    type(adios2_engine), intent(in) :: engine
-    character(len=*), intent(in) :: io_name
-    character*(*), intent(in) :: varname
-    type(decomp_info), intent(in), optional :: opt_decomp
-    
-    integer (kind=MPI_OFFSET_KIND) :: filesize, disp
-    integer :: i,j,k, ierror, newtype, fh
-    type(adios2_io) :: io_handle
-    type(adios2_variable) :: var_handle
-    type(decomp_info) :: decomp
-
-    call adios2_at_io(io_handle, adios, io_name, ierror)
-    call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
-    if (.not.var_handle % valid) then
-       if (present(opt_decomp)) then
-          decomp = opt_decomp
-       else
-          call get_decomp_info(decomp)
-       endif
-       call decomp_2d_register_variable(io_name, varname, ipencil, icoarse, kind(var), decomp)
-    endif
-
-    call adios2_put(engine, var_handle, var, adios2_mode_deferred, ierror)
-
-    return
-  end subroutine adios2_write_real_coarse
-#endif
   
   subroutine mpiio_write_real_probe(ipencil,var,filename,nlength)
 
