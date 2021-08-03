@@ -35,7 +35,7 @@ module stats
   implicit none
 
   ! Experimental
-  ! .false. requires nstat=1 and xenS(1)=xstS(1)
+  ! .false. requires nstat=1
   logical, parameter :: flag_3D_IO = .false.
 
   private
@@ -208,18 +208,25 @@ contains
     character(len=*), intent(in) :: filename
     real(mytype), dimension(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)), intent(inout) :: array
 
+    ! Local variables
+    integer :: i
+    real(mytype), dimension(1,xstS(2):xenS(2),xstS(3):xenS(3)) :: plane
+
     if (flag_read) then
       if (flag_3D_IO) then
         ! There was a check for nvisu = 1 before
         call decomp_2d_read_one(1, array, filename)
       else
-        call decomp_2d_read_plane(1, array, filename)
+        call decomp_2d_read_plane(1, plane, filename)
+        do i = xstS(1), xenS(1)
+           array(i,:,:) = plane(1,:,:)
+        enddo
       endif
     else
       if (flag_3D_IO) then
         call decomp_2d_write_one(1, array, filename, 1)
       else
-        call decomp_2d_write_plane(1, array, 1, 1, filename)
+        call decomp_2d_write_plane(1, array, 1, 0, filename)
       endif
     endif
 
@@ -348,11 +355,7 @@ contains
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux, ep
 
     di1 = one_minus_ep1(ux, ep)
-    if (flag_3D_IO) then
-      call fine_to_coarseS(1, di1, tmean)
-    else
-      tmean(xstS(1),:,:) = sum(di1(:,:,:), dim=1)/real(xsize(1),kind=mytype)
-    endif
+    call fine_to_coarseS(1, di1, tmean)
     um = um + (tmean - um) / real(itime-initstat+1, kind=mytype)
 
   end subroutine update_average_scalar

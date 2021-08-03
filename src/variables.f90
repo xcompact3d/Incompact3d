@@ -245,8 +245,6 @@ contains
 
     !arrays statistics
     if (ilast.ge.initstat) then
-      ! Experimental when flag_3D_IO is .false. (requires nstat=1)
-      !xenS(1) = xstS(1)
       allocate (umean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
       allocate (vmean, mold=umean)
       allocate (wmean, mold=umean)
