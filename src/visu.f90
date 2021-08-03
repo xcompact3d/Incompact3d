@@ -498,8 +498,6 @@ contains
     use var, only : zero, one
 #ifndef ADIOS2
     use var, only : uvisu
-#else
-    use decomp_2d_io, only : get_engine_ptr
 #endif
     use param, only : iibm
     use decomp_2d, only : mytype, xsize, xszV, yszV, zszV

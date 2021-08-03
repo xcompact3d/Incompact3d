@@ -35,7 +35,7 @@ module decomp_2d_io
   character(len=*), parameter :: io_sep = "::"
   character(len=80), dimension(MAX_ENGINES), save :: engine_names
   logical, dimension(MAX_ENGINES), save :: engine_live
-  type(adios2_engine), target, dimension(MAX_ENGINES), save :: engine_registry
+  type(adios2_engine), dimension(MAX_ENGINES), save :: engine_registry
 #endif
   
   private        ! Make everything private unless declared public
@@ -51,8 +51,7 @@ module decomp_2d_io
        decomp_2d_register_variable, &
        decomp_2d_open_io, decomp_2d_close_io, &
        decomp_2d_start_io, decomp_2d_end_io, &
-       decomp_2d_write_mode, decomp_2d_read_mode, &
-       get_engine_ptr
+       decomp_2d_write_mode, decomp_2d_read_mode
 
   ! Generic interface to handle multiple data types
 
@@ -1477,25 +1476,6 @@ contains
     get_engine_idx = idx
     
   end function get_engine_idx
-  function get_engine_ptr(io_name, engine_name) result(engine_ptr)
-
-    implicit none
-
-    character(len=*), intent(in) :: io_name
-    character(len=*), intent(in) :: engine_name
-    type(adios2_engine), pointer :: engine_ptr
-
-    integer :: idx
-    
-    idx = get_engine_idx(io_name, engine_name)
-    if (idx .lt. 1) then
-       print *, "Error: trying to access non-existant engine: ", io_name, "::", engine_name
-       stop
-    endif
-    
-    engine_ptr => engine_registry(idx)
-    
-  end function get_engine_ptr
 #endif
 
 end module decomp_2d_io

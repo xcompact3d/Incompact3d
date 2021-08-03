@@ -510,8 +510,7 @@ contains
 
     use decomp_2d, only : mytype, xsize, phG
     use decomp_2d_io, only : decomp_2d_write_one, decomp_2d_write_mode, &
-         decomp_2d_open_io, decomp_2d_start_io, decomp_2d_end_io, decomp_2d_close_io, &
-         get_engine_ptr
+         decomp_2d_open_io, decomp_2d_start_io, decomp_2d_end_io, decomp_2d_close_io
     use variables, only : numscalar
     use param, only : ntime
     use var, only : itimescheme, iibm
@@ -582,8 +581,7 @@ contains
 
     use decomp_2d, only : mytype, xsize, phG
     use decomp_2d_io, only : decomp_2d_read_one, decomp_2d_read_mode, &
-         decomp_2d_open_io, decomp_2d_start_io, decomp_2d_end_io, decomp_2d_close_io, &
-         get_engine_ptr
+         decomp_2d_open_io, decomp_2d_start_io, decomp_2d_end_io, decomp_2d_close_io
     use variables, only : numscalar
     use param, only : ntime
     use var, only : itimescheme, iibm

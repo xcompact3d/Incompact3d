@@ -256,7 +256,7 @@ contains
   subroutine read_or_write_one_stat(flag_read, filename, array)
 
     use decomp_2d, only : mytype, xstS, xenS
-    use decomp_2d_io, only : decomp_2d_read_one, decomp_2d_write_one, get_engine_ptr
+    use decomp_2d_io, only : decomp_2d_read_one, decomp_2d_write_one
 
     implicit none
 
