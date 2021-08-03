@@ -539,7 +539,7 @@ contains
     call decomp_2d_write_one(1,uy1,resfile,"uy",0,io_restart)
     call decomp_2d_write_one(1,uz1,resfile,"uz",0,io_restart)
 
-    call decomp_2d_write_one(3,pp3,resfile,"pp",0,io_restart,phG)
+    call decomp_2d_write_one(3,pp3,resfile,"pp",0,io_restart)
 
     do is = 1, numscalar
        write(varname, *) "phi-", is
@@ -578,7 +578,7 @@ contains
   end subroutine write_restart_adios2
   
   subroutine read_restart_adios2(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1)
-
+    
     use decomp_2d, only : mytype, xsize, phG
     use decomp_2d_io, only : decomp_2d_read_one, decomp_2d_read_mode, &
          decomp_2d_open_io, decomp_2d_start_io, decomp_2d_end_io, decomp_2d_close_io
@@ -612,7 +612,7 @@ contains
     call decomp_2d_read_one(1,uy1,resfile,"uy",0,io_restart)
     call decomp_2d_read_one(1,uz1,resfile,"uz",0,io_restart)
 
-    call decomp_2d_read_one(3,pp3,resfile,"pp",0,io_restart,phG)
+    call decomp_2d_read_one(3,pp3,resfile,"pp",0,io_restart)
 
     do is = 1, numscalar
        write(varname, *) "phi-", is

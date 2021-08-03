@@ -302,7 +302,7 @@ contains
   end subroutine read_one_complex
 
 #ifdef ADIOS2
-  subroutine adios2_read_one_real(ipencil,var,engine_name,varname,icoarse,io_name,opt_decomp)
+  subroutine adios2_read_one_real(ipencil,var,engine_name,varname,icoarse,io_name)
 
     implicit none
 
@@ -311,25 +311,19 @@ contains
     character(len=*), intent(in) :: engine_name
     character(len=*), intent(in) :: io_name
     character*(*), intent(in) :: varname
-    type(decomp_info), intent(in), optional :: opt_decomp
     real(mytype), dimension(:,:,:), intent(out) :: var
     
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     integer :: i,j,k, ierror, newtype, fh
     type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
-    type(decomp_info) :: decomp
     integer :: idx
 
     call adios2_at_io(io_handle, adios, io_name, ierror)
     call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
     if (.not.var_handle % valid) then
-       if (present(opt_decomp)) then
-          decomp = opt_decomp
-       else
-          call get_decomp_info(decomp)
-       endif
-       call decomp_2d_register_variable(io_name, varname, ipencil, icoarse, kind(var), decomp)
+       print *, "ERROR: trying to read variable without registering first! ", varname
+       stop
     endif
 
     idx = get_engine_idx(io_name, engine_name)
@@ -922,7 +916,7 @@ contains
     
   end subroutine coarse_extents
 
-  subroutine mpiio_write_real_coarse(ipencil,var,dirname,varname,icoarse,io_name,opt_decomp)
+  subroutine mpiio_write_real_coarse(ipencil,var,dirname,varname,icoarse,io_name)
 
     ! USE param
     ! USE variables
@@ -934,9 +928,7 @@ contains
     real(mytype), dimension(:,:,:), intent(IN) :: var
     real(mytype_single), allocatable, dimension(:,:,:) :: varsingle
     character(len=*), intent(in) :: dirname, varname, io_name
-    type(decomp_info), intent(in), optional :: opt_decomp
 
-    type(decomp_info) :: decomp
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
     integer :: i,j,k, ierror, newtype, fh
@@ -973,12 +965,8 @@ contains
     call adios2_at_io(io_handle, adios, io_name, ierror)
     call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
     if (.not.var_handle % valid) then
-       if (present(opt_decomp)) then
-          decomp = opt_decomp
-       else
-          call get_decomp_info(decomp)
-       endif
-       call decomp_2d_register_variable(io_name, varname, ipencil, icoarse, kind(var), decomp)
+       print *, "ERROR: trying to write variable before registering!", varname
+       stop
     endif
 
     idx = get_engine_idx(io_name, dirname)
