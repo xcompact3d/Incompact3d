@@ -505,6 +505,9 @@ module param
   real(mytype),parameter :: twopi=two*acos(-one)
 #endif
 
+  ! Integer used to identify signals
+  integer catching_signal
+
 end module param
 !############################################################################
 !############################################################################

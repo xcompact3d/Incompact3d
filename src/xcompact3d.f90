@@ -35,6 +35,7 @@ program xcompact3d
   use var
   use case
 
+  use param, only : catching_signal
   use transeq, only : calculate_transeq_rhs
   use time_integrators, only : int_time
   use navier, only : velocity_to_momentum, momentum_to_velocity, pre_correc, &
@@ -108,8 +109,7 @@ program xcompact3d
 
      call postprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
 
-     ! This is needed if ilast is modified during the simulation ?
-     if (itime.ge.ilast) exit
+     if (catching_signal.ne.0) call catch_signal()
 
   enddo !! End time loop
 
@@ -133,7 +133,7 @@ subroutine init_xcompact3d()
                     restart, simu_stats, compute_cfldiff
 
   use param, only : ilesmod, jles,itype
-  use param, only : irestart
+  use param, only : irestart, catching_signal
 
   use variables, only : nx, ny, nz, nxm, nym, nzm
   use variables, only : p_row, p_col
@@ -171,6 +171,7 @@ subroutine init_xcompact3d()
   ! Install signal handler
   call signal(SIGUSR1, catch_sigusr1)
   call signal(SIGUSR2, catch_sigusr2)
+  catching_signal = 0
 
   ! Handle input file like a boss -- GD
   nargin=command_argument_count()
@@ -332,42 +333,59 @@ endsubroutine finalise_xcompact3d
 !########################################################################
 subroutine catch_sigusr1
 
-  use MPI
-  use decomp_2d, only : decomp_2d_abort
-  use param, only : itime, ilast
+  use decomp_2d, only : nrank
+  use param, only : catching_signal
 
   implicit none
 
-  integer :: code
-
-  ! Stop at the end of the next iteration
-  ilast = itime + 1
-  call MPI_ALLREDUCE(MPI_IN_PLACE, ilast, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD, code)
-  if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
-
-  return
+  if (nrank.eq.0) print *, "Catching SIGUSR1"
+  catching_signal = 1
 
 end subroutine catch_sigusr1
-!########################################################################
-!########################################################################
+#
 subroutine catch_sigusr2
+
+  use decomp_2d, only : nrank
+  use param, only : catching_signal
+
+  implicit none
+
+  if (nrank.eq.0) print *, "Catching SIGUSR2"
+  catching_signal = 2
+
+end subroutine catch_sigusr2
+#
+subroutine catch_signal
 
   use MPI
   use decomp_2d, only : decomp_2d_abort
-  use param, only : itime, ilast, icheckpoint
+  use param, only : catching_signal, itime, ilast, icheckpoint
 
   implicit none
 
   integer :: code
 
-  ! Stop at the end of the next iteration
-  ilast = itime + 1
-  call MPI_ALLREDUCE(MPI_IN_PLACE, ilast, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD, code)
-  if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+  if (catching_signal.eq.1) then
 
-  ! Write checkpoint at the end of the next iteration
-  icheckpoint = ilast
+    ! Stop at the end of the next iteration
+    ilast = itime + 1
+    call MPI_ALLREDUCE(MPI_IN_PLACE, ilast, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD, code)
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
-  return
+    return
 
-end subroutine catch_sigusr2
+  elseif (catching_signal.eq.2) then
+
+    ! Stop at the end of the next iteration
+    ilast = itime + 1
+    call MPI_ALLREDUCE(MPI_IN_PLACE, ilast, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD, code)
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+
+    ! Write checkpoint at the end of the next iteration
+    icheckpoint = ilast
+
+    return
+
+  endif
+
+end subroutine catch_signal
