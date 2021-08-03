@@ -19,6 +19,7 @@ FFT = generic# generic,fftw3,mkl
 ifeq ($(CMP),intel)
 CC = mpiicc
 FC = mpiifort
+CFLAGS = -ipo
 #FFLAGS = -fpp -O3 -xHost -heap-arrays -shared-intel -mcmodel=large -safe-cray-ptr -g -traceback
 FFLAGS = -fpp -O3 -xSSE4.2 -axAVX,CORE-AVX-I,CORE-AVX2 -ipo -fp-model fast=2 -mcmodel=large -safe-cray-ptr -I$(MPI_ROOT)/lib
 ##debuggin test: -check all -check bounds -chintel eck uninit -gen-interfaces -warn interfaces
@@ -109,7 +110,7 @@ $(OBJ):$(SRCDIR)%.o : $(SRCDIR)%.f90
 	mv $(@F) ${SRCDIR}
 
 $(OBJSIG):$(SRCDIR)%.o : $(SRCDIR)%.c
-	$(CC) $(DEFS) $(DEFS2) -c $<
+	$(CC) $(CFLAGS) $(DEFS) $(DEFS2) -c $<
 	mv $(@F) ${SRCDIR}
 
 #
