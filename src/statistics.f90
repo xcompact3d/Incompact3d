@@ -207,9 +207,9 @@ contains
     endif
 
     if (flag_read) then
-       io_mode = decomp_2d_write_mode
-    else
        io_mode = decomp_2d_read_mode
+    else
+       io_mode = decomp_2d_write_mode
     endif
     call decomp_2d_open_io(io_statistics, "statistics", io_mode)
     call decomp_2d_start_io(io_statistics, "statistics")
