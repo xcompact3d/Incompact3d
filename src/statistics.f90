@@ -55,29 +55,34 @@ contains
     integer :: ierror
     character(len=30) :: varname
     integer :: is
-    
-    call decomp_2d_init_io(io_statistics)
-    
-    call decomp_2d_register_variable(io_statistics, "umean", 1, 1, mytype)
-    call decomp_2d_register_variable(io_statistics, "vmean", 1, 1, mytype)
-    call decomp_2d_register_variable(io_statistics, "wmean", 1, 1, mytype)
-    
-    call decomp_2d_register_variable(io_statistics, "pmean", 1, 1, mytype)
+    logical, save :: initialised = .false.
 
-    call decomp_2d_register_variable(io_statistics, "uumean", 1, 1, mytype)
-    call decomp_2d_register_variable(io_statistics, "vvmean", 1, 1, mytype)
-    call decomp_2d_register_variable(io_statistics, "wwmean", 1, 1, mytype)
+    if (.not. initialised) then
+       call decomp_2d_init_io(io_statistics)
+    
+       call decomp_2d_register_variable(io_statistics, "umean", 1, 1, mytype)
+       call decomp_2d_register_variable(io_statistics, "vmean", 1, 1, mytype)
+       call decomp_2d_register_variable(io_statistics, "wmean", 1, 1, mytype)
+       
+       call decomp_2d_register_variable(io_statistics, "pmean", 1, 1, mytype)
+       
+       call decomp_2d_register_variable(io_statistics, "uumean", 1, 1, mytype)
+       call decomp_2d_register_variable(io_statistics, "vvmean", 1, 1, mytype)
+       call decomp_2d_register_variable(io_statistics, "wwmean", 1, 1, mytype)
 
-    call decomp_2d_register_variable(io_statistics, "uvmean", 1, 1, mytype)
-    call decomp_2d_register_variable(io_statistics, "uwmean", 1, 1, mytype)
-    call decomp_2d_register_variable(io_statistics, "vwmean", 1, 1, mytype)
+       call decomp_2d_register_variable(io_statistics, "uvmean", 1, 1, mytype)
+       call decomp_2d_register_variable(io_statistics, "uwmean", 1, 1, mytype)
+       call decomp_2d_register_variable(io_statistics, "vwmean", 1, 1, mytype)
 
-    do is=1, numscalar
-       write(varname,"('phi',I2.2)") is
-       call decomp_2d_register_variable(io_statistics, varname, 1, 1, mytype)
-       write(varname,"('phiphi',I2.2)") is
-       call decomp_2d_register_variable(io_statistics, varname, 1, 1, mytype)
-    enddo
+       do is=1, numscalar
+          write(varname,"('phi',I2.2)") is
+          call decomp_2d_register_variable(io_statistics, varname, 1, 1, mytype)
+          write(varname,"('phiphi',I2.2)") is
+          call decomp_2d_register_variable(io_statistics, varname, 1, 1, mytype)
+       enddo
+
+       initialised = .true.
+    endif
        
   end subroutine init_statistic_adios2
 #endif
@@ -211,8 +216,8 @@ contains
     else
        io_mode = decomp_2d_write_mode
     endif
-    call decomp_2d_open_io(io_statistics, "statistics", io_mode)
-    call decomp_2d_start_io(io_statistics, "statistics")
+    call decomp_2d_open_io(io_statistics, stat_dir, io_mode)
+    call decomp_2d_start_io(io_statistics, stat_dir)
     
     call read_or_write_one_stat(flag_read, gen_statname("pmean"), pmean)
     call read_or_write_one_stat(flag_read, gen_statname("umean"), umean)
@@ -229,15 +234,14 @@ contains
 
     if (iscalar==1) then
        do is=1, numscalar
-          write(filename,"('phi',I2.2)") is
           call read_or_write_one_stat(flag_read, gen_statname(filename), phimean(:,:,:,is))
           write(filename,"('phiphi',I2.2)") is
           call read_or_write_one_stat(flag_read, gen_statname(filename), phiphimean(:,:,:,is))
        enddo
     endif
 
-    call decomp_2d_end_io(io_statistics, "statistics")
-    call decomp_2d_close_io(io_statistics, "statistics")
+    call decomp_2d_end_io(io_statistics, stat_dir)
+    call decomp_2d_close_io(io_statistics, stat_dir)
     
     if (nrank==0) then
       if (flag_read) then
@@ -320,7 +324,7 @@ contains
     elseif (itime.eq.initstat) then
        call init_statistic()
     elseif (itime.eq.ifirst) then
-        call restart_statistic()
+       call restart_statistic()
     endif
 
     !! Mean pressure

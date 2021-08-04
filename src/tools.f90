@@ -33,12 +33,10 @@ module tools
 
   implicit none
 
-#ifdef ADIOS2
   logical, save :: adios2_restart_initialised = .false.
 
   character(len=*), parameter :: io_restart = "restart-io"
   character(len=*), parameter :: resfile = "checkpoint"
-#endif
 
   private
 
