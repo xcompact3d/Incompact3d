@@ -197,17 +197,25 @@ contains
     logical, intent(in) :: flag_read
 
     ! Local variables
-    integer :: is
+    integer :: is, it
     character(len=30) :: filename
     integer :: io_mode
     integer :: ierror
     
+
+    ! File ID to read or write
+    if (flag_read) then
+        it = itime - 1
+    else
+        it = itime
+    endif
+
     if (nrank==0) then
       print *,'==========================================================='
       if (flag_read) then
-        print *,'Reading stat file', itime
+        print *,'Reading stat file', it
       else
-        print *,'Writing stat file', itime
+        print *,'Writing stat file', it
       endif
     endif
 
