@@ -75,7 +75,7 @@ else ifeq ($(FFT),generic)
 else ifeq ($(FFT),mkl)
   SRCDECOMP := $(DECOMPDIR)/mkl_dfti.f90 $(SRCDECOMP)
   LIBFFT=-Wl,--start-group $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a $(MKLROOT)/lib/intel64/libmkl_sequential.a $(MKLROOT)/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread
-	INC=-I$(MKLROOT)/include
+  INC=-I$(MKLROOT)/include
 endif
 
 #######OPTIONS settings###########
