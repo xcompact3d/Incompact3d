@@ -73,11 +73,7 @@ contains
     integer :: noutput, nsnapout
     real(mytype) :: memout
 
-#ifdef ADIOS2
-    integer :: ierror
-    character(len=80) :: outfile
     integer :: is
-#endif
 
     ! HDD usage of visu module
     if (nrank==0) then
@@ -564,7 +560,7 @@ contains
 #ifndef ADIOS2
        uvisu = zero
        call fine_to_coarseV(1,local_array,uvisu)
-       call decomp_2d_write_one(1,uvisu,"data",//pathname//'/'//filename//'-'//num//'.bin',2,io_name)
+       call decomp_2d_write_one(1,uvisu,"data",pathname//'/'//filename//'-'//num//'.bin',2,io_name)
 #else
        if (iibm==2 .and. (.not.present(skip_ibm))) then
           print *, "Not Implemented: currently ADIOS2 IO doesn't support IBM-blanking"

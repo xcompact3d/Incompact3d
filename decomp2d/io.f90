@@ -1326,6 +1326,7 @@ contains
 
     implicit none
 
+    logical :: dir_exists
     character(len=*), intent(in) :: io_name, io_dir
     integer, intent(in) :: mode
 
@@ -1342,7 +1343,7 @@ contains
     if (nrank==0) then
        inquire(file=io_dir, exist=dir_exists)
        if (.not.dir_exists) then
-          call system("mkdir"//io_dir//"2> /dev/null")
+          call system("mkdir "//io_dir//" 2> /dev/null")
        end if
     end if
 #else
