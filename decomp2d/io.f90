@@ -136,6 +136,8 @@ contains
      print *, "Error initialising ADIOS2 - is adios2_config.xml present and valid?"
      call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
   endif
+
+  engine_live(:) = .false.
 #endif
   
   end subroutine decomp_2d_io_init
