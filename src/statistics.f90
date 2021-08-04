@@ -129,14 +129,18 @@ contains
     if (nrank==0) then
       print *,'==========================================================='
       if (flag_read) then
-        stattime = itime - 1
         print *,'Reading stat file', stattime
       else
-        stattime = itime
         print *,'Writing stat file', stattime
       endif
     endif
 
+    if (flag_read) then
+        stattime = itime - 1
+    else
+        stattime = itime
+    endif
+    
     write(filename,"('pmean.dat',I7.7)") stattime
     call read_or_write_one_stat(flag_read, filename, pmean)
     write(filename,"('umean.dat',I7.7)") stattime
