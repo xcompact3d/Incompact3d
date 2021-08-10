@@ -685,7 +685,56 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Write a 2D slice of the 3D data to a file
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine write_plane_3d_real(ipencil,var,iplane,n,filename, &
+  subroutine plane_extents (sizes, subsizes, starts, iplane, opt_decomp)
+
+    integer, intent(in) :: iplane
+    type(decomp_info), intent(in), optional :: opt_decomp
+    
+    integer, dimension(3), intent(out) :: sizes, subsizes, starts
+
+    type(decomp_info) :: decomp
+
+    if (present(opt_decomp)) then
+       decomp = opt_decomp
+    else
+       call get_decomp_info(decomp)
+    end if
+    
+    if (iplane == 1) then
+       sizes(1) = 1
+       sizes(2) = decomp%ysz(2)
+       sizes(3) = decomp%zsz(3)
+       subsizes(1) = 1
+       subsizes(2) = decomp%xsz(2)
+       subsizes(3) = decomp%xsz(3)
+       starts(1) = 0
+       starts(2) = decomp%xst(2)-1
+       starts(3) = decomp%xst(3)-1
+    else if (iplane == 3) then
+       sizes(1) = decomp%xsz(1)
+       sizes(2) = 1
+       sizes(3) = decomp%zsz(3)
+       subsizes(1) = decomp%ysz(1)
+       subsizes(2) = 1
+       subsizes(3) = decomp%ysz(3)
+       starts(1) = decomp%yst(1)-1
+       starts(2) = 0
+       starts(3) = decomp%yst(3)-1
+    else
+       sizes(1) = decomp%xsz(1)
+       sizes(2) = decomp%ysz(2)
+       sizes(3) = 1
+       subsizes(1) = decomp%zsz(1)
+       subsizes(2) = decomp%zsz(2)
+       subsizes(3) = 1
+       starts(1) = decomp%zst(1)-1
+       starts(2) = decomp%zst(2)-1
+       starts(3) = 0
+    endif
+    
+  end subroutine plane_extents
+
+  subroutine write_plane_3d_real(ipencil,var,iplane,n,dirname,varname,io_name, &
        opt_decomp)
 
     implicit none
@@ -694,7 +743,7 @@ contains
     real(mytype), dimension(:,:,:), intent(IN) :: var
     integer, intent(IN) :: iplane !(x-plane=1; y-plane=2; z-plane=3)
     integer, intent(IN) :: n ! which plane to write (global coordinate)
-    character(len=*), intent(IN) :: filename
+    character(len=*), intent(IN) :: dirname,varname,io_name
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
     real(mytype), allocatable, dimension(:,:,:) :: wk, wk2
@@ -704,6 +753,12 @@ contains
     integer, dimension(3) :: sizes, subsizes, starts
     integer :: i,j,k, ierror, newtype, fh, data_type
 
+#ifdef ADIOS2
+    type(adios2_io) :: io_handle
+    type(adios2_variable) :: var_handle
+    integer :: idx
+#endif
+    
     data_type = real_type
 
 #include "io_write_plane.inc"
@@ -713,7 +768,7 @@ contains
 
 
   subroutine write_plane_3d_complex(ipencil,var,iplane,n, &
-       filename,opt_decomp)
+       dirname,varname,io_name,opt_decomp)
 
     implicit none
 
@@ -721,7 +776,7 @@ contains
     complex(mytype), dimension(:,:,:), intent(IN) :: var
     integer, intent(IN) :: iplane !(x-plane=1; y-plane=2; z-plane=3)
     integer, intent(IN) :: n ! which plane to write (global coordinate)
-    character(len=*), intent(IN) :: filename
+    character(len=*), intent(IN) :: dirname,varname,io_name
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
     complex(mytype), allocatable, dimension(:,:,:) :: wk, wk2
@@ -730,6 +785,12 @@ contains
     integer(kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
     integer :: i,j,k, ierror, newtype, fh, data_type
+
+#ifdef ADIOS2
+    type(adios2_io) :: io_handle
+    type(adios2_variable) :: var_handle
+    integer :: idx
+#endif
 
     data_type = complex_type
 
@@ -978,7 +1039,7 @@ contains
     return
   end subroutine mpiio_write_real_coarse
 
-  subroutine decomp_2d_register_variable(io_name, varname, ipencil, icoarse, type, opt_decomp)
+  subroutine decomp_2d_register_variable(io_name, varname, ipencil, icoarse, iplane, type, opt_decomp)
 
     implicit none
 
@@ -986,6 +1047,7 @@ contains
     integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
     character(len=*), intent(in) :: io_name
     integer, intent(in) :: type
+    integer, intent(in) :: iplane
     type(decomp_info), intent(in), optional :: opt_decomp
     
     character*(*), intent(in) :: varname
@@ -998,11 +1060,19 @@ contains
     integer :: data_type
     integer :: ierror
 
-    if (present(opt_decomp)) then
-       call coarse_extents(ipencil, icoarse, sizes, subsizes, starts, opt_decomp)
+    if (iplane .eq. 0) then
+       if (present(opt_decomp)) then
+          call coarse_extents(ipencil, icoarse, sizes, subsizes, starts, opt_decomp)
+       else
+          call coarse_extents(ipencil, icoarse, sizes, subsizes, starts)
+       endif
     else
-       call coarse_extents(ipencil, icoarse, sizes, subsizes, starts)
-    endif
+       if (present(opt_decomp)) then
+          call plane_extents(sizes, subsizes, starts, iplane, opt_decomp)
+       else
+          call plane_extents(sizes, subsizes, starts, iplane)
+       endif
+    end if
     
     ! Check if variable already exists, if not create it
     call adios2_at_io(io_handle, adios, io_name, ierror)

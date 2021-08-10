@@ -109,16 +109,16 @@ contains
     call decomp_2d_init_io(io_name)
 
     !! Register variables
-    call decomp_2d_register_variable(io_name, "ux", 1, 0, mytype)
-    call decomp_2d_register_variable(io_name, "uy", 1, 0, mytype)
-    call decomp_2d_register_variable(io_name, "uz", 1, 0, mytype)
-    call decomp_2d_register_variable(io_name, "pp", 1, 0, mytype)
+    call decomp_2d_register_variable(io_name, "ux", 1, 0, output2D, mytype)
+    call decomp_2d_register_variable(io_name, "uy", 1, 0, output2D, mytype)
+    call decomp_2d_register_variable(io_name, "uz", 1, 0, output2D, mytype)
+    call decomp_2d_register_variable(io_name, "pp", 1, 0, output2D, mytype)
     if (ilmn) then
-       call decomp_2d_register_variable(io_name, "rho", 1, 0, mytype)
+       call decomp_2d_register_variable(io_name, "rho", 1, 0, output2D, mytype)
     endif
     if (iscalar.ne.0) then
        do is = 1, numscalar
-          call decomp_2d_register_variable(io_name, "phi"//char(48+is), 1, 0, mytype)
+          call decomp_2d_register_variable(io_name, "phi"//char(48+is), 1, 0, output2D, mytype)
        enddo
     endif
     
@@ -347,8 +347,8 @@ contains
     endif
 
     if (save_prem.eq.1) then
-      write(filename,"('./data/prem',I4.4)") itime/ioutput
-      call decomp_2d_write_plane(1,pre1,3,-1,filename)
+      write(filename,"('prem',I4.4)") itime/ioutput
+      call decomp_2d_write_plane(1,pre1,3,-1,"plane-data",filename,io_name)
     endif
 
     return
@@ -569,7 +569,11 @@ contains
        call decomp_2d_write_one(1,f1,"data",filename,0,io_name)
 #endif
     else
-       call decomp_2d_write_plane(1,local_array,output2D,-1,"./data/"//pathname//'/'//filename//'-'//num//'.bin')
+#ifndef ADIOS2
+       call decomp_2d_write_plane(1,local_array,output2D,-1,"data",pathname//'/'//filename//'-'//num//'.bin',io_name)
+#else
+       call decomp_2d_write_plane(1,local_array,output2D,-1,"data",filename,io_name)
+#endif
     endif
 
   end subroutine write_field

@@ -465,41 +465,41 @@ contains
     
     call decomp_2d_init_io(io_restart)
     
-    call decomp_2d_register_variable(io_restart, "ux", 1, 0, mytype)
-    call decomp_2d_register_variable(io_restart, "uy", 1, 0, mytype)
-    call decomp_2d_register_variable(io_restart, "uz", 1, 0, mytype)
+    call decomp_2d_register_variable(io_restart, "ux", 1, 0, 0, mytype)
+    call decomp_2d_register_variable(io_restart, "uy", 1, 0, 0, mytype)
+    call decomp_2d_register_variable(io_restart, "uz", 1, 0, 0, mytype)
 
-    call decomp_2d_register_variable(io_restart, "pp", 3, 0, mytype, phG) !! XXX: need some way to handle the different grid here...
+    call decomp_2d_register_variable(io_restart, "pp", 3, 0, 0, mytype, phG) !! XXX: need some way to handle the different grid here...
 
     do is = 1, numscalar
        write(varname,*) "phi-", is
-       call decomp_2d_register_variable(io_restart, trim(varname), 1, 0, mytype)
+       call decomp_2d_register_variable(io_restart, trim(varname), 1, 0, 0, mytype)
     end do
 
     if ((itimescheme.eq.2) .or. (itimescheme.eq.3)) then
-       call decomp_2d_register_variable(io_restart, "dux-2", 1, 0, mytype)
-       call decomp_2d_register_variable(io_restart, "duy-2", 1, 0, mytype)
-       call decomp_2d_register_variable(io_restart, "duz-2", 1, 0, mytype)
+       call decomp_2d_register_variable(io_restart, "dux-2", 1, 0, 0, mytype)
+       call decomp_2d_register_variable(io_restart, "duy-2", 1, 0, 0, mytype)
+       call decomp_2d_register_variable(io_restart, "duz-2", 1, 0, 0, mytype)
 
        do is = 1, numscalar
           write(varname,*) "dphi-", is, "-2"
-          call decomp_2d_register_variable(io_restart, trim(varname), 1, 0, mytype)
+          call decomp_2d_register_variable(io_restart, trim(varname), 1, 0, 0, mytype)
        end do
 
        if (itimescheme.eq.3) then
-          call decomp_2d_register_variable(io_restart, "dux-3", 1, 0, mytype)
-          call decomp_2d_register_variable(io_restart, "duy-3", 1, 0, mytype)
-          call decomp_2d_register_variable(io_restart, "duz-3", 1, 0, mytype)
+          call decomp_2d_register_variable(io_restart, "dux-3", 1, 0, 0, mytype)
+          call decomp_2d_register_variable(io_restart, "duy-3", 1, 0, 0, mytype)
+          call decomp_2d_register_variable(io_restart, "duz-3", 1, 0, 0, mytype)
 
           do is = 1, numscalar
              write(varname,*) "dphi-", is, "-3"
-             call decomp_2d_register_variable(io_restart, trim(varname), 1, 0, mytype)
+             call decomp_2d_register_variable(io_restart, trim(varname), 1, 0, 0, mytype)
           end do
        endif
     endif
 
     if (iibm .ne. 0) then
-       call decomp_2d_register_variable(io_restart, "ep", 1, 0, mytype)
+       call decomp_2d_register_variable(io_restart, "ep", 1, 0, 0, mytype)
     endif
     
   end subroutine init_restart_adios2

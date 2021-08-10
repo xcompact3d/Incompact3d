@@ -594,8 +594,8 @@ contains
        call transpose_x_to_y (diss1,temp2)
        call transpose_y_to_z (temp2,temp3)
        call mean_plane_z(temp3,zsize(1),zsize(2),zsize(3),temp3(:,:,1))
-       write(filename,"('./data/dissm',I4.4)") itime/ioutput
-       call decomp_2d_write_plane(3,temp3,3,1,filename)
+       write(filename,"('dissm',I4.4)") itime/ioutput
+       call decomp_2d_write_plane(3,temp3,3,1,bcle_dir,filename,io_bcle)
        !endif
     endif
 
@@ -631,8 +631,8 @@ contains
           end do
        end do
 
-       write(filename,"('./out/dep',I1.1,I4.4)") is,itime/iprocessing
-       call decomp_2d_write_plane(2,tempdep2(:,:,:,is),2,1,filename)
+       write(filename,"('dep',I1.1,I4.4)") is,itime/iprocessing
+       call decomp_2d_write_plane(2,tempdep2(:,:,:,is),2,1,bcle_dir,filename,io_bcle)
     enddo
 
   end subroutine dep

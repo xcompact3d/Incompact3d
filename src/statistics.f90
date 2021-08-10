@@ -60,25 +60,25 @@ contains
     if (.not. initialised) then
        call decomp_2d_init_io(io_statistics)
     
-       call decomp_2d_register_variable(io_statistics, "umean", 1, 1, mytype)
-       call decomp_2d_register_variable(io_statistics, "vmean", 1, 1, mytype)
-       call decomp_2d_register_variable(io_statistics, "wmean", 1, 1, mytype)
+       call decomp_2d_register_variable(io_statistics, "umean", 1, 1, 0, mytype)
+       call decomp_2d_register_variable(io_statistics, "vmean", 1, 1, 0, mytype)
+       call decomp_2d_register_variable(io_statistics, "wmean", 1, 1, 0, mytype)
        
-       call decomp_2d_register_variable(io_statistics, "pmean", 1, 1, mytype)
+       call decomp_2d_register_variable(io_statistics, "pmean", 1, 1, 0, mytype)
        
-       call decomp_2d_register_variable(io_statistics, "uumean", 1, 1, mytype)
-       call decomp_2d_register_variable(io_statistics, "vvmean", 1, 1, mytype)
-       call decomp_2d_register_variable(io_statistics, "wwmean", 1, 1, mytype)
+       call decomp_2d_register_variable(io_statistics, "uumean", 1, 1, 0, mytype)
+       call decomp_2d_register_variable(io_statistics, "vvmean", 1, 1, 0, mytype)
+       call decomp_2d_register_variable(io_statistics, "wwmean", 1, 1, 0, mytype)
 
-       call decomp_2d_register_variable(io_statistics, "uvmean", 1, 1, mytype)
-       call decomp_2d_register_variable(io_statistics, "uwmean", 1, 1, mytype)
-       call decomp_2d_register_variable(io_statistics, "vwmean", 1, 1, mytype)
+       call decomp_2d_register_variable(io_statistics, "uvmean", 1, 1, 0, mytype)
+       call decomp_2d_register_variable(io_statistics, "uwmean", 1, 1, 0, mytype)
+       call decomp_2d_register_variable(io_statistics, "vwmean", 1, 1, 0, mytype)
 
        do is=1, numscalar
           write(varname,"('phi',I2.2)") is
-          call decomp_2d_register_variable(io_statistics, varname, 1, 1, mytype)
+          call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
           write(varname,"('phiphi',I2.2)") is
-          call decomp_2d_register_variable(io_statistics, varname, 1, 1, mytype)
+          call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
        enddo
 
        initialised = .true.
