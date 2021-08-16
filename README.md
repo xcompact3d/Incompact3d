@@ -43,7 +43,7 @@ New users and developers are welcome to join.
 
 ### Benchmark test cases for code comparison ###
 
-We estabilished a solid and easy way to run a range of benchmark test cases to verify the code. Incompact3d works now on a flow configuration specific file. You must choose a case and set it on the 'Makefile' and recompile. The following cases are set to match the parameters for cases of reference articles obtained with different codes.
+We established a solid and easy way to run a range of benchmark test cases to verify the code. Incompact3d works now on a flow configuration specific file. You must choose a case and set it on the 'Makefile' and recompile. The following cases are set to match the parameters for cases of reference articles obtained with different codes.
 
 |Code| Flow configuration             | BC File         | Reference | Dataset |
 |:----------------:|:----------------:|:----------------:|:----------------:|:----------------:|
@@ -68,7 +68,7 @@ If the flags are not specified in the Makefile, the compile ignore the sections 
    -DELES        - enable explicit LES modelling
    -DSTRETCHING  - enable mesh stretching in y direction
 
-**Note:** In order to compile the code with the apropiate flags you must enter the -D$FLAG, i.e., -DDOUBLE_PREC
+**Note:** In order to compile the code with the appropriate flags you must enter the -D$FLAG, i.e., -DDOUBLE_PREC
 
 You can do an export of the variable in order to the Makefile knows what BC you want to compiler
        export FLOW_TYPE=Channel-flow
@@ -183,7 +183,7 @@ You also need to activate the shared memory copy [LMT mechanism](https://softwar
     export I_MPI_SHM_LMT=shm
 
 The code is compiled with the mpiifort command and the appropriate flags are set in the `Makefile` file.
-If you eish to compile the code with Intel Compiler use:
+If you wish to compile the code with Intel Compiler use:
 
       LCL = local# local,lad,sdu,archer
       IVER = 17# 15,16,17,18

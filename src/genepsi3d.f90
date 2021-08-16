@@ -72,11 +72,12 @@ contains
 !############################################################################
   subroutine geomcomplex(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
 
-    USE param, ONLY : itype, itype_cyl, itype_hill, itype_channel
+    USE param, ONLY : itype, itype_cyl, itype_hill, itype_channel,itype_sandbox
     USE decomp_2d, ONLY : mytype
     USE cyl, ONLY : geomcomplex_cyl
     USE hill, ONLY : geomcomplex_hill
     USE channel, ONLY : geomcomplex_channel
+    USE sandbox, ONLY : geomcomplex_sandbox
 
     IMPLICIT NONE
 
@@ -98,6 +99,10 @@ contains
 
        CALL geomcomplex_channel(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, yp, remp)
 
+    ELSEIF (itype.EQ.itype_sandbox) THEN
+     
+       CALL  geomcomplex_sandbox(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, yp, remp)
+
     ENDIF
 
   end subroutine geomcomplex
@@ -106,7 +111,7 @@ contains
   subroutine genepsi3d(ep1)
 
     USE variables, only : nx,ny,nz,nxm,nym,nzm,yp
-    USE param, only : xlx,yly,zlz,dx,dy,dz,izap,npif,nclx,ncly,nclz,istret
+    USE param, only : xlx,yly,zlz,dx,dy,dz,izap,npif,nclx,ncly,nclz,istret,itype,itype_sandbox
     USE complex_geometry
     use decomp_2d
 
@@ -140,12 +145,20 @@ contains
       end if
     end if
     !###################################################################
-    call gene_epsi_3D(ep1,nx,ny,nz,dx,dy,dz,xlx,yly,zlz ,&
-         nclx,ncly,nclz,nxraf,nyraf,nzraf   ,&
-         xi,xf,yi,yf,zi,zf,nobjx,nobjy,nobjz,&
-         nobjmax,yp,nraf)
-    call verif_epsi(ep1,npif,izap,nx,ny,nz,nobjmax,&
-         nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif)
+    
+    if (itype.eq.itype_sandbox) then !F.Schuch 2020-08-14T11:44:11-03:00
+      if (nrank==0) print *,'NotImplmentedError: Sandbox with iibm = 2 is a work in progress'
+      if (nrank==0) print *,'                    Please, try again with iibm = 1'
+      stop
+      call read_geomcomplex()
+    else
+      call gene_epsi_3D(ep1,nx,ny,nz,dx,dy,dz,xlx,yly,zlz ,&
+           nclx,ncly,nclz,nxraf,nyraf,nzraf   ,&
+           xi,xf,yi,yf,zi,zf,nobjx,nobjy,nobjz,&
+           nobjmax,yp,nraf)
+      call verif_epsi(ep1,npif,izap,nx,ny,nz,nobjmax,&
+           nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif)
+    endif
  !   call write_geomcomplex(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
  !        nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif,nobjmax,npif)
     !
