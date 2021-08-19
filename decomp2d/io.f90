@@ -28,14 +28,19 @@ module decomp_2d_io
   implicit none
 
   integer, parameter :: decomp_2d_write_mode = 1, decomp_2d_read_mode = 2
-#ifdef ADIOS2
+  integer, parameter :: MAX_IOH = 10 ! How many live IO things should we handle?
+#ifndef ADIOS2
+  integer, dimension(MAX_IOH), save :: fh_registy
+  logical, dimension(MAX_IOH), save :: fh_live
+  character(len=80), dimension(MAX_IOH), save :: fh_names
+  integer, dimension(MAX_IOH), save :: fh_disp
+#else
   type(adios2_adios) :: adios
-  integer, parameter :: MAX_ENGINES = 10
   integer, save :: nreg_io = 0
   character(len=*), parameter :: io_sep = "::"
-  character(len=80), dimension(MAX_ENGINES), save :: engine_names
-  logical, dimension(MAX_ENGINES), save :: engine_live
-  type(adios2_engine), dimension(MAX_ENGINES), save :: engine_registry
+  character(len=80), dimension(MAX_IOH), save :: engine_names
+  logical, dimension(MAX_IOH), save :: engine_live
+  type(adios2_engine), dimension(MAX_IOH), save :: engine_registry
 #endif
   
   private        ! Make everything private unless declared public
@@ -1420,9 +1425,9 @@ contains
     idx = get_engine_idx(io_name, io_dir)
     if (idx .lt. 1) then
        !! New io/engine combination
-       if (nreg_io .lt. MAX_ENGINES) then
+       if (nreg_io .lt. MAX_IOH) then
           nreg_io = nreg_io + 1
-          do idx = 1, MAX_ENGINES
+          do idx = 1, MAX_IOH
              if (.not. engine_live(idx)) then
                 engine_live(idx) = .true.
                 exit
@@ -1521,7 +1526,7 @@ contains
     write(full_name, "(A,A,A)") trim(io_name), trim(io_sep), trim(engine_name)
     
     found = .false.
-    do idx = 1, MAX_ENGINES
+    do idx = 1, MAX_IOH
        if (engine_names(idx) .eq. full_name) then
           found = .true.
           exit
