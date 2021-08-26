@@ -33,7 +33,7 @@ To test your installation you can also type in the terminal from your *build* di
 
     $ make test
 
-Four test are performed:
+Four tests are performed:
 * Taylor Green Vortex (TGV)
 * Turbulent Channel Flow with x as streamwise direction
 * Turbulent Channel Flow with z as streamwise direction
@@ -56,7 +56,15 @@ and make sure that the path to *mpiexec* is the correct one
 
      $ -- MPI EXEC: ~/my_correct_path_to_mpiexec
 
-If the path is not correct you might have problems in running *CTest*
+If the path is not correct you might have problems in running *CTest*.
+To solve the issue do the following 
+  * run *ccmake* at the root of the build directory
+
+     $ ccmake . 
+
+  * Toggle the advance mode by hitting *t*
+  * Look for the *MPIEXEC_EXECUTABLE* and set it up pointing to the correct *mpiexec*
+
 
 
 
