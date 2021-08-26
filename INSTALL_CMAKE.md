@@ -33,7 +33,7 @@ To test your installation you can also type in the terminal from your *build* di
 
     $ make test
 
-Four test are performed:
+Four tests are performed:
 * Taylor Green Vortex (TGV)
 * Turbulent Channel Flow with x as streamwise direction
 * Turbulent Channel Flow with z as streamwise direction

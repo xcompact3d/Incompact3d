@@ -1132,7 +1132,7 @@ contains
 
     if (poissiter.eq.0) then
        !! Compute rho0
-       rhomin = minval(rho1)
+       rhomin = minval(rho1(:,:,:,1))
        call MPI_ALLREDUCE(rhomin,rho0,1,real_type,MPI_MIN,MPI_COMM_WORLD,ierr)
     endif
 
