@@ -126,11 +126,11 @@ contains
         nyi.eq.xstart(2).and.nyf.eq.xend(2).and.&
         nzi.eq.xstart(3).and.nzf.eq.xend(3)) then
         !
-        if (nrank.eq.0) write(*,*) 'reading : ', './data/geometry/epsilon.bin'
-        call decomp_2d_read_one(1,epsi,'./data/geometry/epsilon.bin')
+        if (nrank.eq.0) write(*,*) 'reading : ', './geometry/epsilon.bin'
+        call decomp_2d_read_one(1,epsi,'./geometry/epsilon.bin')
         !
     else
-      ! Just the standard epsi(nx,ny,nz) matrix is loaded
+      ! Just the standard epsi(nx,ny,nz) is loaded
       print *,'Invalid parameters at geomcomplex_sandbox'
       call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
     endif
