@@ -335,7 +335,12 @@ contains
 
     if (iibm.ne.0) then
        !complex_geometry
-       nxraf=(nxm)*nraf+1;nyraf=(nym)*nraf+1;nzraf=(nzm)*nraf+1
+       nxraf=(nxm)*nraf
+       if (.not.nclx) nxraf=nxraf+1
+       nyraf=(nym)*nraf
+       if (.not.ncly) nyraf=nyraf+1
+       nzraf=(nzm)*nraf
+       if (.not.nclz) nzraf=nzraf+1
        allocate(nobjx(xsize(2),xsize(3)))
        allocate(nobjy(ysize(1),ysize(3)))
        allocate(nobjz(zsize(1),zsize(2)))
