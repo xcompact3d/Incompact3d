@@ -1,3 +1,4 @@
+!                          -*- mode: f90 -*-                            
 !=======================================================================
 ! This is part of the 2DECOMP&FFT library
 ! 
@@ -16,9 +17,9 @@
 ! Transpose the 3D data if necessary.
 
 if (present(opt_decomp)) then
-decomp = opt_decomp
+   decomp = opt_decomp
 else
-call get_decomp_info(decomp)
+   call get_decomp_info(decomp)
 end if
 
 if (iplane==1) then
@@ -128,19 +129,19 @@ starts(3) = 0
 end if
 
 call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
-MPI_ORDER_FORTRAN, data_type, newtype, ierror)
+     MPI_ORDER_FORTRAN, data_type, newtype, ierror)
 call MPI_TYPE_COMMIT(newtype,ierror)
 call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
-MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
-fh, ierror)
+     MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
+     fh, ierror)
 filesize = 0_MPI_OFFSET_KIND
 call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
 disp = 0_MPI_OFFSET_KIND
 call MPI_FILE_SET_VIEW(fh,disp,data_type, &
-newtype,'native',MPI_INFO_NULL,ierror)
+     newtype,'native',MPI_INFO_NULL,ierror)
 call MPI_FILE_WRITE_ALL(fh, wk2d, &
-subsizes(1)*subsizes(2)*subsizes(3), &
-data_type, MPI_STATUS_IGNORE, ierror)
+     subsizes(1)*subsizes(2)*subsizes(3), &
+     data_type, MPI_STATUS_IGNORE, ierror)
 call MPI_FILE_CLOSE(fh,ierror)
 call MPI_TYPE_FREE(newtype,ierror)
 

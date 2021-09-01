@@ -6,6 +6,7 @@
 ! three-dimensional Fast Fourier Transform (FFT).
 !
 ! Copyright (C) 2009-2012 Ning Li, the Numerical Algorithms Group (NAG)
+! Copyright (C) 2021               the University of Edinburgh (UoE)
 !
 !=======================================================================
 
@@ -14,7 +15,7 @@
 module decomp_2d
 
   use MPI
-
+  
   implicit none
 
   private        ! Make everything private unless declared public
@@ -155,7 +156,6 @@ module decomp_2d
   integer, save :: iskipV, jskipV, kskipV
   integer, save :: iskipP, jskipP, kskipP
 
-
   ! public user routines
   public :: decomp_2d_init, decomp_2d_finalize, &
        transpose_x_to_y, transpose_y_to_z, &
@@ -174,7 +174,6 @@ module decomp_2d
        alloc_x, alloc_y, alloc_z, &
        update_halo, decomp_2d_abort, &
        get_decomp_info
-
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! These are routines to perform global data transpositions
@@ -305,7 +304,7 @@ contains
   !     library ready to use
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine decomp_2d_init(nx,ny,nz,p_row,p_col,periodic_bc)
-
+    
     implicit none
 
     integer, intent(IN) :: nx,ny,nz,p_row,p_col
@@ -466,14 +465,14 @@ contains
   ! Routine to be called by applications to clean things up
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine decomp_2d_finalize
-
+    
     implicit none
-
+    
     call decomp_info_finalize(decomp_main)
 
     decomp_buf_size = 0
     deallocate(work1_r, work2_r, work1_c, work2_c)
-
+    
     return
   end subroutine decomp_2d_finalize
 

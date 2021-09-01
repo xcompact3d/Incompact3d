@@ -39,6 +39,8 @@
 !###########################################################################
 subroutine parameter(input_i3d)
 
+  use mpi
+  
   use iso_fortran_env
 
   use param
@@ -92,10 +94,11 @@ subroutine parameter(input_i3d)
        Fr, ibirman_eos
   namelist /ABL/ z_zero, iwallmodel, k_roughness, ustar, dBL, &
        imassconserve, ibuoyancy, iPressureGradient, iCoriolis, CoriolisFreq, &
-       istrat, idamping, iheight, TempRate, TempFlux, itherm, gravv, UG, T_wall, T_top 
+       istrat, idamping, iheight, TempRate, TempFlux, itherm, gravv, UG, T_wall, T_top, ishiftedper, iconcprec, pdl 
   namelist /CASE/ tgv_twod, pfront
   namelist/ALMParam/ialmrestart,filealmrestart,iturboutput,NTurbines,TurbinesPath,NActuatorlines,ActuatorlinesPath,eps_factor,rho_air
   namelist/ADMParam/Ndiscs,ADMcoords,C_T,aind,iturboutput,rho_air
+
 #ifdef DEBG
   if (nrank == 0) write(*,*) '# parameter start'
 #endif
@@ -285,6 +288,20 @@ subroutine parameter(input_i3d)
 
   ! 2D snapshot is not compatible with coarse visualization
   if (output2D.ne.0) nvisu = 1
+#ifdef ADIOS2
+  if (nvisu .ne. 1) then
+     if (nrank .eq. 0) then
+        print *, "ADIOS2 output is not compatible with coarse visualisation"
+        print *, "disabling coarse visualisation"
+        print *, "To compress the IO, see ADIOS2 options"
+     endif
+     nvisu = 1
+  endif
+#if defined(DOUBLE_PREC) && defined(SAVE_SINGLE)
+  print *, "ADIOS2 does not support mixing the simulation and output precision"
+  call MPI_ABORT(MPI_COMM_WORLD, -1, ierr)
+#endif
+#endif
 
   if (iimplicit.ne.0) then
      if ((itimescheme==5).or.(itimescheme==6)) then
@@ -540,7 +557,7 @@ subroutine parameter(input_i3d)
   endif
   
   if (iibm.eq.3) then ! This is only for the Cubic Spline Reconstruction
-  npif=npif+1
+     npif=npif+1
   endif
 
 #ifdef DEBG
@@ -650,10 +667,12 @@ subroutine parameter_defaults()
   TempRate=-zptwofive/3600_mytype
   TempFlux=0.24_mytype
   UG=[zero,zero,zero]
-  
+  ishiftedper=0
+  iconcprec=0
+  pdl=zero
   !! Turbine modelling
   iturbine=0
-  rho_air=1.0
+  rho_air=one
 
   !! IO
   ivisu = 1
