@@ -1,3 +1,6 @@
+*.xcuserstate
+*.xc*
+*.pbxproj
 *.out
 *.o
 *.mod
@@ -14,7 +17,6 @@
 sauve*
 incompact3d
 xcompact3d
-post
 data/
 out/
 stats/
@@ -25,5 +27,9 @@ lint.txt
 \#*\#
 *.log
 docs/_build/
+build*
+.cproject
+.project
+.settings
 *.bp4
 *.hdf5

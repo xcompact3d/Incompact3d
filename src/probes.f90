@@ -13,7 +13,7 @@ module probes
   USE decomp_2d, only : xstart, xend, ystart, yend, zstart, zend
   USE decomp_2d, only : decomp_2d_abort
 
-  IMPLICIT NONE
+  implicit none
 
   !
   ! Following parameters are extracted from the i3d input file
@@ -81,7 +81,7 @@ contains
     character(len=30) :: filename
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init_probes start'
+    if (nrank == 0) print *,'# init_probes start'
 #endif
 
     ! In case of restart, check existence of previous probes results
@@ -147,7 +147,7 @@ contains
        nxprobesP(i) = nint(nxm*xprobes/xlx-half) + 1
 
        !y
-       if (istret.eq.0) then
+       if (istret==0) then
           if (ncly) then
              nyprobes(i) = int(yprobes/dy) + 1
           else
@@ -155,24 +155,24 @@ contains
           endif
           nyprobesP(i) = nint(nym*yprobes/yly-half) + 1
        else
-          if (yprobes.le.ypi(1)) then
+          if (yprobes <= ypi(1)) then
              nyprobes(i) = 1
           else if (yprobes.ge.ypi(nym)) then
              nyprobes(i) = ny
           else
              do j = 1, nym-1
-                if (ypi(j).le.yprobes .and. yprobes.lt.ypi(j+1)) then
+                if (ypi(j) <= yprobes .and. yprobes < ypi(j+1)) then
                    nyprobes(i) = j + 1
                 end if
              end do
           endif
-          if (yprobes.le.yp(2)) then
+          if (yprobes <= yp(2)) then
              nyprobesP(i) = 1
-          elseif (yprobes.ge.yp(ny-1)) then
+          elseif (yprobes >= yp(ny-1)) then
              nyprobesP(i) = nym
           else
              do j = 3, ny-2
-                if (yp(j).le.yprobes .and. yprobes.lt.yp(j+1)) then
+                if (yp(j) <= yprobes .and. yprobes < yp(j+1)) then
                    nyprobesP(i) = j - 1
                    exit
                 end if
@@ -189,30 +189,30 @@ contains
        nzprobesP(i) = nint(nzm*zprobes/zlz-half) + 1
 
        ! Flag the rank with the probe
-       if       (xstart(1) .le. nxprobes(i) .and. nxprobes(i) .le. xend(1)) then
-          if    (xstart(2) .le. nyprobes(i) .and. nyprobes(i) .le. xend(2)) then
-             if (xstart(3) .le. nzprobes(i) .and. nzprobes(i) .le. xend(3)) then
+       if       (xstart(1)  <=  nxprobes(i) .and. nxprobes(i)  <=  xend(1)) then
+          if    (xstart(2)  <=  nyprobes(i) .and. nyprobes(i)  <=  xend(2)) then
+             if (xstart(3)  <=  nzprobes(i) .and. nzprobes(i)  <=  xend(3)) then
                 rankprobes(i) = .true.
              endif
           endif
        endif
-       if       (ystart(1) .le. nxprobes(i) .and. nxprobes(i) .le. yend(1)) then
-          if    (ystart(2) .le. nyprobes(i) .and. nyprobes(i) .le. yend(2)) then
-             if (ystart(3) .le. nzprobes(i) .and. nzprobes(i) .le. yend(3)) then
+       if       (ystart(1) <= nxprobes(i) .and. nxprobes(i) <= yend(1)) then
+          if    (ystart(2) <= nyprobes(i) .and. nyprobes(i) <= yend(2)) then
+             if (ystart(3) <= nzprobes(i) .and. nzprobes(i) <= yend(3)) then
                 rankprobesY(i) = .true.
              endif
           endif
        endif
-       if       (zstart(1) .le. nxprobes(i) .and. nxprobes(i) .le. zend(1)) then
-          if    (zstart(2) .le. nyprobes(i) .and. nyprobes(i) .le. zend(2)) then
-             if (zstart(3) .le. nzprobes(i) .and. nzprobes(i) .le. zend(3)) then
+       if       (zstart(1) <= nxprobes(i) .and. nxprobes(i) <= zend(1)) then
+          if    (zstart(2) <= nyprobes(i) .and. nyprobes(i) <= zend(2)) then
+             if (zstart(3) <= nzprobes(i) .and. nzprobes(i) <= zend(3)) then
                 rankprobesZ(i) = .true.
              endif
           endif
        endif
-       if       (ph1%zst(1) .le. nxprobesP(i) .and. nxprobesP(i) .le. ph1%zen(1)) then
-          if    (ph1%zst(2) .le. nyprobesP(i) .and. nyprobesP(i) .le. ph1%zen(2)) then
-             if (ph1%zst(3) .le. nzprobesP(i) .and. nzprobesP(i) .le. ph1%zen(3)) then
+       if       (ph1%zst(1) <= nxprobesP(i) .and. nxprobesP(i) <= ph1%zen(1)) then
+          if    (ph1%zst(2) <= nyprobesP(i) .and. nyprobesP(i) <= ph1%zen(2)) then
+             if (ph1%zst(3) <= nzprobesP(i) .and. nzprobesP(i) <= ph1%zen(3)) then
                 rankprobesP(i) = .true.
              endif
           endif
@@ -220,7 +220,7 @@ contains
     enddo
 
     ! Log the real position of the probes in a file
-    if (nrank.eq.0) call log_probes_position()
+    if (nrank==0) call log_probes_position()
 
     ! Allocate memory to monitor gradients
     if (flag_extra_probes) then
@@ -233,7 +233,7 @@ contains
     endif
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init_probes ok'
+    if (nrank == 0) print *,'# init_probes ok'
 #endif
 
   end subroutine init_probes

@@ -217,7 +217,7 @@ contains
     use variables
     use decomp_2d
     use decomp_2d_io
-    use tools, only : rescale_pressure
+    use dbg_schemes, only : rescale_pressure
 
     use var, only : nxmsize, nymsize, nzmsize
     use var, only : ppi3, dip3
@@ -244,7 +244,7 @@ contains
     integer :: is
     character(len=30) :: filename
 
-    if (itime.lt.initstat) then
+    if (itime < initstat) then
        return
     elseif (itime.eq.initstat) then
        call init_statistic()

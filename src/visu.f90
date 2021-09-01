@@ -104,27 +104,27 @@ contains
 
       nsnapout = 4
       if (ilmn)         nsnapout = nsnapout + 1
-      if (iscalar.ne.0) nsnapout = nsnapout + numscalar
+      if (iscalar /= 0) nsnapout = nsnapout + numscalar
 
       memout = prec * nsnapout * noutput
-      if (output2D.eq.0) then
+      if (output2D == 0) then
         memout = memout * xszV(1) * yszV(2) * zszV(3)
-      else if (output2D.eq.1) then
+      else if (output2D == 1) then
         memout = memout *           yszV(2) * zszV(3)
-      else if (output2D.eq.2) then
+      else if (output2D == 2) then
         memout = memout * xszV(1)           * zszV(3)
-      else if (output2D.eq.3) then
+      else if (output2D == 3) then
         memout = memout * xszV(1) * yszV(2)
       endif
-      print *,'==========================================================='
-      print *,'Visu module requires ',real(memout*1e-9,4),'GB'
-      print *,'==========================================================='
+      write(*,*)'==========================================================='
+      write(*,*)'Visu module requires ',real(memout*1e-9,4),'GB'
+      write(*,*)'==========================================================='
     end if
 
     ! Safety check
-    if (output2D.lt.0 .or. output2D.gt.3 &
-        .or. (output2d.eq.2.and.istret.ne.0)) then
-      if (nrank.eq.0) print *, "Visu module: incorrect value for output2D."
+    if (output2D < 0 .or. output2D > 3 &
+        .or. (output2d == 2.and.istret /= 0)) then
+      if (nrank.eq.0) write(*,*) "Visu module: incorrect value for output2D."
       call MPI_ABORT(MPI_COMM_WORLD, 0, noutput)
       stop
     endif
@@ -210,7 +210,7 @@ contains
     use var, only : ppi3, dip3, ph3, nzmsize
     use var, only : npress
 
-    use tools, only : rescale_pressure
+    use dbg_schemes, only : rescale_pressure
 
     implicit none
 
@@ -358,7 +358,6 @@ contains
     use decomp_2d
     use decomp_2d_io
     use var, only : zero
-    use tools, only : mean_plane_z
 
     implicit none
 

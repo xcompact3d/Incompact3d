@@ -32,26 +32,29 @@
 
 module user_sim
 
-  USE decomp_2d
-  USE variables
-  USE param
+  use decomp_2d
+  use variables
+  use param
 
-  IMPLICIT NONE
+  implicit none
 
   real(mytype), save, allocatable, dimension(:,:,:) :: vol1,volSimps1
   integer :: FS
   character(len=100) :: fileformat
   character(len=1),parameter :: NL=char(10) !new line character
 
-  PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_user, boundary_conditions_user, postprocess_user, visu_user
+  private ! All functions/subroutines private by default
+  public :: init_user, boundary_conditions_user, postprocess_user, visu_user
 
 contains
 
   subroutine init_user (ux1,uy1,uz1,ep1,phi1)
 
-    USE decomp_2d_io
-    USE MPI
+    !use decomp_2d
+    use decomp_2d_io
+    !use variables
+    !use param
+    use MPI
 
     implicit none
 
@@ -70,7 +73,7 @@ contains
        phi1(:,:,:,:) = zero
     endif
 
-    if (iin.eq.0) then !empty domain
+    if (iin == 0) then !empty domain
 
        if (nrank==0) write(*,*) "Empty initial domain!"
 
@@ -78,7 +81,7 @@ contains
 
     endif
 
-    if (iin.eq.1) then !generation of a random noise
+    if (iin == 1) then !generation of a random noise
 
        !INIT FOR G AND U=MEAN FLOW + NOISE
        do k=1,xsize(3)
@@ -94,7 +97,7 @@ contains
     endif
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init end ok'
+    if (nrank  ==  0) write(*,*) '# init end ok'
 #endif
 
     return
@@ -107,20 +110,20 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,ep
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
-    IF (nclx1.EQ.2) THEN
-    ENDIF
-    IF (nclxn.EQ.2) THEN
-    ENDIF
+    if (nclx1 == 2) then
+    endif
+    if (nclxn == 2) then
+    endif
 
-    IF (ncly1.EQ.2) THEN
-    ENDIF
-    IF (nclyn.EQ.2) THEN
-    ENDIF
+    if (ncly1 == 2) then
+    endif
+    if (nclyn == 2) then
+    endif
 
-    IF (nclz1.EQ.2) THEN
-    ENDIF
-    IF (nclzn.EQ.2) THEN
-    ENDIF
+    if (nclz1 == 2) then
+    endif
+    if (nclzn == 2) then
+    endif
 
   end subroutine boundary_conditions_user
 

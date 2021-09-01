@@ -41,22 +41,24 @@ module dynstall_legacy
 
     subroutine dystl_init_LB(lb,dynstallfile)
         
+        use param, only: zero, one
+
         implicit none
         type(LB_Type) :: lb
         character :: dynstallfile*80
-	real(mytype) :: CLcritp, CLcritn, CLalpha 
+	    real(mytype) :: CLcritp, CLcritn, CLalpha
         NAMELIST/LBParam/CLcritp,CLcritn,CLalpha
 
         lb%StallFlag = .true.
-        lb%dp=0.0
-        lb%dF=0.0
-        lb%dCNv=0.0
-        lb%LESepState=0.0
-        lb%sLEv=0.0
-        lb%CLRef_Last=0.0
-        lb%CLRefLE_Last=0.0
-        lb%Fstat_Last=1.0
-        lb%cv_Last=0.0 
+        lb%dp=zero
+        lb%dF=zero
+        lb%dCNv=zero
+        lb%LESepState=zero
+        lb%sLEv=zero
+        lb%CLRef_Last=zero
+        lb%CLRefLE_Last=zero
+        lb%Fstat_Last=one
+        lb%cv_Last=zero
         lb%LB_LogicOutputs(:)=0
         
         open(30,file=dynstallfile) 
@@ -73,6 +75,10 @@ module dynstall_legacy
 
     subroutine LB_EvalIdealCL(AOA,AOA0,CLa,RefFlag,CLID)
 
+    use decomp_2d, only: mytype
+    use param, only: one, two, thirty
+    use dbg_schemes, only: sin_prec
+    
     ! AOA inputs in radians
     ! AOA0 is zero lift AOA
     ! RefFlag defines whether to output reference CL or ideal CL
@@ -87,12 +93,12 @@ module dynstall_legacy
     call Force180(aID)
     ! reflect function across axis for abs(aID)>90
     IDS=1
-    if (aID>pi/2.0) then
+    if (aID>pi/two) then
         aID=pi-aID
-        IDS=-1.0
-    else if (aID<-pi/2.0) then
+        IDS=-one
+    else if (aID<-pi/two) then
         aID=-pi-aID
-        IDS=-1.0
+        IDS=-one
     end if
 
     ! If RefFlag is 1, output reference CL, otherwise round off ideal CL at high AOA
@@ -100,32 +106,39 @@ module dynstall_legacy
         CLID=IDS*CLa*aID
     else
         ! round off the ideal CL after cutoff AOA
-        aIDc=30.0*conrad
-        d1=1.8
-        CLaI=2.0*pi
+        aIDc=thirty*conrad
+        d1=1.8_mytype
+        CLaI=two*pi
         if (abs(aID)<aIDc) then
             CLID=IDS*CLaI*aID
         else
-            CLID=IDS*(CLaI*(aIDc-1.0/d1*sin(d1*aIDc))+CLaI/d1*sin(d1*aID))
+            CLID=IDS*(CLaI*(aIDc-one/d1*sin_prec(d1*aIDc))+CLaI/d1*sin_prec(d1*aID))
         end if
     end if
     
     end subroutine LB_EvalIdealCL
 
     subroutine Force180(a)
+        
+        use dbg_schemes, only: exp_prec
+        use param, only: two
     
         implicit none
 
         real(mytype) :: a
         ! alpha in radians
         if (a>pi) then
-            a=a-2.0*pi
+            a=a-two*pi
         elseif (a<-pi) then
-            a=a+2.0*pi
+            a=a+two*pi
         endif
     end subroutine Force180
     
     SUBROUTINE LB_UpdateStates(lb,airfoil,Re,ds)
+        
+        use decomp_2d, only: mytype
+        use param, only: half, one, two, three, four, eleven
+        use dbg_schemes, only: exp_prec
 
         implicit none
 
@@ -137,10 +150,10 @@ module dynstall_legacy
 
         ! Set model parameters. All of these are potentially a function of Mach
         ! and are set to low mach values...
-        Tp=4.0                  ! time constant on LE pressure response to change in CL
-        TfRef=3.0               ! time constant on TE separation point travel
-        TvRef=6.3               ! time constant on LE vortex lift indicial function
-        TvL=11.0                ! Characteristic LE vortex travel time
+        Tp=four                   ! time constant on LE pressure response to change in CL
+        TfRef=three               ! time constant on TE separation point travel
+        TvRef=6.3_mytype          ! time constant on LE vortex lift indicial function
+        TvL=eleven                ! Characteristic LE vortex travel time
 
     ! Eval LE separation state
     ! Note: CLCrit is critical (ideal) CL value for LE separation. This is
@@ -169,14 +182,14 @@ module dynstall_legacy
         if (lb%sLEv<TvL) then
             if (lb%CLRateFlag>0) then
                 !Tf=3.0*TfRef ! original
-                Tf=4.0*TfRef
+                Tf=four*TfRef
                 Tv=TvRef
 
                 ! Set logic state flags (for model diagnosis output)
                 lb%LB_LogicOutputs(8)=1
             else
-                Tf=1.0/2.0*TfRef
-                Tv=1.0/2.0*TvRef
+                Tf=half*TfRef
+                Tv=half*TvRef
 
                 ! Set logic state flags (for model diagnosis output)
                 lb%LB_LogicOutputs(8)=2
@@ -184,19 +197,19 @@ module dynstall_legacy
 
             ! Set logic state flags (for model diagnosis output)
             lb%LB_LogicOutputs(7)=1
-        else if (lb%sLEv<2.0*TvL) then
+        else if (lb%sLEv<two*TvL) then
             if (lb%CLRateFlag>0) then
                 ! orig 
                 !Tf=1.0/3.0*TfRef
                 !Tv=1.0/4.0*TvRef
-                Tf=2.0*TfRef
+                Tf=two*TfRef
                 Tv=TvRef
 
                 ! Set logic state flags (for model diagnosis output)
                 lb%LB_LogicOutputs(8)=3
             else
-                Tf=1.0/2.0*TfRef
-                Tv=1.0/2.0*TvRef
+                Tf=half*TfRef
+                Tv=half*TvRef
 
                 ! Set logic state flags (for model diagnosis output)
                 lb%LB_LogicOutputs(8)=4                                                        
@@ -224,7 +237,7 @@ module dynstall_legacy
             ! Set logic state flags (for model diagnosis output)
             lb%LB_LogicOutputs(7)=4
         else
-            Tf=2*TfRef
+            Tf=two*TfRef
 
             ! Set logic state flags (for model diagnosis output)
             lb%LB_LogicOutputs(7)=5
@@ -244,9 +257,9 @@ module dynstall_legacy
     end if
 
     ! Update states, first order lag equations, exponential recursion form (midpoint rule version)
-     lb%dp=lb%dp*exp(-ds/Tp)+(lb%CLRef-lb%CLRef_Last)*exp(-ds/(2*Tp))
-     lb%dF=lb%dF*exp(-ds/Tf)+(lb%Fstat-lb%Fstat_Last)*exp(-ds/(2*Tf))
-     lb%dCNv=lb%dCNv*exp(-ds/Tv)+lb%dcv*exp(-ds/(2*Tv))
+    lb%dp=lb%dp*exp_prec(-ds/Tp)+(lb%CLRef-lb%CLRef_Last)*exp_prec(-ds/(two*Tp))
+    lb%dF=lb%dF*exp_prec(-ds/Tf)+(lb%Fstat-lb%Fstat_Last)*exp_prec(-ds/(two*Tf))
+    lb%dCNv=lb%dCNv*exp(-ds/Tv)+lb%dcv*exp(-ds/(two*Tv))
 
     ! update lagged values
     lb%CLRef_Last=lb%CLRef
@@ -279,6 +292,10 @@ subroutine LB_DynStall(airfoil,lb,CLstat,CDstat,alphaL,alpha5,Re,CL,CD)
     ! CL and CD having taken into account the dynamic stall effects
     ! GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
 
+    use decomp_2d, only: mytype
+    use param, only: zero, zpone, zptwofive, one, two, four, fifty
+    use dbg_schemes, only: abs_prec, sqrt_prec, sin_prec, cos_prec, exp_prec
+
     implicit none
     type(AirfoilType) :: airfoil       ! Airfoil structure
     type(LB_Type) :: lb                ! Leishmann-Beddoes model structure
@@ -290,7 +307,7 @@ subroutine LB_DynStall(airfoil,lb,CLstat,CDstat,alphaL,alpha5,Re,CL,CD)
     AOA0=airfoil%alzer
     
     ! Model constants
-    KD=0.1          ! Trailing Edge separation drag factor
+    KD=zpone          ! Trailing Edge separation drag factor
 
     ! Evaluate the ideal CL curve at current AOA
     call LB_EvalIdealCL(alphaL,AOA0,lb%CLa,1,lb%CLRef) 
@@ -309,19 +326,19 @@ subroutine LB_DynStall(airfoil,lb,CLstat,CDstat,alphaL,alpha5,Re,CL,CD)
         lb%CLRateFlag=0
     end if
     AOARefLE=alphaL-dAOARefLE
-    Call Force180(AOARefLE)
+    call Force180(AOARefLE)
 
     ! calc effective static TE separation point using effective LE AOA
-    Call EvalStaticCoeff(Re,AOARefLE*condeg,CLstatF,C,C1,airfoil)
-    Call LB_EvalIdealCL(AOARefLE,AOA0,CLa,0,CLIDF)
-    if (abs(CLIDF)<0.001) then
-        CLRatio=999
+    call EvalStaticCoeff(Re,AOARefLE*condeg,CLstatF,C,C1,airfoil)
+    call LB_EvalIdealCL(AOARefLE,AOA0,CLa,0,CLIDF)
+    if (abs_prec(CLIDF)<0.001_mytype) then
+        CLRatio=999_mytype
     else
         CLRatio=CLstatF/CLIDF;
     end if
 
-    if (CLRatio > 0.25) then
-        lb%Fstat=min((sqrt(4.0*CLRatio)-1.0)**2,1.0)
+    if (CLRatio > zptwofive) then
+        lb%Fstat=min((sqrt(four*CLRatio)-one)**2,one)
 
         ! Test logic
         lb%LB_LogicOutputs(1)=1
@@ -334,24 +351,24 @@ subroutine LB_DynStall(airfoil,lb,CLstat,CDstat,alphaL,alpha5,Re,CL,CD)
     ! calc lagged Fstat to represent dynamic TE separation point
     lb%F=lb%Fstat-lb%dF
     ! force limits on lagged F (needed due to discretization error...)
-    lb%F=min(max(lb%F,0.0),1.0)
+    lb%F=min(max(lb%F,zero),one)
 
     ! Calc dynamic CL due to TE separation as fairing between fully attached and fully separated predictions from the Kirchoff approximation at current AOA
-    if (abs(CLID)<0.001) then
-        CLRatio=999
+    if (abs(CLID)<0.001_mytype) then
+        CLRatio=999_mytype
     else
         CLRatio=CLstat/CLID
     end if
 
-    if (CLRatio > 1.0) then
+    if (CLRatio > one) then
         CLID=CLstat
 
         ! Test logic
         lb%LB_LogicOutputs(2)=1
     end if
 
-    if (CLRatio > 0.25) then
-        CLsep=CLID/4.0
+    if (CLRatio > zptwofive) then
+        CLsep=CLID/four
 
         ! Test logic
         lb%LB_LogicOutputs(3)=1
@@ -361,22 +378,22 @@ subroutine LB_DynStall(airfoil,lb,CLstat,CDstat,alphaL,alpha5,Re,CL,CD)
         ! Test logic
         lb%LB_LogicOutputs(3)=2
     end if
-    CLF=CLsep+CLID*0.25*(lb%F+2.0*sqrt(lb%F))
-    dCDF=KD*(CLstat-CLF)*sign(1.0d0,CLstat)
+    CLF=CLsep+CLID*zptwofive*(lb%F+two*sqrt_prec(lb%F))
+    dCDF=KD*(CLstat-CLF)*sign(one,CLstat)
 
     ! LE vortex lift component, dCNv is a lagged change in the added normal force due
     ! to LE vortex shedding. Assumed to affect lift coeff as an added circulation...
-    dCLv=lb%dCNv*cos(alpha5)
-    dCDv=lb%dCNv*sin(alpha5)
+    dCLv=lb%dCNv*cos_prec(alpha5)
+    dCDv=lb%dCNv*sin_prec(alpha5)
     ! vortex feed is given by the rate at which lift (circulation) is being shed due to dynamic separation. Lift component due to separation is defined by the
     ! difference between the ideal lift and the lift including dynamic separation effects.
     lb%cv=CLID-CLF
     lb%dcv=lb%cv-lb%cv_Last
     ! If the sign of dcv is opposite the reference LE CL, set to zero to disallow negative vorticity from shedding from the leading edge. Also, limit the model 
     ! at AOA>acut or if the magnitude of the reference CL is decreasing...
-    acut=50.0*conrad
-    if (sign(1.0d0,lb%dcv*lb%CLRefLE)<0 .OR. abs(alphaL-AOA0)>acut .OR. lb%CLRateFlag<0) then
-        lb%dcv=0.0
+    acut=fifty*conrad
+    if (sign(one,lb%dcv*lb%CLRefLE)<0 .OR. abs(alphaL-AOA0)>acut .OR. lb%CLRateFlag<0) then
+        lb%dcv=zero
 
         ! Test logic
         lb%LB_LogicOutputs(4)=1

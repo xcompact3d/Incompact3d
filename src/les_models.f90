@@ -43,9 +43,9 @@ contains
     !
     !================================================================================
 
-    USE param
-    USE variables
-    USE decomp_2d
+    use param
+    use variables
+    use decomp_2d
 
     implicit none
 
@@ -63,22 +63,22 @@ contains
        write(*, *) ' '
        write(*, *) '++++++++++++++++++++++++++++++++'
        write(*, *) 'LES Modelling'
-       if(jles==1) then
+       if(jles == 1) then
           write(*, *) ' Classic Smagorinsky is used ... '
           write(*, *) ' Smagorinsky constant = ', smagcst
-          if (itype==itype_abl) then
+          if (itype == itype_abl) then
              write(*,*) ' with Mason and Thomson damping function ... '
              write(*,*) ' n = ', nSmag
           endif
-       else if (jles==2) then
+       else if (jles == 2) then
           write(*, *) ' WALE SGS model is used ... '
           write(*, *) ' Max value for the WALE constant  = ', walecst
-       else if (jles==3) then
+       else if (jles == 3) then
           write(*, *) ' Dynamic Smagorinsky is used ... '
           write(*, *) ' Max value for the dynamic constant field = ', maxdsmagcst
        endif
        write(*, *) '++++++++++++++++++++++++++++++++'
-       !if (nrank==0) print *, "Del y min max= ", minval(del), maxval(del)
+       !if (nrank==0) write(*,*) "Del y min max= ", minval(del), maxval(del)
        write(*, *) '++++++++++++++++++++++++++++++++'
        write(*, *) ' '
     endif
@@ -110,32 +110,32 @@ contains
     integer :: iconservative
 
     ! Calculate eddy-viscosity
-    if(jles.eq.1) then ! Smagorinsky
+    if(jles == 1) then ! Smagorinsky
        call smag(nut1,ux1,uy1,uz1)
 
-    elseif(jles.eq.2) then ! Wall-adapting local eddy-viscosity (WALE) model
+    elseif(jles == 2) then ! Wall-adapting local eddy-viscosity (WALE) model
        call wale(nut1,ux1,uy1,uz1)
 
-    elseif(jles.eq.3) then ! Lilly-style Dynamic Smagorinsky
+    elseif(jles == 3) then ! Lilly-style Dynamic Smagorinsky
        call dynsmag(nut1,ux1,uy1,uz1,ep1)
 
     endif
 
-    if(iconservative.eq.0) then ! Non-conservative form for calculating the divergence of the SGS stresses
+    if(iconservative == 0) then ! Non-conservative form for calculating the divergence of the SGS stresses
 
        call sgs_mom_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
        !call sgs_scalar_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
 
-    elseif (iconservative.eq.1) then ! Conservative form for calculating the divergence of the SGS stresses (used with wall functions)
+    elseif (iconservative == 1) then ! Conservative form for calculating the divergence of the SGS stresses (used with wall functions)
 
        ! Call les_conservative
 
     endif
 
     ! SGS correction for ABL
-    if(itype.eq.itype_abl) then
+    if(itype == itype_abl) then
        call wall_sgs(ux1,uy1,uz1,phi1,nut1,wallfluxx1,wallfluxy1,wallfluxz1)
-       if (xstart(2)==1) then
+       if (xstart(2) == 1) then
           sgsx1(:,1,:) = wallfluxx1(:,1,:)
           sgsy1(:,1,:) = wallfluxy1(:,1,:)
           sgsz1(:,1,:) = wallfluxz1(:,1,:)
@@ -157,19 +157,20 @@ contains
     !
     !================================================================================
 
-    USE param
-    USE variables
-    USE decomp_2d
-    USE decomp_2d_io
-    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-    USE var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,di2
-    USE var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
-    USE var, only : sxx1,syy1,szz1,sxy1,sxz1,syz1,srt_smag
-    USE var, only : gxx1,gyx1,gzx1,gxy2,gyy2,gzy2,gxz3,gyz3,gzz3
-    USE var, only : gxy1,gyy1,gzy1,gxz2,gyz2,gzz2,gxz1,gyz1,gzz1
-    USE var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2,srt_smag2,nut2
-    USE var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
-    USE ibm_param
+    use param
+    use variables
+    use decomp_2d
+    use decomp_2d_io
+    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    use var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,di2
+    use var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
+    use var, only : sxx1,syy1,szz1,sxy1,sxz1,syz1,srt_smag
+    use var, only : gxx1,gyx1,gzx1,gxy2,gyy2,gzy2,gxz3,gyz3,gzz3
+    use var, only : gxy1,gyy1,gzy1,gxz2,gyz2,gzz2,gxz1,gyz1,gzz1
+    use var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2,srt_smag2,nut2
+    use var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
+    use dbg_schemes, only: sqrt_prec
+    use ibm_param
 
     implicit none
 
@@ -250,26 +251,26 @@ contains
     do k = 1, ysize(3)
        do j = 1, ysize(2)
           do i = 1, ysize(1)
-             if(itype.eq.itype_abl) then
+             if(itype == itype_abl) then
                 !Mason and Thomson damping coefficient
-                if (istret.eq.0) y=(j+ystart(2)-1-1)*dy
-                if (istret.ne.0) y=yp(j+ystart(2)-1)
-                smag_constant=(smagcst**(-nSmag)+(k_roughness*(y/del(j)+z_zero/del(j)))**(-nSmag))**(-1./nSmag)
+                if (istret == 0) y=real(j+ystart(2)-1-1,mytype)*dy
+                if (istret /= 0) y=yp(j+ystart(2)-1)
+                smag_constant=(smagcst**(-nSmag)+(k_roughness*(y/del(j)+z_zero/del(j)))**(-nSmag))**(-one/nSmag)
                 length=smag_constant*del(j)
              else
                 length=smagcst*del(j)
              endif
              !Calculate eddy visc nu_t
-             nut2(i, j, k) = ((length)**two) * sqrt(two * srt_smag2(i, j, k))
+             nut2(i, j, k) = ((length)**two) * sqrt_prec(two * srt_smag2(i, j, k))
           enddo
        enddo
     enddo
     call transpose_y_to_x(nut2, nut1)
 
-    if (nrank==0) print *, "smag srt_smag min max= ", minval(srt_smag), maxval(srt_smag)
-    if (nrank==0) print *, "smag nut1     min max= ", minval(nut1), maxval(nut1)
+    if (nrank==0) write(*,*) "smag srt_smag min max= ", minval(srt_smag), maxval(srt_smag)
+    if (nrank==0) write(*,*) "smag nut1     min max= ", minval(nut1), maxval(nut1)
 
-    if (mod(itime, ioutput).eq.0) then
+    if (mod(itime, ioutput) == 0) then
 
        write(filename, "('./data/nut_smag',I4.4)") itime / ioutput
        call decomp_2d_write_one(1, nut1, filename, 2)
@@ -288,20 +289,21 @@ contains
     !
     !================================================================================
 
-    USE param
-    USE variables
-    USE decomp_2d
-    USE decomp_2d_io
-    USE MPI
-    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-    USE var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,di2
-    USE var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
-    USE var, only : sxx1,syy1,szz1,sxy1,sxz1,syz1,srt_smag
-    USE var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2,srt_smag2,nut2
-    USE var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
+    use param
+    use variables
+    use decomp_2d
+    use decomp_2d_io
+    use MPI
+    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    use var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,di2
+    use var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
+    use var, only : sxx1,syy1,szz1,sxy1,sxz1,syz1,srt_smag
+    use var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2,srt_smag2,nut2
+    use var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
     use tools, only : mean_plane_z
-    USE ibm_param
-    USE param, only : zero
+    use dbg_schemes, only: sqrt_prec
+    use ibm_param
+    use param, only : zero
     
     implicit none
 
@@ -377,8 +379,8 @@ contains
     call filx(uxz1f, uxz1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,ubcx*ubcz) !ux1*uz1
     call filx(uyz1f, uyz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcy*ubcz) !uy1*uz1
 
-    if (mod(itime, ioutput).eq.0) then
-       if (nrank==0) print *, "filx ux= ", maxval(ta1), maxval(ux1f), maxval(ta1) - maxval(ux1f)
+    if (mod(itime, ioutput) == 0) then
+       if (nrank==0) write(*,*) "filx ux= ", maxval(ta1), maxval(ux1f), maxval(ta1) - maxval(ux1f)
     endif
 
    if((iibm==1).or.(iibm==2).or.(iibm==3)) then
@@ -416,8 +418,8 @@ contains
     call fily(uxz2f, th2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,ubcx*ubcz) !ux2*uz2
     call fily(uyz2f, ti2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,ubcy*ubcz) !uy2*uz2
 
-    if (mod(itime, ioutput).eq.0) then
-       if (nrank==0) print *, "fily ux= ", maxval(ta2), maxval(ux2f), maxval(ta2) - maxval(ux2f)
+    if (mod(itime, ioutput) == 0) then
+       if (nrank==0) write(*,*) "fily ux= ", maxval(ta2), maxval(ux2f), maxval(ta2) - maxval(ux2f)
     endif
 
     if((iibm==1).or.(iibm==2).or.(iibm==3)) then   
@@ -458,8 +460,8 @@ contains
     call filz(uxz3f, th3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,ubcx*ubcz) !ux3*uz3
     call filz(uyz3f, ti3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,ubcy*ubcz) !uy3*uz3
 
-    if (mod(itime, ioutput).eq.0) then
-       if (nrank==0) print *, "filz ux= ", maxval(ta3), maxval(ux3f), maxval(ta3) - maxval(ux3f)
+    if (mod(itime, ioutput) == 0) then
+       if (nrank==0) write(*,*) "filz ux= ", maxval(ta3), maxval(ux3f), maxval(ta3) - maxval(ux3f)
     endif
 
     ta3 = zero; tb3 = zero; tc3 = zero
@@ -556,6 +558,25 @@ contains
 
     sxz1f = half * (gzx1f + gxz1f)
 
+#ifdef DOUBLE_PREC
+    !Bij tensor with u test filtered OK
+    bbxx1 = -two * dsqrt(two * (sxx1f * sxx1f + syy1f * syy1f + szz1f * szz1f + two * sxy1f * sxy1f + two * sxz1f * sxz1f + two * syz1f * syz1f)) * sxx1f
+    bbyy1 = -two * dsqrt(two * (sxx1f * sxx1f + syy1f * syy1f + szz1f * szz1f + two * sxy1f * sxy1f + two * sxz1f * sxz1f + two * syz1f * syz1f)) * syy1f
+    bbzz1 = -two * dsqrt(two * (sxx1f * sxx1f + syy1f * syy1f + szz1f * szz1f + two * sxy1f * sxy1f + two * sxz1f * sxz1f + two * syz1f * syz1f)) * szz1f
+
+    bbxy1 = -two * dsqrt(two * (sxx1f * sxx1f + syy1f * syy1f + szz1f * szz1f + two * sxy1f * sxy1f + two * sxz1f * sxz1f + two * syz1f * syz1f)) * sxy1f
+    bbxz1 = -two * dsqrt(two * (sxx1f * sxx1f + syy1f * syy1f + szz1f * szz1f + two * sxy1f * sxy1f + two * sxz1f * sxz1f + two * syz1f * syz1f)) * sxz1f
+    bbyz1 = -two * dsqrt(two * (sxx1f * sxx1f + syy1f * syy1f + szz1f * szz1f + two * sxy1f * sxy1f + two * sxz1f * sxz1f + two * syz1f * syz1f)) * syz1f
+
+    !Aij tensor with u
+    axx1 = -two * dsqrt(two * (sxx1 * sxx1 + syy1 * syy1 + szz1 * szz1 + two * sxy1 * sxy1 + two * sxz1 * sxz1 + two * syz1 * syz1)) * sxx1
+    ayy1 = -two * dsqrt(two * (sxx1 * sxx1 + syy1 * syy1 + szz1 * szz1 + two * sxy1 * sxy1 + two * sxz1 * sxz1 + two * syz1 * syz1)) * syy1
+    azz1 = -two * dsqrt(two * (sxx1 * sxx1 + syy1 * syy1 + szz1 * szz1 + two * sxy1 * sxy1 + two * sxz1 * sxz1 + two * syz1 * syz1)) * szz1
+
+    axy1 = -two * dsqrt(two * (sxx1 * sxx1 + syy1 * syy1 + szz1 * szz1 + two * sxy1 * sxy1 + two * sxz1 * sxz1 + two * syz1 * syz1)) * sxy1
+    axz1 = -two * dsqrt(two * (sxx1 * sxx1 + syy1 * syy1 + szz1 * szz1 + two * sxy1 * sxy1 + two * sxz1 * sxz1 + two * syz1 * syz1)) * sxz1
+    ayz1 = -two * dsqrt(two * (sxx1 * sxx1 + syy1 * syy1 + szz1 * szz1 + two * sxy1 * sxy1 + two * sxz1 * sxz1 + two * syz1 * syz1)) * syz1
+#else
     !Bij tensor with u test filtered OK
     bbxx1 = -two * sqrt(two * (sxx1f * sxx1f + syy1f * syy1f + szz1f * szz1f + two * sxy1f * sxy1f + two * sxz1f * sxz1f + two * syz1f * syz1f)) * sxx1f
     bbyy1 = -two * sqrt(two * (sxx1f * sxx1f + syy1f * syy1f + szz1f * szz1f + two * sxy1f * sxy1f + two * sxz1f * sxz1f + two * syz1f * syz1f)) * syy1f
@@ -573,6 +594,7 @@ contains
     axy1 = -two * sqrt(two * (sxx1 * sxx1 + syy1 * syy1 + szz1 * szz1 + two * sxy1 * sxy1 + two * sxz1 * sxz1 + two * syz1 * syz1)) * sxy1
     axz1 = -two * sqrt(two * (sxx1 * sxx1 + syy1 * syy1 + szz1 * szz1 + two * sxy1 * sxy1 + two * sxz1 * sxz1 + two * syz1 * syz1)) * sxz1
     ayz1 = -two * sqrt(two * (sxx1 * sxx1 + syy1 * syy1 + szz1 * szz1 + two * sxy1 * sxy1 + two * sxz1 * sxz1 + two * syz1 * syz1)) * syz1
+#endif
 
     if((iibm==1).or.(iibm==2).or.(iibm==3)) then
        bbxx1 = bbxx1 * (one - ep1)
@@ -645,8 +667,8 @@ contains
     call filx(axz1f, axz1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,zero)
     call filx(ayz1f, ayz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,zero)
 
-    if (mod(itime, ioutput).eq.0) then
-       if (nrank==0) print *, "filx axx1= ", maxval(axx1), maxval(axx1f), maxval(axx1) - maxval(axx1f)
+    if (mod(itime, ioutput) == 0) then
+       if (nrank==0) write(*,*) "filx axx1= ", maxval(axx1), maxval(axx1f), maxval(axx1) - maxval(axx1f)
     endif
 
     if((iibm==1).or.(iibm==2).or.(iibm==3)) then
@@ -673,8 +695,8 @@ contains
     call fily(axz2f, te2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,zero)
     call fily(ayz2f, tf2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,zero)
 
-    if (mod(itime, ioutput).eq.0) then
-       if (nrank==0) print *, "fily axx2= ", maxval(ta2), maxval(axx2f), maxval(ta2) - maxval(axx2f)
+    if (mod(itime, ioutput) == 0) then
+       if (nrank==0) write(*,*) "fily axx2= ", maxval(ta2), maxval(axx2f), maxval(ta2) - maxval(axx2f)
     endif
 
     if((iibm==1).or.(iibm==2).or.(iibm==3)) then
@@ -705,8 +727,8 @@ contains
     call filz(axz3f, te3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,zero)
     call filz(ayz3f, tf3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,zero)
 
-    if (mod(itime, ioutput).eq.0) then
-       if (nrank==0) print *, "filz axx3= ", maxval(ta3), maxval(axx3f), maxval(ta3) - maxval(axx3f)
+    if (mod(itime, ioutput) == 0) then
+       if (nrank==0) write(*,*) "filz axx3= ", maxval(ta3), maxval(axx3f), maxval(ta3) - maxval(axx3f)
     endif
 
     ta3 = zero; tb3 = zero; tc3 = zero
@@ -750,7 +772,7 @@ contains
 
     if((iibm==1).or.(iibm==2).or.(iibm==3)) then
        do ijk = 1, nvect1
-          if (ep1(ijk, 1, 1) .eq. one) then
+          if (ep1(ijk, 1, 1)  ==  one) then
              ta1(ijk, 1, 1) = zero
              tb1(ijk, 1, 1) = one
           endif
@@ -775,10 +797,10 @@ contains
     call transpose_y_to_z(smagC2f, ta3)
     call filz(smagC3f, ta3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,zero)
 
-    if (mod(itime, ioutput).eq.0) then
-       if (nrank==0) print *, "filx smagC1= ", maxval(smagC1), maxval(smagC1f), maxval(smagC1) - maxval(smagC1f)
-       if (nrank==0) print *, "fily smagC1= ", maxval(ta2), maxval(smagC2f), maxval(ta2) - maxval(smagC2f)
-       if (nrank==0) print *, "filz smagC1= ", maxval(ta3), maxval(smagC3f), maxval(ta3) - maxval(smagC3f)
+    if (mod(itime, ioutput) == 0) then
+       if (nrank==0) write(*,*) "filx smagC1= ", maxval(smagC1), maxval(smagC1f), maxval(smagC1) - maxval(smagC1f)
+       if (nrank==0) write(*,*) "fily smagC1= ", maxval(ta2), maxval(smagC2f), maxval(ta2) - maxval(smagC2f)
+       if (nrank==0) write(*,*) "filz smagC1= ", maxval(ta3), maxval(smagC3f), maxval(ta3) - maxval(smagC3f)
     endif
 
 
@@ -809,19 +831,19 @@ contains
     do k = 1, ysize(3)
        do j = 1, ysize(2)
           do i = 1, ysize(1)
-             nut2(i, j, k) = dsmagcst2(i, j, k) * ((del(j))**two) * sqrt(two * srt_smag2(i, j, k))
+             nut2(i, j, k) = dsmagcst2(i, j, k) * ((del(j))**two) * sqrt_prec(two * srt_smag2(i, j, k))
           enddo
        enddo
     enddo
     call transpose_y_to_x(nut2, nut1)
 
     if (mod(itime,itest)==0) then
-       !if (nrank==0) print *, "dsmagc init   min max= ", minval(smagC1), maxval(smagC1)
-       if (nrank==0) print *, "dsmagc final  min max= ", minval(dsmagcst1), maxval(dsmagcst1)
-       if (nrank==0) print *, "dsmag nut1    min max= ", minval(nut1), maxval(nut1)
+       !if (nrank==0) write(*,*) "dsmagc init   min max= ", minval(smagC1), maxval(smagC1)
+       if (nrank==0) write(*,*) "dsmagc final  min max= ", minval(dsmagcst1), maxval(dsmagcst1)
+       if (nrank==0) write(*,*) "dsmag nut1    min max= ", minval(nut1), maxval(nut1)
     endif
 
-    if (mod(itime, ioutput).eq.0) then
+    if (mod(itime, ioutput) == 0) then
 
        ! write(filename, "('./data/dsmagcst_initial',I4.4)") itime / imodulo
        ! call decomp_2d_write_one(1, smagC1, filename, 2)
@@ -850,23 +872,23 @@ contains
   !
   !================================================================================
 
-  USE param
-  USE variables
-  USE decomp_2d
-  USE decomp_2d_io
-  USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-  USE var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,di2
-  USE var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
-  USE var, only : sxx1,syy1,szz1,sxy1,sxz1,syz1
-  USE var, only : gxx1,gyx1,gzx1,gxy2,gyy2,gzy2,gxz3,gyz3,gzz3
-  USE var, only : gxy1,gyy1,gzy1,gxz2,gyz2,gzz2,gxz1,gyz1,gzz1
-  USE var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2,srt_smag2,nut2
-  USE var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
-  USE var, only : sdxx1,sdyy1,sdzz1,sdxy1,sdxz1,sdyz1
-  USE var, only : sdxx2,sdyy2,sdzz2,sdxy2,sdxz2,sdyz2
-  USE var, only : sdxx3,sdyy3,sdzz3,sdxy3,sdxz3,sdyz3
-  USE var, only : srt_wale,srt_wale2,srt_wale3,srt_wale4
-  USE ibm_param
+  use param
+  use variables
+  use decomp_2d
+  use decomp_2d_io
+  use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+  use var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,di2
+  use var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
+  use var, only : sxx1,syy1,szz1,sxy1,sxz1,syz1
+  use var, only : gxx1,gyx1,gzx1,gxy2,gyy2,gzy2,gxz3,gyz3,gzz3
+  use var, only : gxy1,gyy1,gzy1,gxz2,gyz2,gzz2,gxz1,gyz1,gzz1
+  use var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2,srt_smag2,nut2
+  use var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
+  use var, only : sdxx1,sdyy1,sdzz1,sdxy1,sdxz1,sdyz1
+  use var, only : sdxx2,sdyy2,sdzz2,sdxy2,sdxz2,sdyz2
+  use var, only : sdxx3,sdyy3,sdzz3,sdxy3,sdxz3,sdyz3
+  use var, only : srt_wale,srt_wale2,srt_wale3,srt_wale4
+  use ibm_param
   
   implicit none
 
@@ -961,6 +983,44 @@ contains
        gxz1(:,:,:)*gzz1(:,:,:)+gzx1(:,:,:)*gxx1(:,:,:)+&
        gzy1(:,:,:)*gyx1(:,:,:)+gzz1(:,:,:)*gzx1(:,:,:))
 
+  call transpose_z_to_y(gxz3,gxz2)
+  call transpose_z_to_y(gyz3,gyz2)
+  call transpose_z_to_y(gzz3,gzz2)
+
+  !WORK X-PENCILS
+  call transpose_y_to_x(sxy2,sxy1)
+  call transpose_y_to_x(syy2,syy1)
+  call transpose_y_to_x(syz2,syz1)
+  call transpose_y_to_x(szz2,szz1)
+
+  call transpose_y_to_x(sdxy2,sdxy1)
+  call transpose_y_to_x(sdyy2,sdyy1)
+  call transpose_y_to_x(sdyz2,sdyz1)
+  call transpose_y_to_x(sdzz2,sdzz1)
+
+  call transpose_y_to_x(gxy2,gxy1)
+  call transpose_y_to_x(gyy2,gyy1)
+  call transpose_y_to_x(gzy2,gzy1)
+  call transpose_y_to_x(gxz2,gxz1)
+  call transpose_y_to_x(gyz2,gyz1)
+  call transpose_y_to_x(gzz2,gzz1)
+
+  sxz1(:,:,:)=half*(gzx1(:,:,:)+gxz1(:,:,:))
+
+  sdxx1(:,:,:)=gxx1(:,:,:)*gxx1(:,:,:)+gxy1(:,:,:)*gyx1(:,:,:)+&
+       gxz1(:,:,:)*gzx1(:,:,:)-(one/three)*(gxx1(:,:,:)*gxx1(:,:,:)+&
+       gyy1(:,:,:)*gyy1(:,:,:)+gzz1(:,:,:)*gzz1(:,:,:)+&
+       two*gxy1(:,:,:)*gyx1(:,:,:)+two*gxz1(:,:,:)*gzx1(:,:,:)+&
+       two*gzy1(:,:,:)*gyz1(:,:,:))
+
+  sdxy1(:,:,:)=half*(gxx1(:,:,:)*gxy1(:,:,:)+gxy1(:,:,:)*gyy1(:,:,:)+&
+       gxz1(:,:,:)*gzy1(:,:,:)+gyx1(:,:,:)*gxx1(:,:,:)+&
+       gyy1(:,:,:)*gyx1(:,:,:)+gyz1(:,:,:)*gzx1(:,:,:))
+
+  sdxz1(:,:,:)=half*(gxx1(:,:,:)*gxz1(:,:,:)+gxy1(:,:,:)*gyz1(:,:,:)+&
+       gxz1(:,:,:)*gzz1(:,:,:)+gzx1(:,:,:)*gxx1(:,:,:)+&
+       gzy1(:,:,:)*gyx1(:,:,:)+gzz1(:,:,:)*gzx1(:,:,:))
+
   sdyy1(:,:,:)=gyx1(:,:,:)*gxy1(:,:,:)+gyy1(:,:,:)*gyy1(:,:,:)+&
        gyz1(:,:,:)*gzy1(:,:,:)-(one/three)*(gxx1(:,:,:)*gxx1(:,:,:)+&
        gyy1(:,:,:)*gyy1(:,:,:)+gzz1(:,:,:)*gzz1(:,:,:)+&
@@ -1001,18 +1061,18 @@ contains
   enddo
   call transpose_y_to_x(nut2, nut1)
 
-  if (nrank==0) print *, "WALE SS min max= ", minval(srt_wale), maxval(srt_wale)
-  if (nrank==0) print *, "WALE SdSd min max= ", minval(srt_wale3), maxval(srt_wale3)
-  if (nrank==0) print *, "WALE nut1     min max= ", minval(nut1), maxval(nut1)
+  if (nrank==0) write(*,*) "WALE SS min max= ", minval(srt_wale), maxval(srt_wale)
+  if (nrank==0) write(*,*) "WALE SdSd min max= ", minval(srt_wale3), maxval(srt_wale3)
+  if (nrank==0) write(*,*) "WALE nut1     min max= ", minval(nut1), maxval(nut1)
 
-  if (mod(itime, ioutput).eq.0) then
+  if (mod(itime, ioutput) == 0) then
 
      write(filename, "('./data/nut_wale',I4.4)") itime / ioutput
      call decomp_2d_write_one(1, nut1, filename, 2)
 
   endif
 
-end subroutine wale
+  end subroutine wale
 
 
   subroutine sgs_mom_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
@@ -1025,19 +1085,18 @@ end subroutine wale
     !
     !================================================================================
 
-    USE param
-    USE variables
-    USE decomp_2d
-    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-    USE var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2
-    USE var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
-    USE var, only : sgsx2,sgsy2,sgsz2,nut2
-    USE var, only : sgsx3,sgsy3,sgsz3,nut3
-    USE var, only : sxx1,sxy1,sxz1,syy1,syz1,szz1
-    USE var, only : sxy2,syy2,syz2,sxz2,szz2,sxz3,syz3,szz3
-    USE param, only : mytype, zero
-    USE ibm_param
-    
+    use param
+    use variables
+    use decomp_2d
+    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    use var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2
+    use var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
+    use var, only : sgsx2,sgsy2,sgsz2,nut2
+    use var, only : sgsx3,sgsy3,sgsz3,nut3
+    use var, only : sxx1,sxy1,sxz1,syy1,syz1,szz1
+    use var, only : sxy2,syy2,syz2,sxz2,szz2,sxz3,syz3,szz3
+    use ibm_param
+
     implicit none
 
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, nut1, ep1
@@ -1080,7 +1139,7 @@ end subroutine wale
     !-->for ux
     td2 = zero
     iimplicit = -iimplicit
-    if (istret.ne.0) then
+    if (istret /= 0) then
        call deryy (td2, ux2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1,ubcx)
        call dery (te2, ux2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1,ubcx)
        do k = 1, ysize(3)
@@ -1096,7 +1155,7 @@ end subroutine wale
 
     !-->for uy
     te2 = zero
-    if (istret.ne.0) then
+    if (istret /= 0) then
        call deryy (te2, uy2, di2, sy, sfy, ssy, swy, ysize(1), ysize(2), ysize(3), 0,ubcy)
        call dery (tf2, uy2, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0,ubcy)
        do k = 1, ysize(3)
@@ -1112,7 +1171,7 @@ end subroutine wale
 
     !-->for uz
     tf2 = zero
-    if (istret.ne.0) then
+    if (istret /= 0) then
        call deryy (tf2, uz2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1,ubcz)
        call dery (tj2, uz2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1,ubcz)
        do k = 1, ysize(3)
@@ -1165,7 +1224,7 @@ end subroutine wale
        do k=1,xsize(3)
           do j=1,xsize(2)
              do i=1,xsize(1)
-                if(ep1(i,j, k).eq.1) then
+                if(ep1(i,j, k) == 1) then
                    sgsx1(i,j,k) = zero
                    sgsy1(i,j,k) = zero
                    sgsz1(i,j,k) = zero
@@ -1180,12 +1239,12 @@ end subroutine wale
   !************************************************************
   subroutine sgs_scalar_nonconservative(sgsphi1,nut1,phi1,is)
 
-    USE param
-    USE variables
-    USE decomp_2d
+    use param
+    use variables
+    use decomp_2d
 
-    USE var, only: di1,tb1,di2,tb2,di3,tb3,tc1,tc2,tc3
-    USE abl, only: wall_sgs_scalar
+    use var, only: di1,tb1,di2,tb2,di3,tb3,tc1,tc2,tc3
+    use abl, only: wall_sgs_scalar
 
     implicit none
 
@@ -1223,7 +1282,7 @@ end subroutine wale
     iimplicit = - iimplicit
     call deryyS(tc2, phi2, di2, sy, sfypS, ssypS, swypS, ysize(1), ysize(2), ysize(3), 1, zero)
     iimplicit = - iimplicit
-    if (istret.ne.0) then
+    if (istret /= 0) then
        do k = 1, ysize(3)
        do j = 1, ysize(2)
        do i = 1, ysize(1)
@@ -1245,7 +1304,7 @@ end subroutine wale
     call transpose_y_to_x(sgsphi2, sgsphi1)
 
     ! SGS correction for ABL
-    if (itype.eq.itype_abl.and.is==1.and.ibuoyancy.eq.1) then
+    if (itype == itype_abl .and. is == 1 .and. ibuoyancy == 1) then
        call transpose_y_to_x(tb2,dphidy1)
        call wall_sgs_scalar(sgsphi1,nut1,dphidy1)
     endif
