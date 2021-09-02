@@ -70,6 +70,7 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
     ! Local variables
+    logical :: read_from_file
     real(mytype) :: y,r,um,r3,x,z,h,ct
     real(mytype) :: cx0,cy0,cz0,hg,lg
     real(mytype) :: ftent
@@ -492,7 +493,7 @@ contains
     can = - (constant - ub)
 
     if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) &
-       write(*,*) 'UT', uball, can
+       write(*,*) 'UT', ub, can
 
     do k=1,xsize(3)
       do j=1,xsize(2)

@@ -891,16 +891,16 @@ real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: di2
 
       ! Check if we are solving momentum or scalars
       if (cly1 == ncly1 .and. clyn == nclyn) then
-         call deryy(td2,ux2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0, ubcx)
+         call deryy(td2,ux2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0,zero)
       else
-         call deryyS(td2,ux2,di2,sy,sfyS,ssyS,swyS,ysize(1),ysize(2),ysize(3),0, zero)
+         call deryyS(td2,ux2,di2,sy,sfyS,ssyS,swyS,ysize(1),ysize(2),ysize(3),0,zero)
       endif
    else
       ! Check if we are solving momentum or scalars
       if (cly1 == ncly1 .and. clyn == nclyn) then
-         call deryy(td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1, ubcx)
+         call deryy(td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,zero)
       else
-         call deryyS(td2,ux2,di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1, zero)
+         call deryyS(td2,ux2,di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1,zero)
       endif
 
    endif

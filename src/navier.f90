@@ -1039,6 +1039,7 @@ contains
     use var, ONLY : nzmsize
     use param, ONLY : npress
     use variables, ONLY : nxm, nym, nzm
+    use dbg_schemes, ONLY : sqrt_prec
 
     implicit none
 
@@ -1069,7 +1070,7 @@ contains
     else
        !! Compute RMS change
        errloc = sum((pp3(:,:,:,1) - pp3(:,:,:,2))**2)
-       call MPI_ALLREDUCE(errloc,errglob,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
+       call MPI_ALLREDUCE(errloc,errglob,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
        errglob = sqrt_prec(errglob / nxm / nym / nzm)
 
@@ -1139,7 +1140,7 @@ contains
     if (poissiter.eq.0) then
        !! Compute rho0
        rhomin = minval(rho1(:,:,:,1))
-       call MPI_ALLREDUCE(rhomin,rho0,1,real_type,MPI_MIN,MPI_COMM_WORLD,ierr)
+       call MPI_ALLREDUCE(rhomin,rho0,1,real_type,MPI_MIN,MPI_COMM_WORLD,code)
        if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     endif
 
