@@ -157,6 +157,7 @@ contains
     call alloc_x(pz1, opt_global=.true.) !global indices
     call alloc_x(px1, opt_global=.true.) !global indices
     call alloc_x(py1, opt_global=.true.) !global indices
+
     allocate(phi1(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),1:numscalar)) !global indices
 
     call alloc_x(ta1);call alloc_x(tb1);call alloc_x(tc1)
@@ -177,6 +178,8 @@ contains
     if (itype.eq.itype_abl.and.ibuoyancy.eq.1) then
        allocate(T_tmp(xsize(1),xsize(2),xsize(3),1))
     endif
+
+    call alloc_x(uxf1);call alloc_x(uyf1);call alloc_x(uzf1);call alloc_x(phif1);
 
     allocate(pp1(nxmsize,xsize(2),xsize(3)))
     allocate(pgy1(nxmsize,xsize(2),xsize(3)))

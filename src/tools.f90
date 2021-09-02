@@ -74,6 +74,8 @@ contains
       phimaxin(:,is) =  (/phimin, phimax /)
     enddo
 
+    !call MPI_REDUCE(phimax,phimax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
+    !call MPI_REDUCE(phimin,phimin1,1,real_type,MPI_MIN,0,MPI_COMM_WORLD,code)
     call MPI_REDUCE(phimaxin,phimaxout,numscalar*2,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
     if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
 

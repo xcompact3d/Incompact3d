@@ -268,12 +268,12 @@ contains
     ! Recover temperature when decomposed (pressure to be recovered externally)
     if (itype.eq.itype_abl.and.ibuoyancy.eq.1) then
       do k = 1, xsize(3)
-      do j = 1, xsize(2) 
-      do i = 1, xsize(1)
-        T_tmp(i,j,k,1) = phi1(i,j,k,1)
-        phi1(i,j,k,1) = phi1(i,j,k,1) + Tstat(j,1)
-      enddo
-      enddo
+        do j = 1, xsize(2) 
+          do i = 1, xsize(1)
+            T_tmp(i,j,k,1) = phi1(i,j,k,1)
+            phi1(i,j,k,1) = phi1(i,j,k,1) + Tstat(j,1)
+          enddo
+        enddo
       enddo
     endif
 
