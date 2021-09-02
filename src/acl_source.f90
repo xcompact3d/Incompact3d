@@ -2,8 +2,6 @@
 module actuator_line_source
 
     use decomp_2d, only: mytype, decomp_2d_abort
-    use param, only: zero, half, one
-    use dbg_schemes, only: sin_prec, sqrt_prec
     use actuator_line_model_utils
     use actuator_line_model
 
@@ -229,7 +227,7 @@ contains
 
     subroutine Compute_Momentum_Source_Term_pointwise
 
-        use decomp_2d, only: nproc, xstart, xend, xsize, update_halo
+        use decomp_2d, only: mytype, nproc, xstart, xend, xsize, update_halo
         use MPI
         use param, only: dx,dy,dz,eps_factor,xnu,istret,xlx,yly,zlz
         use var, only: ux1, uy1, uz1, FTx, FTy, FTz, yp
@@ -249,22 +247,22 @@ contains
         call get_locations
 
         ! Zero the velocities
-        Su(:)=zero
-        Sv(:)=zero
-        Sw(:)=zero
+        Su(:)=0.0
+        Sv(:)=0.0
+        Sw(:)=0.0
         ! This is not optimum but works
         ! Define the domain
 
         if (istret.eq.0) then
-        ymin=real(xstart(2)-1,mytype)*dy-dy*half ! Add -dy/2.0 overlap
-        ymax=real(xend(2)-1,mytype)*dy+dy*half   ! Add +dy/2.0 overlap
+        ymin=(xstart(2)-1)*dy-dy/2. ! Add -dy/2.0 overlap
+        ymax=(xend(2)-1)*dy+dy/2.   ! Add +dy/2.0 overlap
         else
         ymin=yp(xstart(2))
         ymax=yp(xend(2))
         endif
 
-        zmin=real(xstart(3)-1,mytype)*dz-dz*half ! Add a -dz/2.0 overlap
-        zmax=real(xend(3)-1,mytype)*dz+dz*half   ! Add a +dz/2.0 overlap
+        zmin=(xstart(3)-1)*dz-dz/2. ! Add a -dz/2.0 overlap
+        zmax=(xend(3)-1)*dz+dz/2.   ! Add a +dz/2.0 overlap
 
         ! Check if the points lie outside the fluid domain
         do isource=1,Nsource
@@ -286,17 +284,17 @@ contains
 
         do isource=1,NSource
 
-        min_dist=1e6_mytype
+        min_dist=1e6
         if((Sy(isource)>=ymin).and.(Sy(isource)<ymax).and.(Sz(isource)>=zmin).and.(Sz(isource)<zmax)) then
             !write(*,*) 'nrank= ',nrank, 'owns this node'
             do k=xstart(3),xend(3)
-            zmesh=real(k-1,mytype)*dz
+            zmesh=(k-1)*dz
             do j=xstart(2),xend(2)
-            if (istret.eq.0) ymesh=real(j-1,mytype)*dy
+            if (istret.eq.0) ymesh=(j-1)*dy
             if (istret.ne.0) ymesh=yp(j)
             do i=xstart(1),xend(1)
-            xmesh=real(i-1,mytype)*dx
-            dist = sqrt_prec((Sx(isource)-xmesh)**2.+(Sy(isource)-ymesh)**2.+(Sz(isource)-zmesh)**2.)
+            xmesh=(i-1)*dx
+            dist = sqrt((Sx(isource)-xmesh)**2.+(Sy(isource)-ymesh)**2.+(Sz(isource)-zmesh)**2.)
 
             if (dist<min_dist) then
                 min_dist=dist
@@ -320,31 +318,31 @@ contains
             stop
             endif
 
-            if(Sx(isource)>real(min_i-1,mytype)*dx) then
+            if(Sx(isource)>(min_i-1)*dx) then
                 i_lower=min_i
                 i_upper=min_i+1
-            else if(Sx(isource)<real(min_i-1,mytype)*dx) then
+            else if(Sx(isource)<(min_i-1)*dx) then
                 i_lower=min_i-1
                 i_upper=min_i
-            else if(Sx(isource)==real(min_i-1,mytype)*dx) then
+            else if(Sx(isource)==(min_i-1)*dx) then
                 i_lower=min_i
                 i_upper=min_i
             endif
 
             if (istret.eq.0) then
-            if(Sy(isource)>real(min_j-1,mytype)*dy.and.Sy(isource)<real(xend(2)-1,mytype)*dy) then
+            if(Sy(isource)>(min_j-1)*dy.and.Sy(isource)<(xend(2)-1)*dy) then
                 j_lower=min_j
                 j_upper=min_j+1
-            else if(Sy(isource)>real(min_j-1,mytype)*dy.and.Sy(isource)>(xend(2)-1)*dy) then
+            else if(Sy(isource)>(min_j-1)*dy.and.Sy(isource)>(xend(2)-1)*dy) then
                 j_lower=min_j
                 j_upper=min_j+1 ! THis is in the Halo domain
-            else if(Sy(isource)<real(min_j-1,mytype)*dy.and.Sy(isource)>(xstart(2)-1)*dy) then
+            else if(Sy(isource)<(min_j-1)*dy.and.Sy(isource)>(xstart(2)-1)*dy) then
                 j_lower=min_j-1
                 j_upper=min_j
-            else if(Sy(isource)<real(min_j-1,mytype)*dy.and.Sy(isource)<(xstart(2)-1)*dy) then
+            else if(Sy(isource)<(min_j-1)*dy.and.Sy(isource)<(xstart(2)-1)*dy) then
                 j_lower=min_j-1 ! THis is in the halo domain
                 j_upper=min_j
-            else if (Sy(isource)==real(min_j-1,mytype)*dy) then
+            else if (Sy(isource)==(min_j-1)*dy) then
                 j_lower=min_j
                 j_upper=min_j
             endif
@@ -362,35 +360,35 @@ contains
             endif
             endif
 
-            if(Sz(isource)>real(min_k-1,mytype)*dz.and.Sz(isource)<real(xend(3)-1,mytype)*dz) then
+            if(Sz(isource)>(min_k-1)*dz.and.Sz(isource)<(xend(3)-1)*dz) then
                 k_lower=min_k
                 k_upper=min_k+1
-            elseif(Sz(isource)>real(min_k-1,mytype)*dz.and.Sz(isource)>real(xend(3)-1,mytype)*dz) then
+            elseif(Sz(isource)>(min_k-1)*dz.and.Sz(isource)>(xend(3)-1)*dz) then
                 k_lower=min_k
                 k_upper=min_k+1 ! This in the halo doamin
-            else if(Sz(isource)<real(min_k-1,mytype)*dz.and.Sz(isource)>real(xstart(3)-1,mytype)*dz) then
+            else if(Sz(isource)<(min_k-1)*dz.and.Sz(isource)>(xstart(3)-1)*dz) then
                 k_lower=min_k-1
                 k_upper=min_k
-            else if(Sz(isource)<real(min_k-1,mytype)*dz.and.Sz(isource)<real(xstart(3)-1,mytype)*dz) then
+            else if(Sz(isource)<(min_k-1)*dz.and.Sz(isource)<(xstart(3)-1)*dz) then
                 k_lower=min_k-1 ! This is in the halo domain
                 k_upper=min_k
-            else if (Sz(isource)==real(min_k-1,mytype)*dz) then
+            else if (Sz(isource)==(min_k-1)*dz) then
                 k_lower=min_k
                 k_upper=min_k
             endif
 
             ! Prepare for interpolation
-            x0=real(i_lower-1,mytype)*dx
-            x1=real(i_upper-1,mytype)*dx
+            x0=(i_lower-1)*dx
+            x1=(i_upper-1)*dx
             if (istret.eq.0) then
-            y0=real(j_lower-1,mytype)*dy
-            y1=real(j_upper-1,mytype)*dy
+            y0=(j_lower-1)*dy
+            y1=(j_upper-1)*dy
             else
             y0=yp(j_lower)
             y1=yp(j_upper)
             endif
-            z0=real(k_lower-1,mytype)*dz
-            z1=real(k_upper-1,mytype)*dz
+            z0=(k_lower-1)*dz
+            z1=(k_upper-1)*dz
 
             x=Sx(isource)
             y=Sy(isource)
@@ -442,12 +440,13 @@ contains
                                                   uz1_halo(i_upper,j_upper,k_upper))
 
         else
-            Su_part(isource)=zero
-            Sv_part(isource)=zero
-            Sw_part(isource)=zero
+            Su_part(isource)=0.0
+            Sv_part(isource)=0.0
+            Sw_part(isource)=0.0
             !write(*,*) 'Warning: I do not own this node'
         endif
         enddo
+        !$OMP END PARALLEL DO
 
         call MPI_ALLREDUCE(Su_part,Su,Nsource,MPI_REAL8,MPI_SUM, &
             MPI_COMM_WORLD,code)
@@ -460,9 +459,9 @@ contains
         if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
         ! Zero the Source term at each time step
-        FTx(:,:,:)=zero
-        FTy(:,:,:)=zero
-        FTz(:,:,:)=zero
+        FTx(:,:,:)=0.0
+        FTy(:,:,:)=0.0
+        FTz(:,:,:)=0.0
         Visc=xnu
         !## Send the velocities to the
         call set_vel
@@ -479,21 +478,21 @@ contains
 
             !## Add the source term
             do k=1,xsize(3)
-            zmesh=real(k+xstart(3)-1-1,mytype)*dz
+            zmesh=(k+xstart(3)-1-1)*dz
             do j=1,xsize(2)
-            if (istret.eq.0) ymesh=real(xstart(2)+j-1-1,mytype)*dy
+            if (istret.eq.0) ymesh=(xstart(2)+j-1-1)*dy
             if (istret.ne.0) ymesh=yp(xstart(2)+j-1)
             do i=1,xsize(1)
             xmesh=(i-1)*dx
 
             do isource=1,NSource
 
-            dist = sqrt_prec((Sx(isource)-xmesh)**2+(Sy(isource)-ymesh)**2+(Sz(isource)-zmesh)**2)
+            dist = sqrt((Sx(isource)-xmesh)**2+(Sy(isource)-ymesh)**2+(Sz(isource)-zmesh)**2)
             epsilon=eps_factor*(dx*dy*dz)**(1.0/3.0)
             if (dist<10.0*epsilon) then
-                Kernel= one/(epsilon**3.0*pi**1.5)*exp_prec(-(dist/epsilon)**2.0)
+                Kernel= 1.0/(epsilon**3.0*pi**1.5)*dexp(-(dist/epsilon)**2.0)
             else
-                Kernel=zero
+                Kernel=0.0
             endif
             ! First apply a constant lift to induce the
             FTx(i,j,k)=FTx(i,j,k)-SFx(isource)*Kernel

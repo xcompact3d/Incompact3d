@@ -53,7 +53,8 @@ SRCDECOMP = $(DECOMPDIR)/decomp_2d.f90 $(DECOMPDIR)/glassman.f90 $(DECOMPDIR)/ff
 OBJDECOMP = $(SRCDECOMP:%.f90=%.o)
 SRC = $(SRCDIR)/module_param.f90 $(SRCDIR)/variables.f90 $(SRCDIR)/poisson.f90 $(SRCDIR)/derive.f90 $(SRCDIR)/implicit.f90 $(SRCDIR)/schemes.f90 $(SRCDIR)/parameters.f90 $(SRCDIR)/*.f90
 OBJ = $(SRC:%.f90=%.o)
-SRC = $(SRCDIR)/module_param.f90 $(SRCDIR)/variables.f90 $(SRCDIR)/BC-dbg-schemes.f90 $(SRCDIR)/poisson.f90 $(SRCDIR)/ibm.f90 $(SRCDIR)/derive.f90 $(SRCDIR)/implicit.f90 $(SRCDIR)/schemes.f90 $(SRCDIR)/forces.f90 $(SRCDIR)/probes.f90 $(SRCDIR)/navier.f90 $(SRCDIR)/tools.f90 $(SRCDIR)/visu.f90 $(SRCDIR)/BC-TBL.f90 $(SRCDIR)/BC-ABL.f90 $(SRCDIR)/les_models.f90 $(SRCDIR)/BC-Lock-exchange.f90 $(SRCDIR)/time_integrators.f90 $(SRCDIR)/filters.f90 $(SRCDIR)/parameters.f90 $(SRCDIR)/BC-User.f90 $(SRCDIR)/BC-TGV.f90 $(SRCDIR)/BC-Cavity.f90 $(SRCDIR)/BC-Channel-flow.f90 $(SRCDIR)/BC-Periodic-hill.f90 $(SRCDIR)/BC-Cylinder.f90 $(SRCDIR)/BC-Mixing-layer.f90 $(SRCDIR)/BC-Jet.f90 $(SRCDIR)/BC-Uniform.f90 $(TURBDIR)/constants.f90 $(TURBDIR)/acl_utils.f90 $(TURBDIR)/airfoils.f90 $(TURBDIR)/dynstall.f90 $(TURBDIR)/dynstall_legacy.f90 $(TURBDIR)/acl_elem.f90 $(TURBDIR)/acl_controller.f90 $(TURBDIR)/acl_turb.f90 $(TURBDIR)/acl_out.f90 $(TURBDIR)/acl_farm_controller.f90 $(TURBDIR)/acl_model.f90 $(TURBDIR)/acl_source.f90 $(TURBDIR)/adm.f90 $(TURBDIR)/turbine.f90 $(SRCDIR)/statistics.f90 $(SRCDIR)/case.f90 $(SRCDIR)/transeq.f90 $(SRCDIR)/genepsi3d.f90 $(SRCDIR)/xcompact3d.f90
+SRC = $(SRCDIR)/module_param.f90 $(SRCDIR)/variables.f90 $(SRCDIR)/poisson.f90 $(SRCDIR)/ibm.f90 $(SRCDIR)/derive.f90 $(SRCDIR)/implicit.f90 $(SRCDIR)/schemes.f90 $(SRCDIR)/forces.f90 $(SRCDIR)/probes.f90 $(SRCDIR)/navier.f90 $(SRCDIR)/tools.f90 $(SRCDIR)/visu.f90 $(SRCDIR)/BC-TBL.f90 $(SRCDIR)/BC-ABL.f90 $(SRCDIR)/les_models.f90 $(SRCDIR)/BC-Lock-exchange.f90 $(SRCDIR)/time_integrators.f90 $(SRCDIR)/filters.f90 $(SRCDIR)/parameters.f90 $(SRCDIR)/BC-User.f90 $(SRCDIR)/BC-TGV.f90 $(SRCDIR)/BC-Channel-flow.f90 $(SRCDIR)/BC-Cavity.f90 $(SRCDIR)/BC-Periodic-hill.f90 $(SRCDIR)/BC-Cylinder.f90 $(SRCDIR)/BC-Mixing-layer.f90 $(SRCDIR)/BC-Jet.f90 $(SRCDIR)/BC-dbg-schemes.f90 $(SRCDIR)/BC-Uniform.f90 $(TURBDIR)/constants.f90 $(TURBDIR)/acl_utils.f90 $(TURBDIR)/airfoils.f90 $(TURBDIR)/dynstall.f90 $(TURBDIR)/dynstall_legacy.f90 $(TURBDIR)/acl_elem.f90 $(TURBDIR)/acl_controller.f90 $(TURBDIR)/acl_turb.f90 $(TURBDIR)/acl_out.f90 $(TURBDIR)/acl_farm_controller.f90 $(TURBDIR)/acl_model.f90 $(TURBDIR)/acl_source.f90 $(TURBDIR)/adm.f90 $(TURBDIR)/turbine.f90 $(SRCDIR)/statistics.f90 $(SRCDIR)/case.f90 $(SRCDIR)/transeq.f90 $(SRCDIR)/genepsi3d.f90 $(SRCDIR)/xcompact3d.f90
+
 
 #######FFT settings##########
 ifeq ($(FFT),fftw3)
@@ -130,13 +131,13 @@ $(SRCDIR)/acl_model.o: $(SRCDIR)/acl_elem.o $(SRCDIR)/acl_out.o
 $(SRCDIR)/acl_out.o: $(SRCDIR)/acl_turb.o
 $(SRCDIR)/acl_source.o: $(SRCDIR)/acl_model.o $(SRCDIR)/acl_utils.o
 $(SRCDIR)/acl_turb.o: $(SRCDIR)/module_param.o $(SRCDIR)/acl_elem.o
-$(SRCDIR)/acl_utils.o: $(DECOMPDIR)/decomp_2d.o $(SRCDIR)/constants.o $(SRCDIR)/BC-dbg-schemes.o
+$(SRCDIR)/acl_utils.o: $(DECOMPDIR)/decomp_2d.o $(SRCDIR)/constants.o
 $(SRCDIR)/adm.o: $(SRCDIR)/airfoils.o $(SRCDIR)/variables.o
 $(SRCDIR)/airfoils.o: $(SRCDIR)/acl_utils.o
 $(SRCDIR)/BC-ABL.o: $(SRCDIR)/visu.o
 $(SRCDIR)/BC-Channel-flow.o: $(SRCDIR)/visu.o
 $(SRCDIR)/BC-Cylinder.o: $(SRCDIR)/visu.o
-$(SRCDIR)/BC-dbg-schemes.o: $(SRCDIR)/variables.o
+$(SRCDIR)/BC-dbg-schemes.o: $(SRCDIR)/visu.o
 $(SRCDIR)/BC-Jet.o: $(SRCDIR)/visu.o
 $(SRCDIR)/BC-Lock-exchange.o: $(SRCDIR)/visu.o
 $(SRCDIR)/BC-Mixing-layer.o: $(SRCDIR)/visu.o
@@ -146,21 +147,21 @@ $(SRCDIR)/BC-TGV.o: $(SRCDIR)/visu.o
 $(SRCDIR)/BC-Uniform.o: $(SRCDIR)/visu.o
 $(SRCDIR)/BC-User.o: $(SRCDIR)/visu.o
 $(SRCDIR)/BC-Cavity.o: $(SRCDIR)/visu.o
-$(SRCDIR)/case.o: $(SRCDIR)/BC-ABL.o $(SRCDIR)/BC-Lock-exchange.o $(SRCDIR)/BC-Cavity.o $(SRCDIR)/BC-Channel-flow.o $(SRCDIR)/acl_turb.o $(SRCDIR)/visu.o $(SRCDIR)/BC-Cavity.o
-$(SRCDIR)/constants.o: $(DECOMPDIR)/decomp_2d.o $(SRCDIR)/module_param.o
+$(SRCDIR)/case.o: $(SRCDIR)/BC-Lock-exchange.o $(SRCDIR)/BC-Channel-flow.o $(SRCDIR)/acl_turb.o $(SRCDIR)/visu.o $(SRCDIR)/BC-Cavity.o
+$(SRCDIR)/constants.o: $(DECOMPDIR)/decomp_2d.o
 $(SRCDIR)/derive.o: $(SRCDIR)/ibm.o
 $(SRCDIR)/dynstall.o: $(SRCDIR)/airfoils.o
 $(SRCDIR)/dynstall_legacy.o: $(SRCDIR)/airfoils.o
 $(SRCDIR)/filters.o: $(SRCDIR)/ibm.o
 $(SRCDIR)/forces.o: $(SRCDIR)/module_param.o $(DECOMPDIR)/io.o
 $(SRCDIR)/genepsi3d.o: $(SRCDIR)/BC-Cylinder.o $(SRCDIR)/BC-Periodic-hill.o
-$(SRCDIR)/ibm.o: $(SRCDIR)/module_param.o $(SRCDIR)/BC-dbg-schemes.o
+$(SRCDIR)/ibm.o: $(SRCDIR)/module_param.o
 $(SRCDIR)/implicit.o: $(SRCDIR)/variables.o
 $(SRCDIR)/les_models.o: $(SRCDIR)/BC-ABL.o $(SRCDIR)/tools.o
 $(SRCDIR)/module_param.o: $(DECOMPDIR)/decomp_2d.o
 $(SRCDIR)/navier.o: $(SRCDIR)/forces.o $(SRCDIR)/poisson.o
 $(SRCDIR)/parameters.o: $(SRCDIR)/BC-Lock-exchange.o $(SRCDIR)/visu.o
-$(SRCDIR)/poisson.o: $(SRCDIR)/variables.o $(SRCDIR)/BC-dbg-schemes.o
+$(SRCDIR)/poisson.o: $(SRCDIR)/variables.o
 $(SRCDIR)/probes.o: $(SRCDIR)/variables.o
 $(SRCDIR)/schemes.o: $(SRCDIR)/implicit.o
 $(SRCDIR)/statistics.o: $(SRCDIR)/variables.o $(SRCDIR)/tools.o
@@ -183,7 +184,7 @@ post:
 clean:
 	rm -f $(DECOMPDIR)/*.o $(DECOMPDIR)/*.mod
 	rm -f $(SRCDIR)/*.o $(SRCDIR)/*.mod
-	rm -f *.o *.mod xcompact3d
+	rm -f *.o *.mod xcompact3d post
 
 .PHONY: cleanall
 cleanall: clean

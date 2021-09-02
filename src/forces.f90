@@ -41,7 +41,7 @@
 !=======================================================================
 
 module forces
-  use decomp_2d
+  USE decomp_2d
   implicit none
 
   integer :: nvol,iforces
@@ -55,9 +55,9 @@ contains
 
   subroutine init_forces
 
-    use decomp_2d
-    use param
-    use variables
+    USE decomp_2d
+    USE param
+    USE variables
     implicit none
 
     integer :: iv,stp1,stp2,h
@@ -113,15 +113,15 @@ contains
     enddo
 
     if (nrank==0) then
-       write(*,*) '========================Forces============================='
-       write(*,*) '                       (icvlf)      (icvrt) '
-       write(*,*) '                (jcvup) B____________C '
-       write(*,*) '                        \            \ '
-       write(*,*) '                        \     __     \ '
-       write(*,*) '                        \    \__\    \ '
-       write(*,*) '                        \            \ '
-       write(*,*) '                        \       CV   \ '
-       write(*,*) '                (jcvlw) A____________D '
+       print *,'========================Forces============================='
+       print *,'                       (icvlf)      (icvrt) '
+       print *,'                (jcvup) B____________C '
+       print *,'                        \            \ '
+       print *,'                        \     __     \ '
+       print *,'                        \    \__\    \ '
+       print *,'                        \            \ '
+       print *,'                        \       CV   \ '
+       print *,'                (jcvlw) A____________D '
        do iv=1,nvol
           write(*,"(' Control Volume     : #',I1)") iv
           write(*,"('     xld, icvlf     : (',F6.2,',',I6,')')") xld(iv), icvlf(iv)
@@ -129,7 +129,7 @@ contains
           write(*,"('     yld, jcvlw     : (',F6.2,',',I6,')')") yld(iv), jcvlw(iv)
           write(*,"('     yud, jcvup     : (',F6.2,',',I6,')')") yud(iv), jcvup(iv)
        enddo
-       write(*,*) '==========================================================='
+       print *,'==========================================================='
     endif
   end subroutine init_forces
 
@@ -159,7 +159,7 @@ contains
             MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
             fh, code)
        if (code.ne.0) then
-          if (nrank == 0) then
+          if (nrank.eq.0) then
              print *,'==========================================================='
              print *,'Error: MPI_FILE_OPEN : '//trim(filename)
              print *,'==========================================================='
@@ -176,7 +176,7 @@ contains
        call decomp_2d_write_var(fh,disp,1,uy11)
        call MPI_FILE_CLOSE(fh,code)
        if (code.ne.0) then
-          if (nrank == 0) then
+          if (nrank.eq.0) then
              print *,'==========================================================='
              print *,'Error: MPI_FILE_CLOSE : '//trim(filename)
              print *,'==========================================================='
@@ -188,7 +188,7 @@ contains
             MPI_MODE_RDONLY, MPI_INFO_NULL, &
             fh, code)
        if (code.ne.0) then
-          if (nrank == 0) then
+          if (nrank.eq.0) then
              print *,'==========================================================='
              print *,'Error: MPI_FILE_OPEN : '//trim(filestart)
              print *,'==========================================================='
@@ -202,7 +202,7 @@ contains
        call decomp_2d_read_var(fh,disp,1,uy11)
        call MPI_FILE_CLOSE(fh,code)
        if (code .ne. 0) then
-          if (nrank == 0) then
+          if (nrank.eq.0) then
              print *,'==========================================================='
              print *,'Error: MPI_FILE_CLOSE : '//trim(filestart)
              print *,'==========================================================='
@@ -226,11 +226,14 @@ subroutine force(ux1,uy1,ep1)
 
   !***********************************************************************
 
-  use param
-  use variables
-  use decomp_2d
-  use MPI
-  use ibm_param
+  USE param
+  USE variables
+  USE decomp_2d
+  USE MPI
+  USE ibm_param
+
+  use var, only : ta1, tb1, tc1, td1, di1
+  use var, only : ux2, uy2, ta2, tb2, tc2, td2, di2
 
   use var, only : ta1, tb1, tc1, td1, di1
   use var, only : ux2, uy2, ta2, tb2, tc2, td2, di2
@@ -238,8 +241,8 @@ subroutine force(ux1,uy1,ep1)
   implicit none
   character(len=30) :: filename, filename2
   integer :: nzmsize
-  integer :: i, iv, j, k, kk, code, jj
-  integer :: nvect1,nvect2,nvect3
+  integer                                             :: i, iv, j, k, kk, code, jj
+  integer                                             :: nvect1,nvect2,nvect3
 
   real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1, uy1
   real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ep1
@@ -271,13 +274,13 @@ subroutine force(ux1,uy1,ep1)
   nvect2=ysize(1)*ysize(2)*ysize(3)
   nvect3=zsize(1)*zsize(2)*zsize(3)
 
-  do jj = 1, ny-1
-    if (istret.eq.0) then
-      del_y(jj)=dy
-    else
-      del_y(jj)=yp(jj+1)-yp(jj) 
-    endif
-  enddo
+    do jj = 1, ny-1
+      if (istret.eq.0) then
+        del_y(jj)=dy
+      else
+        del_y(jj)=yp(jj+1)-yp(jj) 
+      endif
+    enddo
 
   if (itime.eq.1) then
      do k = 1, xsize(3)
@@ -289,7 +292,7 @@ subroutine force(ux1,uy1,ep1)
         enddo
      enddo
      return
-  elseif (itime == 2) then
+  elseif (itime.eq.2) then
      do k = 1, xsize(3)
         do j = 1, xsize(2)
            do i = 1, xsize(1)
@@ -395,19 +398,19 @@ subroutine force(ux1,uy1,ep1)
               !momentum flux
               uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
               uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
-              fcvx  = fcvx -uxmid*uymid*dx
-              fcvy  = fcvy -uymid*uymid*dx
+              fcvx= fcvx -uxmid*uymid*dx
+              fcvy= fcvy -uymid*uymid*dx
 
               !pressure
               prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))
-              fpry  = fpry +prmid*dx
+              fpry = fpry +prmid*dx
 
               !viscous term
               dudymid = half*(tc1(i,j,k)+tc1(i+1,j,k))
               dvdxmid = half*(tb1(i,j,k)+tb1(i+1,j,k))
               dvdymid = half*(td1(i,j,k)+td1(i+1,j,k))
-              fdix    = fdix -(xnu*(dudymid+dvdxmid)*dx)
-              fdiy    = fdiy -two*xnu*dvdymid*dx
+              fdix = fdix -(xnu*(dudymid+dvdxmid)*dx)
+              fdiy = fdiy -two*xnu*dvdymid*dx
 
            enddo
 
@@ -419,7 +422,7 @@ subroutine force(ux1,uy1,ep1)
         enddo
      endif
      !BC
-     if ((jcvup(iv) >= xstart(2)).and.(jcvup(iv) <= xend(2))) then
+     if ((jcvup(iv).ge.xstart(2)).and.(jcvup(iv).le.xend(2))) then
         j=jcvup(iv)-xstart(2)+1
         do k=1,xsize(3)
            kk=xstart(3)-1+k
@@ -456,7 +459,7 @@ subroutine force(ux1,uy1,ep1)
      endif
      !AB and DC : y-pencils
      !AB
-     if ((icvlf(iv) >= ystart(1)).and.(icvlf(iv) <= yend(1))) then
+     if ((icvlf(iv).ge.ystart(1)).and.(icvlf(iv).le.yend(1))) then
         i=icvlf(iv)-ystart(1)+1
         do k=1,ysize(3)
            kk=ystart(3)-1+k
@@ -491,7 +494,7 @@ subroutine force(ux1,uy1,ep1)
         enddo
      endif
      !DC
-     if ((icvrt(iv) >= ystart(1)).and.(icvrt(iv) <= yend(1))) then
+     if ((icvrt(iv).ge.ystart(1)).and.(icvrt(iv).le.yend(1))) then
         i=icvrt(iv)-ystart(1)+1
         do k=1,ysize(3)
            kk=ystart(3)-1+k
@@ -560,12 +563,12 @@ subroutine force(ux1,uy1,ep1)
 !        open(38+(iv-1),file=filename,status='unknown',form='formatted')
 !        endif
 !     endif
-     if (nrank == 0) then
+     if (nrank .eq. 0) then
         write(38,*) t,xDrag_mean,yLift_mean
         call flush(38)
      endif
-     if (mod(itime, icheckpoint) == 0) then
-        if (nrank == 0) then
+     if (mod(itime, icheckpoint).eq.0) then
+        if (nrank .eq. 0) then
            write(filename,"('forces.dat',I7.7)") itime
            call system("cp forces.dat " //filename)
         endif

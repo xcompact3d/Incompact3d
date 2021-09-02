@@ -38,12 +38,11 @@ numscalar = 0         ! How many scalars? (Set to zero to disable scalars)
 iibm=0                ! Flag for immersed boundary method
 
 ! Boundary and initial conditions
-iin = 1               ! Inflow conditions (1: classic, 2: turbinit, 4: SEM)
+iin = 1               ! Inflow conditions (1: classic, 2: turbinit)
 u1  = 1.              ! u1 (max velocity) (for inflow condition)
 u2  = 1.              ! u2 (min velocity) (for inflow condition)
-init_noise = 0.125    ! Turbulence intensity (1=100%) !! Initial condition
+init_noise = 0.125   ! Turbulence intensity (1=100%) !! Initial condition
 inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
-idir_stream  = 1      ! Index of the streamwise direction (1=X, 3=Z, 2 not available)
 
 nclx1 = 0
 nclxn = 0
@@ -82,7 +81,6 @@ irestart = 0          ! Read initial flow field ?
 icheckpoint = 5000    ! Frequency for writing backup file
 ioutput = 10000        ! Frequency for visualization
 nvisu = 1             ! Size for visualisation collection
-ilist    = 25         ! Write of the output to screen
 
 /End
 
