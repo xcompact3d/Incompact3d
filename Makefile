@@ -121,7 +121,7 @@ post:
 clean:
 	rm -f $(DECOMPDIR)/*.o $(DECOMPDIR)/*.mod
 	rm -f $(SRCDIR)/*.o $(SRCDIR)/*.mod
-	rm -f *.o *.mod xcompact3d post
+	rm -f *.o *.mod xcompact3d
 
 .PHONY: cleanall
 cleanall: clean
