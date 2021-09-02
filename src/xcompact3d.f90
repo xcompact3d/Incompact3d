@@ -39,7 +39,7 @@ program xcompact3d
   use time_integrators, only : int_time
   use navier, only : velocity_to_momentum, momentum_to_velocity, pre_correc, &
        calc_divu_constraint, solve_poisson, cor_vel
-  use tools, only : restart, simu_stats, apply_spatial_filter, read_inflow, test_speed_min_max
+  use tools, only : restart, simu_stats, apply_spatial_filter, read_inflow
   use turbine, only : compute_turbines
   use ibm_param
   use ibm, only : body
@@ -64,7 +64,7 @@ program xcompact3d
         call filter(C_filter)
         call apply_spatial_filter(ux1,uy1,uz1,phi1)
      endif
-     
+
      do itr=1,iadvance_time
 
         call set_fluid_properties(rho1,mu1)
@@ -129,12 +129,12 @@ subroutine init_xcompact3d()
        restart, &
        simu_stats, compute_cfldiff
 
-  use param, only : ilesmod, jles, itype
+  use param, only : ilesmod, jles,itype
   use param, only : irestart
 
   use variables, only : nx, ny, nz, nxm, nym, nzm
   use variables, only : p_row, p_col
-  use variables, only : nstat, nvisu, nprobe, ilist
+  use variables, only : nstat, nvisu, nprobe
 
   use les, only: init_explicit_les
   use turbine, only: init_turbines
@@ -164,7 +164,7 @@ subroutine init_xcompact3d()
   if (nargin <1) then
      InputFN='input.i3d'
      if (nrank==0) print*, 'Xcompact3d is run with the default file -->', InputFN
-  elseif (nargin >= 1) then
+  elseif (nargin.ge.1) then
      if (nrank==0) print*, 'Program is run with the provided file -->', InputFN
 
      call get_command_argument(1,InputFN,FNLength,status)
@@ -205,23 +205,21 @@ subroutine init_xcompact3d()
 
   call schemes()
 
-  !if (nrank==0) call stabiltemp()
-
   call decomp_2d_poisson_init()
   call decomp_info_init(nxm,nym,nzm,phG)
 
-  if (ilesmod /= 0) then
-     if (jles > 0)  call init_explicit_les()
+  if (ilesmod.ne.0) then
+     if (jles.gt.0)  call init_explicit_les()
   endif
 
-  if ((iibm == 2).or.(iibm == 3)) then
+  if ((iibm.eq.2).or.(iibm.eq.3)) then
      call genepsi3d(ep1)
-  else if (iibm == 1) then
+  else if (iibm.eq.1) then
      call epsi_init(ep1)
      call body(ux1,uy1,uz1,ep1)
   endif
 
-  if (iforces == 1) then
+  if (iforces.eq.1) then
      call init_forces()
      if (irestart==1) then
         call restart_forces(0)
@@ -230,7 +228,7 @@ subroutine init_xcompact3d()
 
   !####################################################################
   ! initialise visu
-  if (ivisu /= 0) call visu_init()
+  if (ivisu.ne.0) call visu_init()
   ! compute diffusion number of simulation
   call compute_cfldiff()
   !####################################################################
@@ -250,10 +248,8 @@ subroutine init_xcompact3d()
      call body(ux1,uy1,uz1,ep1)
   endif
 
-  if (mod(itime, ilist) == 0 .or. itime == ifirst) then
-     call test_speed_min_max(ux1,uy1,uz1)
-     if (iscalar==1) call test_scalar_min_max(phi1)
-  endif
+  call test_speed_min_max(ux1,uy1,uz1)
+  if (iscalar==1) call test_scalar_min_max(phi1)
 
   call simu_stats(1)
 
@@ -264,12 +260,12 @@ subroutine init_xcompact3d()
   if (iturbine.ne.0) call init_turbines(ux1, uy1, uz1)
 
   if (itype==2) then
-     if(nrank == 0)then
+     if(nrank.eq.0)then
         open(42,file='time_evol.dat',form='formatted')
      endif
   endif
   if (itype==5) then
-     if(nrank == 0)then
+     if(nrank.eq.0)then
         open(38,file='forces.dat',form='formatted')
      endif
   endif
@@ -292,12 +288,12 @@ subroutine finalise_xcompact3d()
   integer :: ierr
   
   if (itype==2) then
-     if(nrank == 0)then
+     if(nrank.eq.0)then
         close(42)
      endif
   endif
   if (itype==5) then
-     if(nrank == 0)then
+     if(nrank.eq.0)then
         close(38)
      endif
   endif

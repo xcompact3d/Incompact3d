@@ -19,12 +19,6 @@ module jet
   character(len=100) :: fileformat
   character(len=1),parameter :: NL=char(10) !new line character
 
-  !probes
-  integer, save :: nprobes, ntimes1, ntimes2
-  integer, save, allocatable, dimension(:) :: rankprobes, nxprobes, nyprobes, nzprobes
-
-  real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
-
   REAL(mytype) :: outflow
 
   LOGICAL :: initialising
@@ -41,7 +35,6 @@ contains
     USE variables
     USE param
     USE var, ONLY : rho2, phi2, ta2, tb2, tc2, td2
-    use dbg_schemes, only: exp_prec
 
     implicit none
 
@@ -55,14 +48,12 @@ contains
 
     integer, dimension (:), allocatable :: seed
 
-    ux1=zero
-    uy1=zero
-    uz1=zero
-    if (iin /= 0) then
+    ux1=zero;uy1=zero;uz1=zero
+    if (iin.ne.0) then
        call system_clock(count=code)
-       if (iin == 2) code=0
+       if (iin.eq.2) code=0
        call random_seed(size = ii)
-       call random_seed(put = code+63946*(nrank+1)*(/ (i - 1, i = 1, ii) /))
+       call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /))
 
        call random_number(ux1)
        call random_number(uy1)
@@ -74,7 +65,7 @@ contains
        do j=1,xsize(2)
           if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy
           if (istret.ne.0) y=yp(j+xstart(2)-1)
-          um=exp_prec(-y**2)
+          um=exp(-y**2)
           um = one
           do i=1,xsize(1)
              ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)
@@ -84,12 +75,12 @@ contains
        enddo
     enddo
 
-    initialising = .true.
+    initialising = .TRUE.
     call boundary_conditions_jet (rho1,ux1,uy1,uz1,phi1)
-    initialising = .false.
+    initialising = .FALSE.
 
     !INIT FOR G AND U=MEAN FLOW + NOISE
-    if (xstart(2) == 1) then
+    if (xstart(2)==1) then
        j = 1
        do k = 1, xsize(3)
           do i = 1, xsize(1)
@@ -127,7 +118,7 @@ contains
     enddo
 
 #ifdef DEBG
-    if (nrank == 0) write(*,*) '# init end ok'
+    if (nrank .eq. 0) print *,'# init end ok'
 #endif
 
     return
@@ -139,8 +130,7 @@ contains
     USE param
     USE variables
     USE decomp_2d
-    USE var, only : ta1, tb1
-    use dbg_schemes, only: sin_prec, tanh_prec, sqrt_prec
+    USE var, ONLY : ta1, tb1
 
     implicit none
 
@@ -164,8 +154,8 @@ contains
     D = one
     perturbation = zero
 
-    if (t < one) then
-       timeswitch = sin_prec(t * pi / two)
+    if (t.lt.one) then
+       timeswitch = sin(t * pi / two)
     else
        timeswitch = one
     endif
@@ -181,18 +171,18 @@ contains
           z = real(k + xstart(3) - 2, mytype) * dz - half * zlz
           do i = 1, xsize(1)
              x = real(i + xstart(1) - 2, mytype) * dx - half * xlx
-             r = sqrt_prec(x**2 + z**2) + 1.e-16_mytype !! Can't divide by zero!
+             r = sqrt(x**2 + z**2) + 1.e-16_mytype !! Can't divide by zero!
 
              !! Set mean inflow
              byx1(i, k) = zero
              byy1(i, k) = (u1 - u2) * half &
-                  * (one + tanh_prec((12.5_mytype / four) * ((D / two) / r - two * r / D))) + u2
+                  * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D))) + u2
              byz1(i, k) = zero
 
              if (ilmn) then
                 if (.not.ilmn_solve_temp) then
                    rho(i, 1, k, 1) = (dens1 - dens2) * half &
-                        * (one + tanh_prec((12.5_mytype / four) * ((D / two) / r - two * r / D))) + dens2
+                        * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D))) + dens2
                 else
                    ta1(i,1,k) = one !! Could set variable temperature inlet here
                 endif
@@ -200,20 +190,20 @@ contains
                 rho(i, 1, k, 1) = one
              endif
 
-             if (iscalar == 0) then
+             if (iscalar.ne.0) then
                 do is = 1, numscalar
                    if (.not.massfrac(is)) then
-                      phi(i, 1, k, is) = half * (one + tanh_prec((12.5_mytype / four) * ((D / two) / r - two * r / D)))
-                   else if (is /= primary_species) then
-                      phi(i, 1, k, is) = one - half * (one + tanh_prec((12.5_mytype / four) * ((D / two) / r - two * r / D)))
+                      phi(i, 1, k, is) = half * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D)))
+                   else if (is.ne.primary_species) then
+                      phi(i, 1, k, is) = one - half * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D)))
                    endif
                 enddo
 
-                if (primary_species > 0) then
+                if (primary_species.gt.0) then
                    phi(i, 1, k, primary_species) = one
 
                    do is = 1, numscalar
-                      if (massfrac(is).and.(is /= primary_species)) then
+                      if (massfrac(is).and.(is.ne.primary_species)) then
                          phi(i, 1, k, primary_species) = phi(i, 1, k, primary_species) - phi(i, 1, k, is)
                       endif
                    enddo
@@ -267,8 +257,8 @@ contains
     zc=half*xlx
 
     !! X-BC
-    IF (nclx1 == 2) THEN
-       if(xstart(1) == 1)then!
+    IF (nclx1.EQ.2) THEN
+       if(xstart(1).eq.1)then!
           x = -xc
           i = 1
           do k=1,xsize(3)
@@ -277,24 +267,24 @@ contains
              y2=z
              x1=x+dx
              y1=y2*x1/x2
-             r1=sqrt_prec(x1**2+y1**2)
-             r2=sqrt_prec(x2**2+y2**2)
+             r1=sqrt(x1**2+y1**2)
+             r2=sqrt(x2**2+y2**2)
              if(r1.gt.r2)print*,'bug CL'
-             if(k == 1)then!cas premier point
+             if(k.eq.1)then!cas premier point
                 do j=1,xsize(2)
 
                    bxx1(j,k)=r1*ux(i + 1,j,k+1)/r2
                    bxy1(j,k)=   uy(i + 1,j,k+1)
                    bxz1(j,k)=r1*uz(i + 1,j,k+1)/r2
                 enddo
-             elseif(k == (nz-1)/2+1)then!cas point du milieu
+             elseif(k.eq.(nz-1)/2+1)then!cas point du milieu
                 do j=1,xsize(2)
 
                    bxx1(j,k)=r1*ux(i+1,j,k)/r2
                    bxy1(j,k)=   uy(i+1,j,k)
                    bxz1(j,k)=r1*uz(i+1,j,k)/r2
                 enddo
-             elseif(k == nx)then!cas dernier point
+             elseif(k.eq.nx)then!cas dernier point
                 do j=1,xsize(2)
 
                    bxx1(j,k)=r1*ux(i+1,j,k-1)/r2
@@ -302,7 +292,7 @@ contains
                    bxz1(j,k)=r1*uz(i+1,j,k-1)/r2
                 enddo
              else!cas general
-                if (z >= zero)then
+                if    (z.gt.0.)then
                    ya=y2-dz
                    do j=1,xsize(2)
                       uu1=(ux(i+1,j,k)-ux(i+1,j,k-1))*(y1-ya)/(y2-ya)+ux(i+1,j,k-1)
@@ -313,7 +303,7 @@ contains
                       bxy1(j,k)=   uv1
                       bxz1(j,k)=r1*uw1/r2
                    enddo
-                elseif(z < zero)then
+                elseif(z.lt.0.)then
                    ya=y2+dz
                    do j=1,xsize(2)
                       uu1=(ux(i+1,j,k+1)-ux(2,j,k))*(y1-ya)/(ya-y2)+ux(i+1,j,k+1)
@@ -330,7 +320,7 @@ contains
 
           if (iscalar.ne.0) then
              do is = 1, numscalar
-                if (is /= primary_species) then
+                if (is.ne.primary_species) then
                    phi(i,:,:,is) = one
                 else
                    phi(i,:,:,is) = zero
@@ -349,36 +339,36 @@ contains
              endif
           endif
        endif
-    endif
+    ENDIF
 
-    if (nclxn == 2) then
-       if(xend(1) == nx)then
+    IF (nclxn.EQ.2) THEN
+       if(xend(1).eq.nx)then
           x=xc
           i = xsize(1)
           do k=1,xsize(3)
-             z=real(k + xstart(3) - 2,mytype)*dz-zc
+             z=real(k + xstart(3) - 2)*dz-zc
              x2=x
              y2=z
              x1=x-dx
              y1=y2*x1/x2
-             r1=sqrt_prec(x1**2+y1**2)
-             r2=sqrt_prec(x2**2+y2**2)
-             if(r1 > r2) write(*,*) 'bug CL'
-             if (k == 1) then!cas premier point
+             r1=sqrt(x1**2+y1**2)
+             r2=sqrt(x2**2+y2**2)
+             if(r1.gt.r2)print*,'bug CL'
+             if(k.eq.1)then!cas premier point
                 do j=1,xsize(2)
 
                    bxxn(j,k)=r1*ux(i-1,j,k+1)/r2
                    bxyn(j,k)=   uy(i-1,j,k+1)
                    bxzn(j,k)=r1*uz(i-1,j,k+1)/r2
                 enddo
-             elseif(k == (nz-1)/2+1)then!cas point du milieu
+             elseif(k.eq.(nz-1)/2+1)then!cas point du milieu
                 do j=1,xsize(2)
 
                    bxxn(j,k)=r1*ux(i-1,j,k)/r2
                    bxyn(j,k)=   uy(i-1,j,k)
                    bxzn(j,k)=r1*uz(i-1,j,k)/r2
                 enddo
-             elseif(k == nz)then!cas dernier point
+             elseif(k.eq.nz)then!cas dernier point
                 do j=1,xsize(2)
 
                    bxxn(j,k)=r1*ux(i-1,j,k-1)/r2
@@ -386,7 +376,7 @@ contains
                    bxzn(j,k)=r1*uz(i-1,j,k-1)/r2
                 enddo
              else !cas general
-                if (z >= zero) then
+                if (z.gt.0.) then
                    ya=y2-dz
                    do j=1,xsize(2)
                       uu1=(ux(i-1,j,k)-ux(i-1,j,k-1))*(y1-ya)/(y2-ya)+ux(i-1,j,k-1)
@@ -397,7 +387,7 @@ contains
                       bxyn(j,k)=   uv1
                       bxzn(j,k)=r1*uw1/r2
                    enddo
-                elseif(z < zero)then
+                elseif(z.lt.0.)then
                    ya=y2+dz
                    do j=1,xsize(2)
                       uu1=(ux(i-1,j,k+1)-ux(i-1,j,k))*(y1-ya)/(ya-y2)+ux(i-1,j,k+1)
@@ -412,9 +402,9 @@ contains
              endif
           enddo
 
-          if (iscalar /= 0) then
+          if (iscalar.ne.0) then
              do is = 1, numscalar
-                if (is /= primary_species) then
+                if (is.ne.primary_species) then
                    phi(i,:,:,is) = one
                 else
                    phi(i,:,:,is) = zero
@@ -429,14 +419,14 @@ contains
                 ta1(i,:,:) = one
 
                 !! Need to compute rho (on boundary)
-                call calc_rho_eos(rho(i,:,:,1), ta1(i,:,:), phi(i,:,:,:), tb1(i,:,:), 1, xsize(2), xsize(3))
+                CALL calc_rho_eos(rho(i,:,:,1), ta1(i,:,:), phi(i,:,:,:), tb1(i,:,:), 1, xsize(2), xsize(3))
              endif
           endif
        endif
-    endif
+    ENDIF
 
     !! Z-BC
-    if ((nclz1 == 2).and.(xstart(3) == 1)) then
+    IF ((nclz1.EQ.2).AND.(xstart(3).EQ.1)) THEN
        k = 1
        z = -zc
        do i=1,xsize(1)
@@ -445,24 +435,24 @@ contains
           y2=x
           x1=z+dz
           y1=y2*x1/x2
-          r1=sqrt_prec(x1**2+y1**2)
-          r2=sqrt_prec(x2**2+y2**2)
-          if(r1 > r2) write(*,*) 'bug CL'
-          if(i == 1)then!cas premier point
+          r1=sqrt(x1**2+y1**2)
+          r2=sqrt(x2**2+y2**2)
+          if(r1.gt.r2)print*,'bug CL'
+          if(i.eq.1)then!cas premier point
              do j=1,xsize(2)
 
                 bzx1(i,j)=r1*ux(i+1,j,k + 1)/r2
                 bzy1(i,j)=   uy(i+1,j,k + 1)
                 bzz1(i,j)=r1*uz(i+1,j,k + 1)/r2
              enddo
-          elseif(i == (nx-1)/2+1)then!cas point du milieu
+          elseif(i.eq.(nx-1)/2+1)then!cas point du milieu
              do j=1,xsize(2)
 
                 bzx1(i,j)=r1*ux(i,j,k + 1)/r2
                 bzy1(i,j)=   uy(i,j,k + 1)
                 bzz1(i,j)=r1*uz(i,j,k + 1)/r2
              enddo
-          elseif(i == nx)then!cas dernier point
+          elseif(i.eq.nx)then!cas dernier point
              do j=1,xsize(2)
 
                 bzx1(i,j)=r1*ux(i-1,j,k + 1)/r2
@@ -470,7 +460,7 @@ contains
                 bzz1(i,j)=r1*uz(i-1,j,k + 1)/r2
              enddo
           else!cas general
-             if (x >= zero)then
+             if    (x.gt.0.)then
                 ya=y2-dx
                 do j=1,xsize(2)
 
@@ -482,7 +472,7 @@ contains
                    bzy1(i,j)=   uv1
                    bzz1(i,j)=r1*uw1/r2
                 enddo
-             elseif(x < zero)then
+             elseif(x.lt.0.)then
                 ya=y2+dx
                 do j=1,xsize(2)
 
@@ -498,7 +488,7 @@ contains
           endif
        enddo
 
-       if (iscalar /= 0) then
+       if (iscalar.ne.0) then
           do is = 1, numscalar
              if (is.ne.primary_species) then
                 phi(:,:,k,is) = one
@@ -518,9 +508,9 @@ contains
              CALL calc_rho_eos(rho(:,:,k,1), ta1(:,:,k), phi(:,:,k,:), tb1(:,:,k), xsize(1), xsize(2), 1)
           endif
        endif
-    endif
+    ENDIF
 
-    if ((nclzn == 2).and.(xend(3) == nz)) then
+    IF ((nclzn.EQ.2).AND.(xend(3).EQ.nz)) THEN
        z=zc
        k = xsize(3)
        do i=1,xsize(1)
@@ -529,24 +519,24 @@ contains
           y2=x
           x1=z-dz
           y1=y2*x1/x2
-          r1=sqrt_prec(x1**2+y1**2)
-          r2=sqrt_prec(x2**2+y2**2)
-          if(r1 > r2) write(*,*) 'bug CL'
-          if(i == 1)then!cas premier point
+          r1=sqrt(x1**2+y1**2)
+          r2=sqrt(x2**2+y2**2)
+          if(r1.gt.r2)print*,'bug CL'
+          if(i.eq.1)then!cas premier point
              do j=1,xsize(2)
 
                 bzxn(i,j)=r1*ux(i+1,j,k-1)/r2
                 bzyn(i,j)=   uy(i+1,j,k-1)
                 bzzn(i,j)=r1*uz(i+1,j,k-1)/r2
              enddo
-          elseif(i == (nx-1)/2+1)then!cas point du milieu
+          elseif(i.eq.(nx-1)/2+1)then!cas point du milieu
              do j=1,xsize(2)
 
                 bzxn(i,j)=r1*ux(i,j,k-1)/r2
                 bzyn(i,j)=   uy(i,j,k-1)
                 bzzn(i,j)=r1*uz(i,j,k-1)/r2
              enddo
-          elseif(i == nx)then!cas dernier point
+          elseif(i.eq.nx)then!cas dernier point
              do j=1,xsize(2)
 
                 bzxn(i,k)=r1*ux(i-1,j,k-1)/r2
@@ -554,7 +544,7 @@ contains
                 bzzn(i,k)=r1*uz(i-1,j,k-1)/r2
              enddo
           else !cas general
-             if (x >= zero) then
+             if (x.gt.0.) then
                 ya=y2-dx
                 do j=1,xsize(2)
 
@@ -566,7 +556,7 @@ contains
                    bzyn(i,k)=   uv1
                    bzzn(i,k)=r1*uw1/r2
                 enddo
-             elseif(x < zero)then
+             elseif(x.lt.0.)then
                 ya=y2+dx
                 do j=1,xsize(2)
                    uu1=(ux(i+1,j,k-1)-ux(i,j,k-1))*(y1-ya)/(ya-y2)+ux(i+1,j,k-1)
@@ -581,9 +571,9 @@ contains
           endif
        enddo
 
-       if (iscalar /= 0) then
+       if (iscalar.ne.0) then
           do is = 1, numscalar
-             if (is /= primary_species) then
+             if (is.ne.primary_species) then
                 phi(:,:,k,is) = one
              else
                 phi(:,:,k,is) = zero
@@ -601,7 +591,7 @@ contains
              CALL calc_rho_eos(rho(:,:,k,1), ta1(:,:,k), phi(:,:,k,:), tb1(:,:,k), xsize(1), xsize(2), 1)
           endif
        endif
-    endif
+    ENDIF
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !! Compute outflow
@@ -737,40 +727,38 @@ contains
   !! DESCRIPTION: Applies a fringe/sponge region at the outlet.
   !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine momentum_forcing_jet(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
+  SUBROUTINE momentum_forcing_jet(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
 
-    use dbg_schemes, only: sin_prec
+    IMPLICIT NONE
 
-    implicit none
+    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
+    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
 
-    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
-    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
-
-    integer :: i, j, k
-    real(mytype) :: y, yfringe
-    real(mytype) :: f
+    INTEGER :: i, j, k
+    REAL(mytype) :: y, yfringe
+    REAL(mytype) :: f
 
     !! Set fringe height
     !! Fringe forcing will be applied for y > yfringe
     yfringe = 0.9_mytype * yly
 
-    do k = 1, xsize(3)
-       do j = 1, xsize(2)
-          if (istret.eq.0) then
-             y=real(j+xstart(2)-1-1,mytype)*dy
-          else
+    DO k = 1, xsize(3)
+       DO j = 1, xsize(2)
+          IF (istret.EQ.0) THEN
+             y=REAL(j+xstart(2)-1-1,mytype)*dy
+          ELSE
              y=yp(j+xstart(2)-1)
-          endif
+          ENDIF
 
-          if (y.gt.yfringe) then
-             if (y.lt.(yfringe + half * (yly - yfringe))) then
-                f = sin_prec(((y - yfringe) / (yly - yfringe + 1.0e-16_mytype)) * (half * pi))
-             else
+          IF (y.GT.yfringe) THEN
+             IF (y.LT.(yfringe + half * (yly - yfringe))) THEN
+                f = SIN(((y - yfringe) / (yly - yfringe + 1.0e-16_mytype)) * (half * PI))
+             ELSE
                 f = one
-             endif
+             ENDIF
 
-             do i = 1, xsize(1)
+             DO i = 1, xsize(1)
 
                 !! uy -> mean influx = outflow
                 duy1(i, j, k, 1) = duy1(i, j, k, 1) + f * rho1(i, j, k, 1) * (outflow - uy1(i, j, k))
@@ -779,11 +767,11 @@ contains
                 dux1(i, j, k, 1) = dux1(i, j, k, 1) + f * rho1(i, j, k, 1) * (zero - ux1(i, j, k))
                 duz1(i, j, k, 1) = duz1(i, j, k, 1) + f * rho1(i, j, k, 1) * (zero - uz1(i, j, k))
 
-             enddo
-          endif
-       enddo
-    enddo
+             ENDDO
+          ENDIF
+       ENDDO
+    ENDDO
 
-  endsubroutine momentum_forcing_jet
+  ENDSUBROUTINE momentum_forcing_jet
 
 end module jet

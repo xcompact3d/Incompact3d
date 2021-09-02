@@ -77,7 +77,6 @@ irestart = 0          ! Read initial flow field ?
 icheckpoint = 1000    ! Frequency for writing backup file
 ioutput = 1000        ! Frequency for visualization
 nvisu = 1             ! Size for visualisation collection
-ilist = 25            ! Write of the output to screen
 
 /End
 
