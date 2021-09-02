@@ -27,17 +27,18 @@ module decomp_2d_io
 
   implicit none
 
-  integer, parameter :: decomp_2d_write_mode = 1, decomp_2d_read_mode = 2
+  integer, parameter, public :: decomp_2d_write_mode = 1, decomp_2d_read_mode = 2, &
+       decomp_2d_append_mode = 3
   integer, parameter :: MAX_IOH = 10 ! How many live IO things should we handle?
+  character(len=*), parameter :: io_sep = "::"
+  integer, save :: nreg_io = 0
 #ifndef ADIOS2
   integer, dimension(MAX_IOH), save :: fh_registy
-  logical, dimension(MAX_IOH), save :: fh_live
-  character(len=80), dimension(MAX_IOH), save :: fh_names
-  integer, dimension(MAX_IOH), save :: fh_disp
+  logical, dimension(MAX_IOH), target, save :: fh_live
+  character(len=80), dimension(MAX_IOH), target, save :: fh_names
+  integer(kind=MPI_OFFSET_KIND), dimension(MAX_IOH), save :: fh_disp
 #else
   type(adios2_adios) :: adios
-  integer, save :: nreg_io = 0
-  character(len=*), parameter :: io_sep = "::"
   character(len=80), dimension(MAX_IOH), save :: engine_names
   logical, dimension(MAX_IOH), save :: engine_live
   type(adios2_engine), dimension(MAX_IOH), save :: engine_registry
@@ -55,8 +56,7 @@ module decomp_2d_io
        decomp_2d_init_io, & ! XXX: initialise an io process - awful naming
        decomp_2d_register_variable, &
        decomp_2d_open_io, decomp_2d_close_io, &
-       decomp_2d_start_io, decomp_2d_end_io, &
-       decomp_2d_write_mode, decomp_2d_read_mode
+       decomp_2d_start_io, decomp_2d_end_io
 
   ! Generic interface to handle multiple data types
 
@@ -70,9 +70,6 @@ module decomp_2d_io
   interface decomp_2d_read_one
      module procedure read_one_real
      module procedure read_one_complex
-#ifdef ADIOS2
-     module procedure adios2_read_one_real
-#endif
   end interface decomp_2d_read_one
 
   interface decomp_2d_write_var
@@ -213,13 +210,13 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Using MPI-IO library to read from a file a single 3D array
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine read_one_real(ipencil,var,filename,opt_decomp)
+  subroutine read_one_real(ipencil,var,dirname,varname,io_name,opt_decomp)
 
     implicit none
 
     integer, intent(IN) :: ipencil
     real(mytype), dimension(:,:,:), intent(INOUT) :: var
-    character(len=*), intent(IN) :: filename
+    character(len=*), intent(IN) :: varname, dirname, io_name
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
     TYPE(DECOMP_INFO) :: decomp
@@ -228,6 +225,8 @@ contains
     integer :: ierror, newtype, fh, data_type
     real(mytype_single), allocatable, dimension(:,:,:) :: varsingle
 
+#ifndef ADIOS2
+    !! Use MPIIO
     data_type = real_type_single
     allocate (varsingle(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
 
@@ -268,7 +267,7 @@ contains
     call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
          MPI_ORDER_FORTRAN, data_type, newtype, ierror)
     call MPI_TYPE_COMMIT(newtype,ierror)
-    call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
+    call MPI_FILE_OPEN(MPI_COMM_WORLD, dirname, &
          MPI_MODE_RDONLY, MPI_INFO_NULL, &
          fh, ierror)
     disp = 0_MPI_OFFSET_KIND
@@ -281,7 +280,9 @@ contains
     call MPI_TYPE_FREE(newtype,ierror)
     var = real(varsingle,mytype)
     deallocate(varsingle)
-
+#else
+    call adios2_read_one_real(ipencil, var, dirname, varname, io_name)
+#endif
     return
   end subroutine read_one_real
 
@@ -309,12 +310,11 @@ contains
   end subroutine read_one_complex
 
 #ifdef ADIOS2
-  subroutine adios2_read_one_real(ipencil,var,engine_name,varname,icoarse,io_name)
+  subroutine adios2_read_one_real(ipencil,var,engine_name,varname,io_name)
 
     implicit none
 
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
-    integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
     character(len=*), intent(in) :: engine_name
     character(len=*), intent(in) :: io_name
     character*(*), intent(in) :: varname
@@ -402,6 +402,11 @@ contains
     TYPE(DECOMP_INFO) :: decomp
     integer, dimension(3) :: sizes, subsizes, starts
     integer :: ierror, newtype, data_type
+#ifdef ADIOS2
+    type(adios2_io) :: io_handle
+    type(adios2_variable) :: var_handle
+    integer :: idx
+#endif
 
     data_type = real_type
 
@@ -473,7 +478,12 @@ contains
     TYPE(DECOMP_INFO) :: decomp
     integer, dimension(3) :: sizes, subsizes, starts
     integer :: ierror, newtype, data_type
-
+#ifdef ADIOS2
+    type(adios2_io) :: io_handle
+    type(adios2_variable) :: var_handle
+    integer :: idx
+#endif
+    
     data_type = real_type
 
 #include "io_read_inflow.f90"
@@ -997,15 +1007,17 @@ contains
     real(mytype_single), allocatable, dimension(:,:,:) :: varsingle
     character(len=*), intent(in) :: dirname, varname, io_name
 
-    integer (kind=MPI_OFFSET_KIND) :: filesize, disp
+    integer (kind=MPI_OFFSET_KIND) :: filesize
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: i,j,k, ierror, newtype, fh
+    integer :: i,j,k, ierror, newtype
+    integer :: idx
+    logical :: opened_new = .false.
 #ifdef ADIOS2
     type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
-    integer :: idx
 #endif
 
+    idx = get_io_idx(io_name, dirname)
 #ifndef ADIOS2
     !! Use original MPIIO writers
     call coarse_extents(ipencil, icoarse, sizes, subsizes, starts)
@@ -1015,18 +1027,23 @@ contains
     call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
          MPI_ORDER_FORTRAN, real_type_single, newtype, ierror)
     call MPI_TYPE_COMMIT(newtype,ierror)
-    call MPI_FILE_OPEN(MPI_COMM_WORLD, dirname//"/"//varname, &
-         MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
-         fh, ierror)
-    filesize = 0_MPI_OFFSET_KIND
-    call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
-    disp = 0_MPI_OFFSET_KIND
-    call MPI_FILE_SET_VIEW(fh,disp,real_type_single, &
+
+    if (idx .lt. 1) then
+       call decomp_2d_open_io(io_name, dirname, decomp_2d_write_mode)
+       idx = get_io_idx(io_name, dirname)
+       opened_new = .true.
+    end if
+    
+    call MPI_FILE_SET_VIEW(fh_registy(idx),fh_disp(idx),real_type_single, &
          newtype,'native',MPI_INFO_NULL,ierror)
-    call MPI_FILE_WRITE_ALL(fh, varsingle, &
+    call MPI_FILE_WRITE_ALL(fh_registy(idx), varsingle, &
          subsizes(1)*subsizes(2)*subsizes(3), &
          real_type_single, MPI_STATUS_IGNORE, ierror)
-    call MPI_FILE_CLOSE(fh,ierror)
+
+    if (opened_new) then
+       call decomp_2d_close_io(io_name, dirname)
+    end if
+
     call MPI_TYPE_FREE(newtype,ierror)
     deallocate(varsingle)
 #else
@@ -1037,7 +1054,6 @@ contains
        stop
     endif
 
-    idx = get_engine_idx(io_name, dirname)
     call adios2_put(engine_registry(idx), var_handle, var, adios2_mode_deferred, ierror)
 #endif
 
@@ -1405,15 +1421,23 @@ contains
     character(len=*), intent(in) :: io_name, io_dir
     integer, intent(in) :: mode
 
-#ifdef ADIOS2
+    logical, dimension(:), pointer :: live_ptrh
+    character(len=80), dimension(:), pointer :: names_ptr
+    character(len=:), allocatable :: full_name
+    
     integer :: idx, ierror
+#ifndef ADIOS2
+    integer(MPI_OFFSET_KIND) :: filesize
+#else
     type(adios2_io) :: io
     integer :: adios2_mode
-    character(len=:), allocatable :: full_name
     character(len=80) :: ext
 #endif
 
 #ifndef ADIOS2
+    live_ptrh => fh_live
+    names_ptr => fh_names
+
     ! Create folder if needed
     if (nrank==0) then
        inquire(file=io_dir, exist=dir_exists)
@@ -1422,31 +1446,52 @@ contains
        end if
     end if
 #else
-    idx = get_engine_idx(io_name, io_dir)
+    live_ptrh => engine_live
+    names_ptr => engine_names
+#endif
+    
+    idx = get_io_idx(io_name, io_dir)
     if (idx .lt. 1) then
-       !! New io/engine combination
+       !! New io destination
        if (nreg_io .lt. MAX_IOH) then
           nreg_io = nreg_io + 1
           do idx = 1, MAX_IOH
-             if (.not. engine_live(idx)) then
-                engine_live(idx) = .true.
+             if (.not. live_ptrh(idx)) then
+                live_ptrh(idx) = .true.
                 exit
              end if
           end do
-
+          
           allocate(character(len=len(trim(io_name)) + len(trim(io_sep)) + len(trim(io_dir))) :: full_name)
           write(full_name, "(A,A,A)") trim(io_name), trim(io_sep), trim(io_dir)
-          engine_names(idx) = full_name
+          names_ptr(idx) = full_name
           deallocate(full_name)
 
           if (mode .eq. decomp_2d_write_mode) then
+#ifndef ADIOS2
+             filesize = 0_MPI_OFFSET_KIND
+             fh_disp(idx) = 0_MPI_OFFSET_KIND
+#else
              adios2_mode = adios2_mode_write
+#endif
           else if (mode .eq. decomp_2d_read_mode) then
+#ifndef ADIOS2
+             print *, "ERROR: MPIIO read mode not implemented!"
+             stop
+#else
              adios2_mode = adios2_mode_read
+#endif
           else
              print *, "ERROR: Unknown mode!"
              stop
           endif
+
+#ifndef ADIOS2
+          call MPI_FILE_OPEN(MPI_COMM_WORLD, io_dir, &
+               MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
+               fh_registy(idx), ierror)
+          call MPI_FILE_SET_SIZE(fh_registy(idx), filesize, ierror)
+#else
           call adios2_at_io(io, adios, io_name, ierror)
           if (io%engine_type .eq. "BP4") then
              ext = ".bp4"
@@ -1457,9 +1502,9 @@ contains
              stop
           endif
           call adios2_open(engine_registry(idx), io, trim(io_dir)//trim(ext), adios2_mode, ierror)
-       endif
-    endif
 #endif
+       end if
+    end if
     
   end subroutine decomp_2d_open_io
 
@@ -1468,16 +1513,24 @@ contains
     implicit none
 
     character(len=*), intent(in) :: io_name, io_dir
-
+    
+    character(len=80), dimension(:), pointer :: names_ptr
+    logical, dimension(:), pointer :: live_ptrh
     integer :: idx, ierror
 
-#ifdef ADIOS2
-    idx = get_engine_idx(io_name, io_dir)
+    idx = get_io_idx(io_name, io_dir)
+#ifndef ADIOS2
+    names_ptr => fh_names
+    live_ptrh => fh_live
+    call MPI_FILE_CLOSE(fh_registy(idx), ierror)
+#else
+    names_ptr => engine_names
+    live_ptrh => engine_live
     call adios2_close(engine_registry(idx), ierror)
-    engine_names(idx) = ""
-    engine_live(idx) = .false.
-    nreg_io = nreg_io - 1
 #endif
+    names_ptr(idx) = ""
+    live_ptrh(idx) = .false.
+    nreg_io = nreg_io - 1
 
   end subroutine decomp_2d_close_io
 
@@ -1509,25 +1562,31 @@ contains
 
   end subroutine decomp_2d_end_io
   
-#ifdef ADIOS2
-  integer function get_engine_idx(io_name, engine_name)
+  integer function get_io_idx(io_name, engine_name)
 
     implicit none
 
     character(len=*), intent(in) :: io_name
     character(len=*), intent(in) :: engine_name
-    type(adios2_engine), pointer :: engine_ptr
 
     character(len=:), allocatable :: full_name
     integer :: idx
     logical :: found
+
+    character(len=80), dimension(:), pointer :: names_ptr
+
+#ifndef ADIOS2
+    names_ptr => fh_names
+#else
+    names_ptr => engine_names
+#endif
 
     allocate(character(len=len(trim(io_name)) + len(trim(io_sep)) + len(trim(engine_name))) :: full_name)
     write(full_name, "(A,A,A)") trim(io_name), trim(io_sep), trim(engine_name)
     
     found = .false.
     do idx = 1, MAX_IOH
-       if (engine_names(idx) .eq. full_name) then
+       if (names_ptr(idx) .eq. full_name) then
           found = .true.
           exit
        end if
@@ -1539,9 +1598,8 @@ contains
 
     deallocate(full_name)
 
-    get_engine_idx = idx
+    get_io_idx = idx
     
-  end function get_engine_idx
-#endif
+  end function get_io_idx
 
 end module decomp_2d_io

@@ -63,7 +63,7 @@ contains
     use param, only : ilmn, iscalar, ilast, ifirst, ioutput, istret
     use variables, only : numscalar, prec, nvisu
     use decomp_2d, only : nrank, mytype, xszV, yszV, zszV
-    use decomp_2d_io, only : decomp_2d_init_io, decomp_2d_open_io, decomp_2d_write_mode
+    use decomp_2d_io, only : decomp_2d_init_io, decomp_2d_open_io, decomp_2d_append_mode
     use decomp_2d_io, only : decomp_2d_register_variable
     
     implicit none
@@ -122,20 +122,14 @@ contains
        enddo
     endif
     
-    call decomp_2d_open_io(io_name, "data", decomp_2d_write_mode)
-
   end subroutine visu_init
 
   !
   ! Finalise the visu module
-  ! - Currently only needed to clean up ADIOS2
   !
   subroutine visu_finalise()
 
-    use decomp_2d_io, only : decomp_2d_close_io
     implicit none
-
-    call decomp_2d_close_io(io_name, "data")
     
   end subroutine visu_finalise
 
@@ -147,7 +141,7 @@ contains
     use decomp_2d, only : transpose_z_to_y, transpose_y_to_x
     use decomp_2d, only : mytype, xsize, ysize, zsize
     use decomp_2d, only : nrank
-    use decomp_2d_io, only : decomp_2d_start_io
+    use decomp_2d_io, only : decomp_2d_start_io, decomp_2d_open_io, decomp_2d_append_mode
 
     use param, only : nrhotime, ilmn, iscalar, ioutput
 
@@ -184,6 +178,8 @@ contains
       call cpu_time(tstart)
       print *,'Writing snapshots =>',itime/ioutput
     end if
+
+    call decomp_2d_open_io(io_name, "data", decomp_2d_append_mode)
     call decomp_2d_start_io(io_name, "data")
 
     ! Snapshot number
@@ -244,7 +240,7 @@ contains
   subroutine end_snapshot(itime, num)
 
     use decomp_2d, only : nrank
-    use decomp_2d_io, only : decomp_2d_end_io
+    use decomp_2d_io, only : decomp_2d_end_io, decomp_2d_close_io
     use param, only : istret, xlx, yly, zlz
     use variables, only : nx, ny, nz, beta
     use var, only : dt,t
@@ -289,6 +285,7 @@ contains
     endif
 
     call decomp_2d_end_io(io_name, "data")
+    call decomp_2d_close_io(io_name, "data")
 
     ! Update log file
     if (nrank.eq.0) then

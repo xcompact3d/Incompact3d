@@ -154,10 +154,9 @@ contains
 
     implicit none
 
-    integer :: fh,ierror,code,itest1
+    integer :: ierror,code,itest1
     integer :: ierror_o=0 !error to open sauve file during restart
     character(len=30) :: filename, filestart
-    integer (kind=MPI_OFFSET_KIND) :: filesize, disp
 
 
 #ifndef ADIOS2
@@ -179,42 +178,16 @@ contains
           return
        endif
 
-#ifndef ADIOS2
-       call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
-            MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
-            fh, ierror)
-       filesize = 0_MPI_OFFSET_KIND
-       call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
-       disp = 0_MPI_OFFSET_KIND
-       call decomp_2d_write_var(fh,disp,1,ux01)
-       call decomp_2d_write_var(fh,disp,1,uy01)
-       call decomp_2d_write_var(fh,disp,1,ux11)
-       call decomp_2d_write_var(fh,disp,1,uy11)
-       call MPI_FILE_CLOSE(fh,ierror)
-#else
        call decomp_2d_write_one(1,ux01,resfile,"ux01",0,io_restart_forces)
        call decomp_2d_write_one(1,uy01,resfile,"uy01",0,io_restart_forces)
        call decomp_2d_write_one(1,ux11,resfile,"ux11",0,io_restart_forces)
        call decomp_2d_write_one(1,uy11,resfile,"uy11",0,io_restart_forces)
-#endif
     else
        !read
-#ifndef ADIOS2
-       call MPI_FILE_OPEN(MPI_COMM_WORLD, filestart, &
-            MPI_MODE_RDONLY, MPI_INFO_NULL, &
-            fh, ierror_o)
-       disp = 0_MPI_OFFSET_KIND
-       call decomp_2d_read_var(fh,disp,1,ux01)
-       call decomp_2d_read_var(fh,disp,1,uy01)
-       call decomp_2d_read_var(fh,disp,1,ux11)
-       call decomp_2d_read_var(fh,disp,1,uy11)
-       call MPI_FILE_CLOSE(fh,ierror_o)
-#else
-       call decomp_2d_read_one(1,ux01,resfile,"ux01",0,io_restart_forces)
-       call decomp_2d_read_one(1,uy01,resfile,"uy01",0,io_restart_forces)
-       call decomp_2d_read_one(1,ux11,resfile,"ux11",0,io_restart_forces)
-       call decomp_2d_read_one(1,uy11,resfile,"uy11",0,io_restart_forces)
-#endif
+       call decomp_2d_read_one(1,ux01,resfile,"ux01",io_restart_forces)
+       call decomp_2d_read_one(1,uy01,resfile,"uy01",io_restart_forces)
+       call decomp_2d_read_one(1,ux11,resfile,"ux11",io_restart_forces)
+       call decomp_2d_read_one(1,uy11,resfile,"uy11",io_restart_forces)
     endif
 
     call decomp_2d_end_io(io_restart_forces, resfile)
