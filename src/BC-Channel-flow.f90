@@ -54,10 +54,8 @@ contains
 
     implicit none
 
-<<<<<<< HEAD
     ! Arguments
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(out) :: ux1,uy1,uz1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(out) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(out) :: phi1
 
     ! Local variables
@@ -84,6 +82,9 @@ contains
           endif
        endif
 
+    !
+    ! No 3D snapshot to initialize
+    !
     else
 
        if (iscalar==1) then
@@ -145,71 +146,6 @@ contains
        enddo
 
     endif
-=======
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-
-    real(mytype) :: y,um
-    integer :: k,j,i,ii,code
-
-    if (iscalar==1) then
-      if (nrank.eq.0) print *,'Imposing linear temperature profile'
-      do k=1,xsize(3)
-         do j=1,xsize(2)
-            if (istret.eq.0) y=real(j+xstart(2)-2,mytype)*dy
-            if (istret.ne.0) y=yp(j+xstart(2)-1)
-            do i=1,xsize(1)
-               phi1(i,j,k,:) = one - y/yly
-            enddo
-         enddo
-      enddo
-
-      if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
-        !! Generate a hot patch on bottom boundary
-        phi1(:,1,:,:) = one
-      endif
-      if ((nclySn.eq.2).and.(xend(2).eq.ny)) then
-        phi1(:,xsize(2),:,:) = zero
-      endif
-    endif
-
-    ux1=zero;uy1=zero;uz1=zero
-    if (iin.ne.0) then
-       call system_clock(count=code)
-       if (iin.eq.2) code=0
-       call random_seed(size = ii)
-       call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /))
-
-       call random_number(ux1)
-       call random_number(uy1)
-       call random_number(uz1)
-    endif
-
-    !modulation of the random noise + initial velocity profile
-    do k=1,xsize(3)
-       do j=1,xsize(2)
-          if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy-yly/two
-          if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/two
-          um=exp(-zptwo*y*y)
-          do i=1,xsize(1)
-             ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
-             uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
-             uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
-          enddo
-       enddo
-    enddo
-
-    !INIT FOR G AND U=MEAN FLOW + NOISE
-    do k=1,xsize(3)
-       do j=1,xsize(2)
-          do i=1,xsize(1)
-             ux1(i,j,k)=ux1(i,j,k)+bxx1(j,k)
-             uy1(i,j,k)=uy1(i,j,k)+bxy1(j,k)
-             uz1(i,j,k)=uz1(i,j,k)+bxz1(j,k)
-          enddo
-       enddo
-    enddo
->>>>>>> upstream/master
 
 #ifdef DEBG
     if (nrank .eq. 0) print *,'# init end ok'
@@ -225,7 +161,6 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
-<<<<<<< HEAD
     !
     ! Boundary conditions for velocity are applied after the prediction step
     ! and before the correction step. This is done in navier.f90/pre_correc
@@ -263,19 +198,6 @@ contains
           endif
           ! Explicit Y diffusion, top boundary
           if ((nclySn.eq.2).and.(xend(2).eq.ny)) then
-=======
-    if (.not.cpg) then ! if not constant pressure gradient
-        call channel_cfr(ux,two/three)
-    end if
-
-    if (iscalar.ne.0) then
-       if (iimplicit.le.0) then
-          if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
-             !! Generate a hot patch on bottom boundary
-             phi(:,1,:,:) = one
-          endif
-          if ((nclySn.eq.2).and.(xend(2).eq.ny)) THEN
->>>>>>> upstream/master
              phi(:,xsize(2),:,:) = zero
           endif
        else
@@ -295,7 +217,6 @@ contains
 
   end subroutine boundary_conditions_channel
   !############################################################################
-<<<<<<< HEAD
   !!
   !! Compute average of given array on the current CPU
   !!
@@ -325,8 +246,6 @@ contains
 
   end function channel_local_average
   !############################################################################
-=======
->>>>>>> upstream/master
   !!
   !!  SUBROUTINE: channel_cfr
   !!      AUTHOR: Kay Schäfer

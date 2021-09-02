@@ -526,7 +526,6 @@ subroutine parameter(input_i3d)
 #endif
 #else
      print *,'Numerical precision: Single'
-<<<<<<< HEAD
 #endif
 #ifdef ADIOS2
      print *, 'ADIOS2 flag detected'
@@ -556,9 +555,6 @@ subroutine parameter(input_i3d)
      print *, 'DEBUG flag activated'
 #endif
 
-=======
-#endif
->>>>>>> upstream/master
      print *,'==========================================================='
      write(*,"(' High and low speed : u1=',F6.2,' and u2=',F6.2)") u1,u2
      write(*,"(' Gravity vector     : (gx, gy, gz)=(',F15.8,',',F15.8,',',F15.8,')')") gravx, gravy, gravz
@@ -684,13 +680,10 @@ subroutine parameter_defaults()
 
   !! Channel
   cpg = .false.
-<<<<<<< HEAD
 
   !! Min/max bounds for exit
   uvwt_lbound = -100.
   uvwt_ubound = 100.
-=======
->>>>>>> upstream/master
 
   !! Filter
   ifilter=0
