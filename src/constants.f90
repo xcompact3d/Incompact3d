@@ -1,11 +1,12 @@
 module constants
 
     use decomp_2d, only: mytype
+    use param, only : onehundredeighty
 
     ! Mathematical constants
     real(mytype), parameter :: pi = 3.14159265358979323846_mytype
-    real(mytype), parameter :: conrad = pi / 180.0
-    real(mytype), parameter :: condeg = 180.0 / pi
+    real(mytype), parameter :: conrad = pi / onehundredeighty
+    real(mytype), parameter :: condeg = onehundredeighty / pi
 
     ! Definition of maximum size of arrays
     integer, parameter :: MaxNAirfoils = 80 ! Maximum number of airfoils to be read
