@@ -3,8 +3,6 @@ subroutine GebraadController(Turbine,Ntur,time)
     use actuator_line_model_utils
     use actuator_line_turbine
     use actuator_line_controller
-    use param, only: zero, one
-    use constants
 
     implicit none
     real(mytype) :: time
@@ -13,15 +11,15 @@ subroutine GebraadController(Turbine,Ntur,time)
     integer :: i,j,k
     real(mytype) :: TotalPower, WSRotorAve
 
-    TotalPower=zero
+    TotalPower=0.0_mytype
     do i=1,Ntur
     TotalPower=TotalPower+Turbine(i)%Power
     call compute_rotor_upstream_velocity(Turbine(i))
     enddo
 
     do i=1,Ntur
-    Turbine(i)%yaw_angle=zero
-    Turbine(i)%shaft_tilt_angle=zero
+    Turbine(i)%yaw_angle=0.0_mytype
+    Turbine(i)%shaft_tilt_angle=0.0_mytype
 
     !@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     ! APPLY FARM LEVEL CONTROL
@@ -29,14 +27,14 @@ subroutine GebraadController(Turbine,Ntur,time)
 
     ! Rotate the turbine according to the tilt and yaw angle
     ! Yaw
-    call rotate_turbine(turbine(i),(/zero,one,zero/),turbine(i)%yaw_angle*conrad)
+    call rotate_turbine(turbine(i),(/0.0d0,1.0d0,0.0d0/),turbine(i)%yaw_angle*pi/180.0d0)
     ! Tilt
-    call rotate_turbine(turbine(i),(/zero,zero,one/),-turbine(i)%shaft_tilt_angle*conrad)
+    call rotate_turbine(turbine(i),(/0.0d0,0.0d0,1.0d0/),-turbine(i)%shaft_tilt_angle*pi/180.0d0)
    
     ! Set the rotational axis
-    call QuatRot(turbine(i)%RotN(1),turbine(i)%RotN(2),turbine(i)%RotN(3),turbine(i)%yaw_angle*conrad,zero,one,zero,zero,zero,zero,&
+    call QuatRot(turbine(i)%RotN(1),turbine(i)%RotN(2),turbine(i)%RotN(3),turbine(i)%yaw_angle*pi/180.0d0,0.0d0,1.0d0,0.0d0,0.0d0,0.0d0,0.d0,&
             turbine(i)%RotN(1),turbine(i)%RotN(2),turbine(i)%RotN(3))
-    call QuatRot(turbine(i)%RotN(1),turbine(i)%RotN(2),turbine(i)%RotN(3),-turbine(i)%shaft_tilt_angle*conrad,zero,zero,one,zero,zero,zero,&
+    call QuatRot(turbine(i)%RotN(1),turbine(i)%RotN(2),turbine(i)%RotN(3),-turbine(i)%shaft_tilt_angle*pi/180.0d0,0.0d0,0.0d0,1.0d0,0.0d0,0.0d0,0.d0,&
             turbine(i)%RotN(1),turbine(i)%RotN(2),turbine(i)%RotN(3))
     enddo
 
