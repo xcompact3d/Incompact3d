@@ -91,7 +91,7 @@ contains
     implicit none
 
     ! No reading for statistics when nstat > 1 or no restart
-    if (nstat.gt.1 .or. irestart.eq.0) then
+    if (nstat > 1 .or. irestart == 0) then
        call init_statistic()
        initstat = ifirst
        return
@@ -266,11 +266,11 @@ contains
     integer :: is
     character(len=30) :: filename
 
-    if (itime.lt.initstat) then
+    if (itime < initstat) then
        return
-    elseif (itime.eq.initstat) then
+    elseif (itime == initstat) then
        call init_statistic()
-    elseif (itime.eq.ifirst) then
+    elseif (itime == ifirst) then
         call restart_statistic()
     endif
 

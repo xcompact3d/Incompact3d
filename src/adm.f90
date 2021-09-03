@@ -71,8 +71,8 @@ contains
             do k=1,xsize(3)
               zmesh=(xstart(3)+k-1-1)*dz
               do j=1,xsize(2)
-                if (istret.eq.0) ymesh=(xstart(2)+j-1-1)*dy
-                if (istret.ne.0) ymesh=yp(xstart(2)+j)
+                if (istret == 0) ymesh=(xstart(2)+j-1-1)*dy
+                if (istret /= 0) ymesh=yp(xstart(2)+j)
                 do i=1,xsize(1)
                   xmesh=(xstart(1)+i-1-1)*dx
                   deltax=abs(xmesh-actuatordisc(idisc)%COR(1))
@@ -130,8 +130,8 @@ contains
           do k=1,xsize(3)
             zmesh=(xstart(3)+k-1-1)*dz 
             do j=1,xsize(2)
-              if (istret.eq.0) ymesh=(xstart(2)+j-1-1)*dy
-              if (istret.ne.0) ymesh=yp(xstart(2)+j-1)
+              if (istret == 0) ymesh=(xstart(2)+j-1-1)*dy
+              if (istret /= 0) ymesh=yp(xstart(2)+j-1)
               do i=1,xsize(1)
                 xmesh=(i-1)*dx
                 deltax=abs(xmesh-actuatordisc(idisc)%COR(1))
@@ -154,10 +154,10 @@ contains
 
         call MPI_ALLREDUCE(Udisc_partial,actuatordisc%Udisc,Nad,MPI_REAL8,MPI_SUM, &
             MPI_COMM_WORLD,code)
-        if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+        if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
         call MPI_ALLREDUCE(counter,counter_total,Nad,MPI_INTEGER,MPI_SUM, &
             MPI_COMM_WORLD,code)
-        if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+        if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
         do idisc=1,Nad
           if (counter_total(idisc)==0) then
@@ -199,7 +199,7 @@ contains
         Fdiscy(:,:,:)=0.
         Fdiscz(:,:,:)=0.
         
-        !if(iverifyadm.eq.1) then
+        !if(iverifyadm == 1) then
         !  sumforce=0.
         !  do k=1,xsize(3)
         !  do j=1,xsize(2)

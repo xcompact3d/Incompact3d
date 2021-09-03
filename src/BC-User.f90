@@ -63,7 +63,7 @@ contains
 
     endif
 
-    if (iin.eq.0) then !empty domain
+    if (iin == 0) then !empty domain
 
        if (nrank==0) write(*,*) "Empty initial domain!"
 
@@ -71,7 +71,7 @@ contains
 
     endif
 
-    if (iin.eq.1) then !generation of a random noise
+    if (iin == 1) then !generation of a random noise
 
        !INIT FOR G AND U=MEAN FLOW + NOISE
        do k=1,xsize(3)
@@ -87,7 +87,7 @@ contains
     endif
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init end ok'
+    if (nrank  ==  0) print *,'# init end ok'
 #endif
 
     return

@@ -124,7 +124,7 @@ contains
     TYPE(DECOMP_INFO), save :: ph! decomposition object
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init_variables start'
+    if (nrank  ==  0) print *,'# init_variables start'
 #endif
 
     if (nrank==0) print *,'Initializing variables...'
@@ -169,13 +169,13 @@ contains
       mu1(:,:,:) = one
     endif
 
-    if (itype.eq.itype_abl.and.ifilter.ne.0.and.ilesmod.ne.0) then
+    if (itype == itype_abl.and.ifilter /= 0.and.ilesmod /= 0) then
        call alloc_x(uxf1);call alloc_x(uyf1);call alloc_x(uzf1);call alloc_x(phif1);
     endif
-    if (itype.eq.itype_abl.and.ilesmod.ne.0.and.jles.le.3.and.jles.gt.0) then
+    if (itype == itype_abl.and.ilesmod /= 0.and.jles <= 3.and.jles > 0) then
        call alloc_x(wallfluxx1); call alloc_x(wallfluxy1); call alloc_x(wallfluxz1);
     endif
-    if (itype.eq.itype_abl.and.ibuoyancy.eq.1) then
+    if (itype == itype_abl.and.ibuoyancy == 1) then
        allocate(T_tmp(xsize(1),xsize(2),xsize(3),1))
     endif
 
@@ -208,13 +208,13 @@ contains
     bzxn=zero;bzyn=zero;bzzn=zero
 
     !inflow/outflow arrays (precursor simulations)
-    if (iin.eq.3) then
+    if (iin == 3) then
        allocate(ux_inflow(ntimesteps,xsize(2),xsize(3)))
        allocate(uy_inflow(ntimesteps,xsize(2),xsize(3)))
        allocate(uz_inflow(ntimesteps,xsize(2),xsize(3)))
     endif
 
-    if (ioutflow.eq.1) then
+    if (ioutflow == 1) then
        allocate(ux_recoutflow(ntimesteps,xsize(2),xsize(3)))
        allocate(uy_recoutflow(ntimesteps,xsize(2),xsize(3)))
        allocate(uz_recoutflow(ntimesteps,xsize(2),xsize(3)))
@@ -247,7 +247,7 @@ contains
     allocate(uvisu(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
 
     !arrays statistics
-    if (ilast.ge.initstat) then
+    if (ilast >= initstat) then
       allocate (umean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
       allocate (vmean, mold=umean)
       allocate (wmean, mold=umean)
@@ -270,7 +270,7 @@ contains
     call alloc_y(td2);call alloc_y(te2);call alloc_y(tf2)
     call alloc_y(tg2);call alloc_y(th2);call alloc_y(ti2)
     call alloc_y(tj2);call alloc_y(di2)
-    if (itype.eq.itype_abl.and.ifilter.ne.0.and.ilesmod.ne.0) then
+    if (itype == itype_abl.and.ifilter /= 0.and.ilesmod /= 0) then
        call alloc_y(uxf2);call alloc_y(uyf2);call alloc_y(uzf2); call alloc_y(phif2)
     endif
     allocate(phi2(ysize(1),ysize(2),ysize(3),1:numscalar))
@@ -297,7 +297,7 @@ contains
     call alloc_z(td3);call alloc_z(te3);call alloc_z(tf3)
     call alloc_z(tg3);call alloc_z(th3);call alloc_z(ti3)
     call alloc_z(di3)
-    if (itype.eq.itype_abl.and.ifilter.ne.0.and.ilesmod.ne.0) then
+    if (itype == itype_abl.and.ifilter /= 0.and.ilesmod /= 0) then
        call alloc_z(uxf3);call alloc_z(uyf3);call alloc_z(uzf3); call alloc_z(phif3)
     endif
     allocate(phi3(zsize(1),zsize(2),zsize(3),1:numscalar))
@@ -320,7 +320,7 @@ contains
     call alloc_z(dv3,ph,.true.)
     call alloc_z(po3,ph,.true.)
 
-    if(ilesmod.ne.0.and.jles.gt.0) then
+    if(ilesmod /= 0.and.jles > 0) then
        call alloc_x(sgsx1);call alloc_x(sgsy1); call alloc_x(sgsz1)
        call alloc_x(sxx1);call alloc_x(syy1); call alloc_x(szz1)
        call alloc_x(sxy1);call alloc_x(sxz1); call alloc_x(syz1)
@@ -350,7 +350,7 @@ contains
     endif
 
 
-    if (iibm.ne.0) then
+    if (iibm /= 0) then
        !complex_geometry
        nxraf=(nxm)*nraf+1;nyraf=(nym)*nraf+1;nzraf=(nzm)*nraf+1
        allocate(nobjx(xsize(2),xsize(3)))
@@ -445,16 +445,16 @@ contains
       xpi(i)=(real(i,mytype)-half)*dx
     enddo
     ! y-position
-    if (istret.eq.0) then
+    if (istret == 0) then
        do j=1,ny
           yp(j)=real(j-1,mytype)*dy
           ypi(j)=(real(j,mytype)-half)*dy
           ppy(j) = one
        enddo
-       if (ncly1.eq.1 .or. ncly1.eq.2) then
+       if (ncly1 == 1 .or. ncly1 == 2) then
           ppy(1) = two
        endif
-       if (nclyn.eq.1 .or. nclyn.eq.2) then
+       if (nclyn == 1 .or. nclyn == 2) then
           ppy(ny) = two
        endif
     else
@@ -475,7 +475,7 @@ contains
     enddo
     !
     adt(:)=zero ; bdt(:)=zero ; cdt(:)=zero ; gdt(:)=zero
-    if (itimescheme.eq.1) then ! Euler
+    if (itimescheme == 1) then ! Euler
        iadvance_time=1
        adt(1)=1.0_mytype*dt
        bdt(1)=zero
@@ -484,7 +484,7 @@ contains
 
        ntime = 1
        nrhotime = 2
-    elseif (itimescheme.eq.2) then ! AB2
+    elseif (itimescheme == 2) then ! AB2
        iadvance_time=1
        adt(1)=onepfive*dt
        bdt(1)=-half*dt
@@ -493,7 +493,7 @@ contains
 
        ntime = 2
        nrhotime = 3
-    elseif (itimescheme.eq.3) then ! AB3
+    elseif (itimescheme == 3) then ! AB3
        iadvance_time=1
        adt(1)= (23._mytype/12._mytype)*dt
        bdt(1)=-(16._mytype/12._mytype)*dt
@@ -514,7 +514,7 @@ contains
 
        ntime = 4
        nrhotime = 5
-    elseif(itimescheme.eq.5) then !RK3
+    elseif(itimescheme == 5) then !RK3
        iadvance_time=3
        adt(1)=(8._mytype/15._mytype)*dt
        bdt(1)=zero
@@ -528,7 +528,7 @@ contains
 
        ntime = 2
        nrhotime = 3
-    elseif(itimescheme.eq.6) then !RK4 Carpenter and Kennedy
+    elseif(itimescheme == 6) then !RK4 Carpenter and Kennedy
        iadvance_time=5
        adt(1)=zero
        adt(2)=-0.4178904745_mytype
@@ -558,7 +558,7 @@ contains
     allocate(dphi1(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),ntime,1:numscalar)) !global indices
 
     !! ABL
-    if (itype.eq.itype_abl) then
+    if (itype == itype_abl) then
       allocate(heatflux(xsize(1),xsize(3)))
       allocate(PsiM(xsize(1),xsize(3)))
       allocate(PsiH(xsize(1),xsize(3)))
@@ -566,11 +566,11 @@ contains
     endif
 
     !! Turbine Modelling
-    if (iturbine.eq.1) then
+    if (iturbine == 1) then
        allocate(FTx(xsize(1),xsize(2),xsize(3)))
        allocate(FTy(xsize(1),xsize(2),xsize(3)))
        allocate(FTz(xsize(1),xsize(2),xsize(3)))
-    else if (iturbine.eq.2) then
+    else if (iturbine == 2) then
        allocate(Fdiscx(xsize(1),xsize(2),xsize(3)))
        allocate(Fdiscy(xsize(1),xsize(2),xsize(3)))
        allocate(Fdiscz(xsize(1),xsize(2),xsize(3)))
@@ -602,7 +602,7 @@ contains
     call decomp_info_finalize(ph)
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init_variables done'
+    if (nrank  ==  0) print *,'# init_variables done'
 #endif
     return
   end subroutine init_variables
@@ -615,13 +615,13 @@ contains
     deallocate(phi1)
     deallocate(ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,ep1)
     if (ilmn) deallocate(mu1)
-    if (itype.eq.itype_abl.and.ifilter.ne.0.and.ilesmod.ne.0) then
+    if (itype == itype_abl.and.ifilter /= 0.and.ilesmod /= 0) then
       deallocate(uxf1,uyf1,uzf1,phif1)
     endif
-    if (itype.eq.itype_abl.and.ilesmod.ne.0.and.jles.le.3.and.jles.gt.0) then
+    if (itype == itype_abl.and.ilesmod /= 0.and.jles <= 3.and.jles > 0) then
       deallocate(wallfluxx1, wallfluxy1, wallfluxz1)
     endif
-    if (itype.eq.itype_abl.and.ibuoyancy.eq.1) then
+    if (itype == itype_abl.and.ibuoyancy == 1) then
        deallocate(T_tmp)
     endif
     deallocate(pp1,pgy1,pgz1)
@@ -636,7 +636,7 @@ contains
 
     deallocate(uvisu)
 
-    if (ilast.ge.initstat) then
+    if (ilast >= initstat) then
       deallocate(umean,vmean,wmean,pmean)
       deallocate(uumean,vvmean,wwmean,uvmean,uwmean,vwmean,ppmean)
       deallocate(phimean,phiphimean,tmean)
@@ -644,7 +644,7 @@ contains
 
     deallocate(ux2,uy2,uz2)
     deallocate(ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2)
-    if (itype.eq.itype_abl.and.ifilter.ne.0.and.ilesmod.ne.0) then
+    if (itype == itype_abl.and.ifilter /= 0.and.ilesmod /= 0) then
       deallocate(uxf2,uyf2,uzf2,phif2)
     endif
     deallocate(phi2,pgz2,pp2,dip2,ppi2,pgy2,pgzi2)
@@ -654,7 +654,7 @@ contains
 
     deallocate(ux3,uy3,uz3)
     deallocate(ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3)
-    if (itype.eq.itype_abl.and.ifilter.ne.0.and.ilesmod.ne.0) then
+    if (itype == itype_abl.and.ifilter /= 0.and.ilesmod /= 0) then
       deallocate(uxf3,uyf3,uzf3,phif3)
     endif
     deallocate(phi3,pgz3,ppi3,dip3)
@@ -664,7 +664,7 @@ contains
 
     deallocate(pp3,dv3,po3)
 
-    if (ilesmod.ne.0.and.jles.gt.0) then
+    if (ilesmod /= 0.and.jles > 0) then
       deallocate(sgsx1)
       deallocate(sgsy1)
       deallocate(sgsz1)
@@ -742,7 +742,7 @@ contains
       deallocate(sgsphi3)
     endif
 
-    if (iibm.ne.0) then
+    if (iibm /= 0) then
       deallocate(nobjx)
       deallocate(nobjy)
       deallocate(nobjz)
@@ -803,11 +803,11 @@ contains
 
     deallocate(ppy,pp2y,pp4y,ppyi,pp2yi,pp4yi,xp,xpi,yp,ypi,del,zp,zpi,yeta,yetai)
 
-    if (istret.ne.0) deallocate(dyp)
+    if (istret /= 0) deallocate(dyp)
 
     deallocate(dux1,duy1,duz1,dphi1)
 
-    if (itype.eq.itype_abl) then
+    if (itype == itype_abl) then
        deallocate(heatflux,PsiM,PsiH,Tstat)
     endif
     deallocate(rho1,rho2,rho3,drho1,divu3)
@@ -815,9 +815,9 @@ contains
     deallocate(h_coeff1,h_coeff2,phase1,phase2,h_1,h_2)
 
     ! Free memory allocated in the subroutine parameter
-    if (numscalar.ne.0) then
+    if (numscalar /= 0) then
       deallocate(massfrac,mol_weight,sc,ri,uset,cp)
-      if (iimplicit.gt.0) deallocate(xcst_sc,alpha_sc,beta_sc,g_sc)
+      if (iimplicit > 0) deallocate(xcst_sc,alpha_sc,beta_sc,g_sc)
       deallocate(sc_even,sc_skew,scalar_lbound,scalar_ubound)
     endif
 

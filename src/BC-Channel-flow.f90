@@ -66,18 +66,18 @@ contains
     !
     ! Simulation can start from a 3D snapshot
     !
-    if (nrank.eq.0) inquire(file="channel_init_ux", exist=read_from_file)
+    if (nrank == 0) inquire(file="channel_init_ux", exist=read_from_file)
     call MPI_BCAST(read_from_file,1,MPI_LOGICAL,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
     if (read_from_file) then
 
-       if (nrank.eq.0) print *, "Channel: init from snapshot."
+       if (nrank == 0) print *, "Channel: init from snapshot."
        call decomp_2d_read_one(1,ux1,"channel_init_ux")
        call decomp_2d_read_one(1,uy1,"channel_init_uy")
        call decomp_2d_read_one(1,uz1,"channel_init_uz")
-       if (iscalar.eq.1) then
+       if (iscalar == 1) then
           call decomp_2d_read_one(1,phi1(:,:,:,1),"channel_init_t")
-          if (numscalar.gt.1) then
+          if (numscalar > 1) then
              phi1(:,:,:,2:numscalar) = zero
           endif
        endif
@@ -88,30 +88,30 @@ contains
     else
 
        if (iscalar==1) then
-          if (nrank.eq.0) print *,'Imposing linear temperature profile'
+          if (nrank == 0) print *,'Imposing linear temperature profile'
           do k=1,xsize(3)
              do j=1,xsize(2)
-                if (istret.eq.0) y=real(j+xstart(2)-2,mytype)*dy
-                if (istret.ne.0) y=yp(j+xstart(2)-1)
+                if (istret == 0) y=real(j+xstart(2)-2,mytype)*dy
+                if (istret /= 0) y=yp(j+xstart(2)-1)
                 do i=1,xsize(1)
                    phi1(i,j,k,:) = one - y/yly
                 enddo
              enddo
           enddo
 
-          if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
+          if ((nclyS1 == 2).and.(xstart(2) == 1)) then
              !! Generate a hot patch on bottom boundary
              phi1(:,1,:,:) = one
           endif
-          if ((nclySn.eq.2).and.(xend(2).eq.ny)) then
+          if ((nclySn == 2).and.(xend(2) == ny)) then
              phi1(:,xsize(2),:,:) = zero
           endif
        endif
 
        ux1=zero;uy1=zero;uz1=zero
-       if (iin.ne.0) then
+       if (iin /= 0) then
           call system_clock(count=code)
-          if (iin.eq.2) code=0
+          if (iin == 2) code=0
           call random_seed(size = j)
           call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, j) /))
 
@@ -123,8 +123,8 @@ contains
        !modulation of the random noise + initial velocity profile
        do k=1,xsize(3)
           do j=1,xsize(2)
-             if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy-yly/two
-             if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/two
+             if (istret == 0) y=real(j+xstart(2)-1-1,mytype)*dy-yly/two
+             if (istret /= 0) y=yp(j+xstart(2)-1)-yly/two
              um=exp(-zptwo*y*y)
              do i=1,xsize(1)
                 ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
@@ -148,7 +148,7 @@ contains
     endif
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init end ok'
+    if (nrank  ==  0) print *,'# init end ok'
 #endif
 
   end subroutine init_channel
@@ -171,14 +171,14 @@ contains
     !
 
     ! Zero velocity at bottom boundary
-    if (ncly1.eq.1) then
+    if (ncly1 == 1) then
        byx1(:,:) = zero
        byy1(:,:) = zero
        byz1(:,:) = zero
     endif
 
     ! Zero velocity at top boundary
-    if (nclyn.eq.2) then
+    if (nclyn == 2) then
        byxn(:,:) = zero
        byyn(:,:) = zero
        byzn(:,:) = zero
@@ -190,14 +190,14 @@ contains
     end if
 
     ! Boundary conditions for scalars are applied before computing conv. + diff.
-    if (iscalar.ne.0) then
-       if (iimplicit.le.0) then
+    if (iscalar /= 0) then
+       if (iimplicit <= 0) then
           ! Explicit Y diffusion, bottom boundary
-          if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
+          if ((nclyS1 == 2).and.(xstart(2) == 1)) then
              phi(:,1,:,:) = one
           endif
           ! Explicit Y diffusion, top boundary
-          if ((nclySn.eq.2).and.(xend(2).eq.ny)) then
+          if ((nclySn == 2).and.(xend(2) == ny)) then
              phi(:,xsize(2),:,:) = zero
           endif
        else
@@ -207,10 +207,10 @@ contains
           ! It is not possible to modify alpha_sc and beta_sc here
           !
           ! Bottom temperature if alpha_sc(:,1)=1 and beta_sc(:,1)=0 (default)
-          !if (nclyS1.eq.2) g_sc(:,1) = one
+          !if (nclyS1 == 2) g_sc(:,1) = one
           !
           ! Top temperature if alpha_sc(:,2)=1 and beta_sc(:,2)=0 (default)
-          !if (nclySn.eq.2) g_sc(:,2) = zero
+          !if (nclySn == 2) g_sc(:,2) = zero
           !
        endif
     endif
@@ -269,7 +269,7 @@ contains
     ub = channel_local_average(ux) * coeff
 
     call MPI_ALLREDUCE(MPI_IN_PLACE,ub,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
     can = - (constant - ub)
 
@@ -331,21 +331,21 @@ contains
 
     ! Rescaling and MPI communication
     array = array * coeff
-    if (nrank.eq.0) then
+    if (nrank == 0) then
       call MPI_REDUCE(MPI_IN_PLACE, array, 2*(3+numscalar), real_type, MPI_SUM, 0, MPI_COMM_WORLD, code)
     else
       call MPI_REDUCE(array, array, 2*(3+numscalar), real_type, MPI_SUM, 0, MPI_COMM_WORLD, code)
     endif
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
 
     ! Compute variance and log
-    if (nrank.eq.0) then
+    if (nrank == 0) then
       ! Compute variance
       do is = 1, 3 + numscalar
         array(3+numscalar+is) = array(3+numscalar+is) - array(is)**2
       enddo
       ! Print header at the first time step
-      if (itime.eq.ifirst) then
+      if (itime == ifirst) then
         open(newunit=iochannel, file='channel.dat', form='formatted')
         write(iochannel,*) "# <u>, <v>, <w>, <T>, <u'²>, <v'²>, <w'²>, <T'²>"
       endif
@@ -448,7 +448,7 @@ contains
         dux1(:,:,:,1) = dux1(:,:,:,1) + fcpg !* (re/re_cent)**2
     endif
 
-    if (itime.lt.spinup_time) then
+    if (itime < spinup_time) then
        if (nrank==0) print *,'Rotating turbulent channel at speed ',wrotation
        dux1(:,:,:,1) = dux1(:,:,:,1) - wrotation*uy1(:,:,:)
        duy1(:,:,:,1) = duy1(:,:,:,1) + wrotation*ux1(:,:,:)
@@ -490,14 +490,14 @@ contains
     h = (yly - two) / two
 
     zeromach=one
-    do while ((one + zeromach / two) .gt. one)
+    do while ((one + zeromach / two)  >  one)
        zeromach = zeromach/two
     end do
     zeromach = 1.0e1*zeromach
 
     do j=nyi,nyf
        ym=yp(j)
-       if ((ym.le.h).or.(ym.ge.(h+two))) then
+       if ((ym <= h).or.(ym >= (h+two))) then
           epsi(:,j,:)=remp
        endif
     enddo
@@ -513,7 +513,7 @@ contains
 
     implicit none
 
-    if (nrank.eq.0) then
+    if (nrank == 0) then
       close(iochannel)
     endif
 

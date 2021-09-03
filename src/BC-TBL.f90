@@ -67,11 +67,11 @@ contains
     if (iscalar==1) then
 
        phi1(:,:,:,:) = 0.25 !change as much as you want
-          if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
+          if ((nclyS1 == 2).and.(xstart(2) == 1)) then
              !! Generate a hot patch on bottom boundary
              phi1(:,1,:,:) = one
           endif
-          if ((nclySn.eq.2).and.(xend(2).eq.ny)) THEN
+          if ((nclySn == 2).and.(xend(2) == ny)) THEN
              phi1(:,xsize(2),:,:) = 0.25
           endif
 
@@ -92,7 +92,7 @@ contains
     enddo
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init end ok'
+    if (nrank  ==  0) print *,'# init end ok'
 #endif
 
     return
@@ -116,14 +116,14 @@ contains
 
     call blasius()
     !INLET FOR SCALAR, TO BE CONSISTENT WITH INITIAL CONDITION
-    if (iscalar.eq.1) then
+    if (iscalar == 1) then
        do k=1,xsize(3)
           do j=1,xsize(2)
              phi(1,:,:,:)=0.25
-             if ((xstart(2).eq.1)) then
+             if ((xstart(2) == 1)) then
                 phi(:,1,:,:) = one
              endif
-             if ((xend(2).eq.ny)) THEN
+             if ((xend(2) == ny)) THEN
                 phi(:,xsize(2),:,:) = 0.25
              endif
           enddo
@@ -148,7 +148,7 @@ contains
           bxxn(j,k)=ux(nx,j,k)-cx*(ux(nx,j,k)-ux(nx-1,j,k))
           bxyn(j,k)=uy(nx,j,k)-cx*(uy(nx,j,k)-uy(nx-1,j,k))
           bxzn(j,k)=uz(nx,j,k)-cx*(uz(nx,j,k)-uz(nx-1,j,k))
-          if (iscalar.eq.1) phi(nx,:,:,:) =  phi(nx,:,:,:) - cx*(phi(nx,:,:,:)-phi(nx-1,:,:,:))
+          if (iscalar == 1) phi(nx,:,:,:) =  phi(nx,:,:,:) - cx*(phi(nx,:,:,:)-phi(nx-1,:,:,:))
           enddo
     enddo
 
@@ -174,13 +174,13 @@ contains
     endif
 
     !SCALAR   
-    if (itimescheme.ne.7) then
-    if (iscalar.ne.0) then
-          if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
+    if (itimescheme /= 7) then
+    if (iscalar /= 0) then
+          if ((nclyS1 == 2).and.(xstart(2) == 1)) then
              !! Generate a hot patch on bottom boundary
              phi(1,1,:,:) = one
           endif
-          if ((nclySn.eq.2).and.(xend(2).eq.ny)) THEN
+          if ((nclySn == 2).and.(xend(2) == ny)) THEN
              phi(1,xsize(2),:,:) = phi(1,xsize(2)-1,:,:)
           endif
     endif
@@ -211,8 +211,8 @@ contains
 
     do k=1,xsize(3)
        do j=1,xsize(2)
-          if (istret.eq.0) y=(j+xstart(2)-1-1)*dy
-          if (istret.ne.0) y=yp(j+xstart(2)-1)
+          if (istret == 0) y=(j+xstart(2)-1-1)*dy
+          if (istret /= 0) y=yp(j+xstart(2)-1)
 
           eta_bl=y*4.91/9.0
 
@@ -222,7 +222,7 @@ contains
           eps_eta=0.0
           delta_int=0.2
 
-          if (eta_bl .ge. (7.5/9.0)) then
+          if (eta_bl  >=  (7.5/9.0)) then
              delta_eta=eta_bl-7.5/9.0
              eta_bl=7.5/9.0
              eps_eta=0.00015
@@ -239,7 +239,7 @@ contains
           f_bl=f_bl+(1-exp(-delta_eta/delta_int))*eps_eta
 
 
-          if (eta_bl .ge. (7.15/9.0)) then
+          if (eta_bl  >=  (7.15/9.0)) then
              delta_int=0.8
              delta_eta=eta_bl-7.15/9.0
              eta_bl=7.15/9.0
@@ -275,7 +275,7 @@ contains
     eps_eta=0.0
     delta_int=0.2
 
-    if (eta_bl .ge. (7.5/9.0)) then
+    if (eta_bl  >=  (7.5/9.0)) then
        delta_eta=eta_bl-7.5/9.0
        eta_bl=7.5/9.0
        eps_eta=0.00015
@@ -293,7 +293,7 @@ contains
     f_bl_inf=f_bl_inf+(1-exp(-delta_eta/delta_int))*eps_eta
     f_bl_inf=f_bl_inf/1.0002014996204402/1.0000000359138641 !To assure 1.0 in infinity
 
-    if (eta_bl .ge. (7.15/9.0)) then
+    if (eta_bl  >=  (7.15/9.0)) then
        delta_int=0.8
        delta_eta=eta_bl-7.15/9.0
        eta_bl=7.15/9.0

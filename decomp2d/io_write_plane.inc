@@ -35,7 +35,7 @@ call transpose_y_to_x(wk2,wk,decomp)
 deallocate(wk2)
 end if
 allocate(wk2d(1,decomp%xsz(2),decomp%xsz(3)))
-if (n.ge.1) then
+if (n >= 1) then
   do k=1,decomp%xsz(3)
   do j=1,decomp%xsz(2)
   wk2d(1,j,k)=wk(n,j,k)
@@ -68,7 +68,7 @@ else if (ipencil==3) then
 call transpose_z_to_y(var,wk,decomp)
 end if
 allocate(wk2d(decomp%ysz(1),1,decomp%ysz(3)))
-if (n.ge.1) then
+if (n >= 1) then
   do k=1,decomp%ysz(3)
   do i=1,decomp%ysz(1)
   wk2d(i,1,k)=wk(i,n,k)
@@ -104,7 +104,7 @@ else if (ipencil==3) then
 wk = var
 end if
 allocate(wk2d(decomp%zsz(1),decomp%zsz(2),1))
-if (n.ge.1) then
+if (n >= 1) then
   do j=1,decomp%zsz(2)
   do i=1,decomp%zsz(1) 
   wk2d(i,j,1)=wk(i,j,n)
@@ -130,27 +130,27 @@ end if
 
 call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
      MPI_ORDER_FORTRAN, data_type, newtype, ierror)
-if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
 call MPI_TYPE_COMMIT(newtype,ierror)
-if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
 call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
      MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
      fh, ierror)
-if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_FILE_OPEN: "//trim(filename))
+if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_OPEN: "//trim(filename))
 filesize = 0_MPI_OFFSET_KIND
 call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
-if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_FILE_SET_SIZE")
+if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_SET_SIZE")
 disp = 0_MPI_OFFSET_KIND
 call MPI_FILE_SET_VIEW(fh,disp,data_type, &
      newtype,'native',MPI_INFO_NULL,ierror)
-if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_FILE_SET_VIEW")
+if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_SET_VIEW")
 call MPI_FILE_WRITE_ALL(fh, wk2d, &
      subsizes(1)*subsizes(2)*subsizes(3), &
      data_type, MPI_STATUS_IGNORE, ierror)
-if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_FILE_WRITE_ALL")
+if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_WRITE_ALL")
 call MPI_FILE_CLOSE(fh,ierror)
-if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_FILE_CLOSE")
+if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_CLOSE")
 call MPI_TYPE_FREE(newtype,ierror)
-if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
 
 deallocate(wk,wk2d)

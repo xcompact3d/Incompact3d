@@ -140,7 +140,7 @@ contains
     if (bcz==1) nz=nz-1
 
 #ifdef DEBG 
-    if (nrank .eq. 0) print *,'# decomp_2d_poisson_init start'
+    if (nrank  ==  0) print *,'# decomp_2d_poisson_init start'
 #endif
 
     allocate(ax(nx),bx(nx))
@@ -149,14 +149,14 @@ contains
     call abxyz(ax,ay,az,bx,by,bz,nx,ny,nz,bcx,bcy,bcz)
 
 #ifdef DEBG 
-    if (nrank .eq. 0) print *,'# decomp_2d_poisson_init decomp_info_init'
+    if (nrank  ==  0) print *,'# decomp_2d_poisson_init decomp_info_init'
 #endif
 
     call decomp_info_init(nx, ny, nz, ph)
     call decomp_info_init(nx, ny, nz/2+1, sp)
 
 #ifdef DEBG 
-    if (nrank .eq. 0) print *,'# decomp_2d_poisson_init decomp_info_init ok'
+    if (nrank  ==  0) print *,'# decomp_2d_poisson_init decomp_info_init ok'
 #endif
 
     ! allocate work space
@@ -236,13 +236,13 @@ contains
     end if
 
 #ifdef DEBG 
-    if (nrank .eq. 0) print *,'# decomp_2d_poisson_init before waves'
+    if (nrank  ==  0) print *,'# decomp_2d_poisson_init before waves'
 #endif
 
     call waves()
 
 #ifdef DEBG 
-    if (nrank .eq. 0) print *,'# decomp_2d_poisson_init end'
+    if (nrank  ==  0) print *,'# decomp_2d_poisson_init end'
 #endif
 
     return
@@ -344,20 +344,20 @@ contains
              tmp2 = aimag(cw1(i,j,k))
              cw1(i,j,k) = cmplx(tmp1*by(j)+tmp2*ay(j), &
                   tmp2*by(j)-tmp1*ay(j), kind=mytype)
-             if (j.gt.(ny/2+1)) cw1(i,j,k)=-cw1(i,j,k)
+             if (j > (ny/2+1)) cw1(i,j,k)=-cw1(i,j,k)
 
              ! POST PROCESSING IN X
              tmp1 = real(cw1(i,j,k), kind=mytype)
              tmp2 = aimag(cw1(i,j,k))
              cw1(i,j,k) = cmplx(tmp1*bx(i)+tmp2*ax(i), &
                   tmp2*bx(i)-tmp1*ax(i), kind=mytype)
-             if (i.gt.(nx/2+1)) cw1(i,j,k)=-cw1(i,j,k)
+             if (i > (nx/2+1)) cw1(i,j,k)=-cw1(i,j,k)
 
              ! Solve Poisson
              tmp1=real(kxyz(i,j,k), kind=mytype)
              tmp2=aimag(kxyz(i,j,k))
              ! CANNOT DO A DIVISION BY ZERO
-             if ((tmp1.lt.epsilon).or.(tmp2.lt.epsilon)) then
+             if ((tmp1 < epsilon).or.(tmp2 < epsilon)) then
                 cw1(i,j,k)=0._mytype
                 !                print *,'DIV 0',i,j,k,epsilon
              else
@@ -383,14 +383,14 @@ contains
              tmp2 = aimag(cw1(i,j,k))
              cw1(i,j,k) = cmplx(tmp1*by(j)+tmp2*ay(j), &
                   tmp2*by(j)-tmp1*ay(j), kind=mytype)
-             if (j.gt.(ny/2+1)) cw1(i,j,k)=-cw1(i,j,k)
+             if (j > (ny/2+1)) cw1(i,j,k)=-cw1(i,j,k)
 
              ! POST PROCESSING IN X
              tmp1 = real(cw1(i,j,k), kind=mytype)
              tmp2 = aimag(cw1(i,j,k))
              cw1(i,j,k) = cmplx(tmp1*bx(i)+tmp2*ax(i), &
                   -tmp2*bx(i)+tmp1*ax(i), kind=mytype)
-             if (i.gt.(nx/2+1)) cw1(i,j,k)=-cw1(i,j,k)
+             if (i > (nx/2+1)) cw1(i,j,k)=-cw1(i,j,k)
 
           end do
        end do
@@ -489,7 +489,7 @@ contains
              tmp2 = aimag(cw1(i,j,k))
              cw1(i,j,k) = cmplx(tmp1*by(j)+tmp2*ay(j), &
                   tmp2*by(j)-tmp1*ay(j), kind=mytype)
-             if (j.gt.(ny/2+1)) cw1(i,j,k)=-cw1(i,j,k)
+             if (j > (ny/2+1)) cw1(i,j,k)=-cw1(i,j,k)
 #ifdef DEBUG
              if (abs(cw1(i,j,k)) > 1.0e-4) &
                   write(*,100) 'after y',i,j,k,cw1(i,j,k)
@@ -542,18 +542,18 @@ contains
              tmp2=aimag(kxyz(i,j,k))
              !xyzk=cmplx(tmp1,tmp2, kind=mytype)
              ! CANNOT DO A DIVISION BY ZERO
-             if ((abs(tmp1).lt.epsilon).and.(abs(tmp2).lt.epsilon)) then    
+             if ((abs(tmp1) < epsilon).and.(abs(tmp2) < epsilon)) then    
                 cw1b(i,j,k)=cmplx(0._mytype,0._mytype, kind=mytype)
              end if
-             if ((abs(tmp1).lt.epsilon).and.(abs(tmp2).ge.epsilon)) then
+             if ((abs(tmp1) < epsilon).and.(abs(tmp2) >= epsilon)) then
                 cw1b(i,j,k)=cmplx(0._mytype, &
                      aimag(cw1b(i,j,k))/(-tmp2), kind=mytype)
              end if
-             if ((abs(tmp1).ge.epsilon).and.(abs(tmp2).lt.epsilon)) then    
+             if ((abs(tmp1) >= epsilon).and.(abs(tmp2) < epsilon)) then    
                 cw1b(i,j,k)=cmplx( real(cw1b(i,j,k), kind=mytype) &
                      /(-tmp1), 0._mytype, kind=mytype)
              end if
-             if ((abs(tmp1).ge.epsilon).and.(abs(tmp2).ge.epsilon)) then
+             if ((abs(tmp1) >= epsilon).and.(abs(tmp2) >= epsilon)) then
                 cw1b(i,j,k)=cmplx( real(cw1b(i,j,k), kind=mytype) &
                      /(-tmp1), &
                      aimag(cw1b(i,j,k))/(-tmp2), kind=mytype)
@@ -610,7 +610,7 @@ contains
              tmp2 = aimag(cw1(i,j,k))
              cw1(i,j,k) = cmplx(tmp1*by(j)-tmp2*ay(j), &
                   tmp2*by(j)+tmp1*ay(j), kind=mytype)
-             if (j.gt.(ny/2+1)) cw1(i,j,k)=-cw1(i,j,k)
+             if (j > (ny/2+1)) cw1(i,j,k)=-cw1(i,j,k)
 #ifdef DEBUG
              if (abs(cw1(i,j,k)) > 1.0e-4) &
                   write(*,100) 'AFTER Y',i,j,k,cw1(i,j,k)
@@ -743,7 +743,7 @@ contains
              tmp2 = aimag(cw1(i,j,k))
              cw1(i,j,k) = cmplx(tmp1*bx(i)+tmp2*ax(i), &
                   tmp2*bx(i)-tmp1*ax(i), kind=mytype)
-             if (i.gt.(nx/2+1)) cw1(i,j,k)=-cw1(i,j,k)
+             if (i > (nx/2+1)) cw1(i,j,k)=-cw1(i,j,k)
 #ifdef DEBUG
              if (abs(cw1(i,j,k)) > 1.0e-4) &
                   write(*,100) 'after x',i,j,k,cw1(i,j,k)
@@ -803,18 +803,18 @@ contains
                 tmp2=aimag(kxyz(i,j,k))
                 !xyzk=cmplx(tmp1,tmp2, kind=mytype)
                 !CANNOT DO A DIVISION BY ZERO
-                if ((abs(tmp1).lt.epsilon).and.(abs(tmp2).lt.epsilon)) then    
+                if ((abs(tmp1) < epsilon).and.(abs(tmp2) < epsilon)) then    
                    cw2b(i,j,k)=cmplx(0._mytype,0._mytype, kind=mytype)
                 end if
-                if ((abs(tmp1).lt.epsilon).and.(abs(tmp2).ge.epsilon)) then
+                if ((abs(tmp1) < epsilon).and.(abs(tmp2) >= epsilon)) then
                    cw2b(i,j,k)=cmplx(0._mytype, &
                         aimag(cw2b(i,j,k))/(-tmp2), kind=mytype)
                 end if
-                if ((abs(tmp1).ge.epsilon).and.(abs(tmp2).lt.epsilon)) then    
+                if ((abs(tmp1) >= epsilon).and.(abs(tmp2) < epsilon)) then    
                    cw2b(i,j,k)=cmplx( real(cw2b(i,j,k), kind=mytype) &
                         /(-tmp1), 0._mytype, kind=mytype)
                 end if
-                if ((abs(tmp1).ge.epsilon).and.(abs(tmp2).ge.epsilon)) then
+                if ((abs(tmp1) >= epsilon).and.(abs(tmp2) >= epsilon)) then
                    cw2b(i,j,k)=cmplx( real(cw2b(i,j,k), kind=mytype) &
                         /(-tmp1), &
                         aimag(cw2b(i,j,k))/(-tmp2), kind=mytype)
@@ -830,14 +830,14 @@ contains
        !          do j = 1,ny/2
        !             do i = sp%yst(1), sp%yen(1)
        !                print *,i,j,k,a(i,j,k,3)
-       !!                if (nrank.le.1) print *,i,j,k,a(i,j,k,3)
-       !!                if (nrank.gt.1) print *,i+4,j,k,a(i,j,k,3)
+       !!                if (nrank <= 1) print *,i,j,k,a(i,j,k,3)
+       !!                if (nrank > 1) print *,i+4,j,k,a(i,j,k,3)
        !             enddo
        !          enddo
        !       enddo
 
 
-       if (istret.ne.3) then
+       if (istret /= 3) then
           cw2(:,:,:)=0.;cw2c(:,:,:)=0.
           do k = sp%yst(3), sp%yen(3)
              do j = 1,ny/2
@@ -985,7 +985,7 @@ contains
              tmp2 = aimag(cw1(i,j,k))
              cw1(i,j,k) = cmplx(tmp1*bx(i)-tmp2*ax(i), &
                   tmp2*bx(i)+tmp1*ax(i), kind=mytype)
-             if (i.gt.(nx/2+1)) cw1(i,j,k)=-cw1(i,j,k)
+             if (i > (nx/2+1)) cw1(i,j,k)=-cw1(i,j,k)
 #ifdef DEBUG
              if (abs(cw1(i,j,k)) > 1.0e-4) &
                   write(*,100) 'AFTER X',i,j,k,cw1(i,j,k)
@@ -1233,18 +1233,18 @@ contains
                 tmp2=aimag(kxyz(i,j,k))
                 !xyzk=cmplx(tmp1,tmp2, kind=mytype)
                 !CANNOT DO A DIVISION BY ZERO
-                if ((abs(tmp1).lt.epsilon).and.(abs(tmp2).lt.epsilon)) then    
+                if ((abs(tmp1) < epsilon).and.(abs(tmp2) < epsilon)) then    
                    cw1b(i,j,k)=cmplx(0._mytype,0._mytype, kind=mytype)
                 end if
-                if ((abs(tmp1).lt.epsilon).and.(abs(tmp2).ge.epsilon)) then
+                if ((abs(tmp1) < epsilon).and.(abs(tmp2) >= epsilon)) then
                    cw1b(i,j,k)=cmplx(0._mytype, &
                         aimag(cw1b(i,j,k))/(-tmp2), kind=mytype)
                 end if
-                if ((abs(tmp1).ge.epsilon).and.(abs(tmp2).lt.epsilon)) then    
+                if ((abs(tmp1) >= epsilon).and.(abs(tmp2) < epsilon)) then    
                    cw1b(i,j,k)=cmplx( real(cw1b(i,j,k), kind=mytype) &
                         /(-tmp1), 0._mytype, kind=mytype)
                 end if
-                if ((abs(tmp1).ge.epsilon).and.(abs(tmp2).ge.epsilon)) then
+                if ((abs(tmp1) >= epsilon).and.(abs(tmp2) >= epsilon)) then
                    cw1b(i,j,k)=cmplx( real(cw1b(i,j,k), kind=mytype) &
                         /(-tmp1), &
                         aimag(cw1b(i,j,k))/(-tmp2), kind=mytype)
@@ -1259,7 +1259,7 @@ contains
        call transpose_x_to_y(cw1b,cw2b,sp)
        !we are now in Y pencil
 
-       if (istret.ne.3) then
+       if (istret /= 3) then
           cw2(:,:,:)=0.;cw2c(:,:,:)=0.
           do k = sp%yst(3), sp%yen(3)
              do j = 1,ny/2
@@ -1583,7 +1583,7 @@ contains
           wp=aciy6*2.*dy*sin(w/2.)+(bciy6*2.*dy)*sin(3./2.*w)
           wp=wp/(1.+2.*alcaiy6*cos(w))
           if (istret==0) yky(j)=cmplx(ny*wp/yly,ny*wp/yly, kind=mytype)
-          if (istret.ne.0) yky(j)=cmplx(ny*wp,ny*wp, kind=mytype)
+          if (istret /= 0) yky(j)=cmplx(ny*wp,ny*wp, kind=mytype)
           eys(j)=cmplx(ny*w/yly,ny*w/yly, kind=mytype)
           yk2(j)=cmplx((ny*wp/yly)**2,(ny*wp/yly)**2, kind=mytype)
        enddo
@@ -1598,7 +1598,7 @@ contains
           wp=aciy6*2.*dy*sin(w/2.)+(bciy6*2.*dy)*sin(3./2.*w)
           wp=wp/(1.+2.*alcaiy6*cos(w))
           if (istret==0) yky(j)=cmplx(nym*wp/yly,nym*wp/yly, kind=mytype)
-          if (istret.ne.0) yky(j)=cmplx(nym*wp,nym*wp, kind=mytype)
+          if (istret /= 0) yky(j)=cmplx(nym*wp,nym*wp, kind=mytype)
           eys(j)=cmplx(nym*w/yly,nym*w/yly, kind=mytype)
           yk2(j)=cmplx((nym*wp/yly)**2,(nym*wp/yly)**2, kind=mytype)
        enddo
@@ -1638,7 +1638,7 @@ contains
     !endif
     !stop
 
-    if ((bcx==0).and.(bcz==0).and.bcy.ne.0) then
+    if ((bcx==0).and.(bcz==0).and.bcy /= 0) then
        do k = sp%yst(3), sp%yen(3)
           do j = sp%yst(2), sp%yen(2)
              do i = sp%yst(1), sp%yen(1)

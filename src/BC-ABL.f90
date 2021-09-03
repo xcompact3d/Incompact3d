@@ -64,13 +64,13 @@ contains
     bzx1=zero;bzy1=zero;bzz1=zero
 
     ! ABL not yet set up for iLES, stretched grids, and non-constant explicit models. 
-    if (ilesmod.eq.0.or.istret.ne.0.or.jles.gt.1) then
+    if (ilesmod == 0.or.istret /= 0.or.jles > 1) then
        print *, 'Simulation stopped: run with different options'
        call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
     endif
 
     ! Generation of a random noise
-    if (iin.ne.0) then
+    if (iin /= 0) then
       call system_clock(count=code)
       call random_seed(size = ii)
       call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /)) !
@@ -93,9 +93,9 @@ contains
     ! Initialize with log-law or geostrophic wind
     do k=1,xsize(3)
     do j=1,xsize(2)
-       if (istret.eq.0) y=(j+xstart(2)-1-1)*dy
-       if (istret.ne.0) y=yp(j)
-       if (iPressureGradient.eq.1.or.imassconserve.eq.1) then
+       if (istret == 0) y=(j+xstart(2)-1-1)*dy
+       if (istret /= 0) y=yp(j)
+       if (iPressureGradient == 1.or.imassconserve == 1) then
            bxx1(j,k)=ustar/k_roughness*log((y+z_zero)/z_zero)
        else
            bxx1(j,k)=UG(1)
@@ -117,11 +117,11 @@ contains
     enddo
 
     ! Initialize temperature profiles
-    if (iscalar.eq.1) then
+    if (iscalar == 1) then
       do j=1,xsize(2)
-        if (istret.eq.0) y=(j+xstart(2)-1-1)*dy
-        if (istret.ne.0) y=yp(j+xstart(2)-1)
-        if (ibuoyancy.eq.1) then 
+        if (istret == 0) y=(j+xstart(2)-1-1)*dy
+        if (istret /= 0) y=yp(j+xstart(2)-1)
+        if (ibuoyancy == 1) then 
           Tstat(j,1)=T_wall + (T_top-T_wall)*y/yly
         else 
           Tstat(j,1)=zero
@@ -147,9 +147,9 @@ contains
 
       ! Add random noise
       do j=1,xsize(2)
-        if (istret.eq.0) y=(j+xstart(2)-1-1)*dy
-        if (istret.ne.0) y=yp(j+xstart(2)-1)
-        !if (y.lt.50) then 
+        if (istret == 0) y=(j+xstart(2)-1-1)*dy
+        if (istret /= 0) y=yp(j+xstart(2)-1)
+        !if (y < 50) then 
         !  do k=1,xsize(3)
         !  do i=1,xsize(1)
         !    call random_number(phinoise)
@@ -186,7 +186,7 @@ contains
       call transpose_y_to_x(gx,ux)
     endif
 
-    if ((iconcprec.eq.1).or.(ishiftedper.eq.1)) then
+    if ((iconcprec == 1).or.(ishiftedper == 1)) then
       call fringe_region(ux,uy,uz)
     endif
 
@@ -212,33 +212,33 @@ contains
     integer :: i
    
     ! BL Forcing (Pressure gradient or geostrophic wind)
-    if (iPressureGradient.eq.1) then
+    if (iPressureGradient == 1) then
        dux1(:,:,:,1)=dux1(:,:,:,1)+ustar**2./dBL
-       if (iconcprec.eq.1) then
+       if (iconcprec == 1) then
           do i=1,xsize(1)
              if ((i-1)*dx>=pdl) then
                 dux1(i,:,:,1)=dux1(i,:,:,1)-ustar**2./dBL
              endif
           enddo
        endif
-    else if (iCoriolis.eq.1.and.iPressureGradient.eq.0) then
+    else if (iCoriolis == 1.and.iPressureGradient == 0) then
        dux1(:,:,:,1)=dux1(:,:,:,1)+CoriolisFreq*(-UG(3))
        duz1(:,:,:,1)=duz1(:,:,:,1)-CoriolisFreq*(-UG(1))
     endif
 
     ! Coriolis terms
-    if (iCoriolis.eq.1) then
+    if (iCoriolis == 1) then
        dux1(:,:,:,1)=dux1(:,:,:,1)+CoriolisFreq*uz1(:,:,:)
        duz1(:,:,:,1)=duz1(:,:,:,1)-CoriolisFreq*ux1(:,:,:)
     endif
 
     ! Damping zone
-    if (idamping.eq.1) then
+    if (idamping == 1) then
        call damping_zone(dux1,duy1,duz1,ux1,uy1,uz1)
     endif
 
     ! Buoyancy terms
-    if (iscalar.eq.1.and.ibuoyancy.eq.1) then
+    if (iscalar == 1.and.ibuoyancy == 1) then
        duy1(:,:,:,1)=duy1(:,:,:,1)+gravv*phi1(:,:,:,1)/Tref
     endif
 
@@ -261,12 +261,12 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: uy1, phi1
 
     ! Damping zone
-    if (idamping.eq.1) then
+    if (idamping == 1) then
        call damping_zone_scalar(dphi1,phi1)
     endif
 
     ! Terms from decomposition
-    if (ibuoyancy.eq.1) then
+    if (ibuoyancy == 1) then
        dphi1(:,:,:,1) = dphi1(:,:,:,1) + (T_wall-T_top)*uy1(:,:,:)/yly
     endif
 
@@ -332,8 +332,8 @@ contains
     Phi_HAve_local=zero
 
     ! dy to y=1/2
-    if (istret.ne.0) delta=(yp(2)-yp(1))/two
-    if (istret.eq.0) delta=dy/two
+    if (istret /= 0) delta=(yp(2)-yp(1))/two
+    if (istret == 0) delta=dy/two
 
     ! Find horizontally averaged velocities at j=1.5
     if (xstart(2)==1) then
@@ -350,12 +350,12 @@ contains
     endif
 
     call MPI_ALLREDUCE(ux_HAve_local,ux_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(uz_HAve_local,uz_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     if (iscalar==1) then
       call MPI_ALLREDUCE(Phi_HAve_local,Phi_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-      if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     endif
 
     ux_HAve=ux_HAve/p_col
@@ -363,7 +363,7 @@ contains
     S_HAve=sqrt(ux_HAve**2.+uz_HAve**2.)
     if (iscalar==1) then 
       Phi_HAve=Phi_HAve/p_col
-      if (ibuoyancy.eq.1) then 
+      if (ibuoyancy == 1) then 
         Tstat12 =T_wall + (T_top-T_wall)*delta/yly
       else 
         Tstat12 =zero
@@ -377,13 +377,13 @@ contains
     wallfluxz=zero
 
     ! Initialize stratification variables
-    if (iscalar==1.and.ibuoyancy.eq.1.and.xstart(2)==1) then 
+    if (iscalar==1.and.ibuoyancy == 1.and.xstart(2)==1) then 
       PsiM_HAve=zero
       PsiH_HAve=zero
       ii   = 0
       OL_diff = 1.
       Lold    = 1.
-      do while (OL_diff.gt.1e-14)
+      do while (OL_diff > 1e-14)
         if (itherm==0) then
           Q_HAve = TempFlux
         else if (itherm==1) then
@@ -430,7 +430,7 @@ contains
            ux12=0.5*(uxf1(i,1,k)+uxf1(i,2,k))
            uz12=0.5*(uzf1(i,1,k)+uzf1(i,2,k))
            S12=sqrt(ux12**2.+uz12**2.)
-           if (iscalar.eq.1) then
+           if (iscalar == 1) then
              Phi12= 0.5*(phif1(i,1,k)+ phif1(i,2,k)) + Tstat12
              do ii=1,10
                 if (itherm==1) heatflux(i,k)=-k_roughness**2.0*S12*(Phi12-(T_wall+TempRate*t))/((log(delta/z_zero)-PsiM(i,k))*(log(delta/z_zero)-PsiH(i,k)))
@@ -481,13 +481,13 @@ contains
       Q_HAve_local=Q_HAve_local/xsize(3)/xsize(1)
 
       call MPI_ALLREDUCE(PsiM_HAve_local,PsiM_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-      if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
       call MPI_ALLREDUCE(PsiH_HAve_local,PsiH_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-      if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
       call MPI_ALLREDUCE(L_HAve_local,L_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-      if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
       call MPI_ALLREDUCE(Q_HAve_local,Q_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-      if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
       PsiM_HAve=PsiM_HAve/p_col
       PsiH_HAve=PsiH_HAve/p_col
@@ -547,8 +547,8 @@ contains
     Pr=Sc(1)
 
     if (xstart(2)==1) then
-       if (istret.ne.0) delta=(yp(2)-yp(1))/two
-       if (istret.eq.0) delta=dy/two
+       if (istret /= 0) delta=(yp(2)-yp(1))/two
+       if (istret == 0) delta=dy/two
        do k=1,xsize(3)
        do i=1,xsize(1)
           sgsphi1(i,1,k) =-(-1./2.*(-nut1(i,3,k)*dphidy1(i,3,k))/Pr+&
@@ -581,13 +581,13 @@ contains
     do k=1,ysize(3)
     do i=1,ysize(1)
       xloc=(i+ystart(1)-1-1)*dx
-      if (iconcprec.eq.1.and.xloc>=pdl) then
+      if (iconcprec == 1.and.xloc>=pdl) then
         continue  
       else
         ut=zero
         do j=1,ny-1
-          if (istret.ne.0) ut=ut+(yp(j+1)-yp(j))*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
-          if (istret.eq.0) ut=ut+(yly/(ny-1))*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
+          if (istret /= 0) ut=ut+(yp(j+1)-yp(j))*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
+          if (istret == 0) ut=ut+(yly/(ny-1))*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
         enddo
         ut3=ut3+ut
       endif
@@ -596,9 +596,9 @@ contains
     ut3=ut3/ysize(1)/ysize(3)
 
     call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     ut4=ut4/nproc
-    if (iconcprec.eq.1) ut4=ut4*(xlx/pdl)
+    if (iconcprec == 1) ut4=ut4*(xlx/pdl)
 
     ! Flow rate for a logarithmic profile
     !can=-(ustar/k_roughness*yly*(log(yly/z_zero)-1.)-ut4)
@@ -609,7 +609,7 @@ contains
     do k=1,ysize(3)
     do i=1,ysize(1)
       xloc=(i+ystart(1)-1-1)*dx
-      if (iconcprec.eq.1.and.xloc>=pdl) then
+      if (iconcprec == 1.and.xloc>=pdl) then
         continue
       else
         do j=1,ny
@@ -741,7 +741,7 @@ contains
     real(mytype) :: y, lambda, xloc
     real(mytype) :: damp_lo, coeff, wvar, dheight
    
-    if (ibuoyancy.eq.1) then
+    if (ibuoyancy == 1) then
       damp_lo = 300.
       coeff   = 0.0016 !0.5*ustar/dBL
     else
@@ -753,10 +753,10 @@ contains
     do k=1,xsize(3)
     do j=1,xsize(2)
     do i=1,xsize(1)
-      if (istret.eq.0) y=(j+xstart(2)-1-1)*dy
-      if (istret.ne.0) y=yp(j+xstart(2)-1)
+      if (istret == 0) y=(j+xstart(2)-1-1)*dy
+      if (istret /= 0) y=yp(j+xstart(2)-1)
       ! Damping for non-neutral ABL
-      if (ibuoyancy.eq.1) then
+      if (ibuoyancy == 1) then
         if (y>=damp_lo) then
           lambda=sin(pi/2.*(y-damp_lo)/(yly-damp_lo))**2.
         else
@@ -775,7 +775,7 @@ contains
          lambda=zero
         endif
         xloc=(i-1)*dx
-        if (iconcprec.eq.1.and.xloc.ge.pdl) lambda=0.
+        if (iconcprec == 1.and.xloc >= pdl) lambda=0.
         dux1(i,j,k,1)=dux1(i,j,k,1)-coeff*lambda*(ux1(i,j,k)-ustar/k_roughness*log(dBL/z_zero))
         duy1(i,j,k,1)=duy1(i,j,k,1)-coeff*lambda*(uy1(i,j,k)-UG(2))
         duz1(i,j,k,1)=duz1(i,j,k,1)-coeff*lambda*(uz1(i,j,k)-UG(3))
@@ -810,8 +810,8 @@ contains
     do k=1,xsize(3)
     do j=1,xsize(2)
     do i=1,xsize(1)
-      if (istret.eq.0) y=(j+xstart(2)-1-1)*dy
-      if (istret.ne.0) y=yp(j+xstart(2)-1)
+      if (istret == 0) y=(j+xstart(2)-1-1)*dy
+      if (istret /= 0) y=yp(j+xstart(2)-1)
       if (y>=damp_lo) then
         lambda=sin(pi/2.*(y-damp_lo)/(yly-damp_lo))**2.
       else
@@ -888,19 +888,19 @@ contains
     tyz_HAve_local=tyz_HAve_local/xsize(3)/xsize(1)
 
     call MPI_ALLREDUCE(u_HAve_local,u_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(v_HAve_local,v_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(w_HAve_local,w_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(uxy_HAve_local,uxy_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(uyz_HAve_local,uyz_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(txy_HAve_local,txy_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(tyz_HAve_local,tyz_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     u_HAve=u_HAve/p_col
     v_HAve=v_HAve/p_col
     w_HAve=w_HAve/p_col
@@ -914,9 +914,9 @@ contains
 
     do j=2,ny
       if (momfl(j)<=0.05*u_shear**2.) then
-         if (istret.eq.0) then
+         if (istret == 0) then
            h=(j-1)*dy + dy*(0.05*u_shear**2.-momfl(j-1))/(momfl(j)-momfl(j-1)) 
-         else if (istret.eq.1) then
+         else if (istret == 1) then
            h=yp(j-1) + (yp(j)-yp(j-1))*(0.05*u_shear**2.-momfl(j-1))/(momfl(j)-momfl(j-1)) 
          endif
          exit
@@ -951,7 +951,7 @@ contains
     integer :: out_cntr
 
     ! Record outflow 
-    if (ioutflow.eq.1) then
+    if (ioutflow == 1) then
       out_cntr=mod(itime,ntimesteps)
       if (out_cntr==0) out_cntr=ntimesteps
       call append_outflow(ux1,uy1,uz1,out_cntr)
@@ -961,7 +961,7 @@ contains
     endif        
 
     ! Write vorticity as an example of post processing
-!    if ((ivisu.ne.0).and.(mod(itime,ioutput).eq.0)) then
+!    if ((ivisu /= 0).and.(mod(itime,ioutput) == 0)) then
 !      !x-derivatives
 !      call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
 !      call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)

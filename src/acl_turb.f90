@@ -563,7 +563,7 @@ use MPI
         ! Velocity is calculated at a probe point (closest) at one D upstream the turbine
 
         Rupstream(:)=turbine%origin(:)-turbine%rotN(:)*2.*turbine%Rmax       
-        if (istret.eq.0) then 
+        if (istret == 0) then 
         ymin=(xstart(2)-1)*dy-dy/2.0 ! Add -dy/2.0 overlap
         ymax=(xend(2)-1)*dy+dy/2.0   ! Add +dy/2.0 overlap
         else
@@ -581,8 +581,8 @@ use MPI
             do k=xstart(3),xend(3)
             zmesh=(k-1)*dz 
             do j=xstart(2),xend(2)
-            if (istret.eq.0) ymesh=(j-1)*dy
-            if (istret.ne.0) ymesh=yp(j)
+            if (istret == 0) ymesh=(j-1)*dy
+            if (istret /= 0) ymesh=yp(j)
             do i=xstart(1),xend(1)
             xmesh=(i-1)*dx
             dist = sqrt((Rupstream(1)-xmesh)**2.+(Rupstream(2)-ymesh)**2.+(Rupstream(3)-zmesh)**2.) 
@@ -614,13 +614,13 @@ use MPI
            
         call MPI_ALLREDUCE(Ux_part,Ux,1,MPI_REAL8,MPI_SUM, &
             MPI_COMM_WORLD,code)
-        if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+        if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
         call MPI_ALLREDUCE(Uy_part,Uy,1,MPI_REAL8,MPI_SUM, &
             MPI_COMM_WORLD,code)
-        if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+        if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
         call MPI_ALLREDUCE(Uz_part,Uz,1,MPI_REAL8,MPI_SUM, &
             MPI_COMM_WORLD,code)
-        if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+        if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
         
         Turbine%Ux_upstream=Ux
         Turbine%Uy_upstream=Uy

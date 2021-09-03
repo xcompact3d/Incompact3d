@@ -288,10 +288,10 @@ contains
     ti2(:,:,:) = tf2(:,:,:) - half * ti2(:,:,:)
 
     !DIFFUSIVE TERMS IN Y
-    if (iimplicit.le.0) then
+    if (iimplicit <= 0) then
        !-->for ux
        call deryy (td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,ubcx)
-       if (istret.ne.0) then
+       if (istret /= 0) then
           call dery (te2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
           do k = 1,ysize(3)
              do j = 1,ysize(2)
@@ -304,7 +304,7 @@ contains
 
        !-->for uy
        call deryy (te2,uy2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0,ubcy)
-       if (istret.ne.0) then
+       if (istret /= 0) then
           call dery (tf2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
           do k = 1,ysize(3)
              do j = 1,ysize(2)
@@ -317,7 +317,7 @@ contains
 
        !-->for uz
        call deryy (tf2,uz2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,ubcz)
-       if (istret.ne.0) then
+       if (istret /= 0) then
           call dery (tj2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
           do k = 1,ysize(3)
              do j = 1,ysize(2)
@@ -328,7 +328,7 @@ contains
           enddo
        endif
     else ! (semi)implicit Y diffusion
-       if (istret.ne.0) then
+       if (istret /= 0) then
 
           !-->for ux
           call dery (te2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
@@ -408,9 +408,9 @@ contains
     endif
 
     ! If LES modelling is enabled, add the SGS stresses
-    if (ilesmod.ne.0.and.jles.le.3.and.jles.gt.0) then
+    if (ilesmod /= 0.and.jles <= 3.and.jles > 0) then
        ! Wall model for LES
-       if (iwall.eq.1) then
+       if (iwall == 1) then
           call compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,phi1,ep1,1)
        else
           call compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,phi1,ep1,0)
@@ -423,7 +423,7 @@ contains
 
     if (ilmn) then
       !! Gravity
-      if ((Fr**2).gt.zero) then
+      if ((Fr**2) > zero) then
         call momentum_gravity(dux1, duy1, duz1, rho1(:,:,:,1) - one, one / Fr**2)
       endif
       do is = 1, numscalar
@@ -435,11 +435,11 @@ contains
     call momentum_forcing(dux1, duy1, duz1, rho1, ux1, uy1, uz1, phi1)
 
     !! Turbine forcing
-    if (iturbine.eq.1) then
+    if (iturbine == 1) then
        dux1(:,:,:,1)=dux1(:,:,:,1)+FTx(:,:,:)/rho_air
        duy1(:,:,:,1)=duy1(:,:,:,1)+FTy(:,:,:)/rho_air
        duz1(:,:,:,1)=duz1(:,:,:,1)+FTz(:,:,:)/rho_air
-    else if (iturbine.eq.2) then
+    else if (iturbine == 2) then
        dux1(:,:,:,1)=dux1(:,:,:,1)+Fdiscx(:,:,:)/rho_air
        duy1(:,:,:,1)=duy1(:,:,:,1)+Fdiscy(:,:,:)/rho_air
        duz1(:,:,:,1)=duz1(:,:,:,1)+Fdiscz(:,:,:)/rho_air
@@ -601,29 +601,29 @@ contains
     integer :: i, j, k
 
     !! X-gravity
-    if ((nclx1.eq.0).and.(nclxn.eq.0)) then
+    if ((nclx1 == 0).and.(nclxn == 0)) then
        istart = 1
        iend = xsize(1)
     else
        istart = 2
        iend = xsize(1) - 1
     endif
-    if ((xstart(2).eq.1).and.(ncly1.eq.2)) then
+    if ((xstart(2) == 1).and.(ncly1 == 2)) then
        jstart = 2
     else
        jstart = 1
     endif
-    if ((xend(2).eq.ny).and.(nclyn.eq.2)) then
+    if ((xend(2) == ny).and.(nclyn == 2)) then
        jend = xsize(2) - 1
     else
        jend = xsize(2)
     endif
-    if ((xstart(3).eq.1).and.(nclz1.eq.2)) then
+    if ((xstart(3) == 1).and.(nclz1 == 2)) then
        kstart = 2
     else
        kstart = 1
     endif
-    if ((xend(3).eq.nz).and.(nclzn.eq.2)) then
+    if ((xend(3) == nz).and.(nclzn == 2)) then
        kend = xsize(3) - 1
     else
        kend = xsize(3)
@@ -638,32 +638,32 @@ contains
     enddo
 
     !! Y-gravity
-    if (nclx1.eq.2) then
+    if (nclx1 == 2) then
        istart = 2
     else
        istart = 1
     endif
-    if (nclxn.eq.2) then
+    if (nclxn == 2) then
        iend = xsize(1) - 1
     else
        iend = xsize(1)
     endif
-    if ((xstart(2).eq.1).and.(ncly1.ne.0)) then
+    if ((xstart(2) == 1).and.(ncly1 /= 0)) then
        jstart = 2
     else
        jstart = 1
     endif
-    if ((xend(2).eq.ny).and.(nclyn.ne.0)) then
+    if ((xend(2) == ny).and.(nclyn /= 0)) then
        jend = xsize(2) - 1
     else
        jend = xsize(2)
     endif
-    if ((xstart(3).eq.1).and.(nclz1.eq.2)) then
+    if ((xstart(3) == 1).and.(nclz1 == 2)) then
        kstart = 2
     else
        kstart = 1
     endif
-    if ((xend(3).eq.nz).and.(nclzn.eq.2)) then
+    if ((xend(3) == nz).and.(nclzn == 2)) then
        kend = xsize(3) - 1
     else
        kend = xsize(3)
@@ -677,32 +677,32 @@ contains
     enddo
 
     !! Z-gravity
-    if (nclx1.eq.2) then
+    if (nclx1 == 2) then
        istart = 2
     else
        istart = 1
     endif
-    if (nclxn.eq.2) then
+    if (nclxn == 2) then
        iend = xsize(1) - 1
     else
        iend = xsize(1)
     endif
-    if ((xstart(2).eq.1).and.(ncly1.eq.2)) then
+    if ((xstart(2) == 1).and.(ncly1 == 2)) then
        jstart = 2
     else
        jstart = 1
     endif
-    if ((xend(2).eq.ny).and.(nclyn.eq.2)) then
+    if ((xend(2) == ny).and.(nclyn == 2)) then
        jend = xsize(2) - 1
     else
        jend = xsize(2)
     endif
-    if ((xstart(3).eq.1).and.(nclz1.ne.0)) then
+    if ((xstart(3) == 1).and.(nclz1 /= 0)) then
        kstart = 2
     else
        kstart = 1
     endif
-    if ((xend(3).eq.nz).and.(nclzn.ne.0)) then
+    if ((xend(3) == nz).and.(nclzn /= 0)) then
        kend = xsize(3) - 1
     else
        kend = xsize(3)
@@ -795,7 +795,7 @@ contains
     !Y PENCILS
     if (skewsc) tb2(:,:,:) = uy2(:,:,:) * td2(:,:,:)
     ! Explicit viscous diffusion
-    if (iimplicit.le.0) then
+    if (iimplicit <= 0) then
       if (evensc) then
         call deryS (tc2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1,zero)
         if (skewsc) call deryS (te2,tb2,di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0,zero)
@@ -806,7 +806,7 @@ contains
         call deryyS (ta2,td2(:,:,:),di2,sy,sfyS,ssyS,swyS,ysize(1),ysize(2),ysize(3),0,zero)
       endif
 
-      if (istret.ne.0) then
+      if (istret /= 0) then
          do k = 1,ysize(3)
             do j = 1,ysize(2)
                do i = 1,ysize(1)
@@ -826,7 +826,7 @@ contains
         if (skewsc) call deryS (te2,tb2,di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1,zero)
       endif                                                                             
        
-      if (istret.ne.0) then
+      if (istret /= 0) then
          do k = 1,ysize(3)                                                              
             do j = 1,ysize(2)
                do i = 1,ysize(1)
@@ -935,15 +935,15 @@ contains
     !!=====================================================================
     do is = 1, numscalar
 
-       if (is.ne.primary_species) then
+       if (is /= primary_species) then
           !! For mass fractions enforce primary species Y_p = 1 - sum_s Y_s
           !! So don't solve a transport equation
           call scalar_transport_eq(dphi1(:,:,:,:,is), rho1, ux1, uy1, uz1, phi1(:,:,:,is), sc(is), is=is)
-          if (uset(is).ne.zero) then
+          if (uset(is) /= zero) then
              call scalar_settling(dphi1, phi1(:,:,:,is), is)
           endif
           ! If LES modelling is enabled, add the SGS stresses
-          if (ilesmod.ne.0.and.jles.le.3.and.jles.gt.0) then
+          if (ilesmod /= 0.and.jles <= 3.and.jles > 0) then
              call sgs_scalar_nonconservative(sgsphi1(:,:,:,is),nut1,phi1(:,:,:,is),is)
              dphi1(:,:,:,1,is) = dphi1(:,:,:,1,is) + sgsphi1(:,:,:,is)
           endif
@@ -951,11 +951,11 @@ contains
 
     end do !loop numscalar
 
-    if (primary_species.ge.1) then
+    if (primary_species >= 1) then
        !! Compute rate of change of primary species
        dphi1(:,:,:,1,primary_species) = zero
        do is = 1, numscalar
-          if (is.ne.primary_species) then
+          if (is /= primary_species) then
              dphi1(:,:,:,1,primary_species) = dphi1(:,:,:,1,primary_species) - dphi1(:,:,:,1,is)
           endif
        enddo

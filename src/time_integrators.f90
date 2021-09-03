@@ -61,10 +61,10 @@ contains
     integer :: is, code, ierror
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# intt start'
+    if (nrank  ==  0) print *,'# intt start'
 #endif
 
-    if (iimplicit.ge.1) then
+    if (iimplicit >= 1) then
        !>>> (semi)implicit Y diffusion
 
        if (present(isc)) then
@@ -77,31 +77,31 @@ contains
        else if (present(npaire)) then
           call inttimp(var1, dvar1, npaire=npaire, isc=is)
        else
-          if (nrank.eq.0) print *, "Error in intt call."
+          if (nrank == 0) print *, "Error in intt call."
           call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
        endif
 
-    elseif (itimescheme.eq.1) then
+    elseif (itimescheme == 1) then
        !>>> Euler
 
        var1(:,:,:)=gdt(itr)*dvar1(:,:,:,1)+var1(:,:,:)
-    elseif(itimescheme.eq.2) then
+    elseif(itimescheme == 2) then
        !>>> Adam-Bashforth second order (AB2)
 
        ! Do first time step with Euler
-       if(itime.eq.1.and.irestart.eq.0) then
+       if(itime == 1.and.irestart == 0) then
           var1(:,:,:)=gdt(itr)*dvar1(:,:,:,1)+var1(:,:,:)
        else
           var1(:,:,:)=adt(itr)*dvar1(:,:,:,1)+bdt(itr)*dvar1(:,:,:,2)+var1(:,:,:)
        endif
        dvar1(:,:,:,2)=dvar1(:,:,:,1)
-    elseif(itimescheme.eq.3) then
+    elseif(itimescheme == 3) then
        !>>> Adams-Bashforth third order (AB3)
 
        ! Do first time step with Euler
-       if(itime.eq.1.and.irestart.eq.0) then
+       if(itime == 1.and.irestart == 0) then
           var1(:,:,:)=dt*dvar1(:,:,:,1)+var1(:,:,:)
-       elseif(itime.eq.2.and.irestart.eq.0) then
+       elseif(itime == 2.and.irestart == 0) then
           ! Do second time step with AB2
           var1(:,:,:)=onepfive*dt*dvar1(:,:,:,1)-half*dt*dvar1(:,:,:,2)+var1(:,:,:)
           dvar1(:,:,:,3)=dvar1(:,:,:,2)
@@ -111,22 +111,22 @@ contains
           dvar1(:,:,:,3)=dvar1(:,:,:,2)
        endif
        dvar1(:,:,:,2)=dvar1(:,:,:,1)
-    elseif(itimescheme.eq.4) then
+    elseif(itimescheme == 4) then
        !>>> Adams-Bashforth fourth order (AB4)
 
-       if (nrank.eq.0) then
+       if (nrank == 0) then
           print *, "AB4 not implemented!"
           STOP
        endif
 
-       !if (itime.eq.1.and.ilit.eq.0) then
+       !if (itime == 1.and.ilit == 0) then
        !var(:,:,:)=gdt(itr)*hx(:,:,:)+var(:,:,:)
        !uy(:,:,:)=gdt(itr)*hy(:,:,:)+uy(:,:,:)
        !uz(:,:,:)=gdt(itr)*hz(:,:,:)+uz(:,:,:)
        !gx(:,:,:)=hx(:,:,:)
        !gy(:,:,:)=hy(:,:,:)
        !gz(:,:,:)=hz(:,:,:)
-       !elseif (itime.eq.2.and.ilit.eq.0) then
+       !elseif (itime == 2.and.ilit == 0) then
        !var(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+var(:,:,:)
        !uy(:,:,:)=adt(itr)*hy(:,:,:)+bdt(itr)*gy(:,:,:)+uy(:,:,:)
        !uz(:,:,:)=adt(itr)*hz(:,:,:)+bdt(itr)*gz(:,:,:)+uz(:,:,:)
@@ -136,7 +136,7 @@ contains
        !gx(:,:,:)=hx(:,:,:)
        !gy(:,:,:)=hy(:,:,:)
        !gz(:,:,:)=hz(:,:,:)
-       !elseif (itime.eq.3.and.ilit.eq.0) then
+       !elseif (itime == 3.and.ilit == 0) then
        !var(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+cdt(itr)*gox(:,:,:)+var(:,:,:)
        !uy(:,:,:)=adt(itr)*hy(:,:,:)+bdt(itr)*gy(:,:,:)+cdt(itr)*goy(:,:,:)+uy(:,:,:)
        !uz(:,:,:)=adt(itr)*hz(:,:,:)+bdt(itr)*gz(:,:,:)+cdt(itr)*goz(:,:,:)+uz(:,:,:)
@@ -161,24 +161,24 @@ contains
        !gz(:,:,:)=hz(:,:,:)
        !endif
        !>>> Runge-Kutta (low storage) RK3
-    elseif(itimescheme.eq.5) then
-       if(itr.eq.1) then
+    elseif(itimescheme == 5) then
+       if(itr == 1) then
           var1(:,:,:)=gdt(itr)*dvar1(:,:,:,1)+var1(:,:,:)
        else
           var1(:,:,:)=adt(itr)*dvar1(:,:,:,1)+bdt(itr)*dvar1(:,:,:,2)+var1(:,:,:)
        endif
        dvar1(:,:,:,2)=dvar1(:,:,:,1)
        !>>> Runge-Kutta (low storage) RK4
-    elseif(itimescheme.eq.6) then
+    elseif(itimescheme == 6) then
 
-       if (nrank.eq.0) then
+       if (nrank == 0) then
           print *, "RK4 not implemented!"
           STOP
        endif
 
     else
 
-       if (nrank.eq.0) then
+       if (nrank == 0) then
           print *, "Unrecognised itimescheme: ", itimescheme
           STOP
        endif
@@ -186,7 +186,7 @@ contains
     endif
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# intt done'
+    if (nrank  ==  0) print *,'# intt done'
 #endif
 
     return
@@ -236,7 +236,7 @@ contains
 
        DO is = 1, numscalar
           IF (is.NE.primary_species) THEN
-             IF (iimplicit.ge.1) then
+             IF (iimplicit >= 1) then
                 if (sc_even(is)) then
                    k = 1
                 else
@@ -310,7 +310,7 @@ contains
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1, duy1, duz1
 
-    if (iimplicit.ge.1) then
+    if (iimplicit >= 1) then
        call intt(ux1, dux1, npaire=1, isc=0, forcing1=px1)
        call intt(uy1, duy1, npaire=0, isc=0, forcing1=py1)
        call intt(uz1, duz1, npaire=1, isc=0, forcing1=pz1)
@@ -350,21 +350,21 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
 
     !! First, update old density / store old transients depending on scheme
-    if (itimescheme.lt.5) then
+    if (itimescheme < 5) then
        !! Euler/AB - Store old density values
        do it = nrhotime, 2, -1
           rho1(:,:,:,it) = rho1(:,:,:,it-1)
        enddo
-    elseif (itimescheme.eq.5) then
+    elseif (itimescheme == 5) then
        !! RK3 - Stores old transients
-       if (itr.eq.1) then
+       if (itr == 1) then
           do it = nrhotime, 2, -1
              rho1(:,:,:,it) = rho1(:,:,:,it-1)
           enddo
           rho1(:,:,:,2) = drho1(:,:,:,1)
        endif
     else
-       if (nrank.eq.0) then
+       if (nrank == 0) then
           print *, "int_time_continuity not implemented for itimescheme", itimescheme
           stop
        endif
@@ -420,14 +420,14 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
 
     !! First, update old density / store old transients depending on scheme
-    if (itimescheme.lt.5) then
+    if (itimescheme < 5) then
        !! Euler/AB - Store old density values
        do it = nrhotime, 2, -1
           rho1(:,:,:,it) = rho1(:,:,:,it-1)
        enddo
-    elseif (itimescheme.eq.5) then
+    elseif (itimescheme == 5) then
        !! RK3 - Stores old transients
-       if (itr.eq.1) then
+       if (itr == 1) then
           do it = nrhotime, 2, -1
              rho1(:,:,:,it) = rho1(:,:,:,it-1)
           enddo
@@ -436,7 +436,7 @@ contains
           call lmn_t_to_rho_trans(rho1(:,:,:,2), drho1(:,:,:,1), rho1(:,:,:,1), dphi1, phi1)
        endif
     else
-       if (nrank.eq.0) then
+       if (nrank == 0) then
           print *, "int_time_continuity not implemented for itimescheme", itimescheme
           stop
        endif

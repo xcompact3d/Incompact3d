@@ -56,13 +56,13 @@ contains
     real(mytype) :: um
 
     ux1=zero; uy1=zero; uz1=zero;
-    if (iscalar.eq.1) then
+    if (iscalar == 1) then
       phi1(:,:,:,:) = zero
     endif
 
-    if (iin.ne.0) then
+    if (iin /= 0) then
       call system_clock(count=code)
-      if (iin.eq.2) code=0
+      if (iin == 2) code=0
       call random_seed(size = ii)
       call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /))
 
@@ -111,14 +111,14 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
-    if (nclx1.eq.2) then
-      if (iscalar.eq.0.or.(iscalar.eq.1.and.nclxS1.eq.2)) then
+    if (nclx1 == 2) then
+      if (iscalar == 0.or.(iscalar == 1.and.nclxS1 == 2)) then
         call inflow(ux,uy,uz,phi)
       endif
     endif
 
-    if (nclxn.eq.2) then
-      if (iscalar.eq.0.or.(iscalar.eq.1.and.nclxSn.eq.2)) then
+    if (nclxn == 2) then
+      if (iscalar == 0.or.(iscalar == 1.and.nclxSn == 2)) then
         call outflow(ux,uy,uz,phi)
       endif
     endif
@@ -155,7 +155,7 @@ contains
     enddo
     enddo
  
-    if (iin.eq.1.or.iin.eq.2) then
+    if (iin == 1.or.iin == 2) then
       call random_number(bxo)
       call random_number(byo)
       call random_number(bzo)
@@ -165,12 +165,12 @@ contains
         bxx1(j,k)=bxx1(j,k)+(two*bxo(j,k)-one)*inflow_noise*um
         bxy1(j,k)=bxy1(j,k)+(two*byo(j,k)-one)*inflow_noise*um
         bxz1(j,k)=bxz1(j,k)+(two*bzo(j,k)-one)*inflow_noise*um
-        if (iscalar.eq.1) then
+        if (iscalar == 1) then
           phi(1,j,k,:)=one
         endif
       enddo
       enddo
-    else if (iin.eq.3) then
+    else if (iin == 3) then
       ! Reading from files (when precursor simulations exist)
       itime_input=mod(itime,ntimesteps)
       if (itime_input==0) itime_input=ntimesteps
@@ -216,15 +216,15 @@ contains
     uxmin=1609.
     do k=1,xsize(3)
       do j=1,xsize(2)
-        if (ux(nx-1,j,k).gt.uxmax) uxmax=ux(nx-1,j,k)
-        if (ux(nx-1,j,k).lt.uxmin) uxmin=ux(nx-1,j,k)
+        if (ux(nx-1,j,k) > uxmax) uxmax=ux(nx-1,j,k)
+        if (ux(nx-1,j,k) < uxmin) uxmin=ux(nx-1,j,k)
       enddo
     enddo
 
     call MPI_ALLREDUCE(uxmax,uxmax1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(uxmin,uxmin1,1,real_type,MPI_MIN,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
     cx=0.5*(uxmax1+uxmin1)*gdt(itr)*udx
     do k=1,xsize(3)
@@ -232,7 +232,7 @@ contains
         bxxn(j,k)=ux(nx,j,k)-cx*(ux(nx,j,k)-ux(nx-1,j,k))
         bxyn(j,k)=uy(nx,j,k)-cx*(uy(nx,j,k)-uy(nx-1,j,k))
         bxzn(j,k)=uz(nx,j,k)-cx*(uz(nx,j,k)-uz(nx-1,j,k))
-        if (iscalar.eq.1) then
+        if (iscalar == 1) then
           phi(nx,j,k,:)=phi(nx,j,k,:)-cx*(phi(nx,j,k,:)-phi(nx-1,j,k,:))
         endif
       enddo
@@ -261,7 +261,7 @@ contains
     character(len=30) :: filename
     
     ! Write vorticity as an example of post processing
-!    if ((ivisu.ne.0).and(mod(itime, ioutput).eq.0)) then
+!    if ((ivisu /= 0).and(mod(itime, ioutput) == 0)) then
 !      !x-derivatives
 !      call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
 !      call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)

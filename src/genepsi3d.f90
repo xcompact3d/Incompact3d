@@ -47,7 +47,7 @@ contains
     logical :: dir_exists
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# body_init start'
+    if (nrank  ==  0) print *,'# body_init start'
 #endif
     !###################################################################
     ! Check if geometry folder exists
@@ -63,7 +63,7 @@ contains
     call geomcomplex(ep1,xstart(1),xend(1),ny,xstart(2),xend(2),xstart(3),xend(3),dx,yp,dz,one)
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# body_init done'
+    if (nrank  ==  0) print *,'# body_init done'
 #endif
 
     return
@@ -243,23 +243,23 @@ contains
     do k=1,xsize(3)
        do j=1,xsize(2)
           inum=0
-          if(ep1(1,j,k).eq.1.)then
+          if(ep1(1,j,k) == 1.)then
              inum=1
              nobjx(j,k)=1
           endif
           do i=1,nx-1
-             if(ep1(i,j,k).eq.0..and.ep1(i+1,j,k).eq.1.)then
+             if(ep1(i,j,k) == 0..and.ep1(i+1,j,k) == 1.)then
                 inum=inum+1
                 nobjx(j,k)=nobjx(j,k)+1
              endif
           enddo
-          if(inum.gt.nobjxmax)then
+          if(inum > nobjxmax)then
              nobjxmax=inum
           endif
        enddo
     enddo
     call MPI_REDUCE(nobjxmax,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
   !  if (nrank==0) print*,'        nobjxmax=',mpi_aux_i
 
     nobjxraf(:,:)=0
@@ -269,29 +269,29 @@ contains
     do k=1,xsize(3)
        do j=1,xsize(2)
           inum=0
-          if(xepsi(1,j,k).eq.1.)then
+          if(xepsi(1,j,k) == 1.)then
              inum=1
              nobjxraf(j,k)=1
           endif
           do i=1,nxraf-1
-             if(xepsi(i,j,k).eq.0..and.xepsi(i+1,j,k).eq.1.)then
+             if(xepsi(i,j,k) == 0..and.xepsi(i+1,j,k) == 1.)then
                 inum=inum+1
                 nobjxraf(j,k)=nobjxraf(j,k)+1
              endif
           enddo
-          if(inum.gt.nobjxmaxraf)then
+          if(inum > nobjxmaxraf)then
              nobjxmaxraf=inum
           endif
-          if(nobjx(j,k).ne.nobjxraf(j,k))then
+          if(nobjx(j,k) /= nobjxraf(j,k))then
              ibug=ibug+1
           endif
        enddo
     enddo
     call MPI_REDUCE(nobjxmaxraf,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
   !  if (nrank==0) print*,'        nobjxmaxraf=',mpi_aux_i
     call MPI_REDUCE(ibug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
   !  if (nrank==0) print*,'        ibug=',mpi_aux_i
   !  if (nrank==0) print*,'    step 5'
 
@@ -302,23 +302,23 @@ contains
     do k=1,ysize(3)
        do i=1,ysize(1)
           jnum=0
-          if(ep2(i,1,k).eq.1.)then
+          if(ep2(i,1,k) == 1.)then
              jnum=1
              nobjy(i,k)=1
           endif
           do j=1,ny-1
-             if(ep2(i,j,k).eq.0..and.ep2(i,j+1,k).eq.1.)then
+             if(ep2(i,j,k) == 0..and.ep2(i,j+1,k) == 1.)then
                 jnum=jnum+1
                 nobjy(i,k)=nobjy(i,k)+1
              endif
           enddo
-          if(jnum.gt.nobjymax)then
+          if(jnum > nobjymax)then
              nobjymax=jnum
           endif
        enddo
     enddo
     call MPI_REDUCE(nobjymax,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
   !  if (nrank==0) print*,'        nobjymax=',mpi_aux_i
 
     nobjyraf(:,:)=0
@@ -328,29 +328,29 @@ contains
     do k=1,ysize(3)
        do i=1,ysize(1)
           jnum=0
-          if(yepsi(i,1,k).eq.1.)then
+          if(yepsi(i,1,k) == 1.)then
              jnum=1
              nobjyraf(i,k)=1
           endif
           do j=1,nyraf-1
-             if(yepsi(i,j,k).eq.0..and.yepsi(i,j+1,k).eq.1.)then
+             if(yepsi(i,j,k) == 0..and.yepsi(i,j+1,k) == 1.)then
                 jnum=jnum+1
                 nobjyraf(i,k)=nobjyraf(i,k)+1
              endif
           enddo
-          if(jnum.gt.nobjymaxraf)then
+          if(jnum > nobjymaxraf)then
              nobjymaxraf=jnum
           endif
-          if(nobjy(i,k).ne.nobjyraf(i,k))then
+          if(nobjy(i,k) /= nobjyraf(i,k))then
              jbug=jbug+1
           endif
        enddo
     enddo
     call MPI_REDUCE(nobjymaxraf,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
   !  if (nrank==0) print*,'        nobjymaxraf=',mpi_aux_i
     call MPI_REDUCE(jbug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
   !  if (nrank==0) print*,'        jbug=',mpi_aux_i
   !  if (nrank==0) print*,'    step 6'
 
@@ -361,23 +361,23 @@ contains
     do j=1,zsize(2)
        do i=1,zsize(1)
           knum=0
-          if(ep3(i,j,1).eq.1.)then
+          if(ep3(i,j,1) == 1.)then
              knum=1
              nobjz(i,j)=1
           endif
           do k=1,nz-1
-             if(ep3(i,j,k).eq.0..and.ep3(i,j,k+1).eq.1.)then
+             if(ep3(i,j,k) == 0..and.ep3(i,j,k+1) == 1.)then
                 knum=knum+1
                 nobjz(i,j)=nobjz(i,j)+1
              endif
           enddo
-          if(knum.gt.nobjzmax)then
+          if(knum > nobjzmax)then
              nobjzmax=knum
           endif
        enddo
     enddo
     call MPI_REDUCE(nobjzmax,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
   !  if (nrank==0) print*,'        nobjzmax=',mpi_aux_i
 
     nobjzraf(:,:)=0
@@ -387,29 +387,29 @@ contains
     do j=1,zsize(2)
        do i=1,zsize(1)
           knum=0
-          if(zepsi(i,j,1).eq.1.)then
+          if(zepsi(i,j,1) == 1.)then
              knum=1
              nobjzraf(i,j)=1
           endif
           do k=1,nzraf-1
-             if(zepsi(i,j,k).eq.0..and.zepsi(i,j,k+1).eq.1.)then
+             if(zepsi(i,j,k) == 0..and.zepsi(i,j,k+1) == 1.)then
                 knum=knum+1
                 nobjzraf(i,j)=nobjzraf(i,j)+1
              endif
           enddo
-          if(knum.gt.nobjzmaxraf)then
+          if(knum > nobjzmaxraf)then
              nobjzmaxraf=knum
           endif
-          if(nobjz(i,j).ne.nobjzraf(i,j))then
+          if(nobjz(i,j) /= nobjzraf(i,j))then
              kbug=kbug+1
           endif
        enddo
     enddo
     call MPI_REDUCE(nobjzmaxraf,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
   !  if (nrank==0) print*,'        nobjzmaxraf=',mpi_aux_i
     call MPI_REDUCE(kbug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
   !  if (nrank==0) print*,'        kbug=',mpi_aux_i
   !  if (nrank==0) print*,'    step 7'
 
@@ -417,42 +417,42 @@ contains
     do k=1,xsize(3)
        do j=1,xsize(2)
           inum=0
-          if(xepsi(1,j,k).eq.1.)then
+          if(xepsi(1,j,k) == 1.)then
              inum=inum+1
              xi(inum,j,k)=-dx!-xlx
           endif
           do i=1,nxraf-1
-             if(xepsi(i,j,k).eq.0..and.xepsi(i+1,j,k).eq.1.)then
+             if(xepsi(i,j,k) == 0..and.xepsi(i+1,j,k) == 1.)then
                 inum=inum+1
                 xi(inum,j,k)=dxraf*(i-1)+dxraf/2.
-             elseif(xepsi(i,j,k).eq.1..and.xepsi(i+1,j,k).eq.0.)then
+             elseif(xepsi(i,j,k) == 1..and.xepsi(i+1,j,k) == 0.)then
                 xf(inum,j,k)=dxraf*(i-1)+dxraf/2.
              endif
           enddo
-          if(xepsi(nxraf,j,k).eq.1.)then
+          if(xepsi(nxraf,j,k) == 1.)then
              xf(inum,j,k)=xlx+dx!2.*xlx
           endif
        enddo
     enddo
 
-  if(ibug.ne.0)then
+  if(ibug /= 0)then
      do k=1,xsize(3)
         do j=1,xsize(2)
-           if(nobjx(j,k).ne.nobjxraf(j,k))then
+           if(nobjx(j,k) /= nobjxraf(j,k))then
               iobj=0
-              if(ep1(1,j,k).eq.1.)iobj=iobj+1
+              if(ep1(1,j,k) == 1.)iobj=iobj+1
               do i=1,nx-1
-                 if(ep1(i,j,k).eq.0..and.ep1(i+1,j,k).eq.1.)iobj=iobj+1
-                 if(ep1(i,j,k).eq.0..and.ep1(i+1,j,k).eq.0.)iflu=1
-                 if(ep1(i,j,k).eq.1..and.ep1(i+1,j,k).eq.1.)isol=1
+                 if(ep1(i,j,k) == 0..and.ep1(i+1,j,k) == 1.)iobj=iobj+1
+                 if(ep1(i,j,k) == 0..and.ep1(i+1,j,k) == 0.)iflu=1
+                 if(ep1(i,j,k) == 1..and.ep1(i+1,j,k) == 1.)isol=1
                  do iraf=1,nraf
-                    if(xepsi(iraf+nraf*(i-1)  ,j,k).eq.0..and.&
-                         xepsi(iraf+nraf*(i-1)+1,j,k).eq.1.)idebraf=iraf+nraf*(i-1)+1
-                    if(xepsi(iraf+nraf*(i-1)  ,j,k).eq.1..and.&
-                         xepsi(iraf+nraf*(i-1)+1,j,k).eq.0.)ifinraf=iraf+nraf*(i-1)+1
+                    if(xepsi(iraf+nraf*(i-1)  ,j,k) == 0..and.&
+                         xepsi(iraf+nraf*(i-1)+1,j,k) == 1.)idebraf=iraf+nraf*(i-1)+1
+                    if(xepsi(iraf+nraf*(i-1)  ,j,k) == 1..and.&
+                         xepsi(iraf+nraf*(i-1)+1,j,k) == 0.)ifinraf=iraf+nraf*(i-1)+1
                  enddo
-                 if(idebraf.ne.0.and.ifinraf.ne.0.and.&
-                      idebraf.lt.ifinraf.and.iflu.eq.1)then
+                 if(idebraf /= 0.and.ifinraf /= 0.and.&
+                      idebraf < ifinraf.and.iflu == 1)then
                     iobj=iobj+1
                     do ii=iobj,nobjmax-1
                        xi(ii,j,k)=xi(ii+1,j,k)
@@ -460,8 +460,8 @@ contains
                     enddo
                     iobj=iobj-1
                  endif
-                 if(idebraf.ne.0.and.ifinraf.ne.0.and.&
-                      idebraf.gt.ifinraf.and.isol.eq.1)then
+                 if(idebraf /= 0.and.ifinraf /= 0.and.&
+                      idebraf > ifinraf.and.isol == 1)then
                     iobj=iobj+1
                     do ii=iobj,nobjmax-1
                        xi(ii,j,k)=xi(ii+1,j,k)
@@ -485,42 +485,42 @@ contains
     do k=1,ysize(3)
        do i=1,ysize(1)
           jnum=0
-          if(yepsi(i,1,k).eq.1.)then
+          if(yepsi(i,1,k) == 1.)then
              jnum=jnum+1
              yi(jnum,i,k)=-(yp(2)-yp(1))!-yly
           endif
           do j=1,nyraf-1
-             if(yepsi(i,j,k).eq.0..and.yepsi(i,j+1,k).eq.1.)then
+             if(yepsi(i,j,k) == 0..and.yepsi(i,j+1,k) == 1.)then
                 jnum=jnum+1
                 yi(jnum,i,k)=ypraf(j)+(ypraf(j+1)-ypraf(j))/2.!dyraf*(j-1)+dyraf/2.
-             elseif(yepsi(i,j,k).eq.1..and.yepsi(i,j+1,k).eq.0.)then
+             elseif(yepsi(i,j,k) == 1..and.yepsi(i,j+1,k) == 0.)then
                 yf(jnum,i,k)=ypraf(j)+(ypraf(j+1)-ypraf(j))/2.!dyraf*(j-1)+dyraf/2.
              endif
           enddo
-          if(yepsi(i,nyraf,k).eq.1.)then
+          if(yepsi(i,nyraf,k) == 1.)then
              yf(jnum,i,k)=yly+(yp(ny)-yp(ny-1))/2.!2.*yly
           endif
        enddo
     enddo
 
-  if(jbug.ne.0)then
+  if(jbug /= 0)then
      do k=1,ysize(3)
         do i=1,ysize(1)
-           if(nobjy(i,k).ne.nobjyraf(i,k))then
+           if(nobjy(i,k) /= nobjyraf(i,k))then
               jobj=0
-              if(ep2(i,1,k).eq.1.)jobj=jobj+1
+              if(ep2(i,1,k) == 1.)jobj=jobj+1
               do j=1,ny-1
-                 if(ep2(i,j,k).eq.0..and.ep2(i,j+1,k).eq.1.)jobj=jobj+1
-                 if(ep2(i,j,k).eq.0..and.ep2(i,j+1,k).eq.0.)jflu=1
-                 if(ep2(i,j,k).eq.1..and.ep2(i,j+1,k).eq.1.)jsol=1
+                 if(ep2(i,j,k) == 0..and.ep2(i,j+1,k) == 1.)jobj=jobj+1
+                 if(ep2(i,j,k) == 0..and.ep2(i,j+1,k) == 0.)jflu=1
+                 if(ep2(i,j,k) == 1..and.ep2(i,j+1,k) == 1.)jsol=1
                  do jraf=1,nraf
-                    if(yepsi(i,jraf+nraf*(j-1)  ,k).eq.0..and.&
-                         yepsi(i,jraf+nraf*(j-1)+1,k).eq.1.)jdebraf=jraf+nraf*(j-1)+1
-                    if(yepsi(i,jraf+nraf*(j-1)  ,k).eq.1..and.&
-                         yepsi(i,jraf+nraf*(j-1)+1,k).eq.0.)jfinraf=jraf+nraf*(j-1)+1
+                    if(yepsi(i,jraf+nraf*(j-1)  ,k) == 0..and.&
+                         yepsi(i,jraf+nraf*(j-1)+1,k) == 1.)jdebraf=jraf+nraf*(j-1)+1
+                    if(yepsi(i,jraf+nraf*(j-1)  ,k) == 1..and.&
+                         yepsi(i,jraf+nraf*(j-1)+1,k) == 0.)jfinraf=jraf+nraf*(j-1)+1
                  enddo
-                 if(jdebraf.ne.0.and.jfinraf.ne.0.and.&
-                      jdebraf.lt.jfinraf.and.jflu.eq.1)then
+                 if(jdebraf /= 0.and.jfinraf /= 0.and.&
+                      jdebraf < jfinraf.and.jflu == 1)then
                     jobj=jobj+1
                     do jj=jobj,nobjmax-1
                        yi(jj,i,k)=yi(jj+1,i,k)
@@ -528,8 +528,8 @@ contains
                     enddo
                     jobj=jobj-1
                  endif
-                 if(jdebraf.ne.0.and.jfinraf.ne.0.and.&
-                      jdebraf.gt.jfinraf.and.jsol.eq.1)then
+                 if(jdebraf /= 0.and.jfinraf /= 0.and.&
+                      jdebraf > jfinraf.and.jsol == 1)then
                     jobj=jobj+1
                     do jj=jobj,nobjmax-1
                        yi(jj,i,k)=yi(jj+1,i,k)
@@ -553,43 +553,43 @@ contains
     do j=1,zsize(2)
        do i=1,zsize(1)
           knum=0
-          if(zepsi(i,j,1).eq.1.)then
+          if(zepsi(i,j,1) == 1.)then
              knum=knum+1
              zi(knum,i,j)=-dz!zlz
           endif
           do k=1,nzraf-1
-             if(zepsi(i,j,k).eq.0..and.zepsi(i,j,k+1).eq.1.)then
+             if(zepsi(i,j,k) == 0..and.zepsi(i,j,k+1) == 1.)then
                 knum=knum+1
                 zi(knum,i,j)=dzraf*(k-1)+dzraf/2.
-             elseif(zepsi(i,j,k).eq.1..and.zepsi(i,j,k+1).eq.0.)then
+             elseif(zepsi(i,j,k) == 1..and.zepsi(i,j,k+1) == 0.)then
                 zf(knum,i,j)=dzraf*(k-1)+dzraf/2.
              endif
           enddo
-          if(zepsi(i,j,nzraf).eq.1.)then
+          if(zepsi(i,j,nzraf) == 1.)then
              zf(knum,i,j)=zlz+dz!2.*zlz
           endif
        enddo
     enddo
 
 kdebraf=0.
-  if(kbug.ne.0)then
+  if(kbug /= 0)then
      do j=1,zsize(2)
         do i=1,zsize(1)
-           if(nobjz(i,j).ne.nobjzraf(i,j))then
+           if(nobjz(i,j) /= nobjzraf(i,j))then
               kobj=0
-              if(ep3(i,j,1).eq.1.)kobj=kobj+1
+              if(ep3(i,j,1) == 1.)kobj=kobj+1
               do k=1,nz-1
-                 if(ep3(i,j,k).eq.0..and.ep3(i,j,k+1).eq.1.)kobj=kobj+1
-                 if(ep3(i,j,k).eq.0..and.ep3(i,j,k+1).eq.0.)kflu=1
-                 if(ep3(i,j,k).eq.1..and.ep3(i,j,k+1).eq.1.)ksol=1
+                 if(ep3(i,j,k) == 0..and.ep3(i,j,k+1) == 1.)kobj=kobj+1
+                 if(ep3(i,j,k) == 0..and.ep3(i,j,k+1) == 0.)kflu=1
+                 if(ep3(i,j,k) == 1..and.ep3(i,j,k+1) == 1.)ksol=1
                  do kraf=1,nraf
-                    if(zepsi(i,j,kraf+nraf*(k-1)  ).eq.0..and.&
-                         zepsi(i,j,kraf+nraf*(k-1)+1).eq.1.)kdebraf=kraf+nraf*(k-1)+1
-                    if(zepsi(i,j,kraf+nraf*(k-1)  ).eq.1..and.&
-                         zepsi(i,j,kraf+nraf*(k-1)+1).eq.0.)kfinraf=kraf+nraf*(k-1)+1
+                    if(zepsi(i,j,kraf+nraf*(k-1)  ) == 0..and.&
+                         zepsi(i,j,kraf+nraf*(k-1)+1) == 1.)kdebraf=kraf+nraf*(k-1)+1
+                    if(zepsi(i,j,kraf+nraf*(k-1)  ) == 1..and.&
+                         zepsi(i,j,kraf+nraf*(k-1)+1) == 0.)kfinraf=kraf+nraf*(k-1)+1
                  enddo
-                 if(kdebraf.ne.0.and.kfinraf.ne.0.and.&
-                      kdebraf.lt.kfinraf.and.kflu.eq.1)then
+                 if(kdebraf /= 0.and.kfinraf /= 0.and.&
+                      kdebraf < kfinraf.and.kflu == 1)then
                     kobj=kobj+1
                     do kk=kobj,nobjmax-1
                        zi(kk,i,j)=zi(kk+1,i,j)
@@ -597,8 +597,8 @@ kdebraf=0.
                     enddo
                     kobj=kobj-1
                  endif
-                 if(kdebraf.ne.0.and.kfinraf.ne.0.and.&
-                      kdebraf.gt.kfinraf.and.ksol.eq.1)then
+                 if(kdebraf /= 0.and.kfinraf /= 0.and.&
+                      kdebraf > kfinraf.and.ksol == 1)then
                     kobj=kobj+1
                     do kk=kobj,nobjmax-1
                        zi(kk,i,j)=zi(kk+1,i,j)
@@ -653,16 +653,16 @@ subroutine gene_epsim(epsi,epsim,nx,ny,nz,nobjx,nobjy,nobjz,&
   do k=1,nz
      do j=1,ny
         do i=1,nx
-           if(epsi(i,j,k).eq.1..and.&
-                nobjx (j,k).ne.0)then
+           if(epsi(i,j,k) == 1..and.&
+                nobjx (j,k) /= 0)then
               x=dx*(i-1)
               do ix=1,nobjx(j,k)
-                 if(x  .ge.xi(ix,j,k)   .and.&
-                      x  .le.xi(ix,j,k)+xe.and.&
-                      0. .lt.xi(ix,j,k)   .or. &
-                      x  .le.xf(ix,j,k)   .and.&
-                      x  .ge.xf(ix,j,k)-xe.and.&
-                      xlx.gt.xf(ix,j,k)   )then
+                 if(x   >= xi(ix,j,k)   .and.&
+                      x   <= xi(ix,j,k)+xe.and.&
+                      0.  < xi(ix,j,k)   .or. &
+                      x   <= xf(ix,j,k)   .and.&
+                      x   >= xf(ix,j,k)-xe.and.&
+                      xlx > xf(ix,j,k)   )then
                     epsim(i,j,k)=0.
                  endif
               enddo
@@ -673,17 +673,17 @@ subroutine gene_epsim(epsi,epsim,nx,ny,nz,nobjx,nobjy,nobjz,&
   do k=1,nz
      do i=1,nx
         do j=2,ny-1
-           if(epsi(i,j,k).eq.1..and.&
-                nobjy (i,k).gt.0)then
+           if(epsi(i,j,k) == 1..and.&
+                nobjy (i,k) > 0)then
               y=yp(j)
               ye=epm*(yp(j+1)-yp(j-1))/2.
               do jy=1,nobjy(i,k)
-                 if(y  .ge.yi(jy,i,k)   .and.&
-                      y  .le.yi(jy,i,k)+ye.and.&
-                      0. .lt.yi(jy,i,k)   .or. &
-                      y  .le.yf(jy,i,k)   .and.&
-                      y  .ge.yf(jy,i,k)-ye.and.&
-                      yly.gt.yf(jy,i,k)   )then
+                 if(y   >= yi(jy,i,k)   .and.&
+                      y   <= yi(jy,i,k)+ye.and.&
+                      0.  < yi(jy,i,k)   .or. &
+                      y   <= yf(jy,i,k)   .and.&
+                      y   >= yf(jy,i,k)-ye.and.&
+                      yly > yf(jy,i,k)   )then
                     epsim(i,j,k)=0.
                  endif
               enddo
@@ -695,16 +695,16 @@ subroutine gene_epsim(epsi,epsim,nx,ny,nz,nobjx,nobjy,nobjz,&
   do j=1,ny
      do i=1,nx
         do k=1,nz
-           if(epsi(i,j,k).eq.1..and.&
-                nobjz (i,j).gt.0)then
+           if(epsi(i,j,k) == 1..and.&
+                nobjz (i,j) > 0)then
               z=dz*(k-1)
               do kz=1,nobjz(i,j)
-                 if(z  .ge.zi(kz,i,j)   .and.&
-                      z  .le.zi(kz,i,j)+ze.and.&
-                      0. .lt.zi(kz,i,j)   .or. &
-                      z  .le.zf(kz,i,j)   .and.&
-                      z  .ge.zf(kz,i,j)-ze.and.&
-                      zlz.gt.zf(kz,i,j)   )then
+                 if(z   >= zi(kz,i,j)   .and.&
+                      z   <= zi(kz,i,j)+ze.and.&
+                      0.  < zi(kz,i,j)   .or. &
+                      z   <= zf(kz,i,j)   .and.&
+                      z   >= zf(kz,i,j)-ze.and.&
+                      zlz > zf(kz,i,j)   )then
                     epsim(i,j,k)=0.
                  endif
               enddo
@@ -749,38 +749,38 @@ subroutine verif_epsi(ep1,npif,izap,nx,ny,nz,nobjmax,&
      do j=1,xsize(2)
         inum=0
         iflu=0
-        if(ep1(1,j,k).eq.1.)inum=inum+1
-        if(ep1(1,j,k).eq.0.)iflu=iflu+1
+        if(ep1(1,j,k) == 1.)inum=inum+1
+        if(ep1(1,j,k) == 0.)iflu=iflu+1
         do i=2,nx
-           if(ep1(i  ,j,k).eq.0.)iflu=iflu+1
-           if(ep1(i-1,j,k).eq.0..and.&
-                ep1(i  ,j,k).eq.1.)then
+           if(ep1(i  ,j,k) == 0.)iflu=iflu+1
+           if(ep1(i-1,j,k) == 0..and.&
+                ep1(i  ,j,k) == 1.)then
               inum=inum+1
-              if(inum.eq.1)then
+              if(inum == 1)then
                  nxipif(inum  ,j,k)=iflu-izap
-                 if(iflu-izap.lt.npif)ising=ising+1
-                 if(iflu-izap.ge.npif)nxipif(inum  ,j,k)=npif
+                 if(iflu-izap < npif)ising=ising+1
+                 if(iflu-izap >= npif)nxipif(inum  ,j,k)=npif
                  iflu=0
               else
                  nxipif(inum  ,j,k)=iflu-izap
                  nxfpif(inum-1,j,k)=iflu-izap
-                 if(iflu-izap.lt.npif)ising=ising+1
-                 if(iflu-izap.ge.npif)nxipif(inum  ,j,k)=npif
-                 if(iflu-izap.ge.npif)nxfpif(inum-1,j,k)=npif
+                 if(iflu-izap < npif)ising=ising+1
+                 if(iflu-izap >= npif)nxipif(inum  ,j,k)=npif
+                 if(iflu-izap >= npif)nxfpif(inum-1,j,k)=npif
                  iflu=0
               endif
            endif
-           if(ep1(i,j,k).eq.1.)iflu=0
+           if(ep1(i,j,k) == 1.)iflu=0
         enddo
-        if(ep1(nx,j,k).eq.0.)then
+        if(ep1(nx,j,k) == 0.)then
            nxfpif(inum,j,k)=iflu-izap
-           if(iflu-izap.lt.npif)ising=ising+1
-           if(iflu-izap.lt.npif)nxfpif(inum,j,k)=npif
+           if(iflu-izap < npif)ising=ising+1
+           if(iflu-izap < npif)nxfpif(inum,j,k)=npif
         endif
      enddo
   enddo
   call MPI_REDUCE(ising,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-  if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
+  if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
 !  if (nrank==0) print*,'        number of points with potential problem in X :',mpi_aux_i
 !  if (nrank==0) print*,'    step 11'
 
@@ -793,43 +793,43 @@ subroutine verif_epsi(ep1,npif,izap,nx,ny,nz,nobjmax,&
      do i=1,ysize(1)
         jnum=0
         jflu=0
-        if(ep2(i,1,k).eq.1.)jnum=jnum+1
-        if(ep2(i,1,k).eq.0.)jflu=jflu+1
+        if(ep2(i,1,k) == 1.)jnum=jnum+1
+        if(ep2(i,1,k) == 0.)jflu=jflu+1
         do j=2,ny
-           if(ep2(i,j  ,k).eq.0.)jflu=jflu+1
-           if(ep2(i,j-1,k).eq.0..and.&
-                ep2(i,j  ,k).eq.1.)then
+           if(ep2(i,j  ,k) == 0.)jflu=jflu+1
+           if(ep2(i,j-1,k) == 0..and.&
+                ep2(i,j  ,k) == 1.)then
               jnum=jnum+1
-              if(jnum.eq.1)then
+              if(jnum == 1)then
                  nyipif(jnum  ,i,k)=jflu-izap
-                 if(jflu-izap.lt.npif)jsing=jsing+1
-                 if(jflu-izap.ge.npif)nyipif(jnum  ,i,k)=npif
+                 if(jflu-izap < npif)jsing=jsing+1
+                 if(jflu-izap >= npif)nyipif(jnum  ,i,k)=npif
                  jflu=0
               else
                  nyipif(jnum  ,i,k)=jflu-izap
                  nyfpif(jnum-1,i,k)=jflu-izap
-                 if(jflu-izap.lt.npif)jsing=jsing+1
-                 if(jflu-izap.ge.npif)nyipif(jnum  ,i,k)=npif
-                 if(jflu-izap.ge.npif)nyfpif(jnum-1,i,k)=npif
+                 if(jflu-izap < npif)jsing=jsing+1
+                 if(jflu-izap >= npif)nyipif(jnum  ,i,k)=npif
+                 if(jflu-izap >= npif)nyfpif(jnum-1,i,k)=npif
                  jflu=0
               endif
            endif
-           if(ep2(i,j,k).eq.1.)jflu=0
+           if(ep2(i,j,k) == 1.)jflu=0
         enddo
-        if(ep2(i,ny,k).eq.0.)then
+        if(ep2(i,ny,k) == 0.)then
            nyfpif(jnum,i,k)=jflu-izap
-           if(jflu-izap.lt.npif)jsing=jsing+1
-           if(jflu-izap.lt.npif)nyfpif(jnum,i,k)=npif
+           if(jflu-izap < npif)jsing=jsing+1
+           if(jflu-izap < npif)nyfpif(jnum,i,k)=npif
         endif
      enddo
   enddo
   call MPI_REDUCE(jsing,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-  if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
+  if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
 !  if (nrank==0) print*,'        number of points with potential problem in Y :',mpi_aux_i
 !  if (nrank==0) print*,'    step 12'
 
   !z-pencil
-  if(nz.gt.1)then
+  if(nz > 1)then
      call transpose_y_to_z(ep2,ep3)
      nzipif(:,:,:)=npif
      nzfpif(:,:,:)=npif
@@ -838,38 +838,38 @@ subroutine verif_epsi(ep1,npif,izap,nx,ny,nz,nobjmax,&
         do i=1,zsize(1)
            knum=0
            kflu=0
-           if(ep3(i,j,1).eq.1.)knum=knum+1
-           if(ep3(i,j,1).eq.0.)kflu=kflu+1
+           if(ep3(i,j,1) == 1.)knum=knum+1
+           if(ep3(i,j,1) == 0.)kflu=kflu+1
            do k=2,nz
-              if(ep3(i,j,k  ).eq.0.)kflu=kflu+1
-              if(ep3(i,j,k-1).eq.0..and.&
-                   ep3(i,j,k  ).eq.1.)then
+              if(ep3(i,j,k  ) == 0.)kflu=kflu+1
+              if(ep3(i,j,k-1) == 0..and.&
+                   ep3(i,j,k  ) == 1.)then
                  knum=knum+1
-                 if(knum.eq.1)then
+                 if(knum == 1)then
                     nzipif(knum  ,i,j)=kflu-izap
-                    if(kflu-izap.lt.npif)ksing=ksing+1
-                    if(kflu-izap.ge.npif)nzipif(knum  ,i,j)=npif
+                    if(kflu-izap < npif)ksing=ksing+1
+                    if(kflu-izap >= npif)nzipif(knum  ,i,j)=npif
                     kflu=0
                  else
                     nzipif(knum  ,i,j)=kflu-izap
                     nzfpif(knum-1,i,j)=kflu-izap
-                    if(kflu-izap.lt.npif)ksing=ksing+1
-                    if(kflu-izap.ge.npif)nzipif(knum  ,i,j)=npif
-                    if(kflu-izap.ge.npif)nzfpif(knum-1,i,j)=npif
+                    if(kflu-izap < npif)ksing=ksing+1
+                    if(kflu-izap >= npif)nzipif(knum  ,i,j)=npif
+                    if(kflu-izap >= npif)nzfpif(knum-1,i,j)=npif
                     kflu=0
                  endif
               endif
-              if(ep3(i,j,k).eq.1.)kflu=0
+              if(ep3(i,j,k) == 1.)kflu=0
            enddo
-           if(ep3(i,j,nz).eq.0.)then
+           if(ep3(i,j,nz) == 0.)then
               nzfpif(knum,i,j)=kflu-izap
-              if(kflu-izap.lt.npif)ksing=ksing+1
-              if(kflu-izap.lt.npif)nzfpif(knum,i,j)=npif
+              if(kflu-izap < npif)ksing=ksing+1
+              if(kflu-izap < npif)nzfpif(knum,i,j)=npif
            endif
         enddo
      enddo
      call MPI_REDUCE(ksing,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-     if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
+     if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
 !     if (nrank==0) print*,'        number of points with potential problem in Z :',mpi_aux_i
   endif
 !  if (nrank==0) print*,'    step 13'
@@ -1015,7 +1015,7 @@ end subroutine verif_epsi
     integer :: i,j,k
     integer :: code
     !
-    if(nrank.eq.0)then
+    if(nrank == 0)then
        open(11,file='nobjx.dat'  ,form='formatted', status='old')
        do k=1,nz
           do j=1,ny
@@ -1025,8 +1025,8 @@ end subroutine verif_epsi
        close(11)
     endif
     call MPI_BCAST(nobjx,ny*nz,MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
-    if(nrank.eq.0)then
+    if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+    if(nrank == 0)then
        open(12,file='nobjy.dat'  ,form='formatted', status='old')
        do k=1,nz
           do i=1,nx
@@ -1036,8 +1036,8 @@ end subroutine verif_epsi
        close(12)
     endif
     call MPI_BCAST(nobjy,nx*nz,MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
-    if(nrank.eq.0)then
+    if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+    if(nrank == 0)then
        open(13,file='nobjz.dat'  ,form='formatted', status='old')
        do j=1,ny
           do i=1,nx
@@ -1047,8 +1047,8 @@ end subroutine verif_epsi
        close(13)
     endif
     call MPI_BCAST(nobjz,nx*ny,MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
-    if(nrank.eq.0)then
+    if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+    if(nrank == 0)then
        open(21,file='nxifpif.dat',form='formatted', status='old')
        do k=1,nz
           do j=1,ny
@@ -1060,10 +1060,10 @@ end subroutine verif_epsi
        close(21)
     endif
     call MPI_BCAST(nxipif,ny*nz*(nobjmax+1),MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
     call MPI_BCAST(nxfpif,ny*nz*(nobjmax+1),MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
-    if(nrank.eq.0)then
+    if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+    if(nrank == 0)then
        open(22,file='nyifpif.dat',form='formatted', status='old')
        do k=1,nz
           do i=1,nx
@@ -1075,10 +1075,10 @@ end subroutine verif_epsi
        close(22)
     endif
     call MPI_BCAST(nyipif,nx*nz*(nobjmax+1),MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
     call MPI_BCAST(nyfpif,nx*nz*(nobjmax+1),MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
-    if(nrank.eq.0)then
+    if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+    if(nrank == 0)then
        open(23,file='nzifpif.dat',form='formatted', status='old')
        do j=1,ny
           do i=1,nx
@@ -1090,10 +1090,10 @@ end subroutine verif_epsi
        close(23)
     endif
     call MPI_BCAST(nzipif,nx*ny*(nobjmax+1),MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
     call MPI_BCAST(nzfpif,nx*ny*(nobjmax+1),MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
-    if(nrank.eq.0)then
+    if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+    if(nrank == 0)then
        open(31,file='xixf.dat'   ,form='formatted', status='old')
        do k=1,nz
           do j=1,ny
@@ -1105,10 +1105,10 @@ end subroutine verif_epsi
        close(31)
     endif
     call MPI_BCAST(xi,ny*nz*nobjmax,MPI_REAL,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
     call MPI_BCAST(xf,ny*nz*nobjmax,MPI_REAL,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
-    if(nrank.eq.0)then
+    if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+    if(nrank == 0)then
        open(32,file='yiyf.dat'   ,form='formatted', status='old')
        do k=1,nz
           do i=1,nx
@@ -1120,10 +1120,10 @@ end subroutine verif_epsi
        close(32)
     endif
     call MPI_BCAST(yi,nx*nz*nobjmax,MPI_REAL,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
     call MPI_BCAST(yf,nx*nz*nobjmax,MPI_REAL,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
-    if(nrank.eq.0)then
+    if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+    if(nrank == 0)then
        open(33,file='zizf.dat'   ,form='formatted', status='old')
        do j=1,ny
           do i=1,nx
@@ -1135,9 +1135,9 @@ end subroutine verif_epsi
        close(33)
     endif
     call MPI_BCAST(zi,nx*ny*nobjmax,MPI_REAL,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
     call MPI_BCAST(zf,nx*ny*nobjmax,MPI_REAL,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
     !
     return
   end subroutine read_geomcomplex

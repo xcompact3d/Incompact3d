@@ -85,55 +85,55 @@ contains
     pressure0 = one
     rho1(:,:,:,:) = one
 
-    if (itype.eq.itype_user) then
+    if (itype == itype_user) then
 
        call init_user (ux1, uy1, uz1, ep1, phi1)
 
-    elseif (itype.eq.itype_lockexch) then
+    elseif (itype == itype_lockexch) then
 
        call init_lockexch(rho1, ux1, uy1, uz1, ep1, phi1)
 
-    elseif (itype.eq.itype_tgv) then
+    elseif (itype == itype_tgv) then
 
        call init_tgv (ux1, uy1, uz1, ep1, phi1)
 
-    elseif (itype.eq.itype_channel) then
+    elseif (itype == itype_channel) then
 
        call init_channel (ux1, uy1, uz1, ep1, phi1)
 
-    elseif (itype.eq.itype_hill) then
+    elseif (itype == itype_hill) then
 
        call  init_hill (ux1,uy1,uz1,ep1,phi1)
 
-    elseif (itype.eq.itype_cyl) then
+    elseif (itype == itype_cyl) then
 
        call init_cyl (ux1, uy1, uz1, phi1)
 
-    elseif (itype.eq.itype_dbg) then
+    elseif (itype == itype_dbg) then
 
        call init_dbg (ux1, uy1, uz1, ep1, phi1)
 
-    elseif (itype.eq.itype_mixlayer) then
+    elseif (itype == itype_mixlayer) then
 
        call init_mixlayer(rho1, ux1, uy1, uz1)
 
-    elseif (itype.eq.itype_jet) then
+    elseif (itype == itype_jet) then
 
        call init_jet(rho1, ux1, uy1, uz1, ep1, phi1)
 
-    elseif (itype.eq.itype_tbl) then
+    elseif (itype == itype_tbl) then
 
        call init_tbl (ux1, uy1, uz1, ep1, phi1)
 
-    elseif (itype.eq.itype_abl) then
+    elseif (itype == itype_abl) then
 
        call init_abl (ux1, uy1, uz1, ep1, phi1)
 
-    elseif (itype.eq.itype_uniform) then
+    elseif (itype == itype_uniform) then
 
        call init_uniform (ux1, uy1, uz1, ep1, phi1)
 
-    elseif (itype.eq.itype_cavity) then
+    elseif (itype == itype_cavity) then
 
        call init_cavity (ux1, uy1, uz1, ep1, phi1)
 
@@ -166,51 +166,51 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho
 
-    if (itype.eq.itype_user) then
+    if (itype == itype_user) then
 
        call boundary_conditions_user (ux,uy,uz,phi,ep)
 
-    elseif (itype.eq.itype_lockexch) then
+    elseif (itype == itype_lockexch) then
 
        call boundary_conditions_lockexch(rho, phi)
 
-    elseif (itype.eq.itype_tgv) then
+    elseif (itype == itype_tgv) then
 
        call boundary_conditions_tgv (ux, uy, uz, phi)
 
-    elseif (itype.eq.itype_channel) then
+    elseif (itype == itype_channel) then
 
        call boundary_conditions_channel (ux, uy, uz, phi)
 
-    elseif (itype.eq.itype_hill) then
+    elseif (itype == itype_hill) then
 
        call boundary_conditions_hill (ux,uy,uz,phi,ep)
 
-    elseif (itype.eq.itype_cyl) then
+    elseif (itype == itype_cyl) then
 
        call boundary_conditions_cyl (ux, uy, uz, phi)
 
-    elseif (itype.eq.itype_dbg) then
+    elseif (itype == itype_dbg) then
 
        call boundary_conditions_dbg (ux, uy, uz, phi)
 
-    elseif (itype.eq.itype_jet) then
+    elseif (itype == itype_jet) then
 
        call boundary_conditions_jet (rho,ux,uy,uz,phi)
 
-    elseif (itype.eq.itype_tbl) then
+    elseif (itype == itype_tbl) then
 
        call boundary_conditions_tbl (ux, uy, uz, phi)
 
-    elseif (itype.eq.itype_abl) then
+    elseif (itype == itype_abl) then
 
        call boundary_conditions_abl (ux, uy, uz, phi)
 
-    elseif (itype.eq.itype_uniform) then
+    elseif (itype == itype_uniform) then
 
        call boundary_conditions_uniform (ux, uy, uz, phi)
 
-    elseif (itype.eq.itype_cavity) then
+    elseif (itype == itype_cavity) then
 
        call boundary_conditions_cavity (ux, uy, uz, phi)
 
@@ -266,7 +266,7 @@ contains
     character(len=32) :: num
 
     ! Recover temperature when decomposed (pressure to be recovered externally)
-    if (itype.eq.itype_abl.and.ibuoyancy.eq.1) then
+    if (itype == itype_abl.and.ibuoyancy == 1) then
       do k = 1, xsize(3)
         do j = 1, xsize(2) 
           do i = 1, xsize(1)
@@ -277,7 +277,7 @@ contains
       enddo
     endif
 
-    if ((ivisu.ne.0).and.(mod(itime, ioutput).eq.0)) then
+    if ((ivisu /= 0).and.(mod(itime, ioutput) == 0)) then
       call write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime, num)
 #ifndef ADIOS2
        ! XXX: Ultimate goal for ADIOS2 is to pass do all postproc online - do we need this?
@@ -291,13 +291,13 @@ contains
 
     call overall_statistic(ux1, uy1, uz1, phi1, pp3, ep1)
 
-    if (iturbine.ne.0) then 
+    if (iturbine /= 0) then 
       call turbine_output()
     endif
 
     call write_probes(ux1, uy1, uz1, pp3, phi1)
 
-    if (itype.eq.itype_abl.and.ibuoyancy.eq.1) then
+    if (itype == itype_abl.and.ibuoyancy == 1) then
       phi1(:,:,:,1) = T_tmp(:,:,:,1)
     endif
     
@@ -316,57 +316,57 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep
     real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp
 
-    if (itype.eq.itype_user) then
+    if (itype == itype_user) then
 
        call postprocess_user (ux, uy, uz, phi, ep)
 
-    elseif (itype.eq.itype_lockexch) then
+    elseif (itype == itype_lockexch) then
 
        call postprocess_lockexch(rho, ux, uy, uz, phi, ep)
 
-    elseif (itype.eq.itype_tgv) then
+    elseif (itype == itype_tgv) then
 
        call postprocess_tgv (ux, uy, uz, phi, ep)
 
-    elseif (itype.eq.itype_channel) then
+    elseif (itype == itype_channel) then
 
        call postprocess_channel (ux, uy, uz, pp, phi, ep)
 
-    elseif (itype.eq.itype_hill) then
+    elseif (itype == itype_hill) then
 
        call postprocess_hill(ux, uy, uz, phi, ep)
 
-    elseif (itype.eq.itype_cyl) then
+    elseif (itype == itype_cyl) then
 
        call postprocess_cyl (ux, uy, uz, ep)
 
-    elseif (itype.eq.itype_dbg) then
+    elseif (itype == itype_dbg) then
 
        call postprocess_dbg (ux, uy, uz, phi, ep)
 
-    elseif (itype.eq.itype_jet) then
+    elseif (itype == itype_jet) then
 
        call postprocess_jet (ux, uy, uz, phi, ep)
 
-    elseif (itype.eq.itype_tbl) then
+    elseif (itype == itype_tbl) then
 
        call postprocess_tbl (ux, uy, uz, ep)
 
-    elseif (itype.eq.itype_abl) then
+    elseif (itype == itype_abl) then
 
        call postprocess_abl (ux, uy, uz, ep)
 
-    elseif (itype.eq.itype_uniform) then
+    elseif (itype == itype_uniform) then
 
        call postprocess_uniform (ux, uy, uz, ep)
 
-    elseif (itype.eq.itype_cavity) then
+    elseif (itype == itype_cavity) then
 
        call postprocess_cavity(ux, uy, uz, pp, phi)
 
     endif
 
-    if (iforces.eq.1) then
+    if (iforces == 1) then
        call force(ux,uy,ep)
        call restart_forces(1)
     endif
@@ -391,23 +391,23 @@ contains
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
     character(len=32), intent(in) :: num
 
-    if (itype.eq.itype_user) then
+    if (itype == itype_user) then
 
        call visu_user(ux1, uy1, uz1, pp3, phi1, ep1, num)
 
-    elseif (itype.eq.itype_tgv) then
+    elseif (itype == itype_tgv) then
 
        call visu_tgv(ux1, uy1, uz1, pp3, phi1, ep1, num)
 
-    elseif (itype.eq.itype_channel) then
+    elseif (itype == itype_channel) then
 
        call visu_channel(ux1, uy1, uz1, pp3, phi1, ep1, num)
 
-    elseif (itype.eq.itype_cyl) then
+    elseif (itype == itype_cyl) then
 
        call visu_cyl(ux1, uy1, uz1, pp3, phi1, ep1, num)
 
-    elseif (itype.eq.itype_tbl) then
+    elseif (itype == itype_tbl) then
 
        call visu_tbl(ux1, uy1, uz1, pp3, phi1, ep1, num)
 
@@ -432,19 +432,19 @@ contains
     real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
 
-    if (itype.eq.itype_channel) then
+    if (itype == itype_channel) then
 
        call momentum_forcing_channel(dux1, duy1, ux1, uy1)
 
-    elseif (itype.eq.itype_jet) then
+    elseif (itype == itype_jet) then
 
        call momentum_forcing_jet(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
 
-    elseif (itype.eq.itype_abl) then
+    elseif (itype == itype_abl) then
 
        call momentum_forcing_abl(dux1, duy1, duz1, ux1, uy1, uz1, phi1)
 
-    elseif (itype.eq.itype_cavity) then
+    elseif (itype == itype_cavity) then
 
        call momentum_forcing_cavity(duy1, phi1)
 
@@ -469,11 +469,11 @@ contains
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime) :: dphi1
     integer, optional, intent(in) :: is
 
-    if (itype.eq.itype_channel) then
+    if (itype == itype_channel) then
 
        call scalar_forcing_channel(dphi1, phi1, is)
 
-    elseif (itype.eq.itype_abl) then
+    elseif (itype == itype_abl) then
 
        call scalar_forcing_abl(uy1, dphi1, phi1)
 
@@ -489,7 +489,7 @@ contains
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: rho1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: mu1
 
-    if (itype.eq.itype_lockexch) then
+    if (itype == itype_lockexch) then
 
        call set_fluid_properties_lockexch(rho1, mu1)
 
@@ -515,7 +515,7 @@ contains
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime), intent(in) :: drho1
     real(mytype), dimension(zsize(1), zsize(2), zsize(3)), intent(in) :: divu3
 
-    if ((mod(itime,10)==0).and.(itr.eq.iadvance_time)) then
+    if ((mod(itime,10)==0).and.(itr == iadvance_time)) then
        call divergence(dv3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,2)
        call test_speed_min_max(ux1,uy1,uz1)
        call compute_cfl(ux1,uy1,uz1)
@@ -535,11 +535,11 @@ contains
 
     implicit none
 
-    if (itype.eq.itype_channel) then
+    if (itype == itype_channel) then
 
        call finalize_channel()
 
-    elseif (itype.eq.itype_cavity) then
+    elseif (itype == itype_cavity) then
 
        call finalize_cavity()
 

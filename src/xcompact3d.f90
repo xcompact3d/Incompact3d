@@ -55,13 +55,13 @@ program xcompact3d
      t=t0 + (itime0 + itime + 1 - ifirst)*dt
      call simu_stats(2)
 
-     if (iturbine.ne.0) call compute_turbines(ux1, uy1, uz1)
+     if (iturbine /= 0) call compute_turbines(ux1, uy1, uz1)
 
-     if (iin.eq.3.and.mod(itime,ntimesteps)==1) then
+     if (iin == 3.and.mod(itime,ntimesteps)==1) then
         call read_inflow(ux_inflow,uy_inflow,uz_inflow,itime/ntimesteps)
      endif
 
-     if ((itype.eq.itype_abl.or.iturbine.ne.0).and.(ifilter.ne.0).and.(ilesmod.ne.0)) then
+     if ((itype == itype_abl.or.iturbine /= 0).and.(ifilter /= 0).and.(ilesmod /= 0)) then
         call filter(C_filter)
         call apply_spatial_filter(ux1,uy1,uz1,phi1)
      endif
@@ -71,10 +71,10 @@ program xcompact3d
         call set_fluid_properties(rho1,mu1)
         call boundary_conditions(rho1,ux1,uy1,uz1,phi1,ep1)
 
-        if (imove.eq.1) then ! update epsi for moving objects
-          if ((iibm.eq.2).or.(iibm.eq.3)) then
+        if (imove == 1) then ! update epsi for moving objects
+          if ((iibm == 2).or.(iibm == 3)) then
             call genepsi3d(ep1)
-          else if (iibm.eq.1) then
+          else if (iibm == 1) then
             call body(ux1,uy1,uz1,ep1)
           endif
         endif
@@ -109,7 +109,7 @@ program xcompact3d
 
      call postprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
 
-     if (catching_signal.ne.0) call catch_signal()
+     if (catching_signal /= 0) call catch_signal()
 
   enddo !! End time loop
 
@@ -162,11 +162,11 @@ subroutine init_xcompact3d()
 
   !! Initialise MPI
   call MPI_INIT(code)
-  if (code.ne.0) call decomp_2d_abort(code, "MPI_INIT")
+  if (code /= 0) call decomp_2d_abort(code, "MPI_INIT")
   call MPI_COMM_RANK(MPI_COMM_WORLD,nrank,code)
-  if (code.ne.0) call decomp_2d_abort(code, "MPI_COMM_RANK")
+  if (code /= 0) call decomp_2d_abort(code, "MPI_COMM_RANK")
   call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,code)
-  if (code.ne.0) call decomp_2d_abort(code, "MPI_COMM_SIZE")
+  if (code /= 0) call decomp_2d_abort(code, "MPI_COMM_SIZE")
 
   ! Install signal handler
   call signal(SIGUSR1, catch_sigusr1)
@@ -178,19 +178,19 @@ subroutine init_xcompact3d()
   if (nargin <1) then
      InputFN='input.i3d'
      if (nrank==0) print*, 'Xcompact3d is run with the default file -->', InputFN
-  elseif (nargin.ge.1) then
+  elseif (nargin >= 1) then
      if (nrank==0) print*, 'Xcompact3d is run with the provided file -->', InputFN
 
      call get_command_argument(1,InputFN,FNLength,status)
-     if (status.ne.0) then
-        if (nrank.eq.0) print*, 'InputFN is too small for the given input file'
+     if (status /= 0) then
+        if (nrank == 0) print*, 'InputFN is too small for the given input file'
         call decomp_2d_abort(status, "get_command_argument")
      endif
      if (nrank==0) print*, 'Xcompact3d is run with the provided file -->', InputFN
   endif
 
 #ifdef ADIOS2
-  if (nrank .eq. 0) then
+  if (nrank  ==  0) then
      print *, " WARNING === WARNING === WARNING === WARNING === WARNING"
      print *, " WARNING: Running Xcompact3d with ADIOS2"
      print *, "          this is currently experimental"
@@ -221,18 +221,18 @@ subroutine init_xcompact3d()
   call decomp_2d_poisson_init()
   call decomp_info_init(nxm,nym,nzm,phG)
 
-  if (ilesmod.ne.0) then
-     if (jles.gt.0)  call init_explicit_les()
+  if (ilesmod /= 0) then
+     if (jles > 0)  call init_explicit_les()
   endif
 
-  if ((iibm.eq.2).or.(iibm.eq.3)) then
+  if ((iibm == 2).or.(iibm == 3)) then
      call genepsi3d(ep1)
-  else if (iibm.eq.1) then
+  else if (iibm == 1) then
      call epsi_init(ep1)
      call body(ux1,uy1,uz1,ep1)
   endif
 
-  if (iforces.eq.1) then
+  if (iforces == 1) then
      call init_forces()
      if (irestart==1) then
         call restart_forces(0)
@@ -241,7 +241,7 @@ subroutine init_xcompact3d()
 
   !####################################################################
   ! initialise visu
-  if (ivisu.ne.0) call visu_init()
+  if (ivisu /= 0) call visu_init()
   ! compute diffusion number of simulation
   call compute_cfldiff()
   !####################################################################
@@ -253,9 +253,9 @@ subroutine init_xcompact3d()
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,0)
   endif
 
-  if ((iibm.eq.2).or.(iibm.eq.3)) then
+  if ((iibm == 2).or.(iibm == 3)) then
      call genepsi3d(ep1)
-  else if (iibm.eq.1) then
+  else if (iibm == 1) then
      call body(ux1,uy1,uz1,ep1)
   endif
 
@@ -268,15 +268,15 @@ subroutine init_xcompact3d()
 
   call init_probes()
 
-  if (iturbine.ne.0) call init_turbines(ux1, uy1, uz1)
+  if (iturbine /= 0) call init_turbines(ux1, uy1, uz1)
 
   if (itype==2) then
-     if(nrank.eq.0)then
+     if(nrank == 0)then
         open(42,file='time_evol.dat',form='formatted')
      endif
   endif
   if (itype==5) then
-     if(nrank.eq.0)then
+     if(nrank == 0)then
         open(38,file='forces.dat',form='formatted')
      endif
   endif
@@ -303,19 +303,19 @@ subroutine finalise_xcompact3d()
   integer :: code
   
   if (itype==2) then
-     if(nrank.eq.0)then
+     if(nrank == 0)then
         close(42)
      endif
   endif
   if (itype==5) then
-     if(nrank.eq.0)then
+     if(nrank == 0)then
         close(38)
      endif
   endif
   
   call simu_stats(4)
-  if (iforces.eq.1) call finalize_forces()
-  if (iimplicit.ne.0) call finalize_implicit()
+  if (iforces == 1) call finalize_forces()
+  if (iimplicit /= 0) call finalize_implicit()
   call finalize_case()
   call finalize_probes()
   call finalize_visu()
@@ -328,7 +328,7 @@ subroutine finalise_xcompact3d()
   call decomp_2d_finalize()
   call decomp_2d_poisson_finalize()
   CALL MPI_FINALIZE(code)
-  if (code.ne.0) call decomp_2d_abort(code, "MPI_FINALIZE")
+  if (code /= 0) call decomp_2d_abort(code, "MPI_FINALIZE")
 
 endsubroutine finalise_xcompact3d
 !########################################################################
@@ -340,7 +340,7 @@ subroutine catch_sigusr1
 
   implicit none
 
-  if (nrank.eq.0) print *, "Catching SIGUSR1"
+  if (nrank == 0) print *, "Catching SIGUSR1"
   catching_signal = 1
 
 end subroutine catch_sigusr1
@@ -352,7 +352,7 @@ subroutine catch_sigusr2
 
   implicit none
 
-  if (nrank.eq.0) print *, "Catching SIGUSR2"
+  if (nrank == 0) print *, "Catching SIGUSR2"
   catching_signal = 2
 
 end subroutine catch_sigusr2
@@ -367,21 +367,21 @@ subroutine catch_signal
 
   integer :: code
 
-  if (catching_signal.eq.1) then
+  if (catching_signal == 1) then
 
     ! Stop at the end of the next iteration
     ilast = itime + 1
     call MPI_ALLREDUCE(MPI_IN_PLACE, ilast, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD, code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
     return
 
-  elseif (catching_signal.eq.2) then
+  elseif (catching_signal == 2) then
 
     ! Stop at the end of the next iteration
     ilast = itime + 1
     call MPI_ALLREDUCE(MPI_IN_PLACE, ilast, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD, code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
     ! Write checkpoint at the end of the next iteration
     icheckpoint = ilast

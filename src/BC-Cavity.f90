@@ -68,18 +68,18 @@ contains
     !
     ! Simulation can start from a 3D snapshot
     !
-    if (nrank.eq.0) inquire(file="cavity_init_ux", exist=read_from_file)
+    if (nrank == 0) inquire(file="cavity_init_ux", exist=read_from_file)
     call MPI_BCAST(read_from_file,1,MPI_LOGICAL,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
     if (read_from_file) then
 
-       if (nrank.eq.0) print *, "Cavity: init from snapshot."
+       if (nrank == 0) print *, "Cavity: init from snapshot."
        call decomp_2d_read_one(1,ux1,"cavity_init_ux")
        call decomp_2d_read_one(1,uy1,"cavity_init_uy")
        call decomp_2d_read_one(1,uz1,"cavity_init_uz")
-       if (iscalar.eq.1) then
+       if (iscalar == 1) then
           call decomp_2d_read_one(1,phi1(:,:,:,1),"cavity_init_t")
-          if (numscalar.gt.1) then
+          if (numscalar > 1) then
              phi1(:,:,:,2:numscalar) = zero
           endif
        endif
@@ -135,13 +135,13 @@ contains
     !
     ! Scalar boundary conditions
     !
-    if (iscalar.ne.1) return
+    if (iscalar /= 1) return
 
     !
     ! Imposed temperature at x = 0
     !
     IF (nclxS1.EQ.2) THEN
-       if (xstart(1).eq.1) then
+       if (xstart(1) == 1) then
           phi(1,:,:,:) = zpfive
        endif
     ENDIF
@@ -149,7 +149,7 @@ contains
     ! Imposed temperature at x = Lx
     !
     IF (nclxSn.EQ.2) THEN
-       if (xend(1).eq.nx) then
+       if (xend(1) == nx) then
           phi(xsize(1),:,:,:) = - zpfive 
        endif
     ENDIF
@@ -160,7 +160,7 @@ contains
     ! B.C. at y = 0. This is not used when nclyS1 = 1
     !
     IF (nclyS1.EQ.2) THEN
-       if (xstart(2).eq.1) then
+       if (xstart(2) == 1) then
           do is = 1, numscalar
              do k = 1, xsize(3)
                 j = 1
@@ -175,7 +175,7 @@ contains
     ! B.C. at y = Ly. This is not used when nclySn = 1
     !
     IF (nclySn.EQ.2) THEN
-       if (xend(2).eq.ny) then
+       if (xend(2) == ny) then
           do is = 1, numscalar
              do k = 1, xsize(3)
                 j = xsize(2)
@@ -224,20 +224,20 @@ contains
 
     ! Compute min & max over the domain
     call MPI_REDUCE(arrayin,array,6,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
 
     ! Compute average over the domain
-    if (iscalar.eq.1) then
+    if (iscalar == 1) then
 
       ! Temperature
       phimax = sum(phi(:,:,:,1))
       call MPI_REDUCE(phimax,phim,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
-      if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
+      if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
 
       ! Squared temperature
       phimax = sum(phi(:,:,:,1)*phi(:,:,:,1))
       call MPI_REDUCE(phimax,phi2m,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
-      if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
+      if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
 
     else
 
@@ -248,14 +248,14 @@ contains
     endif
 
     ! Post-processing + output on master rank
-    if (nrank.eq.0) then
+    if (nrank == 0) then
 
       phim = phim / real(nx*ny*nz)
       phi2m = phi2m / real(nx*ny*nz)
       phi2m = phi2m - phim*phim
 
       ! Print header at first time step
-      if (itime.eq.ifirst) then
+      if (itime == ifirst) then
          open(newunit=iocavity, file='cavity.dat', form='formatted')
          write(iocavity,*) "# umin, umax, vmin, vmax, phimin, phimax, average_T, variance_T"
       endif
@@ -280,7 +280,7 @@ contains
     real(mytype), intent(inout), dimension(xsize(1), xsize(2), xsize(3), ntime) :: duy
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
-    if (iscalar.eq.1) duy(:,:,:,1) = duy(:,:,:,1) + phi(:,:,:,1)
+    if (iscalar == 1) duy(:,:,:,1) = duy(:,:,:,1) + phi(:,:,:,1)
 
   end subroutine momentum_forcing_cavity
 
@@ -291,7 +291,7 @@ contains
 
     implicit none
 
-    if (nrank.eq.0) close(iocavity)
+    if (nrank == 0) close(iocavity)
 
   end subroutine finalize_cavity
 

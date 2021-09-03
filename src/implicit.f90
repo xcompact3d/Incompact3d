@@ -597,13 +597,13 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   !! LOCAL
   real(mytype),dimension(ysize(1),ysize(3)) :: bctop, bcbot
 
-  if (itimescheme.eq.1) then
+  if (itimescheme == 1) then
      !>>> Explicit Euler
      ta1(:,:,:) = gdt(1) * dvar1(:,:,:,1)
 
-  elseif (itimescheme.eq.2) then
+  elseif (itimescheme == 2) then
      !>>> AB2
-     if ((itime.eq.1).and.(irestart.eq.0)) then
+     if ((itime == 1).and.(irestart == 0)) then
         !>>> Start with explicit Euler
         ta1(:,:,:) = dt*dvar1(:,:,:,1)
 
@@ -617,13 +617,13 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
      dvar1(:,:,:,2) = dvar1(:,:,:,1)
 
 
-  else if (itimescheme.eq.3) then
+  else if (itimescheme == 3) then
      !>>> AB3
-     if ((itime.eq.1).and.(irestart.eq.0)) then
+     if ((itime == 1).and.(irestart == 0)) then
         !>>> Start with explicit Euler
         ta1(:,:,:) = dt*dvar1(:,:,:,1)
 
-     else if ((itime.eq.2).and.(irestart.eq.0)) then
+     else if ((itime == 2).and.(irestart == 0)) then
         !>>> Then AB2
         ta1(:,:,:) = onepfive*dt*dvar1(:,:,:,1) - half*dt*dvar1(:,:,:,2)
 
@@ -638,16 +638,16 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
      dvar1(:,:,:,3)=dvar1(:,:,:,2)
      dvar1(:,:,:,2)=dvar1(:,:,:,1)
 
-  elseif (itimescheme.eq.4) then
+  elseif (itimescheme == 4) then
      !>>> AB4
-     if (nrank.eq.0) then
+     if (nrank == 0) then
         print *, "AB4 not implemented!"
         STOP
      endif
 
   else
      !>>> We should not be here
-     if (nrank.eq.0) then
+     if (nrank == 0) then
         print *, "Unrecognised implicit itimescheme: ", itimescheme
      endif
      call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
@@ -655,7 +655,7 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   endif
 
   if (present(forcing1)) then
-     if ( (irestart.eq.1).or.(itime.gt.1) ) then
+     if ( (irestart == 1).or.(itime > 1) ) then
         ta1(:,:,:) = ta1(:,:,:) - forcing1(:,:,:)
      endif
   endif
@@ -678,14 +678,14 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   ! Specific cases first
   ! This is the location for exotic / nonhomogeneous boundary conditions
   !
-  if (itype.eq.itype_tbl .and. isc.eq.0) then
+  if (itype == itype_tbl .and. isc == 0) then
      bcbot(:,:) = zero
      bctop(:,:) = tb2(:,ny-1,:)
      !in order to mimick a Neumann BC at the top of the domain for the TBL
   !
   ! Generic homogeneous cases after
   !
-  else if (isc.ne.0) then
+  else if (isc /= 0) then
      bcbot(:,:) = g_sc(isc, 1)
      bctop(:,:) = g_sc(isc, 2)
   else
@@ -698,19 +698,19 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   !if isecondder=5, we need nona inversion
   !id isecondder is not 5, we need septa inversion
 
-  if (isecondder.ne.5) then
-     if (isc.eq.0) then
+  if (isecondder /= 5) then
+     if (isc == 0) then
         call multmatrix7(td2,ta2,tb2,npaire,ncly1,nclyn,xcst)
      else
         call multmatrix7(td2,ta2,tb2,npaire,nclyS1,nclySn,xcst_sc(isc))
      endif
-  else if (isecondder.eq.5) then
+  else if (isecondder == 5) then
      !TO BE DONE: Different types of BC
-     if ((ncly1.eq.0).and.(nclyn.eq.0)) then
+     if ((ncly1 == 0).and.(nclyn == 0)) then
         !NOT READY
-     elseif ((ncly1.eq.1).and.(nclyn.eq.1)) then
+     elseif ((ncly1 == 1).and.(nclyn == 1)) then
         !NOT READY
-     elseif ((ncly1.eq.2).and.(nclyn.eq.2)) then
+     elseif ((ncly1 == 2).and.(nclyn == 2)) then
         call multmatrix9(td2,ta2,tb2,npaire)
      endif
   endif
@@ -721,10 +721,10 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   !
   ! Apply boundary conditions
   !
-  if ((isc.eq.0.and.ncly1.eq.2).or.(isc.gt.0.and.nclyS1.eq.2)) then
+  if ((isc == 0.and.ncly1 == 2).or.(isc > 0.and.nclyS1 == 2)) then
      ta2(:,1,:) = bcbot(:,:)
   endif
-  if ((isc.eq.0.and.nclyn.eq.2).or.(isc.gt.0.and.nclySn.eq.2)) then
+  if ((isc == 0.and.nclyn == 2).or.(isc > 0.and.nclySn == 2)) then
      ta2(:,ny,:) = bctop(:,:)
   endif
  
@@ -732,66 +732,66 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   !if secondder=5, we need nona inversion
   !if isecondder is not 5, we need septa inversion
 
-  if (isecondder.ne.5) then
-     if ((isc.eq.0).and.(ncly1.eq.0).and.(nclyn.eq.0)) then
+  if (isecondder /= 5) then
+     if ((isc == 0).and.(ncly1 == 0).and.(nclyn == 0)) then
         gg=>ggm0; hh=>hhm0; ss=>ssm0; rr=>rrm0; vv=>vvm0; ww=>wwm0; zz=>zzm0
         lo1=>l1m; lo2=>l2m; lo3=>l3m; up1=>u1m; up2=>u2m; up3=>u3m
-     elseif ((isc.gt.0).and.(nclyS1.eq.0).and.(nclySn.eq.0)) then
+     elseif ((isc > 0).and.(nclyS1 == 0).and.(nclySn == 0)) then
         gg=>ggm0t(:,isc); hh=>hhm0t(:,isc); ss=>ssm0t(:,isc); rr=>rrm0t(:,isc); vv=>vvm0t(:,isc); ww=>wwm0t(:,isc); zz=>zzm0t(:,isc)
         lo1=>l1mt(:,isc); lo2=>l2mt(:,isc); lo3=>l3mt(:,isc); up1=>u1mt(:,isc); up2=>u2mt(:,isc); up3=>u3mt(:,isc)
-     elseif ((isc.eq.0).and.(ncly1.eq.1).and.(nclyn.eq.1).and.(npaire.eq.0)) then
+     elseif ((isc == 0).and.(ncly1 == 1).and.(nclyn == 1).and.(npaire == 0)) then
         gg=>ggm10; hh=>hhm10; ss=>ssm10; rr=>rrm10; vv=>vvm10; ww=>wwm10; zz=>zzm10
-     elseif ((isc.gt.0).and.(nclyS1.eq.1).and.(nclySn.eq.1).and.(npaire.eq.0)) then
+     elseif ((isc > 0).and.(nclyS1 == 1).and.(nclySn == 1).and.(npaire == 0)) then
         gg=>ggm10t(:,isc); hh=>hhm10t(:,isc); ss=>ssm10t(:,isc); rr=>rrm10t(:,isc); vv=>vvm10t(:,isc); ww=>wwm10t(:,isc); zz=>zzm10t(:,isc)
-     elseif ((isc.eq.0).and.(ncly1.eq.1).and.(nclyn.eq.1).and.(npaire.eq.1)) then
+     elseif ((isc == 0).and.(ncly1 == 1).and.(nclyn == 1).and.(npaire == 1)) then
         gg=>ggm11; hh=>hhm11; ss=>ssm11; rr=>rrm11; vv=>vvm11; ww=>wwm11; zz=>zzm11
-     elseif ((isc.gt.0).and.(nclyS1.eq.1).and.(nclySn.eq.1).and.(npaire.eq.1)) then
+     elseif ((isc > 0).and.(nclyS1 == 1).and.(nclySn == 1).and.(npaire == 1)) then
         gg=>ggm11t(:,isc); hh=>hhm11t(:,isc); ss=>ssm11t(:,isc); rr=>rrm11t(:,isc); vv=>vvm11t(:,isc); ww=>wwm11t(:,isc); zz=>zzm11t(:,isc)
-     elseif ((isc.eq.0).and.(ncly1.eq.2).and.(nclyn.eq.2)) then
+     elseif ((isc == 0).and.(ncly1 == 2).and.(nclyn == 2)) then
         gg=>ggm; hh=>hhm; ss=>ssm; rr=>rrm; vv=>vvm; ww=>wwm; zz=>zzm
-     elseif ((isc.gt.0).and.(nclyS1.eq.2).and.(nclySn.eq.2)) then
+     elseif ((isc > 0).and.(nclyS1 == 2).and.(nclySn == 2)) then
         gg=>ggmt(:,isc); hh=>hhmt(:,isc); ss=>ssmt(:,isc); rr=>rrmt(:,isc); vv=>vvmt(:,isc); ww=>wwmt(:,isc); zz=>zzmt(:,isc)
-     elseif ((isc.eq.0).and.(ncly1.eq.1).and.(nclyn.eq.2).and.(npaire.eq.0)) then
+     elseif ((isc == 0).and.(ncly1 == 1).and.(nclyn == 2).and.(npaire == 0)) then
         gg=>ggm120; hh=>hhm120; ss=>ssm120; rr=>rrm120; vv=>vvm120; ww=>wwm120; zz=>zzm120
-     elseif ((isc.gt.0).and.(nclyS1.eq.1).and.(nclySn.eq.2).and.(npaire.eq.0)) then
+     elseif ((isc > 0).and.(nclyS1 == 1).and.(nclySn == 2).and.(npaire == 0)) then
         gg=>ggm120t(:,isc); hh=>hhm120t(:,isc); ss=>ssm120t(:,isc); rr=>rrm120t(:,isc); vv=>vvm120t(:,isc); ww=>wwm120t(:,isc); zz=>zzm120t(:,isc)
-     elseif ((isc.eq.0).and.(ncly1.eq.1).and.(nclyn.eq.2).and.(npaire.eq.1)) then
+     elseif ((isc == 0).and.(ncly1 == 1).and.(nclyn == 2).and.(npaire == 1)) then
         gg=>ggm121; hh=>hhm121; ss=>ssm121; rr=>rrm121; vv=>vvm121; ww=>wwm121; zz=>zzm121
-     elseif ((isc.gt.0).and.(nclyS1.eq.1).and.(nclySn.eq.2).and.(npaire.eq.1)) then
+     elseif ((isc > 0).and.(nclyS1 == 1).and.(nclySn == 2).and.(npaire == 1)) then
         gg=>ggm121t(:,isc); hh=>hhm121t(:,isc); ss=>ssm121t(:,isc); rr=>rrm121t(:,isc); vv=>vvm121t(:,isc); ww=>wwm121t(:,isc); zz=>zzm121t(:,isc)
-     elseif ((isc.eq.0).and.(ncly1.eq.2).and.(nclyn.eq.1).and.(npaire.eq.0)) then
+     elseif ((isc == 0).and.(ncly1 == 2).and.(nclyn == 1).and.(npaire == 0)) then
         gg=>ggm210; hh=>hhm210; ss=>ssm210; rr=>rrm210; vv=>vvm210; ww=>wwm210; zz=>zzm210
-     elseif ((isc.gt.0).and.(nclyS1.eq.2).and.(nclySn.eq.1).and.(npaire.eq.0)) then
+     elseif ((isc > 0).and.(nclyS1 == 2).and.(nclySn == 1).and.(npaire == 0)) then
         gg=>ggm210t(:,isc); hh=>hhm210t(:,isc); ss=>ssm210t(:,isc); rr=>rrm210t(:,isc); vv=>vvm210t(:,isc); ww=>wwm210t(:,isc); zz=>zzm210t(:,isc)
-     elseif ((isc.eq.0).and.(ncly1.eq.2).and.(nclyn.eq.1).and.(npaire.eq.1)) then
+     elseif ((isc == 0).and.(ncly1 == 2).and.(nclyn == 1).and.(npaire == 1)) then
         gg=>ggm211; hh=>hhm211; ss=>ssm211; rr=>rrm211; vv=>vvm211; ww=>wwm211; zz=>zzm211
-     elseif ((isc.gt.0).and.(nclyS1.eq.2).and.(nclySn.eq.1).and.(npaire.eq.1)) then
+     elseif ((isc > 0).and.(nclyS1 == 2).and.(nclySn == 1).and.(npaire == 1)) then
         gg=>ggm211t(:,isc); hh=>hhm211t(:,isc); ss=>ssm211t(:,isc); rr=>rrm211t(:,isc); vv=>vvm211t(:,isc); ww=>wwm211t(:,isc); zz=>zzm211t(:,isc)
      else
         ! We should not be here
-        if (nrank.eq.0) then
+        if (nrank == 0) then
            print *, "Error for time-implicit Y diffusion."
-           if (isc.eq.0) print *, "   Wrong combination for ncly1, nclyn and npaire", ncly1, nclyn, npaire
-           if (isc.ne.0) print *, "   Wrong combination for nclyS1, nclySn and npaire", nclyS1, nclySn, npaire
+           if (isc == 0) print *, "   Wrong combination for ncly1, nclyn and npaire", ncly1, nclyn, npaire
+           if (isc /= 0) print *, "   Wrong combination for nclyS1, nclySn and npaire", nclyS1, nclySn, npaire
         endif
         call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
      endif
      tb2=0.;
-     if ((isc.eq.0.and.ncly1.eq.0.and.nclyn.eq.0).or.(isc.gt.0.and.nclyS1.eq.0.and.nclySn.eq.0)) then
+     if ((isc == 0.and.ncly1 == 0.and.nclyn == 0).or.(isc > 0.and.nclyS1 == 0.and.nclySn == 0)) then
         call septinv(tb2,ta2,gg,hh,ss,rr,vv,ww,zz,lo1,lo2,lo3,up1,up2,up3,ysize(1),ysize(2),ysize(3))
         nullify(lo1,lo2,lo3,up1,up2,up3)
      else
         call septinv(tb2,ta2,gg,hh,ss,rr,vv,ww,zz,ysize(1),ysize(2),ysize(3))
      endif
      nullify(gg,hh,ss,rr,vv,ww,zz)
-  else if (isecondder.eq.5) then
+  else if (isecondder == 5) then
      tb2=0.;
      !TO BE DONE: Different types of BC
-     if ((ncly1.eq.0).and.(nclyn.eq.0)) then
+     if ((ncly1 == 0).and.(nclyn == 0)) then
         !NOT READY
-     elseif ((ncly1.eq.1).and.(nclyn.eq.1)) then
+     elseif ((ncly1 == 1).and.(nclyn == 1)) then
         !NOT READY
-     elseif ((ncly1.eq.2).and.(nclyn.eq.2)) then
+     elseif ((ncly1 == 2).and.(nclyn == 2)) then
         call nonainv(tb2,ta2,ggm,hhm,ssm,sssm,ttm,zzzm,zzm,wwm,vvm,ysize(1),ysize(2),ysize(3))
      endif
   endif
@@ -799,7 +799,7 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   call transpose_y_to_x(tb2,var1)
 
   if (present(forcing1)) then
-     if ( (irestart.eq.1).or.(itime.gt.1) ) then
+     if ( (irestart == 1).or.(itime > 1) ) then
         var1(:,:,:)=var1(:,:,:)+forcing1(:,:,:)
      endif
   endif
@@ -828,20 +828,20 @@ real(mytype),dimension(ysize(1),ysize(2),ysize(3)), intent(inout) :: td2,ta2
 real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: di2
 
 ! Compute A.ta2, store it in ta2
-   if (istret.ne.0) then
+   if (istret /= 0) then
       do j=1,ysize(2)
          ta2(:,j,:)=ta2(:,j,:)/pp2y(j)
       enddo
    endif
 
    ! j=1,2,3
-   if (cly1.eq.0) then
+   if (cly1 == 0) then
       td2(:,1,:) = alsajy*ta2(:,2,:) + ta2(:,1,:) + alsajy*ta2(:,ysize(2),:)
       do j=2,3
          td2(:,j,:) = alsajy*ta2(:,j-1,:) + ta2(:,j,:) + alsajy*ta2(:,j+1,:)
       enddo
-   else if (cly1.eq.1) then
-      if (npaire.eq.0) then
+   else if (cly1 == 1) then
+      if (npaire == 0) then
          td2(:,1,:) = ta2(:,1,:)
       else
          td2(:,1,:) = 2.*alsajy*ta2(:,2,:) + ta2(:,1,:)
@@ -860,16 +860,16 @@ real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: di2
    enddo
 
    ! j=ny-2,ny-1,ny
-   if (clyn.eq.0) then
+   if (clyn == 0) then
       do j=ysize(2)-2,ysize(2)-1
          td2(:,j,:) = alsajy*ta2(:,j-1,:) + ta2(:,j,:) + alsajy*ta2(:,j+1,:)
       enddo
       td2(:,ysize(2),:) = alsajy*ta2(:,ysize(2)-1,:) + ta2(:,ysize(2),:) + alsajy*ta2(:,1,:)
-   elseif (clyn.eq.1) then
+   elseif (clyn == 1) then
       do j=ysize(2)-2,ysize(2)-1
          td2(:,j,:) = alsajy*ta2(:,j-1,:) + ta2(:,j,:) + alsajy*ta2(:,j+1,:)
       enddo
-      if (npaire.eq.0) then
+      if (npaire == 0) then
          td2(:,ysize(2),:) = ta2(:,ysize(2),:)
       else
          td2(:,ysize(2),:) = 2.*alsajy*ta2(:,ysize(2)-1,:) + ta2(:,ysize(2),:)
@@ -883,21 +883,21 @@ real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: di2
 
 ! Compute (A+nu*dt.B).un
 ! nu*dt*B.un first, needed for CN, not needed for backward Euler
-   if (iimplicit.eq.1) then
+   if (iimplicit == 1) then
 
       td2(:,:,:) = zero
 
-   else if ((cly1.eq.1.or.clyn.eq.1) .and. npaire.eq.0) then
+   else if ((cly1 == 1.or.clyn == 1) .and. npaire == 0) then
 
       ! Check if we are solving momentum or scalars
-      if (cly1.eq.ncly1 .and. clyn.eq.nclyn) then
+      if (cly1 == ncly1 .and. clyn == nclyn) then
          call deryy(td2,ux2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0, zero)
       else
          call deryyS(td2,ux2,di2,sy,sfyS,ssyS,swyS,ysize(1),ysize(2),ysize(3),0, zero)
       endif
    else
       ! Check if we are solving momentum or scalars
-      if (cly1.eq.ncly1 .and. clyn.eq.nclyn) then
+      if (cly1 == ncly1 .and. clyn == nclyn) then
          call deryy(td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1, zero)
       else
          call deryyS(td2,ux2,di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1, zero)
@@ -906,22 +906,22 @@ real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: di2
    endif
    td2(:,:,:) = xcst * td2(:,:,:)
 
-   if (istret.ne.0) then
+   if (istret /= 0) then
       do j=1,ysize(2)
          ux2(:,j,:)=ux2(:,j,:)/pp2y(j)
       enddo
    endif
 
    ! j=1,2,3
-   if (cly1.eq.0) then
+   if (cly1 == 0) then
       td2(:,1,:) = alsajy*ux2(:,2,:) + ux2(:,1,:) + alsajy*ux2(:,ysize(2),:) &
                  + td2(:,1,:)
       do j=2,3
          td2(:,j,:) = alsajy*ux2(:,j-1,:) + ux2(:,j,:) + alsajy*ux2(:,j+1,:) &
                     + td2(:,j,:)
       enddo
-   else if (cly1.eq.1) then
-      if (npaire.eq.0) then
+   else if (cly1 == 1) then
+      if (npaire == 0) then
          td2(:,1,:) = ux2(:,1,:) + td2(:,1,:)
       else
          td2(:,1,:) = 2.*alsajy*ux2(:,2,:) + ux2(:,1,:) &
@@ -945,19 +945,19 @@ real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: di2
    enddo
 
    ! j=ny-2,ny-1,ny
-   if (clyn.eq.0) then
+   if (clyn == 0) then
       do j=ysize(2)-2,ysize(2)-1
          td2(:,j,:) = alsajy*ux2(:,j-1,:) + ux2(:,j,:) + alsajy*ux2(:,j+1,:) &
                     + td2(:,j,:)
       enddo
       td2(:,ysize(2),:) = alsajy*ux2(:,ysize(2)-1,:) + ux2(:,ysize(2),:) + alsajy*ux2(:,1,:) &
                         + td2(:,ysize(2),:)
-   elseif (clyn.eq.1) then
+   elseif (clyn == 1) then
       do j=ysize(2)-2,ysize(2)-1
          td2(:,j,:) = alsajy*ux2(:,j-1,:) + ux2(:,j,:) + alsajy*ux2(:,j+1,:) &
                     + td2(:,j,:)
       enddo
-      if (npaire.eq.0) then
+      if (npaire == 0) then
          td2(:,ysize(2),:) = ux2(:,ysize(2),:) + td2(:,ysize(2),:)
       else
          td2(:,ysize(2),:) = 2.*alsajy*ux2(:,ysize(2)-1,:) + ux2(:,ysize(2),:) &
@@ -994,13 +994,13 @@ subroutine multmatrix9(td2,ta2,ux2,npaire)
 
   !A.uhat
 
-  if (istret.ne.0) then
+  if (istret /= 0) then
      do j=1,ysize(2)
         ta2(:,j,:)=ta2(:,j,:)/pp2y(j)
      enddo
   endif
 
-  if (ncly1.eq.0) then
+  if (ncly1 == 0) then
 
      td2(:,1,:) = alsajy*ta2(:,2,:) + ta2(:,1,:) + alsajy*ta2(:,ysize(2),:)
      do j=2,ysize(2)-1
@@ -1009,10 +1009,10 @@ subroutine multmatrix9(td2,ta2,ux2,npaire)
      td2(:,ysize(2),:) = alsajy*ta2(:,ysize(2)-1,:) + ta2(:,ysize(2),:) + alsajy*ta2(:,1,:)
      ta2=td2
 
-  elseif (ncly1.eq.1) then
+  elseif (ncly1 == 1) then
 
 
-  elseif (ncly1.eq.2) then
+  elseif (ncly1 == 2) then
 
      td2(:,1,:) = 0.
      td2(:,2,:) = alsa2y*ta2(:,1,:) + ta2(:,2,:) + alsa2y*ta2(:,3,:)
@@ -1031,11 +1031,11 @@ subroutine multmatrix9(td2,ta2,ux2,npaire)
 
   !(A+nu*dt.B).un
 
-  if (iimplicit.eq.1) then
+  if (iimplicit == 1) then
 
      td2(:,:,:) = zero
 
-  elseif ((ncly1.eq.1.or.nclyn.eq.1) .and. npaire.eq.0) then
+  elseif ((ncly1 == 1.or.nclyn == 1) .and. npaire == 0) then
 
      call deryy(td2,ux2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0, zero)
   else
@@ -1044,13 +1044,13 @@ subroutine multmatrix9(td2,ta2,ux2,npaire)
   endif
   td2(:,:,:) = xcst * td2(:,:,:)
 
-  if (istret.ne.0) then
+  if (istret /= 0) then
      do j=1,ysize(2)
         ux2(:,j,:)=ux2(:,j,:)/pp2y(j)
      enddo
   endif
 
-  if (ncly1.eq.0) then
+  if (ncly1 == 0) then
 
      td2(:,1,:) = alsajy*ux2(:,2,:) + ux2(:,1,:) + alsajy*ux2(:,ysize(2),:) &
                 + td2(:,1,:)
@@ -1061,9 +1061,9 @@ subroutine multmatrix9(td2,ta2,ux2,npaire)
      td2(:,ysize(2),:) = alsajy*ux2(:,ysize(2)-1,:) + ux2(:,ysize(2),:) + alsajy*ux2(:,1,:) &
                        + td2(:,ysize(2),:)
 
-  elseif (ncly1.eq.1) then
+  elseif (ncly1 == 1) then
 
-  elseif (ncly1.eq.2) then
+  elseif (ncly1 == 2) then
 
      td2(:,1,:) = 0.
      td2(:,2,:) = alsa2y*ux2(:,1,:) + ux2(:,2,:) + alsa2y*ux2(:,3,:) &
@@ -1114,7 +1114,7 @@ subroutine implicit_schemes()
 !!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!
 
-if (isecondder.ne.5) then
+if (isecondder /= 5) then
 !!!!!!!!!!!!!!!!!!!!!!
      !7-DIAG !!
 !!!!!!!!!!!!!!!!!!!!!!
@@ -1145,7 +1145,7 @@ if (isecondder.ne.5) then
      aam(1 )=one
      aam(ny)=one
      ! BC on aamt
-     if (istret.eq.0) then
+     if (istret == 0) then
         do is = 1, numscalar
            aamt(1 ,is) = alpha_sc(is,1) + beta_sc(is,1)*(11.d0/6.d0/dy)
            aamt(ny,is) = alpha_sc(is,2) + beta_sc(is,2)*(11.d0/6.d0/dy)
@@ -1200,7 +1200,7 @@ if (isecondder.ne.5) then
      bbm(1 )=zero
      bbm(ny)=zero
      ! BC on bbmt
-     if (istret.eq.0) then
+     if (istret == 0) then
         do is = 1, numscalar
            bbmt(1 ,is) = beta_sc(is,1)*(-18.d0/6.d0/dy)
            bbmt(ny,is) = zero
@@ -1228,7 +1228,7 @@ if (isecondder.ne.5) then
      ccm(1 )=zero
      ccm(ny)=zero
      ! BC on ccmt
-     if (istret.eq.0) then
+     if (istret == 0) then
         do is = 1, numscalar
            ccmt(1 ,is) = beta_sc(is,1)*(9.d0/6.d0/dy)
            ccmt(ny,is) = zero
@@ -1256,7 +1256,7 @@ if (isecondder.ne.5) then
      rrm(1 )=zero
      rrm(ny)=zero
      ! BC on rrmt
-     if (istret.eq.0) then
+     if (istret == 0) then
         do is = 1, numscalar
            rrmt(1 ,is) = beta_sc(is,1)*(-2.d0/6.d0/dy)
            rrmt(ny,is) = zero
@@ -1301,7 +1301,7 @@ if (isecondder.ne.5) then
         ddm(ny)=zero
      endif
      ! BC on ddmt
-     if (istret.eq.0) then
+     if (istret == 0) then
         do is = 1, numscalar
            ddmt(1 ,is) = zero
            ddmt(ny,is) = beta_sc(is,2)*(-18.d0/6.d0/dy)
@@ -1317,7 +1317,7 @@ if (isecondder.ne.5) then
      eem=ccm
      eemt = ccmt
      ! BC on eemt
-     if (istret.eq.0) then
+     if (istret == 0) then
         do is = 1, numscalar
            eemt(1 ,is) = zero
            eemt(ny,is) = beta_sc(is,2)*(9.d0/6.d0/dy)
@@ -1333,7 +1333,7 @@ if (isecondder.ne.5) then
      qqm=rrm
      qqmt = rrmt
      ! BC on rrmt
-     if (istret.eq.0) then
+     if (istret == 0) then
         do is = 1, numscalar
            qqmt(1 ,is) = zero
            qqmt(ny,is) = beta_sc(is,2)*(-2.d0/6.d0/dy)
@@ -2102,7 +2102,7 @@ if (isecondder.ne.5) then
      qqm0=rrm0
   endif
 
-  if (isecondder.ne.5) then
+  if (isecondder /= 5) then
      ! velocity, ncly1 = 2, nclyn = 2
      call ludecomp7(aam,bbm,ccm,ddm,eem,qqm,ggm,hhm,ssm,rrm,&
           vvm,wwm,zzm,ny)
@@ -2280,28 +2280,28 @@ subroutine free_useless()
   implicit none
 
   ! Momentum
-  if (ncly1.ne.0 .or. nclyn.ne.0) then
+  if (ncly1 /= 0 .or. nclyn /= 0) then
     deallocate(aam0,bbm0,ccm0,ddm0,eem0,ggm0,hhm0,wwm0,zzm0)
     deallocate(rrm0,qqm0,vvm0,ssm0,l1m,l2m,l3m,u1m,u2m,u3m)
   endif
-  if (ncly1.ne.1 .or. nclyn.ne.1) then
+  if (ncly1 /= 1 .or. nclyn /= 1) then
     deallocate(aam10,bbm10,ccm10,ddm10,eem10,ggm10,hhm10,wwm10,zzm10)
     deallocate(rrm10,qqm10,vvm10,ssm10)
     deallocate(aam11,bbm11,ccm11,ddm11,eem11,ggm11,hhm11,wwm11,zzm11)
     deallocate(rrm11,qqm11,vvm11,ssm11)
   endif
-  if (ncly1.ne.2 .or. nclyn.ne.2) then
+  if (ncly1 /= 2 .or. nclyn /= 2) then
     deallocate(aam,bbm,ccm,ddm,eem,ggm,hhm,wwm,zzm)
     deallocate(rrm,qqm,vvm,ssm) 
     deallocate(sssm,zzzm,ttm,uum)
   endif
-  if (ncly1.ne.1 .or. nclyn.ne.2) then
+  if (ncly1 /= 1 .or. nclyn /= 2) then
     deallocate(aam120,bbm120,ccm120,ddm120,eem120,ggm120,hhm120,wwm120,zzm120)
     deallocate(rrm120,qqm120,vvm120,ssm120)
     deallocate(aam121,bbm121,ccm121,ddm121,eem121,ggm121,hhm121,wwm121,zzm121)
     deallocate(rrm121,qqm121,vvm121,ssm121)
   endif
-  if (ncly1.ne.2 .or. nclyn.ne.1) then
+  if (ncly1 /= 2 .or. nclyn /= 1) then
     deallocate(aam210,bbm210,ccm210,ddm210,eem210,ggm210,hhm210,wwm210,zzm210)
     deallocate(rrm210,qqm210,vvm210,ssm210)
     deallocate(aam211,bbm211,ccm211,ddm211,eem211,ggm211,hhm211,wwm211,zzm211)
@@ -2309,13 +2309,13 @@ subroutine free_useless()
   endif
 
   ! Scalars
-  if (nclyS1.ne.2 .or. nclySn.ne.2) then
+  if (nclyS1 /= 2 .or. nclySn /= 2) then
     deallocate(aamt,bbmt,ccmt,ddmt,eemt)
     deallocate(ggmt,hhmt,wwmt,zzmt)
     deallocate(rrmt,qqmt,vvmt,ssmt)
     deallocate(uumt,ttmt,sssmt,zzzmt) ! nona
   endif
-  if (nclyS1.ne.1 .or. nclySn.ne.1) then
+  if (nclyS1 /= 1 .or. nclySn /= 1) then
     ! npaire = 0
     deallocate(aam10t,bbm10t,ccm10t,ddm10t,eem10t)
     deallocate(ggm10t,hhm10t,wwm10t,zzm10t)
@@ -2325,13 +2325,13 @@ subroutine free_useless()
     deallocate(ggm11t,hhm11t,wwm11t,zzm11t)
     deallocate(rrm11t,qqm11t,vvm11t,ssm11t)
   endif
-  if (nclyS1.ne.0 .or. nclySn.ne.0) then
+  if (nclyS1 /= 0 .or. nclySn /= 0) then
     deallocate(aam0t,bbm0t,ccm0t,ddm0t,eem0t)
     deallocate(ggm0t,hhm0t,wwm0t,zzm0t)
     deallocate(rrm0t,qqm0t,vvm0t,ssm0t)
     deallocate(l1mt,l2mt,l3mt,u1mt,u2mt,u3mt)
   endif
-  if (nclyS1.ne.1 .or. nclySn.ne.2) then
+  if (nclyS1 /= 1 .or. nclySn /= 2) then
     ! npaire = 0
     deallocate(aam120t,bbm120t,ccm120t,ddm120t,eem120t)
     deallocate(ggm120t,hhm120t,wwm120t,zzm120t)
@@ -2341,7 +2341,7 @@ subroutine free_useless()
     deallocate(ggm121t,hhm121t,wwm121t,zzm121t)
     deallocate(rrm121t,qqm121t,vvm121t,ssm121t)
   endif
-  if (nclyS1.ne.2 .or. nclySn.ne.1) then
+  if (nclyS1 /= 2 .or. nclySn /= 1) then
     ! npaire = 0
     deallocate(aam210t,bbm210t,ccm210t,ddm210t,eem210t)
     deallocate(ggm210t,hhm210t,wwm210t,zzm210t)
@@ -2365,13 +2365,13 @@ subroutine finalize_implicit()
   implicit none
 
   ! velocity, ncly1 = 2, nclyn = 2
-  if (ncly1.eq.2 .and. nclyn.eq.2) then
+  if (ncly1 == 2 .and. nclyn == 2) then
     deallocate(aam,bbm,ccm,ddm,eem,ggm,hhm,wwm,zzm)
     deallocate(rrm,qqm,vvm,ssm)
     deallocate(sssm,zzzm,ttm,uum) ! nona
   endif
   ! velocity, ncly1 = 1, nclyn = 1
-  if (ncly1.eq.1 .and. nclyn.eq.1) then
+  if (ncly1 == 1 .and. nclyn == 1) then
     ! npaire = 0
     deallocate(aam10,bbm10,ccm10,ddm10,eem10,ggm10,hhm10,wwm10,zzm10)
     deallocate(rrm10,qqm10,vvm10,ssm10)
@@ -2380,12 +2380,12 @@ subroutine finalize_implicit()
     deallocate(rrm11,qqm11,vvm11,ssm11)
   endif
   ! velocity, ncly1 = 0, nclyn = 0
-  if (ncly1.eq.0 .and. nclyn.eq.0) then
+  if (ncly1 == 0 .and. nclyn == 0) then
     deallocate(aam0,bbm0,ccm0,ddm0,eem0,ggm0,hhm0,wwm0,zzm0)
     deallocate(rrm0,qqm0,vvm0,ssm0,l1m,l2m,l3m,u1m,u2m,u3m)
   endif
   ! velocity, ncly1 = 1, nclyn = 2
-  if (ncly1.eq.1 .and. nclyn.eq.2) then
+  if (ncly1 == 1 .and. nclyn == 2) then
     ! npaire = 0
     deallocate(aam120,bbm120,ccm120,ddm120,eem120,ggm120,hhm120,wwm120,zzm120)
     deallocate(rrm120,qqm120,vvm120,ssm120)
@@ -2394,7 +2394,7 @@ subroutine finalize_implicit()
     deallocate(rrm121,qqm121,vvm121,ssm121)
   endif
   ! velocity, ncly1 = 2, nclyn = 1
-  if (ncly1.eq.2 .and. nclyn.eq.1) then
+  if (ncly1 == 2 .and. nclyn == 1) then
     ! npaire = 0
     deallocate(aam210,bbm210,ccm210,ddm210,eem210,ggm210,hhm210,wwm210,zzm210)
     deallocate(rrm210,qqm210,vvm210,ssm210)
@@ -2403,14 +2403,14 @@ subroutine finalize_implicit()
     deallocate(rrm211,qqm211,vvm211,ssm211)
   endif
   ! scalar, ncly1 = 2, nclyn = 2
-  if (nclyS1.eq.2 .and. nclySn.eq.2) then
+  if (nclyS1 == 2 .and. nclySn == 2) then
     deallocate(aamt,bbmt,ccmt,ddmt,eemt)
     deallocate(ggmt,hhmt,wwmt,zzmt)
     deallocate(rrmt,qqmt,vvmt,ssmt)
     deallocate(uumt,ttmt,sssmt,zzzmt) ! nona
   endif
   ! scalar, ncly1 = 1, nclyn = 1
-  if (nclyS1.eq.1 .and. nclySn.eq.1) then
+  if (nclyS1 == 1 .and. nclySn == 1) then
     ! npaire = 0
     deallocate(aam10t,bbm10t,ccm10t,ddm10t,eem10t)
     deallocate(ggm10t,hhm10t,wwm10t,zzm10t)
@@ -2421,14 +2421,14 @@ subroutine finalize_implicit()
     deallocate(rrm11t,qqm11t,vvm11t,ssm11t)
   endif
   ! scalar, ncly1 = 0, nclyn = 0
-  if (nclyS1.eq.0 .and. nclySn.eq.0) then
+  if (nclyS1 == 0 .and. nclySn == 0) then
     deallocate(aam0t,bbm0t,ccm0t,ddm0t,eem0t)
     deallocate(ggm0t,hhm0t,wwm0t,zzm0t)
     deallocate(rrm0t,qqm0t,vvm0t,ssm0t)
     deallocate(l1mt,l2mt,l3mt,u1mt,u2mt,u3mt)
   endif
   ! scalar, ncly1 = 1, nclyn = 2
-  if (nclyS1.eq.1 .and. nclySn.eq.2) then
+  if (nclyS1 == 1 .and. nclySn == 2) then
     ! npaire = 0
     deallocate(aam120t,bbm120t,ccm120t,ddm120t,eem120t)
     deallocate(ggm120t,hhm120t,wwm120t,zzm120t)
@@ -2439,7 +2439,7 @@ subroutine finalize_implicit()
     deallocate(rrm121t,qqm121t,vvm121t,ssm121t)
   endif
   ! scalar, ncly1 = 2, nclyn = 1
-  if (nclyS1.eq.2 .and. nclySn.eq.1) then
+  if (nclyS1 == 2 .and. nclySn == 1) then
     ! npaire = 0
     deallocate(aam210t,bbm210t,ccm210t,ddm210t,eem210t)
     deallocate(ggm210t,hhm210t,wwm210t,zzm210t)

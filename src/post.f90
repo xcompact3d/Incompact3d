@@ -62,17 +62,17 @@ PROGRAM post
 
   nt = (filen-file1)/icrfile+1
 
-  if(comp_post .eq. 1) then
+  if(comp_post  ==  1) then
      read_phi=1; read_ibm=1; read_u=1
   endif
 
-  if(comp_visu .eq. 1) then
+  if(comp_visu  ==  1) then
      call init_coarser_mesh_statV(nvisu,nvisu,nvisu,.true.)    !start from 1 == true
      read_phi=1; read_u=1; read_ibm=1
   endif
-  if ( iscalar.eq.0) read_phi=0
-  if ( ivirt  .eq.0) read_ibm=0
-  if ( read_ibm .eq. 1 ) then
+  if ( iscalar == 0) read_phi=0
+  if ( ivirt   == 0) read_ibm=0
+  if ( read_ibm  ==  1 ) then
      call decomp_2d_read_one(1,ep1,'./data/ibm0000')
   endif
 
@@ -95,14 +95,14 @@ PROGRAM post
 
      !READ DATA
      call cpu_time(trstart)
-     if ( read_phi .eq. 1 ) then
+     if ( read_phi  ==  1 ) then
         do is=1, numscalar
            write(filename,"('./data/phi',I1.1,I4.4)") is, ifile
            call decomp_2d_read_one(1,phi1(:,:,:,is),filename)
         enddo
         call test_scalar_min_max(phi1)
      endif
-     if ( read_u .eq. 1 ) then
+     if ( read_u  ==  1 ) then
         write(filename,"('./data/ux',I4.4)") ifile
         call decomp_2d_read_one(1,ux1,filename)
         write(filename,"('./data/uy',I4.4)") ifile
@@ -113,13 +113,13 @@ PROGRAM post
      endif
      call cpu_time(trend)
 
-     if (ivisu.ne.0) then
-        if (comp_visu .eq. 1) then
+     if (ivisu /= 0) then
+        if (comp_visu  ==  1) then
            call VISU_INSTA(ux1,uy1,uz1,phi1,ep1,.True.)
         endif
      endif
-     if (ipost.ne.0) then
-        if (comp_post .eq. 1) then
+     if (ipost /= 0) then
+        if (comp_post  ==  1) then
            call postprocessing(ux1,uy1,uz1,phi1,ep1)
         endif
      endif
