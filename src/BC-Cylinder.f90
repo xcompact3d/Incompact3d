@@ -67,7 +67,7 @@ contains
     real(mytype)               :: cexx,ceyy,dist_axi
 
     zeromach=one
-    do while ((one + zeromach / two) .gt. one)
+    do while ((one + zeromach / two)  >  one)
        zeromach = zeromach/two
     end do
     zeromach = 1.0e1*zeromach
@@ -78,7 +78,7 @@ contains
 !    cexx=cex+ubcx*t
 !    ceyy=cey+ubcy*t
     ! Update center of moving Cylinder
-    if (t.ne.0.) then
+    if (t /= 0.) then
        cexx=cex+ubcx*(t-ifirst*dt)
        ceyy=cey+ubcy*(t-ifirst*dt)
     else
@@ -95,7 +95,7 @@ contains
           do i=nxi,nxf
              xm=real(i-1,mytype)*dx
              r=sqrt((xm-cexx)**two+(ym-ceyy)**two)
-             if (r-ra.gt.zeromach) then
+             if (r-ra > zeromach) then
                 cycle
              endif
              epsi(i,j,k)=remp
@@ -147,7 +147,7 @@ contains
        enddo
     enddo
 
-    if (iscalar.eq.1) then
+    if (iscalar == 1) then
        do is=1, numscalar
           do k=1,xsize(3)
              do j=1,xsize(2)
@@ -181,21 +181,21 @@ contains
     uxmin=1609.
     do k=1,xsize(3)
        do j=1,xsize(2)
-          if (ux(nx-1,j,k).gt.uxmax) uxmax=ux(nx-1,j,k)
-          if (ux(nx-1,j,k).lt.uxmin) uxmin=ux(nx-1,j,k)
+          if (ux(nx-1,j,k) > uxmax) uxmax=ux(nx-1,j,k)
+          if (ux(nx-1,j,k) < uxmin) uxmin=ux(nx-1,j,k)
        enddo
     enddo
 
     call MPI_ALLREDUCE(uxmax,uxmax1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(uxmin,uxmin1,1,real_type,MPI_MIN,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
-    if (u1.eq.zero) then
+    if (u1 == zero) then
        cx=(half*(uxmax1+uxmin1))*gdt(itr)*udx
-    elseif (u1.eq.one) then
+    elseif (u1 == one) then
        cx=uxmax1*gdt(itr)*udx
-    elseif (u1.eq.two) then
+    elseif (u1 == two) then
        cx=u2*gdt(itr)*udx    !works better
     else
        cx=(half*(u1+u2))*gdt(itr)*udx
@@ -210,11 +210,11 @@ contains
     enddo
 
     if (iscalar==1) then
-       if (u2.eq.zero) then
+       if (u2 == zero) then
           cx=(half*(uxmax1+uxmin1))*gdt(itr)*udx
-       elseif (u2.eq.one) then
+       elseif (u2 == one) then
           cx=uxmax1*gdt(itr)*udx
-       elseif (u2.eq.two) then
+       elseif (u2 == two) then
           cx=u2*gdt(itr)*udx    !works better
        else
           stop
@@ -256,9 +256,9 @@ contains
 
     ux1=zero; uy1=zero; uz1=zero
 
-    if (iin.ne.0) then
+    if (iin /= 0) then
        call system_clock(count=code)
-       if (iin.eq.2) code=0
+       if (iin == 2) code=0
        call random_seed(size = ii)
        call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /))
 
@@ -279,8 +279,8 @@ contains
        !modulation of the random noise
        do k=1,xsize(3)
           do j=1,xsize(2)
-             if (istret.eq.0) y=(j+xstart(2)-1-1)*dy-yly/2.
-             if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/2.
+             if (istret == 0) y=(j+xstart(2)-1-1)*dy-yly/2.
+             if (istret /= 0) y=yp(j+xstart(2)-1)-yly/2.
              um=exp(-zptwo*y*y)
              do i=1,xsize(1)
                 ux1(i,j,k)=um*ux1(i,j,k)
@@ -303,7 +303,7 @@ contains
     enddo
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init end ok'
+    if (nrank  ==  0) print *,'# init end ok'
 #endif
 
     return

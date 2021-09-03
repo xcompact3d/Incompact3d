@@ -51,22 +51,22 @@ endif
 
 call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
      MPI_ORDER_FORTRAN, data_type, newtype, ierror)
-if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
 call MPI_TYPE_COMMIT(newtype,ierror)
-if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
 call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
      MPI_MODE_RDONLY, MPI_INFO_NULL, &
      fh, ierror)
-if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_FILE_OPEN "//trim(filename))
+if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_OPEN "//trim(filename))
 disp = 0_MPI_OFFSET_KIND
 call MPI_FILE_SET_VIEW(fh,disp,data_type, &
      newtype,'native',MPI_INFO_NULL,ierror)
-if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_FILE_SET_VIEW")
+if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_SET_VIEW")
 call MPI_FILE_READ_ALL(fh, var, &
      subsizes(1)*subsizes(2)*subsizes(3), &
      data_type, MPI_STATUS_IGNORE, ierror)
-if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_FILE_READ_ALL")
+if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_READ_ALL")
 call MPI_FILE_CLOSE(fh,ierror)
-if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_FILE_CLOSE")
+if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_CLOSE")
 call MPI_TYPE_FREE(newtype,ierror)
-if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")

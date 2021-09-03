@@ -99,7 +99,7 @@ subroutine parameter(input_i3d)
   NAMELIST/ADMParam/Ndiscs,ADMcoords,C_T,aind,iturboutput,rho_air
 
 #ifdef DEBG
-  if (nrank .eq. 0) print *,'# parameter start'
+  if (nrank  ==  0) print *,'# parameter start'
 #endif
 
   if (nrank==0) then
@@ -127,14 +127,14 @@ subroutine parameter(input_i3d)
   read(10, nml=NumOptions); rewind(10)
   read(10, nml=InOutParam); rewind(10)
   read(10, nml=Statistics); rewind(10)
-  if (iibm.ne.0) then
+  if (iibm /= 0) then
      read(10, nml=ibmstuff); rewind(10)
   endif
-  if (nprobes.gt.0) then
+  if (nprobes > 0) then
      call setup_probes()
      read(10, nml=ProbesParam); rewind(10)
   endif
-  if (iforces.eq.1) then
+  if (iforces == 1) then
      allocate(xld(nvol), xrd(nvol), yld(nvol), yud(nvol))!, zld(nvol), zrd(nvol))
      read(10, nml=ForceCVs); rewind(10)
   endif
@@ -144,7 +144,7 @@ subroutine parameter(input_i3d)
   nclyS1 = ncly1; nclySn = nclyn
   nclzS1 = nclz1; nclzSn = nclzn
   
-  if (numscalar.ne.0) then
+  if (numscalar /= 0) then
      iscalar = 1
 
      !! Allocate scalar arrays and set sensible defaults
@@ -156,7 +156,7 @@ subroutine parameter(input_i3d)
      ri(:) = zero
      uset(:) = zero
      cp(:) = zero
-     if (iimplicit.gt.0) then
+     if (iimplicit > 0) then
         allocate(xcst_sc(numscalar))
         xcst_sc(:) = zero
         allocate(alpha_sc(numscalar,2), beta_sc(numscalar,2), g_sc(numscalar,2))
@@ -180,8 +180,8 @@ subroutine parameter(input_i3d)
   endif
 
   if (ilmn) then
-     if (istret.ne.0) then
-        if (nrank.eq.0) then
+     if (istret /= 0) then
+        if (nrank == 0) then
            print *, "WARNING: LMN solver does not currently support stretching!"
            stop
         endif
@@ -195,20 +195,20 @@ subroutine parameter(input_i3d)
      enddo
 
      if (imultispecies) then
-        if (primary_species.lt.1) then
-           if (nrank.eq.0) then
+        if (primary_species < 1) then
+           if (nrank == 0) then
               print *, "Error: you must set a primary species for multispecies flow"
               print *, "       solver will enforce Y_p = 1 - sum_s Y_s, s != p."
               stop
            endif
         else if (.not.massfrac(primary_species)) then
-           if (nrank.eq.0) then
+           if (nrank == 0) then
               print *, "Error: primary species must be a massfraction!"
            endif
         endif
      endif
   endif
-  if (numscalar.ne.0) then
+  if (numscalar /= 0) then
      read(10, nml=ScalarParam); rewind(10)
   endif
   ! !! These are the 'optional'/model parameters
@@ -217,18 +217,18 @@ subroutine parameter(input_i3d)
      nu0nu=four
      cnu=0.44_mytype
   endif
-  if(ilesmod.ne.0) then
+  if(ilesmod /= 0) then
      read(10, nml=LESModel); rewind(10)
   endif
-  if (itype.eq.itype_tbl) then
+  if (itype == itype_tbl) then
      read(10, nml=Tripping); rewind(10)
   endif
-  if (itype.eq.itype_abl) then
+  if (itype == itype_abl) then
      read(10, nml=ABL); rewind(10)
   endif
-  if (iturbine.eq.1) then
+  if (iturbine == 1) then
      read(10, nml=ALMParam); rewind(10)
-  else if (iturbine.eq.2) then
+  else if (iturbine == 2) then
      read(10, nml=ADMParam); rewind(10)
   endif
   ! read(10, nml=TurbulenceWallModel)
@@ -237,21 +237,21 @@ subroutine parameter(input_i3d)
 
   ! allocate(sc(numscalar),cp(numscalar),ri(numscalar),group(numscalar))
 
-  if (nclx1.eq.0.and.nclxn.eq.0) then
+  if (nclx1 == 0.and.nclxn == 0) then
      nclx=.true.
      nxm=nx
   else
      nclx=.false.
      nxm=nx-1
   endif
-  if (ncly1.eq.0.and.nclyn.eq.0) then
+  if (ncly1 == 0.and.nclyn == 0) then
      ncly=.true.
      nym=ny
   else
      ncly=.false.
      nym=ny-1
   endif
-  if (nclz1.eq.0.and.nclzn.eq.0) then
+  if (nclz1 == 0.and.nclzn == 0) then
      nclz=.true.
      nzm=nz
   else
@@ -285,10 +285,10 @@ subroutine parameter(input_i3d)
   endif
 
   ! 2D snapshot is not compatible with coarse visualization
-  if (output2D.ne.0) nvisu = 1
+  if (output2D /= 0) nvisu = 1
 #ifdef ADIOS2
-  if (nvisu .ne. 1) then
-     if (nrank .eq. 0) then
+  if (nvisu  /=  1) then
+     if (nrank  ==  0) then
         print *, "ADIOS2 output is not compatible with coarse visualisation"
         print *, "disabling coarse visualisation"
         print *, "To compress the IO, see ADIOS2 options"
@@ -301,26 +301,26 @@ subroutine parameter(input_i3d)
 #endif
 #endif
 
-  if (iimplicit.ne.0) then
-     if ((itimescheme.eq.5).or.(itimescheme.eq.6)) then
+  if (iimplicit /= 0) then
+     if ((itimescheme == 5).or.(itimescheme == 6)) then
         print *,'Error: implicit Y diffusion not yet compatible with RK time schemes'
         stop
      endif
-     if (isecondder.eq.5) then
+     if (isecondder == 5) then
         print *, "Warning : support for implicit Y diffusion and isecondder=5 is experimental"
      endif
-     if (iimplicit.eq.1) then
+     if (iimplicit == 1) then
         xcst = dt * xnu
-     else if (iimplicit.eq.2) then
+     else if (iimplicit == 2) then
         xcst = dt * xnu * half
      else
         print *, 'Error: wrong value for iimplicit ', iimplicit
         stop
      endif
-     if (iscalar.eq.1) xcst_sc = xcst / sc
+     if (iscalar == 1) xcst_sc = xcst / sc
   endif
 
-  if (itype.eq.itype_tbl.and.A_tr .gt. 0.0)  print *, "TBL tripping is active"
+  if (itype == itype_tbl.and.A_tr  >  0.0)  print *, "TBL tripping is active"
 
 #ifdef DOUBLE_PREC
   anglex = dsin(pi*angle/180._mytype)
@@ -335,40 +335,40 @@ subroutine parameter(input_i3d)
   if (nrank==0) call system('mkdir data out probes 2> /dev/null')
 
 #ifdef DEBG
-  if (nrank .eq. 0) print *,'# parameter input.i3d done'
+  if (nrank  ==  0) print *,'# parameter input.i3d done'
 #endif
   if (nrank==0) then
      print *,'==========================================================='
-     if (itype.eq.itype_user) then
+     if (itype == itype_user) then
         print *,'User-defined simulation'
-     elseif (itype.eq.itype_lockexch) then
+     elseif (itype == itype_lockexch) then
         print *,'Simulating lock-exchange'
-     elseif (itype.eq.itype_tgv) then
+     elseif (itype == itype_tgv) then
         print *,'Simulating TGV'
-     elseif (itype.eq.itype_channel) then
+     elseif (itype == itype_channel) then
         print *,'Simulating channel'
-     elseif (itype.eq.itype_hill) then
+     elseif (itype == itype_hill) then
         print *,'Simulating periodic hill'
-     elseif (itype.eq.itype_cyl) then
+     elseif (itype == itype_cyl) then
         print *,'Simulating cylinder'
-     elseif (itype.eq.itype_dbg) then
+     elseif (itype == itype_dbg) then
         print *,'Debug schemes'
-     elseif (itype.eq.itype_mixlayer) then
+     elseif (itype == itype_mixlayer) then
         print *,'Mixing layer'
-     elseif (itype.eq.itype_jet) then
+     elseif (itype == itype_jet) then
         print *,'Jet'
-     elseif (itype.eq.itype_tbl) then
+     elseif (itype == itype_tbl) then
         print *,'Turbulent boundary layer'
-     elseif (itype.eq.itype_abl) then
+     elseif (itype == itype_abl) then
         print *,'Atmospheric boundary layer'
-     elseif (itype.eq.itype_uniform) then
+     elseif (itype == itype_uniform) then
         print *,'Uniform flow'
      else
         print *,'Unknown itype: ', itype
         stop
      endif
      print *,'==========================================================='
-     if (itype.eq.itype_channel) then
+     if (itype == itype_channel) then
        if (.not.cpg) then
          print *,'Channel forcing with constant flow rate (CFR)'
          write(*,"(' Re_cl                  : ',F17.3)") re
@@ -387,24 +387,24 @@ subroutine parameter(input_i3d)
      print *,'==========================================================='
      write(*,"(' Time step dt           : ',F17.8)") dt
      !
-     if (itimescheme.eq.1) then
+     if (itimescheme == 1) then
        !print *,'Temporal scheme        : Forwards Euler'
        write(*,"(' Temporal scheme        : ',A20)") "Forwards Euler"
-     elseif (itimescheme.eq.2) then
+     elseif (itimescheme == 2) then
        !print *,'Temporal scheme        : Adams-bashforth 2'
        write(*,"(' Temporal scheme        : ',A20)") "Adams-bashforth 2"
-     elseif (itimescheme.eq.3) then
+     elseif (itimescheme == 3) then
        !print *,'Temporal scheme        : Adams-bashforth 3'
        write(*,"(' Temporal scheme        : ',A20)") "Adams-bashforth 3"
-     elseif (itimescheme.eq.4) then
+     elseif (itimescheme == 4) then
        !print *,'Temporal scheme        : Adams-bashforth 4'
        write(*,"(' Temporal scheme        : ',A20)") "Adams-bashforth 4"
        print *,'Error: Adams-bashforth 4 not implemented!'
        stop
-     elseif (itimescheme.eq.5) then
+     elseif (itimescheme == 5) then
        !print *,'Temporal scheme        : Runge-kutta 3'
        write(*,"(' Temporal scheme        : ',A20)") "Runge-kutta 3"
-     elseif (itimescheme.eq.6) then
+     elseif (itimescheme == 6) then
        !print *,'Temporal scheme        : Runge-kutta 4'
        write(*,"(' Temporal scheme        : ',A20)") "Runge-kutta 4"
        print *,'Error: Runge-kutta 4 not implemented!'
@@ -414,24 +414,24 @@ subroutine parameter(input_i3d)
        stop
      endif
      !
-     if (iimplicit.ne.0) then
-       if (iimplicit.eq.1) then
+     if (iimplicit /= 0) then
+       if (iimplicit == 1) then
          write(*,"('                          ',A40)") "With backward Euler for Y diffusion"
-       else if (iimplicit.eq.2) then
+       else if (iimplicit == 2) then
          write(*,"('                          ',A40)") "With CN for Y diffusion"
        endif
      endif
      !
-     if (ilesmod.ne.0) then
+     if (ilesmod /= 0) then
        print *,'                   : DNS'
      else
-       if (jles.eq.1) then
+       if (jles == 1) then
           print *,'                   : Phys Smag'
-       else if (jles.eq.2) then
+       else if (jles == 2) then
           print *,'                   : Phys WALE'
-       else if (jles.eq.3) then
+       else if (jles == 3) then
           print *,'                   : Phys dyn. Smag'
-       else if (jles.eq.4) then
+       else if (jles == 4) then
           print *,'                   : iSVV'
        else
        endif
@@ -453,27 +453,27 @@ subroutine parameter(input_i3d)
      write(*,"(' nu0nu                  : ',F17.8)") nu0nu
      write(*,"(' cnu                    : ',F17.8)") cnu
      print *,'==========================================================='
-     if (iscalar.eq.0) write(*,"(' Scalar                 : ',A17)") "off"
-     if (iscalar.eq.1) write(*,"(' Scalar                 : ',A17)") "on"
+     if (iscalar == 0) write(*,"(' Scalar                 : ',A17)") "off"
+     if (iscalar == 1) write(*,"(' Scalar                 : ',A17)") "on"
      write(*,"(' numscalar              : ',I17)") numscalar
-     if (iscalar.eq.1) then
+     if (iscalar == 1) then
        do is=1, numscalar
           write(*,"(' Schmidt number sc(',I2,')  : ',F17.8)") is, sc(is)
           write(*,"(' Richardson n.  ri(',I2,')  : ',F17.8)") is, ri(is)
-          if (scalar_lbound(is).gt.-huge(one)) then
+          if (scalar_lbound(is) > -huge(one)) then
              write(*,"(' Lower bound      (',I2,')  : ',F17.8)") is, scalar_lbound(is)
           else
              ! This is the default option, no information printed in the listing
           endif
-          if (scalar_ubound(is).lt.huge(one)) then
+          if (scalar_ubound(is) < huge(one)) then
              write(*,"(' Upper bound      (',I2,')  : ',F17.8)") is, scalar_ubound(is)
           else
              ! This is the default option, no information printed in the listing
           endif
-          if (iscalar.eq.1) then
-             if (nclxS1.eq.1 .or. nclxSn.eq.1 .or. &
-                 nclyS1.eq.1 .or. nclySn.eq.1 .or. &
-                 nclzS1.eq.1 .or. nclzSn.eq.1) then
+          if (iscalar == 1) then
+             if (nclxS1 == 1 .or. nclxSn == 1 .or. &
+                 nclyS1 == 1 .or. nclySn == 1 .or. &
+                 nclzS1 == 1 .or. nclzSn == 1) then
                 if (sc_even(is)) then
                    ! This is the default option, no information printed in the listing
                 else
@@ -492,13 +492,13 @@ subroutine parameter(input_i3d)
      write(*,"(' spinup_time            : ',I17)") spinup_time
      write(*,"(' wrotation              : ',F17.8)") wrotation
      print *,'==========================================================='
-     if (iibm.eq.0) write(*,"(' Immersed boundary      : ',A17)") "off"
-     if (iibm.gt.1) then
+     if (iibm == 0) write(*,"(' Immersed boundary      : ',A17)") "off"
+     if (iibm > 1) then
       write(*,"(' Immersed boundary      : ',A17)") "on"
       write(*,"(' iibm                   : ',I17)") iibm
      end if
-     if (iibm.eq.1) print *,'Simple immersed boundary method'
-     if (iibm.eq.2) then
+     if (iibm == 1) print *,'Simple immersed boundary method'
+     if (iibm == 2) then
        print *,'Lagrangian polynomial reconstruction'
        print *,'==========================================================='
        write(*,"(' npif                   : ',I17)") npif
@@ -512,7 +512,7 @@ subroutine parameter(input_i3d)
      write(*,"(' ncly1, nclyn           : ',I15,',',I1 )") ncly1,nclyn
      write(*,"(' nclz1, nclzn           : ',I15,',',I1 )") nclz1,nclzn
      print *,'==========================================================='
-     if ((iscalar.eq.1).or.(ilmn)) then
+     if ((iscalar == 1).or.(ilmn)) then
        write(*,"(' Boundary condition scalar field: ')")
        write(*,"(' nclxS1, nclxSn         : ',I15,',',I1 )") nclxS1,nclxSn
        write(*,"(' nclyS1, nclySn         : ',I15,',',I1 )") nclyS1,nclySn
@@ -573,7 +573,7 @@ subroutine parameter(input_i3d)
         write(*,"(' dens1 and dens2    : ',F6.2' ',F6.2)") dens1, dens2
         write(*,"(' Prandtl number Re  : ',F15.8)") prandtl
      endif
-     if (angle.ne.0.) write(*,"(' Solid rotation     : ',F6.2)") angle
+     if (angle /= 0.) write(*,"(' Solid rotation     : ',F6.2)") angle
      print *, ' '
 
      !! Print case-specific information
@@ -585,16 +585,16 @@ subroutine parameter(input_i3d)
      print *,'==========================================================='
   endif
   
-  if (iibm.eq.3) then ! This is only for the Cubic Spline Reconstruction
+  if (iibm == 3) then ! This is only for the Cubic Spline Reconstruction
      npif=npif+1
-     if (iimplicit.ne.0) then
+     if (iimplicit /= 0) then
         print *,'Error: implicit Y diffusion not yet compatible with iibm=3'
         stop
      endif
   endif
 
 #ifdef DEBG
-  if (nrank .eq. 0) print *,'# parameter done'
+  if (nrank  ==  0) print *,'# parameter done'
 #endif
 
   return

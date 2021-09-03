@@ -54,13 +54,13 @@ program xcompact3d
      t=t0 + (itime0 + itime + 1 - ifirst)*dt
      call simu_stats(2)
 
-     if (iturbine.ne.0) call compute_turbines(ux1, uy1, uz1)
+     if (iturbine /= 0) call compute_turbines(ux1, uy1, uz1)
 
-     if (iin.eq.3.and.mod(itime,ntimesteps)==1) then
+     if (iin == 3.and.mod(itime,ntimesteps)==1) then
         call read_inflow(ux_inflow,uy_inflow,uz_inflow,itime/ntimesteps)
      endif
 
-     if ((itype.eq.itype_abl.or.iturbine.ne.0).and.(ifilter.ne.0).and.(ilesmod.ne.0)) then
+     if ((itype == itype_abl.or.iturbine /= 0).and.(ifilter /= 0).and.(ilesmod /= 0)) then
         call filter(C_filter)
         call apply_spatial_filter(ux1,uy1,uz1,phi1)
      endif
@@ -70,10 +70,10 @@ program xcompact3d
         call set_fluid_properties(rho1,mu1)
         call boundary_conditions(rho1,ux1,uy1,uz1,phi1,ep1)
 
-if (imove.eq.1) then ! update epsi for moving objects
-  if ((iibm.eq.2).or.(iibm.eq.3)) then
+if (imove == 1) then ! update epsi for moving objects
+  if ((iibm == 2).or.(iibm == 3)) then
      call genepsi3d(ep1)
-  else if (iibm.eq.1) then
+  else if (iibm == 1) then
      call body(ux1,uy1,uz1,ep1)
   endif
 endif
@@ -156,18 +156,18 @@ subroutine init_xcompact3d()
 
   !! Initialise MPI
   call MPI_INIT(code)
-  if (code.ne.0) call decomp_2d_abort(code, "MPI_INIT")
+  if (code /= 0) call decomp_2d_abort(code, "MPI_INIT")
   call MPI_COMM_RANK(MPI_COMM_WORLD,nrank,code)
-  if (code.ne.0) call decomp_2d_abort(code, "MPI_COMM_RANK")
+  if (code /= 0) call decomp_2d_abort(code, "MPI_COMM_RANK")
   call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,code)
-  if (code.ne.0) call decomp_2d_abort(code, "MPI_COMM_SIZE")
+  if (code /= 0) call decomp_2d_abort(code, "MPI_COMM_SIZE")
 
   ! Handle input file like a boss -- GD
   nargin=command_argument_count()
   if (nargin <1) then
      InputFN='input.i3d'
      if (nrank==0) print*, 'Xcompact3d is run with the default file -->', InputFN
-  elseif (nargin.ge.1) then
+  elseif (nargin >= 1) then
      if (nrank==0) print*, 'Program is run with the provided file -->', InputFN
 
      call get_command_argument(1,InputFN,FNLength,status)
@@ -180,7 +180,7 @@ subroutine init_xcompact3d()
   endif
 
 #ifdef ADIOS2
-  if (nrank .eq. 0) then
+  if (nrank  ==  0) then
      print *, " WARNING === WARNING === WARNING === WARNING === WARNING"
      print *, " WARNING: Running Xcompact3d with ADIOS2"
      print *, "          this is currently experimental"
@@ -211,18 +211,18 @@ subroutine init_xcompact3d()
   call decomp_2d_poisson_init()
   call decomp_info_init(nxm,nym,nzm,phG)
 
-  if (ilesmod.ne.0) then
-     if (jles.gt.0)  call init_explicit_les()
+  if (ilesmod /= 0) then
+     if (jles > 0)  call init_explicit_les()
   endif
 
-  if ((iibm.eq.2).or.(iibm.eq.3)) then
+  if ((iibm == 2).or.(iibm == 3)) then
      call genepsi3d(ep1)
-  else if (iibm.eq.1) then
+  else if (iibm == 1) then
      call epsi_init(ep1)
      call body(ux1,uy1,uz1,ep1)
   endif
 
-  if (iforces.eq.1) then
+  if (iforces == 1) then
      call init_forces()
      if (irestart==1) then
         call restart_forces(0)
@@ -231,7 +231,7 @@ subroutine init_xcompact3d()
 
   !####################################################################
   ! initialise visu
-  if (ivisu.ne.0) call visu_init()
+  if (ivisu /= 0) call visu_init()
   ! compute diffusion number of simulation
   call compute_cfldiff()
   !####################################################################
@@ -245,9 +245,9 @@ subroutine init_xcompact3d()
 !     ux1(:,:,:)=ux1(:,:,:)-0.5
   endif
 
-  if ((iibm.eq.2).or.(iibm.eq.3)) then
+  if ((iibm == 2).or.(iibm == 3)) then
      call genepsi3d(ep1)
-  else if ((iibm.eq.1).or.(iibm.eq.3)) then
+  else if ((iibm == 1).or.(iibm == 3)) then
      call body(ux1,uy1,uz1,ep1)
   endif
 
@@ -260,15 +260,15 @@ subroutine init_xcompact3d()
 
   call init_probes()
 
-  if (iturbine.ne.0) call init_turbines(ux1, uy1, uz1)
+  if (iturbine /= 0) call init_turbines(ux1, uy1, uz1)
 
   if (itype==2) then
-     if(nrank.eq.0)then
+     if(nrank == 0)then
         open(42,file='time_evol.dat',form='formatted')
      endif
   endif
   if (itype==5) then
-     if(nrank.eq.0)then
+     if(nrank == 0)then
         open(38,file='forces.dat',form='formatted')
      endif
   endif
@@ -291,12 +291,12 @@ subroutine finalise_xcompact3d()
   integer :: code
   
   if (itype==2) then
-     if(nrank.eq.0)then
+     if(nrank == 0)then
         close(42)
      endif
   endif
   if (itype==5) then
-     if(nrank.eq.0)then
+     if(nrank == 0)then
         close(38)
      endif
   endif
@@ -306,6 +306,6 @@ subroutine finalise_xcompact3d()
   call visu_finalise()
   call decomp_2d_finalize
   CALL MPI_FINALIZE(code)
-  if (code.ne.0) call decomp_2d_abort(code, "MPI_FINALIZE")
+  if (code /= 0) call decomp_2d_abort(code, "MPI_FINALIZE")
 
 endsubroutine finalise_xcompact3d

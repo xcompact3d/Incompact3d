@@ -252,7 +252,7 @@ contains
 
     nvect3=(ph1%zen(1)-ph1%zst(1)+1)*(ph1%zen(2)-ph1%zst(2)+1)*nzmsize
 
-    if (iibm.eq.0) then
+    if (iibm == 0) then
        ta1(:,:,:) = ux1(:,:,:)
        tb1(:,:,:) = uy1(:,:,:)
        tc1(:,:,:) = uz1(:,:,:)
@@ -266,11 +266,11 @@ contains
 
     call derxvp(pp1,ta1,di1,sx,cfx6,csx6,cwx6,xsize(1),nxmsize,xsize(2),xsize(3),0)
 
-    if (ilmn.and.(nlock.gt.0)) then
-       if ((nlock.eq.1).and.(.not.ivarcoeff)) then
+    if (ilmn.and.(nlock > 0)) then
+       if ((nlock == 1).and.(.not.ivarcoeff)) then
           !! Approximate -div(rho u) using ddt(rho)
           call extrapol_drhodt(ta1, rho1, drho1)
-       elseif ((nlock.eq.2).or.ivarcoeff) then
+       elseif ((nlock == 2).or.ivarcoeff) then
           !! Need to check our error against divu constraint
           !! Or else we are solving the variable-coefficient Poisson equation
           call transpose_z_to_y(-divu3, ta2)
@@ -317,7 +317,7 @@ contains
     do k=1,nzmsize
        do j=ph1%zst(2),ph1%zen(2)
           do i=ph1%zst(1),ph1%zen(1)
-             if (pp3(i,j,k).gt.tmax) tmax=pp3(i,j,k)
+             if (pp3(i,j,k) > tmax) tmax=pp3(i,j,k)
              tmoy=tmoy+abs(pp3(i,j,k))
           enddo
        enddo
@@ -325,11 +325,11 @@ contains
     tmoy=tmoy/nvect3
 
     call MPI_REDUCE(tmax,tmax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
     call MPI_REDUCE(tmoy,tmoy1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
 
-    if ((nrank==0).and.(nlock.gt.0)) then
+    if ((nrank==0).and.(nlock > 0)) then
        if (nlock==2) then
           print *,'DIV U  max mean=',real(tmax1,4),real(tmoy1/real(nproc),4)
        else
@@ -400,13 +400,13 @@ contains
     call interxpv(pz1,pgz1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
          nxmsize,xsize(1),xsize(2),xsize(3),1)
 
-    if (iforces.eq.1) then
+    if (iforces == 1) then
        call interxpv(ppi1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
             nxmsize,xsize(1),xsize(2),xsize(3),1)
     endif
 
     !we are in X pencils:
-    if (nclx1.eq.2) then
+    if (nclx1 == 2) then
        do k=1,xsize(3)
           do j=1,xsize(2)
              dpdyx1(j,k)=py1(1,j,k)/gdt(itr)
@@ -414,7 +414,7 @@ contains
           enddo
        enddo
     endif
-    if (nclxn.eq.2) then
+    if (nclxn == 2) then
        do k=1,xsize(3)
           do j=1,xsize(2)
              dpdyxn(j,k)=py1(nx,j,k)/gdt(itr)
@@ -423,7 +423,7 @@ contains
        enddo
     endif
 
-    if (ncly1.eq.2) then
+    if (ncly1 == 2) then
        if (xstart(2)==1) then
           do k=1,xsize(3)
              do i=1,xsize(1)
@@ -433,7 +433,7 @@ contains
           enddo
        endif
     endif
-    if (nclyn.eq.2) then
+    if (nclyn == 2) then
        if (xend(2)==ny) then
           do k=1,xsize(3)
              do i=1,xsize(1)
@@ -444,7 +444,7 @@ contains
        endif
     endif
 
-    if (nclz1.eq.2) then
+    if (nclz1 == 2) then
        if (xstart(3)==1) then
           do j=1,xsize(2)
              do i=1,xsize(1)
@@ -454,7 +454,7 @@ contains
           enddo
        endif
     endif
-    if (nclzn.eq.2) then
+    if (nclzn == 2) then
        if (xend(3)==nz) then
           do j=1,xsize(2)
              do i=1,xsize(1)
@@ -489,11 +489,11 @@ contains
     logical, dimension(2) :: dummy_periods
 
     call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, dims, dummy_periods, dummy_coords, code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_CART_GET")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_CART_GET")
 
     !********NCLX==2*************************************
     !we are in X pencils:
-    if ((itype.eq.itype_channel.or.itype.eq.itype_uniform).and.(nclx1==2.and.nclxn==2)) then
+    if ((itype == itype_channel.or.itype == itype_uniform).and.(nclx1==2.and.nclxn==2)) then
 
        !Computatation of the flow rate Inflow/Outflow
        ut1=zero
@@ -503,7 +503,7 @@ contains
           enddo
        enddo
        call MPI_ALLREDUCE(ut1,ut11,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+       if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
        ut11=ut11/(real(ny*nz,mytype))
        ut=zero
        do k=1,xsize(3)
@@ -512,7 +512,7 @@ contains
           enddo
        enddo
        call MPI_ALLREDUCE(ut,utt,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+       if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
        utt=utt/(real(ny*nz,mytype))
        if (nrank==0) print *,'Flow rate x I/O/O-I',real(ut11,4),real(utt,4),real(utt-ut11,4)
        do k=1,xsize(3)
@@ -523,7 +523,7 @@ contains
 
     endif
 
-    if (itype.eq.itype_tbl) call tbl_flrt(ux,uy,uz)
+    if (itype == itype_tbl) call tbl_flrt(ux,uy,uz)
 
     if (nclx1==2) then
        do k=1,xsize(3)
@@ -1052,7 +1052,7 @@ contains
     IF (poissiter.EQ.0) THEN
        errloc = SUM(dv3**2)
        CALL MPI_ALLREDUCE(errloc,divup3norm,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+       if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
        divup3norm = SQRT(divup3norm / nxm / nym / nzm)
 
        IF (nrank.EQ.0) THEN
@@ -1063,7 +1063,7 @@ contains
        !! Compute RMS change
        errloc = SUM((pp3(:,:,:,1) - pp3(:,:,:,2))**2)
        CALL MPI_ALLREDUCE(errloc,errglob,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+       if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
        errglob = SQRT(errglob / nxm / nym / nzm)
 
        IF (nrank.EQ.0) THEN
@@ -1134,7 +1134,7 @@ contains
        rhomin = MINVAL(rho1(:,:,:,1))
 
        CALL MPI_ALLREDUCE(rhomin,rho0,1,real_type,MPI_MIN,MPI_COMM_WORLD,code)
-       if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+       if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     ENDIF
 
     ta1(:,:,:) = (one - rho0 / rho1(:,:,:,1)) * px1(:,:,:)
@@ -1185,7 +1185,7 @@ contains
       ! ut1=ut1/real(ysize(3),mytype)
     endif
     call MPI_ALLREDUCE(ut1,utt1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     utt1=utt1/real(nz,mytype) !! Volume flow rate per unit spanwise dist
 
     ! Flow rate at the outlet
@@ -1199,7 +1199,7 @@ contains
       ! ut2=ut2/real(ysize(3),mytype)
     endif
     call MPI_ALLREDUCE(ut2,utt2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     utt2=utt2/real(nz,mytype) !! Volume flow rate per unit spanwise dist
 
     ! Flow rate at the top and bottom
@@ -1212,9 +1212,9 @@ contains
       enddo
     enddo
     call MPI_ALLREDUCE(ut3,utt3,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(ut4,utt4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     utt3=utt3/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
     utt4=utt4/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
 

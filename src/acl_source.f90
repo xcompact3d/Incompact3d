@@ -253,7 +253,7 @@ contains
         ! This is not optimum but works
         ! Define the domain
 
-        if (istret.eq.0) then
+        if (istret == 0) then
         ymin=(xstart(2)-1)*dy-dy/2. ! Add -dy/2.0 overlap
         ymax=(xend(2)-1)*dy+dy/2.   ! Add +dy/2.0 overlap
         else
@@ -290,8 +290,8 @@ contains
             do k=xstart(3),xend(3)
             zmesh=(k-1)*dz
             do j=xstart(2),xend(2)
-            if (istret.eq.0) ymesh=(j-1)*dy
-            if (istret.ne.0) ymesh=yp(j)
+            if (istret == 0) ymesh=(j-1)*dy
+            if (istret /= 0) ymesh=yp(j)
             do i=xstart(1),xend(1)
             xmesh=(i-1)*dx
             dist = sqrt((Sx(isource)-xmesh)**2.+(Sy(isource)-ymesh)**2.+(Sz(isource)-zmesh)**2.)
@@ -329,7 +329,7 @@ contains
                 i_upper=min_i
             endif
 
-            if (istret.eq.0) then
+            if (istret == 0) then
             if(Sy(isource)>(min_j-1)*dy.and.Sy(isource)<(xend(2)-1)*dy) then
                 j_lower=min_j
                 j_upper=min_j+1
@@ -380,7 +380,7 @@ contains
             ! Prepare for interpolation
             x0=(i_lower-1)*dx
             x1=(i_upper-1)*dx
-            if (istret.eq.0) then
+            if (istret == 0) then
             y0=(j_lower-1)*dy
             y1=(j_upper-1)*dy
             else
@@ -450,13 +450,13 @@ contains
 
         call MPI_ALLREDUCE(Su_part,Su,Nsource,MPI_REAL8,MPI_SUM, &
             MPI_COMM_WORLD,code)
-        if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+        if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
         call MPI_ALLREDUCE(Sv_part,Sv,Nsource,MPI_REAL8,MPI_SUM, &
             MPI_COMM_WORLD,code)
-        if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+        if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
         call MPI_ALLREDUCE(Sw_part,Sw,Nsource,MPI_REAL8,MPI_SUM, &
             MPI_COMM_WORLD,code)
-        if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+        if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
         ! Zero the Source term at each time step
         FTx(:,:,:)=0.0
@@ -480,8 +480,8 @@ contains
             do k=1,xsize(3)
             zmesh=(k+xstart(3)-1-1)*dz
             do j=1,xsize(2)
-            if (istret.eq.0) ymesh=(xstart(2)+j-1-1)*dy
-            if (istret.ne.0) ymesh=yp(xstart(2)+j-1)
+            if (istret == 0) ymesh=(xstart(2)+j-1-1)*dy
+            if (istret /= 0) ymesh=yp(xstart(2)+j-1)
             do i=1,xsize(1)
             xmesh=(i-1)*dx
 
@@ -508,7 +508,7 @@ contains
         alm_proj_time=MPI_WTIME()-t1
         call MPI_ALLREDUCE(alm_proj_time,t1,1,MPI_REAL8,MPI_SUM, &
                    MPI_COMM_WORLD,code)
-        if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+        if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
         if(nrank==0) then
             alm_proj_time=alm_proj_time/float(nproc)

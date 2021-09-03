@@ -85,18 +85,18 @@ contains
        ! ok for istret=0 (!!to do for istret=1!!)
        icvlf(iv) = nint(xld(iv)/dx)+1
        icvrt(iv) = nint(xrd(iv)/dx)+1
-       if (istret.eq.0) then 
+       if (istret == 0) then 
          jcvlw(iv) = nint(yld(iv)/dy)+1
          jcvup(iv) = nint(yud(iv)/dy)+1
        else
          stp1=0
          stp2=0
          do h = 1, ny-1  
-           if ((-yp(h+1)-yp(h)+two*yld(iv)).lt.(yld(iv)-yp(h)).and.(stp1.eq.0)) then 
+           if ((-yp(h+1)-yp(h)+two*yld(iv)) < (yld(iv)-yp(h)).and.(stp1 == 0)) then 
              jcvlw(iv) = h+1
              stp1=1
            endif
-           if ((-yp(h+1)-yp(h)+two*yud(iv)).lt.(yud(iv)-yp(h)).and.(stp2.eq.0)) then
+           if ((-yp(h+1)-yp(h)+two*yud(iv)) < (yud(iv)-yp(h)).and.(stp2 == 0)) then
              jcvup(iv) = h
              stp2=1 
            endif
@@ -151,15 +151,15 @@ contains
     write(filestart,"('restart-forces',I7.7)") ifirst-1
 
     if (itest1==1) then !write
-       if (mod(itime, icheckpoint).ne.0) then
+       if (mod(itime, icheckpoint) /= 0) then
           return
        endif
 
        call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
             MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
             fh, code)
-       if (code.ne.0) then
-          if (nrank.eq.0) then
+       if (code /= 0) then
+          if (nrank == 0) then
              print *,'==========================================================='
              print *,'Error: MPI_FILE_OPEN : '//trim(filename)
              print *,'==========================================================='
@@ -168,15 +168,15 @@ contains
        endif
        filesize = 0_MPI_OFFSET_KIND
        call MPI_FILE_SET_SIZE(fh,filesize,code)  ! guarantee overwriting
-       if (code.ne.0) call decomp_2d_abort(code, "MPI_FILE_SET_SIZE")
+       if (code /= 0) call decomp_2d_abort(code, "MPI_FILE_SET_SIZE")
        disp = 0_MPI_OFFSET_KIND
        call decomp_2d_write_var(fh,disp,1,ux01)
        call decomp_2d_write_var(fh,disp,1,uy01)
        call decomp_2d_write_var(fh,disp,1,ux11)
        call decomp_2d_write_var(fh,disp,1,uy11)
        call MPI_FILE_CLOSE(fh,code)
-       if (code.ne.0) then
-          if (nrank.eq.0) then
+       if (code /= 0) then
+          if (nrank == 0) then
              print *,'==========================================================='
              print *,'Error: MPI_FILE_CLOSE : '//trim(filename)
              print *,'==========================================================='
@@ -187,8 +187,8 @@ contains
        call MPI_FILE_OPEN(MPI_COMM_WORLD, filestart, &
             MPI_MODE_RDONLY, MPI_INFO_NULL, &
             fh, code)
-       if (code.ne.0) then
-          if (nrank.eq.0) then
+       if (code /= 0) then
+          if (nrank == 0) then
              print *,'==========================================================='
              print *,'Error: MPI_FILE_OPEN : '//trim(filestart)
              print *,'==========================================================='
@@ -201,8 +201,8 @@ contains
        call decomp_2d_read_var(fh,disp,1,ux11)
        call decomp_2d_read_var(fh,disp,1,uy11)
        call MPI_FILE_CLOSE(fh,code)
-       if (code .ne. 0) then
-          if (nrank.eq.0) then
+       if (code  /=  0) then
+          if (nrank == 0) then
              print *,'==========================================================='
              print *,'Error: MPI_FILE_CLOSE : '//trim(filestart)
              print *,'==========================================================='
@@ -267,14 +267,14 @@ subroutine force(ux1,uy1,ep1)
   nvect3=zsize(1)*zsize(2)*zsize(3)
 
     do jj = 1, ny-1
-      if (istret.eq.0) then
+      if (istret == 0) then
         del_y(jj)=dy
       else
         del_y(jj)=yp(jj+1)-yp(jj) 
       endif
     enddo
 
-  if (itime.eq.1) then
+  if (itime == 1) then
      do k = 1, xsize(3)
         do j = 1, xsize(2)
            do i = 1, xsize(1)
@@ -284,7 +284,7 @@ subroutine force(ux1,uy1,ep1)
         enddo
      enddo
      return
-  elseif (itime.eq.2) then
+  elseif (itime == 2) then
      do k = 1, xsize(3)
         do j = 1, xsize(2)
            do i = 1, xsize(1)
@@ -352,9 +352,9 @@ subroutine force(ux1,uy1,ep1)
         tunstyl(xstart(3)-1+k)=tsumy
      enddo
      call MPI_ALLREDUCE(tunstxl,tunstx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+     if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
      call MPI_ALLREDUCE(tunstyl,tunsty,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+     if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
 !!$!*********************************************************************************
 !!$!     Secondly, the surface momentum fluxes
@@ -377,7 +377,7 @@ subroutine force(ux1,uy1,ep1)
      tpresyl=zero
      !BC and AD : x-pencils
      !AD
-     if ((jcvlw(iv).ge.xstart(2)).and.(jcvlw(iv).le.xend(2))) then
+     if ((jcvlw(iv) >= xstart(2)).and.(jcvlw(iv) <= xend(2))) then
         j=jcvlw(iv)-xstart(2)+1
         do k=1,xsize(3)
            kk=xstart(3)-1+k
@@ -414,7 +414,7 @@ subroutine force(ux1,uy1,ep1)
         enddo
      endif
      !BC
-     if ((jcvup(iv).ge.xstart(2)).and.(jcvup(iv).le.xend(2))) then
+     if ((jcvup(iv) >= xstart(2)).and.(jcvup(iv) <= xend(2))) then
         j=jcvup(iv)-xstart(2)+1
         do k=1,xsize(3)
            kk=xstart(3)-1+k
@@ -451,7 +451,7 @@ subroutine force(ux1,uy1,ep1)
      endif
      !AB and DC : y-pencils
      !AB
-     if ((icvlf(iv).ge.ystart(1)).and.(icvlf(iv).le.yend(1))) then
+     if ((icvlf(iv) >= ystart(1)).and.(icvlf(iv) <= yend(1))) then
         i=icvlf(iv)-ystart(1)+1
         do k=1,ysize(3)
            kk=ystart(3)-1+k
@@ -486,7 +486,7 @@ subroutine force(ux1,uy1,ep1)
         enddo
      endif
      !DC
-     if ((icvrt(iv).ge.ystart(1)).and.(icvrt(iv).le.yend(1))) then
+     if ((icvrt(iv) >= ystart(1)).and.(icvrt(iv) <= yend(1))) then
         i=icvrt(iv)-ystart(1)+1
         do k=1,ysize(3)
            kk=ystart(3)-1+k
@@ -521,17 +521,17 @@ subroutine force(ux1,uy1,ep1)
         enddo
      endif
      call MPI_ALLREDUCE(tconvxl,tconvx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+     if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
      call MPI_ALLREDUCE(tconvyl,tconvy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+     if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
      call MPI_ALLREDUCE(tpresxl,tpresx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+     if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
      call MPI_ALLREDUCE(tpresyl,tpresy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+     if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
      call MPI_ALLREDUCE(tdiffxl,tdiffx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+     if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
      call MPI_ALLREDUCE(tdiffyl,tdiffy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+     if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
      do k=1,zsize(3)
 
@@ -550,17 +550,17 @@ subroutine force(ux1,uy1,ep1)
      yLift_mean = sum(yLift(:))/real(nz,mytype)
 
 !     if ((itime==ifirst).or.(itime==0)) then
-!        if (nrank .eq. 0) then
+!        if (nrank  ==  0) then
 !        write(filename,"('aerof',I1.1)") iv
 !        open(38+(iv-1),file=filename,status='unknown',form='formatted')
 !        endif
 !     endif
-     if (nrank .eq. 0) then
+     if (nrank  ==  0) then
         write(38,*) t,xDrag_mean,yLift_mean
         call flush(38)
      endif
-     if (mod(itime, icheckpoint).eq.0) then
-        if (nrank .eq. 0) then
+     if (mod(itime, icheckpoint) == 0) then
+        if (nrank  ==  0) then
            write(filename,"('forces.dat',I7.7)") itime
            call system("cp forces.dat " //filename)
         endif

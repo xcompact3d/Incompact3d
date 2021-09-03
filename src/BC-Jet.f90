@@ -49,9 +49,9 @@ contains
     integer, dimension (:), allocatable :: seed
 
     ux1=zero;uy1=zero;uz1=zero
-    if (iin.ne.0) then
+    if (iin /= 0) then
        call system_clock(count=code)
-       if (iin.eq.2) code=0
+       if (iin == 2) code=0
        call random_seed(size = ii)
        call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /))
 
@@ -63,8 +63,8 @@ contains
     !modulation of the random noise + initial velocity profile
     do k=1,xsize(3)
        do j=1,xsize(2)
-          if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy
-          if (istret.ne.0) y=yp(j+xstart(2)-1)
+          if (istret == 0) y=real(j+xstart(2)-1-1,mytype)*dy
+          if (istret /= 0) y=yp(j+xstart(2)-1)
           um=exp(-y**2)
           um = one
           do i=1,xsize(1)
@@ -118,7 +118,7 @@ contains
     enddo
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init end ok'
+    if (nrank  ==  0) print *,'# init end ok'
 #endif
 
     return
@@ -150,12 +150,12 @@ contains
     real(mytype) :: uu1,uv1,uw1,x2,y1,y2,ya,y,xc,zc,yc
 
     call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, dims, dummy_periods, dummy_coords, code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_CART_GET")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_CART_GET")
 
     D = one
     perturbation = zero
 
-    if (t.lt.one) then
+    if (t < one) then
        timeswitch = sin(t * pi / two)
     else
        timeswitch = one
@@ -191,20 +191,20 @@ contains
                 rho(i, 1, k, 1) = one
              endif
 
-             if (iscalar.ne.0) then
+             if (iscalar /= 0) then
                 do is = 1, numscalar
                    if (.not.massfrac(is)) then
                       phi(i, 1, k, is) = half * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D)))
-                   else if (is.ne.primary_species) then
+                   else if (is /= primary_species) then
                       phi(i, 1, k, is) = one - half * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D)))
                    endif
                 enddo
 
-                if (primary_species.gt.0) then
+                if (primary_species > 0) then
                    phi(i, 1, k, primary_species) = one
 
                    do is = 1, numscalar
-                      if (massfrac(is).and.(is.ne.primary_species)) then
+                      if (massfrac(is).and.(is /= primary_species)) then
                          phi(i, 1, k, primary_species) = phi(i, 1, k, primary_species) - phi(i, 1, k, is)
                       endif
                    enddo
@@ -212,7 +212,7 @@ contains
              endif
 
              !! Apply transient behaviour
-             ! if (r.lt.D/two) then
+             ! if (r < D/two) then
              !   perturbation = inflow_noise * sin(r * x * z * t)
              ! else
              !   perturbation = zero
@@ -259,7 +259,7 @@ contains
 
     !! X-BC
     IF (nclx1.EQ.2) THEN
-       if(xstart(1).eq.1)then!
+       if(xstart(1) == 1)then!
           x = -xc
           i = 1
           do k=1,xsize(3)
@@ -270,22 +270,22 @@ contains
              y1=y2*x1/x2
              r1=sqrt(x1**2+y1**2)
              r2=sqrt(x2**2+y2**2)
-             if(r1.gt.r2)print*,'bug CL'
-             if(k.eq.1)then!cas premier point
+             if(r1 > r2)print*,'bug CL'
+             if(k == 1)then!cas premier point
                 do j=1,xsize(2)
 
                    bxx1(j,k)=r1*ux(i + 1,j,k+1)/r2
                    bxy1(j,k)=   uy(i + 1,j,k+1)
                    bxz1(j,k)=r1*uz(i + 1,j,k+1)/r2
                 enddo
-             elseif(k.eq.(nz-1)/2+1)then!cas point du milieu
+             elseif(k == (nz-1)/2+1)then!cas point du milieu
                 do j=1,xsize(2)
 
                    bxx1(j,k)=r1*ux(i+1,j,k)/r2
                    bxy1(j,k)=   uy(i+1,j,k)
                    bxz1(j,k)=r1*uz(i+1,j,k)/r2
                 enddo
-             elseif(k.eq.nx)then!cas dernier point
+             elseif(k == nx)then!cas dernier point
                 do j=1,xsize(2)
 
                    bxx1(j,k)=r1*ux(i+1,j,k-1)/r2
@@ -293,7 +293,7 @@ contains
                    bxz1(j,k)=r1*uz(i+1,j,k-1)/r2
                 enddo
              else!cas general
-                if    (z.gt.0.)then
+                if    (z > 0.)then
                    ya=y2-dz
                    do j=1,xsize(2)
                       uu1=(ux(i+1,j,k)-ux(i+1,j,k-1))*(y1-ya)/(y2-ya)+ux(i+1,j,k-1)
@@ -304,7 +304,7 @@ contains
                       bxy1(j,k)=   uv1
                       bxz1(j,k)=r1*uw1/r2
                    enddo
-                elseif(z.lt.0.)then
+                elseif(z < 0.)then
                    ya=y2+dz
                    do j=1,xsize(2)
                       uu1=(ux(i+1,j,k+1)-ux(2,j,k))*(y1-ya)/(ya-y2)+ux(i+1,j,k+1)
@@ -319,9 +319,9 @@ contains
              endif
           enddo
 
-          if (iscalar.ne.0) then
+          if (iscalar /= 0) then
              do is = 1, numscalar
-                if (is.ne.primary_species) then
+                if (is /= primary_species) then
                    phi(i,:,:,is) = one
                 else
                    phi(i,:,:,is) = zero
@@ -343,7 +343,7 @@ contains
     ENDIF
 
     IF (nclxn.EQ.2) THEN
-       if(xend(1).eq.nx)then
+       if(xend(1) == nx)then
           x=xc
           i = xsize(1)
           do k=1,xsize(3)
@@ -354,22 +354,22 @@ contains
              y1=y2*x1/x2
              r1=sqrt(x1**2+y1**2)
              r2=sqrt(x2**2+y2**2)
-             if(r1.gt.r2)print*,'bug CL'
-             if(k.eq.1)then!cas premier point
+             if(r1 > r2)print*,'bug CL'
+             if(k == 1)then!cas premier point
                 do j=1,xsize(2)
 
                    bxxn(j,k)=r1*ux(i-1,j,k+1)/r2
                    bxyn(j,k)=   uy(i-1,j,k+1)
                    bxzn(j,k)=r1*uz(i-1,j,k+1)/r2
                 enddo
-             elseif(k.eq.(nz-1)/2+1)then!cas point du milieu
+             elseif(k == (nz-1)/2+1)then!cas point du milieu
                 do j=1,xsize(2)
 
                    bxxn(j,k)=r1*ux(i-1,j,k)/r2
                    bxyn(j,k)=   uy(i-1,j,k)
                    bxzn(j,k)=r1*uz(i-1,j,k)/r2
                 enddo
-             elseif(k.eq.nz)then!cas dernier point
+             elseif(k == nz)then!cas dernier point
                 do j=1,xsize(2)
 
                    bxxn(j,k)=r1*ux(i-1,j,k-1)/r2
@@ -377,7 +377,7 @@ contains
                    bxzn(j,k)=r1*uz(i-1,j,k-1)/r2
                 enddo
              else !cas general
-                if (z.gt.0.) then
+                if (z > 0.) then
                    ya=y2-dz
                    do j=1,xsize(2)
                       uu1=(ux(i-1,j,k)-ux(i-1,j,k-1))*(y1-ya)/(y2-ya)+ux(i-1,j,k-1)
@@ -388,7 +388,7 @@ contains
                       bxyn(j,k)=   uv1
                       bxzn(j,k)=r1*uw1/r2
                    enddo
-                elseif(z.lt.0.)then
+                elseif(z < 0.)then
                    ya=y2+dz
                    do j=1,xsize(2)
                       uu1=(ux(i-1,j,k+1)-ux(i-1,j,k))*(y1-ya)/(ya-y2)+ux(i-1,j,k+1)
@@ -403,9 +403,9 @@ contains
              endif
           enddo
 
-          if (iscalar.ne.0) then
+          if (iscalar /= 0) then
              do is = 1, numscalar
-                if (is.ne.primary_species) then
+                if (is /= primary_species) then
                    phi(i,:,:,is) = one
                 else
                    phi(i,:,:,is) = zero
@@ -438,22 +438,22 @@ contains
           y1=y2*x1/x2
           r1=sqrt(x1**2+y1**2)
           r2=sqrt(x2**2+y2**2)
-          if(r1.gt.r2)print*,'bug CL'
-          if(i.eq.1)then!cas premier point
+          if(r1 > r2)print*,'bug CL'
+          if(i == 1)then!cas premier point
              do j=1,xsize(2)
 
                 bzx1(i,j)=r1*ux(i+1,j,k + 1)/r2
                 bzy1(i,j)=   uy(i+1,j,k + 1)
                 bzz1(i,j)=r1*uz(i+1,j,k + 1)/r2
              enddo
-          elseif(i.eq.(nx-1)/2+1)then!cas point du milieu
+          elseif(i == (nx-1)/2+1)then!cas point du milieu
              do j=1,xsize(2)
 
                 bzx1(i,j)=r1*ux(i,j,k + 1)/r2
                 bzy1(i,j)=   uy(i,j,k + 1)
                 bzz1(i,j)=r1*uz(i,j,k + 1)/r2
              enddo
-          elseif(i.eq.nx)then!cas dernier point
+          elseif(i == nx)then!cas dernier point
              do j=1,xsize(2)
 
                 bzx1(i,j)=r1*ux(i-1,j,k + 1)/r2
@@ -461,7 +461,7 @@ contains
                 bzz1(i,j)=r1*uz(i-1,j,k + 1)/r2
              enddo
           else!cas general
-             if    (x.gt.0.)then
+             if    (x > 0.)then
                 ya=y2-dx
                 do j=1,xsize(2)
 
@@ -473,7 +473,7 @@ contains
                    bzy1(i,j)=   uv1
                    bzz1(i,j)=r1*uw1/r2
                 enddo
-             elseif(x.lt.0.)then
+             elseif(x < 0.)then
                 ya=y2+dx
                 do j=1,xsize(2)
 
@@ -489,9 +489,9 @@ contains
           endif
        enddo
 
-       if (iscalar.ne.0) then
+       if (iscalar /= 0) then
           do is = 1, numscalar
-             if (is.ne.primary_species) then
+             if (is /= primary_species) then
                 phi(:,:,k,is) = one
              else
                 phi(:,:,k,is) = zero
@@ -522,22 +522,22 @@ contains
           y1=y2*x1/x2
           r1=sqrt(x1**2+y1**2)
           r2=sqrt(x2**2+y2**2)
-          if(r1.gt.r2)print*,'bug CL'
-          if(i.eq.1)then!cas premier point
+          if(r1 > r2)print*,'bug CL'
+          if(i == 1)then!cas premier point
              do j=1,xsize(2)
 
                 bzxn(i,j)=r1*ux(i+1,j,k-1)/r2
                 bzyn(i,j)=   uy(i+1,j,k-1)
                 bzzn(i,j)=r1*uz(i+1,j,k-1)/r2
              enddo
-          elseif(i.eq.(nx-1)/2+1)then!cas point du milieu
+          elseif(i == (nx-1)/2+1)then!cas point du milieu
              do j=1,xsize(2)
 
                 bzxn(i,j)=r1*ux(i,j,k-1)/r2
                 bzyn(i,j)=   uy(i,j,k-1)
                 bzzn(i,j)=r1*uz(i,j,k-1)/r2
              enddo
-          elseif(i.eq.nx)then!cas dernier point
+          elseif(i == nx)then!cas dernier point
              do j=1,xsize(2)
 
                 bzxn(i,k)=r1*ux(i-1,j,k-1)/r2
@@ -545,7 +545,7 @@ contains
                 bzzn(i,k)=r1*uz(i-1,j,k-1)/r2
              enddo
           else !cas general
-             if (x.gt.0.) then
+             if (x > 0.) then
                 ya=y2-dx
                 do j=1,xsize(2)
 
@@ -557,7 +557,7 @@ contains
                    bzyn(i,k)=   uv1
                    bzzn(i,k)=r1*uw1/r2
                 enddo
-             elseif(x.lt.0.)then
+             elseif(x < 0.)then
                 ya=y2+dx
                 do j=1,xsize(2)
                    uu1=(ux(i+1,j,k-1)-ux(i,j,k-1))*(y1-ya)/(ya-y2)+ux(i+1,j,k-1)
@@ -572,9 +572,9 @@ contains
           endif
        enddo
 
-       if (iscalar.ne.0) then
+       if (iscalar /= 0) then
           do is = 1, numscalar
-             if (is.ne.primary_species) then
+             if (is /= primary_species) then
                 phi(:,:,k,is) = one
              else
                 phi(:,:,k,is) = zero
@@ -597,9 +597,9 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !! Compute outflow
     call MPI_ALLREDUCE(inflow,outflow,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     outflow = outflow / nx / nz
-    if (xend(2).eq.ny) then
+    if (xend(2) == ny) then
        j = xsize(2)
        do k = 1, xsize(3)
           do i = 1, xsize(1)
@@ -609,13 +609,13 @@ contains
           enddo
        enddo
 
-       if (iscalar.ne.0) then
+       if (iscalar /= 0) then
           phi(:,j,:,:) = phi(:,j,:,:) - dt * outflow * (phi(:,j,:,:) - phi(:,j - 1,:,:))
 
-          if (primary_species.gt.0) then
+          if (primary_species > 0) then
              phi(:,j,:,primary_species) = one
              do is = 1, numscalar
-                if (massfrac(is).and.(is.ne.primary_species)) then
+                if (massfrac(is).and.(is /= primary_species)) then
                    phi(:,j,:,primary_species) = phi(:,j,:,primary_species) - phi(:,j,:,is)
                 endif
              enddo
@@ -667,7 +667,7 @@ contains
        do i=1,ysize(1)
           ut=zero
           do j=1,ny-1
-             if (istret.eq.0) then
+             if (istret == 0) then
                 ut=ut+dy*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
              else
                 ut=ut+(yp(j+1)-yp(j))*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
@@ -680,7 +680,7 @@ contains
     ut3=ut3/(real(nx*nz,mytype))
 
     call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
     can=-(constant-ut4)
 

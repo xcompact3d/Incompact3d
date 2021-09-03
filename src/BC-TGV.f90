@@ -73,7 +73,7 @@ contains
        phi1(:,:,:,:) = zero
     endif
 
-    if (iin.eq.0) then !empty domain
+    if (iin == 0) then !empty domain
 
        if (nrank==0) write(*,*) "Empty initial domain!"
 
@@ -81,7 +81,7 @@ contains
 
     endif
 
-    if (iin.eq.1) then !generation of a random noise
+    if (iin == 1) then !generation of a random noise
 
        if (nrank==0) write(*,*) "Filled initial domain!"
 
@@ -133,8 +133,8 @@ contains
        !     !modulation of the random noise
        !     do k=1,xsize(3)
        !        do j=1,xsize(2)
-       !           if (istret.eq.0) y=(j+xstart(2)-1-1)*dy-yly/two
-       !           if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/two
+       !           if (istret == 0) y=(j+xstart(2)-1-1)*dy-yly/two
+       !           if (istret /= 0) y=yp(j+xstart(2)-1)-yly/two
        !           um=exp(-0.2*y*y)
        !           do i=1,xsize(1)
        !              ux1(i,j,k)=um*ux1(i,j,k)
@@ -162,7 +162,7 @@ contains
     enddo
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init end ok'
+    if (nrank  ==  0) print *,'# init end ok'
 #endif
 
     return
@@ -221,9 +221,9 @@ contains
        do j=xstart(2),xend(2)
           do i=xstart(1),xend(1)
              vol1(i,j,k)=dxdydz
-             if (i .eq. 1   .or. i .eq. nx) vol1(i,j,k) = vol1(i,j,k)/two
-             if (j .eq. 1   .or. j .eq. ny)  vol1(i,j,k) = vol1(i,j,k)/two
-             if (k .eq. 1   .or. k .eq. nz)  vol1(i,j,k) = vol1(i,j,k)/two
+             if (i  ==  1   .or. i  ==  nx) vol1(i,j,k) = vol1(i,j,k)/two
+             if (j  ==  1   .or. j  ==  ny)  vol1(i,j,k) = vol1(i,j,k)/two
+             if (k  ==  1   .or. k  ==  nz)  vol1(i,j,k) = vol1(i,j,k)/two
           end do
        end do
     end do
@@ -233,18 +233,18 @@ contains
        do j=xstart(2),xend(2)
           do i=xstart(1),xend(1)
              volSimps1(i,j,k)=dxdydz
-             if (i .eq. 1   .or. i .eq. nx) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
-             if (j .eq. 1   .or. j .eq. ny) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
-             if (k .eq. 1   .or. k .eq. nz) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
-             if (i .eq. 2   .or. i .eq. nx-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
-             if (j .eq. 2   .or. j .eq. ny-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
-             if (k .eq. 2   .or. k .eq. nz-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
+             if (i  ==  1   .or. i  ==  nx) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
+             if (j  ==  1   .or. j  ==  ny) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
+             if (k  ==  1   .or. k  ==  nz) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
+             if (i  ==  2   .or. i  ==  nx-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
+             if (j  ==  2   .or. j  ==  ny-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
+             if (k  ==  2   .or. k  ==  nz-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
           end do
        end do
     end do
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init_post ok'
+    if (nrank  ==  0) print *,'# init_post ok'
 #endif
 
   end subroutine init_post
@@ -305,7 +305,7 @@ contains
 
 
     !we only collect statistics every 10 time steps to save computational time
-    if (mod(itime, 10).eq.0) then
+    if (mod(itime, 10) == 0) then
 
     ! Perform communications if needed
     if (sync_vel_needed) then
@@ -357,7 +357,7 @@ contains
       enddo
       enddo
       call MPI_ALLREDUCE(temp1,enst,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-      if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
       enst=enst/(nxc*nyc*nzc)
       
       !SPATIALLY-AVERAGED ENERGY DISSIPATION
@@ -369,14 +369,14 @@ contains
          (two*ti1(i,j,k))**two+two*(td1(i,j,k)+tb1(i,j,k))**two+&
          two*(tg1(i,j,k)+tc1(i,j,k))**two+&
          two*(th1(i,j,k)+tf1(i,j,k))**two)
-         if(ilesmod.ne.0.and.jles.le.3) then
+         if(ilesmod /= 0.and.jles <= 3) then
             temp1=temp1+two*nut1(i,j,k)*srt_smag(i,j,k)
          endif
       enddo
       enddo
       enddo
       call MPI_ALLREDUCE(temp1,eps,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-      if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
       eps=eps/(nxc*nyc*nzc)
 
       !SPATIALLY-AVERAGED TKE of velocity fields
@@ -389,7 +389,7 @@ contains
        enddo
        enddo
        call MPI_ALLREDUCE(temp1,eek,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+       if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
        eek=eek/(nxc*nyc*nzc)
 
        !SECOND DERIVATIVES
@@ -432,7 +432,7 @@ contains
        enddo
        enddo
        call MPI_ALLREDUCE(temp1,eps2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+       if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
        eps2=eps2/(nxc*nyc*nzc)
        
        
@@ -546,7 +546,7 @@ contains
     end do
 
     call MPI_REDUCE(mp,mp1,numscalar,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
 
     return
   end subroutine suspended
@@ -788,20 +788,20 @@ contains
     ! Compute time and space-time discrete damping
     !
     ! Explicit Euler
-    if (itimescheme.eq.1) then
+    if (itimescheme == 1) then
 
       ! Time discrete errors
-      if (iimplicit.eq.0) then
+      if (iimplicit == 0) then
         coef(1) = (one - two*dt*xnu)
         do l = 1, numscalar
           coef(1+l) = one - two*dt*xnu/sc(l)
         enddo
-      else if (iimplicit.eq.1) then
+      else if (iimplicit == 1) then
         coef(1) = (one - dt*xnu) / (one + dt*xnu)
         do l = 1, numscalar
           coef(1+l) = (one - dt*xnu/sc(l)) / (one + dt*xnu/sc(l))
         enddo
-      else if (iimplicit.eq.2) then
+      else if (iimplicit == 2) then
         coef(1) = (one - onepfive*dt*xnu) / (one + half*dt*xnu)
         do l = 1, numscalar
           coef(1+l) = (one - onepfive*dt*xnu/sc(l)) / (one + half*dt*xnu/sc(l))
@@ -816,17 +816,17 @@ contains
       enddo
 
       ! Space-time discrete errors
-      if (iimplicit.eq.0) then
+      if (iimplicit == 0) then
         coef(1) = (one - two*k2tgv*dt*xnu)
         do l = 1, numscalar
           coef(1+l) = one - two*k2tgv*dt*xnu/sc(l)
         enddo
-      else if (iimplicit.eq.1) then
+      else if (iimplicit == 1) then
         coef(1) = (one - k2tgv*dt*xnu) / (one + k2tgv*dt*xnu)
         do l = 1, numscalar
           coef(1+l) = (one - k2tgv*dt*xnu/sc(l)) / (one + k2tgv*dt*xnu/sc(l))
         enddo
-      else if (iimplicit.eq.2) then
+      else if (iimplicit == 2) then
         coef(1) = (one - onepfive*k2tgv*dt*xnu) / (one + half*k2tgv*dt*xnu)
         do l = 1, numscalar
           coef(1+l) = (one - onepfive*k2tgv*dt*xnu/sc(l)) / (one + half*k2tgv*dt*xnu/sc(l))
@@ -866,7 +866,7 @@ contains
   real(mytype), intent(in) :: kin
   real(mytype), intent(out) :: k2out
 
-  if (kin.lt.zero .or. kin.gt.pi/min(dx,dy)) then
+  if (kin < zero .or. kin > pi/min(dx,dy)) then
     if (nrank==0) then
       write(*,*) "TGV2D: Warning, incorrect wavenumber provided."
     endif
@@ -911,11 +911,11 @@ contains
 
     ! Parallel
     call MPI_ALLREDUCE(ll1,l1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(ll2,l2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(llinf,linf,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
     ! Rescaling
     l1 = l1 / ntot

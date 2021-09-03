@@ -12,12 +12,12 @@ contains
     integer :: i,j,k,nlock
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,px,py,pz
 
-    if (nz.eq.1) then
+    if (nz == 1) then
        print *, "2D currently unsupported - see ibm.f90"
        stop
     endif
 
-    if (nlock.eq.1) then
+    if (nlock == 1) then
           do k = 1, xsize(3)
              do j = 1, xsize(2)
                 do i = 1, xsize(1)
@@ -28,7 +28,7 @@ contains
              enddo
           enddo
     endif
-    if (nlock.eq.2) then
+    if (nlock == 2) then
           do k = 1, xsize(3)
              do j = 1, xsize(2)
                 do i = 1, xsize(1)
@@ -54,7 +54,7 @@ contains
     integer :: i,j,k
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# body start'
+    if (nrank  ==  0) print *,'# body start'
 #endif
 
     do k = 1, xsize(3)
@@ -68,7 +68,7 @@ contains
     enddo
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# body done'
+    if (nrank  ==  0) print *,'# body done'
 #endif
 
     return
@@ -96,7 +96,7 @@ contains
     !
     do k=1,xsize(3)
        do j=1,xsize(2)
-          if(nobjx(j,k).ne.0)then
+          if(nobjx(j,k) /= 0)then
              ia=0
              do i=1,nobjx(j,k)          !boucle sur le nombre d'objets par (j,k)
                 !1ère frontière
@@ -104,13 +104,13 @@ contains
                 ia=ia+1
                 xa(ia)=xi(i,j,k)
                 ya(ia)=0.
-                if(xi(i,j,k).gt.0.)then!objet immergé
+                if(xi(i,j,k) > 0.)then!objet immergé
                    ix=xi(i,j,k)/dx+1
                    ipoli=ix+1
-                   if(nxipif(i,j,k).lt.npif)nxpif=nxipif(i,j,k)
+                   if(nxipif(i,j,k) < npif)nxpif=nxipif(i,j,k)
                    do ipif=1,nxpif
                       ia=ia+1
-                      if(izap.eq.1)then!zapping
+                      if(izap == 1)then!zapping
                          xa(ia)=(ix-1)*dx-ipif*dx
                          ya(ia)=u(ix-ipif,j,k)
                       else             !no zapping
@@ -126,13 +126,13 @@ contains
                 ia=ia+1
                 xa(ia)=xf(i,j,k)
                 ya(ia)=0.
-                if(xf(i,j,k).lt.xlx)then!objet immergé
+                if(xf(i,j,k) < xlx)then!objet immergé
                    ix=(xf(i,j,k)+dx)/dx+1
                    ipolf=ix-1
-                   if(nxfpif(i,j,k).lt.npif)nxpif=nxfpif(i,j,k)
+                   if(nxfpif(i,j,k) < npif)nxpif=nxfpif(i,j,k)
                    do ipif=1,nxpif
                       ia=ia+1
-                      if(izap.eq.1)then!zapping
+                      if(izap == 1)then!zapping
                          xa(ia)=(ix-1)*dx+ipif*dx
                          ya(ia)=u(ix+ipif,j,k)
                       else             !no zapping
@@ -181,7 +181,7 @@ contains
     !
     do k=1,ysize(3)
        do i=1,ysize(1)
-          if(nobjy(i,k).ne.0)then
+          if(nobjy(i,k) /= 0)then
              ia=0
              do j=1,nobjy(i,k)          !boucle sur le nombre d'objets par (j,k)
                 !1ère frontière
@@ -189,17 +189,17 @@ contains
                 ia=ia+1
                 xa(ia)=yi(j,i,k)
                 ya(ia)=0.
-                if(yi(j,i,k).gt.0.)then!objet immergé
+                if(yi(j,i,k) > 0.)then!objet immergé
                    jy=1!jy=yi(j,i,k)/dy+1
-                   do while(yp(jy).lt.yi(j,i,k))
+                   do while(yp(jy) < yi(j,i,k))
                       jy=jy+1
                    enddo
                    jy=jy-1
                    jpoli=jy+1
-                   if(nyipif(j,i,k).lt.npif)nypif=nyipif(j,i,k)
+                   if(nyipif(j,i,k) < npif)nypif=nyipif(j,i,k)
                    do jpif=1,nypif
                       ia=ia+1
-                      if(izap.eq.1)then!zapping
+                      if(izap == 1)then!zapping
                          xa(ia)=yp(jy-jpif)!(jy-1)*dy-jpif*dy
                          ya(ia)=u(i,jy-jpif,k)
                       else             !no zapping
@@ -215,16 +215,16 @@ contains
                 ia=ia+1
                 xa(ia)=yf(j,i,k)
                 ya(ia)=0.
-                if(yf(j,i,k).lt.yly)then!objet immergé
+                if(yf(j,i,k) < yly)then!objet immergé
                    jy=1!jy=(yf(j,i,k)+dy)/dy+1
-                   do while(yp(jy).lt.yf(j,i,k))  !there was a bug here yi<-->yf
+                   do while(yp(jy) < yf(j,i,k))  !there was a bug here yi<-->yf
                       jy=jy+1
                    enddo
                    jpolf=jy-1
-                   if(nyfpif(j,i,k).lt.npif)nypif=nyfpif(j,i,k)
+                   if(nyfpif(j,i,k) < npif)nypif=nyfpif(j,i,k)
                    do jpif=1,nypif
                       ia=ia+1
-                      if(izap.eq.1)then!zapping
+                      if(izap == 1)then!zapping
                          xa(ia)=yp(jy+jpif)!(jy-1)*dy+jpif*dy
                          ya(ia)=u(i,jy+jpif,k)
                       else             !no zapping
@@ -273,7 +273,7 @@ contains
     !
     do j=1,zsize(2)
        do i=1,zsize(1)
-          if(nobjz(i,j).ne.0)then
+          if(nobjz(i,j) /= 0)then
              ia=0
              do k=1,nobjz(i,j)          !boucle sur le nombre d'objets par couple   (i,j)
                 !1ère frontière
@@ -281,13 +281,13 @@ contains
                 ia=ia+1
                 xa(ia)=zi(k,i,j)
                 ya(ia)=0.
-                if(zi(k,i,j).gt.0.)then!objet immergé
+                if(zi(k,i,j) > 0.)then!objet immergé
                    kz=zi(k,i,j)/dz+1
                    kpoli=kz+1
-                   if(nzipif(k,i,j).lt.npif)nzpif=nzipif(k,i,j)
+                   if(nzipif(k,i,j) < npif)nzpif=nzipif(k,i,j)
                    do kpif=1,nzpif
                       ia=ia+1
-                      if(izap.eq.1)then!zapping
+                      if(izap == 1)then!zapping
                          xa(ia)=(kz-1)*dz-kpif*dz
                          ya(ia)=u(i,j,kz-kpif)
                       else             !no zapping
@@ -303,13 +303,13 @@ contains
                 ia=ia+1
                 xa(ia)=zf(k,i,j)
                 ya(ia)=0.
-                if(zf(k,i,j).lt.zlz)then!objet immergé
+                if(zf(k,i,j) < zlz)then!objet immergé
                    kz=(zf(k,i,j)+dz)/dz+1
                    kpolf=kz-1
-                   if(nzfpif(k,i,j).lt.npif)nzpif=nzfpif(k,i,j)
+                   if(nzfpif(k,i,j) < npif)nzpif=nzfpif(k,i,j)
                    do kpif=1,nzpif
                       ia=ia+1
-                      if(izap.eq.1)then!zapping
+                      if(izap == 1)then!zapping
                          xa(ia)=(kz-1)*dz+kpif*dz
                          ya(ia)=u(i,j,kz+kpif)
                       else             !no zapping
@@ -352,7 +352,7 @@ contains
     dif=abs(x-xa(1))
     do i=1,n
        dift=abs(x-xa(i))
-       if(dift.lt.dif)then
+       if(dift < dif)then
           ns=i
           dif=dift
        endif
@@ -367,12 +367,12 @@ contains
           hp=xa(i+m)-x
           w=c(i+1)-d(i)
           den=ho-hp
-          !         if(den.eq.0)read(*,*)
+          !         if(den == 0)read(*,*)
           den=w/den
           d(i)=hp*den
           c(i)=ho*den
        enddo
-       if (2*ns.lt.n-m)then
+       if (2*ns < n-m)then
           dy=c(ns+1)
        else
           dy=d(ns)
@@ -424,13 +424,13 @@ subroutine cubsplx(u,lind)
   !
   do k=1,xsize(3)
      do j=1,xsize(2)
-        if(nobjx(j,k).ne.0)then
+        if(nobjx(j,k) /= 0)then
            ia=0
            do i=1,nobjx(j,k)          
               !  1st Boundary
               nxpif=npif
               ia=ia+1
-              if (ianal.eq.0) then
+              if (ianal == 0) then
                  xa(ia)=xi(i,j,k)
                  ana_resi=xi(i,j,k)
               else
@@ -438,14 +438,14 @@ subroutine cubsplx(u,lind)
                  xa(ia)=ana_resi
               endif
               ya(ia)=bcimp
-              if(xi(i,j,k).gt.0.)then ! Immersed Object
+              if(xi(i,j,k) > 0.)then ! Immersed Object
                  inxi=0
                  ix=xi(i,j,k)/dx+1
                  ipoli=ix+1
-                 if(nxipif(i,j,k).lt.npif)nxpif=nxipif(i,j,k)
+                 if(nxipif(i,j,k) < npif)nxpif=nxipif(i,j,k)
                  do ipif=1,nxpif
                     ia=ia+1
-                    if(izap.eq.1)then ! Skip First Points
+                    if(izap == 1)then ! Skip First Points
                        xa(ia)=(ix-1)*dx-ipif*dx
                        ya(ia)=u(ix-ipif,j,k)
                     else              ! Don't Skip any Points
@@ -458,10 +458,10 @@ subroutine cubsplx(u,lind)
                  ipoli=1
                  ix=xi(i,j,k)/dx
                  ipoli=ix+1
-                 if(nxipif(i,j,k).lt.npif)nxpif=nxipif(i,j,k)
+                 if(nxipif(i,j,k) < npif)nxpif=nxipif(i,j,k)
                  do ipif=1,nxpif
                     ia=ia+1
-                    if(izap.eq.1)then ! Skip First Points
+                    if(izap == 1)then ! Skip First Points
                        xa(ia)=(ix-1)*dx-ipif*dx
                        ya(ia)=bcimp                   
                     else              ! Don't Skip any Points
@@ -474,7 +474,7 @@ subroutine cubsplx(u,lind)
               !  2nd Boundary
               nxpif=npif
               ia=ia+1
-              if (ianal.eq.0) then
+              if (ianal == 0) then
                  xa(ia)=xf(i,j,k)
                  ana_resf=xf(i,j,k)
               else
@@ -482,14 +482,14 @@ subroutine cubsplx(u,lind)
                  xa(ia)=ana_resf
               endif              
               ya(ia)=bcimp              
-              if(xf(i,j,k).lt.xlx)then ! Immersed Object
+              if(xf(i,j,k) < xlx)then ! Immersed Object
                  inxf=0
                  ix=(xf(i,j,k)+dx)/dx+1
                  ipolf=ix-1
-                 if(nxfpif(i,j,k).lt.npif)nxpif=nxfpif(i,j,k)
+                 if(nxfpif(i,j,k) < npif)nxpif=nxfpif(i,j,k)
                  do ipif=1,nxpif
                     ia=ia+1
-                    if(izap.eq.1)then  ! Skip First Points
+                    if(izap == 1)then  ! Skip First Points
                        xa(ia)=(ix-1)*dx+ipif*dx
                        ya(ia)=u(ix+ipif,j,k)
                     else               ! Don't Skip any Points
@@ -502,10 +502,10 @@ subroutine cubsplx(u,lind)
                  ipolf=nx
                  ix=(xf(i,j,k)+dx)/dx+1
                  ipolf=ix-1
-                 if(nxfpif(i,j,k).lt.npif)nxpif=nxfpif(i,j,k)
+                 if(nxfpif(i,j,k) < npif)nxpif=nxfpif(i,j,k)
                  do ipif=1,nxpif
                     ia=ia+1
-                    if(izap.eq.1)then  ! Skip First Points
+                    if(izap == 1)then  ! Skip First Points
                        xa(ia)=(ix-1)*dx+ipif*dx
                        ya(ia)=bcimp                                   
                     else               ! Don't Skip any Points
@@ -515,19 +515,19 @@ subroutine cubsplx(u,lind)
                  enddo
               endif
               ! Special Case
-              if (xi(i,j,k).eq.xf(i,j,k)) then
+              if (xi(i,j,k) == xf(i,j,k)) then
                   u(ipol,j,k)=bcimp                                   
               else
               ! Cubic Spline Reconstruction
 		  na=ia
 		  do ipol=ipoli,ipolf
-		     if ((inxf.eq.1).and.(inxi.eq.1)) then ! If the Body Extends from the Inlet to the Outlet (Special Case)
+		     if ((inxf == 1).and.(inxi == 1)) then ! If the Body Extends from the Inlet to the Outlet (Special Case)
                  u(ipol,j,k)=bcimp                            
              else
 		         xpol=dx*(ipol-1)
-		         if (xpol.eq.ana_resi) then
+		         if (xpol == ana_resi) then
 		            u(ipol,j,k)=bcimp
-		         elseif (xpol.eq.ana_resf) then
+		         elseif (xpol == ana_resf) then
 		            u(ipol,j,k)=bcimp
 		         else   
 		            call cubic_spline(xa,ya,na,xpol,ypol)
@@ -582,13 +582,13 @@ subroutine cubsply(u,lind)
   !
   do k=1,ysize(3)
      do i=1,ysize(1)
-        if(nobjy(i,k).ne.0)then
+        if(nobjy(i,k) /= 0)then
            ia=0
            do j=1,nobjy(i,k)          
               !  1st Boundary
               nypif=npif
               ia=ia+1
-              if (ianal.eq.0) then
+              if (ianal == 0) then
                  xa(ia)=yi(j,i,k)
                  ana_resi=yi(j,i,k)
               else
@@ -596,17 +596,17 @@ subroutine cubsply(u,lind)
                  xa(ia)=ana_resi
               endif  
               ya(ia)=bcimp
-              if(yi(j,i,k).gt.0.)then ! Immersed Object
+              if(yi(j,i,k) > 0.)then ! Immersed Object
                  jy=1
-                 do while(yp(jy).lt.yi(j,i,k))
+                 do while(yp(jy) < yi(j,i,k))
                     jy=jy+1
                  enddo
                  jy=jy-1
                  jpoli=jy+1
-                 if(nyipif(j,i,k).lt.npif)nypif=nyipif(j,i,k)
+                 if(nyipif(j,i,k) < npif)nypif=nyipif(j,i,k)
                  do jpif=1,nypif
                     ia=ia+1
-                    if(izap.eq.1)then ! Skip First Points
+                    if(izap == 1)then ! Skip First Points
                        xa(ia)=yp(jy-jpif)
                        ya(ia)=u(i,jy-jpif,k)
                     else              ! Don't Skip any Points
@@ -617,15 +617,15 @@ subroutine cubsply(u,lind)
               else                   ! Boundary Coincides with Physical Boundary (Bottom)
                  jy=1
                  jpoli=1
-                 do while(yp(jy).lt.yi(j,i,k))
+                 do while(yp(jy) < yi(j,i,k))
                     jy=jy+1
                  enddo
                  jy=jy-1
                  jpoli=jy+1
-                 if(nyipif(j,i,k).lt.npif)nypif=nyipif(j,i,k)
+                 if(nyipif(j,i,k) < npif)nypif=nyipif(j,i,k)
                  do jpif=1,nypif
                     ia=ia+1
-                    if(izap.eq.1)then ! Skip First Points
+                    if(izap == 1)then ! Skip First Points
                        xa(ia)=yp(1)-(jpif+1)*dy
                        ya(ia)=bcimp
                     else              ! Don't Skip any Points
@@ -637,7 +637,7 @@ subroutine cubsply(u,lind)
               ! 2nd Boundary
               nypif=npif
               ia=ia+1
-              if (ianal.eq.0) then
+              if (ianal == 0) then
                  xa(ia)=yf(j,i,k)
                  ana_resf=yf(j,i,k)
               else
@@ -645,16 +645,16 @@ subroutine cubsply(u,lind)
                  xa(ia)=ana_resf
               endif  
               ya(ia)=bcimp
-              if(yf(j,i,k).lt.yly)then ! Immersed Object
+              if(yf(j,i,k) < yly)then ! Immersed Object
                  jy=1
-                 do while(yp(jy).lt.yf(j,i,k))  
+                 do while(yp(jy) < yf(j,i,k))  
                     jy=jy+1
                  enddo
                  jpolf=jy-1
-                 if(nyfpif(j,i,k).lt.npif)nypif=nyfpif(j,i,k)
+                 if(nyfpif(j,i,k) < npif)nypif=nyfpif(j,i,k)
                  do jpif=1,nypif
                     ia=ia+1
-                    if(izap.eq.1)then ! Skip First Points
+                    if(izap == 1)then ! Skip First Points
                        xa(ia)=yp(jy+jpif)
                        ya(ia)=u(i,jy+jpif,k)
                     else              ! Don't Skip any Points
@@ -665,14 +665,14 @@ subroutine cubsply(u,lind)
               else                   ! Boundary Coincides with Physical Boundary (Top)
                  jy=1
                  jpolf=ny
-                 do while(yp(jy).lt.yf(j,i,k))  
+                 do while(yp(jy) < yf(j,i,k))  
                     jy=jy+1
                  enddo
                  jpolf=jy-1
-                 if(nyfpif(j,i,k).lt.npif)nypif=nyfpif(j,i,k)
+                 if(nyfpif(j,i,k) < npif)nypif=nyfpif(j,i,k)
                  do jpif=1,nypif
                     ia=ia+1
-                    if(izap.eq.1)then ! Skip First Points
+                    if(izap == 1)then ! Skip First Points
                        xa(ia)=yp(ny)+(jpif+1)*dy
                        ya(ia)=bcimp
                     else              ! Don't Skip any Points
@@ -682,16 +682,16 @@ subroutine cubsply(u,lind)
                  enddo
               endif
               ! Special Case
-              if (yi(j,i,k).eq.yf(j,i,k)) then
+              if (yi(j,i,k) == yf(j,i,k)) then
                   u(i,jpol,k)=bcimp                                   
               else
 		  !calcul du polynôme
 		   na=ia
 		   do jpol=jpoli,jpolf
 		         xpol=yp(jpol)
-		         if (xpol.eq.ana_resi) then
+		         if (xpol == ana_resi) then
 		            u(i,jpol,k)=bcimp
-		         elseif (xpol.eq.ana_resf) then
+		         elseif (xpol == ana_resf) then
 		            u(i,jpol,k)=bcimp
 		         else   
 		            call cubic_spline(xa,ya,na,xpol,ypol)
@@ -745,13 +745,13 @@ subroutine cubsplz(u,lind)
   !
   do j=1,zsize(2)
      do i=1,zsize(1)
-        if(nobjz(i,j).ne.0)then
+        if(nobjz(i,j) /= 0)then
            ia=0
            do k=1,nobjz(i,j)          
               !  1st Boundary
               nzpif=npif
               ia=ia+1
-              if (ianal.eq.0) then
+              if (ianal == 0) then
                  xa(ia)=zi(k,i,j)
                  ana_resi=zi(k,i,j)
               else
@@ -759,14 +759,14 @@ subroutine cubsplz(u,lind)
                  xa(ia)=ana_resi
               endif  
               ya(ia)=bcimp
-              if(zi(k,i,j).gt.0.)then ! Immersed Object
+              if(zi(k,i,j) > 0.)then ! Immersed Object
                  inxi=0
                  kz=zi(k,i,j)/dz+1
                  kpoli=kz+1
-                 if(nzipif(k,i,j).lt.npif)nzpif=nzipif(k,i,j)
+                 if(nzipif(k,i,j) < npif)nzpif=nzipif(k,i,j)
                  do kpif=1,nzpif
                     ia=ia+1
-                    if(izap.eq.1)then ! Skip First Points
+                    if(izap == 1)then ! Skip First Points
                        xa(ia)=(kz-1)*dz-kpif*dz
                        ya(ia)=u(i,j,kz-kpif)
                     else              ! Don't Skip any Points
@@ -778,10 +778,10 @@ subroutine cubsplz(u,lind)
                  inxi=1
                  kz=zi(k,i,j)/dz
                  kpoli=1
-                 if(nzipif(k,i,j).lt.npif)nzpif=nzipif(k,i,j)
+                 if(nzipif(k,i,j) < npif)nzpif=nzipif(k,i,j)
                  do kpif=1,nzpif
                     ia=ia+1
-                    if(izap.eq.1)then ! Skip First Points
+                    if(izap == 1)then ! Skip First Points
                        xa(ia)=(kz-1)*dz-kpif*dz
                        ya(ia)=bcimp
                     else              ! Don't Skip any Points
@@ -793,7 +793,7 @@ subroutine cubsplz(u,lind)
               !  2nd Boundary
               nzpif=npif
               ia=ia+1
-              if (ianal.eq.0) then
+              if (ianal == 0) then
                  xa(ia)=zf(k,i,j)
                  ana_resf=zf(k,i,j)
               else
@@ -801,14 +801,14 @@ subroutine cubsplz(u,lind)
                  xa(ia)=ana_resf
               endif
               ya(ia)=bcimp
-              if(zf(k,i,j).lt.zlz)then  ! Immersed Object
+              if(zf(k,i,j) < zlz)then  ! Immersed Object
                  inxf=0
                  kz=(zf(k,i,j)+dz)/dz+1
                  kpolf=kz-1
-                 if(nzfpif(k,i,j).lt.npif)nzpif=nzfpif(k,i,j)
+                 if(nzfpif(k,i,j) < npif)nzpif=nzfpif(k,i,j)
                  do kpif=1,nzpif
                     ia=ia+1
-                    if(izap.eq.1)then  ! Skip First Points
+                    if(izap == 1)then  ! Skip First Points
                        xa(ia)=(kz-1)*dz+kpif*dz
                        ya(ia)=u(i,j,kz+kpif)
                     else               ! Don't Skip any Points
@@ -820,10 +820,10 @@ subroutine cubsplz(u,lind)
                  inxf=1
                  kz=(zf(k,i,j)+dz)/dz+1
                  kpolf=nz
-                 if(nzfpif(k,i,j).lt.npif)nzpif=nzfpif(k,i,j)
+                 if(nzfpif(k,i,j) < npif)nzpif=nzfpif(k,i,j)
                  do kpif=1,nzpif
                     ia=ia+1
-                    if(izap.eq.1)then  ! Skip First Points
+                    if(izap == 1)then  ! Skip First Points
                        xa(ia)=(kz-1)*dz+kpif*dz
                        ya(ia)=bcimp
                     else               ! Don't Skip any Points
@@ -833,17 +833,17 @@ subroutine cubsplz(u,lind)
                  enddo
               endif
          !     ! Special Case
-         !     if (zi(k,i,j).eq.zf(k,i,j)) then
+         !     if (zi(k,i,j) == zf(k,i,j)) then
          !         u(i,j,kpol)=bcimp                                   
          !     else              
     	      ! Cubic Spline Reconstruction
 	            na=ia
 	            do kpol=kpoli,kpolf 
                           ! Special Case
-                          if (zi(k,i,j).eq.zf(k,i,j)) then
+                          if (zi(k,i,j) == zf(k,i,j)) then
                                 u(i,j,kpol)=bcimp
                           else
-	                    if ((inxf.eq.1).and.(inxi.eq.1)) then ! If the Body Extends from the Front to the Back (Special Case)
+	                    if ((inxf == 1).and.(inxi == 1)) then ! If the Body Extends from the Front to the Back (Special Case)
 	                          u(i,j,kpol)=bcimp                            
 	                     else              
 	                          xpol=dz*(kpol-1)
@@ -886,7 +886,7 @@ subroutine cubic_spline(xa,ya,n,x,y)
 	! Arrange Points in Correct Order (based on x-coor)
 	j=n/2
 	do i=1,n
-		    if (i.le.n/2) then
+		    if (i <= n/2) then
 		            xaa(i)=xa(j)
 		            yaa(i)=ya(j)
 		            j=j-1
@@ -972,14 +972,14 @@ subroutine ana_y_cyl(i,y_pos,ana_res)
   real(mytype)                                       :: y_pos,ana_res 
   real(mytype)                                       :: cexx,ceyy
   !
-  if (t.ne.0.) then
+  if (t /= 0.) then
      cexx = cex + ubcx*(t-ifirst*dt)
      ceyy = cey + ubcy*(t-ifirst*dt)
   else
      cexx = cex
      ceyy = cey
   endif
-  if (y_pos.gt.ceyy) then     ! Impose analytical BC
+  if (y_pos > ceyy) then     ! Impose analytical BC
       ana_res=ceyy + sqrt(ra**2.0-((i+ystart(1)-1-1)*dx-cexx)**2.0)
   else
       ana_res=ceyy - sqrt(ra**2.0-((i+ystart(1)-1-1)*dx-cexx)**2.0)
@@ -1003,14 +1003,14 @@ subroutine ana_x_cyl(j,x_pos,ana_res)
   real(mytype)                                       :: x_pos,ana_res 
   real(mytype)                                       :: cexx,ceyy
   !
-  if (t.ne.0.) then
+  if (t /= 0.) then
      cexx = cex + ubcx*(t-ifirst*dt)
      ceyy = cey + ubcy*(t-ifirst*dt)
   else
      cexx = cex
      ceyy = cey
   endif
-  if (x_pos.gt.cexx) then     ! Impose analytical BC
+  if (x_pos > cexx) then     ! Impose analytical BC
       ana_res = cexx + sqrt(ra**2.0-(yp(j+xstart(2)-1)-ceyy)**2.0)
   else
       ana_res = cexx - sqrt(ra**2.0-(yp(j+xstart(2)-1)-ceyy)**2.0)

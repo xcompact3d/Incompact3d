@@ -49,47 +49,47 @@ subroutine schemes()
   integer :: is
 
 #ifdef DEBG
-  if (nrank .eq. 0) print *,'# schemes start'
+  if (nrank  ==  0) print *,'# schemes start'
 #endif
 
   !Velocity
   ! First derivative
-  if (nclx1.eq.0.and.nclxn.eq.0) derx => derx_00
-  if (nclx1.eq.1.and.nclxn.eq.1) derx => derx_11
-  if (nclx1.eq.1.and.nclxn.eq.2) derx => derx_12
-  if (nclx1.eq.2.and.nclxn.eq.1) derx => derx_21
-  if (nclx1.eq.2.and.nclxn.eq.2) derx => derx_22
+  if (nclx1 == 0.and.nclxn == 0) derx => derx_00
+  if (nclx1 == 1.and.nclxn == 1) derx => derx_11
+  if (nclx1 == 1.and.nclxn == 2) derx => derx_12
+  if (nclx1 == 2.and.nclxn == 1) derx => derx_21
+  if (nclx1 == 2.and.nclxn == 2) derx => derx_22
   !
-  if (ncly1.eq.0.and.nclyn.eq.0) dery => dery_00
-  if (ncly1.eq.1.and.nclyn.eq.1) dery => dery_11
-  if (ncly1.eq.1.and.nclyn.eq.2) dery => dery_12
-  if (ncly1.eq.2.and.nclyn.eq.1) dery => dery_21
-  if (ncly1.eq.2.and.nclyn.eq.2) dery => dery_22
+  if (ncly1 == 0.and.nclyn == 0) dery => dery_00
+  if (ncly1 == 1.and.nclyn == 1) dery => dery_11
+  if (ncly1 == 1.and.nclyn == 2) dery => dery_12
+  if (ncly1 == 2.and.nclyn == 1) dery => dery_21
+  if (ncly1 == 2.and.nclyn == 2) dery => dery_22
   !
-  if (nclz1.eq.0.and.nclzn.eq.0) derz => derz_00
-  if (nclz1.eq.1.and.nclzn.eq.1) derz => derz_11
-  if (nclz1.eq.1.and.nclzn.eq.2) derz => derz_12
-  if (nclz1.eq.2.and.nclzn.eq.1) derz => derz_21
-  if (nclz1.eq.2.and.nclzn.eq.2) derz => derz_22
+  if (nclz1 == 0.and.nclzn == 0) derz => derz_00
+  if (nclz1 == 1.and.nclzn == 1) derz => derz_11
+  if (nclz1 == 1.and.nclzn == 2) derz => derz_12
+  if (nclz1 == 2.and.nclzn == 1) derz => derz_21
+  if (nclz1 == 2.and.nclzn == 2) derz => derz_22
   ! Second derivative
   !x
-  if (nclx1.eq.0.and.nclxn.eq.0) derxx => derxx_00
-  if (nclx1.eq.1.and.nclxn.eq.1) derxx => derxx_11
-  if (nclx1.eq.1.and.nclxn.eq.2) derxx => derxx_12
-  if (nclx1.eq.2.and.nclxn.eq.1) derxx => derxx_21
-  if (nclx1.eq.2.and.nclxn.eq.2) derxx => derxx_22
+  if (nclx1 == 0.and.nclxn == 0) derxx => derxx_00
+  if (nclx1 == 1.and.nclxn == 1) derxx => derxx_11
+  if (nclx1 == 1.and.nclxn == 2) derxx => derxx_12
+  if (nclx1 == 2.and.nclxn == 1) derxx => derxx_21
+  if (nclx1 == 2.and.nclxn == 2) derxx => derxx_22
   !y
-  if (ncly1.eq.0.and.nclyn.eq.0) deryy => deryy_00
-  if (ncly1.eq.1.and.nclyn.eq.1) deryy => deryy_11
-  if (ncly1.eq.1.and.nclyn.eq.2) deryy => deryy_12
-  if (ncly1.eq.2.and.nclyn.eq.1) deryy => deryy_21
-  if (ncly1.eq.2.and.nclyn.eq.2) deryy => deryy_22
+  if (ncly1 == 0.and.nclyn == 0) deryy => deryy_00
+  if (ncly1 == 1.and.nclyn == 1) deryy => deryy_11
+  if (ncly1 == 1.and.nclyn == 2) deryy => deryy_12
+  if (ncly1 == 2.and.nclyn == 1) deryy => deryy_21
+  if (ncly1 == 2.and.nclyn == 2) deryy => deryy_22
   !z
-  if (nclz1.eq.0.and.nclzn.eq.0) derzz => derzz_00
-  if (nclz1.eq.1.and.nclzn.eq.1) derzz => derzz_11
-  if (nclz1.eq.1.and.nclzn.eq.2) derzz => derzz_12
-  if (nclz1.eq.2.and.nclzn.eq.1) derzz => derzz_21
-  if (nclz1.eq.2.and.nclzn.eq.2) derzz => derzz_22
+  if (nclz1 == 0.and.nclzn == 0) derzz => derzz_00
+  if (nclz1 == 1.and.nclzn == 1) derzz => derzz_11
+  if (nclz1 == 1.and.nclzn == 2) derzz => derzz_12
+  if (nclz1 == 2.and.nclzn == 1) derzz => derzz_21
+  if (nclz1 == 2.and.nclzn == 2) derzz => derzz_22
 
   call first_derivative(alfa1x,af1x,bf1x,cf1x,df1x,alfa2x,af2x,alfanx,afnx,bfnx,&
        cfnx,dfnx,alfamx,afmx,alfaix,afix,bfix,&
@@ -122,44 +122,44 @@ subroutine schemes()
        alsakz,askz,bskz,cskz,dskz,&
        sfz,ssz,swz,sfzp,sszp,swzp,dz2,nz,nclz1,nclzn)
 
-  if (iscalar.ne.0 .or. (ilmn)) then
+  if (iscalar /= 0 .or. (ilmn)) then
      !Scalar
      ! First derivative
-     if (nclxS1.eq.0.and.nclxSn.eq.0) derxS => derx_00
-     if (nclxS1.eq.1.and.nclxSn.eq.1) derxS => derx_11
-     if (nclxS1.eq.1.and.nclxSn.eq.2) derxS => derx_12
-     if (nclxS1.eq.2.and.nclxSn.eq.1) derxS => derx_21
-     if (nclxS1.eq.2.and.nclxSn.eq.2) derxS => derx_22
+     if (nclxS1 == 0.and.nclxSn == 0) derxS => derx_00
+     if (nclxS1 == 1.and.nclxSn == 1) derxS => derx_11
+     if (nclxS1 == 1.and.nclxSn == 2) derxS => derx_12
+     if (nclxS1 == 2.and.nclxSn == 1) derxS => derx_21
+     if (nclxS1 == 2.and.nclxSn == 2) derxS => derx_22
      !
-     if (nclyS1.eq.0.and.nclySn.eq.0) deryS => dery_00
-     if (nclyS1.eq.1.and.nclySn.eq.1) deryS => dery_11
-     if (nclyS1.eq.1.and.nclySn.eq.2) deryS => dery_12
-     if (nclyS1.eq.2.and.nclySn.eq.1) deryS => dery_21
-     if (nclyS1.eq.2.and.nclySn.eq.2) deryS => dery_22
+     if (nclyS1 == 0.and.nclySn == 0) deryS => dery_00
+     if (nclyS1 == 1.and.nclySn == 1) deryS => dery_11
+     if (nclyS1 == 1.and.nclySn == 2) deryS => dery_12
+     if (nclyS1 == 2.and.nclySn == 1) deryS => dery_21
+     if (nclyS1 == 2.and.nclySn == 2) deryS => dery_22
      !
-     if (nclzS1.eq.0.and.nclzSn.eq.0) derzS => derz_00
-     if (nclzS1.eq.1.and.nclzSn.eq.1) derzS => derz_11
-     if (nclzS1.eq.1.and.nclzSn.eq.2) derzS => derz_12
-     if (nclzS1.eq.2.and.nclzSn.eq.1) derzS => derz_21
-     if (nclzS1.eq.2.and.nclzSn.eq.2) derzS => derz_22
+     if (nclzS1 == 0.and.nclzSn == 0) derzS => derz_00
+     if (nclzS1 == 1.and.nclzSn == 1) derzS => derz_11
+     if (nclzS1 == 1.and.nclzSn == 2) derzS => derz_12
+     if (nclzS1 == 2.and.nclzSn == 1) derzS => derz_21
+     if (nclzS1 == 2.and.nclzSn == 2) derzS => derz_22
      ! Second derivative
-     if (nclxS1.eq.0.and.nclxSn.eq.0) derxxS => derxx_00
-     if (nclxS1.eq.1.and.nclxSn.eq.1) derxxS => derxx_11
-     if (nclxS1.eq.1.and.nclxSn.eq.2) derxxS => derxx_12
-     if (nclxS1.eq.2.and.nclxSn.eq.1) derxxS => derxx_21
-     if (nclxS1.eq.2.and.nclxSn.eq.2) derxxS => derxx_22
+     if (nclxS1 == 0.and.nclxSn == 0) derxxS => derxx_00
+     if (nclxS1 == 1.and.nclxSn == 1) derxxS => derxx_11
+     if (nclxS1 == 1.and.nclxSn == 2) derxxS => derxx_12
+     if (nclxS1 == 2.and.nclxSn == 1) derxxS => derxx_21
+     if (nclxS1 == 2.and.nclxSn == 2) derxxS => derxx_22
      !y
-     if (nclyS1.eq.0.and.nclySn.eq.0) deryyS => deryy_00
-     if (nclyS1.eq.1.and.nclySn.eq.1) deryyS => deryy_11
-     if (nclyS1.eq.1.and.nclySn.eq.2) deryyS => deryy_12
-     if (nclyS1.eq.2.and.nclySn.eq.1) deryyS => deryy_21
-     if (nclyS1.eq.2.and.nclySn.eq.2) deryyS => deryy_22
+     if (nclyS1 == 0.and.nclySn == 0) deryyS => deryy_00
+     if (nclyS1 == 1.and.nclySn == 1) deryyS => deryy_11
+     if (nclyS1 == 1.and.nclySn == 2) deryyS => deryy_12
+     if (nclyS1 == 2.and.nclySn == 1) deryyS => deryy_21
+     if (nclyS1 == 2.and.nclySn == 2) deryyS => deryy_22
      !z
-     if (nclzS1.eq.0.and.nclzSn.eq.0) derzzS => derzz_00
-     if (nclzS1.eq.1.and.nclzSn.eq.1) derzzS => derzz_11
-     if (nclzS1.eq.1.and.nclzSn.eq.2) derzzS => derzz_12
-     if (nclzS1.eq.2.and.nclzSn.eq.1) derzzS => derzz_21
-     if (nclzS1.eq.2.and.nclzSn.eq.2) derzzS => derzz_22
+     if (nclzS1 == 0.and.nclzSn == 0) derzzS => derzz_00
+     if (nclzS1 == 1.and.nclzSn == 1) derzzS => derzz_11
+     if (nclzS1 == 1.and.nclzSn == 2) derzzS => derzz_12
+     if (nclzS1 == 2.and.nclzSn == 1) derzzS => derzz_21
+     if (nclzS1 == 2.and.nclzSn == 2) derzzS => derzz_22
      call first_derivative(alfa1x,af1x,bf1x,cf1x,df1x,alfa2x,af2x,alfanx,afnx,bfnx,&
           cfnx,dfnx,alfamx,afmx,alfaix,afix,bfix,&
           ffxS,fsxS,fwxS,ffxpS,fsxpS,fwxpS,dx,nx,nclxS1,nclxSn)
@@ -219,13 +219,13 @@ subroutine schemes()
        cwi6z,cifi6z,cici6z,cibi6z,cifip6z,&
        cisip6z,ciwip6z,cisi6z,ciwi6z)
 
-  if (iimplicit.ne.0) then
+  if (iimplicit /= 0) then
      call init_implicit()
      call implicit_schemes()
   endif
 
 #ifdef DEBG
-  if (nrank .eq. 0) print *,'# schemes end'
+  if (nrank  ==  0) print *,'# schemes end'
 #endif
 
   return
@@ -341,21 +341,21 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
      afm  = (three/four)/d
   endif
 
-  if     (ncl1.eq.0) then !Periodic
+  if     (ncl1 == 0) then !Periodic
      ff(1)   =alfai
      ff(2)   =alfai
      fc(1)   =two
      fc(2)   =one
      fb(1)   =alfai
      fb(2)   =alfai
-  elseif (ncl1.eq.1) then !Free-slip
+  elseif (ncl1 == 1) then !Free-slip
      ff(1)   =alfai+alfai
      ff(2)   =alfai
      fc(1)   =one
      fc(2)   =one
      fb(1)   =alfai
      fb(2)   =alfai
-  elseif (ncl1.eq.2) then !Dirichlet
+  elseif (ncl1 == 2) then !Dirichlet
      ff(1)   =alfa1
      ff(2)   =alfa2
      fc(1)   =one
@@ -363,7 +363,7 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
      fb(1)   =alfa2
      fb(2)   =alfai
   endif
-  if     (ncln.eq.0) then !Periodic
+  if     (ncln == 0) then !Periodic
      ff(n-2)=alfai
      ff(n-1)=alfai
      ff(n)  =zero
@@ -373,7 +373,7 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
      fb(n-2)=alfai
      fb(n-1)=alfai
      fb(n  )=zero
-  elseif (ncln.eq.1) then !Free-slip
+  elseif (ncln == 1) then !Free-slip
      ff(n-2)=alfai
      ff(n-1)=alfai
      ff(n)  =zero
@@ -383,7 +383,7 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
      fb(n-2)=alfai
      fb(n-1)=alfai+alfai
      fb(n  )=zero
-  elseif (ncln.eq.2) then !Dirichlet
+  elseif (ncln == 2) then !Dirichlet
      ff(n-2)=alfai
      ff(n-1)=alfam
      ff(n)  =zero
@@ -406,10 +406,10 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
 
   call prepare (fb,fc,ff ,fs ,fw ,n)
 
-  if (ncl1.eq.1) then
+  if (ncl1 == 1) then
      ffp(1)=zero
   endif
-  if (ncln.eq.1) then
+  if (ncln == 1) then
      fb(n-1)=zero
   endif
 
@@ -558,7 +558,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
   bstt = (three/fortyfour)/d2
   cstt = zero
 
-  if     (ncl1.eq.0) then !Periodic
+  if     (ncl1 == 0) then !Periodic
      sf(1)   =alsai
      sf(2)   =alsai
      sf(3)   =alsai
@@ -571,7 +571,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
      sb(2)   =alsai
      sb(3)   =alsai
      sb(4)   =alsai
-  elseif (ncl1.eq.1) then !Free-slip
+  elseif (ncl1 == 1) then !Free-slip
      sf(1)   =alsai+alsai
      sf(2)   =alsai
      sf(3)   =alsai
@@ -584,7 +584,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
      sb(2)   =alsai
      sb(3)   =alsai
      sb(4)   =alsai
-  elseif (ncl1.eq.2) then !Dirichlet
+  elseif (ncl1 == 2) then !Dirichlet
      sf(1)   =alsa1
      sf(2)   =alsa2
      sf(3)   =alsa3
@@ -598,7 +598,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
      sb(3)   =alsa4
      sb(4)   =alsai
   endif
-  if     (ncln.eq.0) then !Periodic
+  if     (ncln == 0) then !Periodic
      sf(n-4)=alsai
      sf(n-3)=alsai
      sf(n-2)=alsai
@@ -614,7 +614,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
      sb(n-2)=alsai
      sb(n-1)=alsai
      sb(n  )=zero
-  elseif (ncln.eq.1) then !Free-slip
+  elseif (ncln == 1) then !Free-slip
      sf(n-4)=alsai
      sf(n-3)=alsai
      sf(n-2)=alsai
@@ -630,7 +630,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
      sb(n-2)=alsai
      sb(n-1)=alsai+alsai
      sb(n  )=zero
-  elseif (ncln.eq.2) then !Dirichlet
+  elseif (ncln == 2) then !Dirichlet
      sf(n-4)=alsai
      sf(n-3)=alsatt
      sf(n-2)=alsat
@@ -657,14 +657,14 @@ subroutine second_derivative(alsa1,as1,bs1,&
      sfp(i)=sf(i)
   enddo
 
-  if (ncl1.eq.1) then
+  if (ncl1 == 1) then
      sf (1)=zero
   endif
 
   call prepare (sb,sc,sf ,ss ,sw ,n)
   call prepare (sb,sc,sfp,ssp,swp,n)
 
-  if (ncln.eq.1) then
+  if (ncln == 1) then
      sb(n-1)=zero
      call prepare (sb,sc,sf ,ss ,sw ,n)
   endif
@@ -767,13 +767,13 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      bicix6   = zero
      cicix6   = zero
      dicix6   = zero
-  else if (ipinter.eq.1) then
+  else if (ipinter == 1) then
      ailcaix6=three/ten
      aicix6=three/four
      bicix6=one/(two*ten)
      cicix6=zero
      dicix6=zero
-  else if (ipinter.eq.2) then
+  else if (ipinter == 2) then
      ailcaix6=0.461658
 
      dicix6=0.00293016
@@ -785,7 +785,7 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      bicix6=bicix6/two
      cicix6=cicix6/two
      dicix6=dicix6/two
-  else if (ipinter.eq.3) then
+  else if (ipinter == 3) then
      ailcaix6=0.49_mytype
      aicix6=one/128._mytype *(75._mytype +70._mytype*ailcaix6)
      bicix6=one/256._mytype *(126._mytype*ailcaix6-25._mytype)
@@ -856,7 +856,7 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
   call prepare (cbi6,cci6,cfip6,csip6,cwip6,nx)
   call prepare (cibi6,cici6,cifi6 ,cisi6 ,ciwi6 ,nx)
   call prepare (cibi6,cici6,cifip6,cisip6,ciwip6,nx)
-  if (nclxn.eq.1) then
+  if (nclxn == 1) then
      cbx6(nxm-1)=zero
      cibx6(nxm)=0
      cbi6(nx-1)=zero
@@ -866,7 +866,7 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      call prepare (cbi6,cci6,cfip6,csip6,cwip6,nx)
      call prepare (cibi6,cici6,cifip6,cisip6,ciwip6,nx)
   endif
-  if (nclxn.eq.2) then
+  if (nclxn == 2) then
      cbx6(nxm-1)=zero
      cibx6(nxm)=zero
      cbi6(nx-1)=zero

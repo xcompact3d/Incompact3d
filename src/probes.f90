@@ -53,7 +53,7 @@ contains
   subroutine setup_probes()
 
     ! Exit if no file or no probes
-    if (nprobes.le.0) then
+    if (nprobes <= 0) then
        flag_extra_probes = .false.
        return
     endif
@@ -80,20 +80,20 @@ contains
     real(mytype) :: xprobes, yprobes, zprobes
     character(len=30) :: filename
 
-    if (nprobes.le.0) return
+    if (nprobes <= 0) return
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init_probes start'
+    if (nrank  ==  0) print *,'# init_probes start'
 #endif
 
     ! In case of restart, check existence of previous probes results
     main_probes_offset = 0
     extra_probes_offset = 0
     !
-    if (irestart.ne.0) then
+    if (irestart /= 0) then
 
        ! Basic probes
-       if (nrank.eq.0) then
+       if (nrank == 0) then
           write(filename,"('./probes/probe',I4.4)") 1
           inquire(file=filename, exist=fexists)
           if (.not.fexists) then
@@ -102,11 +102,11 @@ contains
        endif
        ! Broadcast
        call MPI_BCAST(main_probes_offset,1,MPI_INTEGER,0,MPI_COMM_WORLD,code)
-       if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
+       if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
 
        ! Extra probes
        if (flag_extra_probes) then
-          if (nrank.eq.0) then
+          if (nrank == 0) then
              write(filename,"('./probes/probe_dx_',I4.4)") 1
              inquire(file=filename, exist=fexists)
              if (.not.fexists) then
@@ -115,7 +115,7 @@ contains
           endif
           ! Broadcast
           call MPI_BCAST(extra_probes_offset,1,MPI_INTEGER,0,MPI_COMM_WORLD,code)
-          if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
+          if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
        endif
 
     endif
@@ -151,7 +151,7 @@ contains
        nxprobesP(i) = nint(nxm*xprobes/xlx-half) + 1
 
        !y
-       if (istret.eq.0) then
+       if (istret == 0) then
           if (ncly) then
              nyprobes(i) = int(yprobes/dy) + 1
           else
@@ -159,24 +159,24 @@ contains
           endif
           nyprobesP(i) = nint(nym*yprobes/yly-half) + 1
        else
-          if (yprobes.le.ypi(1)) then
+          if (yprobes <= ypi(1)) then
              nyprobes(i) = 1
-          else if (yprobes.ge.ypi(nym)) then
+          else if (yprobes >= ypi(nym)) then
              nyprobes(i) = ny
           else
              do j = 1, nym-1
-                if (ypi(j).le.yprobes .and. yprobes.lt.ypi(j+1)) then
+                if (ypi(j) <= yprobes .and. yprobes < ypi(j+1)) then
                    nyprobes(i) = j + 1
                 end if
              end do
           endif
-          if (yprobes.le.yp(2)) then
+          if (yprobes <= yp(2)) then
              nyprobesP(i) = 1
-          elseif (yprobes.ge.yp(ny-1)) then
+          elseif (yprobes >= yp(ny-1)) then
              nyprobesP(i) = nym
           else
              do j = 3, ny-2
-                if (yp(j).le.yprobes .and. yprobes.lt.yp(j+1)) then
+                if (yp(j) <= yprobes .and. yprobes < yp(j+1)) then
                    nyprobesP(i) = j - 1
                    exit
                 end if
@@ -193,30 +193,30 @@ contains
        nzprobesP(i) = nint(nzm*zprobes/zlz-half) + 1
 
        ! Flag the rank with the probe
-       if       (xstart(1) .le. nxprobes(i) .and. nxprobes(i) .le. xend(1)) then
-          if    (xstart(2) .le. nyprobes(i) .and. nyprobes(i) .le. xend(2)) then
-             if (xstart(3) .le. nzprobes(i) .and. nzprobes(i) .le. xend(3)) then
+       if       (xstart(1)  <=  nxprobes(i) .and. nxprobes(i)  <=  xend(1)) then
+          if    (xstart(2)  <=  nyprobes(i) .and. nyprobes(i)  <=  xend(2)) then
+             if (xstart(3)  <=  nzprobes(i) .and. nzprobes(i)  <=  xend(3)) then
                 rankprobes(i) = .true.
              endif
           endif
        endif
-       if       (ystart(1) .le. nxprobes(i) .and. nxprobes(i) .le. yend(1)) then
-          if    (ystart(2) .le. nyprobes(i) .and. nyprobes(i) .le. yend(2)) then
-             if (ystart(3) .le. nzprobes(i) .and. nzprobes(i) .le. yend(3)) then
+       if       (ystart(1)  <=  nxprobes(i) .and. nxprobes(i)  <=  yend(1)) then
+          if    (ystart(2)  <=  nyprobes(i) .and. nyprobes(i)  <=  yend(2)) then
+             if (ystart(3)  <=  nzprobes(i) .and. nzprobes(i)  <=  yend(3)) then
                 rankprobesY(i) = .true.
              endif
           endif
        endif
-       if       (zstart(1) .le. nxprobes(i) .and. nxprobes(i) .le. zend(1)) then
-          if    (zstart(2) .le. nyprobes(i) .and. nyprobes(i) .le. zend(2)) then
-             if (zstart(3) .le. nzprobes(i) .and. nzprobes(i) .le. zend(3)) then
+       if       (zstart(1)  <=  nxprobes(i) .and. nxprobes(i)  <=  zend(1)) then
+          if    (zstart(2)  <=  nyprobes(i) .and. nyprobes(i)  <=  zend(2)) then
+             if (zstart(3)  <=  nzprobes(i) .and. nzprobes(i)  <=  zend(3)) then
                 rankprobesZ(i) = .true.
              endif
           endif
        endif
-       if       (ph1%zst(1) .le. nxprobesP(i) .and. nxprobesP(i) .le. ph1%zen(1)) then
-          if    (ph1%zst(2) .le. nyprobesP(i) .and. nyprobesP(i) .le. ph1%zen(2)) then
-             if (ph1%zst(3) .le. nzprobesP(i) .and. nzprobesP(i) .le. ph1%zen(3)) then
+       if       (ph1%zst(1)  <=  nxprobesP(i) .and. nxprobesP(i)  <=  ph1%zen(1)) then
+          if    (ph1%zst(2)  <=  nyprobesP(i) .and. nyprobesP(i)  <=  ph1%zen(2)) then
+             if (ph1%zst(3)  <=  nzprobesP(i) .and. nzprobesP(i)  <=  ph1%zen(3)) then
                 rankprobesP(i) = .true.
              endif
           endif
@@ -224,7 +224,7 @@ contains
     enddo
 
     ! Log the real position of the probes in a file
-    if (nrank.eq.0) call log_probes_position()
+    if (nrank == 0) call log_probes_position()
 
     ! Allocate memory to monitor gradients
     if (flag_extra_probes) then
@@ -237,7 +237,7 @@ contains
     endif
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init_probes ok'
+    if (nrank  ==  0) print *,'# init_probes ok'
 #endif
 
   end subroutine init_probes
@@ -281,7 +281,7 @@ contains
     character(len=30) :: filename
     logical :: evensc
     
-    if (nprobes.le.0) return
+    if (nprobes <= 0) return
 
     ! Number of columns
     FS = 1+3+numscalar
@@ -306,7 +306,7 @@ contains
           write(filename,"('./probes/probe',I4.4)") i
           open(newunit=iounit,file=trim(filename),status='unknown',form='formatted'&
                ,access='direct',recl=FS)
-          if (numscalar.ge.1) then
+          if (numscalar >= 1) then
              write(iounit,fileformat,rec=itime-main_probes_offset) t,&  !1
                   ux1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !2
                   uy1(nxprobes(i),nyprobes(i),nzprobes(i)),&            !3
@@ -481,10 +481,10 @@ contains
     real(mytype) :: fact
 
     ! Explicit Euler, AB2, AB3, AB4, RK3
-    if (itimescheme.ge.1 .and. itimescheme.le.5) then
+    if (itimescheme >= 1 .and. itimescheme <= 5) then
        fact = one / gdt(3)
     ! RK4
-    elseif (itimescheme.eq.6) then
+    elseif (itimescheme == 6) then
        fact = one / gdt(5)
     else
        ! We should not be here
@@ -597,7 +597,7 @@ contains
   !
   subroutine finalize_probes()
 
-    if (nprobes.le.0) return
+    if (nprobes <= 0) return
 
     deallocate(xyzprobes)
     deallocate(nxprobes, nyprobes, nzprobes)

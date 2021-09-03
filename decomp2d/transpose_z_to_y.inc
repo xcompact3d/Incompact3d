@@ -64,7 +64,7 @@ subroutine transpose_z_to_y_real(src, dst, opt_decomp)
 #ifdef SHM
   work2_p = decomp%ROW_INFO%RCV_P
   call MPI_BARRIER(decomp%ROW_INFO%CORE_COMM, ierror)
-  if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_BARRIER")
+  if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_BARRIER")
 #endif
 
 #ifdef SHM
@@ -72,7 +72,7 @@ subroutine transpose_z_to_y_real(src, dst, opt_decomp)
      call MPI_ALLTOALLV(work1, decomp%z2cnts_s, decomp%z2disp_s, &
           real_type, work2, decomp%y2cnts_s, decomp%y2disp_s, &
           real_type, decomp%ROW_INFO%SMP_COMM, ierror)
-     if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLTOALLV")
+     if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLTOALLV")
   end if
 #else
 #ifdef EVEN
@@ -80,25 +80,25 @@ subroutine transpose_z_to_y_real(src, dst, opt_decomp)
      call MPI_ALLTOALL(src, decomp%z2count, &
           real_type, work2_r, decomp%y2count, &
           real_type, DECOMP_2D_COMM_ROW, ierror)
-     if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLTOALL")
+     if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLTOALL")
   else
      call MPI_ALLTOALL(work1_r, decomp%z2count, &
           real_type, work2_r, decomp%y2count, &
           real_type, DECOMP_2D_COMM_ROW, ierror)
-     if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLTOALL")
+     if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLTOALL")
   end if
 #else
   call MPI_ALLTOALLV(src, decomp%z2cnts, decomp%z2disp, &
        real_type, work2_r, decomp%y2cnts, decomp%y2disp, &
        real_type, DECOMP_2D_COMM_ROW, ierror)
-  if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLTOALLV")
+  if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLTOALLV")
 #endif
 #endif
 
   ! rearrange receive buffer
 #ifdef SHM
   call MPI_BARRIER(decomp%ROW_INFO%CORE_COMM, ierror)
-  if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_BARRIER")
+  if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_BARRIER")
   call mem_merge_zy_real(work2, d1, d2, d3, dst, dims(2), &
        decomp%y2dist, decomp)
 #else
@@ -233,7 +233,7 @@ subroutine transpose_z_to_y_complex(src, dst, opt_decomp)
 #ifdef SHM
   work2_p = decomp%ROW_INFO%RCV_P_c
   call MPI_BARRIER(decomp%ROW_INFO%CORE_COMM, ierror)
-  if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_BARRIER")
+  if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_BARRIER")
 #endif
 
 #ifdef SHM
@@ -241,7 +241,7 @@ subroutine transpose_z_to_y_complex(src, dst, opt_decomp)
      call MPI_ALLTOALLV(work1, decomp%z2cnts_s, decomp%z2disp_s, &
           complex_type, work2, decomp%y2cnts_s, decomp%y2disp_s, &
           complex_type, decomp%ROW_INFO%SMP_COMM, ierror)
-     if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLTOALLV")
+     if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLTOALLV")
   end if
 #else
 #ifdef EVEN
@@ -249,25 +249,25 @@ subroutine transpose_z_to_y_complex(src, dst, opt_decomp)
      call MPI_ALLTOALL(src, decomp%z2count, &
           complex_type, work2_c, decomp%y2count, &
           complex_type, DECOMP_2D_COMM_ROW, ierror)
-     if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLTOALL")
+     if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLTOALL")
   else
      call MPI_ALLTOALL(work1_c, decomp%z2count, &
           complex_type, work2_c, decomp%y2count, &
           complex_type, DECOMP_2D_COMM_ROW, ierror)
-     if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLTOALL")
+     if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLTOALL")
   end if
 #else
   call MPI_ALLTOALLV(src, decomp%z2cnts, decomp%z2disp, &
        complex_type, work2_c, decomp%y2cnts, decomp%y2disp, &
        complex_type, DECOMP_2D_COMM_ROW, ierror)
-  if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLTOALLV")
+  if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLTOALLV")
 #endif
 #endif
 
   ! rearrange receive buffer
 #ifdef SHM
   call MPI_BARRIER(decomp%ROW_INFO%CORE_COMM, ierror)
-  if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_BARRIER")
+  if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_BARRIER")
   call mem_merge_zy_complex(work2, d1, d2, d3, dst, dims(2), &
        decomp%y2dist, decomp)
 #else

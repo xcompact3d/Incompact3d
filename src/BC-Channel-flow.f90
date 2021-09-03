@@ -65,30 +65,30 @@ contains
     integer :: k,j,i,ii,code
 
     if (iscalar==1) then
-      if (nrank.eq.0) print *,'Imposing linear temperature profile'
+      if (nrank == 0) print *,'Imposing linear temperature profile'
       do k=1,xsize(3)
          do j=1,xsize(2)
-            if (istret.eq.0) y=real(j+xstart(2)-2,mytype)*dy
-            if (istret.ne.0) y=yp(j+xstart(2)-1)
+            if (istret == 0) y=real(j+xstart(2)-2,mytype)*dy
+            if (istret /= 0) y=yp(j+xstart(2)-1)
             do i=1,xsize(1)
                phi1(i,j,k,:) = one - y/yly
             enddo
          enddo
       enddo
 
-      if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
+      if ((nclyS1 == 2).and.(xstart(2) == 1)) then
         !! Generate a hot patch on bottom boundary
         phi1(:,1,:,:) = one
       endif
-      if ((nclySn.eq.2).and.(xend(2).eq.ny)) then
+      if ((nclySn == 2).and.(xend(2) == ny)) then
         phi1(:,xsize(2),:,:) = zero
       endif
     endif
 
     ux1=zero;uy1=zero;uz1=zero
-    if (iin.ne.0) then
+    if (iin /= 0) then
        call system_clock(count=code)
-       if (iin.eq.2) code=0
+       if (iin == 2) code=0
        call random_seed(size = ii)
        call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /))
 
@@ -100,8 +100,8 @@ contains
     !modulation of the random noise + initial velocity profile
     do k=1,xsize(3)
        do j=1,xsize(2)
-          if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy-yly/two
-          if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/two
+          if (istret == 0) y=real(j+xstart(2)-1-1,mytype)*dy-yly/two
+          if (istret /= 0) y=yp(j+xstart(2)-1)-yly/two
           um=exp(-zptwo*y*y)
           do i=1,xsize(1)
              ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
@@ -123,7 +123,7 @@ contains
     enddo
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init end ok'
+    if (nrank  ==  0) print *,'# init end ok'
 #endif
 
     return
@@ -146,13 +146,13 @@ contains
         call channel_cfr(ux,two/three)
     end if
 
-    if (iscalar.ne.0) then
-       if (iimplicit.le.0) then
-          if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
+    if (iscalar /= 0) then
+       if (iimplicit <= 0) then
+          if ((nclyS1 == 2).and.(xstart(2) == 1)) then
              !! Generate a hot patch on bottom boundary
              phi(:,1,:,:) = one
           endif
-          if ((nclySn.eq.2).and.(xend(2).eq.ny)) THEN
+          if ((nclySn == 2).and.(xend(2) == ny)) THEN
              phi(:,xsize(2),:,:) = zero
           endif
        else
@@ -162,9 +162,9 @@ contains
           ! It is not possible to modify alpha_sc and beta_sc here
           !
           ! Bottom temperature if alpha_sc(:,1)=1 and beta_sc(:,1)=0 (default)
-          !if (nclyS1.eq.2) g_sc(:,1) = one
+          !if (nclyS1 == 2) g_sc(:,1) = one
           ! Top temperature if alpha_sc(:,2)=1 and beta_sc(:,2)=0 (default)
-          !if (nclySn.eq.2) g_sc(:,2) = zero
+          !if (nclySn == 2) g_sc(:,2) = zero
        endif
     endif
 
@@ -204,7 +204,7 @@ contains
     ub = ub * coeff
 
     call MPI_ALLREDUCE(ub,uball,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
     can = - (constant - uball)
 
@@ -325,7 +325,7 @@ contains
         dux1(:,:,:,1) = dux1(:,:,:,1) + fcpg !* (re/re_cent)**2
     endif
 
-    if (itime.lt.spinup_time) then
+    if (itime < spinup_time) then
        if (nrank==0) print *,'Rotating turbulent channel at speed ',wrotation
        dux1(:,:,:,1) = dux1(:,:,:,1) - wrotation*uy1(:,:,:)
        duy1(:,:,:,1) = duy1(:,:,:,1) + wrotation*ux1(:,:,:)
@@ -355,14 +355,14 @@ contains
     h = (yly - two) / two
 
     zeromach=one
-    do while ((one + zeromach / two) .gt. one)
+    do while ((one + zeromach / two)  >  one)
        zeromach = zeromach/two
     end do
     zeromach = 1.0e1*zeromach
 
     do j=nyi,nyf
        ym=yp(j)
-       if ((ym.le.h).or.(ym.ge.(h+two))) then
+       if ((ym <= h).or.(ym >= (h+two))) then
           epsi(:,j,:)=remp
        endif
     enddo

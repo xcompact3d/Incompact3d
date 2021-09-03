@@ -121,7 +121,7 @@ contains
     TYPE(DECOMP_INFO), save :: ph! decomposition object
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init_variables start'
+    if (nrank  ==  0) print *,'# init_variables start'
 #endif
 
     if (nrank==0) print *,'Initializing variables...'
@@ -197,13 +197,13 @@ contains
     bzxn=zero;bzyn=zero;bzzn=zero
 
     !inflow/outflow arrays (precursor simulations)
-    if (iin.eq.3) then
+    if (iin == 3) then
        allocate(ux_inflow(ntimesteps,xsize(2),xsize(3)))
        allocate(uy_inflow(ntimesteps,xsize(2),xsize(3)))
        allocate(uz_inflow(ntimesteps,xsize(2),xsize(3)))
     endif
 
-    if (ioutflow.eq.1) then
+    if (ioutflow == 1) then
        allocate(ux_recoutflow(ntimesteps,xsize(2),xsize(3)))
        allocate(uy_recoutflow(ntimesteps,xsize(2),xsize(3)))
        allocate(uz_recoutflow(ntimesteps,xsize(2),xsize(3)))
@@ -303,7 +303,7 @@ contains
     call alloc_z(dv3,ph,.true.)
     call alloc_z(po3,ph,.true.)
 
-    if(ilesmod.ne.0.and.jles.gt.0) then
+    if(ilesmod /= 0.and.jles > 0) then
        call alloc_x(sgsx1);call alloc_x(sgsy1); call alloc_x(sgsz1)
        call alloc_x(sxx1);call alloc_x(syy1); call alloc_x(szz1)
        call alloc_x(sxy1);call alloc_x(sxz1); call alloc_x(syz1)
@@ -333,7 +333,7 @@ contains
     endif
 
 
-    if (iibm.ne.0) then
+    if (iibm /= 0) then
        !complex_geometry
        nxraf=(nxm)*nraf+1;nyraf=(nym)*nraf+1;nzraf=(nzm)*nraf+1
        allocate(nobjx(xsize(2),xsize(3)))
@@ -428,16 +428,16 @@ contains
       xpi(i)=(real(i,mytype)-half)*dx
     enddo
     ! y-position
-    if (istret.eq.0) then
+    if (istret == 0) then
        do j=1,ny
           yp(j)=real(j-1,mytype)*dy
           ypi(j)=(real(j,mytype)-half)*dy
           ppy(j) = one
        enddo
-       if (ncly1.eq.1 .or. ncly1.eq.2) then
+       if (ncly1 == 1 .or. ncly1 == 2) then
           ppy(1) = two
        endif
-       if (nclyn.eq.1 .or. nclyn.eq.2) then
+       if (nclyn == 1 .or. nclyn == 2) then
           ppy(ny) = two
        endif
     else
@@ -458,7 +458,7 @@ contains
     enddo
     !
     adt(:)=zero ; bdt(:)=zero ; cdt(:)=zero ; gdt(:)=zero
-    if (itimescheme.eq.1) then ! Euler
+    if (itimescheme == 1) then ! Euler
        iadvance_time=1
        adt(1)=1.0_mytype*dt
        bdt(1)=zero
@@ -467,7 +467,7 @@ contains
 
        ntime = 1
        nrhotime = 2
-    elseif (itimescheme.eq.2) then ! AB2
+    elseif (itimescheme == 2) then ! AB2
        iadvance_time=1
        adt(1)=onepfive*dt
        bdt(1)=-half*dt
@@ -476,7 +476,7 @@ contains
 
        ntime = 2
        nrhotime = 3
-    elseif (itimescheme.eq.3) then ! AB3
+    elseif (itimescheme == 3) then ! AB3
        iadvance_time=1
        adt(1)= (23._mytype/12._mytype)*dt
        bdt(1)=-(16._mytype/12._mytype)*dt
@@ -497,7 +497,7 @@ contains
 
        ntime = 4
        nrhotime = 5
-    elseif(itimescheme.eq.5) then !RK3
+    elseif(itimescheme == 5) then !RK3
        iadvance_time=3
        adt(1)=(8._mytype/15._mytype)*dt
        bdt(1)=zero
@@ -511,7 +511,7 @@ contains
 
        ntime = 2
        nrhotime = 3
-    elseif(itimescheme.eq.6) then !RK4 Carpenter and Kennedy
+    elseif(itimescheme == 6) then !RK4 Carpenter and Kennedy
        iadvance_time=5
        adt(1)=zero
        adt(2)=-0.4178904745_mytype
@@ -547,11 +547,11 @@ contains
     allocate(Tstat(xsize(2),1))
 
     !! Turbine Modelling
-    if (iturbine.eq.1) then
+    if (iturbine == 1) then
        allocate(FTx(xsize(1),xsize(2),xsize(3)))
        allocate(FTy(xsize(1),xsize(2),xsize(3)))
        allocate(FTz(xsize(1),xsize(2),xsize(3)))
-    else if (iturbine.eq.2) then
+    else if (iturbine == 2) then
        allocate(Fdiscx(xsize(1),xsize(2),xsize(3)))
        allocate(Fdiscy(xsize(1),xsize(2),xsize(3)))
        allocate(Fdiscz(xsize(1),xsize(2),xsize(3)))
@@ -581,7 +581,7 @@ contains
     allocate(h_1(xsize(3)), h_2(xsize(3)))
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init_variables done'
+    if (nrank  ==  0) print *,'# init_variables done'
 #endif
     return
   end subroutine init_variables

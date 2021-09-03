@@ -110,30 +110,30 @@ contains
     integer :: iconservative
 
     ! Calculate eddy-viscosity
-    if(jles.eq.1) then ! Smagorinsky
+    if(jles == 1) then ! Smagorinsky
        call smag(nut1,ux1,uy1,uz1)
 
-    elseif(jles.eq.2) then ! Wall-adapting local eddy-viscosity (WALE) model
+    elseif(jles == 2) then ! Wall-adapting local eddy-viscosity (WALE) model
        call wale(nut1,ux1,uy1,uz1)
 
-    elseif(jles.eq.3) then ! Lilly-style Dynamic Smagorinsky
+    elseif(jles == 3) then ! Lilly-style Dynamic Smagorinsky
        call dynsmag(nut1,ux1,uy1,uz1,ep1)
 
     endif
 
-    if(iconservative.eq.0) then ! Non-conservative form for calculating the divergence of the SGS stresses
+    if(iconservative == 0) then ! Non-conservative form for calculating the divergence of the SGS stresses
 
        call sgs_mom_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
        !call sgs_scalar_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
 
-    elseif (iconservative.eq.1) then ! Conservative form for calculating the divergence of the SGS stresses (used with wall functions)
+    elseif (iconservative == 1) then ! Conservative form for calculating the divergence of the SGS stresses (used with wall functions)
 
        ! Call les_conservative
 
     endif
 
     ! SGS correction for ABL
-    if(itype.eq.itype_abl) then
+    if(itype == itype_abl) then
        call wall_sgs(ux1,uy1,uz1,phi1,nut1,wallfluxx1,wallfluxy1,wallfluxz1)
        if (xstart(2)==1) then
           sgsx1(:,1,:) = wallfluxx1(:,1,:)
@@ -250,10 +250,10 @@ contains
     do k = 1, ysize(3)
        do j = 1, ysize(2)
           do i = 1, ysize(1)
-             if(itype.eq.itype_abl) then
+             if(itype == itype_abl) then
                 !Mason and Thomson damping coefficient
-                if (istret.eq.0) y=(j+ystart(2)-1-1)*dy
-                if (istret.ne.0) y=yp(j+ystart(2)-1)
+                if (istret == 0) y=(j+ystart(2)-1-1)*dy
+                if (istret /= 0) y=yp(j+ystart(2)-1)
                 smag_constant=(smagcst**(-nSmag)+(k_roughness*(y/del(j)+z_zero/del(j)))**(-nSmag))**(-1./nSmag)
                 length=smag_constant*del(j)
              else
@@ -269,7 +269,7 @@ contains
     if (nrank==0) print *, "smag srt_smag min max= ", minval(srt_smag), maxval(srt_smag)
     if (nrank==0) print *, "smag nut1     min max= ", minval(nut1), maxval(nut1)
 
-    if (mod(itime, ioutput).eq.0) then
+    if (mod(itime, ioutput) == 0) then
 
        write(filename, "('./data/nut_smag',I4.4)") itime / ioutput
        call decomp_2d_write_one(1, nut1, filename, 2)
@@ -377,7 +377,7 @@ contains
     call filx(uxz1f, uxz1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,ubcx*ubcz) !ux1*uz1
     call filx(uyz1f, uyz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcy*ubcz) !uy1*uz1
 
-    if (mod(itime, ioutput).eq.0) then
+    if (mod(itime, ioutput) == 0) then
        if (nrank==0) print *, "filx ux= ", maxval(ta1), maxval(ux1f), maxval(ta1) - maxval(ux1f)
     endif
 
@@ -416,7 +416,7 @@ contains
     call fily(uxz2f, th2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,ubcx*ubcz) !ux2*uz2
     call fily(uyz2f, ti2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,ubcy*ubcz) !uy2*uz2
 
-    if (mod(itime, ioutput).eq.0) then
+    if (mod(itime, ioutput) == 0) then
        if (nrank==0) print *, "fily ux= ", maxval(ta2), maxval(ux2f), maxval(ta2) - maxval(ux2f)
     endif
 
@@ -458,7 +458,7 @@ contains
     call filz(uxz3f, th3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,ubcx*ubcz) !ux3*uz3
     call filz(uyz3f, ti3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,ubcy*ubcz) !uy3*uz3
 
-    if (mod(itime, ioutput).eq.0) then
+    if (mod(itime, ioutput) == 0) then
        if (nrank==0) print *, "filz ux= ", maxval(ta3), maxval(ux3f), maxval(ta3) - maxval(ux3f)
     endif
 
@@ -645,7 +645,7 @@ contains
     call filx(axz1f, axz1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,zero)
     call filx(ayz1f, ayz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,zero)
 
-    if (mod(itime, ioutput).eq.0) then
+    if (mod(itime, ioutput) == 0) then
        if (nrank==0) print *, "filx axx1= ", maxval(axx1), maxval(axx1f), maxval(axx1) - maxval(axx1f)
     endif
 
@@ -673,7 +673,7 @@ contains
     call fily(axz2f, te2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,zero)
     call fily(ayz2f, tf2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,zero)
 
-    if (mod(itime, ioutput).eq.0) then
+    if (mod(itime, ioutput) == 0) then
        if (nrank==0) print *, "fily axx2= ", maxval(ta2), maxval(axx2f), maxval(ta2) - maxval(axx2f)
     endif
 
@@ -705,7 +705,7 @@ contains
     call filz(axz3f, te3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,zero)
     call filz(ayz3f, tf3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,zero)
 
-    if (mod(itime, ioutput).eq.0) then
+    if (mod(itime, ioutput) == 0) then
        if (nrank==0) print *, "filz axx3= ", maxval(ta3), maxval(axx3f), maxval(ta3) - maxval(axx3f)
     endif
 
@@ -750,7 +750,7 @@ contains
 
     if((iibm==1).or.(iibm==2).or.(iibm==3)) then
        do ijk = 1, nvect1
-          if (ep1(ijk, 1, 1) .eq. one) then
+          if (ep1(ijk, 1, 1)  ==  one) then
              ta1(ijk, 1, 1) = zero
              tb1(ijk, 1, 1) = one
           endif
@@ -762,8 +762,8 @@ contains
          (mxx1 * mxx1 + myy1 * myy1 + mzz1 * mzz1 + two * (mxy1 * mxy1 + mxz1 * mxz1 + myz1 * myz1)) !l/M
 
     do ijk = 1, nvect1 ! Limiter for the dynamic Smagorinsky constant
-       if (smagC1(ijk, 1, 1).gt. maxdsmagcst) smagC1(ijk, 1, 1) = zero
-       if (smagC1(ijk, 1, 1).lt. 0.0) smagC1(ijk, 1, 1) = zero
+       if (smagC1(ijk, 1, 1) >  maxdsmagcst) smagC1(ijk, 1, 1) = zero
+       if (smagC1(ijk, 1, 1) <  0.0) smagC1(ijk, 1, 1) = zero
     enddo
 
     !FILTERING THE NON-CONSTANT CONSTANT
@@ -775,7 +775,7 @@ contains
     call transpose_y_to_z(smagC2f, ta3)
     call filz(smagC3f, ta3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,zero)
 
-    if (mod(itime, ioutput).eq.0) then
+    if (mod(itime, ioutput) == 0) then
        if (nrank==0) print *, "filx smagC1= ", maxval(smagC1), maxval(smagC1f), maxval(smagC1) - maxval(smagC1f)
        if (nrank==0) print *, "fily smagC1= ", maxval(ta2), maxval(smagC2f), maxval(ta2) - maxval(smagC2f)
        if (nrank==0) print *, "filz smagC1= ", maxval(ta3), maxval(smagC3f), maxval(ta3) - maxval(smagC3f)
@@ -795,8 +795,8 @@ contains
     call transpose_y_to_x(dsmagcst2, dsmagcst1)
 
     ! do ijk = 1, nvect1 !ERIC LIMITEUR SI BESOIN
-    !   if (dsmagcst1(ijk, 1, 1).gt. maxdsmagcst) dsmagcst1(ijk, 1, 1) =zero
-    !   if (dsmagcst1(ijk, 1, 1).lt. 0.0) dsmagcst1(ijk, 1, 1) = zero
+    !   if (dsmagcst1(ijk, 1, 1) >  maxdsmagcst) dsmagcst1(ijk, 1, 1) =zero
+    !   if (dsmagcst1(ijk, 1, 1) <  0.0) dsmagcst1(ijk, 1, 1) = zero
     ! enddo
 
     nut1 = zero; nut2 = zero
@@ -821,7 +821,7 @@ contains
        if (nrank==0) print *, "dsmag nut1    min max= ", minval(nut1), maxval(nut1)
     endif
 
-    if (mod(itime, ioutput).eq.0) then
+    if (mod(itime, ioutput) == 0) then
 
        ! write(filename, "('./data/dsmagcst_initial',I4.4)") itime / imodulo
        ! call decomp_2d_write_one(1, smagC1, filename, 2)
@@ -1005,7 +1005,7 @@ contains
   if (nrank==0) print *, "WALE SdSd min max= ", minval(srt_wale3), maxval(srt_wale3)
   if (nrank==0) print *, "WALE nut1     min max= ", minval(nut1), maxval(nut1)
 
-  if (mod(itime, ioutput).eq.0) then
+  if (mod(itime, ioutput) == 0) then
 
      write(filename, "('./data/nut_wale',I4.4)") itime / ioutput
      call decomp_2d_write_one(1, nut1, filename, 2)
@@ -1080,7 +1080,7 @@ end subroutine wale
     !-->for ux
     td2 = zero
     iimplicit = -iimplicit
-    if (istret.ne.0) then
+    if (istret /= 0) then
        call deryy (td2, ux2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1,ubcx)
        call dery (te2, ux2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1,ubcx)
        do k = 1, ysize(3)
@@ -1096,7 +1096,7 @@ end subroutine wale
 
     !-->for uy
     te2 = zero
-    if (istret.ne.0) then
+    if (istret /= 0) then
        call deryy (te2, uy2, di2, sy, sfy, ssy, swy, ysize(1), ysize(2), ysize(3), 0,ubcy)
        call dery (tf2, uy2, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0,ubcy)
        do k = 1, ysize(3)
@@ -1112,7 +1112,7 @@ end subroutine wale
 
     !-->for uz
     tf2 = zero
-    if (istret.ne.0) then
+    if (istret /= 0) then
        call deryy (tf2, uz2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1,ubcz)
        call dery (tj2, uz2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1,ubcz)
        do k = 1, ysize(3)
@@ -1165,7 +1165,7 @@ end subroutine wale
        do k=1,xsize(3)
           do j=1,xsize(2)
              do i=1,xsize(1)
-                if(ep1(i,j, k).eq.1) then
+                if(ep1(i,j, k) == 1) then
                    sgsx1(i,j,k) = zero
                    sgsy1(i,j,k) = zero
                    sgsz1(i,j,k) = zero
@@ -1223,7 +1223,7 @@ end subroutine wale
     iimplicit = - iimplicit
     call deryyS(tc2, phi2, di2, sy, sfypS, ssypS, swypS, ysize(1), ysize(2), ysize(3), 1, zero)
     iimplicit = - iimplicit
-    if (istret.ne.0) then
+    if (istret /= 0) then
        do k = 1, ysize(3)
        do j = 1, ysize(2)
        do i = 1, ysize(1)
@@ -1245,7 +1245,7 @@ end subroutine wale
     call transpose_y_to_x(sgsphi2, sgsphi1)
 
     ! SGS correction for ABL
-    if (itype.eq.itype_abl.and.is==1.and.ibuoyancy.eq.1) then
+    if (itype == itype_abl.and.is==1.and.ibuoyancy == 1) then
        call transpose_y_to_x(tb2,dphidy1)
        call wall_sgs_scalar(sgsphi1,nut1,dphidy1)
     endif
