@@ -21,9 +21,9 @@ module probes
   ! Number of probes
   integer, save :: nprobes
   ! Flag to monitor velocity, scalar(s) and pressure gradients
-  logical, save :: flag_extra_probes = .false.
+  logical, save :: flag_extra_probes
   ! Flag to print 16 digits, only 6 digits by default
-  logical, save :: flag_all_digits = .false.
+  logical, save :: flag_all_digits
   ! Position of the probes
   real(mytype), save, allocatable, dimension(:,:) :: xyzprobes
   !
@@ -69,8 +69,8 @@ contains
   !
   subroutine init_probes()
 
-    USE decomp_2d, only : real_type
     USE MPI
+    USE decomp_2d, only : real_type
     USE param, only : dx, dy, dz, nclx, ncly, nclz, xlx, yly, zlz, istret, one, half
     USE param, only : irestart, ifirst
     USE variables, only : nxm, ny, yp, nym, ypi, nzm, numscalar
@@ -102,6 +102,7 @@ contains
        endif
        ! Broadcast
        call MPI_BCAST(main_probes_offset,1,MPI_INTEGER,0,MPI_COMM_WORLD,code)
+       if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
 
        ! Extra probes
        if (flag_extra_probes) then
@@ -114,6 +115,7 @@ contains
           endif
           ! Broadcast
           call MPI_BCAST(extra_probes_offset,1,MPI_INTEGER,0,MPI_COMM_WORLD,code)
+          if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
        endif
 
     endif

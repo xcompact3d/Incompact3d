@@ -1,7 +1,7 @@
 
 module actuator_line_source
 
-    use decomp_2d, only: mytype
+    use decomp_2d, only: mytype, decomp_2d_abort
     use actuator_line_model_utils
     use actuator_line_model
 
@@ -241,7 +241,7 @@ contains
         real(mytype) :: t1,t2, alm_proj_time
         integer :: min_i,min_j,min_k
         integer :: i_lower, j_lower, k_lower, i_upper, j_upper, k_upper
-        integer :: i,j,k, isource, ierr
+        integer :: i,j,k, isource, code
 
         ! First we need to compute the locations
         call get_locations
@@ -449,11 +449,14 @@ contains
         !$OMP END PARALLEL DO
 
         call MPI_ALLREDUCE(Su_part,Su,Nsource,MPI_REAL8,MPI_SUM, &
-            MPI_COMM_WORLD,ierr)
+            MPI_COMM_WORLD,code)
+        if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
         call MPI_ALLREDUCE(Sv_part,Sv,Nsource,MPI_REAL8,MPI_SUM, &
-            MPI_COMM_WORLD,ierr)
+            MPI_COMM_WORLD,code)
+        if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
         call MPI_ALLREDUCE(Sw_part,Sw,Nsource,MPI_REAL8,MPI_SUM, &
-            MPI_COMM_WORLD,ierr)
+            MPI_COMM_WORLD,code)
+        if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
         ! Zero the Source term at each time step
         FTx(:,:,:)=0.0
@@ -504,7 +507,8 @@ contains
 
         alm_proj_time=MPI_WTIME()-t1
         call MPI_ALLREDUCE(alm_proj_time,t1,1,MPI_REAL8,MPI_SUM, &
-                   MPI_COMM_WORLD,ierr)
+                   MPI_COMM_WORLD,code)
+        if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
         if(nrank==0) then
             alm_proj_time=alm_proj_time/float(nproc)

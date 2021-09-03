@@ -350,8 +350,13 @@ contains
     endif
 
     call MPI_ALLREDUCE(ux_HAve_local,ux_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(uz_HAve_local,uz_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (iscalar==1) call MPI_ALLREDUCE(Phi_HAve_local,Phi_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (iscalar==1) then
+      call MPI_ALLREDUCE(Phi_HAve_local,Phi_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+      if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    endif
 
     ux_HAve=ux_HAve/p_col
     uz_HAve=uz_HAve/p_col
@@ -476,9 +481,13 @@ contains
       Q_HAve_local=Q_HAve_local/xsize(3)/xsize(1)
 
       call MPI_ALLREDUCE(PsiM_HAve_local,PsiM_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+      if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
       call MPI_ALLREDUCE(PsiH_HAve_local,PsiH_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+      if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
       call MPI_ALLREDUCE(L_HAve_local,L_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+      if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
       call MPI_ALLREDUCE(Q_HAve_local,Q_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+      if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
       PsiM_HAve=PsiM_HAve/p_col
       PsiH_HAve=PsiH_HAve/p_col
@@ -587,6 +596,7 @@ contains
     ut3=ut3/ysize(1)/ysize(3)
 
     call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     ut4=ut4/nproc
     if (iconcprec.eq.1) ut4=ut4*(xlx/pdl)
 
@@ -878,12 +888,19 @@ contains
     tyz_HAve_local=tyz_HAve_local/xsize(3)/xsize(1)
 
     call MPI_ALLREDUCE(u_HAve_local,u_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(v_HAve_local,v_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(w_HAve_local,w_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(uxy_HAve_local,uxy_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(uyz_HAve_local,uyz_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(txy_HAve_local,txy_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(tyz_HAve_local,tyz_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     u_HAve=u_HAve/p_col
     v_HAve=v_HAve/p_col
     w_HAve=w_HAve/p_col

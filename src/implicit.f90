@@ -577,7 +577,7 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   USE MPI
   USE param
   USE variables
-  USE var, ONLY: ta1, ta2, tb2, tc2, td2
+  USE var, ONLY: ta1, ta2, tb2, td2
   USE decomp_2d
   use derivY
   use matinv

@@ -275,6 +275,7 @@ contains
     ut3=ut3/(real(nx*nz,mytype))
 
     call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
     can=-(constant-ut4)
 

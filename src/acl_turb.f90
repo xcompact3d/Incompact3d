@@ -554,7 +554,7 @@ use MPI
 	    real(mytype) :: xmesh,ymesh,zmesh
 	    real(mytype) :: dist, min_dist 
         integer :: min_i,min_j,min_k
-        integer :: i,j,k,ierr
+        integer :: i,j,k,code
 
         Ux=0.
         Uy=0.
@@ -613,11 +613,14 @@ use MPI
         endif
            
         call MPI_ALLREDUCE(Ux_part,Ux,1,MPI_REAL8,MPI_SUM, &
-            MPI_COMM_WORLD,ierr)
+            MPI_COMM_WORLD,code)
+        if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
         call MPI_ALLREDUCE(Uy_part,Uy,1,MPI_REAL8,MPI_SUM, &
-            MPI_COMM_WORLD,ierr)
+            MPI_COMM_WORLD,code)
+        if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
         call MPI_ALLREDUCE(Uz_part,Uz,1,MPI_REAL8,MPI_SUM, &
-            MPI_COMM_WORLD,ierr)
+            MPI_COMM_WORLD,code)
+        if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
         
         Turbine%Ux_upstream=Ux
         Turbine%Uy_upstream=Uy

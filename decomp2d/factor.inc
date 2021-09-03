@@ -49,6 +49,7 @@ return
 end subroutine findfactor
 
 
+#if 0
 subroutine primefactors(num, factors, nfact)
 
 implicit none
@@ -79,4 +80,4 @@ end do
 return
 
 end subroutine primefactors
-
+#endif

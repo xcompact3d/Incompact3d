@@ -105,7 +105,7 @@ contains
 
     subroutine actuator_disc_model_compute_source(ux1,uy1,uz1)
         
-        use decomp_2d, only: mytype, nproc, xstart, xend, xsize, update_halo
+        use decomp_2d, only: mytype, nproc, xstart, xend, xsize, update_halo, decomp_2d_abort
         use MPI
         use param, only: dx,dy,dz,istret,dt,itime,initstat,rho_air,dBL,ustar,ifirst
         use var, only: FDiscx, FDiscy, FDiscz, GammaDisc, yp
@@ -116,7 +116,7 @@ contains
         real(mytype) :: uave,CTprime, T_relax, alpha_relax, Uinf, CTave,Ratio,sumforce,Sumforce_partial
         real(mytype), allocatable, dimension(:) :: Udisc_partial
         integer,allocatable, dimension(:) :: counter, counter_total
-        integer :: i,j,k, idisc, ierr
+        integer :: i,j,k, idisc, code
 
         ! Compute disc-averaged velocity
         allocate(Udisc_partial(Nad))
@@ -153,9 +153,11 @@ contains
         enddo
 
         call MPI_ALLREDUCE(Udisc_partial,actuatordisc%Udisc,Nad,MPI_REAL8,MPI_SUM, &
-            MPI_COMM_WORLD,ierr)
+            MPI_COMM_WORLD,code)
+        if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
         call MPI_ALLREDUCE(counter,counter_total,Nad,MPI_INTEGER,MPI_SUM, &
-            MPI_COMM_WORLD,ierr)
+            MPI_COMM_WORLD,code)
+        if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
         do idisc=1,Nad
           if (counter_total(idisc)==0) then

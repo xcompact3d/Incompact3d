@@ -148,16 +148,19 @@ subroutine init_xcompact3d()
 
   implicit none
 
-  integer :: ierr
+  integer :: code
 
   integer :: nargin, FNLength, status, DecInd
   logical :: back
   character(len=80) :: InputFN, FNBase
 
   !! Initialise MPI
-  call MPI_INIT(ierr)
-  call MPI_COMM_RANK(MPI_COMM_WORLD,nrank,ierr)
-  call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,ierr)
+  call MPI_INIT(code)
+  if (code.ne.0) call decomp_2d_abort(code, "MPI_INIT")
+  call MPI_COMM_RANK(MPI_COMM_WORLD,nrank,code)
+  if (code.ne.0) call decomp_2d_abort(code, "MPI_COMM_RANK")
+  call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,code)
+  if (code.ne.0) call decomp_2d_abort(code, "MPI_COMM_SIZE")
 
   ! Handle input file like a boss -- GD
   nargin=command_argument_count()
@@ -285,7 +288,7 @@ subroutine finalise_xcompact3d()
 
   implicit none
 
-  integer :: ierr
+  integer :: code
   
   if (itype==2) then
      if(nrank.eq.0)then
@@ -302,6 +305,7 @@ subroutine finalise_xcompact3d()
   call finalize_probes()
   call visu_finalise()
   call decomp_2d_finalize
-  CALL MPI_FINALIZE(ierr)
+  CALL MPI_FINALIZE(code)
+  if (code.ne.0) call decomp_2d_abort(code, "MPI_FINALIZE")
 
 endsubroutine finalise_xcompact3d

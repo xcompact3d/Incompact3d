@@ -82,7 +82,7 @@ contains
     real(mytype) :: memout
 
 #ifdef ADIOS2
-    integer :: ierror
+    integer :: code
     logical :: adios2_debug_mode
     character(len=80) :: config_file="adios2_config.xml"
     character(len=80) :: outfile
@@ -133,19 +133,20 @@ contains
     !! TODO: make this a runtime-option
     adios2_debug_mode = .true.
 
-    call adios2_init(adios, trim(config_file), MPI_COMM_WORLD, adios2_debug_mode, ierror)
-    if (ierror.ne.0) then
+    call adios2_init(adios, trim(config_file), MPI_COMM_WORLD, adios2_debug_mode, code)
+    if (code.ne.0) then
        print *, "Error initialising ADIOS2 - is adios2_config.xml present and valid?"
-       call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
+       call decomp_2d_abort(code, "ADIOS2_INIT")
     endif
-    call adios2_declare_io(io_write_real_coarse, adios, "solution-io", ierror)
+    call adios2_declare_io(io_write_real_coarse, adios, "solution-io", code)
+    if (code.ne.0) call decomp_2d_abort(code, "ADIOS2_DECLARE_IO")
     if (io_write_real_coarse % engine_type.eq."BP4") then
        write(outfile, *) "data.bp4"
     else if (io_write_real_coarse % engine_type.eq."HDF5") then
        write(outfile, *) "data.hdf5"
     else
        print *, "Unknown engine!"
-       call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
+       call MPI_ABORT(MPI_COMM_WORLD, -1, code)
     endif
 
     !! Register variables
@@ -162,7 +163,8 @@ contains
        enddo
     endif
     
-    call adios2_open(engine_write_real_coarse, io_write_real_coarse, trim(outfile), adios2_mode_write, ierror)
+    call adios2_open(engine_write_real_coarse, io_write_real_coarse, trim(outfile), adios2_mode_write, code)
+    if (code.ne.0) then call decomp_2d_abort(code, "ADIOS2_OPEN")
 #endif
 
   end subroutine visu_init
@@ -179,12 +181,14 @@ contains
   implicit none
 
 #ifdef ADIOS2
-  integer :: ierr
+  integer :: code
 #endif
   
 #ifdef ADIOS2
-    call adios2_close(engine_write_real_coarse, ierr)
-    call adios2_finalize(adios, ierr)
+    call adios2_close(engine_write_real_coarse, code)
+    if (code.ne.0) then call decomp_2d_abort(code, "ADIOS2_CLOSE")
+    call adios2_finalize(adios, code)
+    if (code.ne.0) then call decomp_2d_abort(code, "ADIOS2_FINALIZE")
 #endif
     
   end subroutine visu_finalise
@@ -224,8 +228,7 @@ contains
     character(len=32), intent(out) :: num
 
     ! Local variables
-    integer :: is
-    integer :: ierr
+    integer :: is, code
     character(len=30) :: scname
 
     ! Update log file
@@ -234,7 +237,8 @@ contains
       print *,'Writing snapshots =>',itime/ioutput
     end if
 #ifdef ADIOS2
-    call adios2_begin_step(engine_write_real_coarse, adios2_step_mode_append, ierr)
+    call adios2_begin_step(engine_write_real_coarse, adios2_step_mode_append, code)
+    if (code.ne.0) call decomp_2d_abort(code, "ADIOS2_BEGIN_STEP")
 #endif
 
     ! Snapshot number
@@ -305,9 +309,8 @@ contains
     character(len=32), intent(in) :: num
 
     character(len=32) :: fmt2, fmt3, fmt4
-    integer :: is
-    integer :: ierr
-    
+    integer :: is, code
+
     ! Write XDMF footer
     if (use_xdmf) call write_xdmf_footer()
 
@@ -339,7 +342,8 @@ contains
     endif
 
 #ifdef ADIOS2
-    call adios2_end_step(engine_write_real_coarse, ierr)
+    call adios2_end_step(engine_write_real_coarse, code)
+    if (code.ne.0) call decomp_2d_abort(code, "ADIOS2_END_STEP")
 #endif
 
     ! Update log file
@@ -551,7 +555,7 @@ contains
 #endif
     use param, only : iibm
     use decomp_2d, only : mytype, xsize, xszV, yszV, zszV
-    use decomp_2d, only : nrank, fine_to_coarseV
+    use decomp_2d, only : nrank, fine_to_coarseV, decomp_2d_abort
     use decomp_2d_io, only : decomp_2d_write_one, decomp_2d_write_plane
 
     implicit none
@@ -618,7 +622,7 @@ contains
 #else
        if (iibm==2 .and. (.not.present(skip_ibm))) then
           print *, "Not Implemented: currently ADIOS2 IO doesn't support IBM-blanking"
-          call MPI_ABORT(MPI_COMM_WORLD, -1, ierr)
+          call decomp_2d_abort(0, "ADIOS2_IBM")
        endif
        call decomp_2d_write_one(1,f1,filename,2,adios,engine_write_real_coarse,io_write_real_coarse)
 #endif

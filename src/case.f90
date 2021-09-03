@@ -291,7 +291,7 @@ contains
   !##################################################################
   subroutine postprocess_case(rho,ux,uy,uz,pp,phi,ep)
 
-    use forces
+    use forces, only : iforces, force, restart_forces
     use var, only : nzmsize
     use param, only : npress
 
@@ -348,7 +348,7 @@ contains
     endif
 
     if (iforces.eq.1) then
-       call force(ux,uy,uz,ep)
+       call force(ux,uy,ep)
        call restart_forces(1)
     endif
 

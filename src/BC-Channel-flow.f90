@@ -204,6 +204,7 @@ contains
     ub = ub * coeff
 
     call MPI_ALLREDUCE(ub,uball,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
     can = - (constant - uball)
 
