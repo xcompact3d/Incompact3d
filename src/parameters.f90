@@ -539,9 +539,6 @@ subroutine parameter(input_i3d)
 #ifdef EVEN
      print *, 'EVEN flag activated'
 #endif
-#ifdef OCC
-     print *, 'OCC flag activated'
-#endif
 #ifdef OVERWRITE
      print *, 'OVERWRITE flag activated'
 #endif
