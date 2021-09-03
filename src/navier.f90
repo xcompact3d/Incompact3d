@@ -1186,8 +1186,8 @@ contains
     endif
     call MPI_ALLREDUCE(ut1,utt1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
-
     utt1=utt1/real(nz,mytype) !! Volume flow rate per unit spanwise dist
+
     ! Flow rate at the outlet
     ut2=zero;utt2=zero
     if (yend(1)==nx) then !! CPUs at the outlet
@@ -1198,7 +1198,6 @@ contains
       enddo
       ! ut2=ut2/real(ysize(3),mytype)
     endif
-
     call MPI_ALLREDUCE(ut2,utt2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     utt2=utt2/real(nz,mytype) !! Volume flow rate per unit spanwise dist

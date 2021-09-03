@@ -88,7 +88,8 @@ contains
 
         if (abs(phimax1).ge.100.) then !if phi control turned off
            print *,'Scalar diverged! SIMULATION IS STOPPED!'
-           call MPI_ABORT(MPI_COMM_WORLD,code,ierr2); stop
+           call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+           stop
         endif
       endif
 
@@ -149,7 +150,8 @@ contains
 
        if((abs(uxmax1).ge.100.).OR.(abs(uymax1).ge.100.).OR.(abs(uzmax1).ge.100.)) then
          print *,'Velocity diverged! SIMULATION IS STOPPED!'
-         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2); stop
+         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+         stop
        endif
 
     endif
@@ -315,6 +317,15 @@ contains
                call decomp_2d_write_var(fh,disp,1,dphi1(:,:,:,3,is))
              end if
           end do
+       endif
+       if (ilmn) then
+          do is = 1, nrhotime
+             call decomp_2d_write_var(fh,disp,1,rho1(:,:,:,is))
+          enddo
+          do is = 1, ntime
+             call decomp_2d_write_var(fh,disp,1,drho1(:,:,:,is))
+          enddo
+          call decomp_2d_write_var(fh,disp,1,mu1)
        endif
        call MPI_FILE_CLOSE(fh,code)
        if (code.ne.0) then

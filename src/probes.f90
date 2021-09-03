@@ -21,9 +21,9 @@ module probes
   ! Number of probes
   integer, save :: nprobes
   ! Flag to monitor velocity, scalar(s) and pressure gradients
-  logical, save :: flag_extra_probes
+  logical, save :: flag_extra_probes = .false.
   ! Flag to print 16 digits, only 6 digits by default
-  logical, save :: flag_all_digits
+  logical, save :: flag_all_digits = .false.
   ! Position of the probes
   real(mytype), save, allocatable, dimension(:,:) :: xyzprobes
   !
@@ -69,8 +69,8 @@ contains
   !
   subroutine init_probes()
 
-    USE MPI
     USE decomp_2d, only : real_type
+    USE MPI
     USE param, only : dx, dy, dz, nclx, ncly, nclz, xlx, yly, zlz, istret, one, half
     USE param, only : irestart, ifirst
     USE variables, only : nxm, ny, yp, nym, ypi, nzm, numscalar
