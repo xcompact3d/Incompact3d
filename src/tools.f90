@@ -86,7 +86,7 @@ contains
 
         print *,'Phi'//char(48+is)//' min max=', real(phimin1,4), real(phimax1,4)
 
-        if (abs(phimax1) >= 100.) then !if phi control turned off
+        if (phimin1 < uvwt_lbound(4) .or. phimax1 >= uvwt_ubound(4)) then
            print *,'Scalar diverged! SIMULATION IS STOPPED!'
            call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
            stop
@@ -148,7 +148,9 @@ contains
        print *,'U,V,W max=',real(uxmax1,4),real(uymax1,4),real(uzmax1,4)
        !print *,'CFL=',real(abs(max(uxmax1,uymax1,uzmax1)*dt)/min(dx,dy,dz),4)
 
-       if((abs(uxmax1) >= 100.).OR.(abs(uymax1) >= 100.).OR.(abs(uzmax1) >= 100.)) then
+       if (uxmin1 < uvwt_lbound(1) .or. uxmax1 >= uvwt_ubound(1) .or. &
+           uymin1 < uvwt_lbound(2) .or. uymax1 >= uvwt_ubound(2) .or. &
+           uzmin1 < uvwt_lbound(3) .or. uzmax1 >= uvwt_ubound(3) ) then
          print *,'Velocity diverged! SIMULATION IS STOPPED!'
          call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
          stop

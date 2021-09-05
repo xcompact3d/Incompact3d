@@ -681,6 +681,10 @@ subroutine parameter_defaults()
   !! Channel
   cpg = .false.
 
+  !! Min/max bounds for exit
+  uvwt_lbound = -100.
+  uvwt_ubound = 100.
+
   !! Filter
   ifilter=0
   C_filter=0.49

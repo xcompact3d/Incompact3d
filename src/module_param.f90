@@ -349,6 +349,8 @@ module param
   real(mytype), allocatable, dimension(:,:) :: alpha_sc, beta_sc, g_sc
   real(mytype) :: g_bl_inf, f_bl_inf
 
+  !! Min/max bounds for exit
+  real(mytype), dimension(4) :: uvwt_lbound, uvwt_ubound
 
   !! Scalars
   logical, allocatable, dimension(:) :: sc_even, sc_skew
