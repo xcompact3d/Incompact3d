@@ -37,8 +37,6 @@ module channel
 
   implicit none
 
-  integer :: FS
-  character(len=100) :: fileformat
   character(len=1),parameter :: NL=char(10) !new line character
 
   PRIVATE ! All functions/subroutines private by default
@@ -50,17 +48,16 @@ contains
   !############################################################################
   subroutine init_channel (ux1,uy1,uz1,ep1,phi1)
 
-    use decomp_2d
     use decomp_2d_io
-    use variables
-    use param
     use MPI
 
     implicit none
 
+    ! Arguments
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
+    ! Local variables
     real(mytype) :: y,um
     integer :: k,j,i,ii,code
 
@@ -126,33 +123,54 @@ contains
     if (nrank  ==  0) print *,'# init end ok'
 #endif
 
-    return
   end subroutine init_channel
   !############################################################################
   !############################################################################
   subroutine boundary_conditions_channel (ux,uy,uz,phi)
 
-    use param
-    use var, only : di2
-    use variables
-    use decomp_2d
-
     implicit none
 
+    ! Arguments
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
-    if (.not.cpg) then ! if not constant pressure gradient
-        call channel_cfr(ux,two/three)
+    !
+    ! Boundary conditions for velocity are applied after the prediction step
+    ! and before the correction step. This is done in navier.f90/pre_correc
+    ! See comment in the subroutine navier.f90/gradp
+    !
+    ! For implicit Y diffusion, boundary conditions are also applied
+    ! at the end of the correction step. All BC must be consistent.
+    !
+
+    ! Zero velocity at bottom boundary
+    if (ncly1 == 1) then
+       byx1(:,:) = zero
+       byy1(:,:) = zero
+       byz1(:,:) = zero
+    endif
+
+    ! Zero velocity at top boundary
+    if (nclyn == 2) then
+       byxn(:,:) = zero
+       byyn(:,:) = zero
+       byzn(:,:) = zero
+    endif
+
+    ! Imposed flow rate if no constant pressure gradient
+    if (.not.cpg) then
+       call channel_cfr(ux,two/three)
     end if
 
+    ! Boundary conditions for scalars are applied before computing conv. + diff.
     if (iscalar /= 0) then
        if (iimplicit <= 0) then
+          ! Explicit Y diffusion, bottom boundary
           if ((nclyS1 == 2).and.(xstart(2) == 1)) then
-             !! Generate a hot patch on bottom boundary
              phi(:,1,:,:) = one
           endif
-          if ((nclySn == 2).and.(xend(2) == ny)) THEN
+          ! Explicit Y diffusion, top boundary
+          if ((nclySn == 2).and.(xend(2) == ny)) then
              phi(:,xsize(2),:,:) = zero
           endif
        else
@@ -163,12 +181,43 @@ contains
           !
           ! Bottom temperature if alpha_sc(:,1)=1 and beta_sc(:,1)=0 (default)
           !if (nclyS1 == 2) g_sc(:,1) = one
+          !
           ! Top temperature if alpha_sc(:,2)=1 and beta_sc(:,2)=0 (default)
           !if (nclySn == 2) g_sc(:,2) = zero
+          !
        endif
     endif
 
   end subroutine boundary_conditions_channel
+  !############################################################################
+  !!
+  !! Compute average of given array on the current CPU
+  !!
+  !! MPI call should follow to compute the average over the domain
+  !!
+  !############################################################################
+  function channel_local_average(array) result(avg)
+
+    implicit none
+
+    ! Argument
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: array
+    ! Output
+    real(mytype) :: avg
+    ! Local variables
+    integer :: i, j, k, jloc
+
+    avg = zero
+    do k = 1, xsize(3)
+       do jloc = 1, xsize(2)
+          j = jloc + xstart(2) - 1
+          do i = 1, xsize(1)
+            avg = avg + array(i,jloc,k) / ppy(j)
+          enddo
+       enddo
+    enddo
+
+  end function channel_local_average
   !############################################################################
   !!
   !!  SUBROUTINE: channel_cfr
@@ -182,33 +231,24 @@ contains
 
     implicit none
 
+    ! Arguments
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux
     real(mytype), intent(in) :: constant
 
+    ! Local variables
     integer :: code, i, j, k, jloc
-    real(mytype) :: can, ub, uball, coeff
+    real(mytype) :: can, ub, coeff
 
-    ub = zero
-    uball = zero
     coeff = dy / (yly * real(xsize(1) * zsize(3), kind=mytype))
 
-    do k = 1, xsize(3)
-       do jloc = 1, xsize(2)
-          j = jloc + xstart(2) - 1
-          do i = 1, xsize(1)
-            ub = ub + ux(i,jloc,k) / ppy(j)
-          enddo
-       enddo
-    enddo
+    ub = channel_local_average(ux) * coeff
 
-    ub = ub * coeff
-
-    call MPI_ALLREDUCE(ub,uball,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,ub,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
-    can = - (constant - uball)
+    can = - (constant - ub)
 
-    if (nrank==0) print *, nrank, 'UT', uball, can
+    if (nrank==0) print *, nrank, 'UT', ub, can
 
     do k=1,xsize(3)
       do j=1,xsize(2)
@@ -227,6 +267,7 @@ contains
 
     implicit none
 
+    ! Arguments
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
@@ -251,6 +292,7 @@ contains
 
     implicit none
 
+    ! Arguments
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1
     real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
@@ -336,8 +378,6 @@ contains
   !############################################################################
   subroutine geomcomplex_channel(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,yp,remp)
 
-    use decomp_2d, only : mytype
-    use param, only : zero, one, two
     use ibm
 
     implicit none
