@@ -103,10 +103,11 @@ contains
     USE abl, only: wall_sgs
     implicit none
 
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, ep1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
+    ! Arguments
+    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, ep1
+    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sgsx1, sgsy1, sgsz1
-    integer :: iconservative
+    integer, intent(in) :: iconservative
 
     ! Calculate eddy-viscosity
     if(jles == 1) then ! Smagorinsky
@@ -172,8 +173,11 @@ contains
 
     implicit none
 
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+    ! Arguments
+    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1
+
+    ! Local variables
     real(mytype) :: smag_constant, y, length
 
     integer :: i, j, k
@@ -304,9 +308,12 @@ contains
     
     implicit none
 
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, ep1
+    ! Arguments
+    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, ep1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1
 
+    ! Local variables
+    ! FIXME : avoid local 3D arrays
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1f, uy1f, uz1f
     real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ux2f, uy2f, uz2f, ep2
     real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: ux3f, uy3f, uz3f
@@ -315,7 +322,6 @@ contains
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: uxx1f, uyy1f, uzz1f, uxy1f, uxz1f, uyz1f
     real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: uxx2f, uyy2f, uzz2f, uxy2f, uxz2f, uyz2f
     real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: uxx3f, uyy3f, uzz3f, uxy3f, uxz3f, uyz3f
-
 
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sxx1f, syy1f, szz1f, sxy1f, sxz1f, syz1f
     real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: syy2f, szz2f, sxy2f, syz2f
@@ -869,9 +875,11 @@ contains
   
   implicit none
 
-  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+  ! Arguments
+  real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
   real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1
 
+  ! Local variables
   integer :: i, j, k
   character(len = 30) :: filename
 
@@ -1039,9 +1047,11 @@ end subroutine wale
     
     implicit none
 
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, nut1, ep1
+    ! Arguments
+    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, nut1, ep1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sgsx1, sgsy1, sgsz1
 
+    ! Local variables
     integer :: i, j, k, ijk, nvect1
 
     ta1 = zero; ta2 = zero; ta3 = zero
@@ -1188,14 +1198,17 @@ end subroutine wale
 
     implicit none
 
+    ! Arguments
     integer, intent(in) :: is
-    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: phi1
+    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: phi1, nut1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sgsphi1
+
+    ! Local variables
+    ! FIXME : avoid local 3D arrays
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: dphidy1
     real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: sgsphi2
     real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: sgsphi3
-
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1, dnut1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: dnut1
     real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: nut2, dnut2
     real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: nut3, dnut3
 
