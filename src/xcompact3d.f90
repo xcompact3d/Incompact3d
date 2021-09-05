@@ -70,13 +70,14 @@ program xcompact3d
         call set_fluid_properties(rho1,mu1)
         call boundary_conditions(rho1,ux1,uy1,uz1,phi1,ep1)
 
-if (imove == 1) then ! update epsi for moving objects
-  if ((iibm == 2).or.(iibm == 3)) then
-     call genepsi3d(ep1)
-  else if (iibm == 1) then
-     call body(ux1,uy1,uz1,ep1)
-  endif
-endif
+        if (imove == 1) then ! update epsi for moving objects
+          if ((iibm == 2).or.(iibm == 3)) then
+            call genepsi3d(ep1)
+          else if (iibm == 1) then
+            call body(ux1,uy1,uz1,ep1)
+          endif
+        endif
+
         call calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
         if (ilmn) then
@@ -126,8 +127,7 @@ subroutine init_xcompact3d()
 
   use navier, only : calc_divu_constraint
   use tools, only : test_speed_min_max, test_scalar_min_max, &
-       restart, &
-       simu_stats, compute_cfldiff
+                    restart, simu_stats, compute_cfldiff
 
   use param, only : ilesmod, jles,itype
   use param, only : irestart
@@ -150,9 +150,8 @@ subroutine init_xcompact3d()
 
   integer :: code
 
-  integer :: nargin, FNLength, status, DecInd
-  logical :: back
-  character(len=80) :: InputFN, FNBase
+  integer :: nargin, FNLength, status
+  character(len=80) :: InputFN
 
   !! Initialise MPI
   call MPI_INIT(code)
@@ -168,15 +167,13 @@ subroutine init_xcompact3d()
      InputFN='input.i3d'
      if (nrank==0) print*, 'Xcompact3d is run with the default file -->', InputFN
   elseif (nargin >= 1) then
-     if (nrank==0) print*, 'Program is run with the provided file -->', InputFN
+     if (nrank==0) print*, 'Xcompact3d is run with the provided file -->', InputFN
 
      call get_command_argument(1,InputFN,FNLength,status)
-     back=.true.
-     FNBase=inputFN((index(InputFN,'/',back)+1):len(InputFN))
-     DecInd=index(FNBase,'.',back)
-     if (DecInd >1) then
-        FNBase=FNBase(1:(DecInd-1))
-     end if
+     if (status /= 0) then
+        if (nrank == 0) print*, 'InputFN is too small for the given input file'
+        call decomp_2d_abort(status, "get_command_argument")
+     endif
   endif
 
 #ifdef ADIOS2
@@ -240,14 +237,12 @@ subroutine init_xcompact3d()
      itime = 0
      call preprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
   else
-     itr=1
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,rho1,drho1,mu1,0)
-!     ux1(:,:,:)=ux1(:,:,:)-0.5
   endif
 
   if ((iibm == 2).or.(iibm == 3)) then
      call genepsi3d(ep1)
-  else if ((iibm == 1).or.(iibm == 3)) then
+  else if (iibm == 1) then
      call body(ux1,uy1,uz1,ep1)
   endif
 
@@ -304,7 +299,7 @@ subroutine finalise_xcompact3d()
   call simu_stats(4)
   call finalize_probes()
   call visu_finalise()
-  call decomp_2d_finalize
+  call decomp_2d_finalize()
   CALL MPI_FINALIZE(code)
   if (code /= 0) call decomp_2d_abort(code, "MPI_FINALIZE")
 
