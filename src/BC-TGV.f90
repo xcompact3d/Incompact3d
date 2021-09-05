@@ -116,6 +116,7 @@ contains
        allocate (seed(isize))
        seed(:)=67
        call random_seed(put=seed)
+       deallocate(seed)
        !     call random_number(ux1)
        !     call random_number(uy1)
        ! call random_number(uz1)
