@@ -276,7 +276,6 @@ contains
     call interxpv(ta1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
             nxmsize,xsize(1),xsize(2),xsize(3),1)
 
-
     ! Rescale pressure
     call rescale_pressure(ta1)
 
@@ -546,8 +545,6 @@ contains
   !
   subroutine write_field(f1, pathname, filename, num, skip_ibm)
 
-    use mpi
-    
     use var, only : ep1
     use var, only : zero, one
 #ifndef ADIOS2
@@ -565,8 +562,6 @@ contains
     logical, optional, intent(in) :: skip_ibm
 
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: local_array
-
-    integer :: ierr
 
     if (use_xdmf) then
        if (nrank == 0) then
