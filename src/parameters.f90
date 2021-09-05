@@ -39,6 +39,8 @@
 !###########################################################################
 subroutine parameter(input_i3d)
 
+  use mpi
+
   use iso_fortran_env
 
   use param
@@ -56,7 +58,7 @@ subroutine parameter(input_i3d)
   implicit none
 
   character(len=80), intent(in) :: input_i3d
-  integer :: is
+  integer :: is, ierr
 
   NAMELIST /BasicParam/ p_row, p_col, nx, ny, nz, istret, beta, xlx, yly, zlz, &
        itype, iin, re, u1, u2, init_noise, inflow_noise, &
@@ -292,7 +294,7 @@ subroutine parameter(input_i3d)
   endif
 #if defined(DOUBLE_PREC) && defined(SAVE_SINGLE)
   print *, "ADIOS2 does not support mixing the simulation and output precision"
-  stop
+  call MPI_ABORT(MPI_COMM_WORLD, -1, ierr)
 #endif
 #endif
 
