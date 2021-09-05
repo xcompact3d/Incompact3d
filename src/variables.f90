@@ -105,6 +105,8 @@ module var
 
   ! working arrays for ABL
   real(mytype), save, allocatable, dimension(:,:) :: heatflux
+  real(mytype), save, allocatable, dimension(:,:,:) :: wallfluxx1, wallfluxy1, wallfluxz1
+  real(mytype), save, allocatable, dimension(:,:,:,:) :: T_tmp
 
   ! arrays for turbine modelling
   real(mytype), save, allocatable, dimension(:,:,:) :: FTx, FTy, FTz, Fdiscx, Fdiscy, Fdiscz
@@ -168,7 +170,15 @@ contains
       mu1(:,:,:) = one
     endif
 
-    call alloc_x(uxf1);call alloc_x(uyf1);call alloc_x(uzf1);call alloc_x(phif1);
+    if (itype == itype_abl.and.ifilter /= 0.and.ilesmod /= 0) then
+       call alloc_x(uxf1);call alloc_x(uyf1);call alloc_x(uzf1);call alloc_x(phif1);
+    endif
+    if (itype == itype_abl.and.ilesmod /= 0.and.jles <= 3.and.jles > 0) then
+       call alloc_x(wallfluxx1); call alloc_x(wallfluxy1); call alloc_x(wallfluxz1);
+    endif
+    if (itype == itype_abl.and.ibuoyancy == 1) then
+       allocate(T_tmp(xsize(1),xsize(2),xsize(3),1))
+    endif
 
     allocate(pp1(nxmsize,xsize(2),xsize(3)))
     allocate(pgy1(nxmsize,xsize(2),xsize(3)))
@@ -257,7 +267,9 @@ contains
     call alloc_y(td2);call alloc_y(te2);call alloc_y(tf2)
     call alloc_y(tg2);call alloc_y(th2);call alloc_y(ti2)
     call alloc_y(tj2);call alloc_y(di2)
-    call alloc_y(uxf2);call alloc_y(uyf2);call alloc_y(uzf2); call alloc_y(phif2)
+    if (itype == itype_abl.and.ifilter /= 0.and.ilesmod /= 0) then
+       call alloc_y(uxf2);call alloc_y(uyf2);call alloc_y(uzf2); call alloc_y(phif2)
+    endif
     allocate(phi2(ysize(1),ysize(2),ysize(3),1:numscalar))
     allocate(pgz2(ph3%yst(1):ph3%yen(1),nymsize,ysize(3)))
     allocate(pp2(ph3%yst(1):ph3%yen(1),nymsize,ysize(3)))
@@ -282,7 +294,9 @@ contains
     call alloc_z(td3);call alloc_z(te3);call alloc_z(tf3)
     call alloc_z(tg3);call alloc_z(th3);call alloc_z(ti3)
     call alloc_z(di3)
-    call alloc_z(uxf3);call alloc_z(uyf3);call alloc_z(uzf3); call alloc_z(phif3)
+    if (itype == itype_abl.and.ifilter /= 0.and.ilesmod /= 0) then
+       call alloc_z(uxf3);call alloc_z(uyf3);call alloc_z(uzf3); call alloc_z(phif3)
+    endif
     allocate(phi3(zsize(1),zsize(2),zsize(3),1:numscalar))
     allocate(pgz3(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),zsize(3)))
     allocate(ppi3(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),zsize(3)))
@@ -541,10 +555,12 @@ contains
     allocate(dphi1(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),ntime,1:numscalar)) !global indices
 
     !! ABL
-    allocate(heatflux(xsize(1),xsize(3)))
-    allocate(PsiM(xsize(1),xsize(3)))
-    allocate(PsiH(xsize(1),xsize(3)))
-    allocate(Tstat(xsize(2),1))
+    if (itype == itype_abl) then
+      allocate(heatflux(xsize(1),xsize(3)))
+      allocate(PsiM(xsize(1),xsize(3)))
+      allocate(PsiH(xsize(1),xsize(3)))
+      allocate(Tstat(xsize(2),1))
+    endif
 
     !! Turbine Modelling
     if (iturbine == 1) then
@@ -579,6 +595,8 @@ contains
     allocate(h_coeff1(z_modes),h_coeff2(z_modes))
     allocate(phase1(z_modes),phase2(z_modes))
     allocate(h_1(xsize(3)), h_2(xsize(3)))
+
+    call decomp_info_finalize(ph)
 
 #ifdef DEBG
     if (nrank  ==  0) print *,'# init_variables done'
