@@ -33,7 +33,7 @@ module decomp_2d_io
        decomp_2d_write_var, decomp_2d_read_var, &
        decomp_2d_write_scalar, decomp_2d_read_scalar, &
        decomp_2d_write_plane, decomp_2d_write_every, &
-       decomp_2d_write_subdomain, &
+       decomp_2d_write_subdomain, decomp_2d_read_plane, &
        decomp_2d_write_outflow, decomp_2d_read_inflow
 #ifdef ADIOS2
   public :: adios2_register_variable
@@ -83,8 +83,12 @@ module decomp_2d_io
   interface decomp_2d_write_plane
      module procedure write_plane_3d_real
      module procedure write_plane_3d_complex
-     !     module procedure write_plane_2d
   end interface decomp_2d_write_plane
+
+  interface decomp_2d_read_plane
+     module procedure read_plane_2d_real
+     module procedure read_plane_2d_complex
+  end interface decomp_2d_read_plane
 
   interface decomp_2d_write_every
      module procedure write_every_real
@@ -679,6 +683,52 @@ contains
 
     return
   end subroutine write_plane_3d_complex
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! Read a 2D slice from a file
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine read_plane_2d_real(ipencil,var,filename,opt_decomp)
+
+    implicit none
+
+    integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
+    real(mytype), dimension(:,:,:), intent(INOUT) :: var
+    character(len=*), intent(IN) :: filename
+    TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
+
+    TYPE(DECOMP_INFO) :: decomp
+    integer(kind=MPI_OFFSET_KIND) :: filesize, disp
+    integer, dimension(3) :: sizes, subsizes, starts
+    integer :: i,j,k, ierror, newtype, fh, data_type
+
+    data_type = real_type
+
+#include "io_read_plane.inc"
+
+    return
+  end subroutine read_plane_2d_real
+
+
+  subroutine read_plane_2d_complex(ipencil,var,filename,opt_decomp)
+
+    implicit none
+
+    integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
+    complex(mytype), dimension(:,:,:), intent(INOUT) :: var
+    character(len=*), intent(IN) :: filename
+    TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
+
+    TYPE(DECOMP_INFO) :: decomp
+    integer(kind=MPI_OFFSET_KIND) :: filesize, disp
+    integer, dimension(3) :: sizes, subsizes, starts
+    integer :: i,j,k, ierror, newtype, fh, data_type
+
+    data_type = complex_type
+
+#include "io_read_plane.inc"
+
+    return
+  end subroutine read_plane_2d_complex
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
