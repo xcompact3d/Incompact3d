@@ -220,7 +220,7 @@ contains
     !!    MODIFIED: Kay Schäfer
     !!
   !##############################################################################
-  subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1,iresflg)
+  subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1,rho1,drho1,mu1,iresflg)
 
     USE decomp_2d
     USE decomp_2d_io
@@ -238,6 +238,9 @@ contains
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
     real(mytype), dimension(phG%zst(1):phG%zen(1),phG%zst(2):phG%zen(2),phG%zst(3):phG%zen(3)) :: pp3
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: mu1
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     real(mytype) :: xdt,tfield,y
     integer, dimension(2) :: dims, dummy_coords
@@ -314,6 +317,15 @@ contains
                call decomp_2d_write_var(fh,disp,1,dphi1(:,:,:,3,is))
              end if
           end do
+       endif
+       if (ilmn) then
+          do is = 1, nrhotime
+             call decomp_2d_write_var(fh,disp,1,rho1(:,:,:,is))
+          enddo
+          do is = 1, ntime
+             call decomp_2d_write_var(fh,disp,1,drho1(:,:,:,is))
+          enddo
+          call decomp_2d_write_var(fh,disp,1,mu1)
        endif
        call MPI_FILE_CLOSE(fh,code)
        if (code /= 0) then
@@ -407,6 +419,15 @@ contains
            end if
          end do
        endif
+       if (ilmn) then
+          do is = 1, nrhotime
+             call decomp_2d_read_var(fh,disp,1,rho1(:,:,:,is))
+          enddo
+          do is = 1, ntime
+             call decomp_2d_read_var(fh,disp,1,drho1(:,:,:,is))
+          enddo
+          call decomp_2d_read_var(fh,disp,1,mu1)
+       end if
        call MPI_FILE_CLOSE(fh,code)
        if (code /= 0) then
          if (nrank == 0) then
