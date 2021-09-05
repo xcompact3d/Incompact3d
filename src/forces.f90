@@ -213,6 +213,14 @@ contains
 
   end subroutine restart_forces
 
+subroutine finalize_forces                                                                           
+  
+  implicit none
+  
+  deallocate(xld, xrd, yld, yud)
+  
+end subroutine finalize_forces
+
 !***********************************************************************
 subroutine force(ux1,uy1,ep1)
 

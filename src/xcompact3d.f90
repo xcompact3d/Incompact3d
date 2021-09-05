@@ -277,6 +277,8 @@ subroutine finalise_xcompact3d()
   use decomp_2d
   use decomp_2d_poisson, only : decomp_2d_poisson_finalize
   use tools, only : simu_stats
+  use var, only : finalize_variables
+  use forces, only : iforces, finalize_forces
   use param, only : itype
   use probes, only : finalize_probes
   use visu, only : visu_finalise
@@ -297,8 +299,10 @@ subroutine finalise_xcompact3d()
   endif
   
   call simu_stats(4)
+  if (iforces == 1) call finalize_forces()
   call finalize_probes()
   call visu_finalise()
+  call finalize_variables()
   call decomp_info_finalize(ph1)
   call decomp_info_finalize(ph4)
   call decomp_info_finalize(ph2)

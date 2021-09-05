@@ -602,4 +602,221 @@ contains
 #endif
     return
   end subroutine init_variables
+
+  subroutine finalize_variables
+
+    implicit none
+
+    deallocate(ux1, uy1, uz1, px1, py1, pz1)
+    deallocate(phi1)
+    deallocate(ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,ep1)
+    if (ilmn) deallocate(mu1)
+    if (itype == itype_abl.and.ifilter /= 0.and.ilesmod /= 0) then
+      deallocate(uxf1,uyf1,uzf1,phif1)
+    endif
+    if (itype == itype_abl.and.ilesmod /= 0.and.jles <= 3.and.jles > 0) then
+      deallocate(wallfluxx1, wallfluxy1, wallfluxz1)
+    endif
+    if (itype == itype_abl.and.ibuoyancy == 1) then
+       deallocate(T_tmp)
+    endif
+    deallocate(pp1,pgy1,pgz1)
+
+    deallocate(bxx1,bxy1,bxz1,bxxn,bxyn,bxzn)
+    deallocate(byx1,byy1,byz1,byxn,byyn,byzn)
+    deallocate(bzx1,bzy1,bzz1,bzxn,bzyn,bzzn)
+    deallocate(bxo,byo,bzo)
+    deallocate(dpdyx1,dpdyxn,dpdzx1,dpdzxn)
+    deallocate(dpdxy1,dpdxyn,dpdzy1,dpdzyn)
+    deallocate(dpdxz1,dpdxzn,dpdyz1,dpdyzn)
+
+    deallocate(uvisu)
+
+    if (ilast >= initstat) then
+      deallocate(umean,vmean,wmean,pmean)
+      deallocate(uumean,vvmean,wwmean,uvmean,uwmean,vwmean)
+      deallocate(phimean,phiphimean,tmean)
+    endif
+
+    deallocate(ux2,uy2,uz2)
+    deallocate(ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2)
+    if (itype == itype_abl.and.ifilter /= 0.and.ilesmod /= 0) then
+      deallocate(uxf2,uyf2,uzf2,phif2)
+    endif
+    deallocate(phi2,pgz2,pp2,dip2,ppi2,pgy2,pgzi2)
+
+    deallocate(duxdxp2,uyp2,uzp2,dipp2,upi2,duydypi2)
+    if (ilmn) deallocate(mu2)
+
+    deallocate(ux3,uy3,uz3)
+    deallocate(ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3)
+    if (itype == itype_abl.and.ifilter /= 0.and.ilesmod /= 0) then
+      deallocate(uxf3,uyf3,uzf3,phif3)
+    endif
+    deallocate(phi3,pgz3,ppi3,dip3)
+
+    deallocate(duxydxyp3,uzp3,dipp3)
+    if (ilmn) deallocate(mu3)
+
+    deallocate(pp3,dv3,po3)
+
+    if (ilesmod /= 0.and.jles > 0) then
+      deallocate(sgsx1)
+      deallocate(sgsy1)
+      deallocate(sgsz1)
+      deallocate(sxx1)
+      deallocate(syy1)
+      deallocate(szz1)
+      deallocate(sxy1)
+      deallocate(sxz1)
+      deallocate(syz1)
+      deallocate(sdxx1)
+      deallocate(sdyy1)
+      deallocate(sdzz1)
+      deallocate(sdxy1)
+      deallocate(sdxz1)
+      deallocate(sdyz1)
+      deallocate(nut1)
+      deallocate(srt_smag)
+      deallocate(srt_wale)
+      deallocate(sgsx2)
+      deallocate(sgsy2)
+      deallocate(sgsz2)
+      deallocate(sxx2)
+      deallocate(syy2)
+      deallocate(szz2)
+      deallocate(sxy2)
+      deallocate(sxz2)
+      deallocate(syz2)
+      deallocate(sdxx2)
+      deallocate(sdyy2)
+      deallocate(sdzz2)
+      deallocate(sdxy2)
+      deallocate(sdxz2)
+      deallocate(sdyz2)
+      deallocate(nut2)
+      deallocate(srt_smag2)
+      deallocate(srt_wale2)
+      deallocate(srt_wale3)
+      deallocate(srt_wale4)
+      deallocate(sgsx3)
+      deallocate(sgsy3)
+      deallocate(sgsz3)
+      deallocate(sxx3)
+      deallocate(syy3)
+      deallocate(szz3)
+      deallocate(sxy3)
+      deallocate(sxz3)
+      deallocate(syz3)
+      deallocate(sdxx3)
+      deallocate(sdyy3)
+      deallocate(sdzz3)
+      deallocate(sdxy3)
+      deallocate(sdxz3)
+      deallocate(sdyz3)
+      deallocate(nut3)
+      deallocate(gxx1)
+      deallocate(gyx1)
+      deallocate(gzx1)
+      deallocate(gxy1)
+      deallocate(gyy1)
+      deallocate(gzy1)
+      deallocate(gxz1)
+      deallocate(gyz1)
+      deallocate(gzz1)
+      deallocate(gxy2)
+      deallocate(gyy2)
+      deallocate(gzy2)
+      deallocate(gxz2)
+      deallocate(gyz2)
+      deallocate(gzz2)
+      deallocate(gxz3)
+      deallocate(gyz3)
+      deallocate(gzz3)
+      deallocate(sgsphi1)
+      deallocate(sgsphi2)
+      deallocate(sgsphi3)
+    endif
+
+    if (iibm /= 0) then
+      deallocate(nobjx)
+      deallocate(nobjy)
+      deallocate(nobjz)
+      deallocate(nxipif)
+      deallocate(nxfpif)
+      deallocate(nyipif)
+      deallocate(nyfpif)
+      deallocate(nzipif)
+      deallocate(nzfpif)
+      deallocate(xi)
+      deallocate(xf)
+      deallocate(yi)
+      deallocate(yf)
+      deallocate(zi)
+      deallocate(zf)
+    endif
+
+    deallocate(fiffx,fisfx,fifsx,fifwx,fissx,fiswx)
+    deallocate(fiffxp,fisfxp,fifsxp,fifwxp,fissxp,fiswxp)
+    deallocate(fiffy,fisfy,fifsy,fifwy,fissy,fiswy)
+    deallocate(fiffyp,fisfyp,fifsyp,fifwyp,fissyp,fiswyp)
+    deallocate(fiffz, fisfz, fifsz, fifwz, fissz, fiswz)
+    deallocate(fiffzp,fisfzp,fifszp,fifwzp,fisszp,fiswzp)
+    deallocate(fisx,fivx,fisy,fivy,fisz,fivz)
+
+    deallocate(ffx,sfx,fsx,fwx,ssx,swx)
+    deallocate(ffxp,sfxp,fsxp,fwxp,ssxp,swxp)
+    deallocate(ffy,sfy,fsy,fwy,ssy,swy)
+    deallocate(ffyp,sfyp,fsyp,fwyp,ssyp,swyp)
+    deallocate(ffz,sfz,fsz,fwz,ssz,swz)
+    deallocate(ffzp,sfzp,fszp,fwzp,sszp,swzp)
+
+    deallocate(ffxS,sfxS,fsxS,fwxS,ssxS,swxS)
+    deallocate(ffxpS,sfxpS,fsxpS,fwxpS,ssxpS,swxpS)
+    deallocate(ffyS,sfyS,fsyS,fwyS,ssyS,swyS)
+    deallocate(ffypS,sfypS,fsypS,fwypS,ssypS,swypS)
+    deallocate(ffzS,sfzS,fszS,fwzS,sszS,swzS)
+    deallocate(ffzpS,sfzpS,fszpS,fwzpS,sszpS,swzpS)
+
+    deallocate(sx,vx,sy,vy,sz,vz)
+
+    deallocate(newsm,newtm,newsmt,newtmt,newrm,newrmt)
+
+    deallocate(cfx6,ccx6,cbx6,cfxp6,ciwxp6,csxp6,cwxp6,csx6,cwx6,cifx6,cicx6,cisx6)
+    deallocate(cibx6,cifxp6,cisxp6,ciwx6)
+    deallocate(cfi6,cci6,cbi6,cfip6,csip6,cwip6,csi6,cwi6,cifi6,cici6,cibi6,cifip6)
+    deallocate(cisip6,ciwip6,cisi6,ciwi6)
+    deallocate(cfy6,ccy6,cby6,cfyp6,csyp6,cwyp6,csy6)
+    deallocate(cwy6,cify6,cicy6,ciby6,cifyp6,cisyp6,ciwyp6,cisy6,ciwy6)
+    deallocate(cfi6y,cci6y,cbi6y,cfip6y,csip6y,cwip6y,csi6y,cwi6y,cifi6y,cici6y)
+    deallocate(cibi6y,cifip6y,cisip6y,ciwip6y,cisi6y,ciwi6y)
+    deallocate(cfz6,ccz6,cbz6,cfzp6,cszp6,cwzp6,csz6)
+    deallocate(cwz6,cifz6,cicz6,cibz6,cifzp6,ciszp6,ciwzp6,cisz6,ciwz6)
+    deallocate(cfi6z,cci6z,cbi6z,cfip6z,csip6z,cwip6z,csi6z,cwi6z,cifi6z,cici6z)
+    deallocate(cibi6z,cifip6z,cisip6z,ciwip6z,cisi6z,ciwi6z)
+
+    deallocate(zkz,zk2,ezs,yky,yk2,eys,xkx,xk2,exs)
+
+    deallocate(ppy,pp2y,pp4y,ppyi,pp2yi,pp4yi,xp,xpi,yp,ypi,del,zp,zpi,yeta,yetai)
+
+    if (istret /= 0) deallocate(dyp)
+
+    deallocate(dux1,duy1,duz1,dphi1)
+
+    if (itype == itype_abl) then
+       deallocate(heatflux,PsiM,PsiH,Tstat)
+    endif
+    deallocate(rho1,rho2,rho3,drho1,divu3)
+
+    deallocate(h_coeff1,h_coeff2,phase1,phase2,h_1,h_2)
+
+    ! Free memory allocated in the subroutine parameter
+    if (numscalar /= 0) then
+      deallocate(massfrac,mol_weight,sc,ri,uset,cp)
+      if (iimplicit > 0) deallocate(xcst_sc,alpha_sc,beta_sc,g_sc)
+      deallocate(sc_even,sc_skew,scalar_lbound,scalar_ubound)
+    endif
+
+  end subroutine finalize_variables
+
 end module var
