@@ -280,6 +280,7 @@ subroutine finalise_xcompact3d()
   use var, only : finalize_variables
   use forces, only : iforces, finalize_forces
   use param, only : itype
+  use case, only : finalize_case
   use probes, only : finalize_probes
   use visu, only : visu_finalise
 
@@ -300,6 +301,7 @@ subroutine finalise_xcompact3d()
   
   call simu_stats(4)
   if (iforces == 1) call finalize_forces()
+  call finalize_case()
   call finalize_probes()
   call visu_finalise()
   call finalize_variables()

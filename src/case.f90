@@ -56,7 +56,8 @@ module case
   private ! All functions/subroutines private by default
   public :: init, boundary_conditions, &
             momentum_forcing, scalar_forcing, set_fluid_properties, &
-            test_flow, preprocessing, postprocessing, visu_case
+            test_flow, preprocessing, postprocessing, finalize_case, &
+            visu_case
 
 contains
   !##################################################################
@@ -501,7 +502,18 @@ contains
 
   end subroutine test_flow
   !##################################################################
+  !!
+  !!  SUBROUTINE: finalize_case
+  !!      AUTHOR: Cédric Flageul
+  !! DESCRIPTION: Calls case-specific functions to close units
+  !!              and free memory
+  !!
   !##################################################################
+  subroutine finalize_case()
+
+    implicit none
+
+  end subroutine finalize_case
 end module case
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
