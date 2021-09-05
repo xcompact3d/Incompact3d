@@ -186,7 +186,6 @@ subroutine init_xcompact3d()
         if (nrank == 0) print*, 'InputFN is too small for the given input file'
         call decomp_2d_abort(status, "get_command_argument")
      endif
-     if (nrank==0) print*, 'Xcompact3d is run with the provided file -->', InputFN
   endif
 
 #ifdef ADIOS2
