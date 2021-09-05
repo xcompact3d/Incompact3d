@@ -1183,7 +1183,7 @@ end subroutine wale
     USE variables
     USE decomp_2d
 
-    USE var, only: tb1,tc1,di1,tb2,tc2,di2,tb3,tc3,di3,phi2,phi3
+    USE var, only: di1,tb1,di2,tb2,di3,tb3,tc1,tc2,tc3,phi2,phi3
     USE abl, only: wall_sgs_scalar
 
     implicit none
@@ -1199,8 +1199,8 @@ end subroutine wale
     real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: nut2, dnut2
     real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: nut3, dnut3
 
-    integer :: i, j, k
     real(mytype) :: Pr
+    integer :: i, j, k
 
     sgsphi1 = zero; sgsphi2 = zero; sgsphi3 = zero
 

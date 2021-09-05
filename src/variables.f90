@@ -179,8 +179,6 @@ contains
        allocate(T_tmp(xsize(1),xsize(2),xsize(3),1))
     endif
 
-    call alloc_x(uxf1);call alloc_x(uyf1);call alloc_x(uzf1);call alloc_x(phif1);
-
     allocate(pp1(nxmsize,xsize(2),xsize(3)))
     allocate(pgy1(nxmsize,xsize(2),xsize(3)))
     allocate(pgz1(nxmsize,xsize(2),xsize(3)))

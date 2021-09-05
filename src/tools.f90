@@ -88,7 +88,8 @@ contains
 
         if (phimin1 < uvwt_lbound(4) .or. phimax1 >= uvwt_ubound(4)) then
            print *,'Scalar diverged! SIMULATION IS STOPPED!'
-           call MPI_ABORT(MPI_COMM_WORLD,code,ierr2); stop
+           call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+           stop
         endif
       endif
 
@@ -151,7 +152,8 @@ contains
            uymin1 < uvwt_lbound(2) .or. uymax1 >= uvwt_ubound(2) .or. &
            uzmin1 < uvwt_lbound(3) .or. uzmax1 >= uvwt_ubound(3) ) then
          print *,'Velocity diverged! SIMULATION IS STOPPED!'
-         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2); stop
+         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+         stop
        endif
 
     endif
