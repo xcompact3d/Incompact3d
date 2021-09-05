@@ -140,7 +140,9 @@ contains
     ! See comment in the subroutine navier.f90/gradp
     !
     ! For implicit Y diffusion, boundary conditions are also applied
-    ! at the end of the correction step. All BC must be consistent.
+    ! during time-integration at the end of the prediction step.
+    !
+    ! All BC must be consistent.
     !
 
     ! Zero velocity at bottom boundary
