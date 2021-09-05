@@ -32,6 +32,11 @@ PROGRAM post
   call init_variables
   call schemes()
 
+  ! This is used only in post.f90
+  ! And is not allocated in init_variables
+  call alloc_x(diss1, opt_global=.true.) !global indices
+  call alloc_x(pre1, opt_global=.true.) !global indices
+
   ux1=zero; uxm1=zero
   uy1=zero; uym1=zero
   uz1=zero;

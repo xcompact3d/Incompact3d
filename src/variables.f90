@@ -156,8 +156,6 @@ contains
     call alloc_x(pz1, opt_global=.true.) !global indices
     call alloc_x(px1, opt_global=.true.) !global indices
     call alloc_x(py1, opt_global=.true.) !global indices
-    call alloc_x(diss1, opt_global=.true.) !global indices
-    call alloc_x(pre1, opt_global=.true.) !global indices
 
     allocate(phi1(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),1:numscalar)) !global indices
 
