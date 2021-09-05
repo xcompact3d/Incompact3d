@@ -38,9 +38,6 @@ module user_sim
 
   IMPLICIT NONE
 
-  real(mytype), save, allocatable, dimension(:,:,:) :: vol1,volSimps1
-  integer :: FS
-  character(len=100) :: fileformat
   character(len=1),parameter :: NL=char(10) !new line character
 
   PRIVATE ! All functions/subroutines private by default
@@ -58,16 +55,12 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
-    real(mytype) :: y,r,um,r3,x,z,h,ct
-    real(mytype) :: cx0,cy0,cz0,hg,lg
-    integer :: k,j,i,fh,ierror,is,code
-    integer (kind=MPI_OFFSET_KIND) :: disp
-    integer, dimension (:), allocatable :: seed
-    integer ::  isize
+    integer :: k,j,i
 
     if (iscalar==1) then
 
        phi1(:,:,:,:) = zero
+
     endif
 
     if (iin == 0) then !empty domain
