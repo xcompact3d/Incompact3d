@@ -373,6 +373,7 @@ subroutine catch_signal
     call MPI_ALLREDUCE(MPI_IN_PLACE, ilast, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD, code)
     if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
+    catching_signal = 0
     return
 
   elseif (catching_signal == 2) then
@@ -385,6 +386,7 @@ subroutine catch_signal
     ! Write checkpoint at the end of the next iteration
     icheckpoint = ilast
 
+    catching_signal = 0
     return
 
   endif
