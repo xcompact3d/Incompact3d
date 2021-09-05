@@ -268,7 +268,7 @@ contains
     ! Recover temperature when decomposed (pressure to be recovered externally)
     if (itype == itype_abl.and.ibuoyancy == 1) then
       do k = 1, xsize(3)
-        do j = 1, xsize(2) 
+        do j = 1, xsize(2)
           do i = 1, xsize(1)
             T_tmp(i,j,k,1) = phi1(i,j,k,1)
             phi1(i,j,k,1) = phi1(i,j,k,1) + Tstat(j,1)
@@ -300,7 +300,7 @@ contains
     if (itype == itype_abl.and.ibuoyancy == 1) then
       phi1(:,:,:,1) = T_tmp(:,:,:,1)
     endif
-    
+
   end subroutine postprocessing
   !##################################################################
   !##################################################################
