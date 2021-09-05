@@ -57,7 +57,7 @@ module visu
 #endif
 
   private
-  public :: output2D, visu_init, finalize_visu, write_snapshot, end_snapshot, write_field
+  public :: output2D, visu_init, visu_finalise, write_snapshot, end_snapshot, write_field
 
 contains
 
@@ -173,12 +173,11 @@ contains
   ! Finalise the visu module
   ! - Currently only needed to clean up ADIOS2
   !
-  subroutine finalize_visu()
+  subroutine visu_finalise()
     
 #ifdef ADIOS2
     use adios2
 #endif
-
   implicit none
 
 #ifdef ADIOS2
@@ -192,7 +191,7 @@ contains
     if (code /= 0) then call decomp_2d_abort(code, "ADIOS2_FINALIZE")
 #endif
     
-  end subroutine finalize_visu
+  end subroutine visu_finalise
 
   !
   ! Write a snapshot
@@ -565,12 +564,12 @@ contains
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: local_array
 
     if (use_xdmf) then
-      if (nrank == 0) then
-        write(ioxdmf,*)'        <Attribute Name="'//filename//'" Center="Node">'
+       if (nrank == 0) then
+          write(ioxdmf,*)'        <Attribute Name="'//filename//'" Center="Node">'
 #ifndef ADIOS2
-        write(ioxdmf,*)'           <DataItem Format="Binary"'
+          write(ioxdmf,*)'           <DataItem Format="Binary"'
 #else
-        write(ioxdmf,*)'           <DataItem Format="HDF"'
+          write(ioxdmf,*)'           <DataItem Format="HDF"'
 #endif
 #ifdef DOUBLE_PREC
 #ifdef SAVE_SINGLE
@@ -612,9 +611,9 @@ contains
 
     if (output2D == 0) then
 #ifndef ADIOS2
-      uvisu = zero
-      call fine_to_coarseV(1,local_array,uvisu)
-      call decomp_2d_write_one(1,uvisu,"./data/"//pathname//'/'//filename//'-'//num//'.bin',2)
+       uvisu = zero
+       call fine_to_coarseV(1,local_array,uvisu)
+       call decomp_2d_write_one(1,uvisu,"./data/"//pathname//'/'//filename//'-'//num//'.bin',2)
 #else
        if (iibm==2 .and. (.not.present(skip_ibm))) then
           print *, "Not Implemented: currently ADIOS2 IO doesn't support IBM-blanking"

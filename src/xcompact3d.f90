@@ -296,7 +296,7 @@ subroutine finalise_xcompact3d()
   use ydiff_implicit, only : finalize_implicit
   use case, only : finalize_case
   use probes, only : finalize_probes
-  use visu, only : finalize_visu
+  use visu, only : visu_finalise
 
   implicit none
 
@@ -318,7 +318,7 @@ subroutine finalise_xcompact3d()
   if (iimplicit /= 0) call finalize_implicit()
   call finalize_case()
   call finalize_probes()
-  call finalize_visu()
+  call visu_finalise()
   call finalize_variables()
   call decomp_info_finalize(ph1)
   call decomp_info_finalize(ph4)
