@@ -275,7 +275,7 @@ subroutine finalise_xcompact3d()
 
   use MPI
   use decomp_2d
-
+  use decomp_2d_poisson, only : decomp_2d_poisson_finalize
   use tools, only : simu_stats
   use param, only : itype
   use probes, only : finalize_probes
@@ -299,7 +299,13 @@ subroutine finalise_xcompact3d()
   call simu_stats(4)
   call finalize_probes()
   call visu_finalise()
+  call decomp_info_finalize(ph1)
+  call decomp_info_finalize(ph4)
+  call decomp_info_finalize(ph2)
+  call decomp_info_finalize(ph3)
+  call decomp_info_finalize(phG)
   call decomp_2d_finalize()
+  call decomp_2d_poisson_finalize()
   CALL MPI_FINALIZE(code)
   if (code /= 0) call decomp_2d_abort(code, "MPI_FINALIZE")
 
