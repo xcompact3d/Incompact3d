@@ -177,6 +177,7 @@ contains
     ! Local variables
     integer :: is
     integer :: ierr
+    character(len=30) :: scname
 
     ! Update log file
     if (nrank.eq.0) then
@@ -233,7 +234,8 @@ contains
     ! Write scalars
     if (iscalar.ne.0) then
       do is = 1, numscalar
-        call write_field(phi1(:,:,:,is), ".", "phi"//char(48+is), trim(num), .true.)
+        write(scname,"('phi',I2.2)") is
+        call write_field(phi1(:,:,:,is), ".", trim(scname), trim(num), .true.)
       enddo
     endif
 
