@@ -33,7 +33,7 @@ module decomp_2d_io
   character(len=*), parameter :: io_sep = "::"
   integer, save :: nreg_io = 0
 #ifndef ADIOS2
-  integer, dimension(MAX_IOH), save :: fh_registy
+  integer, dimension(MAX_IOH), save :: fh_registry
   logical, dimension(MAX_IOH), target, save :: fh_live
   character(len=80), dimension(MAX_IOH), target, save :: fh_names
   integer(kind=MPI_OFFSET_KIND), dimension(MAX_IOH), save :: fh_disp
@@ -210,7 +210,7 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Using MPI-IO library to read from a file a single 3D array
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine read_one_real(ipencil,var,dirname,varname,io_name,opt_decomp)
+  subroutine read_one_real(ipencil,var,dirname,varname,io_name,opt_decomp,reduce_prec)
 
     implicit none
 
@@ -218,18 +218,36 @@ contains
     real(mytype), dimension(:,:,:), intent(INOUT) :: var
     character(len=*), intent(IN) :: varname, dirname, io_name
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
+    logical, intent(in), optional :: reduce_prec
 
+    logical :: read_reduce_prec = .true.
+    
     TYPE(DECOMP_INFO) :: decomp
-    integer(kind=MPI_OFFSET_KIND) :: disp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: ierror, newtype, fh, data_type
+    integer :: ierror, newtype, data_type
     real(mytype_single), allocatable, dimension(:,:,:) :: varsingle
+    integer :: idx
+    integer :: disp_bytes
 
+    idx = get_io_idx(io_name, dirname)
 #ifndef ADIOS2
-    !! Use MPIIO
-    data_type = real_type_single
-    allocate (varsingle(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
+    if (present(reduce_prec)) then
+       if (.not. reduce_prec) then
+          read_reduce_prec = .false.
+       end if
+    end if
+    if (read_reduce_prec) then
+       data_type = real_type_single
+    else
+       data_type = real_type
+    end if
+    call MPI_TYPE_SIZE(data_type,disp_bytes,ierror)
 
+    !! Use MPIIO
+    if (read_reduce_prec) then
+       allocate (varsingle(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
+    end if
+    
     if (present(opt_decomp)) then
        decomp = opt_decomp
     else
@@ -264,22 +282,28 @@ contains
        starts(3) = decomp%zst(3)-1
     endif
 
-    call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
-         MPI_ORDER_FORTRAN, data_type, newtype, ierror)
-    call MPI_TYPE_COMMIT(newtype,ierror)
-    call MPI_FILE_OPEN(MPI_COMM_WORLD, dirname, &
-         MPI_MODE_RDONLY, MPI_INFO_NULL, &
-         fh, ierror)
-    disp = 0_MPI_OFFSET_KIND
-    call MPI_FILE_SET_VIEW(fh,disp,data_type, &
-         newtype,'native',MPI_INFO_NULL,ierror)
-    call MPI_FILE_READ_ALL(fh, varsingle, &
-         subsizes(1)*subsizes(2)*subsizes(3), &
-         data_type, MPI_STATUS_IGNORE, ierror)
-    call MPI_FILE_CLOSE(fh,ierror)
-    call MPI_TYPE_FREE(newtype,ierror)
-    var = real(varsingle,mytype)
-    deallocate(varsingle)
+    associate(fh => fh_registry(idx), &
+         disp => fh_disp(idx))
+      call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
+           MPI_ORDER_FORTRAN, data_type, newtype, ierror)
+      call MPI_TYPE_COMMIT(newtype,ierror)
+      call MPI_FILE_SET_VIEW(fh,disp,data_type, &
+           newtype,'native',MPI_INFO_NULL,ierror)
+      if (read_reduce_prec) then
+         call MPI_FILE_READ_ALL(fh, varsingle, &
+              subsizes(1)*subsizes(2)*subsizes(3), &
+              data_type, MPI_STATUS_IGNORE, ierror)
+         var = real(varsingle,mytype)
+         deallocate(varsingle)
+      else
+         call MPI_FILE_READ_ALL(fh, var, &
+              subsizes(1)*subsizes(2)*subsizes(3), &
+              data_type, MPI_STATUS_IGNORE, ierror)
+      endif
+      call MPI_TYPE_FREE(newtype,ierror)
+
+      disp = disp + sizes(1) * sizes(2) * sizes(3) * disp_bytes
+    end associate
 #else
     call adios2_read_one_real(ipencil, var, dirname, varname, io_name)
 #endif
@@ -994,7 +1018,7 @@ contains
     
   end subroutine coarse_extents
 
-  subroutine mpiio_write_real_coarse(ipencil,var,dirname,varname,icoarse,io_name)
+  subroutine mpiio_write_real_coarse(ipencil,var,dirname,varname,icoarse,io_name,opt_decomp,reduce_prec)
 
     ! USE param
     ! USE variables
@@ -1004,14 +1028,20 @@ contains
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
     integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
     real(mytype), dimension(:,:,:), intent(IN) :: var
-    real(mytype_single), allocatable, dimension(:,:,:) :: varsingle
     character(len=*), intent(in) :: dirname, varname, io_name
+    type(decomp_info), intent(in), optional :: opt_decomp
+    logical, intent(in), optional :: reduce_prec
 
+    real(mytype_single), allocatable, dimension(:,:,:) :: varsingle
+    real(mytype), allocatable, dimension(:,:,:) :: varfull
+    logical :: write_reduce_prec = .true.
+    
     integer (kind=MPI_OFFSET_KIND) :: filesize
     integer, dimension(3) :: sizes, subsizes, starts
     integer :: i,j,k, ierror, newtype
     integer :: idx
     logical :: opened_new = .false.
+    integer :: disp_bytes
 #ifdef ADIOS2
     type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
@@ -1019,10 +1049,27 @@ contains
 
     idx = get_io_idx(io_name, dirname)
 #ifndef ADIOS2
+    if (present(reduce_prec)) then
+       if (.not. reduce_prec) then
+          write_reduce_prec = .false.
+       end if
+    end if
+    if (write_reduce_prec) then
+       call MPI_TYPE_SIZE(real_type_single,disp_bytes,ierror)
+    else
+       call MPI_TYPE_SIZE(real_type,disp_bytes,ierror)
+    end if
+    
     !! Use original MPIIO writers
-    call coarse_extents(ipencil, icoarse, sizes, subsizes, starts)
-    allocate (varsingle(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
-    varsingle=real(var, mytype_single)
+    if (present(opt_decomp)) then
+       call coarse_extents(ipencil, icoarse, sizes, subsizes, starts, opt_decomp)
+    else
+       call coarse_extents(ipencil, icoarse, sizes, subsizes, starts)
+    end if
+    if (write_reduce_prec) then
+       allocate (varsingle(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
+       varsingle=real(var, mytype_single)
+    end if
 
     call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
          MPI_ORDER_FORTRAN, real_type_single, newtype, ierror)
@@ -1033,19 +1080,31 @@ contains
        idx = get_io_idx(io_name, dirname)
        opened_new = .true.
     end if
-    
-    call MPI_FILE_SET_VIEW(fh_registy(idx),fh_disp(idx),real_type_single, &
-         newtype,'native',MPI_INFO_NULL,ierror)
-    call MPI_FILE_WRITE_ALL(fh_registy(idx), varsingle, &
-         subsizes(1)*subsizes(2)*subsizes(3), &
-         real_type_single, MPI_STATUS_IGNORE, ierror)
 
+    if (write_reduce_prec) then
+       call MPI_FILE_SET_VIEW(fh_registry(idx),fh_disp(idx),real_type_single, &
+            newtype,'native',MPI_INFO_NULL,ierror)
+       call MPI_FILE_WRITE_ALL(fh_registry(idx), varsingle, &
+            subsizes(1)*subsizes(2)*subsizes(3), &
+            real_type_single, MPI_STATUS_IGNORE, ierror)
+    else
+       call MPI_FILE_SET_VIEW(fh_registry(idx),fh_disp(idx),real_type, &
+            newtype,'native',MPI_INFO_NULL,ierror)
+       call MPI_FILE_WRITE_ALL(fh_registry(idx), var, &
+            subsizes(1)*subsizes(2)*subsizes(3), &
+            real_type_single, MPI_STATUS_IGNORE, ierror)
+    end if
+    
+    fh_disp(idx) = fh_disp(idx) + sizes(1) * sizes(2) * sizes(3) * disp_bytes
+    
     if (opened_new) then
        call decomp_2d_close_io(io_name, dirname)
     end if
 
     call MPI_TYPE_FREE(newtype,ierror)
-    deallocate(varsingle)
+    if (write_reduce_prec) then
+       deallocate(varsingle)
+    end if
 #else
     call adios2_at_io(io_handle, adios, io_name, ierror)
     call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
@@ -1426,11 +1485,11 @@ contains
     character(len=:), allocatable :: full_name
     
     integer :: idx, ierror
+    integer :: access_mode
 #ifndef ADIOS2
     integer(MPI_OFFSET_KIND) :: filesize
 #else
     type(adios2_io) :: io
-    integer :: adios2_mode
     character(len=80) :: ext
 #endif
 
@@ -1438,13 +1497,13 @@ contains
     live_ptrh => fh_live
     names_ptr => fh_names
 
-    ! Create folder if needed
-    if (nrank==0) then
-       inquire(file=io_dir, exist=dir_exists)
-       if (.not.dir_exists) then
-          call system("mkdir "//io_dir//" 2> /dev/null")
-       end if
-    end if
+    ! ! Create folder if needed
+    ! if (nrank==0) then
+    !    inquire(file=io_dir, exist=dir_exists)
+    !    if (.not.dir_exists) then
+    !       call system("mkdir "//io_dir//" 2> /dev/null")
+    !    end if
+    ! end if
 #else
     live_ptrh => engine_live
     names_ptr => engine_names
@@ -1468,29 +1527,36 @@ contains
           deallocate(full_name)
 
           if (mode .eq. decomp_2d_write_mode) then
+             !! Setup writers
 #ifndef ADIOS2
              filesize = 0_MPI_OFFSET_KIND
              fh_disp(idx) = 0_MPI_OFFSET_KIND
+             access_mode = MPI_MODE_CREATE + MPI_MODE_WRONLY
 #else
-             adios2_mode = adios2_mode_write
+             access_mode = adios2_mode_write
 #endif
           else if (mode .eq. decomp_2d_read_mode) then
+             !! Setup readers
 #ifndef ADIOS2
-             print *, "ERROR: MPIIO read mode not implemented!"
-             stop
+             fh_disp(idx) = 0_MPI_OFFSET_KIND
+             access_mode = MPI_MODE_RDONLY
 #else
-             adios2_mode = adios2_mode_read
+             access_mode = adios2_mode_read
 #endif
           else
              print *, "ERROR: Unknown mode!"
              stop
           endif
 
+          !! Open IO
 #ifndef ADIOS2
           call MPI_FILE_OPEN(MPI_COMM_WORLD, io_dir, &
-               MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
-               fh_registy(idx), ierror)
-          call MPI_FILE_SET_SIZE(fh_registy(idx), filesize, ierror)
+               access_mode, MPI_INFO_NULL, &
+               fh_registry(idx), ierror)
+          if (mode .eq. decomp_2d_write_mode) then
+             !! Guarantee overwriting
+             call MPI_FILE_SET_SIZE(fh_registry(idx), filesize, ierror)
+          end if
 #else
           call adios2_at_io(io, adios, io_name, ierror)
           if (io%engine_type .eq. "BP4") then
@@ -1501,7 +1567,7 @@ contains
              print *, "ERROR: Unkown engine type! ", io%engine_type
              stop
           endif
-          call adios2_open(engine_registry(idx), io, trim(io_dir)//trim(ext), adios2_mode, ierror)
+          call adios2_open(engine_registry(idx), io, trim(io_dir)//trim(ext), access_mode, ierror)
 #endif
        end if
     end if
@@ -1522,7 +1588,7 @@ contains
 #ifndef ADIOS2
     names_ptr => fh_names
     live_ptrh => fh_live
-    call MPI_FILE_CLOSE(fh_registy(idx), ierror)
+    call MPI_FILE_CLOSE(fh_registry(idx), ierror)
 #else
     names_ptr => engine_names
     live_ptrh => engine_live

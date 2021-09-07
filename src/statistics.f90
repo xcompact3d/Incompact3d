@@ -280,12 +280,8 @@ contains
 
     if (flag_read) then
        ! There was a check for nvisu = 1 before
-#ifndef ADIOS2
-       call decomp_2d_read_one(1, array, filename)
-#else
-       call decomp_2d_read_one(1, array, stat_dir, filename, 1, io_statistics)
-#endif
-   else
+       call decomp_2d_read_one(1, array, stat_dir, filename, io_statistics)
+    else
       call decomp_2d_write_one(1, array, stat_dir, filename, 1, io_statistics)
    endif
 

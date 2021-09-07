@@ -95,7 +95,6 @@ contains
            call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
         endif
       endif
-
     enddo
 
     return
@@ -254,12 +253,10 @@ contains
     NAMELIST /Time/ tfield, itime
     NAMELIST /NumParam/ nx, ny, nz, istret, beta, dt, itimescheme
 
-    if (.not. adios2_restart_initialised) then
-       call init_restart_adios2()
-       adios2_restart_initialised = .true.
-    end if
+    write(filename,"('restart',I7.7)") itime
+    write(filestart,"('restart',I7.7)") ifirst-1
 
-    if (iresflg .eq. 1 ) then !Writing restart
+    if (iresflg .eq. 1) then !Writing restart
        if (mod(itime, icheckpoint).ne.0) then
           return
        endif
@@ -271,57 +268,59 @@ contains
        endif
     end if
 
-    write(filename,"('restart',I7.7)") itime
-    write(filestart,"('restart',I7.7)") ifirst-1
+    if (.not. adios2_restart_initialised) then
+       call init_restart_adios2()
+       adios2_restart_initialised = .true.
+    end if
 
     if (iresflg==1) then !write
        call decomp_2d_open_io(io_restart, resfile, decomp_2d_write_mode)
        call decomp_2d_start_io(io_restart, resfile)
 
-       call decomp_2d_write_one(1,ux1,resfile,"ux",0,io_restart)
-       call decomp_2d_write_one(1,uy1,resfile,"uy",0,io_restart)
-       call decomp_2d_write_one(1,uz1,resfile,"uz",0,io_restart)
+       call decomp_2d_write_one(1,ux1,resfile,"ux",0,io_restart,reduce_prec=.false.)
+       call decomp_2d_write_one(1,uy1,resfile,"uy",0,io_restart,reduce_prec=.false.)
+       call decomp_2d_write_one(1,uz1,resfile,"uz",0,io_restart,reduce_prec=.false.)
        ! write previous time-step if necessary for AB2 or AB3
        if ((itimescheme.eq.2).or.(itimescheme.eq.3)) then
-          call decomp_2d_write_one(1,dux1(:,:,:,2),resfile,"dux-2",0,io_restart)
-          call decomp_2d_write_one(1,duy1(:,:,:,2),resfile,"duy-2",0,io_restart)
-          call decomp_2d_write_one(1,duz1(:,:,:,2),resfile,"duz-2",0,io_restart)
+          call decomp_2d_write_one(1,dux1(:,:,:,2),resfile,"dux-2",0,io_restart,reduce_prec=.false.)
+          call decomp_2d_write_one(1,duy1(:,:,:,2),resfile,"duy-2",0,io_restart,reduce_prec=.false.)
+          call decomp_2d_write_one(1,duz1(:,:,:,2),resfile,"duz-2",0,io_restart,reduce_prec=.false.)
        end if
        ! for AB3 one more previous time-step
        if (itimescheme.eq.3) then
-          call decomp_2d_write_one(1,dux1(:,:,:,3),resfile,"dux-3",0,io_restart)
-          call decomp_2d_write_one(1,duy1(:,:,:,3),resfile,"duy-3",0,io_restart)
-          call decomp_2d_write_one(1,duz1(:,:,:,3),resfile,"duz-3",0,io_restart)
+          call decomp_2d_write_one(1,dux1(:,:,:,3),resfile,"dux-3",0,io_restart,reduce_prec=.false.)
+          call decomp_2d_write_one(1,duy1(:,:,:,3),resfile,"duy-3",0,io_restart,reduce_prec=.false.)
+          call decomp_2d_write_one(1,duz1(:,:,:,3),resfile,"duz-3",0,io_restart,reduce_prec=.false.)
        end if
        !
-       call decomp_2d_write_one(3,pp3,resfile,"pp",0,io_restart)
+       call decomp_2d_write_one(3,pp3,resfile,"pp",0,io_restart,phG,reduce_prec=.false.)
        !
        if (iscalar==1) then
           do is=1, numscalar
              write(varname, *) "phi-", is
-             call decomp_2d_write_one(1,phi1(:,:,:,is),resfile,varname,0,io_restart)
+             call decomp_2d_write_one(1,phi1(:,:,:,is),resfile,varname,0,io_restart,reduce_prec=.false.)
              ! previous time-steps
              if ((itimescheme.eq.2).or.(itimescheme.eq.3)) then ! AB2 or AB3
                 write(varname, *) "dphi-", is, "-2"
-                call decomp_2d_write_one(1,dphi1(:,:,:,2,is),resfile,varname,0,io_restart)
+                call decomp_2d_write_one(1,dphi1(:,:,:,2,is),resfile,varname,0,io_restart,reduce_prec=.false.)
              end if
              !
              if (itimescheme.eq.3) then ! AB3
                write(varname, *) "dphi-", is, "-3"
-               call decomp_2d_write_one(1,dphi1(:,:,:,3,is),resfile,varname,0,io_restart)
+               call decomp_2d_write_one(1,dphi1(:,:,:,3,is),resfile,varname,0,io_restart,reduce_prec=.false.)
              end if
           end do
        endif
        if (ilmn) then
           do is = 1, nrhotime
              write(varname, *) "rho-", is
-             call decomp_2d_write_one(1,rho1(:,:,:,is),resfile,varname,0,io_restart)
+             call decomp_2d_write_one(1,rho1(:,:,:,is),resfile,varname,0,io_restart,reduce_prec=.false.)
           enddo
           do is = 1, ntime
              write(varname, *) "drho-", is
-             call decomp_2d_write_one(1,drho1(:,:,:,is),resfile,varname,0,io_restart)
+             call decomp_2d_write_one(1,drho1(:,:,:,is),resfile,varname,0,io_restart,reduce_prec=.false.)
           enddo
-          call decomp_2d_write_one(1,mu1(:,:,:),resfile,"mu",0,io_restart)
+          call decomp_2d_write_one(1,mu1(:,:,:),resfile,"mu",0,io_restart,reduce_prec=.false.)
        endif
 
        call decomp_2d_end_io(io_restart, resfile)
@@ -370,37 +369,37 @@ contains
        call decomp_2d_open_io(io_restart, resfile, decomp_2d_read_mode)
        call decomp_2d_start_io(io_restart, resfile)
 
-       call decomp_2d_read_one(1,ux1,resfile,"ux",io_restart)
-       call decomp_2d_read_one(1,uy1,resfile,"uy",io_restart)
-       call decomp_2d_read_one(1,uz1,resfile,"uz",io_restart)
+       call decomp_2d_read_one(1,ux1,resfile,"ux",io_restart,reduce_prec=.false.)
+       call decomp_2d_read_one(1,uy1,resfile,"uy",io_restart,reduce_prec=.false.)
+       call decomp_2d_read_one(1,uz1,resfile,"uz",io_restart,reduce_prec=.false.)
        ! read previous time-step if necessary for AB2 or AB3
        if ((itimescheme.eq.2).or.(itimescheme.eq.3)) then ! AB2 or AB3
-          call decomp_2d_read_one(1,dux1(:,:,:,2),resfile,"dux-2",io_restart)
-          call decomp_2d_read_one(1,duy1(:,:,:,2),resfile,"duy-2",io_restart)
-          call decomp_2d_read_one(1,duz1(:,:,:,2),resfile,"duz-2",io_restart)
+          call decomp_2d_read_one(1,dux1(:,:,:,2),resfile,"dux-2",io_restart,reduce_prec=.false.)
+          call decomp_2d_read_one(1,duy1(:,:,:,2),resfile,"duy-2",io_restart,reduce_prec=.false.)
+          call decomp_2d_read_one(1,duz1(:,:,:,2),resfile,"duz-2",io_restart,reduce_prec=.false.)
        end if
        ! for AB3 one more previous time-step
        if (itimescheme.eq.3) then ! AB3
-          call decomp_2d_read_one(1,dux1(:,:,:,3),resfile,"dux-3",io_restart)
-          call decomp_2d_read_one(1,duy1(:,:,:,3),resfile,"duy-3",io_restart)
-          call decomp_2d_read_one(1,duz1(:,:,:,3),resfile,"duz-3",io_restart)
+          call decomp_2d_read_one(1,dux1(:,:,:,3),resfile,"dux-3",io_restart,reduce_prec=.false.)
+          call decomp_2d_read_one(1,duy1(:,:,:,3),resfile,"duy-3",io_restart,reduce_prec=.false.)
+          call decomp_2d_read_one(1,duz1(:,:,:,3),resfile,"duz-3",io_restart,reduce_prec=.false.)
        end if
        !
-       call decomp_2d_read_one(3,pp3,resfile,"pp",io_restart,phG)
+       call decomp_2d_read_one(3,pp3,resfile,"pp",io_restart,phG,reduce_prec=.false.)
        !
        if (iscalar==1) then
          do is=1, numscalar
             write(varname, *) "phi-", is
-            call decomp_2d_read_one(1,phi1(:,:,:,is),resfile,varname,io_restart)
+            call decomp_2d_read_one(1,phi1(:,:,:,is),resfile,varname,io_restart,reduce_prec=.false.)
            ! previous time-steps
            if ((itimescheme.eq.2).or.(itimescheme.eq.3)) then ! AB2 or AB3
              write(varname, *) "dphi-", is, "-2"
-             call decomp_2d_read_one(1,dphi1(:,:,:,2,is),resfile,varname,io_restart)
+             call decomp_2d_read_one(1,dphi1(:,:,:,2,is),resfile,varname,io_restart,reduce_prec=.false.)
            end if
            !
            if (itimescheme.eq.3) then ! AB3
               write(varname, *) "dphi-", is, "-3"
-              call decomp_2d_read_one(1,dphi1(:,:,:,3,is),resfile,varname,io_restart)
+              call decomp_2d_read_one(1,dphi1(:,:,:,3,is),resfile,varname,io_restart,reduce_prec=.false.)
            end if
            ! ABL 
            if (itype.eq.itype_abl) then
@@ -419,13 +418,13 @@ contains
        if (ilmn) then
           do is = 1, nrhotime
              write(varname, *) "rho-", is
-             call decomp_2d_read_one(1,rho1(:,:,:,is),resfile,varname,io_restart)
+             call decomp_2d_read_one(1,rho1(:,:,:,is),resfile,varname,io_restart,reduce_prec=.false.)
           enddo
           do is = 1, ntime
              write(varname, *) "drho-", is
-             call decomp_2d_read_one(1,drho1(:,:,:,is),resfile,varname,io_restart)
+             call decomp_2d_read_one(1,drho1(:,:,:,is),resfile,varname,io_restart,reduce_prec=.false.)
           enddo
-          call decomp_2d_read_one(1,mu1,resfile,"mu",io_restart)
+          call decomp_2d_read_one(1,mu1,resfile,"mu",io_restart,reduce_prec=.false.)
        end if
 
        call decomp_2d_end_io(io_restart, resfile)
