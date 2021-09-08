@@ -415,7 +415,7 @@ contains
     return
   end subroutine flow_rate_control_SZA
   !********************************************************************
-  subroutine init_sandbox (ux1,uy1,uz1,ep1,phi1)
+  subroutine init_sandbox (ux1,uy1,uz1,ep1,phi1,iresflg)
 
     USE decomp_2d
     USE decomp_2d_io
@@ -429,7 +429,7 @@ contains
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-    integer :: i, j, k, is, pos
+    integer :: i, j, k, is, pos, iresflg
 
     ! NAMELIST /CASE/ sz_a_length
     !
@@ -441,21 +441,25 @@ contains
     !! Sponge Zone A for recycling inflow condition
     if (sz_a_length .gt. 0.0) sz_a_i = int(sz_a_length / dx) + 1
 
-    !Read phi
-    if (iscalar .ne. 0) then
-      do is = 1, numscalar
-        if (nrank.eq.0) write(*,*) 'reading : ', './data/phi'//char(is+48)//'.bin'
-        call decomp_2d_read_one(1, phi1(:,:,:,is), './data/phi'//char(is+48)//'.bin')
-      enddo
-    endif
+    if (iresflg.eq.0) then
 
-    !Read velocity field
-    if (nrank.eq.0) write(*,*) 'reading : ', './data/ux.bin'
-    call decomp_2d_read_one(1,ux1,'./data/ux.bin')
-    if (nrank.eq.0) write(*,*) 'reading : ', './data/uy.bin'
-    call decomp_2d_read_one(1,uy1,'./data/uy.bin')
-    if (nrank.eq.0) write(*,*) 'reading : ', './data/uz.bin'
-    call decomp_2d_read_one(1,uz1,'./data/uz.bin')
+      !Read phi
+      if (iscalar .ne. 0) then
+        do is = 1, numscalar
+          if (nrank.eq.0) write(*,*) 'reading : ', './data/phi'//char(is+48)//'.bin'
+          call decomp_2d_read_one(1, phi1(:,:,:,is), './data/phi'//char(is+48)//'.bin')
+        enddo
+      endif
+
+      !Read velocity field
+      if (nrank.eq.0) write(*,*) 'reading : ', './data/ux.bin'
+      call decomp_2d_read_one(1,ux1,'./data/ux.bin')
+      if (nrank.eq.0) write(*,*) 'reading : ', './data/uy.bin'
+      call decomp_2d_read_one(1,uy1,'./data/uy.bin')
+      if (nrank.eq.0) write(*,*) 'reading : ', './data/uz.bin'
+      call decomp_2d_read_one(1,uz1,'./data/uz.bin')
+    
+    endif
 
     !Read integration operator for flow_rate_control
     if (nclx .or. sz_a_i .gt. 1) then

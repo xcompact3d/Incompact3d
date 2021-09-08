@@ -148,7 +148,7 @@ contains
     
     if (itype.eq.itype_sandbox) then !F.Schuch 2020-08-14T11:44:11-03:00
       call geomcomplex_io(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
-      nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif,nobjmax,npif,.true.)
+           nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif,nobjmax,npif,.true.)
     else
       call gene_epsi_3D(ep1,nx,ny,nz,dx,dy,dz,xlx,yly,zlz ,&
            nclx,ncly,nclz,nxraf,nyraf,nzraf   ,&
@@ -157,8 +157,8 @@ contains
       call verif_epsi(ep1,npif,izap,nx,ny,nz,nobjmax,&
            nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif)
     endif
-   call geomcomplex_io(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
-        nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif,nobjmax,npif,.false.)
+    ! call geomcomplex_io(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
+    !      nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif,nobjmax,npif,.false.)
     !
   end subroutine genepsi3d
 !
