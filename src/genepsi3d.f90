@@ -139,9 +139,13 @@ contains
     ! Check if planes folder exists
     !###################################################################
     if (nrank==0) then
-      inquire(file="geometry", exist=dir_exists)
+      inquire(file="data", exist=dir_exists)
       if (.not.dir_exists) then
-        call system("mkdir geometry 2> /dev/null")
+        call system("mkdir data 2> /dev/null")
+      end if
+      inquire(file="data/geometry", exist=dir_exists)
+      if (.not.dir_exists) then
+        call system("mkdir data/geometry 2> /dev/null")
       end if
     end if
     !###################################################################
@@ -904,14 +908,14 @@ end subroutine verif_epsi
     !###################################################################
     if (read_flag) then
       if (nrank==0) print *,'Reading geometry'
-      call decomp_2d_read_one(1,ep1,'geometry/epsilon.bin')   
+      call decomp_2d_read_one(1,ep1,'data/geometry/epsilon.bin')   
     else
       if (nrank==0) print *,'Writing geometry'
-      call decomp_2d_write_one(1,ep1,'geometry/epsilon.bin')
+      call decomp_2d_write_one(1,ep1,'data/geometry/epsilon.bin')
     endif
     !###################################################################
     !x-pencil
-    open(67,file='geometry/nobjx.dat',form='formatted',access='direct',recl=13)
+    open(67,file='data/geometry/nobjx.dat',form='formatted',access='direct',recl=13)
     do k=xstart(3),xend(3)
        do j=xstart(2),xend(2)
           count = (k-1)*ny+j
@@ -924,7 +928,7 @@ end subroutine verif_epsi
     enddo
     close(67)
     !y-pencil
-    open(67,file='geometry/nobjy.dat',form='formatted',access='direct',recl=13)
+    open(67,file='data/geometry/nobjy.dat',form='formatted',access='direct',recl=13)
     do k=ystart(3),yend(3)
        do i=ystart(1),yend(1)
           count = (k-1)*nx+i
@@ -937,7 +941,7 @@ end subroutine verif_epsi
     enddo
     close(67)
     !z-pencil
-    open(67,file='geometry/nobjz.dat',form='formatted',access='direct',recl=13)
+    open(67,file='data/geometry/nobjz.dat',form='formatted',access='direct',recl=13)
     do j=zstart(2),zend(2)
        do i=zstart(1),zend(1)
           count = (j-1)*nx+i
@@ -951,7 +955,7 @@ end subroutine verif_epsi
     close(67)
     !###################################################################
     !x-pencil
-    open(67,file='geometry/nxifpif.dat',form='formatted',access='direct',recl=25)
+    open(67,file='data/geometry/nxifpif.dat',form='formatted',access='direct',recl=25)
     do k=xstart(3),xend(3)
        do j=xstart(2),xend(2)
          do i=0,nobjmax
@@ -966,7 +970,7 @@ end subroutine verif_epsi
     enddo
     close(67)
     !y-pencil
-    open(67,file='geometry/nyifpif.dat',form='formatted',access='direct',recl=25)
+    open(67,file='data/geometry/nyifpif.dat',form='formatted',access='direct',recl=25)
     do k=ystart(3),yend(3)
        do i=ystart(1),yend(1)
          do j=0,nobjmax
@@ -981,7 +985,7 @@ end subroutine verif_epsi
     enddo
     close(67)
     !z-pencil
-    open(67,file='geometry/nzifpif.dat',form='formatted',access='direct',recl=25)
+    open(67,file='data/geometry/nzifpif.dat',form='formatted',access='direct',recl=25)
     do j=zstart(2),zend(2)
        do i=zstart(1),zend(1)
          do k=0,nobjmax
@@ -997,7 +1001,7 @@ end subroutine verif_epsi
     close(67)
     !###################################################################
     !x-pencil
-    open(67,file='geometry/xixf.dat',form='formatted',access='direct',recl=49)
+    open(67,file='data/geometry/xixf.dat',form='formatted',access='direct',recl=49)
     do k=xstart(3),xend(3)
        do j=xstart(2),xend(2)
           do i=1,nobjmax
@@ -1012,7 +1016,7 @@ end subroutine verif_epsi
     enddo
     close(67)
     !y-pencil
-    open(67,file='geometry/yiyf.dat',form='formatted',access='direct',recl=49)
+    open(67,file='data/geometry/yiyf.dat',form='formatted',access='direct',recl=49)
     do k=ystart(3),yend(3)
        do i=ystart(1),yend(1)
           do j=1,nobjmax
@@ -1027,7 +1031,7 @@ end subroutine verif_epsi
     enddo
     close(67)
     !z-pencil
-    open(67,file='geometry/zizf.dat',form='formatted',access='direct',recl=49)
+    open(67,file='data/geometry/zizf.dat',form='formatted',access='direct',recl=49)
     do j=zstart(2),zend(2)
        do i=zstart(1),zend(1)
           do k=1,nobjmax

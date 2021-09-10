@@ -134,7 +134,7 @@ contains
 
     elseif (itype.EQ.itype_sandbox) THEN
    
-       call init_sandbox (ux1, uy1, uz1, ep1, phi1)
+       call init_sandbox (ux1, uy1, uz1, ep1, phi1, 0)
 
     else
   

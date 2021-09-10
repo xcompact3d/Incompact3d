@@ -126,8 +126,8 @@ contains
         nyi.eq.xstart(2).and.nyf.eq.xend(2).and.&
         nzi.eq.xstart(3).and.nzf.eq.xend(3)) then
         !
-        if (nrank.eq.0) write(*,*) 'reading : ', './geometry/epsilon.bin'
-        call decomp_2d_read_one(1,epsi,'./geometry/epsilon.bin')
+        if (nrank.eq.0) write(*,*) 'reading : ', './data/geometry/epsilon.bin'
+        call decomp_2d_read_one(1,epsi,'.data/geometry/epsilon.bin')
         !
     else
       ! Just the standard epsi(nx,ny,nz) is loaded
@@ -547,7 +547,7 @@ contains
     endif
     !Read phi top BC
     if (iscalar .ne. 0 .and. nclySn .eq. 2) then
-      allocate(byphin(xsize(2),xsize(3),numscalar))
+      allocate(byphin(xsize(1),xsize(3),numscalar))
       byphin = zero
       do is=1, numscalar
         !
