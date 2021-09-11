@@ -1,17 +1,3 @@
-# xcompact3d_developers
-Developers repository for xcompact3d
-=======
-<a name="logo"/>
-<div align="center">
-<a href="https://www.incompact3d.com" target="_blank">
-<img src="https://www.incompact3d.com/uploads/5/8/7/2/58724623/incompact3d.png" alt="Logo" width="300" height="100"></img>
-</a>
-</div>
-
-[![Build Status](https://travis-ci.org/xcompact3d/Incompact3d.svg?branch=master)](https://travis-ci.org/xcompact3d/Incompact3d)
-![Build Status](https://github.com/xcompact3d/Incompact3d/workflows/Build/badge.svg)
-[![Documentation Status](https://readthedocs.org/projects/xcompact3d/badge/?version=latest)](https://xcompact3d.readthedocs.io/en/latest/?badge=latest)
-
 ## The Xcompact3d code
 
 Xcompact3d is a Fortran-based framework of high-order finite-difference flow solvers dedicated to the study of turbulent flows. Dedicated to Direct and Large Eddy Simulations (DNS/LES) for which the largest turbulent scales are simulated, it can combine the versatility of industrial codes with the accuracy of spectral codes. Its user-friendliness, simplicity, versatility, accuracy, scalability, portability and efficiency makes it an attractive tool for the Computational Fluid Dynamics community.
