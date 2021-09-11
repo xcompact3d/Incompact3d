@@ -49,11 +49,17 @@ Building Incompact3d requires very little of disk space and virtual memory.
 
 In the Incompact3d, once you have selected the correct options for your Fortran compiler, you just need to do
 
-   make clean
-   make
+    make clean
+    
+to make sure that you will be compiling all the files, and then
+
+    make 
    
-Once it is built, you just need to go in one of the examples directories, for instance https://github.com/xcompact3d/Incompact3d/tree/master/examples/Taylor-Green-Vortex and from there use the input.i3d file to configure your simulation. To start with, you can start with a ready-to-run file, see as an example https://github.com/xcompact3d/Incompact3d/blob/master/examples/Taylor-Green-Vortex/input_DNS_Re1600.i3d which can be use to run the Taylor-Green case in a DNS set-up at Re=1600. Using 16 CPU cores, this simulation should last less than 5 minutes. The command to launch the simulation is
-mpirun -np 16 ../../xcompact3d 
+Once it is built, you just need to go in one of the examples directories, for instance https://github.com/xcompact3d/Incompact3d/tree/master/examples/Taylor-Green-Vortex and from there use the input.i3d file to configure your simulation. To get to know the code, you can start with a ready-to-run input file, see as an example https://github.com/xcompact3d/Incompact3d/blob/master/examples/Taylor-Green-Vortex/input_DNS_Re1600.i3d which can be use to run the Taylor-Green case in a DNS set-up at Re=1600. Using 16 CPU cores, this simulation should last less than 5 minutes. The command to launch the simulation is
+    
+    mpirun -np 16 ../../xcompact3d 
+
 or
-nohup mpirun -np 16 ../../xcompact3d > output.out &
+
+    nohup mpirun -np 16 ../../xcompact3d > output.out &
 
