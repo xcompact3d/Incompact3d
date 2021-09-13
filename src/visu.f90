@@ -179,9 +179,11 @@ contains
       print *,'Writing snapshots =>',itime/ioutput
     end if
 
+#ifdef ADIOS2
     call decomp_2d_open_io(io_name, "data", decomp_2d_append_mode)
     call decomp_2d_start_io(io_name, "data")
-
+#endif
+    
     ! Snapshot number
 #ifndef ADIOS2
     if (filenamedigits) then
@@ -284,9 +286,11 @@ contains
       endif
     endif
 
+#ifdef ADIOS2
     call decomp_2d_end_io(io_name, "data")
     call decomp_2d_close_io(io_name, "data")
-
+#endif
+    
     ! Update log file
     if (nrank.eq.0) then
       call cpu_time(tend)

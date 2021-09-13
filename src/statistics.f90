@@ -42,7 +42,6 @@ module stats
 
 contains
 
-#ifdef ADIOS2
   subroutine init_statistic_adios2
 
     use decomp_2d, only : mytype
@@ -85,7 +84,6 @@ contains
     endif
        
   end subroutine init_statistic_adios2
-#endif
   
   !
   ! Initialize to zero all statistics
@@ -120,9 +118,8 @@ contains
       phiphimean = zero
     endif
 
-#ifdef ADIOS2
     call init_statistic_adios2
-#endif
+
   end subroutine init_statistic
 
   !
@@ -142,9 +139,7 @@ contains
        initstat = ifirst
        return
     else
-#ifdef ADIOS2
-    call init_statistic_adios2
-#endif
+       call init_statistic_adios2
     endif
 
 
@@ -224,8 +219,10 @@ contains
     else
        io_mode = decomp_2d_write_mode
     endif
+#ifdef ADIOS2
     call decomp_2d_open_io(io_statistics, stat_dir, io_mode)
     call decomp_2d_start_io(io_statistics, stat_dir)
+#endif
     
     call read_or_write_one_stat(flag_read, gen_statname("pmean"), pmean)
     call read_or_write_one_stat(flag_read, gen_statname("umean"), umean)
@@ -248,8 +245,10 @@ contains
        enddo
     endif
 
+#ifdef ADIOS2
     call decomp_2d_end_io(io_statistics, stat_dir)
     call decomp_2d_close_io(io_statistics, stat_dir)
+#endif
     
     if (nrank==0) then
       if (flag_read) then

@@ -1040,13 +1040,16 @@ contains
     integer, dimension(3) :: sizes, subsizes, starts
     integer :: i,j,k, ierror, newtype
     integer :: idx
-    logical :: opened_new = .false.
+    logical :: opened_new
     integer :: disp_bytes
+    logical :: dir_exists
+    character(len=:), allocatable :: full_io_name
 #ifdef ADIOS2
     type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
 #endif
 
+    opened_new = .false.
     idx = get_io_idx(io_name, dirname)
 #ifndef ADIOS2
     if (present(reduce_prec)) then
@@ -1076,8 +1079,17 @@ contains
     call MPI_TYPE_COMMIT(newtype,ierror)
 
     if (idx .lt. 1) then
-       call decomp_2d_open_io(io_name, dirname, decomp_2d_write_mode)
-       idx = get_io_idx(io_name, dirname)
+       ! Create folder if needed
+       if (nrank==0) then
+          inquire(file=dirname, exist=dir_exists)
+          if (.not.dir_exists) then
+             call system("mkdir "//dirname//" 2> /dev/null")
+          end if
+       end if
+       allocate(character(len(trim(dirname)) + 1 + len(trim(varname))) :: full_io_name)
+       full_io_name = dirname//"/"//varname
+       call decomp_2d_open_io(io_name, full_io_name, decomp_2d_write_mode)
+       idx = get_io_idx(io_name, full_io_name)
        opened_new = .true.
     end if
 
@@ -1098,7 +1110,8 @@ contains
     fh_disp(idx) = fh_disp(idx) + sizes(1) * sizes(2) * sizes(3) * disp_bytes
     
     if (opened_new) then
-       call decomp_2d_close_io(io_name, dirname)
+       call decomp_2d_close_io(io_name, full_io_name)
+       deallocate(full_io_name)
     end if
 
     call MPI_TYPE_FREE(newtype,ierror)
@@ -1497,13 +1510,6 @@ contains
     live_ptrh => fh_live
     names_ptr => fh_names
 
-    ! ! Create folder if needed
-    ! if (nrank==0) then
-    !    inquire(file=io_dir, exist=dir_exists)
-    !    if (.not.dir_exists) then
-    !       call system("mkdir "//io_dir//" 2> /dev/null")
-    !    end if
-    ! end if
 #else
     live_ptrh => engine_live
     names_ptr => engine_names
@@ -1542,6 +1548,14 @@ contains
              access_mode = MPI_MODE_RDONLY
 #else
              access_mode = adios2_mode_read
+#endif
+          else if (mode .eq. decomp_2d_append_mode) then
+#ifndef ADIOS2
+             filesize = 0_MPI_OFFSET_KIND
+             fh_disp(idx) = 0_MPI_OFFSET_KIND
+             access_mode = MPI_MODE_CREATE + MPI_MODE_WRONLY
+#else
+             access_mode = adios2_mode_append
 #endif
           else
              print *, "ERROR: Unknown mode!"
