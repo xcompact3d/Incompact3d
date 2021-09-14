@@ -429,7 +429,6 @@ contains
     endif
     if (iscalar.eq.1) then
       do is = 1, numscalar
-        if (ri(is).eq.0.0) cycle
         call momentum_gravity(dux1, duy1, duz1, phi1(:,:,:,is), ri(is))
       enddo
     endif
