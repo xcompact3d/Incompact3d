@@ -26,6 +26,9 @@ FC = mpif90
 #FFLAGS = -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -x f95-cpp-input
 FFLAGS = -cpp -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none
 #-ffpe-trap=invalid,zero
+ifeq "$(shell expr `gfortran -dumpversion | cut -f1 -d.` \>= 10)" "1"
+FFLAGS += -fallow-argument-mismatch
+endif
 else ifeq ($(CMP),nagfor)
 FC = mpinagfor
 FFLAGS = -fpp
@@ -119,7 +122,7 @@ post:
 clean:
 	rm -f $(DECOMPDIR)/*.o $(DECOMPDIR)/*.mod
 	rm -f $(SRCDIR)/*.o $(SRCDIR)/*.mod
-	rm -f *.o *.mod xcompact3d post
+	rm -f *.o *.mod xcompact3d
 
 .PHONY: cleanall
 cleanall: clean

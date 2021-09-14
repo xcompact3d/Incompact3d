@@ -86,7 +86,8 @@ contains
         print *,'Phi'//char(48+is)//' min max=', real(phimin1,4), real(phimax1,4)
 
         if (abs(phimax1).ge.100.) then !if phi control turned off
-           print *,'Scalar diverged! SIMULATION IS STOPPED!'
+     ! if (phimin1 < uvwt_lbound(4) .or. phimax1 >= uvwt_ubound(4)) then
+      print *,'Scalar diverged! SIMULATION IS STOPPED!'
            call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
         endif
       endif
@@ -146,6 +147,9 @@ contains
        !print *,'CFL=',real(abs(max(uxmax1,uymax1,uzmax1)*dt)/min(dx,dy,dz),4)
 
        if((abs(uxmax1).ge.100.).OR.(abs(uymax1).ge.100.).OR.(abs(uzmax1).ge.100.)) then
+       !if (uxmin1 < uvwt_lbound(1) .or. uxmax1 >= uvwt_ubound(1) .or. &
+        !   uymin1 < uvwt_lbound(2) .or. uymax1 >= uvwt_ubound(2) .or. &
+        !   uzmin1 < uvwt_lbound(3) .or. uzmax1 >= uvwt_ubound(3) ) then
          print *,'Velocity diverged! SIMULATION IS STOPPED!'
          call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
        endif
@@ -216,7 +220,7 @@ contains
     !!    MODIFIED: Kay Schäfer
     !!
   !##############################################################################
-  subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1,iresflg)
+  subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1,rho1,drho1,mu1,iresflg)
 
     USE decomp_2d
     USE decomp_2d_io
@@ -235,6 +239,9 @@ contains
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
     real(mytype), dimension(phG%zst(1):phG%zen(1),phG%zst(2):phG%zen(2),phG%zst(3):phG%zen(3)) :: pp3
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: mu1
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     real(mytype) :: xdt,tfield,y
     integer, dimension(2) :: dims, dummy_coords
@@ -298,6 +305,15 @@ contains
                call decomp_2d_write_var(fh,disp,1,dphi1(:,:,:,3,is))
              end if
           end do
+       endif
+       if (ilmn) then
+          do is = 1, nrhotime
+             call decomp_2d_write_var(fh,disp,1,rho1(:,:,:,is))
+          enddo
+          do is = 1, ntime
+             call decomp_2d_write_var(fh,disp,1,drho1(:,:,:,is))
+          enddo
+          call decomp_2d_write_var(fh,disp,1,mu1)
        endif
        call MPI_FILE_CLOSE(fh,ierror)
        ! Write info file for restart - Kay Schäfer
@@ -387,6 +403,15 @@ contains
            endif
          end do
        endif
+       if (ilmn) then
+          do is = 1, nrhotime
+             call decomp_2d_read_var(fh,disp,1,rho1(:,:,:,is))
+          enddo
+          do is = 1, ntime
+             call decomp_2d_read_var(fh,disp,1,drho1(:,:,:,is))
+          enddo
+          call decomp_2d_read_var(fh,disp,1,mu1)
+       end if
        call MPI_FILE_CLOSE(fh,ierror_o)
 
        !! Read time of restart file

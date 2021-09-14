@@ -101,7 +101,7 @@ endif
 
      enddo !! End sub timesteps
 
-     call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,1)
+     call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,rho1,drho1,mu1,1)
 
      call simu_stats(3)
 
@@ -240,7 +240,8 @@ subroutine init_xcompact3d()
   else
      itr=1
      call init_sandbox(ux1,uy1,uz1,ep1,phi1,1)
-     call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,0)
+     call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,rho1,drho1,mu1,0)
+!     ux1(:,:,:)=ux1(:,:,:)-0.5
   endif
 
   if ((iibm.eq.2).or.(iibm.eq.3)) then
