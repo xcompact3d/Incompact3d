@@ -48,6 +48,7 @@ module case
   use tbl
   use abl
   use uniform
+  USE sandbox
 
   use var, only : nzmsize
 
@@ -132,6 +133,17 @@ contains
 
        call init_uniform (ux1, uy1, uz1, ep1, phi1)
 
+    elseif (itype.EQ.itype_sandbox) THEN
+   
+       call init_sandbox (ux1, uy1, uz1, ep1, phi1, 0)
+
+    else
+  
+         if (nrank == 0) then
+            print *, "ERROR: Unknown itype: ", itype
+            STOP
+         endif
+
     endif
 
     !! Setup old arrays
@@ -204,6 +216,10 @@ contains
     elseif (itype == itype_uniform) then
 
        call boundary_conditions_uniform (ux, uy, uz, phi)
+
+    elseif (itype.EQ.itype_sandbox) THEN
+   
+       call boundary_conditions_sandbox (ux, uy, uz, phi)
 
     endif
 
@@ -350,6 +366,10 @@ contains
     elseif (itype == itype_uniform) then
 
        call postprocess_uniform (ux, uy, uz, ep)
+
+    elseif (itype.EQ.itype_sandbox) THEN
+   
+       call postprocess_sandbox (ux, uy, uz, phi, ep)
 
     endif
 
