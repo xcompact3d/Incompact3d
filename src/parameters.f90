@@ -360,6 +360,8 @@ subroutine parameter(input_i3d)
         print *,'Atmospheric boundary layer'
      elseif (itype == itype_uniform) then
         print *,'Uniform flow'
+     elseif (itype == itype_sandbox) then
+           print *,'Sandbox'
      elseif (itype == itype_cavity) then
         print *,'Cavity'
      else

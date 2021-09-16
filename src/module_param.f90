@@ -310,7 +310,8 @@ module param
        itype_tbl = 9, &
        itype_abl = 10, &
        itype_uniform = 11, &
-       itype_cavity = 12
+       itype_sandbox = 12, &
+       itype_cavity = 13
 
   integer :: cont_phi,itr,itime,itest,iprocessing
   integer :: ifft,istret,iforc_entree,iturb
