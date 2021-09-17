@@ -37,13 +37,14 @@ module tools
 
   character(len=*), parameter :: io_restart = "restart-io"
   character(len=*), parameter :: resfile = "checkpoint"
-
+  character(len=*), parameter :: io_ioflow = "in-outflow-io"
+  
   private
 
   public :: test_speed_min_max, test_scalar_min_max, &
        restart, &
        simu_stats, &
-       apply_spatial_filter, read_inflow, append_outflow, write_outflow, &
+       apply_spatial_filter, read_inflow, append_outflow, write_outflow, init_inflow_outflow, &
        compute_cfldiff, compute_cfl, &
        rescale_pressure, mean_plane_x, mean_plane_y, mean_plane_z
 
@@ -613,6 +614,28 @@ contains
     !if (iscalar.eq.1) phi1(:,:,:,1)=phi11
 
   end subroutine apply_spatial_filter
+  
+  !############################################################################
+  !!  SUBROUTINE: init_inflow_outflow
+  !############################################################################
+  subroutine init_inflow_outflow()
+
+    use decomp_2d, only : mytype
+    use decomp_2d_io, only : decomp_2d_init_io, decomp_2d_register_variable
+
+    use param, only : ntimesteps
+     
+    integer :: nplanes
+    
+    call decomp_2d_init_io(io_ioflow)
+
+    nplanes = ntimesteps
+    
+    call decomp_2d_register_variable(io_ioflow, "ux", 1, 0, 1, mytype, opt_nplanes=nplanes)
+    call decomp_2d_register_variable(io_ioflow, "uy", 1, 0, 1, mytype, opt_nplanes=nplanes)
+    call decomp_2d_register_variable(io_ioflow, "uz", 1, 0, 1, mytype, opt_nplanes=nplanes)
+    
+  end subroutine init_inflow_outflow
   !############################################################################
   !!  SUBROUTINE: read_inflow
   !############################################################################
@@ -626,11 +649,12 @@ contains
 
     implicit none
 
-    integer :: fh,ierror,ifileinflow
+    integer :: ifileinflow
     real(mytype), dimension(NTimeSteps,xsize(2),xsize(3)) :: ux1,uy1,uz1
-    integer (kind=MPI_OFFSET_KIND) :: disp
     character(20) :: fninflow
 
+    character(80) :: inflow_file
+    
     ! Recirculate inflows 
     if (ifileinflow>=ninflows) then 
       ifileinflow=mod(ifileinflow,ninflows)
@@ -638,15 +662,22 @@ contains
 
     ! Read inflow
     write(fninflow,'(i20)') ifileinflow+1
-    if (nrank==0) print *,'READING INFLOW FROM ',trim(inflowpath)//'inflow'//trim(adjustl(fninflow))
-    call MPI_FILE_OPEN(MPI_COMM_WORLD, trim(inflowpath)//'inflow'//trim(adjustl(fninflow)), &
-         MPI_MODE_RDONLY, MPI_INFO_NULL, &
-         fh, ierror)
-    disp = 0_MPI_OFFSET_KIND
-    call decomp_2d_read_inflow(fh,disp,ntimesteps,ux_inflow)
-    call decomp_2d_read_inflow(fh,disp,ntimesteps,uy_inflow)
-    call decomp_2d_read_inflow(fh,disp,ntimesteps,uz_inflow)
-    call MPI_FILE_CLOSE(fh,ierror)
+#ifndef ADIOS2
+    write(inflow_file, "(A)") trim(inflowpath)//'inflow'//trim(adjustl(fninflow))
+#else
+    write(inflow_file, "(A)") trim(inflowpath)//'inflow'
+#endif
+    if (nrank==0) print *,'READING INFLOW FROM ',inflow_file
+    
+    call decomp_2d_open_io(io_ioflow, inflow_file, decomp_2d_read_mode)
+    call decomp_2d_start_io(io_ioflow, inflow_file)
+
+    call decomp_2d_read_inflow(inflow_file,"ux",ntimesteps,ux_inflow,io_ioflow)
+    call decomp_2d_read_inflow(inflow_file,"uy",ntimesteps,uy_inflow,io_ioflow)
+    call decomp_2d_read_inflow(inflow_file,"uz",ntimesteps,uz_inflow,io_ioflow)
+
+    call decomp_2d_end_io(io_ioflow, inflow_file)
+    call decomp_2d_close_io(io_ioflow, inflow_file)
 
   end subroutine read_inflow
   !############################################################################
@@ -690,29 +721,42 @@ contains
     implicit none
 
     integer,intent(in) :: ifileoutflow
-    integer :: fh, ierror
-    integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     character(20) :: fnoutflow
+    character(80) :: outflow_file
+    logical, save :: clean = .true.
+    integer :: iomode
+
+    if (clean .and. (irestart .eq. 0)) then
+       iomode = decomp_2d_write_mode
+       clean = .false.
+    else
+       iomode = decomp_2d_append_mode
+    end if
     
     write(fnoutflow,'(i20)') ifileoutflow
-    if (nrank==0) print *,'WRITING OUTFLOW TO ','./out/inflow'//trim(adjustl(fnoutflow))
-    call MPI_FILE_OPEN(MPI_COMM_WORLD, './out/inflow'//trim(adjustl(fnoutflow)), &
-         MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
-         fh, ierror)
-    filesize = 0_MPI_OFFSET_KIND
-    call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
-    disp = 0_MPI_OFFSET_KIND
-    call decomp_2d_write_outflow(fh,disp,ntimesteps,ux_recoutflow)
-    call decomp_2d_write_outflow(fh,disp,ntimesteps,uy_recoutflow)
-    call decomp_2d_write_outflow(fh,disp,ntimesteps,uz_recoutflow)
-    call MPI_FILE_CLOSE(fh,ierror)
+#ifndef ADIOS2
+    write(outflow_file, "(A)") './out/inflow'//trim(adjustl(fnoutflow))
+#else
+    write(outflow_file, "(A)") './out/inflow'
+#endif
+    if (nrank==0) print *,'WRITING OUTFLOW TO ', outflow_file
+    
+    call decomp_2d_open_io(io_ioflow, outflow_file, iomode)
+    call decomp_2d_start_io(io_ioflow, outflow_file)
+
+    call decomp_2d_write_outflow(outflow_file,"ux",ntimesteps,ux_recoutflow,io_ioflow)
+    call decomp_2d_write_outflow(outflow_file,"uy",ntimesteps,uy_recoutflow,io_ioflow)
+    call decomp_2d_write_outflow(outflow_file,"uz",ntimesteps,uz_recoutflow,io_ioflow)
+
+    call decomp_2d_end_io(io_ioflow, outflow_file)
+    call decomp_2d_close_io(io_ioflow, outflow_file)
     
   end subroutine write_outflow
   !############################################################################
   !##################################################################
-    !!  SUBROUTINE: compute_cfldiff
-    !! DESCRIPTION: Computes Diffusion/Fourier number
-    !!      AUTHOR: Kay Schäfer
+  !!  SUBROUTINE: compute_cfldiff
+  !! DESCRIPTION: Computes Diffusion/Fourier number
+  !!      AUTHOR: Kay Schäfer
   !##################################################################
   subroutine compute_cfldiff()
      use param, only : xnu,dt,dx,dy,dz,istret

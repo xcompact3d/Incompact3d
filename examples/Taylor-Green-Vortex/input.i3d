@@ -42,7 +42,7 @@ inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
 ! Time stepping
 dt = 0.005            ! Time step
 ifirst = 1            ! First iteration
-ilast = 4000         ! Last iteration
+ilast = 2 !4000         ! Last iteration
 
 ! Enable modelling tools
 ilesmod=0             ! if 0 then DNS
@@ -74,8 +74,8 @@ itimescheme = 5       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4
 
 ! Basic I/O
 irestart = 0          ! Read initial flow field ?
-icheckpoint = 1000    ! Frequency for writing backup file
-ioutput = 1000        ! Frequency for visualization
+icheckpoint = 1 !000    ! Frequency for writing backup file
+ioutput = 1 !000        ! Frequency for visualization
 nvisu = 1             ! Size for visualisation collection
 
 /End
@@ -84,6 +84,7 @@ nvisu = 1             ! Size for visualisation collection
 &Statistics
 !=================
 
+initstat = 1
 nstat = 1             ! Size arrays for statistic collection
 
 /End

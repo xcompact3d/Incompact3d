@@ -35,23 +35,28 @@ starts(1) = 0  ! 0-based index
 starts(2) = decomp%xst(2)-1
 starts(3) = decomp%xst(3)-1
 
+idx = get_io_idx(io_name, dirname)
+
 #ifndef ADIOS2
 !! Use default MPIIO
-call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
-     MPI_ORDER_FORTRAN, data_type, newtype, ierror)
-call MPI_TYPE_COMMIT(newtype,ierror)
-call MPI_FILE_SET_VIEW(fh,disp,data_type, &
-     newtype,'native',MPI_INFO_NULL,ierror)
-call MPI_FILE_READ_ALL(fh, var, &
-     subsizes(1)*subsizes(2)*subsizes(3), &
-     data_type, MPI_STATUS_IGNORE, ierror)
-call MPI_TYPE_FREE(newtype,ierror)
+associate(fh=>fh_registry(idx), &
+  disp => fh_disp(idx))
+  call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
+       MPI_ORDER_FORTRAN, data_type, newtype, ierror)
+  call MPI_TYPE_COMMIT(newtype,ierror)
+  call MPI_FILE_SET_VIEW(fh,disp,data_type, &
+       newtype,'native',MPI_INFO_NULL,ierror)
+  call MPI_FILE_READ_ALL(fh, var, &
+       subsizes(1)*subsizes(2)*subsizes(3), &
+       data_type, MPI_STATUS_IGNORE, ierror)
+  call MPI_TYPE_FREE(newtype,ierror)
 
-! update displacement for the next read operation
-disp = disp + sizes(1)*sizes(2)*sizes(3)*mytype_bytes
-if (data_type == complex_type) then
-   disp = disp + sizes(1)*sizes(2)*sizes(3)*mytype_bytes
-end if
+  ! update displacement for the next read operation
+  disp = disp + sizes(1)*sizes(2)*sizes(3)*mytype_bytes
+  if (data_type == complex_type) then
+     disp = disp + sizes(1)*sizes(2)*sizes(3)*mytype_bytes
+  end if
+end associate
 #else
 !! Use ADIOS2
 call adios2_at_io(io_handle, adios, io_name, ierror)
@@ -61,8 +66,7 @@ if (.not.var_handle % valid) then
    stop
 endif
 
-idx = get_engine_idx(io_name, dirname)
-
 !! Note - need to use sync mode as we are using a view into the array - unsure how this works with deferred writes
-call adios2_get(engine_registry(idx), var_handle, var(1,:,:), adios2_mode_sync, ierror)
+! call adios2_set_step_selection(var_handle, int(0, kind=8), int(1, kind=8), ierror)
+call adios2_get(engine_registry(idx), var_handle, var, adios2_mode_sync, ierror)
 #endif

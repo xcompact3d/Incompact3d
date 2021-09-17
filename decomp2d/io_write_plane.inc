@@ -127,7 +127,7 @@ if (.not.var_handle % valid) then
    stop
 endif
 
-idx = get_engine_idx(io_name, dirname)
+idx = get_io_idx(io_name, dirname)
 
 !! Note - need to use sync mode as the array for the output plane gets reused.
 call adios2_put(engine_registry(idx), var_handle, wk2d, adios2_mode_sync, ierror)

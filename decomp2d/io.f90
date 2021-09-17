@@ -39,8 +39,8 @@ module decomp_2d_io
   integer(kind=MPI_OFFSET_KIND), dimension(MAX_IOH), save :: fh_disp
 #else
   type(adios2_adios) :: adios
-  character(len=80), dimension(MAX_IOH), save :: engine_names
-  logical, dimension(MAX_IOH), save :: engine_live
+  character(len=80), dimension(MAX_IOH), target, save :: engine_names
+  logical, dimension(MAX_IOH), target, save :: engine_live
   type(adios2_engine), dimension(MAX_IOH), save :: engine_registry
 #endif
   
@@ -357,7 +357,7 @@ contains
        stop
     endif
 
-    idx = get_engine_idx(io_name, engine_name)
+    idx = get_io_idx(io_name, engine_name)
     call adios2_get(engine_registry(idx), var_handle, var, adios2_mode_deferred, ierror)
 
     return
@@ -413,12 +413,11 @@ contains
   end subroutine write_var_complex
 
 
-  subroutine write_outflow(fh,disp,ntimesteps,var,opt_decomp)
+  subroutine write_outflow(dirname,varname,ntimesteps,var,io_name,opt_decomp)
 
     implicit none
 
-    integer, intent(IN) :: fh
-    integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
+    character(len=*), intent(in) :: dirname, varname, io_name
     integer, intent(IN) :: ntimesteps 
     real(mytype), dimension(:,:,:), intent(IN) :: var
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
@@ -426,10 +425,10 @@ contains
     TYPE(DECOMP_INFO) :: decomp
     integer, dimension(3) :: sizes, subsizes, starts
     integer :: ierror, newtype, data_type
+    integer :: idx
 #ifdef ADIOS2
     type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
-    integer :: idx
 #endif
 
     data_type = real_type
@@ -489,12 +488,11 @@ contains
   end subroutine read_var_complex
 
 
-  subroutine read_inflow(fh,disp,ntimesteps,var,opt_decomp)
-
+  subroutine read_inflow(dirname,varname,ntimesteps,var,io_name,opt_decomp)
+ 
     implicit none
 
-    integer, intent(IN) :: fh
-    integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
+    character(len=*), intent(in) :: dirname, varname, io_name
     integer, intent(IN) :: ntimesteps
     real(mytype), dimension(:,:,:), intent(INOUT) :: var
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
@@ -502,10 +500,10 @@ contains
     TYPE(DECOMP_INFO) :: decomp
     integer, dimension(3) :: sizes, subsizes, starts
     integer :: ierror, newtype, data_type
+    integer :: idx
 #ifdef ADIOS2
     type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
-    integer :: idx
 #endif
     
     data_type = real_type
@@ -724,13 +722,15 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Write a 2D slice of the 3D data to a file
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine plane_extents (sizes, subsizes, starts, iplane, opt_decomp)
+  subroutine plane_extents (sizes, subsizes, starts, iplane, opt_decomp, opt_nplanes)
 
     integer, intent(in) :: iplane
     type(decomp_info), intent(in), optional :: opt_decomp
+    integer, intent(in), optional :: opt_nplanes
     
     integer, dimension(3), intent(out) :: sizes, subsizes, starts
 
+    integer :: nplanes
     type(decomp_info) :: decomp
 
     if (present(opt_decomp)) then
@@ -738,12 +738,18 @@ contains
     else
        call get_decomp_info(decomp)
     end if
+
+    if (present(opt_nplanes)) then
+       nplanes = opt_nplanes
+    else
+       nplanes = 1
+    end if
     
     if (iplane == 1) then
-       sizes(1) = 1
+       sizes(1) = nplanes
        sizes(2) = decomp%ysz(2)
        sizes(3) = decomp%zsz(3)
-       subsizes(1) = 1
+       subsizes(1) = nplanes
        subsizes(2) = decomp%xsz(2)
        subsizes(3) = decomp%xsz(3)
        starts(1) = 0
@@ -751,10 +757,10 @@ contains
        starts(3) = decomp%xst(3)-1
     else if (iplane == 3) then
        sizes(1) = decomp%xsz(1)
-       sizes(2) = 1
+       sizes(2) = nplanes
        sizes(3) = decomp%zsz(3)
        subsizes(1) = decomp%ysz(1)
-       subsizes(2) = 1
+       subsizes(2) = nplanes
        subsizes(3) = decomp%ysz(3)
        starts(1) = decomp%yst(1)-1
        starts(2) = 0
@@ -762,10 +768,10 @@ contains
     else
        sizes(1) = decomp%xsz(1)
        sizes(2) = decomp%ysz(2)
-       sizes(3) = 1
+       sizes(3) = nplanes
        subsizes(1) = decomp%zsz(1)
        subsizes(2) = decomp%zsz(2)
-       subsizes(3) = 1
+       subsizes(3) = nplanes
        starts(1) = decomp%zst(1)-1
        starts(2) = decomp%zst(2)-1
        starts(3) = 0
@@ -1132,7 +1138,7 @@ contains
     return
   end subroutine mpiio_write_real_coarse
 
-  subroutine decomp_2d_register_variable(io_name, varname, ipencil, icoarse, iplane, type, opt_decomp)
+  subroutine decomp_2d_register_variable(io_name, varname, ipencil, icoarse, iplane, type, opt_decomp, opt_nplanes)
 
     implicit none
 
@@ -1142,7 +1148,9 @@ contains
     integer, intent(in) :: type
     integer, intent(in) :: iplane
     type(decomp_info), intent(in), optional :: opt_decomp
-    
+    integer, intent(in), optional :: opt_nplanes
+
+    integer :: nplanes
     character*(*), intent(in) :: varname
 #ifdef ADIOS2
     integer, dimension(3) :: sizes, subsizes, starts
@@ -1160,10 +1168,15 @@ contains
           call coarse_extents(ipencil, icoarse, sizes, subsizes, starts)
        endif
     else
-       if (present(opt_decomp)) then
-          call plane_extents(sizes, subsizes, starts, iplane, opt_decomp)
+       if (present(opt_nplanes)) then
+          nplanes = opt_nplanes
        else
-          call plane_extents(sizes, subsizes, starts, iplane)
+          nplanes = 1
+       end if
+       if (present(opt_decomp)) then
+          call plane_extents(sizes, subsizes, starts, iplane, opt_decomp, opt_nplanes=nplanes)
+       else
+          call plane_extents(sizes, subsizes, starts, iplane, opt_nplanes=nplanes)
        endif
     end if
     
@@ -1622,7 +1635,7 @@ contains
 #ifdef ADIOS2
     integer :: idx, ierror
 
-    idx = get_engine_idx(io_name, io_dir)
+    idx = get_io_idx(io_name, io_dir)
     call adios2_begin_step(engine_registry(idx), ierror)
 #endif
     
@@ -1636,7 +1649,7 @@ contains
 #ifdef ADIOS2
     integer :: idx, ierror
 
-    idx = get_engine_idx(io_name, io_dir)
+    idx = get_io_idx(io_name, io_dir)
     call adios2_end_step(engine_registry(idx), ierror)
 #endif
 

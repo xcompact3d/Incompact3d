@@ -128,7 +128,8 @@ subroutine init_xcompact3d()
   use navier, only : calc_divu_constraint
   use tools, only : test_speed_min_max, test_scalar_min_max, &
        restart, &
-       simu_stats, compute_cfldiff
+       simu_stats, compute_cfldiff, &
+       init_inflow_outflow
 
   use param, only : ilesmod, jles,itype
   use param, only : irestart
@@ -247,6 +248,10 @@ subroutine init_xcompact3d()
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,rho1,drho1,mu1,0)
 !     ux1(:,:,:)=ux1(:,:,:)-0.5
   endif
+
+  if ((ioutflow.eq.1).or.(iin.eq.3)) then
+     call init_inflow_outflow()
+  end if
 
   if ((iibm.eq.2).or.(iibm.eq.3)) then
      call genepsi3d(ep1)
