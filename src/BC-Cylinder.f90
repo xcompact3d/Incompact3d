@@ -38,15 +38,37 @@ module cyl
 
   IMPLICIT NONE
 
-  integer :: FS
+  integer, save :: cyl_iounit
   character(len=100) :: fileformat
   character(len=1),parameter :: NL=char(10) !new line character
 
   PRIVATE ! All functions/subroutines private by default
   PUBLIC :: init_cyl, boundary_conditions_cyl, postprocess_cyl, &
-            geomcomplex_cyl, visu_cyl
+            geomcomplex_cyl, visu_cyl, boot_cyl, finalize_cyl, cyl_iounit
 
 contains
+
+  ! Always open case-specific IO unit
+  subroutine boot_cyl()
+
+    implicit none
+
+    if (nrank == 0) then
+      open(newunit=cyl_iounit, file='time_evol.dat', form='formatted')
+    endif
+
+  end subroutine boot_cyl
+
+  ! Close case-specific IO unit
+  subroutine finalize_cyl()
+
+    implicit none
+
+    if (nrank == 0) then
+      close(cyl_iounit)
+    endif
+
+  end subroutine finalize_cyl
 
   subroutine geomcomplex_cyl(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,remp)
 
