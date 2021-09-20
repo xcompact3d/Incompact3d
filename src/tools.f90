@@ -233,7 +233,7 @@ contains
 
     implicit none
 
-    integer :: i,j,k,iresflg,nzmsize,fh,code,ierr2,is,it
+    integer :: i,j,k,iresflg,nzmsize,fh,code,ierr2,is,it,iounit
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: px1,py1,pz1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
@@ -345,32 +345,31 @@ contains
          write(fmt3,'("(A,F16.4)")')
          write(fmt4,'("(A,F16.12)")')
          !
-         open (111,file=filename,action='write',status='replace')
-         write(111,'(A)')'!========================='
-         write(111,'(A)')'&Time'
-         write(111,'(A)')'!========================='
-         write(111,fmt3) 'tfield=   ',t
-         write(111,fmt2) 'itime=    ',itime
-         write(111,'(A)')'/End'
-         write(111,'(A)')'!========================='
-         write(111,'(A)')'&NumParam'
-         write(111,'(A)')'!========================='
-         write(111,fmt2) 'nx=       ',nx
-         write(111,fmt2) 'ny=       ',ny
-         write(111,fmt2) 'nz=       ',nz
-         write(111,fmt3) 'Lx=       ',xlx
-         write(111,fmt3) 'Ly=       ',yly
-         write(111,fmt3) 'Lz=       ',zlz
-         write(111,fmt2) 'istret=   ',istret
-         write(111,fmt4) 'beta=     ',beta
-         write(111,fmt2) 'iscalar=  ',iscalar
-         write(111,fmt2) 'numscalar=',numscalar
-         write(111,'(A,I14)') 'itimescheme=',itimescheme
-         write(111,fmt2) 'iimplicit=',iimplicit
-         write(111,'(A)')'/End'
-         write(111,'(A)')'!========================='
-
-         close(111)
+         open(newunit=iounit,file=filename,action='write',status='replace')
+         write(iounit,'(A)')'!========================='
+         write(iounit,'(A)')'&Time'
+         write(iounit,'(A)')'!========================='
+         write(iounit,fmt3) 'tfield=   ',t
+         write(iounit,fmt2) 'itime=    ',itime
+         write(iounit,'(A)')'/End'
+         write(iounit,'(A)')'!========================='
+         write(iounit,'(A)')'&NumParam'
+         write(iounit,'(A)')'!========================='
+         write(iounit,fmt2) 'nx=       ',nx
+         write(iounit,fmt2) 'ny=       ',ny
+         write(iounit,fmt2) 'nz=       ',nz
+         write(iounit,fmt3) 'Lx=       ',xlx
+         write(iounit,fmt3) 'Ly=       ',yly
+         write(iounit,fmt3) 'Lz=       ',zlz
+         write(iounit,fmt2) 'istret=   ',istret
+         write(iounit,fmt4) 'beta=     ',beta
+         write(iounit,fmt2) 'iscalar=  ',iscalar
+         write(iounit,fmt2) 'numscalar=',numscalar
+         write(iounit,'(A,I14)') 'itimescheme=',itimescheme
+         write(iounit,fmt2) 'iimplicit=',iimplicit
+         write(iounit,'(A)')'/End'
+         write(iounit,'(A)')'!========================='
+         close(iounit)
        end if
     else
        if (nrank==0) then
@@ -446,9 +445,9 @@ contains
        if (nrank == 0) print *,filename
        ! file exists???
        if (fexists) then
-         open(111, file=filename)
-         read(111, nml=Time)
-         close(111)
+         open(newunit=iounit, file=filename)
+         read(iounit, nml=Time)
+         close(iounit)
          t0 = tfield
          itime0 = 0
        else
@@ -953,7 +952,7 @@ subroutine stretching()
   implicit none
 
   real(mytype) :: yinf,den,xnum,xcx,den1,den2,den3,den4,xnum1,cst
-  integer :: j
+  integer :: j, iounit
 
   yinf=-yly/two
   den=two*beta*yinf
@@ -1113,16 +1112,16 @@ subroutine stretching()
   !   yp = yp/ypmax*yly
 
   if (nrank==0) then
-     open(10,file='yp.dat', form='formatted')
+     open(newunit=iounit,file='yp.dat', form='formatted')
      do j=1,ny
-        write(10,*)yp(j)
+        write(iounit,*)yp(j)
      enddo
-     close(10)
-     open(10,file='ypi.dat', form='formatted')
+     close(iounit)
+     open(newunit=iounit,file='ypi.dat', form='formatted')
      do j=1,nym
-        write(10,*)ypi(j)
+        write(iounit,*)ypi(j)
      enddo
-     close(10)
+     close(iounit)
   endif
 
 end subroutine stretching
