@@ -56,12 +56,37 @@ module case
   implicit none
 
   private ! All functions/subroutines private by default
-  public :: init, boundary_conditions, &
+  public :: boot, init, boundary_conditions, &
             momentum_forcing, scalar_forcing, set_fluid_properties, &
             test_flow, preprocessing, postprocessing, finalize_case, &
             visu_case
 
 contains
+  !##################################################################
+  subroutine boot(rho1, ux1, uy1, uz1, ep1, phi1, drho1, dux1, duy1, duz1, dphi1, &
+       pp3, px1, py1, pz1)
+
+    ! Arguments
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1,drho1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
+    real(mytype),dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: px1, py1, pz1
+
+    if (itype == itype_tgv) then
+
+       call boot_tgv()
+
+    elseif (itype == itype_cyl) then
+
+       call boot_cyl()
+
+    endif
+
+  end subroutine boot
+  !##################################################################
   !##################################################################
   subroutine init (rho1, ux1, uy1, uz1, ep1, phi1, drho1, dux1, duy1, duz1, dphi1, &
        pp3, px1, py1, pz1)
@@ -387,7 +412,7 @@ contains
     endif
 
     if (iforces == 1) then
-       call force(ux,uy,ep)
+       if (itype == itype_cyl) call force(ux, uy, ep, cyl_iounit)
        call restart_forces(1)
     endif
 
@@ -555,9 +580,17 @@ contains
 
     implicit none
 
-    if (itype == itype_channel) then
+    if (itype == itype_tgv) then
+
+       call finalize_tgv()
+
+    elseif (itype == itype_channel) then
 
        call finalize_channel()
+
+    elseif (itype == itype_cyl) then
+
+       call finalize_cyl()
 
     elseif (itype == itype_cavity) then
 

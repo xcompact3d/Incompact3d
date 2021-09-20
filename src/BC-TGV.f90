@@ -39,14 +39,38 @@ module tgv
   IMPLICIT NONE
 
   real(mytype), save, allocatable, dimension(:,:,:) :: vol1,volSimps1
-  integer :: FS
+  integer, save :: tgv_iounit
   character(len=100) :: fileformat
   character(len=1),parameter :: NL=char(10) !new line character
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_tgv, boundary_conditions_tgv, postprocess_tgv, visu_tgv
+  PUBLIC :: init_tgv, boundary_conditions_tgv, postprocess_tgv, visu_tgv, &
+            boot_tgv, finalize_tgv
 
 contains
+
+  ! Always open case-specific IO unit
+  subroutine boot_tgv()
+
+    implicit none
+
+    if (nrank == 0) then
+      open(newunit=tgv_iounit, file='time_evol.dat', form='formatted')
+    endif
+
+  end subroutine boot_tgv
+
+  ! Close case-specific IO unit
+  subroutine finalize_tgv()
+
+    implicit none
+
+    if (nrank == 0) then
+      close(tgv_iounit)
+    endif
+
+  end subroutine finalize_tgv
+
 
   subroutine init_tgv (ux1,uy1,uz1,ep1,phi1)
 
@@ -431,11 +455,10 @@ contains
        call MPI_ALLREDUCE(temp1,eps2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
        eps2=eps2/(nxc*nyc*nzc)
-       
-       
+
        if (nrank==0) then
-          write(42,'(20e20.12)') (itime-1)*dt,eek,eps,eps2,enst
-          call flush(42)
+          write(tgv_iounit,'(20e20.12)') (itime-1)*dt,eek,eps,eps2,enst
+          call flush(tgv_iounit)
        endif
     endif
 
