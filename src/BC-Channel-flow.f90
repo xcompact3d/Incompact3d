@@ -43,9 +43,24 @@ module channel
   PRIVATE ! All functions/subroutines private by default
   PUBLIC :: init_channel, boundary_conditions_channel, postprocess_channel, &
             visu_channel, momentum_forcing_channel, scalar_forcing_channel, &
-            geomcomplex_channel, finalize_channel
+            geomcomplex_channel, finalize_channel, boot_channel
 
 contains
+  !############################################################################
+  subroutine boot_channel()
+
+    implicit none
+
+    if (nrank == 0) then
+
+      open(newunit=iochannel, file='channel.dat', form='formatted')
+
+      if (ifirst == 1) write(iochannel,*) "# <u>, <v>, <w>, <T>, <u'²>, <v'²>, <w'²>, <T'²>"
+
+    endif
+
+  end subroutine boot_channel
+  !############################################################################
   !############################################################################
   subroutine init_channel (ux1,uy1,uz1,ep1,phi1)
 
@@ -349,11 +364,6 @@ contains
       do is = 1, 3 + numscalar
         array(3+numscalar+is) = array(3+numscalar+is) - array(is)**2
       enddo
-      ! Print header at the first time step
-      if (itime == ifirst) then
-        open(newunit=iochannel, file='channel.dat', form='formatted')
-        write(iochannel,*) "# <u>, <v>, <w>, <T>, <u'²>, <v'²>, <w'²>, <T'²>"
-      endif
       ! Use format to avoid printing all the digits
       write(fileformat, '( "(",I4,"(E18.10),A)" )' ) 2*(3+numscalar)
       write(iochannel, fileformat) array

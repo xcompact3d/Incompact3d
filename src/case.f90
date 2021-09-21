@@ -79,6 +79,10 @@ contains
 
        call boot_tgv()
 
+    elseif (itype == itype_channel) then
+
+       call boot_channel()
+
     elseif (itype == itype_cyl) then
 
        call boot_cyl()
