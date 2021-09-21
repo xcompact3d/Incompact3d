@@ -110,6 +110,7 @@ program xcompact3d
      call postprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
 
      if (catching_signal /= 0) call catch_signal()
+     if (itime >= ilast) exit
 
   enddo !! End time loop
 
