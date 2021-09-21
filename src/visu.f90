@@ -300,65 +300,6 @@ contains
   end subroutine end_snapshot
 
   !
-  ! Output binary data associated with the pressure
-  !
-  subroutine VISU_PRE (pp3,ta1,tb1,di1,ta2,tb2,di2,ta3,di3,nxmsize,nymsize,nzmsize,uvisu,pre1)
-
-    use param
-    use variables
-    use decomp_2d
-    use decomp_2d_io
-    use var, only : zero
-    use tools, only : mean_plane_z
-
-    implicit none
-
-    integer :: nxmsize,nymsize,nzmsize
-
-    real(mytype),dimension(xszV(1),xszV(2),xszV(3)) :: uvisu
-    real(mytype),dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize) :: pp3
-    !Z PENCILS NXM NYM NZM-->NXM NYM NZ
-    real(mytype),dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),zsize(3)) :: ta3,di3
-    !Y PENCILS NXM NYM NZ -->NXM NY NZ
-    real(mytype),dimension(ph3%yst(1):ph3%yen(1),nymsize,ysize(3)) :: ta2
-    real(mytype),dimension(ph3%yst(1):ph3%yen(1),ysize(2),ysize(3)) :: tb2,di2
-    !X PENCILS NXM NY NZ  -->NX NY NZ
-    real(mytype),dimension(nxmsize,xsize(2),xsize(3)) :: ta1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: tb1,di1,pre1
-
-    character(len=30) filename
-
-    !WORK Z-PENCILS
-    call interzpv(ta3,pp3,di3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
-         (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
-    !WORK Y-PENCILS
-    call transpose_z_to_y(ta3,ta2,ph3) !nxm nym nz
-    call interypv(tb2,ta2,di2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
-         (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
-    !WORK X-PENCILS
-    call transpose_y_to_x(tb2,ta1,ph2) !nxm ny nz
-    call interxpv(tb1,ta1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
-         nxmsize,xsize(1),xsize(2),xsize(3),1)
-
-    pre1=tb1
-
-    if (save_pre.eq.1) then
-      uvisu = zero
-      call fine_to_coarseV(1,pre1,uvisu)
-      write(filename,"('pre',I4.4)") itime/ioutput
-      call decomp_2d_write_one(1,uvisu,"data",filename,2,io_name)
-    endif
-
-    if (save_prem.eq.1) then
-      write(filename,"('prem',I4.4)") itime/ioutput
-      call decomp_2d_write_plane(1,pre1,3,-1,"plane-data",filename,io_name)
-    endif
-
-    return
-
-  end subroutine VISU_PRE
-
-  !
   ! Write the header of the XDMF file
   ! Adapted from https://github.com/fschuch/Xcompact3d/blob/master/src/visu.f90
   !
