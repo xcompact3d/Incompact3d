@@ -138,11 +138,11 @@ contains
        !modulation of the random noise + initial velocity profile
        do k=1,xsize(3)
           do j=1,xsize(2)
-             if (istret == 0) y=real(j+xstart(2)-1-1,mytype)*dy-yly/two
-             if (istret /= 0) y=yp(j+xstart(2)-1)-yly/two
+             if (istret == 0) y=real(j+xstart(2)-1-1,mytype)*dy/yly
+             if (istret /= 0) y=yp(j+xstart(2)-1)/yly
              um=exp(-zptwo*y*y)
              do i=1,xsize(1)
-                ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
+                ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one) + four * y * (one-y)
                 uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
                 uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
              enddo
