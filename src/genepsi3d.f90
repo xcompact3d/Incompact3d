@@ -905,13 +905,14 @@ end subroutine verif_epsi
     integer                            :: npif
     integer                            :: i,j,k,count
     character :: tmp_char
+    character(len=*), parameter :: io_geom = "io-geom"
     !###################################################################
     if (read_flag) then
       if (nrank==0) print *,'Reading geometry'
-      call decomp_2d_read_one(1,ep1,'data/geometry/epsilon.bin')   
+      call decomp_2d_read_one(1,ep1,'data/geometry','epsilon.bin',io_geom)   
     else
       if (nrank==0) print *,'Writing geometry'
-      call decomp_2d_write_one(1,ep1,'data/geometry/epsilon.bin')
+      call decomp_2d_write_one(1,ep1,'data/geometry','epsilon.bin',0,io_geom)
     endif
     !###################################################################
     !x-pencil
