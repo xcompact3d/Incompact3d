@@ -381,6 +381,10 @@ contains
     else if (itype .eq. itype_tbl) then
 
        call visu_tbl_init(case_visu_init)
+
+    else if (itype .eq. itype_lockexch) then
+
+       call visu_lockexch_init(case_visu_init)
       
     end if
     

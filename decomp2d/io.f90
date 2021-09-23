@@ -794,14 +794,15 @@ contains
     real(mytype), allocatable, dimension(:,:,:) :: wk, wk2
     real(mytype), allocatable, dimension(:,:,:) :: wk2d
     TYPE(DECOMP_INFO) :: decomp
-    integer(kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: i,j,k, ierror, newtype, fh, data_type
+    integer :: i,j,k, ierror, newtype, data_type
 
+    logical :: opened_new, dir_exists
+    character(len=:), allocatable :: full_io_name
+    integer :: idx
 #ifdef ADIOS2
     type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
-    integer :: idx
 #endif
     
     data_type = real_type
@@ -827,14 +828,14 @@ contains
     complex(mytype), allocatable, dimension(:,:,:) :: wk, wk2
     complex(mytype), allocatable, dimension(:,:,:) :: wk2d
     TYPE(DECOMP_INFO) :: decomp
-    integer(kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: i,j,k, ierror, newtype, fh, data_type
-
+    integer :: i,j,k, ierror, newtype, data_type
+    logical :: opened_new, dir_exists
+    character(len=:), allocatable :: full_io_name
+    integer :: idx
 #ifdef ADIOS2
     type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
-    integer :: idx
 #endif
 
     data_type = complex_type
@@ -1132,6 +1133,11 @@ contains
        stop
     endif
 
+    if (idx .lt. 1) then
+       print *, "You haven't opened ", io_name, ":", dirname
+       stop
+    end if
+    
     call adios2_put(engine_registry(idx), var_handle, var, adios2_mode_deferred, ierror)
 #endif
 

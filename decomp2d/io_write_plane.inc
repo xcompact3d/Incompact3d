@@ -22,6 +22,8 @@ else
    call get_decomp_info(decomp)
 end if
 
+opened_new = .false.
+
 if (iplane==1) then
    allocate(wk(decomp%xsz(1),decomp%xsz(2),decomp%xsz(3)))
    if (ipencil==1) then
@@ -99,25 +101,44 @@ else if (iplane==3) then
    endif
 end if
 
+idx = get_io_idx(io_name, dirname)
+
 #ifndef ADIOS2
 !! Use default MPIIO writers
+
+if (idx .lt. 1) then
+   ! Create folder if needed
+   if (nrank==0) then
+      inquire(file=dirname, exist=dir_exists)
+      if (.not.dir_exists) then
+         call system("mkdir "//dirname//" 2> /dev/null")
+      end if
+   end if
+   allocate(character(len(trim(dirname)) + 1 + len(trim(varname))) :: full_io_name)
+   full_io_name = dirname//"/"//varname
+   call decomp_2d_open_io(io_name, full_io_name, decomp_2d_write_mode)
+   idx = get_io_idx(io_name, full_io_name)
+   opened_new = .true.
+end if
+
 call plane_extents(sizes, subsizes, starts, iplane, decomp)
-call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
-     MPI_ORDER_FORTRAN, data_type, newtype, ierror)
-call MPI_TYPE_COMMIT(newtype,ierror)
-call MPI_FILE_OPEN(MPI_COMM_WORLD, varname, &
-     MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
-     fh, ierror)
-filesize = 0_MPI_OFFSET_KIND
-call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
-disp = 0_MPI_OFFSET_KIND
-call MPI_FILE_SET_VIEW(fh,disp,data_type, &
-     newtype,'native',MPI_INFO_NULL,ierror)
-call MPI_FILE_WRITE_ALL(fh, wk2d, &
-     subsizes(1)*subsizes(2)*subsizes(3), &
-     data_type, MPI_STATUS_IGNORE, ierror)
-call MPI_FILE_CLOSE(fh,ierror)
-call MPI_TYPE_FREE(newtype,ierror)
+associate(fh=>fh_registry(idx), &
+     disp=>fh_disp(idx))
+  call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
+       MPI_ORDER_FORTRAN, data_type, newtype, ierror)
+  call MPI_TYPE_COMMIT(newtype,ierror)
+  call MPI_FILE_SET_VIEW(fh,disp,data_type, &
+       newtype,'native',MPI_INFO_NULL,ierror)
+  call MPI_FILE_WRITE_ALL(fh, wk2d, &
+       subsizes(1)*subsizes(2)*subsizes(3), &
+       data_type, MPI_STATUS_IGNORE, ierror)
+  call MPI_TYPE_FREE(newtype,ierror)
+end associate
+    
+if (opened_new) then
+   call decomp_2d_close_io(io_name, full_io_name)
+   deallocate(full_io_name)
+end if
 #else
 !! Write using ADIOS2
 call adios2_at_io(io_handle, adios, io_name, ierror)
@@ -126,8 +147,6 @@ if (.not.var_handle % valid) then
    print *, "ERROR: trying to write variable before registering!", varname
    stop
 endif
-
-idx = get_io_idx(io_name, dirname)
 
 !! Note - need to use sync mode as the array for the output plane gets reused.
 call adios2_put(engine_registry(idx), var_handle, wk2d, adios2_mode_sync, ierror)

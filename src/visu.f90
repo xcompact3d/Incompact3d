@@ -141,7 +141,7 @@ contains
     use decomp_2d, only : transpose_z_to_y, transpose_y_to_x
     use decomp_2d, only : mytype, xsize, ysize, zsize
     use decomp_2d, only : nrank
-    use decomp_2d_io, only : decomp_2d_start_io, decomp_2d_open_io, decomp_2d_append_mode
+    use decomp_2d_io, only : decomp_2d_start_io, decomp_2d_open_io, decomp_2d_append_mode, decomp_2d_write_mode
 
     use param, only : nrhotime, ilmn, iscalar, ioutput
 
@@ -172,6 +172,7 @@ contains
     integer :: is
     integer :: ierr
     character(len=30) :: scname
+    integer :: mode
 
     ! Update log file
     if (nrank.eq.0) then
@@ -180,7 +181,12 @@ contains
     end if
 
 #ifdef ADIOS2
-    call decomp_2d_open_io(io_name, "data", decomp_2d_append_mode)
+    if (itime .eq. 1) then
+       mode = decomp_2d_write_mode
+    else
+       mode = decomp_2d_append_mode
+    end if
+    call decomp_2d_open_io(io_name, "data", mode)
     call decomp_2d_start_io(io_name, "data")
 #endif
     
@@ -510,6 +516,7 @@ contains
           print *, "Not Implemented: currently ADIOS2 IO doesn't support IBM-blanking"
           call MPI_ABORT(MPI_COMM_WORLD, -1, ierr)
        endif
+       print *, "Writing ", filename
        call decomp_2d_write_one(1,f1,"data",filename,0,io_name)
 #endif
     else

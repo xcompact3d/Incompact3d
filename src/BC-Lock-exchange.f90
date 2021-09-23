@@ -70,7 +70,7 @@ module lockexch
   
   private
   public :: init_lockexch, boundary_conditions_lockexch, postprocess_lockexch, &
-       pfront, set_fluid_properties_lockexch
+       pfront, set_fluid_properties_lockexch, visu_lockexch_init
 
 contains
 
@@ -270,6 +270,21 @@ contains
     return
   end subroutine init_lockexch
 
+  subroutine visu_lockexch_init(visu_initialised)
+
+    use decomp_2d, only : mytype
+    use decomp_2d_io, only : decomp_2d_register_variable
+    
+    implicit none
+
+    logical, intent(out) :: visu_initialised
+
+    call decomp_2d_register_variable(io_bcle, "dissm", 3, 0, 3, mytype)
+    call decomp_2d_register_variable(io_bcle, "dep", 2, 0, 2, mytype)
+
+    visu_initialised = .true.
+    
+  end subroutine visu_lockexch_init
 
   subroutine postprocess_lockexch(rho1,ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
