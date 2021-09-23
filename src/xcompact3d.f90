@@ -121,6 +121,7 @@ subroutine init_xcompact3d()
   use decomp_2d_io, only : decomp_2d_io_init
   USE decomp_2d_poisson, ONLY : decomp_2d_poisson_init
   use case
+  use sandbox, only : init_sandbox
   use forces
 
   use var
@@ -245,6 +246,7 @@ subroutine init_xcompact3d()
      call preprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
   else
      itr=1
+     call init_sandbox(ux1,uy1,uz1,ep1,phi1,1)
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,rho1,drho1,mu1,0)
 !     ux1(:,:,:)=ux1(:,:,:)-0.5
   endif
