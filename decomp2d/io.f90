@@ -755,7 +755,7 @@ contains
        starts(1) = 0
        starts(2) = decomp%xst(2)-1
        starts(3) = decomp%xst(3)-1
-    else if (iplane == 3) then
+    else if (iplane == 2) then
        sizes(1) = decomp%xsz(1)
        sizes(2) = nplanes
        sizes(3) = decomp%zsz(3)
@@ -765,7 +765,7 @@ contains
        starts(1) = decomp%yst(1)-1
        starts(2) = 0
        starts(3) = decomp%yst(3)-1
-    else
+    else if (iplane == 3) then
        sizes(1) = decomp%xsz(1)
        sizes(2) = decomp%ysz(2)
        sizes(3) = nplanes
@@ -775,6 +775,9 @@ contains
        starts(1) = decomp%zst(1)-1
        starts(2) = decomp%zst(2)-1
        starts(3) = 0
+    else
+       print *, "Can't work with plane ", iplane
+       stop
     endif
     
   end subroutine plane_extents
