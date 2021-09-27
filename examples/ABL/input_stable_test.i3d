@@ -42,7 +42,7 @@ inflow_noise = 0.1    ! Turbulence intensity (1=100%) !! Inflow condition
 ! Time stepping
 dt = 0.2              ! Time step
 ifirst = 1            ! First iteration
-ilast = 162000        ! Last iteration
+ilast = 100           ! Last iteration
 
 ! Enable modelling tools
 ilesmod=1             ! if 0 then DNS (=1 before)
@@ -82,7 +82,7 @@ irestart = 0          ! Read initial flow field ?
 icheckpoint = 18000   ! Frequency for writing backup file
 ioutput = 300         ! Frequency for visualization
 nvisu = 1             ! Size for visualisation collection
-ilist = 25            ! Frequency for writing on screen
+ilist = 25            ! Frequency for writing on screen 
 
 /End
 

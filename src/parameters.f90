@@ -72,7 +72,7 @@ subroutine parameter(input_i3d)
        nclx1, nclxn, ncly1, nclyn, nclz1, nclzn, &
        ivisu, ipost, &
        gravx, gravy, gravz, &
-       cpg, icfr, idir_stream, &
+       cpg, idir_stream, &
        ifilter, C_filter, iturbine
   namelist /NumOptions/ ifirstder, isecondder, itimescheme, iimplicit, &
        nu0nu, cnu, ipinter
@@ -447,7 +447,6 @@ subroutine parameter(input_i3d)
      write(*,"(' istret                 : ',I17)") istret
      write(*,"(' beta                   : ',F17.8)") beta
      write(*,*) '==========================================================='
-     write(*,"(' fpi2                   : ',F17.8)") fpi2
      write(*,"(' nu0nu                  : ',F17.8)") nu0nu
      write(*,"(' cnu                    : ',F17.8)") cnu
      write(*,*) '==========================================================='
@@ -608,7 +607,10 @@ subroutine parameter_defaults()
   itime0 = 0
   t0 = zero
   datapath = './data/'
-  fpi2 = (48._mytype / seven) / (PI**2)
+
+  !! LES stuff
+  SmagWallDamp=0
+  nSmag=1
 
   !! IBM stuff
   nraf = 0
@@ -644,7 +646,6 @@ subroutine parameter_defaults()
 
   !! Channel
   cpg = .false.
-  icfr = 1
   idir_stream = 1
 
   !! Filter

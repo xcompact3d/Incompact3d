@@ -98,6 +98,9 @@ contains
     implicit none
 
     integer :: nx, ny, nz, i
+    
+    real(mytype) :: rl, iy
+    external  rl, iy
 
     if (nclx) then
        bcx=0
@@ -241,6 +244,35 @@ contains
 
     call waves()
     if (bcy == 1 .and. istret /= 0) call matrice_refinement()
+    !write(*,*) 'POinit ii1 arl ', rl(a(1,1,1,1)),rl(a(1,1,1,2)),rl(a(1,1,1,3)),&
+    !                              rl(a(1,1,1,4)),rl(a(1,1,1,5))
+    !write(*,*) 'POinit ii1 aiy ', iy(a(1,1,1,1)),iy(a(1,1,1,2)),iy(a(1,1,1,3)),&
+    !                              iy(a(1,1,1,4)),iy(a(1,1,1,5))
+    !!                     
+    !write(*,*) 'POinit ii5 arl ', rl(a(5,5,5,1)),rl(a(5,5,5,2)),rl(a(5,5,5,3)),&
+    !                              rl(a(5,5,5,4)),rl(a(5,5,5,5))
+    !write(*,*) 'POinit ii5 aiy ', iy(a(5,5,5,1)),iy(a(5,5,5,2)),iy(a(5,5,5,3)),&
+    !                              iy(a(5,5,5,4)),iy(a(5,5,5,5))
+    !!!
+    !write(*,*) 'POinit ii1 a2rl ', rl(a2(1,1,1,1)),rl(a2(1,1,1,2)),rl(a2(1,1,1,3)),&
+    !                               rl(a2(1,1,1,4)),rl(a2(1,1,1,5))
+    !write(*,*) 'POinit ii1 a2iy ', iy(a2(1,1,1,1)),iy(a2(1,1,1,2)),iy(a2(1,1,1,3)),&
+    !                               iy(a2(1,1,1,4)),iy(a2(1,1,1,5))
+    !!                     
+    !write(*,*) 'POinit ii5 a2rl ', rl(a2(5,5,5,1)),rl(a2(5,5,5,2)),rl(a2(5,5,5,3)),&
+    !                               rl(a2(5,5,5,4)),rl(a2(5,5,5,5))
+    !write(*,*) 'POinit ii5 a2iy ', iy(a2(5,5,5,1)),iy(a2(5,5,5,2)),iy(a2(5,5,5,3)),&
+    !                               iy(a2(5,5,5,4)),iy(a2(5,5,5,5))
+    !!!
+    !write(*,*) 'POinit ii1 a3rl ', rl(a3(1,1,1,1)),rl(a3(1,1,1,2)),rl(a3(1,1,1,3)),&
+    !                               rl(a3(1,1,1,4)),rl(a3(1,1,1,5))
+    !write(*,*) 'POinit ii1 a3iy ', iy(a3(1,1,1,1)),iy(a3(1,1,1,2)),iy(a3(1,1,1,3)),&
+    !                               iy(a3(1,1,1,4)),iy(a3(1,1,1,5))
+    !!                     
+    !write(*,*) 'POinit ii5 a3rl ', rl(a3(5,5,5,1)),rl(a3(5,5,5,2)),rl(a3(5,5,5,3)),&
+    !                               rl(a3(5,5,5,4)),rl(a3(5,5,5,5))
+    !write(*,*) 'POinit ii5 a3iy ', iy(a3(5,5,5,1)),iy(a3(5,5,5,2)),iy(a3(5,5,5,3)),&
+    !                               iy(a3(5,5,5,4)),iy(a3(5,5,5,5))
 
 #ifdef DEBG 
     if (nrank .eq. 0) write(*,*)'# decomp_2d_poisson_init end'
@@ -319,6 +351,7 @@ contains
     nx = nx_global
     ny = ny_global
     nz = nz_global
+    write(*,*) 'Poisson_000'
 
     if (.not. fft_initialised) then
        call decomp_2d_fft_init(PHYSICAL_IN_Z)
@@ -433,6 +466,7 @@ contains
     ny = ny_global
     nz = nz_global
 
+    write(*,*) 'Poisson_100'
     ! rhs is in Z-pencil but requires global operations in X
     call transpose_z_to_y(rhs,rw2,ph)
     call transpose_y_to_x(rw2,rw1,ph)
@@ -690,6 +724,9 @@ contains
     ny = ny_global - 1
     nz = nz_global
 
+#ifdef DEBG
+    if (nrank .eq. 0) write(*,*)'# Poisoon_010 Init'
+#endif
     ! rhs is in Z-pencil but requires global operations in Y
     call transpose_z_to_y(rhs,rw2,ph)
     do k = ph%yst(3), ph%yen(3)
@@ -827,6 +864,36 @@ contains
 
     else
 
+       write(*,*) 'PO_010 ii1 arl ', rl(a(1,1,1,1)),rl(a(1,1,1,2)),rl(a(1,1,1,3)),&
+                                     rl(a(1,1,1,4)),rl(a(1,1,1,5))
+       write(*,*) 'PO_010 ii1 aiy ', iy(a(1,1,1,1)),iy(a(1,1,1,2)),iy(a(1,1,1,3)),&
+                                     iy(a(1,1,1,4)),iy(a(1,1,1,5))
+       !                 
+       write(*,*) 'PO_010 ii5 arl ', rl(a(5,5,5,1)),rl(a(5,5,5,2)),rl(a(5,5,5,3)),&
+                                     rl(a(5,5,5,4)),rl(a(5,5,5,5))
+       write(*,*) 'PO_010 ii5 aiy ', iy(a(5,5,5,1)),iy(a(5,5,5,2)),iy(a(5,5,5,3)),&
+                                     iy(a(5,5,5,4)),iy(a(5,5,5,5))
+       !
+       write(*,*) 'PO_010 ii1 a2rl ', rl(a2(1,1,1,1)),rl(a2(1,1,1,2)),rl(a2(1,1,1,3)),&
+                                      rl(a2(1,1,1,4)),rl(a2(1,1,1,5))
+       write(*,*) 'PO_010 ii1 a2iy ', iy(a2(1,1,1,1)),iy(a2(1,1,1,2)),iy(a2(1,1,1,3)),&
+                                      iy(a2(1,1,1,4)),iy(a2(1,1,1,5))
+       !                 
+       write(*,*) 'PO_010 ii5 a2rl ', rl(a2(5,5,5,1)),rl(a2(5,5,5,2)),rl(a2(5,5,5,3)),&
+                                      rl(a2(5,5,5,4)),rl(a2(5,5,5,5))
+       write(*,*) 'PO_010 ii5 a2iy ', iy(a2(5,5,5,1)),iy(a2(5,5,5,2)),iy(a2(5,5,5,3)),&
+                                      iy(a2(5,5,5,4)),iy(a2(5,5,5,5))
+       !!
+       !!
+       write(*,*) 'PO_010 ii1 rl ', rl(a3(1,1,1,1)),rl(a3(1,1,1,2)),rl(a3(1,1,1,3)),&
+                                 rl(a3(1,1,1,4)),rl(a3(1,1,1,5))
+       write(*,*) 'PO_010 ii1 iy ', iy(a3(1,1,1,1)),iy(a3(1,1,1,2)),iy(a3(1,1,1,3)),&
+                                 iy(a3(1,1,1,4)),iy(a3(1,1,1,5))
+       !
+       write(*,*) 'PO_010 ii1 rl ', rl(a3(5,5,5,1)),rl(a3(5,5,5,2)),rl(a3(5,5,5,3)),&
+                                    rl(a3(5,5,5,4)),rl(a3(5,5,5,5))
+       write(*,*) 'PO_010 ii1 iy ', iy(a3(5,5,5,1)),iy(a3(5,5,5,2)),iy(a3(5,5,5,3)),&
+                                    iy(a3(5,5,5,4)),iy(a3(5,5,5,5))
        if (istret /= 3) then
           cw2 = zero
           cw2c = zero
@@ -997,6 +1064,7 @@ contains
   subroutine poisson_11x(rhs)
 
     use dbg_schemes, only: abs_prec
+    
 
     implicit none
 
@@ -1011,11 +1079,15 @@ contains
     complex(mytype) :: cx
     real(mytype) :: rl, iy
     external cx, rl, iy
+#ifdef DEBG
+    real(mytype) avg_param
+#endif
 
 100 format(1x,a8,3I4,2F12.6)
 
     nx = nx_global - 1
     ny = ny_global - 1
+    write(*,*) 'Poisson_11x'
 
     if (bcz == 1) then
        nz = nz_global - 1
@@ -1039,6 +1111,7 @@ contains
        call transpose_z_to_y(rhs,rw2,ph)
     end if
 
+
     do k = ph%yst(3), ph%yen(3)
        do i = ph%yst(1), ph%yen(1)
           do j = 1, ny/2
@@ -1049,6 +1122,11 @@ contains
           end do
        end do
     end do
+#ifdef DEBG
+    avg_param = zero
+    call avg3d (rw2b, avg_param)
+    if (nrank == 0) write(*,*)'## Poisson11X Start rw2 ', avg_param
+#endif
 
     ! the global operations in X
     call transpose_y_to_x(rw2b,rw1,ph)
@@ -1063,6 +1141,11 @@ contains
           end do
        end do
     end do
+#ifdef DEBG
+    avg_param = zero
+    call avg3d (rw1b, avg_param)
+    if (nrank == 0) write(*,*)'## Poisson11X Start rw1 ', avg_param
+#endif
 
     ! back to Z-pencil
     call transpose_x_to_y(rw1b,rw2,ph)
@@ -1090,6 +1173,9 @@ contains
           end do
        end do
     end do
+    avg_param = zero
+    call avg3d (cw1, avg_param)
+    if (nrank == 0) write(*,*)'## SUB Poisson11X START AVG cw1 ', avg_param
 #endif
 
     ! post-processing in spectral space
@@ -1109,6 +1195,11 @@ contains
           end do
        end do
     end do
+#ifdef DEBG
+    avg_param = zero
+    call avg3d (abs(cw1), avg_param)
+    if (nrank == 0) write(*,*)'## Poisson11X Post in Z cw1 ', avg_param
+#endif
 
     ! POST PROCESSING IN Y
     ! WE HAVE TO BE IN Y PENCILS
@@ -1134,6 +1225,11 @@ contains
           end do
        end do
     end do
+#ifdef DEBG
+    avg_param = zero
+    call avg3d (abs(cw2), avg_param)
+    if (nrank == 0) write(*,*)'## Poisson11X Post in Y cw2 ', avg_param
+#endif
 
     ! back to X-pencil
     call transpose_y_to_x(cw2b,cw1,sp)
@@ -1147,6 +1243,9 @@ contains
           end do
        end do
     end do
+    avg_param = zero
+    call avg3d (cw1, avg_param)
+    if (nrank == 0) write(*,*)'## Poisson11X Back to X cw1 ', avg_param
 #endif
 
     ! POST PROCESSING IN X
@@ -1182,6 +1281,9 @@ contains
           end do
        end do
     end do
+    avg_param = zero
+    call avg3d (abs(cw1b), avg_param)
+    if (nrank == 0) write(*,*)'## Poisson11X Back to X cw1b ', avg_param
 #endif
 
     if (istret == 0) then
@@ -1208,9 +1310,43 @@ contains
              end do
           end do
        end do
+#ifdef DEBUG
+       avg_param = zero
+       call avg3d (cw1b, avg_param)
+       if (nrank == 0) write(*,*)'## Poisson11X Solve Pois istret 0 ', avg_param
+#endif
 
     else
-
+       call matrice_refinement()
+       !write(*,*) 'PO_11X ii1 arl ', rl(a(1,1,1,1)),rl(a(1,1,1,2)),rl(a(1,1,1,3)),&
+       !                              rl(a(1,1,1,4)),rl(a(1,1,1,5))
+       !write(*,*) 'PO_11X ii1 aiy ', iy(a(1,1,1,1)),iy(a(1,1,1,2)),iy(a(1,1,1,3)),&
+       !                              iy(a(1,1,1,4)),iy(a(1,1,1,5))
+       !!                 
+       !write(*,*) 'PO_11X ii5 arl ', rl(a(5,5,5,1)),rl(a(5,5,5,2)),rl(a(5,5,5,3)),&
+       !                              rl(a(5,5,5,4)),rl(a(5,5,5,5))
+       !write(*,*) 'PO_11X ii5 aiy ', iy(a(5,5,5,1)),iy(a(5,5,5,2)),iy(a(5,5,5,3)),&
+       !                              iy(a(5,5,5,4)),iy(a(5,5,5,5))
+       !!
+       !write(*,*) 'PO_11X ii1 a2rl ', rl(a2(1,1,1,1)),rl(a2(1,1,1,2)),rl(a2(1,1,1,3)),&
+       !                               rl(a2(1,1,1,4)),rl(a2(1,1,1,5))
+       !write(*,*) 'PO_11X ii1 a2iy ', iy(a2(1,1,1,1)),iy(a2(1,1,1,2)),iy(a2(1,1,1,3)),&
+       !                               iy(a2(1,1,1,4)),iy(a2(1,1,1,5))
+       !!                 
+       !write(*,*) 'PO_11X ii5 a2rl ', rl(a2(5,5,5,1)),rl(a2(5,5,5,2)),rl(a2(5,5,5,3)),&
+       !                               rl(a2(5,5,5,4)),rl(a2(5,5,5,5))
+       !write(*,*) 'PO_11X ii5 a2iy ', iy(a2(5,5,5,1)),iy(a2(5,5,5,2)),iy(a2(5,5,5,3)),&
+       !                               iy(a2(5,5,5,4)),iy(a2(5,5,5,5))
+       !!!
+       !write(*,*) 'PO_11X ii1 rl ', rl(a3(1,1,1,1)),rl(a3(1,1,1,2)),rl(a3(1,1,1,3)),&
+       !                             rl(a3(1,1,1,4)),rl(a3(1,1,1,5))
+       !write(*,*) 'PO_11X ii1 iy ', iy(a3(1,1,1,1)),iy(a3(1,1,1,2)),iy(a3(1,1,1,3)),&
+       !                             iy(a3(1,1,1,4)),iy(a3(1,1,1,5))
+       !!
+       !write(*,*) 'PO_11X ii1 rl ', rl(a3(5,5,5,1)),rl(a3(5,5,5,2)),rl(a3(5,5,5,3)),&
+       !                             rl(a3(5,5,5,4)),rl(a3(5,5,5,5))
+       !write(*,*) 'PO_11X ii1 iy ', iy(a3(5,5,5,1)),iy(a3(5,5,5,2)),iy(a3(5,5,5,3)),&
+       !                             iy(a3(5,5,5,4)),iy(a3(5,5,5,5))
        ! the stretching is only working in Y pencils
 
        call transpose_x_to_y(cw1b,cw2b,sp)
@@ -1245,6 +1381,11 @@ contains
                 enddo
              enddo
           enddo
+#ifdef DEBUG
+          avg_param = zero
+          call avg3d (cw2b, avg_param)
+          if (nrank == 0) write(*,*)'## Poisson11X Solve Pois istret < 3 ', avg_param
+#endif
        else
           cw2 = zero
           do k = sp%yst(3), sp%yen(3)
@@ -1265,6 +1406,11 @@ contains
              enddo
           enddo
        endif
+#ifdef DEBUG
+          avg_param = zero
+          call avg3d (cw2b, avg_param)
+          if (nrank == 0) write(*,*)'## Poisson11X Solve Pois istret = 3 ', avg_param
+#endif
        !we have to go back in X pencils
        call transpose_y_to_x(cw2b,cw1b,sp)
     endif
@@ -1279,6 +1425,9 @@ contains
           end do
        end do
     end do
+    avg_param = zero
+    call avg3d (cw1b, avg_param)
+    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois AFTER ', avg_param
 #endif
     !stop
     ! post-processing backward
@@ -1314,6 +1463,9 @@ contains
           end do
        end do
     end do
+    avg_param = zero
+    call avg3d (cw1, avg_param)
+    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois POSTPR X ', avg_param
 #endif
 
     ! POST PROCESSING IN Y
@@ -1350,6 +1502,9 @@ contains
           end do
        end do
     end do
+   avg_param = zero
+   call avg3d (abs(cw2b), avg_param)
+   if (nrank == 0) write(*,*)'## Poisson11X Solve Pois POSTPR Y ', avg_param
 #endif
     ! back to X-pencil
     call transpose_y_to_x(cw2b,cw1,sp)
@@ -1369,9 +1524,19 @@ contains
           end do
        end do
     end do
+#ifdef DEBUG
+    avg_param = zero
+    call avg3d (cw1, avg_param)
+    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois POSTPR Z ', avg_param
+#endif
 
     ! compute c2r transform, back to physical space
     call decomp_2d_fft_3d(cw1,rhs)
+#ifdef DEBUG
+    avg_param = zero
+    call avg3d (rhs, avg_param)
+    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois Back Phy RHS ', avg_param
+#endif
 
     if (bcz == 1) then 
        do j = 1, ph%zsz(2)
@@ -1800,6 +1965,7 @@ contains
     real(mytype) :: xa0,xa1 
     complex(mytype) :: ytt,xtt,ztt,yt1,xt1,yt2,xt2
     complex(mytype) :: xtt1,ytt1,ztt1,zt1,zt2,tmp1,tmp2,tmp3
+    
 
     complex(mytype) :: cx
     real(mytype) :: rl, iy
@@ -2134,7 +2300,7 @@ contains
           do i = sp%yst(1), sp%yen(1)
 !
              a3(i,1,k,3) = -cx(rl(xk2(i)) * transy_rl2(1) * transz_rl2(k) &
-                              +rl(zk2(k)) * transy_rl2(1) * transy_rl2(1) &
+                              +rl(zk2(k)) * transy_rl2(1) * transx_rl2(i) &
                               +xa0_2 * rl(cw22(i,1,k))**2 &
                               +xa1_2 * rl(cw22(i,1,k)) * rl(cw22(i,2,k)),&
 !
@@ -2143,7 +2309,7 @@ contains
                               +xa0_2 * iy(cw22(i,1,k))**2 &
                               +xa1_2 * iy(cw22(i,1,k)) * iy(cw22(i,2,k)))
 !
-             a3(i,nym,k,3) = cx(rl(xk2(i)) * transy_rl2(nym) * transz_rl2(k) &
+             a3(i,nym,k,3) = -cx(rl(xk2(i)) * transy_rl2(nym) * transz_rl2(k) &
                                +rl(zk2(k)) * transy_rl2(nym) * transx_rl2(i) &
                                +xa0_2 * rl(cw22(i,nym,k))**2 &
                                +xa1_2 * rl(cw22(i,nym,k)) * rl(cw22(i,nym-1,k)), &
@@ -2213,6 +2379,71 @@ contains
 
     return
   end subroutine matrice_refinement
+!=====================================
+subroutine avg3d (var, avg)
+
+  use decomp_2d, only: real_type, xsize, xend
+  use param
+  use dbg_schemes, only: sqrt_prec
+  use variables, only: nx,ny,nz,nxm,nym,nzm
+  use mpi
+
+  implicit none
+
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: var
+  real(mytype), intent(out) :: avg
+  real(mytype)              :: dep
+
+  integer :: i,j,k, code
+  integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
+
+  if (nclx1==1.and.xend(1)==nx) then
+     xsize1=xsize(1)-1
+  else
+     xsize1=xsize(1)
+  endif
+  if (ncly1==1.and.xend(2)==ny) then
+     xsize2=xsize(2)-1
+  else
+     xsize2=xsize(2)
+  endif
+  if (nclz1==1.and.xend(3)==nz) then
+     xsize3=xsize(3)-1
+  else
+     xsize3=xsize(3)
+  endif
+  if (nclx1==1) then
+     nxc=nxm
+  else
+     nxc=nx
+  endif
+  if (ncly1==1) then
+     nyc=nym
+  else
+     nyc=ny
+  endif
+  if (nclz1==1) then
+     nzc=nzm
+  else
+     nzc=nz
+  endif
+
+  dep=zero
+  do k=1,xsize3
+     do j=1,xsize2
+        do i=1,xsize1
+           !dep=dep+var(i,j,k)**2
+           dep=dep+var(i,j,k)
+        enddo
+     enddo
+  enddo
+  call MPI_ALLREDUCE(dep,avg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+  !avg=sqrt_prec(avg)/(nxc*nyc*nzc)
+  avg=avg/(nxc*nyc*nzc)
+
+  return
+
+end subroutine avg3d
 
 end module decomp_2d_poisson
 

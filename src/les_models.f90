@@ -267,8 +267,10 @@ contains
     enddo
     call transpose_y_to_x(nut2, nut1)
 
-    if (nrank==0) write(*,*) "smag srt_smag min max= ", minval(srt_smag), maxval(srt_smag)
-    if (nrank==0) write(*,*) "smag nut1     min max= ", minval(nut1), maxval(nut1)
+    if ((nrank==0).and.(mod(itime,ilist)==0)) then 
+       write(*,*) "smag srt_smag min max= ", minval(srt_smag), maxval(srt_smag)
+       write(*,*) "smag nut1     min max= ", minval(nut1), maxval(nut1)
+    endif
 
     if (mod(itime, ioutput) == 0) then
 

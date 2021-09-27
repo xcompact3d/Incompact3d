@@ -195,6 +195,14 @@ contains
       mu1 = one
     endif
 
+    call alloc_x(uxf1);
+    uxf1 = zero
+    call alloc_x(uyf1);
+    uyf1 = zero
+    call alloc_x(uzf1);
+    uzf1 = zero
+    call alloc_x(phif1);
+    phif1 = zero
     allocate(pp1(nxmsize,xsize(2),xsize(3)))
     pp1 = zero
     allocate(pgy1(nxmsize,xsize(2),xsize(3)))
@@ -348,7 +356,14 @@ contains
     tj2=zero
     call alloc_y(di2)
     di2=zero
-
+    call alloc_y(uxf2)
+    uxf2=zero
+    call alloc_y(uyf2)
+    uyf2=zero
+    call alloc_y(uzf2)
+    uzf2=zero
+    call alloc_y(phif2)
+    phif2=zero
     allocate(phi2(ysize(1),ysize(2),ysize(3),1:numscalar))
     phi2=zero
     allocate(pgz2(ph3%yst(1):ph3%yen(1),nymsize,ysize(3)))
@@ -408,7 +423,14 @@ contains
     ti3=zero
     call alloc_z(di3)
     di3=zero
-
+    call alloc_z(uxf3)
+    uxf3=zero
+    call alloc_z(uyf3)
+    uyf3=zero
+    call alloc_z(uzf3) 
+    uzf3=zero
+    call alloc_z(phif3)
+    phif3=zero
     allocate(phi3(zsize(1),zsize(2),zsize(3),1:numscalar))
     phi3=zero
     allocate(pgz3(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),zsize(3)))
@@ -427,7 +449,7 @@ contains
 
     if (ilmn) then
       call alloc_z(mu3)
-      mu3=one
+      mu3(:,:,:) = one
     endif
 
     allocate(pp3(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress))

@@ -41,7 +41,6 @@ module tools
        apply_spatial_filter, read_inflow, append_outflow, write_outflow, &
        compute_cfldiff, compute_cfl, &
        mean_plane_x, mean_plane_y, mean_plane_z, &
-       channel_cfr, &
        avg3d
 
 contains
@@ -142,10 +141,11 @@ contains
 
     if (nrank == 0) then
 
-       write(*,*) 'U,V,W min=',uxmin1,uymin1,uzmin1
-       write(*,*) 'U,V,W max=',uxmax1,uymax1,uzmax1
+       write(*,*) 'U,V,W min=',real(uxmin1,4),real(uymin1,4),real(uzmin1,4)
+       write(*,*) 'U,V,W max=',real(uxmax1,4),real(uymax1,4),real(uzmax1,4)
+       !print *,'CFL=',real(abs(max(uxmax1,uymax1,uzmax1)*dt)/min(dx,dy,dz),4)
 
-       if((abs_prec(uxmax1) >= ten).OR.(abs_prec(uymax1) >= onehundred).OR.(abs_prec(uzmax1) >= ten)) then
+       if((abs_prec(uxmax1)>=onehundred).or.(abs_prec(uymax1)>=onehundred).OR.(abs_prec(uzmax1)>=onehundred)) then
          write(*,*) 'Velocity diverged! SIMULATION IS STOPPED!'
          call MPI_ABORT(MPI_COMM_WORLD,code,ierror)
          stop
@@ -184,7 +184,7 @@ contains
     else if ((iwhen == 3).and.(itime > ifirst)) then !AT THE END OF A TIME STEP
        if (nrank == 0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime==ilast)) then
           call cpu_time(trank)
-          write(*,*) 'Time for this time step (s):',real(trank-time1)
+          if (nrank==0) write(*,*) 'Time for this time step (s):',real(trank-time1)
           telapsed = (trank-tstart)/thirtysixthousand
           tremaining  = telapsed*(ilast-itime)/(itime-ifirst)
           write(*,"(' Remaining time:',I8,' h ',I2,' min')") int(tremaining), int((tremaining-int(tremaining))*sixty)
@@ -222,7 +222,7 @@ contains
     !!    MODIFIED: Kay Schäfer
     !!
   !##############################################################################
-  subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1,iresflg)
+  subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1,rho1,drho1,mu1,iresflg)
 
     use decomp_2d
     use decomp_2d_io
@@ -241,6 +241,9 @@ contains
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime,numscalar) :: dphi1
     real(mytype), dimension(phG%zst(1):phG%zen(1),phG%zst(2):phG%zen(2),phG%zst(3):phG%zen(3)) :: pp3
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: mu1
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     real(mytype) :: xdt,tfield,y
     integer, dimension(2) :: dims, dummy_coords
@@ -260,13 +263,13 @@ contains
           return
        endif
 
-       if (nrank == 0) then
+       if (nrank==0) then
           write(*,*) '===========================================================<<<<<'
           write(*,*) 'Writing restart point ',filename !itime/icheckpoint
        endif
     end if
 
-    if (iresflg == 1) then !write
+    if (iresflg==1) then !write
        call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
             MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
             fh, ierror)
@@ -277,13 +280,13 @@ contains
        call decomp_2d_write_var(fh,disp,1,uy1)
        call decomp_2d_write_var(fh,disp,1,uz1)
        ! write previous time-step if necessary for AB2 or AB3
-       if ((itimescheme == 2).or.(itimescheme == 3)) then
+       if ((itimescheme==2).or.(itimescheme==3)) then
          call decomp_2d_write_var(fh,disp,1,dux1(:,:,:,2))
          call decomp_2d_write_var(fh,disp,1,duy1(:,:,:,2))
          call decomp_2d_write_var(fh,disp,1,duz1(:,:,:,2))
        end if
        ! for AB3 one more previous time-step
-       if (itimescheme == 3) then
+       if (itimescheme==3) then
          call decomp_2d_write_var(fh,disp,1,dux1(:,:,:,3))
          call decomp_2d_write_var(fh,disp,1,duy1(:,:,:,3))
          call decomp_2d_write_var(fh,disp,1,duz1(:,:,:,3))
@@ -291,18 +294,27 @@ contains
        !
        call decomp_2d_write_var(fh,disp,3,pp3,phG)
        !
-       if (iscalar == 1) then
+       if (iscalar==1) then
           do is=1, numscalar
              call decomp_2d_write_var(fh,disp,1,phi1(:,:,:,is))
              ! previous time-steps
-             if ((itimescheme == 2).or.(itimescheme == 3)) then ! AB2 or AB3
+             if ((itimescheme==2).or.(itimescheme==3)) then ! AB2 or AB3
                call decomp_2d_write_var(fh,disp,1,dphi1(:,:,:,2,is))
              end if
              !
-             if (itimescheme == 3) then ! AB3
+             if (itimescheme==3) then ! AB3
                call decomp_2d_write_var(fh,disp,1,dphi1(:,:,:,3,is))
              end if
           end do
+       endif
+       if (ilmn) then
+          do is = 1, nrhotime
+             call decomp_2d_write_var(fh,disp,1,rho1(:,:,:,is))
+          enddo
+          do is = 1, ntime
+             call decomp_2d_write_var(fh,disp,1,drho1(:,:,:,is))
+          enddo
+          call decomp_2d_write_var(fh,disp,1,mu1)
        endif
        call MPI_FILE_CLOSE(fh,ierror)
        ! Write info file for restart - Kay Schäfer
@@ -340,10 +352,10 @@ contains
          close(111)
        end if
     else
-       if (nrank == 0) then
-         write(*,*) '==========================================================='
-         write(*,*) 'RESTART from file:', filestart
-         write(*,*) '==========================================================='
+       if (nrank==0) then
+         write(*,*)'==========================================================='
+         write(*,*)'RESTART from file:', filestart
+         write(*,*)'==========================================================='
        end if
        call MPI_FILE_OPEN(MPI_COMM_WORLD, filestart, &
             MPI_MODE_RDONLY, MPI_INFO_NULL, &
@@ -353,13 +365,13 @@ contains
        call decomp_2d_read_var(fh,disp,1,uy1)
        call decomp_2d_read_var(fh,disp,1,uz1)
        ! read previous time-step if necessary for AB2 or AB3
-       if ((itimescheme == 2).or.(itimescheme == 3)) then ! AB2 or AB3
+       if ((itimescheme==2).or.(itimescheme==3)) then ! AB2 or AB3
          call decomp_2d_read_var(fh,disp,1,dux1(:,:,:,2))
          call decomp_2d_read_var(fh,disp,1,duy1(:,:,:,2))
          call decomp_2d_read_var(fh,disp,1,duz1(:,:,:,2))
        end if
        ! for AB3 one more previous time-step
-       if (itimescheme == 3) then ! AB3
+       if (itimescheme==3) then ! AB3
          call decomp_2d_read_var(fh,disp,1,dux1(:,:,:,3))
          call decomp_2d_read_var(fh,disp,1,duy1(:,:,:,3))
          call decomp_2d_read_var(fh,disp,1,duz1(:,:,:,3))
@@ -367,19 +379,19 @@ contains
        !
        call decomp_2d_read_var(fh,disp,3,pp3,phG)
        !
-       if (iscalar == 1) then
+       if (iscalar==1) then
           do is = 1, numscalar
              call decomp_2d_read_var(fh,disp,1,phi1(:,:,:,is))
              ! previous time-steps
-             if ((itimescheme == 2).or.(itimescheme == 3).or.(itimescheme == 7)) then ! AB2 or AB3
+             if ((itimescheme==2).or.(itimescheme==3).or.(itimescheme == 7)) then ! AB2 or AB3
                call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,2,is))
              end if
              !
-             if ((itimescheme == 3).or.(itimescheme == 7)) then ! AB3
+             if (itimescheme==3) then ! AB3
                call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,3,is))
              end if
              !ABL
-             if (itype == itype_abl) then
+             if (itype==itype_abl) then
                do j=1,xsize(2)
                  if (istret == 0) y = real(j + xstart(2)-1-1,mytype)*dy
                  if (istret.ne.0) y = yp(j+xstart(2)-1)
@@ -392,12 +404,21 @@ contains
              endif
           end do
        endif
+       if (ilmn) then
+          do is = 1, nrhotime
+             call decomp_2d_read_var(fh,disp,1,rho1(:,:,:,is))
+          enddo
+          do is = 1, ntime
+             call decomp_2d_read_var(fh,disp,1,drho1(:,:,:,is))
+          enddo
+          call decomp_2d_read_var(fh,disp,1,mu1)
+       end if
        call MPI_FILE_CLOSE(fh,ierror_o)
 
        !! Read time of restart file
        write(filename,"('restart',I7.7,'.info')") ifirst-1
        inquire(file=filename, exist=fexists)
-       if (nrank == 0) write(*,*) filename
+       if (nrank==0) write(*,*) filename
        ! file exists???
        if (fexists) then
          open(111, file=filename)
@@ -412,7 +433,7 @@ contains
        
     endif
 
-    if (nrank == 0) then
+    if (nrank==0) then
        if (ierror_o /= 0) then !Included by Felipe Schuch
           write(*,*) '==========================================================='
           write(*,*) 'Error: Impossible to read '//trim(filestart)
@@ -422,7 +443,7 @@ contains
     endif
 
     ! reconstruction of the dp/dx, dp/dy and dp/dz from pp3
-    if (iresflg == 0) then
+    if (iresflg==0) then
        if (itimescheme <= 4) itr=1
        if (itimescheme == 5) itr=3
        if (itimescheme == 6) itr=5
@@ -430,8 +451,8 @@ contains
        if (nrank == 0) write(*,*) 'reconstruction pressure gradients done!'
     end if
 
-    if (iresflg == 1) then !Writing restart
-       if (nrank == 0) then
+    if (iresflg==1) then !Writing restart
+       if (nrank==0) then
           write(fmt1,"(I7.7)") itime
           write(*,*) 'Restart point restart',fmt1,' saved successfully!'!itime/icheckpoint,'saved successfully!'
           ! write(*,*) 'Elapsed time (s)',real(trestart,4)
@@ -462,8 +483,7 @@ contains
     integer :: i,j,k,npaire
 
     !if (iscalar == 1) phi11=phi1(:,:,:,1) !currently only first scalar
-
-    if (ifilter == 1.or.ifilter == 2) then
+    if (ifilter==1.or.ifilter==2) then
       call filx(uxf1,ux1,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,ubcx)
       call filx(uyf1,uy1,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
       call filx(uzf1,uz1,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
@@ -479,7 +499,7 @@ contains
     call transpose_x_to_y(uzf1,uz2)
     !if (iscalar == 1) call transpose_x_to_y(phif1,phi2)
 
-    if (ifilter == 1.or.ifilter == 3) then ! all filter or y filter
+    if (ifilter==1.or.ifilter==3) then ! all filter or y filter
       call fily(uxf2,ux2,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,ubcx)
       call fily(uyf2,uy2,di2,fisy,fiffy,fifsy,fifwy,ysize(1),ysize(2),ysize(3),0,ubcy)
       call fily(uzf2,uz2,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,ubcz)
@@ -496,7 +516,7 @@ contains
     call transpose_y_to_z(uzf2,uz3)
     !if (iscalar == 1) call transpose_y_to_z(phif2,phi3)
 
-    if (ifilter == 1.or.ifilter == 2) then
+    if (ifilter==1.or.ifilter==2) then
       call filz(uxf3,ux3,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
       call filz(uyf3,uy3,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
       call filz(uzf3,uz3,di3,fisz,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),0,ubcz)
@@ -617,78 +637,6 @@ contains
     
   end subroutine write_outflow
   !############################################################################
-  !!
-  !!  SUBROUTINE: channel_cfr
-  !!      AUTHOR: Kay Schäfer
-  !! DESCRIPTION: Inforces constant flow rate without need of data transposition
-  !!
-  !############################################################################
-  subroutine channel_cfr (u_stream,constant)
-
-    use decomp_2d
-    use decomp_2d_poisson
-    use variables
-    use param
-    use var
-    use MPI
-
-    implicit none
-
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(inout) :: u_stream
-    real(mytype) :: constant
-
-    integer :: code,i,j,k,jloc
-    real(mytype) :: can,ub,uball, dyloc
-    !
-    ub = zero
-    uball = zero
-    !
-    do k=1,xsize(3)
-       do j=xstart(2)+1,xend(2)-1
-          jloc = j-xstart(2)+1
-          dyloc  = (yp(j+1)-yp(j-1))
-          do i=1,xsize(1)
-            ub = ub + u_stream(i,jloc,k) * half * dyloc
-          enddo
-       enddo
-    enddo
-
-    ! Check if first and last index of subarray is at domain boundary
-    if ( xstart(2)==1) then ! bottom point -> half distance
-       ub = ub + sum(u_stream(:,1,:)) * yp(2)*half
-    else
-       ub = ub + sum(u_stream(:,1,:)) * (yp(xstart(2)+1)-yp(xstart(2)-1))*half
-    end if
-    !
-    if (xend(2)==ny) then ! top point
-       jloc = xend(2)-xstart(2)+1
-       ub = ub + sum(u_stream(:,jloc,:)) * (yp(xend(2))-yp(xend(2)-1))*half
-    else
-       jloc = xend(2)-xstart(2)+1
-       ub = ub + sum(u_stream(:,jloc,:)) * (yp(xend(2)+1)-yp(xend(2)-1))*half
-    end if
-    !
-    ub = ub / (yly * (real(nx*nz,mytype)))
-
-    call MPI_ALLREDUCE(ub,uball,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-
-    can = uball - constant
-
-    if (nrank == 0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) &
-       write(*,*) nrank,'UT',uball,can
-
-    do k = 1, xsize(3)
-      do j = 1, xsize(2)
-        do i = 1, xsize(1)
-          u_stream(i,j,k) = u_stream(i,j,k) - can
-        enddo
-      enddo
-    enddo
-
-    return
-  end subroutine channel_cfr
-  !############################################################################
-  !##################################################################
   !##################################################################
     !!  SUBROUTINE: compute_cfldiff
     !! DESCRIPTION: Computes Diffusion/Fourier number
@@ -788,6 +736,32 @@ contains
       !write(*,"(' CFL_sum                : ',F17.8)") cflmax_out(4)*dt
     end if
   end subroutine compute_cfl
+  !##################################################################
+  !##################################################################
+  ! Rescale pressure to physical pressure
+  ! Written by Kay Schäfer 2019
+  !##################################################################
+  elemental subroutine rescale_pressure(pre1)
+
+    use decomp_2d, only : mytype
+    use param, only : itimescheme, gdt
+    implicit none
+
+    real(mytype), intent(inout) :: pre1
+
+    ! Adjust pressure to physical pressure
+    ! Multiply pressure by factor of time-scheme
+    ! 1/gdt = 1  / (dt * c_k)
+    !
+    ! Explicit Euler, AB2, AB3, AB4, RK3
+    if (itimescheme>=1 .and. itimescheme<=5) then
+       pre1 = pre1 / gdt(3)
+    ! RK4
+    elseif (itimescheme==6) then
+       pre1 = pre1 / gdt(5)
+    endif
+
+  end subroutine
   !##################################################################
   !##################################################################
   subroutine mean_plane_x (f1,nx,ny,nz,fm1)
@@ -912,128 +886,7 @@ contains
   end subroutine avg3d
 end module tools
 !##################################################################
-!##################################################################
-!subroutine stabiltemp() !from Erik, adapted by Leonardo Romero Monteiro
-!
-!  use param
-!  use variables
-!  use var
-!
-!  implicit none
-!
-!  complex(mytype) :: z,eit,ei2t,ei3t,eimt,eim2t,eim3t
-!  real(mytype) :: theta, dtheta, cc, fourier, cfl
-!  real(mytype) :: xkm, xk, xkp, xks, xkf, x, y
-!  real(mytype) :: am1, a0, a1, a2, a3
-!  real(mytype) :: bm1, b0, b1, b2, b3
-!  real(mytype) :: alpha1, c1, c11
-!  real(mytype) :: alpha2, c2
-!  real(mytype) :: alpha3, beta3, c3, d3
-!  integer :: i,ntheta,order
-!
-!  ntheta=360
-!  dtheta=twopi/(ntheta-one)
-!  xk=(fpi2+1.)*pi*pi
-!  order = 6   ! ordem da hiperviscosidade 0 = sem hiperviscosidade; 4 = 4a ordem com 2 formados;  6 = 6a ordem com 1 formado
-!
-!  write(*,*) 'Writing stability data!'
-!
-!  if (itimescheme==0) then !Euler (not implemented)
-!     am1=0; a0=1.; a1=0.; a2=0.
-!  endif
-!
-!  if (itimescheme == 1) then !AB2
-!     am1=0; a0=1.5; a1=-0.5; a2=0.; a3=0.; bm1=1.; b0=-1.; b1=0.; b2=0.; b3=0.
-!  endif
-!
-!  if (itimescheme == 3) then !RK3
-!     if (nrank==0) write(*,*) "Non implemented for RK3"
-!  endif
-!
-!  if (itimescheme == 2) then !AB3
-!     am1=0.; a0=23./12.; a1=-16./12.; a2=5./12; a0=3./2+a2; a1=-1./2-2*a2; a3=0.; bm1=1.; b0=-1.; b1=0.; b2=0.; b3=0.
-!  endif
-!
-!  open(10,file='stabiltemp_1.dat',form='formatted')
-!  do i=1,ntheta
-!     theta=(i-1)*dtheta
-!
-!     eit=exp_prec(cmplx(0.,1.)*theta)
-!     ei2t=eit*eit
-!     ei3t=eit*eit*eit
-!     eimt=1./eit
-!     eim2t=1./ei2t
-!     eim3t=1./ei3t
-!     !z=(eit-1.)/a0
-!     !z=(eit*(eit-1.))/(a0*eit+a1)
-!     !z=(ei3t-ei2t)/(a0*ei2t+a1*eit+a2)
-!     z=(bm1*eit+b0+b1*eimt+b2*eim2t+b3*eim3t)/(a0+a1*eimt+a2*eim2t+a3*eim3t)
-!     !z=(eit-1.)/(am1*eit+a0+a1*eimt)
-!     !z=(eit-1.)/(am1*eit+a0+a1*eimt+a2*eim2t)
-!
-!     write(10,*) real(z),imag(z)
-!  enddo
-!  close(10)
-!
-!
-!  alpha1=1./3.
-!  a1=(alpha1+9.)/6.
-!  b1=(32.*alpha1-9.)/15.
-!  c1=(-3.*alpha1+1.)/10.
-!
-!  if (order == 0) then
-!
-!     alpha2=2./11
-!     a2=12./11
-!     b2=3./11
-!     c2=0.
-!
-!  elseif (order == 4) then
-!
-!     c11=exp_prec(-((pi-2.*pi/3.)/(0.3*pi-2.*pi/3.))**2 )
-!     xkm=(c11*fpi2+1.)*(4./9.)*pi*pi
-!
-!     alpha2=(64.*xkm-27.*xk-96.)/(64.*xkm-54.*xk+48.)
-!     a2 = (54.*xk-15.*xkm*xk+12.)/(64.*xkm-54.*xk+48.)
-!     b2 = (192.*xkm-216.*xk+24.*xkm*xk-48.)/(64.*xkm-54.*xk+48.)
-!     c2 = 3.*(18.*xk -3.*xkm*xk-36.)/(64.*xkm-54.*xk+48.)
-!
-!  elseif(order == 6) then
-!
-!     alpha2=(45.*xk-272.)/(2*(45.*xk-208.))
-!     c2=(2.-11.*alpha2)/20.
-!     a2=(6.-9.*alpha2)/4.
-!     b2=(-3.+24.*alpha2)/5.
-!
-!  endif
-!
-!  !alpha3=0.45
-!  !beta3=(3.-2.*alpha3)/10.
-!  !a3=(2.+3.*alpha3)/4.
-!  !b3=(6.+7*alpha3)/8.
-!  !c3=(6.+alpha3)/20.
-!  !d3=(2-3.*alpha3)/40.
-!
-!  cc=4.
-!  fourier=xnu*dt/(dx*dx)
-!  cfl=cc*dt/dx
-!
-!  open(10,file='stabiltemp_2.dat',form='formatted')
-!  do i=1,ntheta
-!     theta=(i-1)*dtheta
-!
-!     xkp=(a1*sin_prec(theta)+(b1/2)*sin_prec(2*theta) +(c1/3)*sin_prec(3*theta))/(1+2*alpha1*cos_prec(theta))
-!     xks=(2*a2*(1-cos_prec(theta))+(b2/2)*(1-cos_prec(2*theta)) +(2*c2/9)*(1-cos_prec(3*theta)))/(1+2*alpha2*cos_prec(theta))
-!     !xkf=(a3+b3*cos_prec(theta)+c3*cos_prec(2*theta)+d3*cos_prec(3*theta)) /(1+2*alpha3*cos_prec(theta)+2*beta3*cos_prec(2*theta))
-!     x=-fourier*xks
-!     y=-cfl*xkp!*xkf
-!
-!     write(10,*) x,y
-!  enddo
-!  close(10)
-!
-!end subroutine stabiltemp
-!##################################################################
+
 !===================================================
 ! Subroutine for computing the local and global CFL
 ! number, according to Lele 1992.
@@ -1109,114 +962,114 @@ subroutine stretching()
   real(mytype) :: yinf,den,xnum,xcx,den1,den2,den3,den4,xnum1,cst
   integer :: j
 
-  yinf = - half * yly
-  den = two * beta * yinf
-  xnum = -yinf - sqrt_prec(pi * pi * beta * beta + yinf * yinf)
-  alpha = abs_prec(xnum / den)
-  xcx = one / beta / alpha
-  if (alpha /= zero) then
-     if (istret == 1) then
-        yp(1) = zero
-        yeta(1) = zero
-     endif
-     if (istret == 2) then
-        yp(1) = zero
-        yeta(1) = -half
-     endif
-     if (istret == 3) then
-        yp(1) = zero
-        yeta(1) = -half
-     endif
-!
-        den1 = sqrt_prec(alpha * beta + one)
-        xnum = den1/sqrt_prec(alpha / pi) / sqrt_prec(beta) / sqrt_prec(pi)
-        den = two * sqrt_prec(alpha / pi) * sqrt_prec(beta) * pi * sqrt_prec(pi)
-        cst=sqrt_prec(beta) * pi / (two* sqrt_prec(alpha) * sqrt_prec(alpha * beta + one))
-!
-     do j = 2, ny
-        if (istret == 1) yeta(j) = real(j-1, mytype) *(one / nym)
-        if (istret == 2) yeta(j) = real(j-1, mytype) *(one / nym) -half
-        if (istret == 3) yeta(j) = real(j-1, mytype) *(half / nym) -half
-        den3= ((sin_prec(pi * yeta(j))) * (sin_prec(pi * yeta(j))) / beta / pi) + alpha / pi
-        den4= two * alpha * beta - cos_prec(two * pi * yeta(j)) + one
-        xnum1=(atan_prec(xnum * tan_prec(pi * yeta(j)))) *den4 /den1 /den3 / den
-        if (istret == 1) then
-           if (yeta(j) < half) yp(j) = xnum1 - cst - yinf
-           if (yeta(j) == half) yp(j) = zero - yinf
-           if (yeta(j) > half) yp(j) = xnum1 + cst - yinf
+  yinf=-yly/two
+  den=two*beta*yinf
+  xnum=-yinf-sqrt(pi*pi*beta*beta+yinf*yinf)
+  alpha=abs(xnum/den)
+  xcx=one/beta/alpha
+  if (alpha.ne.0.) then
+     if (istret.eq.1) yp(1)=zero
+     if (istret.eq.2) yp(1)=zero
+     if (istret.eq.1) yeta(1)=zero
+     if (istret.eq.2) yeta(1)=-half
+     if (istret.eq.3) yp(1)=zero
+     if (istret.eq.3) yeta(1)=-half
+     do j=2,ny
+        if (istret==1) yeta(j)=real(j-1,mytype)*(one/nym)
+        if (istret==2) yeta(j)=real(j-1,mytype)*(one/nym)-half
+        if (istret==3) yeta(j)=real(j-1,mytype)*(half/nym)-half
+        den1=sqrt(alpha*beta+one)
+        xnum=den1/sqrt(alpha/pi)/sqrt(beta)/sqrt(pi)
+        den=two*sqrt(alpha/pi)*sqrt(beta)*pi*sqrt(pi)
+        den3=((sin(pi*yeta(j)))*(sin(pi*yeta(j)))/beta/pi)+alpha/pi
+        den4=two*alpha*beta-cos(two*pi*yeta(j))+one
+        xnum1=(atan(xnum*tan(pi*yeta(j))))*den4/den1/den3/den
+        cst=sqrt(beta)*pi/(two*sqrt(alpha)*sqrt(alpha*beta+one))
+        if (istret==1) then
+           if (yeta(j).lt.half) yp(j)=xnum1-cst-yinf
+           if (yeta(j).eq.half) yp(j)=zero-yinf
+           if (yeta(j).gt.half) yp(j)=xnum1+cst-yinf
         endif
-        if (istret == 2) then
-           if (yeta(j) < half) yp(j) = xnum1 - cst + yly
-           if (yeta(j) == half) yp(j) = zero + yly
-           if (yeta(j) > half) yp(j) =  xnum1 + cst + yly
+        if (istret==2) then
+           if (yeta(j).lt.half) yp(j)=xnum1-cst+yly
+           if (yeta(j).eq.half) yp(j)=zero+yly
+           if (yeta(j).gt.half) yp(j)=xnum1+cst+yly
         endif
-        if (istret == 3) then
-           if (yeta(j) < half) yp(j) = (xnum1 - cst + yly) * two
-           if (yeta(j) == half) yp(j) = (zero + yly) * two
-           if (yeta(j) > half) yp(j) = (xnum1 + cst + yly) * two
+        if (istret==3) then
+           if (yeta(j).lt.half) yp(j)=(xnum1-cst+yly)*two
+           if (yeta(j).eq.half) yp(j)=(zero+yly)*two
+           if (yeta(j).gt.half) yp(j)=(xnum1+cst+yly)*two
         endif
      enddo
   endif
-
-  if (alpha == zero) then
-     yp(1) = -1.e10_mytype
-     do j = 2 , ny
-        yeta(j) = real(j-1, mytype) *(one / ny)
-        yp(j) = -beta * cos_prec(pi * yeta(j))/ sin_prec(yeta(j) * pi)
+  if (alpha.eq.0.) then
+     yp(1)=-1.e10
+     do j=2,ny
+        yeta(j)=real(j-1,mytype)*(one/ny)
+        yp(j)=-beta*cos(pi*yeta(j))/sin(yeta(j)*pi)
      enddo
-  else if (alpha /= zero) then
-     do j = 1, ny
-        if (istret == 1) yetai(j) = (real(j, mytype) - half) * (one / nym)
-        if (istret == 2) yetai(j) = (real(j, mytype) - half) * (one / nym) - half
-        if (istret == 3) yetai(j) = (real(j, mytype) - half) * (half / nym) - half
-        den3 = ((sin_prec(pi * yetai(j)))*(sin_prec(pi * yetai(j))) / beta / pi) + alpha / pi
-        den4 = two * alpha * beta - cos_prec(two * pi * yetai(j)) + one
-        xnum1 = (atan_prec(xnum * tan_prec(pi * yetai(j)))) *den4 / den1 / den3 / den
-        if (istret == 1) then
-           if (yetai(j) < half) ypi(j) = xnum1 - cst - yinf
-           if (yetai(j) == half) ypi(j) = zero - yinf
-           if (yetai(j) > half) ypi(j) = xnum1 + cst - yinf
+  endif
+  if (alpha.ne.0.) then
+     do j=1,ny
+        if (istret==1) yetai(j)=(real(j,mytype)-half)*(one/nym)
+        if (istret==2) yetai(j)=(real(j,mytype)-half)*(one/nym)-half
+        if (istret==3) yetai(j)=(real(j,mytype)-half)*(half/nym)-half
+        den1=sqrt(alpha*beta+one)
+        xnum=den1/sqrt(alpha/pi)/sqrt(beta)/sqrt(pi)
+        den=2.*sqrt(alpha/pi)*sqrt(beta)*pi*sqrt(pi)
+        den3=((sin(pi*yetai(j)))*(sin(pi*yetai(j)))/beta/pi)+alpha/pi
+        den4=two*alpha*beta-cos(two*pi*yetai(j))+one
+        xnum1=(atan(xnum*tan(pi*yetai(j))))*den4/den1/den3/den
+        cst=sqrt(beta)*pi/(two*sqrt(alpha)*sqrt(alpha*beta+one))
+        if (istret==1) then
+           if (yetai(j).lt.half) ypi(j)=xnum1-cst-yinf
+           if (yetai(j).eq.half) ypi(j)=zero-yinf
+           if (yetai(j).gt.half) ypi(j)=xnum1+cst-yinf
         endif
-        if (istret == 2) then
-           if (yetai(j) < half) ypi(j) = xnum1 - cst + yly
-           if (yetai(j) == half) ypi(j) = zero + yly
-           if (yetai(j) > half) ypi(j) = xnum1 + cst + yly
+        if (istret==2) then
+           if (yetai(j).lt.half) ypi(j)=xnum1-cst+yly
+           if (yetai(j).eq.half) ypi(j)=zero+yly
+           if (yetai(j).gt.half) ypi(j)=xnum1+cst+yly
         endif
-        if (istret == 3) then
-           if (yetai(j) < half) ypi(j) = (xnum1 - cst + yly) * two
-           if (yetai(j) == half) ypi(j) = (zero + yly) * two
-           if (yetai(j) > half) ypi(j) = (xnum1 + cst + yly) * two
+        if (istret==3) then
+           if (yetai(j).lt.half) ypi(j)=(xnum1-cst+yly)*two
+           if (yetai(j).eq.half) ypi(j)=(zero+yly)*two
+           if (yetai(j).gt.half) ypi(j)=(xnum1+cst+yly)*two
         endif
      enddo
   endif
-  if (alpha == zero) then
-     ypi(1) = -1.e10_mytype
-     do j= 2, ny
-        yetai(j) = real(j-1, mytype) * (one / ny)
-        ypi(j) =-beta * cos_prec(pi * yetai(j)) / sin_prec(yetai(j) * pi)
+  if (alpha.eq.0.) then
+     ypi(1)=-1.e10
+     do j=2,ny
+        yetai(j)=real(j-1,mytype)*(one/ny)
+        ypi(j)=-beta*cos(pi*yetai(j))/sin(yetai(j)*pi)
      enddo
   endif
 
   !Mapping!!, metric terms
-  if (istret /= 3) then
-     do j = 1, ny
-        ppy(j)= yly * (alpha / pi + (one / pi / beta) * sin_prec(pi * yeta(j))**2)
-        pp2y(j)= ppy(j)**2
-        pp4y(j)=-two / beta * cos_prec(pi * yeta(j)) * sin_prec(pi * yeta(j))
-        ppyi(j) = yly * (alpha / pi +(one / pi / beta) * sin_prec(pi * yetai(j))**2)
-        pp2yi(j) = ppyi(j)**2
-        pp4yi(j) = -two / beta * cos_prec(pi * yetai(j)) * sin_prec(pi*yetai(j))
+  if (istret .ne. 3) then
+     do j=1,ny
+        ppy(j)=yly*(alpha/pi+(one/pi/beta)*sin(pi*yeta(j))*sin(pi*yeta(j)))
+        pp2y(j)=ppy(j)*ppy(j)
+        pp4y(j)=(-two/beta*cos(pi*yeta(j))*sin(pi*yeta(j)))
+     enddo
+     do j=1,ny
+        ppyi(j)=yly*(alpha/pi+(one/pi/beta)*sin(pi*yetai(j))*sin(pi*yetai(j)))
+        pp2yi(j)=ppyi(j)*ppyi(j)
+        pp4yi(j)=(-two/beta*cos(pi*yetai(j))*sin(pi*yetai(j)))
      enddo
   endif
 
-  if (istret == 3) then
-     do j = 1, ny
-        ppy(j) = yly * (alpha / pi + (one / pi / beta) * sin_prec(pi * yeta(j))**2)
-        pp2y(j) = ppy(j)**2
-        pp4y(j) = one / beta * cos_prec(pi * yeta(j)) * sin_prec(pi * yeta(j))
-        ppyi(j) = yly * (alpha / pi + (one / pi / beta) * sin_prec(pi * yetai(j))**2)
-        pp2yi(j) = ppyi(j)**2
-        pp4yi(j) = one /beta * cos_prec(pi * yetai(j)) *sin_prec(pi * yetai(j))
+  if (istret .eq. 3) then
+     do j=1,ny
+        ppy(j)=yly*(alpha/pi+(one/pi/beta)*sin(pi*yeta(j))*sin(pi*yeta(j)))
+        pp2y(j)=ppy(j)*ppy(j)
+        pp4y(j)=(-two/beta*cos(pi*yeta(j))*sin(pi*yeta(j)))/two
+     enddo
+     do j=1,ny
+        ppyi(j)=yly*(alpha/pi+(one/pi/beta)*sin(pi*yetai(j))*sin(pi*yetai(j)))
+        pp2yi(j)=ppyi(j)*ppyi(j)
+        pp4yi(j)=(-two/beta*cos(pi*yetai(j))*sin(pi*yetai(j)))/two
      enddo
   endif
 
@@ -1227,7 +1080,7 @@ subroutine stretching()
   !   blender2 = 0.0
   !   do j=3,ny
   !!      yeta(j)=(j-1.)*(1./ny)
-  !!      yp(j)=-beta*cos_prec(pi*yeta(j))/sin_prec(yeta(j)*pi)
+  !!      yp(j)=-beta*cos(pi*yeta(j))/sin(yeta(j)*pi)
   !
   !     if (yp(j-1).LE.3.5*1.0) then
   !       dy_plus_target = 8.0
@@ -1613,7 +1466,7 @@ subroutine tripping(tb,ta)
      nxt_itr=0
      do k=1,xsize(3)
         h_nxt(k)=zero
-        z_pos=-zlz/two+(xstart(3)+(k-1)-1)*dz
+        z_pos=-zlz*zpfive+(xstart(3)+(k-1)-1)*dz
         do j=1,z_modes
            h_nxt(k)= h_nxt(k)+h_coeff(j)*sin_prec(two*pi*j*z_pos/zlz)
         enddo
@@ -1642,8 +1495,8 @@ subroutine tripping(tb,ta)
 
      !Initialization h_nxt  (always bounded by z_steps^2 operations)
      do k=1,xsize(3)
-        h_nxt(k)=0.0
-        z_pos=-zlz/2.0+(xstart(3)+(k-1)-1)*dz
+        h_nxt(k)=zero
+        z_pos=-zlz*zpfive+(xstart(3)+(k-1)-1)*dz
         do j=1,z_modes
            h_nxt(k)= h_nxt(k)+h_coeff(j)*sin_prec(two*pi*j*z_pos/zlz)
         enddo
@@ -1667,7 +1520,7 @@ subroutine tripping(tb,ta)
            ta(i,j,k)=A_tr*exp_prec(-((x_pos-x0_tr)/xs_tr)**2-((y_pos-zpfive)/ys_tr)**2)*ta(i,j,k)
            tb(i,j,k)=tb(i,j,k)+ta(i,j,k)
 
-           z_pos=-zlz/two+(xstart(3)+(k-1)-1)*dz
+           z_pos=-zlz*zpfive+(xstart(3)+(k-1)-1)*dz
            ! if ((((x_pos-x0_tr)**2).le.9.0e-3).and.(y_pos.le.0.0001).and.((z_pos).le.0.03))then
            !       open(442,file='tripping.dat',form='formatted',position='APPEND')
            !  write(442,*) t,ta(i,j,k)
@@ -1749,7 +1602,7 @@ subroutine tbl_tripping(tb,ta)
      do k=1,xsize(3)
         h_1(k)=zero
         h_2(k)=zero
-        z_pos=-zlz/two+real(xstart(3)+(k-1)-1,mytype)*dz
+        z_pos=-zlz*zpfive+real(xstart(3)+(k-1)-1,mytype)*dz
         do j=1,z_modes
            h_1(k)= h_1(k)+h_coeff1(j)*sin_prec(two*pi*real(j,mytype)*z_pos/zlz+phase1(j))
            h_2(k)= h_2(k)+h_coeff2(j)*sin_prec(two*pi*real(j,mytype)*z_pos/zlz+phase2(j))
@@ -1780,7 +1633,7 @@ subroutine tbl_tripping(tb,ta)
      !Initialization h_nxt  (always bounded by z_steps^2 operations)
      do k=1,xsize(3)
         h_1(k)=zero
-        z_pos=-zlz/two+real(xstart(3)+(k-1)-1,mytype)*dz
+        z_pos=-zlz*zpfive+real(xstart(3)+(k-1)-1,mytype)*dz
         do j=1,z_modes
            h_1(k)= h_1(k)+h_coeff1(j)*sin_prec(two*pi*real(j,mytype)*z_pos/zlz+phase1(j))
         enddo
@@ -1801,7 +1654,7 @@ subroutine tbl_tripping(tb,ta)
            ta(i,j,k)=A_tr*exp_prec(-((x_pos-x0_tr_tbl)/xs_tr_tbl)**2-((y_pos-0.05_mytype)/ys_tr_tbl)**2)*ta(i,j,k)
            tb(i,j,k)=tb(i,j,k)+ta(i,j,k)
 
-           z_pos=-zlz/two+real(xstart(3)+(k-1)-1,mytype)*dz
+           z_pos=-zlz*zpfive+real(xstart(3)+(k-1)-1,mytype)*dz
 
         enddo
      enddo

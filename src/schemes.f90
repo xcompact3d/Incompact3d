@@ -280,7 +280,7 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
   real(mytype),dimension(n),intent(out) :: ff,fs,fw,ffp,fsp,fwp
   real(mytype),intent(out) :: alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
        cfn,dfn,alfam,afm,alfai,afi,bfi
-  integer :: i
+  integer :: i,code,ierror
   real(mytype),dimension(n) :: fb,fc
 
   ff=zero;fs=zero;fw=zero;ffp=zero;fsp=zero;fwp=zero
@@ -291,13 +291,11 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
      afi  = one/(two*d)
      bfi  = zero
   elseif(ifirstder==2) then ! Fourth-order central
-     alfai= zero
-     afi  = four/(six*d)
-     bfi  = -one/(twelve*d)
+     if (nrank==0) write(*,*)'Set of coefficients not ready yet'
+     call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
   elseif(ifirstder==3) then ! Fourth-order compact
-     alfai= one/four
-     afi  = (three/four)/d
-     bfi  = zero
+     if (nrank==0) write(*,*)'Set of coefficients not ready yet'
+     call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
   elseif(ifirstder==4) then ! Sixth-order compact
      alfai= one/three
      afi  = (seven/nine)/d
@@ -306,6 +304,7 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
      if (nrank==0) then
         write(*,*) 'This is not an option. Please use ifirstder=1,2,3,4'
      endif
+     call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
   endif
 
   if (ifirstder==1) then
@@ -431,12 +430,14 @@ subroutine second_derivative(alsa1,as1,bs1,&
 
   use decomp_2d, only : mytype, nrank
   use param
-  use variables, only : nu0nu,fpi2,cnu
+  use MPI
+  use variables, only : nu0nu,cnu
 
   implicit none
 
   real(mytype),intent(in) :: d2
   integer,intent(in) :: n,ncl1,ncln
+  integer :: code,ierror
   real(mytype),dimension(n),intent(out) :: sf,ss,sw,sfp,ssp,swp
   real(mytype),intent(out) :: alsa1,as1,bs1,&
        cs1,ds1,alsa2,as2,alsan,asn,bsn,csn,dsn,alsam,&
@@ -468,65 +469,15 @@ subroutine second_derivative(alsa1,as1,bs1,&
      bstt = bsi
      cstt = csi
   elseif(isecondder==2) then ! Fourth-order central
-     alsai=zero !(45._mytype*fpi2*pi*pi-272._mytype)/(two*(45._mytype*fpi2*pi*pi-208._mytype))
-     asi  = four/three/d2 !((six-nine*alsai)/four)/d2
-     bsi  = -one/three/(four*d2) !((-three+twentyfour*alsai)/five)/(four*d2)
-     csi  = zero !((two-eleven*alsai)/twenty)/(nine*d2)
-     dsi  = zero
-
-     alsa4= alsai
-     as4  = asi
-     bs4  = bsi
-     cs4  = csi
-
-     alsatt = alsai
-     astt = asi
-     bstt = bsi
-     cstt = csi
+     if (nrank==0) write(*,*)'Set of coefficients not ready yet'
+     call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
   elseif(isecondder==3) then ! Fourth-order compact
-     alsai= one/ten  !(45._mytype*fpi2*pi*pi-272._mytype)/(two*(45._mytype*fpi2*pi*pi-208._mytype))
-     asi  = six/five/d2 !((six-nine*alsai)/four)/d2
-     bsi  = zero !((-three+twentyfour*alsai)/five)/(four*d2)
-     csi  = zero !((two-eleven*alsai)/twenty)/(nine*d2)
-     dsi  = zero
-
-     alsa4= alsai
-     as4  = asi
-     bs4  = bsi
-     cs4  = csi
-
-     alsatt = alsai
-     astt = asi
-     bstt = bsi
-     cstt = csi
-  elseif(isecondder==4) then ! Sixth-order compact with numerical dissipation
-     !BASE LELE
-     !alsai= 2./11.
-     !asi  = (12./11.)/d2
-     !bsi  = (3./44. )/d2
-     !csi  = 0.
-     !NUMERICAL DISSIPATION (see publications for help)
-     !fpi2=(48./7)/(pi*pi)
-     alsai=(45._mytype*fpi2*pi*pi-272._mytype)/(two*(45._mytype*fpi2*pi*pi-208._mytype))
-     asi  =((six-nine*alsai)/four)/d2
-     bsi  =((-three+twentyfour*alsai)/five)/(four*d2)
-     csi  =((two-eleven*alsai)/twenty)/(nine*d2)
-     dsi = zero
-
-     alsa4= alsai
-     as4  = asi
-     bs4  = bsi
-     cs4  = csi
-
-     alsatt = alsai
-     astt = asi
-     bstt = bsi
-     cstt = csi
-  elseif(isecondder==41) then ! Sixth-order compact classical of Lele
-     !BASE LELE
-     alsai= 2._mytype/11._mytype
-     asi  = (12._mytype/11._mytype)/d2
-     bsi  = (3._mytype/44._mytype )/d2
+     if (nrank==0) write(*,*)'Set of coefficients not ready yet'
+     call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
+  elseif(isecondder==4) then ! Sixth-order compact Lele style (no extra dissipation)
+     alsai= 2./11.
+     asi  = (12./11.)/d2
+     bsi  = (3./44. )/d2
      csi  = zero
      dsi  = zero
 

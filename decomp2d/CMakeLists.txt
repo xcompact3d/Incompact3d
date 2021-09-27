@@ -11,7 +11,10 @@ set(SRCFILES ${files_decomp} ${files_fft})
 add_library(decomp2d STATIC ${SRCFILES})
 if (MPI_FOUND)
   target_link_libraries(decomp2d PRIVATE MPI::MPI_Fortran)
-endif (MPI_FOUND)
+endif (MPI_FOUND) 
+if(ADIOS2_FOUND)
+  target_link_libraries(decomp2d PRIVATE adios2::fortran_mpi)
+endif()
 
 install(TARGETS decomp2d
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

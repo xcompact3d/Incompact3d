@@ -184,6 +184,14 @@ contains
     call transpose_x_to_y(ux1,ux2)
     call transpose_x_to_y(uy1,uy2)
     call transpose_x_to_y(uz1,uz2)
+#ifdef DEBG 
+    avg_param = zero
+    call avg3d (ux2, avg_param)
+    if (nrank == 0) write(*,*)'## SUB momentum_rhs_eq VAR ux2 (transpose) AVG ', avg_param
+    avg_param = zero
+    call avg3d (uy2, avg_param)
+    if (nrank == 0) write(*,*)'## SUB momentum_rhs_eq VAR uy2 (transpose) AVG ', avg_param
+#endif
 
     if (ilmn) then
        call transpose_x_to_y(rho1(:,:,:,1),rho2)
@@ -481,10 +489,31 @@ contains
     dux1(:,:,:,1) = ta1(:,:,:) - half*tg1(:,:,:)  + td1(:,:,:)
     duy1(:,:,:,1) = tb1(:,:,:) - half*th1(:,:,:)  + te1(:,:,:)
     duz1(:,:,:,1) = tc1(:,:,:) - half*ti1(:,:,:)  + tf1(:,:,:)
-
+#ifdef DEBG
+    avg_param = zero
+    call avg3d (dux1, avg_param)
+    if (nrank == 0) write(*,*)'## MomRHS dux1 ', avg_param
+    avg_param = zero
+    call avg3d (duy1, avg_param)
+    if (nrank == 0) write(*,*)'## MomRHS duy1 ', avg_param
+    avg_param = zero
+    call avg3d (duz1, avg_param)
+    if (nrank == 0) write(*,*)'## MomRHS duz1 ', avg_param
+#endif
     if (ilmn) then
        call momentum_full_viscstress_tensor(dux1(:,:,:,1), duy1(:,:,:,1), duz1(:,:,:,1), divu3, mu1)
     endif
+#ifdef DEBG
+    avg_param = zero
+    call avg3d (dux1, avg_param)
+    if (nrank == 0) write(*,*)'## MomRHS VisTau dux1 ', avg_param
+    avg_param = zero
+    call avg3d (duy1, avg_param)
+    if (nrank == 0) write(*,*)'## MomRHS VisTau duy1 ', avg_param
+    avg_param = zero
+    call avg3d (duz1, avg_param)
+    if (nrank == 0) write(*,*)'## MomRHS VisTau duz1 ', avg_param
+#endif
 
     ! If LES modelling is enabled, add the SGS stresses
     if (ilesmod /= 0.and.jles <=3.and.jles> 0) then
@@ -499,6 +528,17 @@ contains
        duy1(:,:,:,1) = duy1(:,:,:,1) + sgsy1(:,:,:)
        duz1(:,:,:,1) = duz1(:,:,:,1) + sgsz1(:,:,:)
     endif
+#ifdef DEBG
+    avg_param = zero
+    call avg3d (dux1, avg_param)
+    if (nrank == 0) write(*,*)'## MomRHS LES dux1 ', avg_param
+    avg_param = zero
+    call avg3d (duy1, avg_param)
+    if (nrank == 0) write(*,*)'## MomRHS LES duy1 ', avg_param
+    avg_param = zero
+    call avg3d (duz1, avg_param)
+    if (nrank == 0) write(*,*)'## MomRHS LES duz1 ', avg_param
+#endif
 
     if (ilmn) then
       !! Gravity
@@ -509,9 +549,30 @@ contains
         call momentum_gravity(dux1, duy1, duz1, phi1(:,:,:,is), ri(is))
       enddo
     endif
-
+#ifdef DEBG
+    avg_param = zero
+    call avg3d (dux1, avg_param)
+    if (nrank == 0) write(*,*)'## MomRHS ILMN dux1 ', avg_param
+    avg_param = zero
+    call avg3d (duy1, avg_param)
+    if (nrank == 0) write(*,*)'## MomRHS ILMN duy1 ', avg_param
+    avg_param = zero
+    call avg3d (duz1, avg_param)
+    if (nrank == 0) write(*,*)'## MomRHS ILMN duz1 ', avg_param
+#endif
     !! Additional forcing
     call momentum_forcing(dux1, duy1, duz1, rho1, ux1, uy1, uz1, phi1)
+#ifdef DEBG
+    avg_param = zero
+    call avg3d (dux1, avg_param)
+    if (nrank == 0) write(*,*)'## MomRHS Forc dux1 ', avg_param
+    avg_param = zero
+    call avg3d (duy1, avg_param)
+    if (nrank == 0) write(*,*)'## MomRHS Forc duy1 ', avg_param
+    avg_param = zero
+    call avg3d (duz1, avg_param)
+    if (nrank == 0) write(*,*)'## MomRHS Forc duz1 ', avg_param
+#endif
 
     !! Turbine forcing
     if (iturbine== 1) then
@@ -523,12 +584,34 @@ contains
        duy1(:,:,:,1)=duy1(:,:,:,1)+Fdiscy(:,:,:)/rho_air
        duz1(:,:,:,1)=duz1(:,:,:,1)+Fdiscz(:,:,:)/rho_air
     endif
+#ifdef DEBG
+    avg_param = zero
+    call avg3d (dux1, avg_param)
+    if (nrank == 0) write(*,*)'## MomRHS Turb dux1 ', avg_param
+    avg_param = zero
+    call avg3d (duy1, avg_param)
+    if (nrank == 0) write(*,*)'## MomRHS Turb duy1 ', avg_param
+    avg_param = zero
+    call avg3d (duz1, avg_param)
+    if (nrank == 0) write(*,*)'## MomRHS Turb duz1 ', avg_param
+#endif
 
     if (itrip == 1) then
        !call tripping(tb1,td1)
        call tbl_tripping(duy1(:,:,:,1),td1)
        if (nrank == 0) write(*,*) 'TRIPPING!!'
     endif
+#ifdef DEBG
+    avg_param = zero
+    call avg3d (dux1, avg_param)
+    if (nrank == 0) write(*,*)'## MomRHS Trip dux1 ', avg_param
+    avg_param = zero
+    call avg3d (duy1, avg_param)
+    if (nrank == 0) write(*,*)'## MomRHS Trip duy1 ', avg_param
+    avg_param = zero
+    call avg3d (duz1, avg_param)
+    if (nrank == 0) write(*,*)'## MomRHS Trip duz1 ', avg_param
+#endif
 
   end subroutine momentum_rhs_eq
   !############################################################################

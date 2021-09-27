@@ -56,7 +56,6 @@ contains
     use param, only : ntime, nrhotime, npress
     use param, only : ilmn, ivarcoeff, one
 
-
     implicit none
 
     !! Inputs
@@ -96,7 +95,6 @@ contains
 
     do while(.not.converged)
        if (ivarcoeff) then
-
           !! Test convergence
           call test_varcoeff(converged, divup3norm, pp3, dv3, atol, rtol, poissiter)
 
@@ -205,6 +203,30 @@ contains
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: px,py,pz
+#ifdef DEBG
+    real(mytype) avg_param
+#endif
+
+#ifdef DEBG
+    avg_param = zero
+    call avg3d (ux, avg_param)
+    if (nrank == 0) write(*,*)'## Cor Vel ux', avg_param
+    avg_param = zero
+    call avg3d (uy, avg_param)
+    if (nrank == 0) write(*,*)'## Cor Vel uy', avg_param
+    avg_param = zero
+    call avg3d (uz, avg_param)
+    if (nrank == 0) write(*,*)'## Cor Vel uz', avg_param
+    avg_param = zero
+    call avg3d (px, avg_param)
+    if (nrank == 0) write(*,*)'## Cor Vel px', avg_param
+    avg_param = zero
+    call avg3d (py, avg_param)
+    if (nrank == 0) write(*,*)'## Cor Vel py', avg_param
+    avg_param = zero
+    call avg3d (pz, avg_param)
+    if (nrank == 0) write(*,*)'## Cor Vel pz', avg_param
+#endif
 
     ux(:,:,:)=ux(:,:,:)-px(:,:,:)
     uy(:,:,:)=uy(:,:,:)-py(:,:,:)
@@ -483,12 +505,15 @@ contains
     integer :: code
     integer, dimension(2) :: dims, dummy_coords
     logical, dimension(2) :: dummy_periods
+#ifdef DEBG
+    real(mytype) avg_param
+#endif
 
     call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, dims, dummy_periods, dummy_coords, code)
 
     !********NCLX==2*************************************
     !we are in X pencils:
-    if ((itype.eq.itype_channel).and.(nclx1==2.and.nclxn==2)) then
+    if ((itype.eq.itype_channel.or.itype.eq.itype_uniform).and.(nclx1==2.and.nclxn==2)) then
 
        !Computation of the flow rate Inflow/Outflow
        ut1=zero
@@ -691,6 +716,17 @@ contains
           enddo
        endif
     endif
+#ifdef DEBG
+    avg_param = zero
+    call avg3d (ux, avg_param)
+    if (nrank == 0) write(*,*)'## Pres corr ux ', avg_param
+    avg_param = zero
+    call avg3d (uy, avg_param)
+    if (nrank == 0) write(*,*)'## Pres corr uy ', avg_param
+    avg_param = zero
+    call avg3d (uz, avg_param)
+    if (nrank == 0) write(*,*)'## Pres corr uz ', avg_param
+#endif
 
     if (iibm == 1) then !solid body old school
        call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,1)
@@ -1141,6 +1177,7 @@ contains
     tc1(:,:,:) = (one - rho0 / rho1(:,:,:,1)) * pz1(:,:,:)
 
     nlock = -1 !! Don't do any funny business with LMN
+    write(*,*) 'SolveCalcVarCoeff call divergence'
     call divergence(pp3,rho1,ta1,tb1,tc1,ep1,drho1,divu3,nlock)
 
     !! lapl(p) = div((1 - rho0/rho) grad(p)) + rho0(div(u*) - div(u))
@@ -1231,5 +1268,76 @@ contains
     enddo
 
   end subroutine tbl_flrt
+!############################################################################
+!!
+!!  SUBROUTINE: avg3d
+!!      AUTHOR: Stefano Rolfo
+!! DESCRIPTION: Compute the total sum of a a 3d field
+!!
+!############################################################################
+subroutine avg3d (var, avg)
+
+  use decomp_2d, only: real_type, xsize, xend
+  use param
+  use dbg_schemes, only: sqrt_prec
+  use variables, only: nx,ny,nz,nxm,nym,nzm
+  use mpi
+
+  implicit none
+
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: var
+  real(mytype), intent(out) :: avg
+  real(mytype)              :: dep
+
+  integer :: i,j,k, code
+  integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
+
+  if (nclx1==1.and.xend(1)==nx) then
+     xsize1=xsize(1)-1
+  else
+     xsize1=xsize(1)
+  endif
+  if (ncly1==1.and.xend(2)==ny) then
+     xsize2=xsize(2)-1
+  else
+     xsize2=xsize(2)
+  endif
+  if (nclz1==1.and.xend(3)==nz) then
+     xsize3=xsize(3)-1
+  else
+     xsize3=xsize(3)
+  endif
+  if (nclx1==1) then
+     nxc=nxm
+  else
+     nxc=nx
+  endif
+  if (ncly1==1) then
+     nyc=nym
+  else
+     nyc=ny
+  endif
+  if (nclz1==1) then
+     nzc=nzm
+  else
+     nzc=nz
+  endif
+
+  dep=zero
+  do k=1,xsize3
+     do j=1,xsize2
+        do i=1,xsize1
+           !dep=dep+var(i,j,k)**2
+           dep=dep+var(i,j,k)
+        enddo
+     enddo
+  enddo
+  call MPI_ALLREDUCE(dep,avg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+  !avg=sqrt_prec(avg)/(nxc*nyc*nzc)
+  avg=avg/(nxc*nyc*nzc)
+
+  return
+
+end subroutine avg3d
 
 endmodule navier

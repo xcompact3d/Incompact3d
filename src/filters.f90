@@ -44,27 +44,27 @@ subroutine filter(af)
   real(mytype),intent(in) :: af
 
 #ifdef DEBG
-  if (nrank == 0) write(*,*) '# filter calculation start'
+  if (nrank==0) write(*,*) '# filter calculation start'
 #endif
 
   ! Filter functions
-  if (nclx1 == 0.and.nclxn == 0) filx => filx_00
-  if (nclx1 == 1.and.nclxn == 1) filx => filx_11
-  if (nclx1 == 1.and.nclxn == 2) filx => filx_12
-  if (nclx1 == 2.and.nclxn == 1) filx => filx_21
-  if (nclx1 == 2.and.nclxn == 2) filx => filx_22
+  if (nclx1==0.and.nclxn==0) filx => filx_00
+  if (nclx1==1.and.nclxn==1) filx => filx_11
+  if (nclx1==1.and.nclxn==2) filx => filx_12
+  if (nclx1==2.and.nclxn==1) filx => filx_21
+  if (nclx1==2.and.nclxn==2) filx => filx_22
   !
-  if (ncly1 == 0.and.nclyn == 0) fily => fily_00
-  if (ncly1 == 1.and.nclyn == 1) fily => fily_11
-  if (ncly1 == 1.and.nclyn == 2) fily => fily_12
-  if (ncly1 == 2.and.nclyn == 1) fily => fily_21
-  if (ncly1 == 2.and.nclyn == 2) fily => fily_22
+  if (ncly1==0.and.nclyn==0) fily => fily_00
+  if (ncly1==1.and.nclyn==1) fily => fily_11
+  if (ncly1==1.and.nclyn==2) fily => fily_12
+  if (ncly1==2.and.nclyn==1) fily => fily_21
+  if (ncly1==2.and.nclyn==2) fily => fily_22
   !
-  if (nclz1 == 0.and.nclzn == 0) filz => filz_00
-  if (nclz1 == 1.and.nclzn == 1) filz => filz_11
-  if (nclz1 == 1.and.nclzn == 2) filz => filz_12
-  if (nclz1 == 2.and.nclzn == 1) filz => filz_21
-  if (nclz1 == 2.and.nclzn == 2) filz => filz_22
+  if (nclz1==0.and.nclzn==0) filz => filz_00
+  if (nclz1==1.and.nclzn==1) filz => filz_11
+  if (nclz1==1.and.nclzn==2) filz => filz_12
+  if (nclz1==2.and.nclzn==1) filz => filz_21
+  if (nclz1==2.and.nclzn==2) filz => filz_22
 
   ! Set coefficients for x-direction filter
   call set_filter_coefficients(af,fial1x,fia1x,fib1x,fic1x,fid1x,fial2x,fia2x,fib2x,fic2x,fid2x,fial3x,fia3x,fib3x,fic3x,fid3x,fie3x,fif3x,&
@@ -167,21 +167,21 @@ subroutine set_filter_coefficients(af,alfa1,a1,b1,c1,d1,alfa2,a2,b2,c2,d2,alfa3,
   ff=zero;fs=zero;fw=zero;ffp=zero;fsp=zero;fwp=zero
   fb=zero;fc=zero
 
-  if     (ncl1 == 0) then !Periodic
+  if     (ncl1==0) then !Periodic
      ff(1)   =alfai
      ff(2)   =alfai
      fc(1)   =two
      fc(2)   =one
      fb(1)   =alfai
      fb(2)   =alfai
-  elseif (ncl1 == 1) then !Free-slip
+  elseif (ncl1==1) then !Free-slip
      ff(1)   =alfai+alfai
      ff(2)   =alfai
      fc(1)   =one
      fc(2)   =one
      fb(1)   =alfai
      fb(2)   =alfai
-  elseif (ncl1 == 2) then !Dirichlet
+  elseif (ncl1==2) then !Dirichlet
      ff(1)   =alfa1
      ff(2)   =alfa2
      fc(1)   =one
@@ -189,7 +189,7 @@ subroutine set_filter_coefficients(af,alfa1,a1,b1,c1,d1,alfa2,a2,b2,c2,d2,alfa3,
      fb(1)   =alfa2
      fb(2)   =alfai
   endif
-  if (ncln == 0) then !Periodic
+  if (ncln==0) then !Periodic
      ff(n-2)=alfai
      ff(n-1)=alfai
      ff(n)  =zero
@@ -199,7 +199,7 @@ subroutine set_filter_coefficients(af,alfa1,a1,b1,c1,d1,alfa2,a2,b2,c2,d2,alfa3,
      fb(n-2)=alfai
      fb(n-1)=alfai
      fb(n  )=zero
-  elseif (ncln == 1) then !Free-slip
+  elseif (ncln== 1) then !Free-slip
      ff(n-2)=alfai
      ff(n-1)=alfai
      ff(n)  =zero
@@ -209,7 +209,7 @@ subroutine set_filter_coefficients(af,alfa1,a1,b1,c1,d1,alfa2,a2,b2,c2,d2,alfa3,
      fb(n-2)=alfai
      fb(n-1)=alfai+alfai
      fb(n  )=zero
-  elseif (ncln == 2) then !Dirichlet
+  elseif (ncln==2) then !Dirichlet
      ff(n-2)=alfai
      ff(n-1)=alfam
      ff(n)  =zero
@@ -257,11 +257,10 @@ subroutine filx_00(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: fisx
   real(mytype), dimension(nx) :: fiffx,fifsx,fifwx
-  real(mytype)                      :: lind
+  real(mytype)                :: lind
 
-  if (iibm == 2) call lagpolx(ux)
-  if (iibm == 3) call cubsplx(ux,lind)
-
+  if (iibm==2) call lagpolx(ux)
+  if (iibm==3) call cubsplx(ux,lind)
   do k=1,nz
      do j=1,ny
         tx(1,j,k)=fiaix*ux(1,j,k)+fibix*(ux(2,j,k)+ux(nx,j,k))&
@@ -305,7 +304,7 @@ subroutine filx_00(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind)
            rx(i,j,k)=(rx(i,j,k)-fiffx(i)*rx(i+1,j,k))*fifwx(i)
         enddo
         fisx(j,k)=(tx(1,j,k)-fialix*tx(nx,j,k))&
-             /(1.+rx(1,j,k)-fialix*rx(nx,j,k))
+             /(one+rx(1,j,k)-fialix*rx(nx,j,k))
         do i=1,nx
            tx(i,j,k)=tx(i,j,k)-fisx(j,k)*rx(i,j,k)
         enddo

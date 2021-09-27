@@ -73,6 +73,12 @@ contains
     avg_param = zero
     call avg3d (var1, avg_param)
     if (nrank == 0) write(*,*)'## SUB intt VAR var1 (start) AVG ', avg_param
+    avg_param = zero
+    call avg3d (dvar1(:,:,:,1), avg_param)
+    if (nrank == 0) write(*,*)'## SUB intt VAR dvar1(1) (start) AVG ', avg_param
+    avg_param = zero
+    call avg3d (dvar1(:,:,:,2), avg_param)
+    if (nrank == 0) write(*,*)'## SUB intt VAR dvar1(2) (start) AVG ', avg_param
 #endif
 
     if (iimplicit.ge.1) then
@@ -221,7 +227,7 @@ contains
 
   subroutine int_time(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
 
-    use decomp_2d, only : mytype, xsize
+    use decomp_2d, only : mytype, xsize, nrank
     use param, only : zero, one
     use param, only : ntime, nrhotime, ilmn, iscalar, ilmn_solve_temp,itimescheme
     use param, only : iimplicit, sc_even
@@ -229,6 +235,9 @@ contains
     use param, only : scalar_lbound, scalar_ubound
     use variables, only : numscalar,nu0nu
     use var, only : ta1, tb1
+#ifdef DEBG 
+    use tools, only : avg3d
+#endif
 
     implicit none
 
@@ -243,8 +252,23 @@ contains
 
     !! LOCAL
     integer :: is, i, j, k
+#ifdef DEBG
+    real(mytype) avg_param
+    if (nrank .eq. 0) write(*,*)'## Init int_time'
+#endif
 
     call int_time_momentum(ux1, uy1, uz1, dux1, duy1, duz1)
+#ifdef DEBG
+     avg_param = zero
+     call avg3d (dux1, avg_param)
+     if (nrank == 0) write(*,*)'## int_time dux1 ', avg_param
+     avg_param = zero
+     call avg3d (duy1, avg_param)
+     if (nrank == 0) write(*,*)'## int_time duy1 ', avg_param
+     avg_param = zero
+     call avg3d (duz1, avg_param)
+     if (nrank == 0) write(*,*)'## int_time duz1 ', avg_param
+#endif
 
     if (ilmn) then
        if (ilmn_solve_temp) then
@@ -307,6 +331,10 @@ contains
           call calc_rho_eos(rho1(:,:,:,1), ta1, phi1, tb1, xsize(1), xsize(2), xsize(3))
        endif
     endif
+
+#ifdef DEBG
+    if (nrank .eq. 0) write(*,*)'## End  int_time'
+#endif
 
   endsubroutine int_time
 
