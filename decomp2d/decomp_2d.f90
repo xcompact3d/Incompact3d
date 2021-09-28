@@ -1201,6 +1201,19 @@ contains
 
     integer :: i
 
+    !LG : AJOUTS "bidons" pour eviter un plantage en -O3 avec gcc9.3
+    !       * la fonction sortait des valeurs 'aleatoires'
+    !         et le calcul plantait dans MPI_ALLTOALLV
+    !       * pas de plantage en O2
+    character(len=100) :: tmp_char
+    write(tmp_char,*) decomp%x1dist
+    write(tmp_char,*) decomp%y1dist
+    write(tmp_char,*) decomp%y2dist
+    write(tmp_char,*) decomp%z2dist
+    write(tmp_char,*) decomp%xsz
+    write(tmp_char,*) decomp%ysz
+    write(tmp_char,*) decomp%zsz
+
     ! MPI_ALLTOALLV buffer information
 
     do i=0, dims(1)-1
