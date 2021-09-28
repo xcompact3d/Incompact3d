@@ -325,7 +325,7 @@ contains
     real(mytype) :: xp(xszV(1)), zp(zszV(3))
 
     if (nrank.eq.0) then
-      OPEN(newunit=ioxdmf,file="./data/"//pathname//"/"//filename//'-'//num//'.xdmf')
+      OPEN(newunit=ioxdmf,file="./data/"//gen_filename(pathname, filename, num, "xdmf"))
 
       write(ioxdmf,'(A22)')'<?xml version="1.0" ?>'
       write(ioxdmf,*)'<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>'
@@ -490,11 +490,7 @@ contains
           else if (output2D.eq.3) then
              write(ioxdmf,*)'            Dimensions="',1,yszV(2),xszV(1),'">'
           endif
-#ifndef ADIOS2
-          write(ioxdmf,*)'              ./'//pathname//"/"//filename//'-'//num//'.bin'
-#else
-          write(ioxdmf,*)'              ../data.hdf5:/Step'//num//'/'//filename
-#endif
+          write(ioxdmf,*)'              '//gen_h5path(gen_filename(pathname, filename, num, 'bin'))
           write(ioxdmf,*)'           </DataItem>'
           write(ioxdmf,*)'        </Attribute>'
        endif
@@ -510,23 +506,45 @@ contains
 #ifndef ADIOS2
        uvisu = zero
        call fine_to_coarseV(1,local_array,uvisu)
-       call decomp_2d_write_one(1,uvisu,"data",pathname//'/'//filename//'-'//num//'.bin',2,io_name)
+       call decomp_2d_write_one(1,uvisu,"data",gen_filename(pathname, filename, num, 'bin'),2,io_name)
 #else
        if (iibm==2 .and. (.not.present(skip_ibm))) then
           print *, "Not Implemented: currently ADIOS2 IO doesn't support IBM-blanking"
           call MPI_ABORT(MPI_COMM_WORLD, -1, ierr)
        endif
        print *, "Writing ", filename
-       call decomp_2d_write_one(1,f1,"data",filename,0,io_name)
+       call decomp_2d_write_one(1,f1,"data",gen_filename(pathname, filename, num, 'bin'),0,io_name)
 #endif
     else
-#ifndef ADIOS2
-       call decomp_2d_write_plane(1,local_array,output2D,-1,"data",pathname//'/'//filename//'-'//num//'.bin',io_name)
-#else
-       call decomp_2d_write_plane(1,local_array,output2D,-1,"data",filename,io_name)
-#endif
+       call decomp_2d_write_plane(1,local_array,output2D,-1,"data",gen_filename(pathname, filename, num, 'bin'),io_name)
     endif
 
   end subroutine write_field
 
+  function gen_filename(pathname, varname, num, ext)
+
+    character(len=*), intent(in) :: pathname, varname, num, ext
+#ifndef ADIOS2
+    character(len=(len(pathname) + 1 + len(varname) + 1 + len(num) + 1 + len(ext))) :: gen_filename
+    write(gen_filename, "(A)") pathname//'/'//varname//'-'//num//'.'//ext
+#else
+    character(len=len(varname)) :: gen_filename
+    write(gen_filename, "(A)") varname
+#endif
+    
+  end function gen_filename
+
+  function gen_h5path(filename)
+
+    character(len=*), intent(in) :: filename
+#ifndef ADIOS2
+    character(len=*), parameter :: path_to_h5file = "./"
+#else
+    character(len=*), parameter :: path_to_h5file = "../data.hdf5:/Step"
+#endif
+    character(len=(len(path_to_h5file) + len(filename))) :: gen_h5path
+    write(gen_h5path, "(A)") path_to_h5file//filename
+    
+  end function gen_h5path
+  
 end module visu
