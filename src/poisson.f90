@@ -465,6 +465,7 @@ contains
     ny = ny_global
     nz = nz_global
 
+    !write(*,*) 'Poisson_100'
     ! rhs is in Z-pencil but requires global operations in X
     call transpose_z_to_y(rhs,rw2,ph)
     call transpose_y_to_x(rw2,rw1,ph)
@@ -1086,7 +1087,7 @@ contains
 
     nx = nx_global - 1
     ny = ny_global - 1
-
+    !write(*,*) 'Poisson_11x'
     if (bcz == 1) then
        nz = nz_global - 1
     else if (bcz == 0) then
