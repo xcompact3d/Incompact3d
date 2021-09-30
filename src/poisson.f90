@@ -351,7 +351,6 @@ contains
     nx = nx_global
     ny = ny_global
     nz = nz_global
-    write(*,*) 'Poisson_000'
 
     if (.not. fft_initialised) then
        call decomp_2d_fft_init(PHYSICAL_IN_Z)
@@ -466,7 +465,6 @@ contains
     ny = ny_global
     nz = nz_global
 
-    write(*,*) 'Poisson_100'
     ! rhs is in Z-pencil but requires global operations in X
     call transpose_z_to_y(rhs,rw2,ph)
     call transpose_y_to_x(rw2,rw1,ph)
@@ -718,6 +716,8 @@ contains
     real(mytype) :: rl, iy
     external cx, rl, iy
 
+    real(mytype) :: avg_param
+
 100 format(1x,a8,3I4,2F12.6)
 
     nx = nx_global
@@ -863,37 +863,37 @@ contains
        end do
 
     else
-
-       write(*,*) 'PO_010 ii1 arl ', rl(a(1,1,1,1)),rl(a(1,1,1,2)),rl(a(1,1,1,3)),&
-                                     rl(a(1,1,1,4)),rl(a(1,1,1,5))
-       write(*,*) 'PO_010 ii1 aiy ', iy(a(1,1,1,1)),iy(a(1,1,1,2)),iy(a(1,1,1,3)),&
-                                     iy(a(1,1,1,4)),iy(a(1,1,1,5))
-       !                 
-       write(*,*) 'PO_010 ii5 arl ', rl(a(5,5,5,1)),rl(a(5,5,5,2)),rl(a(5,5,5,3)),&
-                                     rl(a(5,5,5,4)),rl(a(5,5,5,5))
-       write(*,*) 'PO_010 ii5 aiy ', iy(a(5,5,5,1)),iy(a(5,5,5,2)),iy(a(5,5,5,3)),&
-                                     iy(a(5,5,5,4)),iy(a(5,5,5,5))
-       !
-       write(*,*) 'PO_010 ii1 a2rl ', rl(a2(1,1,1,1)),rl(a2(1,1,1,2)),rl(a2(1,1,1,3)),&
-                                      rl(a2(1,1,1,4)),rl(a2(1,1,1,5))
-       write(*,*) 'PO_010 ii1 a2iy ', iy(a2(1,1,1,1)),iy(a2(1,1,1,2)),iy(a2(1,1,1,3)),&
-                                      iy(a2(1,1,1,4)),iy(a2(1,1,1,5))
-       !                 
-       write(*,*) 'PO_010 ii5 a2rl ', rl(a2(5,5,5,1)),rl(a2(5,5,5,2)),rl(a2(5,5,5,3)),&
-                                      rl(a2(5,5,5,4)),rl(a2(5,5,5,5))
-       write(*,*) 'PO_010 ii5 a2iy ', iy(a2(5,5,5,1)),iy(a2(5,5,5,2)),iy(a2(5,5,5,3)),&
-                                      iy(a2(5,5,5,4)),iy(a2(5,5,5,5))
+       !call matrice_refinement()
+       !write(*,*) 'PO_010 ii1 A rl ', rl(a(1,1,1,1)),rl(a(1,1,1,2)),rl(a(1,1,1,3)),&
+       !                              rl(a(1,1,1,4)),rl(a(1,1,1,5))
+       !write(*,*) 'PO_010 ii1 A iy ', iy(a(1,1,1,1)),iy(a(1,1,1,2)),iy(a(1,1,1,3)),&
+       !                              iy(a(1,1,1,4)),iy(a(1,1,1,5))
+       !!                 
+       !write(*,*) 'PO_010 ii5 A rl ', rl(a(5,5,5,1)),rl(a(5,5,5,2)),rl(a(5,5,5,3)),&
+       !                              rl(a(5,5,5,4)),rl(a(5,5,5,5))
+       !write(*,*) 'PO_010 ii5 A iy ', iy(a(5,5,5,1)),iy(a(5,5,5,2)),iy(a(5,5,5,3)),&
+       !                              iy(a(5,5,5,4)),iy(a(5,5,5,5))
        !!
+       !write(*,*) 'PO_010 ii1 A2 rl ', rl(a2(1,1,1,1)),rl(a2(1,1,1,2)),rl(a2(1,1,1,3)),&
+       !                               rl(a2(1,1,1,4)),rl(a2(1,1,1,5))
+       !write(*,*) 'PO_010 ii1 A2 iy ', iy(a2(1,1,1,1)),iy(a2(1,1,1,2)),iy(a2(1,1,1,3)),&
+       !                               iy(a2(1,1,1,4)),iy(a2(1,1,1,5))
+       !!                 
+       !write(*,*) 'PO_010 ii5 A2 rl ', rl(a2(5,5,5,1)),rl(a2(5,5,5,2)),rl(a2(5,5,5,3)),&
+       !                               rl(a2(5,5,5,4)),rl(a2(5,5,5,5))
+       !write(*,*) 'PO_010 ii5 A2 iy ', iy(a2(5,5,5,1)),iy(a2(5,5,5,2)),iy(a2(5,5,5,3)),&
+       !                               iy(a2(5,5,5,4)),iy(a2(5,5,5,5))
+       !!!
+       !!!
+       !write(*,*) 'PO_010 ii1 A3 rl ', rl(a3(1,1,1,1)),rl(a3(1,1,1,2)),rl(a3(1,1,1,3)),&
+       !                          rl(a3(1,1,1,4)),rl(a3(1,1,1,5))
+       !write(*,*) 'PO_010 ii1 A3 iy ', iy(a3(1,1,1,1)),iy(a3(1,1,1,2)),iy(a3(1,1,1,3)),&
+       !                          iy(a3(1,1,1,4)),iy(a3(1,1,1,5))
        !!
-       write(*,*) 'PO_010 ii1 rl ', rl(a3(1,1,1,1)),rl(a3(1,1,1,2)),rl(a3(1,1,1,3)),&
-                                 rl(a3(1,1,1,4)),rl(a3(1,1,1,5))
-       write(*,*) 'PO_010 ii1 iy ', iy(a3(1,1,1,1)),iy(a3(1,1,1,2)),iy(a3(1,1,1,3)),&
-                                 iy(a3(1,1,1,4)),iy(a3(1,1,1,5))
-       !
-       write(*,*) 'PO_010 ii1 rl ', rl(a3(5,5,5,1)),rl(a3(5,5,5,2)),rl(a3(5,5,5,3)),&
-                                    rl(a3(5,5,5,4)),rl(a3(5,5,5,5))
-       write(*,*) 'PO_010 ii1 iy ', iy(a3(5,5,5,1)),iy(a3(5,5,5,2)),iy(a3(5,5,5,3)),&
-                                    iy(a3(5,5,5,4)),iy(a3(5,5,5,5))
+       !write(*,*) 'PO_010 ii5 A3 rl ', rl(a3(5,5,5,1)),rl(a3(5,5,5,2)),rl(a3(5,5,5,3)),&
+       !                             rl(a3(5,5,5,4)),rl(a3(5,5,5,5))
+       !write(*,*) 'PO_010 ii5 A3 iy ', iy(a3(5,5,5,1)),iy(a3(5,5,5,2)),iy(a3(5,5,5,3)),&
+       !                             iy(a3(5,5,5,4)),iy(a3(5,5,5,5))
        if (istret /= 3) then
           cw2 = zero
           cw2c = zero
@@ -962,7 +962,6 @@ contains
        end do
     end do
 #endif
-
     ! post-processing backward
 
     ! POST PROCESSING IN Y
@@ -1087,7 +1086,6 @@ contains
 
     nx = nx_global - 1
     ny = ny_global - 1
-    write(*,*) 'Poisson_11x'
 
     if (bcz == 1) then
        nz = nz_global - 1
@@ -1173,9 +1171,6 @@ contains
           end do
        end do
     end do
-    avg_param = zero
-    call avg3d (cw1, avg_param)
-    if (nrank == 0) write(*,*)'## SUB Poisson11X START AVG cw1 ', avg_param
 #endif
 
     ! post-processing in spectral space

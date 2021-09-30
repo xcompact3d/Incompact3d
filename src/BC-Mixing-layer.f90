@@ -32,14 +32,14 @@
 
 module mixlayer
 
-  use decomp_2d
-  use variables
-  use param
+  USE decomp_2d
+  USE variables
+  USE param
 
-  implicit none
+  IMPLICIT NONE
 
-  private !! All functions/subroutines private by default
-  public :: init_mixlayer!, boundary_conditions_mixlayer, postprocessing_mixlayer
+  PRIVATE !! All functions/subroutines private by default
+  PUBLIC :: init_mixlayer!, boundary_conditions_mixlayer, postprocessing_mixlayer
 
 contains
 
@@ -64,7 +64,7 @@ contains
     real(mytype) :: T1, T2, rhomin, rhomax
     real(mytype) :: disturb_decay, u_disturb, v_disturb
 
-    if (iin == 0) then !empty domain
+    if (iin.eq.0) then !empty domain
        if (nrank==0) then
           write(*,*) "Empty initial domain!"
        endif
@@ -72,7 +72,7 @@ contains
        ux1=zero; uy1=zero; uz1=zero
     endif
 
-    if (iin == 1) then !generation of a random noise
+    if (iin.eq.1) then !generation of a random noise
        if (nrank==0) then
           write(*,*) "Filled initial domain!"
        endif

@@ -239,7 +239,7 @@ contains
        call damping_zone(dux1,duy1,duz1,ux1,uy1,uz1)
     endif
 
-    !! Buoyancy terms
+    ! Buoyancy terms
     if (iscalar==1.and.ibuoyancy==1) then
        duy1(:,:,:,1)=duy1(:,:,:,1)+gravv*phi1(:,:,:,1)/Tref
     endif
@@ -605,7 +605,6 @@ contains
     integer :: j,i,k,code
     real(mytype) :: can,ut3,ut,ut4,xloc
 
-    write(*,*) '## Force abl 1'
     ut3=zero
     do k=1,ysize(3)
       do i=1,ysize(1)
@@ -622,19 +621,17 @@ contains
         endif
       enddo
     enddo
-    write(*,*) '## Force abl 2'
     ut3=ut3/ysize(1)/ysize(3)
 
     call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     ut4=ut4/nproc
     if (iconcprec.eq.1) ut4=ut4*(xlx/pdl)
 
-    write(*,*) '## Force abl 3'
     ! Flow rate for a logarithmic profile
     !can=-(ustar/k_roughness*yly*(log(yly/z_zero)-1.)-ut4)
     can=-(ustar/k_roughness*(yly*log(dBL/z_zero)-dBL)-ut4)
 
-    if (nrank==0)  write(*,*) '# Rank ',nrank,'correction to ensure constant flow rate',ut4,can
+    if (nrank==0.and.mod(itime,ilist)==0)  write(*,*) '# Rank ',nrank,'correction to ensure constant flow rate',ut4,can
 
     do k=1,ysize(3)
       do i=1,ysize(1)
@@ -911,13 +908,6 @@ contains
         enddo
       enddo
     enddo
-    u_HAve_local  =  u_HAve_local/real(xsize(3),mytype)/real(xsize(1),mytype)
-    v_HAve_local  =  v_HAve_local/real(xsize(3),mytype)/real(xsize(1),mytype)
-    w_HAve_local  =  w_HAve_local/real(xsize(3),mytype)/real(xsize(1),mytype)
-    uxy_HAve_local=uxy_HAve_local/real(xsize(3),mytype)/real(xsize(1),mytype)
-    uyz_HAve_local=uyz_HAve_local/real(xsize(3),mytype)/real(xsize(1),mytype)
-    txy_HAve_local=txy_HAve_local/real(xsize(3),mytype)/real(xsize(1),mytype)
-    tyz_HAve_local=tyz_HAve_local/real(xsize(3),mytype)/real(xsize(1),mytype)
 
     call MPI_ALLREDUCE(u_HAve_local,u_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     call MPI_ALLREDUCE(v_HAve_local,v_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
@@ -926,13 +916,13 @@ contains
     call MPI_ALLREDUCE(uyz_HAve_local,uyz_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     call MPI_ALLREDUCE(txy_HAve_local,txy_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     call MPI_ALLREDUCE(tyz_HAve_local,tyz_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    u_HAve  =  u_HAve/real(p_col,mytype)
-    v_HAve  =  v_HAve/real(p_col,mytype)
-    w_HAve  =  w_HAve/real(p_col,mytype)
-    uxy_HAve=uxy_HAve/real(p_col,mytype)
-    uyz_HAve=uyz_HAve/real(p_col,mytype)
-    txy_HAve=txy_HAve/real(p_col,mytype)
-    tyz_HAve=tyz_HAve/real(p_col,mytype)
+    u_HAve  =  u_HAve/real(nx*nz,mytype)
+    v_HAve  =  v_HAve/real(nx*nz,mytype)
+    w_HAve  =  w_HAve/real(nx*nz,mytype)
+    uxy_HAve=uxy_HAve/real(nx*nz,mytype)
+    uyz_HAve=uyz_HAve/real(nx*nz,mytype)
+    txy_HAve=txy_HAve/real(nx*nz,mytype)
+    tyz_HAve=tyz_HAve/real(nx*nz,mytype)
 
     momfl = sqrt((uxy_HAve+txy_HAve-u_HAVE*v_HAve)**two + (uyz_HAve+tyz_HAve-v_HAVE*w_HAve)**two)
     momfl(1) = u_shear**two
@@ -959,17 +949,17 @@ contains
   !
   !*******************************************************************************
 
-    use mpi
-    use decomp_2d
-    use decomp_2d_io
-    use var, only : umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
-    use var, only : uvisu
-    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-    use var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
-    use variables
-    use param, only: ivisu, ioutput, itime
-    use param
-    use tools
+    USE MPI
+    USE decomp_2d
+    USE decomp_2d_io
+    USE var, only : umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
+    USE var, only : uvisu
+    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+    USE variables
+    !USE param, only: ivisu, ioutput, itime
+    USE param
+    USE tools
     
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     character(len=30) :: filename
@@ -983,59 +973,57 @@ contains
       if (mod(itime,ntimesteps)==0) then
         call write_outflow(itime/ntimesteps)
       endif
-    endif
+    endif        
 
-!    if ((ivisu /= 0).and.(mod(itime,ioutput) == 0)) then
-!       !! Write vorticity as an example of post processing
-!       !x-derivatives
-!       call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
-!       call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-!       call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-!       !y-derivatives
-!       call transpose_x_to_y(ux1,td2)
-!       call transpose_x_to_y(uy1,te2)
-!       call transpose_x_to_y(uz1,tf2)
-!       call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-!       call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-!       call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-!       !!z-derivatives
-!       call transpose_y_to_z(td2,td3)
-!       call transpose_y_to_z(te2,te3)
-!       call transpose_y_to_z(tf2,tf3)
-!       call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-!       call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-!       call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
-!       !!all back to x-pencils
-!       call transpose_z_to_y(ta3,td2)
-!       call transpose_z_to_y(tb3,te2)
-!       call transpose_z_to_y(tc3,tf2)
-!       call transpose_y_to_x(td2,tg1)
-!       call transpose_y_to_x(te2,th1)
-!       call transpose_y_to_x(tf2,ti1)
-!       call transpose_y_to_x(ta2,td1)
-!       call transpose_y_to_x(tb2,te1)
-!       call transpose_y_to_x(tc2,tf1)
-!       !du/dx=ta1 du/dy=td1 and du/dz=tg1
-!       !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
-!       !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
-!
-!       ! vorticity
-!       di1(:,:,:)=sqrt((tf1(:,:,:)-th1(:,:,:))**2+(tg1(:,:,:)-tc1(:,:,:))**2+&
-!            (tb1(:,:,:)-td1(:,:,:))**2)
-!
-!       if (iibm==2) then
-!          di1(:,:,:) = (one - ep1(:,:,:)) * di1(:,:,:)
-!       endif
-!       uvisu=zero
-!       call fine_to_coarseV(1,di1,uvisu)
-!994    format('vort',I3.3)
-!       write(filename, 994) itime/ioutput
-!       call decomp_2d_write_one(1,uvisu,filename,2)
-!
+    ! Write vorticity as an example of post processing
+!    if ((ivisu/=0).and.(mod(itime,ioutput)==0)) then
+!      !x-derivatives
+!      call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+!      call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+!      call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+!      !y-derivatives
+!      call transpose_x_to_y(ux1,td2)
+!      call transpose_x_to_y(uy1,te2)
+!      call transpose_x_to_y(uz1,tf2)
+!      call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+!      call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+!      call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+!      !!z-derivatives
+!      call transpose_y_to_z(td2,td3)
+!      call transpose_y_to_z(te2,te3)
+!      call transpose_y_to_z(tf2,tf3)
+!      call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+!      call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+!      call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+!      !!all back to x-pencils
+!      call transpose_z_to_y(ta3,td2)
+!      call transpose_z_to_y(tb3,te2)
+!      call transpose_z_to_y(tc3,tf2)
+!      call transpose_y_to_x(td2,tg1)
+!      call transpose_y_to_x(te2,th1)
+!      call transpose_y_to_x(tf2,ti1)
+!      call transpose_y_to_x(ta2,td1)
+!      call transpose_y_to_x(tb2,te1)
+!      call transpose_y_to_x(tc2,tf1)
+!      !du/dx=ta1 du/dy=td1 and du/dz=tg1
+!      !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
+!      !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
+!    
+!      ! vorticity
+!      di1(:,:,:)=sqrt((tf1(:,:,:)-th1(:,:,:))**2+(tg1(:,:,:)-tc1(:,:,:))**2+&
+!           (tb1(:,:,:)-td1(:,:,:))**2)
+!    
+!      if (iibm==2) then
+!        di1(:,:,:) = (one - ep1(:,:,:)) * di1(:,:,:)
+!      endif
+!      uvisu=0.
+!      call fine_to_coarseV(1,di1,uvisu)
+!994   format('./data/vort',I5.5)
+!      write(filename, 994) itime/ioutput
+!      call decomp_2d_write_one(1,uvisu,filename,2)
 !    endif
 
     return
-
   end subroutine postprocess_abl    
 
 end module abl

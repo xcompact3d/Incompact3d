@@ -32,19 +32,19 @@
 
 module tgv
 
-  use decomp_2d
-  use variables
-  use param
+  USE decomp_2d
+  USE variables
+  USE param
 
-  implicit none
+  IMPLICIT NONE
 
   real(mytype), save, allocatable, dimension(:,:,:) :: vol1,volSimps1
   integer :: FS
   character(len=100) :: fileformat
   character(len=1),parameter :: NL=char(10) !new line character
 
-  private ! All functions/subroutines private by default
-  public :: init_tgv, boundary_conditions_tgv, postprocess_tgv, visu_tgv
+  PRIVATE ! All functions/subroutines private by default
+  PUBLIC :: init_tgv, boundary_conditions_tgv, postprocess_tgv, visu_tgv
 
 contains
 
@@ -69,12 +69,12 @@ contains
     integer, dimension (:), allocatable :: seed
     integer ::  isize
 
-    if (iscalar == 1) then
+    if (iscalar==1) then
 
        phi1(:,:,:,:) = zero
     endif
 
-    if (iin == 0) then !empty domain
+    if (iin.eq.0) then !empty domain
 
        if (nrank==0) write(*,*) "Empty initial domain!"
 
@@ -82,9 +82,9 @@ contains
 
     endif
 
-    if (iin == 1) then !generation of a random noise
+    if (iin.eq.1) then !generation of a random noise
 
-       if (nrank == 0) write(*,*) "Filled initial domain!"
+       if (nrank==0) write(*,*) "Filled initial domain!"
 
        ux1=zero; uy1=zero; uz1=zero
 
@@ -134,7 +134,7 @@ contains
        !     !modulation of the random noise
        !     do k=1,xsize(3)
        !        do j=1,xsize(2)
-       !           if (istret == 0) y=(j+xstart(2)-1-1)*dy-yly/two
+       !           if (istret.eq.0) y=(j+xstart(2)-1-1)*dy-yly/two
        !           if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/two
        !           um=exp(-0.2*y*y)
        !           do i=1,xsize(1)
@@ -222,9 +222,9 @@ contains
        do j=xstart(2),xend(2)
           do i=xstart(1),xend(1)
              vol1(i,j,k)=dxdydz
-             if (i  ==  1   .or. i  ==  nx) vol1(i,j,k) = vol1(i,j,k)/two
-             if (j  ==  1   .or. j  ==  ny) vol1(i,j,k) = vol1(i,j,k)/two
-             if (k  ==  1   .or. k  ==  nz) vol1(i,j,k) = vol1(i,j,k)/two
+             if (i .eq. 1   .or. i .eq. nx) vol1(i,j,k) = vol1(i,j,k)/two
+             if (j .eq. 1   .or. j .eq. ny)  vol1(i,j,k) = vol1(i,j,k)/two
+             if (k .eq. 1   .or. k .eq. nz)  vol1(i,j,k) = vol1(i,j,k)/two
           end do
        end do
     end do
@@ -234,12 +234,12 @@ contains
        do j=xstart(2),xend(2)
           do i=xstart(1),xend(1)
              volSimps1(i,j,k)=dxdydz
-             if (i  ==  1   .or. i  ==  nx) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
-             if (j  ==  1   .or. j  ==  ny) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
-             if (k  ==  1   .or. k  ==  nz) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
-             if (i  ==  2   .or. i  ==  nx-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
-             if (j  ==  2   .or. j  ==  ny-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
-             if (k  ==  2   .or. k  ==  nz-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
+             if (i .eq. 1   .or. i .eq. nx) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
+             if (j .eq. 1   .or. j .eq. ny) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
+             if (k .eq. 1   .or. k .eq. nz) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
+             if (i .eq. 2   .or. i .eq. nx-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
+             if (j .eq. 2   .or. j .eq. ny-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
+             if (k .eq. 2   .or. k .eq. nz-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
           end do
        end do
     end do
@@ -252,15 +252,15 @@ contains
   !############################################################################
   subroutine postprocess_tgv(ux1,uy1,uz1,phi1,ep1)
 
-    use decomp_2d
-    use decomp_2d_io
-    use variables, only: nx,ny,nz
-    use MPI
-    use var, only: nut1, srt_smag 
-    use var, only : uvisu, ux2, uy2, uz2, ux3, uy3, uz3
-    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-    use var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
-    use ibm_param
+    USE decomp_2d
+    USE decomp_2d_io
+    USE variables, only: nx,ny,nz
+    USE MPI
+    USE var, only: nut1, srt_smag 
+    USE var, only : uvisu, ux2, uy2, uz2, ux3, uy3, uz3
+    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+    USE ibm_param
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1,ep1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
@@ -451,11 +451,10 @@ contains
   subroutine visu_tgv(ux1, uy1, uz1, pp3, phi1, ep1, num)
 
     use var, only : ux2, uy2, uz2, ux3, uy3, uz3
-    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-    use var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
     use var, ONLY : nxmsize, nymsize, nzmsize
     use visu, only : write_field
-    use param, only :  zpfive
     use ibm_param, only : ubcx,ubcy,ubcz
 
     implicit none
@@ -513,7 +512,7 @@ contains
 
     !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
     di1 = zero
-    di1(:,:,: ) = - zpfive*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2) &
+    di1(:,:,: ) = - 0.5*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2) &
                   - td1(:,:,:)*tb1(:,:,:) &
                   - tg1(:,:,:)*tc1(:,:,:) &
                   - th1(:,:,:)*tf1(:,:,:)
@@ -523,8 +522,8 @@ contains
   !############################################################################
   subroutine suspended(phi1,vol1,mp1)
 
-    use decomp_2d_io
-    use MPI
+    USE decomp_2d_io
+    USE MPI
 
     implicit none
 
@@ -550,9 +549,9 @@ contains
   !############################################################################
   subroutine dissipation (ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,diss1)
 
-    use param
-    use variables
-    use decomp_2d
+    USE param
+    USE variables
+    USE decomp_2d
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,diss1
@@ -682,70 +681,70 @@ contains
     call error_L1_L2_Linf(ux1, xl1, xl2, xlinf)
     call error_L1_L2_Linf(uy1, yl1, yl2, ylinf)
     if (nrank==0) then
-       write(*,*) "2D Taylor-Green errors:"
-       write(*,*) "  Solution amplitude, L1, sqrt(L2), Linf:"
-       write(*,*) "            ", xl1, xl2, xlinf
-       write(*,*) "            ", yl1, yl2, ylinf
+      write(*,*) "2D Taylor-Green errors:"
+      write(*,*) "  Solution amplitude, L1, sqrt(L2), Linf:"
+      write(*,*) "            ", xl1, xl2, xlinf
+      write(*,*) "            ", yl1, yl2, ylinf
     endif
     if (iscalar==1) then
-       do l = 1, numscalar
-          tmp(:,:,:) = phi1(:,:,:,l)
-          call error_L1_L2_Linf(tmp, xl1, xl2, xlinf)
-          if (nrank==0) then
-             write(*,*) "            ", xl1, xl2, xlinf
-          endif
-       enddo
+    do l = 1, numscalar
+      tmp(:,:,:) = phi1(:,:,:,l)
+      call error_L1_L2_Linf(tmp, xl1, xl2, xlinf)
+      if (nrank==0) then
+        write(*,*) "            ", xl1, xl2, xlinf
+      endif
+    enddo
     endif
     ! Analytical solution
     call error_L1_L2_Linf(errx, xl1, xl2, xlinf)
     call error_L1_L2_Linf(erry, yl1, yl2, ylinf)
     if (nrank==0) then
-       write(*,*) "  1: Analytical, L1, sqrt(L2), Linf:"
-       write(*,*) "     XERROR ", xl1, xl2, xlinf
-       write(*,*) "     YERROR ", yl1, yl2, ylinf
+      write(*,*) "  1: Analytical, L1, sqrt(L2), Linf:"
+      write(*,*) "     XERROR ", xl1, xl2, xlinf
+      write(*,*) "     YERROR ", yl1, yl2, ylinf
     endif
     if (iscalar==1) then
-       do l = 1, numscalar
-          tmp(:,:,:) = errs(:,:,:,l)
-          call error_L1_L2_Linf(tmp, xl1, xl2, xlinf)
-          if (nrank==0) then
-            write(*,*) "            ", xl1, xl2, xlinf
-          endif
-       enddo
+    do l = 1, numscalar
+      tmp(:,:,:) = errs(:,:,:,l)
+      call error_L1_L2_Linf(tmp, xl1, xl2, xlinf)
+      if (nrank==0) then
+        write(*,*) "            ", xl1, xl2, xlinf
+      endif
+    enddo
     endif
     ! Time discrete solution
     call error_L1_L2_Linf(errxd1, xl1, xl2, xlinf)
     call error_L1_L2_Linf(erryd1, yl1, yl2, ylinf)
     if (nrank==0) then
-       write(*,*) "  2: Time-discrete, L1, sqrt(L2), Linf:"                                 
-       write(*,*) "     XERROR ", xl1, xl2, xlinf
-       write(*,*) "     YERROR ", yl1, yl2, ylinf
+      write(*,*) "  2: Time-discrete, L1, sqrt(L2), Linf:"                                 
+      write(*,*) "     XERROR ", xl1, xl2, xlinf
+      write(*,*) "     YERROR ", yl1, yl2, ylinf
     endif
     if (iscalar==1) then
-       do l = 1, numscalar
-          tmp(:,:,:) = errsd1(:,:,:,l)
-          call error_L1_L2_Linf(tmp, xl1, xl2, xlinf)
-          if (nrank==0) then
-            write(*,*) "            ", xl1, xl2, xlinf
-          endif
-       enddo
+    do l = 1, numscalar
+      tmp(:,:,:) = errsd1(:,:,:,l)
+      call error_L1_L2_Linf(tmp, xl1, xl2, xlinf)
+      if (nrank==0) then
+        write(*,*) "            ", xl1, xl2, xlinf
+      endif
+    enddo
     endif
     ! Space-time discrete solution
     call error_L1_L2_Linf(errxd2, xl1, xl2, xlinf)
     call error_L1_L2_Linf(erryd2, yl1, yl2, ylinf)
     if (nrank==0) then
-       write(*,*) "  3: Time-space-discrete, L1, sqrt(L2), Linf:"
-       write(*,*) "     XERROR ", xl1, xl2, xlinf
-       write(*,*) "     YERROR ", yl1, yl2, ylinf
+      write(*,*) "  3: Time-space-discrete, L1, sqrt(L2), Linf:"
+      write(*,*) "     XERROR ", xl1, xl2, xlinf
+      write(*,*) "     YERROR ", yl1, yl2, ylinf
     endif
     if (iscalar==1) then
-       do l = 1, numscalar
-          tmp(:,:,:) = errsd2(:,:,:,l)
-          call error_L1_L2_Linf(tmp, xl1, xl2, xlinf)
-          if (nrank==0) then
-            write(*,*) "            ", xl1, xl2, xlinf
-          endif
-       enddo
+    do l = 1, numscalar
+      tmp(:,:,:) = errsd2(:,:,:,l)
+      call error_L1_L2_Linf(tmp, xl1, xl2, xlinf)
+      if (nrank==0) then
+        write(*,*) "            ", xl1, xl2, xlinf
+      endif
+    enddo
     endif
 
   end subroutine error_tgv2D
@@ -787,20 +786,20 @@ contains
     ! Compute time and space-time discrete damping
     !
     ! Explicit Euler
-    if (itimescheme == 1) then
+    if (itimescheme.eq.1) then
 
       ! Time discrete errors
-      if (iimplicit == 0) then
+      if (iimplicit.eq.0) then
         coef(1) = (one - two*dt*xnu)
         do l = 1, numscalar
           coef(1+l) = one - two*dt*xnu/sc(l)
         enddo
-      else if (iimplicit == 1) then
+      else if (iimplicit.eq.1) then
         coef(1) = (one - dt*xnu) / (one + dt*xnu)
         do l = 1, numscalar
           coef(1+l) = (one - dt*xnu/sc(l)) / (one + dt*xnu/sc(l))
         enddo
-      else if (iimplicit == 2) then
+      else if (iimplicit.eq.2) then
         coef(1) = (one - onepfive*dt*xnu) / (one + half*dt*xnu)
         do l = 1, numscalar
           coef(1+l) = (one - onepfive*dt*xnu/sc(l)) / (one + half*dt*xnu/sc(l))
@@ -815,17 +814,17 @@ contains
       enddo
 
       ! Space-time discrete errors
-      if (iimplicit == 0) then
+      if (iimplicit.eq.0) then
         coef(1) = (one - two*k2tgv*dt*xnu)
         do l = 1, numscalar
           coef(1+l) = one - two*k2tgv*dt*xnu/sc(l)
         enddo
-      else if (iimplicit == 1) then
+      else if (iimplicit.eq.1) then
         coef(1) = (one - k2tgv*dt*xnu) / (one + k2tgv*dt*xnu)
         do l = 1, numscalar
           coef(1+l) = (one - k2tgv*dt*xnu/sc(l)) / (one + k2tgv*dt*xnu/sc(l))
         enddo
-      else if (iimplicit == 2) then
+      else if (iimplicit.eq.2) then
         coef(1) = (one - onepfive*k2tgv*dt*xnu) / (one + half*k2tgv*dt*xnu)
         do l = 1, numscalar
           coef(1+l) = (one - onepfive*k2tgv*dt*xnu/sc(l)) / (one + half*k2tgv*dt*xnu/sc(l))
@@ -883,8 +882,8 @@ contains
   ! Compute L1, L2 and Linf norm of given 3D array
   subroutine error_L1_L2_Linf(err, l1, l2, linf)
 
-    use decomp_2d
-    use mpi
+    USE decomp_2d
+    USE MPI
     
     implicit none
       

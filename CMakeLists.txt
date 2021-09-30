@@ -144,7 +144,7 @@ add_subdirectory(decomp2d)
 add_subdirectory(src)
 
 # Create the Xcompact3d executable
-add_subdirectory(post)
+add_subdirectory(post_vtk)
 
 # Create an example dir with all input.i3d example files
 option(BUILD_TESTING "Build with tests" ON)
@@ -162,5 +162,6 @@ if (${BUILD_TESTING})
   add_test(NAME ABL-Convective COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_convective_test.i3d WORKING_DIRECTORY ${test_dir}/ABL-Convective)
   add_test(NAME ABL-Neutral COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_neutral_test.i3d WORKING_DIRECTORY ${test_dir}/ABL-Neutral)
   add_test(NAME ABL-Stable COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_stable_test.i3d WORKING_DIRECTORY ${test_dir}/ABL-Stable)
+  add_test(NAME TBL COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test.i3d WORKING_DIRECTORY ${test_dir}/TBL)
 endif()
 

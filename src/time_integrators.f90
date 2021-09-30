@@ -54,8 +54,6 @@ contains
 
     !! INPUT / OUTPUT
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: var1
-
-    !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dvar1
 
     !! INPUTS
@@ -98,26 +96,27 @@ contains
           call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
        endif
 
-    elseif (itimescheme  == 1) then
+    elseif (itimescheme.eq.1) then
        !>>> Euler
+
        var1(:,:,:)=gdt(itr)*dvar1(:,:,:,1)+var1(:,:,:)
-    elseif(itimescheme  == 2) then
+    elseif(itimescheme.eq.2) then
        !>>> Adam-Bashforth second order (AB2)
 
        ! Do first time step with Euler
-       if(itime  == 1.and.irestart  == 0) then
+       if(itime.eq.1.and.irestart.eq.0) then
           var1(:,:,:)=gdt(itr)*dvar1(:,:,:,1)+var1(:,:,:)
        else
           var1(:,:,:)=adt(itr)*dvar1(:,:,:,1)+bdt(itr)*dvar1(:,:,:,2)+var1(:,:,:)
        endif
        dvar1(:,:,:,2)=dvar1(:,:,:,1)
-    elseif(itimescheme  == 3) then
+    elseif(itimescheme.eq.3) then
        !>>> Adams-Bashforth third order (AB3)
 
        ! Do first time step with Euler
-       if(itime  == 1.and.irestart  == 0) then
+       if(itime.eq.1.and.irestart.eq.0) then
           var1(:,:,:)=dt*dvar1(:,:,:,1)+var1(:,:,:)
-       elseif(itime  == 2.and.irestart  == 0) then
+       elseif(itime.eq.2.and.irestart.eq.0) then
           ! Do second time step with AB2
           var1(:,:,:)=onepfive*dt*dvar1(:,:,:,1)-half*dt*dvar1(:,:,:,2)+var1(:,:,:)
           dvar1(:,:,:,3)=dvar1(:,:,:,2)
@@ -127,22 +126,22 @@ contains
           dvar1(:,:,:,3)=dvar1(:,:,:,2)
        endif
        dvar1(:,:,:,2)=dvar1(:,:,:,1)
-    elseif(itimescheme  == 4) then
+    elseif(itimescheme.eq.4) then
        !>>> Adams-Bashforth fourth order (AB4)
 
-       if (nrank  == 0) then
+       if (nrank==0) then
           write(*,*) "AB4 not implemented!"
           stop
        endif
 
-       !if (itime  == 1.and.ilit  == 0) then
+       !if (itime.eq.1.and.ilit.eq.0) then
        !var(:,:,:)=gdt(itr)*hx(:,:,:)+var(:,:,:)
        !uy(:,:,:)=gdt(itr)*hy(:,:,:)+uy(:,:,:)
        !uz(:,:,:)=gdt(itr)*hz(:,:,:)+uz(:,:,:)
        !gx(:,:,:)=hx(:,:,:)
        !gy(:,:,:)=hy(:,:,:)
        !gz(:,:,:)=hz(:,:,:)
-       !elseif (itime  == 2.and.ilit  == 0) then
+       !elseif (itime.eq.2.and.ilit.eq.0) then
        !var(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+var(:,:,:)
        !uy(:,:,:)=adt(itr)*hy(:,:,:)+bdt(itr)*gy(:,:,:)+uy(:,:,:)
        !uz(:,:,:)=adt(itr)*hz(:,:,:)+bdt(itr)*gz(:,:,:)+uz(:,:,:)
@@ -152,7 +151,7 @@ contains
        !gx(:,:,:)=hx(:,:,:)
        !gy(:,:,:)=hy(:,:,:)
        !gz(:,:,:)=hz(:,:,:)
-       !elseif (itime  == 3.and.ilit  == 0) then
+       !elseif (itime.eq.3.and.ilit.eq.0) then
        !var(:,:,:)=adt(itr)*hx(:,:,:)+bdt(itr)*gx(:,:,:)+cdt(itr)*gox(:,:,:)+var(:,:,:)
        !uy(:,:,:)=adt(itr)*hy(:,:,:)+bdt(itr)*gy(:,:,:)+cdt(itr)*goy(:,:,:)+uy(:,:,:)
        !uz(:,:,:)=adt(itr)*hz(:,:,:)+bdt(itr)*gz(:,:,:)+cdt(itr)*goz(:,:,:)+uz(:,:,:)
@@ -177,24 +176,24 @@ contains
        !gz(:,:,:)=hz(:,:,:)
        !endif
        !>>> Runge-Kutta (low storage) RK3
-    elseif(itimescheme  == 5) then
-       if(itr  == 1) then
+    elseif(itimescheme.eq.5) then
+       if(itr.eq.1) then
           var1(:,:,:)=gdt(itr)*dvar1(:,:,:,1)+var1(:,:,:)
        else
           var1(:,:,:)=adt(itr)*dvar1(:,:,:,1)+bdt(itr)*dvar1(:,:,:,2)+var1(:,:,:)
        endif
        dvar1(:,:,:,2)=dvar1(:,:,:,1)
        !>>> Runge-Kutta (low storage) RK4
-    elseif(itimescheme  == 6) then
+    elseif(itimescheme.eq.6) then
 
-       if (nrank  == 0) then
+       if (nrank==0) then
           write(*,*) "RK4 not implemented!"
           STOP
        endif
 
     else
 
-       if (nrank  == 0) then
+       if (nrank==0) then
           write(*,*) "Unrecognised itimescheme: ", itimescheme
           STOP
        endif
@@ -225,7 +224,7 @@ contains
   !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  subroutine int_time(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
+  SUBROUTINE int_time(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
 
     use decomp_2d, only : mytype, xsize, nrank
     use param, only : zero, one
@@ -239,16 +238,16 @@ contains
     use tools, only : avg3d
 #endif
 
-    implicit none
+    IMPLICIT NONE
 
     !! INPUT/OUTPUT
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: drho1, dux1, duy1, duz1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime, numscalar) :: dphi1
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1, dux1, duy1, duz1
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime, numscalar) :: dphi1
 
     !! OUTPUT
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
 
     !! LOCAL
     integer :: is, i, j, k
@@ -270,73 +269,73 @@ contains
      if (nrank == 0) write(*,*)'## int_time duz1 ', avg_param
 #endif
 
-    if (ilmn) then
-       if (ilmn_solve_temp) then
-          call int_time_temperature(rho1, drho1, dphi1, phi1)
-       else
-          call int_time_continuity(rho1, drho1)
-       endif
-    endif
+    IF (ilmn) THEN
+       IF (ilmn_solve_temp) THEN
+          CALL int_time_temperature(rho1, drho1, dphi1, phi1)
+       ELSE
+          CALL int_time_continuity(rho1, drho1)
+       ENDIF
+    ENDIF
 
-    if (iscalar.ne.0) then
-       if (ilmn.and.ilmn_solve_temp) then
+    IF (iscalar.NE.0) THEN
+       IF (ilmn.and.ilmn_solve_temp) THEN
           !! Compute temperature
           call calc_temp_eos(ta1, rho1(:,:,:,1), phi1, tb1, xsize(1), xsize(2), xsize(3))
-       endif
+       ENDIF
 
-       do is = 1, numscalar
-          if (is.ne.primary_species) then
-             if (iimplicit.ge.1) then
+       DO is = 1, numscalar
+          IF (is.NE.primary_species) THEN
+             IF (iimplicit.ge.1) then
                 if (sc_even(is)) then
                    k = 1
                 else
                    k = 0
                 endif
-                call intt(phi1(:,:,:,is), dphi1(:,:,:,:,is), npaire=k, isc=is)
-             else
-                call intt(phi1(:,:,:,is), dphi1(:,:,:,:,is))
-             endif
+                CALL intt(phi1(:,:,:,is), dphi1(:,:,:,:,is), npaire=k, isc=is)
+             ELSE
+                CALL intt(phi1(:,:,:,is), dphi1(:,:,:,:,is))
+             ENDIF
 
-             do k = 1, xsize(3)
-                do j = 1, xsize(2)
-                   do i = 1, xsize(1)
+             DO k = 1, xsize(3)
+                DO j = 1, xsize(2)
+                   DO i = 1, xsize(1)
                       phi1(i,j,k,is) = max(phi1(i,j,k,is),scalar_lbound(is))
                       phi1(i,j,k,is) = min(phi1(i,j,k,is),scalar_ubound(is))
-                   enddo
-                enddo
-             enddo
-          endif
-       enddo
+                   ENDDO
+                ENDDO
+             ENDDO
+          ENDIF
+       ENDDO
 
-       if (primary_species.ge.1) then
+       IF (primary_species.GE.1) THEN
           phi1(:,:,:,primary_species) = one
-          do is = 1, numscalar
-             if ((is.ne.primary_species).and.massfrac(is)) then
+          DO is = 1, numscalar
+             IF ((is.NE.primary_species).AND.massfrac(is)) THEN
                 phi1(:,:,:,primary_species) = phi1(:,:,:,primary_species) - phi1(:,:,:,is)
-             endif
-          enddo
+             ENDIF
+          ENDDO
 
-          do k = 1, xsize(3)
-             do j = 1, xsize(2)
-                do i = 1, xsize(1)
+          DO k = 1, xsize(3)
+             DO j = 1, xsize(2)
+                DO i = 1, xsize(1)
                    phi1(i,j,k,primary_species) = max(phi1(i,j,k,primary_species),zero)
                    phi1(i,j,k,primary_species) = min(phi1(i,j,k,primary_species),one)
-                enddo
-             enddo
-          enddo
-       endif
+                ENDDO
+             ENDDO
+          ENDDO
+       ENDIF
 
-       if (ilmn.and.ilmn_solve_temp) then
+       IF (ilmn.and.ilmn_solve_temp) THEN
           !! Compute rho
           call calc_rho_eos(rho1(:,:,:,1), ta1, phi1, tb1, xsize(1), xsize(2), xsize(3))
-       endif
-    endif
+       ENDIF
+    ENDIF
 
 #ifdef DEBG
     if (nrank .eq. 0) write(*,*)'## End  int_time'
 #endif
 
-  endsubroutine int_time
+  ENDSUBROUTINE int_time
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!
@@ -351,10 +350,10 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine int_time_momentum(ux1, uy1, uz1, dux1, duy1, duz1)
 
-    use param
-    use variables
-    use var, only: px1, py1, pz1
-    use decomp_2d
+    USE param
+    USE variables
+    USE var, ONLY: px1, py1, pz1
+    USE decomp_2d
 
     implicit none
 
@@ -388,9 +387,9 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine int_time_continuity(rho1, drho1)
 
-    use param
-    use variables
-    use decomp_2d
+    USE param
+    USE variables
+    USE decomp_2d
 
     implicit none
 
@@ -404,14 +403,14 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
 
     !! First, update old density / store old transients depending on scheme
-    if (itimescheme < 5) then
+    if (itimescheme.lt.5) then
        !! Euler/AB - Store old density values
        do it = nrhotime, 2, -1
           rho1(:,:,:,it) = rho1(:,:,:,it-1)
        enddo
-    elseif (itimescheme  == 5) then
+    elseif (itimescheme.eq.5) then
        !! RK3 - Stores old transients
-       if (itr  == 1) then
+       if (itr.eq.1) then
           do it = nrhotime, 2, -1
              rho1(:,:,:,it) = rho1(:,:,:,it-1)
           enddo
@@ -454,12 +453,12 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine int_time_temperature(rho1, drho1, dphi1, phi1)
 
-    use param
-    use variables
-    use decomp_2d
+    USE param
+    USE variables
+    USE decomp_2d
 
-    use navier, only : lmn_t_to_rho_trans
-    use var, only : tc1, tb1
+    USE navier, ONLY : lmn_t_to_rho_trans
+    USE var, ONLY : tc1, tb1
 
     implicit none
 
@@ -474,14 +473,14 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
 
     !! First, update old density / store old transients depending on scheme
-    if (itimescheme < 5) then
+    if (itimescheme.lt.5) then
        !! Euler/AB - Store old density values
        do it = nrhotime, 2, -1
           rho1(:,:,:,it) = rho1(:,:,:,it-1)
        enddo
-    elseif (itimescheme == 5) then
+    elseif (itimescheme.eq.5) then
        !! RK3 - Stores old transients
-       if (itr  == 1) then
+       if (itr.eq.1) then
           do it = nrhotime, 2, -1
              rho1(:,:,:,it) = rho1(:,:,:,it-1)
           enddo
@@ -490,7 +489,7 @@ contains
           call lmn_t_to_rho_trans(rho1(:,:,:,2), drho1(:,:,:,1), rho1(:,:,:,1), dphi1, phi1)
        endif
     else
-       if (nrank == 0) then
+       if (nrank==0) then
           write(*,*) "int_time_continuity not implemented for itimescheme", itimescheme
           stop
        endif

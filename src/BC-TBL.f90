@@ -147,7 +147,7 @@ contains
 
           cx=ux(nx,j,k)*gdt(itr)*udx
 
-          if (cx<0.0) cx=zero
+          if (cx<zero) cx=zero
           bxxn(j,k)=ux(nx,j,k)-cx*(ux(nx,j,k)-ux(nx-1,j,k))
           bxyn(j,k)=uy(nx,j,k)-cx*(uy(nx,j,k)-uy(nx-1,j,k))
           bxzn(j,k)=uz(nx,j,k)-cx*(uz(nx,j,k)-uz(nx-1,j,k))

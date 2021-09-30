@@ -40,7 +40,7 @@ module tools
        simu_stats, &
        apply_spatial_filter, read_inflow, append_outflow, write_outflow, &
        compute_cfldiff, compute_cfl, &
-       mean_plane_x, mean_plane_y, mean_plane_z, &
+       rescale_pressure, mean_plane_x, mean_plane_y, mean_plane_z, &
        avg3d
 
 contains
@@ -121,6 +121,8 @@ contains
        uz(:,:,:) = (one - ep1(:,:,:)) * uz(:,:,:)
     endif
 
+    uxmax=-1609.;uymax=-1609.;uzmax=-1609.;uxmin=1609.;uymin=1609.;uzmin=1609.
+    !
     ! More efficient version
     uxmax=maxval(ux)
     uymax=maxval(uy)
@@ -824,7 +826,6 @@ contains
 
     use decomp_2d, only: real_type, xsize, xend
     use param
-    use dbg_schemes, only: sqrt_prec
     use variables, only: nx,ny,nz,nxm,nym,nzm
     use mpi
 
@@ -878,7 +879,6 @@ contains
        enddo
     enddo
     call MPI_ALLREDUCE(dep,avg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    !avg=sqrt_prec(avg)/(nxc*nyc*nzc)
     avg=avg/(nxc*nyc*nzc)
 
     return

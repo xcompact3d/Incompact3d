@@ -33,9 +33,9 @@
 module var
 
   use decomp_2d
-  use variables
-  use param
-  use complex_geometry
+  USE variables
+  USE param
+  USE complex_geometry
 
   ! define all major arrays here
   real(mytype), save, allocatable, dimension(:,:,:) :: ux1, ux2, ux3, po3, dv3
@@ -615,10 +615,14 @@ contains
     endif
 
 
-    if (iibm /= 0) then
+    if (iibm.ne.0) then
        !complex_geometry
-       nxraf=(nxm)*nraf+1;nyraf=(nym)*nraf+1;nzraf=(nzm)*nraf+1
-
+       nxraf=(nxm)*nraf
+       if (.not.nclx) nxraf=nxraf+1
+       nyraf=(nym)*nraf
+       if (.not.ncly) nyraf=nyraf+1
+       nzraf=(nzm)*nraf
+       if (.not.nclz) nzraf=nzraf+1
        allocate(nobjx(xsize(2),xsize(3)))
        nobjx=zero
        allocate(nobjy(ysize(1),ysize(3)))
@@ -1247,21 +1251,16 @@ contains
 
        ntime = 1
        nrhotime = 2
-
-    elseif (itimescheme == 2) then ! AB2
-
-        iadvance_time=1
-
-       adt(1)= onepfive*dt
-       bdt(1)=-zpfive*dt
+    elseif (itimescheme.eq.2) then ! AB2
+       iadvance_time=1
+       adt(1)=onepfive*dt
+       bdt(1)=-half*dt
        gdt(1)=adt(1)+bdt(1)
        gdt(3)=gdt(1)
 
        ntime = 2
        nrhotime = 3
-
-    elseif (itimescheme == 3) then ! AB3
-       
+    elseif (itimescheme.eq.3) then ! AB3
        iadvance_time=1
 
        adt(1)= (twentythree/twelve)*dt
@@ -1272,9 +1271,7 @@ contains
 
        ntime = 3
        nrhotime = 4
-
-    elseif(itimescheme == 4) then  ! AB4
-
+    elseif(itimescheme==4) then  ! AB4
        iadvance_time=1
 
        adt(1)= (  fiftyfive/twentyfour)*dt
@@ -1286,9 +1283,7 @@ contains
 
        ntime    = 4
        nrhotime = 5
-
-    elseif(itimescheme == 5) then !RK3
-
+    elseif(itimescheme.eq.5) then !RK3
        iadvance_time=3
 
        adt(1)=(eight/fifteen)*dt
@@ -1303,11 +1298,8 @@ contains
 
        ntime = 2
        nrhotime = 3
-
-    elseif(itimescheme == 6) then !RK4 Carpenter and Kennedy
-
+    elseif(itimescheme.eq.6) then !RK4 Carpenter and Kennedy
        iadvance_time=5
-
        adt(1)=zero
        adt(2)=-0.4178904745_mytype
        adt(3)=-1.192151694643_mytype
@@ -1328,7 +1320,6 @@ contains
        nrhotime = 5 ! (A guess)
 
     endif
-
     allocate(dux1(xsize(1),xsize(2),xsize(3),ntime))
     dux1=zero
     allocate(duy1(xsize(1),xsize(2),xsize(3),ntime))
@@ -1351,14 +1342,14 @@ contains
     Tstat = zero
 
     !! Turbine Modelling
-    if (iturbine == 1) then
+    if (iturbine.eq.1) then
        allocate(FTx(xsize(1),xsize(2),xsize(3)))
        FTx = zero
        allocate(FTy(xsize(1),xsize(2),xsize(3)))
        FTy = zero
        allocate(FTz(xsize(1),xsize(2),xsize(3)))
        FTz = zero
-    else if (iturbine == 2) then
+    else if (iturbine.eq.2) then
        allocate(Fdiscx(xsize(1),xsize(2),xsize(3)))
        Fdiscx = zero
        allocate(Fdiscy(xsize(1),xsize(2),xsize(3)))

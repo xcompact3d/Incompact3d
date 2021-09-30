@@ -104,16 +104,16 @@ contains
 
       nsnapout = 4
       if (ilmn)         nsnapout = nsnapout + 1
-      if (iscalar /= 0) nsnapout = nsnapout + numscalar
+      if (iscalar.ne.0) nsnapout = nsnapout + numscalar
 
       memout = prec * nsnapout * noutput
-      if (output2D == 0) then
+      if (output2D.eq.0) then
         memout = memout * xszV(1) * yszV(2) * zszV(3)
-      else if (output2D == 1) then
+      else if (output2D.eq.1) then
         memout = memout *           yszV(2) * zszV(3)
-      else if (output2D == 2) then
+      else if (output2D.eq.2) then
         memout = memout * xszV(1)           * zszV(3)
-      else if (output2D == 3) then
+      else if (output2D.eq.3) then
         memout = memout * xszV(1) * yszV(2)
       endif
       write(*,*)'==========================================================='
@@ -210,7 +210,7 @@ contains
     use var, only : ppi3, dip3, ph3, nzmsize
     use var, only : npress
 
-    use dbg_schemes, only : rescale_pressure
+    use tools, only : rescale_pressure
 
     implicit none
 
@@ -226,6 +226,7 @@ contains
     ! Local variables
     integer :: is
     integer :: ierr
+    character(len=30) :: scname
 
     ! Update log file
     if (nrank.eq.0) then
@@ -284,7 +285,8 @@ contains
     ! Write scalars
     if (iscalar.ne.0) then
       do is = 1, numscalar
-        call write_field(phi1(:,:,:,is), ".", "phi"//char(48+is), trim(num), .true.)
+        write(scname,"('phi',I2.2)") is
+        call write_field(phi1(:,:,:,is), ".", trim(scname), trim(num), .true.)
       enddo
     endif
 

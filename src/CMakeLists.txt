@@ -23,6 +23,7 @@ add_executable(xcompact3d
                     BC-Lock-exchange.f90
                     BC-Mixing-layer.f90
                     BC-Periodic-hill.f90
+		    BC-Sandbox.f90
                     BC-TBL.f90
                     BC-TGV.f90
                     BC-Uniform.f90

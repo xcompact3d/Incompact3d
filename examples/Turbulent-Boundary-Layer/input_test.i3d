@@ -29,7 +29,7 @@ re  = 1250.           ! nu=1/re (Kinematic Viscosity)
 ! Time stepping
 dt = 0.01             ! Time step
 ifirst = 1            ! First iteration
-ilast = 25000         ! Last iteration
+ilast = 100           ! Last iteration
 
 ! Enable modelling tools
 ilesmod=1             ! if 0 then DNS

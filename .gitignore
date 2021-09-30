@@ -21,6 +21,7 @@ data/
 out/
 stats/
 planes/
+post/
 .DS_Store
 TAGS
 lint.txt
@@ -28,6 +29,8 @@ lint.txt
 *.log
 docs/_build/
 build*
+Test*
+test*
 .cproject
 .project
 .settings
