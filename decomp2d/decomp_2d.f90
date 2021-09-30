@@ -1205,14 +1205,15 @@ contains
     !       * la fonction sortait des valeurs 'aleatoires'
     !         et le calcul plantait dans MPI_ALLTOALLV
     !       * pas de plantage en O2
+    
     character(len=100) :: tmp_char
-    write(tmp_char,*) decomp%x1dist
-    write(tmp_char,*) decomp%y1dist
-    write(tmp_char,*) decomp%y2dist
-    write(tmp_char,*) decomp%z2dist
-    write(tmp_char,*) decomp%xsz
-    write(tmp_char,*) decomp%ysz
-    write(tmp_char,*) decomp%zsz
+    if (nrank==0) then
+     open(101,file='temp.dat', form='unformatted')
+         write(101) decomp%x1dist,decomp%y1dist,decomp%y2dist,decomp%z2dist, &
+              decomp%xsz,decomp%ysz,decomp%zsz
+     close(101)
+     call system("mv temp.dat")
+    endif
 
     ! MPI_ALLTOALLV buffer information
 
