@@ -46,7 +46,7 @@ inflow_noise=0.00    ! Turbulence intensity (1=100%) !! Inflow condition
 ! Time stepping
 dt = 0.02            ! Time step
 ifirst = 1           ! First iteration
-ilast = 2000         ! Last iteration
+ilast = 100          ! Last iteration
 
 ! Enable modelling tools
 ilesmod=1            ! if 0 then DNS (=1 before)
@@ -148,7 +148,7 @@ SmagWallDamp = 1      ! Smagorinsky damping function for ABL if 1
 iturboutput=100       ! frequency for output files for ALM
 eps_factor=2.0        ! Smoothing parameter factor
 Nturbines=1           ! Number of Turbines
-TurbinesPath='NREL-5MW.turb' ! file containing turbine information
+TurbinesPath='input_test.turb' ! file containing turbine information
 rho_air=1.2           ! density of air
 ialmrestart=0         ! restarting ALM
 filealmrestart='./'   ! restarting ALM

@@ -1,0 +1,50 @@
+&TurbineSpecs
+!=========================================
+! Aerodynamic parameters                 |
+!=========================================
+name='NREL-5MW'                              ! Name of the turbine
+origin=63.,90.,126.                        ! Actual location of the turbine 
+numblades=3                                  ! number of blades
+blade_geom='NRELResources/NRELBlade_N71.al'  ! Blade geometry
+numfoil=8                                    ! Number of airfoil from which the interpolation is done
+afname='NRELResources/Airfoils/cylinder1.air','NRELResources/Airfoils/cylinder2.air','NRELResources/Airfoils/DU21_A17.air','NRELResources/Airfoils/DU25_A17.air','NRELResources/Airfoils/DU30_A17.air','NRELResources/Airfoils/DU35_A17.air','NRELResources/Airfoils/DU40_A17.air','NRELResources/Airfoils/NACA64_A17.air'
+towerFlag=1                                  ! Tower model ? (0: no, 1: yes)
+towerOffset=5.                               ! Offset of the tower from the axis of rotation
+tower_geom='NRELResources/NRELTower_N51.al'  ! Tower geometry file
+tower_drag=1.0                               ! Tower induced drag
+tower_lift=0.3                               ! Tower induced lift
+tower_strouhal=0.21                          ! Strouhal number of the tower wake (usually taken equal to 0.21)
+TypeFlag=1                                   ! Type of the turbine (1: Horizontal-axis, 2: Vertical-axis turbines)
+AddedMassFlag=0                              ! Enable the added mass model (for the blades only)       
+EndEffectsFlag=0                             ! EndEffects Flag (0: no end effects, 1: Glauert, 2: Shen et. al 2005)
+TipCorr=0                                    ! Tip correction model (0: no, 1: yes)
+RootCorr=0                                   ! Root correction model (0: no, 1: yes)
+ShenC1=0.125                                 ! Shen et. al 2005 model coefficient (c1)   
+ShenC2=21                                    ! Shen et. al 2005 model coefficient (c2)
+yaw_angle=0.                                 ! Rotor Yaw angle (in degrees)
+shaft_tilt_angle=0.                          ! Hub tilt angle (in degrees)
+blade_cone_angle=0.                          ! Blade cone angle (in degrees)
+!=========================================
+! Aeroelasticity parameters              |
+!=========================================
+AeroElastFlag=0                              ! 0: off, 1: on
+!=========================================
+! Operation/Controller parameters        |
+!=========================================
+OperFlag=2                                   ! Operation flag (1: Prescribed velocity, 2: five region active controller, 3: reading from a list)  
+uref=15                                      ! Reference velocity
+tsr=5.317                                    ! Tip speed ratio (for prescribed velocity)       
+RotFlag=1                                    ! 1: Clockwise, 2: Counterclockwise
+BladeInertia=11776047                        ! Blade inertia
+GeneratorInertia=534.116                     ! Generator Inertia
+GBRatio=97.                                  ! Gear Box ratio
+GBEfficiency=1.                              ! Gear Box Efficiency       
+RatedGenSpeed=121.6805                       ! Rated generator speed in rad/second
+CutInGenSpeed=70.16224                       ! Cut-in generator speed in rad/second
+RatedLimitGenTorque=15000.0                  ! Rated Limit Generator Torque
+Region2StartGenSpeed=91.21091                ! Region 2 starting point generator speed
+Region2EndGenSpeed=121.6805                  ! Region 2 ending point generator speed
+Kgen=2.33                                    ! Region 2 genrator ceoffici
+RatedPower=5296610.0                         ! Rated Power in Watts   ! Rated power
+MaximumTorque=47402.91                       ! Maximum Torque in N*m 
+/End

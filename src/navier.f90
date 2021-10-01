@@ -562,7 +562,8 @@ contains
        enddo
        call MPI_ALLREDUCE(ut,utt,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        utt=utt/(real(ny*nz,mytype))
-       if (nrank==0) write(*,*) 'Flow rate x I/O/O-I',real(ut11,4),real(utt,4),real(utt-ut11,4)
+       if ((nrank==0).and.(mod(itime,ilist)==0)) &
+          write(*,*) 'Flow rate x I/O/O-I',real(ut11,4),real(utt,4),real(utt-ut11,4)
        do k=1,xsize(3)
           do j=1,xsize(2)
              bxxn(j,k)=bxxn(j,k)-utt+ut11

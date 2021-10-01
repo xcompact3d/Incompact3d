@@ -1,7 +1,8 @@
 module actuator_line_turbine
     
     use decomp_2d, only: mytype, nrank
-    use param, only: zero, zpone, half, one, two, onethousand
+    use variables, only : ilist
+    use param, only: itime, zero, zpone, half, one, two, onethousand
     use dbg_schemes, only: cos_prec, sin_prec, abs_prec, exp_prec, acos_prec, sqrt_prec
     use constants
     use actuator_line_model_utils
@@ -178,7 +179,7 @@ contains
     !call actuator_line_beam_model_init(turbine%beam,turbine%blade,turbine%NBlades)
     !endif
     
-    if (nrank==0) then        
+    if (nrank==0.and.mod(itime,ilist)==0) then        
     write(6,*) 'Turbine Name : ', adjustl(turbine%name)
     write(6,*) '-------------------------------------------------------------------'
     write(6,*) 'Number of Blades : ', turbine%Nblades
@@ -319,7 +320,7 @@ contains
     turbine%CP= abs(turbine%CTR)*turbine%TSR
     
     ! PRINT ON SCREEN
-    if(nrank==0) then
+    if(nrank==0.and.mod(itime,ilist)==0) then
         write(6,*) "Turbine : ",   turbine%name
         write(6,*) "======================================="
         write(6,*) "Thrust coeff : ",   turbine%CT

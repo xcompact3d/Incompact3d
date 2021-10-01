@@ -2,6 +2,8 @@ module actuator_line_model
 
    ! Use the actuator_line Modules
    use decomp_2d, only: mytype, nrank
+   use variables, only : ilist
+   use param, only: itime
    use actuator_line_model_utils
    use airfoils
    use actuator_line_element
@@ -500,7 +502,7 @@ contains
                      stop
                   endif
                   deltapitch=Turbine(i)%cbp-Turbine(i)%cbp_old
-                  if(nrank==0) write(*,*) 'Doing Pitch control', -deltapitch*onehundredeighty/pi
+                  if (nrank==0.and.mod(itime,ilist)==0) write(*,*) 'Doing Pitch control', -deltapitch*onehundredeighty/pi
                   call pitch_actuator_line(Turbine(i)%Blade(j),deltapitch)
                enddo
                Turbine(i)%cbp_old=Turbine(i)%cbp
@@ -513,7 +515,7 @@ contains
 
             else if(Turbine(i)%Is_ListController) then
 
-               if(nrank==0) write(*,*) 'Entering the List-controlled operation for the turbine', Turbine(i)%name
+               if (nrank==0.and.mod(itime,ilist)==0) write(*,*) 'Entering the List-controlled operation for the turbine', Turbine(i)%name
                !> Compute the rotor averaged wind speed
                call compute_rotor_upstream_velocity(Turbine(i))
                Turbine(i)%Uref=WSRotorAve
@@ -559,7 +561,7 @@ contains
                do j=1,Nstation
                   ActuatorLine(i)%pitch(j)=actuatorline(i)%pitchAmp*sin_prec(actuatorline(i)%angular_pitch_freq*(ctime-ActuatorLine(i)%pitch_start_time))
                end do
-               if(nrank==0) then
+               if (nrank==0.and.mod(itime,ilist)==0) then        
                   write(*,*) '-----------------------'
                   write(*,*) ' Harmonic pitch :'
                   write(*,*) '-----------------------'
@@ -628,7 +630,7 @@ contains
          turbine(itur)%CP_ave    =turbine(itur)%CP_ave+Turbine(itur)%CP
          turbine(itur)%CT_ave    =turbine(itur)%CT_ave+Turbine(itur)%CT
          turbine(itur)%Torque_ave=turbine(itur)%CP_ave+Turbine(itur)%Torque
-         if(nrank==0) then
+         if (nrank==0.and.mod(itime,ilist)==0) then        
             print *, 'Writing statistics for alm'
             print *, 'Turbine name , CT_ave, CP_ave, Torque_ave'
             print *, turbine(itur)%name, turbine(itur)%CT_ave, turbine(itur)%CP_ave, turbine(itur)%Torque_ave

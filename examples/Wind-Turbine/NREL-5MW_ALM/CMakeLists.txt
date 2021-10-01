@@ -1,0 +1,11 @@
+install(DIRECTORY DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/Wind-Turbine)
+install(FILES input_test.i3d DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/Wind-Turbine)
+install(FILES input_test.turb DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/Wind-Turbine)
+# If testing active add test for Wind-Turbine case
+if (${BUILD_TESTING})
+  set(case_dir "${test_dir}/Wind-Turbine")
+  file(MAKE_DIRECTORY ${case_dir})
+  file(COPY input_test.i3d DESTINATION ${case_dir})
+  file(COPY input_test.turb DESTINATION ${case_dir})
+  file(COPY NRELResources DESTINATION ${case_dir})
+endif()

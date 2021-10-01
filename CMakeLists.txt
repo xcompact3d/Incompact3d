@@ -164,5 +164,6 @@ if (${BUILD_TESTING})
   add_test(NAME ABL-Neutral COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_neutral_test.i3d WORKING_DIRECTORY ${test_dir}/ABL-Neutral)
   add_test(NAME ABL-Stable COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_stable_test.i3d WORKING_DIRECTORY ${test_dir}/ABL-Stable)
   add_test(NAME TBL COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test.i3d WORKING_DIRECTORY ${test_dir}/TBL)
+  add_test(NAME Wind-Turbine COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test.i3d WORKING_DIRECTORY ${test_dir}/Wind-Turbine)
 endif()
 
