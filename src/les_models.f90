@@ -157,6 +157,7 @@ contains
     !
     !================================================================================
 
+    use MPI
     USE param
     USE variables
     USE decomp_2d
@@ -177,8 +178,10 @@ contains
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1
     real(mytype) :: smag_constant, y, length
+    real(mytype) :: nutmin_loc, nutmax_loc, nutmin, nutmax
+    real(mytype) :: srtmin_loc, srtmax_loc, srtmin, srtmax
 
-    integer :: i, j, k
+    integer :: i, j, k, ierr
     character(len = 30) :: filename
 
 
@@ -267,9 +270,26 @@ contains
     enddo
     call transpose_y_to_x(nut2, nut1)
 
-    if ((nrank==0).and.(mod(itime,ilist)==0)) then 
-       write(*,*) "smag srt_smag min max= ", minval(srt_smag), maxval(srt_smag)
-       write(*,*) "smag nut1     min max= ", minval(nut1), maxval(nut1)
+
+    if (mod(itime,ilist)==0) then 
+      srtmin_loc = minval(srt_smag)
+      srtmax_loc = maxval(srt_smag)
+      nutmin_loc = minval(nut1)
+      nutmax_loc = maxval(nut1)
+      srtmin = zero
+      srtmax = zero
+      nutmin = zero
+      nutmax = zero
+
+      call MPI_ALLREDUCE(srtmin_loc,srtmin,1,real_type,MPI_MIN,MPI_COMM_WORLD,ierr)
+      call MPI_ALLREDUCE(nutmin_loc,nutmin,1,real_type,MPI_MIN,MPI_COMM_WORLD,ierr)
+      call MPI_ALLREDUCE(srtmax_loc,srtmax,1,real_type,MPI_MAX,MPI_COMM_WORLD,ierr)
+      call MPI_ALLREDUCE(nutmax_loc,nutmax,1,real_type,MPI_MAX,MPI_COMM_WORLD,ierr)
+
+      if (nrank==0) then 
+         write(*,*) "smag srt_smag min max= ", srtmin, srtmax  
+         write(*,*) "smag nut1     min max= ", nutmin, nutmax
+      endif
     endif
 
     if (mod(itime, ioutput).eq.0) then
