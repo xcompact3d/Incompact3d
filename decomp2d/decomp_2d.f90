@@ -1212,7 +1212,7 @@ contains
          write(101) decomp%x1dist,decomp%y1dist,decomp%y2dist,decomp%z2dist, &
               decomp%xsz,decomp%ysz,decomp%zsz
      close(101)
-     call system("mv temp.dat")
+     call system("rm temp.dat")
     endif
 
     ! MPI_ALLTOALLV buffer information
