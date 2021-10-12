@@ -2,6 +2,7 @@
 module actuator_line_source
 
     use decomp_2d, only: mytype
+    USE decomp_2d, only : real_type
     use variables, only : ilist
     use param, only: itime, zero, half, one
     use dbg_schemes, only: sin_prec, sqrt_prec
@@ -450,11 +451,11 @@ contains
         endif
         enddo
 
-        call MPI_ALLREDUCE(Su_part,Su,Nsource,MPI_REAL8,MPI_SUM, &
+        call MPI_ALLREDUCE(Su_part,Su,Nsource,real_type,MPI_SUM, &
             MPI_COMM_WORLD,ierr)
-        call MPI_ALLREDUCE(Sv_part,Sv,Nsource,MPI_REAL8,MPI_SUM, &
+        call MPI_ALLREDUCE(Sv_part,Sv,Nsource,real_type,MPI_SUM, &
             MPI_COMM_WORLD,ierr)
-        call MPI_ALLREDUCE(Sw_part,Sw,Nsource,MPI_REAL8,MPI_SUM, &
+        call MPI_ALLREDUCE(Sw_part,Sw,Nsource,real_type,MPI_SUM, &
             MPI_COMM_WORLD,ierr)
 
         ! Zero the Source term at each time step
@@ -505,7 +506,7 @@ contains
             enddo
 
         alm_proj_time=MPI_WTIME()-t1
-        call MPI_ALLREDUCE(alm_proj_time,t1,1,MPI_REAL8,MPI_SUM, &
+        call MPI_ALLREDUCE(alm_proj_time,t1,1,real_type,MPI_SUM, &
                    MPI_COMM_WORLD,ierr)
 
         if(nrank==0.and.mod(itime,ilist)==0) then

@@ -1,6 +1,7 @@
 module actuator_line_turbine
     
     use decomp_2d, only: mytype, nrank
+    USE decomp_2d, only : real_type
     use variables, only : ilist
     use param, only: itime, zero, zpone, half, one, two, onethousand
     use dbg_schemes, only: cos_prec, sin_prec, abs_prec, exp_prec, acos_prec, sqrt_prec
@@ -627,11 +628,11 @@ contains
             !write(*,*) 'Warning: I do not own this node' 
         endif
            
-        call MPI_ALLREDUCE(Ux_part,Ux,1,MPI_REAL8,MPI_SUM, &
+        call MPI_ALLREDUCE(Ux_part,Ux,1,real_type,MPI_SUM, &
             MPI_COMM_WORLD,ierr)
-        call MPI_ALLREDUCE(Uy_part,Uy,1,MPI_REAL8,MPI_SUM, &
+        call MPI_ALLREDUCE(Uy_part,Uy,1,real_type,MPI_SUM, &
             MPI_COMM_WORLD,ierr)
-        call MPI_ALLREDUCE(Uz_part,Uz,1,MPI_REAL8,MPI_SUM, &
+        call MPI_ALLREDUCE(Uz_part,Uz,1,real_type,MPI_SUM, &
             MPI_COMM_WORLD,ierr)
         
         Turbine%Ux_upstream=Ux

@@ -233,8 +233,8 @@ contains
           enddo
        endif
 
-       call MPI_ALLREDUCE(ek,ekg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,code)
-       call MPI_ALLREDUCE(ep,epg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(ek,ekg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(ep,epg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
        if ((epg.ne.zero).and.(ekg.ne.zero)) then
           um = ekg / epg
@@ -254,7 +254,7 @@ contains
                 enddo
              enddo
           enddo
-          call MPI_ALLREDUCE(ek,ekg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,code)
+          call MPI_ALLREDUCE(ek,ekg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
           if (nrank == 0) then
              write(*,*)  "Ek / Ep: ", ekg / epg, ekg, epg
@@ -575,10 +575,10 @@ contains
     !    ilag=1
     ! endif
 
-    call MPI_REDUCE(ek,ek1,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,MPI_COMM_WORLD,code)
-    call MPI_REDUCE(dek,dek1,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,MPI_COMM_WORLD,code)
-    call MPI_REDUCE(ep,ep1,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,MPI_COMM_WORLD,code)
-    call MPI_REDUCE(dep,dep1,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,MPI_COMM_WORLD,code)
+    call MPI_REDUCE(ek,ek1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
+    call MPI_REDUCE(dek,dek1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
+    call MPI_REDUCE(ep,ep1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
+    call MPI_REDUCE(dep,dep1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
 
     if (nrank .eq. 0) then
        open(67,file='./out/budget',status='unknown',form='formatted',&
