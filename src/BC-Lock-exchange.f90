@@ -175,8 +175,10 @@ contains
        enddo
     enddo
 
-    call set_fluid_properties_lockexch(rho1, mu1)
-
+    if (ilmn) then
+       call set_fluid_properties_lockexch(rho1, mu1)
+    end if
+    
     ux1=zero; uy1=zero; uz1=zero
 
     if (iin.ne.0) then
@@ -449,6 +451,7 @@ contains
     integer :: ijk,i,j,k,l,m,is,code
     character(len=30) :: filename
 
+    real(mytype) :: visc
     real(mytype) :: y
 
     ek=zero;ek1=zero;dek=zero;dek1=zero;ep=zero;ep1=zero;dep=zero;dep1=zero;diss1=zero
@@ -496,10 +499,15 @@ contains
     do k=1,xsize(3)
        do j=1,xsize(2)
           do i=1,xsize(1)
+             if (ilmn) then
+                visc = mu1(i, j, k)
+             else
+                visc = one
+             end if
              do m=1,3
                 do l=1,3
                    diss1(i,j,k) = diss1(i,j,k) &
-                        + (two * xnu * mu1(i, j, k)) &
+                        + (two * xnu * visc) &
                         * (half * (A(l,m,i,j,k) + A(m,l,i,j,k)))**2
                 enddo
              enddo

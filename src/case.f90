@@ -534,8 +534,10 @@ contains
 
     if (itype.eq.itype_lockexch) then
 
-       call set_fluid_properties_lockexch(rho1, mu1)
-
+       if (ilmn) then 
+          call set_fluid_properties_lockexch(rho1, mu1)
+       end if
+       
     endif
 
   endsubroutine set_fluid_properties
