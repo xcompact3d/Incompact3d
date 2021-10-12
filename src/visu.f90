@@ -325,7 +325,7 @@ contains
     real(mytype) :: xp(xszV(1)), zp(zszV(3))
 
     if (nrank.eq.0) then
-      OPEN(newunit=ioxdmf,file="./data/"//gen_filename(pathname, filename, num, "xdmf"))
+      OPEN(newunit=ioxdmf,file="./data/"//gen_snapshotname(pathname, filename, num, "xdmf"))
 
       write(ioxdmf,'(A22)')'<?xml version="1.0" ?>'
       write(ioxdmf,*)'<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>'
@@ -490,7 +490,7 @@ contains
           else if (output2D.eq.3) then
              write(ioxdmf,*)'            Dimensions="',1,yszV(2),xszV(1),'">'
           endif
-          write(ioxdmf,*)'              '//gen_h5path(gen_filename(pathname, filename, num, 'bin'))
+          write(ioxdmf,*)'              '//gen_h5path(gen_filename(pathname, filename, num, 'bin'), num)
           write(ioxdmf,*)'           </DataItem>'
           write(ioxdmf,*)'        </Attribute>'
        endif
@@ -521,6 +521,17 @@ contains
 
   end subroutine write_field
 
+  function gen_snapshotname(pathname, varname, num, ext)
+    character(len=*), intent(in) :: pathname, varname, num, ext
+#ifndef ADIOS2
+    character(len=(len(pathname) + 1 + len(varname) + 1 + len(num) + 1 + len(ext))) :: gen_snapshotname
+    write(gen_snapshotname, "(A)") gen_filename(pathname, varname, num, ext)
+#else
+    character(len=(len(varname) + 1 + len(num) + 1 + len(ext))) :: gen_snapshotname
+    write(gen_snapshotname, "(A)") varname//'-'//num//'.'//ext
+#endif
+  end function gen_snapshotname
+  
   function gen_filename(pathname, varname, num, ext)
 
     character(len=*), intent(in) :: pathname, varname, num, ext
@@ -534,16 +545,18 @@ contains
     
   end function gen_filename
 
-  function gen_h5path(filename)
+  function gen_h5path(filename, num)
 
-    character(len=*), intent(in) :: filename
+    character(len=*), intent(in) :: filename, num
 #ifndef ADIOS2
     character(len=*), parameter :: path_to_h5file = "./"
-#else
-    character(len=*), parameter :: path_to_h5file = "../data.hdf5:/Step"
-#endif
     character(len=(len(path_to_h5file) + len(filename))) :: gen_h5path
     write(gen_h5path, "(A)") path_to_h5file//filename
+#else
+    character(len=*), parameter :: path_to_h5file = "../data.hdf5:/Step"
+    character(len=(len(path_to_h5file) + len(num) + 1+ len(filename))) :: gen_h5path
+    write(gen_h5path, "(A)") path_to_h5file//num//"/"//filename
+#endif
     
   end function gen_h5path
   
