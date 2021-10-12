@@ -74,8 +74,6 @@ contains
 
     INTEGER :: it, is
 
-    write(*,*) '## INIT'
-
     !! Zero out the pressure field
     pp3(:,:,:,1) = zero
     px1(:,:,:) = zero

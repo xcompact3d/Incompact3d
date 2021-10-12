@@ -161,8 +161,6 @@ contains
       enddo
     endif
 
-    write(*,*) '## INIT ABL end'
-
     return
   end subroutine init_abl
 
