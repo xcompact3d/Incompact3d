@@ -410,7 +410,7 @@ subroutine cubsplx(u,lind)
   real(mytype)                                       :: xpol,ypol       ! Position and Value of the Reconstructed Solution 
   real(mytype),dimension(10)                         :: xa,ya           ! Position and Value of the Input Data Function 
   integer                                            :: ia,na           
-  real(mytype)                                       :: lind            ! Identifying which BC to Impose
+  real(mytype), intent(in)                           :: lind            ! Identifying which BC to Impose
   real(mytype)                                       :: bcimp           ! Imposed BC 
   integer                                            :: inxi,inxf
   real(mytype)                                       :: ana_resi,ana_resf         ! Position of Boundary (Analytically)
@@ -568,7 +568,7 @@ subroutine cubsply(u,lind)
   real(mytype)                                       :: xpol,ypol,dypol ! Position and Value of the Reconstructed Solution 
   real(mytype),dimension(10)                         :: xa,ya           ! Position and Value of the Input Data Function 
   integer                                            :: ia,na           
-  real(mytype)                                       :: lind            ! Identifying which BC to Impose
+  real(mytype), intent(in)                           :: lind            ! Identifying which BC to Impose
   real(mytype)                                       :: bcimp           ! Imposed BC 
   integer                                            :: inxi,inxf  
   real(mytype)                                       :: ana_resi,ana_resf
@@ -731,7 +731,7 @@ subroutine cubsplz(u,lind)
   real(mytype)                                       :: xpol,ypol,dypol !|variables concernant les polynômes
   real(mytype),dimension(10)                         :: xa,ya           !|de Lagrange. A mettre imérativement en 
   integer                                            :: ia,na           !|double précision
-  real(mytype)                                       :: lind            ! Identifying which BC to Impose
+  real(mytype), intent(in)                           :: lind            ! Identifying which BC to Impose
   real(mytype)                                       :: bcimp           ! Imposed BC 
   integer                                            :: inxi,inxf  
   real(mytype)                                       :: ana_resi,ana_resf
