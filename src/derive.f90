@@ -75,7 +75,7 @@ subroutine derx_00(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind)
   enddo
   do concurrent (k=1:nz)
      do concurrent (j=1:ny)
-        rx(1,j,k) = - one
+        rx(1,j,k) = -one
         do concurrent (i=2:nx-1)
            rx(i,j,k) = zero
         enddo
@@ -2678,8 +2678,8 @@ subroutine interxvp(tx,ux,rx,sx,cifx6,cisx6,ciwx6,nx,nxm,ny,nz,npaire)
               tx(i,j,k) = (tx(i,j,k)-cifx6(i)*tx(i+1,j,k)) * ciwx6(i)
               rx(i,j,k) = (rx(i,j,k)-cifx6(i)*rx(i+1,j,k)) * ciwx6(i)
            enddo
-           sx(j,k)=(     tx(1,j,k)-ailcaix6*tx(nx,j,k)) &
-                  / (one+rx(1,j,k)-ailcaix6*rx(nx,j,k))
+           sx(j,k) = (    tx(1,j,k)-ailcaix6*tx(nx,j,k)) &
+                   / (one+rx(1,j,k)-ailcaix6*rx(nx,j,k))
            do concurrent (i=1:nx)
               tx(i,j,k) = tx(i,j,k) - sx(j,k)*rx(i,j,k)
            enddo
@@ -2796,8 +2796,8 @@ subroutine derxpv(tx,ux,rx,sx,cfi6,csi6,cwi6,cfx6,csx6,cwx6,nxm,nx,ny,nz,npaire)
               tx(i,j,k) = (tx(i,j,k)-cfx6(i)*tx(i+1,j,k)) * cwx6(i)
               rx(i,j,k) = (rx(i,j,k)-cfx6(i)*rx(i+1,j,k)) * cwx6(i)
            enddo
-           sx(j,k)=(     tx(1,j,k)-alcaix6*tx(nx,j,k)) &
-                  / (one+rx(1,j,k)-alcaix6*rx(nx,j,k))
+           sx(j,k) = (    tx(1,j,k)-alcaix6*tx(nx,j,k)) &
+                   / (one+rx(1,j,k)-alcaix6*rx(nx,j,k))
            do concurrent (i=1:nx)
               tx(i,j,k) = tx(i,j,k) - sx(j,k)*rx(i,j,k)
            enddo
