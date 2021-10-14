@@ -304,24 +304,24 @@ subroutine parameter(input_i3d)
 
   if (iimplicit.ne.0) then
      if ((itimescheme==5).or.(itimescheme==6)) then
-        write(*,*) 'Error: implicit Y diffusion not yet compatible with RK time schemes'
+        if (nrank==0) write(*,*) 'Error: implicit Y diffusion not yet compatible with RK time schemes'
         stop
      endif
      if (isecondder==5) then
-        write(*,*)  "Warning : support for implicit Y diffusion and isecondder=5 is experimental"
+        if (nrank==0) write(*,*)  "Warning : support for implicit Y diffusion and isecondder=5 is experimental"
      endif
      if (iimplicit==1) then
         xcst = dt * xnu
      else if (iimplicit==2) then
         xcst = dt * xnu * half
      else
-        write(*,*)  'Error: wrong value for iimplicit ', iimplicit
+        if (nrank==0) write(*,*)  'Error: wrong value for iimplicit ', iimplicit
         stop
      endif
      if (iscalar.eq.1) xcst_sc = xcst / sc
   endif
 
-  if (itype==itype_tbl.and.A_tr .gt. zero)  write(*,*)  "TBL tripping is active"
+  if (itype==itype_tbl.and.A_tr .gt. zero.and.nrank==0)  write(*,*)  "TBL tripping is active"
 
   anglex = sin_prec(pi*angle/onehundredeighty)
   angley = cos_prec(pi*angle/onehundredeighty)
