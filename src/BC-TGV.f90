@@ -35,6 +35,7 @@ module tgv
   USE decomp_2d
   USE variables
   USE param
+  USE tools, only : error_l1_l2_linf
 
   IMPLICIT NONE
 
@@ -905,48 +906,5 @@ contains
   k2out = k2out / (one + two * alsaix * cos(kin*dx))
 
   end subroutine compute_k2
-
-  ! Compute L1, L2 and Linf norm of given 3D array
-  subroutine error_L1_L2_Linf(err, l1, l2, linf)
-
-    USE decomp_2d
-    USE MPI
-    
-    implicit none
-      
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: err
-    real(mytype),intent(out) :: l1, l2, linf
-
-    integer :: i,j,k,code
-    real(mytype) :: ll1, ll2, llinf, ntot
-
-    ll1 = zero
-    ll2 = zero
-    llinf = zero
-    ntot = nx*ny*nz
-
-    do k = 1,xsize(3)
-      do j = 1,xsize(2)
-        do i = 1,xsize(1)
-          ll1 = ll1 + abs(err(i,j,k))
-          ll2 = ll2 + err(i,j,k)*err(i,j,k)
-          llinf = max(llinf, abs(err(i,j,k)))
-        enddo
-      enddo
-    enddo
-
-    ! Parallel
-    call MPI_ALLREDUCE(ll1,l1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
-    call MPI_ALLREDUCE(ll2,l2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
-    call MPI_ALLREDUCE(llinf,linf,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
-
-    ! Rescaling
-    l1 = l1 / ntot
-    l2 = sqrt(l2 / ntot)
-
-  end subroutine error_L1_L2_Linf
 
 end module tgv

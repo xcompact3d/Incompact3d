@@ -1,0 +1,17 @@
+module final
+
+   use MPI
+   use pFunit
+   implicit none
+
+contains
+
+   ! Serial test
+   @test
+   subroutine try_final()
+
+      call finalise_xcompact3d(.false.)
+
+   end subroutine try_final
+
+end module final

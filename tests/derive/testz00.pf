@@ -1,0 +1,111 @@
+module testz00
+
+   use MPI
+   use pFunit
+   use iso_c_binding
+   implicit none
+
+contains
+
+   ! Serial test
+   @test
+   subroutine verif_derz_derzz_00()
+
+      use decomp_2d
+      use param
+      use var
+      use variables
+      use tools, only : error_l1_l2_linf
+      use ibm_param, only : ubcx,ubcy,ubcz
+
+      implicit none
+
+      real(mytype), dimension(zsize(1),zsize(2),zsize(3)) :: input, output, sol
+      real(mytype) :: z, l1, l2, linf, sl1, sl2, slinf
+      integer :: k
+
+      ! Lx = Ly = Lz = 2
+      do k = 1, zsize(3)
+         z = (k-1) * dz
+         input(:,:,k) = sin(pi*z) + cos(5*pi*z)
+      enddo
+
+      ! test derx
+      do k = 1, zsize(3)
+         z = (k-1) * dz
+         sol(:,:,k) = pi*cos(pi*z) - 5*pi*sin(5*pi*z)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
+      call derz(output,input,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcy)
+      call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
+      write(*,*) "derz : ", l1/sl1, l2/sl2, linf/slinf
+      @assertEqual(l1/sl1, 0.d0, tolerance=1.d-12)
+      @assertEqual(l2/sl2, 0.d0, tolerance=1.d-12)
+      @assertEqual(linf/slinf, 0.d0, tolerance=1.d-12)
+      call derz(output,input,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcz)
+      call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
+      write(*,*) "derz : ", l1/sl1, l2/sl2, linf/slinf
+      @assertEqual(l1/sl1, 0.d0, tolerance=1.d-12)
+      @assertEqual(l2/sl2, 0.d0, tolerance=1.d-12)
+      @assertEqual(linf/slinf, 0.d0, tolerance=1.d-12)
+
+      ! test derxx
+      do k = 1, zsize(3)
+         z = (k-1) * dz
+         sol(:,:,k) = -(pi**2)*sin(pi*z) - 25*(pi**2)*cos(5*pi*z)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
+      call derzz(output,input,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+      call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
+      write(*,*) "derzz : ", l1/sl1, l2/sl2, linf/slinf
+      @assertEqual(l1/sl1, 0.d0, tolerance=1.d-7)
+      @assertEqual(l2/sl2, 0.d0, tolerance=1.d-7)
+      @assertEqual(linf/slinf, 0.d0, tolerance=1.d-7)
+      call derzz(output,input,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,ubcz)
+      call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
+      write(*,*) "derzz : ", l1/sl1, l2/sl2, linf/slinf
+      @assertEqual(l1/sl1, 0.d0, tolerance=1.d-7)
+      @assertEqual(l2/sl2, 0.d0, tolerance=1.d-7)
+      @assertEqual(linf/slinf, 0.d0, tolerance=1.d-7)
+
+   end subroutine verif_derz_derzz_00
+
+   ! Serial test
+   @test
+   subroutine verif_derzvp_00()
+
+      use decomp_2d
+      use param
+      use var
+      use variables
+      use tools, only : error_l1_l2_linf
+
+      implicit none
+
+      real(mytype), dimension(zsize(1),zsize(2),zsize(3)) :: input, diloc
+      real(mytype), dimension(zsize(1),zsize(2),nzmsize) :: output, sol
+      real(mytype) :: z, l1, l2, linf, sl1, sl2, slinf
+      integer :: k
+
+      ! Lx = Ly = Lz = 2
+      do k = 1, zsize(3)
+         z = (k-1) * dz
+         input(:,:,k) = sin(pi*z) + cos(5*pi*z)
+      enddo
+
+      ! test derzvp
+      do k = 1, nzmsize
+         z = (k-half) * dz
+         sol(:,:,k) = pi*cos(pi*z) - 5*pi*sin(5*pi*z)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf, zsize(1), zsize(2), nzmsize, xsize(1)*ysize(2)*nzmsize)
+      call derzvp(output,input,diloc,sz,cfz6,csz6,cwz6,zsize(1),zsize(2),zsize(3),nzmsize,0)
+      call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), nzmsize, xsize(1)*ysize(2)*nzmsize)
+      write(*,*) "derzvp : ", l1/sl1, l2/sl2, linf/slinf
+      @assertEqual(l1/sl1, 0.d0, tolerance=1.d-12)
+      @assertEqual(l2/sl2, 0.d0, tolerance=1.d-12)
+      @assertEqual(linf/slinf, 0.d0, tolerance=1.d-12)
+
+   end subroutine verif_derzvp_00
+
+end module testz00

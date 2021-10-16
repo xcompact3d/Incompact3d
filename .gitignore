@@ -27,3 +27,7 @@ lint.txt
 docs/_build/
 *.bp4
 *.hdf5
+tests/*/*F90
+tests/*/*inc
+tests/*/*.a
+tests/*/test_*_*

@@ -1,0 +1,111 @@
+module testx00
+
+   use MPI
+   use pFunit
+   use iso_c_binding
+   implicit none
+
+contains
+
+   ! Serial test
+   @test
+   subroutine verif_derx_derxx_00()
+
+      use decomp_2d
+      use param
+      use var
+      use variables
+      use tools, only : error_l1_l2_linf
+      use ibm_param, only : ubcx,ubcy,ubcz
+
+      implicit none
+
+      real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: input, output, sol
+      real(mytype) :: x, l1, l2, linf, sl1, sl2, slinf
+      integer :: i
+
+      ! Lx = Ly = Lz = 2
+      do i = 1, xsize(1)
+         x = (i-1) * dx
+         input(i,:,:) = sin(pi*x) + cos(5*pi*x)
+      enddo
+
+      ! test derx
+      do i = 1, xsize(1)
+         x = (i-1) * dx
+         sol(i,:,:) = pi*cos(pi*x) - 5*pi*sin(5*pi*x)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf)
+      call derx(output,input,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcx)
+      call error_l1_l2_linf(output-sol, l1, l2, linf)
+      write(*,*) "derx : ", l1/sl1, l2/sl2, linf/slinf
+      @assertEqual(l1/sl1, 0.d0, tolerance=1.d-12)
+      @assertEqual(l2/sl2, 0.d0, tolerance=1.d-12)
+      @assertEqual(linf/slinf, 0.d0, tolerance=1.d-12)
+      call derx(output,input,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcy)
+      call error_l1_l2_linf(output-sol, l1, l2, linf)
+      write(*,*) "derx : ", l1/sl1, l2/sl2, linf/slinf
+      @assertEqual(l1/sl1, 0.d0, tolerance=1.d-12)
+      @assertEqual(l2/sl2, 0.d0, tolerance=1.d-12)
+      @assertEqual(linf/slinf, 0.d0, tolerance=1.d-12)
+
+      ! test derxx
+      do i = 1, xsize(1)
+         x = (i-1) * dx
+         sol(i,:,:) = -(pi**2)*sin(pi*x) - 25*(pi**2)*cos(5*pi*x)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf)
+      call derxx(output,input,di1,sx,sfx,ssx,swx,xsize(1),xsize(2),xsize(3),0,ubcx)
+      call error_l1_l2_linf(output-sol, l1, l2, linf)
+      write(*,*) "derxx : ", l1/sl1, l2/sl2, linf/slinf
+      @assertEqual(l1/sl1, 0.d0, tolerance=1.d-7)
+      @assertEqual(l2/sl2, 0.d0, tolerance=1.d-7)
+      @assertEqual(linf/slinf, 0.d0, tolerance=1.d-7)
+      call derxx(output,input,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+      call error_l1_l2_linf(output-sol, l1, l2, linf)
+      write(*,*) "derxx : ", l1/sl1, l2/sl2, linf/slinf
+      @assertEqual(l1/sl1, 0.d0, tolerance=1.d-7)
+      @assertEqual(l2/sl2, 0.d0, tolerance=1.d-7)
+      @assertEqual(linf/slinf, 0.d0, tolerance=1.d-7)
+
+   end subroutine verif_derx_derxx_00
+
+   ! Serial test
+   @test
+   subroutine verif_derxvp_00()
+
+      use decomp_2d
+      use param
+      use var
+      use variables
+      use tools, only : error_l1_l2_linf
+
+      implicit none
+
+      real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: input, diloc
+      real(mytype), dimension(nxmsize,xsize(2),xsize(3)) :: output, sol
+      real(mytype) :: x, l1, l2, linf, sl1, sl2, slinf
+      integer :: i
+
+      ! Lx = Ly = Lz = 2
+      do i = 1, xsize(1)
+         x = (i-1) * dx
+         input(i,:,:) = sin(pi*x) + cos(5*pi*x)
+      enddo
+
+      ! test derxvp
+      do i = 1, nxmsize
+         x = (i-half) * dx
+         sol(i,:,:) = pi*cos(pi*x) - 5*pi*sin(5*pi*x)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf, nxmsize, xsize(2), xsize(3), nxmsize*ysize(2)*zsize(3))
+      call derxvp(output,input,diloc,sx,cfx6,csx6,cwx6,xsize(1),nxmsize,xsize(2),xsize(3),0)
+      call error_l1_l2_linf(output-sol, l1, l2, linf, nxmsize, xsize(2), xsize(3), nxmsize*ysize(2)*zsize(3))
+      write(*,*) "derxvp : ", l1/sl1, l2/sl2, linf/slinf
+      @assertEqual(l1/sl1, 0.d0, tolerance=1.d-12)
+      @assertEqual(l2/sl2, 0.d0, tolerance=1.d-12)
+      @assertEqual(linf/slinf, 0.d0, tolerance=1.d-12)
+
+   end subroutine verif_derxvp_00
+
+end module testx00

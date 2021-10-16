@@ -1,0 +1,26 @@
+module inity00_str
+
+   use MPI
+   use pFunit
+   use iso_c_binding
+   implicit none
+
+contains
+
+   ! Serial test
+   @test
+   subroutine try_init()
+
+      use decomp_2d, only : nrank, nproc, decomp_2d_abort
+
+      implicit none
+
+      integer :: code
+
+      call MPI_COMM_RANK(MPI_COMM_WORLD,nrank,code)
+      call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,code)
+      call init_xcompact3d("./y00_str.i3d"//c_null_char)
+
+end subroutine try_init
+
+end module inity00_str

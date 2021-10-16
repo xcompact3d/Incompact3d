@@ -39,8 +39,13 @@ module tools
        restart, &
        simu_stats, &
        apply_spatial_filter, read_inflow, append_outflow, write_outflow, &
-       compute_cfldiff, compute_cfl, &
+       compute_cfldiff, compute_cfl, error_l1_l2_linf, &
        rescale_pressure, mean_plane_x, mean_plane_y, mean_plane_z
+
+  interface error_l1_l2_linf
+     module procedure error_l1_l2_linf_xsize
+     module procedure error_l1_l2_linf_generic
+  end interface error_l1_l2_linf
 
 contains
   !##################################################################
@@ -74,28 +79,23 @@ contains
       phimaxin(:,is) =  (/phimin, phimax /)
     enddo
 
-    !call MPI_REDUCE(phimax,phimax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-    !call MPI_REDUCE(phimin,phimin1,1,real_type,MPI_MIN,0,MPI_COMM_WORLD,code)
-    call MPI_REDUCE(phimaxin,phimaxout,numscalar*2,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    call MPI_ALLREDUCE(phimaxin,phimaxout,numscalar*2,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
     do is=1,numscalar
-      if (nrank == 0) then
-        phimin1 = -phimaxout(1,is)
-        phimax1 =  phimaxout(2,is)
+      phimin1 = -phimaxout(1,is)
+      phimax1 =  phimaxout(2,is)
 
-        print *,'Phi'//char(48+is)//' min max=', real(phimin1,4), real(phimax1,4)
+      if (nrank == 0) print *,'Phi'//char(48+is)//' min max=', real(phimin1,4), real(phimax1,4)
 
-        if (phimin1 < uvwt_lbound(4) .or. phimax1 >= uvwt_ubound(4)) then
-           print *,'Scalar diverged! SIMULATION IS STOPPED!'
-           call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-           stop
-        endif
+      if (phimin1 < uvwt_lbound(4) .or. phimax1 >= uvwt_ubound(4)) then
+         if (nrank == 0) print *,'Scalar diverged! SIMULATION IS STOPPED!'
+         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+         stop
       endif
 
     enddo
 
-    return
   end subroutine test_scalar_min_max
   !##################################################################
   !##################################################################
@@ -132,8 +132,8 @@ contains
     uzmin=-minval(uz)
 
     umaxin = (/uxmax, uymax, uzmax, uxmin, uymin, uzmin/)
-    call MPI_REDUCE(umaxin,umaxout,6,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    call MPI_ALLREDUCE(umaxin,umaxout,6,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
     uxmax1= umaxout(1)
     uymax1= umaxout(2)
@@ -143,22 +143,19 @@ contains
     uzmin1=-umaxout(6)
 
     if (nrank == 0) then
-
        print *,'U,V,W min=',real(uxmin1,4),real(uymin1,4),real(uzmin1,4)
        print *,'U,V,W max=',real(uxmax1,4),real(uymax1,4),real(uzmax1,4)
        !print *,'CFL=',real(abs(max(uxmax1,uymax1,uzmax1)*dt)/min(dx,dy,dz),4)
-
-       if (uxmin1 < uvwt_lbound(1) .or. uxmax1 >= uvwt_ubound(1) .or. &
-           uymin1 < uvwt_lbound(2) .or. uymax1 >= uvwt_ubound(2) .or. &
-           uzmin1 < uvwt_lbound(3) .or. uzmax1 >= uvwt_ubound(3) ) then
-         print *,'Velocity diverged! SIMULATION IS STOPPED!'
-         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-         stop
-       endif
-
     endif
 
-    return
+    if (uxmin1 < uvwt_lbound(1) .or. uxmax1 >= uvwt_ubound(1) .or. &
+        uymin1 < uvwt_lbound(2) .or. uymax1 >= uvwt_ubound(2) .or. &
+        uzmin1 < uvwt_lbound(3) .or. uzmax1 >= uvwt_ubound(3) ) then
+      if (nrank == 0) print *,'Velocity diverged! SIMULATION IS STOPPED!'
+      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+      stop
+    endif
+
   end subroutine test_speed_min_max
   !##################################################################
   !##################################################################
@@ -877,6 +874,67 @@ contains
     return
 
   end subroutine mean_plane_z
+  !##################################################################
+  !##################################################################
+  subroutine error_L1_L2_Linf_xsize(err, l1, l2, linf)
+
+    USE variables, only : nx, ny, nz
+    USE decomp_2d
+
+    implicit none
+      
+    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: err
+    real(mytype),intent(out) :: l1, l2, linf
+
+    call error_L1_L2_Linf_generic(err, l1, l2, linf, xsize(1), xsize(2), xsize(3), nx*ny*nz)
+
+  end subroutine error_L1_L2_Linf_xsize
+  !##################################################################
+
+  !##################################################################
+  subroutine error_L1_L2_Linf_generic(err, l1, l2, linf, n1, n2, n3, ntot)
+
+    ! Compute L1, L2 and Linf norm of given 3D array
+    USE param, only : zero
+    USE decomp_2d
+    USE MPI
+    
+    implicit none
+      
+    real(mytype),intent(in),dimension(n1,n2,n3) :: err
+    real(mytype),intent(out) :: l1, l2, linf
+    integer, intent(in) :: n1, n2, n3, ntot
+
+    integer :: i,j,k,code
+    real(mytype) :: ll1, ll2, llinf
+
+    ll1 = zero
+    ll2 = zero
+    llinf = zero
+
+    do k = 1,n3
+      do j = 1,n2
+        do i = 1,n1
+          ll1 = ll1 + abs(err(i,j,k))
+          ll2 = ll2 + err(i,j,k)*err(i,j,k)
+          llinf = max(llinf, abs(err(i,j,k)))
+        enddo
+      enddo
+    enddo
+
+    ! Parallel
+    call MPI_ALLREDUCE(ll1,l1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    call MPI_ALLREDUCE(ll2,l2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    call MPI_ALLREDUCE(llinf,linf,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+
+    ! Rescaling
+    l1 = l1 / ntot
+    l2 = sqrt(l2 / ntot)
+
+  end subroutine error_L1_L2_Linf_generic
 
 end module tools
 !##################################################################

@@ -27,7 +27,7 @@ else ifeq ($(CMP),gcc)
 CC = mpicc
 FC = mpif90
 #FFLAGS = -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -x f95-cpp-input
-FFLAGS = -cpp -O2 -funroll-loops -floop-optimize -ftree-vectorize -fno-inline -finstrument-functions -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none -msse4.1 -msse4.2 -mavx2
+FFLAGS = -cpp -O0 -g -funroll-loops -floop-optimize -ftree-vectorize -fno-inline -finstrument-functions -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none -msse4.1 -msse4.2 -mavx2
 #-ffpe-trap=invalid,zero
 ifeq "$(shell expr `gfortran -dumpversion | cut -f1 -d.` \>= 10)" "1"
 FFLAGS += -fallow-argument-mismatch
@@ -53,7 +53,7 @@ SRCDECOMP = $(DECOMPDIR)/decomp_2d.f90 $(DECOMPDIR)/glassman.f90 $(DECOMPDIR)/ff
 OBJDECOMP = $(SRCDECOMP:%.f90=%.o)
 SRC = $(SRCDIR)/module_param.f90 $(SRCDIR)/variables.f90 $(SRCDIR)/poisson.f90 $(SRCDIR)/derive.f90 $(SRCDIR)/implicit.f90 $(SRCDIR)/schemes.f90 $(SRCDIR)/parameters.f90 $(SRCDIR)/*.f90
 OBJ = $(SRC:%.f90=%.o)
-SRC = $(SRCDIR)/module_param.f90 $(SRCDIR)/variables.f90 $(SRCDIR)/poisson.f90 $(SRCDIR)/ibm.f90 $(SRCDIR)/derive.f90 $(SRCDIR)/implicit.f90 $(SRCDIR)/schemes.f90 $(SRCDIR)/forces.f90 $(SRCDIR)/probes.f90 $(SRCDIR)/navier.f90 $(SRCDIR)/tools.f90 $(SRCDIR)/visu.f90 $(SRCDIR)/BC-TBL.f90 $(SRCDIR)/BC-ABL.f90 $(SRCDIR)/les_models.f90 $(SRCDIR)/BC-Lock-exchange.f90 $(SRCDIR)/time_integrators.f90 $(SRCDIR)/filters.f90 $(SRCDIR)/parameters.f90 $(SRCDIR)/BC-User.f90 $(SRCDIR)/BC-TGV.f90 $(SRCDIR)/BC-Channel-flow.f90 $(SRCDIR)/BC-Cavity.f90 $(SRCDIR)/BC-Periodic-hill.f90 $(SRCDIR)/BC-Cylinder.f90 $(SRCDIR)/BC-Mixing-layer.f90 $(SRCDIR)/BC-Jet.f90 $(SRCDIR)/BC-dbg-schemes.f90 $(SRCDIR)/BC-Sandbox.f90 $(SRCDIR)/BC-Uniform.f90 $(TURBDIR)/constants.f90 $(TURBDIR)/acl_utils.f90 $(TURBDIR)/airfoils.f90 $(TURBDIR)/dynstall.f90 $(TURBDIR)/dynstall_legacy.f90 $(TURBDIR)/acl_elem.f90 $(TURBDIR)/acl_controller.f90 $(TURBDIR)/acl_turb.f90 $(TURBDIR)/acl_out.f90 $(TURBDIR)/acl_farm_controller.f90 $(TURBDIR)/acl_model.f90 $(TURBDIR)/acl_source.f90 $(TURBDIR)/adm.f90 $(TURBDIR)/turbine.f90 $(SRCDIR)/statistics.f90 $(SRCDIR)/case.f90 $(SRCDIR)/transeq.f90 $(SRCDIR)/genepsi3d.f90 $(SRCDIR)/xcompact3d.f90
+SRC = $(SRCDIR)/module_param.f90 $(SRCDIR)/variables.f90 $(SRCDIR)/poisson.f90 $(SRCDIR)/ibm.f90 $(SRCDIR)/derive.f90 $(SRCDIR)/implicit.f90 $(SRCDIR)/schemes.f90 $(SRCDIR)/forces.f90 $(SRCDIR)/probes.f90 $(SRCDIR)/navier.f90 $(SRCDIR)/tools.f90 $(SRCDIR)/visu.f90 $(SRCDIR)/BC-TBL.f90 $(SRCDIR)/BC-ABL.f90 $(SRCDIR)/les_models.f90 $(SRCDIR)/BC-Lock-exchange.f90 $(SRCDIR)/time_integrators.f90 $(SRCDIR)/filters.f90 $(SRCDIR)/parameters.f90 $(SRCDIR)/BC-User.f90 $(SRCDIR)/BC-TGV.f90 $(SRCDIR)/BC-Channel-flow.f90 $(SRCDIR)/BC-Cavity.f90 $(SRCDIR)/BC-Periodic-hill.f90 $(SRCDIR)/BC-Cylinder.f90 $(SRCDIR)/BC-Mixing-layer.f90 $(SRCDIR)/BC-Jet.f90 $(SRCDIR)/BC-dbg-schemes.f90 $(SRCDIR)/BC-Sandbox.f90 $(SRCDIR)/BC-Uniform.f90 $(TURBDIR)/constants.f90 $(TURBDIR)/acl_utils.f90 $(TURBDIR)/airfoils.f90 $(TURBDIR)/dynstall.f90 $(TURBDIR)/dynstall_legacy.f90 $(TURBDIR)/acl_elem.f90 $(TURBDIR)/acl_controller.f90 $(TURBDIR)/acl_turb.f90 $(TURBDIR)/acl_out.f90 $(TURBDIR)/acl_farm_controller.f90 $(TURBDIR)/acl_model.f90 $(TURBDIR)/acl_source.f90 $(TURBDIR)/adm.f90 $(TURBDIR)/turbine.f90 $(SRCDIR)/statistics.f90 $(SRCDIR)/case.f90 $(SRCDIR)/transeq.f90 $(SRCDIR)/genepsi3d.f90 $(SRCDIR)/x3d_tools.f90 $(SRCDIR)/xcompact3d.f90
 
 
 #######FFT settings##########
@@ -92,6 +92,9 @@ ifeq ($(IO),adios2)
   INC := $(INC) $(patsubst $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-libs),,$(shell $(ADIOS2DIR)/bin/adios2-config -f))
   LIBIO := $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-libs)
 endif
+
+######## Export compiler and flags for unit tests
+export FC FFLAGS OPT DEFS DEFS2 INC
 
 #-----------------------------------------------------------------------
 # Normally no need to change anything below
@@ -172,7 +175,12 @@ $(SRCDIR)/transeq.o: $(SRCDIR)/case.o $(SRCDIR)/les_models.o $(SRCDIR)/probes.o
 $(SRCDIR)/turbine.o: $(SRCDIR)/acl_model.o $(SRCDIR)/acl_source.o $(SRCDIR)/adm.o
 $(SRCDIR)/variables.o: $(SRCDIR)/module_param.o
 $(SRCDIR)/visu.o: $(SRCDIR)/tools.o
-$(SRCDIR)/xcompact3d.o: $(SRCDIR)/transeq.o
+$(SRCDIR)/x3d_tools.o: $(SRCDIR)/transeq.o
+$(SRCDIR)/xcompact3d.o: $(SRCDIR)/transeq.o $(SRCDIR)/x3d_tools.o
+
+.PHONY: tests
+tests:
+	$(MAKE) -C tests
 
 .PHONY: post
 post:
@@ -180,12 +188,11 @@ post:
 	$(FC) $(FFLAGS) -o $@ $(PSRC:.f90=.o)
 
 .PHONY: clean
-
-
 clean:
 	rm -f $(DECOMPDIR)/*.o $(DECOMPDIR)/*.mod
 	rm -f $(SRCDIR)/*.o $(SRCDIR)/*.mod
 	rm -f *.o *.mod xcompact3d post
+	$(MAKE) -C tests clean
 
 .PHONY: cleanall
 cleanall: clean
