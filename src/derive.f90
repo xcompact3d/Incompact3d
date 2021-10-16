@@ -2752,9 +2752,8 @@ subroutine derxpv(tx,ux,rx,sx,cfi6,csi6,cwi6,cfx6,csx6,cwx6,nxm,nx,ny,nz,npaire)
 
   ! Arguments
   integer, intent(in) :: nx, nxm, ny, nz, npaire
-  real(mytype), intent(out), dimension(nx,ny,nz) :: tx
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
   real(mytype), intent(in), dimension(nxm,ny,nz) :: ux
-  real(mytype), intent(out), dimension(nxm,ny,nz) :: rx
   real(mytype), intent(out), dimension(ny,nz) :: sx
   real(mytype), intent(in), dimension(nx) :: cfi6, csi6, cwi6
   real(mytype), intent(in), dimension(nx) :: cfx6, csx6, cwx6
@@ -4167,9 +4166,8 @@ subroutine derzpv(tz,uz,rz,sz,cfiz6,csiz6,cwiz6,cfz6,csz6,cwz6,&
 
   ! Arguments
   integer, intent(in) :: nx, nzm, ny, nz, npaire
-  real(mytype), intent(out), dimension(nx,ny,nz) :: tz
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
   real(mytype), intent(in), dimension(nx,ny,nzm) :: uz
-  real(mytype), intent(out), dimension(nx,ny,nzm) :: rz
   real(mytype), intent(out), dimension(nx,ny) :: sz
   real(mytype), intent(in), dimension(nz) :: cfiz6, csiz6, cwiz6
   real(mytype), intent(in), dimension(nz) :: cfz6, csz6, cwz6
