@@ -108,4 +108,118 @@ contains
 
    end subroutine verif_derxvp_00
 
+   ! Serial test
+   @test
+   subroutine verif_interxvp_00()
+
+      use decomp_2d
+      use param
+      use var
+      use variables
+      use tools, only : error_l1_l2_linf
+
+      implicit none
+
+      real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: input, diloc
+      real(mytype), dimension(nxmsize,xsize(2),xsize(3)) :: output, sol
+      real(mytype) :: x, l1, l2, linf, sl1, sl2, slinf
+      integer :: i
+
+      ! Lx = Ly = Lz = 2
+      do i = 1, xsize(1)
+         x = (i-1) * dx
+         input(i,:,:) = sin(pi*x) + cos(5*pi*x)
+      enddo
+
+      ! test derxvp
+      do i = 1, nxmsize
+         x = (i-half) * dx
+         sol(i,:,:) = sin(pi*x) + cos(5*pi*x)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf, nxmsize, xsize(2), xsize(3), nxmsize*ysize(2)*zsize(3))
+      call interxvp(output,input,diloc,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+      call error_l1_l2_linf(output-sol, l1, l2, linf, nxmsize, xsize(2), xsize(3), nxmsize*ysize(2)*zsize(3))
+      write(*,*) "interxvp : ", l1/sl1, l2/sl2, linf/slinf
+      @assertEqual(l1/sl1, 0.d0, tolerance=1.d-12)
+      @assertEqual(l2/sl2, 0.d0, tolerance=1.d-12)
+      @assertEqual(linf/slinf, 0.d0, tolerance=1.d-12)
+
+   end subroutine verif_interxvp_00
+
+   ! Serial test
+   @test
+   subroutine verif_derxpv_00()
+
+      use decomp_2d
+      use param
+      use var
+      use variables
+      use tools, only : error_l1_l2_linf
+
+      implicit none
+
+      real(mytype), dimension(nxmsize,xsize(2),xsize(3)) :: input
+      real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: diloc, output, sol
+      real(mytype) :: x, l1, l2, linf, sl1, sl2, slinf
+      integer :: i
+
+      ! Lx = Ly = Lz = 2
+      do i = 1, nxmsize
+         x = (i-half) * dx
+         input(i,:,:) = sin(pi*x) + cos(5*pi*x)
+      enddo
+
+      ! test derxvp
+      do i = 1, xsize(1)
+         x = (i-1) * dx
+         sol(i,:,:) = pi*cos(pi*x) - 5*pi*sin(5*pi*x)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf)
+      call derxpv(output,input,diloc,sx,cfip6,csip6,cwip6,cfx6,csx6,cwx6,nxmsize,xsize(1),xsize(2),xsize(3),1)
+      call error_l1_l2_linf(output-sol, l1, l2, linf)
+      write(*,*) "derxpv : ", l1/sl1, l2/sl2, linf/slinf
+      @assertEqual(l1/sl1, 0.d0, tolerance=1.d-12)
+      @assertEqual(l2/sl2, 0.d0, tolerance=1.d-12)
+      @assertEqual(linf/slinf, 0.d0, tolerance=1.d-12)
+
+   end subroutine verif_derxpv_00
+
+   ! Serial test
+   @test
+   subroutine verif_interxpv_00()
+
+      use decomp_2d
+      use param
+      use var
+      use variables
+      use tools, only : error_l1_l2_linf
+
+      implicit none
+
+      real(mytype), dimension(nxmsize,xsize(2),xsize(3)) :: input
+      real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: diloc, output, sol
+      real(mytype) :: x, l1, l2, linf, sl1, sl2, slinf
+      integer :: i
+
+      ! Lx = Ly = Lz = 2
+      do i = 1, nxmsize
+         x = (i-half) * dx
+         input(i,:,:) = sin(pi*x) + cos(5*pi*x)
+      enddo
+
+      ! test derxvp
+      do i = 1, xsize(1)
+         x = (i-1) * dx
+         sol(i,:,:) = sin(pi*x) + cos(5*pi*x)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf)
+      call interxpv(output,input,diloc,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,nxmsize,xsize(1),xsize(2),xsize(3),1)
+      call error_l1_l2_linf(output-sol, l1, l2, linf)
+      write(*,*) "interxpv : ", l1/sl1, l2/sl2, linf/slinf
+      @assertEqual(l1/sl1, 0.d0, tolerance=1.d-12)
+      @assertEqual(l2/sl2, 0.d0, tolerance=1.d-12)
+      @assertEqual(linf/slinf, 0.d0, tolerance=1.d-12)
+
+   end subroutine verif_interxpv_00
+
 end module testx00
