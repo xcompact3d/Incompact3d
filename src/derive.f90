@@ -2502,8 +2502,8 @@ subroutine derxvp(tx,ux,rx,sx,cfx6,csx6,cwx6,nx,nxm,ny,nz,npaire)
   ! Arguments
   integer, intent(in) :: nx, nxm, ny, nz, npaire
   real(mytype), intent(out), dimension(nxm,ny,nz) :: tx
-  real(mytype), intent(in), dimension(nx,ny,nz) :: ux
   real(mytype), intent(out), dimension(nx,ny,nz) :: rx
+  real(mytype), intent(in), dimension(nx,ny,nz) :: ux
   real(mytype), intent(out), dimension(ny,nz) :: sx
   real(mytype), intent(in), dimension(nxm) :: cfx6, csx6, cwx6
 
@@ -2511,6 +2511,7 @@ subroutine derxvp(tx,ux,rx,sx,cfx6,csx6,cwx6,nx,nxm,ny,nz,npaire)
   integer :: i, j, k
 
   if (nclx) then
+     ! nxm = nx
      do concurrent (k=1:nz)
         do concurrent (j=1:ny)
 
@@ -2553,6 +2554,7 @@ subroutine derxvp(tx,ux,rx,sx,cfx6,csx6,cwx6,nx,nxm,ny,nz,npaire)
         enddo
      enddo
   else
+     ! nxm = nx-1
      do concurrent (k=1:nz)
         do concurrent (j=1:ny)
 
@@ -2614,8 +2616,8 @@ subroutine interxvp(tx,ux,rx,sx,cifx6,cisx6,ciwx6,nx,nxm,ny,nz,npaire)
   ! Arguments
   integer, intent(in) :: nx, nxm, ny, nz, npaire
   real(mytype), intent(out), dimension(nxm,ny,nz) :: tx
-  real(mytype), intent(in), dimension(nx,ny,nz) :: ux
   real(mytype), intent(out), dimension(nx,ny,nz) :: rx
+  real(mytype), intent(in), dimension(nx,ny,nz) :: ux
   real(mytype), intent(out), dimension(ny,nz) :: sx
   real(mytype), intent(in), dimension(nxm) :: cifx6, cisx6, ciwx6
 
@@ -2623,6 +2625,7 @@ subroutine interxvp(tx,ux,rx,sx,cifx6,cisx6,ciwx6,nx,nxm,ny,nz,npaire)
   integer :: i, j, k
 
   if (nclx) then
+     ! nxm = nx
      do concurrent (k=1:nz)
         do concurrent (j=1:ny)
 
@@ -2687,6 +2690,7 @@ subroutine interxvp(tx,ux,rx,sx,cifx6,cisx6,ciwx6,nx,nxm,ny,nz,npaire)
         enddo
      enddo
   else
+     ! nxm = nx-1
      if (npaire==1) then
         do concurrent (k=1:nz)
            do concurrent (j=1:ny)
@@ -2762,6 +2766,7 @@ subroutine derxpv(tx,ux,rx,sx,cfi6,csi6,cwi6,cfx6,csx6,cwx6,nxm,nx,ny,nz,npaire)
   integer :: i, j, k
 
   if (nclx) then
+     ! nxm = nx
      do concurrent (k=1:nz)
         do concurrent (j=1:ny)
 
@@ -2804,6 +2809,7 @@ subroutine derxpv(tx,ux,rx,sx,cfi6,csi6,cwi6,cfx6,csx6,cwx6,nxm,nx,ny,nz,npaire)
         enddo
      enddo
   else
+     ! nxm = nx-1
      if (npaire==1) then
         do concurrent (k=1:nz)
            do concurrent (j=1:ny)
@@ -2860,6 +2866,7 @@ subroutine interxpv(tx,ux,rx,sx,cifi6,cisi6,ciwi6,cifx6,cisx6,ciwx6,&
   integer :: i, j, k
 
   if (nclx) then
+     ! nxm = nx
      do concurrent (k=1:nz)
         do concurrent (j=1:ny)
 
@@ -2924,6 +2931,7 @@ subroutine interxpv(tx,ux,rx,sx,cifi6,cisi6,ciwi6,cifx6,cisx6,ciwx6,&
         enddo
      enddo
   else
+     ! nxm = nx-1
      if (npaire==1) then
         do concurrent (k=1:nz)
            do concurrent (j=1:ny)
@@ -2998,8 +3006,8 @@ subroutine interyvp(ty,uy,ry,sy,cify6,cisy6,ciwy6,nx,ny,nym,nz,npaire)
   ! Arguments
   integer, intent(in) :: nx, ny, nym, nz, npaire
   real(mytype), intent(out), dimension(nx,nym,nz) :: ty
-  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
   real(mytype), intent(out), dimension(nx,ny,nz) :: ry
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
   real(mytype), intent(out), dimension(nx,nz) :: sy
   real(mytype), intent(in), dimension(nym) :: cify6, cisy6, ciwy6
 
@@ -3007,6 +3015,7 @@ subroutine interyvp(ty,uy,ry,sy,cify6,cisy6,ciwy6,nx,ny,nym,nz,npaire)
   integer :: i, j, k
 
   if (ncly) then
+     ! nym = ny
      do concurrent (k=1:nz)
 
         ! Compute r.h.s.
@@ -3107,6 +3116,7 @@ subroutine interyvp(ty,uy,ry,sy,cify6,cisy6,ciwy6,nx,ny,nym,nz,npaire)
 
      enddo
   else
+     ! nym = ny-1
      if (npaire==1) then
         do concurrent (k=1:nz)
 
@@ -3191,8 +3201,8 @@ subroutine deryvp(ty,uy,ry,sy,cfy6,csy6,cwy6,ppyi,nx,ny,nym,nz,npaire)
   ! Arguments
   integer, intent(in) :: nx, ny, nym, nz, npaire
   real(mytype), intent(out), dimension(nx,nym,nz) :: ty
-  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
   real(mytype), intent(out), dimension(nx,ny,nz) :: ry
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
   real(mytype), intent(out), dimension(nx,nz) :: sy
   real(mytype), intent(in), dimension(nym) :: cfy6, csy6, cwy6, ppyi
 
@@ -3200,6 +3210,7 @@ subroutine deryvp(ty,uy,ry,sy,cfy6,csy6,cwy6,ppyi,nx,ny,nym,nz,npaire)
   integer :: i, j, k
 
   if (ncly) then
+     ! nym = ny
      do concurrent (k=1:nz)
 
         ! Compute r.h.s.
@@ -3272,6 +3283,7 @@ subroutine deryvp(ty,uy,ry,sy,cfy6,csy6,cwy6,ppyi,nx,ny,nym,nz,npaire)
 
      enddo
   else
+     ! nym = ny-1
      if (npaire==0) then
         do concurrent (k=1:nz)
 
@@ -3344,9 +3356,8 @@ subroutine interypv(ty,uy,ry,sy,cifi6y,cisi6y,ciwi6y,cify6,cisy6,ciwy6,&
 
   ! Arguments
   integer, intent(in) :: nx, ny, nym, nz, npaire
-  real(mytype), intent(out), dimension(nx,ny,nz) :: ty
+  real(mytype), intent(out), dimension(nx,ny,nz) :: ty, ry
   real(mytype), intent(in), dimension(nx,nym,nz) :: uy
-  real(mytype), intent(out), dimension(nx,ny,nz) :: ry
   real(mytype), intent(out), dimension(nx,nz) :: sy
   real(mytype), intent(in), dimension(ny) :: cifi6y, cisi6y, ciwi6y
   real(mytype), intent(in), dimension(ny) :: cify6, cisy6, ciwy6
@@ -3355,6 +3366,7 @@ subroutine interypv(ty,uy,ry,sy,cifi6y,cisi6y,ciwi6y,cify6,cisy6,ciwy6,&
   integer :: i, j, k
 
   if (ncly) then
+     ! nym = ny
      do concurrent (k=1:nz)
 
         ! Compute r.h.s.
@@ -3455,6 +3467,7 @@ subroutine interypv(ty,uy,ry,sy,cifi6y,cisi6y,ciwi6y,cify6,cisy6,ciwy6,&
 
      enddo
   else
+     ! nym = ny-1
      if (npaire==1) then
         do concurrent (k=1:nz)
 
@@ -3551,9 +3564,8 @@ subroutine derypv(ty,uy,ry,sy,cfi6y,csi6y,cwi6y,cfy6,csy6,cwy6,&
 
   ! Arguments
   integer, intent(in) :: nx, ny, nym, nz, npaire
-  real(mytype), intent(out), dimension(nx,ny,nz) :: ty
+  real(mytype), intent(out), dimension(nx,ny,nz) :: ty, ry
   real(mytype), intent(in), dimension(nx,nym,nz) :: uy
-  real(mytype), intent(out), dimension(nx,ny,nz) :: ry
   real(mytype), intent(out), dimension(nx,nz) :: sy
   real(mytype), intent(in), dimension(ny) :: cfi6y, csi6y, cwi6y, ppy
   real(mytype), intent(in), dimension(nym) :: cfy6, csy6, cwy6
@@ -3562,6 +3574,7 @@ subroutine derypv(ty,uy,ry,sy,cfi6y,csi6y,cwi6y,cfy6,csy6,cwy6,&
   integer :: i, j, k
 
   if (ncly) then
+     ! nym = ny
      do concurrent (k=1:nz)
 
         ! Compute r.h.s.
@@ -3634,6 +3647,7 @@ subroutine derypv(ty,uy,ry,sy,cfi6y,csi6y,cwi6y,cfy6,csy6,cwy6,&
 
      enddo
   else
+     ! nym = ny-1
      if (npaire==1) then
         do concurrent (k=1:nz)
 
@@ -3704,8 +3718,8 @@ subroutine derzvp(tz,uz,rz,sz,cfz6,csz6,cwz6,nx,ny,nz,nzm,npaire)
   ! Arguments
   integer, intent(in) :: nx, ny, nz, nzm, npaire
   real(mytype), intent(out), dimension(nx,ny,nzm) :: tz
-  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
   real(mytype), intent(out), dimension(nx,ny,nz) :: rz
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
   real(mytype), intent(out), dimension(nx,ny) :: sz
   real(mytype), intent(in), dimension(nzm) :: cfz6, csz6, cwz6
 
@@ -3713,6 +3727,7 @@ subroutine derzvp(tz,uz,rz,sz,cfz6,csz6,cwz6,nx,ny,nz,nzm,npaire)
   integer :: i, j, k
 
   if (nclz) then
+     ! nzm = nz
 
      ! Compute r.h.s.
      do concurrent (j=1:ny)
@@ -3815,6 +3830,7 @@ subroutine derzvp(tz,uz,rz,sz,cfz6,csz6,cwz6,nx,ny,nz,nzm,npaire)
      enddo
 
   else
+     ! nzm = nz-1
 
      ! Compute r.h.s.
      if (npaire==1) then
@@ -3919,8 +3935,8 @@ subroutine interzvp(tz,uz,rz,sz,cifz6,cisz6,ciwz6,nx,ny,nz,nzm,npaire)
   ! Arguments
   integer, intent(in) :: nx, ny, nz, nzm, npaire
   real(mytype), intent(out), dimension(nx,ny,nzm) :: tz
-  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
   real(mytype), intent(out), dimension(nx,ny,nz) :: rz
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
   real(mytype), intent(out), dimension(nx,ny) :: sz
   real(mytype), intent(in), dimension(nzm) :: cifz6, cisz6, ciwz6
 
@@ -3928,6 +3944,7 @@ subroutine interzvp(tz,uz,rz,sz,cifz6,cisz6,ciwz6,nx,ny,nz,nzm,npaire)
   integer :: i, j, k
 
   if (nclz) then
+     ! nzm = nz
 
      ! Compute r.h.s.
      do concurrent (j=1:ny)
@@ -4064,6 +4081,7 @@ subroutine interzvp(tz,uz,rz,sz,cifz6,cisz6,ciwz6,nx,ny,nz,nzm,npaire)
      enddo
 
   else
+     ! nzm = nz-1
      if (npaire==1) then
 
         ! Compute r.h.s.
@@ -4176,6 +4194,7 @@ subroutine derzpv(tz,uz,rz,sz,cfiz6,csiz6,cwiz6,cfz6,csz6,cwz6,&
   integer :: i, j, k
 
   if (nclz) then
+     ! nzm = nz
 
      ! Compute r.h.s.
      do concurrent (j=1:ny)
@@ -4278,6 +4297,7 @@ subroutine derzpv(tz,uz,rz,sz,cfiz6,csiz6,cwiz6,cfz6,csz6,cwz6,&
      enddo
 
   else
+     ! nzm = nz-1
      if (npaire==1) then
 
         ! Compute r.h.s.
@@ -4352,9 +4372,8 @@ subroutine interzpv(tz,uz,rz,sz,cifiz6,cisiz6,ciwiz6,cifz6,cisz6,ciwz6,&
 
   ! Arguments
   integer, intent(in) :: nx, ny, nz, nzm, npaire
-  real(mytype), intent(out), dimension(nx,ny,nz) :: tz
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
   real(mytype), intent(in), dimension(nx,ny,nzm) :: uz
-  real(mytype), intent(out), dimension(nx,ny,nz) :: rz
   real(mytype), intent(out), dimension(nx,ny) :: sz
   real(mytype), intent(in), dimension(nz) :: cifiz6, cisiz6, ciwiz6
   real(mytype), intent(in), dimension(nz) :: cifz6, cisz6, ciwz6
@@ -4363,6 +4382,7 @@ subroutine interzpv(tz,uz,rz,sz,cifiz6,cisiz6,ciwiz6,cifz6,cisz6,ciwz6,&
   integer :: i, j, k
 
   if (nclz) then
+     ! nzm = nz
 
      ! Compute r.h.s.
      do concurrent (j=1:ny)
@@ -4499,6 +4519,7 @@ subroutine interzpv(tz,uz,rz,sz,cifiz6,cisiz6,ciwiz6,cifz6,cisz6,ciwz6,&
      enddo
 
   else
+     ! nzm = nz-1
      if (npaire==1) then
 
         ! Compute r.h.s.
