@@ -1,8 +1,4 @@
-#!/bin/bash -f
-
-make clean
-
-make all
+#!/usr/bin/env bash
 
 ./derive/test_x_00
 ./derive/test_y_00

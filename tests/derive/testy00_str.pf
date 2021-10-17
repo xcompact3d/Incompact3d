@@ -114,12 +114,126 @@ contains
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), nymsize, ysize(3), xsize(1)*nymsize*zsize(3))
       call deryvp(output,input,diloc,sy,cfy6,csy6,cwy6,ppyi,ysize(1),ysize(2),nymsize,ysize(3),0)
-      call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
+      call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), nymsize, ysize(3), xsize(1)*nymsize*zsize(3))
       write(*,*) "deryvp : ", l1/sl1, l2/sl2, linf/slinf
+      @assertEqual(l1/sl1, 0.d0, tolerance=1.d-10)
+      @assertEqual(l2/sl2, 0.d0, tolerance=1.d-10)
+      @assertEqual(linf/slinf, 0.d0, tolerance=1.d-10)
+
+   end subroutine verif_deryvp_00_str
+
+   ! Serial test
+   @test
+   subroutine verif_interyvp_00_str()
+
+      use decomp_2d
+      use param
+      use var
+      use variables
+      use tools, only : error_l1_l2_linf
+
+      implicit none
+
+      real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: input, diloc
+      real(mytype), dimension(ysize(1),nymsize,ysize(3)) :: output, sol
+      real(mytype) :: y, l1, l2, linf, sl1, sl2, slinf
+      integer :: j
+
+      ! Lx = Ly = Lz = 2
+      do j = 1, ysize(2)
+         y = yp(j)
+         input(:,j,:) = sin(pi*y) + cos(5*pi*y)
+      enddo
+
+      ! test deryvp
+      do j = 1, nymsize
+         y = ypi(j)
+         sol(:,j,:) = sin(pi*y) + cos(5*pi*y)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), nymsize, ysize(3), xsize(1)*nymsize*zsize(3))
+      call interyvp(output,input,diloc,sz,cifyp6,cisyp6,ciwyp6,ysize(1),ysize(2),nymsize,ysize(3),1)
+      call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), nymsize, ysize(3), xsize(1)*nymsize*zsize(3))
+      write(*,*) "interyvp : ", l1/sl1, l2/sl2, linf/slinf
       @assertEqual(l1/sl1, 0.d0, tolerance=3.d-10)
       @assertEqual(l2/sl2, 0.d0, tolerance=3.d-10)
       @assertEqual(linf/slinf, 0.d0, tolerance=3.d-10)
 
-   end subroutine verif_deryvp_00_str
+   end subroutine verif_interyvp_00_str
+
+   ! Serial test
+   @test
+   subroutine verif_derypv_00_str()
+
+      use decomp_2d
+      use param
+      use var
+      use variables
+      use tools, only : error_l1_l2_linf
+
+      implicit none
+
+      real(mytype), dimension(ysize(1),nymsize,ysize(3)) :: input
+      real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: diloc, output, sol
+      real(mytype) :: y, l1, l2, linf, sl1, sl2, slinf
+      integer :: j
+
+      ! Lx = Ly = Lz = 2
+      do j = 1, nymsize
+         y = ypi(j)
+         input(:,j,:) = sin(pi*y) + cos(5*pi*y)
+      enddo
+
+      ! test deryvp
+      do j = 1, ysize(2)
+         y = yp(j)
+         sol(:,j,:) = pi*cos(pi*y) - 5*pi*sin(5*pi*y)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
+      call derypv(output,input,diloc,sy,cfip6y,csip6y,cwip6y,cfy6,csy6,cwy6,ppy,ysize(1),nymsize,ysize(2),ysize(3),1)
+      call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
+      write(*,*) "derypv : ", l1/sl1, l2/sl2, linf/slinf
+      @assertEqual(l1/sl1, 0.d0, tolerance=1.d-10)
+      @assertEqual(l2/sl2, 0.d0, tolerance=1.d-10)
+      @assertEqual(linf/slinf, 0.d0, tolerance=1.d-10)
+
+   end subroutine verif_derypv_00_str
+
+   ! Serial test
+   @test
+   subroutine verif_interypv_00_str()
+
+      use decomp_2d
+      use param
+      use var
+      use variables
+      use tools, only : error_l1_l2_linf
+
+      implicit none
+
+      real(mytype), dimension(ysize(1),nymsize,ysize(3)) :: input
+      real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: diloc, output, sol
+      real(mytype) :: y, l1, l2, linf, sl1, sl2, slinf
+      integer :: j
+
+      ! Lx = Ly = Lz = 2
+      do j = 1, nymsize
+         y = ypi(j)
+         input(:,j,:) = sin(pi*y) + cos(5*pi*y)
+      enddo
+
+      ! test deryvp
+      do j = 1, ysize(2)
+         y = yp(j)
+         sol(:,j,:) = sin(pi*y) + cos(5*pi*y)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
+      call interypv(output,input,diloc,sz,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,ysize(1),nymsize,ysize(2),ysize(3),1)
+      call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
+      write(*,*) "interypv : ", l1/sl1, l2/sl2, linf/slinf
+      @assertEqual(l1/sl1, 0.d0, tolerance=3.d-10)
+      @assertEqual(l2/sl2, 0.d0, tolerance=3.d-10)
+      @assertEqual(linf/slinf, 0.d0, tolerance=3.d-10)
+
+   end subroutine verif_interypv_00_str
 
 end module testy00_str
