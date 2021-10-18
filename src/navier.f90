@@ -81,9 +81,13 @@ contains
     converged = .FALSE.
     poissiter = 0
     rho0 = one
-
+#ifdef DOUBLE_PREC
     atol = 1.0e-14_mytype !! Absolute tolerance for Poisson solver
     rtol = 1.0e-14_mytype !! Relative tolerance for Poisson solver
+#else
+    atol = 1.0e-9_mytype !! Absolute tolerance for Poisson solver
+    rtol = 1.0e-9_mytype !! Relative tolerance for Poisson solver
+#endif
 
     IF (ilmn.AND.ivarcoeff) THEN
        !! Variable-coefficient Poisson solver works on div(u), not div(rho u)
