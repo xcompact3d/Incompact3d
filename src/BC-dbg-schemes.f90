@@ -32,24 +32,29 @@
 
 module dbg_schemes
 
-  USE decomp_2d
-  USE variables
-  USE param
+  use decomp_2d
+  use variables
+  use param
 
-  IMPLICIT NONE
+  implicit none
 
-  PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_dbg, boundary_conditions_dbg, postprocess_dbg
+  private ! All functions/subroutines private by default
+  public :: init_dbg, boundary_conditions_dbg, postprocess_dbg
+  public ::  sin_prec,  cos_prec,  tan_prec, &
+            asin_prec, acos_prec, atan_prec, &
+            sinh_prec, cosh_prec, tanh_prec, &
+             exp_prec,  log_prec,log10_prec, &
+            sqrt_prec,  abs_prec
 
 contains
   !********************************************************************
   subroutine init_dbg (ux1,uy1,uz1,ep1,phi1)
 
-    USE decomp_2d
-    USE decomp_2d_io
-    USE variables
-    USE param
-    USE MPI
+    use decomp_2d
+    use decomp_2d_io
+    use variables
+    use param
+    use MPI
 
     implicit none
 
@@ -66,9 +71,9 @@ contains
   !********************************************************************
   subroutine boundary_conditions_dbg (ux,uy,uz,phi)
 
-    USE param
-    USE variables
-    USE decomp_2d
+    use param
+    use variables
+    use decomp_2d
 
     implicit none
 
@@ -78,6 +83,10 @@ contains
     return
   end subroutine boundary_conditions_dbg
 
+  !##################################################################
+  !********************************************************************
+  ! Math functions for Single/double precision
+  !-------------------------------------------
   function sin_prec(x) result(y)
     USE decomp_2d, only : mytype
     real(mytype), intent(in) :: x
@@ -88,7 +97,7 @@ contains
     y = sin(x)
 #endif
   end function sin_prec
-
+  !-------------------------------------------
   function cos_prec(x) result(y)
     USE decomp_2d, only : mytype
     real(mytype), intent(in) :: x
@@ -99,7 +108,128 @@ contains
     y = cos(x)
 #endif
   end function cos_prec
-
+  !-------------------------------------------
+  function tan_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = dtan(x)
+#else
+    y = tan(x)
+#endif
+  end function tan_prec
+  !-------------------------------------------
+  function asin_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = dasin(x)
+#else
+    y = asin(x)
+#endif
+  end function asin_prec
+  !-------------------------------------------
+  function acos_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = dacos(x)
+#else
+    y = acos(x)
+#endif
+  end function acos_prec
+  !-------------------------------------------
+  function atan_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = datan(x)
+#else
+    y = atan(x)
+#endif
+  end function atan_prec
+  !-------------------------------------------
+  function sinh_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = dsinh(x)
+#else
+    y = sinh(x)
+#endif
+  end function sinh_prec
+  !-------------------------------------------
+  function cosh_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = dcosh(x)
+#else
+    y = cosh(x)
+#endif
+  end function cosh_prec
+  !-------------------------------------------
+  function tanh_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = dtanh(x)
+#else
+    y = tanh(x)
+#endif
+  end function tanh_prec
+  !-------------------------------------------
+  function exp_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = dexp(x)
+#else
+    y = exp(x)
+#endif
+  end function exp_prec
+  !-------------------------------------------
+  function log_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = dlog(x)
+#else
+    y = alog(x)
+#endif
+  end function log_prec
+  !-------------------------------------------
+  function log10_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = dlog10(x)
+#else
+    y = alog10(x)
+#endif
+  end function log10_prec
+  !-------------------------------------------
+  function sqrt_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = dsqrt(x)
+#else
+    y = sqrt(x)
+#endif
+  end function sqrt_prec
+  !-------------------------------------------
   function abs_prec(x) result(y)
     USE decomp_2d, only : mytype
     real(mytype), intent(in) :: x
@@ -111,6 +241,7 @@ contains
 #endif
   end function abs_prec
 
+  !********************************************************************
   subroutine debug_schemes()
 
     USE param

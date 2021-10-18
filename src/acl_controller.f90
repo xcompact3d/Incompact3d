@@ -1,6 +1,8 @@
 module actuator_line_controller
 
      use decomp_2d, only: mytype, nrank
+     use variables, only : ilist
+     use param, only: itime
      
 implicit none
 ! Define some parameters
@@ -263,18 +265,18 @@ subroutine operate_controller(control,time,NumBl,rotSpeed)
     ! We are in region 3 - power is constant
     IF((control%GenSpeedF>=control%VS_RtGnSp).OR.(control%PitCom(1)>=control%VS_Rgn3MP)) THEN 
       control%GenTrq = control%VS_RtPwr/control%GenSpeedF
-      if (nrank==0) print *, 'Turbine operates in region 3'
+      if (nrank==0.and.mod(itime,ilist)==0) write(*,*) 'Turbine operates in region 3'
     ELSEIF(control%GenSpeedF<=control%VS_CtInSp)  THEN ! We are in region 1 - torque is zero
-      if (nrank==0) print *, 'Turbine operates in region 1'
+      if (nrank==0.and.mod(itime,ilist)==0) write(*,*) 'Turbine operates in region 1'
     control%GenTrq = 0. 
     ELSEIF((control%GenSpeedF>control%VS_CtInSp).and.(control%GenSpeedF<control%VS_Rgn2Sp))  THEN  ! We are in region 1 1/2 - linear ramp in torque from zero to optimal
-      if (nrank==0) print *, 'Turbine operates in region 1 1/2'
+      if (nrank==0.and.mod(itime,ilist)==0) write(*,*) 'Turbine operates in region 1 1/2'
     control%GenTrq = control%VS_Slope15*(control%GenSpeedF-control%VS_CtInSp)
    ELSEIF(control%GenSpeedF<control%VS_TrGnSp)  THEN  ! We are in region 2 - optimal torque is proportional to the square of the generator speed
-      if (nrank==0) print *, 'Turbine operates in region 2'
+      if (nrank==0.and.mod(itime,ilist)==0) write(*,*) 'Turbine operates in region 2'
     control%GenTrq=control%VS_Rgn2K*control%GenSpeedF*control%GenSpeedF
    ELSE   ! We are in region 2 1/2 - simple induction generator transition region
-      if (nrank==0) print *, 'Turbine operates in region 2 1/2 '
+      if (nrank==0.and.mod(itime,ilist)==0) write(*,*) 'Turbine operates in region 2 1/2 '
     control%GenTrq=control%VS_Slope25*(control%GenSpeedF-control%VS_SySp)
    ENDIF
 

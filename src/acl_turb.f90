@@ -1,6 +1,11 @@
 module actuator_line_turbine
     
     use decomp_2d, only: mytype, nrank
+    USE decomp_2d, only : real_type
+    use variables, only : ilist
+    use param, only: itime, zero, zpone, half, one, two, onethousand
+    use dbg_schemes, only: cos_prec, sin_prec, abs_prec, exp_prec, acos_prec, sqrt_prec
+    use constants
     use actuator_line_model_utils
     use Airfoils
     use actuator_line_element
@@ -21,13 +26,13 @@ type TurbineType
     real(mytype) :: IRotor ! Inertia of the Rotor
     real(mytype) :: A ! Rotor area
     real(mytype) :: Torque, angularVel,deltaOmega,TSR,Uref ! Torque and rotation for the shaft  
-    real(mytype) :: Ux_upstream=0.0
-    real(mytype) :: Uy_upstream=0.0
-    real(mytype) :: Uz_upstream=0.0
-    real(mytype) :: AzimAngle=0.0
-    real(mytype) :: dist_from_axis=0.0
-    real(mytype) :: cbp=0.0, cbp_old=0.0 ! Collective blade pitch
-    integer :: No_rev=0.0
+    real(mytype) :: Ux_upstream=zero
+    real(mytype) :: Uy_upstream=zero
+    real(mytype) :: Uz_upstream=zero
+    real(mytype) :: AzimAngle=zero
+    real(mytype) :: dist_from_axis=zero
+    real(mytype) :: cbp=zero, cbp_old=zero ! Collective blade pitch
+    integer :: No_rev=0
     logical :: Is_constant_rotation_operated = .false. ! For a constant rotational velocity (in Revolutions Per Minute)
     logical :: Is_NRELController = .false. ! Active control-based rotational velocity using the NREL controller
     logical :: Is_ListController = .false. ! Active control-based rotational velocity using the rotor averaged velocity and
@@ -64,7 +69,7 @@ type TurbineType
     real(mytype) :: Thrust, Power ! Absolute values for Thrust and Power
 
     ! Rotor Statistics
-    real(mytype) :: CT_ave=0.0_mytype, CP_ave=0.0_mytype, Torque_ave=0.0_mytype
+    real(mytype) :: CT_ave=zero, CP_ave=zero, Torque_ave=zero
 
 end type TurbineType
     
@@ -81,7 +86,7 @@ contains
 
     call read_actuatorline_geometry(turbine%blade_geom_file,turbine%Rmax,SVec,rR,ctoR,pitch,thick,Nstations)
     ! Make sure that the spanwise is [0 0 1]
-    Svec = [0.0d0,0.0d0,1.0d0]
+    Svec = [zero,zero,one]
     ! Make sure that origin is [0,0,0] : we set everything to origin 0 and then translate the
     ! turbine to the actual origin(this is for simplicity)
     theta=2*pi/turbine%Nblades
@@ -98,28 +103,34 @@ contains
     turbine%blade(iblade)%QCy(istation)=rR(istation)*turbine%Rmax*Svec(2)!+turbine%blade(iblade)%COR(2)
     turbine%blade(iblade)%QCz(istation)=rR(istation)*turbine%Rmax*Svec(3)!+turbine%blade(iblade)%COR(3)
     if(turbine%IsCounterClockwise) then
-        turbine%blade(iblade)%tx(istation)=sin(pitch(istation)/180.0*pi)    
-        turbine%blade(iblade)%ty(istation)=-cos(pitch(istation)/180.0*pi)    
-        turbine%blade(iblade)%tz(istation)= 0.0
+        turbine%blade(iblade)%tx(istation)=sin_prec(pitch(istation)*conrad)
+        turbine%blade(iblade)%ty(istation)=-cos_prec(pitch(istation)*conrad)
+        turbine%blade(iblade)%tz(istation)= zero
         turbine%blade(iblade)%C(istation)=ctoR(istation)*turbine%Rmax
         turbine%blade(iblade)%thick(istation)=thick(istation)
-        turbine%blade(iblade)%pitch(istation)=pitch(istation)/180.0*pi
+        turbine%blade(iblade)%pitch(istation)=pitch(istation)*conrad
     elseif(turbine%IsClockwise) then
-        turbine%blade(iblade)%tx(istation)=sin(pitch(istation)/180.0*pi)    
-        turbine%blade(iblade)%ty(istation)=cos(pitch(istation)/180.0*pi)    
-        turbine%blade(iblade)%tz(istation)= 0.0
+        turbine%blade(iblade)%tx(istation)=sin_prec(pitch(istation)*conrad)
+        turbine%blade(iblade)%ty(istation)=cos_prec(pitch(istation)*conrad)
+        turbine%blade(iblade)%tz(istation)= zero
         turbine%blade(iblade)%C(istation)=ctoR(istation)*turbine%Rmax
         turbine%blade(iblade)%thick(istation)=thick(istation)
-        turbine%blade(iblade)%pitch(istation)=pitch(istation)/180.0*pi
+        turbine%blade(iblade)%pitch(istation)=pitch(istation)*conrad
         turbine%blade(iblade)%FlipN = .true.
     endif
     !### Do the blade cone angle ###
     ! Rotate coordinates (around y)
-    call QuatRot(turbine%blade(iblade)%QCx(istation),turbine%blade(iblade)%QCy(istation),turbine%blade(iblade)%QCz(istation),turbine%blade_cone_angle*pi/180.0d0,&
-                0.0d0,1.0d0,0.0d0,0.0d0,0.0d0,0.d0,turbine%blade(iblade)%QCx(istation),turbine%blade(iblade)%QCy(istation),turbine%blade(iblade)%QCz(istation))
+    call QuatRot(turbine%blade(iblade)%QCx(istation),turbine%blade(iblade)%QCy(istation),&
+                 turbine%blade(iblade)%QCz(istation),turbine%blade_cone_angle*conrad,&
+                 zero,one,zero,zero,zero,zero,&
+                 turbine%blade(iblade)%QCx(istation),turbine%blade(iblade)%QCy(istation),&
+                 turbine%blade(iblade)%QCz(istation))
     ! Rotate tangential vectors (around y)
-    call QuatRot(turbine%blade(iblade)%tx(istation),turbine%blade(iblade)%ty(istation),turbine%blade(iblade)%tz(istation),turbine%blade_cone_angle*pi/180.0d0,&
-                0.0d0,1.0d0,0.0d0,0.0d0,0.0d0,0.d0,turbine%blade(iblade)%tx(istation),turbine%blade(iblade)%ty(istation),turbine%blade(iblade)%tz(istation)) 
+    call QuatRot(turbine%blade(iblade)%tx(istation),turbine%blade(iblade)%ty(istation),&
+                 turbine%blade(iblade)%tz(istation),turbine%blade_cone_angle*conrad,&
+                 zero,one,zero,zero,zero,zero,&
+                 turbine%blade(iblade)%tx(istation),turbine%blade(iblade)%ty(istation),&
+                 turbine%blade(iblade)%tz(istation))
     
     ! Translate to the COR of each turbine
     turbine%blade(iblade)%QCx(istation)=turbine%blade(iblade)%QCx(istation)+turbine%blade(iblade)%COR(1)
@@ -133,11 +144,13 @@ contains
     call make_actuatorline_geometry(turbine%blade(iblade))
     
     ! Populate element Airfoils 
-    call populate_blade_airfoils(turbine%blade(iblade)%NElem,turbine%Blade(iblade)%NAirfoilData,turbine%Blade(iblade)%EAirfoil,turbine%Blade(iblade)%AirfoilData,turbine%Blade(iblade)%ETtoC)
+    call populate_blade_airfoils(turbine%blade(iblade)%NElem,turbine%Blade(iblade)%NAirfoilData,&
+                                 turbine%Blade(iblade)%EAirfoil,turbine%Blade(iblade)%AirfoilData,&
+                                 turbine%Blade(iblade)%ETtoC)
     
-    turbine%Blade(iblade)%EAOA_LAST(:)=-666
-    turbine%Blade(iblade)%Eepsilon(:)=0.0
-    turbine%Blade(iblade)%EEndeffects_factor(:)=1.0
+    turbine%Blade(iblade)%EAOA_LAST(:)=-666.0_mytype
+    turbine%Blade(iblade)%Eepsilon(:)=zero
+    turbine%Blade(iblade)%EEndeffects_factor(:)=one
     
     ! Initialise Dynamic stall model
     do ielem=1,turbine%blade(iblade)%Nelem
@@ -152,20 +165,22 @@ contains
    
     ! Rotate the turbine according to the tilt and yaw angle
     ! Yaw
-    call rotate_turbine(turbine,(/0.0d0,1.0d0,0.0d0/),turbine%yaw_angle*pi/180.0d0)
+    call rotate_turbine(turbine,(/zero,one,zero/),turbine%yaw_angle*conrad)
     ! Tilt
-    call rotate_turbine(turbine,(/0.0d0,0.0d0,1.0d0/),-turbine%shaft_tilt_angle*pi/180.0d0)
+    call rotate_turbine(turbine,(/zero,zero,one/),-turbine%shaft_tilt_angle*conrad)
    
     ! Set the rotational axis
-    call QuatRot(turbine%RotN(1),turbine%RotN(2),turbine%RotN(3),turbine%yaw_angle*pi/180.0d0,0.0d0,1.0d0,0.0d0,0.0d0,0.0d0,0.d0,&
-            turbine%RotN(1),turbine%RotN(2),turbine%RotN(3))
-    call QuatRot(turbine%RotN(1),turbine%RotN(2),turbine%RotN(3),-turbine%shaft_tilt_angle*pi/180.0d0,0.0d0,0.0d0,1.0d0,0.0d0,0.0d0,0.d0,&
-            turbine%RotN(1),turbine%RotN(2),turbine%RotN(3))
+    call QuatRot(turbine%RotN(1),turbine%RotN(2),turbine%RotN(3),turbine%yaw_angle*conrad,&
+                 zero,one,zero,zero,zero,zero,&
+                 turbine%RotN(1),turbine%RotN(2),turbine%RotN(3))
+    call QuatRot(turbine%RotN(1),turbine%RotN(2),turbine%RotN(3),-turbine%shaft_tilt_angle*conrad,&
+                 zero,zero,one,zero,zero,zero,&
+                 turbine%RotN(1),turbine%RotN(2),turbine%RotN(3))
     !if(turbine%do_aeroelasticity) then
     !call actuator_line_beam_model_init(turbine%beam,turbine%blade,turbine%NBlades)
     !endif
     
-    if (nrank==0) then        
+    if (nrank==0.and.mod(itime,ilist)==0) then        
     write(6,*) 'Turbine Name : ', adjustl(turbine%name)
     write(6,*) '-------------------------------------------------------------------'
     write(6,*) 'Number of Blades : ', turbine%Nblades
@@ -180,7 +195,7 @@ contains
     if(turbine%has_Tower) then
     call read_actuatorline_geometry(turbine%tower%geom_file,turbine%Towerheight,SVec,rR,ctoR,pitch,thick,Nstations)
     ! Make sure that the spanwise is [0 0 1]
-    Svec = (/0.0,1.0,0.0/)
+    Svec = (/zero,one,zero/)
     
     call allocate_actuatorline(Turbine%Tower,Nstations)
     turbine%tower%name=trim(turbine%name)//'_tower'
@@ -193,26 +208,26 @@ contains
     turbine%Tower%QCx(istation)= turbine%Tower%COR(1) + turbine%TowerOffset  
     turbine%Tower%QCy(istation)= rR(istation)*turbine%Towerheight*Svec(2) 
     turbine%Tower%QCz(istation)= turbine%Tower%COR(3) 
-    turbine%Tower%tx(istation)= 1.0    
-    turbine%Tower%ty(istation)= 0.0    
-    turbine%Tower%tz(istation)= 0.0
+    turbine%Tower%tx(istation)= one
+    turbine%Tower%ty(istation)= zero
+    turbine%Tower%tz(istation)= zero
     turbine%Tower%C(istation)=ctoR(istation)*turbine%Towerheight
     turbine%Tower%thick(istation)=thick(istation)
-    turbine%Tower%pitch(istation)=pitch(istation)/180.0*pi
+    turbine%Tower%pitch(istation)=pitch(istation)*conrad
     enddo
     
     call make_actuatorline_geometry(turbine%tower)
     
-    turbine%tower%EAOA_LAST(:)=-666
+    turbine%tower%EAOA_LAST(:)=-666.0_mytype
     
     !Set the tower body velocity to zero
-    turbine%tower%EVbx(:)=0.0
-    turbine%tower%EVby(:)=0.0
-    turbine%tower%EVbz(:)=0.0
-    turbine%tower%EObx(:)=0.0
-    turbine%tower%EOby(:)=0.0
-    turbine%tower%EObz(:)=0.0
-    turbine%tower%Eepsilon(:)=0.0
+    turbine%tower%EVbx(:)=zero
+    turbine%tower%EVby(:)=zero
+    turbine%tower%EVbz(:)=zero
+    turbine%tower%EObx(:)=zero
+    turbine%tower%EOby(:)=zero
+    turbine%tower%EObz(:)=zero
+    turbine%tower%Eepsilon(:)=zero
     endif
      
     !========================================================
@@ -221,7 +236,7 @@ contains
     turbine%angularVel=turbine%Uref*turbine%TSR/turbine%Rmax
     turbine%A=pi*turbine%Rmax**2
     
-    turbine%IRotor=0. 
+    turbine%IRotor=zero
     do iblade=1,turbine%NBlades
     turbine%IRotor=turbine%IRotor+turbine%Blade(iblade)%Inertia
     enddo   
@@ -249,16 +264,16 @@ contains
     rot_vel_mod = sqrt(RotX*RotX + RotY*RotY + RotZ*RotZ)
 
     ! Compute Torque for each Blade
-        Fx_tot=0.
-        Fy_tot=0.
-        Fz_tot=0.
-        Torq_tot=0
+        Fx_tot=zero
+        Fy_tot=zero
+        Fz_tot=zero
+        Torq_tot=zero
 
         do iblade=1,turbine%Nblades
-        Fx_i=0.
-        Fy_i=0.
-        Fz_i=0.
-        Torque_i=0.
+        Fx_i=zero
+        Fy_i=zero
+        Fz_i=zero
+        Torque_i=zero
 
         do ielem=1,turbine%blade(iblade)%NElem
             
@@ -293,27 +308,27 @@ contains
 
   
     ! Coefficients and Absolute values
-    turbine%CFx=FX_tot/(0.5*rho_air*turbine%A*turbine%Uref**2)
-    turbine%CFy=FY_tot/(0.5*rho_air*turbine%A*turbine%Uref**2)
-    turbine%CFz=Fz_tot/(0.5*rho_air*turbine%A*turbine%Uref**2)
+    turbine%CFx=FX_tot/(half*rho_air*turbine%A*turbine%Uref**2)
+    turbine%CFy=FY_tot/(half*rho_air*turbine%A*turbine%Uref**2)
+    turbine%CFz=Fz_tot/(half*rho_air*turbine%A*turbine%Uref**2)
     turbine%Thrust=sqrt(FX_tot**2.0+FY_tot**2.0+FZ_tot**2.0)
     turbine%CT=sqrt(turbine%CFx**2.0+turbine%CFy**2.0+turbine%CFz**2.0)
     !turbine%Thrust=(Fx_tot*RotX +Fy_tot*RotY +Fz_tot*RotZ)/rot_vel_mod
     !turbine%CT=turbine%Thrust/(0.5*rho_air*turbine%A*turbine%Uref**2)
     turbine%torque=Torq_tot
-    turbine%CTR=Torq_tot/(0.5*rho_air*turbine%A*turbine%Rmax*turbine%Uref**2.0)
+    turbine%CTR=Torq_tot/(half*rho_air*turbine%A*turbine%Rmax*turbine%Uref**2.0)
     turbine%Power=abs(Torq_tot)*turbine%angularVel
     turbine%CP= abs(turbine%CTR)*turbine%TSR
     
     ! PRINT ON SCREEN
-    if(nrank==0) then
+    if(nrank==0.and.mod(itime,ilist)==0) then
         write(6,*) "Turbine : ",   turbine%name
         write(6,*) "======================================="
         write(6,*) "Thrust coeff : ",   turbine%CT
         write(6,*) "Power  coeff  : ",  turbine%CP
-        write(6,*) "Thrust  : ",  turbine%Thrust/1000., "kN"
-        write(6,*) "Torque  : ",  turbine%Torque/1000., "kN m"
-        write(6,*) "Power   : ",  turbine%Power/1000000., "MW"
+        write(6,*) "Thrust  : ",  turbine%Thrust/onethousand, "kN"
+        write(6,*) "Torque  : ",  turbine%Torque/onethousand, "kN m"
+        write(6,*) "Power   : ",  turbine%Power/1000000.0_mytype, "MW"
     endif
 
     end subroutine compute_performance
@@ -336,36 +351,36 @@ contains
         rtip=(turbine%Rmax-turbine%blade(iblade)%ERdist(ielem))/turbine%Rmax
         
         ! Set them into 1.0 before the calculation
-        Ftip=1.0
-        Froot=1.0
+        Ftip=one
+        Froot=one
         if (turbine%do_tip_correction) then 
             if (turbine%EndEffectModel_is_Glauret) then
-                g1=1.0
+                g1=one
             else if (turbine%EndEffectModel_is_Shen) then
-                g1=dexp(-turbine%ShenCoeff_c1*(turbine%NBlades*turbine%TSR-turbine%ShenCoeff_c2))+0.1
+                g1=exp_prec(-turbine%ShenCoeff_c1*(turbine%NBlades*turbine%TSR-turbine%ShenCoeff_c2))+zpone
             else
                 write(*,*) "Only Glauret and ShenEtAl2005 are available at the moment"
                 stop
             endif
-            Ftip=2.0/pi*dacos(dexp(-g1*turbine%Nblades/2.0*(1.0/rroot-1.0)/dsin(phi)))
-            if (dabs(dexp(-g1*turbine%Nblades/2.0*(1.0/rroot-1.0)/dsin(phi)))>1.) then
-                if (nrank==0) print *, "Something went wrong with the tip correction model -- phi =", phi
-                Ftip=1.
+            Ftip=two/pi*acos_prec(exp_prec(-g1*turbine%Nblades*half*(one/rroot-one)/sin_prec(phi)))
+            if (abs_prec(exp_prec(-g1*turbine%Nblades*half*(one/rroot-one)/sin_prec(phi)))>one) then
+                if (nrank==0) write(*,*) "Something went wrong with the tip correction model -- phi =", phi
+                Ftip=one
             endif
         endif
         if (turbine%do_root_correction) then
             if (turbine%EndEffectModel_is_Glauret) then
-                g1=1.0
+                g1=one
             else if (turbine%EndEffectModel_is_Shen) then
-                g1=dexp(-turbine%ShenCoeff_c1*(turbine%NBlades*turbine%TSR-turbine%ShenCoeff_c2))+0.1
+                g1=exp_prec(-turbine%ShenCoeff_c1*(turbine%NBlades*turbine%TSR-turbine%ShenCoeff_c2))+zpone
             else
                 write(*,*) "Only Glauret and ShenEtAl2005 are available at the moment"
                 stop
             endif
-            Froot=2.0/pi*dacos(dexp(-g1*turbine%Nblades/2.0*(1.0/rtip-1.0)/dsin(phi)))
-            if (dabs(dexp(-g1*turbine%Nblades/2.0*(1.0/rtip-1.0)/dsin(phi)))>1.) then
-                if (nrank==0) print *, "Something went wrong with the root correction model -- phi =", phi
-                Froot=1.
+            Froot=two/pi*acos_prec(exp_prec(-g1*turbine%Nblades*half*(one/rtip-one)/sin_prec(phi)))
+            if (abs_prec(exp_prec(-g1*turbine%Nblades*half*(one/rtip-one)/sin_prec(phi)))>one) then
+                if (nrank==0) write(*,*) "Something went wrong with the root correction model -- phi =", phi
+                Froot=one
             endif
         endif
 
@@ -448,7 +463,7 @@ contains
         tztmp=turbine%Blade(j)%tz(ielem)
         
         ! Tangent vectors (rotated assuming the origina as 0)
-        Call QuatRot(txtmp,tytmp,tztmp,theta,nrx,nry,nrz,0.0d0,0.0d0,0.0d0,vrx,vry,vrz)
+        Call QuatRot(txtmp,tytmp,tztmp,theta,nrx,nry,nrz,zero,zero,zero,vrx,vry,vrz)
         VMag=sqrt(vrx**2+vry**2+vrz**2)
         turbine%Blade(j)%tx(ielem)=vrx/VMag                                      
         turbine%Blade(j)%ty(ielem)=vry/VMag                                  
@@ -475,7 +490,8 @@ contains
     read(22,'(A)') ReadLine
     read(ReadLine(index(ReadLine,':')+1:),*) turbine%ContEntries
 
-    allocate(turbine%ContWindSpeed(turbine%ContEntries),turbine%ContOmega(turbine%ContEntries), turbine%ContPitch(turbine%ContEntries))
+    allocate(turbine%ContWindSpeed(turbine%ContEntries),turbine%ContOmega(turbine%ContEntries),&
+             turbine%ContPitch(turbine%ContEntries))
     ! Read the stations specs
     do i=1,turbine%ContEntries
     
@@ -508,7 +524,7 @@ contains
             Pitch=turbine%ContPitch(turbine%ContEntries) ! Last entry
         
         else !> Find the nearest list value
-        mindiff=1e6
+        mindiff=1.0e6_mytype
         do i=1,turbine%ContEntries
             if(abs(WindSpeed-turbine%ContWindSpeed(i))<mindiff) then
                mindiff=abs(WindSpeed-turbine%ContWindSpeed(i)) 
@@ -538,11 +554,11 @@ contains
 
     subroutine compute_rotor_upstream_velocity(turbine)
 
-use actuator_line_model_utils ! used only for the trilinear interpolation
-USE param 
-USE decomp_2d
-use var
-use MPI
+    use actuator_line_model_utils ! used only for the trilinear interpolation
+    use param
+    use decomp_2d
+    use var
+    use MPI
 
         implicit none
         type(TurbineType),intent(inout) ::turbine
@@ -556,35 +572,35 @@ use MPI
         integer :: min_i,min_j,min_k
         integer :: i,j,k,ierr
 
-        Ux=0.
-        Uy=0.
-        Uz=0.
+        Ux=zero
+        Uy=zero
+        Uz=zero
        
         ! Velocity is calculated at a probe point (closest) at one D upstream the turbine
 
         Rupstream(:)=turbine%origin(:)-turbine%rotN(:)*2.*turbine%Rmax       
         if (istret.eq.0) then 
-        ymin=(xstart(2)-1)*dy-dy/2.0 ! Add -dy/2.0 overlap
-        ymax=(xend(2)-1)*dy+dy/2.0   ! Add +dy/2.0 overlap
+        ymin=real(xstart(2)-1,mytype)*dy-dy*half ! Add -dy/2.0 overlap
+        ymax=real(xend(2)-1,mytype)*dy+dy*half   ! Add +dy/2.0 overlap
         else
         ymin=yp(xstart(2))
         ymax=yp(xend(2))
         endif
         
-        zmin=(xstart(3)-1)*dz-dz/2.0 ! Add a -dz/2.0 overlap
-        zmax=(xend(3)-1)*dz+dz/2.0   ! Add a +dz/2.0 overlap
+        zmin=real(xstart(3)-1,mytype)*dz-dz*half ! Add a -dz/2.0 overlap
+        zmax=real(xend(3)-1,mytype)*dz+dz*half   ! Add a +dz/2.0 overlap
          
         
-        min_dist=1e6
+        min_dist=1e6_mytype
         if((Rupstream(2)>=ymin).and.(Rupstream(2)<=ymax).and.(Rupstream(3)>=zmin).and.(Rupstream(3)<=zmax)) then
             !write(*,*) 'Warning: I own this node'
             do k=xstart(3),xend(3)
-            zmesh=(k-1)*dz 
+            zmesh=real(k-1,mytype)*dz
             do j=xstart(2),xend(2)
-            if (istret.eq.0) ymesh=(j-1)*dy
+            if (istret.eq.0) ymesh=real(j-1,mytype)*dy
             if (istret.ne.0) ymesh=yp(j)
             do i=xstart(1),xend(1)
-            xmesh=(i-1)*dx
+            xmesh=real(i-1,mytype)*dx
             dist = sqrt((Rupstream(1)-xmesh)**2.+(Rupstream(2)-ymesh)**2.+(Rupstream(3)-zmesh)**2.) 
             
             if (dist<min_dist) then
@@ -601,29 +617,29 @@ use MPI
             Ux_part=ux1(min_i,min_j,min_k)
             Uy_part=uy1(min_i,min_j,min_k)
             Uz_part=uz1(min_i,min_j,min_k)
-            Phixy_part=0.0
-            Phixz_part=0.0    
+            Phixy_part=zero
+            Phixz_part=zero
         else
-            Ux_part=0.0
-            Uy_part=0.0
-            Uz_part=0.0
-            Phixy_part=0.0
-            Phixz_part=0.0
+            Ux_part=zero
+            Uy_part=zero
+            Uz_part=zero
+            Phixy_part=zero
+            Phixz_part=zero
             !write(*,*) 'Warning: I do not own this node' 
         endif
            
-        call MPI_ALLREDUCE(Ux_part,Ux,1,MPI_REAL8,MPI_SUM, &
+        call MPI_ALLREDUCE(Ux_part,Ux,1,real_type,MPI_SUM, &
             MPI_COMM_WORLD,ierr)
-        call MPI_ALLREDUCE(Uy_part,Uy,1,MPI_REAL8,MPI_SUM, &
+        call MPI_ALLREDUCE(Uy_part,Uy,1,real_type,MPI_SUM, &
             MPI_COMM_WORLD,ierr)
-        call MPI_ALLREDUCE(Uz_part,Uz,1,MPI_REAL8,MPI_SUM, &
+        call MPI_ALLREDUCE(Uz_part,Uz,1,real_type,MPI_SUM, &
             MPI_COMM_WORLD,ierr)
         
         Turbine%Ux_upstream=Ux
         Turbine%Uy_upstream=Uy
         Turbine%Uz_upstream=Uz
 
-        Turbine%Uref=sqrt(Ux**2.0+Uy**2.0+Uz**2.0)
+        Turbine%Uref=sqrt_prec(Ux**2.0+Uy**2.0+Uz**2.0)
         return
     
     end subroutine Compute_Rotor_upstream_Velocity

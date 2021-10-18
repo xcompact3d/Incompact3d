@@ -44,10 +44,17 @@ program xcompact3d
   use ibm_param
   use ibm, only : body
   use genepsi, only : genepsi3d
+#ifdef DEBG 
+  use tools, only : avg3d
+#endif
 
   implicit none
 
-  call init_xcompact3d()
+#ifdef DEBG
+  real(mytype) avg_param
+#endif
+
+call init_xcompact3d()
 
   do itime=ifirst,ilast
      !t=itime*dt
@@ -70,15 +77,26 @@ program xcompact3d
         call set_fluid_properties(rho1,mu1)
         call boundary_conditions(rho1,ux1,uy1,uz1,phi1,ep1)
 
-if (imove.eq.1) then ! update epsi for moving objects
-  if ((iibm.eq.2).or.(iibm.eq.3)) then
-     call genepsi3d(ep1)
-  else if (iibm.eq.1) then
-     call body(ux1,uy1,uz1,ep1)
-  endif
-endif
+        if (imove.eq.1) then ! update epsi for moving objects
+          if ((iibm.eq.2).or.(iibm.eq.3)) then
+             call genepsi3d(ep1)
+          else if (iibm.eq.1) then
+             call body(ux1,uy1,uz1,ep1)
+          endif
+        endif
         call calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
+#ifdef DEBG
+        avg_param = zero
+        call avg3d (dux1, avg_param)
+        if (nrank == 0) write(*,*)'## Main dux1 ', avg_param
+        avg_param = zero
+        call avg3d (duy1, avg_param)
+        if (nrank == 0) write(*,*)'## Main duy1 ', avg_param
+        avg_param = zero
+        call avg3d (duz1, avg_param)
+        if (nrank == 0) write(*,*)'## Main duz1 ', avg_param
+#endif
         if (ilmn) then
            !! XXX N.B. from this point, X-pencil velocity arrays contain momentum (LMN only).
            call velocity_to_momentum(rho1,ux1,uy1,uz1)
@@ -135,7 +153,7 @@ subroutine init_xcompact3d()
 
   use variables, only : nx, ny, nz, nxm, nym, nzm
   use variables, only : p_row, p_col
-  use variables, only : nstat, nvisu, nprobe
+  use variables, only : nstat, nvisu, nprobe, ilist
 
   use les, only: init_explicit_les
   use turbine, only: init_turbines
@@ -164,10 +182,8 @@ subroutine init_xcompact3d()
   nargin=command_argument_count()
   if (nargin <1) then
      InputFN='input.i3d'
-     if (nrank==0) print*, 'Xcompact3d is run with the default file -->', InputFN
-  elseif (nargin.ge.1) then
-     if (nrank==0) print*, 'Program is run with the provided file -->', InputFN
-
+     if (nrank==0) write(*,*) 'Xcompact3d is run with the default file -->', trim(InputFN)
+  elseif (nargin >= 1) then
      call get_command_argument(1,InputFN,FNLength,status)
      back=.true.
      FNBase=inputFN((index(InputFN,'/',back)+1):len(InputFN))
@@ -175,6 +191,7 @@ subroutine init_xcompact3d()
      if (DecInd >1) then
         FNBase=FNBase(1:(DecInd-1))
      end if
+     if (nrank==0) write(*,*) 'Xcompact3d is run with the provided file -->', trim(InputFN)
   endif
 
 #ifdef ADIOS2
@@ -250,8 +267,10 @@ subroutine init_xcompact3d()
      call body(ux1,uy1,uz1,ep1)
   endif
 
-  call test_speed_min_max(ux1,uy1,uz1)
-  if (iscalar==1) call test_scalar_min_max(phi1)
+  if (mod(itime, ilist) == 0 .or. itime == ifirst) then
+     call test_speed_min_max(ux1,uy1,uz1)
+     if (iscalar==1) call test_scalar_min_max(phi1)
+  endif
 
   call simu_stats(1)
 
