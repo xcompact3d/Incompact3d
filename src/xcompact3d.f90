@@ -44,17 +44,11 @@ program xcompact3d
   use ibm_param
   use ibm, only : body
   use genepsi, only : genepsi3d
-#ifdef DEBG 
-  use tools, only : avg3d
-#endif
 
   implicit none
 
-#ifdef DEBG
-  real(mytype) avg_param
-#endif
 
-call init_xcompact3d()
+  call init_xcompact3d()
 
   do itime=ifirst,ilast
      !t=itime*dt
@@ -85,18 +79,10 @@ call init_xcompact3d()
           endif
         endif
         call calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
-
 #ifdef DEBG
-        avg_param = zero
-        call avg3d (dux1, avg_param)
-        if (nrank == 0) write(*,*)'## Main dux1 ', avg_param
-        avg_param = zero
-        call avg3d (duy1, avg_param)
-        if (nrank == 0) write(*,*)'## Main duy1 ', avg_param
-        avg_param = zero
-        call avg3d (duz1, avg_param)
-        if (nrank == 0) write(*,*)'## Main duz1 ', avg_param
+        call check_transients()
 #endif
+        
         if (ilmn) then
            !! XXX N.B. from this point, X-pencil velocity arrays contain momentum (LMN only).
            call velocity_to_momentum(rho1,ux1,uy1,uz1)
@@ -326,3 +312,26 @@ subroutine finalise_xcompact3d()
   CALL MPI_FINALIZE(ierr)
 
 endsubroutine finalise_xcompact3d
+
+subroutine check_transients()
+
+  use decomp_2d, only : mytype
+
+  use var
+  use tools, only : avg3d
+  
+  implicit none
+
+  real(mytype) avg_param
+  
+  avg_param = zero
+  call avg3d (dux1, avg_param)
+  if (nrank == 0) write(*,*)'## Main dux1 ', avg_param
+  avg_param = zero
+  call avg3d (duy1, avg_param)
+  if (nrank == 0) write(*,*)'## Main duy1 ', avg_param
+  avg_param = zero
+  call avg3d (duz1, avg_param)
+  if (nrank == 0) write(*,*)'## Main duz1 ', avg_param
+  
+end subroutine check_transients
