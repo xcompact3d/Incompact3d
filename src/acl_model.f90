@@ -172,6 +172,7 @@ contains
       do i=1, Ntur
          ! Set some default parameters
          !++++++++++++++++++++++++++++++++
+         numfoil=0
          towerFlag=0
          tower_lift=zpthree
          tower_drag=one
@@ -363,7 +364,8 @@ contains
             Turbine(i)%do_aeroelasticity=.true.
          endif
 
-
+         ! close turbine file
+         close(100)
       end do
 
    end subroutine get_turbine_options
