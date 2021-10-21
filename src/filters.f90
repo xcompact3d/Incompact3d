@@ -253,70 +253,75 @@ subroutine filx_00(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind)
 
   implicit none
 
-  integer :: nx,ny,nz,npaire,i,j,k
-  real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
-  real(mytype), dimension(ny,nz) :: fisx
-  real(mytype), dimension(nx) :: fiffx,fifsx,fifwx
-  real(mytype)                      :: lind
+  ! Arguments
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(out), dimension(ny,nz) :: fisx
+  real(mytype), intent(in), dimension(nx) :: fiffx, fifsx, fifwx
+  real(mytype), intent(in) :: lind
+
+  ! Local variables
+  integer :: i, j, k
 
   if (iibm == 2) call lagpolx(ux)
   if (iibm == 3) call cubsplx(ux,lind)
 
-  do k=1,nz
-     do j=1,ny
-        tx(1,j,k)=fiaix*ux(1,j,k)+fibix*(ux(2,j,k)+ux(nx,j,k))&
-             +ficix*(ux(3,j,k)+ux(nx-1,j,k))&
-             +fidix*(ux(4,j,k)+ux(nx-2,j,k))
-        rx(1,j,k)=-1.
-        tx(2,j,k)=fiaix*ux(2,j,k)+fibix*(ux(3,j,k)+ux(1,j,k))&
-             +ficix*(ux(4,j,k)+ux(nx,j,k))&
-             +fidix*(ux(5,j,k)+ux(nx-1,j,k))
-        rx(2,j,k)=0.
-        tx(3,j,k)=fiaix*ux(3,j,k)+fibix*(ux(4,j,k)+ux(2,j,k))&
-             +ficix*(ux(5,j,k)+ux(1,j,k))&
-             +fidix*(ux(6,j,k)+ux(nx,j,k))
-        rx(3,j,k)=0.
-        do i=4,nx-3
-           tx(i,j,k)=fiaix*ux(i,j,k)+fibix*(ux(i+1,j,k)+ux(i-1,j,k))&
-                +ficix*(ux(i+2,j,k)+ux(i-2,j,k))&
-                +fidix*(ux(i+3,j,k)+ux(i-3,j,k))
-           rx(i,j,k)=0.
+  do concurrent (k=1:nz)
+     do concurrent (j=1:ny)
+
+        ! Compute r.h.s.
+        tx(1,j,k) = fiaix*ux(1,j,k) + fibix*(ux(2,j,k)+ux(nx,j,k)) &
+                  + ficix*(ux(3,j,k)+ux(nx-1,j,k)) &
+                  + fidix*(ux(4,j,k)+ux(nx-2,j,k))
+        tx(2,j,k) = fiaix*ux(2,j,k) + fibix*(ux(3,j,k)+ux(1,j,k)) &
+                  + ficix*(ux(4,j,k)+ux(nx,j,k)) &
+                  + fidix*(ux(5,j,k)+ux(nx-1,j,k))
+        tx(3,j,k) = fiaix*ux(3,j,k) + fibix*(ux(4,j,k)+ux(2,j,k)) &
+                  + ficix*(ux(5,j,k)+ux(1,j,k)) &
+                  + fidix*(ux(6,j,k)+ux(nx,j,k))
+        do concurrent (i=4:nx-3)
+           tx(i,j,k) = fiaix*ux(i,j,k) + fibix*(ux(i+1,j,k)+ux(i-1,j,k)) &
+                     + ficix*(ux(i+2,j,k)+ux(i-2,j,k)) &
+                     + fidix*(ux(i+3,j,k)+ux(i-3,j,k))
         enddo
-        tx(nx-2,j,k)=fiaix*ux(nx-2,j,k)+fibix*(ux(nx-3,j,k)+ux(nx-1,j,k))&
-             +ficix*(ux(nx-4,j,k)+ux(nx,j,k))&
-             +fidix*(ux(nx-5,j,k)+ux(1,j,k))
-        rx(nx-2,j,k)=0.
-        tx(nx-1,j,k)=fiaix*ux(nx-1,j,k)+fibix*(ux(nx-2,j,k)+ux(nx,j,k))&
-             +ficix*(ux(nx-3,j,k)+ux(1,j,k))&
-             +fidix*(ux(nx-4,j,k)+ux(2,j,k))
-        rx(nx-1,j,k)=0.
-        tx(nx,j,k)=fiaix*ux(nx,j,k)+fibix*(ux(nx-1,j,k)+ux(1,j,k))&
-             +ficix*(ux(nx-2,j,k)+ux(2,j,k))&
-             +fidix*(ux(nx-3,j,k)+ux(3,j,k))
-        rx(nx,j,k)=fialix
-        do i=2, nx
-           tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fifsx(i)
-           rx(i,j,k)=rx(i,j,k)-rx(i-1,j,k)*fifsx(i)
+        tx(nx-2,j,k) = fiaix*ux(nx-2,j,k) + fibix*(ux(nx-3,j,k)+ux(nx-1,j,k)) &
+                     + ficix*(ux(nx-4,j,k)+ux(nx,j,k)) &
+                     + fidix*(ux(nx-5,j,k)+ux(1,j,k))
+        tx(nx-1,j,k) = fiaix*ux(nx-1,j,k) + fibix*(ux(nx-2,j,k)+ux(nx,j,k)) &
+                     + ficix*(ux(nx-3,j,k)+ux(1,j,k))&
+                     + fidix*(ux(nx-4,j,k)+ux(2,j,k))
+        tx(nx  ,j,k) = fiaix*ux(nx,j,k) + fibix*(ux(nx-1,j,k)+ux(1,j,k)) &
+                     + ficix*(ux(nx-2,j,k)+ux(2,j,k)) &
+                     + fidix*(ux(nx-3,j,k)+ux(3,j,k))
+        rx(1,j,k) = -one
+        do concurrent (i=2:nx-1)
+           rx(i,j,k) = zero
         enddo
-        tx(nx,j,k)=tx(nx,j,k)*fifwx(nx)
-        rx(nx,j,k)=rx(nx,j,k)*fifwx(nx)
+        rx(nx,j,k) = fialix
+
+        ! Solve tri-diagonal system
+        do i = 2, nx
+           tx(i,j,k) = tx(i,j,k) - tx(i-1,j,k)*fifsx(i)
+           rx(i,j,k) = rx(i,j,k) - rx(i-1,j,k)*fifsx(i)
+        enddo
+        tx(nx,j,k) = tx(nx,j,k) * fifwx(nx)
+        rx(nx,j,k) = rx(nx,j,k) * fifwx(nx)
         do i=nx-1,1,-1
-           tx(i,j,k)=(tx(i,j,k)-fiffx(i)*tx(i+1,j,k))*fifwx(i)
-           rx(i,j,k)=(rx(i,j,k)-fiffx(i)*rx(i+1,j,k))*fifwx(i)
+           tx(i,j,k) = (tx(i,j,k)-fiffx(i)*tx(i+1,j,k)) * fifwx(i)
+           rx(i,j,k) = (rx(i,j,k)-fiffx(i)*rx(i+1,j,k)) * fifwx(i)
         enddo
-        fisx(j,k)=(tx(1,j,k)-fialix*tx(nx,j,k))&
-             /(1.+rx(1,j,k)-fialix*rx(nx,j,k))
-        do i=1,nx
-           tx(i,j,k)=tx(i,j,k)-fisx(j,k)*rx(i,j,k)
+        fisx(j,k) = (    tx(1,j,k)-fialix*tx(nx,j,k)) &
+                  / (one+rx(1,j,k)-fialix*rx(nx,j,k))
+        do concurrent (i=1:nx)
+           tx(i,j,k) = tx(i,j,k) - fisx(j,k)*rx(i,j,k)
         enddo
      enddo
   enddo
 
-  return
-
 end subroutine filx_00
 
-subroutine filx_11(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind) 
+subroutine filx_ij(tx,ux,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind,ncl1,ncln)
 
   USE param
   use parfiX
@@ -324,260 +329,145 @@ subroutine filx_11(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind)
 
   implicit none
 
-  integer :: nx,ny,nz,npaire,i,j,k
-  real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
-  real(mytype), dimension(ny,nz) :: fisx
-  real(mytype), dimension(nx) :: fiffx,fifsx,fifwx
-  real(mytype)                      :: lind
+  ! Arguments
+  integer, intent(in) :: nx, ny, nz, npaire, ncl1, ncln
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tx
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(out), dimension(ny,nz) :: fisx
+  real(mytype), intent(in), dimension(nx) :: fiffx,fifsx,fifwx
+  real(mytype), intent(in) :: lind
+
+  ! Local variables
+  integer :: i, j, k
 
   if (iibm == 2) call lagpolx(ux)
   if (iibm == 3) call cubsplx(ux,lind)
 
-  if (npaire==1) then
-     do k=1,nz
-        do j=1,ny
-           tx(1,j,k)=fiaix*ux(1,j,k)+fibix*(ux(2,j,k)+ux(2,j,k))&
-                +ficix*(ux(3,j,k)+ux(3,j,k))&
-                +fidix*(ux(4,j,k)+ux(4,j,k))
-           tx(2,j,k)=fiaix*ux(2,j,k)+fibix*(ux(3,j,k)+ux(1,j,k))&
-                +ficix*(ux(4,j,k)+ux(2,j,k))&
-                +fidix*(ux(5,j,k)+ux(3,j,k))
-           tx(3,j,k)=fiaix*ux(3,j,k)+fibix*(ux(4,j,k)+ux(2,j,k))&
-                +ficix*(ux(5,j,k)+ux(1,j,k))&
-                +fidix*(ux(6,j,k)+ux(2,j,k))
-           do i=4,nx-3
-              tx(i,j,k)=fiaix*ux(i,j,k)+fibix*(ux(i+1,j,k)+ux(i-1,j,k))&
-                   +ficix*(ux(i+2,j,k)+ux(i-2,j,k))&
-                   +fidix*(ux(i+3,j,k)+ux(i-3,j,k))
-           enddo
-           tx(nx,j,k)  =fiaix*ux(nx,j,k)  +fibix*(ux(nx-1,j,k)+ux(nx-1,j,k))&
-                +ficix*(ux(nx-2,j,k)+ux(nx-2,j,k))&
-                +fidix*(ux(nx-3,j,k)+ux(nx-3,j,k))
-           tx(nx-1,j,k)=fiaix*ux(nx-1,j,k)+fibix*(ux(  nx,j,k)+ux(nx-2,j,k))&
-                +ficix*(ux(nx-1,j,k)+ux(nx-3,j,k))&
-                +fidix*(ux(nx-2,j,k)+ux(nx-4,j,k))
-           tx(nx-2,j,k)=fiaix*ux(nx-2,j,k)+fibix*(ux(nx-1,j,k)+ux(nx-3,j,k))&
-                +ficix*(ux(  nx,j,k)+ux(nx-4,j,k))&
-                +fidix*(ux(nx-1,j,k)+ux(nx-5,j,k))
-           do i=2,nx
-              tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fifsx(i)
-           enddo
-           tx(nx,j,k)=tx(nx,j,k)*fifwx(nx)
-           do i=nx-1,1,-1
-              tx(i,j,k)=(tx(i,j,k)-fiffx(i)*tx(i+1,j,k))*fifwx(i)
-           enddo
+  do concurrent (k=1:nz)
+     do concurrent (j=1:ny)
+
+        ! Compute r.h.s.
+        if (ncl1 == 1) then
+           if (npaire == 1) then
+              tx(1,j,k) = fiaix*ux(1,j,k) + fibix*(ux(2,j,k)+ux(2,j,k)) &
+                        + ficix*(ux(3,j,k)+ux(3,j,k)) &
+                        + fidix*(ux(4,j,k)+ux(4,j,k))
+              tx(2,j,k) = fiaix*ux(2,j,k) + fibix*(ux(3,j,k)+ux(1,j,k)) &
+                        + ficix*(ux(4,j,k)+ux(2,j,k)) &
+                        + fidix*(ux(5,j,k)+ux(3,j,k))
+              tx(3,j,k) = fiaix*ux(3,j,k) + fibix*(ux(4,j,k)+ux(2,j,k)) &
+                        + ficix*(ux(5,j,k)+ux(1,j,k)) &
+                        + fidix*(ux(6,j,k)+ux(2,j,k))
+           else
+              tx(1,j,k) = zero
+              tx(2,j,k) = fiaix*ux(2,j,k) + fibix*(ux(3,j,k)+ux(1,j,k)) &
+                        + ficix*(ux(4,j,k)-ux(2,j,k)) &
+                        + fidix*(ux(5,j,k)-ux(3,j,k))
+              tx(3,j,k) = fiaix*ux(3,j,k) + fibix*(ux(4,j,k)+ux(2,j,k)) &
+                        + ficix*(ux(5,j,k)+ux(1,j,k)) &
+                        + fidix*(ux(6,j,k)-ux(2,j,k))
+           endif
+        else
+           tx(1,j,k) = ux(1,j,k)
+           tx(2,j,k) = fia2x*ux(1,j,k) + fib2x*ux(2,j,k)+fic2x*ux(3,j,k) &
+                     + fid2x*ux(4,j,k)
+           tx(3,j,k) = fia3x*ux(1,j,k) + fib3x*ux(2,j,k)+fic3x*ux(3,j,k) &
+                     + fid3x*ux(4,j,k) + fie3x*ux(5,j,k)+fif3x*ux(6,j,k)
+        endif
+        do concurrent (i=4:nx-3)
+           tx(i,j,k) = fiaix*ux(i,j,k) + fibix*(ux(i+1,j,k)+ux(i-1,j,k)) &
+                     + ficix*(ux(i+2,j,k)+ux(i-2,j,k)) &
+                     + fidix*(ux(i+3,j,k)+ux(i-3,j,k))
+        enddo
+        if (ncln == 1) then
+           if (npaire == 1) then
+              tx(nx-2,j,k) = fiaix*ux(nx-2,j,k) + fibix*(ux(nx-1,j,k)+ux(nx-3,j,k)) &
+                           + ficix*(ux(  nx,j,k)+ux(nx-4,j,k)) &
+                           + fidix*(ux(nx-1,j,k)+ux(nx-5,j,k))
+              tx(nx-1,j,k) = fiaix*ux(nx-1,j,k) + fibix*(ux(  nx,j,k)+ux(nx-2,j,k)) &
+                           + ficix*(ux(nx-1,j,k)+ux(nx-3,j,k)) &
+                           + fidix*(ux(nx-2,j,k)+ux(nx-4,j,k))
+              tx(nx,j,k)   = fiaix*ux(nx,j,k) + fibix*(ux(nx-1,j,k)+ux(nx-1,j,k)) &
+                           + ficix*(ux(nx-2,j,k)+ux(nx-2,j,k)) &
+                           + fidix*(ux(nx-3,j,k)+ux(nx-3,j,k))
+           else
+              tx(nx-2,j,k) = fiaix*ux(nx-2,j,k) + fibix*( ux(nx-1,j,k)+ux(nx-3,j,k)) &
+                           + ficix*( ux(nx  ,j,k)+ux(nx-4,j,k)) &
+                           + fidix*(-ux(nx-1,j,k)+ux(nx-5,j,k))
+              tx(nx-1,j,k) = fiaix*ux(nx-1,j,k) + fibix*( ux(nx  ,j,k)+ux(nx-2,j,k)) &
+                           + ficix*(-ux(nx-1,j,k)+ux(nx-3,j,k)) &
+                           + fidix*(-ux(nx-2,j,k)+ux(nx-4,j,k))
+              tx(nx,  j,k) = zero
+           endif
+        else
+           tx(nx-2,j,k) = fiapx*ux(nx,j,k) + fibpx*ux(nx-1,j,k) + ficpx*ux(nx-2,j,k) &
+                        + fidpx*ux(nx-3,j,k) + fiepx*ux(nx-4,j,k) + fifpx*ux(nx-5,j,k)
+           tx(nx-1,j,k) = fiamx*ux(nx,j,k) + fibmx*ux(nx-1,j,k) + ficmx*ux(nx-2,j,k) &
+                        + fidmx*ux(nx-3,j,k)
+           tx(nx,j,k) = ux(nx,j,k)
+        endif
+
+        ! Solve tri-diagonal system
+        do i=2,nx
+           tx(i,j,k) = tx(i,j,k) - tx(i-1,j,k)*fifsx(i)
+        enddo
+        tx(nx,j,k) = tx(nx,j,k) * fifwx(nx)
+        do i=nx-1,1,-1
+           tx(i,j,k) = (tx(i,j,k)-fiffx(i)*tx(i+1,j,k)) * fifwx(i)
         enddo
      enddo
-  endif
+  enddo
 
-  if (npaire==0) then
-     do k=1,nz
-        do j=1,ny
-           tx(1,j,k)=zero
-           tx(2,j,k)=fiaix*ux(2,j,k)+fibix*(ux(3,j,k)+ux(1,j,k))&
-                +ficix*(ux(4,j,k)-ux(2,j,k))&
-                +fidix*(ux(5,j,k)-ux(3,j,k))
-           tx(3,j,k)=fiaix*ux(3,j,k)+fibix*(ux(4,j,k)+ux(2,j,k))&
-                +ficix*(ux(5,j,k)+ux(1,j,k))&
-                +fidix*(ux(6,j,k)-ux(2,j,k))
-           do i=4,nx-3
-              tx(i,j,k)=fiaix*ux(i,j,k)+fibix*(ux(i+1,j,k)+ux(i-1,j,k))&
-                   +ficix*(ux(i+2,j,k)+ux(i-2,j,k))&
-                   +fidix*(ux(i+3,j,k)+ux(i-3,j,k))
-           enddo
-           tx(nx  ,j,k)=zero
-           tx(nx-1,j,k)=fiaix*ux(nx-1,j,k)+fibix*( ux(nx  ,j,k)+ux(nx-2,j,k))&
-                +ficix*(-ux(nx-1,j,k)+ux(nx-3,j,k))&
-                +fidix*(-ux(nx-2,j,k)+ux(nx-4,j,k))
-           tx(nx-2,j,k)=fiaix*ux(nx-2,j,k)+fibix*( ux(nx-1,j,k)+ux(nx-3,j,k))&
-                +ficix*( ux(nx  ,j,k)+ux(nx-4,j,k))&
-                +fidix*(-ux(nx-1,j,k)+ux(nx-5,j,k))
-           do i=2,nx
-              tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fifsx(i)
-           enddo
-           tx(nx,j,k)=tx(nx,j,k)*fifwx(nx)
-           do i=nx-1,1,-1
-              tx(i,j,k)=(tx(i,j,k)-fiffx(i)*tx(i+1,j,k))*fifwx(i)
-           enddo
+end subroutine filx_ij
 
-        enddo
-     enddo
-  endif
+subroutine filx_11(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind) 
 
-  return
+  USE param
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(out), dimension(ny,nz) :: fisx
+  real(mytype), intent(in), dimension(nx) :: fiffx,fifsx,fifwx
+  real(mytype), intent(in) :: lind
+
+  call filx_ij(tx,ux,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind,1,1)
 
 end subroutine filx_11
 
 subroutine filx_12(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind) 
 
   USE param
-  use parfiX
-  use ibm, only : lagpolx, cubsplx
 
   implicit none
 
-  integer :: nx,ny,nz,npaire,i,j,k
-  real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
-  real(mytype), dimension(ny,nz) :: fisx
-  real(mytype), dimension(nx) :: fiffx,fifsx,fifwx
-  real(mytype)                      :: lind
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(out), dimension(ny,nz) :: fisx
+  real(mytype), intent(in), dimension(nx) :: fiffx,fifsx,fifwx
+  real(mytype), intent(in) :: lind
 
-  if (iibm == 2) call lagpolx(ux)
-  if (iibm == 3) call cubsplx(ux,lind)
-
-  if (npaire==1) then
-     do k=1,nz
-        do j=1,ny
-           tx(1,j,k)=fiaix*ux(1,j,k)+fibix*(ux(2,j,k)+ux(2,j,k))&
-                +ficix*(ux(3,j,k)+ux(3,j,k))&
-                +fidix*(ux(4,j,k)+ux(4,j,k))
-           tx(2,j,k)=fiaix*ux(2,j,k)+fibix*(ux(3,j,k)+ux(1,j,k))&
-                +ficix*(ux(4,j,k)+ux(2,j,k))&
-                +fidix*(ux(5,j,k)+ux(3,j,k))
-           tx(3,j,k)=fiaix*ux(3,j,k)+fibix*(ux(4,j,k)+ux(2,j,k))&
-                +ficix*(ux(5,j,k)+ux(1,j,k))&
-                +fidix*(ux(6,j,k)+ux(2,j,k))
-           do i=4,nx-3
-              tx(i,j,k)=fiaix*ux(i,j,k)+fibix*(ux(i+1,j,k)+ux(i-1,j,k))&
-                   +ficix*(ux(i+2,j,k)+ux(i-2,j,k))&
-                   +fidix*(ux(i+3,j,k)+ux(i-3,j,k))
-           enddo
-           tx(nx,j,k)=ux(nx,j,k)
-           tx(nx-1,j,k)=fiamx*ux(nx,j,k)+fibmx*ux(nx-1,j,k)+ficmx*ux(nx-2,j,k)+&
-                fidmx*ux(nx-3,j,k)
-           tx(nx-2,j,k)=fiapx*ux(nx,j,k)+fibpx*ux(nx-1,j,k)+ficpx*ux(nx-2,j,k)+&
-                fidpx*ux(nx-3,j,k)+fiepx*ux(nx-4,j,k)+fifpx*ux(nx-5,j,k)
-           do i=2,nx
-              tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fifsx(i)
-           enddo
-           tx(nx,j,k)=tx(nx,j,k)*fifwx(nx)
-           do i=nx-1,1,-1
-              tx(i,j,k)=(tx(i,j,k)-fiffx(i)*tx(i+1,j,k))*fifwx(i)
-           enddo
-        enddo
-     enddo
-  endif
-
-  if (npaire==0) then
-     do k=1,nz
-        do j=1,ny
-           tx(1,j,k)=zero
-           tx(2,j,k)=fiaix*ux(2,j,k)+fibix*(ux(3,j,k)+ux(1,j,k))&
-                +ficix*(ux(4,j,k)-ux(2,j,k))&
-                +fidix*(ux(5,j,k)-ux(3,j,k))
-           tx(3,j,k)=fiaix*ux(3,j,k)+fibix*(ux(4,j,k)+ux(2,j,k))&
-                +ficix*(ux(5,j,k)+ux(1,j,k))&
-                +fidix*(ux(6,j,k)-ux(2,j,k))
-           do i=4,nx-3
-              tx(i,j,k)=fiaix*ux(i,j,k)+fibix*(ux(i+1,j,k)+ux(i-1,j,k))&
-                   +ficix*(ux(i+2,j,k)+ux(i-2,j,k))&
-                   +fidix*(ux(i+3,j,k)+ux(i-3,j,k))
-           enddo
-           tx(nx,j,k)=ux(nx,j,k)
-           tx(nx-1,j,k)=fiamx*ux(nx,j,k)+fibmx*ux(nx-1,j,k)+ficmx*ux(nx-2,j,k)+&
-                fidmx*ux(nx-3,j,k)
-           tx(nx-2,j,k)=fiapx*ux(nx,j,k)+fibpx*ux(nx-1,j,k)+ficpx*ux(nx-2,j,k)+&
-                fidpx*ux(nx-3,j,k)+fiepx*ux(nx-4,j,k)+fifpx*ux(nx-5,j,k)
-           do i=2,nx
-              tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fifsx(i)
-           enddo
-           tx(nx,j,k)=tx(nx,j,k)*fifwx(nx)
-           do i=nx-1,1,-1
-              tx(i,j,k)=(tx(i,j,k)-fiffx(i)*tx(i+1,j,k))*fifwx(i)
-           enddo
-
-        enddo
-     enddo
-  endif
-
-  return
+  call filx_ij(tx,ux,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind,1,2)
 
 end subroutine filx_12
 
 subroutine filx_21(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind) 
 
   USE param
-  use parfiX
-  use ibm, only : lagpolx, cubsplx
 
   implicit none
 
-  integer :: nx,ny,nz,npaire,i,j,k
-  real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
-  real(mytype), dimension(ny,nz) :: fisx
-  real(mytype), dimension(nx) :: fiffx,fifsx,fifwx
-  real(mytype)                      :: lind
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(out), dimension(ny,nz) :: fisx
+  real(mytype), intent(in), dimension(nx) :: fiffx,fifsx,fifwx
+  real(mytype), intent(in) :: lind
 
-  if (iibm == 2) call lagpolx(ux)
-  if (iibm == 3) call cubsplx(ux,lind)
-
-  if (npaire==1) then
-     do k=1,nz
-        do j=1,ny
-           tx(1,j,k)=ux(1,j,k)
-           tx(2,j,k)=fia2x*ux(1,j,k)+fib2x*ux(2,j,k)+fic2x*ux(3,j,k)+&
-                fid2x*ux(4,j,k)
-           tx(3,j,k)=fia3x*ux(1,j,k)+fib3x*ux(2,j,k)+fic3x*ux(3,j,k)+&
-                fid3x*ux(4,j,k)+fie3x*ux(5,j,k)+fif3x*ux(6,j,k)
-           do i=4,nx-3
-              tx(i,j,k)=fiaix*ux(i,j,k)+fibix*(ux(i+1,j,k)+ux(i-1,j,k))&
-                   +ficix*(ux(i+2,j,k)+ux(i-2,j,k))&
-                   +fidix*(ux(i+3,j,k)+ux(i-3,j,k))
-           enddo
-           tx(nx,j,k)  =fiaix*ux(nx,j,k)  +fibix*(ux(nx-1,j,k)+ux(nx-1,j,k))&
-                +ficix*(ux(nx-2,j,k)+ux(nx-2,j,k))&
-                +fidix*(ux(nx-3,j,k)+ux(nx-3,j,k))
-           tx(nx-1,j,k)=fiaix*ux(nx-1,j,k)+fibix*(ux(  nx,j,k)+ux(nx-2,j,k))&
-                +ficix*(ux(nx-1,j,k)+ux(nx-3,j,k))&
-                +fidix*(ux(nx-2,j,k)+ux(nx-4,j,k))
-           tx(nx-2,j,k)=fiaix*ux(nx-2,j,k)+fibix*(ux(nx-1,j,k)+ux(nx-3,j,k))&
-                +ficix*(ux(  nx,j,k)+ux(nx-4,j,k))&
-                +fidix*(ux(nx-1,j,k)+ux(nx-5,j,k))
-           do i=2,nx
-              tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fifsx(i)
-           enddo
-           tx(nx,j,k)=tx(nx,j,k)*fifwx(nx)
-           do i=nx-1,1,-1
-              tx(i,j,k)=(tx(i,j,k)-fiffx(i)*tx(i+1,j,k))*fifwx(i)
-           enddo
-        enddo
-     enddo
-  endif
-
-  if (npaire==0) then
-     do k=1,nz
-        do j=1,ny
-           tx(1,j,k)=ux(1,j,k)
-           tx(2,j,k)=fia2x*ux(1,j,k)+fib2x*ux(2,j,k)+fic2x*ux(3,j,k)+&
-                fid2x*ux(4,j,k)
-           tx(3,j,k)=fia3x*ux(1,j,k)+fib3x*ux(2,j,k)+fic3x*ux(3,j,k)+&
-                fid3x*ux(4,j,k)+fie3x*ux(5,j,k)+fif3x*ux(6,j,k)
-
-           do i=4,nx-3
-              tx(i,j,k)=fiaix*ux(i,j,k)+fibix*(ux(i+1,j,k)+ux(i-1,j,k))&
-                   +ficix*(ux(i+2,j,k)+ux(i-2,j,k))&
-                   +fidix*(ux(i+3,j,k)+ux(i-3,j,k))
-           enddo
-           tx(nx  ,j,k)=zero
-           tx(nx-1,j,k)=fiaix*ux(nx-1,j,k)+fibix*( ux(nx  ,j,k)+ux(nx-2,j,k))&
-                +ficix*(-ux(nx-1,j,k)+ux(nx-3,j,k))&
-                +fidix*(-ux(nx-2,j,k)+ux(nx-4,j,k))
-           tx(nx-2,j,k)=fiaix*ux(nx-2,j,k)+fibix*( ux(nx-1,j,k)+ux(nx-3,j,k))&
-                +ficix*( ux(nx  ,j,k)+ux(nx-4,j,k))&
-                +fidix*(-ux(nx-1,j,k)+ux(nx-5,j,k))
-           do i=2,nx
-              tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fifsx(i)
-           enddo
-           tx(nx,j,k)=tx(nx,j,k)*fifwx(nx)
-           do i=nx-1,1,-1
-              tx(i,j,k)=(tx(i,j,k)-fiffx(i)*tx(i+1,j,k))*fifwx(i)
-           enddo
-
-        enddo
-     enddo
-  endif
-
-  return
+  call filx_ij(tx,ux,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind,2,1)
 
 end subroutine filx_21
 
@@ -585,48 +475,18 @@ end subroutine filx_21
 subroutine filx_22(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind) 
 
   USE param
-  use parfiX
-  use ibm, only : lagpolx, cubsplx
 
   implicit none
 
-  integer :: nx,ny,nz,npaire,i,j,k
-  real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
-  real(mytype), dimension(ny,nz) :: fisx
-  real(mytype), dimension(nx) :: fiffx,fifsx,fifwx
-  real(mytype)                      :: lind
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(out), dimension(ny,nz) :: fisx
+  real(mytype), intent(in), dimension(nx) :: fiffx,fifsx,fifwx
+  real(mytype), intent(in) :: lind
 
-  if (iibm == 2) call lagpolx(ux)
-  if (iibm == 3) call cubsplx(ux,lind)
+  call filx_ij(tx,ux,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind,2,2)
 
-  do k=1,nz
-     do j=1,ny
-        tx(1,j,k)=ux(1,j,k)
-        tx(2,j,k)=fia2x*ux(1,j,k)+fib2x*ux(2,j,k)+fic2x*ux(3,j,k)+&
-             fid2x*ux(4,j,k)
-        tx(3,j,k)=fia3x*ux(1,j,k)+fib3x*ux(2,j,k)+fic3x*ux(3,j,k)+&
-             fid3x*ux(4,j,k)+fie3x*ux(5,j,k)+fif3x*ux(6,j,k)
-        do i=4,nx-3
-           tx(i,j,k)=fiaix*ux(i,j,k)+fibix*(ux(i+1,j,k)+ux(i-1,j,k))&
-                +ficix*(ux(i+2,j,k)+ux(i-2,j,k))&
-                +fidix*(ux(i+3,j,k)+ux(i-3,j,k))
-        enddo
-        tx(nx,j,k)=ux(nx,j,k)
-        tx(nx-1,j,k)=fiamx*ux(nx,j,k)+fibmx*ux(nx-1,j,k)+ficmx*ux(nx-2,j,k)+&
-             fidmx*ux(nx-3,j,k)
-        tx(nx-2,j,k)=fiapx*ux(nx,j,k)+fibpx*ux(nx-1,j,k)+ficpx*ux(nx-2,j,k)+&
-             fidpx*ux(nx-3,j,k)+fiepx*ux(nx-4,j,k)+fifpx*ux(nx-5,j,k)
-        do i=2,nx
-           tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fifsx(i)
-        enddo
-        tx(nx,j,k)=tx(nx,j,k)*fifwx(nx)
-        do i=nx-1,1,-1
-           tx(i,j,k)=(tx(i,j,k)-fiffx(i)*tx(i+1,j,k))*fifwx(i)
-        enddo
-     enddo
-  enddo
-
-  return
 end subroutine filx_22
 
 subroutine fily_00(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind) 
@@ -637,73 +497,102 @@ subroutine fily_00(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind)
 
   implicit none
 
-  integer :: nx,ny,nz,i,j,k,npaire
-  real(mytype), dimension(nx,ny,nz) :: ty,uy
-  real(mytype), dimension(nx,ny,nz) :: ry
-  real(mytype), dimension(nx,nz)  :: fisy
-  real(mytype), dimension(ny) :: fiffy,fifsy,fifwy
-  real(mytype)                      :: lind
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: ty, ry
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(out), dimension(nx,nz)  :: fisy
+  real(mytype), intent(in), dimension(ny) :: fiffy,fifsy,fifwy
+  real(mytype), intent(in) :: lind
+
+  integer :: i, j, k
 
   if (iibm == 2) call lagpoly(uy)
   if (iibm == 3) call cubsply(uy,lind)
 
-  do k=1,nz
-     do i=1,nx
-        ty(i,1,k)=fiajy*uy(i,1,k)+fibjy*(uy(i,2,k)+uy(i,ny,k))&
-             +ficjy*(uy(i,3,k)+uy(i,ny-1,k))&
-             +fidjy*(uy(i,4,k)+uy(i,ny-2,k))
-        ry(i,1,k)=-1.
-        ty(i,2,k)=fiajy*uy(i,2,k)+fibjy*(uy(i,3,k)+uy(i,1,k))&
-             +ficjy*(uy(i,4,k)+uy(i,ny,k))&
-             +fidjy*(uy(i,5,k)+uy(i,ny-1,k))
-        ry(i,2,k)=0.
-        ty(i,3,k)=fiajy*uy(i,3,k)+fibjy*(uy(i,4,k)+uy(i,2,k))&
-             +ficjy*(uy(i,5,k)+uy(i,1,k))&
-             +fidjy*(uy(i,6,k)+uy(i,ny,k))
-        ry(i,3,k)=0.
-        do j=4,ny-3
-           ty(i,j,k)=fiajy*uy(i,j,k)+fibjy*(uy(i,j+1,k)+uy(i,j-1,k))&
-                +ficjy*(uy(i,j+2,k)+uy(i,j-2,k))&
-                +fidjy*(uy(i,j+3,k)+uy(i,j-3,k))
-           ry(i,j,k)=0.
-        enddo
-        ty(i,ny-2,k)=fiajy*uy(i,ny-2,k)+fibjy*(uy(i,ny-3,k)+uy(i,ny-1,k))&
-             +ficjy*(uy(i,ny-4,k)+uy(i,ny,k))&
-             +fidjy*(uy(i,ny-5,k)+uy(i,1,k))
-        ry(i,ny-2,k)=0.
-        ty(i,ny-1,k)=fiajy*uy(i,ny-1,k)+fibjy*(uy(i,ny-2,k)+uy(i,ny,k))&
-             +ficjy*(uy(i,ny-3,k)+uy(i,1,k))&
-             +fidjy*(uy(i,ny-4,k)+uy(i,2,k))
-        ry(i,ny-1,k)=0.
-        ty(i,ny,k)=fiajy*uy(i,ny,k)+fibjy*(uy(i,ny-1,k)+uy(i,1,k))&
-             +ficjy*(uy(i,ny-2,k)+uy(i,2,k))&
-             +fidjy*(uy(i,ny-3,k)+uy(i,3,k))
-        ry(i,ny,k)=fialjy
-        do j=2, ny
-           ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fifsy(j)
-           ry(i,j,k)=ry(i,j,k)-ry(i,j-1,k)*fifsy(j)
-        enddo
-        ty(i,ny,k)=ty(i,ny,k)*fifwy(ny)
-        ry(i,ny,k)=ry(i,ny,k)*fifwy(ny)
-        do j=ny-1,1,-1
-           ty(i,j,k)=(ty(i,j,k)-fiffy(j)*ty(i,j+1,k))*fifwy(j)
-           ry(i,j,k)=(ry(i,j,k)-fiffy(j)*ry(i,j+1,k))*fifwy(j)
-        enddo
-        fisy(i,k)=(ty(i,1,k)-fialjy*ty(i,ny,k))&
-             /(1.+ry(i,1,k)-fialjy*ry(i,ny,k))
-        do j=1,ny
-           ty(i,j,k)=ty(i,j,k)-fisy(i,k)*ry(i,j,k)
+  do concurrent (k=1:nz)
+
+     ! Solve r.h.s.
+     do concurrent (i=1:nx)
+        ty(i,1,k) = fiajy*uy(i,1,k) + fibjy*(uy(i,2,k)+uy(i,ny,k)) &
+                  + ficjy*(uy(i,3,k)+uy(i,ny-1,k)) &
+                  + fidjy*(uy(i,4,k)+uy(i,ny-2,k))
+     enddo
+     do concurrent (i=1:nx)
+        ty(i,2,k) = fiajy*uy(i,2,k) + fibjy*(uy(i,3,k)+uy(i,1,k)) &
+                  + ficjy*(uy(i,4,k)+uy(i,ny,k)) &
+                  + fidjy*(uy(i,5,k)+uy(i,ny-1,k))
+     enddo
+     do concurrent (i=1:nx)
+        ty(i,3,k) = fiajy*uy(i,3,k) + fibjy*(uy(i,4,k)+uy(i,2,k)) &
+                  + ficjy*(uy(i,5,k)+uy(i,1,k)) &
+                  + fidjy*(uy(i,6,k)+uy(i,ny,k))
+     enddo
+     do concurrent (j=4:ny-3)
+        do concurrent (i=1:nx)
+           ty(i,j,k) = fiajy*uy(i,j,k) + fibjy*(uy(i,j+1,k)+uy(i,j-1,k)) &
+                     + ficjy*(uy(i,j+2,k)+uy(i,j-2,k)) &
+                     + fidjy*(uy(i,j+3,k)+uy(i,j-3,k))
         enddo
      enddo
-  enddo
+     do concurrent (i=1:nx)
+        ty(i,ny-2,k) = fiajy*uy(i,ny-2,k) + fibjy*(uy(i,ny-3,k)+uy(i,ny-1,k)) &
+                     + ficjy*(uy(i,ny-4,k)+uy(i,ny,k)) &
+                     + fidjy*(uy(i,ny-5,k)+uy(i,1,k))
+     enddo
+     do concurrent (i=1:nx)
+        ty(i,ny-1,k) = fiajy*uy(i,ny-1,k) + fibjy*(uy(i,ny-2,k)+uy(i,ny,k)) &
+                     + ficjy*(uy(i,ny-3,k)+uy(i,1,k)) &
+                     + fidjy*(uy(i,ny-4,k)+uy(i,2,k))
+     enddo
+     do concurrent (i=1:nx)
+        ty(i,ny,k) = fiajy*uy(i,ny,k) + fibjy*(uy(i,ny-1,k)+uy(i,1,k)) &
+                   + ficjy*(uy(i,ny-2,k)+uy(i,2,k)) &
+                   + fidjy*(uy(i,ny-3,k)+uy(i,3,k))
+     enddo
+     do concurrent (i=1:nx)
+        ry(i,1,k) = -one
+     enddo
+     do concurrent (j=2:ny-1)
+        do concurrent (i=1:nx)
+           ry(i,j,k) = zero
+        enddo
+     enddo
+     do concurrent (i=1:nx)
+        ry(i,ny,k) = fialjy
+     enddo
 
-  return
+     ! Solve tri-diagonal system
+     do j=2,ny
+        do concurrent (i=1:nx)
+           ty(i,j,k) = ty(i,j,k) - ty(i,j-1,k)*fifsy(j)
+           ry(i,j,k) = ry(i,j,k) - ry(i,j-1,k)*fifsy(j)
+        enddo
+     enddo
+     do concurrent (i=1:nx)
+        ty(i,ny,k) = ty(i,ny,k) * fifwy(ny)
+     enddo
+     do concurrent (i=1:nx)
+        ry(i,ny,k) = ry(i,ny,k) * fifwy(ny)
+     enddo
+     do j=ny-1,1,-1
+        do concurrent (i=1:nx)
+           ty(i,j,k) = (ty(i,j,k)-fiffy(j)*ty(i,j+1,k)) * fifwy(j)
+           ry(i,j,k) = (ry(i,j,k)-fiffy(j)*ry(i,j+1,k)) * fifwy(j)
+        enddo
+     enddo
+     fisy(i,k) = (    ty(i,1,k)-fialjy*ty(i,ny,k)) &
+               / (one+ry(i,1,k)-fialjy*ry(i,ny,k))
+     do concurrent (j=1:ny)
+        do concurrent (i=1:nx)
+           ty(i,j,k) = ty(i,j,k) - fisy(i,k)*ry(i,j,k)
+        enddo
+     enddo
+
+  enddo
 
 end subroutine fily_00
 
-!********************************************************************
-!
-subroutine fily_11(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind) 
+subroutine fily_ij(ty,uy,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind,ncl1,ncln)
   !
   !********************************************************************
 
@@ -713,87 +602,133 @@ subroutine fily_11(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind)
 
   implicit none
 
-  integer :: nx,ny,nz,i,j,k,npaire
-  real(mytype), dimension(nx,ny,nz) :: ty,uy
-  real(mytype), dimension(nx,ny,nz) :: ry
-  real(mytype), dimension(nx,nz)  :: fisy
-  real(mytype), dimension(ny) :: fiffy,fifsy,fifwy
-  real(mytype)                      :: lind
+  integer, intent(in) :: nx, ny, nz, npaire, ncl1, ncln
+  real(mytype), intent(out), dimension(nx,ny,nz) :: ty
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(out), dimension(nx,nz)  :: fisy
+  real(mytype), intent(in), dimension(ny) :: fiffy,fifsy,fifwy
+  real(mytype), intent(in) :: lind
+
+  integer :: i, j, k
 
   if (iibm == 2) call lagpoly(uy)
   if (iibm == 3) call cubsply(uy,lind)
 
-  if (npaire==1) then
-     do k=1,nz
-        do i=1,nx
-           ty(i,1,k)=fiajy*uy(i,1,k)+fibjy*(uy(i,2,k)+uy(i,2,k))&
-                +ficjy*(uy(i,3,k)+uy(i,3,k))&
-                +fidjy*(uy(i,4,k)+uy(i,4,k))
-           ty(i,2,k)=fiajy*uy(i,2,k)+fibjy*(uy(i,3,k)+uy(i,1,k))&
-                +ficjy*(uy(i,4,k)+uy(i,2,k))&
-                +fidjy*(uy(i,5,k)+uy(i,3,k))
-           ty(i,3,k)=fiajy*uy(i,3,k)+fibjy*(uy(i,4,k)+uy(i,2,k))&
-                +ficjy*(uy(i,5,k)+uy(i,1,k))&
-                +fidjy*(uy(i,6,k)+uy(i,2,k))
-           do j=4,ny-3
-              ty(i,j,k)=fiajy*uy(i,j,k)+fibjy*(uy(i,j+1,k)+uy(i,j-1,k))&
-                   +ficjy*(uy(i,j+2,k)+uy(i,j-2,k))&
-                   +fidjy*(uy(i,j+3,k)+uy(i,j-3,k))
+  do concurrent (k=1:nz)
+
+     ! Solve r.h.s.
+     if (ncl1 == 1) then
+        if (npaire==1) then
+           do concurrent (i=1:nx)
+              ty(i,1,k) = fiajy*uy(i,1,k) + fibjy*(uy(i,2,k)+uy(i,2,k)) &
+                        + ficjy*(uy(i,3,k)+uy(i,3,k)) &
+                        + fidjy*(uy(i,4,k)+uy(i,4,k))
            enddo
-           ty(i,ny,k)=fiajy*uy(i,ny,k)    +fibjy*(uy(i,ny-1,k)+uy(i,ny-1,k))&
-                +ficjy*(uy(i,ny-2,k)+uy(i,ny-2,k))&
-                +fidjy*(uy(i,ny-3,k)+uy(i,ny-3,k))
-           ty(i,ny-1,k)=fiajy*uy(i,ny-1,k)+fibjy*(uy(i,ny,k)  +uy(i,ny-2,k))&
-                +ficjy*(uy(i,ny-1,k)+uy(i,ny-3,k))&
-                +fidjy*(uy(i,ny-2,k)+uy(i,ny-4,k))
-           ty(i,ny-2,k)=fiajy*uy(i,ny-2,k)+fibjy*(uy(i,ny-1,k)+uy(i,ny-3,k))&
-                +ficjy*(uy(i,ny,k)+uy(i,ny-4,k))&
-                +fidjy*(uy(i,ny-1,k)+uy(i,ny-5,k))
-           do j=2,ny
-              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fifsy(j)
+           do concurrent (i=1:nx)
+              ty(i,2,k) = fiajy*uy(i,2,k) + fibjy*(uy(i,3,k)+uy(i,1,k)) &
+                        + ficjy*(uy(i,4,k)+uy(i,2,k)) &
+                        + fidjy*(uy(i,5,k)+uy(i,3,k))
            enddo
-           ty(i,ny,k)=ty(i,ny,k)*fifwy(ny)
-           do j=ny-1,1,-1
-              ty(i,j,k)=(ty(i,j,k)-fiffy(j)*ty(i,j+1,k))*fifwy(j)
+           do concurrent (i=1:nx)
+              ty(i,3,k) = fiajy*uy(i,3,k) + fibjy*(uy(i,4,k)+uy(i,2,k)) &
+                        + ficjy*(uy(i,5,k)+uy(i,1,k)) &
+                        + fidjy*(uy(i,6,k)+uy(i,2,k))
            enddo
+        else
+           do concurrent (i=1:nx)
+              ty(i,1,k) = zero !fiajy*uy(i,1,k)
+           enddo
+           do concurrent (i=1:nx)
+              ty(i,2,k) = fiajy*uy(i,2,k) + fibjy*(uy(i,3,k)+uy(i,1,k)) &
+                        + ficjy*(uy(i,4,k)-uy(i,2,k)) &
+                        + fidjy*(uy(i,5,k)-uy(i,3,k))
+           enddo
+           do concurrent (i=1:nx)
+              ty(i,3,k) = fiajy*uy(i,3,k) + fibjy*(uy(i,4,k)+uy(i,2,k)) &
+                        + ficjy*(uy(i,5,k)+uy(i,1,k)) &
+                        + fidjy*(uy(i,6,k)-uy(i,2,k))
+           enddo
+        endif
+     else
+     endif
+     do concurrent (j=4:ny-3)
+        do concurrent (i=1:nx)
+           ty(i,j,k) = fiajy*uy(i,j,k) + fibjy*(uy(i,j+1,k)+uy(i,j-1,k)) &
+                     + ficjy*(uy(i,j+2,k)+uy(i,j-2,k)) &
+                     + fidjy*(uy(i,j+3,k)+uy(i,j-3,k))
         enddo
      enddo
-  endif
-  if (npaire==0) then
-     do k=1,nz
-        do i=1,nx
-           ty(i,1,k)=zero !fiajy*uy(i,1,k)
-           ty(i,2,k)=fiajy*uy(i,2,k)+fibjy*(uy(i,3,k)+uy(i,1,k))&
-                +ficjy*(uy(i,4,k)-uy(i,2,k))&
-                +fidjy*(uy(i,5,k)-uy(i,3,k))
-           ty(i,3,k)=fiajy*uy(i,3,k)+fibjy*(uy(i,4,k)+uy(i,2,k))&
-                +ficjy*(uy(i,5,k)+uy(i,1,k))&
-                +fidjy*(uy(i,6,k)-uy(i,2,k))
-           do j=4,ny-3
-              ty(i,j,k)=fiajy*uy(i,j,k)+fibjy*(uy(i,j+1,k)+uy(i,j-1,k))&
-                   +ficjy*(uy(i,j+2,k)+uy(i,j-2,k))&
-                   +fidjy*(uy(i,j+3,k)+uy(i,j-3,k))
+     if (ncln == 1) then
+        if (npaire == 1) then
+           do concurrent (i=1:nx)
+              ty(i,ny-2,k) = fiajy*uy(i,ny-2,k)+fibjy*(uy(i,ny-1,k)+uy(i,ny-3,k)) &
+                           + ficjy*(uy(i,ny,k)+uy(i,ny-4,k)) &
+                           + fidjy*(uy(i,ny-1,k)+uy(i,ny-5,k))
            enddo
-           ty(i,ny,k)=zero !fiajy*uy(i,ny,k)
-           ty(i,ny-1,k)=fiajy*uy(i,ny-1,k) +fibjy*(uy(i,ny,k)+uy(i,ny-2,k))&
-                +ficjy*(-uy(i,ny-1,k)+uy(i,ny-3,k))&
-                +fidjy*(-uy(i,ny-2,k)+uy(i,ny-4,k))
-           ty(i,ny-2,k)=fiajy*uy(i,ny-2,k) +fibjy*(uy(i,ny-1,k)+uy(i,ny-3,k))&
-                +ficjy*(uy(i,ny,k)+uy(i,ny-4,k))&
-                +fidjy*(-uy(i,ny-1,k)+uy(i,ny-5,k))
-           do j=2,ny
-              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fifsy(j)
+           do concurrent (i=1:nx)
+              ty(i,ny-1,k) = fiajy*uy(i,ny-1,k)+fibjy*(uy(i,ny,k)  +uy(i,ny-2,k)) &
+                           + ficjy*(uy(i,ny-1,k)+uy(i,ny-3,k)) &
+                           + fidjy*(uy(i,ny-2,k)+uy(i,ny-4,k))
            enddo
-           ty(i,ny,k)=ty(i,ny,k)*fifwy(ny)
+           do concurrent (i=1:nx)
+              ty(i,ny  ,k) = fiajy*uy(i,ny,k) + fibjy*(uy(i,ny-1,k)+uy(i,ny-1,k)) &
+                           + ficjy*(uy(i,ny-2,k)+uy(i,ny-2,k)) &
+                           + fidjy*(uy(i,ny-3,k)+uy(i,ny-3,k))
+           enddo
+        else
+           do concurrent (i=1:nx)
+              ty(i,ny-2,k) = fiajy*uy(i,ny-2,k) + fibjy*(uy(i,ny-1,k)+uy(i,ny-3,k)) &
+                           + ficjy*(uy(i,ny,k)+uy(i,ny-4,k)) &
+                           + fidjy*(-uy(i,ny-1,k)+uy(i,ny-5,k))
+           enddo
+           do concurrent (i=1:nx)
+              ty(i,ny-1,k) = fiajy*uy(i,ny-1,k) + fibjy*(uy(i,ny,k)+uy(i,ny-2,k)) &
+                           + ficjy*(-uy(i,ny-1,k)+uy(i,ny-3,k)) &
+                           + fidjy*(-uy(i,ny-2,k)+uy(i,ny-4,k))
+           enddo
+           do concurrent (i=1:nx)
+              ty(i,ny,k) = zero !fiajy*uy(i,ny,k)
+           enddo
+        endif
+     else
+     endif
 
-           do j=ny-1,1,-1
-              ty(i,j,k)=(ty(i,j,k)-fiffy(j)*ty(i,j+1,k))*fifwy(j)
-           enddo
+     ! Solve tri-diagonal system
+     do j=2,ny
+        do concurrent (i=1:nx)     
+           ty(i,j,k) = ty(i,j,k) - ty(i,j-1,k)*fifsy(j)
         enddo
      enddo
-  endif
+     do concurrent (i=1:nx)
+        ty(i,ny,k) = ty(i,ny,k) * fifwy(ny)
+     enddo
+     do j=ny-1,1,-1
+        do concurrent (i=1:nx)
+           ty(i,j,k) = (ty(i,j,k)-fiffy(j)*ty(i,j+1,k)) * fifwy(j)
+        enddo
+     enddo
 
-  return
+  enddo
+
+end subroutine fily_ij
+!********************************************************************
+!
+subroutine fily_11(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind) 
+  !
+  !********************************************************************
+
+  USE param
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: ty, ry
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(out), dimension(nx,nz)  :: fisy
+  real(mytype), intent(in), dimension(ny) :: fiffy,fifsy,fifwy
+  real(mytype), intent(in) :: lind
+
+  call fily_ij(ty,uy,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind,1,1)
 
 end subroutine fily_11
 
@@ -801,84 +736,17 @@ end subroutine fily_11
 subroutine fily_12(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind) 
 
   USE param
-  use parfiY
-  use ibm, only : lagpoly, cubsply
 
   implicit none
 
-  integer :: nx,ny,nz,i,j,k,npaire
-  real(mytype), dimension(nx,ny,nz) :: ty,uy
-  real(mytype), dimension(nx,ny,nz) :: ry
-  real(mytype), dimension(nx,nz)  :: fisy
-  real(mytype), dimension(ny) :: fiffy,fifsy,fifwy
-  real(mytype)                      :: lind
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: ty, ry
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(out), dimension(nx,nz)  :: fisy
+  real(mytype), intent(in), dimension(ny) :: fiffy,fifsy,fifwy
+  real(mytype), intent(in) :: lind
 
-  if (iibm == 2) call lagpoly(uy)
-  if (iibm == 3) call cubsply(uy,lind)
-
-  if (npaire==1) then
-     do k=1,nz
-        do i=1,nx
-           ty(i,1,k)=fiajy*uy(i,1,k)+fibjy*(uy(i,2,k)+uy(i,2,k))&
-                +ficjy*(uy(i,3,k)+uy(i,3,k))&
-                +fidjy*(uy(i,4,k)+uy(i,4,k))
-           ty(i,2,k)=fiajy*uy(i,2,k)+fibjy*(uy(i,3,k)+uy(i,1,k))&
-                +ficjy*(uy(i,4,k)+uy(i,2,k))&
-                +fidjy*(uy(i,5,k)+uy(i,3,k))
-           ty(i,3,k)=fiajy*uy(i,3,k)+fibjy*(uy(i,4,k)+uy(i,2,k))&
-                +ficjy*(uy(i,5,k)+uy(i,1,k))&
-                +fidjy*(uy(i,6,k)+uy(i,2,k))
-           do j=4,ny-3
-              ty(i,j,k)=fiajy*uy(i,j,k)+fibjy*(uy(i,j+1,k)+uy(i,j-1,k))&
-                   +ficjy*(uy(i,j+2,k)+uy(i,j-2,k))&
-                   +fidjy*(uy(i,j+3,k)+uy(i,j-3,k))
-           enddo
-           ty(i,ny,k)  =      uy(i,ny,k)
-           ty(i,ny-1,k)=fiamy*uy(i,ny  ,k)+fibmy*uy(i,ny-1,k)+ficmy*uy(i,ny-2,k)+&
-                fidmy*uy(i,ny-3,k)
-           ty(i,ny-2,k)=fiapy*uy(i,ny  ,k)+fibpy*uy(i,ny-1,k)+ficpy*uy(i,ny-2,k)+&
-                fidpy*uy(i,ny-3,k)+fiepy*uy(i,ny-4,k)+fifpy*uy(i,ny-5,k)
-           do j=2,ny
-              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fifsy(j)
-           enddo
-           ty(i,ny,k)=ty(i,ny,k)*fifwy(ny)
-           do j=ny-1,1,-1
-              ty(i,j,k)=(ty(i,j,k)-fiffy(j)*ty(i,j+1,k))*fifwy(j)
-           enddo
-        enddo
-     enddo
-  endif
-  if (npaire==0) then
-     do k=1,nz
-        do i=1,nx
-           ty(i,1,k)=zero !fiajy*uy(i,1,k)
-           ty(i,2,k)=fiajy*uy(i,2,k)+fibjy*(uy(i,3,k)+uy(i,1,k))&
-                +ficjy*(uy(i,4,k)-uy(i,2,k))&
-                +fidjy*(uy(i,5,k)-uy(i,3,k))
-           ty(i,3,k)=fiajy*uy(i,3,k)+fibjy*(uy(i,4,k)+uy(i,2,k))&
-                +ficjy*(uy(i,5,k)+uy(i,1,k))&
-                +fidjy*(uy(i,6,k)-uy(i,2,k))
-           do j=4,ny-3
-              ty(i,j,k)=fiajy*uy(i,j,k)+fibjy*(uy(i,j+1,k)+uy(i,j-1,k))&
-                   +ficjy*(uy(i,j+2,k)+uy(i,j-2,k))&
-                   +fidjy*(uy(i,j+3,k)+uy(i,j-3,k))
-           enddo
-           ty(i,ny,k)  =      uy(i,ny,k)
-           ty(i,ny-1,k)=fiamy*uy(i,ny  ,k)+fibmy*uy(i,ny-1,k)+ficmy*uy(i,ny-2,k)+&
-                fidmy*uy(i,ny-3,k)
-           ty(i,ny-2,k)=fiapy*uy(i,ny  ,k)+fibpy*uy(i,ny-1,k)+ficpy*uy(i,ny-2,k)+&
-                fidpy*uy(i,ny-3,k)+fiepy*uy(i,ny-4,k)+fifpy*uy(i,ny-5,k)
-           do j=2,ny
-              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fifsy(j)
-           enddo
-           ty(i,ny,k)=ty(i,ny,k)*fifwy(ny)
-
-           do j=ny-1,1,-1
-              ty(i,j,k)=(ty(i,j,k)-fiffy(j)*ty(i,j+1,k))*fifwy(j)
-           enddo
-        enddo
-     enddo
-  endif
+  call fily_ij(ty,uy,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind,1,2)
 
 end subroutine fily_12
 
@@ -886,135 +754,34 @@ end subroutine fily_12
 subroutine fily_21(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind) 
 
   USE param
-  use parfiY
-  use ibm, only : lagpoly, cubsply
 
   implicit none
 
-  integer :: nx,ny,nz,i,j,k,npaire
-  real(mytype), dimension(nx,ny,nz) :: ty,uy
-  real(mytype), dimension(nx,ny,nz) :: ry
-  real(mytype), dimension(nx,nz)  :: fisy
-  real(mytype), dimension(ny) :: fiffy,fifsy,fifwy
-  real(mytype)                      :: lind
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: ty, ry
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(out), dimension(nx,nz)  :: fisy
+  real(mytype), intent(in), dimension(ny) :: fiffy,fifsy,fifwy
+  real(mytype), intent(in) :: lind
 
-  if (iibm == 2) call lagpoly(uy)
-  if (iibm == 3) call cubsply(uy,lind)
-
-  if (npaire==1) then
-     do k=1,nz
-        do i=1,nx
-           ty(i,1,k)=      uy(i,1,k)
-           ty(i,2,k)=fia2y*uy(i,1,k)+fib2y*uy(i,2,k)+fic2y*uy(i,3,k)+&
-                fid2y*uy(i,4,k)
-           ty(i,3,k)=fia3y*uy(i,1,k)+fib3y*uy(i,2,k)+fic3y*uy(i,3,k)+&
-                fid3y*uy(i,4,k)+fie3y*uy(i,5,k)+fif3y*uy(i,6,k)
-           do j=4,ny-3
-              ty(i,j,k)=fiajy*uy(i,j,k)+fibjy*(uy(i,j+1,k)+uy(i,j-1,k))&
-                   +ficjy*(uy(i,j+2,k)+uy(i,j-2,k))&
-                   +fidjy*(uy(i,j+3,k)+uy(i,j-3,k))
-           enddo
-           ty(i,ny,k)=fiajy*uy(i,ny,k)    +fibjy*(uy(i,ny-1,k)+uy(i,ny-1,k))&
-                +ficjy*(uy(i,ny-2,k)+uy(i,ny-2,k))&
-                +fidjy*(uy(i,ny-3,k)+uy(i,ny-3,k))
-           ty(i,ny-1,k)=fiajy*uy(i,ny-1,k)+fibjy*(uy(i,ny,k)  +uy(i,ny-2,k))&
-                +ficjy*(uy(i,ny-1,k)+uy(i,ny-3,k))&
-                +fidjy*(uy(i,ny-2,k)+uy(i,ny-4,k))
-           ty(i,ny-2,k)=fiajy*uy(i,ny-2,k)+fibjy*(uy(i,ny-1,k)+uy(i,ny-3,k))&
-                +ficjy*(uy(i,ny,k)+uy(i,ny-4,k))&
-                +fidjy*(uy(i,ny-1,k)+uy(i,ny-5,k))
-           do j=2,ny
-              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fifsy(j)
-           enddo
-           ty(i,ny,k)=ty(i,ny,k)*fifwy(ny)
-           do j=ny-1,1,-1
-              ty(i,j,k)=(ty(i,j,k)-fiffy(j)*ty(i,j+1,k))*fifwy(j)
-           enddo
-        enddo
-     enddo
-  endif
-  if (npaire==0) then
-     do k=1,nz
-        do i=1,nx
-           ty(i,1,k)=      uy(i,1,k)
-           ty(i,2,k)=fia2y*uy(i,1,k)+fib2y*uy(i,2,k)+fic2y*uy(i,3,k)+&
-                fid2y*uy(i,4,k)
-           ty(i,3,k)=fia3y*uy(i,1,k)+fib3y*uy(i,2,k)+fic3y*uy(i,3,k)+&
-                fid3y*uy(i,4,k)+fie3y*uy(i,5,k)+fif3y*uy(i,6,k)
-           do j=4,ny-3
-              ty(i,j,k)=fiajy*uy(i,j,k)+fibjy*(uy(i,j+1,k)+uy(i,j-1,k))&
-                   +ficjy*(uy(i,j+2,k)+uy(i,j-2,k))&
-                   +fidjy*(uy(i,j+3,k)+uy(i,j-3,k))
-           enddo
-           ty(i,ny,k)=zero !fiajy*uy(i,ny,k)
-           ty(i,ny-1,k)=fiajy*uy(i,ny-1,k) +fibjy*(uy(i,ny,k)+uy(i,ny-2,k))&
-                +ficjy*(-uy(i,ny-1,k)+uy(i,ny-3,k))&
-                +fidjy*(-uy(i,ny-2,k)+uy(i,ny-4,k))
-           ty(i,ny-2,k)=fiajy*uy(i,ny-2,k) +fibjy*(uy(i,ny-1,k)+uy(i,ny-3,k))&
-                +ficjy*(uy(i,ny,k)+uy(i,ny-4,k))&
-                +fidjy*(-uy(i,ny-1,k)+uy(i,ny-5,k))
-           do j=2,ny
-              ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fifsy(j)
-           enddo
-           ty(i,ny,k)=ty(i,ny,k)*fifwy(ny)
-
-           do j=ny-1,1,-1
-              ty(i,j,k)=(ty(i,j,k)-fiffy(j)*ty(i,j+1,k))*fifwy(j)
-           enddo
-        enddo
-     enddo
-  endif
-
-  return
+  call fily_ij(ty,uy,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind,2,1)
 
 end subroutine fily_21
 
 subroutine fily_22(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind) 
 
   USE param
-  use parfiY
-  use ibm, only : lagpoly, cubsply
 
   implicit none
 
-  integer :: nx,ny,nz,i,j,k,npaire
-  real(mytype), dimension(nx,ny,nz) :: ty,uy
-  real(mytype), dimension(nx,ny,nz) :: ry
-  real(mytype), dimension(nx,nz)  :: fisy
-  real(mytype), dimension(ny) :: fiffy,fifsy,fifwy
-  real(mytype)                      :: lind
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: ty, ry
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(out), dimension(nx,nz)  :: fisy
+  real(mytype), intent(in), dimension(ny) :: fiffy,fifsy,fifwy
+  real(mytype), intent(in) :: lind
 
-  if (iibm == 2) call lagpoly(uy)
-  if (iibm == 3) call cubsply(uy,lind)
-
-  do k=1,nz
-     do i=1,nx
-        ty(i,1,k)=      uy(i,1,k)
-        ty(i,2,k)=fia2y*uy(i,1,k)+fib2y*uy(i,2,k)+fic2y*uy(i,3,k)+&
-             fid2y*uy(i,4,k)
-        ty(i,3,k)=fia3y*uy(i,1,k)+fib3y*uy(i,2,k)+fic3y*uy(i,3,k)+&
-             fid3y*uy(i,4,k)+fie3y*uy(i,5,k)+fif3y*uy(i,6,k)
-        do j=4,ny-3
-           ty(i,j,k)=fiajy*uy(i,j,k) +fibjy*(uy(i,j+1,k)+uy(i,j-1,k))&
-                +ficjy*(uy(i,j+2,k)+uy(i,j-2,k))&
-                +fidjy*(uy(i,j+3,k)+uy(i,j-3,k))
-        enddo
-        ty(i,ny,k)  =      uy(i,ny  ,k)
-        ty(i,ny-1,k)=fiamy*uy(i,ny  ,k)+fibmy*uy(i,ny-1,k)+ficmy*uy(i,ny-2,k)+&
-             fidmy*uy(i,ny-3,k)
-        ty(i,ny-2,k)=fiapy*uy(i,ny  ,k)+fibpy*uy(i,ny-1,k)+ficpy*uy(i,ny-2,k)+&
-             fidpy*uy(i,ny-3,k)+fiepy*uy(i,ny-4,k)+fifpy*uy(i,ny-5,k)
-        do j=2,ny
-           ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fifsy(j)
-        enddo
-        ty(i,ny,k)=ty(i,ny,k)*fifwy(ny)
-        do j=ny-1,1,-1
-           ty(i,j,k)=(ty(i,j,k)-fiffy(j)*ty(i,j+1,k))*fifwy(j)
-        enddo
-     enddo
-  enddo
-
-  return
+  call fily_ij(ty,uy,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind,2,2)
 
 end subroutine fily_22
 
@@ -1026,70 +793,129 @@ subroutine filz_00(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
 
   implicit none
 
-  integer :: nx,ny,nz,npaire,i,j,k
-  real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
-  real(mytype), dimension(nx,ny) :: fisz
-  real(mytype), dimension(nz) :: fiffz,fifsz,fifwz
-  real(mytype)                      :: lind
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(out), dimension(nx,ny) :: fisz
+  real(mytype), intent(in), dimension(nz) :: fiffz,fifsz,fifwz
+  real(mytype), intent(in):: lind
+
+  integer :: i, j, k
 
   if (iibm == 2) call lagpolz(uz)
   if (iibm == 3) call cubsplz(uz,lind)
 
-  do j=1,ny
-     do i=1,nx
-        tz(i,j,1)=fiakz*uz(i,j,1)+fibkz*(uz(i,j,2)+uz(i,j,nz))&
-             +fickz*(uz(i,j,3)+uz(i,j,nz-1))&
-             +fidkz*(uz(i,j,4)+uz(i,j,nz-2))
-        rz(i,j,1)=-1.
-        tz(i,j,2)=fiakz*uz(i,j,2)+fibkz*(uz(i,j,3)+uz(i,j,1))&
-             +fickz*(uz(i,j,4)+uz(i,j,nz))&
-             +fidkz*(uz(i,j,5)+uz(i,j,nz-1))
-        rz(i,j,2)=0.
-        tz(i,j,3)=fiakz*uz(i,j,3)+fibkz*(uz(i,j,4)+uz(i,j,2))&
-             +fickz*(uz(i,j,5)+uz(i,j,1))&
-             +fidkz*(uz(i,j,6)+uz(i,j,nz))
-        rz(i,j,3)=0.
-        do k=4,nz-3
-           tz(i,j,k)=fiakz*uz(i,j,k)+fibkz*(uz(i,j,k+1)+uz(i,j,k-1))&
-                +fickz*(uz(i,j,k+2)+uz(i,j,k-2))&
-                +fidkz*(uz(i,j,k+3)+uz(i,j,k-3))
-           rz(i,j,k)=0.
+  ! Compute r.h.s.
+  do concurrent (j=1:ny)
+     do concurrent (i=1:nx)
+        tz(i,j,1) = fiakz*uz(i,j,1) + fibkz*(uz(i,j,2)+uz(i,j,nz)) &
+                  + fickz*(uz(i,j,3)+uz(i,j,nz-1)) &
+                  + fidkz*(uz(i,j,4)+uz(i,j,nz-2))
+     enddo
+  enddo
+  do concurrent (j=1:ny)
+     do concurrent (i=1:nx)
+        tz(i,j,2) = fiakz*uz(i,j,2) + fibkz*(uz(i,j,3)+uz(i,j,1)) &
+                  + fickz*(uz(i,j,4)+uz(i,j,nz)) &
+                  + fidkz*(uz(i,j,5)+uz(i,j,nz-1))
+     enddo
+  enddo
+  do concurrent (j=1:ny)
+     do concurrent (i=1:nx)
+        tz(i,j,3) = fiakz*uz(i,j,3) + fibkz*(uz(i,j,4)+uz(i,j,2)) &
+                  + fickz*(uz(i,j,5)+uz(i,j,1)) &
+                  + fidkz*(uz(i,j,6)+uz(i,j,nz))
+     enddo
+  enddo
+  do concurrent (k=4:nz-3)
+     do concurrent (j=1:ny)
+        do concurrent (i=1:nx)
+           tz(i,j,k) = fiakz*uz(i,j,k) + fibkz*(uz(i,j,k+1)+uz(i,j,k-1)) &
+                     + fickz*(uz(i,j,k+2)+uz(i,j,k-2)) &
+                     + fidkz*(uz(i,j,k+3)+uz(i,j,k-3))
         enddo
-        tz(i,j,nz-2)=fiakz*uz(i,j,nz-2)+fibkz*(uz(i,j,nz-3)+uz(i,j,nz-1))&
-             +fickz*(uz(i,j,nz-4)+uz(i,j,nz))&
-             +fidkz*(uz(i,j,nz-5)+uz(i,j,1))
-        rz(i,j,nz-2)=0.
-        tz(i,j,nz-1)=fiakz*uz(i,j,nz-1)+fibkz*(uz(i,j,nz-2)+uz(i,j,nz))&
-             +fickz*(uz(i,j,nz-3)+uz(i,j,1))&
-             +fidkz*(uz(i,j,nz-4)+uz(i,j,2))
-        rz(i,j,nz-1)=0.
-        tz(i,j,nz)=fiakz*uz(i,j,nz)+fibkz*(uz(i,j,nz-1)+uz(i,j,1))&
-             +fickz*(uz(i,j,nz-2)+uz(i,j,2))&
-             +fidkz*(uz(i,j,nz-3)+uz(i,j,3))
-        rz(i,j,nz)=fialkz
-        do k=2,nz
-           tz(i,j,k)=tz(i,j,k)-tz(i,j,k-1)*fifsz(k)
-           rz(i,j,k)=rz(i,j,k)-rz(i,j,k-1)*fifsz(k)
+     enddo
+  enddo
+  do concurrent (j=1:ny)
+     do concurrent (i=1:nx)
+        tz(i,j,nz-2) = fiakz*uz(i,j,nz-2) + fibkz*(uz(i,j,nz-3)+uz(i,j,nz-1)) &
+                     + fickz*(uz(i,j,nz-4)+uz(i,j,nz)) &
+                     + fidkz*(uz(i,j,nz-5)+uz(i,j,1))
+     enddo
+  enddo
+  do concurrent (j=1:ny)
+     do concurrent (i=1:nx)
+        tz(i,j,nz-1) = fiakz*uz(i,j,nz-1) + fibkz*(uz(i,j,nz-2)+uz(i,j,nz)) &
+                     + fickz*(uz(i,j,nz-3)+uz(i,j,1)) &
+                     + fidkz*(uz(i,j,nz-4)+uz(i,j,2))
+     enddo
+  enddo
+  do concurrent (j=1:ny)
+     do concurrent (i=1:nx)
+        tz(i,j,nz  ) = fiakz*uz(i,j,nz) + fibkz*(uz(i,j,nz-1)+uz(i,j,1)) &
+                     + fickz*(uz(i,j,nz-2)+uz(i,j,2)) &
+                     + fidkz*(uz(i,j,nz-3)+uz(i,j,3))
+     enddo
+  enddo
+  do concurrent (j=1:ny)
+     do concurrent (i=1:nx)
+        rz(i,j,1) = -one
+     enddo
+  enddo
+  do concurrent (k=2:nz-1)
+     do concurrent (j=1:ny)
+        do concurrent (i=1:nx)
+           rz(i,j,k) = zero
         enddo
-        tz(i,j,nz)=tz(i,j,nz)*fifwz(nz)
-        rz(i,j,nz)=rz(i,j,nz)*fifwz(nz)
-        do k=nz-1,1,-1
-           tz(i,j,k)=(tz(i,j,k)-fiffz(k)*tz(i,j,k+1))*fifwz(k)
-           rz(i,j,k)=(rz(i,j,k)-fiffz(k)*rz(i,j,k+1))*fifwz(k)
-        enddo
-        fisz(i,j)=(tz(i,j,1)-fialkz*tz(i,j,nz))&
-             /(1.+rz(i,j,1)-fialkz*rz(i,j,nz))
-        do k=1,nz
-           tz(i,j,k)=tz(i,j,k)-fisz(i,j)*rz(i,j,k)
-        enddo
+     enddo
+  enddo
+  do concurrent (j=1:ny)
+     do concurrent (i=1:nx)
+        rz(i,j,nz) = fialkz
+     enddo
+  enddo
 
+  ! Solve tri-diagonal system
+  do k=2,nz
+     do concurrent (j=1:ny)
+        do concurrent (i=1:nx)
+           tz(i,j,k) = tz(i,j,k) - tz(i,j,k-1)*fifsz(k)
+           rz(i,j,k) = rz(i,j,k) - rz(i,j,k-1)*fifsz(k)
+        enddo
+     enddo
+  enddo
+  do concurrent (j=1:ny)
+     do concurrent (i=1:nx)
+        tz(i,j,nz) = tz(i,j,nz) * fifwz(nz)
+        rz(i,j,nz) = rz(i,j,nz) * fifwz(nz)
+     enddo
+  enddo
+  do k=nz-1,1,-1
+     do concurrent (j=1:ny)
+        do concurrent (i=1:nx)
+           tz(i,j,k) = (tz(i,j,k)-fiffz(k)*tz(i,j,k+1)) * fifwz(k)
+           rz(i,j,k) = (rz(i,j,k)-fiffz(k)*rz(i,j,k+1)) * fifwz(k)
+        enddo
+     enddo
+  enddo
+  do concurrent (j=1:ny)
+     do concurrent (i=1:nx)
+        fisz(i,j) = (    tz(i,j,1)-fialkz*tz(i,j,nz)) &
+                  / (one+rz(i,j,1)-fialkz*rz(i,j,nz))
+     enddo
+  enddo
+  do concurrent (k=1:nz)
+     do concurrent (j=1:ny)
+        do concurrent (i=1:nx)
+           tz(i,j,k) = tz(i,j,k) - fisz(i,j)*rz(i,j,k)
+        enddo
      enddo
   enddo
 
   return
 end subroutine filz_00
 
-subroutine filz_11(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind) 
+subroutine filz_ij(tz,uz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind,ncl1,ncln)
 
   USE param
   use parfiZ
@@ -1097,255 +923,226 @@ subroutine filz_11(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
 
   implicit none
 
-  integer :: nx,ny,nz,npaire,i,j,k
-  real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
-  real(mytype), dimension(nx,ny) :: fisz
-  real(mytype), dimension(nz) :: fiffz,fifsz,fifwz
-  real(mytype)                      :: lind
+  integer, intent(in) :: nx, ny, nz, npaire, ncl1, ncln
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tz
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(out), dimension(nx,ny) :: fisz
+  real(mytype), intent(in), dimension(nz) :: fiffz,fifsz,fifwz
+  real(mytype), intent(in) :: lind
+
+  integer :: i, j, k
 
   if (iibm == 2) call lagpolz(uz)
   if (iibm == 3) call cubsplz(uz,lind)
 
-  if (npaire==1) then
-     do j=1,ny
-        do i=1,nx
-           tz(i,j,1)=fiakz*uz(i,j,1)+fibkz*(uz(i,j,2)+uz(i,j,2))&
-                +fickz*(uz(i,j,3)+uz(i,j,3))&
-                +fidkz*(uz(i,j,4)+uz(i,j,4))
-           tz(i,j,2)=fiakz*uz(i,j,2)+fibkz*(uz(i,j,3)+uz(i,j,1))&
-                +fickz*(uz(i,j,4)+uz(i,j,2))&
-                +fidkz*(uz(i,j,5)+uz(i,j,3))
-           tz(i,j,3)=fiakz*uz(i,j,3)+fibkz*(uz(i,j,4)+uz(i,j,2))&
-                +fickz*(uz(i,j,5)+uz(i,j,1))&
-                +fidkz*(uz(i,j,6)+uz(i,j,2))
-           do k=4,nz-3
-              tz(i,j,k)=fiakz*uz(i,j,k)+fibkz*(uz(i,j,k+1)+uz(i,j,k-1))&
-                   +fickz*(uz(i,j,k+2)+uz(i,j,k-2))&
-                   +fidkz*(uz(i,j,k+3)+uz(i,j,k-3))
+  ! Compute r.h.s.
+  if (ncl1 == 1) then
+     if (npaire==1) then
+        do concurrent (j=1:ny)
+           do concurrent (i=1:nx)
+              tz(i,j,1) = fiakz*uz(i,j,1) + fibkz*(uz(i,j,2)+uz(i,j,2)) &
+                        + fickz*(uz(i,j,3)+uz(i,j,3)) &
+                        + fidkz*(uz(i,j,4)+uz(i,j,4))
            enddo
-           tz(i,j,nz)=fiakz*uz(i,j,nz)    +fibkz*(uz(i,j,nz-1)+uz(i,j,nz-1))&
-                +fickz*(uz(i,j,nz-2)+uz(i,j,nz-2))&
-                +fidkz*(uz(i,j,nz-3)+uz(i,j,nz-3))
-           tz(i,j,nz-1)=fiakz*uz(i,j,nz-1)+fibkz*(uz(i,j,nz  )+uz(i,j,nz-2))&
-                +fickz*(uz(i,j,nz-1)+uz(i,j,nz-3))&
-                +fidkz*(uz(i,j,nz-2)+uz(i,j,nz-4))
-           tz(i,j,nz-2)=fiakz*uz(i,j,nz-2)+fibkz*(uz(i,j,nz-1)+uz(i,j,nz-3))&
-                +fickz*(uz(i,j,nz  )+uz(i,j,nz-4))&
-                +fidkz*(uz(i,j,nz-1)+uz(i,j,nz-5))
-           do k=2,nz
-              tz(i,j,k)=tz(i,j,k)-tz(i,j,k-1)*fifsz(k)
+        enddo
+        do concurrent (j=1:ny)
+           do concurrent (i=1:nx)
+              tz(i,j,2) = fiakz*uz(i,j,2) + fibkz*(uz(i,j,3)+uz(i,j,1)) &
+                        + fickz*(uz(i,j,4)+uz(i,j,2)) &
+                        + fidkz*(uz(i,j,5)+uz(i,j,3))
            enddo
-           tz(i,j,nz)=tz(i,j,nz)*fifwz(nz)
-           do k=nz-1,1,-1
-              tz(i,j,k)=(tz(i,j,k)-fiffz(k)*tz(i,j,k+1))*fifwz(k)
+        enddo
+        do concurrent (j=1:ny)
+           do concurrent (i=1:nx)
+              tz(i,j,3) = fiakz*uz(i,j,3) + fibkz*(uz(i,j,4)+uz(i,j,2)) &
+                        + fickz*(uz(i,j,5)+uz(i,j,1)) &
+                        + fidkz*(uz(i,j,6)+uz(i,j,2))
            enddo
+        enddo
+     else
+        do concurrent (j=1:ny)
+           do concurrent (i=1:nx)
+              tz(i,j,1) = zero
+           enddo
+        enddo
+        do concurrent (j=1:ny)
+           do concurrent (i=1:nx)
+              tz(i,j,2) = fiakz*uz(i,j,2) + fibkz*(uz(i,j,3)+uz(i,j,1)) &
+                        + fickz*(uz(i,j,4)-uz(i,j,2)) &
+                        + fidkz*(uz(i,j,5)-uz(i,j,3))
+           enddo
+        enddo
+        do concurrent (j=1:ny)
+           do concurrent (i=1:nx)
+              tz(i,j,3) = fiakz*uz(i,j,3) + fibkz*(uz(i,j,4)+uz(i,j,2)) &
+                        + fickz*(uz(i,j,5)+uz(i,j,1)) &
+                        + fidkz*(uz(i,j,6)-uz(i,j,2))
+           enddo
+        enddo
+     endif
+  else
+     do concurrent (j=1:ny)
+        do concurrent (i=1:nx)
+           tz(i,j,1) = uz(i,j,1)
+        enddo
+     enddo
+     do concurrent (j=1:ny)
+        do concurrent (i=1:nx)
+           tz(i,j,2) = fia2z*uz(i,j,1) + fib2z*uz(i,j,2) + fic2z*uz(i,j,3) &
+                     + fid2z*uz(i,j,4)
+        enddo
+     enddo
+     do concurrent (j=1:ny)
+        do concurrent (i=1:nx)
+           tz(i,j,3) = fia3z*uz(i,j,1) + fib3z*uz(i,j,2) + fic3z*uz(i,j,3) &
+                     + fid3z*uz(i,j,4) + fie3z*uz(i,j,5) + fif3z*uz(i,j,6)
         enddo
      enddo
   endif
-  if (npaire==0) then
-     do j=1,ny
-        do i=1,nx
-           tz(i,j,1)=zero
-           tz(i,j,2)=fiakz*uz(i,j,2)+fibkz*(uz(i,j,3)+uz(i,j,1))&
-                +fickz*(uz(i,j,4)-uz(i,j,2))&
-                +fidkz*(uz(i,j,5)-uz(i,j,3))
-           tz(i,j,3)=fiakz*uz(i,j,3)+fibkz*(uz(i,j,4)+uz(i,j,2))&
-                +fickz*(uz(i,j,5)+uz(i,j,1))&
-                +fidkz*(uz(i,j,6)-uz(i,j,2))
-           do k=4,nz-3
-              tz(i,j,k)=fiakz*uz(i,j,k)+fibkz*(uz(i,j,k+1)+uz(i,j,k-1))&
-                   +fickz*(uz(i,j,k+2)+uz(i,j,k-2))&
-                   +fidkz*(uz(i,j,k+3)+uz(i,j,k-3))
+  do concurrent (k=4:nz-3)
+     do concurrent (j=1:ny)
+        do concurrent (i=1:nx)
+           tz(i,j,k) = fiakz*uz(i,j,k) + fibkz*(uz(i,j,k+1)+uz(i,j,k-1)) &
+                     + fickz*(uz(i,j,k+2)+uz(i,j,k-2)) &
+                     + fidkz*(uz(i,j,k+3)+uz(i,j,k-3))
+        enddo
+     enddo
+  enddo
+  if (ncln == 1) then
+     if (npaire == 1) then
+        do concurrent (j=1:ny)
+           do concurrent (i=1:nx)
+              tz(i,j,nz-2) = fiakz*uz(i,j,nz-2) + fibkz*(uz(i,j,nz-1)+uz(i,j,nz-3)) &
+                           + fickz*(uz(i,j,nz  )+uz(i,j,nz-4)) &
+                           + fidkz*(uz(i,j,nz-1)+uz(i,j,nz-5))
            enddo
-           tz(i,j,nz)=zero
-           tz(i,j,nz-1)=fiakz*uz(i,j,nz-1) +fibkz*( uz(i,j,nz  )+uz(i,j,nz-2))&
-                +fickz*(-uz(i,j,nz-1)+uz(i,j,nz-3))&
-                +fidkz*(-uz(i,j,nz-2)+uz(i,j,nz-4))
-           tz(i,j,nz-2)=fiakz*uz(i,j,nz-2) +fibkz*( uz(i,j,nz-1)+uz(i,j,nz-3))&
-                +fickz*( uz(i,j,nz  )+uz(i,j,nz-4))&
-                +fidkz*(-uz(i,j,nz-1)+uz(i,j,nz-5))
-           do k=2,nz
-              tz(i,j,k)=tz(i,j,k)-tz(i,j,k-1)*fifsz(k)
+        enddo
+        do concurrent (j=1:ny)
+           do concurrent (i=1:nx)
+              tz(i,j,nz-1) = fiakz*uz(i,j,nz-1) + fibkz*(uz(i,j,nz  )+uz(i,j,nz-2)) &
+                           + fickz*(uz(i,j,nz-1)+uz(i,j,nz-3)) &
+                           + fidkz*(uz(i,j,nz-2)+uz(i,j,nz-4))
            enddo
-           tz(i,j,nz)=tz(i,j,nz)*fifwz(nz)
-
-           do k=nz-1,1,-1
-              tz(i,j,k)=(tz(i,j,k)-fiffz(k)*tz(i,j,k+1))*fifwz(k)
+        enddo
+        do concurrent (j=1:ny)
+           do concurrent (i=1:nx)
+              tz(i,j,nz) = fiakz*uz(i,j,nz) + fibkz*(uz(i,j,nz-1)+uz(i,j,nz-1)) &
+                         + fickz*(uz(i,j,nz-2)+uz(i,j,nz-2)) &
+                         + fidkz*(uz(i,j,nz-3)+uz(i,j,nz-3))
            enddo
+        enddo
+     else
+        do concurrent (j=1:ny)
+           do concurrent (i=1:nx)
+              tz(i,j,nz-2) = fiakz*uz(i,j,nz-2) + fibkz*( uz(i,j,nz-1)+uz(i,j,nz-3)) &
+                           + fickz*( uz(i,j,nz  )+uz(i,j,nz-4)) &
+                           + fidkz*(-uz(i,j,nz-1)+uz(i,j,nz-5))
+           enddo
+        enddo
+        do concurrent (j=1:ny)
+           do concurrent (i=1:nx)
+              tz(i,j,nz-1) = fiakz*uz(i,j,nz-1) + fibkz*( uz(i,j,nz  )+uz(i,j,nz-2)) &
+                           + fickz*(-uz(i,j,nz-1)+uz(i,j,nz-3)) &
+                           + fidkz*(-uz(i,j,nz-2)+uz(i,j,nz-4))
+           enddo
+        enddo
+        do concurrent (j=1:ny)
+           do concurrent (i=1:nx)
+              tz(i,j,nz  ) = zero
+           enddo
+        enddo
+     endif
+  else
+     do concurrent (j=1:ny)
+        do concurrent (i=1:nx)
+           tz(i,j,nz-2 ) = fiapz*uz(i,j,nz  ) + fibpz*uz(i,j,nz-1) + ficpz*uz(i,j,nz-2) &
+                         + fidpz*uz(i,j,nz-3) + fiepz*uz(i,j,nz-4) + fifpz*uz(i,j,nz-5)
+        enddo
+     enddo
+     do concurrent (j=1:ny)
+        do concurrent (i=1:nx)
+           tz(i,j,nz-1 ) = fiamz*uz(i,j,nz  ) + fibmz*uz(i,j,nz-1) + ficmz*uz(i,j,nz-2) &
+                         + fidmz*uz(i,j,nz-3)
+        enddo
+     enddo
+     do concurrent (j=1:ny)
+        do concurrent (i=1:nx)
+           tz(i,j,nz   ) = uz(i,j,nz  )
         enddo
      enddo
   endif
 
-  return
+  ! Solve tri-diagonal system
+  do k=2,nz
+     do concurrent (j=1:ny)
+        do concurrent (i=1:nx)
+           tz(i,j,k) = tz(i,j,k) - tz(i,j,k-1)*fifsz(k)
+        enddo
+     enddo
+  enddo
+  do concurrent (j=1:ny)
+     do concurrent (i=1:nx)
+        tz(i,j,nz) = tz(i,j,nz) * fifwz(nz)
+     enddo
+  enddo
+  do k=nz-1,1,-1
+     do concurrent (j=1:ny)
+        do concurrent (i=1:nx)
+           tz(i,j,k) = (tz(i,j,k)-fiffz(k)*tz(i,j,k+1)) * fifwz(k)
+        enddo
+     enddo
+  enddo
+
+end subroutine filz_ij
+
+subroutine filz_11(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind) 
+
+  USE param
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(out), dimension(nx,ny) :: fisz
+  real(mytype), intent(in), dimension(nz) :: fiffz,fifsz,fifwz
+  real(mytype), intent(in) :: lind
+
+  call filz_ij(tz,uz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind,1,1)
+
 end subroutine filz_11
 
 subroutine filz_12(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind) 
 
   USE param
-  use parfiZ
-  use ibm, only : lagpolz, cubsplz
 
   implicit none
 
-  integer :: nx,ny,nz,npaire,i,j,k
-  real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
-  real(mytype), dimension(nx,ny) :: fisz
-  real(mytype), dimension(nz) :: fiffz,fifsz,fifwz
-  real(mytype)                      :: lind
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(out), dimension(nx,ny) :: fisz
+  real(mytype), intent(in), dimension(nz) :: fiffz,fifsz,fifwz
+  real(mytype), intent(in) :: lind
 
-  if (iibm == 2) call lagpolz(uz)
-  if (iibm == 3) call cubsplz(uz,lind)
-
-  if (npaire==1) then
-     do j=1,ny
-        do i=1,nx
-           tz(i,j,1)=fiakz*uz(i,j,1)+fibkz*(uz(i,j,2)+uz(i,j,2))&
-                +fickz*(uz(i,j,3)+uz(i,j,3))&
-                +fidkz*(uz(i,j,4)+uz(i,j,4))
-           tz(i,j,2)=fiakz*uz(i,j,2)+fibkz*(uz(i,j,3)+uz(i,j,1))&
-                +fickz*(uz(i,j,4)+uz(i,j,2))&
-                +fidkz*(uz(i,j,5)+uz(i,j,3))
-           tz(i,j,3)=fiakz*uz(i,j,3)+fibkz*(uz(i,j,4)+uz(i,j,2))&
-                +fickz*(uz(i,j,5)+uz(i,j,1))&
-                +fidkz*(uz(i,j,6)+uz(i,j,2))
-           do k=4,nz-3
-              tz(i,j,k)=fiakz*uz(i,j,k)+fibkz*(uz(i,j,k+1)+uz(i,j,k-1))&
-                   +fickz*(uz(i,j,k+2)+uz(i,j,k-2))&
-                   +fidkz*(uz(i,j,k+3)+uz(i,j,k-3))
-           enddo
-           tz(i,j,nz)   =      uz(i,j,nz  )
-           tz(i,j,nz-1 )=fiamz*uz(i,j,nz  )+fibmz*uz(i,j,nz-1)+ficmz*uz(i,j,nz-2)+&
-                fidmz*uz(i,j,nz-3)
-           tz(i,j,nz-2 )=fiapz*uz(i,j,nz  )+fibpz*uz(i,j,nz-1)+ficpz*uz(i,j,nz-2)+&
-                fidpz*uz(i,j,nz-3)+fiepz*uz(i,j,nz-4)+fifpz*uz(i,j,nz-5)
-           do k=2,nz
-              tz(i,j,k)=tz(i,j,k)-tz(i,j,k-1)*fifsz(k)
-           enddo
-           tz(i,j,nz)=tz(i,j,nz)*fifwz(nz)
-           do k=nz-1,1,-1
-              tz(i,j,k)=(tz(i,j,k)-fiffz(k)*tz(i,j,k+1))*fifwz(k)
-           enddo
-        enddo
-     enddo
-  endif
-  if (npaire==0) then
-     do j=1,ny
-        do i=1,nx
-           tz(i,j,1)=zero
-           tz(i,j,2)=fiakz*uz(i,j,2)+fibkz*(uz(i,j,3)+uz(i,j,1))&
-                +fickz*(uz(i,j,4)-uz(i,j,2))&
-                +fidkz*(uz(i,j,5)-uz(i,j,3))
-           tz(i,j,3)=fiakz*uz(i,j,3)+fibkz*(uz(i,j,4)+uz(i,j,2))&
-                +fickz*(uz(i,j,5)+uz(i,j,1))&
-                +fidkz*(uz(i,j,6)-uz(i,j,2))
-           do k=4,nz-3
-              tz(i,j,k)=fiakz*uz(i,j,k)+fibkz*(uz(i,j,k+1)+uz(i,j,k-1))&
-                   +fickz*(uz(i,j,k+2)+uz(i,j,k-2))&
-                   +fidkz*(uz(i,j,k+3)+uz(i,j,k-3))
-           enddo
-           tz(i,j,nz)   =      uz(i,j,nz  )
-           tz(i,j,nz-1 )=fiamz*uz(i,j,nz  )+fibmz*uz(i,j,nz-1)+ficmz*uz(i,j,nz-2)+&
-                fidmz*uz(i,j,nz-3)
-           tz(i,j,nz-2 )=fiapz*uz(i,j,nz  )+fibpz*uz(i,j,nz-1)+ficpz*uz(i,j,nz-2)+&
-                fidpz*uz(i,j,nz-3)+fiepz*uz(i,j,nz-4)+fifpz*uz(i,j,nz-5)
-           do k=2,nz
-              tz(i,j,k)=tz(i,j,k)-tz(i,j,k-1)*fifsz(k)
-           enddo
-           tz(i,j,nz)=tz(i,j,nz)*fifwz(nz)
-
-           do k=nz-1,1,-1
-              tz(i,j,k)=(tz(i,j,k)-fiffz(k)*tz(i,j,k+1))*fifwz(k)
-           enddo
-        enddo
-     enddo
-  endif
-
-  return
+  call filz_ij(tz,uz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind,1,2)
 
 end subroutine filz_12
 
 subroutine filz_21(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind) 
 
   USE param
-  use parfiZ
-  use ibm, only : lagpolz, cubsplz
 
   implicit none
 
-  integer :: nx,ny,nz,npaire,i,j,k
-  real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
-  real(mytype), dimension(nx,ny) :: fisz
-  real(mytype), dimension(nz) :: fiffz,fifsz,fifwz
-  real(mytype)                      :: lind
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(out), dimension(nx,ny) :: fisz
+  real(mytype), intent(in), dimension(nz) :: fiffz,fifsz,fifwz
+  real(mytype), intent(in) :: lind
 
-  if (iibm == 2) call lagpolz(uz)
-  if (iibm == 3) call cubsplz(uz,lind)
-
-  if (npaire==1) then
-     do j=1,ny
-        do i=1,nx
-           tz(i,j,1)=      uz(i,j,1)
-           tz(i,j,2)=fia2z*uz(i,j,1)+fib2z*uz(i,j,2)+fic2z*uz(i,j,3)+&
-                fid2z*uz(i,j,4)
-           tz(i,j,3)=fia3z*uz(i,j,1)+fib3z*uz(i,j,2)+fic3z*uz(i,j,3)+&
-                fid3z*uz(i,j,4)+fie3z*uz(i,j,5)+fif3z*uz(i,j,6)
-           do k=4,nz-3
-              tz(i,j,k)=fiakz*uz(i,j,k)+fibkz*(uz(i,j,k+1)+uz(i,j,k-1))&
-                   +fickz*(uz(i,j,k+2)+uz(i,j,k-2))&
-                   +fidkz*(uz(i,j,k+3)+uz(i,j,k-3))
-           enddo
-           tz(i,j,nz)=fiakz*uz(i,j,nz)    +fibkz*(uz(i,j,nz-1)+uz(i,j,nz-1))&
-                +fickz*(uz(i,j,nz-2)+uz(i,j,nz-2))&
-                +fidkz*(uz(i,j,nz-3)+uz(i,j,nz-3))
-           tz(i,j,nz-1)=fiakz*uz(i,j,nz-1)+fibkz*(uz(i,j,nz  )+uz(i,j,nz-2))&
-                +fickz*(uz(i,j,nz-1)+uz(i,j,nz-3))&
-                +fidkz*(uz(i,j,nz-2)+uz(i,j,nz-4))
-           tz(i,j,nz-2)=fiakz*uz(i,j,nz-2)+fibkz*(uz(i,j,nz-1)+uz(i,j,nz-3))&
-                +fickz*(uz(i,j,nz  )+uz(i,j,nz-4))&
-                +fidkz*(uz(i,j,nz-1)+uz(i,j,nz-5))
-           do k=2,nz
-              tz(i,j,k)=tz(i,j,k)-tz(i,j,k-1)*fifsz(k)
-           enddo
-           tz(i,j,nz)=tz(i,j,nz)*fifwz(nz)
-           do k=nz-1,1,-1
-              tz(i,j,k)=(tz(i,j,k)-fiffz(k)*tz(i,j,k+1))*fifwz(k)
-           enddo
-        enddo
-     enddo
-  endif
-  if (npaire==0) then
-     do j=1,ny
-        do i=1,nx
-           tz(i,j,1)=      uz(i,j,1)
-           tz(i,j,2)=fia2z*uz(i,j,1)+fib2z*uz(i,j,2)+fic2z*uz(i,j,3)+&
-                fid2z*uz(i,j,4)
-           tz(i,j,3)=fia3z*uz(i,j,1)+fib3z*uz(i,j,2)+fic3z*uz(i,j,3)+&
-                fid3z*uz(i,j,4)+fie3z*uz(i,j,5)+fif3z*uz(i,j,6)
-           do k=4,nz-3
-              tz(i,j,k)=fiakz*uz(i,j,k)+fibkz*(uz(i,j,k+1)+uz(i,j,k-1))&
-                   +fickz*(uz(i,j,k+2)+uz(i,j,k-2))&
-                   +fidkz*(uz(i,j,k+3)+uz(i,j,k-3))
-           enddo
-           tz(i,j,nz)=zero
-           tz(i,j,nz-1)=fiakz*uz(i,j,nz-1) +fibkz*( uz(i,j,nz  )+uz(i,j,nz-2))&
-                +fickz*(-uz(i,j,nz-1)+uz(i,j,nz-3))&
-                +fidkz*(-uz(i,j,nz-2)+uz(i,j,nz-4))
-           tz(i,j,nz-2)=fiakz*uz(i,j,nz-2) +fibkz*( uz(i,j,nz-1)+uz(i,j,nz-3))&
-                +fickz*( uz(i,j,nz  )+uz(i,j,nz-4))&
-                +fidkz*(-uz(i,j,nz-1)+uz(i,j,nz-5))
-           do k=2,nz
-              tz(i,j,k)=tz(i,j,k)-tz(i,j,k-1)*fifsz(k)
-           enddo
-           tz(i,j,nz)=tz(i,j,nz)*fifwz(nz)
-
-           do k=nz-1,1,-1
-              tz(i,j,k)=(tz(i,j,k)-fiffz(k)*tz(i,j,k+1))*fifwz(k)
-           enddo
-        enddo
-     enddo
-  endif
-
-  return
+  call filz_ij(tz,uz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind,2,1)
 
 end subroutine filz_21
 
@@ -1353,47 +1150,16 @@ end subroutine filz_21
 subroutine filz_22(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind) 
 
   USE param
-  use parfiZ
-  use ibm, only : lagpolz, cubsplz
 
   implicit none
 
-  integer :: nx,ny,nz,npaire,i,j,k
-  real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
-  real(mytype), dimension(nx,ny) :: fisz
-  real(mytype), dimension(nz) :: fiffz,fifsz,fifwz
-  real(mytype)                      :: lind
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(out), dimension(nx,ny) :: fisz
+  real(mytype), intent(in), dimension(nz) :: fiffz,fifsz,fifwz
+  real(mytype), intent(in) :: lind
 
-  if (iibm == 2) call lagpolz(uz)
-  if (iibm == 3) call cubsplz(uz,lind)
-
-  do j=1,ny
-     do i=1,nx
-        tz(i,j,1)=      uz(i,j,1)
-        tz(i,j,2)=fia2z*uz(i,j,1)+fib2z*uz(i,j,2)+fic2z*uz(i,j,3)+&
-             fid2z*uz(i,j,4)
-        tz(i,j,3)=fia3z*uz(i,j,1)+fib3z*uz(i,j,2)+fic3z*uz(i,j,3)+&
-             fid3z*uz(i,j,4)+fie3z*uz(i,j,5)+fif3z*uz(i,j,6)
-        do k=4,nz-3
-           tz(i,j,k)=fiakz*uz(i,j,k) +fibkz*(uz(i,j,k+1)+uz(i,j,k-1))&
-                +fickz*(uz(i,j,k+2)+uz(i,j,k-2))&
-                +fidkz*(uz(i,j,k+3)+uz(i,j,k-3))
-        enddo
-        tz(i,j,nz)   =      uz(i,j,nz  )
-        tz(i,j,nz-1 )=fiamz*uz(i,j,nz  )+fibmz*uz(i,j,nz-1)+ficmz*uz(i,j,nz-2)+&
-             fidmz*uz(i,j,nz-3)
-        tz(i,j,nz-2 )=fiapz*uz(i,j,nz  )+fibpz*uz(i,j,nz-1)+ficpz*uz(i,j,nz-2)+&
-             fidpz*uz(i,j,nz-3)+fiepz*uz(i,j,nz-4)+fifpz*uz(i,j,nz-5)
-        do k=2,nz
-           tz(i,j,k)=tz(i,j,k)-tz(i,j,k-1)*fifsz(k)
-        enddo
-        tz(i,j,nz)=tz(i,j,nz)*fifwz(nz)
-        do k=nz-1,1,-1
-           tz(i,j,k)=(tz(i,j,k)-fiffz(k)*tz(i,j,k+1))*fifwz(k)
-        enddo
-     enddo
-  enddo
-
-  return
+  call filz_ij(tz,uz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind,2,2)
 
 end subroutine filz_22
