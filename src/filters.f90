@@ -44,27 +44,27 @@ subroutine filter(af)
   real(mytype),intent(in) :: af
 
 #ifdef DEBG
-  if (nrank .eq. 0) print *,'# filter calculation start'
+  if (nrank==0) write(*,*) '# filter calculation start'
 #endif
 
   ! Filter functions
-  if (nclx1.eq.0.and.nclxn.eq.0) filx => filx_00
-  if (nclx1.eq.1.and.nclxn.eq.1) filx => filx_11
-  if (nclx1.eq.1.and.nclxn.eq.2) filx => filx_12
-  if (nclx1.eq.2.and.nclxn.eq.1) filx => filx_21
-  if (nclx1.eq.2.and.nclxn.eq.2) filx => filx_22
+  if (nclx1==0.and.nclxn==0) filx => filx_00
+  if (nclx1==1.and.nclxn==1) filx => filx_11
+  if (nclx1==1.and.nclxn==2) filx => filx_12
+  if (nclx1==2.and.nclxn==1) filx => filx_21
+  if (nclx1==2.and.nclxn==2) filx => filx_22
   !
-  if (ncly1.eq.0.and.nclyn.eq.0) fily => fily_00
-  if (ncly1.eq.1.and.nclyn.eq.1) fily => fily_11
-  if (ncly1.eq.1.and.nclyn.eq.2) fily => fily_12
-  if (ncly1.eq.2.and.nclyn.eq.1) fily => fily_21
-  if (ncly1.eq.2.and.nclyn.eq.2) fily => fily_22
+  if (ncly1==0.and.nclyn==0) fily => fily_00
+  if (ncly1==1.and.nclyn==1) fily => fily_11
+  if (ncly1==1.and.nclyn==2) fily => fily_12
+  if (ncly1==2.and.nclyn==1) fily => fily_21
+  if (ncly1==2.and.nclyn==2) fily => fily_22
   !
-  if (nclz1.eq.0.and.nclzn.eq.0) filz => filz_00
-  if (nclz1.eq.1.and.nclzn.eq.1) filz => filz_11
-  if (nclz1.eq.1.and.nclzn.eq.2) filz => filz_12
-  if (nclz1.eq.2.and.nclzn.eq.1) filz => filz_21
-  if (nclz1.eq.2.and.nclzn.eq.2) filz => filz_22
+  if (nclz1==0.and.nclzn==0) filz => filz_00
+  if (nclz1==1.and.nclzn==1) filz => filz_11
+  if (nclz1==1.and.nclzn==2) filz => filz_12
+  if (nclz1==2.and.nclzn==1) filz => filz_21
+  if (nclz1==2.and.nclzn==2) filz => filz_22
 
   ! Set coefficients for x-direction filter
   call set_filter_coefficients(af,fial1x,fia1x,fib1x,fic1x,fid1x,fial2x,fia2x,fib2x,fic2x,fid2x,fial3x,fia3x,fib3x,fic3x,fid3x,fie3x,fif3x,&
@@ -79,7 +79,7 @@ subroutine filter(af)
        fialnz,fianz,fibnz,ficnz,fidnz,fialmz,fiamz,fibmz,ficmz,fidmz,fialpz,fiapz,fibpz,ficpz,fidpz,fiepz,fifpz,&
        fialkz,fiakz,fibkz,fickz,fidkz,fiffz,fifsz,fifwz,fiffzp,fifszp,fifwzp,nz,nclz1,nclzn)
 #ifdef DEBG
-  if (nrank .eq. 0) print *,'# filter calculation end'
+  if (nrank == 0) write(*,*) '# filter calculation end'
 #endif
 
   return
@@ -167,7 +167,7 @@ subroutine set_filter_coefficients(af,alfa1,a1,b1,c1,d1,alfa2,a2,b2,c2,d2,alfa3,
   ff=zero;fs=zero;fw=zero;ffp=zero;fsp=zero;fwp=zero
   fb=zero;fc=zero
 
-  if     (ncl1.eq.0) then !Periodic
+  if     (ncl1==0) then !Periodic
      ff(1)   =alfai
      ff(2)   =alfai
      fc(1)   =two
@@ -257,7 +257,7 @@ subroutine filx_00(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: fisx
   real(mytype), dimension(nx) :: fiffx,fifsx,fifwx
-  real(mytype)                      :: lind
+  real(mytype)                :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -265,34 +265,34 @@ subroutine filx_00(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind)
   do k=1,nz
      do j=1,ny
         tx(1,j,k)=fiaix*ux(1,j,k)+fibix*(ux(2,j,k)+ux(nx,j,k))&
-             +ficix*(ux(3,j,k)+ux(nx-1,j,k))&
-             +fidix*(ux(4,j,k)+ux(nx-2,j,k))
-        rx(1,j,k)=-1.
+                 +ficix*(ux(3,j,k)+ux(nx-1,j,k))&
+                 +fidix*(ux(4,j,k)+ux(nx-2,j,k))
+        rx(1,j,k)=-one
         tx(2,j,k)=fiaix*ux(2,j,k)+fibix*(ux(3,j,k)+ux(1,j,k))&
-             +ficix*(ux(4,j,k)+ux(nx,j,k))&
-             +fidix*(ux(5,j,k)+ux(nx-1,j,k))
-        rx(2,j,k)=0.
+                 +ficix*(ux(4,j,k)+ux(nx,j,k))&
+                 +fidix*(ux(5,j,k)+ux(nx-1,j,k))
+        rx(2,j,k)=zero
         tx(3,j,k)=fiaix*ux(3,j,k)+fibix*(ux(4,j,k)+ux(2,j,k))&
-             +ficix*(ux(5,j,k)+ux(1,j,k))&
-             +fidix*(ux(6,j,k)+ux(nx,j,k))
-        rx(3,j,k)=0.
+                 +ficix*(ux(5,j,k)+ux(1,j,k))&
+                 +fidix*(ux(6,j,k)+ux(nx,j,k))
+        rx(3,j,k)=zero
         do i=4,nx-3
            tx(i,j,k)=fiaix*ux(i,j,k)+fibix*(ux(i+1,j,k)+ux(i-1,j,k))&
-                +ficix*(ux(i+2,j,k)+ux(i-2,j,k))&
-                +fidix*(ux(i+3,j,k)+ux(i-3,j,k))
-           rx(i,j,k)=0.
+                    +ficix*(ux(i+2,j,k)+ux(i-2,j,k))&
+                    +fidix*(ux(i+3,j,k)+ux(i-3,j,k))
+           rx(i,j,k)=zero
         enddo
         tx(nx-2,j,k)=fiaix*ux(nx-2,j,k)+fibix*(ux(nx-3,j,k)+ux(nx-1,j,k))&
-             +ficix*(ux(nx-4,j,k)+ux(nx,j,k))&
-             +fidix*(ux(nx-5,j,k)+ux(1,j,k))
-        rx(nx-2,j,k)=0.
+                    +ficix*(ux(nx-4,j,k)+ux(nx,j,k))&
+                    +fidix*(ux(nx-5,j,k)+ux(1,j,k))
+        rx(nx-2,j,k)=zero
         tx(nx-1,j,k)=fiaix*ux(nx-1,j,k)+fibix*(ux(nx-2,j,k)+ux(nx,j,k))&
-             +ficix*(ux(nx-3,j,k)+ux(1,j,k))&
-             +fidix*(ux(nx-4,j,k)+ux(2,j,k))
-        rx(nx-1,j,k)=0.
+                    +ficix*(ux(nx-3,j,k)+ux(1,j,k))&
+                    +fidix*(ux(nx-4,j,k)+ux(2,j,k))
+        rx(nx-1,j,k)=zero
         tx(nx,j,k)=fiaix*ux(nx,j,k)+fibix*(ux(nx-1,j,k)+ux(1,j,k))&
-             +ficix*(ux(nx-2,j,k)+ux(2,j,k))&
-             +fidix*(ux(nx-3,j,k)+ux(3,j,k))
+                  +ficix*(ux(nx-2,j,k)+ux(2,j,k))&
+                  +fidix*(ux(nx-3,j,k)+ux(3,j,k))
         rx(nx,j,k)=fialix
         do i=2, nx
            tx(i,j,k)=tx(i,j,k)-tx(i-1,j,k)*fifsx(i)
@@ -305,7 +305,7 @@ subroutine filx_00(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind)
            rx(i,j,k)=(rx(i,j,k)-fiffx(i)*rx(i+1,j,k))*fifwx(i)
         enddo
         fisx(j,k)=(tx(1,j,k)-fialix*tx(nx,j,k))&
-             /(1.+rx(1,j,k)-fialix*rx(nx,j,k))
+             /(one+rx(1,j,k)-fialix*rx(nx,j,k))
         do i=1,nx
            tx(i,j,k)=tx(i,j,k)-fisx(j,k)*rx(i,j,k)
         enddo
@@ -650,34 +650,34 @@ subroutine fily_00(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind)
   do k=1,nz
      do i=1,nx
         ty(i,1,k)=fiajy*uy(i,1,k)+fibjy*(uy(i,2,k)+uy(i,ny,k))&
-             +ficjy*(uy(i,3,k)+uy(i,ny-1,k))&
-             +fidjy*(uy(i,4,k)+uy(i,ny-2,k))
-        ry(i,1,k)=-1.
+                 +ficjy*(uy(i,3,k)+uy(i,ny-1,k))&
+                 +fidjy*(uy(i,4,k)+uy(i,ny-2,k))
+        ry(i,1,k)=-one
         ty(i,2,k)=fiajy*uy(i,2,k)+fibjy*(uy(i,3,k)+uy(i,1,k))&
-             +ficjy*(uy(i,4,k)+uy(i,ny,k))&
-             +fidjy*(uy(i,5,k)+uy(i,ny-1,k))
-        ry(i,2,k)=0.
+                 +ficjy*(uy(i,4,k)+uy(i,ny,k))&
+                 +fidjy*(uy(i,5,k)+uy(i,ny-1,k))
+        ry(i,2,k)=zero
         ty(i,3,k)=fiajy*uy(i,3,k)+fibjy*(uy(i,4,k)+uy(i,2,k))&
-             +ficjy*(uy(i,5,k)+uy(i,1,k))&
-             +fidjy*(uy(i,6,k)+uy(i,ny,k))
-        ry(i,3,k)=0.
+                 +ficjy*(uy(i,5,k)+uy(i,1,k))&
+                 +fidjy*(uy(i,6,k)+uy(i,ny,k))
+        ry(i,3,k)=zero
         do j=4,ny-3
            ty(i,j,k)=fiajy*uy(i,j,k)+fibjy*(uy(i,j+1,k)+uy(i,j-1,k))&
-                +ficjy*(uy(i,j+2,k)+uy(i,j-2,k))&
-                +fidjy*(uy(i,j+3,k)+uy(i,j-3,k))
-           ry(i,j,k)=0.
+                    +ficjy*(uy(i,j+2,k)+uy(i,j-2,k))&
+                    +fidjy*(uy(i,j+3,k)+uy(i,j-3,k))
+           ry(i,j,k)=zero
         enddo
         ty(i,ny-2,k)=fiajy*uy(i,ny-2,k)+fibjy*(uy(i,ny-3,k)+uy(i,ny-1,k))&
-             +ficjy*(uy(i,ny-4,k)+uy(i,ny,k))&
-             +fidjy*(uy(i,ny-5,k)+uy(i,1,k))
-        ry(i,ny-2,k)=0.
+                    +ficjy*(uy(i,ny-4,k)+uy(i,ny,k))&
+                    +fidjy*(uy(i,ny-5,k)+uy(i,1,k))
+        ry(i,ny-2,k)=zero
         ty(i,ny-1,k)=fiajy*uy(i,ny-1,k)+fibjy*(uy(i,ny-2,k)+uy(i,ny,k))&
-             +ficjy*(uy(i,ny-3,k)+uy(i,1,k))&
-             +fidjy*(uy(i,ny-4,k)+uy(i,2,k))
-        ry(i,ny-1,k)=0.
+                    +ficjy*(uy(i,ny-3,k)+uy(i,1,k))&
+                    +fidjy*(uy(i,ny-4,k)+uy(i,2,k))
+        ry(i,ny-1,k)=zero
         ty(i,ny,k)=fiajy*uy(i,ny,k)+fibjy*(uy(i,ny-1,k)+uy(i,1,k))&
-             +ficjy*(uy(i,ny-2,k)+uy(i,2,k))&
-             +fidjy*(uy(i,ny-3,k)+uy(i,3,k))
+                  +ficjy*(uy(i,ny-2,k)+uy(i,2,k))&
+                  +fidjy*(uy(i,ny-3,k)+uy(i,3,k))
         ry(i,ny,k)=fialjy
         do j=2, ny
            ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*fifsy(j)
@@ -690,7 +690,7 @@ subroutine fily_00(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind)
            ry(i,j,k)=(ry(i,j,k)-fiffy(j)*ry(i,j+1,k))*fifwy(j)
         enddo
         fisy(i,k)=(ty(i,1,k)-fialjy*ty(i,ny,k))&
-             /(1.+ry(i,1,k)-fialjy*ry(i,ny,k))
+                /(one+ry(i,1,k)-fialjy*ry(i,ny,k))
         do j=1,ny
            ty(i,j,k)=ty(i,j,k)-fisy(i,k)*ry(i,j,k)
         enddo
@@ -1038,34 +1038,34 @@ subroutine filz_00(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
   do j=1,ny
      do i=1,nx
         tz(i,j,1)=fiakz*uz(i,j,1)+fibkz*(uz(i,j,2)+uz(i,j,nz))&
-             +fickz*(uz(i,j,3)+uz(i,j,nz-1))&
-             +fidkz*(uz(i,j,4)+uz(i,j,nz-2))
-        rz(i,j,1)=-1.
+                 +fickz*(uz(i,j,3)+uz(i,j,nz-1))&
+                 +fidkz*(uz(i,j,4)+uz(i,j,nz-2))
+        rz(i,j,1)=-one
         tz(i,j,2)=fiakz*uz(i,j,2)+fibkz*(uz(i,j,3)+uz(i,j,1))&
-             +fickz*(uz(i,j,4)+uz(i,j,nz))&
-             +fidkz*(uz(i,j,5)+uz(i,j,nz-1))
-        rz(i,j,2)=0.
+                 +fickz*(uz(i,j,4)+uz(i,j,nz))&
+                 +fidkz*(uz(i,j,5)+uz(i,j,nz-1))
+        rz(i,j,2)=zero
         tz(i,j,3)=fiakz*uz(i,j,3)+fibkz*(uz(i,j,4)+uz(i,j,2))&
-             +fickz*(uz(i,j,5)+uz(i,j,1))&
-             +fidkz*(uz(i,j,6)+uz(i,j,nz))
-        rz(i,j,3)=0.
+                 +fickz*(uz(i,j,5)+uz(i,j,1))&
+                 +fidkz*(uz(i,j,6)+uz(i,j,nz))
+        rz(i,j,3)=zero
         do k=4,nz-3
            tz(i,j,k)=fiakz*uz(i,j,k)+fibkz*(uz(i,j,k+1)+uz(i,j,k-1))&
-                +fickz*(uz(i,j,k+2)+uz(i,j,k-2))&
-                +fidkz*(uz(i,j,k+3)+uz(i,j,k-3))
-           rz(i,j,k)=0.
+                    +fickz*(uz(i,j,k+2)+uz(i,j,k-2))&
+                    +fidkz*(uz(i,j,k+3)+uz(i,j,k-3))
+           rz(i,j,k)=zero
         enddo
         tz(i,j,nz-2)=fiakz*uz(i,j,nz-2)+fibkz*(uz(i,j,nz-3)+uz(i,j,nz-1))&
-             +fickz*(uz(i,j,nz-4)+uz(i,j,nz))&
-             +fidkz*(uz(i,j,nz-5)+uz(i,j,1))
-        rz(i,j,nz-2)=0.
+                    +fickz*(uz(i,j,nz-4)+uz(i,j,nz))&
+                    +fidkz*(uz(i,j,nz-5)+uz(i,j,1))
+        rz(i,j,nz-2)=zero
         tz(i,j,nz-1)=fiakz*uz(i,j,nz-1)+fibkz*(uz(i,j,nz-2)+uz(i,j,nz))&
-             +fickz*(uz(i,j,nz-3)+uz(i,j,1))&
-             +fidkz*(uz(i,j,nz-4)+uz(i,j,2))
-        rz(i,j,nz-1)=0.
+                    +fickz*(uz(i,j,nz-3)+uz(i,j,1))&
+                    +fidkz*(uz(i,j,nz-4)+uz(i,j,2))
+        rz(i,j,nz-1)=zero
         tz(i,j,nz)=fiakz*uz(i,j,nz)+fibkz*(uz(i,j,nz-1)+uz(i,j,1))&
-             +fickz*(uz(i,j,nz-2)+uz(i,j,2))&
-             +fidkz*(uz(i,j,nz-3)+uz(i,j,3))
+                  +fickz*(uz(i,j,nz-2)+uz(i,j,2))&
+                  +fidkz*(uz(i,j,nz-3)+uz(i,j,3))
         rz(i,j,nz)=fialkz
         do k=2,nz
            tz(i,j,k)=tz(i,j,k)-tz(i,j,k-1)*fifsz(k)
@@ -1078,7 +1078,7 @@ subroutine filz_00(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
            rz(i,j,k)=(rz(i,j,k)-fiffz(k)*rz(i,j,k+1))*fifwz(k)
         enddo
         fisz(i,j)=(tz(i,j,1)-fialkz*tz(i,j,nz))&
-             /(1.+rz(i,j,1)-fialkz*rz(i,j,nz))
+                 /(one+rz(i,j,1)-fialkz*rz(i,j,nz))
         do k=1,nz
            tz(i,j,k)=tz(i,j,k)-fisz(i,j)*rz(i,j,k)
         enddo

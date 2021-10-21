@@ -48,7 +48,7 @@ module case
   use tbl
   use abl
   use uniform
-  USE sandbox
+  use sandbox
 
   use var, only : nzmsize
 
@@ -171,8 +171,8 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,ep
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho
-
-    if (itype.eq.itype_user) then
+    
+    if (itype == itype_user) then
 
        call boundary_conditions_user (ux,uy,uz,phi,ep)
 
@@ -435,7 +435,7 @@ contains
 
     if (itype.eq.itype_channel) then
 
-       call momentum_forcing_channel(dux1, duy1, ux1, uy1)
+       call momentum_forcing_channel(dux1, duy1, duz1, ux1, uy1, uz1)
 
     elseif (itype.eq.itype_jet) then
 
@@ -509,7 +509,7 @@ contains
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime), intent(in) :: drho1
     real(mytype), dimension(zsize(1), zsize(2), zsize(3)), intent(in) :: divu3
 
-    if ((mod(itime,10)==0).and.(itr.eq.iadvance_time)) then
+    if ((mod(itime,ilist)==0 .or. itime == ifirst .or. itime == ilast)) then
        call divergence(dv3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,2)
        call test_speed_min_max(ux1,uy1,uz1)
        call compute_cfl(ux1,uy1,uz1)
