@@ -82,8 +82,6 @@ subroutine filter(af)
   if (nrank  ==  0) print *,'# filter calculation end'
 #endif
 
-  return
-
 end subroutine filter
 
 
@@ -240,8 +238,6 @@ subroutine set_filter_coefficients(af,alfa1,a1,b1,c1,d1,alfa2,a2,b2,c2,d2,alfa3,
   endif
 
   call prepare (fb,fc,ff,fs,fw,n)
-
-  return
 
 end subroutine set_filter_coefficients
 
@@ -565,6 +561,8 @@ subroutine fily_00(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind)
      do j=2,ny
         do concurrent (i=1:nx)
            ty(i,j,k) = ty(i,j,k) - ty(i,j-1,k)*fifsy(j)
+        enddo
+        do concurrent (i=1:nx)
            ry(i,j,k) = ry(i,j,k) - ry(i,j-1,k)*fifsy(j)
         enddo
      enddo
@@ -577,6 +575,8 @@ subroutine fily_00(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind)
      do j=ny-1,1,-1
         do concurrent (i=1:nx)
            ty(i,j,k) = (ty(i,j,k)-fiffy(j)*ty(i,j+1,k)) * fifwy(j)
+        enddo
+        do concurrent (i=1:nx)
            ry(i,j,k) = (ry(i,j,k)-fiffy(j)*ry(i,j+1,k)) * fifwy(j)
         enddo
      enddo
@@ -880,6 +880,10 @@ subroutine filz_00(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
      do concurrent (j=1:ny)
         do concurrent (i=1:nx)
            tz(i,j,k) = tz(i,j,k) - tz(i,j,k-1)*fifsz(k)
+        enddo
+     enddo
+     do concurrent (j=1:ny)
+        do concurrent (i=1:nx)
            rz(i,j,k) = rz(i,j,k) - rz(i,j,k-1)*fifsz(k)
         enddo
      enddo
@@ -887,6 +891,10 @@ subroutine filz_00(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
   do concurrent (j=1:ny)
      do concurrent (i=1:nx)
         tz(i,j,nz) = tz(i,j,nz) * fifwz(nz)
+     enddo
+  enddo
+  do concurrent (j=1:ny)
+     do concurrent (i=1:nx)
         rz(i,j,nz) = rz(i,j,nz) * fifwz(nz)
      enddo
   enddo
@@ -894,6 +902,10 @@ subroutine filz_00(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
      do concurrent (j=1:ny)
         do concurrent (i=1:nx)
            tz(i,j,k) = (tz(i,j,k)-fiffz(k)*tz(i,j,k+1)) * fifwz(k)
+        enddo
+     enddo
+     do concurrent (j=1:ny)
+        do concurrent (i=1:nx)
            rz(i,j,k) = (rz(i,j,k)-fiffz(k)*rz(i,j,k+1)) * fifwz(k)
         enddo
      enddo
@@ -912,7 +924,6 @@ subroutine filz_00(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
      enddo
   enddo
 
-  return
 end subroutine filz_00
 
 subroutine filz_ij(tz,uz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind,ncl1,ncln)
