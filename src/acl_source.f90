@@ -446,7 +446,6 @@ contains
             !write(*,*) 'Warning: I do not own this node'
         endif
         enddo
-        !$OMP END PARALLEL DO
 
         call MPI_ALLREDUCE(Su_part,Su,Nsource,MPI_REAL8,MPI_SUM, &
             MPI_COMM_WORLD,code)
