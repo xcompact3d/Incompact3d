@@ -7,6 +7,38 @@ module testz00
 
 contains
 
+   subroutine log(filename, l1, l2, linf, time)
+
+      use decomp_2d, only : mytype, nrank, nproc, real_type, decomp_2d_abort
+
+      implicit none
+
+      character(len=*), intent(in) :: filename
+      real(mytype), intent(in) :: l1, l2, linf, time
+
+      logical :: file_found
+      integer :: iounit, code
+      real(mytype), dimension(nproc) :: alltime
+
+      alltime(:) = 0.d0
+      alltime(nrank+1) = time
+      call MPI_ALLREDUCE(MPI_IN_PLACE,alltime,nproc,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+
+      if (nrank == 0) then
+         write(*,*) trim(filename)//" : ", l1, l2, linf, alltime
+         inquire(file=filename//".dat", exist=file_found)
+         if (file_found) then
+            open(newunit=iounit, file=trim(filename)//".dat", form='formatted', status='old', access='append')
+         else
+            open(newunit=iounit, file=trim(filename)//".dat", form='formatted', status='new')
+         endif
+         write(iounit, *) l1, l2, linf, alltime
+         close(iounit)
+      endif
+
+   end subroutine log
+
    ! Serial test
    @test
    subroutine verif_derz_derzz_00()
@@ -21,7 +53,7 @@ contains
       implicit none
 
       real(mytype), dimension(zsize(1),zsize(2),zsize(3)) :: input, output, sol
-      real(mytype) :: z, l1, l2, linf, sl1, sl2, slinf
+      real(mytype) :: z, l1, l2, linf, sl1, sl2, slinf, t1, t2
       integer :: k
 
       ! Lx = Ly = Lz = 2
@@ -36,15 +68,19 @@ contains
          sol(:,:,k) = pi*cos(pi*z) - 5*pi*sin(5*pi*z)
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
+      call cpu_time(t1)
       call derz(output,input,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcy)
+      call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
-      write(*,*) "derz : ", l1/sl1, l2/sl2, linf/slinf
+      call log("derz", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       @assertEqual(l1/sl1, 0.d0, tolerance=1.d-12)
       @assertEqual(l2/sl2, 0.d0, tolerance=1.d-12)
       @assertEqual(linf/slinf, 0.d0, tolerance=1.d-12)
+      call cpu_time(t1)
       call derz(output,input,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcz)
+      call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
-      write(*,*) "derz : ", l1/sl1, l2/sl2, linf/slinf
+      call log("derz", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       @assertEqual(l1/sl1, 0.d0, tolerance=1.d-12)
       @assertEqual(l2/sl2, 0.d0, tolerance=1.d-12)
       @assertEqual(linf/slinf, 0.d0, tolerance=1.d-12)
@@ -55,15 +91,19 @@ contains
          sol(:,:,k) = -(pi**2)*sin(pi*z) - 25*(pi**2)*cos(5*pi*z)
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
+      call cpu_time(t1)
       call derzz(output,input,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+      call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
-      write(*,*) "derzz : ", l1/sl1, l2/sl2, linf/slinf
+      call log("derzz", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       @assertEqual(l1/sl1, 0.d0, tolerance=1.d-7)
       @assertEqual(l2/sl2, 0.d0, tolerance=1.d-7)
       @assertEqual(linf/slinf, 0.d0, tolerance=1.d-7)
+      call cpu_time(t1)
       call derzz(output,input,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,ubcz)
+      call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
-      write(*,*) "derzz : ", l1/sl1, l2/sl2, linf/slinf
+      call log("derzz", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       @assertEqual(l1/sl1, 0.d0, tolerance=1.d-7)
       @assertEqual(l2/sl2, 0.d0, tolerance=1.d-7)
       @assertEqual(linf/slinf, 0.d0, tolerance=1.d-7)
@@ -84,7 +124,7 @@ contains
 
       real(mytype), dimension(zsize(1),zsize(2),zsize(3)) :: input, diloc
       real(mytype), dimension(zsize(1),zsize(2),nzmsize) :: output, sol
-      real(mytype) :: z, l1, l2, linf, sl1, sl2, slinf
+      real(mytype) :: z, l1, l2, linf, sl1, sl2, slinf, t1, t2
       integer :: k
 
       ! Lx = Ly = Lz = 2
@@ -99,9 +139,11 @@ contains
          sol(:,:,k) = pi*cos(pi*z) - 5*pi*sin(5*pi*z)
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, zsize(1), zsize(2), nzmsize, xsize(1)*ysize(2)*nzmsize)
+      call cpu_time(t1)
       call derzvp(output,input,diloc,sz,cfz6,csz6,cwz6,zsize(1),zsize(2),zsize(3),nzmsize,0)
+      call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), nzmsize, xsize(1)*ysize(2)*nzmsize)
-      write(*,*) "derzvp : ", l1/sl1, l2/sl2, linf/slinf
+      call log("derzvp", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       @assertEqual(l1/sl1, 0.d0, tolerance=1.d-12)
       @assertEqual(l2/sl2, 0.d0, tolerance=1.d-12)
       @assertEqual(linf/slinf, 0.d0, tolerance=1.d-12)
@@ -122,7 +164,7 @@ contains
 
       real(mytype), dimension(zsize(1),zsize(2),zsize(3)) :: input, diloc
       real(mytype), dimension(zsize(1),zsize(2),nzmsize) :: output, sol
-      real(mytype) :: z, l1, l2, linf, sl1, sl2, slinf
+      real(mytype) :: z, l1, l2, linf, sl1, sl2, slinf, t1, t2
       integer :: k
 
       ! Lx = Ly = Lz = 2
@@ -137,9 +179,11 @@ contains
          sol(:,:,k) = sin(pi*z) + cos(5*pi*z)
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, zsize(1), zsize(2), nzmsize, xsize(1)*ysize(2)*nzmsize)
+      call cpu_time(t1)
       call interzvp(output,input,diloc,sz,cifzp6,ciszp6,ciwzp6,zsize(1),zsize(2),zsize(3),nzmsize,1)
+      call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), nzmsize, xsize(1)*ysize(2)*nzmsize)
-      write(*,*) "interzvp : ", l1/sl1, l2/sl2, linf/slinf
+      call log("interzvp", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       @assertEqual(l1/sl1, 0.d0, tolerance=1.d-12)
       @assertEqual(l2/sl2, 0.d0, tolerance=1.d-12)
       @assertEqual(linf/slinf, 0.d0, tolerance=1.d-12)
@@ -160,7 +204,7 @@ contains
 
       real(mytype), dimension(zsize(1),zsize(2),nzmsize) :: input
       real(mytype), dimension(zsize(1),zsize(2),zsize(3)) :: diloc, output, sol
-      real(mytype) :: z, l1, l2, linf, sl1, sl2, slinf
+      real(mytype) :: z, l1, l2, linf, sl1, sl2, slinf, t1, t2
       integer :: k
 
       ! Lx = Ly = Lz = 2
@@ -175,9 +219,11 @@ contains
          sol(:,:,k) = pi*cos(pi*z) - 5*pi*sin(5*pi*z)
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
+      call cpu_time(t1)
       call derzpv(output,input,diloc,sz,cfip6z,csip6z,cwip6z,cfz6,csz6,cwz6,zsize(1),zsize(2),nzmsize,zsize(3),1)
+      call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
-      write(*,*) "derzpv : ", l1/sl1, l2/sl2, linf/slinf
+      call log("derzpv", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       @assertEqual(l1/sl1, 0.d0, tolerance=1.d-12)
       @assertEqual(l2/sl2, 0.d0, tolerance=1.d-12)
       @assertEqual(linf/slinf, 0.d0, tolerance=1.d-12)
@@ -198,7 +244,7 @@ contains
 
       real(mytype), dimension(zsize(1),zsize(2),nzmsize) :: input
       real(mytype), dimension(zsize(1),zsize(2),zsize(3)) :: diloc, output, sol
-      real(mytype) :: z, l1, l2, linf, sl1, sl2, slinf
+      real(mytype) :: z, l1, l2, linf, sl1, sl2, slinf, t1, t2
       integer :: k
 
       ! Lx = Ly = Lz = 2
@@ -213,9 +259,11 @@ contains
          sol(:,:,k) = sin(pi*z) + cos(5*pi*z)
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
+      call cpu_time(t1)
       call interzpv(output,input,diloc,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,zsize(1),zsize(2),nzmsize,zsize(3),1)
+      call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
-      write(*,*) "interzpv : ", l1/sl1, l2/sl2, linf/slinf
+      call log("interzpv", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       @assertEqual(l1/sl1, 0.d0, tolerance=1.d-12)
       @assertEqual(l2/sl2, 0.d0, tolerance=1.d-12)
       @assertEqual(linf/slinf, 0.d0, tolerance=1.d-12)

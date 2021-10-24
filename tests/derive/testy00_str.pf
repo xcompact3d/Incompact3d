@@ -7,6 +7,38 @@ module testy00_str
 
 contains
 
+   subroutine log(filename, l1, l2, linf, time)
+
+      use decomp_2d, only : mytype, nrank, nproc, real_type, decomp_2d_abort
+
+      implicit none
+
+      character(len=*), intent(in) :: filename
+      real(mytype), intent(in) :: l1, l2, linf, time
+
+      logical :: file_found
+      integer :: iounit, code
+      real(mytype), dimension(nproc) :: alltime
+
+      alltime(:) = 0.d0
+      alltime(nrank+1) = time
+      call MPI_ALLREDUCE(MPI_IN_PLACE,alltime,nproc,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+
+      if (nrank == 0) then
+         write(*,*) trim(filename)//" : ", l1, l2, linf, alltime
+         inquire(file=filename//".dat", exist=file_found)
+         if (file_found) then
+            open(newunit=iounit, file=trim(filename)//".dat", form='formatted', status='old', access='append')
+         else
+            open(newunit=iounit, file=trim(filename)//".dat", form='formatted', status='new')
+         endif
+         write(iounit, *) l1, l2, linf, alltime
+         close(iounit)
+      endif
+
+   end subroutine log
+
    ! Serial test
    @test
    subroutine verif_dery_deryy_00_str()
@@ -21,7 +53,7 @@ contains
       implicit none
 
       real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: input, output, tmp, sol
-      real(mytype) :: y, l1, l2, linf, sl1, sl2, slinf
+      real(mytype) :: y, l1, l2, linf, sl1, sl2, slinf, t1, t2
       integer :: j
 
       ! Lx = Ly = Lz = 2
@@ -36,15 +68,19 @@ contains
          sol(:,j,:) = pi*cos(pi*y) - 5*pi*sin(5*pi*y)
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
+      call cpu_time(t1)
       call dery(output,input,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcx)
+      call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
-      write(*,*) "dery : ", l1/sl1, l2/sl2, linf/slinf
+      call log("dery_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       @assertEqual(l1/sl1, 0.d0, tolerance=3.d-10)
       @assertEqual(l2/sl2, 0.d0, tolerance=3.d-10)
       @assertEqual(linf/slinf, 0.d0, tolerance=3.d-10)
+      call cpu_time(t1)
       call dery(output,input,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcy)
+      call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
-      write(*,*) "dery : ", l1/sl1, l2/sl2, linf/slinf
+      call log("dery_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       @assertEqual(l1/sl1, 0.d0, tolerance=3.d-10)
       @assertEqual(l2/sl2, 0.d0, tolerance=3.d-10)
       @assertEqual(linf/slinf, 0.d0, tolerance=3.d-10)
@@ -56,6 +92,7 @@ contains
          sol(:,j,:) = -(pi**2)*sin(pi*y) - 25*(pi**2)*cos(5*pi*y)
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
+      call cpu_time(t1)
       call deryy(output,input,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,ubcx)
       if (istret /= 0) then
          call dery(tmp,input,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
@@ -63,11 +100,13 @@ contains
             output(:,j,:) = output(:,j,:)*pp2y(j)-pp4y(j)*tmp(:,j,:)
          enddo
       endif
+      call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
-      write(*,*) "deryy : ", l1/sl1, l2/sl2, linf/slinf
+      call log("deryy_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       @assertEqual(l1/sl1, 0.d0, tolerance=1.d-7)
       @assertEqual(l2/sl2, 0.d0, tolerance=1.d-7)
       @assertEqual(linf/slinf, 0.d0, tolerance=1.d-7)
+      call cpu_time(t1)
       call deryy(output,input,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0,ubcy)
       if (istret /= 0) then
          call dery(tmp,input,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
@@ -75,8 +114,9 @@ contains
             output(:,j,:) = output(:,j,:)*pp2y(j)-pp4y(j)*tmp(:,j,:)
          enddo
       endif
+      call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
-      write(*,*) "deryy : ", l1/sl1, l2/sl2, linf/slinf
+      call log("deryy_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       @assertEqual(l1/sl1, 0.d0, tolerance=1.d-7)
       @assertEqual(l2/sl2, 0.d0, tolerance=1.d-7)
       @assertEqual(linf/slinf, 0.d0, tolerance=1.d-7)
@@ -98,7 +138,7 @@ contains
 
       real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: input, diloc
       real(mytype), dimension(ysize(1),nymsize,ysize(3)) :: output, sol
-      real(mytype) :: y, l1, l2, linf, sl1, sl2, slinf
+      real(mytype) :: y, l1, l2, linf, sl1, sl2, slinf, t1, t2
       integer :: j
 
       ! Lx = Ly = Lz = 2
@@ -113,9 +153,11 @@ contains
          sol(:,j,:) = pi*cos(pi*y) - 5*pi*sin(5*pi*y)
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), nymsize, ysize(3), xsize(1)*nymsize*zsize(3))
+      call cpu_time(t1)
       call deryvp(output,input,diloc,sy,cfy6,csy6,cwy6,ppyi,ysize(1),ysize(2),nymsize,ysize(3),0)
+      call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), nymsize, ysize(3), xsize(1)*nymsize*zsize(3))
-      write(*,*) "deryvp : ", l1/sl1, l2/sl2, linf/slinf
+      call log("deryvp_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       @assertEqual(l1/sl1, 0.d0, tolerance=1.d-10)
       @assertEqual(l2/sl2, 0.d0, tolerance=1.d-10)
       @assertEqual(linf/slinf, 0.d0, tolerance=1.d-10)
@@ -136,7 +178,7 @@ contains
 
       real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: input, diloc
       real(mytype), dimension(ysize(1),nymsize,ysize(3)) :: output, sol
-      real(mytype) :: y, l1, l2, linf, sl1, sl2, slinf
+      real(mytype) :: y, l1, l2, linf, sl1, sl2, slinf, t1, t2
       integer :: j
 
       ! Lx = Ly = Lz = 2
@@ -151,9 +193,11 @@ contains
          sol(:,j,:) = sin(pi*y) + cos(5*pi*y)
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), nymsize, ysize(3), xsize(1)*nymsize*zsize(3))
+      call cpu_time(t1)
       call interyvp(output,input,diloc,sz,cifyp6,cisyp6,ciwyp6,ysize(1),ysize(2),nymsize,ysize(3),1)
+      call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), nymsize, ysize(3), xsize(1)*nymsize*zsize(3))
-      write(*,*) "interyvp : ", l1/sl1, l2/sl2, linf/slinf
+      call log("interyvp_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       @assertEqual(l1/sl1, 0.d0, tolerance=3.d-10)
       @assertEqual(l2/sl2, 0.d0, tolerance=3.d-10)
       @assertEqual(linf/slinf, 0.d0, tolerance=3.d-10)
@@ -174,7 +218,7 @@ contains
 
       real(mytype), dimension(ysize(1),nymsize,ysize(3)) :: input
       real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: diloc, output, sol
-      real(mytype) :: y, l1, l2, linf, sl1, sl2, slinf
+      real(mytype) :: y, l1, l2, linf, sl1, sl2, slinf, t1, t2
       integer :: j
 
       ! Lx = Ly = Lz = 2
@@ -189,9 +233,11 @@ contains
          sol(:,j,:) = pi*cos(pi*y) - 5*pi*sin(5*pi*y)
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
+      call cpu_time(t1)
       call derypv(output,input,diloc,sy,cfip6y,csip6y,cwip6y,cfy6,csy6,cwy6,ppy,ysize(1),nymsize,ysize(2),ysize(3),1)
+      call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
-      write(*,*) "derypv : ", l1/sl1, l2/sl2, linf/slinf
+      call log("derypv_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       @assertEqual(l1/sl1, 0.d0, tolerance=1.d-10)
       @assertEqual(l2/sl2, 0.d0, tolerance=1.d-10)
       @assertEqual(linf/slinf, 0.d0, tolerance=1.d-10)
@@ -212,7 +258,7 @@ contains
 
       real(mytype), dimension(ysize(1),nymsize,ysize(3)) :: input
       real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: diloc, output, sol
-      real(mytype) :: y, l1, l2, linf, sl1, sl2, slinf
+      real(mytype) :: y, l1, l2, linf, sl1, sl2, slinf, t1, t2
       integer :: j
 
       ! Lx = Ly = Lz = 2
@@ -227,9 +273,11 @@ contains
          sol(:,j,:) = sin(pi*y) + cos(5*pi*y)
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
+      call cpu_time(t1)
       call interypv(output,input,diloc,sz,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,ysize(1),nymsize,ysize(2),ysize(3),1)
+      call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
-      write(*,*) "interypv : ", l1/sl1, l2/sl2, linf/slinf
+      call log("interypv_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       @assertEqual(l1/sl1, 0.d0, tolerance=3.d-10)
       @assertEqual(l2/sl2, 0.d0, tolerance=3.d-10)
       @assertEqual(linf/slinf, 0.d0, tolerance=3.d-10)
