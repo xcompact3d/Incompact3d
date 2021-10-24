@@ -905,29 +905,28 @@ contains
     real(mytype),intent(out) :: l1, l2, linf
     integer, intent(in) :: n1, n2, n3, ntot
 
-    integer :: i,j,k,code
-    real(mytype) :: ll1, ll2, llinf
+    integer :: i, j, k, code
 
-    ll1 = zero
-    ll2 = zero
-    llinf = zero
+    l1 = zero
+    l2 = zero
+    linf = zero
 
     do k = 1,n3
       do j = 1,n2
         do i = 1,n1
-          ll1 = ll1 + abs(err(i,j,k))
-          ll2 = ll2 + err(i,j,k)*err(i,j,k)
-          llinf = max(llinf, abs(err(i,j,k)))
+          l1 = l1 + abs(err(i,j,k))
+          l2 = l2 + err(i,j,k)*err(i,j,k)
+          linf = max(linf, abs(err(i,j,k)))
         enddo
       enddo
     enddo
 
     ! Parallel
-    call MPI_ALLREDUCE(ll1,l1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,l1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
-    call MPI_ALLREDUCE(ll2,l2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,l2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
-    call MPI_ALLREDUCE(llinf,linf,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,linf,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
     if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
     ! Rescaling
