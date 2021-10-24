@@ -23,7 +23,7 @@ for filename in args.files:
    #
    # Show histogram
    tmpn, tmpbins, tmppatches = plt.hist(array, bins=bins)
-   plt.title(filename + " : " + np.str(10**(tmpbins[np.where(tmpn == tmpn.max())][0])) + " seconds")
+   plt.title("<" + filename + "> : " + np.str(np.mean(10**(array))) + " seconds")
    plt.ylabel("Number of runs")
    plt.xlabel("log10 of the CPU time")
    plt.savefig(filename[:-4] + ".png")
