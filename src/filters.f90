@@ -244,6 +244,7 @@ end subroutine set_filter_coefficients
 subroutine filx_00(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind) 
 
   USE param
+  use thomas
   use parfiX
   use ibm, only : lagpolx, cubsplx
 
@@ -294,31 +295,17 @@ subroutine filx_00(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind)
         rx(i,j,k) = zero
      enddo
      rx(nx,j,k) = fialix
-
-     ! Solve tri-diagonal system
-     do i = 2, nx
-        tx(i,j,k) = tx(i,j,k) - tx(i-1,j,k)*fifsx(i)
-        rx(i,j,k) = rx(i,j,k) - rx(i-1,j,k)*fifsx(i)
-     enddo
-     tx(nx,j,k) = tx(nx,j,k) * fifwx(nx)
-     rx(nx,j,k) = rx(nx,j,k) * fifwx(nx)
-     do i=nx-1,1,-1
-        tx(i,j,k) = (tx(i,j,k)-fiffx(i)*tx(i+1,j,k)) * fifwx(i)
-        rx(i,j,k) = (rx(i,j,k)-fiffx(i)*rx(i+1,j,k)) * fifwx(i)
-     enddo
-     fisx(j,k) = (    tx(1,j,k)-fialix*tx(nx,j,k)) &
-               / (one+rx(1,j,k)-fialix*rx(nx,j,k))
-     do concurrent (i=1:nx)
-        tx(i,j,k) = tx(i,j,k) - fisx(j,k)*rx(i,j,k)
-     enddo
-
   enddo
+
+  ! Solve tri-diagonal system
+  call xthomas(tx, rx, fisx, fiffx, fifsx, fifwx, fialix, nx, ny, nz)
 
 end subroutine filx_00
 
 subroutine filx_ij(tx,ux,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind,ncl1,ncln)
 
   USE param
+  use thomas
   use parfiX
   use ibm, only : lagpolx, cubsplx
 
@@ -400,17 +387,10 @@ subroutine filx_ij(tx,ux,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind,ncl1,ncln)
                      + fidmx*ux(nx-3,j,k)
         tx(nx,j,k) = ux(nx,j,k)
      endif
-
-     ! Solve tri-diagonal system
-     do i=2,nx
-        tx(i,j,k) = tx(i,j,k) - tx(i-1,j,k)*fifsx(i)
-     enddo
-     tx(nx,j,k) = tx(nx,j,k) * fifwx(nx)
-     do i=nx-1,1,-1
-        tx(i,j,k) = (tx(i,j,k)-fiffx(i)*tx(i+1,j,k)) * fifwx(i)
-     enddo
-
   enddo
+
+  ! Solve tri-diagonal system
+  call xthomas(tx, fiffx, fifsx, fifwx, nx, ny, nz)
 
 end subroutine filx_ij
 
@@ -486,6 +466,7 @@ end subroutine filx_22
 subroutine fily_00(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind) 
 
   USE param
+  use thomas
   use parfiY
   use ibm, only : lagpoly, cubsply
 
@@ -550,37 +531,10 @@ subroutine fily_00(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind)
      do concurrent (i=1:nx)
         ry(i,ny,k) = fialjy
      enddo
-
-     ! Solve tri-diagonal system
-     do j=2,ny
-        do concurrent (i=1:nx)
-           ty(i,j,k) = ty(i,j,k) - ty(i,j-1,k)*fifsy(j)
-        enddo
-        do concurrent (i=1:nx)
-           ry(i,j,k) = ry(i,j,k) - ry(i,j-1,k)*fifsy(j)
-        enddo
-     enddo
-     do concurrent (i=1:nx)
-        ty(i,ny,k) = ty(i,ny,k) * fifwy(ny)
-     enddo
-     do concurrent (i=1:nx)
-        ry(i,ny,k) = ry(i,ny,k) * fifwy(ny)
-     enddo
-     do j=ny-1,1,-1
-        do concurrent (i=1:nx)
-           ty(i,j,k) = (ty(i,j,k)-fiffy(j)*ty(i,j+1,k)) * fifwy(j)
-        enddo
-        do concurrent (i=1:nx)
-           ry(i,j,k) = (ry(i,j,k)-fiffy(j)*ry(i,j+1,k)) * fifwy(j)
-        enddo
-     enddo
-     fisy(i,k) = (    ty(i,1,k)-fialjy*ty(i,ny,k)) &
-               / (one+ry(i,1,k)-fialjy*ry(i,ny,k))
-     do concurrent (j=1:ny, i=1:nx)
-        ty(i,j,k) = ty(i,j,k) - fisy(i,k)*ry(i,j,k)
-     enddo
-
   enddo
+
+  ! Solve tri-diagonal system
+  call ythomas(ty, ry, fisy, fiffy, fifsy, fifwy, fialjy, nx, ny, nz)
 
 end subroutine fily_00
 
@@ -589,6 +543,7 @@ subroutine fily_ij(ty,uy,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind,ncl1,ncln)
   !********************************************************************
 
   USE param
+  use thomas
   use parfiY
   use ibm, only : lagpoly, cubsply
 
@@ -642,6 +597,17 @@ subroutine fily_ij(ty,uy,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind,ncl1,ncln)
            enddo
         endif
      else
+        do concurrent (i=1:nx)
+           ty(i,1,k) = uy(i,1,k)
+        enddo
+        do concurrent (i=1:nx)
+           ty(i,2,k) = fia2y*uy(i,1,k) + fib2y*uy(i,2,k) + fic2y*uy(i,3,k) &
+                     + fid2y*uy(i,4,k)
+        enddo
+        do concurrent (i=1:nx)
+           ty(i,3,k) = fia3y*uy(i,1,k) + fib3y*uy(i,2,k) + fic3y*uy(i,3,k) &
+                     + fid3y*uy(i,4,k) + fie3y*uy(i,5,k) + fif3y*uy(i,6,k)
+        enddo
      endif
      do concurrent (j=4:ny-3, i=1:nx)
         ty(i,j,k) = fiajy*uy(i,j,k) + fibjy*(uy(i,j+1,k)+uy(i,j-1,k)) &
@@ -681,24 +647,22 @@ subroutine fily_ij(ty,uy,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind,ncl1,ncln)
            enddo
         endif
      else
-     endif
-
-     ! Solve tri-diagonal system
-     do j=2,ny
-        do concurrent (i=1:nx)     
-           ty(i,j,k) = ty(i,j,k) - ty(i,j-1,k)*fifsy(j)
-        enddo
-     enddo
-     do concurrent (i=1:nx)
-        ty(i,ny,k) = ty(i,ny,k) * fifwy(ny)
-     enddo
-     do j=ny-1,1,-1
         do concurrent (i=1:nx)
-           ty(i,j,k) = (ty(i,j,k)-fiffy(j)*ty(i,j+1,k)) * fifwy(j)
+           ty(i,ny-2,k) = fiapy*uy(i,ny  ,k) + fibpy*uy(i,ny-1,k) + ficpy*uy(i,ny-2,k) &
+                        + fidpy*uy(i,ny-3,k) + fiepy*uy(i,ny-4,k) + fifpy*uy(i,ny-5,k)
         enddo
-     enddo
-
+        do concurrent (i=1:nx)
+           ty(i,ny-1,k) = fiamy*uy(i,ny  ,k) + fibmy*uy(i,ny-1,k) + ficmy*uy(i,ny-2,k) &
+                        + fidmy*uy(i,ny-3,k)
+        enddo
+        do concurrent (i=1:nx)
+           ty(i,ny,k) = uy(i,ny,k)
+        enddo
+     endif
   enddo
+
+  ! Solve tri-diagonal system
+  call ythomas(ty, fiffy, fifsy, fifwy, nx, ny, nz)
 
 end subroutine fily_ij
 !********************************************************************
@@ -778,6 +742,7 @@ end subroutine fily_22
 subroutine filz_00(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind) 
 
   USE param
+  use thomas
   use parfiZ
   use ibm, only : lagpolz, cubsplz
 
@@ -842,41 +807,14 @@ subroutine filz_00(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
   enddo
 
   ! Solve tri-diagonal system
-  do k=2,nz
-     do concurrent (j=1:ny, i=1:nx)
-        tz(i,j,k) = tz(i,j,k) - tz(i,j,k-1)*fifsz(k)
-     enddo
-     do concurrent (j=1:ny, i=1:nx)
-        rz(i,j,k) = rz(i,j,k) - rz(i,j,k-1)*fifsz(k)
-     enddo
-  enddo
-  do concurrent (j=1:ny, i=1:nx)
-     tz(i,j,nz) = tz(i,j,nz) * fifwz(nz)
-  enddo
-  do concurrent (j=1:ny, i=1:nx)
-     rz(i,j,nz) = rz(i,j,nz) * fifwz(nz)
-  enddo
-  do k=nz-1,1,-1
-     do concurrent (j=1:ny, i=1:nx)
-        tz(i,j,k) = (tz(i,j,k)-fiffz(k)*tz(i,j,k+1)) * fifwz(k)
-     enddo
-     do concurrent (j=1:ny, i=1:nx)
-        rz(i,j,k) = (rz(i,j,k)-fiffz(k)*rz(i,j,k+1)) * fifwz(k)
-     enddo
-  enddo
-  do concurrent (j=1:ny, i=1:nx)
-     fisz(i,j) = (    tz(i,j,1)-fialkz*tz(i,j,nz)) &
-               / (one+rz(i,j,1)-fialkz*rz(i,j,nz))
-  enddo
-  do concurrent (k=1:nz, j=1:ny, i=1:nx)
-     tz(i,j,k) = tz(i,j,k) - fisz(i,j)*rz(i,j,k)
-  enddo
+  call zthomas(tz, rz, fisz, fiffz, fifsz, fifwz, fialkz, nx, ny, nz)
 
 end subroutine filz_00
 
 subroutine filz_ij(tz,uz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind,ncl1,ncln)
 
   USE param
+  use thomas
   use parfiZ
   use ibm, only : lagpolz, cubsplz
 
@@ -992,19 +930,7 @@ subroutine filz_ij(tz,uz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind,ncl1,ncln)
   endif
 
   ! Solve tri-diagonal system
-  do k=2,nz
-     do concurrent (j=1:ny, i=1:nx)
-        tz(i,j,k) = tz(i,j,k) - tz(i,j,k-1)*fifsz(k)
-     enddo
-  enddo
-  do concurrent (j=1:ny, i=1:nx)
-     tz(i,j,nz) = tz(i,j,nz) * fifwz(nz)
-  enddo
-  do k=nz-1,1,-1
-     do concurrent (j=1:ny, i=1:nx)
-        tz(i,j,k) = (tz(i,j,k)-fiffz(k)*tz(i,j,k+1)) * fifwz(k)
-     enddo
-  enddo
+  call zthomas(tz, fiffz, fifsz, fifwz, nx, ny, nz)
 
 end subroutine filz_ij
 
