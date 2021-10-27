@@ -9,4 +9,8 @@ cd ./derive
 ./test_y_11
 ./test_y_11_str
 ./test_z_11
+./test_x_22
+./test_y_22
+./test_y_22_str
+./test_z_22
 cd ../
