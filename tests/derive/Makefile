@@ -69,7 +69,7 @@ clean:
 	$(RM) test_z_00 initz00.F90 testz00.F90
 	$(RM) test_x_11 initx11.F90 testx11.F90
 	$(RM) test_y_11 inity11.F90 testy11.F90
-	$(RM) test_y_11 inity11_str.F90 testy11_str.F90
+	$(RM) test_y_11_str inity11_str.F90 testy11_str.F90
 	$(RM) test_z_11 initz11.F90 testz11.F90
 	$(RM) test_x_22 initx22.F90 testx22.F90
 	$(RM) test_y_22 inity22.F90 testy22.F90
