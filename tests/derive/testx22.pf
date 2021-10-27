@@ -1,0 +1,121 @@
+module testx22
+
+   use MPI
+   use pFunit
+   use iso_c_binding
+   implicit none
+
+contains
+
+   subroutine log(filename, l1, l2, linf, time)
+
+      use decomp_2d, only : mytype, nrank, nproc, real_type, decomp_2d_abort
+
+      implicit none
+
+      character(len=*), intent(in) :: filename
+      real(mytype), intent(in) :: l1, l2, linf, time
+
+      logical :: file_found
+      integer :: iounit, code
+      real(mytype), dimension(nproc) :: alltime
+
+      alltime(:) = 0.d0
+      alltime(nrank+1) = time
+      call MPI_ALLREDUCE(MPI_IN_PLACE,alltime,nproc,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+
+      if (nrank == 0) then
+         write(*,*) trim(filename)//" : ", l1, l2, linf, alltime
+         inquire(file=filename//".dat", exist=file_found)
+         if (file_found) then
+            open(newunit=iounit, file=trim(filename)//".dat", form='formatted', status='old', access='append')
+         else
+            open(newunit=iounit, file=trim(filename)//".dat", form='formatted', status='new')
+         endif
+         write(iounit, *) l1, l2, linf, alltime
+         close(iounit)
+      endif
+
+   end subroutine log
+
+   ! Serial test
+   @test
+   subroutine verif_derx_derxx_22()
+
+      use decomp_2d
+      use param
+      use var
+      use variables
+      use tools, only : error_l1_l2_linf
+      use ibm_param, only : ubcx,ubcy,ubcz
+
+      implicit none
+
+      real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: input, output, sol
+      real(mytype) :: x, l1, l2, linf, sl1, sl2, slinf, t1, t2
+      integer :: i
+
+      ! Lx = Ly = Lz = 2
+      do i = 1, xsize(1)
+         x = (i-1) * dx
+         input(i,:,:) = cos(5*pi*x)
+         sol(i,:,:) = - 5*pi*sin(5*pi*x)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf)
+      call cpu_time(t1)
+      call derx(output,input,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcx)
+      call cpu_time(t2)
+      call error_l1_l2_linf(output-sol, l1, l2, linf)
+      call log("derx22p", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      @assertEqual(l1/sl1, 0.d0, tolerance=3.d-8)
+      @assertEqual(l2/sl2, 0.d0, tolerance=4.d-7)
+      @assertEqual(linf/slinf, 0.d0, tolerance=6.d-6)
+      do i = 1, xsize(1)
+         x = (i-1) * dx
+         input(i,:,:) = sin(5*pi*x)
+         sol(i,:,:) = 5*pi*cos(5*pi*x)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf)
+      call cpu_time(t1)
+      call derx(output,input,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcy)
+      call cpu_time(t2)
+      call error_l1_l2_linf(output-sol, l1, l2, linf)
+      call log("derx22", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      @assertEqual(l1/sl1, 0.d0, tolerance=8.d-10)
+      @assertEqual(l2/sl2, 0.d0, tolerance=2.d-8)
+      @assertEqual(linf/slinf, 0.d0, tolerance=2.d-7)
+
+      ! test derxx
+      do i = 1, xsize(1)
+         x = (i-1) * dx
+         input(i,:,:) = sin(5*pi*x)
+         sol(i,:,:) = -25*(pi**2)*sin(5*pi*x)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf)
+      call cpu_time(t1)
+      call derxx(output,input,di1,sx,sfx,ssx,swx,xsize(1),xsize(2),xsize(3),0,ubcx)
+      call cpu_time(t2)
+      call error_l1_l2_linf(output-sol, l1, l2, linf)
+      call log("derxx22", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      @assertEqual(l1/sl1, 0.d0, tolerance=1.d-7)
+      @assertEqual(l2/sl2, 0.d0, tolerance=2.d-6)
+      @assertEqual(linf/slinf, 0.d0, tolerance=2.d-5)
+      do i = 1, xsize(1)
+         x = (i-1) * dx
+         input(i,:,:) = cos(5*pi*x)
+         sol(i,:,:) = -25*(pi**2)*cos(5*pi*x)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf)
+      call cpu_time(t1)
+      call derxx(output,input,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+      call cpu_time(t2)
+      call error_l1_l2_linf(output-sol, l1, l2, linf)
+      call log("derxx22p", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      @assertEqual(l1/sl1, 0.d0, tolerance=3.d-8)
+      @assertEqual(l2/sl2, 0.d0, tolerance=6.d-8)
+      @assertEqual(linf/slinf, 0.d0, tolerance=9.d-7)
+
+   end subroutine verif_derx_derxx_22
+
+end module testx22
