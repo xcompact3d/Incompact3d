@@ -3,7 +3,7 @@ PFUNIT_DIR := ../../../unit_testing/pFUnit/build/installed
 LATEST_PFUNIT_DIR := $(lastword $(shell echo $(wildcard $(PFUNIT_DIR)/PFUNIT-4.*) | xargs -n1 | sort -V))
 include $(LATEST_PFUNIT_DIR)/include/PFUNIT.mk
 
-all: test_x_00 test_y_00 test_y_00_str test_z_00
+all: test_x_00 test_y_00 test_y_00_str test_z_00 test_x_11 test_y_11 test_y_11_str test_z_11
 
 X3D := ../../src/x3d_tools.o ../../src/les_models.o ../../src/signal.o ../../src/genepsi3d.o ../../src/statistics.o ../../src/dynstall*.o ../../src/a*.o ../../src/turbine.o ../../src/poisson.o ../../src/implicit.o ../../src/ibm.o ../../src/schemes.o ../../src/filters.o ../../src/navier.o ../../src/derive.o ../../src/tools.o ../../src/visu.o ../../src/BC*.o ../../src/case.o ../../src/variables.o ../../src/probes.o ../../src/forces.o ../../src/module_param.o ../../src/parameters.o ../../src/thomas.o ../../decomp2d/*.o
 
@@ -28,6 +28,22 @@ test_z_00_TESTS := initz00.pf testz00.pf final.pf
 test_z_00_OTHER_LIBRARIES := $(X3D) -L../lib -lx3d
 $(eval $(call make_pfunit_test,test_z_00))
 
+test_x_11_TESTS := initx11.pf testx11.pf final.pf
+test_x_11_OTHER_LIBRARIES := $(X3D) -L../lib -lx3d
+$(eval $(call make_pfunit_test,test_x_11))
+
+test_y_11_TESTS := inity11.pf testy11.pf final.pf
+test_y_11_OTHER_LIBRARIES := $(X3D) -L../lib -lx3d
+$(eval $(call make_pfunit_test,test_y_11))
+
+test_y_11_str_TESTS := inity11_str.pf testy11_str.pf final.pf
+test_y_11_str_OTHER_LIBRARIES := $(X3D) -L../lib -lx3d
+$(eval $(call make_pfunit_test,test_y_11_str))
+
+test_z_11_TESTS := initz11.pf testz11.pf final.pf
+test_z_11_OTHER_LIBRARIES := $(X3D) -L../lib -lx3d
+$(eval $(call make_pfunit_test,test_z_11))
+
 clean:
 	$(RM) *.o *.mod *.a  *.inc *.dat *.png
 	$(RM) final.F90
@@ -35,5 +51,9 @@ clean:
 	$(RM) test_y_00 inity00.F90 testy00.F90
 	$(RM) test_y_00_str inity00_str.F90 testy00_str.F90
 	$(RM) test_z_00 initz00.F90 testz00.F90
+	$(RM) test_x_11 initx11.F90 testx11.F90
+	$(RM) test_y_11 inity11.F90 testy11.F90
+	$(RM) test_y_11 inity11_str.F90 testy11_str.F90
+	$(RM) test_z_11 initz11.F90 testz11.F90
 	$(RM) -rf data/ out/ probes/
 	$(RM) yp.dat ypi.dat channel.dat time_evol.dat

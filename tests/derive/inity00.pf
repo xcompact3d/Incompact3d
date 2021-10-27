@@ -18,7 +18,9 @@ contains
       integer :: code
 
       call MPI_COMM_RANK(MPI_COMM_WORLD,nrank,code)
+      if (code /= 0) call decomp_2d_abort(code, "mpi_comm_rank")
       call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,code)
+      if (code /= 0) call decomp_2d_abort(code, "mpi_comm_size")
       call init_xcompact3d("./y00.i3d"//c_null_char)
 
 end subroutine try_init
