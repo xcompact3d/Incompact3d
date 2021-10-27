@@ -13,4 +13,6 @@ cd ./derive
 ./test_y_22
 ./test_y_22_str
 ./test_z_22
+./test_x_12
+./test_x_21
 cd ../
