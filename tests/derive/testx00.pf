@@ -96,17 +96,17 @@ contains
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf)
       call log("derxx00", l1/sl1, l2/sl2, linf/slinf, t2-t1)
-      @assertEqual(l1/sl1, 0.d0, tolerance=3.d-8)
-      @assertEqual(l2/sl2, 0.d0, tolerance=3.d-8)
-      @assertEqual(linf/slinf, 0.d0, tolerance=3.d-8)
+      @assertEqual(l1/sl1, 0.d0, tolerance=2.d-12)
+      @assertEqual(l2/sl2, 0.d0, tolerance=3.d-12)
+      @assertEqual(linf/slinf, 0.d0, tolerance=7.d-12)
       call cpu_time(t1)
       call derxx(output,input,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,ubcy)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf)
       call log("derxx00p", l1/sl1, l2/sl2, linf/slinf, t2-t1)
-      @assertEqual(l1/sl1, 0.d0, tolerance=3.d-8)
-      @assertEqual(l2/sl2, 0.d0, tolerance=3.d-8)
-      @assertEqual(linf/slinf, 0.d0, tolerance=3.d-8)
+      @assertEqual(l1/sl1, 0.d0, tolerance=2.d-12)
+      @assertEqual(l2/sl2, 0.d0, tolerance=3.d-12)
+      @assertEqual(linf/slinf, 0.d0, tolerance=7.d-12)
 
    end subroutine verif_derx_derxx_00
 
