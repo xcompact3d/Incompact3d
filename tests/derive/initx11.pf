@@ -12,6 +12,7 @@ contains
    subroutine try_init()
 
       use decomp_2d, only : nrank, nproc, decomp_2d_abort
+      use x3d_unit_testing_tools, only : check_error
 
       implicit none
 
@@ -22,6 +23,8 @@ contains
       call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,code)
       if (code /= 0) call decomp_2d_abort(code, "mpi_comm_size")
       call init_xcompact3d("./x11.i3d"//c_null_char)
+
+      check_error = .true.
 
 end subroutine try_init
 

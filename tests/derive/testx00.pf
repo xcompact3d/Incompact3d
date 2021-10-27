@@ -3,41 +3,10 @@ module testx00
    use MPI
    use pFunit
    use iso_c_binding
+   use x3d_unit_testing_tools
    implicit none
 
 contains
-
-   subroutine log(filename, l1, l2, linf, time)
-
-      use decomp_2d, only : mytype, nrank, nproc, real_type, decomp_2d_abort
-
-      implicit none
-
-      character(len=*), intent(in) :: filename
-      real(mytype), intent(in) :: l1, l2, linf, time
-
-      logical :: file_found
-      integer :: iounit, code
-      real(mytype), dimension(nproc) :: alltime
-
-      alltime(:) = 0.d0
-      alltime(nrank+1) = time
-      call MPI_ALLREDUCE(MPI_IN_PLACE,alltime,nproc,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
-
-      if (nrank == 0) then
-         write(*,*) trim(filename)//" : ", l1, l2, linf, alltime
-         inquire(file=filename//".dat", exist=file_found)
-         if (file_found) then
-            open(newunit=iounit, file=trim(filename)//".dat", form='formatted', status='old', access='append')
-         else
-            open(newunit=iounit, file=trim(filename)//".dat", form='formatted', status='new')
-         endif
-         write(iounit, *) l1, l2, linf, alltime
-         close(iounit)
-      endif
-
-   end subroutine log
 
    ! Serial test
    @test
@@ -73,17 +42,21 @@ contains
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf)
       call log("derx00p", l1/sl1, l2/sl2, linf/slinf, t2-t1)
-      @assertEqual(l1/sl1, 0.d0, tolerance=4.d-13)
-      @assertEqual(l2/sl2, 0.d0, tolerance=4.d-13)
-      @assertEqual(linf/slinf, 0.d0, tolerance=4.d-13)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=4.d-13)
+         @assertEqual(l2/sl2, 0.d0, tolerance=4.d-13)
+         @assertEqual(linf/slinf, 0.d0, tolerance=4.d-13)
+      endif
       call cpu_time(t1)
       call derx(output,input,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcy)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf)
       call log("derx00", l1/sl1, l2/sl2, linf/slinf, t2-t1)
-      @assertEqual(l1/sl1, 0.d0, tolerance=4.d-13)
-      @assertEqual(l2/sl2, 0.d0, tolerance=4.d-13)
-      @assertEqual(linf/slinf, 0.d0, tolerance=4.d-13)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=4.d-13)
+         @assertEqual(l2/sl2, 0.d0, tolerance=4.d-13)
+         @assertEqual(linf/slinf, 0.d0, tolerance=4.d-13)
+      endif
 
       ! test derxx
       do i = 1, xsize(1)
@@ -96,17 +69,21 @@ contains
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf)
       call log("derxx00", l1/sl1, l2/sl2, linf/slinf, t2-t1)
-      @assertEqual(l1/sl1, 0.d0, tolerance=2.d-12)
-      @assertEqual(l2/sl2, 0.d0, tolerance=3.d-12)
-      @assertEqual(linf/slinf, 0.d0, tolerance=7.d-12)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=2.d-12)
+         @assertEqual(l2/sl2, 0.d0, tolerance=3.d-12)
+         @assertEqual(linf/slinf, 0.d0, tolerance=7.d-12)
+      endif
       call cpu_time(t1)
       call derxx(output,input,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,ubcy)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf)
       call log("derxx00p", l1/sl1, l2/sl2, linf/slinf, t2-t1)
-      @assertEqual(l1/sl1, 0.d0, tolerance=2.d-12)
-      @assertEqual(l2/sl2, 0.d0, tolerance=3.d-12)
-      @assertEqual(linf/slinf, 0.d0, tolerance=7.d-12)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=2.d-12)
+         @assertEqual(l2/sl2, 0.d0, tolerance=3.d-12)
+         @assertEqual(linf/slinf, 0.d0, tolerance=7.d-12)
+      endif
 
    end subroutine verif_derx_derxx_00
 
@@ -144,9 +121,11 @@ contains
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, nxmsize, xsize(2), xsize(3), nxmsize*ysize(2)*zsize(3))
       call log("derxvp00", l1/sl1, l2/sl2, linf/slinf, t2-t1)
-      @assertEqual(l1/sl1, 0.d0, tolerance=2.d-13)
-      @assertEqual(l2/sl2, 0.d0, tolerance=2.d-13)
-      @assertEqual(linf/slinf, 0.d0, tolerance=2.d-13)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=2.d-13)
+         @assertEqual(l2/sl2, 0.d0, tolerance=2.d-13)
+         @assertEqual(linf/slinf, 0.d0, tolerance=2.d-13)
+      endif
 
    end subroutine verif_derxvp_00
 
@@ -184,9 +163,11 @@ contains
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, nxmsize, xsize(2), xsize(3), nxmsize*ysize(2)*zsize(3))
       call log("interxvp00", l1/sl1, l2/sl2, linf/slinf, t2-t1)
-      @assertEqual(l1/sl1, 0.d0, tolerance=7.d-13)
-      @assertEqual(l2/sl2, 0.d0, tolerance=6.d-13)
-      @assertEqual(linf/slinf, 0.d0, tolerance=4.d-13)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=7.d-13)
+         @assertEqual(l2/sl2, 0.d0, tolerance=6.d-13)
+         @assertEqual(linf/slinf, 0.d0, tolerance=4.d-13)
+      endif
 
    end subroutine verif_interxvp_00
 
@@ -224,9 +205,11 @@ contains
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf)
       call log("derxpv00", l1/sl1, l2/sl2, linf/slinf, t2-t1)
-      @assertEqual(l1/sl1, 0.d0, tolerance=2.d-13)
-      @assertEqual(l2/sl2, 0.d0, tolerance=2.d-13)
-      @assertEqual(linf/slinf, 0.d0, tolerance=2.d-13)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=2.d-13)
+         @assertEqual(l2/sl2, 0.d0, tolerance=2.d-13)
+         @assertEqual(linf/slinf, 0.d0, tolerance=2.d-13)
+      endif
 
    end subroutine verif_derxpv_00
 
@@ -264,9 +247,11 @@ contains
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf)
       call log("interxpv00", l1/sl1, l2/sl2, linf/slinf, t2-t1)
-      @assertEqual(l1/sl1, 0.d0, tolerance=7.d-13)
-      @assertEqual(l2/sl2, 0.d0, tolerance=6.d-13)
-      @assertEqual(linf/slinf, 0.d0, tolerance=4.d-13)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=7.d-13)
+         @assertEqual(l2/sl2, 0.d0, tolerance=6.d-13)
+         @assertEqual(linf/slinf, 0.d0, tolerance=4.d-13)
+      endif
 
    end subroutine verif_interxpv_00
 
