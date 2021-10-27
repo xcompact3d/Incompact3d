@@ -290,11 +290,13 @@ subroutine filx_00(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind)
      tx(nx  ,j,k) = fiaix*ux(nx,j,k) + fibix*(ux(nx-1,j,k)+ux(1,j,k)) &
                   + ficix*(ux(nx-2,j,k)+ux(2,j,k)) &
                   + fidix*(ux(nx-3,j,k)+ux(3,j,k))
-     rx(1,j,k) = -one
-     do concurrent (i=2:nx-1)
-        rx(i,j,k) = zero
-     enddo
-     rx(nx,j,k) = fialix
+     if (.not. thomas_optim) then
+        rx(1,j,k) = -one
+        do concurrent (i=2:nx-1)
+           rx(i,j,k) = zero
+        enddo
+        rx(nx,j,k) = fialix
+     endif
   enddo
 
   ! Solve tri-diagonal system
@@ -522,15 +524,17 @@ subroutine fily_00(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind)
                    + ficjy*(uy(i,ny-2,k)+uy(i,2,k)) &
                    + fidjy*(uy(i,ny-3,k)+uy(i,3,k))
      enddo
-     do concurrent (i=1:nx)
-        ry(i,1,k) = -one
-     enddo
-     do concurrent (j=2:ny-1, i=1:nx)
-        ry(i,j,k) = zero
-     enddo
-     do concurrent (i=1:nx)
-        ry(i,ny,k) = fialjy
-     enddo
+     if (.not. thomas_optim) then
+        do concurrent (i=1:nx)
+           ry(i,1,k) = -one
+        enddo
+        do concurrent (j=2:ny-1, i=1:nx)
+           ry(i,j,k) = zero
+        enddo
+        do concurrent (i=1:nx)
+           ry(i,ny,k) = fialjy
+        enddo
+     endif
   enddo
 
   ! Solve tri-diagonal system
@@ -796,15 +800,17 @@ subroutine filz_00(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
                   + fickz*(uz(i,j,nz-2)+uz(i,j,2)) &
                   + fidkz*(uz(i,j,nz-3)+uz(i,j,3))
   enddo
-  do concurrent (j=1:ny, i=1:nx)
-     rz(i,j,1) = -one
-  enddo
-  do concurrent (k=2:nz-1, j=1:ny, i=1:nx)
-     rz(i,j,k) = zero
-  enddo
-  do concurrent (j=1:ny, i=1:nx)
-     rz(i,j,nz) = fialkz
-  enddo
+  if (.not. thomas_optim) then
+     do concurrent (j=1:ny, i=1:nx)
+        rz(i,j,1) = -one
+     enddo
+     do concurrent (k=2:nz-1, j=1:ny, i=1:nx)
+        rz(i,j,k) = zero
+     enddo
+     do concurrent (j=1:ny, i=1:nx)
+        rz(i,j,nz) = fialkz
+     enddo
+  endif
 
   ! Solve tri-diagonal system
   call zthomas(tz, rz, fisz, fiffz, fifsz, fifwz, fialkz, nx, ny, nz)

@@ -33,12 +33,14 @@
 module thomas
 
   use decomp_2d, only : mytype
-  use param, only : one
+  use param, only : zero, one
 
   implicit none
 
+  logical, parameter :: thomas_optim = .true.
+
   private
-  public :: xthomas, ythomas, zthomas
+  public :: xthomas, ythomas, zthomas, thomas_optim
 
   interface xthomas
     module procedure xthomas_0
@@ -59,7 +61,7 @@ module thomas
 contains
 
   ! Thomas algorithm in X direction (periodicity)
-  pure subroutine xthomas_0(tt, rr, ss, ff, fs, fw, alfa, nx, ny, nz)
+  subroutine xthomas_0(tt, rr, ss, ff, fs, fw, alfa, nx, ny, nz)
 
     implicit none
 
@@ -70,21 +72,36 @@ contains
     integer, intent(in) :: nx, ny, nz
 
     integer :: i, j, k
+    real(mytype), dimension(nx) :: tmp
 
     call xthomas_12(tt, ff, fs, fw, nx, ny, nz)
-    call xthomas_12(rr, ff, fs, fw, nx, ny, nz)
-    do concurrent (k=1:nz, j=1:ny)
-       ss(j,k) = (    tt(1,j,k)-alfa*tt(nx,j,k)) &
-               / (one+rr(1,j,k)-alfa*rr(nx,j,k))
-       do concurrent (i=1:nx)
-          tt(i,j,k) = tt(i,j,k) - ss(j,k)*rr(i,j,k)
+    ! Optimized solver, rr is pre-determined
+    if (thomas_optim) then
+       tmp = (/-one, (zero, i=2,nx-1), alfa/)
+       call xthomas_12(tmp, ff, fs, fw, nx, 1, 1)
+       do concurrent (k=1:nz, j=1:ny)
+          ss(j,k) = (    tt(1,j,k)-alfa*tt(nx,j,k)) &
+                  / (one+tmp(1)   -alfa*tmp(nx))
+          do concurrent (i=1:nx)
+             tt(i,j,k) = tt(i,j,k) - ss(j,k)*tmp(i)
+          enddo
        enddo
-    enddo
+    ! Reference solver
+    else
+       call xthomas_12(rr, ff, fs, fw, nx, ny, nz)
+       do concurrent (k=1:nz, j=1:ny)
+          ss(j,k) = (    tt(1,j,k)-alfa*tt(nx,j,k)) &
+                  / (one+rr(1,j,k)-alfa*rr(nx,j,k))
+          do concurrent (i=1:nx)
+             tt(i,j,k) = tt(i,j,k) - ss(j,k)*rr(i,j,k)
+          enddo
+       enddo
+    endif
 
   end subroutine xthomas_0
 
   ! Thomas algorithm in X direction
-  pure subroutine xthomas_12(tt, ff, fs, fw, nx, ny, nz)
+  subroutine xthomas_12(tt, ff, fs, fw, nx, ny, nz)
 
     implicit none
 
@@ -107,7 +124,7 @@ contains
   end subroutine xthomas_12
 
   ! Thomas algorithm in Y direction (periodicity)
-  pure subroutine ythomas_0(tt, rr, ss, ff, fs, fw, alfa, nx, ny, nz)
+  subroutine ythomas_0(tt, rr, ss, ff, fs, fw, alfa, nx, ny, nz)
 
     implicit none
 
@@ -118,23 +135,40 @@ contains
     integer, intent(in) :: nx, ny, nz
 
     integer :: i, j, k
+    real(mytype), dimension(ny) :: tmp
 
     call ythomas_12(tt, ff, fs, fw, nx, ny, nz)
-    call ythomas_12(rr, ff, fs, fw, nx, ny, nz)
-    do concurrent (k=1:nz)
-       do concurrent (i=1:nx)
-          ss(i,k) = (    tt(i,1,k)-alfa*tt(i,ny,k)) &
-                  / (one+rr(i,1,k)-alfa*rr(i,ny,k))
+    ! Optimized solver, rr is pre-determined
+    if (thomas_optim) then
+       tmp = (/-one, (zero, j=2,ny-1), alfa/)
+       call ythomas_12(tmp, ff, fs, fw, 1, ny, 1)
+       do concurrent (k=1:nz)
+          do concurrent (i=1:nx)
+             ss(i,k) = (    tt(i,1,k)-alfa*tt(i,ny,k)) &
+                     / (one+tmp(1)   -alfa*tmp(ny))
+          enddo
+          do concurrent (j=1:ny, i=1:nx)
+             tt(i,j,k) = tt(i,j,k) - ss(i,k)*tmp(j)
+          enddo
        enddo
-       do concurrent (j=1:ny, i=1:nx)
-          tt(i,j,k) = tt(i,j,k) - ss(i,k)*rr(i,j,k)
+    ! Reference solver
+    else
+       call ythomas_12(rr, ff, fs, fw, nx, ny, nz)
+       do concurrent (k=1:nz)
+          do concurrent (i=1:nx)
+             ss(i,k) = (    tt(i,1,k)-alfa*tt(i,ny,k)) &
+                     / (one+rr(i,1,k)-alfa*rr(i,ny,k))
+          enddo
+          do concurrent (j=1:ny, i=1:nx)
+             tt(i,j,k) = tt(i,j,k) - ss(i,k)*rr(i,j,k)
+          enddo
        enddo
-    enddo
+    endif
 
   end subroutine ythomas_0
 
   ! Thomas algorithm in Y direction
-  pure subroutine ythomas_12(tt, ff, fs, fw, nx, ny, nz)
+  subroutine ythomas_12(tt, ff, fs, fw, nx, ny, nz)
 
     implicit none
 
@@ -163,7 +197,7 @@ contains
   end subroutine ythomas_12
 
   ! Thomas algorithm in Z direction (periodicity)
-  pure subroutine zthomas_0(tt, rr, ss, ff, fs, fw, alfa, nx, ny, nz)
+  subroutine zthomas_0(tt, rr, ss, ff, fs, fw, alfa, nx, ny, nz)
 
     implicit none
 
@@ -174,21 +208,36 @@ contains
     integer, intent(in) :: nx, ny, nz
 
     integer :: i, j, k
+    real(mytype), dimension(nz) :: tmp
 
     call zthomas_12(tt, ff, fs, fw, nx, ny, nz)
-    call zthomas_12(rr, ff, fs, fw, nx, ny, nz)
-    do concurrent (j=1:ny, i=1:nx)
-       ss(i,j) = (    tt(i,j,1)-alfa*tt(i,j,nz)) &
-               / (one+rr(i,j,1)-alfa*rr(i,j,nz))
-    enddo
-    do concurrent (k=1:nz, j=1:ny, i=1:nx)
-       tt(i,j,k) = tt(i,j,k) - ss(i,j)*rr(i,j,k)
-    enddo
+    ! Optimized solver, rr is constant
+    if (thomas_optim) then
+       tmp = (/-one, (zero, k=2, nz-1), alfa/)
+       call zthomas_12(tmp, ff, fs, fw, 1, 1, nz)
+       do concurrent (j=1:ny, i=1:nx)
+          ss(i,j) = (    tt(i,j,1)-alfa*tt(i,j,nz)) &
+                  / (one+tmp(1)   -alfa*tmp(nz))
+       enddo
+       do concurrent (k=1:nz, j=1:ny, i=1:nx)
+          tt(i,j,k) = tt(i,j,k) - ss(i,j)*tmp(k)
+       enddo
+    ! Reference solver
+    else
+       call zthomas_12(rr, ff, fs, fw, nx, ny, nz)
+       do concurrent (j=1:ny, i=1:nx)
+          ss(i,j) = (    tt(i,j,1)-alfa*tt(i,j,nz)) &
+                  / (one+rr(i,j,1)-alfa*rr(i,j,nz))
+       enddo
+       do concurrent (k=1:nz, j=1:ny, i=1:nx)
+          tt(i,j,k) = tt(i,j,k) - ss(i,j)*rr(i,j,k)
+       enddo
+    endif
 
   end subroutine zthomas_0
 
   ! Thomas algorithm in Z direction
-  pure subroutine zthomas_12(tt, ff, fs, fw, nx, ny, nz)
+  subroutine zthomas_12(tt, ff, fs, fw, nx, ny, nz)
 
     implicit none
 

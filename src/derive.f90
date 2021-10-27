@@ -72,13 +72,15 @@ subroutine derx_00(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind)
      tx(nx,j,k) = afix*(ux(1,j,k)-ux(nx-1,j,k)) &
                 + bfix*(ux(2,j,k)-ux(nx-2,j,k))
   enddo
-  do concurrent (k=1:nz, j=1:ny)
-     rx(1,j,k) = -one
-     do concurrent (i=2:nx-1)
-        rx(i,j,k) = zero
+  if (.not. thomas_optim) then
+     do concurrent (k=1:nz, j=1:ny)
+        rx(1,j,k) = -one
+        do concurrent (i=2:nx-1)
+           rx(i,j,k) = zero
+        enddo
+        rx(nx,j,k) = alfaix
      enddo
-     rx(nx,j,k) = alfaix
-  enddo
+  endif
 
   ! Solve tri-diagonal system
   call xthomas(tx, rx, sx, ffx, fsx, fwx, alfaix, nx, ny, nz)
@@ -291,17 +293,19 @@ subroutine dery_00(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind)
                    + bfjy*(uy(i,2,k)-uy(i,ny-2,k))
      enddo
   enddo
-  do concurrent (k=1:nz)
-     do concurrent (i=1:nx)
-        ry(i,1,k) = -one
+  if (.not. thomas_optim) then
+     do concurrent (k=1:nz)
+        do concurrent (i=1:nx)
+           ry(i,1,k) = -one
+        enddo
+        do concurrent (j=2:ny-1, i=1:nx)
+           ry(i,j,k) = zero
+        enddo
+        do concurrent (i=1:nx)
+           ry(i,ny,k) = alfajy
+        enddo
      enddo
-     do concurrent (j=2:ny-1, i=1:nx)
-        ry(i,j,k) = zero
-     enddo
-     do concurrent (i=1:nx)
-        ry(i,ny,k) = alfajy
-     enddo
-  enddo
+  endif
 
   ! Solve tri-diagonal system
   call ythomas(ty, ry, sy, ffy, fsy, fwy, alfajy, nx, ny, nz)
@@ -553,15 +557,17 @@ subroutine derz_00(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind)
      tz(i,j,nz) = afkz*(uz(i,j,1)-uz(i,j,nz-1)) &
                 + bfkz*(uz(i,j,2)-uz(i,j,nz-2))
   enddo
-  do concurrent (j=1:ny, i=1:nx)
-     rz(i,j,1) = -one
-  enddo
-  do concurrent (k=2:nz-1, j=1:ny, i=1:nx)
-     rz(i,j,k) = zero
-  enddo
-  do concurrent (j=1:ny, i=1:nx)
-     rz(i,j,nz) = alfakz
-  enddo
+  if (.not. thomas_optim) then
+     do concurrent (j=1:ny, i=1:nx)
+        rz(i,j,1) = -one
+     enddo
+     do concurrent (k=2:nz-1, j=1:ny, i=1:nx)
+        rz(i,j,k) = zero
+     enddo
+     do concurrent (j=1:ny, i=1:nx)
+        rz(i,j,nz) = alfakz
+     enddo
+  endif
 
   ! Solve tri-diagonal system
   call zthomas(tz, rz, sz, ffz, fsz, fwz, alfakz, nx, ny, nz)
@@ -850,13 +856,15 @@ subroutine derxx_00(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind)
                   + dsix*(ux(4 ,j,k)-ux(nx  ,j,k) &
                          -ux(nx,j,k)+ux(nx-4,j,k))
   enddo
-  do concurrent (k=1:nz, j=1:ny)
-     rx(1,j,k) = -one
-     do concurrent (i=2:nx-1)
-        rx(i,j,k) = zero
+  if (.not. thomas_optim) then
+     do concurrent (k=1:nz, j=1:ny)
+        rx(1,j,k) = -one
+        do concurrent (i=2:nx-1)
+           rx(i,j,k) = zero
+        enddo
+        rx(nx,j,k) = alsaix
      enddo
-     rx(nx,j,k) = alsaix
-  enddo
+  endif
 
   ! Solve tri-diagonal system
   call xthomas(tx, rx, sx, sfx, ssx, swx, alsaix, nx, ny, nz)
@@ -1269,17 +1277,19 @@ subroutine deryy_00(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind)
      enddo
   enddo
   if (iimplicit >= 1) return
-  do concurrent (k=1:nz)
-     do concurrent (i=1:nx)
-        ry(i,1,k) = -one
+  if (.not. thomas_optim) then
+     do concurrent (k=1:nz)
+        do concurrent (i=1:nx)
+           ry(i,1,k) = -one
+        enddo
+        do concurrent (j=2:ny-1, i=1:nx)
+           ry(i,j,k) = zero
+        enddo
+        do concurrent (i=1:nx)
+           ry(i,ny,k) = alsajy
+        enddo
      enddo
-     do concurrent (j=2:ny-1, i=1:nx)
-        ry(i,j,k) = zero
-     enddo
-     do concurrent (i=1:nx)
-        ry(i,ny,k) = alsajy
-     enddo
-  enddo
+  endif
 
   ! Solve tri-diagonal system
   call ythomas(ty, ry, sy, sfy, ssy, swy, alsajy, nx, ny, nz)
@@ -1729,15 +1739,17 @@ subroutine derzz_00(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind)
                   + dskz*(uz(i,j,4 )-uz(i,j,nz  ) &
                          -uz(i,j,nz)+uz(i,j,nz-4))
   enddo
-  do concurrent (j=1:ny, i=1:nx)
-     rz(i,j,1) = -one
-  enddo
-  do concurrent (k=2:nz-1, j=1:ny, i=1:nx)
-     rz(i,j,k) = zero
-  enddo
-  do concurrent (j=1:ny, i=1:nx)
-     rz(i,j,nz) = alsakz
-  enddo
+  if (.not. thomas_optim) then
+     do concurrent (j=1:ny, i=1:nx)
+        rz(i,j,1) = -one
+     enddo
+     do concurrent (k=2:nz-1, j=1:ny, i=1:nx)
+        rz(i,j,k) = zero
+     enddo
+     do concurrent (j=1:ny, i=1:nx)
+        rz(i,j,nz) = alsakz
+     enddo
+  endif
 
   ! Solve tri-diagonal system
   call zthomas(tz, rz, sz, sfz, ssz, swz, alsakz, nx, ny, nz)
@@ -2114,11 +2126,13 @@ subroutine derxvp(tx,ux,rx,sx,cfx6,csx6,cwx6,nx,nxm,ny,nz,npaire)
                      + bcix6*(ux(1 ,j,k)-ux(nx-2,j,k))
         tx(nx  ,j,k) = acix6*(ux(1,j,k)-ux(nx  ,j,k)) &
                      + bcix6*(ux(2,j,k)-ux(nx-1,j,k))
-        rx(1,j,k) = -one
-        do concurrent (i=2:nx-1)
-           rx(i,j,k) = zero
-        enddo
-        rx(nx,j,k) = alcaix6
+        if (.not. thomas_optim) then
+           rx(1,j,k) = -one
+           do concurrent (i=2:nx-1)
+              rx(i,j,k) = zero
+           enddo
+           rx(nx,j,k) = alcaix6
+        endif
      enddo
 
      ! Solve tri-diagonal system
@@ -2226,11 +2240,13 @@ subroutine interxvp(tx,ux,rx,sx,cifx6,cisx6,ciwx6,nx,nxm,ny,nz,npaire)
                      + bicix6*(ux(2,j,k)+ux(nx-1,j,k)) &
                      + cicix6*(ux(3,j,k)+ux(nx-2,j,k)) &
                      + dicix6*(ux(4,j,k)+ux(nx-3,j,k))
-        rx(1,j,k) = -one
-        do concurrent (i=2:nx-1)
-           rx(i,j,k) = zero
-        enddo
-        rx(nx,j,k) = ailcaix6
+        if (.not. thomas_optim) then
+           rx(1,j,k) = -one
+           do concurrent (i=2:nx-1)
+              rx(i,j,k) = zero
+           enddo
+           rx(nx,j,k) = ailcaix6
+        endif
      enddo
 
      ! Solve tri-diagonal system
@@ -2322,11 +2338,13 @@ subroutine derxpv(tx,ux,rx,sx,cfi6,csi6,cwi6,cfx6,csx6,cwx6,nxm,nx,ny,nz,npaire)
                      + bcix6*(ux(nx ,j,k)-ux(nx-3,j,k))
         tx(nx  ,j,k) = acix6*(ux(nx,j,k)-ux(nx-1,j,k)) &
                      + bcix6*(ux(1,j,k)-ux(nx-2,j,k))
-        rx(1,j,k) = -one
-        do concurrent (i=2:nx-1)
-           rx(i,j,k) = zero
-        enddo
-        rx(nx,j,k) = alcaix6
+        if (.not. thomas_optim) then
+           rx(1,j,k) = -one
+           do concurrent (i=2:nx-1)
+              rx(i,j,k) = zero
+           enddo
+           rx(nx,j,k) = alcaix6
+        endif
      enddo
 
      ! Solve tri-diagonal system
@@ -2421,11 +2439,13 @@ subroutine interxpv(tx,ux,rx,sx,cifi6,cisi6,ciwi6,cifx6,cisx6,ciwx6,&
                      + bicix6*(ux(1,j,k)+ux(nx-2,j,k)) &
                      + cicix6*(ux(2,j,k)+ux(nx-3,j,k)) &
                      + dicix6*(ux(3,j,k)+ux(nx-4,j,k))
-        rx(1,j,k) = -one
-        do concurrent (i=2:nx-1)
-           rx(i,j,k) = zero
-        enddo
-        rx(nx,j,k) = ailcaix6
+        if (.not. thomas_optim) then
+           rx(1,j,k) = -one
+           do concurrent (i=2:nx-1)
+              rx(i,j,k) = zero
+           enddo
+           rx(nx,j,k) = ailcaix6
+        endif
      enddo
 
      ! Solve tri-diagonal system
@@ -2561,15 +2581,17 @@ subroutine interyvp(ty,uy,ry,sy,cify6,cisy6,ciwy6,nx,ny,nym,nz,npaire)
                         + ciciy6*(uy(i,3,k)+uy(i,ny-2,k)) &
                         + diciy6*(uy(i,4,k)+uy(i,ny-3,k))
         enddo
-        do concurrent (i=1:nx)
-           ry(i,1,k) = -one
-        enddo
-        do concurrent (j=2:ny-1, i=1:nx)
-           ry(i,j,k) = zero
-        enddo
-        do concurrent (i=1:nx)
-           ry(i,ny,k) = ailcaiy6
-        enddo
+        if (.not. thomas_optim) then
+           do concurrent (i=1:nx)
+              ry(i,1,k) = -one
+           enddo
+           do concurrent (j=2:ny-1, i=1:nx)
+              ry(i,j,k) = zero
+           enddo
+           do concurrent (i=1:nx)
+              ry(i,ny,k) = ailcaiy6
+           enddo
+        endif
      enddo
 
      ! Solve tri-diagonal system
@@ -2681,15 +2703,17 @@ subroutine deryvp(ty,uy,ry,sy,cfy6,csy6,cwy6,ppyi,nx,ny,nym,nz,npaire)
            ty(i,ny  ,k) = aciy6*(uy(i,1,k)-uy(i,ny,k)) &
                         + bciy6*(uy(i,2,k)-uy(i,ny-1,k))
         enddo
-        do concurrent (i=1:nx)
-           ry(i,1,k) = -one
-        enddo
-        do concurrent (j=2:ny-1, i=1:nx)
-           ry(i,j,k) = zero
-        enddo
-        do concurrent (i=1:nx)
-           ry(i,ny,k) = alcaiy6
-        enddo
+        if (.not. thomas_optim) then
+           do concurrent (i=1:nx)
+              ry(i,1,k) = -one
+           enddo
+           do concurrent (j=2:ny-1, i=1:nx)
+              ry(i,j,k) = zero
+           enddo
+           do concurrent (i=1:nx)
+              ry(i,ny,k) = alcaiy6
+           enddo
+        endif
      enddo
 
      ! Solve tri-diagonal system
@@ -2814,15 +2838,17 @@ subroutine interypv(ty,uy,ry,sy,cifi6y,cisi6y,ciwi6y,cify6,cisy6,ciwy6,&
                         + ciciy6*(uy(i,2,k)+uy(i,ny-3,k)) &
                         + diciy6*(uy(i,3,k)+uy(i,ny-4,k))
         enddo
-        do concurrent (i=1:nx)
-           ry(i,1,k) = -one
-        enddo
-        do concurrent (j=2:ny-1, i=1:nx)
-           ry(i,j,k) = zero
-        enddo
-        do concurrent (i=1:nx)
-           ry(i,ny,k) = ailcaiy6
-        enddo
+        if (.not. thomas_optim) then
+           do concurrent (i=1:nx)
+              ry(i,1,k) = -one
+           enddo
+           do concurrent (j=2:ny-1, i=1:nx)
+              ry(i,j,k) = zero
+           enddo
+           do concurrent (i=1:nx)
+              ry(i,ny,k) = ailcaiy6
+           enddo
+        endif
      enddo
 
      ! Solve tri-diagonal system
@@ -2947,15 +2973,17 @@ subroutine derypv(ty,uy,ry,sy,cfi6y,csi6y,cwi6y,cfy6,csy6,cwy6,&
            ty(i,ny,k) = aciy6*(uy(i,ny,k)-uy(i,ny-1,k)) &
                       + bciy6*(uy(i,1,k)-uy(i,ny-2,k))
         enddo
-        do concurrent (i=1:nx)
-           ry(i,1,k) = -one
-        enddo
-        do concurrent (j=2:ny-1, i=1:nx)
-           ry(i,j,k) = zero
-        enddo
-        do concurrent (i=1:nx)
-           ry(i,ny,k) = alcaiy6
-        enddo
+        if (.not. thomas_optim) then
+           do concurrent (i=1:nx)
+              ry(i,1,k) = -one
+           enddo
+           do concurrent (j=2:ny-1, i=1:nx)
+              ry(i,j,k) = zero
+           enddo
+           do concurrent (i=1:nx)
+              ry(i,ny,k) = alcaiy6
+           enddo
+        endif
      enddo
 
      ! Solve tri-diagonal system
@@ -3048,15 +3076,17 @@ subroutine derzvp(tz,uz,rz,sz,cfz6,csz6,cwz6,nx,ny,nz,nzm,npaire)
         tz(i,j,nz  ) = aciz6*(uz(i,j,1)-uz(i,j,nz)) &
                      + bciz6*(uz(i,j,2)-uz(i,j,nz-1))
      enddo
-     do concurrent (j=1:ny, i=1:nx)
-        rz(i,j,1) = -one
-     enddo
-     do concurrent (k=2:nz-1, j=1:ny, i=1:nx)
-        rz(i,j,k) = zero
-     enddo
-     do concurrent (j=1:ny, i=1:nx)
-        rz(i,j,nz) = alcaiz6
-     enddo
+     if (.not. thomas_optim) then
+        do concurrent (j=1:ny, i=1:nx)
+           rz(i,j,1) = -one
+        enddo
+        do concurrent (k=2:nz-1, j=1:ny, i=1:nx)
+           rz(i,j,k) = zero
+        enddo
+        do concurrent (j=1:ny, i=1:nx)
+           rz(i,j,nz) = alcaiz6
+        enddo
+     endif
 
      ! Solve tri-diagonal system
      call zthomas(tz, rz, sz, cfz6, csz6, cwz6, alcaiz6, nx, ny, nz)
@@ -3190,15 +3220,17 @@ subroutine interzvp(tz,uz,rz,sz,cifz6,cisz6,ciwz6,nx,ny,nz,nzm,npaire)
                      + ciciz6*(uz(i,j,3)+uz(i,j,nz-2)) &
                      + diciz6*(uz(i,j,4)+uz(i,j,nz-3))
      enddo
-     do concurrent (j=1:ny, i=1:nx)
-        rz(i,j,1) = -one
-     enddo
-     do concurrent (k=2:nz-1, j=1:ny, i=1:nx)
-        rz(i,j,k) = zero
-     enddo
-     do concurrent (j=1:ny, i=1:nx)
-        rz(i,j,nz) = ailcaiz6
-     enddo
+     if (.not. thomas_optim) then
+        do concurrent (j=1:ny, i=1:nx)
+           rz(i,j,1) = -one
+        enddo
+        do concurrent (k=2:nz-1, j=1:ny, i=1:nx)
+           rz(i,j,k) = zero
+        enddo
+        do concurrent (j=1:ny, i=1:nx)
+           rz(i,j,nz) = ailcaiz6
+        enddo
+     endif
 
      ! Solve tri-diagonal system
      call zthomas(tz, rz, sz, cifz6, cisz6, ciwz6, ailcaiz6, nx, ny, nz)
@@ -3307,15 +3339,17 @@ subroutine derzpv(tz,uz,rz,sz,cfiz6,csiz6,cwiz6,cfz6,csz6,cwz6,&
         tz(i,j,nz) = aciz6*(uz(i,j,nz)-uz(i,j,nz-1)) &
                    + bciz6*(uz(i,j,1)-uz(i,j,nz-2))
      enddo
-     do concurrent (j=1:ny, i=1:nx)
-        rz(i,j,1) = -one
-     enddo
-     do concurrent (k=2:nz-1, j=1:ny, i=1:nx)
-        rz(i,j,k) = zero
-     enddo
-     do concurrent (j=1:ny, i=1:nx)
-        rz(i,j,nz) = alcaiz6
-     enddo
+     if (.not. thomas_optim) then
+        do concurrent (j=1:ny, i=1:nx)
+           rz(i,j,1) = -one
+        enddo
+        do concurrent (k=2:nz-1, j=1:ny, i=1:nx)
+           rz(i,j,k) = zero
+        enddo
+        do concurrent (j=1:ny, i=1:nx)
+           rz(i,j,nz) = alcaiz6
+        enddo
+     endif
 
      ! Solve tri-diagonal system
      call zthomas(tz, rz, sz, cfz6, csz6, cwz6, alcaiz6, nx, ny, nz)
@@ -3428,15 +3462,17 @@ subroutine interzpv(tz,uz,rz,sz,cifiz6,cisiz6,ciwiz6,cifz6,cisz6,ciwz6,&
                      + ciciz6*(uz(i,j,2)+uz(i,j,nz-3)) &
                      + diciz6*(uz(i,j,3)+uz(i,j,nz-4))
      enddo
-     do concurrent (j=1:ny, i=1:nx)
-        rz(i,j,1) = -one
-     enddo
-     do concurrent (k=2:nz-1, j=1:ny, i=1:nx)
-        rz(i,j,k) = zero
-     enddo
-     do concurrent (j=1:ny, i=1:nx)
-        rz(i,j,nz) = ailcaiz6
-     enddo
+     if (.not. thomas_optim) then
+        do concurrent (j=1:ny, i=1:nx)
+           rz(i,j,1) = -one
+        enddo
+        do concurrent (k=2:nz-1, j=1:ny, i=1:nx)
+           rz(i,j,k) = zero
+        enddo
+        do concurrent (j=1:ny, i=1:nx)
+           rz(i,j,nz) = ailcaiz6
+        enddo
+     endif
 
      ! Solve tri-diagonal system
      call zthomas(tz, rz, sz, cifz6, cisz6, ciwz6, ailcaiz6, nx, ny, nz)
