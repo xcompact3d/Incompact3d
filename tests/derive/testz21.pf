@@ -1,0 +1,98 @@
+module testz21
+
+   use MPI
+   use pFunit
+   use iso_c_binding
+   use x3d_unit_testing_tools
+   implicit none
+
+contains
+
+   ! Serial test
+   @test
+   subroutine verif_derz_derzz_21()
+
+      use decomp_2d
+      use param
+      use var
+      use variables
+      use tools, only : error_l1_l2_linf
+      use ibm_param, only : ubcx,ubcy,ubcz
+
+      implicit none
+
+      real(mytype), dimension(zsize(1),zsize(2),zsize(3)) :: input, output, sol
+      real(mytype) :: z, l1, l2, linf, sl1, sl2, slinf, t1, t2
+      integer :: k
+
+      ! Lx = Ly = Lz = 2
+      do k = 1, zsize(3)
+         z = (k-1) * dz
+         input(:,:,k) = sin(5*pi*z)
+         sol(:,:,k) = 5*pi*cos(5*pi*z)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
+      call cpu_time(t1)
+      call derz(output,input,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcy)
+      call cpu_time(t2)
+      call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
+      call log("derz21", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=4.d-10)
+         @assertEqual(l2/sl2, 0.d0, tolerance=8.d-9)
+         @assertEqual(linf/slinf, 0.d0, tolerance=2.d-7)
+      endif
+      do k = 1, zsize(3)
+         z = (k-1) * dz
+         input(:,:,k) = cos(5*pi*z)
+         sol(:,:,k) = -5*pi*sin(5*pi*z)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
+      call cpu_time(t1)
+      call derz(output,input,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcz)
+      call cpu_time(t2)
+      call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
+      call log("derz21p", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=2.d-8)
+         @assertEqual(l2/sl2, 0.d0, tolerance=3.d-7)
+         @assertEqual(linf/slinf, 0.d0, tolerance=6.d-6)
+      endif
+
+      ! test derzz
+      do k = 1, zsize(3)
+         z = (k-1) * dz
+         input(:,:,k) = cos(5*pi*z)
+         sol(:,:,k) = -25*(pi**2)*cos(5*pi*z)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
+      call cpu_time(t1)
+      call derzz(output,input,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+      call cpu_time(t2)
+      call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
+      call log("derzz21p", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=2.d-9)
+         @assertEqual(l2/sl2, 0.d0, tolerance=4.d-8)
+         @assertEqual(linf/slinf, 0.d0, tolerance=9.d-7)
+      endif
+      do k = 1, zsize(3)
+         z = (k-1) * dz
+         input(:,:,k) = sin(5*pi*z)
+         sol(:,:,k) = -25*(pi**2)*sin(5*pi*z)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3)) 
+      call cpu_time(t1)
+      call derzz(output,input,di3,sz,sfz,ssz,swz,zsize(1),zsize(2),zsize(3),0,ubcz)
+      call cpu_time(t2)
+      call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
+      call log("derzz21", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=4.d-8)
+         @assertEqual(l2/sl2, 0.d0, tolerance=9.d-7)
+         @assertEqual(linf/slinf, 0.d0, tolerance=2.d-5)
+      endif
+
+   end subroutine verif_derz_derzz_21
+
+end module testz21
