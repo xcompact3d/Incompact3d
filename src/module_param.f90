@@ -512,7 +512,7 @@ module param
   !
   real(mytype),parameter :: onethousand=1000._mytype
   real(mytype),parameter :: twothousand=2000._mytype
-  real(mytype),parameter :: thirtysixthousand=3600._mytype
+  real(mytype),parameter :: threethousandsixhundred=3600._mytype
   !
   complex(mytype),parameter :: cx_one_one=cmplx(one, one, kind=mytype)
 
