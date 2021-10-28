@@ -733,7 +733,7 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
   cbx6(2)=alcaix6
   cbx6(nxm-2)=alcaix6
   cbx6(nxm-1)=alcaix6
-  cbx6(nxm)=0.
+  cbx6(nxm)=zero
   do i=3,nxm-3
      cfx6(i)=alcaix6
      ccx6(i)=one
@@ -858,9 +858,9 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
   call prepare (cibi6,cici6,cifip6,cisip6,ciwip6,nx)
   if (nclxn.eq.1) then
      cbx6(nxm-1)=zero
-     cibx6(nxm)=0
+     cibx6(nxm)=zero
      cbi6(nx-1)=zero
-     cibi6(nx)=0
+     cibi6(nx)=zero
      call prepare (cbx6,ccx6,cfxp6,csxp6,cwxp6,nxm)
      call prepare (cibx6,cicx6,cifxp6,cisxp6,ciwxp6,nxm)
      call prepare (cbi6,cci6,cfip6,csip6,cwip6,nx)
