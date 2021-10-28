@@ -35,6 +35,7 @@ contains
     USE variables
     USE param
     USE var, ONLY : rho2, phi2, ta2, tb2, tc2, td2
+    use dbg_schemes, only: exp_prec
 
     implicit none
 
@@ -48,12 +49,14 @@ contains
 
     integer, dimension (:), allocatable :: seed
 
-    ux1=zero;uy1=zero;uz1=zero
-    if (iin.ne.0) then
+    ux1=zero
+    uy1=zero
+    uz1=zero
+    if (iin /= 0) then
        call system_clock(count=code)
-       if (iin.eq.2) code=0
+       if (iin == 2) code=0
        call random_seed(size = ii)
-       call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /))
+       call random_seed(put = code+63946*(nrank+1)*(/ (i - 1, i = 1, ii) /))
 
        call random_number(ux1)
        call random_number(uy1)
@@ -65,7 +68,7 @@ contains
        do j=1,xsize(2)
           if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy
           if (istret.ne.0) y=yp(j+xstart(2)-1)
-          um=exp(-y**2)
+          um=exp_prec(-y**2)
           um = one
           do i=1,xsize(1)
              ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)
@@ -75,9 +78,9 @@ contains
        enddo
     enddo
 
-    initialising = .TRUE.
+    initialising = .true.
     call boundary_conditions_jet (rho1,ux1,uy1,uz1,phi1)
-    initialising = .FALSE.
+    initialising = .false.
 
     !INIT FOR G AND U=MEAN FLOW + NOISE
     if (xstart(2)==1) then
@@ -118,7 +121,7 @@ contains
     enddo
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init end ok'
+    if (nrank == 0) write(*,*) '# init end ok'
 #endif
 
     return
@@ -130,7 +133,8 @@ contains
     USE param
     USE variables
     USE decomp_2d
-    USE var, ONLY : ta1, tb1
+    USE var, only : ta1, tb1
+    use dbg_schemes, only: sin_prec, tanh_prec, sqrt_prec
 
     implicit none
 
@@ -154,8 +158,8 @@ contains
     D = one
     perturbation = zero
 
-    if (t.lt.one) then
-       timeswitch = sin(t * pi / two)
+    if (t < one) then
+       timeswitch = sin_prec(t * pi * half)
     else
        timeswitch = one
     endif
@@ -171,18 +175,18 @@ contains
           z = real(k + xstart(3) - 2, mytype) * dz - half * zlz
           do i = 1, xsize(1)
              x = real(i + xstart(1) - 2, mytype) * dx - half * xlx
-             r = sqrt(x**2 + z**2) + 1.e-16_mytype !! Can't divide by zero!
+             r = sqrt_prec(x**2 + z**2) + 1.e-16_mytype !! Can't divide by zero!
 
              !! Set mean inflow
              byx1(i, k) = zero
              byy1(i, k) = (u1 - u2) * half &
-                  * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D))) + u2
+                  * (one + tanh_prec((12.5_mytype / four) * ((D / two) / r - two * r / D))) + u2
              byz1(i, k) = zero
 
              if (ilmn) then
                 if (.not.ilmn_solve_temp) then
                    rho(i, 1, k, 1) = (dens1 - dens2) * half &
-                        * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D))) + dens2
+                        * (one + tanh_prec((12.5_mytype / four) * ((D / two) / r - two * r / D))) + dens2
                 else
                    ta1(i,1,k) = one !! Could set variable temperature inlet here
                 endif
@@ -190,12 +194,12 @@ contains
                 rho(i, 1, k, 1) = one
              endif
 
-             if (iscalar.ne.0) then
+             if (iscalar/=0) then
                 do is = 1, numscalar
                    if (.not.massfrac(is)) then
-                      phi(i, 1, k, is) = half * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D)))
-                   else if (is.ne.primary_species) then
-                      phi(i, 1, k, is) = one - half * (one + tanh((12.5_mytype / four) * ((D / two) / r - two * r / D)))
+                      phi(i, 1, k, is) = half * (one + tanh_prec((12.5_mytype / four) * ((D / two) / r - two * r / D)))
+                   else if (is/=primary_species) then
+                      phi(i, 1, k, is) = one - half * (one + tanh_prec((12.5_mytype / four) * ((D / two) / r - two * r / D)))
                    endif
                 enddo
 
@@ -257,8 +261,8 @@ contains
     zc=half*xlx
 
     !! X-BC
-    IF (nclx1.EQ.2) THEN
-       if(xstart(1).eq.1)then!
+    IF (nclx1 == 2) THEN
+       if(xstart(1) == 1)then!
           x = -xc
           i = 1
           do k=1,xsize(3)
@@ -267,10 +271,10 @@ contains
              y2=z
              x1=x+dx
              y1=y2*x1/x2
-             r1=sqrt(x1**2+y1**2)
-             r2=sqrt(x2**2+y2**2)
-             if(r1.gt.r2)print*,'bug CL'
-             if(k.eq.1)then!cas premier point
+             r1=sqrt_prec(x1**2+y1**2)
+             r2=sqrt_prec(x2**2+y2**2)
+             if(r1.gt.r2) write(*,*)'##BUG CL in JET'
+             if(k==1)then!cas premier point
                 do j=1,xsize(2)
 
                    bxx1(j,k)=r1*ux(i + 1,j,k+1)/r2
@@ -292,7 +296,7 @@ contains
                    bxz1(j,k)=r1*uz(i+1,j,k-1)/r2
                 enddo
              else!cas general
-                if    (z.gt.0.)then
+                if (z.gt.0.)then
                    ya=y2-dz
                    do j=1,xsize(2)
                       uu1=(ux(i+1,j,k)-ux(i+1,j,k-1))*(y1-ya)/(y2-ya)+ux(i+1,j,k-1)
@@ -339,22 +343,22 @@ contains
              endif
           endif
        endif
-    ENDIF
+    endif
 
-    IF (nclxn.EQ.2) THEN
+    if (nclxn.eq.2) then
        if(xend(1).eq.nx)then
           x=xc
           i = xsize(1)
           do k=1,xsize(3)
-             z=real(k + xstart(3) - 2)*dz-zc
+             z=real(k + xstart(3) - 2,mytype)*dz-zc
              x2=x
              y2=z
              x1=x-dx
              y1=y2*x1/x2
-             r1=sqrt(x1**2+y1**2)
-             r2=sqrt(x2**2+y2**2)
-             if(r1.gt.r2)print*,'bug CL'
-             if(k.eq.1)then!cas premier point
+             r1=sqrt_prec(x1**2+y1**2)
+             r2=sqrt_prec(x2**2+y2**2)
+             if(r1 > r2) write(*,*) '##Bug CL Jet 2'
+             if (k == 1) then!cas premier point
                 do j=1,xsize(2)
 
                    bxxn(j,k)=r1*ux(i-1,j,k+1)/r2
@@ -419,14 +423,14 @@ contains
                 ta1(i,:,:) = one
 
                 !! Need to compute rho (on boundary)
-                CALL calc_rho_eos(rho(i,:,:,1), ta1(i,:,:), phi(i,:,:,:), tb1(i,:,:), 1, xsize(2), xsize(3))
+                call calc_rho_eos(rho(i,:,:,1), ta1(i,:,:), phi(i,:,:,:), tb1(i,:,:), 1, xsize(2), xsize(3))
              endif
           endif
        endif
-    ENDIF
+    endif
 
     !! Z-BC
-    IF ((nclz1.EQ.2).AND.(xstart(3).EQ.1)) THEN
+    if ((nclz1 == 2).and.(xstart(3) == 1)) then
        k = 1
        z = -zc
        do i=1,xsize(1)
@@ -435,17 +439,17 @@ contains
           y2=x
           x1=z+dz
           y1=y2*x1/x2
-          r1=sqrt(x1**2+y1**2)
-          r2=sqrt(x2**2+y2**2)
-          if(r1.gt.r2)print*,'bug CL'
-          if(i.eq.1)then!cas premier point
+          r1=sqrt_prec(x1**2+y1**2)
+          r2=sqrt_prec(x2**2+y2**2)
+          if(r1 > r2) write(*,*) 'bug CL'
+          if(i == 1)then!cas premier point
              do j=1,xsize(2)
 
                 bzx1(i,j)=r1*ux(i+1,j,k + 1)/r2
                 bzy1(i,j)=   uy(i+1,j,k + 1)
                 bzz1(i,j)=r1*uz(i+1,j,k + 1)/r2
              enddo
-          elseif(i.eq.(nx-1)/2+1)then!cas point du milieu
+          elseif(i == (nx-1)/2+1)then!cas point du milieu
              do j=1,xsize(2)
 
                 bzx1(i,j)=r1*ux(i,j,k + 1)/r2
@@ -508,9 +512,9 @@ contains
              CALL calc_rho_eos(rho(:,:,k,1), ta1(:,:,k), phi(:,:,k,:), tb1(:,:,k), xsize(1), xsize(2), 1)
           endif
        endif
-    ENDIF
+    endif
 
-    IF ((nclzn.EQ.2).AND.(xend(3).EQ.nz)) THEN
+    if ((nclzn == 2).and.(xend(3) == nz)) then
        z=zc
        k = xsize(3)
        do i=1,xsize(1)
@@ -519,10 +523,10 @@ contains
           y2=x
           x1=z-dz
           y1=y2*x1/x2
-          r1=sqrt(x1**2+y1**2)
-          r2=sqrt(x2**2+y2**2)
-          if(r1.gt.r2)print*,'bug CL'
-          if(i.eq.1)then!cas premier point
+          r1=sqrt_prec(x1**2+y1**2)
+          r2=sqrt_prec(x2**2+y2**2)
+          if(r1 > r2) write(*,*) 'bug CL'
+          if(i == 1)then!cas premier point
              do j=1,xsize(2)
 
                 bzxn(i,j)=r1*ux(i+1,j,k-1)/r2
@@ -591,7 +595,7 @@ contains
              CALL calc_rho_eos(rho(:,:,k,1), ta1(:,:,k), phi(:,:,k,:), tb1(:,:,k), xsize(1), xsize(2), 1)
           endif
        endif
-    ENDIF
+    endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !! Compute outflow
@@ -727,38 +731,40 @@ contains
   !! DESCRIPTION: Applies a fringe/sponge region at the outlet.
   !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE momentum_forcing_jet(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
+  subroutine momentum_forcing_jet(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
 
-    IMPLICIT NONE
+    use dbg_schemes, only: sin_prec
 
-    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
-    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
-    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
+    implicit none
 
-    INTEGER :: i, j, k
-    REAL(mytype) :: y, yfringe
-    REAL(mytype) :: f
+    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
+    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
+
+    integer :: i, j, k
+    real(mytype) :: y, yfringe
+    real(mytype) :: f
 
     !! Set fringe height
     !! Fringe forcing will be applied for y > yfringe
     yfringe = 0.9_mytype * yly
 
-    DO k = 1, xsize(3)
-       DO j = 1, xsize(2)
-          IF (istret.EQ.0) THEN
-             y=REAL(j+xstart(2)-1-1,mytype)*dy
-          ELSE
+    do k = 1, xsize(3)
+       do j = 1, xsize(2)
+          if (istret.eq.0) then
+             y=real(j+xstart(2)-1-1,mytype)*dy
+          else
              y=yp(j+xstart(2)-1)
-          ENDIF
+          endif
 
-          IF (y.GT.yfringe) THEN
-             IF (y.LT.(yfringe + half * (yly - yfringe))) THEN
-                f = SIN(((y - yfringe) / (yly - yfringe + 1.0e-16_mytype)) * (half * PI))
-             ELSE
+          if (y.gt.yfringe) then
+             if (y.lt.(yfringe + half * (yly - yfringe))) then
+                f = sin_prec(((y - yfringe) / (yly - yfringe + 1.0e-16_mytype)) * (half * pi))
+             else
                 f = one
-             ENDIF
+             endif
 
-             DO i = 1, xsize(1)
+             do i = 1, xsize(1)
 
                 !! uy -> mean influx = outflow
                 duy1(i, j, k, 1) = duy1(i, j, k, 1) + f * rho1(i, j, k, 1) * (outflow - uy1(i, j, k))
@@ -767,11 +773,11 @@ contains
                 dux1(i, j, k, 1) = dux1(i, j, k, 1) + f * rho1(i, j, k, 1) * (zero - ux1(i, j, k))
                 duz1(i, j, k, 1) = duz1(i, j, k, 1) + f * rho1(i, j, k, 1) * (zero - uz1(i, j, k))
 
-             ENDDO
-          ENDIF
-       ENDDO
-    ENDDO
+             enddo
+          endif
+       enddo
+    enddo
 
-  ENDSUBROUTINE momentum_forcing_jet
+  endsubroutine momentum_forcing_jet
 
 end module jet

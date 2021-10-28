@@ -51,8 +51,9 @@ contains
   subroutine geomcomplex_cyl(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,remp)
 
     use decomp_2d, only : mytype
-    use param, only : zero, one, two
+    use param, only : one, two, ten
     use ibm_param
+    use dbg_schemes, only: sqrt_prec
 
     implicit none
 
@@ -70,13 +71,14 @@ contains
     do while ((one + zeromach / two) .gt. one)
        zeromach = zeromach/two
     end do
-    zeromach = 1.0e1*zeromach
+    zeromach = ten*zeromach
+
     ! Intitialise epsi
     epsi(:,:,:)=zero
 
     ! Update center of moving Cylinder
-!    cexx=cex+ubcx*t
-!    ceyy=cey+ubcy*t
+    !cexx=cex+ubcx*t
+    !ceyy=cey+ubcy*t
     ! Update center of moving Cylinder
     if (t.ne.0.) then
        cexx=cex+ubcx*(t-ifirst*dt)
@@ -94,7 +96,7 @@ contains
           ym=yp(j)
           do i=nxi,nxf
              xm=real(i-1,mytype)*dx
-             r=sqrt((xm-cexx)**two+(ym-ceyy)**two)
+             r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two)
              if (r-ra.gt.zeromach) then
                 cycle
              endif
@@ -177,8 +179,8 @@ contains
 
     udx=one/dx; udy=one/dy; udz=one/dz; uddx=half/dx; uddy=half/dy; uddz=half/dz
 
-    uxmax=-1609.
-    uxmin=1609.
+    uxmax=-1609._mytype
+    uxmin=1609._mytype
     do k=1,xsize(3)
        do j=1,xsize(2)
           if (ux(nx-1,j,k).gt.uxmax) uxmax=ux(nx-1,j,k)
@@ -189,11 +191,11 @@ contains
     call MPI_ALLREDUCE(uxmax,uxmax1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
     call MPI_ALLREDUCE(uxmin,uxmin1,1,real_type,MPI_MIN,MPI_COMM_WORLD,code)
 
-    if (u1.eq.zero) then
+    if (u1 == zero) then
        cx=(half*(uxmax1+uxmin1))*gdt(itr)*udx
-    elseif (u1.eq.one) then
+    elseif (u1 == one) then
        cx=uxmax1*gdt(itr)*udx
-    elseif (u1.eq.two) then
+    elseif (u1 == two) then
        cx=u2*gdt(itr)*udx    !works better
     else
        cx=(half*(u1+u2))*gdt(itr)*udx
@@ -208,11 +210,11 @@ contains
     enddo
 
     if (iscalar==1) then
-       if (u2.eq.zero) then
+       if (u2==zero) then
           cx=(half*(uxmax1+uxmin1))*gdt(itr)*udx
-       elseif (u2.eq.one) then
+       elseif (u2==one) then
           cx=uxmax1*gdt(itr)*udx
-       elseif (u2.eq.two) then
+       elseif (u2==two) then
           cx=u2*gdt(itr)*udx    !works better
        else
           stop
@@ -225,7 +227,8 @@ contains
        enddo
     endif
 
-    if (nrank==0) write(*,*) "Outflow velocity ux nx=n min max=",real(uxmin1,4),real(uxmax1,4)
+    if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) &
+       write(*,*) "Outflow velocity ux nx=n min max=",real(uxmin1,4),real(uxmax1,4)
 
     return
   end subroutine outflow
@@ -237,6 +240,7 @@ contains
     USE variables
     USE param
     USE MPI
+    use dbg_schemes, only: exp_prec
 
     implicit none
 
@@ -258,7 +262,7 @@ contains
        call system_clock(count=code)
        if (iin.eq.2) code=0
        call random_seed(size = ii)
-       call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /))
+       call random_seed(put = code+63946*(nrank+1)*(/ (i - 1, i = 1, ii) /))
 
        call random_number(ux1)
        call random_number(uy1)
@@ -279,7 +283,7 @@ contains
           do j=1,xsize(2)
              if (istret.eq.0) y=(j+xstart(2)-1-1)*dy-yly/2.
              if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/2.
-             um=exp(-zptwo*y*y)
+             um=exp_prec(-zptwo*y*y)
              do i=1,xsize(1)
                 ux1(i,j,k)=um*ux1(i,j,k)
                 uy1(i,j,k)=um*uy1(i,j,k)
@@ -301,7 +305,7 @@ contains
     enddo
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init end ok'
+    if (nrank .eq. 0) write(*,*) '# init end ok'
 #endif
 
     return
@@ -318,6 +322,7 @@ contains
     USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
     USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
     USE ibm_param
+    use dbg_schemes, only: sqrt_prec
     
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
 
@@ -410,7 +415,7 @@ contains
 
     !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
     di1 = zero
-    di1(:,:,: ) = - 0.5*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2) &
+    di1(:,:,: ) = - half*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2) &
                   - td1(:,:,:)*tb1(:,:,:) &
                   - tg1(:,:,:)*tc1(:,:,:) &
                   - th1(:,:,:)*tf1(:,:,:)

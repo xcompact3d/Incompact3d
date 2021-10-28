@@ -1,6 +1,9 @@
 module actuator_line_model_utils
 
     use decomp_2d, only: mytype
+    use param, only: zero, one, two
+    use dbg_schemes, only: sqrt_prec, cos_prec, exp_prec, sin_prec
+    
     implicit none
     ! Define parameters for ALM
 
@@ -21,33 +24,33 @@ contains
         if (x1/=x0) then
             xd=(x-x0)/(x1-x0)
         else
-            xd=0
+            xd=zero
         endif
 
         if (y1/=y0) then
             yd=(y-y0)/(y1-y0)
         else
-            yd=0
+            yd=zero
         endif
 
         if (z1/=z0) then
             zd=(z-z0)/(z1-z0)
         else
-            zd=0
+            zd=zero
         endif
 
         ! Interpolate along X
-        c00=u000*(1-xd)+u100*xd
-        c01=u001*(1-xd)+u101*xd
-        c10=u010*(1-xd)+u110*xd
-        c11=u011*(1-xd)+u111*xd
+        c00=u000*(one-xd)+u100*xd
+        c01=u001*(one-xd)+u101*xd
+        c10=u010*(one-xd)+u110*xd
+        c11=u011*(one-xd)+u111*xd
 
         ! Interpolate along Y
-        c0 = c00*(1-yd)+c10*yd
-        c1 = c01*(1-yd)+c11*yd
+        c0 = c00*(one-yd)+c10*yd
+        c1 = c01*(one-yd)+c11*yd
 
         ! Interpolate along Z
-        trilinear_interpolation=c0*(1-zd)+c1*zd
+        trilinear_interpolation=c0*(one-zd)+c1*zd
 
         return
 
@@ -61,7 +64,7 @@ contains
         cy = az*bx - ax*bz
         cz = ax*by - ay*bx
 
-    End SUBROUTINE cross
+   end SUBROUTINE cross
 
    subroutine QuatRot(vx,vy,vz,Theta,Rx,Ry,Rz,Ox,Oy,Oz,vRx,vRy,vRz)
 
@@ -82,7 +85,7 @@ contains
    real(mytype) :: QL(4,4), QbarR(4,4)
 
    ! Force normalize nR
-   RMag=sqrt(Rx**2.0+Ry**2.0+Rz**2.0)
+   RMag=sqrt_prec(Rx**2.0+Ry**2.0+Rz**2.0)
    nRx=Rx/RMag
    nRy=Ry/RMag
    nRz=Rz/RMag
@@ -91,10 +94,10 @@ contains
    vOx=vx-Ox
    vOy=vy-Oy
    vOz=vz-Oz
-   p=reshape([0.0d0,vOx,vOy,vOz],[4,1])
+   p=reshape([zero,vOx,vOy,vOz],[4,1])
 
    ! Rotation quaternion and conjugate
-    q=(/cos(Theta/2),nRx*sin(Theta/2),nRy*sin(Theta/2),nRz*sin(Theta/2)/)
+   q=(/cos_prec(Theta/2),nRx*sin_prec(Theta/2),nRy*sin_prec(Theta/2),nRz*sin_prec(Theta/2)/)
    qbar=(/q(1),-q(2),-q(3),-q(4)/)
 
    QL=transpose(reshape((/q(1), -q(2), -q(3), -q(4), &
@@ -127,26 +130,26 @@ contains
         real(mytype) ::  wsum
         integer :: i,imin
 
-        wsum=0.0
+        wsum=zero
         do i=1,Ncol
-        d(i)=sqrt((Xcol(i)-Xmesh)**2+(Ycol(i)-Ymesh)**2+(Zcol(i)-Zmesh)**2)
-        w(i)=1/d(i)**p
+          d(i)=sqrt_prec((Xcol(i)-Xmesh)**2+(Ycol(i)-Ymesh)**2+(Zcol(i)-Zmesh)**2)
+          w(i)=one/d(i)**p
         wsum=wsum+w(i)
         end do
 
-        if (minval(d)<0.001) then
+        if (minval(d)<0.001_mytype) then
             imin=minloc(d,1)
             Fxmesh=Fxcol(imin)
             Fymesh=Fycol(imin)
             Fzmesh=Fzcol(imin)
         else
-            Fxmesh=0.0
-            Fymesh=0.0
-            Fzmesh=0.0
+            Fxmesh=zero
+            Fymesh=zero
+            Fzmesh=zero
             do i=1,Ncol
-            Fxmesh=Fxmesh+w(i)*Fxcol(i)/wsum
-            Fymesh=Fymesh+w(i)*Fycol(i)/wsum
-            Fzmesh=Fzmesh+w(i)*Fzcol(i)/wsum
+              Fxmesh=Fxmesh+w(i)*Fxcol(i)/wsum
+              Fymesh=Fymesh+w(i)*Fycol(i)/wsum
+              Fzmesh=Fzmesh+w(i)*Fzcol(i)/wsum
             enddo
         endif
 
@@ -161,12 +164,12 @@ contains
         ! real(mytype), parameter :: pi=3.14159265359
 
             if(dim==2) then
-            IsoKernel = 1.0/(epsilon_par**2*pi)*exp(-(dr/epsilon_par)**2.0)
+              IsoKernel = one/(epsilon_par**2*pi)*exp_prec(-(dr/epsilon_par)**2.0)
             elseif(dim==3) then
-            IsoKernel = 1.0/(epsilon_par**3.0*pi**1.5)*exp(-(dr/epsilon_par)**2.0)
+              IsoKernel = one/(epsilon_par**3.0*pi**1.5)*exp_prec(-(dr/epsilon_par)**2.0)
             else
-            write(*,*) "1D source not implemented"
-            stop
+              write(*,*) "1D source not implemented"
+              stop
             endif
 
     end function IsoKernel
@@ -183,10 +186,10 @@ contains
         t=dx*tx+dy*ty+dz*tz ! Chordwise projection
         s=dx*sx+dy*sy+dz*sz ! Spanwise projection
 
-        if(abs(s)<=es) then
-        AnIsoKernel = exp(-((n/et)**2.0+(t/ec)**2.0))/(ec*et*pi)
+        if (abs(s)<=es) then
+          AnIsoKernel = exp_prec(-((n/et)**2.0+(t/ec)**2.0))/(ec*et*pi)
         else
-        AnIsoKernel = 0.0
+          AnIsoKernel = zero
         endif
 
     end function AnIsoKernel

@@ -2,6 +2,7 @@ module actuator_disc_model
 
     ! Use the actuator_line Modules
     use decomp_2d, only: mytype, nrank
+    USE decomp_2d, only : real_type
     use actuator_line_model_utils 
     use airfoils
 
@@ -152,7 +153,7 @@ contains
           Udisc_partial(idisc)=uave
         enddo
 
-        call MPI_ALLREDUCE(Udisc_partial,actuatordisc%Udisc,Nad,MPI_REAL8,MPI_SUM, &
+        call MPI_ALLREDUCE(Udisc_partial,actuatordisc%Udisc,Nad,real_type,MPI_SUM, &
             MPI_COMM_WORLD,ierr)
         call MPI_ALLREDUCE(counter,counter_total,Nad,MPI_INTEGER,MPI_SUM, &
             MPI_COMM_WORLD,ierr)
@@ -206,7 +207,7 @@ contains
         !  enddo
         !  enddo
         !  enddo
-        !  call MPI_ALLREDUCE(Sumforce_partial,sumforce,1,MPI_REAL8,MPI_SUM, &
+        !  call MPI_ALLREDUCE(Sumforce_partial,sumforce,1,real_type,MPI_SUM, &
         !       MPI_COMM_WORLD,ierr)
         !  do idisc=1,Nad
         !    DiscsTotalArea=DiscsTotalArea+pi/4.0_mytype*actuatordisc(idisc)%D**2.0_mytype

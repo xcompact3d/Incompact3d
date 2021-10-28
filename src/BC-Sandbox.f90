@@ -270,8 +270,8 @@ contains
 
     udx=one/dx; udy=one/dy; udz=one/dz; uddx=half/dx; uddy=half/dy; uddz=half/dz
 
-    uxmax=-1609.
-    uxmin=1609.
+    uxmax=-1609._mytype
+    uxmin=1609._mytype
     do k=1,xsize(3)
       do j=1,xsize(2)
         if (ux(nx-1,j,k).gt.uxmax) uxmax=ux(nx-1,j,k)

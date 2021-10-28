@@ -93,15 +93,15 @@ contains
       else if (output2D.eq.3) then
         memout = memout * xszV(1) * yszV(2)
       endif
-      print *,'==========================================================='
-      print *,'Visu module requires ',real(memout*1e-9,4),'GB'
-      print *,'==========================================================='
+      write(*,*)'==========================================================='
+      write(*,*)'Visu module requires ',real(memout*1e-9,4),'GB'
+      write(*,*)'==========================================================='
     end if
 
     ! Safety check
-    if (output2D.lt.0 .or. output2D.gt.3 &
-        .or. (output2d.eq.2.and.istret.ne.0)) then
-      if (nrank.eq.0) print *, "Visu module: incorrect value for output2D."
+    if (output2D < 0 .or. output2D > 3 &
+        .or. (output2d == 2.and.istret /= 0)) then
+      if (nrank.eq.0) write(*,*) "Visu module: incorrect value for output2D."
       call MPI_ABORT(MPI_COMM_WORLD, 0, noutput)
       stop
     endif
