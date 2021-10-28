@@ -475,9 +475,9 @@ subroutine second_derivative(alsa1,as1,bs1,&
      if (nrank==0) write(*,*)'Set of coefficients not ready yet'
      call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
   elseif(isecondder==4) then ! Sixth-order compact Lele style (no extra dissipation)
-     alsai= 2./11.
-     asi  = (12./11.)/d2
-     bsi  = (3./44. )/d2
+     alsai= two / eleven
+     asi  = (twelve / eleven)/d2
+     bsi  = (three / 44.0_mytype )/d2
      csi  = zero
      dsi = zero
 
