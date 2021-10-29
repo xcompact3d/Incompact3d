@@ -7,7 +7,9 @@ export FFLAGS OPT DEFS DEFS2 INC
 all:
 	$(MAKE) -C lib all
 	$(MAKE) -C verif all
+	$(MAKE) -C convergence all
 
 clean:
 	$(MAKE) -C lib clean
 	$(MAKE) -C verif clean
+	$(MAKE) -C convergence clean

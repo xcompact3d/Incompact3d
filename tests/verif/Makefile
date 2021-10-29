@@ -93,7 +93,7 @@ test_z_21_OTHER_LIBRARIES := $(X3D) -L../lib -lx3d
 $(eval $(call make_pfunit_test,test_z_21))
 
 clean:
-	$(RM) *.o *.mod *.a *.inc *.dat *.png
+	$(RM) *.o *.mod *.a *.inc *.dat *.png *_tmp.i3d
 	$(RM) final.F90
 	$(RM) test_x_00 initx00.F90 testx00.F90
 	$(RM) test_y_00 inity00.F90 testy00.F90
