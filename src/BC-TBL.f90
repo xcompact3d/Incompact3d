@@ -426,7 +426,7 @@ contains
     di1(:,:,:)=sqrt(  (tf1(:,:,:)-th1(:,:,:))**2 &
                     + (tg1(:,:,:)-tc1(:,:,:))**2 &
                     + (tb1(:,:,:)-td1(:,:,:))**2)
-    call write_field(di1, ".", "vort", trim(num))
+    call write_field(di1, ".", "vort", trim(num), flush=.true.) ! Reusing temporary array, force flush
 
   end subroutine visu_tbl
 

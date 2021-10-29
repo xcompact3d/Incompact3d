@@ -483,7 +483,7 @@ contains
                  - td1(:,:,:) * tb1(:,:,:) &
                  - tg1(:,:,:) * tc1(:,:,:) &
                  - th1(:,:,:) * tf1(:,:,:)
-    call write_field(di1, ".", "critq", trim(num))
+    call write_field(di1, ".", "critq", trim(num), flush = .true.) ! Reusing temporary array, force flush
 
   end subroutine visu_channel
   !############################################################################

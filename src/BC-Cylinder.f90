@@ -411,7 +411,7 @@ contains
     di1(:,:,:)=sqrt(  (tf1(:,:,:)-th1(:,:,:))**2 &
                     + (tg1(:,:,:)-tc1(:,:,:))**2 &
                     + (tb1(:,:,:)-td1(:,:,:))**2)
-    call write_field(di1, ".", "vort", trim(num))
+    call write_field(di1, ".", "vort", trim(num), flush = .true.) ! Reusing temporary array, force flush
 
     !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
     di1 = zero
@@ -419,7 +419,7 @@ contains
                   - td1(:,:,:)*tb1(:,:,:) &
                   - tg1(:,:,:)*tc1(:,:,:) &
                   - th1(:,:,:)*tf1(:,:,:)
-    call write_field(di1, ".", "critq", trim(num))
+    call write_field(di1, ".", "critq", trim(num), flush = .true.) ! Reusing temporary array, force flush
 
   end subroutine visu_cyl
 

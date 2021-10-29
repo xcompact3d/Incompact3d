@@ -56,7 +56,8 @@ module decomp_2d_io
        decomp_2d_init_io, & ! XXX: initialise an io process - awful naming
        decomp_2d_register_variable, &
        decomp_2d_open_io, decomp_2d_close_io, &
-       decomp_2d_start_io, decomp_2d_end_io
+       decomp_2d_start_io, decomp_2d_end_io, &
+       gen_iodir_name
 
   ! Generic interface to handle multiple data types
 
@@ -1028,7 +1029,7 @@ contains
     
   end subroutine coarse_extents
 
-  subroutine mpiio_write_real_coarse(ipencil,var,dirname,varname,icoarse,io_name,opt_decomp,reduce_prec)
+  subroutine mpiio_write_real_coarse(ipencil,var,dirname,varname,icoarse,io_name,opt_decomp,reduce_prec,opt_deferred_writes)
 
     ! USE param
     ! USE variables
@@ -1041,10 +1042,12 @@ contains
     character(len=*), intent(in) :: dirname, varname, io_name
     type(decomp_info), intent(in), optional :: opt_decomp
     logical, intent(in), optional :: reduce_prec
+    logical, intent(in), optional :: opt_deferred_writes
 
     real(mytype_single), allocatable, dimension(:,:,:) :: varsingle
     real(mytype), allocatable, dimension(:,:,:) :: varfull
     logical :: write_reduce_prec = .true.
+    logical :: deferred_writes = .true.
     
     integer (kind=MPI_OFFSET_KIND) :: filesize
     integer, dimension(3) :: sizes, subsizes, starts
@@ -1057,6 +1060,7 @@ contains
 #ifdef ADIOS2
     type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
+    integer :: write_mode
 #endif
 
     opened_new = .false.
@@ -1140,8 +1144,18 @@ contains
        print *, "You haven't opened ", io_name, ":", dirname
        stop
     end if
+
+    if (present(opt_deferred_writes)) then
+       deferred_writes = opt_deferred_writes
+    end if
+
+    if (deferred_writes) then
+       write_mode = adios2_mode_deferred
+    else
+       write_mode = adios2_mode_sync
+    end if
     
-    call adios2_put(engine_registry(idx), var_handle, var, adios2_mode_deferred, ierror)
+    call adios2_put(engine_registry(idx), var_handle, var, write_mode, ierror)
 #endif
 
     return
@@ -1525,13 +1539,11 @@ contains
     integer(MPI_OFFSET_KIND) :: filesize
 #else
     type(adios2_io) :: io
-    character(len=80) :: ext
 #endif
 
 #ifndef ADIOS2
     live_ptrh => fh_live
     names_ptr => fh_names
-
 #else
     live_ptrh => engine_live
     names_ptr => engine_names
@@ -1595,15 +1607,7 @@ contains
           end if
 #else
           call adios2_at_io(io, adios, io_name, ierror)
-          if (io%engine_type .eq. "BP4") then
-             ext = ".bp4"
-          else if (io%engine_type .eq. "HDF5") then
-             ext = ".hdf5"
-          else
-             print *, "ERROR: Unkown engine type! ", io%engine_type
-             stop
-          endif
-          call adios2_open(engine_registry(idx), io, trim(io_dir)//trim(ext), access_mode, ierror)
+          call adios2_open(engine_registry(idx), io, trim(gen_iodir_name(io_dir, io_name)), access_mode, ierror)
 #endif
        end if
     end if
@@ -1703,5 +1707,34 @@ contains
     get_io_idx = idx
     
   end function get_io_idx
+
+  function gen_iodir_name(io_dir, io_name)
+
+    character(len=*), intent(in) :: io_dir, io_name
+    character(len=(len(io_dir) + 5)) :: gen_iodir_name
+#ifdef ADIOS2
+    integer :: ierror
+    type(adios2_io) :: io
+    character(len=5) :: ext
+#endif
+
+#ifndef ADIOS2
+    write(gen_iodir_name, "(A)") io_dir
+#else
+    call adios2_at_io(io, adios, io_name, ierror)
+    if (io%engine_type .eq. "BP4") then
+       ext = ".bp4"
+    else if (io%engine_type .eq. "HDF5") then
+       ext = ".hdf5"
+    else
+       print *, "ERROR: Unkown engine type! ", io%engine_type
+       print *, "-  IO: ", io_name
+       print *, "- DIR:", io_dir
+       stop
+    endif
+    write(gen_iodir_name, "(A,A)") io_dir, trim(ext)
+#endif
+    
+  end function gen_iodir_name
 
 end module decomp_2d_io

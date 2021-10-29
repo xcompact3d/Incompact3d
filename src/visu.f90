@@ -69,7 +69,6 @@ contains
     implicit none
 
     ! Local variables
-    logical :: dir_exists
     integer :: noutput, nsnapout
     real(mytype) :: memout
 
@@ -141,9 +140,10 @@ contains
     use decomp_2d, only : transpose_z_to_y, transpose_y_to_x
     use decomp_2d, only : mytype, xsize, ysize, zsize
     use decomp_2d, only : nrank
-    use decomp_2d_io, only : decomp_2d_start_io, decomp_2d_open_io, decomp_2d_append_mode, decomp_2d_write_mode
+    use decomp_2d_io, only : decomp_2d_start_io, decomp_2d_open_io, decomp_2d_append_mode, decomp_2d_write_mode, &
+         gen_iodir_name
 
-    use param, only : nrhotime, ilmn, iscalar, ioutput
+    use param, only : nrhotime, ilmn, iscalar, ioutput, irestart
 
     use variables, only : sx, cifip6, cisip6, ciwip6, cifx6, cisx6, ciwx6
     use variables, only : sy, cifip6y, cisip6y, ciwip6y, cify6, cisy6, ciwy6
@@ -173,6 +173,8 @@ contains
     integer :: ierr
     character(len=30) :: scname
     integer :: mode
+    logical, save :: outloc_init = .false.
+    logical :: dir_exists
 
     ! Update log file
     if (nrank.eq.0) then
@@ -181,8 +183,21 @@ contains
     end if
 
 #ifdef ADIOS2
-    if (itime .eq. 1) then
-       mode = decomp_2d_write_mode
+    if (.not.outloc_init) then
+       if (irestart == 1) then
+          !! Restarting - is the output already available to write to?
+          inquire(file=gen_iodir_name("data", io_name), exist=dir_exists)
+          if (dir_exists) then
+             outloc_init = .true.
+          end if
+       end if
+       
+       if (.not.outloc_init) then !! Yes, yes, but check the restart check above.
+          mode = decomp_2d_write_mode
+       else
+          mode = decomp_2d_append_mode
+       end if
+       outloc_init = .true.
     else
        mode = decomp_2d_append_mode
     end if
@@ -436,15 +451,13 @@ contains
   ! Write the given field for visualization
   ! Adapted from https://github.com/fschuch/Xcompact3d/blob/master/src/visu.f90
   !
-  subroutine write_field(f1, pathname, filename, num, skip_ibm)
+  subroutine write_field(f1, pathname, filename, num, skip_ibm, flush)
 
     use mpi
     
     use var, only : ep1
     use var, only : zero, one
-#ifndef ADIOS2
     use var, only : uvisu
-#endif
     use param, only : iibm
     use decomp_2d, only : mytype, xsize, xszV, yszV, zszV
     use decomp_2d, only : nrank, fine_to_coarseV
@@ -454,12 +467,25 @@ contains
 
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: f1
     character(len=*), intent(in) :: pathname, filename, num 
-    logical, optional, intent(in) :: skip_ibm
+    logical, optional, intent(in) :: skip_ibm, flush
 
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: local_array
-
+    logical :: mpiio, force_flush
+    
     integer :: ierr
 
+#ifndef ADIOS2
+    mpiio = .true.
+#else
+    mpiio = .false.
+#endif
+
+    if (present(flush)) then
+       force_flush = flush
+    else
+       force_flush = .false.
+    end if
+ 
     if (use_xdmf) then
        if (nrank.eq.0) then
           write(ioxdmf,*)'        <Attribute Name="'//filename//'" Center="Node">'
@@ -495,26 +521,23 @@ contains
           write(ioxdmf,*)'        </Attribute>'
        endif
     endif
-    
-    if (iibm==2 .and. .not.present(skip_ibm)) then
+
+    if ((iibm == 2) .and. .not.present(skip_ibm)) then
        local_array(:,:,:) = (one - ep1(:,:,:)) * f1(:,:,:)
     else
        local_array(:,:,:) = f1(:,:,:)
     endif
-
     if (output2D.eq.0) then
-#ifndef ADIOS2
-       uvisu = zero
-       call fine_to_coarseV(1,local_array,uvisu)
-       call decomp_2d_write_one(1,uvisu,"data",gen_filename(pathname, filename, num, 'bin'),2,io_name)
-#else
-       if (iibm==2 .and. (.not.present(skip_ibm))) then
-          print *, "Not Implemented: currently ADIOS2 IO doesn't support IBM-blanking"
-          call MPI_ABORT(MPI_COMM_WORLD, -1, ierr)
-       endif
-       print *, "Writing ", filename
-       call decomp_2d_write_one(1,f1,"data",gen_filename(pathname, filename, num, 'bin'),0,io_name)
-#endif
+       if (mpiio .or. ((iibm == 2) .and. (.not.present(skip_ibm))) .or. force_flush) then
+          !! XXX: This (re)uses a temporary array for data - need to force synchronous writes.
+          uvisu = zero
+          
+          call fine_to_coarseV(1,local_array,uvisu)
+          call decomp_2d_write_one(1,uvisu,"data",gen_filename(pathname, filename, num, 'bin'),2,io_name,&
+               opt_deferred_writes=.false.)
+       else
+          call decomp_2d_write_one(1,f1,"data",gen_filename(pathname, filename, num, 'bin'),0,io_name)
+       end if
     else
        call decomp_2d_write_plane(1,local_array,output2D,-1,"data",gen_filename(pathname, filename, num, 'bin'),io_name)
     endif
