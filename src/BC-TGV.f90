@@ -897,7 +897,7 @@ contains
     real(mytype), intent(in) :: kin
     real(mytype), intent(out) :: k2out
 
-    if (kin.lt.zero .or. kin.gt.pi/min(dx,dy)) then
+    if (kin < zero .or. kin > pi/min(dx,dy)) then
       if (nrank==0) then
         write(*,*) "TGV2D: Warning, incorrect wavenumber provided."
       endif

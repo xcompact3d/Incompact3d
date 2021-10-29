@@ -773,7 +773,7 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      bicix6=one/(two*ten)
      cicix6=zero
      dicix6=zero
-  else if (ipinter.eq.2) then
+  else if (ipinter == 2) then
      ailcaix6=0.461658_mytype
 
      dicix6=0.00293016_mytype

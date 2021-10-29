@@ -193,7 +193,7 @@ subroutine parameter(input_i3d)
      enddo
 
      if (imultispecies) then
-        if (primary_species.lt.1) then
+        if (primary_species < 1) then
            if (nrank==0) then
               write(*,*)  "Error: you must set a primary species for multispecies flow"
               write(*,*)  "       solver will enforce Y_p = 1 - sum_s Y_s, s != p."
@@ -299,7 +299,7 @@ subroutine parameter(input_i3d)
 #endif
 #endif
 
-  if (iimplicit.ne.0) then
+  if (iimplicit /= 0) then
      if ((itimescheme==5).or.(itimescheme==6)) then
         if (nrank==0) write(*,*) 'Error: implicit Y diffusion not yet compatible with RK time schemes'
         stop
@@ -318,7 +318,7 @@ subroutine parameter(input_i3d)
      if (iscalar == 1) xcst_sc = xcst / sc
   endif
 
-  if (itype==itype_tbl.and.A_tr .gt. zero.and.nrank==0)  write(*,*)  "TBL tripping is active"
+  if (itype==itype_tbl.and.A_tr  >  zero.and.nrank==0)  write(*,*)  "TBL tripping is active"
 
   anglex = sin_prec(pi*angle/onehundredeighty)
   angley = cos_prec(pi*angle/onehundredeighty)
@@ -419,7 +419,7 @@ subroutine parameter(input_i3d)
        endif
      endif
      !
-     if (ilesmod.ne.0) then
+     if (ilesmod /= 0) then
        write(*,*) '                   : DNS'
      else
        if (jles==1) then
@@ -490,7 +490,7 @@ subroutine parameter(input_i3d)
      write(*,"(' wrotation              : ',F17.8)") wrotation
      write(*,*) '==========================================================='
      if (iibm==0) write(*,"(' Immersed boundary      : ',A17)") "off"
-     if (iibm.gt.1) then
+     if (iibm > 1) then
       write(*,"(' Immersed boundary      : ',A17)") "on"
       write(*,"(' iibm                   : ',I17)") iibm
      end if
@@ -573,7 +573,7 @@ subroutine parameter(input_i3d)
         write(*,"(' dens1 and dens2    : ',F6.2' ',F6.2)") dens1, dens2
         write(*,"(' Prandtl number Re  : ',F15.8)") prandtl
      endif
-     if (angle.ne.0.) write(*,"(' Solid rotation     : ',F6.2)") angle
+     if (angle /= 0.) write(*,"(' Solid rotation     : ',F6.2)") angle
      write(*,*) ' '
      !! Print case-specific information
      if (itype==itype_lockexch) then

@@ -95,7 +95,7 @@ contains
     do j=1,xsize(2)
        if (istret == 0) y=real(j+xstart(2)-1-1,mytype)*dy
        if (istret /= 0) y=yp(j)
-       if (iPressureGradient.eq.1.or.imassconserve.eq.1) then
+       if (iPressureGradient == 1.or.imassconserve == 1) then
            bxx1(j,k)=ustar/k_roughness*log((y+z_zero)/z_zero)
        else
            bxx1(j,k)=UG(1)
@@ -149,7 +149,7 @@ contains
       do j=1,xsize(2)
         if (istret==0) y=real(j + xstart(2)-1-1,mytype)*dy
         if (istret/=0) y=yp(j+xstart(2)-1)
-        !if (y.lt.50) then 
+        !if (y < 50) then 
         !  do k=1,xsize(3)
         !  do i=1,xsize(1)
         !    call random_number(phinoise)
@@ -616,7 +616,7 @@ contains
     do k=1,ysize(3)
       do i=1,ysize(1)
         xloc=(i+ystart(1)-1-1)*dx
-        if (iconcprec.eq.1.and.xloc >= pdl) then
+        if (iconcprec == 1.and.xloc >= pdl) then
           continue  
         else
           ut=zero
@@ -644,7 +644,7 @@ contains
     do k=1,ysize(3)
       do i=1,ysize(1)
         xloc=real(i+ystart(1)-1-1,mytype)*dx
-        if (iconcprec.eq.1.and.xloc >= pdl) then
+        if (iconcprec == 1.and.xloc >= pdl) then
           continue
         else
           do j=1,ny
@@ -777,7 +777,7 @@ contains
     real(mytype) :: y, lambda, xloc
     real(mytype) :: damp_lo, coeff, wvar, dheight
    
-    if (ibuoyancy.eq.1) then
+    if (ibuoyancy == 1) then
       damp_lo = 300._mytype
       coeff   = 0.0016_mytype !0.5*ustar/dBL
     else
@@ -811,7 +811,7 @@ contains
              lambda=zero
             endif
             xloc=real(i-1,mytype)*dx
-            if (iconcprec.eq.1.and.xloc.ge.pdl) lambda=0.
+            if (iconcprec == 1.and.xloc >= pdl) lambda=0.
             dux1(i,j,k,1)=dux1(i,j,k,1)-coeff*lambda*(ux1(i,j,k)-ustar/k_roughness*log_prec(dBL/z_zero))
             duy1(i,j,k,1)=duy1(i,j,k,1)-coeff*lambda*(uy1(i,j,k)-UG(2))
             duz1(i,j,k,1)=duz1(i,j,k,1)-coeff*lambda*(uz1(i,j,k)-UG(3))

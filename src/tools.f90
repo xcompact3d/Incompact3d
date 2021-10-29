@@ -1650,7 +1650,7 @@ subroutine tripping(tb,ta)
            tb(i,j,k)=tb(i,j,k)+ta(i,j,k)
 
            z_pos=-zlz*zpfive+(xstart(3)+(k-1)-1)*dz
-           ! if ((((x_pos-x0_tr)**2).le.9.0e-3).and.(y_pos.le.0.0001).and.((z_pos).le.0.03))then
+           ! if ((((x_pos-x0_tr)**2) <= 9.0e-3).and.(y_pos <= 0.0001).and.((z_pos) <= 0.03))then
            !       open(442,file='tripping.dat',form='formatted',position='APPEND')
            !  write(442,*) t,ta(i,j,k)
            !  close(442)

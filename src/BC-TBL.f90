@@ -215,8 +215,8 @@ contains
 
     do k=1,xsize(3)
        do j=1,xsize(2)
-          if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy
-          if (istret.ne.0) y=yp(j+xstart(2)-1)
+          if (istret == 0) y=real(j+xstart(2)-1-1,mytype)*dy
+          if (istret /= 0) y=yp(j+xstart(2)-1)
 
           eta_bl=y*real(4.91,mytype)/nine
 

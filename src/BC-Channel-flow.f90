@@ -180,7 +180,7 @@ contains
           enddo     
        elseif (iin <= 2) then ! Traditional init to turbulent flows using random numbers + lam profile
           call system_clock(count=code)
-          if (iin.eq.2) code=0
+          if (iin == 2) code=0
           call random_seed(size = ii)
           call random_seed(put = code+63946*(nrank+1)*(/ (i - 1, i = 1, ii) /))
 
@@ -317,7 +317,7 @@ contains
     avg_param = zero
     call avg3d (uz1, avg_param)
     if (nrank == 0) write(*,*)'## SUB Channel Init uz_avg ', avg_param
-    if (nrank .eq. 0) write(*,*) '# init end ok'
+    if (nrank  ==  0) write(*,*) '# init end ok'
 #endif
 
   end subroutine init_channel

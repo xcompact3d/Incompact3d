@@ -278,7 +278,7 @@ contains
 
       ! This is not optimum but works
       ! Define the domain
-      if (istret.eq.0) then
+      if (istret == 0) then
          ymin=real(xstart(2)-1,mytype)*dy-dy*half ! Add -dy/2.0 overlap
          ymax=real(xend(2)-1,mytype)*dy+dy*half   ! Add +dy/2.0 overlap
       else
@@ -310,8 +310,8 @@ contains
             do k=xstart(3),xend(3)
                zmesh=real(k-1,mytype)*dz
                do j=xstart(2),xend(2)
-                  if (istret.eq.0) ymesh=real(j-1,mytype)*dy
-                  if (istret.ne.0) ymesh=yp(j)
+                  if (istret == 0) ymesh=real(j-1,mytype)*dy
+                  if (istret /= 0) ymesh=yp(j)
                   do i=xstart(1),xend(1)
                      xmesh=real(i-1,mytype)*dx
                      dist = sqrt_prec((Sx(isource)-xmesh)**2.+(Sy(isource)-ymesh)**2.+(Sz(isource)-zmesh)**2.)
@@ -348,7 +348,7 @@ contains
                i_upper=min_i
             endif
 
-            if (istret.eq.0) then
+            if (istret == 0) then
                if (Sy(isource)>real(min_j-1,mytype)*dy.and.Sy(isource)<real(xend(2)-1,mytype)*dy) then
                   j_lower=min_j
                   j_upper=min_j+1
@@ -398,7 +398,7 @@ contains
             ! Prepare for interpolation
             x0=real(i_lower-1,mytype)*dx
             x1=real(i_upper-1,mytype)*dx
-            if (istret.eq.0) then
+            if (istret == 0) then
                y0=real(j_lower-1,mytype)*dy
                y1=real(j_upper-1,mytype)*dy
             else
@@ -496,8 +496,8 @@ contains
       do k=1,xsize(3)
          zmesh=real(k+xstart(3)-1-1,mytype)*dz
          do j=1,xsize(2)
-            if (istret.eq.0) ymesh=real(xstart(2)+j-1-1,mytype)*dy
-            if (istret.ne.0) ymesh=yp(xstart(2)+j-1)
+            if (istret == 0) ymesh=real(xstart(2)+j-1-1,mytype)*dy
+            if (istret /= 0) ymesh=yp(xstart(2)+j-1)
             do i=1,xsize(1)
                xmesh=(i-1)*dx
                do isource=1,NSource

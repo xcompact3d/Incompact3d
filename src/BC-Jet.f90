@@ -66,8 +66,8 @@ contains
     !modulation of the random noise + initial velocity profile
     do k=1,xsize(3)
        do j=1,xsize(2)
-          if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy
-          if (istret.ne.0) y=yp(j+xstart(2)-1)
+          if (istret == 0) y=real(j+xstart(2)-1-1,mytype)*dy
+          if (istret /= 0) y=yp(j+xstart(2)-1)
           um=exp_prec(-y**2)
           um = one
           do i=1,xsize(1)
@@ -274,7 +274,7 @@ contains
              y1=y2*x1/x2
              r1=sqrt_prec(x1**2+y1**2)
              r2=sqrt_prec(x2**2+y2**2)
-             if(r1.gt.r2) write(*,*)'##BUG CL in JET'
+             if(r1 > r2) write(*,*)'##BUG CL in JET'
              if(k==1)then!cas premier point
                 do j=1,xsize(2)
 
@@ -297,7 +297,7 @@ contains
                    bxz1(j,k)=r1*uz(i+1,j,k-1)/r2
                 enddo
              else!cas general
-                if (z.gt.0.)then
+                if (z > 0.)then
                    ya=y2-dz
                    do j=1,xsize(2)
                       uu1=(ux(i+1,j,k)-ux(i+1,j,k-1))*(y1-ya)/(y2-ya)+ux(i+1,j,k-1)
@@ -346,8 +346,8 @@ contains
        endif
     endif
 
-    if (nclxn.eq.2) then
-       if(xend(1).eq.nx)then
+    if (nclxn == 2) then
+       if(xend(1) == nx)then
           x=xc
           i = xsize(1)
           do k=1,xsize(3)
@@ -754,14 +754,14 @@ contains
 
     do k = 1, xsize(3)
        do j = 1, xsize(2)
-          if (istret.eq.0) then
+          if (istret == 0) then
              y=real(j+xstart(2)-1-1,mytype)*dy
           else
              y=yp(j+xstart(2)-1)
           endif
 
-          if (y.gt.yfringe) then
-             if (y.lt.(yfringe + half * (yly - yfringe))) then
+          if (y > yfringe) then
+             if (y < (yfringe + half * (yly - yfringe))) then
                 f = sin_prec(((y - yfringe) / (yly - yfringe + 1.0e-16_mytype)) * (half * pi))
              else
                 f = one

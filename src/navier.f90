@@ -1134,7 +1134,7 @@ contains
        if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
        divup3norm = SQRT(divup3norm / nxm / nym / nzm)
 
-       if (nrank.eq.0.and.mod(itime, ilist) == 0) then
+       if (nrank == 0.and.mod(itime, ilist) == 0) then
           write(*,*)  "solving variable-coefficient poisson equation:"
           write(*,*)  "+ rms div(u*) - div(u): ", divup3norm
        endif
@@ -1145,21 +1145,21 @@ contains
        if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
        errglob = SQRT(errglob / nxm / nym / nzm)
 
-       if (nrank.eq.0.and.mod(itime, ilist) == 0) then
+       if (nrank == 0.and.mod(itime, ilist) == 0) then
           write(*,*)  "+ RMS change in pressure: ", errglob
        endif
 
-       if (errglob.le.atol) then
+       if (errglob <= atol) then
           converged = .true.
-          if (nrank.eq.0.and.mod(itime, ilist) == 0) then
+          if (nrank == 0.and.mod(itime, ilist) == 0) then
              write(*,*)  "- Converged: atol"
           endif
        endif
 
        !! Compare RMS change to size of |div(u*) - div(u)|
-       if (errglob.lt.(rtol * divup3norm)) then
+       if (errglob < (rtol * divup3norm)) then
           converged = .true.
-          if (nrank.eq.0.and.mod(itime, ilist) == 0) then
+          if (nrank == 0.and.mod(itime, ilist) == 0) then
              write(*,*)  "- Converged: rtol"
           endif
        endif

@@ -1261,7 +1261,7 @@ contains
     cdt=zero
     gdt=zero
 
-    if (itimescheme.eq.1) then ! Euler
+    if (itimescheme == 1) then ! Euler
 
        iadvance_time=1
 
@@ -1372,7 +1372,7 @@ contains
        FTy = zero
        allocate(FTz(xsize(1),xsize(2),xsize(3)))
        FTz = zero
-    else if (iturbine.eq.2) then
+    else if (iturbine == 2) then
        allocate(Fdiscx(xsize(1),xsize(2),xsize(3)))
        Fdiscx = zero
        allocate(Fdiscy(xsize(1),xsize(2),xsize(3)))

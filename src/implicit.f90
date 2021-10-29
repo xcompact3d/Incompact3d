@@ -829,7 +829,7 @@ subroutine multmatrix7(td2,ta2,ux2,npaire,cly1,clyn,xcst)
    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: di2
    
    ! Compute A.ta2, store it in ta2
-   if (istret.ne.0) then
+   if (istret /= 0) then
       do j=1,ysize(2)
          ta2(:,j,:)=ta2(:,j,:)/pp2y(j)
       enddo

@@ -124,7 +124,7 @@ contains
     ! Safety check
     if (output2D < 0 .or. output2D > 3 &
         .or. (output2d == 2.and.istret /= 0)) then
-      if (nrank.eq.0) write(*,*) "Visu module: incorrect value for output2D."
+      if (nrank == 0) write(*,*) "Visu module: incorrect value for output2D."
       call MPI_ABORT(MPI_COMM_WORLD, 0, noutput)
       stop
     endif

@@ -119,7 +119,7 @@ contains
           do i=nxi,nxf
              xm=real(i-1,mytype)*dx
              r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two)
-             if (r-ra.gt.zeromach) then
+             if (r-ra > zeromach) then
                 cycle
              endif
              epsi(i,j,k)=remp
@@ -305,8 +305,8 @@ contains
        !modulation of the random noise
        do k=1,xsize(3)
           do j=1,xsize(2)
-             if (istret.eq.0) y=(j+xstart(2)-1-1)*dy-yly/2.
-             if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/2.
+             if (istret == 0) y=(j+xstart(2)-1-1)*dy-yly/2.
+             if (istret /= 0) y=yp(j+xstart(2)-1)-yly/2.
              um=exp_prec(-zptwo*y*y)
              do i=1,xsize(1)
                 ux1(i,j,k)=um*ux1(i,j,k)
@@ -329,7 +329,7 @@ contains
     enddo
 
 #ifdef DEBG
-    if (nrank.eq.0) write(*,*) '# init end ok'
+    if (nrank == 0) write(*,*) '# init end ok'
 #endif
 
     return

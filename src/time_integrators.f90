@@ -253,7 +253,7 @@ contains
     integer :: is, i, j, k
 #ifdef DEBG
     real(mytype) avg_param
-    if (nrank .eq. 0) write(*,*)'## Init int_time'
+    if (nrank  ==  0) write(*,*)'## Init int_time'
 #endif
 
     call int_time_momentum(ux1, uy1, uz1, dux1, duy1, duz1)
@@ -332,7 +332,7 @@ contains
     ENDIF
 
 #ifdef DEBG
-    if (nrank .eq. 0) write(*,*)'## End  int_time'
+    if (nrank  ==  0) write(*,*)'## End  int_time'
 #endif
 
   ENDSUBROUTINE int_time

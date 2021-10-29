@@ -47,7 +47,7 @@ contains
     logical :: dir_exists
 
 #ifdef DEBG
-    if (nrank .eq. 0) write(*,*)'# body_init start'
+    if (nrank  ==  0) write(*,*)'# body_init start'
 #endif
     !###################################################################
     ! Check if geometry folder exists
@@ -63,7 +63,7 @@ contains
     call geomcomplex(ep1,xstart(1),xend(1),ny,xstart(2),xend(2),xstart(3),xend(3),dx,yp,dz,one)
 
 #ifdef DEBG
-    if (nrank .eq. 0) write(*,*)'# body_init done'
+    if (nrank  ==  0) write(*,*)'# body_init done'
 #endif
 
     return
@@ -289,7 +289,7 @@ contains
              nobjxraf(j,k)=1
           endif
           do i=1,nxraf-1
-             if(xepsi(i,j,k).eq.zero.and.xepsi(i+1,j,k).eq.one)then
+             if(xepsi(i,j,k) == zero.and.xepsi(i+1,j,k) == one)then
                 inum=inum+1
                 nobjxraf(j,k)=nobjxraf(j,k)+1
              endif
@@ -587,7 +587,7 @@ contains
     enddo
 
     kdebraf=0
-    if(kbug.ne.0)then
+    if(kbug /= 0)then
        do j=1,zsize(2)
           do i=1,zsize(1)
              if(nobjz(i,j) /= nobjzraf(i,j))then

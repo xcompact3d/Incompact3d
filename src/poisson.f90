@@ -143,7 +143,7 @@ contains
     if (bcz==1) nz=nz-1
 
 #ifdef DEBG 
-    if (nrank.eq.0) write(*,*)'# decomp_2d_poisson_init start'
+    if (nrank == 0) write(*,*)'# decomp_2d_poisson_init start'
 #endif
 
     allocate(ax(nx),bx(nx))
@@ -152,14 +152,14 @@ contains
     call abxyz(ax,ay,az,bx,by,bz,nx,ny,nz,bcx,bcy,bcz)
 
 #ifdef DEBG 
-    if (nrank.eq.0) write(*,*)'# decomp_2d_poisson_init decomp_info_init'
+    if (nrank == 0) write(*,*)'# decomp_2d_poisson_init decomp_info_init'
 #endif
 
     call decomp_info_init(nx, ny, nz, ph)
     call decomp_info_init(nx, ny, nz/2+1, sp)
 
 #ifdef DEBG 
-    if (nrank.eq.0) write(*,*)'# decomp_2d_poisson_init decomp_info_init ok'
+    if (nrank == 0) write(*,*)'# decomp_2d_poisson_init decomp_info_init ok'
 #endif
 
     ! allocate work space
@@ -239,7 +239,7 @@ contains
     end if
 
 #ifdef DEBG 
-    if (nrank.eq.0) write(*,*)'# decomp_2d_poisson_init before waves'
+    if (nrank == 0) write(*,*)'# decomp_2d_poisson_init before waves'
 #endif
 
     call waves()
@@ -275,7 +275,7 @@ contains
     !                               iy(a3(5,5,5,4)),iy(a3(5,5,5,5))
 
 #ifdef DEBG 
-    if (nrank.eq.0) write(*,*)'# decomp_2d_poisson_init end'
+    if (nrank == 0) write(*,*)'# decomp_2d_poisson_init end'
 #endif
 
     return
@@ -726,7 +726,7 @@ contains
     nz = nz_global
 
 #ifdef DEBG
-    if (nrank .eq. 0) write(*,*)'# Poisoon_010 Init'
+    if (nrank  ==  0) write(*,*)'# Poisoon_010 Init'
 #endif
     ! rhs is in Z-pencil but requires global operations in Y
     call transpose_z_to_y(rhs,rw2,ph)
@@ -790,7 +790,7 @@ contains
              tmp2 = iy(cw1(i,j,k))
              cw1(i,j,k) = cx(tmp1 * bx(i) + tmp2 * ax(i), &
                              tmp2 * bx(i) - tmp1 * ax(i))
-             if (i.gt.(nx/2+1)) cw1(i,j,k)=-cw1(i,j,k)
+             if (i > (nx/2+1)) cw1(i,j,k)=-cw1(i,j,k)
 #ifdef DEBUG
              if (abs_prec(cw1(i,j,k)) > 1.0e-4) &
                   write(*,100) 'after x',i,j,k,cw1(i,j,k)

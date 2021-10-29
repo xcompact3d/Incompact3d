@@ -587,7 +587,7 @@ contains
        
       ! Velocity is calculated at a probe point (closest) at one D upstream the turbine
       Rupstream(:)=turbine%origin(:)-turbine%rotN(:)*2.*turbine%Rmax       
-      if (istret.eq.0) then 
+      if (istret == 0) then 
          ymin=real(xstart(2)-1,mytype)*dy-dy*half ! Add -dy/2.0 overlap
          ymax=real(xend(2)-1,mytype)*dy+dy*half   ! Add +dy/2.0 overlap
       else
@@ -604,8 +604,8 @@ contains
          do k=xstart(3),xend(3)
             zmesh=real(k-1,mytype)*dz
             do j=xstart(2),xend(2)
-               if (istret.eq.0) ymesh=real(j-1,mytype)*dy
-               if (istret.ne.0) ymesh=yp(j)
+               if (istret == 0) ymesh=real(j-1,mytype)*dy
+               if (istret /= 0) ymesh=yp(j)
                do i=xstart(1),xend(1)
                   xmesh=real(i-1,mytype)*dx
                   dist = sqrt((Rupstream(1)-xmesh)**2.+(Rupstream(2)-ymesh)**2.+(Rupstream(3)-zmesh)**2.) 

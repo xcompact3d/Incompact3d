@@ -71,10 +71,10 @@ program xcompact3d
         call set_fluid_properties(rho1,mu1)
         call boundary_conditions(rho1,ux1,uy1,uz1,phi1,ep1)
 
-        if (imove.eq.1) then ! update epsi for moving objects
-          if ((iibm.eq.2).or.(iibm.eq.3)) then
+        if (imove == 1) then ! update epsi for moving objects
+          if ((iibm == 2).or.(iibm == 3)) then
              call genepsi3d(ep1)
-          else if (iibm.eq.1) then
+          else if (iibm == 1) then
              call body(ux1,uy1,uz1,ep1)
           endif
         endif

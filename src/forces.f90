@@ -273,7 +273,7 @@ subroutine force(ux1,uy1,ep1,iounit)
   nvect3=zsize(1)*zsize(2)*zsize(3)
 
   do jj = 1, ny-1
-    if (istret.eq.0) then
+    if (istret == 0) then
       del_y(jj)=dy
     else
       del_y(jj)=yp(jj+1)-yp(jj) 

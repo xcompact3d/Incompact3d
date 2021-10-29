@@ -76,8 +76,8 @@ contains
             do k=1,xsize(3)
                zmesh=(xstart(3)+k-1-1)*dz
                do j=1,xsize(2)
-                  if (istret.eq.0) ymesh=(xstart(2)+j-1-1)*dy
-                  if (istret.ne.0) ymesh=yp(xstart(2)+j)
+                  if (istret == 0) ymesh=(xstart(2)+j-1-1)*dy
+                  if (istret /= 0) ymesh=yp(xstart(2)+j)
                   do i=1,xsize(1)
                      xmesh=(xstart(1)+i-1-1)*dx
                      deltax=abs(xmesh-actuatordisc(idisc)%COR(1))
@@ -138,8 +138,8 @@ contains
          do k=1,xsize(3)
             zmesh=(xstart(3)+k-1-1)*dz 
             do j=1,xsize(2)
-               if (istret.eq.0) ymesh=(xstart(2)+j-1-1)*dy
-               if (istret.ne.0) ymesh=yp(xstart(2)+j-1)
+               if (istret == 0) ymesh=(xstart(2)+j-1-1)*dy
+               if (istret /= 0) ymesh=yp(xstart(2)+j-1)
                do i=1,xsize(1)
                   xmesh=(i-1)*dx
                   deltax=abs(xmesh-actuatordisc(idisc)%COR(1))
