@@ -528,7 +528,7 @@ contains
        local_array(:,:,:) = f1(:,:,:)
     endif
     if (output2D.eq.0) then
-       if (mpiio .or. ((iibm == 2) .and. (.not.present(skip_ibm))) .or. force_flush) then
+       if (mpiio .or. (iibm == 2) .or. force_flush) then
           !! XXX: This (re)uses a temporary array for data - need to force synchronous writes.
           uvisu = zero
           
