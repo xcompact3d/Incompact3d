@@ -41,11 +41,14 @@ contains
 
   subroutine intt(var1,dvar1,npaire,isc,forcing1)
 
-    USE MPI
-    USE param
-    USE variables
-    USE decomp_2d
-    USE ydiff_implicit, only : inttimp
+    use MPI
+    use param
+    use variables
+    use decomp_2d
+    use ydiff_implicit, only : inttimp
+#ifdef DEBG 
+    use tools, only : avg3d
+#endif
 
     implicit none
 
@@ -60,8 +63,20 @@ contains
     !! LOCAL
     integer :: is, code, ierror
 
+#ifdef DEBG 
+    real(mytype) avg_param
+#endif
+
 #ifdef DEBG
-    if (nrank  ==  0) print *,'# intt start'
+    avg_param = zero
+    call avg3d (var1, avg_param)
+    if (nrank == 0) write(*,*)'## SUB intt VAR var1 (start) AVG ', avg_param
+    avg_param = zero
+    call avg3d (dvar1(:,:,:,1), avg_param)
+    if (nrank == 0) write(*,*)'## SUB intt VAR dvar1(1) (start) AVG ', avg_param
+    avg_param = zero
+    call avg3d (dvar1(:,:,:,2), avg_param)
+    if (nrank == 0) write(*,*)'## SUB intt VAR dvar1(2) (start) AVG ', avg_param
 #endif
 
     if (iimplicit >= 1) then
@@ -77,7 +92,7 @@ contains
        else if (present(npaire)) then
           call inttimp(var1, dvar1, npaire=npaire, isc=is)
        else
-          if (nrank == 0) print *, "Error in intt call."
+          if (nrank  == 0) write(*,*) "Error in intt call."
           call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
        endif
 
@@ -114,9 +129,9 @@ contains
     elseif(itimescheme == 4) then
        !>>> Adams-Bashforth fourth order (AB4)
 
-       if (nrank == 0) then
-          print *, "AB4 not implemented!"
-          STOP
+       if (nrank==0) then
+          write(*,*) "AB4 not implemented!"
+          stop
        endif
 
        !if (itime == 1.and.ilit == 0) then
@@ -171,38 +186,57 @@ contains
        !>>> Runge-Kutta (low storage) RK4
     elseif(itimescheme == 6) then
 
-       if (nrank == 0) then
-          print *, "RK4 not implemented!"
+       if (nrank==0) then
+          write(*,*) "RK4 not implemented!"
           STOP
        endif
 
     else
 
-       if (nrank == 0) then
-          print *, "Unrecognised itimescheme: ", itimescheme
+       if (nrank==0) then
+          write(*,*) "Unrecognised itimescheme: ", itimescheme
           STOP
        endif
 
     endif
 
 #ifdef DEBG
-    if (nrank  ==  0) print *,'# intt done'
+    avg_param = zero
+    call avg3d (var1, avg_param)
+    if (nrank == 0) write(*,*)'## SUB intt VAR var1 AVG ', avg_param
+    avg_param = zero
+    call avg3d (dvar1(:,:,:,1), avg_param)
+    if (nrank == 0) write(*,*)'## SUB intt VAR dvar1 AVG ', avg_param
+    if (nrank   ==  0) write(*,*)'# intt done'
 #endif
 
     return
 
   end subroutine intt
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!
+  !!  SUBROUTINE: int_time
+  !! DESCRIPTION: 
+  !!      INPUTS: 
+  !!     OUTPUTS:
+  !!       NOTES: 
+  !!      AUTHOR:  
+  !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   SUBROUTINE int_time(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
 
-    USE decomp_2d, ONLY : mytype, xsize
-    USE param, ONLY : zero, one
-    USE param, ONLY : ntime, nrhotime, ilmn, iscalar, ilmn_solve_temp
-    USE param, ONLY : iimplicit, sc_even
-    USE param, ONLY : primary_species, massfrac
+    use decomp_2d, only : mytype, xsize, nrank
+    use param, only : zero, one
+    use param, only : ntime, nrhotime, ilmn, iscalar, ilmn_solve_temp
+    use param, only : iimplicit, sc_even
+    use param, only : primary_species, massfrac
     use param, only : scalar_lbound, scalar_ubound
-    USE variables, ONLY : numscalar
-    USE var, ONLY : ta1, tb1
+    use variables, only : numscalar
+    use var, only : ta1, tb1
+#ifdef DEBG 
+    use tools, only : avg3d
+#endif
 
     IMPLICIT NONE
 
@@ -216,9 +250,24 @@ contains
     REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
 
     !! LOCAL
-    INTEGER :: is, i, j, k
+    integer :: is, i, j, k
+#ifdef DEBG
+    real(mytype) avg_param
+    if (nrank .eq. 0) write(*,*)'## Init int_time'
+#endif
 
-    CALL int_time_momentum(ux1, uy1, uz1, dux1, duy1, duz1)
+    call int_time_momentum(ux1, uy1, uz1, dux1, duy1, duz1)
+#ifdef DEBG
+     avg_param = zero
+     call avg3d (dux1, avg_param)
+     if (nrank == 0) write(*,*)'## int_time dux1 ', avg_param
+     avg_param = zero
+     call avg3d (duy1, avg_param)
+     if (nrank == 0) write(*,*)'## int_time duy1 ', avg_param
+     avg_param = zero
+     call avg3d (duz1, avg_param)
+     if (nrank == 0) write(*,*)'## int_time duz1 ', avg_param
+#endif
 
     IF (ilmn) THEN
        IF (ilmn_solve_temp) THEN
@@ -281,6 +330,10 @@ contains
           call calc_rho_eos(rho1(:,:,:,1), ta1, phi1, tb1, xsize(1), xsize(2), xsize(3))
        ENDIF
     ENDIF
+
+#ifdef DEBG
+    if (nrank .eq. 0) write(*,*)'## End  int_time'
+#endif
 
   ENDSUBROUTINE int_time
 
@@ -364,8 +417,8 @@ contains
           rho1(:,:,:,2) = drho1(:,:,:,1)
        endif
     else
-       if (nrank == 0) then
-          print *, "int_time_continuity not implemented for itimescheme", itimescheme
+       if (nrank  == 0) then
+          write(*,*) "int_time_continuity not implemented for itimescheme", itimescheme
           stop
        endif
     endif
@@ -436,8 +489,8 @@ contains
           call lmn_t_to_rho_trans(rho1(:,:,:,2), drho1(:,:,:,1), rho1(:,:,:,1), dphi1, phi1)
        endif
     else
-       if (nrank == 0) then
-          print *, "int_time_continuity not implemented for itimescheme", itimescheme
+       if (nrank==0) then
+          write(*,*) "int_time_continuity not implemented for itimescheme", itimescheme
           stop
        endif
     endif

@@ -113,15 +113,15 @@ contains
     enddo
 
     if (nrank==0) then
-       print *,'========================Forces============================='
-       print *,'                       (icvlf)      (icvrt) '
-       print *,'                (jcvup) B____________C '
-       print *,'                        \            \ '
-       print *,'                        \     __     \ '
-       print *,'                        \    \__\    \ '
-       print *,'                        \            \ '
-       print *,'                        \       CV   \ '
-       print *,'                (jcvlw) A____________D '
+       write(*,*) '========================Forces============================='
+       write(*,*) '                       (icvlf)      (icvrt) '
+       write(*,*) '                (jcvup) B____________C '
+       write(*,*) '                        \            \ '
+       write(*,*) '                        \     __     \ '
+       write(*,*) '                        \    \__\    \ '
+       write(*,*) '                        \            \ '
+       write(*,*) '                        \       CV   \ '
+       write(*,*) '                (jcvlw) A____________D '
        do iv=1,nvol
           write(*,"(' Control Volume     : #',I1)") iv
           write(*,"('     xld, icvlf     : (',F6.2,',',I6,')')") xld(iv), icvlf(iv)
@@ -129,7 +129,7 @@ contains
           write(*,"('     yld, jcvlw     : (',F6.2,',',I6,')')") yld(iv), jcvlw(iv)
           write(*,"('     yud, jcvup     : (',F6.2,',',I6,')')") yud(iv), jcvup(iv)
        enddo
-       print *,'==========================================================='
+       write(*,*) '==========================================================='
     endif
   end subroutine init_forces
 
@@ -160,9 +160,9 @@ contains
             fh, code)
        if (code /= 0) then
           if (nrank == 0) then
-             print *,'==========================================================='
-             print *,'Error: MPI_FILE_OPEN : '//trim(filename)
-             print *,'==========================================================='
+             write(*,*) '==========================================================='
+             write(*,*) 'Error: MPI_FILE_OPEN : '//trim(filename)
+             write(*,*) '==========================================================='
           endif
           call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
        endif
@@ -177,9 +177,9 @@ contains
        call MPI_FILE_CLOSE(fh,code)
        if (code /= 0) then
           if (nrank == 0) then
-             print *,'==========================================================='
-             print *,'Error: MPI_FILE_CLOSE : '//trim(filename)
-             print *,'==========================================================='
+             write(*,*) '==========================================================='
+             write(*,*) 'Error: MPI_FILE_CLOSE : '//trim(filename)
+             write(*,*) '==========================================================='
           endif
           call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
        endif
@@ -189,9 +189,9 @@ contains
             fh, code)
        if (code /= 0) then
           if (nrank == 0) then
-             print *,'==========================================================='
-             print *,'Error: MPI_FILE_OPEN : '//trim(filestart)
-             print *,'==========================================================='
+             write(*,*) '==========================================================='
+             write(*,*) 'Error: MPI_FILE_OPEN : '//trim(filestart)
+             write(*,*) '==========================================================='
           endif
           call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
        endif
@@ -203,9 +203,9 @@ contains
        call MPI_FILE_CLOSE(fh,code)
        if (code  /=  0) then
           if (nrank == 0) then
-             print *,'==========================================================='
-             print *,'Error: MPI_FILE_CLOSE : '//trim(filestart)
-             print *,'==========================================================='
+             write(*,*) '==========================================================='
+             write(*,*) 'Error: MPI_FILE_CLOSE : '//trim(filestart)
+             write(*,*) '==========================================================='
           endif
           call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
        endif
@@ -231,9 +231,6 @@ subroutine force(ux1,uy1,ep1,iounit)
   USE decomp_2d
   USE MPI
   USE ibm_param
-
-  use var, only : ta1, tb1, tc1, td1, di1
-  use var, only : ux2, uy2, ta2, tb2, tc2, td2, di2
 
   use var, only : ta1, tb1, tc1, td1, di1
   use var, only : ux2, uy2, ta2, tb2, tc2, td2, di2
@@ -275,13 +272,13 @@ subroutine force(ux1,uy1,ep1,iounit)
   nvect2=ysize(1)*ysize(2)*ysize(3)
   nvect3=zsize(1)*zsize(2)*zsize(3)
 
-    do jj = 1, ny-1
-      if (istret == 0) then
-        del_y(jj)=dy
-      else
-        del_y(jj)=yp(jj+1)-yp(jj) 
-      endif
-    enddo
+  do jj = 1, ny-1
+    if (istret.eq.0) then
+      del_y(jj)=dy
+    else
+      del_y(jj)=yp(jj+1)-yp(jj) 
+    endif
+  enddo
 
   if (itime == 1) then
      do k = 1, xsize(3)
@@ -399,19 +396,19 @@ subroutine force(ux1,uy1,ep1,iounit)
               !momentum flux
               uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
               uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
-              fcvx= fcvx -uxmid*uymid*dx
-              fcvy= fcvy -uymid*uymid*dx
+              fcvx  = fcvx -uxmid*uymid*dx
+              fcvy  = fcvy -uymid*uymid*dx
 
               !pressure
               prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))
-              fpry = fpry +prmid*dx
+              fpry  = fpry +prmid*dx
 
               !viscous term
               dudymid = half*(tc1(i,j,k)+tc1(i+1,j,k))
               dvdxmid = half*(tb1(i,j,k)+tb1(i+1,j,k))
               dvdymid = half*(td1(i,j,k)+td1(i+1,j,k))
-              fdix = fdix -(xnu*(dudymid+dvdxmid)*dx)
-              fdiy = fdiy -two*xnu*dvdymid*dx
+              fdix    = fdix -(xnu*(dudymid+dvdxmid)*dx)
+              fdiy    = fdiy -two*xnu*dvdymid*dx
 
            enddo
 

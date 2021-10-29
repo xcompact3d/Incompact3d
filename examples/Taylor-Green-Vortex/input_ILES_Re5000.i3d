@@ -40,9 +40,9 @@ init_noise  = 0.0     ! Turbulence intensity (1=100%) !! Initial condition
 inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
 
 ! Time stepping
-dt = 0.0025            ! Time step
+dt = 0.0025           ! Time step
 ifirst = 1            ! First iteration
-ilast = 8000         ! Last iteration
+ilast = 8000          ! Last iteration
 
 ! Enable modelling tools
 ilesmod=1             ! if 0 then DNS if 1 then LES
@@ -80,6 +80,7 @@ cnu = 0.22               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 irestart = 0          ! Read initial flow field ?
 icheckpoint = 1000    ! Frequency for writing backup file
 ioutput = 1000        ! Frequency for visualization
+ilist = 5             ! Frequency for the output
 nvisu = 1             ! Size for visualisation collection
 
 /End

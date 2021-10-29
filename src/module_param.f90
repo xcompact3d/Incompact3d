@@ -53,7 +53,7 @@ module variables
   !Possible n points: 3 5 7 9 11 13 17 19 21 25 31 33 37 41 49 51 55 61 65 73 81 91 97 101 109 121 129 145 151 161 163 181 193 201 217 241 251 257 271 289 301 321 325 361 385 401 433 451 481 487 501 513 541 577 601 641 649 721 751 769 801 811 865 901 961 973 1001 1025 1081 1153 1201 1251 1281 1297 1351 1441 1459 1501 1537 1601 1621 1729 1801 1921 1945 2001 2049 2161 2251 2305 2401 2431 2501 2561 2593 2701 2881 2917 3001 3073 3201 3241 3457 3601 3751 3841 3889 4001 4051 4097 4321 4375 4501 4609 4801 4861 5001 5121 5185 5401 5761 5833 6001 6145 6251 6401 6481 6751 6913 7201 7291 7501 7681 7777 8001 8101 8193 8641 8749 9001 9217 9601 9721 enough
 
   integer :: nx,ny,nz,numscalar,p_row,p_col,nxm,nym,nzm,spinup_time
-  integer :: nstat=1,nvisu=1,nprobe=1,nlength=1
+  integer :: nstat=1,nvisu=1,nprobe=1,nlength=1,ilist=1
 
   real(mytype),allocatable,dimension(:) :: sc,uset,cp,ri,group
   real(mytype) :: nu0nu, cnu
@@ -336,6 +336,7 @@ module param
   logical, save :: sync_scal_needed = .true.
 
   !! Channel flow
+  integer :: idir_stream
   logical :: cpg
   real(mytype) :: re_cent, fcpg
 
@@ -435,6 +436,8 @@ module param
 
   real(mytype),parameter :: zpone=0.1_mytype
   real(mytype),parameter :: zptwo=0.2_mytype
+  real(mytype),parameter :: zptwoone=0.21_mytype
+  real(mytype),parameter :: zptwofive=0.25_mytype
   real(mytype),parameter :: zpthree=0.3_mytype
   real(mytype),parameter :: zpfour=0.4_mytype
   real(mytype),parameter :: zpfive=0.5_mytype
@@ -444,11 +447,14 @@ module param
   real(mytype),parameter :: zpnine=0.9_mytype
 
   real(mytype),parameter :: half=0.5_mytype
+  real(mytype),parameter :: twothird=2._mytype/3._mytype
   real(mytype),parameter :: zero=0._mytype
   real(mytype),parameter :: one=1._mytype
   real(mytype),parameter :: onepfive=1.5_mytype
   real(mytype),parameter :: two=2._mytype
+  real(mytype),parameter :: twopfive=2.5_mytype
   real(mytype),parameter :: three=3._mytype
+  real(mytype),parameter :: threepfive=3.5_mytype
   real(mytype),parameter :: four=4._mytype
   real(mytype),parameter :: five=5._mytype
   real(mytype),parameter :: six=6._mytype
@@ -464,20 +470,31 @@ module param
   real(mytype),parameter :: fifteen=15._mytype
   real(mytype),parameter :: sixteen=16._mytype
   real(mytype),parameter :: seventeen=17._mytype
+  real(mytype),parameter :: eighteen=18._mytype
 
   real(mytype),parameter :: twenty=20._mytype
+  real(mytype),parameter :: twentyone=21._mytype
+  real(mytype),parameter :: twentythree=23._mytype
   real(mytype),parameter :: twentyfour=24._mytype
   real(mytype),parameter :: twentyfive=25._mytype
   real(mytype),parameter :: twentyseven=27._mytype
   real(mytype),parameter :: twentyeight=28._mytype
   !
+  real(mytype),parameter :: thirty=30._mytype
   real(mytype),parameter :: thirtytwo=32._mytype
   real(mytype),parameter :: thirtyfour=34._mytype
   real(mytype),parameter :: thirtysix=36._mytype
+  real(mytype),parameter :: thirtyseven=37._mytype
   !
+  real(mytype),parameter :: forty=40._mytype
   real(mytype),parameter :: fortyfour=44._mytype
   real(mytype),parameter :: fortyfive=45._mytype
   real(mytype),parameter :: fortyeight=48._mytype
+  !
+  real(mytype),parameter :: fifty=50._mytype
+  real(mytype),parameter :: fiftyfour=54._mytype
+  real(mytype),parameter :: fiftyfive=55._mytype
+  real(mytype),parameter :: fiftynine=59._mytype
   !
   real(mytype),parameter :: sixty=60._mytype
   real(mytype),parameter :: sixtytwo=62._mytype
@@ -486,16 +503,21 @@ module param
   real(mytype),parameter :: seventy=70._mytype
   real(mytype),parameter :: seventyfive=75._mytype
   !
+  real(mytype),parameter :: onehundred=100._mytype
   real(mytype),parameter :: onehundredtwentysix=126._mytype
   real(mytype),parameter :: onehundredtwentyeight=128._mytype
+  real(mytype),parameter :: onehundredeighty=180._mytype
   !
   real(mytype),parameter :: twohundredsix=206._mytype
   real(mytype),parameter :: twohundredeight=208._mytype
   real(mytype),parameter :: twohundredfiftysix=256._mytype
   real(mytype),parameter :: twohundredseventytwo=272._mytype
   !
+  real(mytype),parameter :: onethousand=1000._mytype
   real(mytype),parameter :: twothousand=2000._mytype
-  real(mytype),parameter :: thirtysixthousand=3600._mytype
+  real(mytype),parameter :: threethousandsixhundred=3600._mytype
+  !
+  complex(mytype),parameter :: cx_one_one=cmplx(one, one, kind=mytype)
 
 
 #ifdef DOUBLE_PREC

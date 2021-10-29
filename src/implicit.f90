@@ -548,7 +548,7 @@ contains
     real(mytype),dimension(ny), intent(in) :: l1m,l2m,l3m
     real(mytype),dimension(ny), intent(in) :: u1m,u2m,u3m
 
-    print *,'NOT READY YET! SIMULATION IS STOPPED!'
+    write(*,*) 'NOT READY YET! SIMULATION IS STOPPED!'
     call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
 
   end subroutine nonainv_0
@@ -770,9 +770,9 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
      else
         ! We should not be here
         if (nrank == 0) then
-           print *, "Error for time-implicit Y diffusion."
-           if (isc == 0) print *, "   Wrong combination for ncly1, nclyn and npaire", ncly1, nclyn, npaire
-           if (isc /= 0) print *, "   Wrong combination for nclyS1, nclySn and npaire", nclyS1, nclySn, npaire
+           write(*,*)  "Error for time-implicit Y diffusion."
+           if (isc == 0) write(*,*)  "   Wrong combination for ncly1, nclyn and npaire", ncly1, nclyn, npaire
+           if (isc /= 0) write(*,*)  "   Wrong combination for nclyS1, nclySn and npaire", nclyS1, nclySn, npaire
         endif
         call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
      endif
@@ -813,22 +813,23 @@ end subroutine inttimp
 subroutine multmatrix7(td2,ta2,ux2,npaire,cly1,clyn,xcst)
 ! 
 !********************************************************************
-USE param, only : iimplicit, istret, zero, ncly1, nclyn
-USE variables
-USE derivY
-USE decomp_2d
-  
-implicit none
-
-integer, intent(in) :: npaire, cly1, clyn
-real(mytype), intent(in) :: xcst
-integer :: i,j,k,code
-real(mytype),dimension(ysize(1),ysize(2),ysize(3)), intent(inout) :: ux2
-real(mytype),dimension(ysize(1),ysize(2),ysize(3)), intent(inout) :: td2,ta2
-real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: di2
-
-! Compute A.ta2, store it in ta2
-   if (istret /= 0) then
+   USE param, only : iimplicit, istret, zero, ncly1, nclyn, two
+   USE variables
+   USE derivY
+   USE decomp_2d
+   USE ibm_param, only : ubcx,ubcy,ubcz
+     
+   implicit none
+   
+   integer, intent(in) :: npaire, cly1, clyn
+   real(mytype), intent(in) :: xcst
+   integer :: i,j,k,code
+   real(mytype),dimension(ysize(1),ysize(2),ysize(3)), intent(inout) :: ux2
+   real(mytype),dimension(ysize(1),ysize(2),ysize(3)), intent(inout) :: td2,ta2
+   real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: di2
+   
+   ! Compute A.ta2, store it in ta2
+   if (istret.ne.0) then
       do j=1,ysize(2)
          ta2(:,j,:)=ta2(:,j,:)/pp2y(j)
       enddo
@@ -844,7 +845,7 @@ real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: di2
       if (npaire == 0) then
          td2(:,1,:) = ta2(:,1,:)
       else
-         td2(:,1,:) = 2.*alsajy*ta2(:,2,:) + ta2(:,1,:)
+         td2(:,1,:) = two*alsajy*ta2(:,2,:) + ta2(:,1,:)
       endif
       do j=2,3
          td2(:,j,:) = alsajy*ta2(:,j-1,:) + ta2(:,j,:) + alsajy*ta2(:,j+1,:)
@@ -872,7 +873,7 @@ real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: di2
       if (npaire == 0) then
          td2(:,ysize(2),:) = ta2(:,ysize(2),:)
       else
-         td2(:,ysize(2),:) = 2.*alsajy*ta2(:,ysize(2)-1,:) + ta2(:,ysize(2),:)
+         td2(:,ysize(2),:) = two*alsajy*ta2(:,ysize(2)-1,:) + ta2(:,ysize(2),:)
       endif
    else
       td2(:,ysize(2)-2,:) = alsaty*ta2(:,ysize(2)-3,:) + ta2(:,ysize(2)-2,:) + alsaty*ta2(:,ysize(2)-1,:)
@@ -924,7 +925,7 @@ real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: di2
       if (npaire == 0) then
          td2(:,1,:) = ux2(:,1,:) + td2(:,1,:)
       else
-         td2(:,1,:) = 2.*alsajy*ux2(:,2,:) + ux2(:,1,:) &
+         td2(:,1,:) = two*alsajy*ux2(:,2,:) + ux2(:,1,:) &
                     + td2(:,1,:)
       endif
       do j=2,3
@@ -960,7 +961,7 @@ real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: di2
       if (npaire == 0) then
          td2(:,ysize(2),:) = ux2(:,ysize(2),:) + td2(:,ysize(2),:)
       else
-         td2(:,ysize(2),:) = 2.*alsajy*ux2(:,ysize(2)-1,:) + ux2(:,ysize(2),:) &
+         td2(:,ysize(2),:) = two*alsajy*ux2(:,ysize(2)-1,:) + ux2(:,ysize(2),:) &
                            + td2(:,ysize(2),:)
       endif
    else
@@ -1014,7 +1015,7 @@ subroutine multmatrix9(td2,ta2,ux2,npaire)
 
   elseif (ncly1 == 2) then
 
-     td2(:,1,:) = 0.
+     td2(:,1,:) = zero
      td2(:,2,:) = alsa2y*ta2(:,1,:) + ta2(:,2,:) + alsa2y*ta2(:,3,:)
      td2(:,3,:) = alsa3y*ta2(:,2,:) + ta2(:,3,:) + alsa3y*ta2(:,4,:)
      td2(:,4,:) = alsa4y*ta2(:,3,:) + ta2(:,4,:) + alsa4y*ta2(:,5,:)
@@ -1065,7 +1066,7 @@ subroutine multmatrix9(td2,ta2,ux2,npaire)
 
   elseif (ncly1 == 2) then
 
-     td2(:,1,:) = 0.
+     td2(:,1,:) = zero
      td2(:,2,:) = alsa2y*ux2(:,1,:) + ux2(:,2,:) + alsa2y*ux2(:,3,:) &
                 + td2(:,2,:)
      td2(:,3,:) = alsa3y*ux2(:,2,:) + ux2(:,3,:) + alsa3y*ux2(:,4,:) &
@@ -1082,7 +1083,7 @@ subroutine multmatrix9(td2,ta2,ux2,npaire)
                          + td2(:,ysize(2)-2,:)
      td2(:,ysize(2)-1,:) = alsamy*ux2(:,ysize(2)-2,:) + ux2(:,ysize(2)-1,:) + alsamy*ux2(:,ysize(2),:) &
                          + td2(:,ysize(2)-1,:)
-     td2(:,ysize(2),:) = 0.
+     td2(:,ysize(2),:) = zero
 
   endif
 
@@ -1230,12 +1231,12 @@ if (isecondder /= 5) then
      ! BC on ccmt
      if (istret == 0) then
         do is = 1, numscalar
-           ccmt(1 ,is) = beta_sc(is,1)*(9.d0/6.d0/dy)
+           ccmt(1 ,is) = beta_sc(is,1)*(nine/six/dy)
            ccmt(ny,is) = zero
         enddo
      else
         do is = 1, numscalar
-           ccmt(1 ,is) = beta_sc(is,1)*ppy(1)*(9.d0/6.d0/dy)
+           ccmt(1 ,is) = beta_sc(is,1)*ppy(1)*(nine/six/dy)
            ccmt(ny,is) = zero
         enddo
      endif
@@ -1258,12 +1259,12 @@ if (isecondder /= 5) then
      ! BC on rrmt
      if (istret == 0) then
         do is = 1, numscalar
-           rrmt(1 ,is) = beta_sc(is,1)*(-2.d0/6.d0/dy)
+           rrmt(1 ,is) = beta_sc(is,1)*(-two/six/dy)
            rrmt(ny,is) = zero
         enddo
      else
         do is = 1, numscalar
-           rrmt(1 ,is) = beta_sc(is,1)*ppy(1)*(-2.d0/6.d0/dy)
+           rrmt(1 ,is) = beta_sc(is,1)*ppy(1)*(-two/six/dy)
            rrmt(ny,is) = zero
         enddo
      endif
@@ -1304,12 +1305,12 @@ if (isecondder /= 5) then
      if (istret == 0) then
         do is = 1, numscalar
            ddmt(1 ,is) = zero
-           ddmt(ny,is) = beta_sc(is,2)*(-18.d0/6.d0/dy)
+           ddmt(ny,is) = beta_sc(is,2)*(-eighteen/six/dy)
         enddo
      else
         do is = 1, numscalar
            ddmt(1 ,is) = zero
-           ddmt(ny,is) = beta_sc(is,2)*ppy(ny)*(-18.d0/6.d0/dy)
+           ddmt(ny,is) = beta_sc(is,2)*ppy(ny)*(-eighteen/six/dy)
         enddo
      endif
      !
@@ -1320,12 +1321,12 @@ if (isecondder /= 5) then
      if (istret == 0) then
         do is = 1, numscalar
            eemt(1 ,is) = zero
-           eemt(ny,is) = beta_sc(is,2)*(9.d0/6.d0/dy)
+           eemt(ny,is) = beta_sc(is,2)*(nine/six/dy)
         enddo
      else
         do is = 1, numscalar
            eemt(1 ,is) = zero
-           eemt(ny,is) = beta_sc(is,2)*ppy(ny)*(9.d0/6.d0/dy)
+           eemt(ny,is) = beta_sc(is,2)*ppy(ny)*(nine/six/dy)
         enddo
      endif
      !
@@ -1336,12 +1337,12 @@ if (isecondder /= 5) then
      if (istret == 0) then
         do is = 1, numscalar
            qqmt(1 ,is) = zero
-           qqmt(ny,is) = beta_sc(is,2)*(-2.d0/6.d0/dy)
+           qqmt(ny,is) = beta_sc(is,2)*(-two/six/dy)
         enddo
      else
         do is = 1, numscalar
            qqmt(1 ,is) = zero
-           qqmt(ny,is) = beta_sc(is,2)*ppy(ny)*(-2.d0/6.d0/dy)
+           qqmt(ny,is) = beta_sc(is,2)*ppy(ny)*(-two/six/dy)
         enddo
      endif
 

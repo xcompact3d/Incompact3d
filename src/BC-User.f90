@@ -87,7 +87,7 @@ contains
     endif
 
 #ifdef DEBG
-    if (nrank  ==  0) print *,'# init end ok'
+    if (nrank == 0) write(*,*) '# init end ok'
 #endif
 
     return

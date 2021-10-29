@@ -83,7 +83,7 @@ contains
     if (nprobes <= 0) return
 
 #ifdef DEBG
-    if (nrank  ==  0) print *,'# init_probes start'
+    if (nrank == 0) print *,'# init_probes start'
 #endif
 
     ! In case of restart, check existence of previous probes results
@@ -237,7 +237,7 @@ contains
     endif
 
 #ifdef DEBG
-    if (nrank  ==  0) print *,'# init_probes ok'
+    if (nrank == 0) print *,'# init_probes ok'
 #endif
 
   end subroutine init_probes

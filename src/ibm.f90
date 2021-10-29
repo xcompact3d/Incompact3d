@@ -11,33 +11,31 @@ contains
     implicit none
     integer :: i,j,k,nlock
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,px,py,pz
-
     if (nz == 1) then
-       print *, "2D currently unsupported - see ibm.f90"
+       write(*,*) "2D currently unsupported - see ibm.f90"
        stop
     endif
-
     if (nlock == 1) then
-          do k = 1, xsize(3)
-             do j = 1, xsize(2)
-                do i = 1, xsize(1)
-                   ux(i,j,k)=-px(i,j,k)+ux(i,j,k)
-                   uy(i,j,k)=-py(i,j,k)+uy(i,j,k)
-                   uz(i,j,k)=-pz(i,j,k)+uz(i,j,k)
-                enddo
+       do k = 1, xsize(3)
+          do j = 1, xsize(2)
+             do i = 1, xsize(1)
+                ux(i,j,k)=-px(i,j,k)+ux(i,j,k)
+                uy(i,j,k)=-py(i,j,k)+uy(i,j,k)
+                uz(i,j,k)=-pz(i,j,k)+uz(i,j,k)
              enddo
           enddo
+       enddo
     endif
     if (nlock == 2) then
-          do k = 1, xsize(3)
-             do j = 1, xsize(2)
-                do i = 1, xsize(1)
-                   ux(i,j,k)=px(i,j,k)+ux(i,j,k)
-                   uy(i,j,k)=py(i,j,k)+uy(i,j,k)
-                   uz(i,j,k)=pz(i,j,k)+uz(i,j,k)
-                enddo
+       do k = 1, xsize(3)
+          do j = 1, xsize(2)
+             do i = 1, xsize(1)
+                ux(i,j,k)=px(i,j,k)+ux(i,j,k)
+                uy(i,j,k)=py(i,j,k)+uy(i,j,k)
+                uz(i,j,k)=pz(i,j,k)+uz(i,j,k)
              enddo
           enddo
+       enddo
     endif
 
     return
@@ -45,16 +43,16 @@ contains
   !############################################################################
   !############################################################################
   subroutine body(ux1,uy1,uz1,ep1)
-    USE param, only : zero, one, dx, dz
-    USE decomp_2d, only : xstart, xend, xsize, mytype
-    !USE decomp_2d_io
-    USE variables, only : ny
+    use param, only : zero, one, dx, dz
+    use decomp_2d, only : xstart, xend, xsize, mytype, nrank
+    !use decomp_2d_io
+    use variables, only : ny
     implicit none
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     integer :: i,j,k
 
 #ifdef DEBG
-    if (nrank  ==  0) print *,'# body start'
+    if (nrank  ==  0) write(*,*) '# body start'
 #endif
 
     do k = 1, xsize(3)
@@ -68,7 +66,7 @@ contains
     enddo
 
 #ifdef DEBG
-    if (nrank  ==  0) print *,'# body done'
+    if (nrank  ==  0) write(*,*) '# body done'
 #endif
 
     return
@@ -103,8 +101,8 @@ contains
                 nxpif=npif
                 ia=ia+1
                 xa(ia)=xi(i,j,k)
-                ya(ia)=0.
-                if(xi(i,j,k) > 0.)then!objet immergé
+                ya(ia)=zero
+                if(xi(i,j,k) > zero)then!objet immergé
                    ix=xi(i,j,k)/dx+1
                    ipoli=ix+1
                    if(nxipif(i,j,k) < npif)nxpif=nxipif(i,j,k)
@@ -125,7 +123,7 @@ contains
                 nxpif=npif
                 ia=ia+1
                 xa(ia)=xf(i,j,k)
-                ya(ia)=0.
+                ya(ia)=zero
                 if(xf(i,j,k) < xlx)then!objet immergé
                    ix=(xf(i,j,k)+dx)/dx+1
                    ipolf=ix-1
@@ -188,8 +186,8 @@ contains
                 nypif=npif
                 ia=ia+1
                 xa(ia)=yi(j,i,k)
-                ya(ia)=0.
-                if(yi(j,i,k) > 0.)then!objet immergé
+                ya(ia)=zero
+                if(yi(j,i,k) > zero)then!objet immergé
                    jy=1!jy=yi(j,i,k)/dy+1
                    do while(yp(jy) < yi(j,i,k))
                       jy=jy+1
@@ -214,7 +212,7 @@ contains
                 nypif=npif
                 ia=ia+1
                 xa(ia)=yf(j,i,k)
-                ya(ia)=0.
+                ya(ia)=zero
                 if(yf(j,i,k) < yly)then!objet immergé
                    jy=1!jy=(yf(j,i,k)+dy)/dy+1
                    do while(yp(jy) < yf(j,i,k))  !there was a bug here yi<-->yf
@@ -280,8 +278,8 @@ contains
                 nzpif=npif
                 ia=ia+1
                 xa(ia)=zi(k,i,j)
-                ya(ia)=0.
-                if(zi(k,i,j) > 0.)then!objet immergé
+                ya(ia)=zero
+                if(zi(k,i,j) > zero)then!objet immergé
                    kz=zi(k,i,j)/dz+1
                    kpoli=kz+1
                    if(nzipif(k,i,j) < npif)nzpif=nzipif(k,i,j)
@@ -302,7 +300,7 @@ contains
                 nzpif=npif
                 ia=ia+1
                 xa(ia)=zf(k,i,j)
-                ya(ia)=0.
+                ya(ia)=zero
                 if(zf(k,i,j) < zlz)then!objet immergé
                    kz=(zf(k,i,j)+dz)/dz+1
                    kpolf=kz-1
@@ -339,7 +337,8 @@ contains
   !############################################################################
   subroutine polint(xa,ya,n,x,y,dy)
     !
-    USE decomp_2d
+    use decomp_2d
+    use dbg_schemes, only: abs_prec
     !
     implicit none
     !
@@ -349,7 +348,7 @@ contains
     real(mytype),dimension(nmax) :: c,d
     real(mytype),dimension(n)    :: xa,ya
     ns=1
-    dif=abs(x-xa(1))
+    dif=abs_prec(x-xa(1))
     do i=1,n
        dift=abs(x-xa(i))
        if(dift < dif)then
@@ -737,8 +736,8 @@ subroutine cubsplz(u,lind)
   real(mytype)                                       :: ana_resi,ana_resf
   !
   ! Initialise Arrays
-  xa(:)=0.
-  ya(:)=0.
+  xa(:)=zero
+  ya(:)=zero
   !
   ! Impose the Correct BC
   bcimp=lind  
@@ -797,7 +796,7 @@ subroutine cubsplz(u,lind)
                  xa(ia)=zf(k,i,j)
                  ana_resf=zf(k,i,j)
               else
-!                 call analitic_z(i,zf(k,i,j),ana_resf,j) ! Calculate the position of BC analytically
+                 !call analitic_z(i,zf(k,i,j),ana_resf,j) ! Calculate the position of BC analytically
                  xa(ia)=ana_resf
               endif
               ya(ia)=bcimp
@@ -867,92 +866,93 @@ end subroutine cubsplz
 !***************************************************************************
 !
 subroutine cubic_spline(xa,ya,n,x,y)
-  !
-  USE decomp_2d
-  !
-  implicit none
-  !
-  integer                 :: n,i,j,nc,nk
-  real(8)                 :: x,y,xcc
-  real(8),dimension(n)    :: xa,ya
-  real(8),dimension(10)   :: xaa,yaa
-  real(8)                 :: ypri,yprf
-  real(8),dimension(n-2)  :: xx,alpha,cc,zz,ll,aa,yy
-  real(8),dimension(n-3)  :: hh,dd,bb,mm
-  !
-	! Initialise Arrays
-	xaa(:)=0.
-	yaa(:)=0.
-	! Arrange Points in Correct Order (based on x-coor)
-	j=n/2
-	do i=1,n
-		    if (i <= n/2) then
-		            xaa(i)=xa(j)
-		            yaa(i)=ya(j)
-		            j=j-1
-		    else
-		            xaa(i)=xa(i)
-		            yaa(i)=ya(i)
-		    endif
-	enddo   
-	!
-	ypri=(yaa(3)-yaa(1))/(xaa(3)-xaa(1))
-	yprf=(yaa(n)-yaa(n-2))/(xaa(n)-xaa(n-2))
-	!
-	nk=n-1
-	!
-	do i=2,nk
-		yy(i-1)=yaa(i)
-	enddo
-	!
-	do i=2,nk
-		xx(i-1)=xaa(i)
-	enddo
-	!
-	nc=nk-1
-	!
-	do i=1,nc
-		aa(i)=yy(i)
-	enddo
-	!
-	do i=1,nc-1
-		hh(i)=xx(i+1)-xx(i)
-	enddo
-	!
-	alpha(1)=(3.*(aa(2)-aa(1)))/hh(1) - 3.*ypri
-	alpha(nc)= 3.*yprf - 3.*(aa(nc)-aa(nc-1))/hh(nc-1)
-	!
-	do i=2,nc-1
-		alpha(i)=(3./hh(i))*(aa(i+1)-aa(i))-(3./hh(i-1))*(aa(i)-aa(i-1))
-	enddo
-	ll(1)=2.*hh(1)
-	mm(1)=0.5
-	zz(1)=alpha(1)/ll(1)
-	!
-	do i=2,nc-1
-		ll(i)=2.*(xx(i+1)-xx(i-1))-hh(i-1)*mm(i-1);
-		mm(i)=hh(i)/ll(i);
-		zz(i)=(alpha(i)-hh(i-1)*zz(i-1))/ll(i);
-	enddo
-	!
-	 ll(nc)=hh(nc-1)*(2.-mm(nc-1));
-	 zz(nc)=(alpha(nc)-hh(nc-1)*zz(nc-1))/ll(nc);
-	 cc(nc)=zz(nc);
-	!
-	do j=nc-1,1,-1
-		cc(j)=zz(j)-mm(j)*cc(j+1);
-		bb(j)=(aa(j+1)-aa(j))/hh(j)-(hh(j)/3.)*(cc(j+1)+2.*cc(j));
-		dd(j)=(cc(j+1)-cc(j))/(3.*hh(j));
-	enddo
-	!
-	do j=2,nc
-	xcc=x;
-        if (xcc<=xx(j) .and. xcc>=xx(j-1)) then
-	       y= aa(j-1) + bb(j-1)*(xcc-xx(j-1)) + cc(j-1)*(xcc-xx(j-1))**2 + dd(j-1)*(xcc-xx(j-1))**3;
-	endif
-	enddo 
-	!
-  return
+   !
+   use decomp_2d
+   use param, only : zero, two, three, zpfive
+   !
+   implicit none
+   !
+   integer                      :: n,i,j,nc,nk
+   real(mytype)                 :: x,y,xcc
+   real(mytype),dimension(n)    :: xa,ya
+   real(mytype),dimension(10)   :: xaa,yaa
+   real(mytype)                 :: ypri,yprf
+   real(mytype),dimension(n-2)  :: xx,alpha,cc,zz,ll,aa,yy
+   real(mytype),dimension(n-3)  :: hh,dd,bb,mm
+     !
+   ! Initialise Arrays
+   xaa(:)=zero
+   yaa(:)=zero
+   ! Arrange Points in Correct Order (based on x-coor)
+   j=n/2
+   do i=1,n
+      if (i <= n/2) then
+         xaa(i)=xa(j)
+         yaa(i)=ya(j)
+         j=j-1
+      else
+         xaa(i)=xa(i)
+         yaa(i)=ya(i)
+      endif
+   enddo
+   !
+   ypri=(yaa(3)-yaa(1))/(xaa(3)-xaa(1))
+   yprf=(yaa(n)-yaa(n-2))/(xaa(n)-xaa(n-2))
+   !
+   nk=n-1
+   !
+   do i=2,nk
+      yy(i-1)=yaa(i)
+   enddo
+   !
+   do i=2,nk
+      xx(i-1)=xaa(i)
+   enddo
+   !
+   nc=nk-1
+   !
+   do i=1,nc
+      aa(i)=yy(i)
+   enddo
+   !
+   do i=1,nc-1
+      hh(i)=xx(i+1)-xx(i)
+   enddo
+   !
+   alpha(1)=(three*(aa(2)-aa(1)))/hh(1) - three*ypri
+   alpha(nc)= three*yprf - three*(aa(nc)-aa(nc-1))/hh(nc-1)
+   !
+   do i=2,nc-1
+      alpha(i)=(three/hh(i))*(aa(i+1)-aa(i))-(three/hh(i-1))*(aa(i)-aa(i-1))
+   enddo
+   ll(1)=two*hh(1)
+   mm(1)=zpfive
+   zz(1)=alpha(1)/ll(1)
+   !
+   do i=2,nc-1
+      ll(i)=two*(xx(i+1)-xx(i-1))-hh(i-1)*mm(i-1);
+      mm(i)=hh(i)/ll(i);
+      zz(i)=(alpha(i)-hh(i-1)*zz(i-1))/ll(i);
+   enddo
+   !
+   ll(nc)=hh(nc-1)*(two-mm(nc-1));
+   zz(nc)=(alpha(nc)-hh(nc-1)*zz(nc-1))/ll(nc);
+   cc(nc)=zz(nc);
+   !
+   do j=nc-1,1,-1
+      cc(j)=zz(j)-mm(j)*cc(j+1);
+      bb(j)=(aa(j+1)-aa(j))/hh(j)-(hh(j)/three)*(cc(j+1)+two*cc(j));
+      dd(j)=(cc(j+1)-cc(j))/(three*hh(j));
+   enddo
+   !
+   do j=2,nc
+      xcc=x;
+      if (xcc <= xx(j) .and. xcc >= xx(j-1)) then
+         y= aa(j-1) + bb(j-1)*(xcc-xx(j-1)) + cc(j-1)*(xcc-xx(j-1))**2 + dd(j-1)*(xcc-xx(j-1))**3;
+      endif
+   enddo
+   !
+   return
 end subroutine cubic_spline
 !***************************************************************************
 !***************************************************************************

@@ -89,8 +89,8 @@ PROGRAM post
      t=dt*real(imodulo*ifile,mytype)
      itime=imodulo*ifile
      if (nrank==0) then
-        print *,'--------------------------------------------'
-        print *,'Snapshot',ifile, t
+        write(*,*)'--------------------------------------------'
+        write(*,*)'Snapshot',ifile, t
      endif
 
      !READ DATA
@@ -129,8 +129,8 @@ PROGRAM post
      tremaining  =  telapsed*(nt-ii)/(ii)
 
      if (nrank==0) then
-        print *,'Time per this snapshot (s):',real(trank-t1)
-        print *,'Reading speed (MB/s)',real((ttsize*1e-6)/(trend-trstart),4)
+        write(*,*)'Time per this snapshot (s):',real(trank-t1)
+        write(*,*)'Reading speed (MB/s)',real((ttsize*1e-6)/(trend-trstart),4)
         write(*,"(' Remaining time:',I8,' h ',I2,' min')"), int(tremaining), int((tremaining-int(tremaining))*60.)
         write(*,"(' Elapsed time:',I8,' h ',I2,' min')"), int(telapsed), int((telapsed-int(telapsed))*60.)
      endif
@@ -140,22 +140,22 @@ PROGRAM post
   ttotal=trank-tstart
 
   if (nrank==0) then
-     print *,'==========================================================='
-     print *,''
-     print *,'Post-processing finished successfully!'
-     print *,''
-     print *,'2DECOMP with p_row*p_col=',p_row,p_col
-     print *,''
-     print *,'nx*ny*nz=',nx*ny*nz
-     print *,'nx,ny,nz=',nx,ny,nz
-     print *,'dx,dy,dz=',dx,dy,dz
-     print *,''
-     print *,'Averaged time per snapshot (s):',real(ttotal/nt,4)
-     print *,'Total wallclock (s):',real(ttotal,4)
-     print *,'Total wallclock (m):',real(ttotal/60.,4)
-     print *,'Total wallclock (h):',real(ttotal/3600.,4)
-     print *,'Total wallclock (d):',real(ttotal*1.1574e-5,4)
-     print *,''
+     write(*,*)'==========================================================='
+     write(*,*)''
+     write(*,*)'Post-processing finished successfully!'
+     write(*,*)''
+     write(*,*)'2DECOMP with p_row*p_col=',p_row,p_col
+     write(*,*)''
+     write(*,*)'nx*ny*nz=',nx*ny*nz
+     write(*,*)'nx,ny,nz=',nx,ny,nz
+     write(*,*)'dx,dy,dz=',dx,dy,dz
+     write(*,*)''
+     write(*,*)'Averaged time per snapshot (s):',real(ttotal/nt,4)
+     write(*,*)'Total wallclock (s):',real(ttotal,4)
+     write(*,*)'Total wallclock (m):',real(ttotal/60.,4)
+     write(*,*)'Total wallclock (h):',real(ttotal/3600.,4)
+     write(*,*)'Total wallclock (d):',real(ttotal*1.1574e-5,4)
+     write(*,*)''
   endif
 
   call decomp_2d_finalize

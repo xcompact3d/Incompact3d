@@ -64,10 +64,8 @@ subroutine boot_xcompact3d()
   nargin=command_argument_count()
   if (nargin <1) then
      InputFN='input.i3d'
-     if (nrank==0) print*, 'Xcompact3d is run with the default file -->', InputFN
+     if (nrank==0) write(*,*) 'Xcompact3d is run with the default file -->', trim(InputFN)
   elseif (nargin >= 1) then
-     if (nrank==0) print*, 'Xcompact3d is run with the provided file -->', InputFN
-
      call get_command_argument(1,InputFN,FNLength,status)
      if (status /= 0) then
         if (nrank == 0) print*, 'InputFN is too small for the given input file'
@@ -76,7 +74,7 @@ subroutine boot_xcompact3d()
   endif
 
 #ifdef ADIOS2
-  if (nrank  ==  0) then
+  if (nrank == 0) then
      print *, " WARNING === WARNING === WARNING === WARNING === WARNING"
      print *, " WARNING: Running Xcompact3d with ADIOS2"
      print *, "          this is currently experimental"
@@ -170,7 +168,9 @@ subroutine init_xcompact3d(InputFN)
      itime = 0
      call preprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
   else
-     call init_sandbox(ux1,uy1,uz1,ep1,phi1,1)
+     if (itype == itype_sandbox) then
+        call init_sandbox(ux1,uy1,uz1,ep1,phi1,1)
+     endif
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,rho1,drho1,mu1,0)
   endif
 
@@ -180,8 +180,10 @@ subroutine init_xcompact3d(InputFN)
      call body(ux1,uy1,uz1,ep1)
   endif
 
-  call test_speed_min_max(ux1,uy1,uz1)
-  if (iscalar==1) call test_scalar_min_max(phi1)
+  if (mod(itime, ilist) == 0 .or. itime == ifirst) then
+     call test_speed_min_max(ux1,uy1,uz1)
+     if (iscalar==1) call test_scalar_min_max(phi1)
+  endif
 
   call simu_stats(1)
 
@@ -238,6 +240,28 @@ subroutine finalise_xcompact3d(flag)
 endsubroutine finalise_xcompact3d
 !########################################################################
 
+subroutine check_transients()
+
+  use decomp_2d, only : mytype
+
+  use var
+  use tools, only : avg3d
+
+  implicit none
+
+  real(mytype) avg_param
+
+  avg_param = zero
+  call avg3d (dux1, avg_param)
+  if (nrank == 0) write(*,*)'## Main dux1 ', avg_param
+  avg_param = zero
+  call avg3d (duy1, avg_param)
+  if (nrank == 0) write(*,*)'## Main duy1 ', avg_param
+  avg_param = zero
+  call avg3d (duz1, avg_param)
+  if (nrank == 0) write(*,*)'## Main duz1 ', avg_param
+
+end subroutine check_transients
 !
 subroutine catch_sigusr1
 

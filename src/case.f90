@@ -48,7 +48,7 @@ module case
   use tbl
   use abl
   use uniform
-  USE sandbox
+  use sandbox
   use cavity
 
   use var, only : nzmsize
@@ -483,7 +483,7 @@ contains
 
     if (itype == itype_channel) then
 
-       call momentum_forcing_channel(dux1, duy1, ux1, uy1)
+       call momentum_forcing_channel(dux1, duy1, duz1, ux1, uy1, uz1)
 
     elseif (itype == itype_jet) then
 
@@ -566,7 +566,7 @@ contains
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime), intent(in) :: drho1
     real(mytype), dimension(zsize(1), zsize(2), zsize(3)), intent(in) :: divu3
 
-    if ((mod(itime,10)==0).and.(itr == iadvance_time)) then
+    if ((mod(itime,ilist)==0 .or. itime == ifirst .or. itime == ilast)) then
        call divergence(dv3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,2)
        call test_speed_min_max(ux1,uy1,uz1)
        call compute_cfl(ux1,uy1,uz1)

@@ -45,11 +45,12 @@ contains
 
   subroutine init_mixlayer (rho1,ux1,uy1,uz1)
 
-    USE decomp_2d, ONLY : mytype, xsize
-    USE param, ONLY : u1, u2, dens1, dens2
-    USE param, ONLY : half, one, two, four, eight, sixteen
-    USE param, ONLY : ntime, nrhotime
-    USE MPI
+    use decomp_2d, only : mytype, xsize
+    use param, only : u1, u2, dens1, dens2
+    use param, only : half, one, two, four, eight, sixteen
+    use param, only : ntime, nrhotime
+    use dbg_schemes, only: sin_prec, cos_prec, exp_prec, tanh_prec, sqrt_prec
+    use MPI
 
     implicit none
 
@@ -79,12 +80,12 @@ contains
        ux1=zero; uy1=zero; uz1=zero
 
        !! Compute flow for zero convective velocity
-       rhomin = MIN(dens1, dens2)
-       rhomax = MAX(dens1, dens2)
+       rhomin = min(dens1, dens2)
+       rhomax = max(dens1, dens2)
        T1 = pressure0 / dens1
        T2 = pressure0 / dens2
-       u1 = SQRT(dens2 / dens1) / (SQRT(dens2 / dens1) + one)
-       u2 = -SQRT(dens1 / dens2) / (one + SQRT(dens1 / dens2))
+       u1 =  sqrt_prec(dens2 / dens1) / (sqrt_prec(dens2 / dens1) + one)
+       u2 = -sqrt_prec(dens1 / dens2) / (one + sqrt_prec(dens1 / dens2))
        M = 0.2_mytype
        rspech = 1.4_mytype
        heatcap = (one / (T2 * (rspech - one))) * ((u1 - u2) / M)**2
@@ -97,7 +98,7 @@ contains
 
                 !! Set mean field
                 ux1(i, j, k) = ux1(i, j, k) + half * (u1 + u2) &
-                     + half * (u1 - u2) * TANH(two * y)
+                     + half * (u1 - u2) * tanh_prec(two * y)
                 uy1(i, j, k) = zero
                 uz1(i, j, k) = zero
 
@@ -110,14 +111,14 @@ contains
                 rho1(i, j, k, 1) = MIN(rho1(i, j, k, 1), rhomax)
 
                 ! Calculate disturbance field (as given in Fortune2004)
-                disturb_decay = 0.025_mytype * (u1 - u2) * EXP(-0.05_mytype * (y**2))
-                u_disturb = disturb_decay * (SIN(eight * PI * x / xlx) &
-                     + SIN(four * PI * x / xlx) / eight &
-                     + SIN(two * PI * x / xlx) / sixteen)
+                disturb_decay = 0.025_mytype * (u1 - u2) * exp_prec(-0.05_mytype * (y**2))
+                u_disturb = disturb_decay * (sin_prec(eight * PI * x / xlx) &
+                     + sin_prec(four * PI * x / xlx) / eight &
+                     + sin_prec(two * PI * x / xlx) / sixteen)
                 u_disturb = (0.05_mytype * y * xlx / PI) * u_disturb
-                v_disturb = disturb_decay * (COS(eight * PI * x / xlx) &
-                     + COS(four * PI * x / xlx) / eight &
-                     + COS(two * PI * x / xlx) / sixteen)
+                v_disturb = disturb_decay * (cos_prec(eight * PI * x / xlx) &
+                     + cos_prec(four * PI * x / xlx) / eight &
+                     + cos_prec(two * PI * x / xlx) / sixteen)
 
                 ux1(i, j, k) = ux1(i, j, k) + u_disturb
                 uy1(i, j, k) = uy1(i, j, k) + v_disturb
@@ -132,7 +133,7 @@ contains
     endif
 
 #ifdef DEBG
-    if (nrank  ==  0) print *,'# init end ok'
+    if (nrank == 0) write(*,*) '# init end ok'
 #endif
 
     return

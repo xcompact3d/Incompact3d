@@ -49,15 +49,14 @@ contains
   !############################################################################
   SUBROUTINE solve_poisson(pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
 
-    USE decomp_2d, ONLY : mytype, xsize, zsize, ph1
+    USE decomp_2d, ONLY : mytype, xsize, zsize, ph1, nrank
     USE decomp_2d_poisson, ONLY : poisson
     USE var, ONLY : nzmsize
     USE var, ONLY : dv3
     USE param, ONLY : ntime, nrhotime, npress
-    USE param, ONLY : ilmn, ivarcoeff, one
+    USE param, ONLY : ilmn, ivarcoeff, zero, one 
 
-
-    IMPLICIT NONE
+    implicit none
 
     !! Inputs
     REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ux1, uy1, uz1
@@ -74,14 +73,21 @@ contains
     INTEGER :: nlock, poissiter
     LOGICAL :: converged
     REAL(mytype) :: atol, rtol, rho0, divup3norm
+#ifdef DEBG
+    real(mytype) avg_param
+#endif
 
     nlock = 1 !! Corresponds to computing div(u*)
     converged = .FALSE.
     poissiter = 0
     rho0 = one
-
+#ifdef DOUBLE_PREC
     atol = 1.0e-14_mytype !! Absolute tolerance for Poisson solver
     rtol = 1.0e-14_mytype !! Relative tolerance for Poisson solver
+#else
+    atol = 1.0e-9_mytype !! Absolute tolerance for Poisson solver
+    rtol = 1.0e-9_mytype !! Relative tolerance for Poisson solver
+#endif
 
     IF (ilmn.AND.ivarcoeff) THEN
        !! Variable-coefficient Poisson solver works on div(u), not div(rho u)
@@ -94,9 +100,8 @@ contains
        dv3(:,:,:) = pp3(:,:,:,1)
     ENDIF
 
-    DO WHILE(.NOT.converged)
-       IF (ivarcoeff) THEN
-
+    do while(.not.converged)
+       if (ivarcoeff) then
           !! Test convergence
           CALL test_varcoeff(converged, divup3norm, pp3, dv3, atol, rtol, poissiter)
 
@@ -109,10 +114,35 @@ contains
        ENDIF
 
        IF (.NOT.converged) THEN
+#ifdef DEBG
+          avg_param = zero
+          call avg3d (pp3(:,:,:,1), avg_param)
+          if (nrank == 0) write(*,*)'## Solve Poisson before1 pp3', avg_param
+#endif
           CALL poisson(pp3(:,:,:,1))
+#ifdef DEBG
+          avg_param = zero
+          call avg3d (pp3(:,:,:,1), avg_param)
+          if (nrank == 0) write(*,*)'## Solve Poisson after call  pp3', avg_param
+#endif
 
           !! Need to update pressure gradient here for varcoeff
           CALL gradp(px1,py1,pz1,pp3(:,:,:,1))
+#ifdef DEBG
+          avg_param = zero
+          call avg3d (pp3(:,:,:,1), avg_param)
+          if (nrank == 0) write(*,*)'## Solve Poisson pp3', avg_param
+          avg_param = zero
+          call avg3d (px1, avg_param)
+          if (nrank == 0) write(*,*)'## Solve Poisson px', avg_param
+          avg_param = zero
+          call avg3d (py1, avg_param)
+          if (nrank == 0) write(*,*)'## Solve Poisson py', avg_param
+          avg_param = zero
+          call avg3d (pz1, avg_param)
+          if (nrank == 0) write(*,*)'## Solve Poisson pz', avg_param
+#endif
+         
 
           IF ((.NOT.ilmn).OR.(.NOT.ivarcoeff)) THEN
              !! Once-through solver
@@ -123,7 +153,7 @@ contains
        ENDIF
 
        poissiter = poissiter + 1
-    ENDDO
+    enddo
 
     IF (ilmn.AND.ivarcoeff) THEN
        !! Variable-coefficient Poisson solver works on div(u), not div(rho u)
@@ -207,6 +237,30 @@ contains
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: px,py,pz
+#ifdef DEBG
+    real(mytype) avg_param
+#endif
+
+#ifdef DEBG
+    avg_param = zero
+    call avg3d (ux, avg_param)
+    if (nrank == 0) write(*,*)'## Cor Vel ux', avg_param
+    avg_param = zero
+    call avg3d (uy, avg_param)
+    if (nrank == 0) write(*,*)'## Cor Vel uy', avg_param
+    avg_param = zero
+    call avg3d (uz, avg_param)
+    if (nrank == 0) write(*,*)'## Cor Vel uz', avg_param
+    avg_param = zero
+    call avg3d (px, avg_param)
+    if (nrank == 0) write(*,*)'## Cor Vel px', avg_param
+    avg_param = zero
+    call avg3d (py, avg_param)
+    if (nrank == 0) write(*,*)'## Cor Vel py', avg_param
+    avg_param = zero
+    call avg3d (pz, avg_param)
+    if (nrank == 0) write(*,*)'## Cor Vel pz', avg_param
+#endif
 
     ux(:,:,:)=ux(:,:,:)-px(:,:,:)
     uy(:,:,:)=uy(:,:,:)-py(:,:,:)
@@ -313,7 +367,7 @@ contains
     endif
 
     tmax=-1609._mytype
-    tmoy=0._mytype
+    tmoy=zero
     do k=1,nzmsize
        do j=ph1%zst(2),ph1%zen(2)
           do i=ph1%zst(1),ph1%zen(1)
@@ -329,11 +383,11 @@ contains
     call MPI_REDUCE(tmoy,tmoy1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
     if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
 
-    if ((nrank==0).and.(nlock > 0)) then
-       if (nlock==2) then
-          print *,'DIV U  max mean=',real(tmax1,4),real(tmoy1/real(nproc),4)
+    if ((nrank == 0) .and. (nlock > 0).and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime==ilast)) then
+       if (nlock == 2) then
+          write(*,*) 'DIV U  max mean=',real(tmax1,mytype),real(tmoy1/real(nproc),mytype)
        else
-          print *,'DIV U* max mean=',real(tmax1,4),real(tmoy1/real(nproc),4)
+          write(*,*) 'DIV U* max mean=',real(tmax1,mytype),real(tmoy1/real(nproc),mytype)
        endif
     endif
 
@@ -487,6 +541,9 @@ contains
     integer :: code
     integer, dimension(2) :: dims, dummy_coords
     logical, dimension(2) :: dummy_periods
+#ifdef DEBG
+    real(mytype) avg_param
+#endif
 
     call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, dims, dummy_periods, dummy_coords, code)
     if (code /= 0) call decomp_2d_abort(code, "MPI_CART_GET")
@@ -495,7 +552,7 @@ contains
     !we are in X pencils:
     if ((itype == itype_channel.or.itype == itype_uniform).and.(nclx1==2.and.nclxn==2)) then
 
-       !Computatation of the flow rate Inflow/Outflow
+       !Computation of the flow rate Inflow/Outflow
        ut1=zero
        do k=1,xsize(3)
           do j=1,xsize(2)
@@ -514,7 +571,8 @@ contains
        call MPI_ALLREDUCE(ut,utt,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
        utt=utt/(real(ny*nz,mytype))
-       if (nrank==0) print *,'Flow rate x I/O/O-I',real(ut11,4),real(utt,4),real(utt-ut11,4)
+       if ((nrank==0).and.(mod(itime,ilist)==0)) &
+          write(*,*) 'Flow rate x I/O/O-I',real(ut11,4),real(utt,4),real(utt-ut11,4)
        do k=1,xsize(3)
           do j=1,xsize(2)
              bxxn(j,k)=bxxn(j,k)-utt+ut11
@@ -698,6 +756,17 @@ contains
           enddo
        endif
     endif
+#ifdef DEBG
+    avg_param = zero
+    call avg3d (ux, avg_param)
+    if (nrank == 0) write(*,*)'## Pres corr ux ', avg_param
+    avg_param = zero
+    call avg3d (uy, avg_param)
+    if (nrank == 0) write(*,*)'## Pres corr uy ', avg_param
+    avg_param = zero
+    call avg3d (uz, avg_param)
+    if (nrank == 0) write(*,*)'## Pres corr uz ', avg_param
+#endif
 
     if (iibm==1) then !solid body old school
        call corgp_IBM(ux1,uy1,uz1,px1,py1,pz1,1)
@@ -923,6 +992,9 @@ contains
 
   ENDSUBROUTINE calc_divu_constraint
 
+  !############################################################################
+  !############################################################################
+  ! Calculate extrapolation drhodt 
   SUBROUTINE extrapol_drhodt(drhodt1_next, rho1, drho1)
 
     USE decomp_2d, ONLY : mytype, xsize, nrank
@@ -976,6 +1048,13 @@ contains
     ENDIF
 
   ENDSUBROUTINE extrapol_drhodt
+  !############################################################################
+  !!
+  !! Subroutine : birman_drhodt_corr
+  !! Author     :
+  !! Description: Calculate extrapolation drhodt correction
+  !!
+  !############################################################################
 
   SUBROUTINE birman_drhodt_corr(drhodt1_next, rho1)
 
@@ -1030,8 +1109,8 @@ contains
     USE MPI
     USE decomp_2d, ONLY: mytype, ph1, real_type, nrank, decomp_2d_abort
     USE var, ONLY : nzmsize
-    USE param, ONLY : npress
-    USE variables, ONLY : nxm, nym, nzm
+    USE param, ONLY : npress, itime
+    USE variables, ONLY : nxm, nym, nzm, ilist
 
     IMPLICIT NONE
 
@@ -1055,40 +1134,40 @@ contains
        if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
        divup3norm = SQRT(divup3norm / nxm / nym / nzm)
 
-       IF (nrank.EQ.0) THEN
-          PRINT *, "Solving variable-coefficient Poisson equation:"
-          PRINT *, "+ RMS div(u*) - div(u): ", divup3norm
-       ENDIF
-    ELSE
+       if (nrank.eq.0.and.mod(itime, ilist) == 0) then
+          write(*,*)  "solving variable-coefficient poisson equation:"
+          write(*,*)  "+ rms div(u*) - div(u): ", divup3norm
+       endif
+    else
        !! Compute RMS change
        errloc = SUM((pp3(:,:,:,1) - pp3(:,:,:,2))**2)
        CALL MPI_ALLREDUCE(errloc,errglob,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
        errglob = SQRT(errglob / nxm / nym / nzm)
 
-       IF (nrank.EQ.0) THEN
-          PRINT *, "+ RMS change in pressure: ", errglob
-       ENDIF
+       if (nrank.eq.0.and.mod(itime, ilist) == 0) then
+          write(*,*)  "+ RMS change in pressure: ", errglob
+       endif
 
-       IF (errglob.LE.atol) THEN
-          converged = .TRUE.
-          IF (nrank.EQ.0) THEN
-             PRINT *, "- Converged: atol"
-          ENDIF
-       ENDIF
+       if (errglob.le.atol) then
+          converged = .true.
+          if (nrank.eq.0.and.mod(itime, ilist) == 0) then
+             write(*,*)  "- Converged: atol"
+          endif
+       endif
 
        !! Compare RMS change to size of |div(u*) - div(u)|
-       IF (errglob.LT.(rtol * divup3norm)) THEN
-          converged = .TRUE.
-          IF (nrank.EQ.0) THEN
-             PRINT *, "- Converged: rtol"
-          ENDIF
-       ENDIF
+       if (errglob.lt.(rtol * divup3norm)) then
+          converged = .true.
+          if (nrank.eq.0.and.mod(itime, ilist) == 0) then
+             write(*,*)  "- Converged: rtol"
+          endif
+       endif
 
-       IF (.NOT.converged) THEN
+       if (.not.converged) then
           pp3(:,:,:,2) = pp3(:,:,:,1)
-       ENDIF
-    ENDIF
+       endif
+    endif
 
   ENDSUBROUTINE test_varcoeff
   !############################################################################
@@ -1220,7 +1299,7 @@ contains
 
     !! velocity correction
     udif=(utt1-utt2+utt3-utt4)/yly
-    if (nrank==0 .and. mod(itime,1)==0) then
+    if ((nrank==0).and.(mod(itime,ilist)==0)) then
       write(*,"(' Mass balance: L-BC, R-BC,',2f12.6)") utt1,utt2
       write(*,"(' Mass balance: B-BC, T-BC, Crr-Vel',3f11.5)") utt3,utt4,udif
     endif
@@ -1236,5 +1315,76 @@ contains
     enddo
 
   end subroutine tbl_flrt
+!############################################################################
+!!
+!!  SUBROUTINE: avg3d
+!!      AUTHOR: Stefano Rolfo
+!! DESCRIPTION: Compute the total sum of a a 3d field
+!!
+!############################################################################
+subroutine avg3d (var, avg)
+
+  use decomp_2d, only: real_type, xsize, xend
+  use param
+  use dbg_schemes, only: sqrt_prec
+  use variables, only: nx,ny,nz,nxm,nym,nzm
+  use mpi
+
+  implicit none
+
+  real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: var
+  real(mytype), intent(out) :: avg
+  real(mytype)              :: dep
+
+  integer :: i,j,k, code
+  integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
+
+  if (nclx1==1.and.xend(1)==nx) then
+     xsize1=xsize(1)-1
+  else
+     xsize1=xsize(1)
+  endif
+  if (ncly1==1.and.xend(2)==ny) then
+     xsize2=xsize(2)-1
+  else
+     xsize2=xsize(2)
+  endif
+  if (nclz1==1.and.xend(3)==nz) then
+     xsize3=xsize(3)-1
+  else
+     xsize3=xsize(3)
+  endif
+  if (nclx1==1) then
+     nxc=nxm
+  else
+     nxc=nx
+  endif
+  if (ncly1==1) then
+     nyc=nym
+  else
+     nyc=ny
+  endif
+  if (nclz1==1) then
+     nzc=nzm
+  else
+     nzc=nz
+  endif
+
+  dep=zero
+  do k=1,xsize3
+     do j=1,xsize2
+        do i=1,xsize1
+           !dep=dep+var(i,j,k)**2
+           dep=dep+var(i,j,k)
+        enddo
+     enddo
+  enddo
+  call MPI_ALLREDUCE(dep,avg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+  !avg=sqrt_prec(avg)/(nxc*nyc*nzc)
+  avg=avg/(nxc*nyc*nzc)
+
+  return
+
+end subroutine avg3d
 
 endmodule navier

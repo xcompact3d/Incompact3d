@@ -32,24 +32,29 @@
 
 module dbg_schemes
 
-  USE decomp_2d
-  USE variables
-  USE param
+  use decomp_2d
+  use variables
+  use param
 
-  IMPLICIT NONE
+  implicit none
 
-  PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_dbg, boundary_conditions_dbg, postprocess_dbg
+  private ! All functions/subroutines private by default
+  public :: init_dbg, boundary_conditions_dbg, postprocess_dbg
+  public ::  sin_prec,  cos_prec,  tan_prec, &
+            asin_prec, acos_prec, atan_prec, &
+            sinh_prec, cosh_prec, tanh_prec, &
+             exp_prec,  log_prec,log10_prec, &
+            sqrt_prec,  abs_prec
 
 contains
   !********************************************************************
   subroutine init_dbg (ux1,uy1,uz1,ep1,phi1)
 
-    USE decomp_2d
-    USE decomp_2d_io
-    USE variables
-    USE param
-    USE MPI
+    use decomp_2d
+    use decomp_2d_io
+    use variables
+    use param
+    use MPI
 
     implicit none
 
@@ -66,9 +71,9 @@ contains
   !********************************************************************
   subroutine boundary_conditions_dbg (ux,uy,uz,phi)
 
-    USE param
-    USE variables
-    USE decomp_2d
+    use param
+    use variables
+    use decomp_2d
 
     implicit none
 
@@ -78,6 +83,10 @@ contains
     return
   end subroutine boundary_conditions_dbg
 
+  !##################################################################
+  !********************************************************************
+  ! Math functions for Single/double precision
+  !-------------------------------------------
   function sin_prec(x) result(y)
     USE decomp_2d, only : mytype
     real(mytype), intent(in) :: x
@@ -88,7 +97,7 @@ contains
     y = sin(x)
 #endif
   end function sin_prec
-
+  !-------------------------------------------
   function cos_prec(x) result(y)
     USE decomp_2d, only : mytype
     real(mytype), intent(in) :: x
@@ -99,7 +108,128 @@ contains
     y = cos(x)
 #endif
   end function cos_prec
-
+  !-------------------------------------------
+  function tan_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = dtan(x)
+#else
+    y = tan(x)
+#endif
+  end function tan_prec
+  !-------------------------------------------
+  function asin_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = dasin(x)
+#else
+    y = asin(x)
+#endif
+  end function asin_prec
+  !-------------------------------------------
+  function acos_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = dacos(x)
+#else
+    y = acos(x)
+#endif
+  end function acos_prec
+  !-------------------------------------------
+  function atan_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = datan(x)
+#else
+    y = atan(x)
+#endif
+  end function atan_prec
+  !-------------------------------------------
+  function sinh_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = dsinh(x)
+#else
+    y = sinh(x)
+#endif
+  end function sinh_prec
+  !-------------------------------------------
+  function cosh_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = dcosh(x)
+#else
+    y = cosh(x)
+#endif
+  end function cosh_prec
+  !-------------------------------------------
+  function tanh_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = dtanh(x)
+#else
+    y = tanh(x)
+#endif
+  end function tanh_prec
+  !-------------------------------------------
+  function exp_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = dexp(x)
+#else
+    y = exp(x)
+#endif
+  end function exp_prec
+  !-------------------------------------------
+  function log_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = dlog(x)
+#else
+    y = alog(x)
+#endif
+  end function log_prec
+  !-------------------------------------------
+  function log10_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = dlog10(x)
+#else
+    y = alog10(x)
+#endif
+  end function log10_prec
+  !-------------------------------------------
+  function sqrt_prec(x) result(y)
+    USE decomp_2d, only : mytype
+    real(mytype), intent(in) :: x
+    real(mytype) :: y
+#ifdef DOUBLE_PREC
+    y = dsqrt(x)
+#else
+    y = sqrt(x)
+#endif
+  end function sqrt_prec
+  !-------------------------------------------
   function abs_prec(x) result(y)
     USE decomp_2d, only : mytype
     real(mytype), intent(in) :: x
@@ -111,6 +241,163 @@ contains
 #endif
   end function abs_prec
 
+  !********************************************************************
+  subroutine xerrors(dfdx1, dfdxp1, dfdxx1, dfdxxp1)
+
+    real(mytype), dimension(:,:,:), intent(in) :: dfdx1, dfdxp1, dfdxx1, dfdxxp1
+
+    real(mytype) :: x, err, avg, expt
+    integer :: i
+
+    err = 0._mytype
+    do i = 1, size(dfdx1, 1)
+       x = real(i - 1, mytype) * dx
+       expt = four * pi * cos_prec(four * pi * x)
+
+       avg = sum(dfdx1(i,:,:)) / size(dfdx1, 2) / size(dfdx1, 3)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdx1, 1))
+    print *, "dfdx1 RMS error: ", err
+
+    err = 0._mytype
+    do i = 1, size(dfdxp1, 1)
+       x = real(i - 1, mytype) * dx
+       expt = -four * pi * sin_prec(four * pi * x)
+
+       avg = sum(dfdxp1(i,:,:)) / size(dfdxp1, 2) / size(dfdxp1, 3)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdxp1, 1))
+    print *, "dfdxp1 RMS error: ", err
+
+    err = 0._mytype
+    do i = 1, size(dfdxx1, 1)
+       x = real(i - 1, mytype) * dx
+       expt = -sixteen * (pi**2) * sin_prec(four * pi * x)
+
+       avg = sum(dfdxx1(i,:,:)) / size(dfdxx1, 2) / size(dfdxx1, 3)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdxx1, 1))
+    print *, "dfdxx1 RMS error: ", err
+
+    err = 0._mytype
+    do i = 1, size(dfdxxp1, 1)
+       x = real(i - 1, mytype) * dx
+       expt = -sixteen * (pi**2) * cos_prec(four * pi * x)
+
+       avg = sum(dfdxxp1(i,:,:)) / size(dfdxxp1, 2) / size(dfdxxp1, 3)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdxxp1, 1))
+    print *, "dfdxxp1 RMS error: ", err
+    
+  end subroutine xerrors
+  subroutine yerrors(dfdy1, dfdyp1, dfdyy1, dfdyyp1)
+
+    real(mytype), dimension(:,:,:), intent(in) :: dfdy1, dfdyp1, dfdyy1, dfdyyp1
+
+    real(mytype) :: y, err, avg, expt
+    integer :: j
+
+    err = 0._mytype
+    do j = 1, size(dfdy1, 2)
+       y = real(j - 1, mytype) * dy
+       expt = four * pi * cos_prec(four * pi * y)
+
+       avg = sum(dfdy1(:,j,:)) / size(dfdy1, 1) / size(dfdy1, 3)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdy1, 2))
+    print *, "dfdy1 RMS error: ", err
+
+    err = 0._mytype
+    do j = 1, size(dfdyp1, 2)
+       y = real(j - 1, mytype) * dy
+       expt = -four * pi * sin_prec(four * pi * y)
+
+       avg = sum(dfdyp1(:,j,:)) / size(dfdyp1, 1) / size(dfdyp1, 3)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdyp1, 2))
+    print *, "dfdyp1 RMS error: ", err
+
+    err = 0._mytype
+    do j = 1, size(dfdyy1, 2)
+       y = real(j - 1, mytype) * dy
+       expt = -sixteen * (pi**2) * sin_prec(four * pi * y)
+
+       avg = sum(dfdyy1(:,j,:)) / size(dfdyy1, 1) / size(dfdyy1, 3)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdyy1, 2))
+    print *, "dfdyy1 RMS error: ", err
+
+    err = 0._mytype
+    do j = 1, size(dfdyyp1, 1)
+       y = real(j - 1, mytype) * dy
+       expt = -sixteen * (pi**2) * cos_prec(four * pi * y)
+
+       avg = sum(dfdyyp1(:,j,:)) / size(dfdyyp1, 1) / size(dfdyyp1, 3)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdyyp1, 2))
+    print *, "dfdyyp1 RMS error: ", err
+    
+  end subroutine yerrors
+  subroutine zerrors(dfdz1, dfdzp1, dfdzz1, dfdzzp1)
+
+    real(mytype), dimension(:,:,:), intent(in) :: dfdz1, dfdzp1, dfdzz1, dfdzzp1
+
+    real(mytype) :: z, err, avg, expt
+    integer :: k
+
+    err = 0._mytype
+    do k = 1, size(dfdz1, 3)
+       z = real(k - 1, mytype) * dz
+       expt = four * pi * cos_prec(four * pi * z)
+
+       avg = sum(dfdz1(:,:,k)) / size(dfdz1, 1) / size(dfdz1, 2)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdz1, 3))
+    print *, "dfdz1 RMS error: ", err
+
+    err = 0._mytype
+    do k = 1, size(dfdzp1, 3)
+       z = real(k - 1, mytype) * dz
+       expt = -four * pi * sin_prec(four * pi * z)
+
+       avg = sum(dfdzp1(:,:,k)) / size(dfdzp1, 1) / size(dfdzp1, 2)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdzp1, 3))
+    print *, "dfdzp1 RMS error: ", err
+
+    err = 0._mytype
+    do k = 1, size(dfdzz1, 3)
+       z = real(k - 1, mytype) * dz
+       expt = -sixteen * (pi**2) * sin_prec(four * pi * z)
+
+       avg = sum(dfdzz1(:,:,k)) / size(dfdzz1, 1) / size(dfdzz1, 2)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdzz1, 3))
+    print *, "dfdzz1 RMS error: ", err
+
+    err = 0._mytype
+    do k = 1, size(dfdzzp1, 1)
+       z = real(k - 1, mytype) * dz
+       expt = -sixteen * (pi**2) * cos_prec(four * pi * z)
+
+       avg = sum(dfdzzp1(:,:,k)) / size(dfdzzp1, 1) / size(dfdzzp1, 2)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdzzp1, 3))
+    print *, "dfdzzp1 RMS error: ", err
+    
+  end subroutine zerrors
   subroutine debug_schemes()
 
     USE param
@@ -169,6 +456,7 @@ contains
        enddo
        close(67)
     endif
+    call xerrors(dfdx1, dfdxp1, dfdxx1, dfdxxp1)
     call derxvp(test1,fx1,di1,sx,cfx6,csx6,cwx6,xsize(1),nxmsize,xsize(2),xsize(3),0)
     call interxvp(test11,fxp1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
     if (nrank == 0) then
@@ -261,6 +549,7 @@ contains
        enddo
        close(67)
     endif
+    call yerrors(dfdy2, dfdyp2, dfdyy2, dfdyyp2)
     call deryvp(test2,fy2,di2,sy,cfy6,csy6,cwy6,ppyi,ysize(1),ysize(2),nymsize,ysize(3),0)
     call interyvp(test22,fyp2,di2,sy,cifyp6,cisyp6,ciwyp6,ysize(1),ysize(2),nymsize,ysize(3),1)
     if (nrank == 0) then
@@ -350,6 +639,7 @@ contains
        enddo
        close(67)
     endif
+    call zerrors(dfdz3, dfdzp3, dfdzz3, dfdzzp3)
     call derzvp(test3,fz3,di3,sz,cfz6,csz6,cwz6,zsize(1),zsize(2),zsize(3),nzmsize,0)
     call interzvp(test33,fzp3,di3,sz,cifzp6,ciszp6,ciwzp6,zsize(1),zsize(2),zsize(3),nzmsize,1)
     if (nrank == 0) then

@@ -49,7 +49,7 @@ subroutine schemes()
   integer :: is
 
 #ifdef DEBG
-  if (nrank  ==  0) print *,'# schemes start'
+  if (nrank  ==  0) write(*,*)'# schemes start'
 #endif
 
   !Velocity
@@ -225,7 +225,7 @@ subroutine schemes()
   endif
 
 #ifdef DEBG
-  if (nrank  ==  0) print *,'# schemes end'
+  if (nrank  ==  0) write(*,*)'# schemes end'
 #endif
 
   return
@@ -291,10 +291,10 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
      afi  = one/(two*d)
      bfi  = zero
   elseif(ifirstder==2) then ! Fourth-order central
-     if (nrank==0) print *,'Set of coefficients not ready yet'
+     if (nrank==0) write(*,*)'Set of coefficients not ready yet'
      call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
   elseif(ifirstder==3) then ! Fourth-order compact
-     if (nrank==0) print *,'Set of coefficients not ready yet'
+     if (nrank==0) write(*,*)'Set of coefficients not ready yet'
      call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
   elseif(ifirstder==4) then ! Sixth-order compact
      alfai= one/three
@@ -302,7 +302,7 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
      bfi  = (one/thirtysix)/d
   else
      if (nrank==0) then
-        print *, 'This is not an option. Please use ifirstder=1,2,3,4'
+        write(*,*) 'This is not an option. Please use ifirstder=1,2,3,4'
      endif
      call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
   endif
@@ -469,15 +469,15 @@ subroutine second_derivative(alsa1,as1,bs1,&
      bstt = bsi
      cstt = csi
   elseif(isecondder==2) then ! Fourth-order central
-     if (nrank==0) print *,'Set of coefficients not ready yet'
+     if (nrank==0) write(*,*)'Set of coefficients not ready yet'
      call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
   elseif(isecondder==3) then ! Fourth-order compact
-     if (nrank==0) print *,'Set of coefficients not ready yet'
+     if (nrank==0) write(*,*)'Set of coefficients not ready yet'
      call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
   elseif(isecondder==4) then ! Sixth-order compact Lele style (no extra dissipation)
-     alsai= two/eleven
-     asi  = (twelve/eleven)/d2
-     bsi  = (three/fortyfour)/d2
+     alsai= two / eleven
+     asi  = (twelve / eleven)/d2
+     bsi  = (three / 44.0_mytype )/d2
      csi  = zero
      dsi = zero
 
@@ -491,7 +491,7 @@ subroutine second_derivative(alsa1,as1,bs1,&
      bstt = bsi
      cstt = csi
   elseif(isecondder==5) then ! Sixth-order Hyperviscous operator
-     if(nrank==0) print *, 'Using the hyperviscous operator with (nu_0/nu,c_nu) = ', '(', nu0nu,',', cnu,')'
+     if(nrank==0) write(*,*) 'Using the hyperviscous operator with (nu_0/nu,c_nu) = ', '(', nu0nu,',', cnu,')'
      dpis3=two*pi/three
      kppkc=pi*pi*(one+nu0nu)
      kppkm=dpis3*dpis3*(one+cnu*nu0nu) !exp(-((pi-dpis3)/(zpthree*pi-dpis3))**two)/xxnu+dpis3*dpis3
@@ -503,11 +503,11 @@ subroutine second_derivative(alsa1,as1,bs1,&
      alsai = half - (320._mytype * xmpi2 - 1296._mytype) / den
      asi = -(4329._mytype * xnpi2 / eight - 32._mytype * xmpi2 - 140._mytype * xnpi2 * xmpi2 + 286._mytype) / den / d2
      bsi = (2115._mytype * xnpi2 - 1792._mytype * xmpi2 - 280._mytype * xnpi2 * xmpi2 + 1328._mytype) / den / (four * d2)
-     csi = -(7695 * xnpi2 / eight + 288._mytype * xmpi2 - 180._mytype * xnpi2 * xmpi2 - 2574._mytype) / den / (nine * d2)
+     csi = -(7695._mytype * xnpi2 / eight + 288._mytype * xmpi2 - 180._mytype * xnpi2 * xmpi2 - 2574._mytype) / den / (nine * d2)
      dsi = (198._mytype * xnpi2 + 128._mytype * xmpi2 - 40._mytype * xnpi2 * xmpi2 - 736._mytype) / den / (four**2 * d2)
   else
      if (nrank==0) then
-        print *, 'This is not an option.'
+        write(*,*) 'This is not an option.'
      endif
   endif
 
@@ -733,7 +733,7 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
   cbx6(2)=alcaix6
   cbx6(nxm-2)=alcaix6
   cbx6(nxm-1)=alcaix6
-  cbx6(nxm)=0.
+  cbx6(nxm)=zero
   do i=3,nxm-3
      cfx6(i)=alcaix6
      ccx6(i)=one
@@ -773,10 +773,10 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      bicix6=one/(two*ten)
      cicix6=zero
      dicix6=zero
-  else if (ipinter == 2) then
-     ailcaix6=0.461658
+  else if (ipinter.eq.2) then
+     ailcaix6=0.461658_mytype
 
-     dicix6=0.00293016
+     dicix6=0.00293016_mytype
      aicix6=one/64._mytype *(75._mytype +70._mytype *ailcaix6-320._mytype *dicix6)
      bicix6=one/128._mytype *(126._mytype *ailcaix6-25._mytype +1152._mytype *dicix6)
      cicix6=one/128._mytype *(-ten*ailcaix6+three-640._mytype *dicix6)
@@ -858,9 +858,9 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
   call prepare (cibi6,cici6,cifip6,cisip6,ciwip6,nx)
   if (nclxn == 1) then
      cbx6(nxm-1)=zero
-     cibx6(nxm)=0
+     cibx6(nxm)=zero
      cbi6(nx-1)=zero
-     cibi6(nx)=0
+     cibi6(nx)=zero
      call prepare (cbx6,ccx6,cfxp6,csxp6,cwxp6,nxm)
      call prepare (cibx6,cicx6,cifxp6,cisxp6,ciwxp6,nxm)
      call prepare (cbi6,cci6,cfip6,csip6,cwip6,nx)

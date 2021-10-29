@@ -157,6 +157,7 @@ contains
     !
     !================================================================================
 
+    use MPI
     USE param
     USE variables
     USE decomp_2d
@@ -170,6 +171,7 @@ contains
     USE var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2,srt_smag2,nut2
     USE var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
     USE ibm_param
+    use dbg_schemes, only: sqrt_prec
 
     implicit none
 
@@ -179,8 +181,10 @@ contains
 
     ! Local variables
     real(mytype) :: smag_constant, y, length
+    real(mytype) :: nutmin_loc, nutmax_loc, nutmin, nutmax
+    real(mytype) :: srtmin_loc, srtmax_loc, srtmin, srtmax
 
-    integer :: i, j, k
+    integer :: i, j, k, ierr
     character(len = 30) :: filename
 
 
@@ -255,22 +259,41 @@ contains
           do i = 1, ysize(1)
              if(itype == itype_abl) then
                 !Mason and Thomson damping coefficient
-                if (istret == 0) y=(j+ystart(2)-1-1)*dy
+                if (istret == 0) y=real(j+ystart(2)-1-1,mytype)*dy
                 if (istret /= 0) y=yp(j+ystart(2)-1)
-                smag_constant=(smagcst**(-nSmag)+(k_roughness*(y/del(j)+z_zero/del(j)))**(-nSmag))**(-1./nSmag)
+                smag_constant=(smagcst**(-nSmag)+(k_roughness*(y/del(j)+z_zero/del(j)))**(-nSmag))**(-one/nSmag)
                 length=smag_constant*del(j)
              else
                 length=smagcst*del(j)
              endif
              !Calculate eddy visc nu_t
-             nut2(i, j, k) = ((length)**two) * sqrt(two * srt_smag2(i, j, k))
+             nut2(i, j, k) = ((length)**two) * sqrt_prec(two * srt_smag2(i, j, k))
           enddo
        enddo
     enddo
     call transpose_y_to_x(nut2, nut1)
 
-    if (nrank==0) print *, "smag srt_smag min max= ", minval(srt_smag), maxval(srt_smag)
-    if (nrank==0) print *, "smag nut1     min max= ", minval(nut1), maxval(nut1)
+
+    if (mod(itime,ilist)==0) then 
+      srtmin_loc = minval(srt_smag)
+      srtmax_loc = maxval(srt_smag)
+      nutmin_loc = minval(nut1)
+      nutmax_loc = maxval(nut1)
+      srtmin = zero
+      srtmax = zero
+      nutmin = zero
+      nutmax = zero
+
+      call MPI_ALLREDUCE(srtmin_loc,srtmin,1,real_type,MPI_MIN,MPI_COMM_WORLD,ierr)
+      call MPI_ALLREDUCE(nutmin_loc,nutmin,1,real_type,MPI_MIN,MPI_COMM_WORLD,ierr)
+      call MPI_ALLREDUCE(srtmax_loc,srtmax,1,real_type,MPI_MAX,MPI_COMM_WORLD,ierr)
+      call MPI_ALLREDUCE(nutmax_loc,nutmax,1,real_type,MPI_MAX,MPI_COMM_WORLD,ierr)
+
+      if (nrank==0) then 
+         write(*,*) "smag srt_smag min max= ", srtmin, srtmax  
+         write(*,*) "smag nut1     min max= ", nutmin, nutmax
+      endif
+    endif
 
     if (mod(itime, ioutput) == 0) then
 
@@ -305,6 +328,7 @@ contains
     use tools, only : mean_plane_z
     USE ibm_param
     USE param, only : zero
+    use dbg_schemes, only: sqrt_prec
     
     implicit none
 
@@ -383,7 +407,7 @@ contains
     call filx(uyz1f, uyz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcy*ubcz) !uy1*uz1
 
     if (mod(itime, ioutput) == 0) then
-       if (nrank==0) print *, "filx ux= ", maxval(ta1), maxval(ux1f), maxval(ta1) - maxval(ux1f)
+       if (nrank==0) write(*,*) "filx ux= ", maxval(ta1), maxval(ux1f), maxval(ta1) - maxval(ux1f)
     endif
 
    if((iibm==1).or.(iibm==2).or.(iibm==3)) then
@@ -422,7 +446,7 @@ contains
     call fily(uyz2f, ti2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,ubcy*ubcz) !uy2*uz2
 
     if (mod(itime, ioutput) == 0) then
-       if (nrank==0) print *, "fily ux= ", maxval(ta2), maxval(ux2f), maxval(ta2) - maxval(ux2f)
+       if (nrank==0) write(*,*) "fily ux= ", maxval(ta2), maxval(ux2f), maxval(ta2) - maxval(ux2f)
     endif
 
     if((iibm==1).or.(iibm==2).or.(iibm==3)) then   
@@ -464,7 +488,7 @@ contains
     call filz(uyz3f, ti3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,ubcy*ubcz) !uy3*uz3
 
     if (mod(itime, ioutput) == 0) then
-       if (nrank==0) print *, "filz ux= ", maxval(ta3), maxval(ux3f), maxval(ta3) - maxval(ux3f)
+       if (nrank==0) write(*,*) "filz ux= ", maxval(ta3), maxval(ux3f), maxval(ta3) - maxval(ux3f)
     endif
 
     ta3 = zero; tb3 = zero; tc3 = zero
@@ -651,7 +675,7 @@ contains
     call filx(ayz1f, ayz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,zero)
 
     if (mod(itime, ioutput) == 0) then
-       if (nrank==0) print *, "filx axx1= ", maxval(axx1), maxval(axx1f), maxval(axx1) - maxval(axx1f)
+       if (nrank==0) write(*,*) "filx axx1= ", maxval(axx1), maxval(axx1f), maxval(axx1) - maxval(axx1f)
     endif
 
     if((iibm==1).or.(iibm==2).or.(iibm==3)) then
@@ -679,7 +703,7 @@ contains
     call fily(ayz2f, tf2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,zero)
 
     if (mod(itime, ioutput) == 0) then
-       if (nrank==0) print *, "fily axx2= ", maxval(ta2), maxval(axx2f), maxval(ta2) - maxval(axx2f)
+       if (nrank==0) write(*,*) "fily axx2= ", maxval(ta2), maxval(axx2f), maxval(ta2) - maxval(axx2f)
     endif
 
     if((iibm==1).or.(iibm==2).or.(iibm==3)) then
@@ -711,7 +735,7 @@ contains
     call filz(ayz3f, tf3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,zero)
 
     if (mod(itime, ioutput) == 0) then
-       if (nrank==0) print *, "filz axx3= ", maxval(ta3), maxval(axx3f), maxval(ta3) - maxval(axx3f)
+       if (nrank==0) write(*,*) "filz axx3= ", maxval(ta3), maxval(axx3f), maxval(ta3) - maxval(axx3f)
     endif
 
     ta3 = zero; tb3 = zero; tc3 = zero
@@ -781,9 +805,9 @@ contains
     call filz(smagC3f, ta3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,zero)
 
     if (mod(itime, ioutput) == 0) then
-       if (nrank==0) print *, "filx smagC1= ", maxval(smagC1), maxval(smagC1f), maxval(smagC1) - maxval(smagC1f)
-       if (nrank==0) print *, "fily smagC1= ", maxval(ta2), maxval(smagC2f), maxval(ta2) - maxval(smagC2f)
-       if (nrank==0) print *, "filz smagC1= ", maxval(ta3), maxval(smagC3f), maxval(ta3) - maxval(smagC3f)
+       if (nrank==0) write(*,*) "filx smagC1= ", maxval(smagC1), maxval(smagC1f), maxval(smagC1) - maxval(smagC1f)
+       if (nrank==0) write(*,*) "fily smagC1= ", maxval(ta2), maxval(smagC2f), maxval(ta2) - maxval(smagC2f)
+       if (nrank==0) write(*,*) "filz smagC1= ", maxval(ta3), maxval(smagC3f), maxval(ta3) - maxval(smagC3f)
     endif
 
 
@@ -821,9 +845,9 @@ contains
     call transpose_y_to_x(nut2, nut1)
 
     if (mod(itime,itest)==0) then
-       !if (nrank==0) print *, "dsmagc init   min max= ", minval(smagC1), maxval(smagC1)
-       if (nrank==0) print *, "dsmagc final  min max= ", minval(dsmagcst1), maxval(dsmagcst1)
-       if (nrank==0) print *, "dsmag nut1    min max= ", minval(nut1), maxval(nut1)
+       !if (nrank==0) write(*,*) "dsmagc init   min max= ", minval(smagC1), maxval(smagC1)
+       if (nrank==0) write(*,*) "dsmagc final  min max= ", minval(dsmagcst1), maxval(dsmagcst1)
+       if (nrank==0) write(*,*) "dsmag nut1    min max= ", minval(nut1), maxval(nut1)
     endif
 
     if (mod(itime, ioutput) == 0) then
@@ -1008,9 +1032,9 @@ contains
   enddo
   call transpose_y_to_x(nut2, nut1)
 
-  if (nrank==0) print *, "WALE SS min max= ", minval(srt_wale), maxval(srt_wale)
-  if (nrank==0) print *, "WALE SdSd min max= ", minval(srt_wale3), maxval(srt_wale3)
-  if (nrank==0) print *, "WALE nut1     min max= ", minval(nut1), maxval(nut1)
+  if (nrank==0) write(*,*) "WALE SS min max= ", minval(srt_wale), maxval(srt_wale)
+  if (nrank==0) write(*,*) "WALE SdSd min max= ", minval(srt_wale3), maxval(srt_wale3)
+  if (nrank==0) write(*,*) "WALE nut1     min max= ", minval(nut1), maxval(nut1)
 
   if (mod(itime, ioutput) == 0) then
 
@@ -1055,9 +1079,9 @@ end subroutine wale
     integer :: i, j, k, ijk, nvect1
 
     ta1 = zero; ta2 = zero; ta3 = zero
-    sgsx1=0.;sgsy1=0.;sgsz1=0.
-    sgsx2=0.;sgsy2=0.;sgsz2=0.
-    sgsx3=0.;sgsy3=0.;sgsz3=0.
+    sgsx1=zero;sgsy1=zero;sgsz1=zero
+    sgsx2=zero;sgsy2=zero;sgsz2=zero
+    sgsx3=zero;sgsy3=zero;sgsz3=zero
     !WORK X-PENCILS
     call derx (ta1,nut1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,zero)
 

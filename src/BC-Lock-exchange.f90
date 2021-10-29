@@ -183,7 +183,7 @@ contains
        call system_clock(count=code)
        if (iin == 2) code=0
        call random_seed(size = ii)
-       call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /))
+       call random_seed(put = code+63946*(nrank+1)*(/ (i - 1, i = 1, ii) /))
 
        call random_number(ux1)
        call random_number(uy1)
@@ -234,9 +234,9 @@ contains
           enddo
        endif
 
-       call MPI_ALLREDUCE(ek,ekg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(ek,ekg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
-       call MPI_ALLREDUCE(ep,epg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(ep,epg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
        if ((epg /= zero).and.(ekg /= zero)) then
@@ -257,17 +257,17 @@ contains
                 enddo
              enddo
           enddo
-          call MPI_ALLREDUCE(ek,ekg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,code)
+          call MPI_ALLREDUCE(ek,ekg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
           if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
           if (nrank == 0) then
-             print *, "Ek / Ep: ", ekg / epg, ekg, epg
+             write(*,*)  "Ek / Ep: ", ekg / epg, ekg, epg
           endif
        endif
     endif
 
 #ifdef DEBG
-    if (nrank  ==  0) print *,'# init end ok'
+    if (nrank == 0) write(*,*) '# init end ok'
 #endif
 
     return
@@ -579,13 +579,13 @@ contains
     !    ilag=1
     ! endif
 
-    call MPI_REDUCE(ek,ek1,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,MPI_COMM_WORLD,code)
+    call MPI_REDUCE(ek,ek1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
     if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
-    call MPI_REDUCE(dek,dek1,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,MPI_COMM_WORLD,code)
+    call MPI_REDUCE(dek,dek1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
     if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
-    call MPI_REDUCE(ep,ep1,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,MPI_COMM_WORLD,code)
+    call MPI_REDUCE(ep,ep1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
     if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
-    call MPI_REDUCE(dep,dep1,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,MPI_COMM_WORLD,code)
+    call MPI_REDUCE(dep,dep1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
     if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
 
     if (nrank  ==  0) then

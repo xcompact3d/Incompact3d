@@ -66,6 +66,11 @@ contains
 
     use decomp_2d_io
     use MPI
+    use dbg_schemes, only: exp_prec, abs_prec, sqrt_prec
+#ifdef DEBG 
+    use tools, only : avg3d
+#endif
+    
 
     implicit none
 
@@ -75,8 +80,33 @@ contains
 
     ! Local variables
     logical :: read_from_file
-    real(mytype) :: y, um
-    integer :: k, j, i, is, code
+    real(mytype) :: x, y, z, um, ftent
+    integer :: k, j, i, is, code, jj, ii
+    integer ( kind = 4 ) :: seed1, seed2, seed3, seed11, seed22, seed33
+    integer ( kind = 4 ) :: return_30k
+    integer ( kind = 4 ), parameter :: nsemini = 1000 ! For the moment we fix it but after this can go in the input file
+    real(mytype), dimension(3,nsemini) :: eddy, posvor
+    real(mytype) :: volsemini, rrand, ddx, ddy, ddz, lsem, upr, vpr, wpr, rrand1
+    real(mytype), dimension(3) :: dim_min, dim_max
+    real( kind = 8 ) :: r8_random
+    external r8_random, return_30k
+#ifdef DEBG
+    real(mytype) avg_param
+#endif
+
+    if (idir_stream /= 1 .and. idir_stream /= 3) then
+       if (nrank == 0) then
+          write(*,*) '!! ERROR in imposing sorce term for momentum !!'
+          write(*,*) '!! idir_stream ', idir_stream
+          write(*,*) '!! idir_stream has to be:'
+          write(*,*) '!! - 1 for streamwise direction in X'
+          write(*,*) '!! - 3 for streamwise direction in Z'
+          write(*,*) '!! Y is not supported and other values do not make sense'
+          write(*,*) '!! Calculation will be now stop'
+        endif
+        call MPI_ABORT(MPI_COMM_WORLD,-1,code)
+        stop
+    endif
 
     !
     ! Simulation can start from a 3D snapshot
@@ -103,53 +133,168 @@ contains
     else
 
        if (iscalar==1) then
-          if (nrank == 0) print *,'Imposing linear temperature profile'
+          if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) &
+             write(*,*) 'Imposing linear temperature profile'
           do k=1,xsize(3)
              do j=1,xsize(2)
-                if (istret == 0) y=real(j+xstart(2)-2,mytype)*dy
-                if (istret /= 0) y=yp(j+xstart(2)-1)
+                if (istret==0) y=real(j+xstart(2)-2,mytype)*dy
+                if (istret/=0) y=yp(j+xstart(2)-1)
                 do i=1,xsize(1)
                    phi1(i,j,k,:) = one - y/yly
                 enddo
              enddo
           enddo
 
+          phi1(:,:,:,:) = zero !change as much as you want
           if ((nclyS1 == 2).and.(xstart(2) == 1)) then
-             !! Generate a hot patch on bottom boundary
-             phi1(:,1,:,:) = one
+            !! Generate a hot patch on bottom boundary
+            phi1(:,1,:,:) = one
           endif
           if ((nclySn == 2).and.(xend(2) == ny)) then
-             phi1(:,xsize(2),:,:) = zero
+            phi1(:,xsize(2),:,:) = zero
           endif
        endif
 
-       ux1=zero;uy1=zero;uz1=zero
-       if (iin /= 0) then
+       ux1=zero
+       uy1=zero
+       uz1=zero
+       ! if to decide type of initialization to apply 
+       if (iin == 0) then ! laminar flow
+          do k=1,xsize(3)
+             do j=1,xsize(2)
+                if (istret==0) y=real(j+xstart(2)-1-1,mytype)*dy-yly*half
+                if (istret/=0) y=yp(j+xstart(2)-1)-yly*half
+                um=exp_prec(-zptwo*y*y)
+                do i=1,xsize(1)
+                   if (idir_stream == 1) then
+                      ux1(i,j,k)=one-y*y
+                      uy1(i,j,k)=zero
+                      uz1(i,j,k)=sin(real(i-1,mytype)*dx)+cos(real(k-1,mytype)*dz)
+                   else
+                      uz1(i,j,k)=one-y*y
+                      uy1(i,j,k)=zero
+                      ux1(i,j,k)=zero
+                   endif
+                enddo
+             enddo
+          enddo     
+       elseif (iin <= 2) then ! Traditional init to turbulent flows using random numbers + lam profile
           call system_clock(count=code)
-          if (iin == 2) code=0
-          call random_seed(size = j)
-          call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, j) /))
+          if (iin.eq.2) code=0
+          call random_seed(size = ii)
+          call random_seed(put = code+63946*(nrank+1)*(/ (i - 1, i = 1, ii) /))
 
           call random_number(ux1)
           call random_number(uy1)
           call random_number(uz1)
-       endif
-
-       !modulation of the random noise + initial velocity profile
-       do k=1,xsize(3)
-          do j=1,xsize(2)
-             if (istret == 0) y=real(j+xstart(2)-1-1,mytype)*dy/yly
-             if (istret /= 0) y=yp(j+xstart(2)-1)/yly
-             um=exp(-zptwo*y*y)
-             do i=1,xsize(1)
-                ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one) + four * y * (one-y)
-                uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
-                uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
+          !modulation of the random noise + initial velocity profile
+          do k=1,xsize(3)
+             do j=1,xsize(2)
+                if (istret==0) y=real(j+xstart(2)-1-1,mytype)*dy-yly*half
+                if (istret/=0) y=yp(j+xstart(2)-1)-yly*half
+                um=exp_prec(-zptwo*y*y)
+                do i=1,xsize(1)
+                   if (idir_stream == 1) then
+                      ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
+                      uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
+                      uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
+                   else
+                      uz1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
+                      uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
+                      ux1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
+                   endif
+                enddo
              enddo
           enddo
-       enddo
-
-       !INIT FOR G AND U=MEAN FLOW + NOISE
+       ! iin = 3 is for inlet-outlet files
+       elseif (iin == 4) then ! Simplified version of SEM 
+          dim_min(1) = zero
+          dim_min(2) = zero
+          dim_min(3) = zero
+          dim_max(1) = xlx
+          dim_max(2) = yly
+          dim_max(3) = zlz
+          volsemini = xlx * yly * zlz
+          ! 3 int to get different random numbers
+          seed1 =  2345
+          seed2 = 13456
+          seed3 = 24567
+          do jj=1,nsemini
+             ! Vortex Position
+             do ii=1,3
+                seed11 = return_30k(seed1+jj*2+ii*379)
+                seed22 = return_30k(seed2+jj*5+ii*5250)
+                seed33 = return_30k(seed3+jj*3+ii*8170)
+                rrand1  = real(r8_random(seed11, seed22, seed33),mytype)
+                call random_number(rrand)
+                !write(*,*) ' rr r1 ', rrand, rrand1
+                posvor(ii,jj) = dim_min(ii)+(dim_max(ii)-dim_min(ii))*rrand
+             enddo
+             ! Eddy intensity
+             do ii=1,3
+                seed11 = return_30k(seed1+jj*7+ii*7924)
+                seed22 = return_30k(seed2+jj*11+ii*999)
+                seed33 = return_30k(seed3+jj*5+ii*5054)
+                rrand1  = real(r8_random(seed11, seed22, seed33),mytype)
+                call random_number(rrand)
+                !write(*,*) ' rr r1 ', rrand, rrand1
+                if (rrand <= zpfive) then
+                   eddy(ii,jj) = -one
+                else
+                   eddy(ii,jj) = +one
+                endif 
+             enddo
+          enddo
+          !do jj=1,nsemini
+          !   write(*,*) 'posvor ', posvor(1,jj), posvor(2,jj), posvor(3,jj)
+          !   write(*,*) 'eddy   ', eddy(1,jj)  , eddy(2,jj)  , eddy(3,jj)
+          !   write(*,*) '  '
+          !enddo
+          ! Loops to apply the fluctuations 
+          do k=1,xsize(3)
+             z=real((k+xstart(3)-1-1),mytype)*dz
+             do j=1,xsize(2)
+                if (istret==0) y=real(j+xstart(2)-2,mytype)*dy
+                if (istret/=0) y=yp(j+xstart(2)-1)
+                do i=1,xsize(1)
+                   x=real(i-1,mytype)*dx
+                   lsem = 0.15_mytype ! For the moment we keep it constant
+                   upr = zero
+                   vpr = zero
+                   wpr = zero
+                   do jj=1,nsemini
+                      ddx = abs_prec(x-posvor(1,jj))
+                      ddy = abs_prec(y-posvor(2,jj))
+                      ddz = abs_prec(z-posvor(3,jj))
+                      if (ddx < lsem .and. ddy < lsem .and. ddz < lsem) then
+                         ! coefficients for the intensity of the fluctuation
+                         ftent = (one-ddx/lsem)*(one-ddy/lsem)*(one-ddz/lsem)
+                         ftent = ftent / (sqrt_prec(two/three*lsem))**3
+                         upr = upr + eddy(1,jj) * ftent
+                         vpr = vpr + eddy(2,jj) * ftent
+                         wpr = wpr + eddy(3,jj) * ftent
+                      endif
+                   enddo
+                   upr = upr * sqrt_prec(volsemini/nsemini)
+                   vpr = vpr * sqrt_prec(volsemini/nsemini)
+                   wpr = wpr * sqrt_prec(volsemini/nsemini)
+                   ! 
+                   um  = one-(y-yly*half)**2 ! we can use a better arroximation 
+                   if (idir_stream == 1) then
+                      ux1(i,j,k)=upr*sqrt_prec(two/three*init_noise*um) + um
+                      uy1(i,j,k)=vpr*sqrt_prec(two/three*init_noise*um)
+                      uz1(i,j,k)=wpr*sqrt_prec(two/three*init_noise*um)
+                   else
+                      uz1(i,j,k)=upr*sqrt_prec(two/three*init_noise*um) + um
+                      uy1(i,j,k)=vpr*sqrt_prec(two/three*init_noise*um)
+                      ux1(i,j,k)=wpr*sqrt_prec(two/three*init_noise*um)
+                   endif
+                enddo
+             enddo
+          enddo
+       endif
+   
+       !INIT FOR G AND U=MEAN FLOW + NOISE 
        do k=1,xsize(3)
           do j=1,xsize(2)
              do i=1,xsize(1)
@@ -163,7 +308,16 @@ contains
     endif
 
 #ifdef DEBG
-    if (nrank  ==  0) print *,'# init end ok'
+    avg_param = zero
+    call avg3d (ux1, avg_param)
+    if (nrank == 0) write(*,*)'## SUB Channel Init ux_avg ', avg_param
+    avg_param = zero
+    call avg3d (uy1, avg_param)
+    if (nrank == 0) write(*,*)'## SUB Channel Init uy_avg ', avg_param
+    avg_param = zero
+    call avg3d (uz1, avg_param)
+    if (nrank == 0) write(*,*)'## SUB Channel Init uz_avg ', avg_param
+    if (nrank .eq. 0) write(*,*) '# init end ok'
 #endif
 
   end subroutine init_channel
@@ -204,7 +358,11 @@ contains
 
     ! Imposed flow rate if no constant pressure gradient
     if (.not.cpg) then
-       call channel_cfr(ux,two/three)
+       if (idir_stream == 1) then
+          call channel_cfr(ux,two/three)
+       else
+          call channel_cfr(uz,two/three)
+       endif
     end if
 
     ! Boundary conditions for scalars are applied before computing conv. + diff.
@@ -293,7 +451,8 @@ contains
 
     can = - (constant - ub)
 
-    if (nrank==0) print *, nrank, 'UT', ub, can
+    if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) &
+       write(*,*) 'UT', ub, can
 
     do k=1,xsize(3)
       do j=1,xsize(2)
@@ -380,8 +539,8 @@ contains
   subroutine visu_channel(ux1, uy1, uz1, pp3, phi1, ep1, num)
 
     use var, only : ux2, uy2, uz2, ux3, uy3, uz3
-    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-    USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    use var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
     use var, ONLY : nzmsize
     use visu, only : write_field
     
@@ -437,7 +596,7 @@ contains
 
     !Q=-0.5*(ta1**2+te1**2+di1**2)-td1*tb1-tg1*tc1-th1*tf1
     di1 = zero
-    di1(:,:,:) = - 0.5*(ta1(:,:,:)**2 + te1(:,:,:)**2 + ti1(:,:,:)**2) &
+    di1(:,:,:) = - half*(ta1(:,:,:)**2 + te1(:,:,:)**2 + ti1(:,:,:)**2) &
                  - td1(:,:,:) * tb1(:,:,:) &
                  - tg1(:,:,:) * tc1(:,:,:) &
                  - th1(:,:,:) * tf1(:,:,:)
@@ -452,20 +611,26 @@ contains
   !! DESCRIPTION: Applies rotation for t < spinup_time.
   !!
   !############################################################################
-  subroutine momentum_forcing_channel(dux1, duy1, ux1, uy1)
+  subroutine momentum_forcing_channel(dux1, duy1, duz1, ux1, uy1, uz1)
 
     implicit none
 
-    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1
+    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
 
     if (cpg) then
         !! fcpg: add constant pressure gradient in streamwise direction
-        dux1(:,:,:,1) = dux1(:,:,:,1) + fcpg !* (re/re_cent)**2
+        if (idir_stream == 1) then
+           dux1(:,:,:,1) = dux1(:,:,:,1) + fcpg !* (re/re_cent)**2
+        else
+           duz1(:,:,:,1) = duz1(:,:,:,1) + fcpg !* (re/re_cent)**2
+        endif
     endif
 
-    if (itime < spinup_time) then
-       if (nrank==0) print *,'Rotating turbulent channel at speed ',wrotation
+    ! To update to take into account possible flow in z dir
+    if (itime < spinup_time .and. iin <= 2) then
+       if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) &
+          write(*,*) 'Rotating turbulent channel at speed ',wrotation
        dux1(:,:,:,1) = dux1(:,:,:,1) - wrotation*uy1(:,:,:)
        duy1(:,:,:,1) = duy1(:,:,:,1) + wrotation*ux1(:,:,:)
     endif
@@ -509,7 +674,7 @@ contains
     do while ((one + zeromach / two)  >  one)
        zeromach = zeromach/two
     end do
-    zeromach = 1.0e1*zeromach
+    zeromach = ten*zeromach
 
     do j=nyi,nyf
        ym=yp(j)

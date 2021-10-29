@@ -49,7 +49,7 @@ contains
     do while ((one + zeromach / two)  >  one)
        zeromach = zeromach/two
     end do
-    zeromach = 1.0e1*zeromach
+    zeromach = ten*zeromach
     !
     y_bump=zero
     dune=zero
@@ -60,28 +60,28 @@ contains
        else
           xm = xm*twentyeight
        endif
-       if ((xm >= zero).and.(xm <= nine)) then
-          y_bump=min(28.,28+0.006775070969851*xm**two-2.124527775800E-03*xm**three)
+       if ((xm >= zero).and.(xm<nine)) then
+          y_bump=min(twentyeight,twentyeight+0.006775070969851_mytype*xm**two-2.124527775800E-03_mytype*xm**three)
        endif
-       if ((xm >= 9.).and.(xm <= fourteen)) then
-          y_bump=  2.507355893131E+01      +9.754803562315E-01*xm&
-               -1.016116352781E-01*xm**two +1.889794677828E-03*xm**three
+       if ((xm >= nine).and.(xm<fourteen)) then
+          y_bump=  2.507355893131E+01_mytype         +9.754803562315E-01_mytype*xm&
+                  -1.016116352781E-01_mytype*xm**two +1.889794677828E-03_mytype*xm**three
        endif
-       if ((xm >= 14.).and.(xm <= twenty)) then
-          y_bump=  2.579601052357E+01      +8.206693007457E-01*xm &
-               -9.055370274339E-02*xm**two +1.626510569859E-03*xm**three
+       if ((xm >= fourteen).and.(xm<twenty)) then
+          y_bump=  2.579601052357E+01_mytype         +8.206693007457E-01_mytype*xm &
+                  -9.055370274339E-02_mytype*xm**two +1.626510569859E-03_mytype*xm**three
        endif
-       if ((xm >= 20.).and.(xm <= 30._mytype)) then
-          y_bump=  4.046435022819E+01      -1.379581654948E+00*xm &
-               +1.945884504128E-02*xm**two -2.070318932190E-04*xm**three
+       if ((xm >= twenty).and.(xm<thirty)) then
+          y_bump= 4.046435022819E+01_mytype         -1.379581654948E+00_mytype*xm &
+                 +1.945884504128E-02_mytype*xm**two -2.070318932190E-04_mytype*xm**three
        endif
-       if ((xm >= 30.).and.(xm <= 40._mytype)) then
-          y_bump=  1.792461334664E+01      +8.743920332081E-01*xm &
-               -5.567361123058E-02*xm**two +6.277731764683E-04*xm**three
+       if ((xm >= thirty).and.(xm<forty)) then
+          y_bump= 1.792461334664E+01_mytype         +8.743920332081E-01_mytype*xm &
+                 -5.567361123058E-02_mytype*xm**two +6.277731764683E-04_mytype*xm**three
        endif
-       if ((xm >= 40.).and.(xm <= 54._mytype)) then
-          y_bump=max(0.,5.639011190988E+01  -2.010520359035E+00*xm &
-               +1.644919857549E-02*xm**two  +2.674976141766E-05*xm**three)
+       if ((xm >= forty).and.(xm <= fiftyfour)) then
+          y_bump=max(zero,5.639011190988E+01_mytype          -2.010520359035E+00_mytype*xm &
+                         +1.644919857549E-02_mytype*xm**two  +2.674976141766E-05_mytype*xm**three)
        endif
        dune(i)=y_bump/twentyeight
     enddo
@@ -153,7 +153,7 @@ contains
        call system_clock(count=code)
        if (iin == 2) code=0
        call random_seed(size = ii)
-       call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /))
+       call random_seed(put = code+63946*(nrank+1)*(/ (i - 1, i = 1, ii) /))
 
        call random_number(ux1)
        call random_number(uy1)
@@ -204,7 +204,7 @@ contains
     enddo
 
 #ifdef DEBG
-    if (nrank  ==  0) print *,'# init end ok'
+    if (nrank == 0) write(*,*) '# init end ok'
 #endif
 
     return
@@ -279,7 +279,7 @@ contains
 
     can=-(constant-ut4)
 
-    if (nrank==0) print *,nrank,'UT',ut4,can
+    if (nrank==0) write(*,*) nrank,'UT',ut4,can
 
     do k=1,ysize(3)
        do i=1,ysize(1)

@@ -44,27 +44,27 @@ subroutine filter(af)
   real(mytype),intent(in) :: af
 
 #ifdef DEBG
-  if (nrank  ==  0) print *,'# filter calculation start'
+  if (nrank==0) write(*,*) '# filter calculation start'
 #endif
 
   ! Filter functions
-  if (nclx1 == 0.and.nclxn == 0) filx => filx_00
-  if (nclx1 == 1.and.nclxn == 1) filx => filx_11
-  if (nclx1 == 1.and.nclxn == 2) filx => filx_12
-  if (nclx1 == 2.and.nclxn == 1) filx => filx_21
-  if (nclx1 == 2.and.nclxn == 2) filx => filx_22
+  if (nclx1==0.and.nclxn==0) filx => filx_00
+  if (nclx1==1.and.nclxn==1) filx => filx_11
+  if (nclx1==1.and.nclxn==2) filx => filx_12
+  if (nclx1==2.and.nclxn==1) filx => filx_21
+  if (nclx1==2.and.nclxn==2) filx => filx_22
   !
-  if (ncly1 == 0.and.nclyn == 0) fily => fily_00
-  if (ncly1 == 1.and.nclyn == 1) fily => fily_11
-  if (ncly1 == 1.and.nclyn == 2) fily => fily_12
-  if (ncly1 == 2.and.nclyn == 1) fily => fily_21
-  if (ncly1 == 2.and.nclyn == 2) fily => fily_22
+  if (ncly1==0.and.nclyn==0) fily => fily_00
+  if (ncly1==1.and.nclyn==1) fily => fily_11
+  if (ncly1==1.and.nclyn==2) fily => fily_12
+  if (ncly1==2.and.nclyn==1) fily => fily_21
+  if (ncly1==2.and.nclyn==2) fily => fily_22
   !
-  if (nclz1 == 0.and.nclzn == 0) filz => filz_00
-  if (nclz1 == 1.and.nclzn == 1) filz => filz_11
-  if (nclz1 == 1.and.nclzn == 2) filz => filz_12
-  if (nclz1 == 2.and.nclzn == 1) filz => filz_21
-  if (nclz1 == 2.and.nclzn == 2) filz => filz_22
+  if (nclz1==0.and.nclzn==0) filz => filz_00
+  if (nclz1==1.and.nclzn==1) filz => filz_11
+  if (nclz1==1.and.nclzn==2) filz => filz_12
+  if (nclz1==2.and.nclzn==1) filz => filz_21
+  if (nclz1==2.and.nclzn==2) filz => filz_22
 
   ! Set coefficients for x-direction filter
   call set_filter_coefficients(af,fial1x,fia1x,fib1x,fic1x,fid1x,fial2x,fia2x,fib2x,fic2x,fid2x,fial3x,fia3x,fib3x,fic3x,fid3x,fie3x,fif3x,&
@@ -79,7 +79,7 @@ subroutine filter(af)
        fialnz,fianz,fibnz,ficnz,fidnz,fialmz,fiamz,fibmz,ficmz,fidmz,fialpz,fiapz,fibpz,ficpz,fidpz,fiepz,fifpz,&
        fialkz,fiakz,fibkz,fickz,fidkz,fiffz,fifsz,fifwz,fiffzp,fifszp,fifwzp,nz,nclz1,nclzn)
 #ifdef DEBG
-  if (nrank  ==  0) print *,'# filter calculation end'
+  if (nrank == 0) write(*,*) '# filter calculation end'
 #endif
 
 end subroutine filter
@@ -165,7 +165,7 @@ subroutine set_filter_coefficients(af,alfa1,a1,b1,c1,d1,alfa2,a2,b2,c2,d2,alfa3,
   ff=zero;fs=zero;fw=zero;ffp=zero;fsp=zero;fwp=zero
   fb=zero;fc=zero
 
-  if     (ncl1 == 0) then !Periodic
+  if     (ncl1==0) then !Periodic
      ff(1)   =alfai
      ff(2)   =alfai
      fc(1)   =two
