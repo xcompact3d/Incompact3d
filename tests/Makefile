@@ -6,8 +6,8 @@ export FFLAGS OPT DEFS DEFS2 INC
 
 all:
 	$(MAKE) -C lib all
-	$(MAKE) -C derive all
+	$(MAKE) -C verif all
 
 clean:
 	$(MAKE) -C lib clean
-	$(MAKE) -C derive clean
+	$(MAKE) -C verif clean

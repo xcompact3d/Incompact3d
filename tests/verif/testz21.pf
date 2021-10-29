@@ -1,4 +1,4 @@
-module testz22
+module testz21
 
    use MPI
    use pFunit
@@ -10,7 +10,7 @@ contains
 
    ! Serial test
    @test
-   subroutine verif_derz_derzz_22()
+   subroutine verif_derz_derzz_21()
 
       use decomp_2d
       use param
@@ -36,10 +36,10 @@ contains
       call derz(output,input,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcy)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
-      call log("derz22", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      call log("derz21", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       if (check_error) then
-         @assertEqual(l1/sl1, 0.d0, tolerance=8.d-10)
-         @assertEqual(l2/sl2, 0.d0, tolerance=2.d-8)
+         @assertEqual(l1/sl1, 0.d0, tolerance=4.d-10)
+         @assertEqual(l2/sl2, 0.d0, tolerance=8.d-9)
          @assertEqual(linf/slinf, 0.d0, tolerance=2.d-7)
       endif
       do k = 1, zsize(3)
@@ -52,10 +52,10 @@ contains
       call derz(output,input,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcz)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
-      call log("derz22p", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      call log("derz21p", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       if (check_error) then
-         @assertEqual(l1/sl1, 0.d0, tolerance=3.d-8)
-         @assertEqual(l2/sl2, 0.d0, tolerance=4.d-7)
+         @assertEqual(l1/sl1, 0.d0, tolerance=2.d-8)
+         @assertEqual(l2/sl2, 0.d0, tolerance=3.d-7)
          @assertEqual(linf/slinf, 0.d0, tolerance=6.d-6)
       endif
 
@@ -70,10 +70,10 @@ contains
       call derzz(output,input,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,ubcy)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
-      call log("derzz22p", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      call log("derzz21p", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       if (check_error) then
-         @assertEqual(l1/sl1, 0.d0, tolerance=3.d-8)
-         @assertEqual(l2/sl2, 0.d0, tolerance=6.d-8)
+         @assertEqual(l1/sl1, 0.d0, tolerance=2.d-9)
+         @assertEqual(l2/sl2, 0.d0, tolerance=4.d-8)
          @assertEqual(linf/slinf, 0.d0, tolerance=9.d-7)
       endif
       do k = 1, zsize(3)
@@ -86,13 +86,68 @@ contains
       call derzz(output,input,di3,sz,sfz,ssz,swz,zsize(1),zsize(2),zsize(3),0,ubcz)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
-      call log("derzz22", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      call log("derzz21", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       if (check_error) then
-         @assertEqual(l1/sl1, 0.d0, tolerance=1.d-7)
-         @assertEqual(l2/sl2, 0.d0, tolerance=2.d-6)
+         @assertEqual(l1/sl1, 0.d0, tolerance=4.d-8)
+         @assertEqual(l2/sl2, 0.d0, tolerance=9.d-7)
          @assertEqual(linf/slinf, 0.d0, tolerance=2.d-5)
       endif
 
-   end subroutine verif_derz_derzz_22
+   end subroutine verif_derz_derzz_21
 
-end module testz22
+   ! Serial test
+   @test
+   subroutine verif_filz_21()
+
+      use decomp_2d
+      use param
+      use var
+      use variables
+      use tools, only : error_l1_l2_linf
+      use ibm_param, only : ubcx,ubcy,ubcz
+
+      implicit none
+
+      real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: input, output, sol
+      real(mytype) :: z, l1, l2, linf, sl1, sl2, slinf, t1, t2
+      integer :: k
+
+      call filter(zero)
+
+      ! Lx = Ly = Lz = 2
+      do k = 1, zsize(3)
+         z = (k-1) * dz
+         input(:,:,k) = cos(5*pi*z)
+         sol(:,:,k) = input(:,:,k)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf)
+      call cpu_time(t1)
+      call filz(output,input,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+      call cpu_time(t2)
+      call error_l1_l2_linf(output-sol, l1, l2, linf)
+      call log("filz21p", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=3.d-10)
+         @assertEqual(l2/sl2, 0.d0, tolerance=8.d-9)
+         @assertEqual(linf/slinf, 0.d0, tolerance=2.d-7)
+      endif
+      do k = 1, zsize(3)
+         z = (k-1) * dz
+         input(:,:,k) = sin(pi*z)
+         sol(:,:,k) = input(:,:,k)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf)
+      call cpu_time(t1)
+      call filz(output,input,di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,ubcz)
+      call cpu_time(t2)
+      call error_l1_l2_linf(output-sol, l1, l2, linf)
+      call log("filz21", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=5.d-11)
+         @assertEqual(l2/sl2, 0.d0, tolerance=2.d-9)
+         @assertEqual(linf/slinf, 0.d0, tolerance=3.d-8)
+      endif
+
+   end subroutine verif_filz_21
+
+end module testz21

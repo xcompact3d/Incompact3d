@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-cd ./derive
+cd ./verif
 ./test_x_00
 ./test_y_00
 ./test_y_00_str

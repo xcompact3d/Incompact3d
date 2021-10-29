@@ -1,4 +1,4 @@
-module testy00_str
+module testy11
 
    use MPI
    use pFunit
@@ -10,7 +10,7 @@ contains
 
    ! Serial test
    @test
-   subroutine verif_dery_deryy_00_str()
+   subroutine verif_dery_deryy_11()
 
       use decomp_2d
       use param
@@ -28,36 +28,43 @@ contains
       ! Lx = Ly = Lz = 2
       do j = 1, ysize(2)
          y = yp(j)
-         input(:,j,:) = sin(pi*y) + cos(5*pi*y)
-         sol(:,j,:) = pi*cos(pi*y) - 5*pi*sin(5*pi*y)
+         input(:,j,:) = sin(5*pi*y)
+         sol(:,j,:) = 5*pi*cos(5*pi*y)
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
       call cpu_time(t1)
       call dery(output,input,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcx)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
-      call log("dery00_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      call log("dery11", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       if (check_error) then
-         @assertEqual(l1/sl1, 0.d0, tolerance=4.d-11)
-         @assertEqual(l2/sl2, 0.d0, tolerance=9.d-11)
-         @assertEqual(linf/slinf, 0.d0, tolerance=3.d-10)
+         @assertEqual(l1/sl1, 0.d0, tolerance=4.d-13)
+         @assertEqual(l2/sl2, 0.d0, tolerance=4.d-13)
+         @assertEqual(linf/slinf, 0.d0, tolerance=5.d-13)
       endif
+      do j = 1, ysize(2)
+         y = yp(j)
+         input(:,j,:) = cos(5*pi*y)
+         sol(:,j,:) = -5*pi*sin(5*pi*y)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
       call cpu_time(t1)
       call dery(output,input,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcy)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
-      call log("dery00p_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      call log("dery11p", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       if (check_error) then
-         @assertEqual(l1/sl1, 0.d0, tolerance=4.d-11)
-         @assertEqual(l2/sl2, 0.d0, tolerance=9.d-11)
-         @assertEqual(linf/slinf, 0.d0, tolerance=3.d-10)
+         @assertEqual(l1/sl1, 0.d0, tolerance=4.d-13)
+         @assertEqual(l2/sl2, 0.d0, tolerance=4.d-13)
+         @assertEqual(linf/slinf, 0.d0, tolerance=5.d-13)
       endif
 
       ! test deryy
       iimplicit = -iimplicit
       do j = 1, ysize(2)
          y = yp(j)
-         sol(:,j,:) = -(pi**2)*sin(pi*y) - 25*(pi**2)*cos(5*pi*y)
+         input(:,j,:) = cos(5*pi*y)
+         sol(:,j,:) = -25*(pi**2)*cos(5*pi*y)
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
       call cpu_time(t1)
@@ -70,12 +77,18 @@ contains
       endif
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
-      call log("deryy00p_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      call log("deryy11p", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       if (check_error) then
-         @assertEqual(l1/sl1, 0.d0, tolerance=7.d-11)
-         @assertEqual(l2/sl2, 0.d0, tolerance=1.d-10)
-         @assertEqual(linf/slinf, 0.d0, tolerance=3.d-10)
+         @assertEqual(l1/sl1, 0.d0, tolerance=2.d-12)
+         @assertEqual(l2/sl2, 0.d0, tolerance=2.d-12)
+         @assertEqual(linf/slinf, 0.d0, tolerance=6.d-12)
       endif
+      do j = 1, ysize(2)
+         y = yp(j)
+         input(:,j,:) = sin(5*pi*y)
+         sol(:,j,:) = -25*(pi**2)*sin(5*pi*y)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
       call cpu_time(t1)
       call deryy(output,input,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0,ubcy)
       if (istret /= 0) then
@@ -86,19 +99,19 @@ contains
       endif
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
-      call log("deryy00_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      call log("deryy11", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       if (check_error) then
-         @assertEqual(l1/sl1, 0.d0, tolerance=7.d-11)
-         @assertEqual(l2/sl2, 0.d0, tolerance=1.d-10)
-         @assertEqual(linf/slinf, 0.d0, tolerance=3.d-10)
+         @assertEqual(l1/sl1, 0.d0, tolerance=2.d-12)
+         @assertEqual(l2/sl2, 0.d0, tolerance=2.d-12)
+         @assertEqual(linf/slinf, 0.d0, tolerance=6.d-12)
       endif
       iimplicit = -iimplicit
 
-   end subroutine verif_dery_deryy_00_str
+   end subroutine verif_dery_deryy_11
 
    ! Serial test
    @test
-   subroutine verif_deryvp_00_str()
+   subroutine verif_deryvp_11()
 
       use decomp_2d
       use param
@@ -116,31 +129,31 @@ contains
       ! Lx = Ly = Lz = 2
       do j = 1, ysize(2)
          y = yp(j)
-         input(:,j,:) = sin(pi*y) + cos(5*pi*y)
+         input(:,j,:) = sin(5*pi*y)
       enddo
 
       ! test deryvp
       do j = 1, nymsize
          y = ypi(j)
-         sol(:,j,:) = pi*cos(pi*y) - 5*pi*sin(5*pi*y)
+         sol(:,j,:) = 5*pi*cos(5*pi*y)
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), nymsize, ysize(3), xsize(1)*nymsize*zsize(3))
       call cpu_time(t1)
       call deryvp(output,input,diloc,sy,cfy6,csy6,cwy6,ppyi,ysize(1),ysize(2),nymsize,ysize(3),0)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), nymsize, ysize(3), xsize(1)*nymsize*zsize(3))
-      call log("deryvp00_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      call log("deryvp11", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       if (check_error) then
-         @assertEqual(l1/sl1, 0.d0, tolerance=2.d-11)
-         @assertEqual(l2/sl2, 0.d0, tolerance=4.d-11)
-         @assertEqual(linf/slinf, 0.d0, tolerance=1.d-10)
+         @assertEqual(l1/sl1, 0.d0, tolerance=2.d-13)
+         @assertEqual(l2/sl2, 0.d0, tolerance=2.d-13)
+         @assertEqual(linf/slinf, 0.d0, tolerance=2.d-13)
       endif
 
-   end subroutine verif_deryvp_00_str
+   end subroutine verif_deryvp_11
 
    ! Serial test
    @test
-   subroutine verif_interyvp_00_str()
+   subroutine verif_interyvp_11()
 
       use decomp_2d
       use param
@@ -158,31 +171,31 @@ contains
       ! Lx = Ly = Lz = 2
       do j = 1, ysize(2)
          y = yp(j)
-         input(:,j,:) = sin(pi*y) + cos(5*pi*y)
+         input(:,j,:) = cos(5*pi*y)
       enddo
 
       ! test deryvp
       do j = 1, nymsize
          y = ypi(j)
-         sol(:,j,:) = sin(pi*y) + cos(5*pi*y)
+         sol(:,j,:) = cos(5*pi*y)
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), nymsize, ysize(3), xsize(1)*nymsize*zsize(3))
       call cpu_time(t1)
       call interyvp(output,input,diloc,sz,cifyp6,cisyp6,ciwyp6,ysize(1),ysize(2),nymsize,ysize(3),1)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), nymsize, ysize(3), xsize(1)*nymsize*zsize(3))
-      call log("interyvp00_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      call log("interyvp11", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       if (check_error) then
-         @assertEqual(l1/sl1, 0.d0, tolerance=5.d-11)
-         @assertEqual(l2/sl2, 0.d0, tolerance=2.d-10)
-         @assertEqual(linf/slinf, 0.d0, tolerance=3.d-10)
+         @assertEqual(l1/sl1, 0.d0, tolerance=8.d-13)
+         @assertEqual(l2/sl2, 0.d0, tolerance=8.d-13)
+         @assertEqual(linf/slinf, 0.d0, tolerance=8.d-13)
       endif
 
-   end subroutine verif_interyvp_00_str
+   end subroutine verif_interyvp_11
 
    ! Serial test
    @test
-   subroutine verif_derypv_00_str()
+   subroutine verif_derypv_11()
 
       use decomp_2d
       use param
@@ -200,31 +213,31 @@ contains
       ! Lx = Ly = Lz = 2
       do j = 1, nymsize
          y = ypi(j)
-         input(:,j,:) = sin(pi*y) + cos(5*pi*y)
+         input(:,j,:) = cos(5*pi*y)
       enddo
 
       ! test deryvp
       do j = 1, ysize(2)
          y = yp(j)
-         sol(:,j,:) = pi*cos(pi*y) - 5*pi*sin(5*pi*y)
+         sol(:,j,:) = -5*pi*sin(5*pi*y)
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
       call cpu_time(t1)
       call derypv(output,input,diloc,sy,cfip6y,csip6y,cwip6y,cfy6,csy6,cwy6,ppy,ysize(1),nymsize,ysize(2),ysize(3),1)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
-      call log("derypv00_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      call log("derypv11", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       if (check_error) then
-         @assertEqual(l1/sl1, 0.d0, tolerance=2.d-11)
-         @assertEqual(l2/sl2, 0.d0, tolerance=4.d-11)
-         @assertEqual(linf/slinf, 0.d0, tolerance=1.d-10)
+         @assertEqual(l1/sl1, 0.d0, tolerance=2.d-13)
+         @assertEqual(l2/sl2, 0.d0, tolerance=2.d-13)
+         @assertEqual(linf/slinf, 0.d0, tolerance=2.d-13)
       endif
 
-   end subroutine verif_derypv_00_str
+   end subroutine verif_derypv_11
 
    ! Serial test
    @test
-   subroutine verif_interypv_00_str()
+   subroutine verif_interypv_11()
 
       use decomp_2d
       use param
@@ -242,26 +255,81 @@ contains
       ! Lx = Ly = Lz = 2
       do j = 1, nymsize
          y = ypi(j)
-         input(:,j,:) = sin(pi*y) + cos(5*pi*y)
+         input(:,j,:) = cos(5*pi*y)
       enddo
 
       ! test deryvp
       do j = 1, ysize(2)
          y = yp(j)
-         sol(:,j,:) = sin(pi*y) + cos(5*pi*y)
+         sol(:,j,:) = cos(5*pi*y)
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
       call cpu_time(t1)
       call interypv(output,input,diloc,sz,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,ysize(1),nymsize,ysize(2),ysize(3),1)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
-      call log("interypv00_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      call log("interypv11", l1/sl1, l2/sl2, linf/slinf, t2-t1)
       if (check_error) then
-         @assertEqual(l1/sl1, 0.d0, tolerance=5.d-11)
-         @assertEqual(l2/sl2, 0.d0, tolerance=2.d-10)
-         @assertEqual(linf/slinf, 0.d0, tolerance=3.d-10)
+         @assertEqual(l1/sl1, 0.d0, tolerance=8.d-13)
+         @assertEqual(l2/sl2, 0.d0, tolerance=8.d-13)
+         @assertEqual(linf/slinf, 0.d0, tolerance=8.d-13)
       endif
 
-   end subroutine verif_interypv_00_str
+   end subroutine verif_interypv_11
 
-end module testy00_str
+   ! Serial test
+   @test
+   subroutine verif_fily_11()
+
+      use decomp_2d
+      use param
+      use var
+      use variables
+      use tools, only : error_l1_l2_linf
+      use ibm_param, only : ubcx,ubcy,ubcz
+
+      implicit none
+
+      real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: input, output, sol
+      real(mytype) :: y, l1, l2, linf, sl1, sl2, slinf, t1, t2
+      integer :: j
+
+      call filter(zero)
+
+      ! Lx = Ly = Lz = 2
+      do j = 1, ysize(2)
+         y = (j-1) * dy
+         input(:,j,:) = cos(5*pi*y)
+         sol(:,j,:) = input(:,j,:)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf)
+      call cpu_time(t1)
+      call fily(output,input,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,ubcx)
+      call cpu_time(t2)
+      call error_l1_l2_linf(output-sol, l1, l2, linf)
+      call log("fily11p", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=2.d-11)
+         @assertEqual(l2/sl2, 0.d0, tolerance=2.d-11)
+         @assertEqual(linf/slinf, 0.d0, tolerance=2.d-11)
+      endif
+      do j = 1, ysize(2)
+         y = (j-1) * dy
+         input(:,j,:) = sin(pi*y)
+         sol(:,j,:) = input(:,j,:)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf)
+      call cpu_time(t1)
+      call fily(output,input,di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,ubcy)
+      call cpu_time(t2)
+      call error_l1_l2_linf(output-sol, l1, l2, linf)
+      call log("fily11", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=9.d-16)
+         @assertEqual(l2/sl2, 0.d0, tolerance=9.d-16)
+         @assertEqual(linf/slinf, 0.d0, tolerance=1.d-15)
+      endif
+
+   end subroutine verif_fily_11
+
+end module testy11

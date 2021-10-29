@@ -95,4 +95,59 @@ contains
 
    end subroutine verif_derx_derxx_22
 
+   ! Serial test
+   @test
+   subroutine verif_filx_22()
+
+      use decomp_2d
+      use param
+      use var
+      use variables
+      use tools, only : error_l1_l2_linf
+      use ibm_param, only : ubcx,ubcy,ubcz
+
+      implicit none
+
+      real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: input, output, sol
+      real(mytype) :: x, l1, l2, linf, sl1, sl2, slinf, t1, t2
+      integer :: i
+
+      call filter(zero)
+
+      ! Lx = Ly = Lz = 2
+      do i = 1, xsize(1)
+         x = (i-1) * dx
+         input(i,:,:) = cos(5*pi*x)
+         sol(i,:,:) = input(i,:,:)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf)
+      call cpu_time(t1)
+      call filx(output,input,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+      call cpu_time(t2)
+      call error_l1_l2_linf(output-sol, l1, l2, linf)
+      call log("filx22p", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=6.d-10)
+         @assertEqual(l2/sl2, 0.d0, tolerance=2.d-8)
+         @assertEqual(linf/slinf, 0.d0, tolerance=2.d-7)
+      endif
+      do i = 1, xsize(1)
+         x = (i-1) * dx
+         input(i,:,:) = sin(pi*x)
+         sol(i,:,:) = input(i,:,:)
+      enddo
+      call error_l1_l2_linf(output-sol, l1, l2, linf)
+      call cpu_time(t1)
+      call filx(output,input,di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,ubcx)
+      call cpu_time(t2)
+      call error_l1_l2_linf(output-sol, l1, l2, linf)
+      call log("filx22", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=9.d-11)
+         @assertEqual(l2/sl2, 0.d0, tolerance=2.d-9)
+         @assertEqual(linf/slinf, 0.d0, tolerance=3.d-8)
+      endif
+
+   end subroutine verif_filx_22
+
 end module testx22

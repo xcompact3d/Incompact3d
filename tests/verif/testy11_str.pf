@@ -277,4 +277,59 @@ contains
 
    end subroutine verif_interypv_11_str
 
+   ! Serial test
+   @test
+   subroutine verif_fily_11_str()
+
+      use decomp_2d
+      use param
+      use var
+      use variables
+      use tools, only : error_l1_l2_linf
+      use ibm_param, only : ubcx,ubcy,ubcz
+
+      implicit none
+
+      real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: input, output, sol
+      real(mytype) :: y, l1, l2, linf, sl1, sl2, slinf, t1, t2
+      integer :: j
+
+      call filter(zero)
+
+      ! Lx = Ly = Lz = 2
+      do j = 1, ysize(2)
+         y = (j-1) * dy
+         input(:,j,:) = cos(5*pi*y)
+         sol(:,j,:) = input(:,j,:)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf)
+      call cpu_time(t1)
+      call fily(output,input,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,ubcx)
+      call cpu_time(t2)
+      call error_l1_l2_linf(output-sol, l1, l2, linf)
+      call log("fily11p_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=2.d-11)
+         @assertEqual(l2/sl2, 0.d0, tolerance=2.d-11)
+         @assertEqual(linf/slinf, 0.d0, tolerance=2.d-11)
+      endif
+      do j = 1, ysize(2)
+         y = (j-1) * dy
+         input(:,j,:) = sin(pi*y)
+         sol(:,j,:) = input(:,j,:)
+      enddo
+      call error_l1_l2_linf(sol, sl1, sl2, slinf)
+      call cpu_time(t1)
+      call fily(output,input,di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,ubcy)
+      call cpu_time(t2)
+      call error_l1_l2_linf(output-sol, l1, l2, linf)
+      call log("fily11_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=9.d-16)
+         @assertEqual(l2/sl2, 0.d0, tolerance=9.d-16)
+         @assertEqual(linf/slinf, 0.d0, tolerance=1.d-15)
+      endif
+
+   end subroutine verif_fily_11_str
+
 end module testy11_str
