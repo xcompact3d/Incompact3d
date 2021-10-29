@@ -47,7 +47,7 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:) :: divu3
   real(mytype), save, allocatable, dimension(:,:,:,:) :: phi1, phi2, phi3
   real(mytype), save, allocatable, dimension(:,:,:) :: px1, py1, pz1
-  real(mytype), save, allocatable, dimension(:,:,:) :: ep1, depo, depof, kine
+  real(mytype), save, allocatable, dimension(:,:,:) :: ep1, diss1, pre1, depo, depof, kine
   real(mytype), save, allocatable, dimension(:,:,:,:) :: dux1,duy1,duz1  ! Output of convdiff
   real(mytype), save, allocatable, dimension(:,:,:,:,:) :: dphi1
   real(mytype), save, allocatable, dimension(:,:,:) :: mu1,mu2,mu3
@@ -333,6 +333,8 @@ contains
        uwmean=zero
        allocate (vwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
        vwmean=zero
+       allocate (ppmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+       ppmean=zero
 
        allocate (phimean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
        phimean=zero
