@@ -194,7 +194,7 @@ contains
       mu1 = one
     endif
 
-    if (itype == itype_uniform .or. (itype == itype_abl.and.ifilter /= 0.and.ilesmod /= 0)) then
+    if ((itype == itype_abl.or.iturbine /= 0).and.(ifilter /= 0).and.(ilesmod /= 0)) then
        call alloc_x(uxf1)
        uxf1 = zero
        call alloc_x(uyf1)
@@ -374,7 +374,7 @@ contains
     tj2=zero
     call alloc_y(di2)
     di2=zero
-    if (itype == itype_uniform .or. (itype == itype_abl.and.ifilter /= 0.and.ilesmod /= 0)) then
+    if ((itype == itype_abl.or.iturbine /= 0).and.(ifilter /= 0).and.(ilesmod /= 0)) then
        call alloc_y(uxf2)
        uxf2=zero
        call alloc_y(uyf2)
@@ -443,7 +443,7 @@ contains
     ti3=zero
     call alloc_z(di3)
     di3=zero
-    if (itype == itype_uniform .or. (itype == itype_abl.and.ifilter /= 0.and.ilesmod /= 0)) then
+    if ((itype == itype_abl.or.iturbine /= 0).and.(ifilter /= 0).and.(ilesmod /= 0)) then
     di3=zero
        call alloc_z(uxf3)
        uxf3=zero
@@ -1436,7 +1436,7 @@ contains
     deallocate(phi1)
     deallocate(ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,ep1)
     if (ilmn) deallocate(mu1)
-    if (itype == itype_uniform .or. (itype == itype_abl.and.ifilter /= 0.and.ilesmod /= 0)) then
+    if ((itype == itype_abl.or.iturbine /= 0).and.(ifilter /= 0).and.(ilesmod /= 0)) then
       deallocate(uxf1,uyf1,uzf1,phif1)
     endif
     if (itype == itype_abl.and.ilesmod /= 0.and.jles <= 3.and.jles > 0) then
@@ -1465,7 +1465,7 @@ contains
 
     deallocate(ux2,uy2,uz2)
     deallocate(ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2)
-    if (itype == itype_uniform .or. (itype == itype_abl.and.ifilter /= 0.and.ilesmod /= 0)) then
+    if ((itype == itype_abl.or.iturbine /= 0).and.(ifilter /= 0).and.(ilesmod /= 0)) then
       deallocate(uxf2,uyf2,uzf2,phif2)
     endif
     deallocate(phi2,pgz2,pp2,dip2,ppi2,pgy2,pgzi2)
@@ -1475,7 +1475,7 @@ contains
 
     deallocate(ux3,uy3,uz3)
     deallocate(ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3)
-    if (itype == itype_uniform .or. (itype == itype_abl.and.ifilter /= 0.and.ilesmod /= 0)) then
+    if ((itype == itype_abl.or.iturbine /= 0).and.(ifilter /= 0).and.(ilesmod /= 0)) then
       deallocate(uxf3,uyf3,uzf3,phif3)
     endif
     deallocate(phi3,pgz3,ppi3,dip3)
