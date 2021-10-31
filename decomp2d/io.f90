@@ -1531,7 +1531,7 @@ contains
 
     logical, dimension(:), pointer :: live_ptrh
     character(len=80), dimension(:), pointer :: names_ptr
-    character(len=:), allocatable :: full_name
+    character(len=(len(io_name)+len(io_sep)+len(io_dir))) :: full_name
     
     integer :: idx, ierror
     integer :: access_mode
@@ -1561,10 +1561,8 @@ contains
              end if
           end do
           
-          allocate(character(len=len(trim(io_name)) + len(trim(io_sep)) + len(trim(io_dir))) :: full_name)
-          write(full_name, "(A,A,A)") trim(io_name), trim(io_sep), trim(io_dir)
+          full_name = io_name//io_sep//io_dir
           names_ptr(idx) = full_name
-          deallocate(full_name)
 
           if (mode .eq. decomp_2d_write_mode) then
              !! Setup writers
@@ -1675,7 +1673,7 @@ contains
     character(len=*), intent(in) :: io_name
     character(len=*), intent(in) :: engine_name
 
-    character(len=:), allocatable :: full_name
+    character(len=(len(io_name)+len(io_sep)+len(engine_name))) :: full_name
     integer :: idx
     logical :: found
 
@@ -1687,8 +1685,7 @@ contains
     names_ptr => engine_names
 #endif
 
-    allocate(character(len=len(trim(io_name)) + len(trim(io_sep)) + len(trim(engine_name))) :: full_name)
-    write(full_name, "(A,A,A)") trim(io_name), trim(io_sep), trim(engine_name)
+    full_name = io_name//io_sep//engine_name
     
     found = .false.
     do idx = 1, MAX_IOH
@@ -1701,8 +1698,6 @@ contains
     if (.not. found) then
        idx = -1
     end if
-
-    deallocate(full_name)
 
     get_io_idx = idx
     
