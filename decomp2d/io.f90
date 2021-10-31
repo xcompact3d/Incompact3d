@@ -1133,6 +1133,11 @@ contains
        deallocate(varsingle)
     end if
 #else
+    if (.not. engine_live(idx)) then
+       print *, "ERROR: Engine is not live!"
+       stop
+    end if
+    
     call adios2_at_io(io_handle, adios, io_name, ierror)
     call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
     if (.not.var_handle % valid) then
@@ -1154,8 +1159,17 @@ contains
     else
        write_mode = adios2_mode_sync
     end if
-    
-    call adios2_put(engine_registry(idx), var_handle, var, write_mode, ierror)
+
+    if (engine_registry(idx)%valid) then
+       call adios2_put(engine_registry(idx), var_handle, var, write_mode, ierror)
+       if (ierror /= 0) then
+          print *, "ERROR: something went wrong in adios2_put"
+          stop
+       end if
+    else
+       print *, "ERROR: decomp2d thinks engine is live, but adios2 engine object is not valid"
+       stop
+    end if
 #endif
 
     return
@@ -1205,29 +1219,38 @@ contains
     
     ! Check if variable already exists, if not create it
     call adios2_at_io(io_handle, adios, io_name, ierror)
-    call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
-    if (.not.var_handle % valid) then
-       !! New variable
-       if (nrank .eq. 0) then
-          print *, "Registering variable for IO: ", varname
-       endif
-       
-       ! Need to set the ADIOS2 data type
-       if (type.eq.kind(0.0d0)) then
-          !! Double
-          data_type = adios2_type_dp
-       else if (type.eq.kind(0.0)) then
-          !! Single
-          data_type = adios2_type_real
-       else
-          print *, "Trying to write unknown data type!"
-          call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
-       endif
+    if (io_handle%valid) then
+       call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
+       if (.not.var_handle % valid) then
+          !! New variable
+          if (nrank .eq. 0) then
+             print *, "Registering variable for IO: ", varname
+          endif
 
-       call adios2_define_variable(var_handle, io_handle, varname, data_type, &
-            ndims, int(sizes, kind=8), int(starts, kind=8), int(subsizes, kind=8), &
-            adios2_constant_dims, ierror)
-    endif
+          ! Need to set the ADIOS2 data type
+          if (type.eq.kind(0.0d0)) then
+             !! Double
+             data_type = adios2_type_dp
+          else if (type.eq.kind(0.0)) then
+             !! Single
+             data_type = adios2_type_real
+          else
+             print *, "Trying to write unknown data type!"
+             call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
+          endif
+
+          call adios2_define_variable(var_handle, io_handle, varname, data_type, &
+               ndims, int(sizes, kind=8), int(starts, kind=8), int(subsizes, kind=8), &
+               adios2_constant_dims, ierror)
+          if (ierror /= 0) then
+             print *, "ERROR registering variable"
+             stop
+          end if
+       endif
+    else
+       print *, "ERROR trying to register variable with invalid IO!"
+       stop
+    end if
 #endif
     
   end subroutine decomp_2d_register_variable
@@ -1516,7 +1539,17 @@ contains
     end if
 
 #ifdef ADIOS2
-    call adios2_declare_io(io, adios, io_name, ierror)
+    if (adios%valid) then
+       call adios2_declare_io(io, adios, io_name, ierror)
+    else
+       print *, "ERROR: couldn't declare IO - adios object not valid"
+       stop
+    end if
+    
+    if (ierror /= 0) then
+       print *, "ERROR: Initialising IO"
+       stop
+    end if
 #endif
     
   end subroutine decomp_2d_init_io
@@ -1605,7 +1638,16 @@ contains
           end if
 #else
           call adios2_at_io(io, adios, io_name, ierror)
-          call adios2_open(engine_registry(idx), io, trim(gen_iodir_name(io_dir, io_name)), access_mode, ierror)
+          if (io%valid) then
+             call adios2_open(engine_registry(idx), io, trim(gen_iodir_name(io_dir, io_name)), access_mode, ierror)
+             if (ierror /= 0) then
+                print *, "ERROR opening engine!"
+                stop
+             end if
+          else
+             print *, "ERROR: Couldn't find IO handle"
+             stop
+          end if
 #endif
        end if
     end if
@@ -1631,6 +1673,9 @@ contains
     names_ptr => engine_names
     live_ptrh => engine_live
     call adios2_close(engine_registry(idx), ierror)
+    if (ierror /= 0) then
+       print *, "ERROR closing IO"
+    end if
 #endif
     names_ptr(idx) = ""
     live_ptrh(idx) = .false.
@@ -1647,7 +1692,18 @@ contains
     integer :: idx, ierror
 
     idx = get_io_idx(io_name, io_dir)
-    call adios2_begin_step(engine_registry(idx), ierror)
+    associate(engine => engine_registry(idx))
+      if (engine%valid) then
+         call adios2_begin_step(engine, ierror)
+         if (ierror /= 0) then
+            print *, "ERROR beginning step"
+            stop
+         end if
+      else
+         print *, "ERROR trying to begin step with invalid engine"
+         stop
+      end if
+    end associate
 #endif
     
   end subroutine decomp_2d_start_io
@@ -1661,7 +1717,18 @@ contains
     integer :: idx, ierror
 
     idx = get_io_idx(io_name, io_dir)
-    call adios2_end_step(engine_registry(idx), ierror)
+    associate(engine => engine_registry(idx))
+      if (engine%valid) then
+         call adios2_end_step(engine, ierror)
+         if (ierror /= 0) then
+            print *, "ERROR ending step"
+            stop
+         end if
+      else
+         print *, "ERROR trying to end step with invalid engine"
+         stop
+      end if
+    end associate
 #endif
 
   end subroutine decomp_2d_end_io
