@@ -67,7 +67,6 @@ contains
     use decomp_2d, only : nrank, mytype, xszV, yszV, zszV, xsize, ysize, zsize
     use decomp_2d_io, only : decomp_2d_init_io, decomp_2d_open_io, decomp_2d_append_mode
     use decomp_2d_io, only : decomp_2d_register_variable
-    use decomp_2d_io, only : adios
 
     
     implicit none
