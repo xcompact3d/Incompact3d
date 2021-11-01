@@ -146,7 +146,7 @@ subroutine init_xcompact3d()
   use les, only: init_explicit_les
   use turbine, only: init_turbines
 
-  use visu, only : visu_init
+  use visu, only : visu_init, visu_ready
 
   use genepsi, only : genepsi3d, epsi_init
   use ibm, only : body
@@ -239,6 +239,7 @@ subroutine init_xcompact3d()
      call visu_init()
      call visu_case_init() !! XXX: If you get error about uninitialised IO, look here.
                            !! Ensures additional case-specific variables declared for IO
+     call visu_ready()
   end if
   ! compute diffusion number of simulation
   call compute_cfldiff()

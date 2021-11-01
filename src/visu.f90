@@ -50,7 +50,8 @@ module visu
   character(len=*), parameter :: io_name = "solution-io"
 
   private
-  public :: output2D, visu_init, visu_finalise, write_snapshot, end_snapshot, write_field, io_name
+  public :: output2D, visu_init, visu_ready, visu_finalise, write_snapshot, end_snapshot, &
+       write_field, io_name
 
 contains
 
@@ -65,6 +66,8 @@ contains
     use decomp_2d, only : nrank, mytype, xszV, yszV, zszV
     use decomp_2d_io, only : decomp_2d_init_io, decomp_2d_open_io, decomp_2d_append_mode
     use decomp_2d_io, only : decomp_2d_register_variable
+
+    use adios2, only : adios2_define_attribute, adios2_attribute, adios2_io, adios2_at_io
     
     implicit none
 
@@ -124,11 +127,60 @@ contains
   end subroutine visu_init
 
   !
-  ! Finalise the visu module
+  ! Indicate visu ready for IO. This is only required for ADIOS2 backend, using MPIIO this
+  ! subroutine doesn't do anything.
+  ! XXX: Call after all visu initialisation (main visu + case visu)
   !
-  subroutine visu_finalise()
+  subroutine visu_ready ()
+
+    use decomp_2d_io, only : decomp_2d_open_io, decomp_2d_append_mode, decomp_2d_write_mode
 
     implicit none
+
+    integer :: mode
+    
+#ifdef ADIOS2
+    
+    mode = decomp_2d_write_mode
+
+    ! XXX: Currently opening BP4 files in append mode seems to corrupt data.
+    ! if (.not.outloc_init) then
+    !    if (irestart == 1) then
+    !       !! Restarting - is the output already available to write to?
+    !       inquire(file=gen_iodir_name("data", io_name), exist=dir_exists)
+    !       if (dir_exists) then
+    !          outloc_init = .true.
+    !       end if
+    !    end if
+       
+    !    if (.not.outloc_init) then !! Yes, yes, but check the restart check above.
+    !       mode = decomp_2d_write_mode
+    !    else
+    !       mode = decomp_2d_append_mode
+    !    end if
+    !    outloc_init = .true.
+    ! else
+    !    mode = decomp_2d_append_mode
+    ! end if
+
+    call decomp_2d_open_io(io_name, "data", mode)
+#endif
+    
+  end subroutine visu_ready
+  
+  !
+  ! Finalise the visu module. When using the ADIOS2 backend this closes the IO which is held open
+  ! for the duration of the simulation, otherwise does nothing.
+  ! 
+  subroutine visu_finalise()
+
+    use decomp_2d_io, only : decomp_2d_close_io
+    
+    implicit none
+
+#ifdef ADIOS2
+    call decomp_2d_close_io(io_name, "data")
+#endif
     
   end subroutine visu_finalise
 
@@ -140,8 +192,7 @@ contains
     use decomp_2d, only : transpose_z_to_y, transpose_y_to_x
     use decomp_2d, only : mytype, xsize, ysize, zsize
     use decomp_2d, only : nrank
-    use decomp_2d_io, only : decomp_2d_start_io, decomp_2d_open_io, decomp_2d_append_mode, decomp_2d_write_mode, &
-         gen_iodir_name
+    use decomp_2d_io, only : decomp_2d_start_io, decomp_2d_flush_io
 
     use param, only : nrhotime, ilmn, iscalar, ioutput, irestart
 
@@ -183,25 +234,6 @@ contains
     end if
 
 #ifdef ADIOS2
-    if (.not.outloc_init) then
-       if (irestart == 1) then
-          !! Restarting - is the output already available to write to?
-          inquire(file=gen_iodir_name("data", io_name), exist=dir_exists)
-          if (dir_exists) then
-             outloc_init = .true.
-          end if
-       end if
-       
-       if (.not.outloc_init) then !! Yes, yes, but check the restart check above.
-          mode = decomp_2d_write_mode
-       else
-          mode = decomp_2d_append_mode
-       end if
-       outloc_init = .true.
-    else
-       mode = decomp_2d_append_mode
-    end if
-    call decomp_2d_open_io(io_name, "data", mode)
     call decomp_2d_start_io(io_name, "data")
 #endif
     
@@ -245,7 +277,7 @@ contains
     call rescale_pressure(ta1)
 
     ! Write pressure
-    call write_field(ta1, ".", "pp", trim(num), .true.)
+    call write_field(ta1, ".", "pp", trim(num), .true., flush=.true.)
 
     ! LMN - write density
     if (ilmn) call write_field(rho1(:,:,:,1), ".", "rho", trim(num))
@@ -263,7 +295,7 @@ contains
   subroutine end_snapshot(itime, num)
 
     use decomp_2d, only : nrank
-    use decomp_2d_io, only : decomp_2d_end_io, decomp_2d_close_io
+    use decomp_2d_io, only : decomp_2d_end_io
     use param, only : istret, xlx, yly, zlz
     use variables, only : nx, ny, nz, beta
     use var, only : dt,t
@@ -309,7 +341,6 @@ contains
 
 #ifdef ADIOS2
     call decomp_2d_end_io(io_name, "data")
-    call decomp_2d_close_io(io_name, "data")
 #endif
     
     ! Update log file
