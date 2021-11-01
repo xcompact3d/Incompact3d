@@ -193,7 +193,7 @@ contains
     use decomp_2d, only : transpose_z_to_y, transpose_y_to_x
     use decomp_2d, only : mytype, xsize, ysize, zsize
     use decomp_2d, only : nrank
-    use decomp_2d_io, only : decomp_2d_start_io, decomp_2d_flush_io
+    use decomp_2d_io, only : decomp_2d_start_io
 
     use param, only : nrhotime, ilmn, iscalar, ioutput, irestart
 
