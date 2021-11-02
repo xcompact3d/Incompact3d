@@ -53,3 +53,73 @@ variables to their desired values (be sure in particular to check the value of
 Once the build has been configured run `make` to compile, followed by `make install` which will
 install the `xcompact3d` executable to `${CMAKE_INSTALL_PREFIX/bin/}`, you can optionally run tests
 on the build by executing `make test`.
+
+---------------
+Enabling ADIOS2
+---------------
+
+An alternative I/O backend using ADIOS2 has been added to the 2DECOMP&FFT library distributed with
+Xcompact3d and can be selected at compile time, following the above build instructions will default
+to the original `MPI-IO` backend.
+
+^^^^^^^^^^^^
+Dependencies
+^^^^^^^^^^^^
+
+Enabling ADIOS2 requires the ADIOS2 library, optionally HDF5 files can be written through the ADIOS2
+interface (see runtime configuration).
+ADIOS2 (and HDF5) may be available through an HPC machine's module system, if not, and for local
+testing and development purposes, the installation process for both is summarised below.
+
+The HDF5 source can be obtained from https://github.com/HDFGroup/hdf5, Xcompact3d with ADIOS2 has
+been tested with v1.12.0:
+``
+git clone git@github.com:HDFGroup/hdf5.git
+cd hdf5
+git checkout hdf5-1_12_0
+``
+(release tarfiles are also available).
+
+HDF5 is configured as
+``
+./configure --prefix=${HDF5_DIR} --enable-parallel --enable-shared --enable-fortran CC=mpicc CXX=mpicxx FC=mpif90
+``
+where `HDF5_DIR` is the desired install location.
+For production use it may be worth exploring the `--enable-build-mode=production` option and other
+suggestings in the readmes under `release_docs/`.
+
+**N.B.** package manager installations (*e.g.* using `apt-get`) may not be build with
+`--enable-parallel` and are therefore unsuitable here.
+
+ADIOS2 can similarly be obtained via git
+``
+git clone git@github.com:ornladios/ADIOS2.git
+cd ADIOS2
+git checkout v2.7.1
+``
+The recommendation is to build with `cmake`:
+``
+mkdir build
+cd build
+cmake ../
+``
+and use `ccmake .` to configure, in particular ensuring the Fortran bindings are enabled, you can
+also enable HDF5 and set the path to your HDF5 installation if it is in a non-standard location.
+After configuring build and install with
+``
+make
+make install
+``
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Building Xcompact3d with ADIOS2
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To build Xcompact3d with ADIOS2 as the I/O backend either use `make`:
+``
+make clean
+make IO=adios2 ADIOS2DIR=${ADIOS2_DIR}
+``
+or with `cmake` (from the `build/` directory) use `ccmake .` to turn ADIOS2 `ON` and set `ADIOS2DIR`
+to `${ADIOS2_DIR}/lib/cmake/adios2` (note some installations use `lib64` in place of `lib`),
+followed by `make && make install` as above.
