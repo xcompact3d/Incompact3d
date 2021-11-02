@@ -30,7 +30,7 @@ module decomp_2d
   integer, parameter, public :: mytype_single = KIND(0._real32)
   integer, parameter, public :: real_type_single = MPI_REAL
 #else
-  integer, parameter, public :: mytype_single = KIND(0._real_64)
+  integer, parameter, public :: mytype_single = KIND(0._real64)
   integer, parameter, public :: real_type_single = MPI_DOUBLE_PRECISION
 #endif
 #else
