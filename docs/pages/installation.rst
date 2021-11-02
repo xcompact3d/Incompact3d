@@ -123,3 +123,15 @@ make IO=adios2 ADIOS2DIR=${ADIOS2_DIR}
 or with `cmake` (from the `build/` directory) use `ccmake .` to turn ADIOS2 `ON` and set `ADIOS2DIR`
 to `${ADIOS2_DIR}/lib/cmake/adios2` (note some installations use `lib64` in place of `lib`),
 followed by `make && make install` as above.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Running Xcompact3d with ADIOS2
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Running an ADIOS2-enabled build of Xcompact3d requires an `adios2_config.xml` file to provide the
+runtime configuration for ADIOS2, an example can be found in the `Taylor-Green-Vortex` example
+directory.
+With this it is possible to switch the "engine" for example to change from writing ADIOS2-native
+`.bp4` output to HDF5, and various other aspects of the I/O can be controlled at runtime - see the
+ADIOS2 documentation for possibilities.
+
