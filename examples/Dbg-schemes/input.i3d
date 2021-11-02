@@ -84,7 +84,7 @@ nvisu = 1             ! Size for visualisation collection
 &Statistics
 !=================
 
-spinup_time = 5000.   ! Time after which statistics are collected (in seconds)
+spinup_time = 5000    ! Time after which statistics are collected (in seconds)
 nstat = 1             ! Size arrays for statistic collection
 
 /End
@@ -120,4 +120,7 @@ iwall = 0             ! Enable wall modeling
 
 SmagWallDamp = 1      ! Smagorinsky damping function for ABL if 1
 
+/End
+
+&CASE
 /End
