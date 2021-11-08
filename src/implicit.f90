@@ -891,16 +891,16 @@ real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: di2
 
       ! Check if we are solving momentum or scalars
       if (cly1 == ncly1 .and. clyn == nclyn) then
-         call deryy(td2,ux2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0, zero)
+         call deryy(td2,ux2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0)
       else
-         call deryyS(td2,ux2,di2,sy,sfyS,ssyS,swyS,ysize(1),ysize(2),ysize(3),0, zero)
+         call deryyS(td2,ux2,di2,sy,sfyS,ssyS,swyS,ysize(1),ysize(2),ysize(3),0)
       endif
    else
       ! Check if we are solving momentum or scalars
       if (cly1 == ncly1 .and. clyn == nclyn) then
-         call deryy(td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1, zero)
+         call deryy(td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
       else
-         call deryyS(td2,ux2,di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1, zero)
+         call deryyS(td2,ux2,di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
       endif
 
    endif
@@ -1037,9 +1037,9 @@ subroutine multmatrix9(td2,ta2,ux2,npaire)
 
   elseif ((ncly1 == 1.or.nclyn == 1) .and. npaire == 0) then
 
-     call deryy(td2,ux2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0, zero)
+     call deryy(td2,ux2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0)
   else
-     call deryy(td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1, zero)         
+     call deryy(td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
 
   endif
   td2(:,:,:) = xcst * td2(:,:,:)

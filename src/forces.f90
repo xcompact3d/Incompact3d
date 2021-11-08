@@ -230,7 +230,7 @@ subroutine force(ux1,uy1,ep1,iounit)
   USE variables
   USE decomp_2d
   USE MPI
-  USE ibm_param
+  USE ibm
 
   use var, only : ta1, tb1, tc1, td1, di1
   use var, only : ux2, uy2, ta2, tb2, tc2, td2, di2
@@ -305,8 +305,8 @@ subroutine force(ux1,uy1,ep1,iounit)
      return
   endif
 
-  call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)    ! dudx
-  call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy) ! dvdx
+  call ibm_derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)    ! dudx
+  call ibm_derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy) ! dvdx
   call transpose_x_to_y(ta1,ta2) ! dudx
   call transpose_x_to_y(tb1,tb2) ! dvdx
 
@@ -314,8 +314,8 @@ subroutine force(ux1,uy1,ep1,iounit)
   call transpose_x_to_y(uy1,uy2)
   call transpose_x_to_y(ppi1,ppi2)
 
-  call dery (tc2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx) ! dudy
-  call dery (td2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)    ! dvdy
+  call ibm_dery (tc2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx) ! dudy
+  call ibm_dery (td2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)    ! dvdy
   call transpose_y_to_x(tc2,tc1) ! dudy
   call transpose_y_to_x(td2,td1) ! dvdy
 

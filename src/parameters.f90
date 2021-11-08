@@ -47,7 +47,7 @@ subroutine parameter(input_i3d)
   use variables
   use complex_geometry
   use decomp_2d
-  use ibm_param
+  use ibm
 
   use lockexch, only : pfront
 

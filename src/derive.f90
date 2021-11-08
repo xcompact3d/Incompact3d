@@ -32,30 +32,25 @@
 
 !********************************************************************
 !
-subroutine derx_00(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind) 
+subroutine derx_00(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire) 
   !
   !********************************************************************
 
   USE param
   use thomas
   use derivX
-  use ibm, only : lagpolx, cubsplx
 
   implicit none
 
   ! Arguments
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(in), dimension(nx,ny,nz) :: ux
   real(mytype), intent(out), dimension(ny,nz):: sx
   real(mytype), intent(in), dimension(nx):: ffx,fsx,fwx
-  real(mytype), intent(in) :: lind
 
   ! Local variables
   integer :: i, j, k
-
-  if (iibm == 2) call lagpolx(ux)
-  if (iibm == 3) call cubsplx(ux,lind)
 
   ! Compute r.h.s.
   do concurrent (k=1:nz, j=1:ny)
@@ -89,30 +84,25 @@ end subroutine derx_00
 
 !********************************************************************
 !
-subroutine derx_ij(tx,ux,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind,ncl1,ncln)
+subroutine derx_ij(tx,ux,sx,ffx,fsx,fwx,nx,ny,nz,npaire,ncl1,ncln)
   !
   !********************************************************************
 
   USE param
   use thomas
   use derivX
-  use ibm, only : lagpolx, cubsplx
 
   implicit none
 
   ! Arguments
   integer, intent(in) :: nx, ny, nz, npaire, ncl1, ncln
   real(mytype), intent(out), dimension(nx,ny,nz) :: tx
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(in), dimension(nx,ny,nz) :: ux
   real(mytype), intent(out), dimension(ny,nz):: sx
   real(mytype), intent(in), dimension(nx):: ffx, fsx, fwx
-  real(mytype) :: lind
 
   ! Local variables
   integer :: i, j, k
-
-  if (iibm == 2) call lagpolx(ux)
-  if (iibm == 3) call cubsplx(ux,lind)
 
   ! Compute r.h.s.
   do concurrent (k=1:nz, j=1:ny)
@@ -160,11 +150,91 @@ end subroutine derx_ij
 
 !********************************************************************
 !
-subroutine derx_11(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind) 
+subroutine derx_11(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire) 
   !
   !********************************************************************
 
   use decomp_2d, only : mytype
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
+  real(mytype), intent(in), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(out), dimension(ny,nz):: sx
+  real(mytype), intent(in), dimension(nx):: ffx, fsx, fwx
+
+  call derx_ij(tx,ux,sx,ffx,fsx,fwx,nx,ny,nz,npaire,1,1)
+  
+end subroutine derx_11
+
+!********************************************************************
+!
+subroutine derx_12(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire) 
+  !
+  !********************************************************************
+
+  use decomp_2d, only : mytype
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire              
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
+  real(mytype), intent(in), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(out), dimension(ny,nz):: sx
+  real(mytype), intent(in), dimension(nx):: ffx, fsx, fwx
+
+  call derx_ij(tx,ux,sx,ffx,fsx,fwx,nx,ny,nz,npaire,1,2)
+
+end subroutine derx_12
+
+!********************************************************************
+!
+subroutine derx_21(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire) 
+  !
+  !********************************************************************
+
+  use decomp_2d, only : mytype
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire              
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
+  real(mytype), intent(in), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(out), dimension(ny,nz):: sx
+  real(mytype), intent(in), dimension(nx):: ffx, fsx, fwx
+
+  call derx_ij(tx,ux,sx,ffx,fsx,fwx,nx,ny,nz,npaire,2,1)
+
+end subroutine derx_21
+
+!********************************************************************
+!
+subroutine derx_22(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire) 
+  !
+  !********************************************************************
+
+  use decomp_2d, only : mytype
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire              
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
+  real(mytype), intent(in), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(out), dimension(ny,nz):: sx
+  real(mytype), intent(in), dimension(nx):: ffx, fsx, fwx
+
+  call derx_ij(tx,ux,sx,ffx,fsx,fwx,nx,ny,nz,npaire,2,2)
+
+end subroutine derx_22
+
+!********************************************************************
+!
+subroutine ibm_derx(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind)
+
+  use decomp_2d, only : mytype
+  use ibm, only : apply_ibmx
+  use variables, only : derx
 
   implicit none
 
@@ -175,100 +245,52 @@ subroutine derx_11(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind)
   real(mytype), intent(in), dimension(nx):: ffx, fsx, fwx
   real(mytype), intent(in) :: lind
 
-  call derx_ij(tx,ux,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind,1,1)
-  
-end subroutine derx_11
+  call apply_ibmx(ux,lind)
+  call derx(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
 
-!********************************************************************
-!
-subroutine derx_12(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind) 
-  !
-  !********************************************************************
+end subroutine ibm_derx
+subroutine ibm_derxS(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind)
 
   use decomp_2d, only : mytype
+  use ibm, only : apply_ibmx
+  use variables, only : derxS
 
   implicit none
 
-  integer, intent(in) :: nx, ny, nz, npaire              
+  integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
   real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
   real(mytype), intent(out), dimension(ny,nz):: sx
   real(mytype), intent(in), dimension(nx):: ffx, fsx, fwx
   real(mytype), intent(in) :: lind
 
-  call derx_ij(tx,ux,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind,1,2)
+  call apply_ibmx(ux,lind)
+  call derxS(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
 
-end subroutine derx_12
-
-!********************************************************************
-!
-subroutine derx_21(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind) 
-  !
-  !********************************************************************
-
-  use decomp_2d, only : mytype
-
-  implicit none
-
-  integer, intent(in) :: nx, ny, nz, npaire              
-  real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
-  real(mytype), intent(out), dimension(ny,nz):: sx
-  real(mytype), intent(in), dimension(nx):: ffx, fsx, fwx
-  real(mytype), intent(in) :: lind
-
-  call derx_ij(tx,ux,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind,2,1)
-
-end subroutine derx_21
+end subroutine ibm_derxS
 
 !********************************************************************
 !
-subroutine derx_22(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind) 
-  !
-  !********************************************************************
-
-  use decomp_2d, only : mytype
-
-  implicit none
-
-  integer, intent(in) :: nx, ny, nz, npaire              
-  real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
-  real(mytype), intent(out), dimension(ny,nz):: sx
-  real(mytype), intent(in), dimension(nx):: ffx, fsx, fwx
-  real(mytype), intent(in) :: lind
-
-  call derx_ij(tx,ux,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind,2,2)
-
-end subroutine derx_22
-
-!********************************************************************
-!
-subroutine dery_00(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind) 
+subroutine dery_00(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire) 
   !
   !********************************************************************
 
   USE param
   use thomas
   use derivY
-  use ibm, only : lagpoly, cubsply
 
   implicit none
 
   ! Arguments
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: ty
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
   real(mytype), intent(out), dimension(nx,ny,nz) :: ry
   real(mytype), intent(out), dimension(nx,nz)  :: sy
   real(mytype), intent(in), dimension(ny) :: ffy,fsy,fwy,ppy
-  real(mytype), intent(in) :: lind
 
   ! Local variables
   integer :: i, j, k
-
-  if (iibm == 2) call lagpoly(uy)
-  if (iibm == 3) call cubsply(uy,lind)
 
   ! Compute r.h.s.
   do concurrent (k=1:nz)
@@ -321,30 +343,25 @@ end subroutine dery_00
 
 !********************************************************************
 !
-subroutine dery_ij(ty,uy,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind,ncl1,ncln)
+subroutine dery_ij(ty,uy,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,ncl1,ncln)
   !
   !********************************************************************
 
   USE param
   use thomas
   use derivY
-  use ibm, only : lagpoly, cubsply
 
   implicit none
 
   ! Arguments
   integer, intent(in) :: nx, ny, nz, npaire, ncl1, ncln
   real(mytype), intent(out), dimension(nx,ny,nz) :: ty
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
   real(mytype), intent(out), dimension(nx,nz)  :: sy
   real(mytype), intent(in), dimension(ny) :: ffy,fsy,fwy,ppy
-  real(mytype), intent(in) :: lind
 
   ! Local variables
   integer :: i, j, k
-
-  if (iibm == 2) call lagpoly(uy)
-  if (iibm == 3) call cubsply(uy,lind)
 
   do concurrent (k=1:nz)
 
@@ -423,7 +440,7 @@ end subroutine dery_ij
 
 !********************************************************************
 !
-subroutine dery_11(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind)
+subroutine dery_11(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -433,19 +450,18 @@ subroutine dery_11(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind)
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: ty
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
   real(mytype), intent(out), dimension(nx,ny,nz) :: ry
   real(mytype), intent(out), dimension(nx,nz)  :: sy
   real(mytype), intent(in), dimension(ny) :: ffy,fsy,fwy,ppy
-  real(mytype), intent(in) :: lind
 
-  call dery_ij(ty,uy,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind,1,1)
+  call dery_ij(ty,uy,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,1,1)
 
 end subroutine dery_11
 
 !********************************************************************
 !
-subroutine dery_12(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind) 
+subroutine dery_12(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire) 
   !
   !********************************************************************
 
@@ -455,19 +471,18 @@ subroutine dery_12(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind)
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: ty
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
   real(mytype), intent(out), dimension(nx,ny,nz) :: ry
   real(mytype), intent(out), dimension(nx,nz)  :: sy
   real(mytype), intent(in), dimension(ny) :: ffy,fsy,fwy,ppy
-  real(mytype), intent(in) :: lind
 
-  call dery_ij(ty,uy,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind,1,2)
+  call dery_ij(ty,uy,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,1,2)
 
 end subroutine dery_12
 
 !********************************************************************
 !
-subroutine dery_21(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind) 
+subroutine dery_21(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire) 
   !
   !********************************************************************
 
@@ -477,23 +492,43 @@ subroutine dery_21(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind)
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: ty
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
   real(mytype), intent(out), dimension(nx,ny,nz) :: ry
   real(mytype), intent(out), dimension(nx,nz)  :: sy
   real(mytype), intent(in), dimension(ny) :: ffy,fsy,fwy,ppy
-  real(mytype), intent(in) :: lind
 
-  call dery_ij(ty,uy,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind,2,1)
+  call dery_ij(ty,uy,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,2,1)
 
 end subroutine dery_21
 
 !********************************************************************
 !
-subroutine dery_22(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind) 
+subroutine dery_22(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire) 
   !
   !********************************************************************
 
   use decomp_2d, only : mytype
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: ty
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(out), dimension(nx,ny,nz) :: ry
+  real(mytype), intent(out), dimension(nx,nz)  :: sy
+  real(mytype), intent(in), dimension(ny) :: ffy,fsy,fwy,ppy
+
+  call dery_ij(ty,uy,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,2,2)
+
+end subroutine dery_22
+
+!********************************************************************
+!
+subroutine ibm_dery(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind)
+
+  use decomp_2d, only : mytype
+  use ibm, only : apply_ibmy
+  use variables, only : dery
 
   implicit none
 
@@ -505,13 +540,34 @@ subroutine dery_22(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind)
   real(mytype), intent(in), dimension(ny) :: ffy,fsy,fwy,ppy
   real(mytype), intent(in) :: lind
 
-  call dery_ij(ty,uy,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind,2,2)
+  call apply_ibmy(uy,lind)
+  call dery(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
 
-end subroutine dery_22
+end subroutine ibm_dery
+subroutine ibm_deryS(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind)
+
+  use decomp_2d, only : mytype
+  use ibm, only : apply_ibmy
+  use variables, only : deryS
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: ty
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(out), dimension(nx,ny,nz) :: ry
+  real(mytype), intent(out), dimension(nx,nz)  :: sy
+  real(mytype), intent(in), dimension(ny) :: ffy,fsy,fwy,ppy
+  real(mytype), intent(in) :: lind
+
+  call apply_ibmy(uy,lind)
+  call deryS(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire)
+
+end subroutine ibm_deryS
 
 !********************************************************************
 !
-subroutine derz_00(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind) 
+subroutine derz_00(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -525,16 +581,12 @@ subroutine derz_00(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind)
   ! Arguments
   integer, intent(in) :: nx,ny,nz,npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
   real(mytype), intent(out), dimension(nx,ny) :: sz
   real(mytype), intent(in), dimension(nz) :: ffz,fsz,fwz
-  real(mytype), intent(in) :: lind
 
   ! Local variables
   integer :: i, j, k
-
-  if (iibm == 2) call lagpolz(uz)
-  if (iibm == 3) call cubsplz(uz,lind)
 
   ! Compute r.h.s.
   do concurrent (j=1:ny, i=1:nx)
@@ -576,30 +628,25 @@ end subroutine derz_00
 
 !********************************************************************
 !
-subroutine derz_ij(tz,uz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind,ncl1,ncln)
+subroutine derz_ij(tz,uz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,ncl1,ncln)
   !
   !********************************************************************
 
   USE param
   use thomas
   use derivZ
-  use ibm, only : lagpolz, cubsplz
 
   implicit none
 
   ! Arguments
   integer, intent(in) :: nx, ny, nz, npaire, ncl1, ncln
   real(mytype), intent(out), dimension(nx,ny,nz) :: tz
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
   real(mytype), intent(out), dimension(nx,ny) :: sz
   real(mytype), intent(in), dimension(nz) :: ffz,fsz,fwz
-  real(mytype), intent(in) :: lind
 
   ! Local variables
   integer :: i, j, k
-
-  if (iibm == 2) call lagpolz(uz)
-  if (iibm == 3) call cubsplz(uz,lind)
 
   ! Compute r.h.s.
   if (ncl1==1) then
@@ -670,7 +717,7 @@ end subroutine derz_ij
 
 !********************************************************************
 !
-subroutine derz_11(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind)
+subroutine derz_11(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -680,18 +727,17 @@ subroutine derz_11(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind)
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
   real(mytype), intent(out), dimension(nx,ny) :: sz
   real(mytype), intent(in), dimension(nz) :: ffz,fsz,fwz
-  real(mytype), intent(in) :: lind
 
-  call derz_ij(tz,uz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind,1,1)
+  call derz_ij(tz,uz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,1,1)
 
 end subroutine derz_11
 
 !********************************************************************
 !
-subroutine derz_12(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind) 
+subroutine derz_12(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -701,18 +747,17 @@ subroutine derz_12(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind)
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
   real(mytype), intent(out), dimension(nx,ny) :: sz
   real(mytype), intent(in), dimension(nz) :: ffz,fsz,fwz
-  real(mytype), intent(in) :: lind
 
-  call derz_ij(tz,uz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind,1,2)
+  call derz_ij(tz,uz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,1,2)
 
 end subroutine derz_12
 
 !********************************************************************
 !
-subroutine derz_21(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind) 
+subroutine derz_21(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -722,22 +767,41 @@ subroutine derz_21(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind)
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
   real(mytype), intent(out), dimension(nx,ny) :: sz
   real(mytype), intent(in), dimension(nz) :: ffz,fsz,fwz
-  real(mytype), intent(in) :: lind
 
-  call derz_ij(tz,uz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind,2,1)
+  call derz_ij(tz,uz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,2,1)
 
 end subroutine derz_21
 
 !********************************************************************
 !
-subroutine derz_22(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind) 
+subroutine derz_22(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
   !
   !********************************************************************
 
   use decomp_2d, only : mytype
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(out), dimension(nx,ny) :: sz
+  real(mytype), intent(in), dimension(nz) :: ffz,fsz,fwz
+
+  call derz_ij(tz,uz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,2,2)
+
+end subroutine derz_22
+
+!********************************************************************
+!
+subroutine ibm_derz(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind)
+
+  use decomp_2d, only : mytype
+  use variables, only : derz
+  use ibm, only : apply_ibmz
 
   implicit none
 
@@ -748,36 +812,51 @@ subroutine derz_22(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind)
   real(mytype), intent(in), dimension(nz) :: ffz,fsz,fwz
   real(mytype), intent(in) :: lind
 
-  call derz_ij(tz,uz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind,2,2)
+  call apply_ibmz(uz,lind)
+  call derz(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
 
-end subroutine derz_22
+end subroutine ibm_derz
+subroutine ibm_derzS(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind)
+
+  use decomp_2d, only : mytype
+  use variables, only : derzS
+  use ibm, only : apply_ibmz
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(out), dimension(nx,ny) :: sz
+  real(mytype), intent(in), dimension(nz) :: ffz,fsz,fwz
+  real(mytype), intent(in) :: lind
+
+  call apply_ibmz(uz,lind)
+  call derzS(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire)
+
+end subroutine ibm_derzS
 
 !********************************************************************
 !
-subroutine derxx_00(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind) 
+subroutine derxx_00(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
   !
   !********************************************************************
 
   USE param
   use thomas
   use derivX
-  use ibm, only : lagpolx, cubsplx
 
   implicit none
 
   ! Arguments
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(in), dimension(nx,ny,nz) :: ux
   real(mytype), intent(out), dimension(ny,nz) :: sx
   real(mytype), intent(in), dimension(nx):: sfx,ssx,swx
-  real(mytype), intent(in) :: lind
 
   ! Local variables
   integer :: i, j, k
-
-  if (iibm == 2) call lagpolx(ux)
-  if (iibm == 3) call cubsplx(ux,lind)
 
   ! Compute r.h.s.
   do concurrent (k=1:nz, j=1:ny)
@@ -873,30 +952,25 @@ end subroutine derxx_00
 
 !********************************************************************
 !
-subroutine derxx_ij(tx,ux,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind,ncl1,ncln)
+subroutine derxx_ij(tx,ux,sx,sfx,ssx,swx,nx,ny,nz,npaire,ncl1,ncln)
   !
   !********************************************************************
 
   USE param
   use thomas
   use derivX
-  use ibm, only : lagpolx, cubsplx
 
   implicit none
 
   ! Arguments
   integer, intent(in) :: nx, ny, nz, npaire, ncl1, ncln
   real(mytype), intent(out), dimension(nx,ny,nz) :: tx
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(in), dimension(nx,ny,nz) :: ux
   real(mytype), intent(out), dimension(ny,nz) :: sx
   real(mytype), intent(in), dimension(nx):: sfx,ssx,swx
-  real(mytype), intent(in) :: lind
 
   ! Local variables
   integer :: i, j, k
-
-  if (iibm == 2) call lagpolx(ux)
-  if (iibm == 3) call cubsplx(ux,lind)
 
   do concurrent (k=1:nz, j=1:ny)
 
@@ -1074,7 +1148,7 @@ end subroutine derxx_ij
 
 !********************************************************************
 !
-subroutine derxx_11(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind)
+subroutine derxx_11(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -1087,15 +1161,14 @@ subroutine derxx_11(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind)
   real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
   real(mytype), intent(out), dimension(ny,nz) :: sx
   real(mytype), intent(in), dimension(nx):: sfx,ssx,swx
-  real(mytype), intent(in) :: lind
 
-  call derxx_ij(tx,ux,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind,1,1)
+  call derxx_ij(tx,ux,sx,sfx,ssx,swx,nx,ny,nz,npaire,1,1)
 
 end subroutine derxx_11
 
 !********************************************************************
 !
-subroutine derxx_12(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind) 
+subroutine derxx_12(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -1105,18 +1178,17 @@ subroutine derxx_12(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind)
 
   integer, intent(in) :: nx,ny,nz,npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tx,rx
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(in), dimension(nx,ny,nz) :: ux
   real(mytype), intent(out), dimension(ny,nz) :: sx
   real(mytype), intent(in), dimension(nx):: sfx,ssx,swx
-  real(mytype), intent(in) :: lind
 
-  call derxx_ij(tx,ux,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind,1,2)
+  call derxx_ij(tx,ux,sx,sfx,ssx,swx,nx,ny,nz,npaire,1,2)
 
 end subroutine derxx_12
 
 !********************************************************************
 !
-subroutine derxx_21(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind) 
+subroutine derxx_21(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -1126,18 +1198,17 @@ subroutine derxx_21(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind)
 
   integer, intent(in) :: nx,ny,nz,npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tx,rx
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(in), dimension(nx,ny,nz) :: ux
   real(mytype), intent(out), dimension(ny,nz) :: sx
   real(mytype), intent(in), dimension(nx):: sfx,ssx,swx
-  real(mytype), intent(in) :: lind
 
-  call derxx_ij(tx,ux,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind,2,1)
+  call derxx_ij(tx,ux,sx,sfx,ssx,swx,nx,ny,nz,npaire,2,1)
 
 end subroutine derxx_21
 
 !********************************************************************
 !
-subroutine derxx_22(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind) 
+subroutine derxx_22(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -1147,41 +1218,76 @@ subroutine derxx_22(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind)
 
   integer, intent(in) :: nx,ny,nz,npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tx,rx
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(in), dimension(nx,ny,nz) :: ux
   real(mytype), intent(out), dimension(ny,nz) :: sx
   real(mytype), intent(in), dimension(nx):: sfx,ssx,swx
-  real(mytype), intent(in) :: lind
 
-  call derxx_ij(tx,ux,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind,2,2)
+  call derxx_ij(tx,ux,sx,sfx,ssx,swx,nx,ny,nz,npaire,2,2)
 
 end subroutine derxx_22
 
 !********************************************************************
 !
-subroutine deryy_00(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind) 
+subroutine ibm_derxx(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind)
+
+  use decomp_2d, only : mytype
+  use ibm, only : apply_ibmx
+  use variables, only : derxx
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(out), dimension(ny,nz):: sx
+  real(mytype), intent(in), dimension(nx):: ffx, fsx, fwx
+  real(mytype), intent(in) :: lind
+
+  call apply_ibmx(ux,lind)
+  call derxx(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
+
+end subroutine ibm_derxx
+subroutine ibm_derxxS(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind)
+
+  use decomp_2d, only : mytype
+  use ibm, only : apply_ibmx
+  use variables, only : derxxS
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(out), dimension(ny,nz):: sx
+  real(mytype), intent(in), dimension(nx):: ffx, fsx, fwx
+  real(mytype), intent(in) :: lind
+
+  call apply_ibmx(ux,lind)
+  call derxxS(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire)
+
+end subroutine ibm_derxxS
+
+!********************************************************************
+!
+subroutine deryy_00(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire) 
   !
   !********************************************************************
 
   USE param
   use thomas
   use derivY
-  use ibm, only : lagpoly, cubsply
 
   implicit none
 
   ! Arguments
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: ty, ry
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
   real(mytype), intent(out), dimension(nx,nz) :: sy
   real(mytype), intent(in), dimension(ny) :: sfy,ssy,swy
-  real(mytype), intent(in) :: lind
 
   ! Local variables
   integer :: i, j, k
-
-  if (iibm == 2) call lagpoly(uy)
-  if (iibm == 3) call cubsply(uy,lind)
 
   ! Compute r.h.s.
   do concurrent (k=1:nz)
@@ -1298,30 +1404,25 @@ end subroutine deryy_00
 
 !********************************************************************
 !
-subroutine deryy_ij(ty,uy,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind,ncl1,ncln)
+subroutine deryy_ij(ty,uy,sy,sfy,ssy,swy,nx,ny,nz,npaire,ncl1,ncln)
   !
   !********************************************************************
 
   USE param
   use thomas
   use derivY
-  use ibm, only : lagpoly, cubsply
 
   implicit none
 
   ! Arguments
   integer, intent(in) :: nx, ny, nz, npaire, ncl1, ncln
   real(mytype), intent(out), dimension(nx,ny,nz) :: ty
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
   real(mytype), intent(out), dimension(nx,nz) :: sy
   real(mytype), intent(in), dimension(ny) :: sfy,ssy,swy
-  real(mytype), intent(in) :: lind
 
   ! Local variables
   integer :: i, j, k
-
-  if (iibm == 2) call lagpoly(uy)
-  if (iibm == 3) call cubsply(uy,lind)
 
   ! Compute r.h.s.
   do concurrent (k=1:nz)
@@ -1545,7 +1646,7 @@ end subroutine deryy_ij
 
 !********************************************************************
 !
-subroutine deryy_11(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind)
+subroutine deryy_11(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -1555,18 +1656,17 @@ subroutine deryy_11(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind)
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: ty, ry
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
   real(mytype), intent(out), dimension(nx,nz) :: sy
   real(mytype), intent(in), dimension(ny) :: sfy,ssy,swy
-  real(mytype), intent(in) :: lind
 
-  call deryy_ij(ty,uy,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind,1,1)
+  call deryy_ij(ty,uy,sy,sfy,ssy,swy,nx,ny,nz,npaire,1,1)
 
 end subroutine deryy_11
 
 !********************************************************************
 !
-subroutine deryy_12(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind) 
+subroutine deryy_12(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire) 
   !
   !********************************************************************
 
@@ -1576,18 +1676,17 @@ subroutine deryy_12(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind)
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: ty, ry
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
   real(mytype), intent(out), dimension(nx,nz) :: sy
   real(mytype), intent(in), dimension(ny) :: sfy,ssy,swy
-  real(mytype), intent(in) :: lind
 
-  call deryy_ij(ty,uy,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind,1,2)
+  call deryy_ij(ty,uy,sy,sfy,ssy,swy,nx,ny,nz,npaire,1,2)
 
 end subroutine deryy_12
 
 !********************************************************************
 !
-subroutine deryy_21(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind) 
+subroutine deryy_21(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire) 
   !
   !********************************************************************
 
@@ -1597,22 +1696,41 @@ subroutine deryy_21(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind)
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: ty, ry
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
   real(mytype), intent(out), dimension(nx,nz) :: sy
   real(mytype), intent(in), dimension(ny) :: sfy,ssy,swy
-  real(mytype), intent(in) :: lind
 
-  call deryy_ij(ty,uy,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind,2,1)
+  call deryy_ij(ty,uy,sy,sfy,ssy,swy,nx,ny,nz,npaire,2,1)
 
 end subroutine deryy_21
 
 !********************************************************************
 !
-subroutine deryy_22(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind) 
+subroutine deryy_22(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire) 
   !
   !********************************************************************
 
   USE decomp_2d, only : mytype
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: ty, ry
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(out), dimension(nx,nz) :: sy
+  real(mytype), intent(in), dimension(ny) :: sfy,ssy,swy
+
+  call deryy_ij(ty,uy,sy,sfy,ssy,swy,nx,ny,nz,npaire,2,2)
+
+end subroutine deryy_22
+
+!********************************************************************
+!
+subroutine ibm_deryy(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind)
+
+  use decomp_2d, only : mytype
+  use ibm, only : apply_ibmy
+  use variables, only : deryy
 
   implicit none
 
@@ -1623,36 +1741,51 @@ subroutine deryy_22(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind)
   real(mytype), intent(in), dimension(ny) :: sfy,ssy,swy
   real(mytype), intent(in) :: lind
 
-  call deryy_ij(ty,uy,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind,2,2)
+  call apply_ibmy(uy,lind)
+  call deryy(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
 
-end subroutine deryy_22
+end subroutine ibm_deryy
+subroutine ibm_deryyS(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind)
+
+  use decomp_2d, only : mytype
+  use ibm, only : apply_ibmy
+  use variables, only : deryyS
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: ty, ry
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(out), dimension(nx,nz) :: sy
+  real(mytype), intent(in), dimension(ny) :: sfy,ssy,swy
+  real(mytype), intent(in) :: lind
+
+  call apply_ibmy(uy,lind)
+  call deryyS(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire)
+
+end subroutine ibm_deryyS
 
 !********************************************************************
 !
-subroutine derzz_00(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind) 
+subroutine derzz_00(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
   !
   !********************************************************************
 
   USE param
   use thomas
   use derivZ
-  use ibm, only : lagpolz, cubsplz
 
   implicit none
 
   ! Arguments
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
   real(mytype), intent(out), dimension(nx,ny) :: sz
   real(mytype), intent(in), dimension(nz) :: sfz,ssz,swz
-  real(mytype), intent(in) :: lind
 
   ! Local variables
   integer :: i, j, k
-
-  if (iibm == 2) call lagpolz(uz)
-  if (iibm == 3) call cubsplz(uz,lind)
 
   ! Compute r.h.s.
   do concurrent (j=1:ny, i=1:nx)
@@ -1758,30 +1891,25 @@ end subroutine derzz_00
 
 !********************************************************************
 !
-subroutine derzz_ij(tz,uz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind,ncl1,ncln)
+subroutine derzz_ij(tz,uz,sz,sfz,ssz,swz,nx,ny,nz,npaire,ncl1,ncln)
   !
   !********************************************************************
 
   USE param
   use thomas
   use derivZ
-  use ibm, only : lagpolz, cubsplz
 
   implicit none
 
   ! Arguments
   integer, intent(in) :: nx, ny, nz, npaire, ncl1, ncln
   real(mytype), intent(out), dimension(nx,ny,nz) :: tz
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
   real(mytype), intent(out), dimension(nx,ny) :: sz
   real(mytype), intent(in), dimension(nz) :: sfz,ssz,swz
-  real(mytype), intent(in) :: lind
 
   ! Local variables
   integer :: i, j, k
-
-  if (iibm == 2) call lagpolz(uz)
-  if (iibm == 3) call cubsplz(uz,lind)
 
   ! Compute r.h.s.
   if (ncl1==1) then
@@ -2004,7 +2132,7 @@ end subroutine derzz_ij
 
 !********************************************************************
 !
-subroutine derzz_11(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind) 
+subroutine derzz_11(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -2014,18 +2142,17 @@ subroutine derzz_11(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind)
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
   real(mytype), intent(out), dimension(nx,ny) :: sz
   real(mytype), intent(in), dimension(nz) :: sfz,ssz,swz
-  real(mytype), intent(in) :: lind
 
-  call derzz_ij(tz,uz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind,1,1)
+  call derzz_ij(tz,uz,sz,sfz,ssz,swz,nx,ny,nz,npaire,1,1)
 
 end subroutine derzz_11
 
 !********************************************************************
 !
-subroutine derzz_12(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind) 
+subroutine derzz_12(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -2035,18 +2162,17 @@ subroutine derzz_12(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind)
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
   real(mytype), intent(out), dimension(nx,ny) :: sz
   real(mytype), intent(in), dimension(nz) :: sfz,ssz,swz
-  real(mytype), intent(in) :: lind
 
-  call derzz_ij(tz,uz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind,1,2)
+  call derzz_ij(tz,uz,sz,sfz,ssz,swz,nx,ny,nz,npaire,1,2)
 
 end subroutine derzz_12
 
 !********************************************************************
 !
-subroutine derzz_21(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind) 
+subroutine derzz_21(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
   !
   !********************************************************************
 
@@ -2056,22 +2182,41 @@ subroutine derzz_21(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind)
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
   real(mytype), intent(out), dimension(nx,ny) :: sz
   real(mytype), intent(in), dimension(nz) :: sfz,ssz,swz
-  real(mytype), intent(in) :: lind
 
-  call derzz_ij(tz,uz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind,2,1)
+  call derzz_ij(tz,uz,sz,sfz,ssz,swz,nx,ny,nz,npaire,2,1)
 
 end subroutine derzz_21
 
 !********************************************************************
 !
-subroutine derzz_22(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind)
+subroutine derzz_22(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
   !
   !********************************************************************
 
   USE decomp_2d, only : mytype
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(out), dimension(nx,ny) :: sz
+  real(mytype), intent(in), dimension(nz) :: sfz,ssz,swz
+
+  call derzz_ij(tz,uz,sz,sfz,ssz,swz,nx,ny,nz,npaire,2,2)
+
+end subroutine derzz_22
+
+!********************************************************************
+!
+subroutine ibm_derzz(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind)
+
+  use decomp_2d, only : mytype
+  use variables, only : derzz
+  use ibm, only : apply_ibmz
 
   implicit none
 
@@ -2082,9 +2227,29 @@ subroutine derzz_22(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind)
   real(mytype), intent(in), dimension(nz) :: sfz,ssz,swz
   real(mytype), intent(in) :: lind
 
-  call derzz_ij(tz,uz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind,2,2)
+  call apply_ibmz(uz,lind)
+  call derzz(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
 
-end subroutine derzz_22
+end subroutine ibm_derzz
+subroutine ibm_derzzS(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind)
+
+  use decomp_2d, only : mytype
+  use variables, only : derzzS
+  use ibm, only : apply_ibmz
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(out), dimension(nx,ny) :: sz
+  real(mytype), intent(in), dimension(nz) :: sfz,ssz,swz
+  real(mytype), intent(in) :: lind
+
+  call apply_ibmz(uz,lind)
+  call derzzS(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire)
+
+end subroutine ibm_derzzS
 
 !********************************************************************
 !

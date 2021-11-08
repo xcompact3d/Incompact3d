@@ -1,12 +1,30 @@
 module ibm
 
-  public
+  use decomp_2d
+
+  implicit none
+
+  ! This used to be in the module "ibm_param"
+  real(mytype) :: cex,cey,cez,ra,ubcx,ubcy,ubcz,rads, c_air
+  real(mytype) :: chord,thickness,omega
+  integer :: inana ! Analytical BC as Input
+  integer :: imove
+
+  private
+  public :: corgp_IBM, body, &
+            imove, inana, cex, cey, cez, ra, &
+            ubcx, ubcy, ubcz, &
+            rads, c_air, chord, thickness, omega, &
+            lagpolx, lagpoly, lagpolz, &
+            cubsplx, cubsply, cubsplz, &
+            apply_ibmx, apply_ibmy, apply_ibmz
+
 
 contains
+
   !############################################################################
   subroutine corgp_IBM (ux,uy,uz,px,py,pz,nlock)
     USE param
-    USE decomp_2d
     USE variables
     implicit none
     integer :: i,j,k,nlock
@@ -46,7 +64,6 @@ contains
   !############################################################################
   subroutine body(ux1,uy1,uz1,ep1)
     USE param, only : zero, one, dx, dz
-    USE decomp_2d, only : xstart, xend, xsize, mytype
     !USE decomp_2d_io
     USE variables, only : ny
     implicit none
@@ -79,7 +96,6 @@ contains
     !
     USE param
     USE complex_geometry
-    USE decomp_2d
     USE variables
     !
     implicit none
@@ -164,7 +180,6 @@ contains
     !
     USE param
     USE complex_geometry
-    USE decomp_2d
     USE variables
     !
     implicit none
@@ -256,7 +271,6 @@ contains
     !
     USE param
     USE complex_geometry
-    USE decomp_2d
     USE variables
     !
     implicit none
@@ -339,8 +353,6 @@ contains
   !############################################################################
   subroutine polint(xa,ya,n,x,y,dy)
     !
-    USE decomp_2d
-    !
     implicit none
     !
     integer,parameter            :: nmax=30
@@ -395,9 +407,7 @@ subroutine cubsplx(u,lind)
   !
   USE param
   USE complex_geometry
-  USE decomp_2d
   USE variables
-  USE ibm_param
   !
   implicit none
   !
@@ -553,9 +563,7 @@ subroutine cubsply(u,lind)
   !
   USE param
   USE complex_geometry
-  USE decomp_2d
   USE variables
-  USE ibm_param
   !
   implicit none
   !
@@ -716,9 +724,7 @@ subroutine cubsplz(u,lind)
   !
   USE param
   USE complex_geometry
-  USE decomp_2d
   USE variables
-  USE ibm_param
   !
   implicit none
   !
@@ -868,8 +874,6 @@ end subroutine cubsplz
 !
 subroutine cubic_spline(xa,ya,n,x,y)
   !
-  USE decomp_2d
-  !
   implicit none
   !
   integer                 :: n,i,j,nc,nk
@@ -962,9 +966,7 @@ subroutine ana_y_cyl(i,y_pos,ana_res)
   !
   USE param
   USE complex_geometry
-  USE decomp_2d
   USE variables
-  USE ibm_param
   !
   implicit none
   !
@@ -993,9 +995,7 @@ subroutine ana_x_cyl(j,x_pos,ana_res)
   !
   USE param
   USE complex_geometry
-  USE decomp_2d
   USE variables
-  USE ibm_param
   !
   implicit none
   !
@@ -1022,7 +1022,6 @@ end subroutine ana_x_cyl
 SUBROUTINE analitic_x(j,x_pos,ana_res,k)
 
   USE param, ONLY : itype, itype_cyl
-  USE decomp_2d, ONLY : mytype
 !  USE cyl, ONLY : geomcomplex_cyl
 
   IMPLICIT NONE
@@ -1042,7 +1041,6 @@ END SUBROUTINE analitic_x
 SUBROUTINE analitic_y(i,y_pos,ana_res,k)
 
   USE param, ONLY : itype, itype_cyl
-  USE decomp_2d, ONLY : mytype
 !  USE cyl, ONLY : geomcomplex_cyl
 
   IMPLICIT NONE
@@ -1059,6 +1057,60 @@ SUBROUTINE analitic_y(i,y_pos,ana_res,k)
 END SUBROUTINE analitic_y
 !*******************************************************************
 !*******************************************************************
-  
-  
+
+!
+! Apply the IBM on the given array (X-pencil)
+subroutine apply_ibmx(array, lind)
+
+  use param, only : iibm
+
+  implicit none
+
+  real(mytype), intent(inout), dimension(xsize(1),xsize(2),xsize(3)) :: array
+  real(mytype), intent(in) :: lind
+
+  if (iibm == 2) then
+    call lagpolx(array)
+  else if (iibm == 3) then
+    call cubsplx(array, lind)
+  endif
+
+end subroutine apply_ibmx
+!
+! Apply the IBM on the given array (Y-pencil)
+subroutine apply_ibmy(array, lind)
+
+  use param, only : iibm
+
+  implicit none
+
+  real(mytype), intent(inout), dimension(ysize(1),ysize(2),ysize(3)) :: array
+  real(mytype), intent(in) :: lind
+
+  if (iibm == 2) then
+    call lagpoly(array)
+  else if (iibm == 3) then
+    call cubsply(array, lind)
+  endif
+
+end subroutine apply_ibmy
+!
+! Apply the IBM on the given array (Z-pencil)
+subroutine apply_ibmz(array, lind)
+    
+  use param, only : iibm
+
+  implicit none
+
+  real(mytype), intent(inout), dimension(zsize(1),zsize(2),zsize(3)) :: array
+  real(mytype), intent(in) :: lind
+
+  if (iibm == 2) then
+    call lagpolz(array)
+  else if (iibm == 3) then
+    call cubsplz(array, lind)
+  endif
+
+end subroutine apply_ibmz
+
 end module ibm

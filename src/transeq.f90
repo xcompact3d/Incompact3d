@@ -50,9 +50,9 @@ contains
     implicit none
 
     !! Inputs
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: ux1, uy1, uz1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), nrhotime), intent(in) :: rho1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar), intent(in) :: phi1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(inout) :: ux1, uy1, uz1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), nrhotime), intent(inout) :: rho1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar), intent(inout) :: phi1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: ep1
     real(mytype), dimension(zsize(1), zsize(2), zsize(3)), intent(in) :: divu3
 
@@ -99,7 +99,7 @@ contains
     use var, only : rho3,ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
     use var, only : sgsx1,sgsy1,sgsz1
     use var, only : FTx, FTy, FTz, Fdiscx, Fdiscy, Fdiscz
-    use ibm_param, only : ubcx,ubcy,ubcz
+    use ibm, only : ubcx,ubcy,ubcz,apply_ibmx,apply_ibmy,apply_ibmz
     use les, only : compute_SGS
 
     use case, only : momentum_forcing
@@ -109,7 +109,7 @@ contains
     !! INPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
     real(mytype),intent(in),dimension(zsize(1),zsize(2),zsize(3)) :: divu3
 
     !! OUTPUTS
@@ -117,6 +117,12 @@ contains
 
 
     integer :: i,j,k,is
+
+    ! IBM reconstruction
+    call apply_ibmx(ux1,ubcx)
+    call apply_ibmx(uy1,ubcy)
+    call apply_ibmx(uz1,ubcz)
+    if (ilmn) call apply_ibmx(rho1(:,:,:,1),zero)
 
     !SKEW SYMMETRIC FORM
     !WORK X-PENCILS
@@ -130,12 +136,18 @@ contains
       tc1(:,:,:) = ux1(:,:,:) * uz1(:,:,:)
     endif
 
-    call derx (td1,ta1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcx*ubcx)
-    call derx (te1,tb1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx*ubcy)
-    call derx (tf1,tc1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx*ubcz)
-    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
-    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
-    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
+    ! IBM reconstruction
+    ! FIXME: this step is mandatory ?
+    call apply_ibmx(ta1,ubcx*ubcx)
+    call apply_ibmx(tb1,ubcx*ubcy)
+    call apply_ibmx(tc1,ubcx*ubcz)
+
+    call derx (td1,ta1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    call derx (te1,tb1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+    call derx (tf1,tc1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
 
     ! Convective terms of x-pencil are stored in tg1,th1,ti1
     if (ilmn) then
@@ -151,7 +163,7 @@ contains
 
     if (ilmn) then
        !! Quasi-skew symmetric terms
-       call derx (td1,rho1(:,:,:,1),di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1, zero)
+       call derx (td1,rho1(:,:,:,1),di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
        tg1(:,:,:) = tg1(:,:,:) + ux1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
        th1(:,:,:) = th1(:,:,:) + uy1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
        ti1(:,:,:) = ti1(:,:,:) + uz1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
@@ -168,6 +180,12 @@ contains
        rho2(:,:,:) = one
     endif
 
+    ! IBM reconstruction
+    call apply_ibmy(ux2,ubcx)
+    call apply_ibmy(uy2,ubcy)
+    call apply_ibmy(uz2,ubcz)
+    if (ilmn) call apply_ibmy(rho2,zero)
+
     !WORK Y-PENCILS
     if (ilmn) then
       td2(:,:,:) = rho2(:,:,:) * ux2(:,:,:) * uy2(:,:,:)
@@ -179,12 +197,18 @@ contains
       tf2(:,:,:) = uz2(:,:,:) * uy2(:,:,:)
     endif
 
-    call dery (tg2,td2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcx*ubcy)
-    call dery (th2,te2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcy*ubcy)
-    call dery (ti2,tf2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcz*ubcy)
-    call dery (td2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
-    call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
-    call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
+    ! IBM reconstruction
+    ! FIXME: this step is mandatory ?
+    call apply_ibmy(td2,ubcx*ubcy)
+    call apply_ibmy(te2,ubcy*ubcy)
+    call apply_ibmy(tf2,ubcz*ubcy)
+
+    call dery (tg2,td2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+    call dery (th2,te2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call dery (ti2,tf2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+    call dery (td2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+    call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+    call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
 
     ! Convective terms of y-pencil in tg2,th2,ti2
     if (ilmn) then
@@ -199,7 +223,7 @@ contains
 
     if (ilmn) then
        !! Quasi-skew symmetric terms
-       call dery (te2,rho2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,zero)
+       call dery (te2,rho2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
        tg2(:,:,:) = tg2(:,:,:) + ux2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
        th2(:,:,:) = th2(:,:,:) + uy2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
        ti2(:,:,:) = ti2(:,:,:) + uz2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
@@ -223,13 +247,22 @@ contains
        tf3(:,:,:) = uz3(:,:,:) * uz3(:,:,:)
     endif
 
+    ! IBM reconstruction
+    call apply_ibmz(ux3,ubcx)
+    call apply_ibmz(uy3,ubcy)
+    call apply_ibmz(uz3,ubcz)
+    if (ilmn) call apply_ibmz(rho3,zero)
+    ! FIXME: this step is mandatory ?
+    call apply_ibmz(td3,ubcx*ubcz)
+    call apply_ibmz(te3,ubcy*ubcz)
+    call apply_ibmz(tf3,ubcz*ubcz)
 
-    call derz (tg3,td3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcx*ubcz)
-    call derz (th3,te3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcy*ubcz)
-    call derz (ti3,tf3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcz*ubcz)
-    call derz (td3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
-    call derz (te3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
-    call derz (tf3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
+    call derz (tg3,td3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+    call derz (th3,te3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+    call derz (ti3,tf3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+    call derz (td3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+    call derz (te3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+    call derz (tf3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
 
     ! Convective terms of z-pencil in ta3,tb3,tc3
     if (ilmn) then
@@ -244,7 +277,7 @@ contains
 
     if (ilmn) then
        !! Quasi-skew symmetric terms
-       call derz (tf3,rho3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,zero)
+       call derz (tf3,rho3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
        ta3(:,:,:) = ta3(:,:,:) + ux3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
        tb3(:,:,:) = tb3(:,:,:) + uy3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
        tc3(:,:,:) = tc3(:,:,:) + uz3(:,:,:) * uz3(:,:,:) * tf3(:,:,:)
@@ -261,9 +294,9 @@ contains
     tf3(:,:,:) = tc3(:,:,:)
 
     !DIFFUSIVE TERMS IN Z
-    call derzz (ta3,ux3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,ubcx)
-    call derzz (tb3,uy3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,ubcy)
-    call derzz (tc3,uz3,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0,ubcz)
+    call derzz (ta3,ux3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
+    call derzz (tb3,uy3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
+    call derzz (tc3,uz3,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0)
 
 
     ! Add convective and diffusive terms of z-pencil (half for skew-symmetric)
@@ -290,9 +323,9 @@ contains
     !DIFFUSIVE TERMS IN Y
     if (iimplicit <= 0) then
        !-->for ux
-       call deryy (td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,ubcx)
+       call deryy (td2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
        if (istret /= 0) then
-          call dery (te2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+          call dery (te2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
           do k = 1,ysize(3)
              do j = 1,ysize(2)
                 do i = 1,ysize(1)
@@ -303,9 +336,9 @@ contains
        endif
 
        !-->for uy
-       call deryy (te2,uy2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0,ubcy)
+       call deryy (te2,uy2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0)
        if (istret /= 0) then
-          call dery (tf2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+          call dery (tf2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
           do k = 1,ysize(3)
              do j = 1,ysize(2)
                 do i = 1,ysize(1)
@@ -316,9 +349,9 @@ contains
        endif
 
        !-->for uz
-       call deryy (tf2,uz2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,ubcz)
+       call deryy (tf2,uz2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1)
        if (istret /= 0) then
-          call dery (tj2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
+          call dery (tj2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
           do k = 1,ysize(3)
              do j = 1,ysize(2)
                 do i = 1,ysize(1)
@@ -331,7 +364,7 @@ contains
        if (istret /= 0) then
 
           !-->for ux
-          call dery (te2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+          call dery (te2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
           do k=1,ysize(3)
              do j=1,ysize(2)
                 do i=1,ysize(1)
@@ -340,7 +373,7 @@ contains
              enddo
           enddo
           !-->for uy
-          call dery (tf2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+          call dery (tf2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
           do k=1,ysize(3)
              do j=1,ysize(2)
                 do i=1,ysize(1)
@@ -349,7 +382,7 @@ contains
              enddo
           enddo
           !-->for uz
-          call dery (tj2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
+          call dery (tj2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
           do k=1,ysize(3)
              do j=1,ysize(2)
                 do i=1,ysize(1)
@@ -384,9 +417,9 @@ contains
     call transpose_y_to_x(tc2,tc1) !diff+conv. terms
 
     !DIFFUSIVE TERMS IN X
-    call derxx (td1,ux1,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0,ubcx)
-    call derxx (te1,uy1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,ubcy)
-    call derxx (tf1,uz1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,ubcz)
+    call derxx (td1,ux1,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0)
+    call derxx (te1,uy1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
+    call derxx (tf1,uz1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1)
 
     if (ilmn) then
       td1(:,:,:) = mu1(:,:,:) * xnu * td1(:,:,:)
@@ -482,7 +515,7 @@ contains
     use var, only : ux1,uy1,uz1,ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
     use var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,di2
     use var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
-    use ibm_param
+    use ibm
     
     implicit none
 
@@ -494,26 +527,26 @@ contains
 
     one_third = one / three
 
-    call derz (tc3,divu3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,zero)
+    call ibm_derz (tc3,divu3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,zero)
     call transpose_z_to_y(tc3, tc2)
     call transpose_z_to_y(divu3, th2)
 
-    call dery(tb2,th2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,zero)
+    call ibm_dery(tb2,th2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,zero)
     call transpose_y_to_x(tb2, te1)
     call transpose_y_to_x(tc2, tf1)
     call transpose_y_to_x(th2, tg1)
 
-    call derx(td1,tg1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,zero)
+    call ibm_derx(td1,tg1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,zero)
 
     dux1(:,:,:) = dux1(:,:,:) + mu1(:,:,:) * one_third * xnu * td1(:,:,:)
     duy1(:,:,:) = duy1(:,:,:) + mu1(:,:,:) * one_third * xnu * te1(:,:,:)
     duz1(:,:,:) = duz1(:,:,:) + mu1(:,:,:) * one_third * xnu * tf1(:,:,:)
 
     !! Variable viscosity part
-    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
-    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
-    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
-    call derx (td1,mu1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,zero)
+    call ibm_derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+    call ibm_derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+    call ibm_derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
+    call ibm_derx (td1,mu1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,zero)
     ta1(:,:,:) = two * ta1(:,:,:) - (two * one_third) * tg1(:,:,:)
 
     ta1(:,:,:) = td1(:,:,:) * ta1(:,:,:)
@@ -525,13 +558,13 @@ contains
     call transpose_x_to_y(tc1, tc2)
     call transpose_x_to_y(td1, tg2)
 
-    call dery (td2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
-    call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
-    call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
+    call ibm_dery (td2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+    call ibm_dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+    call ibm_dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
     te2(:,:,:) = two * te2(:,:,:) - (two * one_third) * th2(:,:,:)
 
     call transpose_x_to_y(mu1, ti2)
-    call dery (th2,ti2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,zero)
+    call ibm_dery (th2,ti2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,zero)
 
     ta2(:,:,:) = ta2(:,:,:) + th2(:,:,:) * td2(:,:,:)
     tb2(:,:,:) = tb2(:,:,:) + th2(:,:,:) * te2(:,:,:) + tg2(:,:,:) * td2(:,:,:)
@@ -544,14 +577,14 @@ contains
     call transpose_y_to_z(th2, th3) !! dmudy
     call transpose_y_to_z(ti2, ti3) !! mu
 
-    call derz (td3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
-    call derz (te3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
-    call derz (tf3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
+    call ibm_derz (td3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+    call ibm_derz (te3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+    call ibm_derz (tf3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
     tf3(:,:,:) = two * tf3(:,:,:) - (two * one_third) * divu3(:,:,:)
 
     tc3(:,:,:) = tc3(:,:,:) + tg3(:,:,:) * td3(:,:,:) + th3(:,:,:) * te3(:,:,:)
 
-    call derz (th3,ti3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,zero)
+    call ibm_derz (th3,ti3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,zero)
 
     ta3(:,:,:) = ta3(:,:,:) + th3(:,:,:) * td3(:,:,:)
     tb3(:,:,:) = tb3(:,:,:) + th3(:,:,:) * te3(:,:,:)
@@ -570,8 +603,8 @@ contains
     call transpose_y_to_x(th2, te1) !! dmudy
     call transpose_y_to_x(ti2, tf1) !! dmudz
 
-    call derx (th1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
-    call derx (ti1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
+    call ibm_derx (th1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+    call ibm_derx (ti1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
     ta1(:,:,:) = ta1(:,:,:) + te1(:,:,:) * th1(:,:,:) + tf1(:,:,:) * ti1(:,:,:)
 
     dux1(:,:,:) = dux1(:,:,:) + xnu * ta1(:,:,:)
@@ -727,6 +760,7 @@ contains
     use variables
     use decomp_2d
     use case, only : scalar_forcing
+    use ibm, only : apply_ibmx, apply_ibmy, apply_ibmz
 
     use var, only : ta1,tb1,tc1,di1
     use var, only : rho2,uy2,ta2,tb2,tc2,td2,te2,di2
@@ -736,7 +770,7 @@ contains
 
     !! INPUTS
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: phi1
+    real(mytype),intent(inout),dimension(xsize(1),xsize(2),xsize(3)) :: phi1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
     real(mytype), intent(in) :: schmidt
     integer, optional, intent(in) :: is
@@ -765,13 +799,17 @@ contains
     xalpha = xnu/schmidt
 
     !X PENCILS
-    if (skewsc) ta1(:,:,:) = ux1(:,:,:) * phi1(:,:,:)
+    call apply_ibmx(phi1,zero)
+    if (skewsc) then
+      ta1(:,:,:) = ux1(:,:,:) * phi1(:,:,:)
+      call apply_ibmx(ta1,zero)
+    endif
     if (evensc) then
-      call derxS (tb1,phi1(:,:,:),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1,zero)
-      if (skewsc) call derxS (tc1,ta1,di1,sx,ffxS,fsxS,fwxS,xsize(1),xsize(2),xsize(3),0,zero)
+      call derxS (tb1,phi1(:,:,:),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1)
+      if (skewsc) call derxS (tc1,ta1,di1,sx,ffxS,fsxS,fwxS,xsize(1),xsize(2),xsize(3),0)
     else
-      call derxS (tb1,phi1(:,:,:),di1,sx,ffxS,fsxS,fwxS,xsize(1),xsize(2),xsize(3),0,zero)
-      if (skewsc) call derxS (tc1,ta1,di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1,zero) 
+      call derxS (tb1,phi1(:,:,:),di1,sx,ffxS,fsxS,fwxS,xsize(1),xsize(2),xsize(3),0)
+      if (skewsc) call derxS (tc1,ta1,di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1)
     endif
     if (ilmn) then
       tb1(:,:,:) = rho1(:,:,:,1) * ux1(:,:,:) * tb1(:,:,:)
@@ -784,28 +822,32 @@ contains
     endif
 
     if (evensc) then
-      call derxxS (ta1,phi1(:,:,:),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1,zero)
+      call derxxS (ta1,phi1(:,:,:),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1)
     else
-      call derxxS (ta1,phi1(:,:,:),di1,sx,sfxS,ssxS,swxS,xsize(1),xsize(2),xsize(3),0,zero)
+      call derxxS (ta1,phi1(:,:,:),di1,sx,sfxS,ssxS,swxS,xsize(1),xsize(2),xsize(3),0)
     endif
 
     ! Add convective and diffusive scalar terms of x-pencil
     ta1(:,:,:) = xalpha*ta1(:,:,:) - tb1(:,:,:)
 
     call transpose_x_to_y(phi1(:,:,:),td2(:,:,:))
+    call apply_ibmy(td2,zero)
 
     !Y PENCILS
-    if (skewsc) tb2(:,:,:) = uy2(:,:,:) * td2(:,:,:)
+    if (skewsc) then
+      tb2(:,:,:) = uy2(:,:,:) * td2(:,:,:)
+      call apply_ibmy(tb2,zero)
+    endif
     ! Explicit viscous diffusion
     if (iimplicit <= 0) then
       if (evensc) then
-        call deryS (tc2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1,zero)
-        if (skewsc) call deryS (te2,tb2,di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0,zero)
-        call deryyS (ta2,td2(:,:,:),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1,zero)
+        call deryS (tc2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
+        if (skewsc) call deryS (te2,tb2,di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0)
+        call deryyS (ta2,td2(:,:,:),di2,sy,sfypS,ssypS,swypS,ysize(1),ysize(2),ysize(3),1)
       else
-        call deryS (tc2,td2(:,:,:),di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0,zero)
-        if (skewsc) call deryS (te2,tb2,di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1,zero)
-        call deryyS (ta2,td2(:,:,:),di2,sy,sfyS,ssyS,swyS,ysize(1),ysize(2),ysize(3),0,zero)
+        call deryS (tc2,td2(:,:,:),di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0)
+        if (skewsc) call deryS (te2,tb2,di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
+        call deryyS (ta2,td2(:,:,:),di2,sy,sfyS,ssyS,swyS,ysize(1),ysize(2),ysize(3),0)
       endif
 
       if (istret /= 0) then
@@ -821,11 +863,11 @@ contains
     ! (semi)implicit Y viscous diffusion
     else
       if (evensc) then
-        call deryS (tc2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1,zero)
-        if (skewsc) call deryS (te2,tb2,di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0,zero)
+        call deryS (tc2,td2(:,:,:),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
+        if (skewsc) call deryS (te2,tb2,di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0)
       else      
-        call deryS (tc2,td2(:,:,:),di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0,zero)
-        if (skewsc) call deryS (te2,tb2,di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1,zero)
+        call deryS (tc2,td2(:,:,:),di2,sy,ffyS,fsyS,fwyS,ppy,ysize(1),ysize(2),ysize(3),0)
+        if (skewsc) call deryS (te2,tb2,di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1)
       endif                                                                             
        
       if (istret /= 0) then
@@ -856,15 +898,19 @@ contains
     tc2(:,:,:) = xalpha*ta2(:,:,:) - tb2(:,:,:)
 
     call transpose_y_to_z(td2(:,:,:),td3(:,:,:))
+    call apply_ibmz(td3,zero)
 
     !Z PENCILS
-    if (skewsc) ta3(:,:,:) = uz3(:,:,:) * td3(:,:,:)
+    if (skewsc) then
+      ta3(:,:,:) = uz3(:,:,:) * td3(:,:,:)
+      call apply_ibmz(ta3,zero)
+    endif
     if (evensc) then
-      call derzS (tb3,td3(:,:,:),di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1,zero)
-      if (skewsc) call derzS (tc3,ta3,di3,sz,ffzS,fszS,fwzS,zsize(1),zsize(2),zsize(3),0,zero)
+      call derzS (tb3,td3(:,:,:),di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1)
+      if (skewsc) call derzS (tc3,ta3,di3,sz,ffzS,fszS,fwzS,zsize(1),zsize(2),zsize(3),0)
     else
-      call derzS (tb3,td3(:,:,:),di3,sz,ffzS,fszS,fwzS,zsize(1),zsize(2),zsize(3),0,zero)
-      if (skewsc) call derzS (tc3,ta3,di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1,zero)
+      call derzS (tb3,td3(:,:,:),di3,sz,ffzS,fszS,fwzS,zsize(1),zsize(2),zsize(3),0)
+      if (skewsc) call derzS (tc3,ta3,di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1)
     endif
 
     ! convective terms
@@ -880,9 +926,9 @@ contains
 
     ! diffusive terms
     if (evensc) then
-      call derzzS (ta3,td3(:,:,:),di3,sz,sfzpS,sszpS,swzpS,zsize(1),zsize(2),zsize(3),1,zero)
+      call derzzS (ta3,td3(:,:,:),di3,sz,sfzpS,sszpS,swzpS,zsize(1),zsize(2),zsize(3),1)
     else
-      call derzzS (ta3,td3(:,:,:),di3,sz,sfzS,sszS,swzS,zsize(1),zsize(2),zsize(3),0,zero)
+      call derzzS (ta3,td3(:,:,:),di3,sz,sfzS,sszS,swzS,zsize(1),zsize(2),zsize(3),0)
     endif
 
     ! Add convective and diffusive scalar terms of z-pencil
@@ -923,7 +969,7 @@ contains
 
     !! INPUTS
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype),intent(inout),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
 
     !! OUTPUTS
@@ -991,19 +1037,19 @@ contains
     call transpose_x_to_y(phi1, phi2)
     call transpose_y_to_z(phi2, phi3)
 
-    call derz (ta3, phi3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
+    call ibm_derz (ta3, phi3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
     ta3(:,:,:) = uset(is) * gravz * ta3(:,:,:)
 
     call transpose_z_to_y(ta3, tb2)
 
-    call dery (ta2, phi2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
+    call ibm_dery (ta2, phi2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
     ta2(:,:,:) = uset(is) * gravy * ta2(:,:,:)
     ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
 
     call transpose_y_to_x(ta2, ta1)
 
     dphi1(:,:,:,1,is) = dphi1(:,:,:,1,is) - ta1(:,:,:)
-    call derx (ta1, phi1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
+    call ibm_derx (ta1, phi1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
     dphi1(:,:,:,1,is) = dphi1(:,:,:,1,is) - uset(is) * gravx * ta1(:,:,:)
 
   endsubroutine scalar_settling
@@ -1065,29 +1111,29 @@ contains
 
     !! XXX All variables up to date - no need to transpose
 
-    call derz (ta3, rho3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
+    call ibm_derz (ta3, rho3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
     ta3(:,:,:) = uz3(:,:,:) * ta3(:,:,:) + rho3(:,:,:) * divu3(:,:,:)
 
     call transpose_z_to_y(ta3, tb2)
-    call dery (ta2, rho2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
+    call ibm_dery (ta2, rho2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
     ta2(:,:,:) = uy2(:,:,:) * ta2(:,:,:) + tb2(:,:,:)
 
     call transpose_y_to_x(ta2, ta1)
-    call derx (drho1(:,:,:,1), rho1(:,:,:,1), &
+    call ibm_derx (drho1(:,:,:,1), rho1(:,:,:,1), &
          di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
     drho1(:,:,:,1) = -(ux1(:,:,:) * drho1(:,:,:,1) + ta1(:,:,:))
 
     if (ibirman_eos) THEN !! Add a diffusion term
-       call derzz (ta3,rho3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1, zero)
+       call ibm_derzz (ta3,rho3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1, zero)
        call transpose_z_to_y(ta3, tb2)
 
        iimplicit = -iimplicit
-       call deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1, zero)
+       call ibm_deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1, zero)
        iimplicit = -iimplicit
        ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
        call transpose_y_to_x(ta2, ta1)
 
-       call derxx (tb1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1, zero)
+       call ibm_derxx (tb1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1, zero)
        ta1(:,:,:) = ta1(:,:,:) + tb1(:,:,:)
 
        drho1(:,:,:,1) = drho1(:,:,:,1) + invpe * ta1(:,:,:)

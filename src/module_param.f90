@@ -155,37 +155,37 @@ module variables
 
 
   ABSTRACT INTERFACE
-     SUBROUTINE DERIVATIVE_X(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
+     SUBROUTINE DERIVATIVE_X(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
        use decomp_2d, only : mytype
-       integer :: nx,ny,nz,npaire
-       real(mytype), dimension(nx,ny,nz) :: t,u,r
-       real(mytype), dimension(ny,nz):: s
-       real(mytype), dimension(nx):: ff,fs,fw
-       real(mytype) :: lind
+       integer, intent(in) :: nx,ny,nz,npaire
+       real(mytype), intent(out), dimension(nx,ny,nz) :: t,r
+       real(mytype), intent(in), dimension(nx,ny,nz) :: u
+       real(mytype), intent(out), dimension(ny,nz):: s
+       real(mytype), intent(in), dimension(nx):: ff,fs,fw
      END SUBROUTINE DERIVATIVE_X
-     SUBROUTINE DERIVATIVE_Y(t,u,r,s,ff,fs,fw,pp,nx,ny,nz,npaire,lind)
+     SUBROUTINE DERIVATIVE_Y(t,u,r,s,ff,fs,fw,pp,nx,ny,nz,npaire)
        use decomp_2d, only : mytype
-       integer :: nx,ny,nz,npaire
-       real(mytype), dimension(nx,ny,nz) :: t,u,r
-       real(mytype), dimension(nx,nz):: s
-       real(mytype), dimension(ny):: ff,fs,fw,pp
-       real(mytype) :: lind
+       integer, intent(in) :: nx,ny,nz,npaire
+       real(mytype), intent(out), dimension(nx,ny,nz) :: t,r
+       real(mytype), intent(in), dimension(nx,ny,nz) :: u
+       real(mytype), intent(out), dimension(nx,nz):: s
+       real(mytype), intent(in), dimension(ny):: ff,fs,fw,pp
      END SUBROUTINE DERIVATIVE_Y
-     SUBROUTINE DERIVATIVE_YY(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
+     SUBROUTINE DERIVATIVE_YY(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
        use decomp_2d, only : mytype
-       integer :: nx,ny,nz,npaire
-       real(mytype), dimension(nx,ny,nz) :: t,u,r
-       real(mytype), dimension(nx,nz):: s
-       real(mytype), dimension(ny):: ff,fs,fw
-       real(mytype) :: lind
+       integer, intent(in) :: nx,ny,nz,npaire
+       real(mytype), intent(out), dimension(nx,ny,nz) :: t,r
+       real(mytype), intent(in), dimension(nx,ny,nz) :: u
+       real(mytype), intent(out), dimension(nx,nz):: s
+       real(mytype), intent(in), dimension(ny):: ff,fs,fw
      END SUBROUTINE DERIVATIVE_YY
-     SUBROUTINE DERIVATIVE_Z(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
+     SUBROUTINE DERIVATIVE_Z(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
        use decomp_2d, only : mytype
-       integer :: nx,ny,nz,npaire
-       real(mytype), dimension(nx,ny,nz) :: t,u,r
-       real(mytype), dimension(nx,ny):: s
-       real(mytype), dimension(nz):: ff,fs,fw
-       real(mytype) :: lind
+       integer, intent(in) :: nx,ny,nz,npaire
+       real(mytype), intent(out), dimension(nx,ny,nz) :: t,r
+       real(mytype), intent(in), dimension(nx,ny,nz) :: u
+       real(mytype), intent(out), dimension(nx,ny):: s
+       real(mytype), intent(in), dimension(nz):: ff,fs,fw
      END SUBROUTINE DERIVATIVE_Z
   END INTERFACE
 
@@ -207,29 +207,29 @@ module variables
   real(mytype),allocatable,dimension(:) :: newrm,newrmt
 
   ABSTRACT INTERFACE
-     SUBROUTINE FILTER_X(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
+     SUBROUTINE FILTER_X(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
        use decomp_2d, only : mytype
-       integer :: nx,ny,nz,npaire
-       real(mytype), dimension(nx,ny,nz) :: t,u,r
-       real(mytype), dimension(ny,nz):: s
-       real(mytype), dimension(nx):: ff,fs,fw
-       real(mytype) :: lind
+       integer, intent(in) :: nx,ny,nz,npaire
+       real(mytype), intent(out), dimension(nx,ny,nz) :: t,r
+       real(mytype), intent(in), dimension(nx,ny,nz) :: u
+       real(mytype), intent(out), dimension(ny,nz):: s
+       real(mytype), intent(in), dimension(nx):: ff,fs,fw
      END SUBROUTINE FILTER_X
-     SUBROUTINE FILTER_Y(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
+     SUBROUTINE FILTER_Y(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
        use decomp_2d, only : mytype
-       integer :: nx,ny,nz,npaire
-       real(mytype), dimension(nx,ny,nz) :: t,u,r
-       real(mytype), dimension(nx,nz):: s
-       real(mytype), dimension(ny):: ff,fs,fw
-       real(mytype) :: lind
+       integer, intent(in) :: nx,ny,nz,npaire
+       real(mytype), intent(out), dimension(nx,ny,nz) :: t,r
+       real(mytype), intent(in), dimension(nx,ny,nz) :: u
+       real(mytype), intent(out), dimension(nx,nz):: s
+       real(mytype), intent(in), dimension(ny):: ff,fs,fw
      END SUBROUTINE FILTER_Y
-     SUBROUTINE FILTER_Z(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
+     SUBROUTINE FILTER_Z(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire)
        use decomp_2d, only : mytype
-       integer :: nx,ny,nz,npaire
-       real(mytype), dimension(nx,ny,nz) :: t,u,r
-       real(mytype), dimension(nx,ny):: s
-       real(mytype), dimension(nz):: ff,fs,fw
-       real(mytype) :: lind
+       integer, intent(in) :: nx,ny,nz,npaire
+       real(mytype), intent(out), dimension(nx,ny,nz) :: t,r
+       real(mytype), intent(in), dimension(nx,ny,nz) :: u
+       real(mytype), intent(out), dimension(nx,ny):: s
+       real(mytype), intent(in), dimension(nz):: ff,fs,fw
      END SUBROUTINE FILTER_Z
   END INTERFACE
 
@@ -627,13 +627,4 @@ end module parfiZ
 module simulation_stats
   real(8) :: tstart,time1,trank,tranksum,ttotal,tremaining,telapsed
 end module simulation_stats
-!############################################################################
-!############################################################################
-module ibm_param
-  use decomp_2d, only : mytype
-  real(mytype) :: cex,cey,cez,ra,ubcx,ubcy,ubcz,rads, c_air
-  real(mytype) :: chord,thickness,omega
-  integer :: inana ! Analytical BC as Input
-  integer :: imove
-end module ibm_param
 !############################################################################
