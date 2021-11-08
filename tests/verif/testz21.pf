@@ -17,7 +17,7 @@ contains
       use var
       use variables
       use tools, only : error_l1_l2_linf
-      use ibm_param, only : ubcx,ubcy,ubcz
+      use ibm, only : ubcx,ubcy,ubcz
 
       implicit none
 
@@ -33,7 +33,7 @@ contains
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
       call cpu_time(t1)
-      call derz(output,input,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcy)
+      call ibm_derz(output,input,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcy)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
       call log("derz21", l1/sl1, l2/sl2, linf/slinf, t2-t1)
@@ -49,7 +49,7 @@ contains
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
       call cpu_time(t1)
-      call derz(output,input,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcz)
+      call ibm_derz(output,input,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcz)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
       call log("derz21p", l1/sl1, l2/sl2, linf/slinf, t2-t1)
@@ -67,7 +67,7 @@ contains
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
       call cpu_time(t1)
-      call derzz(output,input,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+      call ibm_derzz(output,input,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,ubcy)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
       call log("derzz21p", l1/sl1, l2/sl2, linf/slinf, t2-t1)
@@ -83,7 +83,7 @@ contains
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3)) 
       call cpu_time(t1)
-      call derzz(output,input,di3,sz,sfz,ssz,swz,zsize(1),zsize(2),zsize(3),0,ubcz)
+      call ibm_derzz(output,input,di3,sz,sfz,ssz,swz,zsize(1),zsize(2),zsize(3),0,ubcz)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, zsize(1), zsize(2), zsize(3), xsize(1)*ysize(2)*zsize(3))
       call log("derzz21", l1/sl1, l2/sl2, linf/slinf, t2-t1)
@@ -104,7 +104,7 @@ contains
       use var
       use variables
       use tools, only : error_l1_l2_linf
-      use ibm_param, only : ubcx,ubcy,ubcz
+      use ibm, only : ubcx,ubcy,ubcz
 
       implicit none
 
@@ -122,7 +122,7 @@ contains
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf)
       call cpu_time(t1)
-      call filz(output,input,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+      call ibm_filz(output,input,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf)
       call log("filz21p", l1/sl1, l2/sl2, linf/slinf, t2-t1)
@@ -138,7 +138,7 @@ contains
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf)
       call cpu_time(t1)
-      call filz(output,input,di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,ubcz)
+      call ibm_filz(output,input,di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,ubcz)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf)
       call log("filz21", l1/sl1, l2/sl2, linf/slinf, t2-t1)

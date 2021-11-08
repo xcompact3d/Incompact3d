@@ -241,28 +241,23 @@ subroutine set_filter_coefficients(af,alfa1,a1,b1,c1,d1,alfa2,a2,b2,c2,d2,alfa3,
 
 end subroutine set_filter_coefficients
 
-subroutine filx_00(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind) 
+subroutine filx_00(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire) 
 
   USE param
   use thomas
   use parfiX
-  use ibm, only : lagpolx, cubsplx
 
   implicit none
 
   ! Arguments
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(in), dimension(nx,ny,nz) :: ux
   real(mytype), intent(out), dimension(ny,nz) :: fisx
   real(mytype), intent(in), dimension(nx) :: fiffx, fifsx, fifwx
-  real(mytype), intent(in) :: lind
 
   ! Local variables
   integer :: i, j, k
-
-  if (iibm == 2) call lagpolx(ux)
-  if (iibm == 3) call cubsplx(ux,lind)
 
   do concurrent (k=1:nz, j=1:ny)
 
@@ -304,28 +299,23 @@ subroutine filx_00(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind)
 
 end subroutine filx_00
 
-subroutine filx_ij(tx,ux,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind,ncl1,ncln)
+subroutine filx_ij(tx,ux,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,ncl1,ncln)
 
   USE param
   use thomas
   use parfiX
-  use ibm, only : lagpolx, cubsplx
 
   implicit none
 
   ! Arguments
   integer, intent(in) :: nx, ny, nz, npaire, ncl1, ncln
   real(mytype), intent(out), dimension(nx,ny,nz) :: tx
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(in), dimension(nx,ny,nz) :: ux
   real(mytype), intent(out), dimension(ny,nz) :: fisx
   real(mytype), intent(in), dimension(nx) :: fiffx,fifsx,fifwx
-  real(mytype), intent(in) :: lind
 
   ! Local variables
   integer :: i, j, k
-
-  if (iibm == 2) call lagpolx(ux)
-  if (iibm == 3) call cubsplx(ux,lind)
 
   do concurrent (k=1:nz, j=1:ny)
 
@@ -396,61 +386,76 @@ subroutine filx_ij(tx,ux,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind,ncl1,ncln)
 
 end subroutine filx_ij
 
-subroutine filx_11(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind) 
+subroutine filx_11(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire) 
 
-  USE param
+  use decomp_2d, only : mytype
 
   implicit none
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(in), dimension(nx,ny,nz) :: ux
   real(mytype), intent(out), dimension(ny,nz) :: fisx
   real(mytype), intent(in), dimension(nx) :: fiffx,fifsx,fifwx
-  real(mytype), intent(in) :: lind
 
-  call filx_ij(tx,ux,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind,1,1)
+  call filx_ij(tx,ux,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,1,1)
 
 end subroutine filx_11
 
-subroutine filx_12(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind) 
+subroutine filx_12(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire)
 
-  USE param
+  use decomp_2d, only : mytype
 
   implicit none
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(in), dimension(nx,ny,nz) :: ux
   real(mytype), intent(out), dimension(ny,nz) :: fisx
   real(mytype), intent(in), dimension(nx) :: fiffx,fifsx,fifwx
-  real(mytype), intent(in) :: lind
 
-  call filx_ij(tx,ux,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind,1,2)
+  call filx_ij(tx,ux,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,1,2)
 
 end subroutine filx_12
 
-subroutine filx_21(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind) 
+subroutine filx_21(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire)
 
-  USE param
+  use decomp_2d, only : mytype
 
   implicit none
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(in), dimension(nx,ny,nz) :: ux
   real(mytype), intent(out), dimension(ny,nz) :: fisx
   real(mytype), intent(in), dimension(nx) :: fiffx,fifsx,fifwx
-  real(mytype), intent(in) :: lind
 
-  call filx_ij(tx,ux,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind,2,1)
+  call filx_ij(tx,ux,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,2,1)
 
 end subroutine filx_21
 
 
-subroutine filx_22(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind) 
+subroutine filx_22(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire)
 
-  USE param
+  use decomp_2d, only : mytype
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
+  real(mytype), intent(in), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(out), dimension(ny,nz) :: fisx
+  real(mytype), intent(in), dimension(nx) :: fiffx,fifsx,fifwx
+
+  call filx_ij(tx,ux,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,2,2)
+
+end subroutine filx_22
+
+subroutine ibm_filx(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind)
+
+  use decomp_2d, only : mytype
+  use ibm, only : apply_ibmx
+  use variables, only : filx
 
   implicit none
 
@@ -461,30 +466,45 @@ subroutine filx_22(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind)
   real(mytype), intent(in), dimension(nx) :: fiffx,fifsx,fifwx
   real(mytype), intent(in) :: lind
 
-  call filx_ij(tx,ux,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind,2,2)
+  call apply_ibmx(ux,lind)
+  call filx(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire)
 
-end subroutine filx_22
+end subroutine ibm_filx
+subroutine ibm_filxS(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind)
 
-subroutine fily_00(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind) 
+  use decomp_2d, only : mytype
+  use ibm, only : apply_ibmx
+  use variables, only : filxS
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tx, rx
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: ux
+  real(mytype), intent(out), dimension(ny,nz) :: fisx
+  real(mytype), intent(in), dimension(nx) :: fiffx,fifsx,fifwx
+  real(mytype), intent(in) :: lind
+
+  call apply_ibmx(ux,lind)
+  call filxS(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire)
+
+end subroutine ibm_filxS
+
+subroutine fily_00(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire) 
 
   USE param
   use thomas
   use parfiY
-  use ibm, only : lagpoly, cubsply
 
   implicit none
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: ty, ry
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
   real(mytype), intent(out), dimension(nx,nz)  :: fisy
   real(mytype), intent(in), dimension(ny) :: fiffy,fifsy,fifwy
-  real(mytype), intent(in) :: lind
 
   integer :: i, j, k
-
-  if (iibm == 2) call lagpoly(uy)
-  if (iibm == 3) call cubsply(uy,lind)
 
   do concurrent (k=1:nz)
 
@@ -542,28 +562,23 @@ subroutine fily_00(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind)
 
 end subroutine fily_00
 
-subroutine fily_ij(ty,uy,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind,ncl1,ncln)
+subroutine fily_ij(ty,uy,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,ncl1,ncln)
   !
   !********************************************************************
 
   USE param
   use thomas
   use parfiY
-  use ibm, only : lagpoly, cubsply
 
   implicit none
 
   integer, intent(in) :: nx, ny, nz, npaire, ncl1, ncln
   real(mytype), intent(out), dimension(nx,ny,nz) :: ty
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
   real(mytype), intent(out), dimension(nx,nz)  :: fisy
   real(mytype), intent(in), dimension(ny) :: fiffy,fifsy,fifwy
-  real(mytype), intent(in) :: lind
 
   integer :: i, j, k
-
-  if (iibm == 2) call lagpoly(uy)
-  if (iibm == 3) call cubsply(uy,lind)
 
   do concurrent (k=1:nz)
 
@@ -671,64 +686,75 @@ subroutine fily_ij(ty,uy,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind,ncl1,ncln)
 end subroutine fily_ij
 !********************************************************************
 !
-subroutine fily_11(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind) 
-  !
-  !********************************************************************
+subroutine fily_11(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire) 
 
-  USE param
+  use decomp_2d, only : mytype
 
   implicit none
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: ty, ry
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
   real(mytype), intent(out), dimension(nx,nz)  :: fisy
   real(mytype), intent(in), dimension(ny) :: fiffy,fifsy,fifwy
-  real(mytype), intent(in) :: lind
 
-  call fily_ij(ty,uy,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind,1,1)
+  call fily_ij(ty,uy,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,1,1)
 
 end subroutine fily_11
 
+subroutine fily_12(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire) 
 
-subroutine fily_12(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind) 
-
-  USE param
+  use decomp_2d, only : mytype
 
   implicit none
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: ty, ry
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
   real(mytype), intent(out), dimension(nx,nz)  :: fisy
   real(mytype), intent(in), dimension(ny) :: fiffy,fifsy,fifwy
-  real(mytype), intent(in) :: lind
 
-  call fily_ij(ty,uy,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind,1,2)
+  call fily_ij(ty,uy,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,1,2)
 
 end subroutine fily_12
 
+subroutine fily_21(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire) 
 
-subroutine fily_21(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind) 
-
-  USE param
+  use decomp_2d, only : mytype
 
   implicit none
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: ty, ry
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
   real(mytype), intent(out), dimension(nx,nz)  :: fisy
   real(mytype), intent(in), dimension(ny) :: fiffy,fifsy,fifwy
-  real(mytype), intent(in) :: lind
 
-  call fily_ij(ty,uy,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind,2,1)
+  call fily_ij(ty,uy,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,2,1)
 
 end subroutine fily_21
 
-subroutine fily_22(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind) 
+subroutine fily_22(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire) 
 
-  USE param
+  use decomp_2d, only : mytype
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: ty, ry
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(out), dimension(nx,nz)  :: fisy
+  real(mytype), intent(in), dimension(ny) :: fiffy,fifsy,fifwy
+
+  call fily_ij(ty,uy,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,2,2)
+
+end subroutine fily_22
+
+subroutine ibm_fily(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind)
+
+  use decomp_2d, only : mytype
+  use variables, only : fily
+  use ibm, only : apply_ibmy
 
   implicit none
 
@@ -739,30 +765,45 @@ subroutine fily_22(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind)
   real(mytype), intent(in), dimension(ny) :: fiffy,fifsy,fifwy
   real(mytype), intent(in) :: lind
 
-  call fily_ij(ty,uy,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind,2,2)
+  call apply_ibmy(uy,lind)
+  call fily(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire)
 
-end subroutine fily_22
+end subroutine ibm_fily
+subroutine ibm_filyS(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind)
 
-subroutine filz_00(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind) 
+  use decomp_2d, only : mytype
+  use variables, only : filyS
+  use ibm, only : apply_ibmy
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: ty, ry
+  real(mytype), intent(inout), dimension(nx,ny,nz) :: uy
+  real(mytype), intent(out), dimension(nx,nz)  :: fisy
+  real(mytype), intent(in), dimension(ny) :: fiffy,fifsy,fifwy
+  real(mytype), intent(in) :: lind
+
+  call apply_ibmy(uy,lind)
+  call filyS(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire)
+
+end subroutine ibm_filyS
+
+subroutine filz_00(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire)
 
   USE param
   use thomas
   use parfiZ
-  use ibm, only : lagpolz, cubsplz
 
   implicit none
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
   real(mytype), intent(out), dimension(nx,ny) :: fisz
   real(mytype), intent(in), dimension(nz) :: fiffz,fifsz,fifwz
-  real(mytype), intent(in):: lind
 
   integer :: i, j, k
-
-  if (iibm == 2) call lagpolz(uz)
-  if (iibm == 3) call cubsplz(uz,lind)
 
   ! Compute r.h.s.
   do concurrent (j=1:ny, i=1:nx)
@@ -817,26 +858,21 @@ subroutine filz_00(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
 
 end subroutine filz_00
 
-subroutine filz_ij(tz,uz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind,ncl1,ncln)
+subroutine filz_ij(tz,uz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,ncl1,ncln)
 
   USE param
   use thomas
   use parfiZ
-  use ibm, only : lagpolz, cubsplz
 
   implicit none
 
   integer, intent(in) :: nx, ny, nz, npaire, ncl1, ncln
   real(mytype), intent(out), dimension(nx,ny,nz) :: tz
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
   real(mytype), intent(out), dimension(nx,ny) :: fisz
   real(mytype), intent(in), dimension(nz) :: fiffz,fifsz,fifwz
-  real(mytype), intent(in) :: lind
 
   integer :: i, j, k
-
-  if (iibm == 2) call lagpolz(uz)
-  if (iibm == 3) call cubsplz(uz,lind)
 
   ! Compute r.h.s.
   if (ncl1 == 1) then
@@ -940,7 +976,7 @@ subroutine filz_ij(tz,uz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind,ncl1,ncln)
 
 end subroutine filz_ij
 
-subroutine filz_11(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind) 
+subroutine filz_11(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire)
 
   USE param
 
@@ -948,16 +984,15 @@ subroutine filz_11(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
   real(mytype), intent(out), dimension(nx,ny) :: fisz
   real(mytype), intent(in), dimension(nz) :: fiffz,fifsz,fifwz
-  real(mytype), intent(in) :: lind
 
-  call filz_ij(tz,uz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind,1,1)
+  call filz_ij(tz,uz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,1,1)
 
 end subroutine filz_11
 
-subroutine filz_12(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind) 
+subroutine filz_12(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire)
 
   USE param
 
@@ -965,16 +1000,15 @@ subroutine filz_12(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
   real(mytype), intent(out), dimension(nx,ny) :: fisz
   real(mytype), intent(in), dimension(nz) :: fiffz,fifsz,fifwz
-  real(mytype), intent(in) :: lind
 
-  call filz_ij(tz,uz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind,1,2)
+  call filz_ij(tz,uz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,1,2)
 
 end subroutine filz_12
 
-subroutine filz_21(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind) 
+subroutine filz_21(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire)
 
   USE param
 
@@ -982,19 +1016,36 @@ subroutine filz_21(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
 
   integer, intent(in) :: nx, ny, nz, npaire
   real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
-  real(mytype), intent(inout), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
   real(mytype), intent(out), dimension(nx,ny) :: fisz
   real(mytype), intent(in), dimension(nz) :: fiffz,fifsz,fifwz
-  real(mytype), intent(in) :: lind
 
-  call filz_ij(tz,uz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind,2,1)
+  call filz_ij(tz,uz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,2,1)
 
 end subroutine filz_21
 
 
-subroutine filz_22(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind) 
+subroutine filz_22(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire)
 
   USE param
+
+  implicit none
+
+  integer, intent(in) :: nx, ny, nz, npaire
+  real(mytype), intent(out), dimension(nx,ny,nz) :: tz, rz
+  real(mytype), intent(in), dimension(nx,ny,nz) :: uz
+  real(mytype), intent(out), dimension(nx,ny) :: fisz
+  real(mytype), intent(in), dimension(nz) :: fiffz,fifsz,fifwz
+
+  call filz_ij(tz,uz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,2,2)
+
+end subroutine filz_22
+
+subroutine ibm_filz(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
+
+  use decomp_2d, only : mytype
+  use variables, only : filz
+  use ibm, only : apply_ibmz
 
   implicit none
 
@@ -1005,6 +1056,7 @@ subroutine filz_22(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
   real(mytype), intent(in), dimension(nz) :: fiffz,fifsz,fifwz
   real(mytype), intent(in) :: lind
 
-  call filz_ij(tz,uz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind,2,2)
+  call apply_ibmz(uz,lind)
+  call filz(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire)
 
-end subroutine filz_22
+end subroutine ibm_filz

@@ -10,14 +10,14 @@ contains
 
    ! Serial test
    @test
-   subroutine verif_dery_deryy_12_str()
+   subroutine verif_ibm_dery_ibm_deryy_12_str()
 
       use decomp_2d
       use param
       use var
       use variables
       use tools, only : error_l1_l2_linf
-      use ibm_param, only : ubcx,ubcy,ubcz
+      use ibm, only : ubcx,ubcy,ubcz
 
       implicit none
 
@@ -33,7 +33,7 @@ contains
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
       call cpu_time(t1)
-      call dery(output,input,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcx)
+      call ibm_dery(output,input,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcx)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
       call log("dery12_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
@@ -49,7 +49,7 @@ contains
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
       call cpu_time(t1)
-      call dery(output,input,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcy)
+      call ibm_dery(output,input,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcy)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
       call log("dery12p_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
@@ -59,7 +59,7 @@ contains
          @assertEqual(linf/slinf, 0.d0, tolerance=2.d-7)
       endif
 
-      ! test deryy
+      ! test ibm_deryy
       iimplicit = -iimplicit
       do j = 1, ysize(2)
          y = yp(j)
@@ -68,9 +68,9 @@ contains
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
       call cpu_time(t1)
-      call deryy(output,input,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,ubcx)
+      call ibm_deryy(output,input,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,ubcx)
       if (istret /= 0) then
-         call dery(tmp,input,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+         call ibm_dery(tmp,input,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
          do j = 1, ysize(2)
             output(:,j,:) = output(:,j,:)*pp2y(j)-pp4y(j)*tmp(:,j,:)
          enddo
@@ -90,9 +90,9 @@ contains
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf, ysize(1), ysize(2), ysize(3), xsize(1)*ysize(2)*zsize(3))
       call cpu_time(t1)
-      call deryy(output,input,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0,ubcy)
+      call ibm_deryy(output,input,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0,ubcy)
       if (istret /= 0) then
-         call dery(tmp,input,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+         call ibm_dery(tmp,input,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
          do j = 1, ysize(2)
             output(:,j,:) = output(:,j,:)*pp2y(j)-pp4y(j)*tmp(:,j,:)
          enddo
@@ -107,18 +107,18 @@ contains
       endif
       iimplicit = -iimplicit
 
-   end subroutine verif_dery_deryy_12_str
+   end subroutine verif_ibm_dery_ibm_deryy_12_str
 
    ! Serial test
    @test
-   subroutine verif_fily_12_str()
+   subroutine verif_ibm_fily_12_str()
 
       use decomp_2d
       use param
       use var
       use variables
       use tools, only : error_l1_l2_linf
-      use ibm_param, only : ubcx,ubcy,ubcz
+      use ibm, only : ubcx,ubcy,ubcz
 
       implicit none
 
@@ -136,7 +136,7 @@ contains
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf)
       call cpu_time(t1)
-      call fily(output,input,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,ubcx)
+      call ibm_fily(output,input,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,ubcx)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf)
       call log("fily12p_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
@@ -152,7 +152,7 @@ contains
       enddo
       call error_l1_l2_linf(sol, sl1, sl2, slinf)
       call cpu_time(t1)
-      call fily(output,input,di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,ubcy)
+      call ibm_fily(output,input,di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,ubcy)
       call cpu_time(t2)
       call error_l1_l2_linf(output-sol, l1, l2, linf)
       call log("fily12_str", l1/sl1, l2/sl2, linf/slinf, t2-t1)
@@ -162,6 +162,6 @@ contains
          @assertEqual(linf/slinf, 0.d0, tolerance=3.d-8)
       endif
 
-   end subroutine verif_fily_12_str
+   end subroutine verif_ibm_fily_12_str
 
 end module testy12_str

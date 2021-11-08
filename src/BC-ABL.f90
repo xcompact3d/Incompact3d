@@ -286,7 +286,7 @@ contains
     use var, only: uxf1, uzf1, phif1, uxf3, uzf3, phif3
     use var, only: di1, di3
     use var, only: sxy1, syz1, heatflux, ta2, tb2, ta3, tb3
-    use ibm_param, only : ubcx, ubcz
+    use ibm, only : ubcx, ubcz
     use dbg_schemes, only: log_prec, tanh_prec, sqrt_prec, abs_prec, atan_prec
    
     implicit none
@@ -338,24 +338,24 @@ contains
     endif
 
     call filter(zero)
-    call filx(uxf1,ux,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,ubcx)
-    call filx(uzf1,uz,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
+    call ibm_filx(uxf1,ux,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+    call ibm_filx(uzf1,uz,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
     call transpose_x_to_y(uxf1,ta2)
     call transpose_x_to_y(uzf1,tb2)
     call transpose_y_to_z(ta2,ta3)
     call transpose_y_to_z(tb2,tb3)
-    call filz(uxf3,ta3,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
-    call filz(uzf3,tb3,di3,fisz,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),0,ubcz)
+    call ibm_filz(uxf3,ta3,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+    call ibm_filz(uzf3,tb3,di3,fisz,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),0,ubcz)
     call transpose_z_to_y(uxf3,ta2)
     call transpose_z_to_y(uzf3,tb2)
     call transpose_y_to_x(ta2,uxf1)
     call transpose_y_to_x(tb2,uzf1)
 
     if (iscalar==1) then
-      call filx(phif1,phi(:,:,:,1),di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,zero)
+      call ibm_filx(phif1,phi(:,:,:,1),di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,zero)
       call transpose_x_to_y(phif1,ta2)
       call transpose_y_to_z(ta2,ta3)
-      call filz(phif3,ta3,di3,fisz,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),0,zero)
+      call ibm_filz(phif3,ta3,di3,fisz,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),0,zero)
       call transpose_z_to_y(phif3,ta2)
       call transpose_y_to_x(ta2,phif1)
     endif
