@@ -817,7 +817,6 @@ subroutine multmatrix7(td2,ta2,ux2,npaire,cly1,clyn,xcst)
    USE variables
    USE derivY
    USE decomp_2d
-   USE ibm_param, only : ubcx,ubcy,ubcz
      
    implicit none
    
