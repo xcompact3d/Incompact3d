@@ -88,6 +88,15 @@ where `HDF5_DIR` is the desired install location.
 For production use it may be worth exploring the `--enable-build-mode=production` option and other
 suggestings in the readmes under `release_docs/`.
 
+After configuring build and install with
+``
+make
+make install
+``
+this will build and install hdf5 to `${HDF5_DIR}` - check for the presence of `bin/`, `lib/`, etc.
+You might also want to add `${HDF5_DIR}` to your path, it contains useful utilities such as `h5dump`
+for inspecting hdf5 files.
+
 **N.B.** package manager installations (*e.g.* using `apt-get`) may not be build with
 `--enable-parallel` and are therefore unsuitable here.
 
@@ -110,6 +119,9 @@ After configuring build and install with
 make
 make install
 ``
+note that you can control the installation location by passing
+`-DCMAKE_INSTALL_PREFIX=${ADIOS2_DIR}` to `cmake` or by setting the variable when configuring with
+`ccmake`.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Building Xcompact3d with ADIOS2
