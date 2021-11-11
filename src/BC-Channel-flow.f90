@@ -113,7 +113,7 @@ contains
     !
     if (nrank == 0) inquire(file="channel_init_ux", exist=read_from_file)
     call MPI_BCAST(read_from_file,1,MPI_LOGICAL,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_BCAST")
     if (read_from_file) then
 
        if (nrank == 0) print *, "Channel: init from snapshot."
@@ -447,7 +447,7 @@ contains
     ub = channel_local_average(ux) * coeff
 
     call MPI_ALLREDUCE(MPI_IN_PLACE,ub,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
 
     can = - (constant - ub)
 
@@ -515,7 +515,7 @@ contains
     else
       call MPI_REDUCE(array, array, 2*(3+numscalar), real_type, MPI_SUM, 0, MPI_COMM_WORLD, code)
     endif
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
 
     ! Compute variance and log
     if (nrank == 0) then

@@ -59,7 +59,7 @@ subroutine parameter(input_i3d)
   implicit none
 
   character(len=80), intent(in) :: input_i3d
-  integer :: is, ierr
+  integer :: is
 
   NAMELIST /BasicParam/ p_row, p_col, nx, ny, nz, istret, beta, xlx, yly, zlz, &
        itype, iin, re, u1, u2, init_noise, inflow_noise, &
@@ -294,8 +294,8 @@ subroutine parameter(input_i3d)
      nvisu = 1
   endif
 #if defined(DOUBLE_PREC) && defined(SAVE_SINGLE)
-  write(*,*)  "ADIOS2 does not support mixing the simulation and output precision"
-  call MPI_ABORT(MPI_COMM_WORLD, -1, ierr)
+  call decomp_2d_abort(__FILE__, __LINE__, -1, &
+          "ADIOS2 does not support mixing the simulation and output precision")
 #endif
 #endif
 

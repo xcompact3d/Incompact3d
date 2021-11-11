@@ -92,8 +92,7 @@ contains
        else if (present(npaire)) then
           call inttimp(var1, dvar1, npaire=npaire, isc=is)
        else
-          if (nrank  == 0) write(*,*) "Error in intt call."
-          call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
+          call decomp_2d_abort(__FILE__, __LINE__, -1, "Error in intt call")
        endif
 
     elseif (itimescheme == 1) then

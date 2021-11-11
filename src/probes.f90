@@ -102,7 +102,7 @@ contains
        endif
        ! Broadcast
        call MPI_BCAST(main_probes_offset,1,MPI_INTEGER,0,MPI_COMM_WORLD,code)
-       if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+       if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_BCAST")
 
        ! Extra probes
        if (flag_extra_probes) then
@@ -115,7 +115,7 @@ contains
           endif
           ! Broadcast
           call MPI_BCAST(extra_probes_offset,1,MPI_INTEGER,0,MPI_COMM_WORLD,code)
-          if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+          if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_BCAST")
        endif
 
     endif

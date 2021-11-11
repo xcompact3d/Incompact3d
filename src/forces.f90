@@ -143,7 +143,7 @@ contains
 
     implicit none
 
-    integer :: fh,code,ierr2,itest1
+    integer :: fh,code,itest1
     character(len=30) :: filename, filestart
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
 
@@ -164,11 +164,11 @@ contains
              write(*,*) 'Error: MPI_FILE_OPEN : '//trim(filename)
              write(*,*) '==========================================================='
           endif
-          call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+          call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_OPEN")
        endif
        filesize = 0_MPI_OFFSET_KIND
        call MPI_FILE_SET_SIZE(fh,filesize,code)  ! guarantee overwriting
-       if (code /= 0) call decomp_2d_abort(code, "MPI_FILE_SET_SIZE")
+       if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_SET_SIZE")
        disp = 0_MPI_OFFSET_KIND
        call decomp_2d_write_var(fh,disp,1,ux01)
        call decomp_2d_write_var(fh,disp,1,uy01)
@@ -181,7 +181,7 @@ contains
              write(*,*) 'Error: MPI_FILE_CLOSE : '//trim(filename)
              write(*,*) '==========================================================='
           endif
-          call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+          call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_CLOSE")
        endif
     else !read
        call MPI_FILE_OPEN(MPI_COMM_WORLD, filestart, &
@@ -193,7 +193,7 @@ contains
              write(*,*) 'Error: MPI_FILE_OPEN : '//trim(filestart)
              write(*,*) '==========================================================='
           endif
-          call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+          call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_OPEN")
        endif
        disp = 0_MPI_OFFSET_KIND
        call decomp_2d_read_var(fh,disp,1,ux01)
@@ -207,7 +207,7 @@ contains
              write(*,*) 'Error: MPI_FILE_CLOSE : '//trim(filestart)
              write(*,*) '==========================================================='
           endif
-          call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+          call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_CLOSE")
        endif
     endif
 
@@ -358,9 +358,9 @@ subroutine force(ux1,uy1,ep1,iounit)
         tunstyl(xstart(3)-1+k)=tsumy
      enddo
      call MPI_ALLREDUCE(tunstxl,tunstx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
      call MPI_ALLREDUCE(tunstyl,tunsty,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
 
 !!$!*********************************************************************************
 !!$!     Secondly, the surface momentum fluxes
@@ -527,17 +527,17 @@ subroutine force(ux1,uy1,ep1,iounit)
         enddo
      endif
      call MPI_ALLREDUCE(tconvxl,tconvx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
      call MPI_ALLREDUCE(tconvyl,tconvy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
      call MPI_ALLREDUCE(tpresxl,tpresx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
      call MPI_ALLREDUCE(tpresyl,tpresy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
      call MPI_ALLREDUCE(tdiffxl,tdiffx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
      call MPI_ALLREDUCE(tdiffyl,tdiffy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
 
      do k=1,zsize(3)
 

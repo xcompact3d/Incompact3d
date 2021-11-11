@@ -213,25 +213,25 @@ contains
 
     call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
          MPI_ORDER_FORTRAN, data_type, newtype, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
     call MPI_TYPE_COMMIT(newtype,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
     call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
          MPI_MODE_RDONLY, MPI_INFO_NULL, &
          fh, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_OPEN "//trim(filename))
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_OPEN "//trim(filename))
     disp = 0_MPI_OFFSET_KIND
     call MPI_FILE_SET_VIEW(fh,disp,data_type, &
          newtype,'native',MPI_INFO_NULL,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_SET_VIEW")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
     call MPI_FILE_READ_ALL(fh, varsingle, &
          subsizes(1)*subsizes(2)*subsizes(3), &
          data_type, MPI_STATUS_IGNORE, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_READ_ALL")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
     call MPI_FILE_CLOSE(fh,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_CLOSE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_CLOSE")
     call MPI_TYPE_FREE(newtype,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
     var = real(varsingle,mytype)
     deallocate(varsingle)
 
@@ -422,7 +422,7 @@ contains
 
     call MPI_FILE_SET_VIEW(fh,disp,real_type, &
          real_type,'native',MPI_INFO_NULL,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_SET_VIEW")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
     if (nrank==0) then
        m = n ! only one rank needs to write
     else
@@ -430,7 +430,7 @@ contains
     end if
     call MPI_FILE_WRITE_ALL(fh, var, m, real_type, &
          MPI_STATUS_IGNORE, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_WRITE_ALL")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
     disp = disp + n*mytype_bytes
 
     return
@@ -450,7 +450,7 @@ contains
 
     call MPI_FILE_SET_VIEW(fh,disp,complex_type, &
          complex_type,'native',MPI_INFO_NULL,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_SET_VIEW")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
     if (nrank==0) then
        m = n
     else
@@ -458,7 +458,7 @@ contains
     end if
     call MPI_FILE_WRITE_ALL(fh, var, m, complex_type, &
          MPI_STATUS_IGNORE, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_WRITE_ALL")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
     disp = disp + n*mytype_bytes*2
 
     return
@@ -478,7 +478,7 @@ contains
 
     call MPI_FILE_SET_VIEW(fh,disp,MPI_INTEGER, &
          MPI_INTEGER,'native',MPI_INFO_NULL,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_SET_VIEW")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
     if (nrank==0) then
        m = n
     else
@@ -486,9 +486,9 @@ contains
     end if
     call MPI_FILE_WRITE_ALL(fh, var, m, MPI_INTEGER, &
          MPI_STATUS_IGNORE, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_WRITE_ALL")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
     call MPI_TYPE_SIZE(MPI_INTEGER,m,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_SIZE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
     disp = disp + n*m
 
     return
@@ -508,7 +508,7 @@ contains
 
     call MPI_FILE_SET_VIEW(fh,disp,MPI_LOGICAL, &
          MPI_LOGICAL,'native',MPI_INFO_NULL,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_SET_VIEW")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
     if (nrank==0) then
        m = n
     else
@@ -516,9 +516,9 @@ contains
     end if
     call MPI_FILE_WRITE_ALL(fh, var, m, MPI_LOGICAL, &
          MPI_STATUS_IGNORE, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_WRITE_ALL")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
     call MPI_TYPE_SIZE(MPI_LOGICAL,m,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_SIZE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
     disp = disp + n*m
 
     return
@@ -545,10 +545,10 @@ contains
 
     call MPI_FILE_SET_VIEW(fh,disp,real_type, &
          real_type,'native',MPI_INFO_NULL,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_SET_VIEW")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
     call MPI_FILE_READ_ALL(fh, var, n, real_type, &
          MPI_STATUS_IGNORE, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_READ_ALL")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
     disp = disp + n*mytype_bytes
 
     return
@@ -568,10 +568,10 @@ contains
 
     call MPI_FILE_SET_VIEW(fh,disp,complex_type, &
          complex_type,'native',MPI_INFO_NULL,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_SET_VIEW")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
     call MPI_FILE_READ_ALL(fh, var, n, complex_type, &
          MPI_STATUS_IGNORE, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_READ_ALL")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
     disp = disp + n*mytype_bytes*2
 
     return
@@ -591,12 +591,12 @@ contains
 
     call MPI_FILE_SET_VIEW(fh,disp,MPI_INTEGER, &
          MPI_INTEGER,'native',MPI_INFO_NULL,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_SET_VIEW")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
     call MPI_FILE_READ_ALL(fh, var, n, MPI_INTEGER, &
          MPI_STATUS_IGNORE, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_READ_ALL")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
     call MPI_TYPE_SIZE(MPI_INTEGER,m,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_SIZE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
     disp = disp + n*m
 
     return
@@ -616,12 +616,12 @@ contains
 
     call MPI_FILE_SET_VIEW(fh,disp,MPI_LOGICAL, &
          MPI_LOGICAL,'native',MPI_INFO_NULL,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_SET_VIEW")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
     call MPI_FILE_READ_ALL(fh, var, n, MPI_LOGICAL, &
          MPI_STATUS_IGNORE, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_READ_ALL")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
     call MPI_TYPE_SIZE(MPI_LOGICAL,m,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_SIZE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
     disp = disp + n*m
 
     return
@@ -819,12 +819,12 @@ contains
     integer :: ierror
 
     if ((icoarse < 1).or.(icoarse > 2)) then
-       print *, "Error invalid value of icoarse: ", icoarse
-       call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
+       call decomp_2d_abort(__FILE__, __LINE__, icoarse, &
+               "Error invalid value of icoarse")
     endif
     if ((ipencil < 1).or.(ipencil > 3)) then
-       print *, "Error invalid value of ipencil: ", ipencil
-       call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
+       call decomp_2d_abort(__FILE__, __LINE__, ipencil, &
+               "Error invalid value of ipencil")
     endif
     
     if (icoarse==1) then
@@ -908,28 +908,28 @@ contains
 
     call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
          MPI_ORDER_FORTRAN, real_type_single, newtype, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
     call MPI_TYPE_COMMIT(newtype,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
     call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
          MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
          fh, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_OPEN "//trim(filename))
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_OPEN "//trim(filename))
     filesize = 0_MPI_OFFSET_KIND
     call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_SET_SIZE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_SIZE")
     disp = 0_MPI_OFFSET_KIND
     call MPI_FILE_SET_VIEW(fh,disp,real_type_single, &
          newtype,'native',MPI_INFO_NULL,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_SET_VIEW")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
     call MPI_FILE_WRITE_ALL(fh, varsingle, &
          subsizes(1)*subsizes(2)*subsizes(3), &
          real_type_single, MPI_STATUS_IGNORE, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_WRITE_ALL")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
     call MPI_FILE_CLOSE(fh,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_CLOSE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_CLOSE")
     call MPI_TYPE_FREE(newtype,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
 
     deallocate(varsingle)
 
@@ -958,7 +958,7 @@ contains
 
     ! Check if variable already exists, if not create it
     call adios2_inquire_variable(var_handle, io, varname, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "ADIOS2_INQUIRE_VARIABLE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "ADIOS2_INQUIRE_VARIABLE")
     if (.not.var_handle % valid) then
        !! New variable
        if(nrank==0) print *, "Registering variable for IO: ", varname
@@ -971,14 +971,14 @@ contains
           !! Single
           data_type = adios2_type_real
        else
-          print *, "Trying to write unknown data type!"
-          call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
+          call decomp_2d_abort(__FILE__, __LINE__, -1, &
+                  "Trying to write unknown data type!")
        endif
 
        call adios2_define_variable(var_handle, io, varname, data_type, &
             ndims, int(sizes, kind=8), int(starts, kind=8), int(subsizes, kind=8), &
             adios2_constant_dims, ierror)
-       if (ierror /= 0) call decomp_2d_abort(ierror, "ADIOS2_DEFINE_VARIABLE")
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "ADIOS2_DEFINE_VARIABLE")
     endif
     
   end subroutine adios2_register_variable
@@ -1002,13 +1002,13 @@ contains
     type(adios2_variable) :: var_handle
 
     call adios2_inquire_variable(var_handle, io, varname, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "ADIOS2_INQUIRE_VARIABLE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "ADIOS2_INQUIRE_VARIABLE")
     if (.not.var_handle % valid) then
        call adios2_register_variable(io, varname, ipencil, icoarse)
     endif
 
     call adios2_put(engine, var_handle, var, adios2_mode_deferred, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "ADIOS2_PUT")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "ADIOS2_PUT")
 
     return
   end subroutine adios2_write_real_coarse
@@ -1062,28 +1062,28 @@ contains
     !   print *,nrank,starts(1),starts(2),starts(3),starts(4)
     call MPI_TYPE_CREATE_SUBARRAY(4, sizes, subsizes, starts,  &
          MPI_ORDER_FORTRAN, real_type, newtype, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
     call MPI_TYPE_COMMIT(newtype,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
     call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
          MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
          fh, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_OPEN "//trim(filename))
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_OPEN "//trim(filename))
     filesize = 0_MPI_OFFSET_KIND
     call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_SET_SIZE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_SIZE")
     disp = 0_MPI_OFFSET_KIND
     call MPI_FILE_SET_VIEW(fh,disp,real_type, &
          newtype,'native',MPI_INFO_NULL,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_SET_VIEW")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
     call MPI_FILE_WRITE_ALL(fh, var, &
          subsizes(1)*subsizes(2)*subsizes(3)*subsizes(4), &
          real_type, MPI_STATUS_IGNORE, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_WRITE_ALL")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
     call MPI_FILE_CLOSE(fh,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_CLOSE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_CLOSE")
     call MPI_TYPE_FREE(newtype,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
 
 
     return
@@ -1114,7 +1114,7 @@ contains
     if (is<1 .OR. ie>nx_global .OR. js<1 .OR. je>ny_global .OR. &
          ks<1 .OR. ke>nz_global) then
        errorcode = 10
-       call decomp_2d_abort(errorcode, &
+       call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
             'Invalid subdomain specified in I/O')
     end if
 
@@ -1138,7 +1138,7 @@ contains
        end if
     end if
     call MPI_COMM_SPLIT(MPI_COMM_WORLD,color,key,newcomm,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_COMM_SPLIT")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SPLIT")
 
     if (color==1) then ! only ranks in this group do IO collectively
 
@@ -1270,28 +1270,28 @@ contains
        ! MPI-IO
        call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
             MPI_ORDER_FORTRAN, data_type, newtype, ierror)
-       if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
        call MPI_TYPE_COMMIT(newtype,ierror)
-       if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
        call MPI_FILE_OPEN(newcomm, filename, &
             MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
             fh, ierror)
-       if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_OPEN "//trim(filename))
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_OPEN "//trim(filename))
        filesize = 0_MPI_OFFSET_KIND
        call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
-       if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_SET_SIZE")
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_SIZE")
        disp = 0_MPI_OFFSET_KIND
        call MPI_FILE_SET_VIEW(fh,disp,data_type, &
             newtype,'native',MPI_INFO_NULL,ierror)
-       if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_SET_VIEW")
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
        call MPI_FILE_WRITE_ALL(fh, wk, &
             subsizes(1)*subsizes(2)*subsizes(3), &
             data_type, MPI_STATUS_IGNORE, ierror)
-       if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_WRITE_ALL")
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
        call MPI_FILE_CLOSE(fh,ierror)
-       if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_CLOSE")
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_CLOSE")
        call MPI_TYPE_FREE(newtype,ierror)
-       if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_FREE")
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_FREE")
 
        deallocate(wk)
 

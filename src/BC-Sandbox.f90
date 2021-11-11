@@ -105,13 +105,12 @@ contains
 
   subroutine geomcomplex_sandbox(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, yp, remp)
 
-    use decomp_2d, only : mytype, xstart, xend
+    use decomp_2d, only : mytype, xstart, xend, decomp_2d_abort
     use decomp_2d_io, only : decomp_2d_read_one
     use param, only : one, two
     use variables, only : nx, nz
     use complex_geometry, only : nxraf,nyraf,nzraf
     use ibm
-    use MPI
 
     implicit none
 
@@ -120,7 +119,6 @@ contains
     real(mytype),dimension(ny) :: yp
     real(mytype)               :: dx,dz
     real(mytype)               :: remp
-    integer                    :: code, ierror
     !
     if (nxi == 1.and.nxf == nx.and.&
         nyi == xstart(2).and.nyf == xend(2).and.&
@@ -131,8 +129,8 @@ contains
         !
     else
       ! Just the standard epsi(nx,ny,nz) is loaded
-      print *,'Invalid parameters at geomcomplex_sandbox'
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
+      call decomp_2d_abort(__FILE__, __LINE__, -1, &
+              'Invalid parameters at geomcomplex_sandbox')
     endif
     !
     return

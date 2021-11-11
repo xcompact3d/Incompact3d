@@ -54,17 +54,14 @@ contains
     use decomp_2d_io
     use variables
     use param
-    use MPI
 
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
-    integer :: code, ierror
-
     call debug_schemes()
-    call MPI_ABORT(MPI_COMM_WORLD,code,ierror)
+    call decomp_2d_abort(__FILE__, __LINE__, 0, "End of benchmark")
 
     return
   end subroutine init_dbg

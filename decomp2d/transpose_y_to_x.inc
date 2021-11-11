@@ -59,7 +59,7 @@ decomp%y1dist, decomp)
 #ifdef SHM
 work2_p = decomp%COL_INFO%RCV_P
 call MPI_BARRIER(decomp%COL_INFO%CORE_COMM, ierror)
-if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_BARRIER")
+if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BARRIER")
 #endif
 
 ! transpose using MPI_ALLTOALL(V)
@@ -68,26 +68,26 @@ if (decomp%COL_INFO%CORE_ME==1) THEN
 call MPI_ALLTOALLV(work1, decomp%y1cnts_s, decomp%y1disp_s, &
 real_type, work2, decomp%x1cnts_s, decomp%x1disp_s, &
 real_type, decomp%COL_INFO%SMP_COMM, ierror)
-if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLTOALLV")
+if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
 end if
 #else
 #ifdef EVEN
 call MPI_ALLTOALL(work1_r, decomp%y1count, &
 real_type, work2_r, decomp%x1count, &
 real_type, DECOMP_2D_COMM_COL, ierror)
-if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLTOALL")
+if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
 #else
 call MPI_ALLTOALLV(work1_r, decomp%y1cnts, decomp%y1disp, &
 real_type, work2_r, decomp%x1cnts, decomp%x1disp, &
 real_type, DECOMP_2D_COMM_COL, ierror)
-if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLTOALLV")
+if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
 #endif
 #endif
 
 ! rearrange receive buffer
 #ifdef SHM
 call MPI_BARRIER(decomp%COL_INFO%CORE_COMM, ierror)
-if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_BARRIER")
+if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BARRIER")
 call mem_merge_yx_real(work2, d1, d2, d3, dst, dims(1), &
 decomp%x1dist, decomp)
 #else
@@ -225,7 +225,7 @@ decomp%y1dist, decomp)
 #ifdef SHM
 work2_p = decomp%COL_INFO%RCV_P_c
 call MPI_BARRIER(decomp%COL_INFO%CORE_COMM, ierror)
-if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_BARRIER")
+if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BARRIER")
 #endif
 
 ! transpose using MPI_ALLTOALL(V)
@@ -234,26 +234,26 @@ if (decomp%COL_INFO%CORE_ME==1) THEN
 call MPI_ALLTOALLV(work1, decomp%y1cnts_s, decomp%y1disp_s, &
 complex_type, work2, decomp%x1cnts_s, decomp%x1disp_s, &
 complex_type, decomp%COL_INFO%SMP_COMM, ierror)
-if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLTOALLV")
+if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
 end if
 #else
 #ifdef EVEN
 call MPI_ALLTOALL(work1_c, decomp%y1count, &
 complex_type, work2_c, decomp%x1count, &
 complex_type, DECOMP_2D_COMM_COL, ierror)
-if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLTOALL")
+if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
 #else
 call MPI_ALLTOALLV(work1_c, decomp%y1cnts, decomp%y1disp, &
 complex_type, work2_c, decomp%x1cnts, decomp%x1disp, &
 complex_type, DECOMP_2D_COMM_COL, ierror)
-if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLTOALLV")
+if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
 #endif
 #endif
 
 ! rearrange receive buffer
 #ifdef SHM
 call MPI_BARRIER(decomp%COL_INFO%CORE_COMM, ierror)
-if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_BARRIER")
+if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BARRIER")
 call mem_merge_yx_complex(work2, d1, d2, d3, dst, dims(1), &
 decomp%x1dist, decomp)
 #else

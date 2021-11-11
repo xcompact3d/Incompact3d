@@ -633,11 +633,11 @@ contains
       endif
            
       call MPI_ALLREDUCE(Ux_part,Ux,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+      if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
       call MPI_ALLREDUCE(Uy_part,Uy,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+      if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
       call MPI_ALLREDUCE(Uz_part,Uz,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+      if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
         
       Turbine%Ux_upstream=Ux
       Turbine%Uy_upstream=Uy

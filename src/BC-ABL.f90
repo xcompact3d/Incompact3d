@@ -65,8 +65,8 @@ contains
 
     ! ABL not yet set up for iLES, stretched grids, and non-constant explicit models. 
     if (ilesmod == 0.or.istret /= 0.or.jles > 1) then
-        write(*,*)  'Simulation stopped: run with different options'
-       call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
+       call decomp_2d_abort(__FILE__, __LINE__, -1, &
+               "Given options are not compatible with ABL")
     endif
 
     ! Generation of a random noise
@@ -384,12 +384,12 @@ contains
     endif
 
     call MPI_ALLREDUCE(ux_HAve_local,ux_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(uz_HAve_local,uz_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
     if (iscalar==1) then
       call MPI_ALLREDUCE(Phi_HAve_local,Phi_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+      if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
     endif
 
     ux_HAve=ux_HAve/(nxc*nzc)
@@ -509,24 +509,20 @@ contains
             Q_HAve_local=Q_HAve_local+heatflux(i,k)
           enddo
        enddo
-       PsiM_HAve_local=PsiM_HAve_local
-       PsiH_HAve_local=PsiH_HAve_local
-       L_HAve_local=L_HAve_local
-       Q_HAve_local=Q_HAve_local
 
        call MPI_ALLREDUCE(PsiM_HAve_local,PsiM_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+       if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
        call MPI_ALLREDUCE(PsiH_HAve_local,PsiH_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+       if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
        call MPI_ALLREDUCE(L_HAve_local,L_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+       if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
        call MPI_ALLREDUCE(Q_HAve_local,Q_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+       if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
 
-       PsiM_HAve=PsiM_HAve/(nxc*nzc)
-       PsiH_HAve=PsiH_HAve/(nxc*nzc)
-       L_HAve=L_HAve/(nxc*nzc)
-       Q_HAve=Q_HAve/(nxc*nzc)
+       PsiM_HAve=PsiM_HAve/real(nxc*nzc,mytype)
+       PsiH_HAve=PsiH_HAve/real(nxc*nzc,mytype)
+       L_HAve   =   L_HAve/real(nxc*nzc,mytype)
+       Q_HAve   =   Q_HAve/real(nxc*nzc,mytype)
     endif
     
     ! Compute friction velocity u_shear and boundary layer height
@@ -631,7 +627,7 @@ contains
     ut3=ut3/ysize(1)/ysize(3)
 
     call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
     ut4=ut4/nproc
     if (iconcprec == 1) ut4=ut4*(xlx/pdl)
 
@@ -918,19 +914,19 @@ contains
     enddo
 
     call MPI_ALLREDUCE(u_HAve_local,u_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(v_HAve_local,v_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(w_HAve_local,w_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(uxy_HAve_local,uxy_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(uyz_HAve_local,uyz_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(txy_HAve_local,txy_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(tyz_HAve_local,tyz_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
     u_HAve  =  u_HAve/real(nx*nz,mytype)
     v_HAve  =  v_HAve/real(nx*nz,mytype)
     w_HAve  =  w_HAve/real(nx*nz,mytype)

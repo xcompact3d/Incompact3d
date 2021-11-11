@@ -235,9 +235,9 @@ contains
        endif
 
        call MPI_ALLREDUCE(ek,ekg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+       if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
        call MPI_ALLREDUCE(ep,epg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+       if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
 
        if ((epg /= zero).and.(ekg /= zero)) then
           um = ekg / epg
@@ -258,7 +258,7 @@ contains
              enddo
           enddo
           call MPI_ALLREDUCE(ek,ekg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-          if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+          if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
 
           if (nrank == 0) then
              write(*,*)  "Ek / Ep: ", ekg / epg, ekg, epg
@@ -576,13 +576,13 @@ contains
     ! endif
 
     call MPI_REDUCE(ek,ek1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
     call MPI_REDUCE(dek,dek1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
     call MPI_REDUCE(ep,ep1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
     call MPI_REDUCE(dep,dep1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
 
     if (nrank  ==  0) then
        open(67,file='./out/budget',status='unknown',form='formatted',&
@@ -669,7 +669,7 @@ contains
     end do
 
     call MPI_REDUCE(mp,mp1,numscalar,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
 
     return
   end subroutine suspended
@@ -696,7 +696,7 @@ contains
     enddo
 
     call MPI_REDUCE(dms,dms1,numscalar,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
 
   end subroutine depositrate
 
@@ -726,9 +726,9 @@ contains
     end do kloop
 
     call MPI_ALLREDUCE(xp(:,1),xp1,1,real2_type,MPI_MAXLOC,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
     call MPI_BCAST(xp(1,:), 3,real_type, int(xp1(2)), MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_BCAST")
 
   end subroutine front
 
@@ -756,9 +756,9 @@ contains
     end do jloop
 
     call MPI_ALLREDUCE(xp(:,1),xp1,1,real2_type,MPI_MAXLOC,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
     call MPI_BCAST(xp(1,:), 2,real_type, int(xp1(2)), MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_BCAST")
 
   end subroutine front2d
 

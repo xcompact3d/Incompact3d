@@ -161,9 +161,9 @@ contains
       enddo
 
       call MPI_ALLREDUCE(Udisc_partial,actuatordisc%Udisc,Nad,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+      if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
       call MPI_ALLREDUCE(counter,counter_total,Nad,MPI_INTEGER,MPI_SUM,MPI_COMM_WORLD,code)
-      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+      if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
 
       do idisc=1,Nad
          if (counter_total(idisc)==0) then

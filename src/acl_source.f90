@@ -466,11 +466,11 @@ contains
       enddo
 
       call MPI_ALLREDUCE(Su_part,Su,Nsource,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+      if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
       call MPI_ALLREDUCE(Sv_part,Sv,Nsource,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+      if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
       call MPI_ALLREDUCE(Sw_part,Sw,Nsource,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+      if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
 
       ! Zero the Source term at each time step
       FTx(:,:,:)=zero
@@ -519,7 +519,7 @@ contains
 
       alm_proj_time=MPI_WTIME()-t1
       call MPI_ALLREDUCE(alm_proj_time,t1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+      if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
 
       if (nrank==0.and.mod(itime,ilist)==0) then
          alm_proj_time=alm_proj_time/float(nproc)
