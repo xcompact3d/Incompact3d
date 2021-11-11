@@ -293,8 +293,8 @@ subroutine parameter(input_i3d)
      nvisu = 1
   endif
 #if defined(DOUBLE_PREC) && defined(SAVE_SINGLE)
-  print *, "ADIOS2 does not support mixing the simulation and output precision"
-  call MPI_ABORT(MPI_COMM_WORLD, -1, ierr)
+  call decomp_2d_abort(__FILE__, __LINE__, -1, &
+          "ADIOS2 does not support mixing the simulation and output precision")
 #endif
 #endif
 

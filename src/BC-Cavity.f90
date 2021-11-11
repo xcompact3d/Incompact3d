@@ -70,7 +70,7 @@ contains
     !
     if (nrank == 0) inquire(file="cavity_init_ux", exist=read_from_file)
     call MPI_BCAST(read_from_file,1,MPI_LOGICAL,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_BCAST")
     if (read_from_file) then
 
        if (nrank == 0) print *, "Cavity: init from snapshot."
@@ -224,7 +224,7 @@ contains
 
     ! Compute min & max over the domain
     call MPI_REDUCE(arrayin,array,6,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
 
     ! Compute average over the domain
     if (iscalar == 1) then
@@ -232,12 +232,12 @@ contains
       ! Temperature
       phimax = sum(phi(:,:,:,1))
       call MPI_REDUCE(phimax,phim,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
-      if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+      if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
 
       ! Squared temperature
       phimax = sum(phi(:,:,:,1)*phi(:,:,:,1))
       call MPI_REDUCE(phimax,phi2m,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
-      if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+      if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
 
     else
 

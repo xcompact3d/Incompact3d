@@ -69,7 +69,7 @@ contains
     use MPI
     use param, only : ilmn, iscalar, ilast, ifirst, ioutput, istret
     use variables, only : numscalar, prec, nvisu
-    use decomp_2d, only : nrank, mytype, xszV, yszV, zszV
+    use decomp_2d, only : nrank, mytype, xszV, yszV, zszV, decomp_2d_abort
 #ifdef ADIOS2
     use decomp_2d_io, only : adios2_register_variable
 #endif
@@ -123,11 +123,9 @@ contains
 
     ! Safety check
     if (output2D < 0 .or. output2D > 3 &
-        .or. (output2d == 2.and.istret /= 0)) then
-      if (nrank == 0) print *, "Visu module: incorrect value for output2D."
-      call MPI_ABORT(MPI_COMM_WORLD, 0, noutput)
-      stop
-    endif
+                     .or. (output2d == 2.and.istret /= 0)) &
+      call decomp_2d_abort(__FILE__, __LINE__, output2D, &
+                           "Visu module: incorrect value for output2D")
 
 #ifdef ADIOS2
     !! TODO: make this a runtime-option
@@ -136,17 +134,16 @@ contains
     call adios2_init(adios, trim(config_file), MPI_COMM_WORLD, adios2_debug_mode, code)
     if (code /= 0) then
        print *, "Error initialising ADIOS2 - is adios2_config.xml present and valid?"
-       call decomp_2d_abort(code, "ADIOS2_INIT")
+       call decomp_2d_abort(__FILE__, __LINE__, code, "ADIOS2_INIT")
     endif
     call adios2_declare_io(io_write_real_coarse, adios, "solution-io", code)
-    if (code /= 0) call decomp_2d_abort(code, "ADIOS2_DECLARE_IO")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "ADIOS2_DECLARE_IO")
     if (io_write_real_coarse % engine_type == "BP4") then
        write(outfile, *) "data.bp4"
     else if (io_write_real_coarse % engine_type == "HDF5") then
        write(outfile, *) "data.hdf5"
     else
-       print *, "Unknown engine!"
-       call MPI_ABORT(MPI_COMM_WORLD, -1, code)
+       call decomp_2d_abort(__FILE__, __LINE__, -1, "Unknown engine!")
     endif
 
     !! Register variables
@@ -164,7 +161,7 @@ contains
     endif
     
     call adios2_open(engine_write_real_coarse, io_write_real_coarse, trim(outfile), adios2_mode_write, code)
-    if (code /= 0) then call decomp_2d_abort(code, "ADIOS2_OPEN")
+    if (code /= 0) then call decomp_2d_abort(__FILE__, __LINE__, code, "ADIOS2_OPEN")
 #endif
 
   end subroutine visu_init
@@ -186,9 +183,9 @@ contains
   
 #ifdef ADIOS2
     call adios2_close(engine_write_real_coarse, code)
-    if (code /= 0) then call decomp_2d_abort(code, "ADIOS2_CLOSE")
+    if (code /= 0) then call decomp_2d_abort(__FILE__, __LINE__, code, "ADIOS2_CLOSE")
     call adios2_finalize(adios, code)
-    if (code /= 0) then call decomp_2d_abort(code, "ADIOS2_FINALIZE")
+    if (code /= 0) then call decomp_2d_abort(__FILE__, __LINE__, code, "ADIOS2_FINALIZE")
 #endif
     
   end subroutine visu_finalise
@@ -238,7 +235,7 @@ contains
     end if
 #ifdef ADIOS2
     call adios2_begin_step(engine_write_real_coarse, adios2_step_mode_append, code)
-    if (code /= 0) call decomp_2d_abort(code, "ADIOS2_BEGIN_STEP")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "ADIOS2_BEGIN_STEP")
 #endif
 
     ! Snapshot number
@@ -342,7 +339,7 @@ contains
 
 #ifdef ADIOS2
     call adios2_end_step(engine_write_real_coarse, code)
-    if (code /= 0) call decomp_2d_abort(code, "ADIOS2_END_STEP")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "ADIOS2_END_STEP")
 #endif
 
     ! Update log file
@@ -617,7 +614,7 @@ contains
 #else
        if (iibm==2 .and. (.not.present(skip_ibm))) then
           print *, "Not Implemented: currently ADIOS2 IO doesn't support IBM-blanking"
-          call decomp_2d_abort(0, "ADIOS2_IBM")
+          call decomp_2d_abort(__FILE__, __LINE__, 0, "ADIOS2_IBM")
        endif
        call decomp_2d_write_one(1,f1,filename,2,adios,engine_write_real_coarse,io_write_real_coarse)
 #endif

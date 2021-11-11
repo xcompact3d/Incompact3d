@@ -296,15 +296,13 @@ contains
   subroutine ludecomp9_0(aam,bbm,ccm,ddm,eem,qqm,ggm,hhm,ssm,rrm,vvm,wwm,zzm,l1m,l2m,l3m,u1m,u2m,u3m,ny)
 !
 !*******************************************************************
-    use decomp_2d, only : mytype
+    use decomp_2d, only : mytype, decomp_2d_abort
     use param
-    USE MPI
 
     implicit none
 
     integer :: i,j,k
     integer, intent(in) :: ny
-    integer :: code,ierror
     real(mytype),dimension(ny), intent(in)  :: aam,bbm,ccm,ddm,eem,rrm,qqm
     real(mytype),dimension(ny), intent(out) :: ggm,hhm,ssm
     real(mytype),dimension(ny), intent(out) :: vvm,wwm,zzm
@@ -319,8 +317,8 @@ contains
     vvm=zero;wwm=zero;zzm=zero
     l1m=zero;l2m=zero;l3m=zero
 
-    print *,'NOT READY YET! SIMULATION IS STOPPED!'
-    call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
+    call decomp_2d_abort(__FILE__, __LINE__, -1, &
+            'NOT READY YET! SIMULATION IS STOPPED!')
 
   end subroutine ludecomp9_0
 
@@ -533,14 +531,12 @@ contains
   subroutine nonainv_0(xsol,bbb,ggm,hhm,ssm,rrm,vvm,wwm,zzm,l1m,l2m,l3m,u1m,u2m,u3m,nx,ny,nz)
     !
     !********************************************************************
-    use decomp_2d, only : mytype
-    USE MPI
+    use decomp_2d, only : mytype, decomp_2d_abort
     
     implicit none
 
     integer :: i,j,k,kk
     integer, intent(in) :: nx,ny,nz
-    integer :: code,ierror
     real(mytype),dimension(nx,ny,nz), intent(out) :: xsol
     real(mytype),dimension(nx,ny,nz), intent(in) :: bbb
     real(mytype),dimension(ny), intent(in)    :: ggm,hhm,ssm,rrm
@@ -548,8 +544,8 @@ contains
     real(mytype),dimension(ny), intent(in) :: l1m,l2m,l3m
     real(mytype),dimension(ny), intent(in) :: u1m,u2m,u3m
 
-    print *,'NOT READY YET! SIMULATION IS STOPPED!'
-    call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
+    call decomp_2d_abort(__FILE__, __LINE__, -1, &
+            'NOT READY YET! SIMULATION IS STOPPED!')
 
   end subroutine nonainv_0
   
@@ -647,10 +643,8 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
 
   else
      !>>> We should not be here
-     if (nrank == 0) then
-        print *, "Unrecognised implicit itimescheme: ", itimescheme
-     endif
-     call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
+     call decomp_2d_abort(__FILE__, __LINE__, itimescheme, &
+             "Unrecognised implicit itimescheme")
 
   endif
 
@@ -774,7 +768,7 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
            if (isc == 0) print *, "   Wrong combination for ncly1, nclyn and npaire", ncly1, nclyn, npaire
            if (isc /= 0) print *, "   Wrong combination for nclyS1, nclySn and npaire", nclyS1, nclySn, npaire
         endif
-        call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
+        call decomp_2d_abort(__FILE__, __LINE__, -1, "Something is wrong")
      endif
      tb2=0.;
      if ((isc == 0.and.ncly1 == 0.and.nclyn == 0).or.(isc > 0.and.nclyS1 == 0.and.nclySn == 0)) then

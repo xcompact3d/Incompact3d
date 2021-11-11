@@ -101,7 +101,7 @@ else if (ipencil==3) then
    end if
 end if
 call MPI_COMM_SPLIT(MPI_COMM_WORLD,color,key,newcomm,ierror)
-if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_COMM_SPLIT")
+if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SPLIT")
 
 if (color==1) then ! only ranks in this group do IO collectively
 
@@ -203,32 +203,32 @@ if (color==1) then ! only ranks in this group do IO collectively
    ! MPI-IO
    call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
         MPI_ORDER_FORTRAN, data_type, newtype, ierror)
-   if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
    call MPI_TYPE_COMMIT(newtype,ierror)
-   if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
    call MPI_FILE_OPEN(newcomm, filename, &
         MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
         fh, ierror)
-   if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_OPEN "//trim(filename))
+   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_OPEN "//trim(filename))
    filesize = 0_MPI_OFFSET_KIND
    call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
-   if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_SET_SIZE")
+   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_SIZE")
    disp = 0_MPI_OFFSET_KIND
    call MPI_FILE_SET_VIEW(fh,disp,data_type, &
         newtype,'native',MPI_INFO_NULL,ierror)
-   if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_SET_VIEW")
+   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
    call MPI_FILE_WRITE_ALL(fh, wk, &
         subsizes(1)*subsizes(2)*subsizes(3), &
         data_type, MPI_STATUS_IGNORE, ierror)
-   if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_WRITE_ALL")
+   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
    call MPI_FILE_CLOSE(fh,ierror)
-   if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_FILE_CLOSE")
+   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_CLOSE")
    call MPI_TYPE_FREE(newtype,ierror)
-   if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
 
    deallocate(wk)
 
 end if ! color==1
 
 call MPI_BARRIER(MPI_COMM_WORLD, ierror)
-if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_BARRIER")
+if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BARRIER")

@@ -49,7 +49,7 @@ end if
 
 if (alloc_stat /= 0) then
 errorcode = 8
-call decomp_2d_abort(errorcode, &
+call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
 'Memory allocation failed when creating new arrays')
 end if
 
@@ -93,7 +93,7 @@ end if
 
 if (alloc_stat /= 0) then
 errorcode = 8
-call decomp_2d_abort(errorcode, &
+call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
 'Memory allocation failed when creating new arrays')
 end if
 
@@ -137,7 +137,7 @@ end if
 
 if (alloc_stat /= 0) then
 errorcode = 8
-call decomp_2d_abort(errorcode, &
+call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
 'Memory allocation failed when creating new arrays')
 end if
 
@@ -181,7 +181,7 @@ end if
 
 if (alloc_stat /= 0) then
 errorcode = 8
-call decomp_2d_abort(errorcode, &
+call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
 'Memory allocation failed when creating new arrays')
 end if
 
@@ -225,7 +225,7 @@ end if
 
 if (alloc_stat /= 0) then
 errorcode = 8
-call decomp_2d_abort(errorcode, &
+call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
 'Memory allocation failed when creating new arrays')
 end if
 
@@ -269,7 +269,7 @@ end if
 
 if (alloc_stat /= 0) then
 errorcode = 8
-call decomp_2d_abort(errorcode, &
+call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
 'Memory allocation failed when creating new arrays')
 end if
 

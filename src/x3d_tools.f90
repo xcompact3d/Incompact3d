@@ -49,11 +49,11 @@ subroutine boot_xcompact3d()
 
   !! Initialise MPI
   call MPI_INIT(code)
-  if (code /= 0) call decomp_2d_abort(code, "MPI_INIT")
+  if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_INIT")
   call MPI_COMM_RANK(MPI_COMM_WORLD,nrank,code)
-  if (code /= 0) call decomp_2d_abort(code, "MPI_COMM_RANK")
+  if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_COMM_RANK")
   call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,code)
-  if (code /= 0) call decomp_2d_abort(code, "MPI_COMM_SIZE")
+  if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_COMM_SIZE")
 
   ! Install signal handler
   call signal(SIGUSR1, catch_sigusr1)
@@ -71,7 +71,7 @@ subroutine boot_xcompact3d()
      call get_command_argument(1,InputFN,FNLength,status)
      if (status /= 0) then
         if (nrank == 0) print*, 'InputFN is too small for the given input file'
-        call decomp_2d_abort(status, "get_command_argument")
+        call decomp_2d_abort(__FILE__, __LINE__, status, "get_command_argument")
      endif
   endif
 
@@ -234,7 +234,7 @@ subroutine finalise_xcompact3d(flag)
   if (flag) then
     call decomp_2d_poisson_finalize()
     CALL MPI_FINALIZE(code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_FINALIZE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FINALIZE")
   endif
 
 endsubroutine finalise_xcompact3d
@@ -280,7 +280,7 @@ subroutine catch_signal
     ! Stop at the end of the next iteration
     ilast = itime + 1
     call MPI_ALLREDUCE(MPI_IN_PLACE, ilast, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD, code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
 
     catching_signal = 0
     return
@@ -290,7 +290,7 @@ subroutine catch_signal
     ! Stop at the end of the next iteration
     ilast = itime + 1
     call MPI_ALLREDUCE(MPI_IN_PLACE, ilast, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD, code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
 
     ! Write checkpoint at the end of the next iteration
     icheckpoint = ilast

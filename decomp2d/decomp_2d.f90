@@ -284,6 +284,11 @@ module decomp_2d
      module procedure alloc_z_complex
   end interface alloc_z
 
+  interface decomp_2d_abort
+     module procedure decomp_2d_abort_basic
+     module procedure decomp_2d_abort_file_line
+  end interface decomp_2d_abort
+
 contains
 
 #ifdef SHM_DEBUG
@@ -345,7 +350,7 @@ contains
     else
        if (nproc /= p_row*p_col) then
           errorcode = 1
-          call decomp_2d_abort(errorcode, &
+          call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
                'Invalid 2D processor grid - nproc /= p_row*p_col')
        else
           row = p_row
@@ -366,28 +371,28 @@ contains
     call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
          .false., &  ! do not reorder rank
          DECOMP_2D_COMM_CART_X, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_CREATE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_CREATE")
     periodic(1) = periodic_x
     periodic(2) = periodic_z
     call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
          .false., DECOMP_2D_COMM_CART_Y, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_CREATE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_CREATE")
     periodic(1) = periodic_x
     periodic(2) = periodic_y
     call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
          .false., DECOMP_2D_COMM_CART_Z, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_CREATE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_CREATE")
 
     call MPI_CART_COORDS(DECOMP_2D_COMM_CART_X,nrank,2,coord,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_COORDS")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_COORDS")
 
     ! derive communicators defining sub-groups for ALLTOALL(V)
     call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.true.,.false./), &
          DECOMP_2D_COMM_COL,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_SUB")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_SUB")
     call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.false.,.true./), &
          DECOMP_2D_COMM_ROW,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_SUB")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_SUB")
 
     ! gather information for halo-cell support code
     call init_neighbour
@@ -467,7 +472,7 @@ contains
     ! do not use 'mytype' which is compiler dependent
     ! also possible to use inquire(iolength=...) 
     call MPI_TYPE_SIZE(real_type,mytype_bytes,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_SIZE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
 
 #ifdef EVEN
     if (nrank==0) write(*,*) 'Padded ALLTOALL optimisation on'
@@ -529,7 +534,7 @@ contains
     ! verify the global size can actually be distributed as pencils
     if (nx<dims(1) .or. ny<dims(1) .or. ny<dims(2) .or. nz<dims(2)) then
        errorcode = 6
-       call decomp_2d_abort(errorcode, &
+       call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
             'Invalid 2D processor grid. ' // &
             'Make sure that min(nx,ny) >= p_row and ' // &
             'min(ny,nz) >= p_col')
@@ -590,25 +595,25 @@ contains
        allocate(work1_r(buf_size), STAT=status)
        if (status /= 0) then
           errorcode = 2
-          call decomp_2d_abort(errorcode, &
+          call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
                'Out of memory when allocating 2DECOMP workspace')
        end if
        allocate(work2_r(buf_size), STAT=status)
        if (status /= 0) then
           errorcode = 2
-          call decomp_2d_abort(errorcode, &
+          call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
                'Out of memory when allocating 2DECOMP workspace')
        end if
        allocate(work1_c(buf_size), STAT=status)
        if (status /= 0) then
           errorcode = 2
-          call decomp_2d_abort(errorcode, &
+          call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
                'Out of memory when allocating 2DECOMP workspace')
        end if
        allocate(work2_c(buf_size), STAT=status)
        if (status /= 0) then
           errorcode = 2
-          call decomp_2d_abort(errorcode, &
+          call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
                'Out of memory when allocating 2DECOMP workspace')
        end if
     end if
@@ -1338,9 +1343,9 @@ contains
 
     C%MPI_COMM = MPI_COMM
     CALL MPI_COMM_SIZE(MPI_COMM,C%NCPU,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_COMM_SIZE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SIZE")
     CALL MPI_COMM_RANK(MPI_COMM,C%NODE_ME,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_RANK")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_RANK")
     C%SMP_COMM  = MPI_COMM_NULL
     C%CORE_COMM = MPI_COMM_NULL
     C%SMP_ME= 0
@@ -1364,9 +1369,9 @@ contains
     COLOR = MYCORE
     IF (COLOR.GT.0) COLOR = MPI_UNDEFINED
     CALL MPI_Comm_split(C%MPI_COMM, COLOR, MYSMP, C%SMP_COMM, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_COMM_SPLIT")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SPLIT")
     CALL MPI_Comm_split(C%MPI_COMM, MYSMP, MYCORE, C%CORE_COMM, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_COMM_SPLIT")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SPLIT")
     ! - allocate work space
     ALLOCATE(KTBL(C%MAXCORE,C%NSMP),NARY(C%NCPU,C%NCORE))
     ALLOCATE(KTBLALL(C%MAXCORE,C%NSMP))
@@ -1375,7 +1380,7 @@ contains
     KTBL(C%CORE_ME,C%SMP_ME) = C%NODE_ME + 1
     CALL MPI_ALLREDUCE(KTBL,KTBLALL,C%NSMP*C%MAXCORE,MPI_INTEGER, &
          MPI_SUM,MPI_COMM,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
     KTBL=KTBLALL
     !  IF (SUM(KTBL) /= C%NCPU*(C%NCPU+1)/2) &
     !       CALL MPI_ABORT(...
@@ -1420,21 +1425,21 @@ contains
     ! for others extra_comm = MPI_COMM_NULL
     if (extra_comm /= MPI_COMM_NULL) then
        call MPI_COMM_SIZE(extra_comm,  nnodes, ierror)
-       if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_COMM_SIZE")
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SIZE")
        call MPI_COMM_RANK(extra_comm, my_node, ierror)
-       if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_COMM_RANK")
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_RANK")
     end if
 
     ! other ranks share the same information as their leaders
     call MPI_BCAST( nnodes, 1, MPI_INTEGER, 0, intra_comm, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_BCAST")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BCAST")
     call MPI_BCAST(my_node, 1, MPI_INTEGER, 0, intra_comm, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_BCAST")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BCAST")
 
     ! maxcor
     call MPI_ALLREDUCE(ncores, maxcor, 1, MPI_INTEGER, MPI_MAX, &
          MPI_COMM_WORLD, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
 
     call FIPC_finalize(ierror)
 
@@ -1466,7 +1471,7 @@ contains
             stat=status)
        CALL MPI_Allgather(decomp%x1cnts, C%NCPU, MPI_INTEGER, &
             NARY, C%NCPU, MPI_INTEGER, C%CORE_COMM, ierror)
-       if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLGATHER")
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLGATHER")
        PTR = 0
        DO i=1,C%NSMP
           decomp%x1disp_s(i) = PTR
@@ -1491,7 +1496,7 @@ contains
             stat=status)
        CALL MPI_Allgather(decomp%y2cnts, C%NCPU, MPI_INTEGER, &
             NARY, C%NCPU, MPI_INTEGER, C%CORE_COMM, ierror)
-       if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLGATHER")
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLGATHER")
        PTR = 0
        DO i=1,C%NSMP
           decomp%y2disp_s(i) = PTR
@@ -1519,7 +1524,7 @@ contains
             stat=status)
        CALL MPI_Allgather(decomp%y1cnts, C%NCPU, MPI_INTEGER, &
             NARY, C%NCPU, MPI_INTEGER, C%CORE_COMM, ierror)
-       if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLGATHER")
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLGATHER")
        PTR = 0
        DO i=1,C%NSMP
           decomp%y1disp_s(i) = PTR
@@ -1544,7 +1549,7 @@ contains
             stat=status)
        CALL MPI_Allgather(decomp%z2cnts, C%NCPU, MPI_INTEGER, &
             NARY, C%NCPU, MPI_INTEGER, C%CORE_COMM, ierror)
-       if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLGATHER")
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLGATHER")
        PTR = 0
        DO i=1,C%NSMP
           decomp%z2disp_s(i) = PTR
@@ -1674,17 +1679,17 @@ contains
           periodic(2) = .false.
           call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
                .false.,DECOMP_2D_COMM_CART_X, ierror)
-          if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_CREATE")
+          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_CREATE")
           call MPI_CART_COORDS(DECOMP_2D_COMM_CART_X,nrank,2,coord,ierror)
-          if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_COORDS")
+          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_COORDS")
 
           ! communicators defining sub-groups for ALLTOALL(V)
           call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.true.,.false./), &
                DECOMP_2D_COMM_COL,ierror)
-          if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_SUB")
+          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_SUB")
           call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.false.,.true./), &
                DECOMP_2D_COMM_ROW,ierror)
-          if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_SUB")
+          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_SUB")
 
           ! generate 2D decomposition information for this row*col
           call decomp_info_init(nx_global,ny_global,nz_global,decomp)
@@ -1707,7 +1712,7 @@ contains
 
           call MPI_ALLREDUCE(t2,t1,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
                MPI_COMM_WORLD,ierror)
-          if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
+          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
           t1 = t1 / dble(nproc)
 
           if (nrank==0) then
@@ -1733,7 +1738,7 @@ contains
        end if
     else
        errorcode = 9
-       call decomp_2d_abort(errorcode, &
+       call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
             'The processor-grid auto-tuning code failed. ' // &
             'The number of processes requested is probably too large.')
     end if
@@ -1752,7 +1757,7 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Error handling
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine decomp_2d_abort(errorcode, msg)
+  subroutine decomp_2d_abort_basic(errorcode, msg)
 
     implicit none
 
@@ -1768,7 +1773,26 @@ contains
     call MPI_ABORT(MPI_COMM_WORLD,errorcode,ierror)
 
     return
-  end subroutine decomp_2d_abort
+  end subroutine decomp_2d_abort_basic
+
+  subroutine decomp_2d_abort_file_line(file, line, errorcode, msg)
+
+    implicit none
+
+    integer, intent(IN) :: errorcode, line
+    character(len=*), intent(IN) :: msg, file
+
+    integer :: ierror
+
+    if (nrank==0) then
+       write(*,*) '2DECOMP&FFT ERROR - errorcode: ', errorcode
+       write(*,*) 'ERROR IN FILE ' // file
+       write(*,*) '         LINE ', line
+       write(*,*) 'ERROR MESSAGE: ' // msg
+    end if
+    call MPI_ABORT(MPI_COMM_WORLD,errorcode,ierror)
+
+  end subroutine decomp_2d_abort_file_line
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
