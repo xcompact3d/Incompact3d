@@ -30,7 +30,7 @@ contains
     !
     !*******************************************************************************
 
-      use param, only: ialmrestart, filealmrestart
+      use param, only: irestart, iturboutput
 
       implicit none
       integer :: Nturbines, Nactuatorlines
@@ -38,6 +38,7 @@ contains
       real(mytype), intent(in) :: dt
       integer :: itur,ial
       character(1000) :: ReadLine
+      character(100) :: filename, dir
 
       if (nrank==0) then
          write(*,*) '==========================================================='
@@ -53,19 +54,29 @@ contains
       endif
       call get_turbine_options(turbines_file)
       if (Ntur>0) then
-         if (ialmrestart==1) then
+         if (irestart==1) then
             ! Read the checkpoint information and rotate actuator lines accordingly
-            open(17,file=filealmrestart)
-            ! Read the azimuthal angle
+            write(filename,"('restart',I7.7'.alm')") itime
+            open(17,file=filename)
+            read(17,*)
             do itur=1,Ntur
-               read(17,'(A)') ReadLine ! Turb ....
-               read(ReadLine,*) turbine(itur)%AzimAngle, turbine(itur)%angularVel,turbine(itur)%cbp
+               read(17,'(A)') ReadLine
+               read(ReadLine,*) turbine(itur)%AzimAngle, turbine(itur)%angularVel, turbine(itur)%cbp_old
             enddo
             close(17)
+            ! Read statistics
+            dir=adjustl(trim(dirname(itime/iturboutput)))
+            do itur=1,Ntur
+               open(17,File=trim(dir)//'_'//trim(turbine(itur)%name)//'.stat')
+               read(17,*)
+               read(17,*) turbine(itur)%T_ave, turbine(itur)%P_ave, turbine(itur)%Torque_ave 
+               close(17)
+            enddo
          endif
          do itur=1,Ntur
             call set_turbine_geometry(Turbine(itur))
          enddo
+
       endif
 
       ! Speficy actuator lines
@@ -285,6 +296,7 @@ contains
             call read_list_controller_file(list_controller_file,turbine(i))
          else if (OperFlag==4) then
             Turbine(i)%Is_upstreamvel_controlled=.true.
+            ! Assign Uref and TSR (this applies only to the first time step)
             Turbine(i)%Uref=uref
             Turbine(i)%TSR=tsr
          else
@@ -522,7 +534,7 @@ contains
 
                ! Compute Omega and pitch by interpolating from the list
                call from_list_controller(Omega,pitch_angle,turbine(i),WSRotorAve)
-               Turbine(i)%angularVel=Omega/(sixty/(two*pi))  ! Convert to rad/s
+               Turbine(i)%angularVel=Omega/(sixty/(two*pi)) ! Convert to rad/s
                theta=Turbine(i)%angularVel*DeltaT
                Turbine(i)%AzimAngle=Turbine(i)%AzimAngle+theta
                call rotate_turbine(Turbine(i),Turbine(i)%RotN,theta)
@@ -530,13 +542,15 @@ contains
 
                ! Do pitch control
                if (Turbine(i)%IsClockwise) then
-                  deltapitch=pitch_angle
+                  Turbine(i)%cbp = pitch_angle*pi/onehundredeighty ! Convert to rad
                else
-                  deltapitch=pitch_angle
+                  Turbine(i)%cbp = pitch_angle*pi/onehundredeighty ! Convert to rad
                endif
+               deltapitch = Turbine(i)%cbp - Turbine(i)%cbp_old
                do j=1,Turbine(i)%NBlades
                   call pitch_actuator_line(Turbine(i)%Blade(j),deltapitch)
                enddo
+               Turbine(i)%cbp_old=Turbine(i)%cbp
 
             else if (Turbine(i)%Is_upstreamvel_controlled) then
                ! Compute the rotor averaged wind speed
@@ -638,4 +652,28 @@ contains
 
     end subroutine actuator_line_statistics
 
+    !*******************************************************************************
+    !
+    subroutine actuator_line_model_write_restart()
+    !
+    !*******************************************************************************
+
+      implicit none
+      integer :: itur
+      character(len=30) :: filename
+
+      if (Ntur>0) then
+         write(filename,"('restart',I7.7'.alm')") itime
+         open(2021,file=filename)
+         write(2021,*) 'Azimuthal angle, Angular velocity, Collective blade pitch'
+         do itur=1,Ntur
+            write(2021,*) turbine(itur)%AzimAngle, turbine(itur)%angularVel, turbine(itur)%cbp
+         enddo
+         close(2021)
+      endif
+
+      return 
+
+    end subroutine actuator_line_model_write_restart
+    
 end module actuator_line_model
