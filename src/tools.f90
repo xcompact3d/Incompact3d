@@ -902,6 +902,7 @@ contains
     integer, intent(in) :: n1, n2, n3, ntot
 
     integer :: i, j, k, code
+    real(mytype) :: l1l2(2)
 
     l1 = zero
     l2 = zero
@@ -917,17 +918,15 @@ contains
       enddo
     enddo
 
-    ! Parallel
-    call MPI_ALLREDUCE(MPI_IN_PLACE,l1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    ! Parallel, MPI_SUM
+    l1l2 = (/l1, l2/)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,l1l2,2,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
-    call MPI_ALLREDUCE(MPI_IN_PLACE,l2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
+    l1 = l1l2(1) / ntot
+    l2 = sqrt(l1l2(2) / ntot)
+    ! Parallel, MPI_MAX
     call MPI_ALLREDUCE(MPI_IN_PLACE,linf,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
-
-    ! Rescaling
-    l1 = l1 / ntot
-    l2 = sqrt(l2 / ntot)
 
   end subroutine error_L1_L2_Linf_generic
 
