@@ -73,7 +73,7 @@ contains
     !
     !*******************************************************************************
 
-      use param, only: ialmrestart
+      use param, only: irestart
 
       implicit none
       type(TurbineType), intent(inout) :: turbine
@@ -137,6 +137,8 @@ contains
          enddo
     
          call rotate_actuatorline(turbine%blade(iblade),turbine%blade(iblade)%COR,turbine%RotN,(iblade-1)*theta+turbine%AzimAngle)   
+
+         call pitch_actuator_line(turbine%blade(iblade),turbine%cbp_old)
  
          call make_actuatorline_geometry(turbine%blade(iblade))
     
@@ -226,7 +228,9 @@ contains
       endif
      
       ! Compute a number of global parameters for the turbine
-      turbine%angularVel=turbine%Uref*turbine%TSR/turbine%Rmax
+      if (irestart==0) then
+         turbine%angularVel=turbine%Uref*turbine%TSR/turbine%Rmax
+      endif
       turbine%A=pi*turbine%Rmax**2
     
       turbine%IRotor=zero

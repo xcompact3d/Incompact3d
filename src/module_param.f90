@@ -401,9 +401,7 @@ module param
   real(mytype) :: C_T, aind
   ! Actuator line
   integer :: NTurbines, NActuatorlines
-  integer :: ialmrestart
   character, dimension(100) :: TurbinesPath*80, ActuatorlinesPath*80
-  character(len=100) :: filealmrestart
   real(mytype) :: eps_factor ! Smoothing factor
   
   !! Case-specific variables
