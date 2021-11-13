@@ -35,8 +35,9 @@ module stats
   implicit none
 
   ! Experimental
-  ! .false. requires nstat=1
-  logical, parameter :: flag_3D_IO = .false.
+  ! .true. is the default
+  ! .false. is experimental and requires nstat=1
+  logical, parameter :: flag_3D_IO = .true.
 
   private
   public overall_statistic

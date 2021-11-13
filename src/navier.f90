@@ -300,11 +300,9 @@ contains
     real(mytype),dimension(zsize(1),zsize(2),zsize(3)),intent(in) :: divu3
     real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: pp3
 
-    integer :: nvect3,i,j,k,nlock
+    integer :: i,j,k,nlock
     integer :: code
-    real(mytype) :: tmax,tmoy,tmax1,tmoy1
-
-    nvect3=(ph1%zen(1)-ph1%zst(1)+1)*(ph1%zen(2)-ph1%zst(2)+1)*nzmsize
+    real(mytype) :: tmax,tl2,tmoy
 
     if (iibm == 0) then
        ta1(:,:,:) = ux1(:,:,:)
@@ -362,32 +360,19 @@ contains
     !! Compute sum dudx + dvdy + dwdz
     pp3(:,:,:) = pp3(:,:,:) + po3(:,:,:)
 
-    if (nlock==2) then
+    ! This is not looking like a very good idea
+    if (.false. .and. nlock==2) then
        pp3(:,:,:)=pp3(:,:,:)-pp3(ph1%zst(1),ph1%zst(2),nzmsize)
     endif
 
-    tmax=-1609._mytype
-    tmoy=zero
-    do k=1,nzmsize
-       do j=ph1%zst(2),ph1%zen(2)
-          do i=ph1%zst(1),ph1%zen(1)
-             if (pp3(i,j,k) > tmax) tmax=pp3(i,j,k)
-             tmoy=tmoy+abs(pp3(i,j,k))
-          enddo
-       enddo
-    enddo
-    tmoy=tmoy/nvect3
-
-    call MPI_REDUCE(tmax,tmax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
-    call MPI_REDUCE(tmoy,tmoy1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
+    call error_l1_l2_linf(pp3,tmoy,tl2,tmax,ph1%zsz(1),ph1%zsz(2),nzmsize, &
+                                            ph1%xsz(1)*ph1%ysz(2)*nzmsize)
 
     if ((nrank == 0) .and. (nlock > 0).and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime==ilast)) then
-       if (nlock == 2) then
-          write(*,*) 'DIV U  max mean=',real(tmax1,mytype),real(tmoy1/real(nproc),mytype)
+       if (nlock==2) then
+          print *,'DIV U  Linf, L2, L1 = ',real(tmax,4),real(tl2,4),real(tmoy,4)
        else
-          write(*,*) 'DIV U* max mean=',real(tmax1,mytype),real(tmoy1/real(nproc),mytype)
+          print *,'DIV U* Linf, L2, L1 = ',real(tmax,4),real(tl2,4),real(tmoy,4)
        endif
     endif
 

@@ -299,6 +299,9 @@ subroutine parameter(input_i3d)
 #endif
 #endif
 
+  ! When initstat < 0, collection of statistics start at the first time step
+  if (initstat < 0) initstat = ifirst
+
   if (iimplicit /= 0) then
      if ((itimescheme==5).or.(itimescheme==6)) then
         if (nrank==0) write(*,*) 'Error: implicit Y diffusion not yet compatible with RK time schemes'
