@@ -23,7 +23,7 @@ contains
       if (iturbine == 1) then
          call actuator_line_model_init(Nturbines,Nactuatorlines,TurbinesPath,ActuatorlinesPath,dt)
          call initialize_actuator_source
-      else if (iturbine.eq.2) then
+      else if (iturbine == 2) then
          call actuator_disc_model_init(Ndiscs,admCoords,C_T,aind)
       endif
 
@@ -78,7 +78,7 @@ contains
       endif
 
       if (nrank==0.and.mod(itime,icheckpoint)==0) then
-         if (iturbine.eq.1) then
+         if (iturbine == 1) then
             call actuator_line_model_write_restart()
          endif
       endif
