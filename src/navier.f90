@@ -302,7 +302,7 @@ contains
 
     integer :: i,j,k,nlock
     integer :: code
-    real(mytype) :: tmax,tl2,tmoy
+    real(mytype) :: tmax,tmoy,tmax1,tmoy1
 
     if (iibm == 0) then
        ta1(:,:,:) = ux1(:,:,:)
@@ -365,14 +365,28 @@ contains
        pp3(:,:,:)=pp3(:,:,:)-pp3(ph1%zst(1),ph1%zst(2),nzmsize)
     endif
 
-    call error_l1_l2_linf(pp3,tmoy,tl2,tmax,ph1%zsz(1),ph1%zsz(2),nzmsize, &
-                                            ph1%xsz(1)*ph1%ysz(2)*nzmsize)
+    tmax=-1609._mytype
+    tmoy=zero
+    do k=1,nzmsize
+       do j=ph1%zst(2),ph1%zen(2)
+          do i=ph1%zst(1),ph1%zen(1)
+             if (abs(pp3(i,j,k)).gt.tmax) tmax=abs(pp3(i,j,k))
+             tmoy=tmoy+abs(pp3(i,j,k))
+          enddo
+       enddo
+    enddo
+
+    call MPI_REDUCE(tmax,tmax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
+    call MPI_REDUCE(tmoy,tmoy1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
+    tmoy1 = tmoy1 / (ph1%xsz(1)*ph1%ysz(2)*nzmsize)
 
     if ((nrank == 0) .and. (nlock > 0).and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime==ilast)) then
        if (nlock==2) then
-          print *,'DIV U  Linf, L2, L1 = ',real(tmax,4),real(tl2,4),real(tmoy,4)
+          write(*,*) 'DIV U  max mean=',real(tmax1,mytype),real(tmoy1,mytype)
        else
-          print *,'DIV U* Linf, L2, L1 = ',real(tmax,4),real(tl2,4),real(tmoy,4)
+          write(*,*) 'DIV U* max mean=',real(tmax1,mytype),real(tmoy1,mytype)
        endif
     endif
 
