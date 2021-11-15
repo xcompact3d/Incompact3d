@@ -98,9 +98,10 @@ contains
     implicit none
 
     integer :: nx, ny, nz, i
-    
+
+    complex(mytype) :: cx 
     real(mytype) :: rl, iy
-    external  rl, iy
+    external  cx, rl, iy
 
     if (nclx) then
        bcx=0
@@ -149,6 +150,12 @@ contains
     allocate(ax(nx),bx(nx))
     allocate(ay(ny),by(ny))
     allocate(az(nz),bz(nz))
+    ax=zero
+    bx=zero
+    ay=zero
+    by=zero
+    az=zero
+    bz=zero
     call abxyz(ax,ay,az,bx,by,bz,nx,ny,nz,bcx,bcy,bcz)
 
 #ifdef DEBG 
@@ -166,76 +173,116 @@ contains
     if (bcx==0 .and. bcy==0 .and. bcz==0) then
        allocate(cw1(sp%xst(1):sp%xen(1),sp%xst(2):sp%xen(2), &
             sp%xst(3):sp%xen(3)))
+       cw1=cx(zero,zero)
        allocate(kxyz(sp%xst(1):sp%xen(1),sp%xst(2):sp%xen(2), &
             sp%xst(3):sp%xen(3)))
+       kxyz=cx(zero,zero)
        allocate(a(sp%yst(1):sp%yen(1),ny/2,sp%yst(3):sp%yen(3),5))
+       a=cx(zero,zero)
        allocate(a2(sp%yst(1):sp%yen(1),ny/2,sp%yst(3):sp%yen(3),5))
+       a2=cx(zero,zero)
        allocate(a3(sp%yst(1):sp%yen(1),ny,sp%yst(3):sp%yen(3),5))
+       a3=cx(zero,zero)
     else if (bcx==1 .and. bcy==0 .and. bcz==0) then
        allocate(cw1(sp%xst(1):sp%xen(1),sp%xst(2):sp%xen(2), &
             sp%xst(3):sp%xen(3)))
+       cw1=cx(zero,zero)
        allocate(cw1b(sp%xst(1):sp%xen(1),sp%xst(2):sp%xen(2), &
             sp%xst(3):sp%xen(3)))
+       cw1b=cx(zero,zero)
        allocate(rw1(ph%xst(1):ph%xen(1),ph%xst(2):ph%xen(2), &
             ph%xst(3):ph%xen(3)))
+       rw1=zero
        allocate(rw1b(ph%xst(1):ph%xen(1),ph%xst(2):ph%xen(2), &
             ph%xst(3):ph%xen(3)))
+       rw1b=zero
        allocate(rw2(ph%yst(1):ph%yen(1),ph%yst(2):ph%yen(2), &
             ph%yst(3):ph%yen(3)))
+       rw2=zero
        allocate(kxyz(sp%xst(1):sp%xen(1),sp%xst(2):sp%xen(2), &
             sp%xst(3):sp%xen(3)))
+       kxyz=cx(zero,zero)
        allocate(a(sp%yst(1):sp%yen(1),ny/2,sp%yst(3):sp%yen(3),5))
+       a=cx(zero,zero)
        allocate(a2(sp%yst(1):sp%yen(1),ny/2,sp%yst(3):sp%yen(3),5))
+       a2=cx(zero,zero)
        allocate(a3(sp%yst(1):sp%yen(1),ny,sp%yst(3):sp%yen(3),5))
+       a3=cx(zero,zero)
     else if (bcx==0 .and. bcy==1 .and. bcz==0) then
        allocate(rw2(ph%yst(1):ph%yen(1),ph%yst(2):ph%yen(2), &
             ph%yst(3):ph%yen(3)))
+       rw2=zero
        allocate(rw2b(ph%yst(1):ph%yen(1),ph%yst(2):ph%yen(2), &
             ph%yst(3):ph%yen(3)))
+       rw2b=zero
        allocate(cw1(sp%xst(1):sp%xen(1),sp%xst(2):sp%xen(2), &
             sp%xst(3):sp%xen(3)))
+       cw1=cx(zero,zero)
        allocate(cw2(sp%yst(1):sp%yen(1),sp%yst(2):sp%yen(2), &
             sp%yst(3):sp%yen(3)))
+       cw2=cx(zero,zero)
        allocate(cw22(sp%yst(1):sp%yen(1),sp%yst(2):sp%yen(2), &
             sp%yst(3):sp%yen(3)))
+       cw22=cx(zero,zero)
        allocate(cw2b(sp%yst(1):sp%yen(1),sp%yst(2):sp%yen(2), &
             sp%yst(3):sp%yen(3)))
+       cw2b=cx(zero,zero)
        allocate(cw2c(sp%yst(1):sp%yen(1),sp%yst(2):sp%yen(2), &
             sp%yst(3):sp%yen(3)))
+       cw2c=cx(zero,zero)
        allocate(kxyz(sp%yst(1):sp%yen(1),sp%yst(2):sp%yen(2), &
             sp%yst(3):sp%yen(3)))
+       kxyz=cx(zero,zero)
        allocate(a(sp%yst(1):sp%yen(1),ny/2,sp%yst(3):sp%yen(3),5))
+       a=cx(zero,zero)
        allocate(a2(sp%yst(1):sp%yen(1),ny/2,sp%yst(3):sp%yen(3),5))
+       a2=cx(zero,zero)
        allocate(a3(sp%yst(1):sp%yen(1),ny,sp%yst(3):sp%yen(3),5))
+       a3=cx(zero,zero)
     else if (bcx==1 .and. bcy==1) then
        allocate(cw1(sp%xst(1):sp%xen(1),sp%xst(2):sp%xen(2), &
             sp%xst(3):sp%xen(3)))
+       cw1=cx(zero,zero)
        allocate(cw1b(sp%xst(1):sp%xen(1),sp%xst(2):sp%xen(2), &
             sp%xst(3):sp%xen(3)))
+       cw1b=cx(zero,zero)
        allocate(cw2(sp%yst(1):sp%yen(1),sp%yst(2):sp%yen(2), &
             sp%yst(3):sp%yen(3)))
+       cw2=cx(zero,zero)
        allocate(cw22(sp%yst(1):sp%yen(1),sp%yst(2):sp%yen(2), &
             sp%yst(3):sp%yen(3)))
+       cw22=cx(zero,zero)
        allocate(cw2b(sp%yst(1):sp%yen(1),sp%yst(2):sp%yen(2), &
             sp%yst(3):sp%yen(3)))
+       cw2b=cx(zero,zero)
        allocate(cw2c(sp%yst(1):sp%yen(1),sp%yst(2):sp%yen(2), &
             sp%yst(3):sp%yen(3)))
+       cw2c=cx(zero,zero)
        allocate(rw1(ph%xst(1):ph%xen(1),ph%xst(2):ph%xen(2), &
             ph%xst(3):ph%xen(3)))
+       rw1=zero
        allocate(rw1b(ph%xst(1):ph%xen(1),ph%xst(2):ph%xen(2), &
             ph%xst(3):ph%xen(3)))
+       rw1b=zero
        allocate(rw2(ph%yst(1):ph%yen(1),ph%yst(2):ph%yen(2), &
             ph%yst(3):ph%yen(3)))
+       rw2=zero
        allocate(rw2b(ph%yst(1):ph%yen(1),ph%yst(2):ph%yen(2), &
             ph%yst(3):ph%yen(3)))
+       rw2b=zero
        if (bcz==1) then  
           allocate(rw3(ph%zsz(1),ph%zsz(2),ph%zsz(3)))
+          rw3=zero
        end if
        allocate(kxyz(sp%xst(1):sp%xen(1),sp%xst(2):sp%xen(2), &
-            sp%xst(3):sp%xen(3)))    
+            sp%xst(3):sp%xen(3)))
+       kxyz=cx(zero,zero)
        allocate(a(sp%yst(1):sp%yen(1),ny/2,sp%yst(3):sp%yen(3),5))
+       a=cx(zero,zero)
        allocate(a2(sp%yst(1):sp%yen(1),ny/2,sp%yst(3):sp%yen(3),5))
-       allocate(a3(sp%yst(1):sp%yen(1),nym,sp%yst(3):sp%yen(3),5))      
+       a2=cx(zero,zero)
+       allocate(a3(sp%yst(1):sp%yen(1),nym,sp%yst(3):sp%yen(3),5))
+       a3=cx(zero,zero)
     end if
 
 #ifdef DEBG 

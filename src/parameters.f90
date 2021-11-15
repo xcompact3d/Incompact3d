@@ -137,6 +137,10 @@ subroutine parameter(input_i3d)
   endif
   if (iforces.eq.1) then
      allocate(xld(nvol), xrd(nvol), yld(nvol), yud(nvol))!, zld(nvol), zrd(nvol))
+     xld=zero
+     xrd=zero
+     yld=zero
+     yud=zero
      read(10, nml=ForceCVs); rewind(10)
   endif
   
