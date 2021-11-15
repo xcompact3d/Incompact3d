@@ -242,6 +242,162 @@ contains
   end function abs_prec
 
   !********************************************************************
+  subroutine xerrors(dfdx1, dfdxp1, dfdxx1, dfdxxp1)
+
+    real(mytype), dimension(:,:,:), intent(in) :: dfdx1, dfdxp1, dfdxx1, dfdxxp1
+
+    real(mytype) :: x, err, avg, expt
+    integer :: i
+
+    err = 0._mytype
+    do i = 1, size(dfdx1, 1)
+       x = real(i - 1, mytype) * dx
+       expt = four * pi * cos_prec(four * pi * x)
+
+       avg = sum(dfdx1(i,:,:)) / size(dfdx1, 2) / size(dfdx1, 3)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdx1, 1))
+    print *, "dfdx1 RMS error: ", err
+
+    err = 0._mytype
+    do i = 1, size(dfdxp1, 1)
+       x = real(i - 1, mytype) * dx
+       expt = -four * pi * sin_prec(four * pi * x)
+
+       avg = sum(dfdxp1(i,:,:)) / size(dfdxp1, 2) / size(dfdxp1, 3)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdxp1, 1))
+    print *, "dfdxp1 RMS error: ", err
+
+    err = 0._mytype
+    do i = 1, size(dfdxx1, 1)
+       x = real(i - 1, mytype) * dx
+       expt = -sixteen * (pi**2) * sin_prec(four * pi * x)
+
+       avg = sum(dfdxx1(i,:,:)) / size(dfdxx1, 2) / size(dfdxx1, 3)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdxx1, 1))
+    print *, "dfdxx1 RMS error: ", err
+
+    err = 0._mytype
+    do i = 1, size(dfdxxp1, 1)
+       x = real(i - 1, mytype) * dx
+       expt = -sixteen * (pi**2) * cos_prec(four * pi * x)
+
+       avg = sum(dfdxxp1(i,:,:)) / size(dfdxxp1, 2) / size(dfdxxp1, 3)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdxxp1, 1))
+    print *, "dfdxxp1 RMS error: ", err
+    
+  end subroutine xerrors
+  subroutine yerrors(dfdy1, dfdyp1, dfdyy1, dfdyyp1)
+
+    real(mytype), dimension(:,:,:), intent(in) :: dfdy1, dfdyp1, dfdyy1, dfdyyp1
+
+    real(mytype) :: y, err, avg, expt
+    integer :: j
+
+    err = 0._mytype
+    do j = 1, size(dfdy1, 2)
+       y = real(j - 1, mytype) * dy
+       expt = four * pi * cos_prec(four * pi * y)
+
+       avg = sum(dfdy1(:,j,:)) / size(dfdy1, 1) / size(dfdy1, 3)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdy1, 2))
+    print *, "dfdy1 RMS error: ", err
+
+    err = 0._mytype
+    do j = 1, size(dfdyp1, 2)
+       y = real(j - 1, mytype) * dy
+       expt = -four * pi * sin_prec(four * pi * y)
+
+       avg = sum(dfdyp1(:,j,:)) / size(dfdyp1, 1) / size(dfdyp1, 3)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdyp1, 2))
+    print *, "dfdyp1 RMS error: ", err
+
+    err = 0._mytype
+    do j = 1, size(dfdyy1, 2)
+       y = real(j - 1, mytype) * dy
+       expt = -sixteen * (pi**2) * sin_prec(four * pi * y)
+
+       avg = sum(dfdyy1(:,j,:)) / size(dfdyy1, 1) / size(dfdyy1, 3)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdyy1, 2))
+    print *, "dfdyy1 RMS error: ", err
+
+    err = 0._mytype
+    do j = 1, size(dfdyyp1, 1)
+       y = real(j - 1, mytype) * dy
+       expt = -sixteen * (pi**2) * cos_prec(four * pi * y)
+
+       avg = sum(dfdyyp1(:,j,:)) / size(dfdyyp1, 1) / size(dfdyyp1, 3)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdyyp1, 2))
+    print *, "dfdyyp1 RMS error: ", err
+    
+  end subroutine yerrors
+  subroutine zerrors(dfdz1, dfdzp1, dfdzz1, dfdzzp1)
+
+    real(mytype), dimension(:,:,:), intent(in) :: dfdz1, dfdzp1, dfdzz1, dfdzzp1
+
+    real(mytype) :: z, err, avg, expt
+    integer :: k
+
+    err = 0._mytype
+    do k = 1, size(dfdz1, 3)
+       z = real(k - 1, mytype) * dz
+       expt = four * pi * cos_prec(four * pi * z)
+
+       avg = sum(dfdz1(:,:,k)) / size(dfdz1, 1) / size(dfdz1, 2)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdz1, 3))
+    print *, "dfdz1 RMS error: ", err
+
+    err = 0._mytype
+    do k = 1, size(dfdzp1, 3)
+       z = real(k - 1, mytype) * dz
+       expt = -four * pi * sin_prec(four * pi * z)
+
+       avg = sum(dfdzp1(:,:,k)) / size(dfdzp1, 1) / size(dfdzp1, 2)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdzp1, 3))
+    print *, "dfdzp1 RMS error: ", err
+
+    err = 0._mytype
+    do k = 1, size(dfdzz1, 3)
+       z = real(k - 1, mytype) * dz
+       expt = -sixteen * (pi**2) * sin_prec(four * pi * z)
+
+       avg = sum(dfdzz1(:,:,k)) / size(dfdzz1, 1) / size(dfdzz1, 2)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdzz1, 3))
+    print *, "dfdzz1 RMS error: ", err
+
+    err = 0._mytype
+    do k = 1, size(dfdzzp1, 1)
+       z = real(k - 1, mytype) * dz
+       expt = -sixteen * (pi**2) * cos_prec(four * pi * z)
+
+       avg = sum(dfdzzp1(:,:,k)) / size(dfdzzp1, 1) / size(dfdzzp1, 2)
+       err = err + (expt - avg)**2
+    end do
+    err = sqrt(err / size(dfdzzp1, 3))
+    print *, "dfdzzp1 RMS error: ", err
+    
+  end subroutine zerrors
   subroutine debug_schemes()
 
     USE param
@@ -300,6 +456,7 @@ contains
        enddo
        close(67)
     endif
+    call xerrors(dfdx1, dfdxp1, dfdxx1, dfdxxp1)
     call derxvp(test1,fx1,di1,sx,cfx6,csx6,cwx6,xsize(1),nxmsize,xsize(2),xsize(3),0)
     call interxvp(test11,fxp1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
     if (nrank.eq.0) then
@@ -392,6 +549,7 @@ contains
        enddo
        close(67)
     endif
+    call yerrors(dfdy2, dfdyp2, dfdyy2, dfdyyp2)
     call deryvp(test2,fy2,di2,sy,cfy6,csy6,cwy6,ppyi,ysize(1),ysize(2),nymsize,ysize(3),0)
     call interyvp(test22,fyp2,di2,sy,cifyp6,cisyp6,ciwyp6,ysize(1),ysize(2),nymsize,ysize(3),1)
     if (nrank.eq.0) then
@@ -481,6 +639,7 @@ contains
        enddo
        close(67)
     endif
+    call zerrors(dfdz3, dfdzp3, dfdzz3, dfdzzp3)
     call derzvp(test3,fz3,di3,sz,cfz6,csz6,cwz6,zsize(1),zsize(2),zsize(3),nzmsize,0)
     call interzvp(test33,fzp3,di3,sz,cifzp6,ciszp6,ciwzp6,zsize(1),zsize(2),zsize(3),nzmsize,1)
     if (nrank.eq.0) then

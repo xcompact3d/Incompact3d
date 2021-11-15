@@ -4853,8 +4853,8 @@ subroutine derypv(ty,uy,ry,sy,cfi6y,csi6y,cwi6y,cfy6,csy6,cwy6,&
            ry(i,ny,k)=ry(i,ny,k)*cwy6(ny)
         enddo
      enddo
-     do j=ny-1,1,-1
-        do k=1,nz
+     do k=1,nz
+        do j=ny-1,1,-1
            do i=1,nx
               ty(i,j,k)=(ty(i,j,k)-cfy6(j)*ty(i,j+1,k))*cwy6(j)
               ry(i,j,k)=(ry(i,j,k)-cfy6(j)*ry(i,j+1,k))*cwy6(j)
@@ -4867,8 +4867,8 @@ subroutine derypv(ty,uy,ry,sy,cfi6y,csi6y,cwi6y,cfy6,csy6,cwy6,&
                   /(one+ry(i,1,k)-alcaiy6*ry(i,ny,k))
         enddo
      enddo
-     do j=1,ny
-        do k=1,nz
+     do k=1,nz
+        do j=1,ny
            do i=1,nx
               ty(i,j,k)=ty(i,j,k)-sy(i,k)*ry(i,j,k)
            enddo
@@ -4883,8 +4883,8 @@ subroutine derypv(ty,uy,ry,sy,cfi6y,csi6y,cwi6y,cfy6,csy6,cwy6,&
                        +bciy6*(uy(i,3,k)-uy(i,1,k))
            enddo
         enddo
-        do j=3,ny-2
-           do k=1,nz
+        do k=1,nz
+           do j=3,ny-2
               do i=1,nx
                  ty(i,j,k)=aciy6*(uy(i,j,k)-uy(i,j-1,k))&
                           +bciy6*(uy(i,j+1,k)-uy(i,j-2,k))
@@ -4898,8 +4898,8 @@ subroutine derypv(ty,uy,ry,sy,cfi6y,csi6y,cwi6y,cfy6,csy6,cwy6,&
               ty(i,ny,k)=zero
            enddo
         enddo
-        do j=2,ny
-           do k=1,nz
+        do k=1,nz
+           do j=2,ny
               do i=1,nx
                  ty(i,j,k)=ty(i,j,k)-ty(i,j-1,k)*csi6y(j)
               enddo
@@ -4910,8 +4910,8 @@ subroutine derypv(ty,uy,ry,sy,cfi6y,csi6y,cwi6y,cfy6,csy6,cwy6,&
               ty(i,ny,k)=ty(i,ny,k)*cwi6y(ny)
            enddo
         enddo
-        do j=ny-1,1,-1
-           do k=1,nz
+        do k=1,nz
+           do j=ny-1,1,-1
               do i=1,nx
                  ty(i,j,k)=(ty(i,j,k)-cfi6y(j)*ty(i,j+1,k))*cwi6y(j)
               enddo
@@ -4990,8 +4990,8 @@ subroutine derzvp(tz,uz,rz,sz,cfz6,csz6,cwz6,nx,ny,nz,nzm,npaire)
            enddo
         enddo
      enddo
-     do i=1,nx
-        do j=1,ny
+     do j=1,ny
+        do i=1,nx
            tz(i,j,nz)=tz(i,j,nz)*cwz6(nz)
            rz(i,j,nz)=rz(i,j,nz)*cwz6(nz)
         enddo

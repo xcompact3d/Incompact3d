@@ -191,7 +191,7 @@ contains
     call alloc_x(ep1)
     tep1 = zero
     if (ilmn) then
-      call alloc_x(mu1)
+      call alloc_x(mu1, opt_global=.true.)
       mu1 = one
     endif
 
@@ -281,16 +281,22 @@ contains
     !pre_correc 2d array
     allocate(dpdyx1(xsize(2),xsize(3)),dpdyxn(xsize(2),xsize(3)))
     dpdyx1=zero
+    dpdyxn=zero
     allocate(dpdzx1(xsize(2),xsize(3)),dpdzxn(xsize(2),xsize(3)))
-    dpdyx1=zero
+    dpdzx1=zero
+    dpdzxn=zero
     allocate(dpdxy1(xsize(1),xsize(3)),dpdxyn(xsize(1),xsize(3)))
-    dpdyx1=zero
+    dpdxy1=zero
+    dpdxyn=zero
     allocate(dpdzy1(xsize(1),xsize(3)),dpdzyn(xsize(1),xsize(3)))
-    dpdyx1=zero
+    dpdzy1=zero
+    dpdzyn=zero
     allocate(dpdxz1(xsize(1),xsize(2)),dpdxzn(xsize(1),xsize(2)))
-    dpdyx1=zero
+    dpdxz1=zero
+    dpdxzn=zero
     allocate(dpdyz1(xsize(1),xsize(2)),dpdyzn(xsize(1),xsize(2)))
-    dpdyx1=zero
+    dpdyz1=zero
+    dpdyzn=zero
 
     !arrays for visualization!pay attention to the size!
     allocate(uvisu(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
@@ -1364,7 +1370,7 @@ contains
     if (.not.ilmn) then
        nrhotime = 1 !! Save some space
     endif
-    allocate(rho1(xsize(1),xsize(2),xsize(3),nrhotime)) !Need to store old density values to extrapolate drhodt
+    allocate(rho1(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),nrhotime)) !Need to store old density values to extrapolate drhodt
     rho1=one
     call alloc_y(rho2)
     rho2=zero

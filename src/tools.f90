@@ -187,7 +187,7 @@ contains
        if (nrank == 0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime==ilast)) then
           call cpu_time(trank)
           if (nrank==0) write(*,*) 'Time for this time step (s):',real(trank-time1)
-          telapsed = (trank-tstart)/thirtysixthousand
+          telapsed = (trank-tstart)/threethousandsixhundred
           tremaining  = telapsed*(ilast-itime)/(itime-ifirst)
           write(*,"(' Remaining time:',I8,' h ',I2,' min')") int(tremaining), int((tremaining-int(tremaining))*sixty)
           write(*,"(' Elapsed time:  ',I8,' h ',I2,' min')") int(telapsed), int((telapsed-int(telapsed))*sixty)
@@ -209,7 +209,7 @@ contains
           write(*,*) 'Averaged time per step (s):',real(ttotal/(ilast-(ifirst-1)),4)
           write(*,*) 'Total wallclock (s):',real(ttotal,4)
           write(*,*) 'Total wallclock (m):',real(ttotal/sixty,4)
-          write(*,*) 'Total wallclock (h):',real(ttotal/thirtysixthousand,4)
+          write(*,*) 'Total wallclock (h):',real(ttotal/threethousandsixhundred,4)
           write(*,*) '                                                           '
        endif
     endif
