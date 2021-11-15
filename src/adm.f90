@@ -35,11 +35,11 @@ contains
     !
     !*******************************************************************************
         
-      USE var, only: Fdiscx, Fdiscy, Fdiscz, GammaDisc, yp
-      use param, only: dx,dy,dz,istret
-      USE decomp_2d
-      USE decomp_2d_io
-      USE MPI
+      use var, only: GammaDisc, yp
+      use param, only: dx,dy,dz,istret,irestart,itime,iturboutput
+      use decomp_2d
+      use decomp_2d_io
+      use MPI
 
       implicit none
       integer, intent(in) :: Ndiscs
@@ -52,13 +52,14 @@ contains
       ! Specify the actuator discs
       Nad=Ndiscs
       if (nrank==0) then
-         write(*,*) '-------------------------------------------------------------------'
+         write(*,*) '==========================================================='
          write(*,*) 'The actuator disc model is enabled'
          write(*,*) 'Number of Actuator discs : ', Nad
-         write(*,*) '-------------------------------------------------------------------'
+         write(*,*) '==========================================================='
       endif
 
       if (Nad>0) then 
+         ! Read the disc data
          allocate(ActuatorDisc(Nad))
          open(15,file=admCoords)
          do idisc=1,Nad
@@ -101,6 +102,16 @@ contains
                enddo
             enddo
          enddo
+
+         ! Read data if restarting simulation
+         if (irestart==1) then
+            open(15,File='discs_time'//trim(int2str(itime/iturboutput))//'.adm')
+            read(15,*)
+            do idisc=1,Nad
+               read(15,*) actuatordisc(idisc)%UF,actuatordisc(idisc)%Power,actuatordisc(idisc)%Thrust,actuatordisc(idisc)%Udisc_ave,actuatordisc(idisc)%Power_ave,actuatordisc(idisc)%Thrust_ave
+            enddo
+            close(15)
+         endif
       endif
 
       return
@@ -120,8 +131,8 @@ contains
         
       implicit none
       real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1       
-      real(mytype) :: xmesh, ymesh,zmesh,deltax,deltay,deltaz,deltar,DiscsTotalArea
-      real(mytype) :: uave,CTprime, T_relax, alpha_relax, Uinf, CTave
+      real(mytype) :: xmesh, ymesh,zmesh,deltax,deltay,deltaz,deltar
+      real(mytype) :: uave,CTprime, T_relax, alpha_relax
       real(mytype), allocatable, dimension(:) :: Udisc_partial
       integer, allocatable, dimension(:) :: counter, counter_total
       integer :: i,j,k, idisc, ierr
@@ -134,7 +145,7 @@ contains
       do idisc=1,Nad
          uave=0.
          counter(idisc)=0
-         counter_total(idisc)=0.
+         counter_total(idisc)=0
          do k=1,xsize(3)
             zmesh=(xstart(3)+k-1-1)*dz 
             do j=1,xsize(2)
@@ -176,7 +187,7 @@ contains
       ! Time relaxation -- low pass filter
       T_relax= 0.27*dBL/ustar !5.0, 5.0*dt
       alpha_relax=(dt/T_relax)/(1.+dt/T_relax)
-      if (itime==ifirst) then
+      if (itime==1) then
          do idisc=1,Nad
             actuatordisc(idisc)%UF=actuatordisc(idisc)%Udisc
          enddo
@@ -222,14 +233,12 @@ contains
       implicit none
       integer, intent(in) :: dump_no
       integer :: idisc
-      character(len=300) :: dir, Format
 
       if (Nad>0) then
          open(2020,File='discs_time'//trim(int2str(dump_no))//'.adm')
-         write(2020,*) 'Udisc, CT, Power, Thrust, Udisc_ave, Power_ave, Thrust_ave'
-         Format="(7(E14.7,A))"
+         write(2020,*) 'UF, Power, Thrust, Udisc_ave, Power_ave, Thrust_ave'
          do idisc=1,Nad
-            write(2020,Format) actuatordisc(idisc)%UF,',',actuatordisc(idisc)%C_T,',',actuatordisc(idisc)%Power,',',actuatordisc(idisc)%Thrust,',',actuatordisc(idisc)%Udisc_ave,',',actuatordisc(idisc)%Power_ave,',',actuatordisc(idisc)%Thrust_ave
+            write(2020,*) actuatordisc(idisc)%UF,actuatordisc(idisc)%Power,actuatordisc(idisc)%Thrust,actuatordisc(idisc)%Udisc_ave,actuatordisc(idisc)%Power_ave,actuatordisc(idisc)%Thrust_ave
          enddo
          close(2020)
       endif
