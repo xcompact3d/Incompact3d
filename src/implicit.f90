@@ -2187,63 +2187,291 @@ subroutine init_implicit()
 
   ! velocity, ncly1 = 2, nclyn = 2
   allocate(aam(ny),bbm(ny),ccm(ny),ddm(ny),eem(ny),ggm(ny),hhm(ny),wwm(ny),zzm(ny))
+  aam=zero
+  bbm=zero
+  ccm=zero
+  ddm=zero
+  eem=zero
+  ggm=zero
+  hhm=zero
+  wwm=zero
+  zzm=zero
   allocate(rrm(ny),qqm(ny),vvm(ny),ssm(ny))
+  rrm=zero
+  qqm=zero
+  vvm=zero
+  ssm=zero
   allocate(sssm(ny),zzzm(ny),ttm(ny),uum(ny)) ! nona
+  sssm=zero
+  zzzm=zero
+  ttm=zero
+  uum=zero
   ! velocity, ncly1 = 1, nclyn = 1, npaire = 0
   allocate(aam10(ny),bbm10(ny),ccm10(ny),ddm10(ny),eem10(ny),ggm10(ny),hhm10(ny),wwm10(ny),zzm10(ny))
+  aam10=zero
+  bbm10=zero
+  ccm10=zero
+  ddm10=zero
+  eem10=zero
+  ggm10=zero
+  hhm10=zero
+  wwm10=zero
+  zzm10=zero
   allocate(rrm10(ny),qqm10(ny),vvm10(ny),ssm10(ny))
+  rrm10=zero
+  qqm10=zero
+  vvm10=zero
+  ssm10=zero
   ! velocity, ncly1 = 1, nclyn = 1, npaire = 1
   allocate(aam11(ny),bbm11(ny),ccm11(ny),ddm11(ny),eem11(ny),ggm11(ny),hhm11(ny),wwm11(ny),zzm11(ny))
+  aam11=zero
+  bbm11=zero
+  ccm11=zero
+  ddm11=zero
+  eem11=zero
+  ggm11=zero
+  hhm11=zero
+  wwm11=zero
+  zzm11=zero
   allocate(rrm11(ny),qqm11(ny),vvm11(ny),ssm11(ny))
+  rrm11=zero
+  qqm11=zero
+  vvm11=zero
+  ssm11=zero
   ! velocity, ncly1 = 0, nclyn = 0
   allocate(aam0(ny),bbm0(ny),ccm0(ny),ddm0(ny),eem0(ny),ggm0(ny),hhm0(ny),wwm0(ny),zzm0(ny))
+  aam0=zero
+  bbm0=zero
+  ccm0=zero
+  ddm0=zero
+  eem0=zero
+  ggm0=zero
+  hhm0=zero
+  wwm0=zero
+  zzm0=zero
   allocate(rrm0(ny),qqm0(ny),vvm0(ny),ssm0(ny),l1m(ny),l2m(ny),l3m(ny),u1m(ny),u2m(ny),u3m(ny))
+  rrm0=zero
+  qqm0=zero
+  vvm0=zero
+  ssm0=zero
+  l1m=zero
+  l2m=zero
+  l3m=zero
+  u1m=zero
+  u2m=zero
+  u3m=zero
   ! velocity, ncly1 = 1, nclyn = 2, npaire = 0
   allocate(aam120(ny),bbm120(ny),ccm120(ny),ddm120(ny),eem120(ny),ggm120(ny),hhm120(ny),wwm120(ny),zzm120(ny))
+  aam120=zero
+  bbm120=zero
+  ccm120=zero
+  ddm120=zero
+  eem120=zero
+  ggm120=zero
+  hhm120=zero
+  wwm120=zero
+  zzm120=zero
   allocate(rrm120(ny),qqm120(ny),vvm120(ny),ssm120(ny))
+  rrm120=zero
+  qqm120=zero
+  vvm120=zero
+  ssm120=zero
   ! velocity, ncly1 = 1, nclyn = 2, npaire = 1
   allocate(aam121(ny),bbm121(ny),ccm121(ny),ddm121(ny),eem121(ny),ggm121(ny),hhm121(ny),wwm121(ny),zzm121(ny))
+  aam121=zero
+  bbm121=zero
+  ccm121=zero
+  ddm121=zero
+  eem121=zero
+  ggm121=zero
+  hhm121=zero
+  wwm121=zero
+  zzm121=zero
   allocate(rrm121(ny),qqm121(ny),vvm121(ny),ssm121(ny))
+  rrm121=zero
+  qqm121=zero
+  vvm121=zero
+  ssm121=zero
   ! velocity, ncly1 = 2, nclyn = 1, npaire = 0
   allocate(aam210(ny),bbm210(ny),ccm210(ny),ddm210(ny),eem210(ny),ggm210(ny),hhm210(ny),wwm210(ny),zzm210(ny))
+  aam210=zero
+  bbm210=zero
+  ccm210=zero
+  ddm210=zero
+  eem210=zero
+  ggm210=zero
+  hhm210=zero
+  wwm210=zero
+  zzm210=zero
   allocate(rrm210(ny),qqm210(ny),vvm210(ny),ssm210(ny))
+  rrm210=zero
+  qqm210=zero
+  vvm210=zero
+  ssm210=zero
   ! velocity, ncly1 = 2, nclyn = 1, npaire = 1
   allocate(aam211(ny),bbm211(ny),ccm211(ny),ddm211(ny),eem211(ny),ggm211(ny),hhm211(ny),wwm211(ny),zzm211(ny))
+  aam211=zero
+  bbm211=zero
+  ccm211=zero
+  ddm211=zero
+  eem211=zero
+  ggm211=zero
+  hhm211=zero
+  wwm211=zero
+  zzm211=zero
   allocate(rrm211(ny),qqm211(ny),vvm211(ny),ssm211(ny))
+  rrm211=zero
+  qqm211=zero
+  vvm211=zero
+  ssm211=zero
   ! scalar, ncly1 = 2, nclyn = 2
   allocate(aamt(ny,numscalar),bbmt(ny,numscalar),ccmt(ny,numscalar),ddmt(ny,numscalar),eemt(ny,numscalar))
+  aamt=zero
+  bbmt=zero
+  ccmt=zero
+  ddmt=zero
+  eemt=zero
   allocate(ggmt(ny,numscalar),hhmt(ny,numscalar),wwmt(ny,numscalar),zzmt(ny,numscalar))
+  ggmt=zero
+  hhmt=zero
+  wwmt=zero
+  zzmt=zero
   allocate(rrmt(ny,numscalar),qqmt(ny,numscalar),vvmt(ny,numscalar),ssmt(ny,numscalar))
+  rrmt=zero
+  qqmt=zero
+  vvmt=zero
+  ssmt=zero
   allocate(uumt(ny,numscalar),ttmt(ny,numscalar),sssmt(ny,numscalar),zzzmt(ny,numscalar)) ! nona
+  uumt=zero
+  ttmt=zero
+  sssmt=zero
+  zzzmt=zero
   ! scalar, ncly1 = 1, nclyn = 1, npaire = 0
   allocate(aam10t(ny,numscalar),bbm10t(ny,numscalar),ccm10t(ny,numscalar),ddm10t(ny,numscalar),eem10t(ny,numscalar))
+  aam10t=zero
+  bbm10t=zero
+  ccm10t=zero
+  ddm10t=zero
+  eem10t=zero
   allocate(ggm10t(ny,numscalar),hhm10t(ny,numscalar),wwm10t(ny,numscalar),zzm10t(ny,numscalar))
+  ggm10t=zero
+  hhm10t=zero
+  wwm10t=zero
+  zzm10t=zero
   allocate(rrm10t(ny,numscalar),qqm10t(ny,numscalar),vvm10t(ny,numscalar),ssm10t(ny,numscalar))
+  rrm10t=zero
+  qqm10t=zero
+  vvm10t=zero
+  ssm10t=zero
   ! scalar, ncly1 = 1, nclyn = 1, npaire = 1
   allocate(aam11t(ny,numscalar),bbm11t(ny,numscalar),ccm11t(ny,numscalar),ddm11t(ny,numscalar),eem11t(ny,numscalar))
+  aam11t=zero
+  bbm11t=zero
+  ccm11t=zero
+  ddm11t=zero
+  eem11t=zero
   allocate(ggm11t(ny,numscalar),hhm11t(ny,numscalar),wwm11t(ny,numscalar),zzm11t(ny,numscalar))
+  ggm11t=zero
+  hhm11t=zero
+  wwm11t=zero
+  zzm11t=zero
   allocate(rrm11t(ny,numscalar),qqm11t(ny,numscalar),vvm11t(ny,numscalar),ssm11t(ny,numscalar))
+  rrm11t=zero
+  qqm11t=zero
+  vvm11t=zero
+  ssm11t=zero
   ! scalar, ncly1 = 0, nclyn = 0
   allocate(aam0t(ny,numscalar),bbm0t(ny,numscalar),ccm0t(ny,numscalar),ddm0t(ny,numscalar),eem0t(ny,numscalar))
+  aam0t=zero
+  bbm0t=zero
+  ccm0t=zero
+  ddm0t=zero
+  eem0t=zero
   allocate(ggm0t(ny,numscalar),hhm0t(ny,numscalar),wwm0t(ny,numscalar),zzm0t(ny,numscalar))
+  ggm0t=zero
+  hhm0t=zero
+  wwm0t=zero
+  zzm0t=zero
   allocate(rrm0t(ny,numscalar),qqm0t(ny,numscalar),vvm0t(ny,numscalar),ssm0t(ny,numscalar))
+  rrm0t=zero
+  qqm0t=zero
+  vvm0t=zero
+  ssm0t=zero
   allocate(l1mt(ny,numscalar),l2mt(ny,numscalar),l3mt(ny,numscalar),u1mt(ny,numscalar),u2mt(ny,numscalar),u3mt(ny,numscalar))
+  l1mt=zero
+  l2mt=zero
+  l3mt=zero
+  u1mt=zero
+  u2mt=zero
+  u3mt=zero
   ! scalar, ncly1 = 1, nclyn = 2, npaire = 0
   allocate(aam120t(ny,numscalar),bbm120t(ny,numscalar),ccm120t(ny,numscalar),ddm120t(ny,numscalar),eem120t(ny,numscalar))
+  aam120t=zero
+  bbm120t=zero
+  ccm120t=zero
+  ddm120t=zero
+  eem120t=zero
   allocate(ggm120t(ny,numscalar),hhm120t(ny,numscalar),wwm120t(ny,numscalar),zzm120t(ny,numscalar))
+  ggm120t=zero
+  hhm120t=zero
+  wwm120t=zero
+  zzm120t=zero
   allocate(rrm120t(ny,numscalar),qqm120t(ny,numscalar),vvm120t(ny,numscalar),ssm120t(ny,numscalar))
+  rrm120t=zero
+  qqm120t=zero
+  vvm120t=zero
+  ssm120t=zero
   ! scalar, ncly1 = 1, nclyn = 2, npaire = 1
   allocate(aam121t(ny,numscalar),bbm121t(ny,numscalar),ccm121t(ny,numscalar),ddm121t(ny,numscalar),eem121t(ny,numscalar))
+  aam121t=zero
+  bbm121t=zero
+  ccm121t=zero
+  ddm121t=zero
+  eem121t=zero
   allocate(ggm121t(ny,numscalar),hhm121t(ny,numscalar),wwm121t(ny,numscalar),zzm121t(ny,numscalar))
+  ggm121t=zero
+  hhm121t=zero
+  wwm121t=zero
+  zzm121t=zero
   allocate(rrm121t(ny,numscalar),qqm121t(ny,numscalar),vvm121t(ny,numscalar),ssm121t(ny,numscalar))
+  rrm121t=zero
+  qqm121t=zero
+  vvm121t=zero
+  ssm121t=zero
   ! scalar, ncly1 = 2, nclyn = 1, npaire = 0
   allocate(aam210t(ny,numscalar),bbm210t(ny,numscalar),ccm210t(ny,numscalar),ddm210t(ny,numscalar),eem210t(ny,numscalar))
+  aam210t=zero
+  bbm210t=zero
+  ccm210t=zero
+  ddm210t=zero
+  eem210t=zero
   allocate(ggm210t(ny,numscalar),hhm210t(ny,numscalar),wwm210t(ny,numscalar),zzm210t(ny,numscalar))
+  ggm210t=zero
+  hhm210t=zero
+  wwm210t=zero
+  zzm210t=zero
   allocate(rrm210t(ny,numscalar),qqm210t(ny,numscalar),vvm210t(ny,numscalar),ssm210t(ny,numscalar))
+  rrm210t=zero
+  qqm210t=zero
+  vvm210t=zero
+  ssm210t=zero
   ! scalar, ncly1 = 2, nclyn = 1, npaire = 1
   allocate(aam211t(ny,numscalar),bbm211t(ny,numscalar),ccm211t(ny,numscalar),ddm211t(ny,numscalar),eem211t(ny,numscalar))
+  aam211t=zero
+  bbm211t=zero
+  ccm211t=zero
+  ddm211t=zero
+  eem211t=zero
   allocate(ggm211t(ny,numscalar),hhm211t(ny,numscalar),wwm211t(ny,numscalar),zzm211t(ny,numscalar))
+  ggm211t=zero
+  hhm211t=zero
+  wwm211t=zero
+  zzm211t=zero
   allocate(rrm211t(ny,numscalar),qqm211t(ny,numscalar),vvm211t(ny,numscalar),ssm211t(ny,numscalar))
+  rrm211t=zero
+  qqm211t=zero
+  vvm211t=zero
+  ssm211t=zero
 
 end subroutine init_implicit
 
