@@ -1,12 +1,12 @@
-program post
+PROGRAM post
 
-  use decomp_2d
-  use decomp_2d_io
-  use variables
-  use param
-  use var
-  use MPI
-  use post_processing
+  USE decomp_2d
+  USE decomp_2d_io
+  USE variables
+  USE param
+  USE var
+  USE MPI
+  USE post_processing
 
   implicit none
 
@@ -19,11 +19,11 @@ program post
   character(30) :: filename
   character(1) :: a
 
-  type(DECOMP_INFO) :: phG,ph1,ph2,ph3,ph4
+  TYPE(DECOMP_INFO) :: phG,ph1,ph2,ph3,ph4
 
   call ft_parameter(.true.)
 
-  call MPI_INIT(code)
+  CALL MPI_INIT(code)
   call decomp_2d_init(nx,ny,nz,p_row,p_col)
   call init_coarser_mesh_statS(nstat,nstat,nstat,.true.) !start from 1 == true
   call init_coarser_mesh_statV(nvisu,nvisu,nvisu,.true.) !start from 1 == true
@@ -155,4 +155,4 @@ program post
 
   call decomp_2d_finalize
   CALL MPI_FINALIZE(code)
-end program post
+end PROGRAM post

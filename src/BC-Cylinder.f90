@@ -42,12 +42,6 @@ module cyl
   character(len=100) :: fileformat
   character(len=1),parameter :: NL=char(10) !new line character
 
-  !probes
-  integer, save :: nprobes, ntimes1, ntimes2
-  integer, save, allocatable, dimension(:) :: rankprobes, nxprobes, nyprobes, nzprobes
-
-  real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
-
   PRIVATE ! All functions/subroutines private by default
   PUBLIC :: init_cyl, boundary_conditions_cyl, postprocess_cyl, &
             geomcomplex_cyl, visu_cyl
@@ -57,7 +51,7 @@ contains
   subroutine geomcomplex_cyl(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,remp)
 
     use decomp_2d, only : mytype
-    use param, only : one, two, ten, ten
+    use param, only : one, two, ten
     use ibm_param
     use dbg_schemes, only: sqrt_prec
 
@@ -170,11 +164,11 @@ contains
   !********************************************************************
   subroutine outflow (ux,uy,uz,phi)
 
-    use param
-    use variables
-    use decomp_2d
-    use MPI
-    use ibm_param
+    USE param
+    USE variables
+    USE decomp_2d
+    USE MPI
+    USE ibm_param
 
     implicit none
 
@@ -215,12 +209,12 @@ contains
        enddo
     enddo
 
-    if (iscalar == 1) then
-       if (u2 == zero) then
+    if (iscalar==1) then
+       if (u2==zero) then
           cx=(half*(uxmax1+uxmin1))*gdt(itr)*udx
-       elseif (u2 == one) then
+       elseif (u2==one) then
           cx=uxmax1*gdt(itr)*udx
-       elseif (u2 == two) then
+       elseif (u2==two) then
           cx=u2*gdt(itr)*udx    !works better
        else
           stop
@@ -321,15 +315,15 @@ contains
   !############################################################################
   subroutine postprocess_cyl(ux1,uy1,uz1,ep1)
 
-    use mpi
-    use decomp_2d
-    use decomp_2d_io
-    use var, only : uvisu
-    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-    use var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
-    use ibm_param
+    USE MPI
+    USE decomp_2d
+    USE decomp_2d_io
+    USE var, only : uvisu
+    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+    USE ibm_param
     use dbg_schemes, only: sqrt_prec
-
+    
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
 
   end subroutine postprocess_cyl
@@ -344,12 +338,11 @@ contains
   subroutine visu_cyl(ux1, uy1, uz1, pp3, phi1, ep1, num)
 
     use var, only : ux2, uy2, uz2, ux3, uy3, uz3
-    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-    use var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
     use var, ONLY : nxmsize, nymsize, nzmsize
     use visu, only : write_field
     use ibm_param, only : ubcx,ubcy,ubcz
-    use param, only :  zpfive
 
     implicit none
 
@@ -406,7 +399,7 @@ contains
 
     !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
     di1 = zero
-    di1(:,:,: ) = - zpfive*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2) &
+    di1(:,:,: ) = - half*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2) &
                   - td1(:,:,:)*tb1(:,:,:) &
                   - tg1(:,:,:)*tc1(:,:,:) &
                   - th1(:,:,:)*tf1(:,:,:)

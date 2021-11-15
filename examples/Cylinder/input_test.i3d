@@ -43,7 +43,7 @@ inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
 ! Time stepping
 dt = 0.0075              ! Time step
 ifirst = 1            ! First iteration
-ilast =  1000     ! Last iteration
+ilast =  100     ! Last iteration
 
 ! Enable modelling tools
 ilesmod=0             ! if 0 then DNS
@@ -71,11 +71,11 @@ itimescheme = 3       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4
 !=================
 
 ! Basic I/O
-irestart = 0          ! Read initial flow field ?
+irestart = 0           ! Read initial flow field ?
 icheckpoint = 10000    ! Frequency for writing backup file
-ioutput = 10000        ! Frequency for visualization
-nvisu = 1             ! Size for visualisation collection
-ilist    = 25         ! Write of the output to screen
+ioutput = 100          ! Frequency for visualization
+ilist    = 25          ! Frequency for the output to screen
+nvisu = 1              ! Size for visualisation collection
 
 /End
 
@@ -83,8 +83,8 @@ ilist    = 25         ! Write of the output to screen
 &Statistics
 !=================
 
-nstat = 1             ! Size arrays for statistic collection
-initstat = 10000         ! Time steps after which statistics are collected 
+nstat = 1              ! Size arrays for statistic collection
+initstat = 10000       ! Time steps after which statistics are collected 
 
 /End
 
@@ -96,8 +96,8 @@ initstat = 10000         ! Time steps after which statistics are collected
 &ScalarParam
 !================
 
-numscalar = 0         ! How many scalars?
-Sc = 0.2              ! Schmidt number
+numscalar = 0          ! How many scalars?
+Sc = 0.2               ! Schmidt number
 
 /End
 

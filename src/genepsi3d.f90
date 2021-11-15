@@ -37,17 +37,17 @@ contains
 
   subroutine epsi_init(ep1)
 
-    use param, only : zero, one, dx, dz
-    use decomp_2d, only : xstart, xend, xsize, mytype, nrank
-    !use decomp_2d_io
-    use variables, only : yp, ny
+    USE param, only : zero, one, dx, dz
+    USE decomp_2d, only : xstart, xend, xsize, mytype, nrank
+    !USE decomp_2d_io
+    USE variables, only : yp, ny
 
     implicit none
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
     logical :: dir_exists
 
 #ifdef DEBG
-    if (nrank == 0) print *,'# body_init start'
+    if (nrank .eq. 0) write(*,*)'# body_init start'
 #endif
     !###################################################################
     ! Check if geometry folder exists
@@ -63,7 +63,7 @@ contains
     call geomcomplex(ep1,xstart(1),xend(1),ny,xstart(2),xend(2),xstart(3),xend(3),dx,yp,dz,one)
 
 #ifdef DEBG
-    if (nrank == 0) print *,'# body_init done'
+    if (nrank .eq. 0) write(*,*)'# body_init done'
 #endif
 
     return
@@ -72,33 +72,38 @@ contains
 !############################################################################
   subroutine geomcomplex(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
 
-    use param, only : itype, itype_cyl, itype_hill, itype_channel
-    use decomp_2d, only : mytype
-    use cyl, only : geomcomplex_cyl
-    use hill, only : geomcomplex_hill
-    use channel, only : geomcomplex_channel
+    USE param, ONLY : itype, itype_cyl, itype_hill, itype_channel,itype_sandbox
+    USE decomp_2d, ONLY : mytype
+    USE cyl, ONLY : geomcomplex_cyl
+    USE hill, ONLY : geomcomplex_hill
+    USE channel, ONLY : geomcomplex_channel
+    USE sandbox, ONLY : geomcomplex_sandbox
 
-    implicit none
+    IMPLICIT NONE
 
-    integer :: nxi,nxf,ny,nyi,nyf,nzi,nzf
-    real(mytype),dimension(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
-    real(mytype)               :: dx,dz
-    real(mytype),dimension(ny) :: yp
-    real(mytype)               :: remp
+    INTEGER :: nxi,nxf,ny,nyi,nyf,nzi,nzf
+    REAL(mytype),DIMENSION(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
+    REAL(mytype)               :: dx,dz
+    REAL(mytype),DIMENSION(ny) :: yp
+    REAL(mytype)               :: remp
 
-    if (itype==itype_cyl) then
+    IF (itype.EQ.itype_cyl) THEN
 
-       call geomcomplex_cyl(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, remp)
+       CALL geomcomplex_cyl(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, remp)
 
-    elseif (itype==itype_hill) then
+    ELSEIF (itype.EQ.itype_hill) THEN
 
-       call geomcomplex_hill(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
+       CALL geomcomplex_hill(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
 
-    elseif (itype==itype_channel) then
+    ELSEIF (itype.EQ.itype_channel) THEN
 
-       call geomcomplex_channel(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, yp, remp)
+       CALL geomcomplex_channel(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, yp, remp)
 
-    endif
+    ELSEIF (itype.EQ.itype_sandbox) THEN
+     
+       CALL  geomcomplex_sandbox(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, yp, remp)
+
+    ENDIF
 
   end subroutine geomcomplex
 !############################################################################
@@ -106,7 +111,7 @@ contains
   subroutine genepsi3d(ep1)
 
     USE variables, only : nx,ny,nz,nxm,nym,nzm,yp
-    USE param, only : xlx,yly,zlz,dx,dy,dz,izap,npif,nclx,ncly,nclz,istret
+    USE param, only : xlx,yly,zlz,dx,dy,dz,izap,npif,nclx,ncly,nclz,istret,itype,itype_sandbox
     USE complex_geometry
     use decomp_2d
 
@@ -127,27 +132,37 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
     !
     if (nrank==0) then
-      print *,'==========================================================='
-      print *,'Generating the geometry!'
+      write(*,*)'==========================================================='
+      write(*,*)'Generating the geometry!'
     end if
     !###################################################################
     ! Check if planes folder exists
     !###################################################################
     if (nrank==0) then
-      inquire(file="geometry", exist=dir_exists)
+      inquire(file="data", exist=dir_exists)
       if (.not.dir_exists) then
-        call system("mkdir geometry 2> /dev/null")
+        call system("mkdir data 2> /dev/null")
+      end if
+      inquire(file="data/geometry", exist=dir_exists)
+      if (.not.dir_exists) then
+        call system("mkdir data/geometry 2> /dev/null")
       end if
     end if
     !###################################################################
-    call gene_epsi_3D(ep1,nx,ny,nz,dx,dy,dz,xlx,yly,zlz ,&
-         nclx,ncly,nclz,nxraf,nyraf,nzraf   ,&
-         xi,xf,yi,yf,zi,zf,nobjx,nobjy,nobjz,&
-         nobjmax,yp,nraf)
-    call verif_epsi(ep1,npif,izap,nx,ny,nz,nobjmax,&
-         nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif)
- !   call write_geomcomplex(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
- !        nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif,nobjmax,npif)
+    
+    if (itype.eq.itype_sandbox) then !F.Schuch 2020-08-14T11:44:11-03:00
+      call geomcomplex_io(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
+           nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif,nobjmax,npif,.true.)
+    else
+      call gene_epsi_3D(ep1,nx,ny,nz,dx,dy,dz,xlx,yly,zlz ,&
+           nclx,ncly,nclz,nxraf,nyraf,nzraf   ,&
+           xi,xf,yi,yf,zi,zf,nobjx,nobjy,nobjz,&
+           nobjmax,yp,nraf)
+      call verif_epsi(ep1,npif,izap,nx,ny,nz,nobjmax,&
+           nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif)
+    endif
+    ! call geomcomplex_io(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
+    !      nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif,nobjmax,npif,.false.)
     !
   end subroutine genepsi3d
 !
@@ -157,7 +172,7 @@ contains
        nclx,ncly,nclz,nxraf,nyraf,nzraf   ,&
        xi,xf,yi,yf,zi,zf,nobjx,nobjy,nobjz,&
        nobjmax,yp,nraf)
-    use param, only : zero,one, zpfive
+    use param, only : zero,half, one, two
     use decomp_2d
     use MPI
     implicit none
@@ -203,39 +218,39 @@ contains
     !x-pencil
     ep1=zero
     call geomcomplex(ep1,xstart(1),xend(1),ny,xstart(2),xend(2),xstart(3),xend(3),dx,yp,dz,one)
-    !if (nrank==0) write(*,*) '    step 1'
+    ! if (nrank==0) print*,'    step 1'
     if(nclx)then
-       dxraf =xlx/nxraf
+       dxraf =xlx/real(nxraf, mytype)
     else
-       dxraf =xlx/(nxraf-1)
+       dxraf =xlx/real(nxraf-1, mytype)
     endif
     xepsi=zero
     call geomcomplex(xepsi,1,nxraf,ny,xstart(2),xend(2),xstart(3),xend(3),dxraf,yp,dz,one)
-    !if (nrank==0) write(*,*) '    step 2'
+    ! if (nrank==0) print*,'    step 2'
     !y-pencil
     if(ncly)then
-       dyraf =yly/nyraf
+       dyraf =yly/real(nyraf, mytype)
     else
-       dyraf =yly/(nyraf-1)
+       dyraf =yly/real(nyraf-1, mytype)
     endif
     do j=1,ny-1
        do jraf=1,nraf
-          ypraf(jraf+nraf*(j-1))=yp(j)+(jraf-1)*(yp(j+1)-yp(j))/nraf
+          ypraf(jraf+nraf*(j-1))=yp(j)+real(jraf-1, mytype)*(yp(j+1)-yp(j))/real(nraf, mytype)
        enddo
     enddo
     if(.not.ncly)ypraf(nyraf)=yp(ny)
     yepsi=zero
     call geomcomplex(yepsi,ystart(1),yend(1),nyraf,1,nyraf,ystart(3),yend(3),dx,ypraf,dz,one)
-    !if (nrank==0) write(*,*) '    step 3'
+    ! if (nrank==0) print*,'    step 3'
     !z-pencil
     if(nclz)then
-       dzraf=zlz/nzraf
+       dzraf=zlz/real(nzraf, mytype)
     else
-       dzraf=zlz/(nzraf-1)
+       dzraf=zlz/real(nzraf-1, mytype)
     endif
     zepsi=zero
     call geomcomplex(zepsi,zstart(1),zend(1),ny,zstart(2),zend(2),1,nzraf,dx,yp,dzraf,one)
-    !if (nrank==0) write(*,*) '    step 4'
+    ! if (nrank==0) print*,'    step 4'
 
     !x-pencil
     nobjx(:,:)=0
@@ -243,23 +258,23 @@ contains
     do k=1,xsize(3)
        do j=1,xsize(2)
           inum=0
-          if(ep1(1,j,k)==one)then
+          if(ep1(1,j,k).eq.1.)then
              inum=1
              nobjx(j,k)=1
           endif
           do i=1,nx-1
-             if(ep1(i,j,k) == zero .and. ep1(i+1,j,k) == one)then
+             if(ep1(i,j,k).eq.0..and.ep1(i+1,j,k).eq.1.)then
                 inum=inum+1
                 nobjx(j,k)=nobjx(j,k)+1
              endif
           enddo
-          if(inum > nobjxmax)then
+          if(inum.gt.nobjxmax)then
              nobjxmax=inum
           endif
        enddo
     enddo
     call MPI_REDUCE(nobjxmax,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    !if (nrank==0) write(*,*) '        nobjxmax=',mpi_aux_i
+    ! if (nrank==0) print*,'        nobjxmax=',mpi_aux_i
 
     nobjxraf(:,:)=0
     ibug=0
@@ -268,29 +283,29 @@ contains
     do k=1,xsize(3)
        do j=1,xsize(2)
           inum=0
-          if(xepsi(1,j,k) == one)then
+          if(xepsi(1,j,k).eq.1.)then
              inum=1
              nobjxraf(j,k)=1
           endif
           do i=1,nxraf-1
-             if(xepsi(i,j,k) == zero .and. xepsi(i+1,j,k) == one)then
+             if(xepsi(i,j,k).eq.zero.and.xepsi(i+1,j,k).eq.one)then
                 inum=inum+1
                 nobjxraf(j,k)=nobjxraf(j,k)+1
              endif
           enddo
-          if(inum > nobjxmaxraf)then
+          if(inum.gt.nobjxmaxraf)then
              nobjxmaxraf=inum
           endif
-          if(nobjx(j,k) /= nobjxraf(j,k))then
+          if(nobjx(j,k).ne.nobjxraf(j,k))then
              ibug=ibug+1
           endif
        enddo
     enddo
     call MPI_REDUCE(nobjxmaxraf,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    !if (nrank==0) write(*,*) '        nobjxmaxraf=',mpi_aux_i
+    ! if (nrank==0) print*,'        nobjxmaxraf=',mpi_aux_i
     call MPI_REDUCE(ibug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-    !if (nrank==0) write(*,*) '        ibug=',mpi_aux_i
-    !if (nrank==0) write(*,*) '    step 5'
+    ! if (nrank==0) print*,'        ibug=',mpi_aux_i
+    ! if (nrank==0) print*,'    step 5'
 
     !y-pencil
     nobjy(:,:)=0
@@ -309,13 +324,13 @@ contains
                 nobjy(i,k)=nobjy(i,k)+1
              endif
           enddo
-          if(jnum > nobjymax)then
+          if(jnum.gt.nobjymax)then
              nobjymax=jnum
           endif
        enddo
     enddo
     call MPI_REDUCE(nobjymax,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    !if (nrank==0) write(*,*) '        nobjymax=',mpi_aux_i
+    ! if (nrank==0) print*,'        nobjymax=',mpi_aux_i
 
     nobjyraf(:,:)=0
     jbug=0
@@ -334,19 +349,19 @@ contains
                 nobjyraf(i,k)=nobjyraf(i,k)+1
              endif
           enddo
-          if(jnum > nobjymaxraf)then
+          if(jnum.gt.nobjymaxraf)then
              nobjymaxraf=jnum
           endif
-          if(nobjy(i,k) /= nobjyraf(i,k))then
+          if(nobjy(i,k).ne.nobjyraf(i,k))then
              jbug=jbug+1
           endif
        enddo
     enddo
     call MPI_REDUCE(nobjymaxraf,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    !if (nrank==0) write(*,*) '        nobjymaxraf=',mpi_aux_i
+    ! if (nrank==0) print*,'        nobjymaxraf=',mpi_aux_i
     call MPI_REDUCE(jbug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-    !if (nrank==0) write(*,*) '        jbug=',mpi_aux_i
-    !if (nrank==0) write(*,*) '    step 6'
+    ! if (nrank==0) print*,'        jbug=',mpi_aux_i
+    ! if (nrank==0) print*,'    step 6'
 
     !z-pencil
     nobjz(:,:)=0
@@ -365,13 +380,13 @@ contains
                 nobjz(i,j)=nobjz(i,j)+1
              endif
           enddo
-          if(knum > nobjzmax)then
+          if(knum.gt.nobjzmax)then
              nobjzmax=knum
           endif
        enddo
     enddo
     call MPI_REDUCE(nobjzmax,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    !if (nrank==0) write(*,*) '        nobjzmax=',mpi_aux_i
+    ! if (nrank==0) print*,'        nobjzmax=',mpi_aux_i
 
     nobjzraf(:,:)=0
     kbug=0
@@ -390,19 +405,19 @@ contains
                 nobjzraf(i,j)=nobjzraf(i,j)+1
              endif
           enddo
-          if(knum > nobjzmaxraf)then
+          if(knum.gt.nobjzmaxraf)then
              nobjzmaxraf=knum
           endif
-          if(nobjz(i,j) /= nobjzraf(i,j))then
+          if(nobjz(i,j).ne.nobjzraf(i,j))then
              kbug=kbug+1
           endif
        enddo
     enddo
     call MPI_REDUCE(nobjzmaxraf,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    !if (nrank==0) write(*,*) '        nobjzmaxraf=',mpi_aux_i
+    ! if (nrank==0) print*,'        nobjzmaxraf=',mpi_aux_i
     call MPI_REDUCE(kbug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-    !if (nrank==0) write(*,*) '        kbug=',mpi_aux_i
-    !if (nrank==0) write(*,*) '    step 7'
+    ! if (nrank==0) print*,'        kbug=',mpi_aux_i
+    ! if (nrank==0) print*,'    step 7'
 
     !x-pencil
     do k=1,xsize(3)
@@ -483,13 +498,13 @@ contains
           do j=1,nyraf-1
              if(yepsi(i,j,k) == zero .and. yepsi(i,j+1,k) == one)then
                 jnum=jnum+1
-                yi(jnum,i,k)=ypraf(j)+(ypraf(j+1)-ypraf(j))*zpfive!dyraf*(j-1)+dyraf/2.
+                yi(jnum,i,k)=ypraf(j)+(ypraf(j+1)-ypraf(j))*half!dyraf*(j-1)+dyraf/2.
              elseif(yepsi(i,j,k) == one .and. yepsi(i,j+1,k) == zero)then
-                yf(jnum,i,k)=ypraf(j)+(ypraf(j+1)-ypraf(j))*zpfive!dyraf*(j-1)+dyraf/2.
+                yf(jnum,i,k)=ypraf(j)+(ypraf(j+1)-ypraf(j))*half!dyraf*(j-1)+dyraf/2.
              endif
           enddo
           if(yepsi(i,nyraf,k) == one)then
-             yf(jnum,i,k)=yly+(yp(ny)-yp(ny-1))*zpfive!2.*yly
+             yf(jnum,i,k)=yly+(yp(ny)-yp(ny-1))*half!2.*yly
           endif
        enddo
     enddo
@@ -551,9 +566,9 @@ contains
           do k=1,nzraf-1
              if(zepsi(i,j,k) == zero .and. zepsi(i,j,k+1) == one)then
                 knum=knum+1
-                zi(knum,i,j)=dzraf*(k-1)+dzraf*zpfive
+                zi(knum,i,j)=dzraf*(k-1)+dzraf*half
              elseif(zepsi(i,j,k) == one .and. zepsi(i,j,k+1) == zero)then
-                zf(knum,i,j)=dzraf*(k-1)+dzraf*zpfive
+                zf(knum,i,j)=dzraf*(k-1)+dzraf*half
              endif
           enddo
           if(zepsi(i,j,nzraf) == one)then
@@ -562,7 +577,8 @@ contains
        enddo
     enddo
 
-    if(kbug /= 0)then
+    kdebraf=0
+    if(kbug.ne.0)then
        do j=1,zsize(2)
           do i=1,zsize(1)
              if(nobjz(i,j) /= nobjzraf(i,j))then
@@ -606,110 +622,14 @@ contains
           enddo
        enddo
     endif
-    !if (nrank==0) write(*,*) '    step 10'
+    ! if (nrank==0) print*,'    step 10'
     !
     return
   end subroutine gene_epsi_3D
 !############################################################################
 !############################################################################
-  subroutine gene_epsim(epsi,epsim,nx,ny,nz,nobjx,nobjy,nobjz,&
-       xi,xf,yi,yf,zi,zf,nobjmax,dx,dz,epm,&
-       xlx,yly,zlz,yp)
-
-    use param, only : zero, one, two
-    
-    implicit none
-    !
-    real(4),dimension(       nx,ny,nz) :: epsi
-    real(4),dimension(       nx,ny,nz) :: epsim
-    real(4),dimension(  nobjmax,ny,nz) :: xi,xf
-    real(4),dimension(  nobjmax,nx,nz) :: yi,yf
-    real(4),dimension(  nobjmax,nx,ny) :: zi,zf
-    integer,dimension(          ny,nz) :: nobjx
-    integer,dimension(          nx,nz) :: nobjy
-    integer,dimension(          nx,ny) :: nobjz
-    real(4),dimension(             ny) :: yp
-    real(4)                            :: x,y,z
-    real(4)                            :: dx,dz
-    real(4)                            :: xlx,yly,zlz
-    real(4)                            :: xe,ye,ze,epm
-    integer                            :: i,j,k
-    integer                            :: nx,ny,nz
-    integer                            :: ix,jy,kz
-    integer                            :: nobjmax
-    !
-    epsim(:,:,:)=epsi(:,:,:)
-    xe=epm*dx
-    do k=1,nz
-       do j=1,ny
-          do i=1,nx
-             if(epsi(i,j,k) == one .and.&
-                nobjx (j,k) /= 0)then
-                x=dx*(i-1)
-                do ix=1,nobjx(j,k)
-                   if(   x >= xi(ix,j,k)    .and.&
-                         x <= xi(ix,j,k)+xe .and.&
-                      zero <  xi(ix,j,k)    .or. &
-                         x <= xf(ix,j,k)    .and.&
-                         x >= xf(ix,j,k)-xe .and.&
-                       xlx >  xf(ix,j,k)   )then
-                      epsim(i,j,k)=zero
-                   endif
-                enddo
-             endif
-          enddo
-       enddo
-    enddo
-    do k=1,nz
-       do i=1,nx
-          do j=2,ny-1
-             if(epsi(i,j,k) == one .and.&
-                nobjy (i,k)  > 0)then
-                y=yp(j)
-                ye=epm*(yp(j+1)-yp(j-1))/two
-                do jy=1,nobjy(i,k)
-                   if(   y >= yi(jy,i,k)    .and.&
-                         y <= yi(jy,i,k)+ye .and.&
-                      zero <  yi(jy,i,k)    .or. &
-                         y <= yf(jy,i,k)    .and.&
-                         y >= yf(jy,i,k)-ye .and.&
-                       yly >  yf(jy,i,k)   )then
-                      epsim(i,j,k)=zero
-                   endif
-                enddo
-             endif
-          enddo
-       enddo
-    enddo
-    ze=epm*dz
-    do j=1,ny
-       do i=1,nx
-          do k=1,nz
-             if(epsi(i,j,k) == one .and.&
-                nobjz (i,j) >  0)then
-                z=dz*(k-1)
-                do kz=1,nobjz(i,j)
-                   if(   z >= zi(kz,i,j)    .and.&
-                         z <= zi(kz,i,j)+ze .and.&
-                      zero <  zi(kz,i,j)    .or. &
-                         z <= zf(kz,i,j)    .and.&
-                         z >= zf(kz,i,j)-ze .and.&
-                       zlz >  zf(kz,i,j)   )then
-                      epsim(i,j,k)=zero
-                   endif
-                enddo
-             endif
-          enddo
-       enddo
-    enddo
-    !
-    return
-  end subroutine gene_epsim
-!############################################################################
-!############################################################################
   subroutine verif_epsi(ep1,npif,izap,nx,ny,nz,nobjmax,&
        nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif)
-
     use decomp_2d
     use param, only: zero, one
     use MPI
@@ -864,12 +784,13 @@ contains
   end subroutine verif_epsi
 !############################################################################
 !############################################################################
-  subroutine write_geomcomplex(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
-       nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif,nobjmax,npif)
+  subroutine geomcomplex_io(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
+       nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif,nobjmax,npif,read_flag)
     use decomp_2d
-    use decomp_2d_io
+    USE decomp_2d_io
     implicit none
     !
+    logical, intent(in) :: read_flag
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
     integer                            :: nx,ny,nz,nobjmax
     integer,dimension(xstart(2):xend(2),xstart(3):xend(3)) :: nobjx
@@ -883,232 +804,148 @@ contains
     integer,dimension(0:nobjmax,zstart(1):zend(1),zstart(2):zend(2)) :: nzipif,nzfpif
     integer                            :: npif
     integer                            :: i,j,k,count
+    character :: tmp_char
     !###################################################################
-    if (nrank==0) print *,'Writing geometry'
-    call decomp_2d_write_one(1,ep1,'geometry/epsilon.dat')
+    if (read_flag) then
+      if (nrank==0) print *,'Reading geometry'
+      call decomp_2d_read_one(1,ep1,'data/geometry/epsilon.bin')   
+    else
+      if (nrank==0) print *,'Writing geometry'
+      call decomp_2d_write_one(1,ep1,'data/geometry/epsilon.bin')
+    endif
     !###################################################################
     !x-pencil
-    open(67,file='geometry/nobjx.dat',form='formatted',access='direct',recl=13)
+    open(67,file='data/geometry/nobjx.dat',form='formatted',access='direct',recl=13)
     do k=xstart(3),xend(3)
        do j=xstart(2),xend(2)
           count = (k-1)*ny+j
-          write(67,'(1I12,A)',rec=count) nobjx(j,k),char(10)
+          if (read_flag) then
+            read(67,'(1I12,A)',rec=count) nobjx(j,k),tmp_char
+          else
+            write(67,'(1I12,A)',rec=count) nobjx(j,k),char(10)
+          endif
        enddo
     enddo
     close(67)
     !y-pencil
-    open(67,file='geometry/nobjy.dat',form='formatted',access='direct',recl=13)
+    open(67,file='data/geometry/nobjy.dat',form='formatted',access='direct',recl=13)
     do k=ystart(3),yend(3)
        do i=ystart(1),yend(1)
           count = (k-1)*nx+i
-          write(67,'(1I12,A)',rec=count) nobjy(i,k),char(10)
+          if (read_flag) then
+            read(67,'(1I12,A)',rec=count) nobjy(i,k),tmp_char
+          else
+            write(67,'(1I12,A)',rec=count) nobjy(i,k),char(10)
+         endif
        enddo
     enddo
     close(67)
     !z-pencil
-    open(67,file='geometry/nobjz.dat',form='formatted',access='direct',recl=13)
+    open(67,file='data/geometry/nobjz.dat',form='formatted',access='direct',recl=13)
     do j=zstart(2),zend(2)
        do i=zstart(1),zend(1)
           count = (j-1)*nx+i
-          write(67,'(1I12,A)',rec=count) nobjz(i,j),char(10)
+          if (read_flag) then
+            read(67,'(1I12,A)',rec=count) nobjz(i,j),tmp_char
+          else
+            write(67,'(1I12,A)',rec=count) nobjz(i,j),char(10)
+         endif
        enddo
     enddo
     close(67)
     !###################################################################
     !x-pencil
-    open(67,file='geometry/nxifpif.dat',form='formatted',access='direct',recl=25)
+    open(67,file='data/geometry/nxifpif.dat',form='formatted',access='direct',recl=25)
     do k=xstart(3),xend(3)
        do j=xstart(2),xend(2)
-          do i=0,nobjmax
-             count = (k-1)*ny*(1+nobjmax)+(j-1)*(1+nobjmax)+i+1
-             write(67,'(2I12,A)',rec=count) nxipif(i,j,k),nxfpif(i,j,k),char(10)
+         do i=0,nobjmax
+            count = (k-1)*ny*(1+nobjmax)+(j-1)*(1+nobjmax)+i+1
+            if (read_flag) then
+              read(67,'(2I12,A)',rec=count) nxipif(i,j,k),nxfpif(i,j,k),tmp_char
+            else
+              write(67,'(2I12,A)',rec=count) nxipif(i,j,k),nxfpif(i,j,k),char(10)
+            endif
           enddo
        enddo
     enddo
     close(67)
     !y-pencil
-    open(67,file='geometry/nyifpif.dat',form='formatted',access='direct',recl=25)
+    open(67,file='data/geometry/nyifpif.dat',form='formatted',access='direct',recl=25)
     do k=ystart(3),yend(3)
        do i=ystart(1),yend(1)
-          do j=0,nobjmax
-             count = (k-1)*nx*(1+nobjmax)+(i-1)*(1+nobjmax)+j+1
-             write(67,'(2I12,A)',rec=count) nyipif(j,i,k),nyfpif(j,i,k),char(10)
+         do j=0,nobjmax
+            count = (k-1)*nx*(1+nobjmax)+(i-1)*(1+nobjmax)+j+1
+            if (read_flag) then
+              read(67,'(2I12,A)',rec=count) nyipif(j,i,k),nyfpif(j,i,k),tmp_char
+            else
+              write(67,'(2I12,A)',rec=count) nyipif(j,i,k),nyfpif(j,i,k),char(10)
+            endif
           enddo
        enddo
     enddo
     close(67)
     !z-pencil
-    open(67,file='geometry/nzifpif.dat',form='formatted',access='direct',recl=25)
+    open(67,file='data/geometry/nzifpif.dat',form='formatted',access='direct',recl=25)
     do j=zstart(2),zend(2)
        do i=zstart(1),zend(1)
-          do k=0,nobjmax
-             count = (j-1)*nx*(1+nobjmax)+(i-1)*(1+nobjmax)+k+1
-             write(67,'(2I12,A)',rec=count) nzipif(k,i,j),nzfpif(k,i,j),char(10)
+         do k=0,nobjmax
+            count = (j-1)*nx*(1+nobjmax)+(i-1)*(1+nobjmax)+k+1
+            if (read_flag) then
+              read(67,'(2I12,A)',rec=count) nzipif(k,i,j),nzfpif(k,i,j),tmp_char
+            else
+              write(67,'(2I12,A)',rec=count) nzipif(k,i,j),nzfpif(k,i,j),char(10)
+            endif
           enddo
        enddo
     enddo
     close(67)
     !###################################################################
     !x-pencil
-    open(67,file='geometry/xixf.dat',form='formatted',access='direct',recl=29)
+    open(67,file='data/geometry/xixf.dat',form='formatted',access='direct',recl=49)
     do k=xstart(3),xend(3)
        do j=xstart(2),xend(2)
           do i=1,nobjmax
              count = (k-1)*ny*nobjmax+(j-1)*nobjmax+i
-             write(67,'(2E14.6,A)',rec=count) xi(i,j,k),xf(i,j,k),char(10)
+             if (read_flag) then
+              read(67,'(2E24.16,A)',rec=count) xi(i,j,k),xf(i,j,k),tmp_char
+            else
+              write(67,'(2E24.16,A)',rec=count) xi(i,j,k),xf(i,j,k),char(10)
+            endif
           enddo
        enddo
     enddo
     close(67)
     !y-pencil
-    open(67,file='geometry/yiyf.dat',form='formatted',access='direct',recl=29)
+    open(67,file='data/geometry/yiyf.dat',form='formatted',access='direct',recl=49)
     do k=ystart(3),yend(3)
        do i=ystart(1),yend(1)
           do j=1,nobjmax
              count = (k-1)*nx*nobjmax+(i-1)*nobjmax+j
-             write(67,'(2E14.6,A)',rec=count) yi(j,i,k),yf(j,i,k),char(10)
+             if (read_flag) then
+               read(67,'(2E24.16,A)',rec=count) yi(j,i,k),yf(j,i,k),tmp_char
+            else
+               write(67,'(2E24.16,A)',rec=count) yi(j,i,k),yf(j,i,k),char(10)
+            endif
           enddo
        enddo
     enddo
     close(67)
     !z-pencil
-    open(67,file='geometry/zizf.dat',form='formatted',access='direct',recl=29)
+    open(67,file='data/geometry/zizf.dat',form='formatted',access='direct',recl=49)
     do j=zstart(2),zend(2)
        do i=zstart(1),zend(1)
           do k=1,nobjmax
              count = (j-1)*nx*nobjmax+(i-1)*nobjmax+k
-             write(67,'(2E14.6,A)',rec=count) zi(k,i,j),zf(k,i,j),char(10)
+             if (read_flag) then
+               read(67,'(2E24.16,A)',rec=count) zi(k,i,j),zf(k,i,j),tmp_char
+            else
+               write(67,'(2E24.16,A)',rec=count) zi(k,i,j),zf(k,i,j),char(10)
+            endif
           enddo
        enddo
     enddo
     close(67)
-    !###################################################################
     return
-  end subroutine write_geomcomplex
+  end subroutine geomcomplex_io
   !############################################################################
-  !############################################################################
-  subroutine read_geomcomplex()
-    !
-    use complex_geometry
-    use decomp_2d
-    use MPI
-    !
-    implicit none
-    !
-    integer :: i,j,k
-    integer :: code
-    !
-    if(nrank == 0)then
-       open(11,file='nobjx.dat'  ,form='formatted', status='old')
-       do k=1,nz
-          do j=1,ny
-             read(11,*)nobjx(j,k)
-          enddo
-       enddo
-       close(11)
-    endif
-    call MPI_BCAST(nobjx,ny*nz,MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if(nrank == 0)then
-       open(12,file='nobjy.dat'  ,form='formatted', status='old')
-       do k=1,nz
-          do i=1,nx
-             read(12,*)nobjy(i,k)
-          enddo
-       enddo
-       close(12)
-    endif
-    call MPI_BCAST(nobjy,nx*nz,MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if(nrank == 0)then
-       open(13,file='nobjz.dat'  ,form='formatted', status='old')
-       do j=1,ny
-          do i=1,nx
-             read(13,*)nobjz(i,j)
-          enddo
-       enddo
-       close(13)
-    endif
-    call MPI_BCAST(nobjz,nx*ny,MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if(nrank == 0)then
-       open(21,file='nxifpif.dat',form='formatted', status='old')
-       do k=1,nz
-          do j=1,ny
-             do i=0,nobjmax
-                read(21,*)nxipif(i,j,k),nxfpif(i,j,k)
-             enddo
-          enddo
-       enddo
-       close(21)
-    endif
-    call MPI_BCAST(nxipif,ny*nz*(nobjmax+1),MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    call MPI_BCAST(nxfpif,ny*nz*(nobjmax+1),MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if(nrank == 0)then
-       open(22,file='nyifpif.dat',form='formatted', status='old')
-       do k=1,nz
-          do i=1,nx
-             do j=0,nobjmax
-                read(22,*)nyipif(j,i,k),nyfpif(j,i,k)
-             enddo
-          enddo
-       enddo
-       close(22)
-    endif
-    call MPI_BCAST(nyipif,nx*nz*(nobjmax+1),MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    call MPI_BCAST(nyfpif,nx*nz*(nobjmax+1),MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if(nrank == 0)then
-       open(23,file='nzifpif.dat',form='formatted', status='old')
-       do j=1,ny
-          do i=1,nx
-             do k=0,nobjmax
-                read(23,*)nzipif(k,i,j),nzfpif(k,i,j)
-             enddo
-          enddo
-       enddo
-       close(23)
-    endif
-    call MPI_BCAST(nzipif,nx*ny*(nobjmax+1),MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    call MPI_BCAST(nzfpif,nx*ny*(nobjmax+1),MPI_INTEGER,0,MPI_COMM_WORLD,code)
-    if(nrank == 0)then
-       open(31,file='xixf.dat'   ,form='formatted', status='old')
-       do k=1,nz
-          do j=1,ny
-             do i=1,nobjmax
-                read(31,*)xi(i,j,k),xf(i,j,k)
-             enddo
-          enddo
-       enddo
-       close(31)
-    endif
-    call MPI_BCAST(xi,ny*nz*nobjmax,MPI_REAL,0,MPI_COMM_WORLD,code)
-    call MPI_BCAST(xf,ny*nz*nobjmax,MPI_REAL,0,MPI_COMM_WORLD,code)
-    if(nrank == 0)then
-       open(32,file='yiyf.dat'   ,form='formatted', status='old')
-       do k=1,nz
-          do i=1,nx
-             do j=1,nobjmax
-                read(32,*)yi(j,i,k),yf(j,i,k)
-             enddo
-          enddo
-       enddo
-       close(32)
-    endif
-    call MPI_BCAST(yi,nx*nz*nobjmax,MPI_REAL,0,MPI_COMM_WORLD,code)
-    call MPI_BCAST(yf,nx*nz*nobjmax,MPI_REAL,0,MPI_COMM_WORLD,code)
-    if(nrank == 0)then
-       open(33,file='zizf.dat'   ,form='formatted', status='old')
-       do j=1,ny
-          do i=1,nx
-             do k=1,nobjmax
-                read(33,*)zi(k,i,j),zf(k,i,j)
-             enddo
-          enddo
-       enddo
-       close(33)
-    endif
-    call MPI_BCAST(zi,nx*ny*nobjmax,MPI_REAL,0,MPI_COMM_WORLD,code)
-    call MPI_BCAST(zf,nx*ny*nobjmax,MPI_REAL,0,MPI_COMM_WORLD,code)
-    !
-    return
-  end subroutine read_geomcomplex
-!############################################################################
-!############################################################################
 end module genepsi

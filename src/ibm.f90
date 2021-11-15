@@ -5,9 +5,9 @@ module ibm
 contains
   !############################################################################
   subroutine corgp_IBM (ux,uy,uz,px,py,pz,nlock)
-    use param
-    use decomp_2d
-    use variables
+    USE param
+    USE decomp_2d
+    USE variables
     implicit none
     integer :: i,j,k,nlock
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,px,py,pz
@@ -75,10 +75,10 @@ contains
   !############################################################################
   subroutine lagpolx(u)
     !
-    use param
-    use complex_geometry
-    use decomp_2d
-    use variables
+    USE param
+    USE complex_geometry
+    USE decomp_2d
+    USE variables
     !
     implicit none
     !
@@ -105,10 +105,10 @@ contains
                 if(xi(i,j,k) > zero)then!objet immergé
                    ix=xi(i,j,k)/dx+1
                    ipoli=ix+1
-                   if(nxipif(i,j,k) < npif)nxpif=nxipif(i,j,k)
+                   if(nxipif(i,j,k).lt.npif)nxpif=nxipif(i,j,k)
                    do ipif=1,nxpif
                       ia=ia+1
-                      if(izap == 1)then!zapping
+                      if(izap.eq.1)then!zapping
                          xa(ia)=(ix-1)*dx-ipif*dx
                          ya(ia)=u(ix-ipif,j,k)
                       else             !no zapping
@@ -127,10 +127,10 @@ contains
                 if(xf(i,j,k) < xlx)then!objet immergé
                    ix=(xf(i,j,k)+dx)/dx+1
                    ipolf=ix-1
-                   if(nxfpif(i,j,k) < npif)nxpif=nxfpif(i,j,k)
+                   if(nxfpif(i,j,k).lt.npif)nxpif=nxfpif(i,j,k)
                    do ipif=1,nxpif
                       ia=ia+1
-                      if(izap == 1)then!zapping
+                      if(izap.eq.1)then!zapping
                          xa(ia)=(ix-1)*dx+ipif*dx
                          ya(ia)=u(ix+ipif,j,k)
                       else             !no zapping
@@ -160,10 +160,10 @@ contains
   !############################################################################
   subroutine lagpoly(u)
     !
-    use param
-    use complex_geometry
-    use decomp_2d
-    use variables
+    USE param
+    USE complex_geometry
+    USE decomp_2d
+    USE variables
     !
     implicit none
     !
@@ -194,10 +194,10 @@ contains
                    enddo
                    jy=jy-1
                    jpoli=jy+1
-                   if(nyipif(j,i,k) < npif)nypif=nyipif(j,i,k)
+                   if(nyipif(j,i,k).lt.npif)nypif=nyipif(j,i,k)
                    do jpif=1,nypif
                       ia=ia+1
-                      if(izap == 1)then!zapping
+                      if(izap.eq.1)then!zapping
                          xa(ia)=yp(jy-jpif)!(jy-1)*dy-jpif*dy
                          ya(ia)=u(i,jy-jpif,k)
                       else             !no zapping
@@ -215,14 +215,14 @@ contains
                 ya(ia)=zero
                 if(yf(j,i,k) < yly)then!objet immergé
                    jy=1!jy=(yf(j,i,k)+dy)/dy+1
-                   do while(yp(jy) < yf(j,i,k))  !there was a bug here yi<-->yf
+                   do while(yp(jy).lt.yf(j,i,k))  !there was a bug here yi<-->yf
                       jy=jy+1
                    enddo
                    jpolf=jy-1
-                   if(nyfpif(j,i,k) < npif)nypif=nyfpif(j,i,k)
+                   if(nyfpif(j,i,k).lt.npif)nypif=nyfpif(j,i,k)
                    do jpif=1,nypif
                       ia=ia+1
-                      if(izap == 1)then!zapping
+                      if(izap.eq.1)then!zapping
                          xa(ia)=yp(jy+jpif)!(jy-1)*dy+jpif*dy
                          ya(ia)=u(i,jy+jpif,k)
                       else             !no zapping
@@ -252,10 +252,10 @@ contains
   !############################################################################
   subroutine lagpolz(u)
     !
-    use param
-    use complex_geometry
-    use decomp_2d
-    use variables
+    USE param
+    USE complex_geometry
+    USE decomp_2d
+    USE variables
     !
     implicit none
     !
@@ -282,10 +282,10 @@ contains
                 if(zi(k,i,j) > zero)then!objet immergé
                    kz=zi(k,i,j)/dz+1
                    kpoli=kz+1
-                   if(nzipif(k,i,j) < npif)nzpif=nzipif(k,i,j)
+                   if(nzipif(k,i,j).lt.npif)nzpif=nzipif(k,i,j)
                    do kpif=1,nzpif
                       ia=ia+1
-                      if(izap == 1)then!zapping
+                      if(izap.eq.1)then!zapping
                          xa(ia)=(kz-1)*dz-kpif*dz
                          ya(ia)=u(i,j,kz-kpif)
                       else             !no zapping
@@ -304,10 +304,10 @@ contains
                 if(zf(k,i,j) < zlz)then!objet immergé
                    kz=(zf(k,i,j)+dz)/dz+1
                    kpolf=kz-1
-                   if(nzfpif(k,i,j) < npif)nzpif=nzfpif(k,i,j)
+                   if(nzfpif(k,i,j).lt.npif)nzpif=nzfpif(k,i,j)
                    do kpif=1,nzpif
                       ia=ia+1
-                      if(izap == 1)then!zapping
+                      if(izap.eq.1)then!zapping
                          xa(ia)=(kz-1)*dz+kpif*dz
                          ya(ia)=u(i,j,kz+kpif)
                       else             !no zapping
@@ -351,7 +351,7 @@ contains
     dif=abs_prec(x-xa(1))
     do i=1,n
        dift=abs(x-xa(i))
-       if(dift < dif)then
+       if(dift.lt.dif)then
           ns=i
           dif=dift
        endif
@@ -366,12 +366,12 @@ contains
           hp=xa(i+m)-x
           w=c(i+1)-d(i)
           den=ho-hp
-          !         if(den == 0)read(*,*)
+          !         if(den.eq.0)read(*,*)
           den=w/den
           d(i)=hp*den
           c(i)=ho*den
        enddo
-       if (2*ns < n-m)then
+       if (2*ns.lt.n-m)then
           dy=c(ns+1)
        else
           dy=d(ns)
@@ -392,11 +392,11 @@ contains
 !
 subroutine cubsplx(u,lind)
   !
-  use param
-  use complex_geometry
-  use decomp_2d
-  use variables
-  use ibm_param
+  USE param
+  USE complex_geometry
+  USE decomp_2d
+  USE variables
+  USE ibm_param
   !
   implicit none
   !
@@ -550,11 +550,11 @@ end subroutine cubsplx
 !
 subroutine cubsply(u,lind)
   !
-  use param
-  use complex_geometry
-  use decomp_2d
-  use variables
-  use ibm_param
+  USE param
+  USE complex_geometry
+  USE decomp_2d
+  USE variables
+  USE ibm_param
   !
   implicit none
   !
@@ -713,11 +713,11 @@ end subroutine cubsply
 !
 subroutine cubsplz(u,lind)
   !
-  use param
-  use complex_geometry
-  use decomp_2d
-  use variables
-  use ibm_param
+  USE param
+  USE complex_geometry
+  USE decomp_2d
+  USE variables
+  USE ibm_param
   !
   implicit none
   !
@@ -744,28 +744,28 @@ subroutine cubsplz(u,lind)
   !
   do j=1,zsize(2)
      do i=1,zsize(1)
-        if (nobjz(i,j) /= 0)then
+        if(nobjz(i,j).ne.0)then
            ia=0
            do k=1,nobjz(i,j)          
               !  1st Boundary
               nzpif=npif
               ia=ia+1
-              if (ianal == 0) then
+              if (ianal.eq.0) then
                  xa(ia)=zi(k,i,j)
                  ana_resi=zi(k,i,j)
               else
-                 !                 call analitic_z(i,zi(k,i,j),ana_resi,j) ! Calculate the position of BC analytically
+!                 call analitic_z(i,zi(k,i,j),ana_resi,j) ! Calculate the position of BC analytically
                  xa(ia)=ana_resi
               endif  
               ya(ia)=bcimp
-              if (zi(k,i,j) > zero) then ! Immersed Object
+              if(zi(k,i,j).gt.0.)then ! Immersed Object
                  inxi=0
                  kz=zi(k,i,j)/dz+1
                  kpoli=kz+1
-                 if (nzipif(k,i,j) < npif)nzpif=nzipif(k,i,j)
+                 if(nzipif(k,i,j).lt.npif)nzpif=nzipif(k,i,j)
                  do kpif=1,nzpif
                     ia=ia+1
-                    if (izap == 1)then ! Skip First Points
+                    if(izap.eq.1)then ! Skip First Points
                        xa(ia)=(kz-1)*dz-kpif*dz
                        ya(ia)=u(i,j,kz-kpif)
                     else              ! Don't Skip any Points
@@ -777,10 +777,10 @@ subroutine cubsplz(u,lind)
                  inxi=1
                  kz=zi(k,i,j)/dz
                  kpoli=1
-                 if(nzipif(k,i,j) < npif)nzpif=nzipif(k,i,j)
+                 if(nzipif(k,i,j).lt.npif)nzpif=nzipif(k,i,j)
                  do kpif=1,nzpif
                     ia=ia+1
-                    if(izap == 1)then ! Skip First Points
+                    if(izap.eq.1)then ! Skip First Points
                        xa(ia)=(kz-1)*dz-kpif*dz
                        ya(ia)=bcimp
                     else              ! Don't Skip any Points
@@ -792,7 +792,7 @@ subroutine cubsplz(u,lind)
               !  2nd Boundary
               nzpif=npif
               ia=ia+1
-              if (ianal == 0) then
+              if (ianal.eq.0) then
                  xa(ia)=zf(k,i,j)
                  ana_resf=zf(k,i,j)
               else
@@ -800,17 +800,17 @@ subroutine cubsplz(u,lind)
                  xa(ia)=ana_resf
               endif
               ya(ia)=bcimp
-              if (zf(k,i,j) < zlz)then  ! Immersed Object
+              if(zf(k,i,j).lt.zlz)then  ! Immersed Object
                  inxf=0
                  kz=(zf(k,i,j)+dz)/dz+1
                  kpolf=kz-1
-                 if (nzfpif(k,i,j) < npif) nzpif=nzfpif(k,i,j)
+                 if(nzfpif(k,i,j).lt.npif)nzpif=nzfpif(k,i,j)
                  do kpif=1,nzpif
                     ia=ia+1
-                    if(izap == 1) then  ! Skip First Points
+                    if(izap.eq.1)then  ! Skip First Points
                        xa(ia)=(kz-1)*dz+kpif*dz
                        ya(ia)=u(i,j,kz+kpif)
-                    else                ! Don't Skip any Points
+                    else               ! Don't Skip any Points
                        xa(ia)=(kz-1)*dz+(kpif-1)*dz
                        ya(ia)=u(i,j,kz+kpif-1)
                     endif
@@ -819,10 +819,10 @@ subroutine cubsplz(u,lind)
                  inxf=1
                  kz=(zf(k,i,j)+dz)/dz+1
                  kpolf=nz
-                 if (nzfpif(k,i,j) < npif) nzpif=nzfpif(k,i,j)
+                 if(nzfpif(k,i,j).lt.npif)nzpif=nzfpif(k,i,j)
                  do kpif=1,nzpif
                     ia=ia+1
-                    if (izap == 1) then  ! Skip First Points
+                    if(izap.eq.1)then  ! Skip First Points
                        xa(ia)=(kz-1)*dz+kpif*dz
                        ya(ia)=bcimp
                     else               ! Don't Skip any Points
@@ -831,28 +831,28 @@ subroutine cubsplz(u,lind)
                     endif
                  enddo
               endif
-              !     ! Special Case
-              !     if (zi(k,i,j).eq.zf(k,i,j)) then
-              !         u(i,j,kpol)=bcimp
-              !     else
-              ! Cubic Spline Reconstruction
-              na=ia
-              do kpol=kpoli,kpolf
-                 ! Special Case
-                 if (zi(k,i,j) == zf(k,i,j)) then
-                    u(i,j,kpol)=bcimp
-                 else
-                    if ((inxf == 1).and.(inxi == 1)) then ! If the Body Extends from the Front to the Back (Special Case)
-                       u(i,j,kpol)=bcimp
-                    else
-                       xpol=dz*(kpol-1)
-                       call cubic_spline(xa,ya,na,xpol,ypol)
-                       u(i,j,kpol)=ypol
-                    endif
-                 endif
-              enddo
-              ia=0
-           !     endif
+         !     ! Special Case
+         !     if (zi(k,i,j).eq.zf(k,i,j)) then
+         !         u(i,j,kpol)=bcimp                                   
+         !     else              
+    	      ! Cubic Spline Reconstruction
+	            na=ia
+	            do kpol=kpoli,kpolf 
+                          ! Special Case
+                          if (zi(k,i,j).eq.zf(k,i,j)) then
+                                u(i,j,kpol)=bcimp
+                          else
+	                    if ((inxf.eq.1).and.(inxi.eq.1)) then ! If the Body Extends from the Front to the Back (Special Case)
+	                          u(i,j,kpol)=bcimp                            
+	                     else              
+	                          xpol=dz*(kpol-1)
+	                          call cubic_spline(xa,ya,na,xpol,ypol)
+	                          u(i,j,kpol)=ypol
+	                     endif
+                           endif
+	            enddo
+	            ia=0
+         !     endif
            enddo
         endif
      enddo
@@ -960,11 +960,11 @@ end subroutine cubic_spline
 !
 subroutine ana_y_cyl(i,y_pos,ana_res)
   !
-  use param
-  use complex_geometry
-  use decomp_2d
-  use variables
-  use ibm_param
+  USE param
+  USE complex_geometry
+  USE decomp_2d
+  USE variables
+  USE ibm_param
   !
   implicit none
   !
@@ -972,14 +972,14 @@ subroutine ana_y_cyl(i,y_pos,ana_res)
   real(mytype)                                       :: y_pos,ana_res 
   real(mytype)                                       :: cexx,ceyy
   !
-  if (t /= zero) then
+  if (t.ne.0.) then
      cexx = cex + ubcx*(t-ifirst*dt)
      ceyy = cey + ubcy*(t-ifirst*dt)
   else
      cexx = cex
      ceyy = cey
   endif
-  if (y_pos > ceyy) then     ! Impose analytical BC
+  if (y_pos.gt.ceyy) then     ! Impose analytical BC
       ana_res=ceyy + sqrt(ra**2.0-((i+ystart(1)-1-1)*dx-cexx)**2.0)
   else
       ana_res=ceyy - sqrt(ra**2.0-((i+ystart(1)-1-1)*dx-cexx)**2.0)
@@ -991,11 +991,11 @@ end subroutine ana_y_cyl
 !
 subroutine ana_x_cyl(j,x_pos,ana_res)
   !
-  use param
-  use complex_geometry
-  use decomp_2d
-  use variables
-  use ibm_param
+  USE param
+  USE complex_geometry
+  USE decomp_2d
+  USE variables
+  USE ibm_param
   !
   implicit none
   !
@@ -1003,14 +1003,14 @@ subroutine ana_x_cyl(j,x_pos,ana_res)
   real(mytype)                                       :: x_pos,ana_res 
   real(mytype)                                       :: cexx,ceyy
   !
-  if (t /= zero) then
+  if (t.ne.0.) then
      cexx = cex + ubcx*(t-ifirst*dt)
      ceyy = cey + ubcy*(t-ifirst*dt)
   else
      cexx = cex
      ceyy = cey
   endif
-  if (x_pos > cexx) then     ! Impose analytical BC
+  if (x_pos.gt.cexx) then     ! Impose analytical BC
       ana_res = cexx + sqrt(ra**2.0-(yp(j+xstart(2)-1)-ceyy)**2.0)
   else
       ana_res = cexx - sqrt(ra**2.0-(yp(j+xstart(2)-1)-ceyy)**2.0)
@@ -1019,44 +1019,44 @@ subroutine ana_x_cyl(j,x_pos,ana_res)
   return
 end subroutine ana_x_cyl
 !*******************************************************************
-subroutine analitic_x(j,x_pos,ana_res,k)
+SUBROUTINE analitic_x(j,x_pos,ana_res,k)
 
-  use param, only : itype, itype_cyl
-  use decomp_2d, only : mytype
-!  use cyl, only : geomcomplex_cyl
+  USE param, ONLY : itype, itype_cyl
+  USE decomp_2d, ONLY : mytype
+!  USE cyl, ONLY : geomcomplex_cyl
 
-  implicit none
+  IMPLICIT NONE
 
   integer                                            :: j,k
   real(mytype)                                       :: x_pos,ana_res 
 
-  if (itype == itype_cyl) then
+  IF (itype.EQ.itype_cyl) THEN
 
-     call ana_x_cyl(j,x_pos,ana_res)
+     CALL ana_x_cyl(j,x_pos,ana_res)
 
-  endif
+  ENDIF
 
-end subroutine analitic_x
+END SUBROUTINE analitic_x
 !*******************************************************************
 !*******************************************************************
-subroutine analitic_y(i,y_pos,ana_res,k)
+SUBROUTINE analitic_y(i,y_pos,ana_res,k)
 
-  use param, only : itype, itype_cyl
-  use decomp_2d, only : mytype
-!  use cyl, only : geomcomplex_cyl
+  USE param, ONLY : itype, itype_cyl
+  USE decomp_2d, ONLY : mytype
+!  USE cyl, ONLY : geomcomplex_cyl
 
-  implicit none
+  IMPLICIT NONE
 
   integer                                            :: i,k
   real(mytype)                                       :: y_pos,ana_res 
 
-  if (itype == itype_cyl) then
+  IF (itype.EQ.itype_cyl) THEN
 
-     call ana_y_cyl(i,y_pos,ana_res)
+     CALL ana_y_cyl(i,y_pos,ana_res)
 
-  endif
+  ENDIF
 
-end subroutine analitic_y
+END SUBROUTINE analitic_y
 !*******************************************************************
 !*******************************************************************
   

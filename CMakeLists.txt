@@ -16,6 +16,13 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX "${PROJECT_BINARY_DIR}/opt" CACHE PATH "..." FORCE)
 endif()
 
+# Add support for CMAKE_DEPENDENT_OPTION
+INCLUDE(CMakeDependentOption)
+INCLUDE(CMakeParseArguments)
+
+# Find the modules included with Xcompact
+#SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+
 # make sure that the default is a RELEASE
 if (NOT CMAKE_BUILD_TYPE)
   set (CMAKE_BUILD_TYPE RELEASE CACHE STRING
@@ -116,6 +123,20 @@ endif()
 set(FFT_Choice "generic" CACHE STRING "FFT for XCompact3d project (generic is the default)")
 set_property(CACHE FFT_Choice PROPERTY STRINGS generic fftw3 mkl)
 
+# Look for ADIOS2 library
+option(USE_ADIOS2 "Build XCompact with ADIOS2 library" OFF)
+if(USE_ADIOS2)
+  #find_package(ADIOS2 COMPONENTS fortran)
+  find_package(ADIOS2)
+endif()
+if(ADIOS2_FOUND)
+  message(STATUS "ADIOS INCLUDE ${ADIOS2_INCLUDE_DIRS}")
+  include_directories(${ADIOS2_INCLUDE_DIRS})
+  add_definitions("-DADIOS2")
+else(ADIOS_FOUND)
+  message(STATUS "ADIOS2 not found")
+endif()
+
 # Create a static library for the fft
 add_subdirectory(decomp2d)
 
@@ -123,7 +144,7 @@ add_subdirectory(decomp2d)
 add_subdirectory(src)
 
 # Create the Xcompact3d executable
-add_subdirectory(post)
+add_subdirectory(post_vtk)
 
 # Create an example dir with all input.i3d example files
 option(BUILD_TESTING "Build with tests" ON)
@@ -137,6 +158,15 @@ if (${BUILD_TESTING})
   add_test(NAME TGvortex COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test.i3d WORKING_DIRECTORY ${test_dir}/TGV)
   add_test(NAME Channel-Flow-X COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test_x.i3d WORKING_DIRECTORY ${test_dir}/Channel-Flow-X)
   add_test(NAME Channel-Flow-Z COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test_z.i3d WORKING_DIRECTORY ${test_dir}/Channel-Flow-Z)
-  add_test(NAME Cylinder COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test.i3d WORKING_DIRECTORY ${test_dir}/Cylinder)
+  if(NOT ${USE_ADIOS2})
+    add_test(NAME Cylinder COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test.i3d WORKING_DIRECTORY ${test_dir}/Cylinder)
+  endif()
+  add_test(NAME Lock-exchange COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test.i3d WORKING_DIRECTORY ${test_dir}/Lock-exchange)
+  add_test(NAME Mixing-layer COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test.i3d WORKING_DIRECTORY ${test_dir}/Mixing-layer)
+  add_test(NAME ABL-Convective COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_convective_test.i3d WORKING_DIRECTORY ${test_dir}/ABL-Convective)
+  add_test(NAME ABL-Neutral COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_neutral_test.i3d WORKING_DIRECTORY ${test_dir}/ABL-Neutral)
+  add_test(NAME ABL-Stable COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_stable_test.i3d WORKING_DIRECTORY ${test_dir}/ABL-Stable)
+  add_test(NAME TBL COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test.i3d WORKING_DIRECTORY ${test_dir}/TBL)
+  add_test(NAME Wind-Turbine COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test.i3d WORKING_DIRECTORY ${test_dir}/Wind-Turbine)
 endif()
 

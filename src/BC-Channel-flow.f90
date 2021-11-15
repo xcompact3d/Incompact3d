@@ -41,12 +41,6 @@ module channel
   character(len=100) :: fileformat
   character(len=1),parameter :: NL=char(10) !new line character
 
-  !probes
-  integer, save :: nprobes, ntimes1, ntimes2
-  integer, save, allocatable, dimension(:) :: rankprobes, nxprobes, nyprobes, nzprobes
-
-  real(mytype),save,allocatable,dimension(:) :: usum,vsum,wsum,uusum,uvsum,uwsum,vvsum,vwsum,wwsum
-
   PRIVATE ! All functions/subroutines private by default
   PUBLIC :: init_channel, boundary_conditions_channel, postprocess_channel, &
             visu_channel, momentum_forcing_channel, &
@@ -145,7 +139,7 @@ contains
                 if (idir_stream == 1) then
                    ux1(i,j,k)=one-y*y
                    uy1(i,j,k)=zero
-                   uz1(i,j,k)=zero
+                   uz1(i,j,k)=sin(real(i-1,mytype)*dx)+cos(real(k-1,mytype)*dz)
                 else
                    uz1(i,j,k)=one-y*y
                    uy1(i,j,k)=zero
@@ -309,20 +303,13 @@ contains
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: gx
 
     if (.not. cpg ) then ! if not constant pressure gradient
-       if (icfr == 1) then ! constant flow rate without transposition
-          if (idir_stream == 1) then
-             call channel_cfr(ux,two/three)
-          else
-             call channel_cfr(uz,two/three)
-          endif
-       else if (icfr == 2) then
-          call transpose_x_to_y(ux,gx)
-          call channel_flrt(gx,two/three)
-          call transpose_y_to_x(gx,ux)
-       end if
+       if (idir_stream == 1) then
+          call channel_cfr(ux,two/three)
+       else
+          call channel_cfr(uz,two/three)
+       endif
     end if
 
     if (iscalar /= 0) then
@@ -348,59 +335,6 @@ contains
     endif
 
   end subroutine boundary_conditions_channel
-  !############################################################################
-  !############################################################################
-  subroutine channel_flrt (ux,constant)
-
-    use decomp_2d
-    use decomp_2d_poisson
-    use variables
-    use param
-    use var
-    use MPI
-
-    implicit none
-
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux
-    real(mytype) :: constant
-
-    integer :: j,i,k,code
-    real(mytype) :: can,ut3,ut,ut4
-
-    ut3=zero
-    do k=1,ysize(3)
-       do i=1,ysize(1)
-          ut=zero
-          do j=1,ny-1
-             if (istret == 0) then
-                ut=ut+dy*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
-             else
-                ut=ut+(yp(j+1)-yp(j))*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
-             endif
-          enddo
-          ut=ut/yly
-          ut3=ut3+ut
-       enddo
-    enddo
-    ut3=ut3/(real(nx*nz,mytype))
-
-    call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-
-    can=-(constant-ut4)
-
-    if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) &
-      write(*,*) nrank,'correction to ensure constant flow rate',ut4,can
-
-    do k=1,ysize(3)
-       do i=1,ysize(1)
-          do j=2,ny-1
-             ux(i,j,k)=ux(i,j,k)-can
-          enddo
-       enddo
-    enddo
-
-    return
-  end subroutine channel_flrt
   !############################################################################
   !!
   !!  SUBROUTINE: channel_cfr
@@ -478,7 +412,6 @@ contains
     use var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
     use var, ONLY : nzmsize
     use visu, only : write_field
-    use param, only :  zpfive
     
     use ibm_param, only : ubcx,ubcy,ubcz
 
@@ -531,7 +464,7 @@ contains
 
     !Q=-0.5*(ta1**2+te1**2+di1**2)-td1*tb1-tg1*tc1-th1*tf1
     di1 = zero
-    di1(:,:,:) = - zpfive*(ta1(:,:,:)**2 + te1(:,:,:)**2 + ti1(:,:,:)**2) &
+    di1(:,:,:) = - half*(ta1(:,:,:)**2 + te1(:,:,:)**2 + ti1(:,:,:)**2) &
                  - td1(:,:,:) * tb1(:,:,:) &
                  - tg1(:,:,:) * tc1(:,:,:) &
                  - th1(:,:,:) * tf1(:,:,:)
@@ -610,98 +543,3 @@ contains
   end subroutine geomcomplex_channel
   !############################################################################
 end module channel
-
-
-! Just to store until necessary
-!       !!! CM: Use a geometrical value for urand: Compute nz_global * ny_global (assuming 10,000 * 10,000 is the max)
-!       !!! CM: and then count how many slabs we could get (split nz_global)
-!       allocate(urand(nx_global, ny_global, nz_global))
-!       ! For streamwise direction
-!       seed1 =  2345
-!       seed2 = 13456
-!       seed3 = 24567
-!       ! Global definition of the random number
-!       do k = 1, nz_global
-!          seed33 = return_30k(seed3+k) 
-!          do j = 1, ny_global
-!             seed22 = return_30k(seed2+j)
-!             do i = 1, nx_global
-!                seed11 = return_30k(seed1+i)
-!                urand(i, j, k) = r8_random(seed11, seed22, seed33)
-!             enddo
-!          enddo
-!       enddo
-!       ! apply to local variable
-!       do k = xstart(3), xend(3)
-!          zshift = k - xstart(3) + 1
-!          do j = xstart(2), xend(2)
-!             yshift = j - xstart(2) + 1
-!             do i = xstart(1), xend(1)
-!                xshift = i - xstart(1) + 1
-!                if (idir_stream == 1) then
-!                   ux1(xshift, yshift, zshift) = urand(i, j, k)
-!                else 
-!                   uz1(xshift, yshift, zshift) = urand(i, j, k)
-!                endif
-!             enddo
-!          enddo
-!       enddo
-!       ! Wall normal direction
-!       seed1 = 2 *  2345
-!       seed2 = 2 * 13456
-!       seed3 = 2 * 24567
-!       ! Global definition of the random number
-!       do k = 1, nz_global
-!          seed33 = return_30k(seed3+k) 
-!          do j = 1, ny_global
-!             seed22 = return_30k(seed2+j) 
-!             do i = 1, nx_global
-!                seed11 = return_30k(seed1+i) 
-!                urand(i, j, k) = r8_random(seed11, seed22, seed33)
-!             enddo
-!          enddo
-!       enddo
-!       ! apply to local variable
-!       do k = xstart(3), xend(3)
-!          zshift = k - xstart(3) + 1
-!          do j = xstart(2), xend(2)
-!             yshift = j - xstart(2) + 1
-!             do i = xstart(1), xend(1)
-!                xshift = i - xstart(1) + 1
-!                uy1(xshift, yshift, zshift) = urand(i, j, k)
-!             enddo
-!          enddo
-!       enddo
-!       ! Spanwise direction
-!       seed1 = 3 * 12345
-!       seed2 = 3 * 23456
-!       seed3 = 3 * 34567
-!       ! Global definition of the random number
-!       do k = 1, nz_global
-!          seed33 = return_30k(seed3+k) 
-!          do j = 1, ny_global
-!             seed22 = return_30k(seed2+k) 
-!             do i = 1, nx_global
-!                seed11 = return_30k(seed1+k) 
-!                urand(i, j, k) = r8_random(seed1, seed2, seed3)
-!             enddo
-!          enddo
-!       enddo
-!       ! apply to local variable
-!       do k = xstart(3), xend(3)
-!          zshift = k - xstart(3) + 1
-!          do j = xstart(2), xend(2)
-!             yshift = j - xstart(2) + 1
-!             do i = xstart(1), xend(1)
-!                xshift = i - xstart(1) + 1
-!                if (idir_stream == 1) then
-!                   uz1(xshift, yshift, zshift) = urand(i, j, k)
-!                else 
-!                   ux1(xshift, yshift, zshift) = urand(i, j, k)
-!                endif
-!             enddo
-!          enddo
-!       enddo
-!       ! Deallocate large array
-!       deallocate(urand)
-

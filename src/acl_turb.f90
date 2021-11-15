@@ -1,7 +1,9 @@
 module actuator_line_turbine
     
     use decomp_2d, only: mytype, nrank
-    use param, only: zero, zpone, half, one, two, onethousand
+    USE decomp_2d, only : real_type
+    use variables, only : ilist
+    use param, only: itime, zero, zpone, half, one, two, onethousand
     use dbg_schemes, only: cos_prec, sin_prec, abs_prec, exp_prec, acos_prec, sqrt_prec
     use constants
     use actuator_line_model_utils
@@ -101,31 +103,31 @@ contains
     turbine%blade(iblade)%QCy(istation)=rR(istation)*turbine%Rmax*Svec(2)!+turbine%blade(iblade)%COR(2)
     turbine%blade(iblade)%QCz(istation)=rR(istation)*turbine%Rmax*Svec(3)!+turbine%blade(iblade)%COR(3)
     if(turbine%IsCounterClockwise) then
-        turbine%blade(iblade)%tx(istation)=sin_prec(pitch(istation)*condeg)
-        turbine%blade(iblade)%ty(istation)=-cos_prec(pitch(istation)*condeg)
+        turbine%blade(iblade)%tx(istation)=sin_prec(pitch(istation)*conrad)
+        turbine%blade(iblade)%ty(istation)=-cos_prec(pitch(istation)*conrad)
         turbine%blade(iblade)%tz(istation)= zero
         turbine%blade(iblade)%C(istation)=ctoR(istation)*turbine%Rmax
         turbine%blade(iblade)%thick(istation)=thick(istation)
-        turbine%blade(iblade)%pitch(istation)=pitch(istation)*condeg
+        turbine%blade(iblade)%pitch(istation)=pitch(istation)*conrad
     elseif(turbine%IsClockwise) then
-        turbine%blade(iblade)%tx(istation)=sin_prec(pitch(istation)*condeg)
-        turbine%blade(iblade)%ty(istation)=cos_prec(pitch(istation)*condeg)
+        turbine%blade(iblade)%tx(istation)=sin_prec(pitch(istation)*conrad)
+        turbine%blade(iblade)%ty(istation)=cos_prec(pitch(istation)*conrad)
         turbine%blade(iblade)%tz(istation)= zero
         turbine%blade(iblade)%C(istation)=ctoR(istation)*turbine%Rmax
         turbine%blade(iblade)%thick(istation)=thick(istation)
-        turbine%blade(iblade)%pitch(istation)=pitch(istation)*condeg
+        turbine%blade(iblade)%pitch(istation)=pitch(istation)*conrad
         turbine%blade(iblade)%FlipN = .true.
     endif
     !### Do the blade cone angle ###
     ! Rotate coordinates (around y)
     call QuatRot(turbine%blade(iblade)%QCx(istation),turbine%blade(iblade)%QCy(istation),&
-                 turbine%blade(iblade)%QCz(istation),turbine%blade_cone_angle*condeg,&
+                 turbine%blade(iblade)%QCz(istation),turbine%blade_cone_angle*conrad,&
                  zero,one,zero,zero,zero,zero,&
                  turbine%blade(iblade)%QCx(istation),turbine%blade(iblade)%QCy(istation),&
                  turbine%blade(iblade)%QCz(istation))
     ! Rotate tangential vectors (around y)
     call QuatRot(turbine%blade(iblade)%tx(istation),turbine%blade(iblade)%ty(istation),&
-                 turbine%blade(iblade)%tz(istation),turbine%blade_cone_angle*condeg,&
+                 turbine%blade(iblade)%tz(istation),turbine%blade_cone_angle*conrad,&
                  zero,one,zero,zero,zero,zero,&
                  turbine%blade(iblade)%tx(istation),turbine%blade(iblade)%ty(istation),&
                  turbine%blade(iblade)%tz(istation))
@@ -163,22 +165,22 @@ contains
    
     ! Rotate the turbine according to the tilt and yaw angle
     ! Yaw
-    call rotate_turbine(turbine,(/zero,one,zero/),turbine%yaw_angle*condeg)
+    call rotate_turbine(turbine,(/zero,one,zero/),turbine%yaw_angle*conrad)
     ! Tilt
-    call rotate_turbine(turbine,(/zero,zero,one/),-turbine%shaft_tilt_angle*condeg)
+    call rotate_turbine(turbine,(/zero,zero,one/),-turbine%shaft_tilt_angle*conrad)
    
     ! Set the rotational axis
-    call QuatRot(turbine%RotN(1),turbine%RotN(2),turbine%RotN(3),turbine%yaw_angle*condeg,&
+    call QuatRot(turbine%RotN(1),turbine%RotN(2),turbine%RotN(3),turbine%yaw_angle*conrad,&
                  zero,one,zero,zero,zero,zero,&
                  turbine%RotN(1),turbine%RotN(2),turbine%RotN(3))
-    call QuatRot(turbine%RotN(1),turbine%RotN(2),turbine%RotN(3),-turbine%shaft_tilt_angle*condeg,&
+    call QuatRot(turbine%RotN(1),turbine%RotN(2),turbine%RotN(3),-turbine%shaft_tilt_angle*conrad,&
                  zero,zero,one,zero,zero,zero,&
                  turbine%RotN(1),turbine%RotN(2),turbine%RotN(3))
     !if(turbine%do_aeroelasticity) then
     !call actuator_line_beam_model_init(turbine%beam,turbine%blade,turbine%NBlades)
     !endif
     
-    if (nrank==0) then        
+    if (nrank==0.and.mod(itime,ilist)==0) then        
     write(6,*) 'Turbine Name : ', adjustl(turbine%name)
     write(6,*) '-------------------------------------------------------------------'
     write(6,*) 'Number of Blades : ', turbine%Nblades
@@ -211,7 +213,7 @@ contains
     turbine%Tower%tz(istation)= zero
     turbine%Tower%C(istation)=ctoR(istation)*turbine%Towerheight
     turbine%Tower%thick(istation)=thick(istation)
-    turbine%Tower%pitch(istation)=pitch(istation)*condeg
+    turbine%Tower%pitch(istation)=pitch(istation)*conrad
     enddo
     
     call make_actuatorline_geometry(turbine%tower)
@@ -319,7 +321,7 @@ contains
     turbine%CP= abs(turbine%CTR)*turbine%TSR
     
     ! PRINT ON SCREEN
-    if(nrank==0) then
+    if(nrank==0.and.mod(itime,ilist)==0) then
         write(6,*) "Turbine : ",   turbine%name
         write(6,*) "======================================="
         write(6,*) "Thrust coeff : ",   turbine%CT
@@ -626,11 +628,11 @@ contains
             !write(*,*) 'Warning: I do not own this node' 
         endif
            
-        call MPI_ALLREDUCE(Ux_part,Ux,1,MPI_REAL8,MPI_SUM, &
+        call MPI_ALLREDUCE(Ux_part,Ux,1,real_type,MPI_SUM, &
             MPI_COMM_WORLD,ierr)
-        call MPI_ALLREDUCE(Uy_part,Uy,1,MPI_REAL8,MPI_SUM, &
+        call MPI_ALLREDUCE(Uy_part,Uy,1,real_type,MPI_SUM, &
             MPI_COMM_WORLD,ierr)
-        call MPI_ALLREDUCE(Uz_part,Uz,1,MPI_REAL8,MPI_SUM, &
+        call MPI_ALLREDUCE(Uz_part,Uz,1,real_type,MPI_SUM, &
             MPI_COMM_WORLD,ierr)
         
         Turbine%Ux_upstream=Ux

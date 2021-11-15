@@ -1,4 +1,4 @@
-include_directories(${CMAKE_SOURCE_DIR}/post)
+include_directories(${CMAKE_SOURCE_DIR}/post_vtk)
 
 message(STATUS "CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
 message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")

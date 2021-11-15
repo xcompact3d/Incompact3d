@@ -17,7 +17,6 @@ contains
                                                   x,y,z, &
                                                   u000,u100,u001,u101, &
                                                   u010,u110,u011,u111)
-
         implicit none
         real(mytype),intent(in) :: x0,y0,z0,x1,y1,z1,x,y,z,u000,u100,u001,u101,u010,u110,u011,u111
         real(mytype) :: c00,c01,c10,c11,c0,c1,xd,yd,zd
@@ -120,7 +119,6 @@ contains
    end subroutine QuatRot
 
     subroutine IDW(Ncol,Xcol,Ycol,Zcol,Fxcol,Fycol,Fzcol,p,Xmesh,Ymesh,Zmesh,Fxmesh,Fymesh,Fzmesh)
-       
         implicit none
         integer, intent(in) :: Ncol
         real(mytype), dimension(Ncol),intent(in) :: Xcol,Ycol,Zcol,Fxcol,Fycol,Fzcol
@@ -134,8 +132,8 @@ contains
 
         wsum=zero
         do i=1,Ncol
-        d(i)=sqrt_prec((Xcol(i)-Xmesh)**2+(Ycol(i)-Ymesh)**2+(Zcol(i)-Zmesh)**2)
-        w(i)=one/d(i)**p
+          d(i)=sqrt_prec((Xcol(i)-Xmesh)**2+(Ycol(i)-Ymesh)**2+(Zcol(i)-Zmesh)**2)
+          w(i)=one/d(i)**p
         wsum=wsum+w(i)
         end do
 
@@ -149,36 +147,35 @@ contains
             Fymesh=zero
             Fzmesh=zero
             do i=1,Ncol
-            Fxmesh=Fxmesh+w(i)*Fxcol(i)/wsum
-            Fymesh=Fymesh+w(i)*Fycol(i)/wsum
-            Fzmesh=Fzmesh+w(i)*Fzcol(i)/wsum
+              Fxmesh=Fxmesh+w(i)*Fxcol(i)/wsum
+              Fymesh=Fymesh+w(i)*Fycol(i)/wsum
+              Fzmesh=Fzmesh+w(i)*Fzcol(i)/wsum
             enddo
         endif
 
     end subroutine IDW
 
     real(mytype) function IsoKernel(dr,epsilon_par,dim)
-       
-        use constants
 
+        use constants
         implicit none
         integer, intent(in) :: dim
         real(mytype), intent(in) :: dr, epsilon_par
         ! real(mytype), parameter :: pi=3.14159265359
 
             if(dim==2) then
-            IsoKernel = one/(epsilon_par**2*pi)*exp_prec(-(dr/epsilon_par)**2.0)
+              IsoKernel = one/(epsilon_par**2*pi)*exp_prec(-(dr/epsilon_par)**2.0)
             elseif(dim==3) then
-            IsoKernel = one/(epsilon_par**3.0*pi**1.5)*exp_prec(-(dr/epsilon_par)**2.0)
+              IsoKernel = one/(epsilon_par**3.0*pi**1.5)*exp_prec(-(dr/epsilon_par)**2.0)
             else
-            write(*,*) "1D source not implemented"
-            stop
+              write(*,*) "1D source not implemented"
+              stop
             endif
 
     end function IsoKernel
 
     real(mytype) function AnIsoKernel(dx,dy,dz,nx,ny,nz,tx,ty,tz,sx,sy,sz,ec,et,es)
-        
+
         use constants
         implicit none
         real(mytype),intent(in) :: dx,dy,dz,nx,ny,nz,tx,ty,tz,sx,sy,sz,ec,et,es
@@ -189,10 +186,10 @@ contains
         t=dx*tx+dy*ty+dz*tz ! Chordwise projection
         s=dx*sx+dy*sy+dz*sz ! Spanwise projection
 
-        if(abs(s)<=es) then
-        AnIsoKernel = exp_prec(-((n/et)**2.0+(t/ec)**2.0))/(ec*et*pi)
+        if (abs(s)<=es) then
+          AnIsoKernel = exp_prec(-((n/et)**2.0+(t/ec)**2.0))/(ec*et*pi)
         else
-        AnIsoKernel = zero
+          AnIsoKernel = zero
         endif
 
     end function AnIsoKernel

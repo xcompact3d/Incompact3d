@@ -41,7 +41,7 @@
 !=======================================================================
 
 module forces
-  use decomp_2d
+  USE decomp_2d
   implicit none
 
   integer :: nvol,iforces
@@ -55,9 +55,9 @@ contains
 
   subroutine init_forces
 
-    use decomp_2d
-    use param
-    use variables
+    USE decomp_2d
+    USE param
+    USE variables
     implicit none
 
     integer :: iv,stp1,stp2,h
@@ -179,7 +179,7 @@ contains
        call MPI_FILE_CLOSE(fh,ierror_o)
     endif
 
-    if (nrank == 0) then
+    if (nrank.eq.0) then
        if (ierror_o .ne. 0) then !Included by Felipe Schuch
           write(*,*) '==========================================================='
           write(*,*) 'Error: Impossible to read '//trim(filestart)
@@ -196,12 +196,12 @@ subroutine force(ux1,uy1,ep1)
 
   !***********************************************************************
 
-  use forces
-  use param
-  use variables
-  use decomp_2d
-  use MPI
-  use ibm_param
+  USE forces
+  USE param
+  USE variables
+  USE decomp_2d
+  USE MPI
+  USE ibm_param
 
   use var, only : ta1, tb1, tc1, td1, di1
   use var, only : ux2, uy2, ta2, tb2, tc2, td2, di2
@@ -260,7 +260,7 @@ subroutine force(ux1,uy1,ep1)
         enddo
      enddo
      return
-  elseif (itime == 2) then
+  elseif (itime.eq.2) then
      do k = 1, xsize(3)
         do j = 1, xsize(2)
            do i = 1, xsize(1)
@@ -388,7 +388,7 @@ subroutine force(ux1,uy1,ep1)
         enddo
      endif
      !BC
-     if ((jcvup(iv) >= xstart(2)).and.(jcvup(iv) <= xend(2))) then
+     if ((jcvup(iv).ge.xstart(2)).and.(jcvup(iv).le.xend(2))) then
         j=jcvup(iv)-xstart(2)+1
         do k=1,xsize(3)
            kk=xstart(3)-1+k
@@ -425,7 +425,7 @@ subroutine force(ux1,uy1,ep1)
      endif
      !AB and DC : y-pencils
      !AB
-     if ((icvlf(iv) >= ystart(1)).and.(icvlf(iv) <= yend(1))) then
+     if ((icvlf(iv).ge.ystart(1)).and.(icvlf(iv).le.yend(1))) then
         i=icvlf(iv)-ystart(1)+1
         do k=1,ysize(3)
            kk=ystart(3)-1+k
@@ -460,7 +460,7 @@ subroutine force(ux1,uy1,ep1)
         enddo
      endif
      !DC
-     if ((icvrt(iv) >= ystart(1)).and.(icvrt(iv) <= yend(1))) then
+     if ((icvrt(iv).ge.ystart(1)).and.(icvrt(iv).le.yend(1))) then
         i=icvrt(iv)-ystart(1)+1
         do k=1,ysize(3)
            kk=ystart(3)-1+k
@@ -523,12 +523,12 @@ subroutine force(ux1,uy1,ep1)
 !        open(38+(iv-1),file=filename,status='unknown',form='formatted')
 !        endif
 !     endif
-     if (nrank == 0) then
+     if (nrank .eq. 0) then
         write(38,*) t,xDrag_mean,yLift_mean
         call flush(38)
      endif
-     if (mod(itime, icheckpoint) == 0) then
-        if (nrank == 0) then
+     if (mod(itime, icheckpoint).eq.0) then
+        if (nrank .eq. 0) then
            write(filename,"('forces.dat',I7.7)") itime
            call system("cp forces.dat " //filename)
         endif

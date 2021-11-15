@@ -56,7 +56,7 @@ module variables
   integer :: nstat=1,nvisu=1,nprobe=1,nlength=1,ilist=1
 
   real(mytype),allocatable,dimension(:) :: sc,uset,cp,ri,group
-  real(mytype) :: fpi2, nu0nu, cnu
+  real(mytype) :: nu0nu, cnu
 
 #ifndef DOUBLE_PREC
   integer,parameter :: prec = 4
@@ -309,7 +309,8 @@ module param
        itype_jet = 8, &
        itype_tbl = 9, &
        itype_abl = 10, &
-       itype_uniform = 11
+       itype_uniform = 11, &
+       itype_sandbox = 12
 
   integer :: cont_phi,itr,itime,itest,iprocessing
   integer :: ifft,istret,iforc_entree,iturb
@@ -334,7 +335,7 @@ module param
   logical, save :: sync_scal_needed = .true.
 
   !! Channel flow
-  integer :: icfr, idir_stream
+  integer :: idir_stream
   logical :: cpg
   real(mytype) :: re_cent, fcpg
 
@@ -466,7 +467,7 @@ module param
   real(mytype),parameter :: fifteen=15._mytype
   real(mytype),parameter :: sixteen=16._mytype
   real(mytype),parameter :: seventeen=17._mytype
-  real(mytype),parameter :: eighteen=17._mytype
+  real(mytype),parameter :: eighteen=18._mytype
 
   real(mytype),parameter :: twenty=20._mytype
   real(mytype),parameter :: twentyone=21._mytype

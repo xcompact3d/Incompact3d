@@ -84,10 +84,10 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
 
-    if (xstart(2) == 1) then
+    if (xstart(2).eq.1) then
        j = 1
 
-       if (ncly1 == 2) then !! Set velocity BCs
+       if (ncly1.eq.2) then !! Set velocity BCs
           byx1(:,:) = zero
           byy1(:,:) = zero
           byz1(:,:) = zero
@@ -99,13 +99,13 @@ contains
           enddo
        endif
 
-       if (nclyS1 == 2) then !! Set scalar BCs
+       if (nclyS1.eq.2) then !! Set scalar BCs
           do is=1, numscalar
              do k=1,xsize(3)
                 do i=1,xsize(1)
                    !phi2(i,yend(2),k)= phi2(i,yend(2)-1,k) / (1.+uset(is)*dy*sc(is)/xnu) !Robin on top BC
 
-                   if ((uset(is) /= zero).and.&
+                   if ((uset(is).ne.zero).and.&
                         (phi1(i,j+1,k,is).gt.phi1(i,j,k,is))) then
                       phi1(i,j,k,is) = phi1(i,j,k,is) - &
                            ((uset(is)*gdt(itr))*gravy/dy)*(phi1(i,j+1,k,is)-phi1(i,j,k,is)) !Deposit on bottom BC
@@ -123,12 +123,11 @@ contains
 
   subroutine init_lockexch (rho1,ux1,uy1,uz1,ep1,phi1)
 
-    use decomp_2d
-    use decomp_2d_io
-    use variables
-    use param
-    use mpi
-    use dbg_schemes, only: exp_prec, tanh_prec
+    USE decomp_2d
+    USE decomp_2d_io
+    USE variables
+    USE param
+    USE MPI
 
     USE var, only : mu1
 
@@ -146,9 +145,9 @@ contains
           do i=1,xsize(1)
              x=real(i+xstart(1)-1-1,mytype)*dx-pfront
              do is=1,numscalar
-                phi1(i,j,k,is)=half * (one - tanh_prec((sc(is) / xnu)**(half) * x)) * cp(is)
+                phi1(i,j,k,is)=half * (one - tanh((sc(is) / xnu)**(half) * x)) * cp(is)
              enddo
-             rho1(i,j,k,1) = half * (one - tanh_prec((prandtl / xnu)**half * x)) &
+             rho1(i,j,k,1) = half * (one - tanh((prandtl / xnu)**half * x)) &
                   * (dens1 - dens2) + dens2
           enddo
        enddo
@@ -173,13 +172,15 @@ contains
        enddo
     enddo
 
-    call set_fluid_properties_lockexch(rho1, mu1)
-
+    if (ilmn) then
+       call set_fluid_properties_lockexch(rho1, mu1)
+    end if
+    
     ux1=zero; uy1=zero; uz1=zero
 
-    if (iin /= 0) then
+    if (iin.ne.0) then
        call system_clock(count=code)
-       if (iin == 2) code=0
+       if (iin.eq.2) code=0
        call random_seed(size = ii)
        call random_seed(put = code+63946*(nrank+1)*(/ (i - 1, i = 1, ii) /))
 
@@ -192,7 +193,7 @@ contains
           do j=1,xsize(2)
              do i=1,xsize(1)
                 x=real(i-1,mytype)*dx-pfront
-                um=exp_prec(-twentyfive*x*x)*init_noise
+                um=exp(-twentyfive*x*x)*init_noise
                 ux1(i,j,k)=um*(two*ux1(i,j,k)-one)
                 uy1(i,j,k)=um*(two*uy1(i,j,k)-one)
                 uz1(i,j,k)=um*(two*uz1(i,j,k)-one)
@@ -221,7 +222,7 @@ contains
           enddo
        enddo
 
-       if (ilmn.and.((Fr**2) > zero)) then
+       if (ilmn.and.((Fr**2).gt.zero)) then
           do k = 1, xsize(3)
              do j = 1, xsize(2)
                 y = (j + xstart(2) - 2) * dy
@@ -232,10 +233,10 @@ contains
           enddo
        endif
 
-       call MPI_ALLREDUCE(ek,ekg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,code)
-       call MPI_ALLREDUCE(ep,epg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(ek,ekg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(ep,epg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
-       if ((epg /= zero).and.(ekg /= zero)) then
+       if ((epg.ne.zero).and.(ekg.ne.zero)) then
           um = ekg / epg
           um = init_noise / um
           um = sqrt(um)
@@ -253,7 +254,7 @@ contains
                 enddo
              enddo
           enddo
-          call MPI_ALLREDUCE(ek,ekg,1,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,code)
+          call MPI_ALLREDUCE(ek,ekg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
           if (nrank == 0) then
              write(*,*)  "Ek / Ep: ", ekg / epg, ekg, epg
@@ -317,7 +318,7 @@ contains
        init = .TRUE.
     endif
 
-    if (mod(itime,iprocessing) /= 0) return
+    if (mod(itime,iprocessing).ne.0) return
 
     mp=zero; dms=zero; xf=zero; xf2d=zero
 
@@ -367,7 +368,7 @@ contains
        call front2d(rhom3(:,:),xf2d)
     endif
 
-    if (nrank  ==  0) then
+    if (nrank .eq. 0) then
        FS = 1+numscalar+numscalar+3+2 !Number of columns
        write(fileformat, '( "(",I4,"(E14.6),A)" )' ) FS
        FS = FS*14+1  !Line width
@@ -432,6 +433,7 @@ contains
     integer :: ijk,i,j,k,l,m,is,code
     character(len=30) :: filename
 
+    real(mytype) :: visc
     real(mytype) :: y
 
     ek=zero;ek1=zero;dek=zero;dek1=zero;ep=zero;ep1=zero;dep=zero;dep1=zero;diss1=zero
@@ -479,10 +481,15 @@ contains
     do k=1,xsize(3)
        do j=1,xsize(2)
           do i=1,xsize(1)
+             if (ilmn) then
+                visc = mu1(i, j, k)
+             else
+                visc = one
+             end if
              do m=1,3
                 do l=1,3
                    diss1(i,j,k) = diss1(i,j,k) &
-                        + (two * xnu * mu1(i, j, k)) &
+                        + (two * xnu * visc) &
                         * (half * (A(l,m,i,j,k) + A(m,l,i,j,k)))**2
                 enddo
              enddo
@@ -502,7 +509,7 @@ contains
     !    ilag=0
     ! endif
     do is=1, numscalar
-       if (ri(is)  ==  zero) cycle
+       if (ri(is) .eq. zero) cycle
        call derxxS (dphixx1,phi1(:,:,:,is),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1,zero)
 
        call transpose_x_to_y(dphixx1,dphixx2)
@@ -568,27 +575,27 @@ contains
     !    ilag=1
     ! endif
 
-    call MPI_REDUCE(ek,ek1,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,MPI_COMM_WORLD,code)
-    call MPI_REDUCE(dek,dek1,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,MPI_COMM_WORLD,code)
-    call MPI_REDUCE(ep,ep1,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,MPI_COMM_WORLD,code)
-    call MPI_REDUCE(dep,dep1,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,MPI_COMM_WORLD,code)
+    call MPI_REDUCE(ek,ek1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
+    call MPI_REDUCE(dek,dek1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
+    call MPI_REDUCE(ep,ep1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
+    call MPI_REDUCE(dep,dep1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
 
-    if (nrank  ==  0) then
+    if (nrank .eq. 0) then
        open(67,file='./out/budget',status='unknown',form='formatted',&
             access='direct',recl=71) !71=5*14+1
        write(67,"(5E14.6,A)",rec=itime/iprocessing+1) t,ek1,dek1,ep1,dep1,NL
        close(67)
     end if
 
-    if (mod(itime,ioutput) == 0) then
-       !if (save_diss == 1) then
+    if (mod(itime,ioutput).eq.0) then
+       !if (save_diss.eq.1) then
        uvisu=zero
        call fine_to_coarseV(1,diss1,uvisu)
        write(filename,"('./data/diss',I4.4)") itime/ioutput
        call decomp_2d_write_one(1,uvisu,filename,2)
        !endif
 
-       !if (save_dissm == 1) then
+       !if (save_dissm.eq.1) then
        call transpose_x_to_y (diss1,temp2)
        call transpose_y_to_z (temp2,temp3)
        call mean_plane_z(temp3,zsize(1),zsize(2),zsize(3),temp3(:,:,1))
@@ -616,7 +623,7 @@ contains
 
     dep2 = zero
     do is=1, numscalar
-       if (uset(is)  ==  zero) cycle
+       if (uset(is) .eq. zero) cycle
        call transpose_x_to_y(phi1(:,:,:,is),phi2(:,:,:,is))
 
        tempdep2=zero
@@ -675,7 +682,7 @@ contains
 
     dms=zero; dms1=zero
     do is=1, numscalar
-       if (uset(is)  ==  zero) cycle
+       if (uset(is) .eq. zero) cycle
        do k=ystart(3),yend(3)
           do i=ystart(1),yend(1)
              dms(is)=dms(is)+dep2(i,k,is)*area2(i,k)

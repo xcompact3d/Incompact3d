@@ -2,7 +2,9 @@
 module actuator_line_source
 
     use decomp_2d, only: mytype
-    use param, only: zero, half, one
+    USE decomp_2d, only : real_type
+    use variables, only : ilist
+    use param, only: itime, zero, half, one
     use dbg_schemes, only: sin_prec, sqrt_prec
     use actuator_line_model_utils
     use actuator_line_model
@@ -449,11 +451,11 @@ contains
         endif
         enddo
 
-        call MPI_ALLREDUCE(Su_part,Su,Nsource,MPI_REAL8,MPI_SUM, &
+        call MPI_ALLREDUCE(Su_part,Su,Nsource,real_type,MPI_SUM, &
             MPI_COMM_WORLD,ierr)
-        call MPI_ALLREDUCE(Sv_part,Sv,Nsource,MPI_REAL8,MPI_SUM, &
+        call MPI_ALLREDUCE(Sv_part,Sv,Nsource,real_type,MPI_SUM, &
             MPI_COMM_WORLD,ierr)
-        call MPI_ALLREDUCE(Sw_part,Sw,Nsource,MPI_REAL8,MPI_SUM, &
+        call MPI_ALLREDUCE(Sw_part,Sw,Nsource,real_type,MPI_SUM, &
             MPI_COMM_WORLD,ierr)
 
         ! Zero the Source term at each time step
@@ -468,7 +470,7 @@ contains
         !## Get Forces
         call get_forces
 
-        if(nrank==0) then
+        if(nrank==0.and.mod(itime,ilist)==0) then
             write(*,*) 'Projecting the AL Momentum Source term ... '
         endif
         t1 = MPI_WTIME()
@@ -504,10 +506,10 @@ contains
             enddo
 
         alm_proj_time=MPI_WTIME()-t1
-        call MPI_ALLREDUCE(alm_proj_time,t1,1,MPI_REAL8,MPI_SUM, &
+        call MPI_ALLREDUCE(alm_proj_time,t1,1,real_type,MPI_SUM, &
                    MPI_COMM_WORLD,ierr)
 
-        if(nrank==0) then
+        if(nrank==0.and.mod(itime,ilist)==0) then
             alm_proj_time=alm_proj_time/float(nproc)
             write(*,*) 'AL Momentum Source term projection completed in :', alm_proj_time ,'seconds'
         endif

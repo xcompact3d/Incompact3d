@@ -46,7 +46,7 @@ module dynstall_legacy
         implicit none
         type(LB_Type) :: lb
         character :: dynstallfile*80
-	    real(mytype) :: CLcritp, CLcritn, CLalpha
+        real(mytype) :: CLcritp, CLcritn, CLalpha
         NAMELIST/LBParam/CLcritp,CLcritn,CLalpha
 
         lb%StallFlag = .true.

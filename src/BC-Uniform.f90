@@ -40,11 +40,11 @@ contains
   !
   !*******************************************************************************
 
-    use decomp_2d
-    use decomp_2d_io
-    use variables
-    use param
-    use MPI
+    USE decomp_2d
+    USE decomp_2d_io
+    USE variables
+    USE param
+    USE MPI
 
     implicit none
 
@@ -60,36 +60,36 @@ contains
       phi1(:,:,:,:) = zero
     endif
 
-    if (iin /= 0) then
-       call system_clock(count=code)
-       if (iin == 2) code=0
-       call random_seed(size = ii)
-       call random_seed(put = code+63946*(nrank+1)*(/ (i - 1, i = 1, ii) /))
+    if (iin.ne.0) then
+      call system_clock(count=code)
+      if (iin.eq.2) code=0
+      call random_seed(size = ii)
+      call random_seed(put = code+63946*(nrank+1)*(/ (i - 1, i = 1, ii) /))
 
-       call random_number(ux1)
-       call random_number(uy1)
-       call random_number(uz1)
+      call random_number(ux1)
+      call random_number(uy1)
+      call random_number(uz1)
 
-       um=0.5*(u1+u2)
-       do k=1,xsize(3)
-         do j=1,xsize(2)
-           do i=1,xsize(1)
-             ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)
-             uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
-             uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
-           enddo
-         enddo
-       enddo
+      um=0.5*(u1+u2)
+      do k=1,xsize(3)
+        do j=1,xsize(2)
+          do i=1,xsize(1)
+            ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)
+            uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
+            uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
+          enddo
+        enddo
+      enddo
     endif
             
     do k=1,xsize(3)
-       do j=1,xsize(2)
-          do i=1,xsize(1)
-             ux1(i,j,k)=ux1(i,j,k)+um
-             uy1(i,j,k)=uy1(i,j,k)+zero
-             uz1(i,j,k)=uz1(i,j,k)+zero
-          enddo
-       enddo
+    do j=1,xsize(2)
+    do i=1,xsize(1)
+      ux1(i,j,k)=ux1(i,j,k)+um
+      uy1(i,j,k)=uy1(i,j,k)+zero
+      uz1(i,j,k)=uz1(i,j,k)+zero
+    enddo
+    enddo
     enddo
 
     return
@@ -112,15 +112,15 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
     if (nclx1.eq.2) then
-       if (iscalar.eq.0.or.(iscalar.eq.1.and.nclxS1.eq.2)) then
-          call inflow(ux,uy,uz,phi)
-       endif
+      if (iscalar.eq.0.or.(iscalar.eq.1.and.nclxS1.eq.2)) then
+        call inflow(ux,uy,uz,phi)
+      endif
     endif
 
     if (nclxn.eq.2) then
-       if (iscalar.eq.0.or.(iscalar.eq.1.and.nclxSn.eq.2)) then
-          call outflow(ux,uy,uz,phi)
-       endif
+      if (iscalar.eq.0.or.(iscalar.eq.1.and.nclxSn.eq.2)) then
+        call outflow(ux,uy,uz,phi)
+      endif
     endif
 
     return
@@ -148,11 +148,11 @@ contains
     
     um=0.5*(u1+u2)
     do k=1,xsize(3)
-       do j=1,xsize(2)
-          bxx1(j,k)=um
-          bxy1(j,k)=zero
-          bxz1(j,k)=zero
-       enddo
+    do j=1,xsize(2)
+      bxx1(j,k)=um
+      bxy1(j,k)=zero
+      bxz1(j,k)=zero
+    enddo
     enddo
  
     if (iin.eq.1.or.iin.eq.2) then

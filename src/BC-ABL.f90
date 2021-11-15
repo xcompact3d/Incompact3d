@@ -128,16 +128,16 @@ contains
         endif
         ! Initialize GABLS-1 case
         if (istrat==0) then
-          if (y > onehundred) then
+          if (y>onehundred) then
             phi1(:,j,:,1)=T_wall-Tstat(j,1) + (y-onehundred)*one/onehundred
           else
             phi1(:,j,:,1)=T_wall-Tstat(j,1)
           endif
         ! Initialize case from Gadde et al. (2020)
         else if (istrat==1) then
-          if (y > 1062._mytype) then
+          if (y>1062._mytype) then
             phi1(:,j,:,1)=T_wall-Tstat(j,1) + eight + (y-1062._mytype)*three/onethousand
-          else if (y > 937._mytype) then
+          else if (y>937._mytype) then
             phi1(:,j,:,1)=T_wall-Tstat(j,1) + (y-937._mytype)*eight/125._mytype
           else 
             phi1(:,j,:,1)=T_wall-Tstat(j,1)
@@ -147,8 +147,8 @@ contains
 
       ! Add random noise
       do j=1,xsize(2)
-        if (istret == 0) y=real(j + xstart(2)-1-1,mytype)*dy
-        if (istret /= 0) y=yp(j+xstart(2)-1)
+        if (istret==0) y=real(j + xstart(2)-1-1,mytype)*dy
+        if (istret/=0) y=yp(j+xstart(2)-1)
         !if (y.lt.50) then 
         !  do k=1,xsize(3)
         !  do i=1,xsize(1)
@@ -212,7 +212,7 @@ contains
     integer :: i
    
     ! BL Forcing (Pressure gradient or geostrophic wind)
-    if (iPressureGradient == 1) then
+    if (iPressureGradient==1) then
        dux1(:,:,:,1)=dux1(:,:,:,1)+ustar**2./dBL
        if (iconcprec.eq.1) then
           do i=1,xsize(1)
@@ -221,24 +221,24 @@ contains
              endif
           enddo
        endif
-    else if (iCoriolis == 1 .and. iPressureGradient == 0) then
+    else if (iCoriolis==1 .and. iPressureGradient==0) then
        dux1(:,:,:,1)=dux1(:,:,:,1)+CoriolisFreq*(-UG(3))
        duz1(:,:,:,1)=duz1(:,:,:,1)-CoriolisFreq*(-UG(1))
     endif
 
     ! Coriolis terms
-    if (iCoriolis == 1) then
+    if (iCoriolis==1) then
        dux1(:,:,:,1)=dux1(:,:,:,1)+CoriolisFreq*uz1(:,:,:)
        duz1(:,:,:,1)=duz1(:,:,:,1)-CoriolisFreq*ux1(:,:,:)
     endif
 
     ! Damping zone
-    if (idamping == 1) then
+    if (idamping==1) then
        call damping_zone(dux1,duy1,duz1,ux1,uy1,uz1)
     endif
 
-    !! Buoyancy terms
-    if (iscalar == 1.and.ibuoyancy == 1) then
+    ! Buoyancy terms
+    if (iscalar==1.and.ibuoyancy==1) then
        duy1(:,:,:,1)=duy1(:,:,:,1)+gravv*phi1(:,:,:,1)/Tref
     endif
 
@@ -261,12 +261,12 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: uy1, phi1
 
     ! Damping zone
-    if (idamping == 1) then
+    if (idamping==1) then
        call damping_zone_scalar(dphi1,phi1)
     endif
 
     ! Terms from decomposition
-    if (ibuoyancy == 1) then
+    if (ibuoyancy==1) then
        dphi1(:,:,:,1) = dphi1(:,:,:,1) + (T_wall-T_top)*uy1(:,:,:)/yly
     endif
 
@@ -296,6 +296,7 @@ contains
     real(mytype),dimension(xsize(1),xsize(3)) :: tauwallxy, tauwallzy
     real(mytype),dimension(xsize(1),xsize(3)) :: Obukhov, zeta
     integer :: i,j,k,ii,code
+    integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
     real(mytype) :: delta
     real(mytype) :: ux_HAve_local, uz_HAve_local, Phi_HAve_local
     real(mytype) :: ux_HAve, uz_HAve,S_HAve,Phi_HAve,ux12,uz12,S12,Phi12,Tstat12
@@ -304,6 +305,38 @@ contains
     real(mytype) :: Lold, OL_diff
 
     ! Filter the velocity with twice the grid scale according to Bou-Zeid et al. (2005)
+
+    if (nclx1==1.and.xend(1)==nx) then
+       xsize1=xsize(1)-1
+    else
+       xsize1=xsize(1)
+    endif
+    if (ncly1==1.and.xend(2)==ny) then
+       xsize2=xsize(2)-1
+    else
+       xsize2=xsize(2)
+    endif
+    if (nclz1==1.and.xend(3)==nz) then
+       xsize3=xsize(3)-1
+    else
+       xsize3=xsize(3)
+    endif
+    if (nclx1==1) then
+       nxc=nxm
+    else
+       nxc=nx
+    endif
+    if (ncly1==1) then
+       nyc=nym
+    else
+       nyc=ny
+    endif
+    if (nclz1==1) then
+       nzc=nzm
+    else
+       nzc=nz
+    endif
+
     call filter(zero)
     call filx(uxf1,ux,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,ubcx)
     call filx(uzf1,uz,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
@@ -333,33 +366,33 @@ contains
     Phi_HAve_local = zero
 
     ! dy to y=1/2
-    if (istret /= 0) delta=(yp(2)-yp(1))/two
-    if (istret == 0) delta=dy/two
+    if (istret/=0) delta=half*(yp(2)-yp(1))
+    if (istret==0) delta=half*dy
 
     ! Find horizontally averaged velocities at j=1.5
     if (xstart(2)==1) then
       do k=1,xsize(3)
         do i=1,xsize(1)
-           ux_HAve_local=ux_HAve_local+zpfive*(uxf1(i,1,k)+uxf1(i,2,k))
-           uz_HAve_local=uz_HAve_local+zpfive*(uzf1(i,1,k)+uzf1(i,2,k))
-           if (iscalar==1) Phi_HAve_local=Phi_HAve_local+zpfive*(phif1(i,1,k)+phif1(i,2,k))
+           ux_HAve_local=ux_HAve_local+half*(uxf1(i,1,k)+uxf1(i,2,k))
+           uz_HAve_local=uz_HAve_local+half*(uzf1(i,1,k)+uzf1(i,2,k))
+           if (iscalar==1) Phi_HAve_local=Phi_HAve_local+half*(phif1(i,1,k)+phif1(i,2,k))
         enddo
       enddo
-      ux_HAve_local=ux_HAve_local/xsize(3)/xsize(1)
-      uz_HAve_local=uz_HAve_local/xsize(3)/xsize(1)
-      Phi_HAve_local=Phi_HAve_local/xsize(3)/xsize(1)
+      ux_HAve_local=ux_HAve_local
+      uz_HAve_local=uz_HAve_local
+      Phi_HAve_local=Phi_HAve_local
     endif
 
     call MPI_ALLREDUCE(ux_HAve_local,ux_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     call MPI_ALLREDUCE(uz_HAve_local,uz_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     if (iscalar==1) call MPI_ALLREDUCE(Phi_HAve_local,Phi_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
-    ux_HAve=ux_HAve/p_col
-    uz_HAve=uz_HAve/p_col
+    ux_HAve=ux_HAve/(nxc*nzc)
+    uz_HAve=uz_HAve/(nxc*nzc)
     S_HAve=sqrt(ux_HAve**2.+uz_HAve**2.)
     if (iscalar==1) then 
-      Phi_HAve=Phi_HAve/p_col
-      if (ibuoyancy == 1) then 
+      Phi_HAve=Phi_HAve/(nxc*nzc)
+      if (ibuoyancy==1) then 
         Tstat12 =T_wall + (T_top-T_wall)*delta/yly
       else 
         Tstat12 =zero
@@ -376,7 +409,7 @@ contains
     if (iscalar==1.and.ibuoyancy == 1.and.xstart(2)==1) then 
       PsiM_HAve= zero
       PsiH_HAve= zero
-      ii       = zero
+      ii       = 0
       OL_diff  = one
       Lold     = one
       do while (OL_diff > 1.0e-14_mytype)
@@ -391,8 +424,8 @@ contains
           PsiH_HAve=-7.8_mytype*delta/L_HAve
         else if (istrat==1) then
           zeta_HAve=(one-sixteen*delta/L_HAve)**zptwofive
-          PsiM_HAve=two*log_prec(zpfive*(one+zeta_HAve))+log_prec(zpfive*(one+zeta_HAve**two))-two*atan_prec(zeta_HAve)+pi/two
-          PsiH_HAve=two*log_prec(zpfive*(one+zeta_HAve**two))
+          PsiM_HAve=two*log_prec(half*(one+zeta_HAve))+log_prec(zpfive*(one+zeta_HAve**two))-two*atan_prec(zeta_HAve)+pi/two
+          PsiH_HAve=two*log_prec(half*(one+zeta_HAve**two))
         endif
         ii      = ii + 1
         OL_diff = abs_prec((L_HAve - Lold)/Lold)
@@ -423,11 +456,11 @@ contains
            tauwallzy(i,k)=-(k_roughness/(log_prec(delta/z_zero)-PsiM_HAve))**two*uz_HAve*S_HAve
          ! Local formulation
          else
-           ux12=zpfive*(uxf1(i,1,k)+uxf1(i,2,k))
-           uz12=zpfive*(uzf1(i,1,k)+uzf1(i,2,k))
+           ux12=half*(uxf1(i,1,k)+uxf1(i,2,k))
+           uz12=half*(uzf1(i,1,k)+uzf1(i,2,k))
            S12=sqrt_prec(ux12**2.+uz12**2.)
-           if (iscalar == 1) then
-             Phi12= zpfive*(phif1(i,1,k)+ phif1(i,2,k)) + Tstat12
+           if (iscalar==1) then
+             Phi12= half*(phif1(i,1,k)+ phif1(i,2,k)) + Tstat12
              do ii=1,10
                 if (itherm==1) heatflux(i,k)=-k_roughness**two*S12*(Phi12-(T_wall+TempRate*t))/((log_prec(delta/z_zero)-PsiM(i,k))*(log_prec(delta/z_zero)-PsiH(i,k)))
                 Obukhov(i,k)=-(k_roughness*S12/(log_prec(delta/z_zero)-PsiM(i,k)))**three*Phi12/(k_roughness*gravv*heatflux(i,k))
@@ -436,8 +469,8 @@ contains
                   PsiH(i,k)=-7.8_mytype*delta/Obukhov(i,k)
                 else if (istrat==1) then
                   zeta(i,k)=(one-sixteen*delta/Obukhov(i,k))**zptwofive
-                  PsiM(i,k)=two*log_prec(zpfive*(one+zeta(i,k)))+log_prec(zpfive*(one+zeta(i,k)**2.))-two*atan_prec(zeta(i,k))+pi/two
-                  PsiH(i,k)=two*log_prec(zpfive*(one+zeta(i,k)**two))
+                  PsiM(i,k)=two*log_prec(half*(one+zeta(i,k)))+log_prec(zpfive*(one+zeta(i,k)**2.))-two*atan_prec(zeta(i,k))+pi/two
+                  PsiH(i,k)=two*log_prec(half*(one+zeta(i,k)**two))
                 endif
              enddo
            endif
@@ -446,10 +479,10 @@ contains
          endif
          ! Apply second-order upwind scheme for the near wall
          ! Below should change for non-uniform grids, same for wall_sgs_scalar
-         wallfluxx(i,1,k) = -(-zpfive*(-two*nut1(i,3,k)*sxy1(i,3,k))+&
+         wallfluxx(i,1,k) = -(-half*(-two*nut1(i,3,k)*sxy1(i,3,k))+&
                             two*(-two*nut1(i,2,k)*sxy1(i,2,k))-three/two*tauwallxy(i,k))/(two*delta)
          wallfluxy(i,1,k) = zero
-         wallfluxz(i,1,k) = -(-zpfive*(-two*nut1(i,3,k)*syz1(i,3,k))+&
+         wallfluxz(i,1,k) = -(-half*(-two*nut1(i,3,k)*syz1(i,3,k))+&
                             two*(-two*nut1(i,2,k)*syz1(i,2,k))-three/two*tauwallzy(i,k))/(two*delta)
       enddo
       enddo
@@ -471,20 +504,20 @@ contains
             Q_HAve_local=Q_HAve_local+heatflux(i,k)
           enddo
        enddo
-       PsiM_HAve_local=PsiM_HAve_local/xsize(3)/xsize(1)
-       PsiH_HAve_local=PsiH_HAve_local/xsize(3)/xsize(1)
-       L_HAve_local=L_HAve_local/xsize(3)/xsize(1)
-       Q_HAve_local=Q_HAve_local/xsize(3)/xsize(1)
+       PsiM_HAve_local=PsiM_HAve_local
+       PsiH_HAve_local=PsiH_HAve_local
+       L_HAve_local=L_HAve_local
+       Q_HAve_local=Q_HAve_local
 
        call MPI_ALLREDUCE(PsiM_HAve_local,PsiM_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        call MPI_ALLREDUCE(PsiH_HAve_local,PsiH_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        call MPI_ALLREDUCE(L_HAve_local,L_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        call MPI_ALLREDUCE(Q_HAve_local,Q_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
-       PsiM_HAve=PsiM_HAve/p_col
-       PsiH_HAve=PsiH_HAve/p_col
-       L_HAve=L_HAve/p_col
-       Q_HAve=Q_HAve/p_col
+       PsiM_HAve=PsiM_HAve/(nxc*nzc)
+       PsiH_HAve=PsiH_HAve/(nxc*nzc)
+       L_HAve=L_HAve/(nxc*nzc)
+       Q_HAve=Q_HAve/(nxc*nzc)
     endif
     
     ! Compute friction velocity u_shear and boundary layer height
@@ -492,7 +525,7 @@ contains
     if (iheight==1) call boundary_height(ux,uy,uz,dBL)
     if (iscalar==1) zL=dBL/L_HAve
 
-    if (mod(itime,100)==0.and.nrank==0) then
+    if (mod(itime,ilist)==0.and.nrank==0) then
          write(*,*)  ' '
          write(*,*)  ' ABL:'
          write(*,*)  ' Horizontally-averaged velocity at y=1/2: ', ux_HAve,uz_Have
@@ -539,11 +572,11 @@ contains
     Pr=Sc(1)
 
     if (xstart(2)==1) then
-       if (istret /= 0) delta=(yp(2)-yp(1))/two
-       if (istret == 0) delta=dy/two
+       if (istret/=0) delta=(yp(2)-yp(1))/two
+       if (istret==0) delta=dy/two
        do k=1,xsize(3)
           do i=1,xsize(1)
-             sgsphi1(i,1,k) =-(-zpfive*(-nut1(i,3,k)*dphidy1(i,3,k))/Pr+&
+             sgsphi1(i,1,k) =-(-half*(-nut1(i,3,k)*dphidy1(i,3,k))/Pr+&
                              two*(-nut1(i,2,k)*dphidy1(i,2,k))/Pr-three/two*heatflux(i,k))/(two*delta)
           enddo
        enddo
@@ -579,8 +612,8 @@ contains
         else
           ut=zero
           do j=1,ny-1
-            if (istret /= 0) ut=ut+(yp(j+1)-yp(j))*(ux(i,j+1,k)-zpfive*(ux(i,j+1,k)-ux(i,j,k)))
-            if (istret == 0) ut=ut+(yly/real(ny-1,mytype))*(ux(i,j+1,k)-zpfive*(ux(i,j+1,k)-ux(i,j,k)))
+            if (istret/=0) ut=ut+(yp(j+1)-yp(j))*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
+            if (istret==0) ut=ut+(yly/real(ny-1,mytype))*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
           enddo
           ut3=ut3+ut
         endif
@@ -596,7 +629,7 @@ contains
     !can=-(ustar/k_roughness*yly*(log(yly/z_zero)-1.)-ut4)
     can=-(ustar/k_roughness*(yly*log(dBL/z_zero)-dBL)-ut4)
 
-    if (nrank==0)  write(*,*) '# Rank ',nrank,'correction to ensure constant flow rate',ut4,can
+    if (nrank==0.and.mod(itime,ilist)==0)  write(*,*) '# Rank ',nrank,'correction to ensure constant flow rate',ut4,can
 
     do k=1,ysize(3)
       do i=1,ysize(1)
@@ -669,8 +702,8 @@ contains
     endif
 
     ! Fringe region(s) parameters
-    edl = 2./3. 
-    frl = 1./6.
+    edl = twothird 
+    frl = 1._mytype/6._mytype
     if (ishiftedper==1.and.iconcprec==0) then
       fre = xlx*edl
       npe = nx
@@ -686,30 +719,30 @@ contains
 
     ! Apply fringe region(s)
     do k=1,xsize(3)
-    do j=1,xsize(2)
-    do i=1,nfe
-      x=(i-1)*dx
-      if (x<frs) then
-        lambda=0.
-      elseif ( (x>=frs) .and. (x<(fre-frd/4.)) ) then
-        lambda=0.5*(1.-cos(4.*pi/3.*(x-frs)/frd))
-      elseif ( (x>=(fre-frd/4.)) .and. (x<fre) ) then
-        lambda=1.
-      else 
-        lambda=0.
-      endif
-      if (ishiftedper==1) then
-        ux(i+npe-nfe,j,k)=lambda*ux_s(i,j,k)+(one-lambda)*ux(i+npe-nfe,j,k)
-        uy(i+npe-nfe,j,k)=lambda*uy_s(i,j,k)+(one-lambda)*uy(i+npe-nfe,j,k)
-        uz(i+npe-nfe,j,k)=lambda*uz_s(i,j,k)+(one-lambda)*uz(i+npe-nfe,j,k)
-      endif
-      if (iconcprec==1) then
-        ux(i+nx-nfe,j,k)=lambda*ux_s(i,j,k)+(one-lambda)*ux(i+nx-nfe,j,k)
-        uy(i+nx-nfe,j,k)=lambda*uy_s(i,j,k)+(one-lambda)*uy(i+nx-nfe,j,k)
-        uz(i+nx-nfe,j,k)=lambda*uz_s(i,j,k)+(one-lambda)*uz(i+nx-nfe,j,k)
-      endif
-    enddo
-    enddo
+      do j=1,xsize(2)
+        do i=1,nfe
+          x=real(i-1,mytype)*dx
+          if (x<frs) then
+            lambda=zero
+          elseif ( (x>=frs) .and. (x<(fre-frd/four)) ) then
+            lambda=half*(1.-cos(four*pi/three*(x-frs)/frd))
+          elseif ( (x>=(fre-frd/four)) .and. (x<fre) ) then
+            lambda=one
+          else 
+            lambda=zero
+          endif
+          if (ishiftedper==1) then
+            ux(i+npe-nfe,j,k)=lambda*ux_s(i,j,k)+(one-lambda)*ux(i+npe-nfe,j,k)
+            uy(i+npe-nfe,j,k)=lambda*uy_s(i,j,k)+(one-lambda)*uy(i+npe-nfe,j,k)
+            uz(i+npe-nfe,j,k)=lambda*uz_s(i,j,k)+(one-lambda)*uz(i+npe-nfe,j,k)
+          endif
+          if (iconcprec==1) then
+            ux(i+nx-nfe,j,k)=lambda*ux_s(i,j,k)+(one-lambda)*ux(i+nx-nfe,j,k)
+            uy(i+nx-nfe,j,k)=lambda*uy_s(i,j,k)+(one-lambda)*uy(i+nx-nfe,j,k)
+            uz(i+nx-nfe,j,k)=lambda*uz_s(i,j,k)+(one-lambda)*uz(i+nx-nfe,j,k)
+          endif
+        enddo
+      enddo
     enddo
 
     return
@@ -746,12 +779,12 @@ contains
     do k=1,xsize(3)
       do j=1,xsize(2)
         do i=1,xsize(1)
-          if (istret == 0) y=real(j+xstart(2)-1-1,mytype)*dy
-          if (istret /= 0) y=yp(j+xstart(2)-1)
+          if (istret==0) y=real(j+xstart(2)-1-1,mytype)*dy
+          if (istret/=0) y=yp(j+xstart(2)-1)
           ! Damping for non-neutral ABL
-          if (ibuoyancy == 1) then
+          if (ibuoyancy==1) then
             if (y>=damp_lo) then
-              lambda=sin_prec(pi/two*(y-damp_lo)/(yly-damp_lo))**two
+              lambda=sin_prec(half*pi*(y-damp_lo)/(yly-damp_lo))**two
             else
               lambda=zero
             endif
@@ -763,7 +796,7 @@ contains
             if (y>=(dBL+half*dheight)) then
               lambda=one
             elseif (y>=(dBL-half*dheight).and.y<(dBL+half*dheight)) then
-              lambda=zpfive*(one-cos_prec(pi*(y-(dBL-half*dheight))/dheight))
+              lambda=half*(one-cos_prec(pi*(y-(dBL-half*dheight))/dheight))
             else
              lambda=zero
             endif
@@ -804,12 +837,12 @@ contains
     do k=1,xsize(3)
       do j=1,xsize(2)
         do i=1,xsize(1)
-          if (istret == 0) y=real(j+xstart(2)-1-1,mytype)*dy
-          if (istret /= 0) y=yp(j+xstart(2)-1)
-          if (y >= damp_lo) then
-             lambda=sin_prec(pi/two*(y-damp_lo)/(yly-damp_lo))**two
+          if (istret==0) y=real(j+xstart(2)-1-1,mytype)*dy
+          if (istret/=0) y=yp(j+xstart(2)-1)
+          if (y>=damp_lo) then
+            lambda=sin_prec(half*pi*(y-damp_lo)/(yly-damp_lo))**two
           else
-             lambda=zero
+            lambda=zero
           endif
           dphi1(i,j,k,1)=dphi1(i,j,k,1)-coeff*lambda*(phi1(i,j,k)-zero) !SR why -0
         enddo
@@ -861,25 +894,18 @@ contains
     txy_HAve_local=zero
     tyz_HAve_local=zero
     do j=1,xsize(2)
-       do k=1,xsize(3)
-          do i=1,xsize(1)
-            u_HAve_local(j+xstart(2)-1) = u_HAve_local(j+xstart(2)-1) + ux(i,j,k)
-            v_HAve_local(j+xstart(2)-1) = v_HAve_local(j+xstart(2)-1) + uy(i,j,k)
-            w_HAve_local(j+xstart(2)-1) = w_HAve_local(j+xstart(2)-1) + uz(i,j,k)
-            uxy_HAve_local(j+xstart(2)-1) = uxy_HAve_local(j+xstart(2)-1) + ux(i,j,k)*uy(i,j,k)
-            uyz_HAve_local(j+xstart(2)-1) = uyz_HAve_local(j+xstart(2)-1) + uy(i,j,k)*uz(i,j,k)
-            txy_HAve_local(j+xstart(2)-1) = txy_HAve_local(j+xstart(2)-1) - two*nut1(i,j,k)*sxy1(i,j,k)
-            tyz_HAve_local(j+xstart(2)-1) = tyz_HAve_local(j+xstart(2)-1) - two*nut1(i,j,k)*syz1(i,j,k)
-          enddo
-       enddo
+      do k=1,xsize(3)
+        do i=1,xsize(1)
+          u_HAve_local(j+xstart(2)-1) = u_HAve_local(j+xstart(2)-1) + ux(i,j,k)
+          v_HAve_local(j+xstart(2)-1) = v_HAve_local(j+xstart(2)-1) + uy(i,j,k)
+          w_HAve_local(j+xstart(2)-1) = w_HAve_local(j+xstart(2)-1) + uz(i,j,k)
+          uxy_HAve_local(j+xstart(2)-1) = uxy_HAve_local(j+xstart(2)-1) + ux(i,j,k)*uy(i,j,k)
+          uyz_HAve_local(j+xstart(2)-1) = uyz_HAve_local(j+xstart(2)-1) + uy(i,j,k)*uz(i,j,k)
+          txy_HAve_local(j+xstart(2)-1) = txy_HAve_local(j+xstart(2)-1) - two*nut1(i,j,k)*sxy1(i,j,k)
+          tyz_HAve_local(j+xstart(2)-1) = tyz_HAve_local(j+xstart(2)-1) - two*nut1(i,j,k)*syz1(i,j,k)
+        enddo
+      enddo
     enddo
-    u_HAve_local  =  u_HAve_local/real(xsize(3),mytype)/real(xsize(1),mytype)
-    v_HAve_local  =  v_HAve_local/real(xsize(3),mytype)/real(xsize(1),mytype)
-    w_HAve_local  =  w_HAve_local/real(xsize(3),mytype)/real(xsize(1),mytype)
-    uxy_HAve_local=uxy_HAve_local/real(xsize(3),mytype)/real(xsize(1),mytype)
-    uyz_HAve_local=uyz_HAve_local/real(xsize(3),mytype)/real(xsize(1),mytype)
-    txy_HAve_local=txy_HAve_local/real(xsize(3),mytype)/real(xsize(1),mytype)
-    tyz_HAve_local=tyz_HAve_local/real(xsize(3),mytype)/real(xsize(1),mytype)
 
     call MPI_ALLREDUCE(u_HAve_local,u_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     call MPI_ALLREDUCE(v_HAve_local,v_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
@@ -888,22 +914,22 @@ contains
     call MPI_ALLREDUCE(uyz_HAve_local,uyz_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     call MPI_ALLREDUCE(txy_HAve_local,txy_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     call MPI_ALLREDUCE(tyz_HAve_local,tyz_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    u_HAve  =  u_HAve/real(p_col,mytype)
-    v_HAve  =  v_HAve/real(p_col,mytype)
-    w_HAve  =  w_HAve/real(p_col,mytype)
-    uxy_HAve=uxy_HAve/real(p_col,mytype)
-    uyz_HAve=uyz_HAve/real(p_col,mytype)
-    txy_HAve=txy_HAve/real(p_col,mytype)
-    tyz_HAve=tyz_HAve/real(p_col,mytype)
+    u_HAve  =  u_HAve/real(nx*nz,mytype)
+    v_HAve  =  v_HAve/real(nx*nz,mytype)
+    w_HAve  =  w_HAve/real(nx*nz,mytype)
+    uxy_HAve=uxy_HAve/real(nx*nz,mytype)
+    uyz_HAve=uyz_HAve/real(nx*nz,mytype)
+    txy_HAve=txy_HAve/real(nx*nz,mytype)
+    tyz_HAve=tyz_HAve/real(nx*nz,mytype)
 
     momfl = sqrt((uxy_HAve+txy_HAve-u_HAVE*v_HAve)**two + (uyz_HAve+tyz_HAve-v_HAVE*w_HAve)**two)
     momfl(1) = u_shear**two
 
     do j=2,ny
       if (momfl(j)<=0.05_mytype*u_shear**two) then
-         if (istret == 0) then
+         if (istret==0) then
            h=real(j-1,mytype)*dy +  dy*(0.05_mytype*u_shear**two-momfl(j-1))/(momfl(j)-momfl(j-1)) 
-         else if (istret == 1) then
+         else if (istret==1) then
            h=yp(j-1) + (yp(j)-yp(j-1))*(0.05_mytype*u_shear**two-momfl(j-1))/(momfl(j)-momfl(j-1)) 
          endif
          exit
@@ -921,17 +947,17 @@ contains
   !
   !*******************************************************************************
 
-    use mpi
-    use decomp_2d
-    use decomp_2d_io
-    use var, only : umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
-    use var, only : uvisu
-    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-    use var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
-    use variables
-    use param, only: ivisu, ioutput, itime
-    use param
-    use tools
+    USE MPI
+    USE decomp_2d
+    USE decomp_2d_io
+    USE var, only : umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
+    USE var, only : uvisu
+    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+    USE variables
+    !USE param, only: ivisu, ioutput, itime
+    USE param
+    USE tools
     
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     character(len=30) :: filename
@@ -945,59 +971,57 @@ contains
       if (mod(itime,ntimesteps)==0) then
         call write_outflow(itime/ntimesteps)
       endif
-    endif
+    endif        
 
-!    if ((ivisu /= 0).and.(mod(itime,ioutput) == 0)) then
-!       !! Write vorticity as an example of post processing
-!       !x-derivatives
-!       call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
-!       call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-!       call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
-!       !y-derivatives
-!       call transpose_x_to_y(ux1,td2)
-!       call transpose_x_to_y(uy1,te2)
-!       call transpose_x_to_y(uz1,tf2)
-!       call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-!       call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
-!       call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
-!       !!z-derivatives
-!       call transpose_y_to_z(td2,td3)
-!       call transpose_y_to_z(te2,te3)
-!       call transpose_y_to_z(tf2,tf3)
-!       call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-!       call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
-!       call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
-!       !!all back to x-pencils
-!       call transpose_z_to_y(ta3,td2)
-!       call transpose_z_to_y(tb3,te2)
-!       call transpose_z_to_y(tc3,tf2)
-!       call transpose_y_to_x(td2,tg1)
-!       call transpose_y_to_x(te2,th1)
-!       call transpose_y_to_x(tf2,ti1)
-!       call transpose_y_to_x(ta2,td1)
-!       call transpose_y_to_x(tb2,te1)
-!       call transpose_y_to_x(tc2,tf1)
-!       !du/dx=ta1 du/dy=td1 and du/dz=tg1
-!       !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
-!       !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
-!
-!       ! vorticity
-!       di1(:,:,:)=sqrt((tf1(:,:,:)-th1(:,:,:))**2+(tg1(:,:,:)-tc1(:,:,:))**2+&
-!            (tb1(:,:,:)-td1(:,:,:))**2)
-!
-!       if (iibm==2) then
-!          di1(:,:,:) = (one - ep1(:,:,:)) * di1(:,:,:)
-!       endif
-!       uvisu=zero
-!       call fine_to_coarseV(1,di1,uvisu)
-!994    format('vort',I3.3)
-!       write(filename, 994) itime/ioutput
-!       call decomp_2d_write_one(1,uvisu,filename,2)
-!
+    ! Write vorticity as an example of post processing
+!    if ((ivisu/=0).and.(mod(itime,ioutput)==0)) then
+!      !x-derivatives
+!      call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0)
+!      call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+!      call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1)
+!      !y-derivatives
+!      call transpose_x_to_y(ux1,td2)
+!      call transpose_x_to_y(uy1,te2)
+!      call transpose_x_to_y(uz1,tf2)
+!      call dery (ta2,td2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+!      call dery (tb2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0)
+!      call dery (tc2,tf2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1)
+!      !!z-derivatives
+!      call transpose_y_to_z(td2,td3)
+!      call transpose_y_to_z(te2,te3)
+!      call transpose_y_to_z(tf2,tf3)
+!      call derz (ta3,td3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+!      call derz (tb3,te3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1)
+!      call derz (tc3,tf3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0)
+!      !!all back to x-pencils
+!      call transpose_z_to_y(ta3,td2)
+!      call transpose_z_to_y(tb3,te2)
+!      call transpose_z_to_y(tc3,tf2)
+!      call transpose_y_to_x(td2,tg1)
+!      call transpose_y_to_x(te2,th1)
+!      call transpose_y_to_x(tf2,ti1)
+!      call transpose_y_to_x(ta2,td1)
+!      call transpose_y_to_x(tb2,te1)
+!      call transpose_y_to_x(tc2,tf1)
+!      !du/dx=ta1 du/dy=td1 and du/dz=tg1
+!      !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
+!      !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
+!    
+!      ! vorticity
+!      di1(:,:,:)=sqrt((tf1(:,:,:)-th1(:,:,:))**2+(tg1(:,:,:)-tc1(:,:,:))**2+&
+!           (tb1(:,:,:)-td1(:,:,:))**2)
+!    
+!      if (iibm==2) then
+!        di1(:,:,:) = (one - ep1(:,:,:)) * di1(:,:,:)
+!      endif
+!      uvisu=0.
+!      call fine_to_coarseV(1,di1,uvisu)
+!994   format('./data/vort',I5.5)
+!      write(filename, 994) itime/ioutput
+!      call decomp_2d_write_one(1,uvisu,filename,2)
 !    endif
 
     return
-
   end subroutine postprocess_abl    
 
 end module abl

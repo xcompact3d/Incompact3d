@@ -23,6 +23,7 @@ add_executable(xcompact3d
                     BC-Lock-exchange.f90
                     BC-Mixing-layer.f90
                     BC-Periodic-hill.f90
+		    BC-Sandbox.f90
                     BC-TBL.f90
                     BC-TGV.f90
                     BC-Uniform.f90
@@ -58,6 +59,10 @@ target_link_libraries(xcompact3d PRIVATE decomp2d)
 if (MPI_FOUND)
   target_link_libraries(xcompact3d PRIVATE MPI::MPI_Fortran)
 endif (MPI_FOUND)
+if(ADIOS2_FOUND)
+  #target_link_libraries(xcompact3d ${ADIOS_LIBRARIES})
+  target_link_libraries(xcompact3d PRIVATE adios2::fortran_mpi)
+endif()
 
 install(TARGETS xcompact3d
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

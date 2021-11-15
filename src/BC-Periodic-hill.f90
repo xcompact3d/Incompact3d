@@ -46,7 +46,7 @@ contains
     real(mytype),dimension(ny) :: yp
 
     zeromach=one
-    do while ((one + zeromach / two)  >  one)
+    do while ((one + zeromach / two) .gt. one)
        zeromach = zeromach/two
     end do
     zeromach = ten*zeromach
@@ -55,33 +55,33 @@ contains
     dune=zero
     do i=nxi,nxf
        xm=real(i-1,mytype)*dx
-       if (xm > xlx/two) then
+       if (xm.gt.xlx/two) then
           xm = (xlx-xm)*twentyeight
        else
           xm = xm*twentyeight
        endif
-       if ((xm >= zero).and.(xm <= nine)) then
-          y_bump=min(twentyeight,twentyeight+0.006775070969851*xm**two-2.124527775800E-03*xm**three)
+       if ((xm >= zero).and.(xm<nine)) then
+          y_bump=min(twentyeight,twentyeight+0.006775070969851_mytype*xm**two-2.124527775800E-03_mytype*xm**three)
        endif
-       if ((xm >= nine).and.(xm <= fourteen)) then
-          y_bump=  2.507355893131E+01      +9.754803562315E-01*xm&
-               -1.016116352781E-01*xm**two +1.889794677828E-03*xm**three
+       if ((xm >= nine).and.(xm<fourteen)) then
+          y_bump=  2.507355893131E+01_mytype         +9.754803562315E-01_mytype*xm&
+                  -1.016116352781E-01_mytype*xm**two +1.889794677828E-03_mytype*xm**three
        endif
-       if ((xm >= fourteen).and.(xm <= twenty)) then
-          y_bump=  2.579601052357E+01      +8.206693007457E-01*xm &
-               -9.055370274339E-02*xm**two +1.626510569859E-03*xm**three
+       if ((xm >= fourteen).and.(xm<twenty)) then
+          y_bump=  2.579601052357E+01_mytype         +8.206693007457E-01_mytype*xm &
+                  -9.055370274339E-02_mytype*xm**two +1.626510569859E-03_mytype*xm**three
        endif
-       if ((xm >= twenty).and.(xm <= thirty)) then
-          y_bump=  4.046435022819E+01      -1.379581654948E+00*xm &
-               +1.945884504128E-02*xm**two -2.070318932190E-04*xm**three
+       if ((xm >= twenty).and.(xm<thirty)) then
+          y_bump= 4.046435022819E+01_mytype         -1.379581654948E+00_mytype*xm &
+                 +1.945884504128E-02_mytype*xm**two -2.070318932190E-04_mytype*xm**three
        endif
-       if ((xm >= thirty).and.(xm <= forty)) then
-          y_bump=  1.792461334664E+01      +8.743920332081E-01*xm &
-               -5.567361123058E-02*xm**two +6.277731764683E-04*xm**three
+       if ((xm >= thirty).and.(xm<forty)) then
+          y_bump= 1.792461334664E+01_mytype         +8.743920332081E-01_mytype*xm &
+                 -5.567361123058E-02_mytype*xm**two +6.277731764683E-04_mytype*xm**three
        endif
        if ((xm >= forty).and.(xm <= fiftyfour)) then
-          y_bump=max(zero,5.639011190988E+01  -2.010520359035E+00*xm &
-               +1.644919857549E-02*xm**two  +2.674976141766E-05*xm**three)
+          y_bump=max(zero,5.639011190988E+01_mytype          -2.010520359035E+00_mytype*xm &
+                         +1.644919857549E-02_mytype*xm**two  +2.674976141766E-05_mytype*xm**three)
        endif
        dune(i)=y_bump/twentyeight
     enddo
@@ -90,7 +90,7 @@ contains
        do j=nyi,nyf
           ym=yp(j)
           do i=nxi,nxf
-             if (ym-dune(i) <= zeromach) then
+             if (ym-dune(i).le.zeromach) then
                 epsi(i,j,k)=remp
              endif
           enddo
@@ -149,9 +149,9 @@ contains
 
     endif
     ux1=zero;uy1=zero;uz1=zero
-    if (iin /= 0) then
+    if (iin.ne.0) then
        call system_clock(count=code)
-       if (iin == 2) code=0
+       if (iin.eq.2) code=0
        call random_seed(size = ii)
        call random_seed(put = code+63946*(nrank+1)*(/ (i - 1, i = 1, ii) /))
 
@@ -174,8 +174,8 @@ contains
     !initial velocity profile
     do k=1,xsize(3)
        do j=1,xsize(2)
-          if (istret == 0) y=real(j+xstart(2)-1-1,mytype)*dy
-          if (istret /= 0) y=yp(j+xstart(2)-1)
+          if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy
+          if (istret.ne.0) y=yp(j+xstart(2)-1)
           if (y.lt.yly-two) then
              do i=1,xsize(1)
                 ux1(i,j,k) = zero
@@ -211,7 +211,6 @@ contains
   end subroutine init_hill
   !********************************************************************
 
-  !############################################################################
   subroutine init_post(ep1)
 
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ep1
@@ -263,7 +262,7 @@ contains
        do i=1,ysize(1)
           ut=zero
           do j=1,ny-1
-             if (istret == 0) then
+             if (istret.eq.0) then
                 ut=ut+dy*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
              else
                 ut=ut+(yp(j+1)-yp(j))*(ux(i,j+1,k)-half*(ux(i,j+1,k)-ux(i,j,k)))
