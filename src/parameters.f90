@@ -96,7 +96,7 @@ subroutine parameter(input_i3d)
        imassconserve, ibuoyancy, iPressureGradient, iCoriolis, CoriolisFreq, &
        istrat, idamping, iheight, TempRate, TempFlux, itherm, gravv, UG, T_wall, T_top, ishiftedper, iconcprec, pdl 
   NAMELIST /CASE/ tgv_twod, pfront
-  NAMELIST/ALMParam/ialmrestart,filealmrestart,iturboutput,NTurbines,TurbinesPath,NActuatorlines,ActuatorlinesPath,eps_factor,rho_air
+  NAMELIST/ALMParam/iturboutput,NTurbines,TurbinesPath,NActuatorlines,ActuatorlinesPath,eps_factor,rho_air
   NAMELIST/ADMParam/Ndiscs,ADMcoords,C_T,aind,iturboutput,rho_air
 
 #ifdef DEBG

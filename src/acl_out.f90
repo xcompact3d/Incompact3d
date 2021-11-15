@@ -80,12 +80,10 @@ contains
       implicit none
       type(TurbineType), intent(in) :: turbine
       character(len=100), intent(in) :: dir
-      character(len=22) :: Format
         
       open(2019,File=trim(dir)//'_'//trim(turbine%name)//'.stat')
       write(2019,*) 'T_ave, P_ave, Torque_ave'
-      Format='(3(E14.7,A))'
-      write(2019,Format) turbine%T_ave,',',turbine%P_ave,',',turbine%Torque_ave
+      write(2019,*) turbine%T_ave,turbine%P_ave,turbine%Torque_ave
       close(2019)
 
     end subroutine actuator_line_turbine_write_statistics
