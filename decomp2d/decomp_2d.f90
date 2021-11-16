@@ -1785,10 +1785,11 @@ contains
     integer :: ierror
 
     if (nrank==0) then
-       write(*,*) '2DECOMP&FFT ERROR - errorcode: ', errorcode
-       write(*,*) 'ERROR IN FILE ' // file
-       write(*,*) '         LINE ', line
-       write(*,*) 'ERROR MESSAGE: ' // msg
+       write(*,*) '2DECOMP&FFT / X3D ERROR'
+       write(*,*) '  errorcode:     ', errorcode
+       write(*,*) '  error in file  ' // file
+       write(*,*) '           line  ', line
+       write(*,*) '  error message: ' // msg
     end if
     call MPI_ABORT(MPI_COMM_WORLD,errorcode,ierror)
 
