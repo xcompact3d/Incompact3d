@@ -939,6 +939,8 @@ contains
 #ifdef ADIOS2
   subroutine adios2_register_variable(io, varname, ipencil, icoarse)
 
+    use, intrinsic :: iso_fortran_env, only : real32, real64
+
     implicit none
 
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
@@ -964,10 +966,10 @@ contains
        if(nrank==0) print *, "Registering variable for IO: ", varname
    
        ! Need to set the ADIOS2 data type
-       if (mytype_single == kind(0.0d0)) then
+       if (mytype_single == kind(0._real64)) then
           !! Double
           data_type = adios2_type_dp
-       else if (mytype_single == kind(0.0)) then
+       else if (mytype_single == kind(0._real32)) then
           !! Single
           data_type = adios2_type_real
        else
