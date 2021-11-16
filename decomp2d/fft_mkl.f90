@@ -295,6 +295,7 @@ module decomp_2d_fft
 
        ! ===== 1D FFTs in X =====
        allocate (wk1(ph%xsz(1),ph%xsz(2),ph%xsz(3)))
+       wk1=cmplx(0._mytype, 0._mytype, kind=mytype)
        !       if (isign==DECOMP_2D_FFT_FORWARD) then
        !          status = DftiComputeForward(c2c_x, in(:,1,1), wk1(:,1,1))
        !       else if (isign==DECOMP_2D_FFT_BACKWARD) then
@@ -304,10 +305,12 @@ module decomp_2d_fft
 
        ! ===== Swap X --> Y =====
        allocate (wk2(ph%ysz(1),ph%ysz(2),ph%ysz(3)))
+       wk2=cmplx(0._mytype, 0._mytype, kind=mytype)
        call transpose_x_to_y(wk1,wk2,ph)
 
        ! ===== 1D FFTs in Y =====
        allocate (wk2b(ph%ysz(1),ph%ysz(2),ph%ysz(3))) 
+       wk2b=cmplx(0._mytype, 0._mytype, kind=mytype)
        do k=1,ph%xsz(3) ! one Z-plane at a time
           !          if (isign==DECOMP_2D_FFT_FORWARD) then
           !             status = DftiComputeForward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
@@ -319,6 +322,7 @@ module decomp_2d_fft
 
        ! ===== Swap Y --> Z =====
        allocate (wk3(ph%zsz(1),ph%zsz(2),ph%zsz(3)))
+       wk3=cmplx(0._mytype, 0._mytype, kind=mytype)
        call transpose_y_to_z(wk2b,wk3,ph)
 
        ! ===== 1D FFTs in Z =====
@@ -335,6 +339,7 @@ module decomp_2d_fft
 
        ! ===== 1D FFTs in Z =====
        allocate (wk1(ph%zsz(1),ph%zsz(2),ph%zsz(3)))
+       wk1=cmplx(0._mytype, 0._mytype, kind=mytype)
        !       if (isign==DECOMP_2D_FFT_FORWARD) then
        !          status = DftiComputeForward(c2c_z, in(:,1,1), wk1(:,1,1))
        !       else if (isign==DECOMP_2D_FFT_BACKWARD) then
@@ -344,10 +349,12 @@ module decomp_2d_fft
 
        ! ===== Swap Z --> Y =====
        allocate (wk2(ph%ysz(1),ph%ysz(2),ph%ysz(3)))
+       wk2=cmplx(0._mytype, 0._mytype, kind=mytype)
        call transpose_z_to_y(wk1,wk2,ph)
 
        ! ===== 1D FFTs in Y =====
        allocate (wk2b(ph%ysz(1),ph%ysz(2),ph%ysz(3)))
+       wk2b=cmplx(0._mytype, 0._mytype, kind=mytype)
        do k=1,ph%xsz(3) ! one Z-plane at a time
           !          if (isign==DECOMP_2D_FFT_FORWARD) then
           !             status = DftiComputeForward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
@@ -359,6 +366,7 @@ module decomp_2d_fft
 
        ! ===== Swap Y --> X =====
        allocate (wk3(ph%xsz(1),ph%xsz(2),ph%xsz(3)))
+       wk3=cmplx(0._mytype, 0._mytype, kind=mytype)
        call transpose_y_to_x(wk2b,wk3,ph)
 
        ! ===== 1D FFTs in X =====
@@ -394,15 +402,18 @@ module decomp_2d_fft
 
        ! ===== 1D FFTs in X =====
        allocate(wk1(sp%xsz(1),sp%xsz(2),sp%xsz(3)))
+       wk1=cmplx(0._mytype, 0._mytype, kind=mytype)
        !       status = DftiComputeForward(r2c_x, in_r(:,1,1), wk1(:,1,1))       
        status = wrapper_r2c(r2c_x, in_r, wk1)
 
        ! ===== Swap X --> Y =====
        allocate (wk2(sp%ysz(1),sp%ysz(2),sp%ysz(3)))
+       wk2=cmplx(0._mytype, 0._mytype, kind=mytype)
        call transpose_x_to_y(wk1,wk2,sp)
 
        ! ===== 1D FFTs in Y =====
        allocate (wk2b(sp%ysz(1),sp%ysz(2),sp%ysz(3)))
+       wk2b=cmplx(0._mytype, 0._mytype, kind=mytype)
        do k=1,sp%ysz(3)
           !          status = DftiComputeForward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
           status = wrapper_c2c(c2c_y2, wk2(1,1,k), wk2b(1,1,k), isign)
@@ -410,6 +421,7 @@ module decomp_2d_fft
 
        ! ===== Swap Y --> Z =====
        allocate (wk3(sp%zsz(1),sp%zsz(2),sp%zsz(3)))
+       wk3=cmplx(0._mytype, 0._mytype, kind=mytype)
        call transpose_y_to_z(wk2b,wk3,sp)
 
        ! ===== 1D FFTs in Z =====
@@ -420,15 +432,18 @@ module decomp_2d_fft
 
        ! ===== 1D FFTs in Z =====
        allocate(wk1(sp%zsz(1),sp%zsz(2),sp%zsz(3)))
+       wk1=cmplx(0._mytype, 0._mytype, kind=mytype)
        !       status = DftiComputeForward(r2c_z, in_r(:,1,1), wk1(:,1,1))
        status = wrapper_r2c(r2c_z, in_r, wk1)
 
        ! ===== Swap Z --> Y =====
        allocate (wk2(sp%ysz(1),sp%ysz(2),sp%ysz(3)))
+       wk2=cmplx(0._mytype, 0._mytype, kind=mytype)
        call transpose_z_to_y(wk1,wk2,sp)
 
        ! ===== 1D FFTs in Y =====
        allocate (wk2b(sp%ysz(1),sp%ysz(2),sp%ysz(3)))
+       wk2b=cmplx(0._mytype, 0._mytype, kind=mytype)
        do k=1,sp%ysz(3)
           !          status = DftiComputeForward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
           status = wrapper_c2c(c2c_y2, wk2(1,1,k), wk2b(1,1,k), isign)
@@ -436,6 +451,7 @@ module decomp_2d_fft
 
        ! ===== Swap Y --> X =====
        allocate (wk3(sp%xsz(1),sp%xsz(2),sp%xsz(3)))
+       wk3=cmplx(0._mytype, 0._mytype, kind=mytype)
        call transpose_y_to_x(wk2b,wk3,sp)
 
        ! ===== 1D FFTs in X =====
@@ -467,15 +483,18 @@ module decomp_2d_fft
 
        ! ===== 1D FFTs in Z =====
        allocate (wk1(sp%zsz(1),sp%zsz(2),sp%zsz(3)))
+       wk1=cmplx(0._mytype, 0._mytype, kind=mytype)
        !       status = DftiComputeBackward(c2c_z2, in_c(:,1,1), wk1(:,1,1))
        status = wrapper_c2c(c2c_z2, in_c, wk1, isign)
 
        ! ===== Swap Z --> Y =====
        allocate (wk2(sp%ysz(1),sp%ysz(2),sp%ysz(3)))
+       wk2=cmplx(0._mytype, 0._mytype, kind=mytype)
        call transpose_z_to_y(wk1,wk2,sp)
 
        ! ===== 1D FFTs in Y =====
        allocate (wk2b(sp%ysz(1),sp%ysz(2),sp%ysz(3)))
+       wk2b=cmplx(0._mytype, 0._mytype, kind=mytype)
        do k=1,sp%ysz(3)
           !          status = DftiComputeBackward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
           status = wrapper_c2c(c2c_y2, wk2(1,1,k), wk2b(1,1,k), isign)
@@ -483,6 +502,7 @@ module decomp_2d_fft
 
        ! ===== Swap Y --> X =====
        allocate (wk3(sp%xsz(1),sp%xsz(2),sp%xsz(3)))
+       wk3=cmplx(0._mytype, 0._mytype, kind=mytype)
        call transpose_y_to_x(wk2b,wk3,sp)
 
        ! ===== 1D FFTs in X =====
@@ -493,15 +513,18 @@ module decomp_2d_fft
 
        ! ===== 1D FFTs in X =====
        allocate(wk1(sp%xsz(1),sp%xsz(2),sp%xsz(3)))
+       wk1=cmplx(0._mytype, 0._mytype, kind=mytype)
        !       status = DftiComputeBackward(c2c_x2, in_c(:,1,1), wk1(:,1,1))
        status = wrapper_c2c(c2c_x2, in_c, wk1, isign)
 
        ! ===== Swap X --> Y =====
        allocate (wk2(sp%ysz(1),sp%ysz(2),sp%ysz(3)))
+       wk2=cmplx(0._mytype, 0._mytype, kind=mytype)
        call transpose_x_to_y(wk1,wk2,sp)
 
        ! ===== 1D FFTs in Y =====
        allocate (wk2b(sp%ysz(1),sp%ysz(2),sp%ysz(3)))
+       wk2b=cmplx(0._mytype, 0._mytype, kind=mytype)
        do k=1,sp%ysz(3)
           !          status = DftiComputeBackward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
           status = wrapper_c2c(c2c_y2, wk2(1,1,k), wk2b(1,1,k), isign)
@@ -509,6 +532,7 @@ module decomp_2d_fft
 
        ! ===== Swap Y --> Z =====
        allocate (wk3(sp%zsz(1),sp%zsz(2),sp%zsz(3)))
+       wk3=cmplx(0._mytype, 0._mytype, kind=mytype)
        call transpose_y_to_z(wk2b,wk3,sp)
 
        ! ===== 1D FFTs in Z =====
