@@ -42,9 +42,11 @@ if (global) then
 allocate(var(decomp%xst(1):decomp%xen(1), &
 decomp%xst(2):decomp%xen(2), decomp%xst(3):decomp%xen(3)), &
 stat=alloc_stat)
+var = 0._mytype
 else
 allocate(var(decomp%xsz(1),decomp%xsz(2),decomp%xsz(3)), &
 stat=alloc_stat)
+var = 0._mytype
 end if
 
 if (alloc_stat /= 0) then
@@ -86,9 +88,11 @@ if (global) then
 allocate(var(decomp%xst(1):decomp%xen(1), &
 decomp%xst(2):decomp%xen(2), decomp%xst(3):decomp%xen(3)), &
 stat=alloc_stat)
+var = cmplx(0._mytype,0._mytype, kind=mytype)
 else
 allocate(var(decomp%xsz(1),decomp%xsz(2),decomp%xsz(3)), &
 stat=alloc_stat)
+var = cmplx(0._mytype,0._mytype, kind=mytype)
 end if
 
 if (alloc_stat /= 0) then
@@ -130,9 +134,11 @@ if (global) then
 allocate(var(decomp%yst(1):decomp%yen(1), &
 decomp%yst(2):decomp%yen(2), decomp%yst(3):decomp%yen(3)), &
 stat=alloc_stat)
+var = 0._mytype
 else
 allocate(var(decomp%ysz(1),decomp%ysz(2),decomp%ysz(3)), &
 stat=alloc_stat)
+var = 0._mytype
 end if
 
 if (alloc_stat /= 0) then
@@ -174,9 +180,11 @@ if (global) then
 allocate(var(decomp%yst(1):decomp%yen(1), &
 decomp%yst(2):decomp%yen(2), decomp%yst(3):decomp%yen(3)), &
 stat=alloc_stat)
+var = cmplx(0._mytype,0._mytype, kind=mytype)
 else
 allocate(var(decomp%ysz(1),decomp%ysz(2),decomp%ysz(3)), &
 stat=alloc_stat)
+var = cmplx(0._mytype,0._mytype, kind=mytype)
 end if
 
 if (alloc_stat /= 0) then
@@ -218,9 +226,11 @@ if (global) then
 allocate(var(decomp%zst(1):decomp%zen(1), &
 decomp%zst(2):decomp%zen(2), decomp%zst(3):decomp%zen(3)), &
 stat=alloc_stat)
+var = 0._mytype
 else
 allocate(var(decomp%zsz(1),decomp%zsz(2),decomp%zsz(3)), &
 stat=alloc_stat)
+var = 0._mytype
 end if
 
 if (alloc_stat /= 0) then
@@ -262,9 +272,11 @@ if (global) then
 allocate(var(decomp%zst(1):decomp%zen(1), &
 decomp%zst(2):decomp%zen(2), decomp%zst(3):decomp%zen(3)), &
 stat=alloc_stat)
+var = cmplx(0._mytype,0._mytype, kind=mytype)
 else
 allocate(var(decomp%zsz(1),decomp%zsz(2),decomp%zsz(3)), &
 stat=alloc_stat)
+var = cmplx(0._mytype,0._mytype, kind=mytype)
 end if
 
 if (alloc_stat /= 0) then

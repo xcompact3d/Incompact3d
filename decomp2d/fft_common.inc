@@ -123,11 +123,15 @@ call decomp_info_init(nx, ny, nz/2+1, sp)
 end if
 
 allocate(wk2_c2c(ph%ysz(1),ph%ysz(2),ph%ysz(3)), STAT=status)
+wk2_c2c = cmplx(0._mytype,0._mytype, kind=mytype)
 allocate(wk2_r2c(sp%ysz(1),sp%ysz(2),sp%ysz(3)), STAT=status)
+wk2_r2c = cmplx(0._mytype,0._mytype, kind=mytype)
 if (format==PHYSICAL_IN_X) then
 allocate(wk13(sp%xsz(1),sp%xsz(2),sp%xsz(3)), STAT=status)
+wk13 = cmplx(0._mytype,0._mytype, kind=mytype)
 else if (format==PHYSICAL_IN_Z) then
 allocate(wk13(sp%zsz(1),sp%zsz(2),sp%zsz(3)), STAT=status)
+wk13 = cmplx(0._mytype,0._mytype, kind=mytype)
 end if
 if (status /= 0) then
 errorcode = 3

@@ -86,6 +86,7 @@ end if
 
 allocate(out(xs:xe, ys:ye, zs:ze))
 !    out = -1.0_mytype ! fill the halo for debugging
+out = 0._mytype
 
 ! copy input data to output
 if (global) then
