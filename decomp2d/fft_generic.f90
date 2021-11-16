@@ -46,6 +46,8 @@ module decomp_2d_fft
     cbuf_size = max(cbuf_size, ph%zsz(3))
     allocate(buf(cbuf_size))
     allocate(scratch(cbuf_size))
+    buf=cmplx(0._mytype, 0._mytype, kind=mytype)
+    scratch=cmplx(0._mytype, 0._mytype, kind=mytype)
 
     return
   end subroutine init_fft_engine

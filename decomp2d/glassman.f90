@@ -129,7 +129,9 @@ contains
 
     maxsize = max(nx, max(ny,nz))
     allocate(buf(maxsize))
+    buf=cmplx(0._mytype, 0._mytype, kind=mytype)
     allocate(scratch(maxsize))
+    scratch=cmplx(0._mytype, 0._mytype, kind=mytype)
 
     ! ===== 1D FFTs in X =====
     do k=1,nz
