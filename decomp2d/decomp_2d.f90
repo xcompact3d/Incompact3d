@@ -529,6 +529,10 @@ contains
     ! distribute mesh points
     allocate(decomp%x1dist(0:dims(1)-1),decomp%y1dist(0:dims(1)-1), &
          decomp%y2dist(0:dims(2)-1),decomp%z2dist(0:dims(2)-1))
+    decomp%x1dist=0
+    decomp%y1dist=0
+    decomp%y2dist=0
+    decomp%z2dist=0
     call get_dist(nx,ny,nz,decomp)
 
     ! generate partition information - starting/ending index etc.
@@ -542,8 +546,16 @@ contains
     ! prepare send/receive buffer displacement and count for ALLTOALL(V)
     allocate(decomp%x1cnts(0:dims(1)-1),decomp%y1cnts(0:dims(1)-1), &
          decomp%y2cnts(0:dims(2)-1),decomp%z2cnts(0:dims(2)-1))
+    decomp%x1cnts=0
+    decomp%y1cnts=0
+    decomp%y2cnts=0
+    decomp%z2cnts=0
     allocate(decomp%x1disp(0:dims(1)-1),decomp%y1disp(0:dims(1)-1), &
          decomp%y2disp(0:dims(2)-1),decomp%z2disp(0:dims(2)-1))
+    decomp%x1disp=0
+    decomp%y1disp=0
+    decomp%y2disp=0
+    decomp%z2disp=0
     call prepare_buffer(decomp)
 
 #ifdef SHM
@@ -572,14 +584,33 @@ contains
        if (allocated(work1_c)) deallocate(work1_c)
        if (allocated(work2_c)) deallocate(work2_c)
        allocate(work1_r(buf_size), STAT=status)
+       if (status /= 0) then
+          errorcode = 2
+          call decomp_2d_abort(errorcode, &
+               'Out of memory when allocating 2DECOMP workspace')
+       end if
+       work1_r = 0._mytype
        allocate(work2_r(buf_size), STAT=status)
+       if (status /= 0) then
+          errorcode = 2
+          call decomp_2d_abort(errorcode, &
+               'Out of memory when allocating 2DECOMP workspace')
+       end if
+       work2_r = 0._mytype
        allocate(work1_c(buf_size), STAT=status)
+       if (status /= 0) then
+          errorcode = 2
+          call decomp_2d_abort(errorcode, &
+               'Out of memory when allocating 2DECOMP workspace')
+       end if
+       work1_c = cmplx(0._mytype, 0._mytype, kind = mytype)
        allocate(work2_c(buf_size), STAT=status)
        if (status /= 0) then
           errorcode = 2
           call decomp_2d_abort(errorcode, &
                'Out of memory when allocating 2DECOMP workspace')
        end if
+       work2_c = cmplx(0._mytype, 0._mytype, kind = mytype)
     end if
 
     return
@@ -821,6 +852,7 @@ contains
 
     if (ipencil==1) then
        allocate(wk(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+       wk=0._mytype
        allocate(wk2(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)))
        wk2=var_fine
        if (coarse_mesh_starts_from_1) then
@@ -843,6 +875,7 @@ contains
        var_coarse=wk
     else if (ipencil==2) then
        allocate(wk(ystS(1):yenS(1),ystS(2):yenS(2),ystS(3):yenS(3)))
+       wk=0._mytype
        allocate(wk2(ystart(1):yend(1),ystart(2):yend(2),ystart(3):yend(3)))
        wk2=var_fine
        if (coarse_mesh_starts_from_1) then
@@ -865,6 +898,7 @@ contains
        var_coarse=wk
     else if (ipencil==3) then
        allocate(wk(zstS(1):zenS(1),zstS(2):zenS(2),zstS(3):zenS(3)))
+       wk=0._mytype
        allocate(wk2(zstart(1):zend(1),zstart(2):zend(2),zstart(3):zend(3)))
        wk2=var_fine
        if (coarse_mesh_starts_from_1) then
@@ -906,6 +940,7 @@ contains
 
     if (ipencil==1) then
        allocate(wk(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
+       wk=0._mytype
        allocate(wk2(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)))
        wk2=var_fine
        if (coarse_mesh_starts_from_1) then
@@ -928,6 +963,7 @@ contains
        var_coarse=wk
     else if (ipencil==2) then
        allocate(wk(ystV(1):yenV(1),ystV(2):yenV(2),ystV(3):yenV(3)))
+       wk=0._mytype
        allocate(wk2(ystart(1):yend(1),ystart(2):yend(2),ystart(3):yend(3)))
        wk2=var_fine
        if (coarse_mesh_starts_from_1) then
@@ -950,6 +986,7 @@ contains
        var_coarse=wk
     else if (ipencil==3) then
        allocate(wk(zstV(1):zenV(1),zstV(2):zenV(2),zstV(3):zenV(3)))
+       wk=0._mytype
        allocate(wk2(zstart(1):zend(1),zstart(2):zend(2),zstart(3):zend(3)))
        wk2=var_fine
        if (coarse_mesh_starts_from_1) then
@@ -991,6 +1028,7 @@ contains
 
     if (ipencil==1) then
        allocate(wk(xstP(1):xenP(1),xstP(2):xenP(2),xstP(3):xenP(3)))
+       wk=0._mytype
        allocate(wk2(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)))
        wk2=var_fine
        if (coarse_mesh_starts_from_1) then
@@ -1013,6 +1051,7 @@ contains
        var_coarse=wk
     else if (ipencil==2) then
        allocate(wk(ystP(1):yenP(1),ystP(2):yenP(2),ystP(3):yenP(3)))
+       wk=0._mytype
        allocate(wk2(ystart(1):yend(1),ystart(2):yend(2),ystart(3):yend(3)))
        wk2=var_fine
        if (coarse_mesh_starts_from_1) then
@@ -1035,6 +1074,7 @@ contains
        var_coarse=wk
     else if (ipencil==3) then
        allocate(wk(zstP(1):zenP(1),zstP(2):zenP(2),zstP(3):zenP(3)))
+       wk=0._mytype
        allocate(wk2(zstart(1):zend(1),zstart(2):zend(2),zstart(3):zend(3)))
        wk2=var_fine
        if (coarse_mesh_starts_from_1) then
@@ -1103,8 +1143,11 @@ contains
           lsize(i)  = gsize
        elseif (pdim(i) == 2) then    ! distribute across dims(1)
           allocate(st(0:dims(1)-1))
+          st=0
           allocate(en(0:dims(1)-1))
+          en=0
           allocate(sz(0:dims(1)-1))
+          sz=0
           call distribute(gsize,dims(1),st,en,sz)
           lstart(i) = st(coord(1))
           lend(i)   = en(coord(1))
@@ -1112,8 +1155,11 @@ contains
           deallocate(st,en,sz)
        elseif (pdim(i) == 3) then    ! distribute across dims(2)
           allocate(st(0:dims(2)-1))
+          st=0
           allocate(en(0:dims(2)-1))
+          en=0
           allocate(sz(0:dims(2)-1))
+          sz=0
           call distribute(gsize,dims(2),st,en,sz)
           lstart(i) = st(coord(2))
           lend(i)   = en(coord(2))
@@ -1176,13 +1222,17 @@ contains
     integer, allocatable, dimension(:) :: st,en
 
     allocate(st(0:dims(1)-1))
+    st=0
     allocate(en(0:dims(1)-1))
+    en=0
     call distribute(nx,dims(1),st,en,decomp%x1dist)
     call distribute(ny,dims(1),st,en,decomp%y1dist)
     deallocate(st,en)
 
     allocate(st(0:dims(2)-1))
+    st=0
     allocate(en(0:dims(2)-1))
+    en=0
     call distribute(ny,dims(2),st,en,decomp%y2dist)
     call distribute(nz,dims(2),st,en,decomp%z2dist)
     deallocate(st,en)
@@ -1338,6 +1388,7 @@ contains
     ALLOCATE(KTBLALL(C%MAXCORE,C%NSMP))
     ! - set up smp-node/core to node_me lookup table
     KTBL = 0
+    KTBLALL = 0
     KTBL(C%CORE_ME,C%SMP_ME) = C%NODE_ME + 1
     CALL MPI_ALLREDUCE(KTBL,KTBLALL,C%NSMP*C%MAXCORE,MPI_INTEGER, &
          MPI_SUM,MPI_COMM,ierror)
@@ -1611,6 +1662,7 @@ contains
 
     i = int(sqrt(real(iproc))) + 10  ! enough space to save all factors 
     allocate(factors(i))
+    factors=0
     call findfactor(iproc, factors, nfact)
     if (nrank==0) write(*,*) 'factors: ', (factors(i), i=1,nfact)
 
@@ -1643,8 +1695,11 @@ contains
 
           ! arrays for X,Y and Z-pencils
           allocate(u1(decomp%xsz(1),decomp%xsz(2),decomp%xsz(3)))
+          u1=0._mytype
           allocate(u2(decomp%ysz(1),decomp%ysz(2),decomp%ysz(3)))
+          u2=0._mytype
           allocate(u3(decomp%zsz(1),decomp%zsz(2),decomp%zsz(3)))
+          u3=0._mytype
 
           ! timing the transposition routines
           t1 = MPI_WTIME()
