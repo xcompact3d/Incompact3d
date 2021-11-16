@@ -24,17 +24,20 @@ end if
 
 if (iplane==1) then
 allocate(wk(decomp%xsz(1),decomp%xsz(2),decomp%xsz(3)))
+wk = 0._mytype
 if (ipencil==1) then
 wk = var
 else if (ipencil==2) then
 call transpose_y_to_x(var,wk,decomp)
 else if (ipencil==3) then
 allocate(wk2(decomp%ysz(1),decomp%ysz(2),decomp%ysz(3)))
+wk2 = 0._mytype
 call transpose_z_to_y(var,wk2,decomp)
 call transpose_y_to_x(wk2,wk,decomp)
 deallocate(wk2)
 end if
 allocate(wk2d(1,decomp%xsz(2),decomp%xsz(3)))
+wk2d = 0._mytype
 if (n.ge.1) then
   do k=1,decomp%xsz(3)
   do j=1,decomp%xsz(2)
@@ -60,6 +63,7 @@ starts(3) = decomp%xst(3)-1
 
 else if (iplane==2) then
 allocate(wk(decomp%ysz(1),decomp%ysz(2),decomp%ysz(3)))
+wk = 0._mytype
 if (ipencil==1) then
 call transpose_x_to_y(var,wk,decomp)
 else if (ipencil==2) then
@@ -68,6 +72,7 @@ else if (ipencil==3) then
 call transpose_z_to_y(var,wk,decomp)
 end if
 allocate(wk2d(decomp%ysz(1),1,decomp%ysz(3)))
+wk2d = 0._mytype
 if (n.ge.1) then
   do k=1,decomp%ysz(3)
   do i=1,decomp%ysz(1)
@@ -93,8 +98,10 @@ starts(3) = decomp%yst(3)-1
 
 else if (iplane==3) then
 allocate(wk(decomp%zsz(1),decomp%zsz(2),decomp%zsz(3)))
+wk = 0._mytype
 if (ipencil==1) then
 allocate(wk2(decomp%ysz(1),decomp%ysz(2),decomp%ysz(3)))
+wk2 = 0._mytype
 call transpose_x_to_y(var,wk2,decomp)
 call transpose_y_to_z(wk2,wk,decomp)
 deallocate(wk2)
@@ -104,6 +111,7 @@ else if (ipencil==3) then
 wk = var
 end if
 allocate(wk2d(decomp%zsz(1),decomp%zsz(2),1))
+wk2d = 0._mytype
 if (n.ge.1) then
   do j=1,decomp%zsz(2)
   do i=1,decomp%zsz(1) 

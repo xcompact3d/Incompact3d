@@ -135,6 +135,7 @@ if (color==1) then ! only ranks in this group do IO collectively
    ! needs a copy of original array in global coordinate 
    if (ipencil==1) then
       allocate(wk(xst(1):xen(1),xst(2):xen(2),xst(3):xen(3)))
+      wk = 0._mytype
       allocate(wk2(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)))
       wk2=var
       if (from1) then
@@ -156,6 +157,7 @@ if (color==1) then ! only ranks in this group do IO collectively
       end if
    else if (ipencil==2) then
       allocate(wk(yst(1):yen(1),yst(2):yen(2),yst(3):yen(3)))
+      wk = 0._mytype
       allocate(wk2(ystart(1):yend(1),ystart(2):yend(2),ystart(3):yend(3)))
       wk2=var
       if (from1) then
@@ -177,6 +179,7 @@ if (color==1) then ! only ranks in this group do IO collectively
       end if
    else if (ipencil==3) then
       allocate(wk(zst(1):zen(1),zst(2):zen(2),zst(3):zen(3)))
+      wk = 0._mytype
       allocate(wk2(zstart(1):zend(1),zstart(2):zend(2),zstart(3):zend(3)))
       wk2=var
       if (from1) then

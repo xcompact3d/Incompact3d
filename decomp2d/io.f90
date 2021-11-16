@@ -172,6 +172,7 @@ contains
 
     data_type = real_type_single
     allocate (varsingle(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
+    varsingle=0._mytype_single
 
     if (present(opt_decomp)) then
        decomp = opt_decomp
@@ -1147,6 +1148,7 @@ contains
           end if
 
           allocate(wk(i1:i2, j1:j2, k1:k2))
+          wk=0._mytype
           allocate(wk2(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)))
           wk2 = var
           do k=k1,k2
