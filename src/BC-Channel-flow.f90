@@ -103,8 +103,9 @@ contains
     endif
 
     if (iscalar==1) then
-       if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) &
+       if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) then
           write(*,*) 'Imposing linear temperature profile'
+       end if
        do k=1,xsize(3)
           do j=1,xsize(2)
              if (istret==0) y=real(j+xstart(2)-2,mytype)*dy
