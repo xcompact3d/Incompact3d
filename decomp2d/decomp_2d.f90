@@ -1648,7 +1648,8 @@ contains
 
     integer, allocatable, dimension(:) :: factors
     double precision :: t1, t2, best_time
-    integer :: nfact, i, row, col, ierror, errorcode
+    integer :: nfact, i, ierror, errorcode
+    integer :: best_ind
 
     real(mytype), allocatable, dimension(:,:,:) :: u1, u2, u3
 
@@ -1656,7 +1657,7 @@ contains
 
     if (nrank==0) write(*,*) 'In auto-tuning mode......'
 
-    best_time = huge(t1)
+    !best_time = huge(t1)
     best_p_row = -1
     best_p_col = -1
 
@@ -1666,70 +1667,23 @@ contains
     call findfactor(iproc, factors, nfact)
     if (nrank==0) write(*,*) 'factors: ', (factors(i), i=1,nfact)
 
-    do i=1, nfact
+    ! Sylvain decomp
+    !col=factors(1)
+    !do i=1, nfact-1
+    !   if (col.ge.sqrt(real(iproc))) then
+    !      exit
+    !   else
+    !      col=factors(i+1)
+    !   endif
+    !enddo
 
-       row = factors(i)
-       col = iproc / row
+    ! Stefano decomp
+    best_ind = nfact/2+1
 
-       ! enforce the limitation of 2D decomposition
-       if (min(nx_global,ny_global)>=row .and. &
-            min(ny_global,nz_global)>=col) then
-
-          ! 2D Catersian topology
-          dims(1) = row
-          dims(2) = col
-          periodic(1) = .false.
-          periodic(2) = .false.
-          call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
-               .false.,DECOMP_2D_COMM_CART_X, ierror)
-          call MPI_CART_COORDS(DECOMP_2D_COMM_CART_X,nrank,2,coord,ierror)
-
-          ! communicators defining sub-groups for ALLTOALL(V)
-          call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.true.,.false./), &
-               DECOMP_2D_COMM_COL,ierror)
-          call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.false.,.true./), &
-               DECOMP_2D_COMM_ROW,ierror)
-
-          ! generate 2D decomposition information for this row*col
-          call decomp_info_init(nx_global,ny_global,nz_global,decomp)
-
-          ! arrays for X,Y and Z-pencils
-          allocate(u1(decomp%xsz(1),decomp%xsz(2),decomp%xsz(3)))
-          u1=0._mytype
-          allocate(u2(decomp%ysz(1),decomp%ysz(2),decomp%ysz(3)))
-          u2=0._mytype
-          allocate(u3(decomp%zsz(1),decomp%zsz(2),decomp%zsz(3)))
-          u3=0._mytype
-
-          ! timing the transposition routines
-          t1 = MPI_WTIME()
-          call transpose_x_to_y(u1,u2,decomp)
-          call transpose_y_to_z(u2,u3,decomp)
-          call transpose_z_to_y(u3,u2,decomp)
-          call transpose_y_to_x(u2,u1,decomp)
-          t2 = MPI_WTIME() - t1
-
-          deallocate(u1,u2,u3)
-          call decomp_info_finalize(decomp)
-
-          call MPI_ALLREDUCE(t2,t1,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
-               MPI_COMM_WORLD,ierror)
-          t1 = t1 / dble(nproc)
-
-          if (nrank==0) then
-             write(*,*) 'processor grid', row, ' by ', col, ' time=', t1
-          end if
-
-          if (best_time > t1) then
-             best_time = t1
-             best_p_row = row
-             best_p_col = col
-          end if
-
-       end if
-
-    end do ! loop through processer grid
-
+    ! 
+    best_p_col = factors(best_ind)
+    best_p_row = iproc/best_p_col
+    !if (nrank==0) write(*,*) 'P_RoW x P_CoL', best_p_row, best_p_col,nproc
     deallocate(factors)
 
     if (best_p_row/=-1) then
