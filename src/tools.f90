@@ -491,6 +491,7 @@ contains
     use decomp_2d, only : mytype, phG
     use decomp_2d_io, only : decomp_2d_register_variable, decomp_2d_init_io
     use variables, only : numscalar
+    use param, only : ilmn, nrhotime, ntime
     use var, only : itimescheme, iibm
     
     implicit none
@@ -538,6 +539,17 @@ contains
     if (iibm .ne. 0) then
        call decomp_2d_register_variable(io_restart, "ep", 1, 0, 0, mytype)
     endif
+
+    if (ilmn) then
+       do is = 1, nrhotime
+          write(varname, *) "rho-", is
+          call decomp_2d_register_variable(io_restart, varname, 1, 0, 0, mytype)
+       end do
+       do is = 1, ntime
+          write(varname, *) "drho-", is
+          call decomp_2d_register_variable(io_restart, varname, 1, 0, 0, mytype)
+       end do
+    end if
     
   end subroutine init_restart_adios2
   !############################################################################
