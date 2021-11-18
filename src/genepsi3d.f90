@@ -110,8 +110,9 @@ contains
 !############################################################################
   subroutine genepsi3d(ep1)
 
-    USE variables, only : nx,ny,nz,nxm,nym,nzm,yp
+    USE variables, only : nx,ny,nz,nxm,nym,nzm,yp, ilist
     USE param, only : xlx,yly,zlz,dx,dy,dz,izap,npif,nclx,ncly,nclz,istret,itype,itype_sandbox
+    use param, only : itime
     USE complex_geometry
     use decomp_2d
 
@@ -131,7 +132,7 @@ contains
     logical :: dir_exists
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
     !
-    if (nrank==0) then
+    if (nrank==0.and.mod(itime,ilist)==0) then
       write(*,*)'==========================================================='
       write(*,*)'Generating the geometry!'
     end if

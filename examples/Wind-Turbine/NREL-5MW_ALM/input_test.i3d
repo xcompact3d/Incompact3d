@@ -150,8 +150,6 @@ eps_factor=2.0        ! Smoothing parameter factor
 Nturbines=1           ! Number of Turbines
 TurbinesPath='input_test.turb' ! file containing turbine information
 rho_air=1.2           ! density of air
-ialmrestart=0         ! restarting ALM
-filealmrestart='./'   ! restarting ALM
 
 /End
 
