@@ -34,11 +34,57 @@ module stats
 
   implicit none
 
+  character(len=*), parameter :: io_statistics = "statistics-io", &
+       stat_dir = "statistics"
+  
   private
   public overall_statistic
 
 contains
 
+  subroutine init_statistic_adios2
+
+    use decomp_2d, only : mytype
+    use decomp_2d_io, only : decomp_2d_register_variable, decomp_2d_init_io
+
+    use var, only : numscalar
+    
+    implicit none
+
+    integer :: ierror
+    character(len=30) :: varname
+    integer :: is
+    logical, save :: initialised = .false.
+
+    if (.not. initialised) then
+       call decomp_2d_init_io(io_statistics)
+    
+       call decomp_2d_register_variable(io_statistics, "umean", 1, 1, 0, mytype)
+       call decomp_2d_register_variable(io_statistics, "vmean", 1, 1, 0, mytype)
+       call decomp_2d_register_variable(io_statistics, "wmean", 1, 1, 0, mytype)
+       
+       call decomp_2d_register_variable(io_statistics, "pmean", 1, 1, 0, mytype)
+       
+       call decomp_2d_register_variable(io_statistics, "uumean", 1, 1, 0, mytype)
+       call decomp_2d_register_variable(io_statistics, "vvmean", 1, 1, 0, mytype)
+       call decomp_2d_register_variable(io_statistics, "wwmean", 1, 1, 0, mytype)
+
+       call decomp_2d_register_variable(io_statistics, "uvmean", 1, 1, 0, mytype)
+       call decomp_2d_register_variable(io_statistics, "uwmean", 1, 1, 0, mytype)
+       call decomp_2d_register_variable(io_statistics, "vwmean", 1, 1, 0, mytype)
+
+       do is=1, numscalar
+          write(varname,"('phi',I2.2)") is
+          call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
+          write(varname,"('phiphi',I2.2)") is
+          call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
+       enddo
+
+       initialised = .true.
+    endif
+       
+  end subroutine init_statistic_adios2
+  
   !
   ! Initialize to zero all statistics
   !
@@ -72,6 +118,8 @@ contains
       phiphimean = zero
     endif
 
+    call init_statistic_adios2
+
   end subroutine init_statistic
 
   !
@@ -90,7 +138,10 @@ contains
        call init_statistic()
        initstat = ifirst
        return
+    else
+       call init_statistic_adios2
     endif
+
 
     ! Temporary array
     tmean = zero
@@ -100,6 +151,23 @@ contains
 
   end subroutine restart_statistic
 
+  function gen_statname(stat) result(newname)
+
+    use param, only : itime
+
+    implicit none
+    
+    character(len=*), intent(in) :: stat
+    character(len=30) :: newname
+    
+#ifndef ADIOS2
+    write(newname, "(A,'.dat',I7.7)") stat, itime
+#else
+    write(newname, *) stat
+#endif
+    
+  end function gen_statname
+
   !
   ! Statistics: perform all IO
   !
@@ -108,6 +176,8 @@ contains
     use param, only : iscalar, itime
     use variables, only : numscalar
     use decomp_2d, only : nrank
+    use decomp_2d_io, only : decomp_2d_write_mode, decomp_2d_read_mode, &
+         decomp_2d_open_io, decomp_2d_close_io, decomp_2d_start_io, decomp_2d_end_io
     use var, only : pmean
     use var, only : umean, uumean
     use var, only : vmean, vvmean
@@ -124,6 +194,9 @@ contains
     ! Local variables
     integer :: is, it
     character(len=30) :: filename
+    integer :: io_mode
+    integer :: ierror
+    
 
     ! File ID to read or write
     if (flag_read) then
@@ -141,38 +214,42 @@ contains
       endif
     endif
 
-    write(filename,"('pmean.dat',I7.7)") it
-    call read_or_write_one_stat(flag_read, filename, pmean)
-    write(filename,"('umean.dat',I7.7)") it
-    call read_or_write_one_stat(flag_read, filename, umean)
-    write(filename,"('vmean.dat',I7.7)") it
-    call read_or_write_one_stat(flag_read, filename, vmean)
-    write(filename,"('wmean.dat',I7.7)") it
-    call read_or_write_one_stat(flag_read, filename, wmean)
+    if (flag_read) then
+       io_mode = decomp_2d_read_mode
+    else
+       io_mode = decomp_2d_write_mode
+    endif
+#ifdef ADIOS2
+    call decomp_2d_open_io(io_statistics, stat_dir, io_mode)
+    call decomp_2d_start_io(io_statistics, stat_dir)
+#endif
+    
+    call read_or_write_one_stat(flag_read, gen_statname("pmean"), pmean)
+    call read_or_write_one_stat(flag_read, gen_statname("umean"), umean)
+    call read_or_write_one_stat(flag_read, gen_statname("vmean"), vmean)
+    call read_or_write_one_stat(flag_read, gen_statname("wmean"), wmean)
 
-    write(filename,"('uumean.dat',I7.7)") it
-    call read_or_write_one_stat(flag_read, filename, uumean)
-    write(filename,"('vvmean.dat',I7.7)") it
-    call read_or_write_one_stat(flag_read, filename, vvmean)
-    write(filename,"('wwmean.dat',I7.7)") it
-    call read_or_write_one_stat(flag_read, filename, wwmean)
+    call read_or_write_one_stat(flag_read, gen_statname("uumean"), uumean)
+    call read_or_write_one_stat(flag_read, gen_statname("vvmean"), vvmean)
+    call read_or_write_one_stat(flag_read, gen_statname("wwmean"), wwmean)
 
-    write(filename,"('uvmean.dat',I7.7)") it
-    call read_or_write_one_stat(flag_read, filename, uvmean)
-    write(filename,"('uwmean.dat',I7.7)") it
-    call read_or_write_one_stat(flag_read, filename, uwmean)
-    write(filename,"('vwmean.dat',I7.7)") it
-    call read_or_write_one_stat(flag_read, filename, vwmean)
+    call read_or_write_one_stat(flag_read, gen_statname("uvmean"), uvmean)
+    call read_or_write_one_stat(flag_read, gen_statname("uwmean"), uwmean)
+    call read_or_write_one_stat(flag_read, gen_statname("vwmean"), vwmean)
 
     if (iscalar==1) then
        do is=1, numscalar
-          write(filename,"('phi',I2.2,'mean.dat',I7.7)") is, it
-          call read_or_write_one_stat(flag_read, filename, phimean(:,:,:,is))
-          write(filename,"('phiphi',I2.2,'mean.dat',I7.7)") is, it
-          call read_or_write_one_stat(flag_read, filename, phiphimean(:,:,:,is))
+          call read_or_write_one_stat(flag_read, gen_statname(filename), phimean(:,:,:,is))
+          write(filename,"('phiphi',I2.2)") is
+          call read_or_write_one_stat(flag_read, gen_statname(filename), phiphimean(:,:,:,is))
        enddo
     endif
 
+#ifdef ADIOS2
+    call decomp_2d_end_io(io_statistics, stat_dir)
+    call decomp_2d_close_io(io_statistics, stat_dir)
+#endif
+    
     if (nrank==0) then
       if (flag_read) then
         print *,'Read stat done!'
@@ -198,13 +275,14 @@ contains
     logical, intent(in) :: flag_read
     character(len=*), intent(in) :: filename
     real(mytype), dimension(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)), intent(inout) :: array
+    integer :: ierror
 
     if (flag_read) then
-      ! There was a check for nvisu = 1 before
-      call decomp_2d_read_one(1, array, filename)
+       ! There was a check for nvisu = 1 before
+       call decomp_2d_read_one(1, array, stat_dir, filename, io_statistics)
     else
-      call decomp_2d_write_one(1, array, filename, 1)
-    endif
+      call decomp_2d_write_one(1, array, stat_dir, filename, 1, io_statistics)
+   endif
 
   end subroutine read_or_write_one_stat
 
@@ -249,7 +327,7 @@ contains
     elseif (itime.eq.initstat) then
        call init_statistic()
     elseif (itime.eq.ifirst) then
-        call restart_statistic()
+       call restart_statistic()
     endif
 
     !! Mean pressure

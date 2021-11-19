@@ -84,7 +84,7 @@ ifeq ($(IO),adios2)
     $(error Set ADIOS2DIR=/path/to/adios2/install/)
   endif
   OPT := -DADIOS2 $(OPT)
-  INC := $(INC) $(patsubst $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-libs),,$(shell $(ADIOS2DIR)/bin/adios2-config -f))
+  INC := $(INC) $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-flags) #$(patsubst $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-libs),,$(shell $(ADIOS2DIR)/bin/adios2-config -f))
   LIBIO := $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-libs)
 endif
 
@@ -120,9 +120,9 @@ post:
 
 
 clean:
-	rm -f $(DECOMPDIR)/*.o $(DECOMPDIR)/*.mod
-	rm -f $(SRCDIR)/*.o $(SRCDIR)/*.mod
-	rm -f *.o *.mod xcompact3d
+	rm -f $(DECOMPDIR)/*.o $(DECOMPDIR)/*.mod $(DECOMPDIR)/*.smod
+	rm -f $(SRCDIR)/*.o $(SRCDIR)/*.mod $(SRCDIR)/*.smod
+	rm -f *.o *.mod *.smod xcompact3d
 
 .PHONY: cleanall
 cleanall: clean

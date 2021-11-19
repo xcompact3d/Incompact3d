@@ -36,7 +36,7 @@ module var
   USE variables
   USE param
   USE complex_geometry
-
+  
   ! define all major arrays here
   real(mytype), save, allocatable, dimension(:,:,:) :: ux1, ux2, ux3, po3, dv3
   real(mytype), save, allocatable, dimension(:,:,:,:) :: pp3

@@ -122,6 +122,7 @@ subroutine init_xcompact3d()
 
   use MPI
   use decomp_2d
+  use decomp_2d_io, only : decomp_2d_io_init
   USE decomp_2d_poisson, ONLY : decomp_2d_poisson_init
   use case
   use sandbox, only : init_sandbox
@@ -132,7 +133,8 @@ subroutine init_xcompact3d()
   use navier, only : calc_divu_constraint
   use tools, only : test_speed_min_max, test_scalar_min_max, &
        restart, &
-       simu_stats, compute_cfldiff
+       simu_stats, compute_cfldiff, &
+       init_inflow_outflow
 
   use param, only : ilesmod, jles,itype
   use param, only : irestart
@@ -144,7 +146,7 @@ subroutine init_xcompact3d()
   use les, only: init_explicit_les
   use turbine, only: init_turbines
 
-  use visu, only : visu_init
+  use visu, only : visu_init, visu_ready
 
   use genepsi, only : genepsi3d, epsi_init
   use ibm, only : body
@@ -158,7 +160,7 @@ subroutine init_xcompact3d()
   integer :: nargin, FNLength, status, DecInd
   logical :: back
   character(len=80) :: InputFN, FNBase
-
+    
   !! Initialise MPI
   call MPI_INIT(ierr)
   call MPI_COMM_RANK(MPI_COMM_WORLD,nrank,ierr)
@@ -195,6 +197,7 @@ subroutine init_xcompact3d()
   call parameter(InputFN)
 
   call decomp_2d_init(nx,ny,nz,p_row,p_col)
+  call decomp_2d_io_init()
   call init_coarser_mesh_statS(nstat,nstat,nstat,.true.)    !start from 1 == true
   call init_coarser_mesh_statV(nvisu,nvisu,nvisu,.true.)    !start from 1 == true
   call init_coarser_mesh_statP(nprobe,nprobe,nprobe,.true.) !start from 1 == true
@@ -232,7 +235,12 @@ subroutine init_xcompact3d()
 
   !####################################################################
   ! initialise visu
-  if (ivisu.ne.0) call visu_init()
+  if (ivisu.ne.0) then
+     call visu_init()
+     call visu_case_init() !! XXX: If you get error about uninitialised IO, look here.
+                           !! Ensures additional case-specific variables declared for IO
+     call visu_ready()
+  end if
   ! compute diffusion number of simulation
   call compute_cfldiff()
   !####################################################################
@@ -247,6 +255,10 @@ subroutine init_xcompact3d()
      end if
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,rho1,drho1,mu1,0)
   endif
+
+  if ((ioutflow.eq.1).or.(iin.eq.3)) then
+     call init_inflow_outflow()
+  end if
 
   if ((iibm.eq.2).or.(iibm.eq.3)) then
      call genepsi3d(ep1)
@@ -285,6 +297,7 @@ subroutine finalise_xcompact3d()
 
   use MPI
   use decomp_2d
+  use decomp_2d_io, only : decomp_2d_io_finalise
 
   use tools, only : simu_stats
   use param, only : itype
@@ -309,6 +322,7 @@ subroutine finalise_xcompact3d()
   call simu_stats(4)
   call finalize_probes()
   call visu_finalise()
+  call decomp_2d_io_finalise()
   call decomp_2d_finalize
   CALL MPI_FINALIZE(ierr)
 

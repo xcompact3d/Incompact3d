@@ -49,3 +49,13 @@ or
 
     nohup mpirun -np 16 ../../xcompact3d > output.out &
 
+### Optional ADIOS2 I/O backend
+
+As part of the ARCHER2 eCSE0302 project, an optional I/O backend using ADIOS2 has been added to the 2DECOMP&FFT library distributed with Xcompact3d.
+This is enabled at compile time, by default the original MPIIO backend will be used, to enable the ADIOS2 backend build as
+
+    make clean
+    make IO=adios2 ADIOS2DIR=${ADIOS2_DIR}
+    
+where `${ADIOS2_DIR}` points to the install location of ADIOS2.
+ADIOS2 enables configuring the I/O behaviour at runtime using an `xml` configuration file - see the example at `examples/Taylor-Green-Vortex/adios2_config.xml`.

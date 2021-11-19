@@ -36,3 +36,6 @@ test*
 .settings
 *.bp4
 *.hdf5
+checkpoint
+restart*
+forces.dat*

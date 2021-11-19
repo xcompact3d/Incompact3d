@@ -30,10 +30,6 @@
 !    Methods in Fluids, vol 67 (11), pp 1735-1757
 !################################################################################
 module visu
-
-#ifdef ADIOS2
-  use adios2
-#endif
   
   implicit none
 
@@ -50,14 +46,12 @@ module visu
   integer :: ioxdmf
   character(len=9) :: ifilenameformat = '(I3.3)'
   real, save :: tstart, tend
-#ifdef ADIOS2
-  type(adios2_adios) :: adios
-  type(adios2_io) :: io_write_real_coarse
-  type(adios2_engine) :: engine_write_real_coarse
-#endif
+
+  character(len=*), parameter :: io_name = "solution-io"
 
   private
-  public :: output2D, visu_init, visu_finalise, write_snapshot, end_snapshot, write_field
+  public :: output2D, visu_init, visu_ready, visu_finalise, write_snapshot, end_snapshot, &
+       write_field, io_name
 
 contains
 
@@ -69,34 +63,19 @@ contains
     use MPI
     use param, only : ilmn, iscalar, ilast, ifirst, ioutput, istret
     use variables, only : numscalar, prec, nvisu
-    use decomp_2d, only : nrank, mytype, xszV, yszV, zszV
-#ifdef ADIOS2
-    use decomp_2d_io, only : adios2_register_variable
-#endif
+    use param, only : dx, dy, dz
+    use decomp_2d, only : nrank, mytype, xszV, yszV, zszV, xsize, ysize, zsize
+    use decomp_2d_io, only : decomp_2d_init_io, decomp_2d_open_io, decomp_2d_append_mode
+    use decomp_2d_io, only : decomp_2d_register_variable
+
     
     implicit none
 
     ! Local variables
-    logical :: dir_exists
     integer :: noutput, nsnapout
     real(mytype) :: memout
 
-#ifdef ADIOS2
-    integer :: ierror
-    logical :: adios2_debug_mode
-    character(len=80) :: config_file="adios2_config.xml"
-    character(len=80) :: outfile
     integer :: is
-#endif
-
-    ! Create folder if needed
-    ! XXX: Is this needed for ADIOS2?
-    if (nrank==0) then
-      inquire(file="data", exist=dir_exists)
-      if (.not.dir_exists) then
-        call system("mkdir data 2> /dev/null")
-      end if
-    end if
 
     ! HDD usage of visu module
     if (nrank==0) then
@@ -129,62 +108,78 @@ contains
       stop
     endif
 
-#ifdef ADIOS2
-    !! TODO: make this a runtime-option
-    adios2_debug_mode = .true.
-
-    call adios2_init(adios, trim(config_file), MPI_COMM_WORLD, adios2_debug_mode, ierror)
-    if (ierror.ne.0) then
-       print *, "Error initialising ADIOS2 - is adios2_config.xml present and valid?"
-       call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
-    endif
-    call adios2_declare_io(io_write_real_coarse, adios, "solution-io", ierror)
-    if (io_write_real_coarse % engine_type.eq."BP4") then
-       write(outfile, *) "data.bp4"
-    else if (io_write_real_coarse % engine_type.eq."HDF5") then
-       write(outfile, *) "data.hdf5"
-    else
-       print *, "Unknown engine!"
-       call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
-    endif
+    call decomp_2d_init_io(io_name)
 
     !! Register variables
-    call adios2_register_variable(io_write_real_coarse, "ux", 1, 2)
-    call adios2_register_variable(io_write_real_coarse, "uy", 1, 2)
-    call adios2_register_variable(io_write_real_coarse, "uz", 1, 2)
-    call adios2_register_variable(io_write_real_coarse, "pp", 1, 2)
+    call decomp_2d_register_variable(io_name, "ux", 1, 0, output2D, mytype)
+    call decomp_2d_register_variable(io_name, "uy", 1, 0, output2D, mytype)
+    call decomp_2d_register_variable(io_name, "uz", 1, 0, output2D, mytype)
+    call decomp_2d_register_variable(io_name, "pp", 1, 0, output2D, mytype)
     if (ilmn) then
-       call adios2_register_variable(io_write_real_coarse, "rho", 1, 2)
+       call decomp_2d_register_variable(io_name, "rho", 1, 0, output2D, mytype)
     endif
     if (iscalar.ne.0) then
        do is = 1, numscalar
-          call adios2_register_variable(io_write_real_coarse, "phi"//char(48+is), 1, 2)
+          call decomp_2d_register_variable(io_name, "phi"//char(48+is), 1, 0, output2D, mytype)
        enddo
     endif
     
-    call adios2_open(engine_write_real_coarse, io_write_real_coarse, trim(outfile), adios2_mode_write, ierror)
-#endif
-
   end subroutine visu_init
 
   !
-  ! Finalise the visu module
-  ! - Currently only needed to clean up ADIOS2
+  ! Indicate visu ready for IO. This is only required for ADIOS2 backend, using MPIIO this
+  ! subroutine doesn't do anything.
+  ! XXX: Call after all visu initialisation (main visu + case visu)
   !
-  subroutine visu_finalise()
+  subroutine visu_ready ()
+
+    use decomp_2d_io, only : decomp_2d_open_io, decomp_2d_append_mode, decomp_2d_write_mode
+
+    implicit none
+
+    integer :: mode
     
 #ifdef ADIOS2
-    use adios2
+    
+    mode = decomp_2d_write_mode
+
+    ! XXX: Currently opening BP4 files in append mode seems to corrupt data.
+    ! if (.not.outloc_init) then
+    !    if (irestart == 1) then
+    !       !! Restarting - is the output already available to write to?
+    !       inquire(file=gen_iodir_name("data", io_name), exist=dir_exists)
+    !       if (dir_exists) then
+    !          outloc_init = .true.
+    !       end if
+    !    end if
+       
+    !    if (.not.outloc_init) then !! Yes, yes, but check the restart check above.
+    !       mode = decomp_2d_write_mode
+    !    else
+    !       mode = decomp_2d_append_mode
+    !    end if
+    !    outloc_init = .true.
+    ! else
+    !    mode = decomp_2d_append_mode
+    ! end if
+
+    call decomp_2d_open_io(io_name, "data", mode)
 #endif
-  implicit none
+    
+  end subroutine visu_ready
+  
+  !
+  ! Finalise the visu module. When using the ADIOS2 backend this closes the IO which is held open
+  ! for the duration of the simulation, otherwise does nothing.
+  ! 
+  subroutine visu_finalise()
+
+    use decomp_2d_io, only : decomp_2d_close_io
+    
+    implicit none
 
 #ifdef ADIOS2
-  integer :: ierr
-#endif
-  
-#ifdef ADIOS2
-    call adios2_close(engine_write_real_coarse, ierr)
-    call adios2_finalize(adios, ierr)
+    call decomp_2d_close_io(io_name, "data")
 #endif
     
   end subroutine visu_finalise
@@ -197,8 +192,9 @@ contains
     use decomp_2d, only : transpose_z_to_y, transpose_y_to_x
     use decomp_2d, only : mytype, xsize, ysize, zsize
     use decomp_2d, only : nrank
+    use decomp_2d_io, only : decomp_2d_start_io
 
-    use param, only : nrhotime, ilmn, iscalar, ioutput
+    use param, only : nrhotime, ilmn, iscalar, ioutput, irestart
 
     use variables, only : sx, cifip6, cisip6, ciwip6, cifx6, cisx6, ciwx6
     use variables, only : sy, cifip6y, cisip6y, ciwip6y, cify6, cisy6, ciwy6
@@ -227,16 +223,20 @@ contains
     integer :: is
     integer :: ierr
     character(len=30) :: scname
+    integer :: mode
+    logical, save :: outloc_init = .false.
+    logical :: dir_exists
 
     ! Update log file
     if (nrank.eq.0) then
       call cpu_time(tstart)
       print *,'Writing snapshots =>',itime/ioutput
     end if
-#ifdef ADIOS2
-    call adios2_begin_step(engine_write_real_coarse, adios2_step_mode_append, ierr)
-#endif
 
+#ifdef ADIOS2
+    call decomp_2d_start_io(io_name, "data")
+#endif
+    
     ! Snapshot number
 #ifndef ADIOS2
     if (filenamedigits) then
@@ -277,7 +277,7 @@ contains
     call rescale_pressure(ta1)
 
     ! Write pressure
-    call write_field(ta1, ".", "pp", trim(num), .true.)
+    call write_field(ta1, ".", "pp", trim(num), .true., flush=.true.)
 
     ! LMN - write density
     if (ilmn) call write_field(rho1(:,:,:,1), ".", "rho", trim(num))
@@ -295,6 +295,7 @@ contains
   subroutine end_snapshot(itime, num)
 
     use decomp_2d, only : nrank
+    use decomp_2d_io, only : decomp_2d_end_io
     use param, only : istret, xlx, yly, zlz
     use variables, only : nx, ny, nz, beta
     use var, only : dt,t
@@ -339,9 +340,9 @@ contains
     endif
 
 #ifdef ADIOS2
-    call adios2_end_step(engine_write_real_coarse, ierr)
+    call decomp_2d_end_io(io_name, "data")
 #endif
-
+    
     ! Update log file
     if (nrank.eq.0) then
       call cpu_time(tend)
@@ -349,64 +350,6 @@ contains
     endif
 
   end subroutine end_snapshot
-
-  !
-  ! Output binary data associated with the pressure
-  !
-  subroutine VISU_PRE (pp3,ta1,tb1,di1,ta2,tb2,di2,ta3,di3,nxmsize,nymsize,nzmsize,uvisu,pre1)
-
-    use param
-    use variables
-    use decomp_2d
-    use decomp_2d_io
-    use var, only : zero
-
-    implicit none
-
-    integer :: nxmsize,nymsize,nzmsize
-
-    real(mytype),dimension(xszV(1),xszV(2),xszV(3)) :: uvisu
-    real(mytype),dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize) :: pp3
-    !Z PENCILS NXM NYM NZM-->NXM NYM NZ
-    real(mytype),dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),zsize(3)) :: ta3,di3
-    !Y PENCILS NXM NYM NZ -->NXM NY NZ
-    real(mytype),dimension(ph3%yst(1):ph3%yen(1),nymsize,ysize(3)) :: ta2
-    real(mytype),dimension(ph3%yst(1):ph3%yen(1),ysize(2),ysize(3)) :: tb2,di2
-    !X PENCILS NXM NY NZ  -->NX NY NZ
-    real(mytype),dimension(nxmsize,xsize(2),xsize(3)) :: ta1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: tb1,di1,pre1
-
-    character(len=30) filename
-
-    !WORK Z-PENCILS
-    call interzpv(ta3,pp3,di3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
-         (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
-    !WORK Y-PENCILS
-    call transpose_z_to_y(ta3,ta2,ph3) !nxm nym nz
-    call interypv(tb2,ta2,di2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
-         (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
-    !WORK X-PENCILS
-    call transpose_y_to_x(tb2,ta1,ph2) !nxm ny nz
-    call interxpv(tb1,ta1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
-         nxmsize,xsize(1),xsize(2),xsize(3),1)
-
-    pre1=tb1
-
-    if (save_pre.eq.1) then
-      uvisu = zero
-      call fine_to_coarseV(1,pre1,uvisu)
-      write(filename,"('./data/pre',I4.4)") itime/ioutput
-      call decomp_2d_write_one(1,uvisu,filename,2)
-    endif
-
-    if (save_prem.eq.1) then
-      write(filename,"('./data/prem',I4.4)") itime/ioutput
-      call decomp_2d_write_plane(1,pre1,3,-1,filename)
-    endif
-
-    return
-
-  end subroutine VISU_PRE
 
   !
   ! Write the header of the XDMF file
@@ -428,7 +371,7 @@ contains
     real(mytype) :: xp(xszV(1)), zp(zszV(3))
 
     if (nrank.eq.0) then
-      OPEN(newunit=ioxdmf,file="./data/"//pathname//"/"//filename//'-'//num//'.xdmf')
+      OPEN(newunit=ioxdmf,file="./data/"//gen_snapshotname(pathname, filename, num, "xdmf"))
 
       write(ioxdmf,'(A22)')'<?xml version="1.0" ?>'
       write(ioxdmf,*)'<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>'
@@ -539,15 +482,13 @@ contains
   ! Write the given field for visualization
   ! Adapted from https://github.com/fschuch/Xcompact3d/blob/master/src/visu.f90
   !
-  subroutine write_field(f1, pathname, filename, num, skip_ibm)
+  subroutine write_field(f1, pathname, filename, num, skip_ibm, flush)
 
     use mpi
     
     use var, only : ep1
     use var, only : zero, one
-#ifndef ADIOS2
     use var, only : uvisu
-#endif
     use param, only : iibm
     use decomp_2d, only : mytype, xsize, xszV, yszV, zszV
     use decomp_2d, only : nrank, fine_to_coarseV
@@ -557,12 +498,25 @@ contains
 
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: f1
     character(len=*), intent(in) :: pathname, filename, num 
-    logical, optional, intent(in) :: skip_ibm
+    logical, optional, intent(in) :: skip_ibm, flush
 
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: local_array
-
+    logical :: mpiio, force_flush
+    
     integer :: ierr
 
+#ifndef ADIOS2
+    mpiio = .true.
+#else
+    mpiio = .false.
+#endif
+
+    if (present(flush)) then
+       force_flush = flush
+    else
+       force_flush = .false.
+    end if
+ 
     if (use_xdmf) then
        if (nrank.eq.0) then
           write(ioxdmf,*)'        <Attribute Name="'//filename//'" Center="Node">'
@@ -593,38 +547,71 @@ contains
           else if (output2D.eq.3) then
              write(ioxdmf,*)'            Dimensions="',1,yszV(2),xszV(1),'">'
           endif
-#ifndef ADIOS2
-          write(ioxdmf,*)'              ./'//pathname//"/"//filename//'-'//num//'.bin'
-#else
-          write(ioxdmf,*)'              ../data.hdf5:/Step'//num//'/'//filename
-#endif
+          write(ioxdmf,*)'              '//gen_h5path(gen_filename(pathname, filename, num, 'bin'), num)
           write(ioxdmf,*)'           </DataItem>'
           write(ioxdmf,*)'        </Attribute>'
        endif
     endif
-    
-    if (iibm==2 .and. .not.present(skip_ibm)) then
+
+    if ((iibm == 2) .and. .not.present(skip_ibm)) then
        local_array(:,:,:) = (one - ep1(:,:,:)) * f1(:,:,:)
     else
        local_array(:,:,:) = f1(:,:,:)
     endif
-
     if (output2D.eq.0) then
-#ifndef ADIOS2
-       uvisu = zero
-       call fine_to_coarseV(1,local_array,uvisu)
-       call decomp_2d_write_one(1,uvisu,"./data/"//pathname//'/'//filename//'-'//num//'.bin',2)
-#else
-       if (iibm==2 .and. (.not.present(skip_ibm))) then
-          print *, "Not Implemented: currently ADIOS2 IO doesn't support IBM-blanking"
-          call MPI_ABORT(MPI_COMM_WORLD, -1, ierr)
-       endif
-       call decomp_2d_write_one(1,f1,filename,2,adios,engine_write_real_coarse,io_write_real_coarse)
-#endif
+       if (mpiio .or. (iibm == 2) .or. force_flush) then
+          !! XXX: This (re)uses a temporary array for data - need to force synchronous writes.
+          uvisu = zero
+          
+          call fine_to_coarseV(1,local_array,uvisu)
+          call decomp_2d_write_one(1,uvisu,"data",gen_filename(pathname, filename, num, 'bin'),2,io_name,&
+               opt_deferred_writes=.false.)
+       else
+          call decomp_2d_write_one(1,f1,"data",gen_filename(pathname, filename, num, 'bin'),0,io_name)
+       end if
     else
-       call decomp_2d_write_plane(1,local_array,output2D,-1,"./data/"//pathname//'/'//filename//'-'//num//'.bin')
+       call decomp_2d_write_plane(1,local_array,output2D,-1,"data",gen_filename(pathname, filename, num, 'bin'),io_name)
     endif
 
   end subroutine write_field
 
+  function gen_snapshotname(pathname, varname, num, ext)
+    character(len=*), intent(in) :: pathname, varname, num, ext
+#ifndef ADIOS2
+    character(len=(len(pathname) + 1 + len(varname) + 1 + len(num) + 1 + len(ext))) :: gen_snapshotname
+    write(gen_snapshotname, "(A)") gen_filename(pathname, varname, num, ext)
+#else
+    character(len=(len(varname) + 1 + len(num) + 1 + len(ext))) :: gen_snapshotname
+    write(gen_snapshotname, "(A)") varname//'-'//num//'.'//ext
+#endif
+  end function gen_snapshotname
+  
+  function gen_filename(pathname, varname, num, ext)
+
+    character(len=*), intent(in) :: pathname, varname, num, ext
+#ifndef ADIOS2
+    character(len=(len(pathname) + 1 + len(varname) + 1 + len(num) + 1 + len(ext))) :: gen_filename
+    write(gen_filename, "(A)") pathname//'/'//varname//'-'//num//'.'//ext
+#else
+    character(len=len(varname)) :: gen_filename
+    write(gen_filename, "(A)") varname
+#endif
+    
+  end function gen_filename
+
+  function gen_h5path(filename, num)
+
+    character(len=*), intent(in) :: filename, num
+#ifndef ADIOS2
+    character(len=*), parameter :: path_to_h5file = "./"
+    character(len=(len(path_to_h5file) + len(filename))) :: gen_h5path
+    write(gen_h5path, "(A)") path_to_h5file//filename
+#else
+    character(len=*), parameter :: path_to_h5file = "../data.hdf5:/Step"
+    character(len=(len(path_to_h5file) + len(num) + 1+ len(filename))) :: gen_h5path
+    write(gen_h5path, "(A)") path_to_h5file//num//"/"//filename
+#endif
+    
+  end function gen_h5path
+  
 end module visu

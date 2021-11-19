@@ -73,6 +73,7 @@ module sandbox
 
   implicit none
 
+  character(len=*), parameter :: io_sandbox = "io-sandbox"
   character(len=120)  :: filename
   integer, parameter :: filenum = 67
 
@@ -127,7 +128,7 @@ contains
         nzi.eq.xstart(3).and.nzf.eq.xend(3)) then
         !
         if (nrank.eq.0) write(*,*) 'reading : ', './data/geometry/epsilon.bin'
-        call decomp_2d_read_one(1,epsi,'./data/geometry/epsilon.bin')
+        call decomp_2d_read_one(1,epsi,'./data/geometry','epsilon.bin',io_sandbox)
         !
     else
       ! Just the standard epsi(nx,ny,nz) is loaded
@@ -447,17 +448,17 @@ contains
       if (iscalar .ne. 0) then
         do is = 1, numscalar
           if (nrank.eq.0) write(*,*) 'reading : ', './data/phi'//char(is+48)//'.bin'
-          call decomp_2d_read_one(1, phi1(:,:,:,is), './data/phi'//char(is+48)//'.bin')
+          call decomp_2d_read_one(1, phi1(:,:,:,is), './data','phi'//char(is+48)//'.bin',io_sandbox)
         enddo
       endif
 
       !Read velocity field
       if (nrank.eq.0) write(*,*) 'reading : ', './data/ux.bin'
-      call decomp_2d_read_one(1,ux1,'./data/ux.bin')
+      call decomp_2d_read_one(1,ux1,'./data','ux.bin',io_sandbox)
       if (nrank.eq.0) write(*,*) 'reading : ', './data/uy.bin'
-      call decomp_2d_read_one(1,uy1,'./data/uy.bin')
+      call decomp_2d_read_one(1,uy1,'./data','uy.bin',io_sandbox)
       if (nrank.eq.0) write(*,*) 'reading : ', './data/uz.bin'
-      call decomp_2d_read_one(1,uz1,'./data/uz.bin')
+      call decomp_2d_read_one(1,uz1,'./data','uz.bin',io_sandbox)
     
     endif
 
@@ -465,9 +466,9 @@ contains
     if (nclx .or. sz_a_i .gt. 1) then
       call alloc_x(vol1_frc)
       vol1_frc = zero
-      filename = './data/vol_frc.bin'
+      filename = 'vol_frc.bin'
       if (nrank.eq.0) write(*,*) 'reading : ', filename
-      call decomp_2d_read_one(1,vol1_frc,filename)
+      call decomp_2d_read_one(1,vol1_frc,'data',filename,io_sandbox)
     endif
 
     !Read inflow profile
