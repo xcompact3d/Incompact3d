@@ -360,7 +360,8 @@ contains
     !! Compute sum dudx + dvdy + dwdz
     pp3(:,:,:) = pp3(:,:,:) + po3(:,:,:)
 
-    ! This is not looking like a very good idea
+    ! This is deactivate
+    ! The output in the listing was depending on the pencil decomposition
     if (.false. .and. nlock==2) then
        pp3(:,:,:)=pp3(:,:,:)-pp3(ph1%zst(1),ph1%zst(2),nzmsize)
     endif
@@ -380,7 +381,7 @@ contains
     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
     call MPI_REDUCE(tmoy,tmoy1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
-    tmoy1 = tmoy1 / (ph1%xsz(1)*ph1%ysz(2)*nzmsize)
+    tmoy1 = tmoy1 / real(ph1%xsz(1)*ph1%ysz(2)*nzmsize,kind=mytype)
 
     if ((nrank == 0) .and. (nlock > 0).and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime==ilast)) then
        if (nlock==2) then
