@@ -144,11 +144,11 @@ contains
          aviFAIL  =  -1
          if (nrank==0) write(*,*) 'VS_MaxRat must be greater than zero.'
       endif
-      if (control%VS_RtPwr  <  0.0 ) then
+      if (control%VS_RtPwr < 0.0 ) then
          aviFAIL  = -1
          if (nrank==0) write(*,*) 'VS_RtPwr must not be negative.'
       endif
-      if (control%VS_Rgn2K  <  0.0 ) then
+      if (control%VS_Rgn2K < 0.0 ) then
          aviFAIL  = -1
          if (nrank==0) write(*,*) 'VS_Rgn2K must not be negative.'
       endif

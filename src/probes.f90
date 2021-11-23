@@ -193,30 +193,30 @@ contains
        nzprobesP(i) = nint(nzm*zprobes/zlz-half) + 1
 
        ! Flag the rank with the probe
-       if       (xstart(1)  <=  nxprobes(i) .and. nxprobes(i)  <=  xend(1)) then
-          if    (xstart(2)  <=  nyprobes(i) .and. nyprobes(i)  <=  xend(2)) then
-             if (xstart(3)  <=  nzprobes(i) .and. nzprobes(i)  <=  xend(3)) then
+       if       (xstart(1) <= nxprobes(i) .and. nxprobes(i) <= xend(1)) then
+          if    (xstart(2) <= nyprobes(i) .and. nyprobes(i) <= xend(2)) then
+             if (xstart(3) <= nzprobes(i) .and. nzprobes(i) <= xend(3)) then
                 rankprobes(i) = .true.
              endif
           endif
        endif
-       if       (ystart(1)  <=  nxprobes(i) .and. nxprobes(i)  <=  yend(1)) then
-          if    (ystart(2)  <=  nyprobes(i) .and. nyprobes(i)  <=  yend(2)) then
-             if (ystart(3)  <=  nzprobes(i) .and. nzprobes(i)  <=  yend(3)) then
+       if       (ystart(1) <= nxprobes(i) .and. nxprobes(i) <= yend(1)) then
+          if    (ystart(2) <= nyprobes(i) .and. nyprobes(i) <= yend(2)) then
+             if (ystart(3) <= nzprobes(i) .and. nzprobes(i) <= yend(3)) then
                 rankprobesY(i) = .true.
              endif
           endif
        endif
-       if       (zstart(1)  <=  nxprobes(i) .and. nxprobes(i)  <=  zend(1)) then
-          if    (zstart(2)  <=  nyprobes(i) .and. nyprobes(i)  <=  zend(2)) then
-             if (zstart(3)  <=  nzprobes(i) .and. nzprobes(i)  <=  zend(3)) then
+       if       (zstart(1) <= nxprobes(i) .and. nxprobes(i) <= zend(1)) then
+          if    (zstart(2) <= nyprobes(i) .and. nyprobes(i) <= zend(2)) then
+             if (zstart(3) <= nzprobes(i) .and. nzprobes(i) <= zend(3)) then
                 rankprobesZ(i) = .true.
              endif
           endif
        endif
-       if       (ph1%zst(1)  <=  nxprobesP(i) .and. nxprobesP(i)  <=  ph1%zen(1)) then
-          if    (ph1%zst(2)  <=  nyprobesP(i) .and. nyprobesP(i)  <=  ph1%zen(2)) then
-             if (ph1%zst(3)  <=  nzprobesP(i) .and. nzprobesP(i)  <=  ph1%zen(3)) then
+       if       (ph1%zst(1) <= nxprobesP(i) .and. nxprobesP(i) <= ph1%zen(1)) then
+          if    (ph1%zst(2) <= nyprobesP(i) .and. nyprobesP(i) <= ph1%zen(2)) then
+             if (ph1%zst(3) <= nzprobesP(i) .and. nzprobesP(i) <= ph1%zen(3)) then
                 rankprobesP(i) = .true.
              endif
           endif

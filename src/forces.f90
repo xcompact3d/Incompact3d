@@ -51,11 +51,15 @@ module forces
   integer,allocatable,dimension(:) :: icvlf_lx,icvrt_lx,icvlf_ly,icvrt_ly
   integer,allocatable,dimension(:) :: jcvlw_lx,jcvup_lx,jcvlw_ly,jcvup_ly
 
+  character(len=*), parameter :: io_restart_forces = "restart-forces-io", &
+       resfile = "restart-forces"
+  
 contains
 
   subroutine init_forces
 
     USE decomp_2d
+    USE decomp_2d_io, only : decomp_2d_register_variable, decomp_2d_init_io
     USE param
     USE variables
     implicit none
@@ -131,6 +135,13 @@ contains
        enddo
        write(*,*) '==========================================================='
     endif
+
+    call decomp_2d_init_io(io_restart_forces)
+    call decomp_2d_register_variable(io_restart_forces, "ux01", 1, 0, 0, mytype)
+    call decomp_2d_register_variable(io_restart_forces, "uy01", 1, 0, 0, mytype)
+    call decomp_2d_register_variable(io_restart_forces, "ux11", 1, 0, 0, mytype)
+    call decomp_2d_register_variable(io_restart_forces, "uy11", 1, 0, 0, mytype)
+    
   end subroutine init_forces
 
   subroutine restart_forces(itest1)
@@ -143,83 +154,53 @@ contains
 
     implicit none
 
-    integer :: fh,code,itest1
+    integer :: code,itest1
     character(len=30) :: filename, filestart
-    integer (kind=MPI_OFFSET_KIND) :: filesize, disp
 
+
+#ifndef ADIOS2
     write(filename, "('restart-forces',I7.7)") itime
     write(filestart,"('restart-forces',I7.7)") ifirst-1
-
-    if (itest1==1) then !write
+#else
+    write(filename, *) "restart-forces"
+#endif
+    if (itest1 == 1) then
+       call decomp_2d_open_io(io_restart_forces, resfile, decomp_2d_write_mode)
+    else
+       call decomp_2d_open_io(io_restart_forces, resfile, decomp_2d_read_mode)
+    endif
+    call decomp_2d_start_io(io_restart_forces, resfile)
+    
+    if (itest1==1) then
+       !write
        if (mod(itime, icheckpoint) /= 0) then
           return
        endif
 
-       call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
-            MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
-            fh, code)
-       if (code /= 0) then
-          if (nrank == 0) then
-             write(*,*) '==========================================================='
-             write(*,*) 'Error: MPI_FILE_OPEN : '//trim(filename)
-             write(*,*) '==========================================================='
-          endif
-          call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_OPEN")
-       endif
-       filesize = 0_MPI_OFFSET_KIND
-       call MPI_FILE_SET_SIZE(fh,filesize,code)  ! guarantee overwriting
-       if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_SET_SIZE")
-       disp = 0_MPI_OFFSET_KIND
-       call decomp_2d_write_var(fh,disp,1,ux01)
-       call decomp_2d_write_var(fh,disp,1,uy01)
-       call decomp_2d_write_var(fh,disp,1,ux11)
-       call decomp_2d_write_var(fh,disp,1,uy11)
-       call MPI_FILE_CLOSE(fh,code)
-       if (code /= 0) then
-          if (nrank == 0) then
-             write(*,*) '==========================================================='
-             write(*,*) 'Error: MPI_FILE_CLOSE : '//trim(filename)
-             write(*,*) '==========================================================='
-          endif
-          call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_CLOSE")
-       endif
-    else !read
-       call MPI_FILE_OPEN(MPI_COMM_WORLD, filestart, &
-            MPI_MODE_RDONLY, MPI_INFO_NULL, &
-            fh, code)
-       if (code /= 0) then
-          if (nrank == 0) then
-             write(*,*) '==========================================================='
-             write(*,*) 'Error: MPI_FILE_OPEN : '//trim(filestart)
-             write(*,*) '==========================================================='
-          endif
-          call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_OPEN")
-       endif
-       disp = 0_MPI_OFFSET_KIND
-       call decomp_2d_read_var(fh,disp,1,ux01)
-       call decomp_2d_read_var(fh,disp,1,uy01)
-       call decomp_2d_read_var(fh,disp,1,ux11)
-       call decomp_2d_read_var(fh,disp,1,uy11)
-       call MPI_FILE_CLOSE(fh,code)
-       if (code  /=  0) then
-          if (nrank == 0) then
-             write(*,*) '==========================================================='
-             write(*,*) 'Error: MPI_FILE_CLOSE : '//trim(filestart)
-             write(*,*) '==========================================================='
-          endif
-          call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_CLOSE")
-       endif
+       call decomp_2d_write_one(1,ux01,resfile,"ux01",0,io_restart_forces)
+       call decomp_2d_write_one(1,uy01,resfile,"uy01",0,io_restart_forces)
+       call decomp_2d_write_one(1,ux11,resfile,"ux11",0,io_restart_forces)
+       call decomp_2d_write_one(1,uy11,resfile,"uy11",0,io_restart_forces)
+    else
+       !read
+       call decomp_2d_read_one(1,ux01,resfile,"ux01",io_restart_forces)
+       call decomp_2d_read_one(1,uy01,resfile,"uy01",io_restart_forces)
+       call decomp_2d_read_one(1,ux11,resfile,"ux11",io_restart_forces)
+       call decomp_2d_read_one(1,uy11,resfile,"uy11",io_restart_forces)
     endif
 
+    call decomp_2d_end_io(io_restart_forces, resfile)
+    call decomp_2d_close_io(io_restart_forces, resfile)
+    
   end subroutine restart_forces
 
-subroutine finalize_forces                                                                           
-  
-  implicit none
-  
-  deallocate(xld, xrd, yld, yud)
-  
-end subroutine finalize_forces
+  subroutine finalize_forces
+
+    implicit none
+
+    deallocate(xld, xrd, yld, yud)
+
+  end subroutine finalize_forces
 
 !***********************************************************************
 subroutine force(ux1,uy1,ep1,iounit)
@@ -556,17 +537,17 @@ subroutine force(ux1,uy1,ep1,iounit)
      yLift_mean = sum(yLift(:))/real(nz,mytype)
 
 !     if ((itime==ifirst).or.(itime==0)) then
-!        if (nrank  ==  0) then
+!        if (nrank == 0) then
 !        write(filename,"('aerof',I1.1)") iv
 !        open(38+(iv-1),file=filename,status='unknown',form='formatted')
 !        endif
 !     endif
-     if (nrank  ==  0) then
+     if (nrank == 0) then
         write(iounit,*) t,xDrag_mean,yLift_mean
         call flush(iounit)
      endif
      if (mod(itime, icheckpoint) == 0) then
-        if (nrank  ==  0) then
+        if (nrank == 0) then
            write(filename,"('forces.dat',I7.7)") itime
            call system("cp forces.dat " //filename)
         endif

@@ -43,7 +43,7 @@ module tbl
   character(len=1),parameter :: NL=char(10) !new line character
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_tbl, boundary_conditions_tbl, postprocess_tbl, visu_tbl
+  PUBLIC :: init_tbl, boundary_conditions_tbl, postprocess_tbl, visu_tbl, visu_tbl_init
 
 contains
 
@@ -61,8 +61,7 @@ contains
 
     real(mytype) :: y,r,um,r3,x,z,h,ct
     real(mytype) :: cx0,cy0,cz0,hg,lg
-    integer :: k,j,i,fh,ierror,ii,is,it,code
-    integer (kind=MPI_OFFSET_KIND) :: disp
+    integer :: k,j,i,ierror,ii,is,it,code
 
     integer, dimension (:), allocatable :: seed
 
@@ -343,6 +342,21 @@ contains
 
   end subroutine postprocess_tbl
 
+  subroutine visu_tbl_init (visu_initialised)
+
+    use decomp_2d, only : mytype
+    use decomp_2d_io, only : decomp_2d_register_variable
+    use visu, only : io_name, output2D
+    
+    implicit none
+
+    logical, intent(out) :: visu_initialised
+
+    call decomp_2d_register_variable(io_name, "vort", 1, 0, output2D, mytype)
+
+    visu_initialised = .true.
+
+  end subroutine visu_tbl_init
   !############################################################################
   !!
   !!  SUBROUTINE: visu_tbl
@@ -411,7 +425,7 @@ contains
     di1(:,:,:)=sqrt(  (tf1(:,:,:)-th1(:,:,:))**2 &
                     + (tg1(:,:,:)-tc1(:,:,:))**2 &
                     + (tb1(:,:,:)-td1(:,:,:))**2)
-    call write_field(di1, ".", "vort", trim(num))
+    call write_field(di1, ".", "vort", trim(num), flush=.true.) ! Reusing temporary array, force flush
 
   end subroutine visu_tbl
 

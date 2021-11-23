@@ -49,7 +49,7 @@ subroutine schemes()
   integer :: is
 
 #ifdef DEBG
-  if (nrank  ==  0) write(*,*)'# schemes start'
+  if (nrank == 0) write(*,*)'# schemes start'
 #endif
 
   !Velocity
@@ -225,7 +225,7 @@ subroutine schemes()
   endif
 
 #ifdef DEBG
-  if (nrank  ==  0) write(*,*)'# schemes end'
+  if (nrank == 0) write(*,*)'# schemes end'
 #endif
 
   return

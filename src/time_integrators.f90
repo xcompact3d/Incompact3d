@@ -206,7 +206,7 @@ contains
     avg_param = zero
     call avg3d (dvar1(:,:,:,1), avg_param)
     if (nrank == 0) write(*,*)'## SUB intt VAR dvar1 AVG ', avg_param
-    if (nrank   ==  0) write(*,*)'# intt done'
+    if (nrank  == 0) write(*,*)'# intt done'
 #endif
 
     return
@@ -252,7 +252,7 @@ contains
     integer :: is, i, j, k
 #ifdef DEBG
     real(mytype) avg_param
-    if (nrank  ==  0) write(*,*)'## Init int_time'
+    if (nrank == 0) write(*,*)'## Init int_time'
 #endif
 
     call int_time_momentum(ux1, uy1, uz1, dux1, duy1, duz1)
@@ -331,7 +331,7 @@ contains
     ENDIF
 
 #ifdef DEBG
-    if (nrank  ==  0) write(*,*)'## End  int_time'
+    if (nrank == 0) write(*,*)'## End  int_time'
 #endif
 
   ENDSUBROUTINE int_time

@@ -55,11 +55,13 @@ module case
 
   implicit none
 
+  logical :: case_visu_init = .false.
+  
   private ! All functions/subroutines private by default
   public :: boot, init, boundary_conditions, &
             momentum_forcing, scalar_forcing, set_fluid_properties, &
             test_flow, preprocessing, postprocessing, finalize_case, &
-            visu_case
+            visu_case, visu_case_init
 
 contains
   !##################################################################
@@ -324,11 +326,11 @@ contains
 
     if ((ivisu /= 0).and.(mod(itime, ioutput) == 0)) then
       call write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime, num)
-#ifndef ADIOS2
-       ! XXX: Ultimate goal for ADIOS2 is to pass do all postproc online - do we need this?
-       !      Currently, needs some way to "register" variables for IO
+
+      ! XXX: Ultimate goal for ADIOS2 is to pass do all postproc online - do we need this?
+      !      Currently, needs some way to "register" variables for IO
       call visu_case(rho1, ux1, uy1, uz1, pp3, phi1, ep1, num)
-#endif
+
       call end_snapshot(itime, num)
     end if
 
@@ -423,6 +425,40 @@ contains
   end subroutine postprocess_case
   !##################################################################
   !!
+  !!  SUBROUTINE: visu_case_init
+  !!      AUTHOR: PB
+  !! DESCRIPTION: Initialise case-specific visualization
+  !!
+  !##################################################################
+  subroutine visu_case_init
+
+    implicit none
+    
+    if (itype == itype_tgv) then
+
+       call visu_tgv_init(case_visu_init)
+
+    else if (itype == itype_channel) then
+
+       call visu_channel_init(case_visu_init)
+
+    else if (itype == itype_cyl) then
+
+       call visu_cyl_init(case_visu_init)
+
+    else if (itype == itype_tbl) then
+
+       call visu_tbl_init(case_visu_init)
+
+    else if (itype == itype_lockexch) then
+
+       call visu_lockexch_init(case_visu_init)
+      
+    end if
+    
+  end subroutine visu_case_init
+  !##################################################################
+  !!
   !!  SUBROUTINE: visu_case
   !!      AUTHOR: CF
   !! DESCRIPTION: Call case-specific visualization
@@ -440,26 +476,41 @@ contains
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
     character(len=32), intent(in) :: num
 
+    logical :: called_visu = .false.
+
     if (itype == itype_user) then
 
        call visu_user(ux1, uy1, uz1, pp3, phi1, ep1, num)
-
+       called_visu = .true.
+       
     elseif (itype == itype_tgv) then
 
        call visu_tgv(ux1, uy1, uz1, pp3, phi1, ep1, num)
+       called_visu = .true.
 
     elseif (itype == itype_channel) then
 
        call visu_channel(ux1, uy1, uz1, pp3, phi1, ep1, num)
+       called_visu = .true.
 
     elseif (itype == itype_cyl) then
 
        call visu_cyl(ux1, uy1, uz1, pp3, phi1, ep1, num)
+       called_visu = .true.
 
     elseif (itype == itype_tbl) then
 
        call visu_tbl(ux1, uy1, uz1, pp3, phi1, ep1, num)
+       called_visu = .true.
+       
+    endif
 
+    if (called_visu .and. (.not. case_visu_init)) then
+
+       print *, "ERROR: tried to run case-specific visu without initialisation!"
+       print *, "       See the TGV case initialisation for example."
+       STOP
+       
     endif
 
   end subroutine visu_case

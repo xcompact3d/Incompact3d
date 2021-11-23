@@ -32,6 +32,8 @@
 
 module les
 
+  character(len=*), parameter :: io_turb = "turb-io", &
+       turb_dir = "turb-data"
 contains
 
   subroutine init_explicit_les
@@ -104,8 +106,8 @@ contains
     implicit none
 
     ! Arguments
-    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, ep1
-    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, ep1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sgsx1, sgsy1, sgsz1
     integer, intent(in) :: iconservative
 
@@ -176,7 +178,7 @@ contains
     implicit none
 
     ! Arguments
-    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1
 
     ! Local variables
@@ -297,8 +299,8 @@ contains
 
     if (mod(itime, ioutput) == 0) then
 
-       write(filename, "('./data/nut_smag',I4.4)") itime / ioutput
-       call decomp_2d_write_one(1, nut1, filename, 2)
+       write(filename, "('nut_smag',I4.4)") itime / ioutput
+       call decomp_2d_write_one(1, nut1, turb_dir, filename, 2, io_turb)
 
     endif
 
@@ -333,7 +335,7 @@ contains
     implicit none
 
     ! Arguments
-    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, ep1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, ep1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1
 
     ! Local variables
@@ -779,7 +781,7 @@ contains
 
     if((iibm==1).or.(iibm==2).or.(iibm==3)) then
        do ijk = 1, nvect1
-          if (ep1(ijk, 1, 1)  ==  one) then
+          if (ep1(ijk, 1, 1) == one) then
              ta1(ijk, 1, 1) = zero
              tb1(ijk, 1, 1) = one
           endif
@@ -855,11 +857,11 @@ contains
        ! write(filename, "('./data/dsmagcst_initial',I4.4)") itime / imodulo
        ! call decomp_2d_write_one(1, smagC1, filename, 2)
 
-       write(filename, "('./data/dsmagcst_final',I4.4)") itime / ioutput
-       call decomp_2d_write_one(1, dsmagcst1, filename, 2)
+       write(filename, "('dsmagcst_final',I4.4)") itime / ioutput
+       call decomp_2d_write_one(1, dsmagcst1, turb_dir, filename, 2, io_turb)
 
-       write(filename, "('./data/nut_dynsmag',I4.4)") itime / ioutput
-       call decomp_2d_write_one(1, nut1, filename, 2)
+       write(filename, "('nut_dynsmag',I4.4)") itime / ioutput
+       call decomp_2d_write_one(1, nut1, turb_dir, filename, 2, io_turb)
     endif
 
   end subroutine dynsmag
@@ -1038,8 +1040,8 @@ contains
 
   if (mod(itime, ioutput) == 0) then
 
-     write(filename, "('./data/nut_wale',I4.4)") itime / ioutput
-     call decomp_2d_write_one(1, nut1, filename, 2)
+     write(filename, "('nut_wale',I4.4)") itime / ioutput
+     call decomp_2d_write_one(1, nut1, turb_dir, filename, 2, io_turb)
 
   endif
 

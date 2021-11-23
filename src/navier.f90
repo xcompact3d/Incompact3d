@@ -360,18 +360,13 @@ contains
     !! Compute sum dudx + dvdy + dwdz
     pp3(:,:,:) = pp3(:,:,:) + po3(:,:,:)
 
-    ! This is deactivate
-    ! The output in the listing was depending on the pencil decomposition
-    if (.false. .and. nlock==2) then
-       pp3(:,:,:)=pp3(:,:,:)-pp3(ph1%zst(1),ph1%zst(2),nzmsize)
-    endif
 
     tmax=-1609._mytype
     tmoy=zero
     do k=1,nzmsize
        do j=ph1%zst(2),ph1%zen(2)
           do i=ph1%zst(1),ph1%zen(1)
-             if (abs(pp3(i,j,k)).gt.tmax) tmax=abs(pp3(i,j,k))
+             if (abs(pp3(i,j,k)) > tmax) tmax=abs(pp3(i,j,k))
              tmoy=tmoy+abs(pp3(i,j,k))
           enddo
        enddo

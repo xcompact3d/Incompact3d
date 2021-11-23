@@ -33,15 +33,21 @@ module tools
 
   implicit none
 
+  logical, save :: adios2_restart_initialised = .false.
+
+  character(len=*), parameter :: io_restart = "restart-io"
+  character(len=*), parameter :: resfile = "checkpoint"
+  character(len=*), parameter :: io_ioflow = "in-outflow-io"
+  
   private
 
   public :: test_speed_min_max, test_scalar_min_max, &
-       restart, &
-       simu_stats, &
-       apply_spatial_filter, read_inflow, append_outflow, write_outflow, &
-       compute_cfldiff, compute_cfl, error_l1_l2_linf, &
-       rescale_pressure, mean_plane_x, mean_plane_y, mean_plane_z, &
-       avg3d
+            restart, &
+            simu_stats, &
+            apply_spatial_filter, read_inflow, append_outflow, write_outflow, &
+            init_inflow_outflow, compute_cfldiff, compute_cfl, error_l1_l2_linf, &
+            rescale_pressure, mean_plane_x, mean_plane_y, mean_plane_z, &
+            avg3d
 
   interface error_l1_l2_linf
      module procedure error_l1_l2_linf_xsize
@@ -95,7 +101,6 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, -1, &
                  'Scalar diverged! SIMULATION IS STOPPED!')
       endif
-
     enddo
 
   end subroutine test_scalar_min_max
@@ -238,7 +243,7 @@ contains
 
     implicit none
 
-    integer :: i,j,k,iresflg,nzmsize,fh,code,is,it,iounit
+    integer :: i,j,k,iresflg,nzmsize,is,it,iounit
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: px1,py1,pz1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
@@ -248,7 +253,6 @@ contains
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime) :: drho1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: mu1
-    integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     real(mytype) :: xdt,tfield,y
     integer, dimension(2) :: dims, dummy_coords
     logical, dimension(2) :: dummy_periods
@@ -256,6 +260,7 @@ contains
     character(len=30) :: filename, filestart
     character(len=32) :: fmt2,fmt3,fmt4
     character(len=7) :: fmt1
+    character(len=80) :: varname
     NAMELIST /Time/ tfield, itime
     NAMELIST /NumParam/ nx, ny, nz, istret, beta, dt, itimescheme
 
@@ -273,72 +278,64 @@ contains
        endif
     end if
 
-    if (iresflg==1) then !write
-       call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
-            MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
-            fh, code)
-       if (code /= 0) then
-         if (nrank == 0) then
-           print *,'==========================================================='
-           print *, "Error: Impossible to open "//trim(filename)
-           print *,'==========================================================='
-         endif
-         call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_OPEN")
-       endif
+    if (.not. adios2_restart_initialised) then
+       call init_restart_adios2()
+       adios2_restart_initialised = .true.
+    end if
 
-       filesize = 0_MPI_OFFSET_KIND
-       call MPI_FILE_SET_SIZE(fh,filesize,code)  ! guarantee overwriting
-       if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_SET_SIZE")
-       disp = 0_MPI_OFFSET_KIND
-       call decomp_2d_write_var(fh,disp,1,ux1)
-       call decomp_2d_write_var(fh,disp,1,uy1)
-       call decomp_2d_write_var(fh,disp,1,uz1)
+    if (iresflg==1) then !write
+       call decomp_2d_open_io(io_restart, resfile, decomp_2d_write_mode)
+       call decomp_2d_start_io(io_restart, resfile)
+
+       call decomp_2d_write_one(1,ux1,resfile,"ux",0,io_restart,reduce_prec=.false.)
+       call decomp_2d_write_one(1,uy1,resfile,"uy",0,io_restart,reduce_prec=.false.)
+       call decomp_2d_write_one(1,uz1,resfile,"uz",0,io_restart,reduce_prec=.false.)
        ! write previous time-step if necessary for AB2 or AB3
        if ((itimescheme==2).or.(itimescheme==3)) then
-         call decomp_2d_write_var(fh,disp,1,dux1(:,:,:,2))
-         call decomp_2d_write_var(fh,disp,1,duy1(:,:,:,2))
-         call decomp_2d_write_var(fh,disp,1,duz1(:,:,:,2))
+          call decomp_2d_write_one(1,dux1(:,:,:,2),resfile,"dux-2",0,io_restart,reduce_prec=.false.)
+          call decomp_2d_write_one(1,duy1(:,:,:,2),resfile,"duy-2",0,io_restart,reduce_prec=.false.)
+          call decomp_2d_write_one(1,duz1(:,:,:,2),resfile,"duz-2",0,io_restart,reduce_prec=.false.)
        end if
        ! for AB3 one more previous time-step
        if (itimescheme == 3) then
-         call decomp_2d_write_var(fh,disp,1,dux1(:,:,:,3))
-         call decomp_2d_write_var(fh,disp,1,duy1(:,:,:,3))
-         call decomp_2d_write_var(fh,disp,1,duz1(:,:,:,3))
+          call decomp_2d_write_one(1,dux1(:,:,:,3),resfile,"dux-3",0,io_restart,reduce_prec=.false.)
+          call decomp_2d_write_one(1,duy1(:,:,:,3),resfile,"duy-3",0,io_restart,reduce_prec=.false.)
+          call decomp_2d_write_one(1,duz1(:,:,:,3),resfile,"duz-3",0,io_restart,reduce_prec=.false.)
        end if
        !
-       call decomp_2d_write_var(fh,disp,3,pp3,phG)
+       call decomp_2d_write_one(3,pp3,resfile,"pp",0,io_restart,phG,reduce_prec=.false.)
        !
        if (iscalar==1) then
           do is=1, numscalar
-             call decomp_2d_write_var(fh,disp,1,phi1(:,:,:,is))
+             write(varname, *) "phi-", is
+             call decomp_2d_write_one(1,phi1(:,:,:,is),resfile,varname,0,io_restart,reduce_prec=.false.)
              ! previous time-steps
              if ((itimescheme==2).or.(itimescheme==3)) then ! AB2 or AB3
-               call decomp_2d_write_var(fh,disp,1,dphi1(:,:,:,2,is))
+                write(varname, *) "dphi-", is, "-2"
+                call decomp_2d_write_one(1,dphi1(:,:,:,2,is),resfile,varname,0,io_restart,reduce_prec=.false.)
              end if
              !
              if (itimescheme==3) then ! AB3
-               call decomp_2d_write_var(fh,disp,1,dphi1(:,:,:,3,is))
+               write(varname, *) "dphi-", is, "-3"
+               call decomp_2d_write_one(1,dphi1(:,:,:,3,is),resfile,varname,0,io_restart,reduce_prec=.false.)
              end if
           end do
        endif
        if (ilmn) then
           do is = 1, nrhotime
-             call decomp_2d_write_var(fh,disp,1,rho1(:,:,:,is))
+             write(varname, *) "rho-", is
+             call decomp_2d_write_one(1,rho1(:,:,:,is),resfile,varname,0,io_restart,reduce_prec=.false.)
           enddo
           do is = 1, ntime
-             call decomp_2d_write_var(fh,disp,1,drho1(:,:,:,is))
+             write(varname, *) "drho-", is
+             call decomp_2d_write_one(1,drho1(:,:,:,is),resfile,varname,0,io_restart,reduce_prec=.false.)
           enddo
-          call decomp_2d_write_var(fh,disp,1,mu1)
+          call decomp_2d_write_one(1,mu1(:,:,:),resfile,"mu",0,io_restart,reduce_prec=.false.)
        endif
-       call MPI_FILE_CLOSE(fh,code)
-       if (code /= 0) then
-         if (nrank == 0) then
-           print *,'==========================================================='
-           print *, "Error: Impossible to close "//trim(filename)
-           print *,'==========================================================='
-         endif
-         call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_CLOSE")
-       endif
+
+       call decomp_2d_end_io(io_restart, resfile)
+       call decomp_2d_close_io(io_restart, resfile)
+
        ! Write info file for restart - Kay Schäfer
        if (nrank == 0) then
          write(filename,"('restart',I7.7,'.info')") itime
@@ -378,67 +375,69 @@ contains
          write(*,*)'RESTART from file:', filestart
          write(*,*)'==========================================================='
        end if
-       call MPI_FILE_OPEN(MPI_COMM_WORLD, filestart, &
-            MPI_MODE_RDONLY, MPI_INFO_NULL, &
-            fh, code)
-       if (code /= 0) then
-         if (nrank == 0) then
-           print *,'==========================================================='
-           print *, "Error: Impossible to open "//trim(filestart)
-           print *,'==========================================================='
-         endif
-         call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_OPEN")
-       endif
-       disp = 0_MPI_OFFSET_KIND
-       call decomp_2d_read_var(fh,disp,1,ux1)
-       call decomp_2d_read_var(fh,disp,1,uy1)
-       call decomp_2d_read_var(fh,disp,1,uz1)
+       call decomp_2d_open_io(io_restart, resfile, decomp_2d_read_mode)
+       call decomp_2d_start_io(io_restart, resfile)
+
+       call decomp_2d_read_one(1,ux1,resfile,"ux",io_restart,reduce_prec=.false.)
+       call decomp_2d_read_one(1,uy1,resfile,"uy",io_restart,reduce_prec=.false.)
+       call decomp_2d_read_one(1,uz1,resfile,"uz",io_restart,reduce_prec=.false.)
        ! read previous time-step if necessary for AB2 or AB3
        if ((itimescheme==2).or.(itimescheme==3)) then ! AB2 or AB3
-         call decomp_2d_read_var(fh,disp,1,dux1(:,:,:,2))
-         call decomp_2d_read_var(fh,disp,1,duy1(:,:,:,2))
-         call decomp_2d_read_var(fh,disp,1,duz1(:,:,:,2))
+          call decomp_2d_read_one(1,dux1(:,:,:,2),resfile,"dux-2",io_restart,reduce_prec=.false.)
+          call decomp_2d_read_one(1,duy1(:,:,:,2),resfile,"duy-2",io_restart,reduce_prec=.false.)
+          call decomp_2d_read_one(1,duz1(:,:,:,2),resfile,"duz-2",io_restart,reduce_prec=.false.)
        end if
        ! for AB3 one more previous time-step
        if (itimescheme==3) then ! AB3
-         call decomp_2d_read_var(fh,disp,1,dux1(:,:,:,3))
-         call decomp_2d_read_var(fh,disp,1,duy1(:,:,:,3))
-         call decomp_2d_read_var(fh,disp,1,duz1(:,:,:,3))
+          call decomp_2d_read_one(1,dux1(:,:,:,3),resfile,"dux-3",io_restart,reduce_prec=.false.)
+          call decomp_2d_read_one(1,duy1(:,:,:,3),resfile,"duy-3",io_restart,reduce_prec=.false.)
+          call decomp_2d_read_one(1,duz1(:,:,:,3),resfile,"duz-3",io_restart,reduce_prec=.false.)
        end if
        !
-       call decomp_2d_read_var(fh,disp,3,pp3,phG)
+       call decomp_2d_read_one(3,pp3,resfile,"pp",io_restart,phG,reduce_prec=.false.)
        !
        if (iscalar==1) then
-          do is = 1, numscalar
-             call decomp_2d_read_var(fh,disp,1,phi1(:,:,:,is))
-             ! previous time-steps
-             if ((itimescheme==2).or.(itimescheme==3).or.(itimescheme == 7)) then ! AB2 or AB3
-               call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,2,is))
-             end if
-             !
-             if (itimescheme==3) then ! AB3
-               call decomp_2d_read_var(fh,disp,1,dphi1(:,:,:,3,is))
-             end if
-          end do
+         do is=1, numscalar
+            write(varname, *) "phi-", is
+            call decomp_2d_read_one(1,phi1(:,:,:,is),resfile,varname,io_restart,reduce_prec=.false.)
+           ! previous time-steps
+           if ((itimescheme==2).or.(itimescheme==3)) then ! AB2 or AB3
+             write(varname, *) "dphi-", is, "-2"
+             call decomp_2d_read_one(1,dphi1(:,:,:,2,is),resfile,varname,io_restart,reduce_prec=.false.)
+           end if
+           !
+           if (itimescheme==3) then ! AB3
+              write(varname, *) "dphi-", is, "-3"
+              call decomp_2d_read_one(1,dphi1(:,:,:,3,is),resfile,varname,io_restart,reduce_prec=.false.)
+           end if
+           ! ABL 
+           if (itype==itype_abl) then
+             do j=1,xsize(2)
+               if (istret==0) y = (j + xstart(2)-1-1)*dy
+               if (istret /= 0) y = yp(j+xstart(2)-1)
+               if (ibuoyancy==1) then
+                 Tstat(j,1) = T_wall - (T_wall-T_top)*y/yly
+               else
+                 Tstat(j,1) = zero
+               endif
+             enddo
+           endif
+         end do
        endif
        if (ilmn) then
           do is = 1, nrhotime
-             call decomp_2d_read_var(fh,disp,1,rho1(:,:,:,is))
+             write(varname, *) "rho-", is
+             call decomp_2d_read_one(1,rho1(:,:,:,is),resfile,varname,io_restart,reduce_prec=.false.)
           enddo
           do is = 1, ntime
-             call decomp_2d_read_var(fh,disp,1,drho1(:,:,:,is))
+             write(varname, *) "drho-", is
+             call decomp_2d_read_one(1,drho1(:,:,:,is),resfile,varname,io_restart,reduce_prec=.false.)
           enddo
-          call decomp_2d_read_var(fh,disp,1,mu1)
+          call decomp_2d_read_one(1,mu1,resfile,"mu",io_restart,reduce_prec=.false.)
        end if
-       call MPI_FILE_CLOSE(fh,code)
-       if (code /= 0) then
-         if (nrank == 0) then
-           print *,'==========================================================='
-           print *, "Error: Impossible to close "//trim(filestart)
-           print *,'==========================================================='
-         endif
-         call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_CLOSE")
-       endif
+
+       call decomp_2d_end_io(io_restart, resfile)
+       call decomp_2d_close_io(io_restart, resfile)
 
        !! Read time of restart file
        write(filename,"('restart',I7.7,'.info')") ifirst-1
@@ -491,6 +490,73 @@ contains
     end if
 
   end subroutine restart
+  
+  subroutine init_restart_adios2()
+
+    use decomp_2d, only : mytype, phG
+    use decomp_2d_io, only : decomp_2d_register_variable, decomp_2d_init_io
+    use variables, only : numscalar
+    use param, only : ilmn, nrhotime, ntime
+    use var, only : itimescheme, iibm
+    
+    implicit none
+
+    integer :: ierror
+    
+    integer :: is
+    character(len=80) :: varname
+    
+    call decomp_2d_init_io(io_restart)
+    
+    call decomp_2d_register_variable(io_restart, "ux", 1, 0, 0, mytype)
+    call decomp_2d_register_variable(io_restart, "uy", 1, 0, 0, mytype)
+    call decomp_2d_register_variable(io_restart, "uz", 1, 0, 0, mytype)
+
+    call decomp_2d_register_variable(io_restart, "pp", 3, 0, 0, mytype, phG) !! XXX: need some way to handle the different grid here...
+
+    do is = 1, numscalar
+       write(varname,*) "phi-", is
+       call decomp_2d_register_variable(io_restart, trim(varname), 1, 0, 0, mytype)
+    end do
+
+    if ((itimescheme == 2) .or. (itimescheme == 3)) then
+       call decomp_2d_register_variable(io_restart, "dux-2", 1, 0, 0, mytype)
+       call decomp_2d_register_variable(io_restart, "duy-2", 1, 0, 0, mytype)
+       call decomp_2d_register_variable(io_restart, "duz-2", 1, 0, 0, mytype)
+
+       do is = 1, numscalar
+          write(varname,*) "dphi-", is, "-2"
+          call decomp_2d_register_variable(io_restart, trim(varname), 1, 0, 0, mytype)
+       end do
+
+       if (itimescheme == 3) then
+          call decomp_2d_register_variable(io_restart, "dux-3", 1, 0, 0, mytype)
+          call decomp_2d_register_variable(io_restart, "duy-3", 1, 0, 0, mytype)
+          call decomp_2d_register_variable(io_restart, "duz-3", 1, 0, 0, mytype)
+
+          do is = 1, numscalar
+             write(varname,*) "dphi-", is, "-3"
+             call decomp_2d_register_variable(io_restart, trim(varname), 1, 0, 0, mytype)
+          end do
+       endif
+    endif
+
+    if (iibm /= 0) then
+       call decomp_2d_register_variable(io_restart, "ep", 1, 0, 0, mytype)
+    endif
+
+    if (ilmn) then
+       do is = 1, nrhotime
+          write(varname, *) "rho-", is
+          call decomp_2d_register_variable(io_restart, varname, 1, 0, 0, mytype)
+       end do
+       do is = 1, ntime
+          write(varname, *) "drho-", is
+          call decomp_2d_register_variable(io_restart, varname, 1, 0, 0, mytype)
+       end do
+    end if
+    
+  end subroutine init_restart_adios2
   !############################################################################
   !!  SUBROUTINE: apply_spatial_filter
   !############################################################################
@@ -571,6 +637,28 @@ contains
     !if (iscalar == 1) phi1(:,:,:,1)=phi11
 
   end subroutine apply_spatial_filter
+  
+  !############################################################################
+  !!  SUBROUTINE: init_inflow_outflow
+  !############################################################################
+  subroutine init_inflow_outflow()
+
+    use decomp_2d, only : mytype
+    use decomp_2d_io, only : decomp_2d_init_io, decomp_2d_register_variable
+
+    use param, only : ntimesteps
+     
+    integer :: nplanes
+    
+    call decomp_2d_init_io(io_ioflow)
+
+    nplanes = ntimesteps
+    
+    call decomp_2d_register_variable(io_ioflow, "ux", 1, 0, 1, mytype, opt_nplanes=nplanes)
+    call decomp_2d_register_variable(io_ioflow, "uy", 1, 0, 1, mytype, opt_nplanes=nplanes)
+    call decomp_2d_register_variable(io_ioflow, "uz", 1, 0, 1, mytype, opt_nplanes=nplanes)
+    
+  end subroutine init_inflow_outflow
   !############################################################################
   !!  SUBROUTINE: read_inflow
   !############################################################################
@@ -584,11 +672,12 @@ contains
 
     implicit none
 
-    integer :: fh,code,ifileinflow
+    integer :: ifileinflow
     real(mytype), dimension(NTimeSteps,xsize(2),xsize(3)) :: ux1,uy1,uz1
-    integer (kind=MPI_OFFSET_KIND) :: disp
     character(20) :: fninflow
 
+    character(80) :: inflow_file
+    
     ! Recirculate inflows 
     if (ifileinflow>=ninflows) then 
       ifileinflow=mod(ifileinflow,ninflows)
@@ -596,31 +685,22 @@ contains
 
     ! Read inflow
     write(fninflow,'(i20)') ifileinflow+1
-    if (nrank==0) print *,'READING INFLOW FROM ',trim(inflowpath)//'inflow'//trim(adjustl(fninflow))
-    call MPI_FILE_OPEN(MPI_COMM_WORLD, trim(inflowpath)//'inflow'//trim(adjustl(fninflow)), &
-         MPI_MODE_RDONLY, MPI_INFO_NULL, &
-         fh, code)
-    if (code /= 0) then
-      if (nrank == 0) then
-        print *,'==========================================================='
-        print *,'Error: Impossible to open '//trim(inflowpath)//'inflow'//trim(adjustl(fninflow))
-        print *,'==========================================================='
-      endif
-      call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_OPEN")
-    endif
-    disp = 0_MPI_OFFSET_KIND
-    call decomp_2d_read_inflow(fh,disp,ntimesteps,ux_inflow)
-    call decomp_2d_read_inflow(fh,disp,ntimesteps,uy_inflow)
-    call decomp_2d_read_inflow(fh,disp,ntimesteps,uz_inflow)
-    call MPI_FILE_CLOSE(fh,code)
-    if (code /= 0) then
-      if (nrank == 0) then
-        print *,'==========================================================='
-        print *,'Error: Impossible to close '//trim(inflowpath)//'inflow'//trim(adjustl(fninflow))
-        print *,'==========================================================='
-      endif
-      call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_CLOSE")
-    endif
+#ifndef ADIOS2
+    write(inflow_file, "(A)") trim(inflowpath)//'inflow'//trim(adjustl(fninflow))
+#else
+    write(inflow_file, "(A)") trim(inflowpath)//'inflow'
+#endif
+    if (nrank==0) print *,'READING INFLOW FROM ',inflow_file
+    
+    call decomp_2d_open_io(io_ioflow, inflow_file, decomp_2d_read_mode)
+    call decomp_2d_start_io(io_ioflow, inflow_file)
+
+    call decomp_2d_read_inflow(inflow_file,"ux",ntimesteps,ux_inflow,io_ioflow)
+    call decomp_2d_read_inflow(inflow_file,"uy",ntimesteps,uy_inflow,io_ioflow)
+    call decomp_2d_read_inflow(inflow_file,"uz",ntimesteps,uz_inflow,io_ioflow)
+
+    call decomp_2d_end_io(io_ioflow, inflow_file)
+    call decomp_2d_close_io(io_ioflow, inflow_file)
 
   end subroutine read_inflow
   !############################################################################
@@ -664,46 +744,42 @@ contains
     implicit none
 
     integer,intent(in) :: ifileoutflow
-    integer :: fh, code
-    integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     character(20) :: fnoutflow
+    character(80) :: outflow_file
+    logical, save :: clean = .true.
+    integer :: iomode
+
+    if (clean .and. (irestart == 0)) then
+       iomode = decomp_2d_write_mode
+       clean = .false.
+    else
+       iomode = decomp_2d_append_mode
+    end if
     
     write(fnoutflow,'(i20)') ifileoutflow
-    if (nrank==0) print *,'WRITING OUTFLOW TO ','./out/inflow'//trim(adjustl(fnoutflow))
-    call MPI_FILE_OPEN(MPI_COMM_WORLD, './out/inflow'//trim(adjustl(fnoutflow)), &
-         MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
-         fh, code)
-    if (code /= 0) then
-      if (nrank == 0) then
-        print *,'==========================================================='
-        print *,'Error: Impossible to open '//'./out/inflow'//trim(adjustl(fnoutflow))
-        print *,'==========================================================='
-      endif
-      call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_OPEN")
-    endif
-    filesize = 0_MPI_OFFSET_KIND
-    call MPI_FILE_SET_SIZE(fh,filesize,code)  ! guarantee overwriting
-    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_SET_SIZE")
-    disp = 0_MPI_OFFSET_KIND
-    call decomp_2d_write_outflow(fh,disp,ntimesteps,ux_recoutflow)
-    call decomp_2d_write_outflow(fh,disp,ntimesteps,uy_recoutflow)
-    call decomp_2d_write_outflow(fh,disp,ntimesteps,uz_recoutflow)
-    call MPI_FILE_CLOSE(fh, code)
-    if (code /= 0) then
-      if (nrank == 0) then
-        print *,'==========================================================='
-        print *,'Error: Impossible to close '//'./out/inflow'//trim(adjustl(fnoutflow))
-        print *,'==========================================================='
-      endif
-      call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_CLOSE")
-    endif
+#ifndef ADIOS2
+    write(outflow_file, "(A)") './out/inflow'//trim(adjustl(fnoutflow))
+#else
+    write(outflow_file, "(A)") './out/inflow'
+#endif
+    if (nrank==0) print *,'WRITING OUTFLOW TO ', outflow_file
+    
+    call decomp_2d_open_io(io_ioflow, outflow_file, iomode)
+    call decomp_2d_start_io(io_ioflow, outflow_file)
+
+    call decomp_2d_write_outflow(outflow_file,"ux",ntimesteps,ux_recoutflow,io_ioflow)
+    call decomp_2d_write_outflow(outflow_file,"uy",ntimesteps,uy_recoutflow,io_ioflow)
+    call decomp_2d_write_outflow(outflow_file,"uz",ntimesteps,uz_recoutflow,io_ioflow)
+
+    call decomp_2d_end_io(io_ioflow, outflow_file)
+    call decomp_2d_close_io(io_ioflow, outflow_file)
     
   end subroutine write_outflow
   !############################################################################
   !##################################################################
-    !!  SUBROUTINE: compute_cfldiff
-    !! DESCRIPTION: Computes Diffusion/Fourier number
-    !!      AUTHOR: Kay Schäfer
+  !!  SUBROUTINE: compute_cfldiff
+  !! DESCRIPTION: Computes Diffusion/Fourier number
+  !!      AUTHOR: Kay Schäfer
   !##################################################################
   subroutine compute_cfldiff()
      use param, only : xnu,dt,dx,dy,dz,istret
@@ -1169,7 +1245,7 @@ subroutine stretching()
   endif
 
   !Mapping!!, metric terms
-  if (istret  /=  3) then
+  if (istret /= 3) then
      do j=1,ny
         ppy(j)=yly*(alpha/pi+(one/pi/beta)*sin(pi*yeta(j))*sin(pi*yeta(j)))
         pp2y(j)=ppy(j)*ppy(j)
@@ -1182,7 +1258,7 @@ subroutine stretching()
      enddo
   endif
 
-  if (istret  ==  3) then
+  if (istret == 3) then
      do j=1,ny
         ppy(j)=yly*(alpha/pi+(one/pi/beta)*sin(pi*yeta(j))*sin(pi*yeta(j)))
         pp2y(j)=ppy(j)*ppy(j)
@@ -1605,7 +1681,7 @@ subroutine tripping(tb,ta)
 
      !First random generation of h
      h_i(:)=h_nxt(:)
-     if (nrank  ==  0) then
+     if (nrank == 0) then
         do j=1,z_modes
            call random_number(randx)
            h_coeff(j)=one*(randx-zpfive)
@@ -1747,7 +1823,7 @@ subroutine tbl_tripping(tb,ta)
      h_2(:)=h_1(:)
      !---------------------------------------------------------
      !Create signal again
-     if (nrank  ==  0) then
+     if (nrank == 0) then
         do j=1,z_modes
            call random_number(randx)
            h_coeff1(j)=one*(randx-zpfive)/sqrt_prec(real(z_modes,mytype))

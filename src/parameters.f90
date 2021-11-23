@@ -285,8 +285,8 @@ subroutine parameter(input_i3d)
   ! 2D snapshot is not compatible with coarse visualization
   if (output2D /= 0) nvisu = 1
 #ifdef ADIOS2
-  if (nvisu  /=  1) then
-     if (nrank  ==  0) then
+  if (nvisu /= 1) then
+     if (nrank == 0) then
         write(*,*)  "ADIOS2 output is not compatible with coarse visualisation"
         write(*,*)  "disabling coarse visualisation"
         write(*,*)  "To compress the IO, see ADIOS2 options"
@@ -321,7 +321,7 @@ subroutine parameter(input_i3d)
      if (iscalar == 1) xcst_sc = xcst / sc
   endif
 
-  if (itype==itype_tbl.and.A_tr  >  zero.and.nrank==0)  write(*,*)  "TBL tripping is active"
+  if (itype==itype_tbl.and.A_tr > zero.and.nrank==0)  write(*,*)  "TBL tripping is active"
 
   anglex = sin_prec(pi*angle/onehundredeighty)
   angley = cos_prec(pi*angle/onehundredeighty)

@@ -39,11 +39,13 @@ module channel
 
   integer, save :: iochannel
   character(len=1),parameter :: NL=char(10) !new line character
+  character(len=*), parameter :: io_channel = "io-channel"
 
   PRIVATE ! All functions/subroutines private by default
   PUBLIC :: init_channel, boundary_conditions_channel, postprocess_channel, &
-            visu_channel, momentum_forcing_channel, scalar_forcing_channel, &
-            geomcomplex_channel, finalize_channel, boot_channel
+            visu_channel, visu_channel_init, momentum_forcing_channel, &
+            scalar_forcing_channel, geomcomplex_channel, finalize_channel, &
+            boot_channel
 
 contains
   !############################################################################
@@ -117,11 +119,11 @@ contains
     if (read_from_file) then
 
        if (nrank == 0) print *, "Channel: init from snapshot."
-       call decomp_2d_read_one(1,ux1,"channel_init_ux")
-       call decomp_2d_read_one(1,uy1,"channel_init_uy")
-       call decomp_2d_read_one(1,uz1,"channel_init_uz")
+       call decomp_2d_read_one(1,ux1,"data","channel_init_ux",io_channel)
+       call decomp_2d_read_one(1,uy1,"data","channel_init_uy",io_channel)
+       call decomp_2d_read_one(1,uz1,"data","channel_init_uz",io_channel)
        if (iscalar == 1) then
-          call decomp_2d_read_one(1,phi1(:,:,:,1),"channel_init_t")
+          call decomp_2d_read_one(1,phi1(:,:,:,1),"data","channel_init_t",io_channel)
           if (numscalar > 1) then
              phi1(:,:,:,2:numscalar) = zero
           endif
@@ -317,7 +319,7 @@ contains
     avg_param = zero
     call avg3d (uz1, avg_param)
     if (nrank == 0) write(*,*)'## SUB Channel Init uz_avg ', avg_param
-    if (nrank  ==  0) write(*,*) '# init end ok'
+    if (nrank == 0) write(*,*) '# init end ok'
 #endif
 
   end subroutine init_channel
@@ -529,6 +531,21 @@ contains
     endif
 
   end subroutine postprocess_channel
+  subroutine visu_channel_init(visu_initialised)
+
+    use decomp_2d, only : mytype
+    use decomp_2d_io, only : decomp_2d_register_variable
+    use visu, only : io_name, output2D
+    
+    implicit none
+
+    logical, intent(out) :: visu_initialised
+
+    call decomp_2d_register_variable(io_name, "critq", 1, 0, output2D, mytype)
+
+    visu_initialised = .true.
+    
+  end subroutine visu_channel_init
   !############################################################################
   !!
   !!  SUBROUTINE: visu_channel
@@ -600,7 +617,7 @@ contains
                  - td1(:,:,:) * tb1(:,:,:) &
                  - tg1(:,:,:) * tc1(:,:,:) &
                  - th1(:,:,:) * tf1(:,:,:)
-    call write_field(di1, ".", "critq", trim(num))
+    call write_field(di1, ".", "critq", trim(num), flush = .true.) ! Reusing temporary array, force flush
 
   end subroutine visu_channel
   !############################################################################
@@ -671,7 +688,7 @@ contains
     h = (yly - two) / two
 
     zeromach=one
-    do while ((one + zeromach / two)  >  one)
+    do while ((one + zeromach / two) > one)
        zeromach = zeromach/two
     end do
     zeromach = ten*zeromach

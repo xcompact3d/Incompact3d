@@ -44,7 +44,8 @@ module cyl
 
   PRIVATE ! All functions/subroutines private by default
   PUBLIC :: init_cyl, boundary_conditions_cyl, postprocess_cyl, &
-            geomcomplex_cyl, visu_cyl, boot_cyl, finalize_cyl, cyl_iounit
+            geomcomplex_cyl, visu_cyl, visu_cyl_init, &
+            boot_cyl, finalize_cyl, cyl_iounit
 
 contains
 
@@ -88,7 +89,7 @@ contains
     real(mytype)               :: cexx,ceyy,dist_axi
 
     zeromach=one
-    do while ((one + zeromach / two)  >  one)
+    do while ((one + zeromach / two) > one)
        zeromach = zeromach/two
     end do
     zeromach = ten*zeromach
@@ -333,6 +334,22 @@ contains
 
   end subroutine postprocess_cyl
 
+  subroutine visu_cyl_init (visu_initialised)
+
+    use decomp_2d, only : mytype
+    use decomp_2d_io, only : decomp_2d_register_variable
+    use visu, only : io_name, output2D
+    
+    implicit none
+
+    logical, intent(out) :: visu_initialised
+
+    call decomp_2d_register_variable(io_name, "vort", 1, 0, output2D, mytype)
+    call decomp_2d_register_variable(io_name, "critq", 1, 0, output2D, mytype)
+
+    visu_initialised = .true.
+    
+  end subroutine visu_cyl_init
   !############################################################################
   !!
   !!  SUBROUTINE: visu_cyl
@@ -400,7 +417,7 @@ contains
     di1(:,:,:)=sqrt(  (tf1(:,:,:)-th1(:,:,:))**2 &
                     + (tg1(:,:,:)-tc1(:,:,:))**2 &
                     + (tb1(:,:,:)-td1(:,:,:))**2)
-    call write_field(di1, ".", "vort", trim(num))
+    call write_field(di1, ".", "vort", trim(num), flush = .true.) ! Reusing temporary array, force flush
 
     !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
     di1 = zero
@@ -408,7 +425,7 @@ contains
                   - td1(:,:,:)*tb1(:,:,:) &
                   - tg1(:,:,:)*tc1(:,:,:) &
                   - th1(:,:,:)*tf1(:,:,:)
-    call write_field(di1, ".", "critq", trim(num))
+    call write_field(di1, ".", "critq", trim(num), flush = .true.) ! Reusing temporary array, force flush
 
   end subroutine visu_cyl
 

@@ -39,6 +39,7 @@ module cavity
   implicit none
 
   integer, save :: iocavity
+  character(len=*), parameter :: io_cavity = "io-cavity"
 
   private ! All functions/subroutines private by default
   public :: init_cavity, boundary_conditions_cavity, &
@@ -74,11 +75,11 @@ contains
     if (read_from_file) then
 
        if (nrank == 0) print *, "Cavity: init from snapshot."
-       call decomp_2d_read_one(1,ux1,"cavity_init_ux")
-       call decomp_2d_read_one(1,uy1,"cavity_init_uy")
-       call decomp_2d_read_one(1,uz1,"cavity_init_uz")
+       call decomp_2d_read_one(1,ux1,"data","cavity_init_ux",io_cavity)
+       call decomp_2d_read_one(1,uy1,"data","cavity_init_uy",io_cavity)
+       call decomp_2d_read_one(1,uz1,"data","cavity_init_uz",io_cavity)
        if (iscalar == 1) then
-          call decomp_2d_read_one(1,phi1(:,:,:,1),"cavity_init_t")
+          call decomp_2d_read_one(1,phi1(:,:,:,1),"data","cavity_init_t",io_cavity)
           if (numscalar > 1) then
              phi1(:,:,:,2:numscalar) = zero
           endif

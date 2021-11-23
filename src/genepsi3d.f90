@@ -47,7 +47,7 @@ contains
     logical :: dir_exists
 
 #ifdef DEBG
-    if (nrank  ==  0) write(*,*)'# body_init start'
+    if (nrank == 0) write(*,*)'# body_init start'
 #endif
     !###################################################################
     ! Check if geometry folder exists
@@ -63,7 +63,7 @@ contains
     call geomcomplex(ep1,xstart(1),xend(1),ny,xstart(2),xend(2),xstart(3),xend(3),dx,yp,dz,one)
 
 #ifdef DEBG
-    if (nrank  ==  0) write(*,*)'# body_init done'
+    if (nrank == 0) write(*,*)'# body_init done'
 #endif
 
     return
@@ -110,8 +110,9 @@ contains
 !############################################################################
   subroutine genepsi3d(ep1)
 
-    USE variables, only : nx,ny,nz,nxm,nym,nzm,yp
+    USE variables, only : nx,ny,nz,nxm,nym,nzm,yp, ilist
     USE param, only : xlx,yly,zlz,dx,dy,dz,izap,npif,nclx,ncly,nclz,istret,itype,itype_sandbox
+    use param, only : itime
     USE complex_geometry
     use decomp_2d
 
@@ -131,7 +132,7 @@ contains
     logical :: dir_exists
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
     !
-    if (nrank==0) then
+    if (nrank==0.and.mod(itime,ilist)==0) then
       write(*,*)'==========================================================='
       write(*,*)'Generating the geometry!'
     end if
@@ -817,13 +818,14 @@ contains
     integer                            :: npif
     integer                            :: i,j,k,count
     character :: tmp_char
+    character(len=*), parameter :: io_geom = "io-geom"
     !###################################################################
     if (read_flag) then
       if (nrank==0) print *,'Reading geometry'
-      call decomp_2d_read_one(1,ep1,'data/geometry/epsilon.bin')   
+      call decomp_2d_read_one(1,ep1,'data/geometry','epsilon.bin',io_geom)   
     else
       if (nrank==0) print *,'Writing geometry'
-      call decomp_2d_write_one(1,ep1,'data/geometry/epsilon.bin')
+      call decomp_2d_write_one(1,ep1,'data/geometry','epsilon.bin',0,io_geom)
     endif
     !###################################################################
     !x-pencil

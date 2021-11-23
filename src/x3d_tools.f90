@@ -94,6 +94,7 @@ endsubroutine boot_xcompact3d
 subroutine init_xcompact3d(InputFN)
 
   use decomp_2d
+  use decomp_2d_io, only : decomp_2d_io_init
   use decomp_2d_poisson, ONLY : decomp_2d_poisson_init
   use case
   use sandbox, only : init_sandbox
@@ -101,7 +102,8 @@ subroutine init_xcompact3d(InputFN)
   use var
   use navier, only : calc_divu_constraint
   use tools, only : test_speed_min_max, test_scalar_min_max, &
-                    restart, simu_stats, compute_cfldiff
+                    restart, simu_stats, compute_cfldiff, &
+                    init_inflow_outflow
   use param, only : ilesmod, jles,itype, &
                     irestart, catching_signal
   use variables, only : nx, ny, nz, nxm, nym, nzm, &
@@ -109,7 +111,7 @@ subroutine init_xcompact3d(InputFN)
                         nstat, nvisu, nprobe
   use les, only: init_explicit_les
   use turbine, only: init_turbines
-  use visu, only : visu_init
+  use visu, only : visu_init, visu_ready
   use genepsi, only : genepsi3d, epsi_init
   use ibm, only : body
   use probes, only : init_probes
@@ -121,6 +123,7 @@ subroutine init_xcompact3d(InputFN)
   call parameter(InputFN)
 
   call decomp_2d_init(nx,ny,nz,p_row,p_col)
+  call decomp_2d_io_init()
   call init_coarser_mesh_statS(nstat,nstat,nstat,.true.)    !start from 1 == true
   call init_coarser_mesh_statV(nvisu,nvisu,nvisu,.true.)    !start from 1 == true
   call init_coarser_mesh_statP(nprobe,nprobe,nprobe,.true.) !start from 1 == true
@@ -158,7 +161,12 @@ subroutine init_xcompact3d(InputFN)
 
   !####################################################################
   ! initialise visu
-  if (ivisu /= 0) call visu_init()
+  if (ivisu /= 0) then
+     call visu_init()
+     call visu_case_init() !! XXX: If you get error about uninitialised IO, look here.
+                           !! Ensures additional case-specific variables declared for IO
+     call visu_ready()
+  end if
   ! compute diffusion number of simulation
   call compute_cfldiff()
   !####################################################################
@@ -173,6 +181,10 @@ subroutine init_xcompact3d(InputFN)
      endif
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,rho1,drho1,mu1,0)
   endif
+
+  if ((ioutflow == 1).or.(iin == 3)) then
+     call init_inflow_outflow()
+  end if
 
   if ((iibm == 2).or.(iibm == 3)) then
      call genepsi3d(ep1)
@@ -201,6 +213,7 @@ subroutine finalise_xcompact3d(flag)
 
   use MPI
   use decomp_2d
+  use decomp_2d_io, only : decomp_2d_io_finalise
   use decomp_2d_poisson, only : decomp_2d_poisson_finalize
   use tools, only : simu_stats
   use var, only : finalize_variables
@@ -230,6 +243,7 @@ subroutine finalise_xcompact3d(flag)
   call decomp_info_finalize(ph2)
   call decomp_info_finalize(ph3)
   call decomp_info_finalize(phG)
+  call decomp_2d_io_finalise()
   call decomp_2d_finalize()
   if (flag) then
     call decomp_2d_poisson_finalize()

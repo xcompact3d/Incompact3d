@@ -46,7 +46,7 @@ module tgv
 
   PRIVATE ! All functions/subroutines private by default
   PUBLIC :: init_tgv, boundary_conditions_tgv, postprocess_tgv, visu_tgv, &
-            boot_tgv, finalize_tgv
+            visu_tgv_init, boot_tgv, finalize_tgv
 
 contains
 
@@ -89,8 +89,7 @@ contains
 
     real(mytype) :: y,r,um,r3,x,z,h,ct
     real(mytype) :: cx0,cy0,cz0,hg,lg
-    integer :: k,j,i,fh,ierror,is,code
-    integer (kind=MPI_OFFSET_KIND) :: disp
+    integer :: k,j,i,ierror,is,code
     integer ::  isize
 
     if (iscalar==1) then
@@ -244,9 +243,9 @@ contains
        do j=xstart(2),xend(2)
           do i=xstart(1),xend(1)
              vol1(i,j,k)=dxdydz
-             if (i  ==  1   .or. i  ==  nx) vol1(i,j,k) = vol1(i,j,k)/two
-             if (j  ==  1   .or. j  ==  ny)  vol1(i,j,k) = vol1(i,j,k)/two
-             if (k  ==  1   .or. k  ==  nz)  vol1(i,j,k) = vol1(i,j,k)/two
+             if (i == 1 .or. i == nx) vol1(i,j,k) = vol1(i,j,k)/two
+             if (j == 1 .or. j == ny)  vol1(i,j,k) = vol1(i,j,k)/two
+             if (k == 1 .or. k == nz)  vol1(i,j,k) = vol1(i,j,k)/two
           end do
        end do
     end do
@@ -256,12 +255,12 @@ contains
        do j=xstart(2),xend(2)
           do i=xstart(1),xend(1)
              volSimps1(i,j,k)=dxdydz
-             if (i  ==  1   .or. i  ==  nx) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
-             if (j  ==  1   .or. j  ==  ny) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
-             if (k  ==  1   .or. k  ==  nz) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
-             if (i  ==  2   .or. i  ==  nx-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
-             if (j  ==  2   .or. j  ==  ny-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
-             if (k  ==  2   .or. k  ==  nz-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
+             if (i == 1 .or. i == nx) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
+             if (j == 1 .or. j == ny) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
+             if (k == 1 .or. k == nz) volSimps1(i,j,k) = volSimps1(i,j,k) * (five/twelve)
+             if (i == 2 .or. i == nx-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
+             if (j == 2 .or. j == ny-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
+             if (k == 2 .or. k == nz-1) volSimps1(i,j,k) = volSimps1(i,j,k) * (thirteen/twelve)
           end do
        end do
     end do
@@ -464,14 +463,31 @@ contains
        endif
     endif
 
-    ! Compute analytical and discrete errors for 2D TGV
-    ! Discrete error valid only for explicit Euler
-    if (tgv_twod) then
-      call error_tgv2D(ux1,uy1,phi1)
-    endif
-
   end subroutine postprocess_tgv
 
+  !############################################################################
+  !!
+  !!  SUBROUTINE: visu_tgv_init
+  !!      AUTHOR: PB
+  !! DESCRIPTION: Initialises TGV-specific visualisation
+  !!
+  !############################################################################
+  subroutine visu_tgv_init (visu_initialised)
+
+    use decomp_2d, only : mytype
+    use decomp_2d_io, only : decomp_2d_register_variable
+    use visu, only : io_name, output2D
+    
+    implicit none
+
+    logical, intent(out) :: visu_initialised
+
+    call decomp_2d_register_variable(io_name, "vort", 1, 0, output2D, mytype)
+    call decomp_2d_register_variable(io_name, "critq", 1, 0, output2D, mytype)
+
+    visu_initialised = .true.
+    
+  end subroutine visu_tgv_init
   !############################################################################
   !!
   !!  SUBROUTINE: visu_tgv
@@ -539,7 +555,7 @@ contains
     di1(:,:,:)=sqrt(  (tf1(:,:,:)-th1(:,:,:))**2 &
                     + (tg1(:,:,:)-tc1(:,:,:))**2 &
                     + (tb1(:,:,:)-td1(:,:,:))**2)
-    call write_field(di1, ".", "vort", trim(num))
+    call write_field(di1, ".", "vort", trim(num), flush=.true.) ! Reusing temporary array, force flush
 
     !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
     di1 = zero
@@ -547,7 +563,7 @@ contains
                   - td1(:,:,:)*tb1(:,:,:) &
                   - tg1(:,:,:)*tc1(:,:,:) &
                   - th1(:,:,:)*tf1(:,:,:)
-    call write_field(di1, ".", "critq", trim(num))
+    call write_field(di1, ".", "critq", trim(num), flush=.true.) ! Reusing temporary array, force flush
 
   end subroutine visu_tgv
   !############################################################################

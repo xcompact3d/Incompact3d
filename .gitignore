@@ -36,6 +36,9 @@ test*
 .settings
 *.bp4
 *.hdf5
+checkpoint
+restart*
+forces.dat*
 tests/*/*F90
 tests/*/*inc
 tests/*/*.a

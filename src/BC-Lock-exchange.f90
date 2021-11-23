@@ -66,9 +66,12 @@ module lockexch
 
   logical, save :: init = .FALSE.
 
+  character(len=*), parameter :: io_bcle = "BC-lock-exchange-io", &
+       bcle_dir = "data-lock-exchange"
+  
   private
   public :: init_lockexch, boundary_conditions_lockexch, postprocess_lockexch, &
-       pfront, set_fluid_properties_lockexch
+       pfront, set_fluid_properties_lockexch, visu_lockexch_init
 
 contains
 
@@ -273,6 +276,21 @@ contains
     return
   end subroutine init_lockexch
 
+  subroutine visu_lockexch_init(visu_initialised)
+
+    use decomp_2d, only : mytype
+    use decomp_2d_io, only : decomp_2d_register_variable
+    
+    implicit none
+
+    logical, intent(out) :: visu_initialised
+
+    call decomp_2d_register_variable(io_bcle, "dissm", 3, 0, 3, mytype)
+    call decomp_2d_register_variable(io_bcle, "dep", 2, 0, 2, mytype)
+
+    visu_initialised = .true.
+    
+  end subroutine visu_lockexch_init
 
   subroutine postprocess_lockexch(rho1,ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
@@ -300,12 +318,12 @@ contains
           do j=xstart(2),xend(2)
              do i=xstart(1),xend(1)
                 vol1(i,j,k)=dx*dy*dz
-                if (i  ==  1 .or. i  ==  nx) vol1(i,j,k) = vol1(i,j,k) * half !five/twelve
-                if (j  ==  1 .or. j  ==  ny) vol1(i,j,k) = vol1(i,j,k) * half !five/twelve
-                if (k  ==  1 .or. k  ==  nz) vol1(i,j,k) = vol1(i,j,k) * half !five/twelve
-                ! if (i  ==  2 .or. i  ==  nx-1) vol1(i,j,k) = vol1(i,j,k) * thirteen/twelve
-                ! if (j  ==  2 .or. j  ==  ny-1) vol1(i,j,k) = vol1(i,j,k) * thirteen/twelve
-                ! if (k  ==  2 .or. k  ==  nz-1) vol1(i,j,k) = vol1(i,j,k) * thirteen/twelve
+                if (i == 1 .or. i == nx) vol1(i,j,k) = vol1(i,j,k) * half !five/twelve
+                if (j == 1 .or. j == ny) vol1(i,j,k) = vol1(i,j,k) * half !five/twelve
+                if (k == 1 .or. k == nz) vol1(i,j,k) = vol1(i,j,k) * half !five/twelve
+                ! if (i == 2 .or. i == nx-1) vol1(i,j,k) = vol1(i,j,k) * thirteen/twelve
+                ! if (j == 2 .or. j == ny-1) vol1(i,j,k) = vol1(i,j,k) * thirteen/twelve
+                ! if (k == 2 .or. k == nz-1) vol1(i,j,k) = vol1(i,j,k) * thirteen/twelve
              end do
           end do
        end do
@@ -314,8 +332,8 @@ contains
        area2=dx*dz
        do k=ystart(3),yend(3)
           do i=ystart(1),yend(1)
-             if (i  ==  1 .or. i  ==  nx) area2(i,k) = area2(i,k)/two
-             if (k  ==  1 .or. k  ==  nz)  area2(i,k) = area2(i,k)/two
+             if (i == 1 .or. i == nx) area2(i,k) = area2(i,k)/two
+             if (k == 1 .or. k == nz)  area2(i,k) = area2(i,k)/two
           end do
        end do
 
@@ -372,7 +390,7 @@ contains
        call front2d(rhom3(:,:),xf2d)
     endif
 
-    if (nrank  ==  0) then
+    if (nrank == 0) then
        FS = 1+numscalar+numscalar+3+2 !Number of columns
        write(fileformat, '( "(",I4,"(E14.6),A)" )' ) FS
        FS = FS*14+1  !Line width
@@ -509,7 +527,7 @@ contains
     !    ilag=0
     ! endif
     do is=1, numscalar
-       if (ri(is)  ==  zero) cycle
+       if (ri(is) == zero) cycle
        call ibm_derxxS (dphixx1,phi1(:,:,:,is),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1,zero)
 
        call transpose_x_to_y(dphixx1,dphixx2)
@@ -584,7 +602,7 @@ contains
     call MPI_REDUCE(dep,dep1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
 
-    if (nrank  ==  0) then
+    if (nrank == 0) then
        open(67,file='./out/budget',status='unknown',form='formatted',&
             access='direct',recl=71) !71=5*14+1
        write(67,"(5E14.6,A)",rec=itime/iprocessing+1) t,ek1,dek1,ep1,dep1,NL
@@ -595,16 +613,16 @@ contains
        !if (save_diss == 1) then
        uvisu=zero
        call fine_to_coarseV(1,diss1,uvisu)
-       write(filename,"('./data/diss',I4.4)") itime/ioutput
-       call decomp_2d_write_one(1,uvisu,filename,2)
+       write(filename,"('diss',I4.4)") itime/ioutput
+       call decomp_2d_write_one(1,uvisu,bcle_dir,filename,2,io_bcle)
        !endif
 
        !if (save_dissm == 1) then
        call transpose_x_to_y (diss1,temp2)
        call transpose_y_to_z (temp2,temp3)
        call mean_plane_z(temp3,zsize(1),zsize(2),zsize(3),temp3(:,:,1))
-       write(filename,"('./data/dissm',I4.4)") itime/ioutput
-       call decomp_2d_write_plane(3,temp3,3,1,filename)
+       write(filename,"('dissm',I4.4)") itime/ioutput
+       call decomp_2d_write_plane(3,temp3,3,1,bcle_dir,filename,io_bcle)
        !endif
     endif
 
@@ -627,7 +645,7 @@ contains
 
     dep2 = zero
     do is=1, numscalar
-       if (uset(is)  ==  zero) cycle
+       if (uset(is) == zero) cycle
        call transpose_x_to_y(phi1(:,:,:,is),phi2(:,:,:,is))
 
        tempdep2=zero
@@ -640,8 +658,8 @@ contains
           end do
        end do
 
-       write(filename,"('./out/dep',I1.1,I4.4)") is,itime/iprocessing
-       call decomp_2d_write_plane(2,tempdep2(:,:,:,is),2,1,filename)
+       write(filename,"('dep',I1.1,I4.4)") is,itime/iprocessing
+       call decomp_2d_write_plane(2,tempdep2(:,:,:,is),2,1,bcle_dir,filename,io_bcle)
     enddo
 
   end subroutine dep
@@ -687,7 +705,7 @@ contains
 
     dms=zero; dms1=zero
     do is=1, numscalar
-       if (uset(is)  ==  zero) cycle
+       if (uset(is) == zero) cycle
        do k=ystart(3),yend(3)
           do i=ystart(1),yend(1)
              dms(is)=dms(is)+dep2(i,k,is)*area2(i,k)
@@ -717,7 +735,7 @@ contains
     kloop: do k=xstart(3),xend(3)
        jloop: do j=xstart(2),xend(2)
           iloop: do i=xend(1), xstart(1), -1
-             if ( phisum1(i,j,k)  >=  0.01_mytype) then
+             if ( phisum1(i,j,k) >= 0.01_mytype) then
                 xp(1,1:3) = (/ real (i-1,mytype)*dx, real (j-1,mytype)*dy, real(k-1,mytype)*dz /)
                 exit kloop
              end if

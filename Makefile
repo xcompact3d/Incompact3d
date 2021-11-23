@@ -89,7 +89,7 @@ ifeq ($(IO),adios2)
     $(error Set ADIOS2DIR=/path/to/adios2/install/)
   endif
   OPT := -DADIOS2 $(OPT)
-  INC := $(INC) $(patsubst $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-libs),,$(shell $(ADIOS2DIR)/bin/adios2-config -f))
+  INC := $(INC) $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-flags) #$(patsubst $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-libs),,$(shell $(ADIOS2DIR)/bin/adios2-config -f))
   LIBIO := $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-libs)
 endif
 
@@ -157,7 +157,7 @@ $(SRCDIR)/derive.o: $(SRCDIR)/ibm.o $(SRCDIR)/thomas.o
 $(SRCDIR)/dynstall.o: $(SRCDIR)/airfoils.o
 $(SRCDIR)/dynstall_legacy.o: $(SRCDIR)/airfoils.o
 $(SRCDIR)/filters.o: $(SRCDIR)/ibm.o
-$(SRCDIR)/forces.o: $(SRCDIR)/module_param.o $(DECOMPDIR)/io.o
+$(SRCDIR)/forces.o: $(SRCDIR)/module_param.o $(DECOMPDIR)/io.o $(SRCDIR)/ibm.o
 $(SRCDIR)/genepsi3d.o: $(SRCDIR)/BC-Cylinder.o $(SRCDIR)/BC-Periodic-hill.o $(SRCDIR)/BC-Sandbox.o
 $(SRCDIR)/ibm.o: $(SRCDIR)/module_param.o $(SRCDIR)/BC-dbg-schemes.o
 $(SRCDIR)/implicit.o: $(SRCDIR)/variables.o
@@ -166,7 +166,7 @@ $(SRCDIR)/module_param.o: $(DECOMPDIR)/decomp_2d.o
 $(SRCDIR)/navier.o: $(SRCDIR)/forces.o $(SRCDIR)/poisson.o
 $(SRCDIR)/parameters.o: $(SRCDIR)/BC-Lock-exchange.o $(SRCDIR)/visu.o
 $(SRCDIR)/poisson.o: $(SRCDIR)/variables.o $(SRCDIR)/BC-dbg-schemes.o
-$(SRCDIR)/probes.o: $(SRCDIR)/variables.o
+$(SRCDIR)/probes.o: $(SRCDIR)/variables.o $(SRCDIR)/ibm.o
 $(SRCDIR)/schemes.o: $(SRCDIR)/implicit.o
 $(SRCDIR)/statistics.o: $(SRCDIR)/variables.o $(SRCDIR)/tools.o
 $(SRCDIR)/thomas.o: $(SRCDIR)/module_param.o
@@ -190,9 +190,9 @@ post:
 
 .PHONY: clean
 clean:
-	rm -f $(DECOMPDIR)/*.o $(DECOMPDIR)/*.mod
-	rm -f $(SRCDIR)/*.o $(SRCDIR)/*.mod
-	rm -f *.o *.mod xcompact3d post
+	rm -f $(DECOMPDIR)/*.o $(DECOMPDIR)/*.mod $(DECOMPDIR)/*.smod
+	rm -f $(SRCDIR)/*.o $(SRCDIR)/*.mod $(SRCDIR)/*.smod
+	rm -f *.o *.mod *.smod xcompact3d
 	$(MAKE) -C tests clean
 
 .PHONY: cleanall

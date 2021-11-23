@@ -726,7 +726,7 @@ contains
     nz = nz_global
 
 #ifdef DEBG
-    if (nrank  ==  0) write(*,*)'# Poisoon_010 Init'
+    if (nrank == 0) write(*,*)'# Poisoon_010 Init'
 #endif
     ! rhs is in Z-pencil but requires global operations in Y
     call transpose_z_to_y(rhs,rw2,ph)

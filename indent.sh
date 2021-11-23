@@ -32,6 +32,7 @@ done
 # no .le., use <=
 # no .gt., use >
 # no .le., use <
+# no double space
 for f in decomp2d/*f90 decomp2d/*.inc src/*f90
 do
 	sed -i 's!\.eq\.! == !g' $f
@@ -40,4 +41,11 @@ do
 	sed -i 's!\.le\.! <= !g' $f
 	sed -i 's!\.gt\.! > !g' $f
 	sed -i 's!\.lt\.! < !g' $f
+
+        sed -i 's!  ==  ! == !g' $f
+        sed -i 's!  \/=  ! \/= !g' $f
+        sed -i 's!  >=  ! >= !g' $f
+        sed -i 's!  <=  ! <= !g' $f
+        sed -i 's!  >  ! > !g' $f
+        sed -i 's!  <  ! < !g' $f
 done

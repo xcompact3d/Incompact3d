@@ -366,8 +366,8 @@ contains
     Phi_HAve_local = zero
 
     ! dy to y=1/2
-    if (istret /= 0) delta=(yp(2)-yp(1))/two
-    if (istret == 0) delta=dy/two
+    if (istret /= 0) delta=half*(yp(2)-yp(1))
+    if (istret == 0) delta=half*dy
 
     ! Find horizontally averaged velocities at j=1.5
     if (xstart(2)==1) then

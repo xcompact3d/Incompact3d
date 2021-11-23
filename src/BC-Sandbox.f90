@@ -73,6 +73,7 @@ module sandbox
 
   implicit none
 
+  character(len=*), parameter :: io_sandbox = "io-sandbox"
   character(len=120)  :: filename
   integer, parameter :: filenum = 67
 
@@ -125,7 +126,7 @@ contains
         nzi == xstart(3).and.nzf == xend(3)) then
         !
         if (nrank == 0) write(*,*) 'reading : ', './data/geometry/epsilon.bin'
-        call decomp_2d_read_one(1,epsi,'./data/geometry/epsilon.bin')
+        call decomp_2d_read_one(1,epsi,'./data/geometry','epsilon.bin',io_sandbox)
         !
     else
       ! Just the standard epsi(nx,ny,nz) is loaded
@@ -148,11 +149,11 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
-    if (nclx1  ==  2) call inflow (phi1)
-    if (nclxn  ==  2) call outflow (ux,uy,uz,phi1)
+    if (nclx1 == 2) call inflow (phi1)
+    if (nclxn == 2) call outflow (ux,uy,uz,phi1)
     if (nclx) call flow_rate_control(ux)
-    if (sz_a_i  >  1) call flow_rate_control_SZA(ux, uy, uz)
-    if (iscalar  ==  1) call deposit(phi1)
+    if (sz_a_i > 1) call flow_rate_control_SZA(ux, uy, uz)
+    if (iscalar == 1) call deposit(phi1)
 
     return
   end subroutine boundary_conditions_sandbox
@@ -178,10 +179,10 @@ contains
     real(mytype) :: temp
 
     !Robin on top BC, following Schuch (2020)
-    if (nclySn  ==  2 .and. xend(2)  ==  ny) then
+    if (nclySn == 2 .and. xend(2) == ny) then
       j = xsize(2)
       do is=1, numscalar
-        if (uset(is)  ==  zero) then !For no-flux use nclySn = 1
+        if (uset(is) == zero) then !For no-flux use nclySn = 1
           do k=1, xsize(3)
             do i=1, xsize(1)
               phi1(i,j,k,is) = byphin(i,k,is)
@@ -202,14 +203,14 @@ contains
     endif
 
     !Deposit on bottom BC
-    if (nclyS1  ==  2) then
+    if (nclyS1 == 2) then
       do is=1, numscalar
-        if (uset(is)  ==  zero) cycle
+        if (uset(is) == zero) cycle
         call transpose_x_to_y(phi1(:,:,:,is),phi2(:,:,:,is))
         call ibm_deryS (ta2, phi2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
           do k=1, ysize(3)
             do i=1, ysize(1)
-              if (ta2(i,1,k)  <  zero) then
+              if (ta2(i,1,k) < zero) then
                 phi2(i,1,k,is) = (-four*dy*ta2(i,2,k)+four*phi2(i,2,k,is)+phi2(i,3,k,is))/five
               endif
             enddo
@@ -437,39 +438,39 @@ contains
     ! close(10)
 
     !! Sponge Zone A for recycling inflow condition
-    if (sz_a_length  >  0.0) sz_a_i = int(sz_a_length / dx) + 1
+    if (sz_a_length > 0.0) sz_a_i = int(sz_a_length / dx) + 1
 
     if (iresflg == 0) then
 
       !Read phi
-      if (iscalar  /=  0) then
+      if (iscalar /= 0) then
         do is = 1, numscalar
           if (nrank == 0) write(*,*) 'reading : ', './data/phi'//char(is+48)//'.bin'
-          call decomp_2d_read_one(1, phi1(:,:,:,is), './data/phi'//char(is+48)//'.bin')
+          call decomp_2d_read_one(1, phi1(:,:,:,is), './data','phi'//char(is+48)//'.bin',io_sandbox)
         enddo
       endif
 
       !Read velocity field
       if (nrank == 0) write(*,*) 'reading : ', './data/ux.bin'
-      call decomp_2d_read_one(1,ux1,'./data/ux.bin')
+      call decomp_2d_read_one(1,ux1,'./data','ux.bin',io_sandbox)
       if (nrank == 0) write(*,*) 'reading : ', './data/uy.bin'
-      call decomp_2d_read_one(1,uy1,'./data/uy.bin')
+      call decomp_2d_read_one(1,uy1,'./data','uy.bin',io_sandbox)
       if (nrank == 0) write(*,*) 'reading : ', './data/uz.bin'
-      call decomp_2d_read_one(1,uz1,'./data/uz.bin')
+      call decomp_2d_read_one(1,uz1,'./data','uz.bin',io_sandbox)
     
     endif
 
     !Read integration operator for flow_rate_control
-    if (nclx .or. sz_a_i  >  1) then
+    if (nclx .or. sz_a_i > 1) then
       call alloc_x(vol1_frc)
       vol1_frc = zero
-      filename = './data/vol_frc.bin'
+      filename = 'vol_frc.bin'
       if (nrank == 0) write(*,*) 'reading : ', filename
-      call decomp_2d_read_one(1,vol1_frc,filename)
+      call decomp_2d_read_one(1,vol1_frc,'data',filename,io_sandbox)
     endif
 
     !Read inflow profile
-    if (nclx1  ==  2) then
+    if (nclx1 == 2) then
       !
       allocate(bxx1_sb(xsize(2),xsize(3)))
       allocate(bxy1_sb(xsize(2),xsize(3)))
@@ -502,7 +503,7 @@ contains
     endif
 
     !Read phi inflow profile
-    if (iscalar  /=  0 .and. nclxS1  ==  2) then
+    if (iscalar /= 0 .and. nclxS1 == 2) then
       allocate(bxphi1(xsize(2),xsize(3),numscalar))
       bxphi1 = zero
       do is=1, numscalar
@@ -522,12 +523,12 @@ contains
       enddo
     endif
     !Read phi bottom BC
-    if (iscalar  /=  0 .and. nclyS1  ==  2) then
+    if (iscalar /= 0 .and. nclyS1 == 2) then
       allocate(byphi1(xsize(1),xsize(3),numscalar))
       byphi1 = zero
       do is=1, numscalar
         !
-        if (uset(is)  /=  zero) cycle !in this case we use deposition BC
+        if (uset(is) /= zero) cycle !in this case we use deposition BC
         !
         filename = './data/byphi1'//char(is+48)//'.bin'
         if (nrank == 0) write(*,*) 'reading : ', filename
@@ -544,12 +545,12 @@ contains
       enddo
     endif
     !Read phi top BC
-    if (iscalar  /=  0 .and. nclySn  ==  2) then
+    if (iscalar /= 0 .and. nclySn == 2) then
       allocate(byphin(xsize(1),xsize(3),numscalar))
       byphin = zero
       do is=1, numscalar
         !
-        if (uset(is)  /=  zero) cycle !in this case we use deposition BC
+        if (uset(is) /= zero) cycle !in this case we use deposition BC
         !
         filename = './data/byphin'//char(is+48)//'.bin'
         if (nrank == 0) write(*,*) 'reading : ', filename
@@ -585,7 +586,7 @@ contains
 
     ! if (mod(itime,iprocessing) /= 0) return
     !
-    ! if (filenamedigits  ==  0) then
+    ! if (filenamedigits == 0) then
     !   WRITE(num, ifilenameformat) itime
     ! else
     !   WRITE(num, ifilenameformat) itime/iprocessing

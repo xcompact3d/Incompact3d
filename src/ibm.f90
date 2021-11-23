@@ -69,7 +69,7 @@ contains
     integer :: i,j,k
 
 #ifdef DEBG
-    if (nrank  ==  0) write(*,*) '# body start'
+    if (nrank == 0) write(*,*) '# body start'
 #endif
 
     do k = 1, xsize(3)
@@ -83,7 +83,7 @@ contains
     enddo
 
 #ifdef DEBG
-    if (nrank  ==  0) write(*,*) '# body done'
+    if (nrank == 0) write(*,*) '# body done'
 #endif
 
     return

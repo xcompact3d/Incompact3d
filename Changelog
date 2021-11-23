@@ -1,0 +1,84 @@
+Major updates :
+- Check most MPI and ADIOS2 error codes
+- Separate IBM reconstruction and derive / filter subroutines. The subroutines der* and fil* no longer perform IBM reconstruction. This combined operation can be obtained using the subroutines ibm_der* and ibm_fil*
+- Thomas tri-diagonal solver is moved in a dedicated module
+- Remove most of the memory leaks
+- Add unit tests for all derive and filter subroutines (depends on pfunit)
+- Avoid IO with pre-defined unit number
+- Add boot & finalize subroutines for each case to open and close IO units
+- Add a differentially heated cavity example
+- Move subroutines from the file xcompact3d.f90 to x3d_tools.f90. The file xcompact3d.f90 contains only the program.
+- X3D can catch the signals SIGUSR1 and SIGUSR2
+
+indent.sh : force homogeneous if statements in the code
+
+Makefile : explicit file dependency allow parallel make
+
+decomp2d/decomp2d.f90 : 
+   - use iso_fortran_env for single / double precision kind
+   - refactor transpose operations to avoid the optional argument (some compilers allocate memory for each call otherwise)
+   - new error subroutine provides the file and line to locate the error
+
+decomp2d/io.f90 : add read_plane
+
+The module src/ibm_param is merged inside the module src/ibm
+
+src/BC-Channel.f90 :
+   - try to initialize the velocity with a binary file first
+   - monitor bulk quantities by default
+
+src/BC-dbg-schemes.f90 : inhouse sin / cos / ... functions can be applied to arrays using the elemental keyword
+
+src/case.f90/postprocessing : move the potentially large array T_tmp to the var module
+
+src/case.f90/postprocess_case : the subroutine force was called with the wrong number of arguments
+
+src/derive.f90 : major refactoring
+
+src/filters.f90 : major refactoring
+
+src/forces.f90 : Move the subroutine force inside the module
+
+src/ibm.f90 : add subroutines apply_ibm* for IBM reconstruction
+
+src/implicit.f90 : unused 1D arrays are deallocated at the beginning of the simulation
+
+src/les_models.f90 :
+   - local 3D arrays wallflux*1 are moved inside the module var
+   - sgs_scalar_nonconservative: use pre-allocated arrays phi2 and phi3
+
+src/module_param.f90 :
+   - der* and fil* subroutines can no longer modify the input 3D array. This should allow OCC.
+   - uvwt_*bound are now used for out of bound detection
+
+src/navier.f90 :
+   - compute max(abs(div(u))) instead of max(div(u))
+   - div(u*) and div(u) in the listing are no longer changing when the 2D pencil configuration (or the number of CPUs) is modified
+
+src/parameters.f90 :
+   - initstat set to ifirst when initstat < 0
+   - print all the detected compile flags in the listing
+   - current implicit time scheme is not compatible with IIBM=3
+
+src/probes.f90 : flag_* are initialized in parameters.f90
+
+src/statistics.f90 :
+   - add the variance of the pressure
+   - fix a bug, nvisu was used instead of nstat
+
+src/tools.f90 :
+   - add a function to compute the L1 / L2 / Linf errors
+   - min_max detection based on uvwt_*bound arrays
+   - when min/max is reached, all CPUs call MPI_ABORT
+
+src/transeq.f90 : change intent(in) for some arrays (in case of IBM)
+
+src/variables.f90 :
+   - do not allocate all the variables all the time (statistics or ABL arrays are not always needed)
+   - 
+
+examples :
+
+tests/verif : unit tests with verification of the error level for each derive and filter subroutine.
+
+tests/convergence : unit tests without verification of the error level for each derive and filter subroutine (mesh convergence)
