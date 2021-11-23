@@ -75,9 +75,14 @@ src/transeq.f90 : change intent(in) for some arrays (in case of IBM)
 
 src/variables.f90 :
    - do not allocate all the variables all the time (statistics or ABL arrays are not always needed)
-   - 
 
-examples :
+examples/cavity : add input file and a python SPOD script
+
+examples/channel :
+   - python script to plot the channel.dat values
+   - Slurm example to send SIGUSR2
+
+examples/TGV : input files for 2D TGV
 
 tests/verif : unit tests with verification of the error level for each derive and filter subroutine.
 
