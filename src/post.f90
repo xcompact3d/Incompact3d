@@ -32,17 +32,8 @@ PROGRAM post
   call init_variables
   call schemes()
 
-  ! This is used only in post.f90
-  ! And is no longer allocated in init_variables
-  call alloc_x(diss1, opt_global=.true.) !global indices
-  call alloc_x(pre1, opt_global=.true.) !global indices
-
-  ux1=zero; uxm1=zero
-  uy1=zero; uym1=zero
-  uz1=zero;
-  phi1=zero; phim1=zero
-  diss1=zero; dissm1=zero
-  pre1=zero; prem1=zero
+  ux1=zero; 
+  uy1=zero; 
 
   read_phi=0; read_u=0; read_ibm=0
   open(10,file='post.prm',status='unknown',form='formatted')
