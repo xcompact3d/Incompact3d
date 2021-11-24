@@ -32,8 +32,15 @@ PROGRAM post
   call init_variables
   call schemes()
 
-  ux1=zero; 
-  uy1=zero; 
+  call alloc_x(diss1, opt_global=.true.) !global indices
+  call alloc_x(pre1, opt_global=.true.) !global indices
+
+  ux1=zero 
+  uy1=zero 
+  uz1=zero
+  phi1=zero
+  diss1=zero
+  pre1=zero
 
   read_phi=0; read_u=0; read_ibm=0
   open(10,file='post.prm',status='unknown',form='formatted')
