@@ -8,7 +8,7 @@
 # generate a Git version string
 GIT_VERSION := $(shell git describe --tag --long --always)
 
-DEFS = -DOVERWRITE -DSAVE_SINGLE -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"
+DEFS = -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"
 
 LCL = local# local,lad,sdu,archer
 IVER = 17# 15,16,17,18
@@ -27,7 +27,7 @@ else ifeq ($(CMP),gcc)
 CC = mpicc
 FC = mpif90
 #FFLAGS = -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -x f95-cpp-input
-FFLAGS = -cpp -O0 -g -funroll-loops -floop-optimize -ftree-vectorize -fno-inline -finstrument-functions -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none -msse4.1 -msse4.2 -mavx2
+FFLAGS = -cpp -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none
 #-ffpe-trap=invalid,zero
 ifeq "$(shell expr `gfortran -dumpversion | cut -f1 -d.` \>= 10)" "1"
 FFLAGS += -fallow-argument-mismatch
