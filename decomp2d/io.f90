@@ -1020,7 +1020,7 @@ contains
     integer :: ierror
     type(decomp_info) :: decomp
 
-    if ((icoarse < 1).or.(icoarse > 2)) then
+    if ((icoarse < 0).or.(icoarse > 2)) then
        call decomp_2d_abort(__FILE__, __LINE__, icoarse, &
                "Error invalid value of icoarse")
     endif
