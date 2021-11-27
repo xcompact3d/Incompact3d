@@ -1681,6 +1681,8 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine decomp_2d_abort_basic(errorcode, msg)
 
+    use iso_fortran_env, only : error_unit
+
     implicit none
 
     integer, intent(IN) :: errorcode
@@ -1691,6 +1693,8 @@ contains
     if (nrank==0) then
        write(*,*) '2DECOMP&FFT ERROR - errorcode: ', errorcode
        write(*,*) 'ERROR MESSAGE: ' // msg
+       write(error_unit,*) '2DECOMP&FFT ERROR - errorcode: ', errorcode
+       write(error_unit,*) 'ERROR MESSAGE: ' // msg
     end if
     call MPI_ABORT(MPI_COMM_WORLD,errorcode,ierror)
 
@@ -1698,6 +1702,8 @@ contains
   end subroutine decomp_2d_abort_basic
 
   subroutine decomp_2d_abort_file_line(file, line, errorcode, msg)
+
+    use iso_fortran_env, only : error_unit
 
     implicit none
 
@@ -1712,6 +1718,11 @@ contains
        write(*,*) '  error in file  ' // file
        write(*,*) '           line  ', line
        write(*,*) '  error message: ' // msg
+       write(error_unit,*) '2DECOMP&FFT / X3D ERROR'
+       write(error_unit,*) '  errorcode:     ', errorcode
+       write(error_unit,*) '  error in file  ' // file
+       write(error_unit,*) '           line  ', line
+       write(error_unit,*) '  error message: ' // msg
     end if
     call MPI_ABORT(MPI_COMM_WORLD,errorcode,ierror)
 
