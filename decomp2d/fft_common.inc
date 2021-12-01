@@ -154,7 +154,9 @@ implicit none
 call decomp_info_finalize(ph)
 call decomp_info_finalize(sp)
 
-deallocate(wk2_c2c, wk2_r2c, wk13)
+if (allocated(wk2_c2c)) deallocate(wk2_c2c)
+if (allocated(wk2_r2c)) deallocate(wk2_r2c)
+if (allocated(wk13)) deallocate(wk13)
 
 call finalize_fft_engine
 

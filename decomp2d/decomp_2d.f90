@@ -631,17 +631,32 @@ contains
 
     TYPE(DECOMP_INFO), intent(INOUT) :: decomp
 
-    deallocate(decomp%x1dist,decomp%y1dist,decomp%y2dist,decomp%z2dist)
-    deallocate(decomp%x1cnts,decomp%y1cnts,decomp%y2cnts,decomp%z2cnts)
-    deallocate(decomp%x1disp,decomp%y1disp,decomp%y2disp,decomp%z2disp)
+    if (allocated(decomp%x1dist)) deallocate(decomp%x1dist)
+    if (allocated(decomp%y1dist)) deallocate(decomp%y1dist)
+    if (allocated(decomp%y2dist)) deallocate(decomp%y2dist)
+    if (allocated(decomp%z2dist)) deallocate(decomp%z2dist)
+    if (allocated(decomp%x1cnts)) deallocate(decomp%x1cnts)
+    if (allocated(decomp%y1cnts)) deallocate(decomp%y1cnts)
+    if (allocated(decomp%y2cnts)) deallocate(decomp%y2cnts)
+    if (allocated(decomp%z2cnts)) deallocate(decomp%z2cnts)
+    if (allocated(decomp%x1disp)) deallocate(decomp%x1disp)
+    if (allocated(decomp%y1disp)) deallocate(decomp%y1disp)
+    if (allocated(decomp%y2disp)) deallocate(decomp%y2disp)
+    if (allocated(decomp%z2disp)) deallocate(decomp%z2disp)
 
 #ifdef SHM
-    deallocate(decomp%x1disp_o,decomp%y1disp_o,decomp%y2disp_o, &
-         decomp%z2disp_o)
-    deallocate(decomp%x1cnts_s,decomp%y1cnts_s,decomp%y2cnts_s, &
-         decomp%z2cnts_s)
-    deallocate(decomp%x1disp_s,decomp%y1disp_s,decomp%y2disp_s, &
-         decomp%z2disp_s)
+    if (allocated(decomp%x1disp_o)) deallocate(decomp%x1disp_o)
+    if (allocated(decomp%y1disp_o)) deallocate(decomp%y1disp_o)
+    if (allocated(decomp%y2disp_o)) deallocate(decomp%y2disp_o)
+    if (allocated(decomp%z2disp_o)) deallocate(decomp%z2disp_o)
+    if (allocated(decomp%x1cnts_s)) deallocate(decomp%x1cnts_s)
+    if (allocated(decomp%y1cnts_s)) deallocate(decomp%y1cnts_s)
+    if (allocated(decomp%y2cnts_s)) deallocate(decomp%y2cnts_s)
+    if (allocated(decomp%z2cnts_s)) deallocate(decomp%z2cnts_s)
+    if (allocated(decomp%x1disp_s)) deallocate(decomp%x1disp_s)
+    if (allocated(decomp%y1disp_s)) deallocate(decomp%y1disp_s)
+    if (allocated(decomp%y2disp_s)) deallocate(decomp%y2disp_s)
+    if (allocated(decomp%z2disp_s)) deallocate(decomp%z2disp_s)
 #endif
 
     return

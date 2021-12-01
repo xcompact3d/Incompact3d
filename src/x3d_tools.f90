@@ -245,8 +245,8 @@ subroutine finalise_xcompact3d(flag)
   call decomp_info_finalize(phG)
   call decomp_2d_io_finalise()
   call decomp_2d_finalize()
+  call decomp_2d_poisson_finalize()
   if (flag) then
-    call decomp_2d_poisson_finalize()
     CALL MPI_FINALIZE(code)
     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FINALIZE")
   endif
