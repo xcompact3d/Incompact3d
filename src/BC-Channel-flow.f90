@@ -129,6 +129,7 @@ contains
     ux1=zero
     uy1=zero
     uz1=zero
+    byx1=zero;byy1=zero;byz1=zero
     ! if to decide type of initialization to apply 
     if (iin == 0) then ! laminar flow
        do k=1,xsize(3)
