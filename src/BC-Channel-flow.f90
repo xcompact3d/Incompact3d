@@ -122,6 +122,12 @@ contains
        call decomp_2d_read_one(1,ux1,"data","channel_init_ux",io_channel)
        call decomp_2d_read_one(1,uy1,"data","channel_init_uy",io_channel)
        call decomp_2d_read_one(1,uz1,"data","channel_init_uz",io_channel)
+       byx1=zero
+       byy1=zero
+       byz1=zero
+       byxn=zero
+       byyn=zero
+       byzn=zero
        if (iscalar == 1) then
           call decomp_2d_read_one(1,phi1(:,:,:,1),"data","channel_init_t",io_channel)
           if (numscalar > 1) then
