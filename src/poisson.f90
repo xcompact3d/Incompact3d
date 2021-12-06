@@ -864,7 +864,7 @@ contains
        end do
 
     else
-       !call matrice_refinement()
+       call matrice_refinement()
        !write(*,*) 'PO_010 ii1 A rl ', rl(a(1,1,1,1)),rl(a(1,1,1,2)),rl(a(1,1,1,3)),&
        !                              rl(a(1,1,1,4)),rl(a(1,1,1,5))
        !write(*,*) 'PO_010 ii1 A iy ', iy(a(1,1,1,1)),iy(a(1,1,1,2)),iy(a(1,1,1,3)),&
