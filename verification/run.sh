@@ -7,3 +7,7 @@ cd ../
 cd ./convergence
 ./run.sh
 cd ../
+
+cd Taylor-Green-Vortex-2D/
+./run.sh
+cd ../
