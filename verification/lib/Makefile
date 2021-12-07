@@ -1,7 +1,7 @@
-SRCS := x3d_unit_testing_tools.f90
+SRCS := x3d_unit_testing_tools.f90 verif_TGV2D.f90
 OBJS := $(../decomp2d/*.o) $(../src/*.o) $(./*.o)
 
-all: libx3d.a x3d_unit_testing_tools.o
+all: libx3d.a x3d_unit_testing_tools.o verif_TGV2D.o
 
 libx3d.a: $(OBJS)
 	$(AR) -r $@ $?

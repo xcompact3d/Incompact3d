@@ -5,7 +5,7 @@ include $(LATEST_PFUNIT_DIR)/include/PFUNIT.mk
 
 all: test_x_00 test_y_00 test_y_00_str test_z_00 test_x_11 test_y_11 test_y_11_str test_z_11 test_x_22 test_y_22 test_y_22_str test_z_22 test_x_12 test_y_12 test_y_12_str test_z_12 test_x_21 test_y_21 test_y_21_str test_z_21
 
-X3D := ../../src/x3d_tools.o ../../src/les_models.o ../../src/signal.o ../../src/genepsi3d.o ../../src/statistics.o ../../src/dynstall*.o ../../src/a*.o ../../src/turbine.o ../../src/poisson.o ../../src/implicit.o ../../src/ibm.o ../../src/schemes.o ../../src/filters.o ../../src/navier.o ../../src/derive.o ../../src/tools.o ../../src/visu.o ../../src/BC*.o ../../src/case.o ../../src/variables.o ../../src/probes.o ../../src/forces.o ../../src/module_param.o ../../src/parameters.o ../../src/thomas.o ../../decomp2d/*.o ../lib/*.o
+X3D := ../../src/x3d_tools.o ../../src/les_models.o ../../src/signal.o ../../src/genepsi3d.o ../../src/statistics.o ../../src/dynstall*.o ../../src/a*.o ../../src/turbine.o ../../src/poisson.o ../../src/implicit.o ../../src/ibm.o ../../src/schemes.o ../../src/filters.o ../../src/navier.o ../../src/derive.o ../../src/tools.o ../../src/visu.o ../../src/BC*.o ../../src/case.o ../../src/variables.o ../../src/probes.o ../../src/forces.o ../../src/module_param.o ../../src/parameters.o ../../src/thomas.o ../../src/transeq.o ../../src/time_integrators.o ../../decomp2d/*.o ../lib/*.o
 
 %.o : %.F90
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(DEFS2) $(INC) $(PFUNIT_EXTRA_FFLAGS) -c $<

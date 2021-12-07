@@ -179,9 +179,9 @@ $(SRCDIR)/visu.o: $(SRCDIR)/tools.o
 $(SRCDIR)/x3d_tools.o: $(SRCDIR)/transeq.o
 $(SRCDIR)/xcompact3d.o: $(SRCDIR)/transeq.o $(SRCDIR)/x3d_tools.o
 
-.PHONY: tests
-tests:
-	$(MAKE) -C tests
+.PHONY: verification
+verification:
+	$(MAKE) -C verification
 
 .PHONY: post
 post:
@@ -193,7 +193,7 @@ clean:
 	rm -f $(DECOMPDIR)/*.o $(DECOMPDIR)/*.mod $(DECOMPDIR)/*.smod
 	rm -f $(SRCDIR)/*.o $(SRCDIR)/*.mod $(SRCDIR)/*.smod
 	rm -f *.o *.mod *.smod xcompact3d
-	$(MAKE) -C tests clean
+	$(MAKE) -C verification clean
 
 .PHONY: cleanall
 cleanall: clean

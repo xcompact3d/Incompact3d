@@ -39,7 +39,7 @@ test*
 checkpoint
 restart*
 forces.dat*
-tests/*/*F90
-tests/*/*inc
-tests/*/*.a
-tests/*/test_*_*
+verification/*/*F90
+verification/*/*inc
+verification/*/*.a
+verification/*/test_*_*

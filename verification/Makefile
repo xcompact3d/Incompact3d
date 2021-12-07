@@ -8,8 +8,10 @@ all:
 	$(MAKE) -C lib all
 	$(MAKE) -C verif all
 	$(MAKE) -C convergence all
+	$(MAKE) -C Taylor-Green-Vortex-2D all
 
 clean:
 	$(MAKE) -C lib clean
 	$(MAKE) -C verif clean
 	$(MAKE) -C convergence clean
+	$(MAKE) -C Taylor-Green-Vortex-2D clean

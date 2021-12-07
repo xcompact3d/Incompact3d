@@ -1,0 +1,176 @@
+module test00_imp1
+
+   use MPI
+   use pFunit
+   use iso_c_binding
+   use x3d_unit_testing_tools
+   use verif_tgv2D
+
+   implicit none
+
+contains
+
+   ! Serial test
+   @test
+   subroutine verif_tgv_00()
+
+      use decomp_2d
+      use param
+      use var
+      use variables
+      use tools, only : error_l1_l2_linf
+
+      implicit none
+
+      ! Analytical error
+      real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: errx, erry
+      real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: errs
+      ! Time-discrete error
+      real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: errxd1, erryd1
+      real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: errsd1
+      ! Space-time discrete error
+      real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: errxd2, erryd2
+      real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: errsd2
+
+      real(mytype) :: l1, l2, linf, sl1, sl2, slinf, t1, t2, sca
+      integer :: l
+
+      ! Compute one time step
+      call cpu_time(t1)
+      do itime = ifirst, ilast
+         call one_time_step()
+      enddo
+      call cpu_time(t2)
+      itime = itime - 1
+
+      ! Compute the errors
+      call error_tgv2D(ux1, uy1, phi1, errx,   erry,   errs, &
+                                       errxd1, erryd1, errsd1, &
+                                       errxd2, erryd2, errsd2)
+
+      ! Analytical error
+      ! ux
+      call error_l1_l2_linf(ux1, sl1, sl2, slinf)
+      call error_l1_l2_linf(errx, l1, l2, linf)
+      call log("tgv00_ux", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=6.d-10)
+         @assertEqual(l2/sl2, 0.d0, tolerance=6.d-10)
+         @assertEqual(linf/slinf, 0.d0, tolerance=6.d-10)
+      endif
+      ! uy
+      call error_l1_l2_linf(uy1, sl1, sl2, slinf)
+      call error_l1_l2_linf(erry, l1, l2, linf)
+      call log("tgv00_uy", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=6.d-10)
+         @assertEqual(l2/sl2, 0.d0, tolerance=6.d-10)
+         @assertEqual(linf/slinf, 0.d0, tolerance=6.d-10)
+      endif
+      ! phi
+      if (iscalar == 1) then
+         do l = 1, numscalar
+            call error_l1_l2_linf(phi1(:,:,:,l), sl1, sl2, slinf)
+            call error_l1_l2_linf(errs(:,:,:,l), l1, l2, linf)
+            call log("tgv00_phi", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+            if (l == 3) then
+               sca = 3.d-10
+            else
+               sca = 6.d-10
+            endif
+            if (check_error) then
+               @assertEqual(l1/sl1, 0.d0, tolerance=sca)
+               @assertEqual(l2/sl2, 0.d0, tolerance=sca)
+               @assertEqual(linf/slinf, 0.d0, tolerance=sca)
+            endif
+         enddo
+      endif
+
+      ! Time-discrete error
+      ! ux
+      call error_l1_l2_linf(ux1, sl1, sl2, slinf)
+      call error_l1_l2_linf(errxd1, l1, l2, linf)
+      call log("tgv00_ux", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=6.d-10)
+         @assertEqual(l2/sl2, 0.d0, tolerance=6.d-10)
+         @assertEqual(linf/slinf, 0.d0, tolerance=6.d-10)
+      endif
+      ! uy
+      call error_l1_l2_linf(uy1, sl1, sl2, slinf)
+      call error_l1_l2_linf(erryd1, l1, l2, linf)
+      call log("tgv00_uy", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=6.d-10)
+         @assertEqual(l2/sl2, 0.d0, tolerance=6.d-10)
+         @assertEqual(linf/slinf, 0.d0, tolerance=6.d-10)
+      endif
+      ! phi
+      if (iscalar == 1) then
+         do l = 1, numscalar
+            call error_l1_l2_linf(phi1(:,:,:,l), sl1, sl2, slinf)
+            call error_l1_l2_linf(errsd1(:,:,:,l), l1, l2, linf)
+            call log("tgv00_phi", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+            if (l == 3) then
+               sca = 3.d-10
+            else
+               sca = 6.d-10
+            endif
+            if (check_error) then
+               @assertEqual(l1/sl1, 0.d0, tolerance=sca)
+               @assertEqual(l2/sl2, 0.d0, tolerance=sca)
+               @assertEqual(linf/slinf, 0.d0, tolerance=sca)
+            endif
+         enddo
+      endif
+
+      ! Space-time discrete error
+      ! ux
+      call error_l1_l2_linf(ux1, sl1, sl2, slinf)
+      call error_l1_l2_linf(errxd2, l1, l2, linf)
+      call log("tgv00_ux", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=4.d-15)
+         @assertEqual(l2/sl2, 0.d0, tolerance=4.d-15)
+         @assertEqual(linf/slinf, 0.d0, tolerance=7.d-15)
+      endif
+      ! uy
+      call error_l1_l2_linf(uy1, sl1, sl2, slinf)
+      call error_l1_l2_linf(erryd2, l1, l2, linf)
+      call log("tgv00_uy", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+      if (check_error) then
+         @assertEqual(l1/sl1, 0.d0, tolerance=3.d-15)
+         @assertEqual(l2/sl2, 0.d0, tolerance=3.d-15)
+         @assertEqual(linf/slinf, 0.d0, tolerance=5.d-15)
+      endif
+      ! phi
+      if (iscalar == 1) then
+         do l = 1, numscalar
+            call error_l1_l2_linf(phi1(:,:,:,l), sl1, sl2, slinf)
+            call error_l1_l2_linf(errsd2(:,:,:,l), l1, l2, linf)
+            call log("tgv00_phi", l1/sl1, l2/sl2, linf/slinf, t2-t1)
+            if (l == 1) then
+               if (check_error) then
+                  @assertEqual(l1/sl1, 0.d0, tolerance=5.d-16)
+                  @assertEqual(l2/sl2, 0.d0, tolerance=5.d-16)
+                  @assertEqual(linf/slinf, 0.d0, tolerance=8.d-16)
+               endif
+            elseif (l == 2) then
+               if (check_error) then
+                  @assertEqual(l1/sl1, 0.d0, tolerance=7.d-16)
+                  @assertEqual(l2/sl2, 0.d0, tolerance=8.d-16)
+                  @assertEqual(linf/slinf, 0.d0, tolerance=2.d-15)
+               endif
+            else
+               if (check_error) then
+                  @assertEqual(l1/sl1, 0.d0, tolerance=4.d-16)
+                  @assertEqual(l2/sl2, 0.d0, tolerance=5.d-16)
+                  @assertEqual(linf/slinf, 0.d0, tolerance=9.d-16)
+               endif
+            endif
+         enddo
+      endif
+
+   end subroutine verif_tgv_00
+
+end module test00_imp1
