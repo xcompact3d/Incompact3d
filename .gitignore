@@ -39,6 +39,7 @@ test*
 checkpoint
 restart*
 forces.dat*
+!verification/*pf
 verification/*/*F90
 verification/*/*inc
 verification/*/*.a

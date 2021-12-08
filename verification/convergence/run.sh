@@ -10,7 +10,7 @@ do
    do
       sed "s!1024!"${nn}"!g" ${i3d}.i3d > ${i3d}_tmp.i3d
    done
-   for run in test_x_00 test_y_00 test_y_00_str test_z_00
+   for run in convergence_x_00 convergence_y_00 convergence_y_00_str convergence_z_00
    do
       ./${run}
    done
@@ -23,7 +23,7 @@ do
    do
       sed "s!1025!"${nn}"!g" ${i3d}.i3d > ${i3d}_tmp.i3d
    done
-   for run in test_x_11 test_y_11 test_y_11_str test_z_11 test_x_22 test_y_22 test_y_22_str test_z_22 test_x_12 test_y_12 test_y_12_str test_z_12 test_x_21 test_y_21 test_y_21_str test_z_21
+   for run in convergence_x_11 convergence_y_11 convergence_y_11_str convergence_z_11 convergence_x_22 convergence_y_22 convergence_y_22_str convergence_z_22 convergence_x_12 convergence_y_12 convergence_y_12_str convergence_z_12 convergence_x_21 convergence_y_21 convergence_y_21_str convergence_z_21
    do
       ./${run}
    done

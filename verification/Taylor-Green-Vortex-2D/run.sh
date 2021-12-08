@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-./test_00
-./test_00_imp1
-./test_11
-./test_11_imp2
+./tgv2D_00
+./tgv2D_00_imp1
+./tgv2D_11
+./tgv2D_11_imp2

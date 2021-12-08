@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.0.2)                        
-cmake_policy(SET CMP0048 NEW)
+cmake_minimum_required(VERSION 3.12)                        
+cmake_policy(SET CMP0074 NEW)
 
 project(xcompact3d LANGUAGES Fortran)
 
@@ -137,6 +137,20 @@ else(ADIOS_FOUND)
   message(STATUS "ADIOS2 not found")
 endif()
 
+# Look for unit testing library pfunit
+option(USE_PFUNIT "Unit testing library pFUnit" OFF)
+if (MPI_FOUND)
+  if (USE_PFUNIT)
+    find_package(PFUNIT)
+  endif (USE_PFUNIT)
+  if (PFUNIT_FOUND)
+    message(STATUS "pFunit directory : ${PFUNIT_DIR}")
+    enable_testing()
+  else (PFUNIT_FOUND)
+    message(STATUS "pFUnit not found")
+  endif (PFUNIT_FOUND)
+endif (MPI_FOUND)
+
 # Create a static library for the fft
 add_subdirectory(decomp2d)
 
@@ -171,3 +185,7 @@ if (${BUILD_TESTING})
   add_test(NAME Wind-Turbine COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test.i3d WORKING_DIRECTORY ${test_dir}/Wind-Turbine)
 endif()
 
+# Folder for unit tests
+if (PFUNIT_FOUND)
+  add_subdirectory(verification)
+endif()
