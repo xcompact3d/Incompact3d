@@ -228,11 +228,11 @@ contains
 
     use decomp_2d, only : mytype, xsize, nrank
     use param, only : zero, one
-    use param, only : ntime, nrhotime, ilmn, iscalar, ilmn_solve_temp,itimescheme
+    use param, only : ntime, nrhotime, ilmn, iscalar, ilmn_solve_temp
     use param, only : iimplicit, sc_even
     use param, only : primary_species, massfrac
     use param, only : scalar_lbound, scalar_ubound
-    use variables, only : numscalar,nu0nu
+    use variables, only : numscalar
     use var, only : ta1, tb1
 #ifdef DEBG 
     use tools, only : avg3d

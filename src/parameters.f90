@@ -40,14 +40,14 @@
 subroutine parameter(input_i3d)
 
   use mpi
-  
+
   use iso_fortran_env
 
   use param
   use variables
   use complex_geometry
   use decomp_2d
-  use ibm_param
+  use ibm
   use dbg_schemes, only: sin_prec, cos_prec
 
   use var, only : dphi1
@@ -558,6 +558,10 @@ subroutine parameter(input_i3d)
   
   if (iibm.eq.3) then ! This is only for the Cubic Spline Reconstruction
      npif=npif+1
+     if (iimplicit /= 0) then
+        write(*,*) 'Error: implicit Y diffusion not yet compatible with iibm=3'
+        stop
+     endif
   endif
 
 #ifdef DEBG

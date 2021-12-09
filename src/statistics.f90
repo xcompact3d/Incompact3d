@@ -46,7 +46,6 @@ contains
 
     use decomp_2d, only : mytype
     use decomp_2d_io, only : decomp_2d_register_variable, decomp_2d_init_io
-
     use var, only : numscalar
     
     implicit none
