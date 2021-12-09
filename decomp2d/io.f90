@@ -221,7 +221,7 @@ contains
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
     logical, intent(in), optional :: reduce_prec
 
-    logical :: read_reduce_prec = .true.
+    logical :: read_reduce_prec
     
     TYPE(DECOMP_INFO) :: decomp
     integer, dimension(3) :: sizes, subsizes, starts
@@ -230,6 +230,8 @@ contains
     integer :: idx
     integer :: disp_bytes
 
+    read_reduce_prec = .true.
+    
     idx = get_io_idx(io_name, dirname)
 #ifndef ADIOS2
     if (present(reduce_prec)) then
