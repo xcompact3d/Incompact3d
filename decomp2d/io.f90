@@ -1088,8 +1088,13 @@ contains
        varsingle=real(var, mytype_single)
     end if
 
-    call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
-         MPI_ORDER_FORTRAN, real_type_single, newtype, ierror)
+    if (write_reduce_prec) then
+       call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
+            MPI_ORDER_FORTRAN, real_type_single, newtype, ierror)
+    else
+       call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
+            MPI_ORDER_FORTRAN, real_type, newtype, ierror)
+    end if
     call MPI_TYPE_COMMIT(newtype,ierror)
 
     if (idx .lt. 1) then
@@ -1118,7 +1123,7 @@ contains
             newtype,'native',MPI_INFO_NULL,ierror)
        call MPI_FILE_WRITE_ALL(fh_registry(idx), var, &
             subsizes(1)*subsizes(2)*subsizes(3), &
-            real_type_single, MPI_STATUS_IGNORE, ierror)
+            real_type, MPI_STATUS_IGNORE, ierror)
     end if
     
     fh_disp(idx) = fh_disp(idx) + sizes(1) * sizes(2) * sizes(3) * disp_bytes
