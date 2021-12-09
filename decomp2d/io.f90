@@ -1046,8 +1046,8 @@ contains
 
     real(mytype_single), allocatable, dimension(:,:,:) :: varsingle
     real(mytype), allocatable, dimension(:,:,:) :: varfull
-    logical :: write_reduce_prec = .true.
-    logical :: deferred_writes = .true.
+    logical :: write_reduce_prec
+    logical :: deferred_writes
     
     integer (kind=MPI_OFFSET_KIND) :: filesize
     integer, dimension(3) :: sizes, subsizes, starts
@@ -1063,6 +1063,10 @@ contains
     integer :: write_mode
 #endif
 
+    !! Set defaults
+    write_reduce_prec = .true.
+    deferred_writes = .true.
+    
     opened_new = .false.
     idx = get_io_idx(io_name, dirname)
 #ifndef ADIOS2
