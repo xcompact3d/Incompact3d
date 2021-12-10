@@ -46,7 +46,6 @@ contains
 
     use decomp_2d, only : mytype
     use decomp_2d_io, only : decomp_2d_register_variable, decomp_2d_init_io
-
     use var, only : numscalar
     
     implicit none
@@ -74,9 +73,9 @@ contains
        call decomp_2d_register_variable(io_statistics, "vwmean", 1, 1, 0, mytype)
 
        do is=1, numscalar
-          write(varname,"('phi',I2.2)") is
+          write(varname,"('phi',I2.2,'mean')") is
           call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
-          write(varname,"('phiphi',I2.2)") is
+          write(varname,"('phiphi',I2.2,'mean')") is
           call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
        enddo
 
