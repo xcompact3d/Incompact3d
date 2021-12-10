@@ -221,7 +221,7 @@ contains
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
     logical, intent(in), optional :: reduce_prec
 
-    logical :: read_reduce_prec = .true.
+    logical :: read_reduce_prec
     
     TYPE(DECOMP_INFO) :: decomp
     integer, dimension(3) :: sizes, subsizes, starts
@@ -230,6 +230,8 @@ contains
     integer :: idx
     integer :: disp_bytes
 
+    read_reduce_prec = .true.
+    
     idx = get_io_idx(io_name, dirname)
 #ifndef ADIOS2
     if (present(reduce_prec)) then
@@ -1046,8 +1048,8 @@ contains
 
     real(mytype_single), allocatable, dimension(:,:,:) :: varsingle
     real(mytype), allocatable, dimension(:,:,:) :: varfull
-    logical :: write_reduce_prec = .true.
-    logical :: deferred_writes = .true.
+    logical :: write_reduce_prec
+    logical :: deferred_writes
     
     integer (kind=MPI_OFFSET_KIND) :: filesize
     integer, dimension(3) :: sizes, subsizes, starts
@@ -1063,6 +1065,10 @@ contains
     integer :: write_mode
 #endif
 
+    !! Set defaults
+    write_reduce_prec = .true.
+    deferred_writes = .true.
+    
     opened_new = .false.
     idx = get_io_idx(io_name, dirname)
 #ifndef ADIOS2
