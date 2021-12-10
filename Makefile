@@ -93,9 +93,6 @@ ifeq ($(IO),adios2)
   LIBIO := $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-libs)
 endif
 
-######## Export compiler and flags for unit tests
-export FC FFLAGS OPT DEFS DEFS2 INC
-
 #-----------------------------------------------------------------------
 # Normally no need to change anything below
 
@@ -179,10 +176,6 @@ $(SRCDIR)/visu.o: $(SRCDIR)/tools.o
 $(SRCDIR)/x3d_tools.o: $(SRCDIR)/transeq.o
 $(SRCDIR)/xcompact3d.o: $(SRCDIR)/transeq.o $(SRCDIR)/x3d_tools.o
 
-.PHONY: verification
-verification:
-	$(MAKE) -C verification
-
 .PHONY: post
 post:
 	$(FC) $(FFLAGS) $(DEFS) $(DEFS2) post.f90 -c
@@ -193,7 +186,6 @@ clean:
 	rm -f $(DECOMPDIR)/*.o $(DECOMPDIR)/*.mod $(DECOMPDIR)/*.smod
 	rm -f $(SRCDIR)/*.o $(SRCDIR)/*.mod $(SRCDIR)/*.smod
 	rm -f *.o *.mod *.smod xcompact3d
-	$(MAKE) -C verification clean
 
 .PHONY: cleanall
 cleanall: clean
