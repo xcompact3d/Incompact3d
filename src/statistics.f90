@@ -34,6 +34,7 @@ module stats
 
   implicit none
 
+  logical, save :: stats_with_grad = .false. ! Experimental (nstat=1 only)
   character(len=*), parameter :: io_statistics = "statistics-io", &
                                  stat_dir = "statistics"
  
@@ -78,6 +79,27 @@ contains
           write(varname,"('phiphi',I2.2,'mean')") is
           call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
        enddo
+
+       ! Experimental
+       if (stats_with_grad) then
+          call decomp_2d_register_variable(io_statistics, "dudxmean", 1, 1, 0, mytype)
+          call decomp_2d_register_variable(io_statistics, "dudymean", 1, 1, 0, mytype)
+          call decomp_2d_register_variable(io_statistics, "dudzmean", 1, 1, 0, mytype)
+          call decomp_2d_register_variable(io_statistics, "dvdxmean", 1, 1, 0, mytype)
+          call decomp_2d_register_variable(io_statistics, "dvdymean", 1, 1, 0, mytype)
+          call decomp_2d_register_variable(io_statistics, "dvdzmean", 1, 1, 0, mytype)
+          call decomp_2d_register_variable(io_statistics, "dwdxmean", 1, 1, 0, mytype)
+          call decomp_2d_register_variable(io_statistics, "dwdymean", 1, 1, 0, mytype)
+          call decomp_2d_register_variable(io_statistics, "dwdzmean", 1, 1, 0, mytype)
+          do is=1, numscalar
+             write(varname,"('dphi',I2.2,'dxmean')") is
+             call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
+             write(varname,"('dphi',I2.2,'dymean')") is
+             call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
+             write(varname,"('dphi',I2.2,'dzmean')") is
+             call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
+          enddo
+       endif
 
        initialised = .true.
     endif
@@ -173,7 +195,7 @@ contains
   !
   subroutine read_or_write_all_stats(flag_read)
 
-    use param, only : iscalar, itime
+    use param, only : iscalar, itime, zero, sc_even
     use variables, only : numscalar
     use decomp_2d, only : nrank
     use decomp_2d_io, only : decomp_2d_write_mode, decomp_2d_read_mode, &
@@ -185,6 +207,7 @@ contains
     use var, only : uvmean, uwmean
     use var, only : vwmean
     use var, only : phimean, phiphimean
+    use ibm, only : ubcx, ubcy, ubcz
 
     implicit none
 
@@ -244,6 +267,23 @@ contains
           write(filename,"('phiphi',I2.2)") is
           call read_or_write_one_stat(flag_read, gen_statname(filename), phiphimean(:,:,:,is))
        enddo
+    endif
+
+    ! Experimental
+    if (stats_with_grad .and. (.not.flag_read)) then
+       call stats_write_grad("u", umean, ubcx, 0, 1, 1)
+       call stats_write_grad("v", vmean, ubcy, 1, 0, 1)
+       call stats_write_grad("w", wmean, ubcz, 1, 1, 0)
+       if (iscalar == 1) then
+          do is = 1, numscalar
+             write(filename,"('phi',I2.2)") is
+             if (sc_even(is)) then
+                call stats_write_grad(trim(filename), phimean(:,:,:,is), zero, 1, 1, 1)
+             else
+                call stats_write_grad(trim(filename), phimean(:,:,:,is), zero, 0, 0, 0)
+             endif
+          enddo
+       endif
     endif
 
 #ifdef ADIOS2
@@ -324,10 +364,13 @@ contains
 
     if (itime < initstat) then
        return
-    elseif (itime == initstat) then
-       call init_statistic()
-    elseif (itime == ifirst) then
-       call restart_statistic()
+    elseif (itime == initstat .or. itime == ifirst) then
+       if (stats_with_grad .and. nstat /= 1) stats_with_grad = .false.
+       if (itime == initstat) then
+          call init_statistic()
+       elseif (itime == ifirst) then
+          call restart_statistic()
+       endif
     endif
 
     !! Mean pressure
@@ -455,5 +498,54 @@ contains
     call update_average_scalar(vwm, uy*uz, ep)
 
   end subroutine update_variance_vector
+
+  !
+  ! Compute the gradient of a statistic array and write it
+  !
+  subroutine stats_write_grad(varname, array, ubc, clx, cly, clz)
+
+    use decomp_2d, only : xstS, xenS, xsize, ysize, zsize, &
+                          transpose_x_to_y, transpose_y_to_z
+    use decomp_2d_io, only : decomp_2d_write_one
+    use var, only : ta1, tb1, di1, ta2, tb2, di2, ta3, tb3, di3
+    use variables
+
+    implicit none
+
+    ! Arguments
+    character(len=*), intent(in) :: varname
+    real(mytype), dimension(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)), intent(in) :: array
+    real(mytype), intent(in) :: ubc
+    integer, intent(in) :: clx, cly, clz
+
+    ! MPI communication before computing the gradient
+    ta1(1:xsize(1),1:xsize(2),1:xsize(3)) = array(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3))
+    call transpose_x_to_y(ta1, ta2)
+    call transpose_y_to_z(ta2, ta3)
+
+    ! Compute the gradient
+    ! FIXME : scalars should use derxS, ffxS, fsxS and fwxS
+    if (clx == 0) then
+      call ibm_derx(tb1, ta1, di1, sx, ffx, fsx, fwx, xsize(1), xsize(2), xsize(3), 0, ubc)
+    else
+      call ibm_derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, ubc)
+    endif
+    if (cly == 0) then
+      call ibm_dery(tb2, ta2, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0, ubc)
+    else
+      call ibm_dery(tb2, ta2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, ubc)
+    endif
+    if (clz == 0) then
+      call ibm_derz(tb3, ta3, di3, sz, ffz, fsz, fwz, zsize(1), zsize(2), zsize(3), 0, ubc)
+    else
+      call ibm_derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, ubc)
+    endif
+
+    ! Write the gradient
+    call decomp_2d_write_one(1, tb1, stat_dir, gen_statname("d"//varname//"dxmean"), 1, io_statistics)
+    call decomp_2d_write_one(2, tb2, stat_dir, gen_statname("d"//varname//"dymean"), 1, io_statistics)
+    call decomp_2d_write_one(3, tb3, stat_dir, gen_statname("d"//varname//"dzmean"), 1, io_statistics)
+
+  end subroutine stats_write_grad
 
 endmodule stats
