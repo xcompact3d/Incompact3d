@@ -128,13 +128,13 @@ contains
   subroutine restart_statistic
 
     use param, only : initstat, irestart, ifirst, zero
-    use variables, only : nvisu
+    use variables, only : nstat
     use var, only : tmean
 
     implicit none
 
-    ! No reading for statistics when nvisu > 1 or no restart
-    if (nvisu.gt.1 .or. irestart.eq.0) then
+    ! No reading for statistics when nstat > 1 or no restart
+    if (nstat.gt.1 .or. irestart.eq.0) then
        call init_statistic()
        initstat = ifirst
        return
