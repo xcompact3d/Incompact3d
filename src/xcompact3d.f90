@@ -303,6 +303,7 @@ subroutine finalise_xcompact3d()
   use param, only : itype
   use probes, only : finalize_probes
   use visu, only : visu_finalise
+  use case, only : visu_case_finalise
 
   implicit none
 
@@ -322,6 +323,7 @@ subroutine finalise_xcompact3d()
   call simu_stats(4)
   call finalize_probes()
   call visu_finalise()
+  call visu_case_finalise()
   call decomp_2d_io_finalise()
   call decomp_2d_finalize
   CALL MPI_FINALIZE(ierr)

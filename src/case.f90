@@ -59,7 +59,8 @@ module case
   private ! All functions/subroutines private by default
   public :: init, boundary_conditions, &
             momentum_forcing, scalar_forcing, set_fluid_properties, &
-            test_flow, preprocessing, postprocessing, visu_case, visu_case_init
+            test_flow, preprocessing, postprocessing, &
+            visu_case, visu_case_init, visu_case_finalise
 
 contains
   !##################################################################
@@ -140,10 +141,10 @@ contains
 
     else
   
-         if (nrank.eq.0) then
-            print *, "ERROR: Unknown itype: ", itype
-            STOP
-         endif
+       if (nrank.eq.0) then
+          print *, "ERROR: Unknown itype: ", itype
+          STOP
+       endif
 
     endif
 
@@ -312,6 +313,8 @@ contains
     use forces
     use var, only : nzmsize
     use param, only : npress
+    use param, only : io_bc, bc_dir
+    use decomp_2d_io, only : decomp_2d_start_io, decomp_2d_end_io
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
@@ -319,6 +322,9 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep
     real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp
 
+#ifdef ADIOS2
+    call decomp_2d_start_io(io_bc, bc_dir)
+#endif
     if (itype.eq.itype_user) then
 
        call postprocess_user (ux, uy, uz, phi, ep)
@@ -373,19 +379,28 @@ contains
        call force(ux,uy,uz,ep)
        call restart_forces(1)
     endif
+#ifdef ADIOS2
+    call decomp_2d_end_io(io_bc, bc_dir)
+#endif
 
   end subroutine postprocess_case
   !##################################################################
   !!
   !!  SUBROUTINE: visu_case_init
   !!      AUTHOR: PB
-  !! DESCRIPTION: Initialise case-specific visualization
+  !! DESCRIPTION: Initialise case-specific visualization, including
+  !!              I/O for per-case postprocessing.
   !!
   !##################################################################
   subroutine visu_case_init
 
-    implicit none
+    use param, only : io_bc, bc_dir
+    use decomp_2d_io, only : decomp_2d_init_io, decomp_2d_open_io, decomp_2d_write_mode
     
+    implicit none
+
+    call decomp_2d_init_io(io_bc)
+
     if (itype .eq. itype_tgv) then
 
        call visu_tgv_init(case_visu_init)
@@ -407,8 +422,25 @@ contains
        call visu_lockexch_init(case_visu_init)
       
     end if
+
+#ifdef ADIOS2
+    call decomp_2d_open_io(io_bc, bc_dir, decomp_2d_write_mode)
+#endif
     
   end subroutine visu_case_init
+  !##################################################################
+  !!
+  !!  SUBROUTINE: visu_case_finalise
+  !!      AUTHOR: PB
+  !! DESCRIPTION: Finalise case-specific visualisation.
+  !##################################################################
+  subroutine visu_case_finalise
+
+    use param, only : io_bc, bc_dir
+    use decomp_2d_io, only : decomp_2d_close_io
+
+    call decomp_2d_close_io(io_bc, bc_dir)
+  end subroutine visu_case_finalise
   !##################################################################
   !!
   !!  SUBROUTINE: visu_case

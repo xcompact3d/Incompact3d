@@ -523,6 +523,10 @@ module param
   real(mytype),parameter :: twopi=two*acos(-one)
 #endif
 
+  !! I/O
+  character(len=*), parameter, public :: io_bc = "BC-io"
+  character(len=*), parameter, public :: bc_dir = "data-BC"
+
 end module param
 !############################################################################
 !############################################################################
