@@ -63,6 +63,7 @@ subroutine parameter(input_i3d)
   character(len=80), intent(in) :: input_i3d
   real(mytype) :: theta, cfl,cf2
   integer :: longueur ,impi,j, is, total
+  integer :: ierr
 
   NAMELIST /BasicParam/ p_row, p_col, nx, ny, nz, istret, beta, xlx, yly, zlz, &
        itype, iin, re, u1, u2, init_noise, inflow_noise, &

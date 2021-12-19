@@ -275,12 +275,14 @@ contains
   subroutine visu_lockexch_init(visu_initialised)
 
     use decomp_2d, only : mytype
-    use decomp_2d_io, only : decomp_2d_register_variable
+    use decomp_2d_io, only : decomp_2d_register_variable, decomp_2d_init_io
     
     implicit none
 
     logical, intent(out) :: visu_initialised
 
+    call decomp_2d_init_io(io_bcle)
+    
     call decomp_2d_register_variable(io_bcle, "dissm", 3, 0, 3, mytype)
     call decomp_2d_register_variable(io_bcle, "dep", 2, 0, 2, mytype)
 
