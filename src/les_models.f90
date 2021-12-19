@@ -48,7 +48,9 @@ contains
     USE param
     USE variables
     USE decomp_2d
-
+    USE decomp_2d_io, only : decomp_2d_init_io, decomp_2d_open_io, decomp_2d_write_mode, &
+         decomp_2d_register_variable
+    
     implicit none
 
     integer :: j
@@ -60,6 +62,8 @@ contains
     enddo
     del(ny) = del(ny - 1)
 
+    call decomp_2d_init_io(io_turb)
+    
     if(nrank==0) then
 
        write(*, *) ' '
@@ -83,9 +87,32 @@ contains
        !if (nrank==0) print *, "Del y min max= ", minval(del), maxval(del)
        write(*, *) '++++++++++++++++++++++++++++++++'
        write(*, *) ' '
+
     endif
 
+    if (jles == 1) then
+       call decomp_2d_register_variable(io_turb, "nut_smag", 1, 2, 0, mytype)
+    else if (jles == 2) then
+       call decomp_2d_register_variable(io_turb, "nut_wale", 1, 2, 0, mytype)
+    else if (jles == 3) then
+       call decomp_2d_register_variable(io_turb, "dynsmagcst_final", 1, 2, 0, mytype)
+       call decomp_2d_register_variable(io_turb, "nut_dynsmag", 1, 2, 0, mytype)
+    endif
+    
+#ifdef ADIOS2
+    call decomp_2d_open_io(io_turb, turb_dir, decomp_2d_write_mode)
+#endif
+    
   end subroutine init_explicit_les
+  subroutine finalise_explicit_les
+
+    use decomp_2d_io, only : decomp_2d_close_io
+    
+#ifdef ADIOS2
+    call decomp_2d_close_io(io_turb, turb_dir)
+#endif
+    
+  end subroutine finalise_explicit_les
   !************************************************************
   subroutine Compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,phi1,ep1,iconservative)
     !================================================================================
@@ -111,6 +138,9 @@ contains
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: wallfluxx1, wallfluxy1, wallfluxz1
     integer :: iconservative
 
+#ifdef ADIOS2
+    call decomp_2d_start_io(io_bc, bc_dir)
+#endif
     ! Calculate eddy-viscosity
     if(jles.eq.1) then ! Smagorinsky
        call smag(nut1,ux1,uy1,uz1)
@@ -143,6 +173,9 @@ contains
           sgsz1(:,1,:) = wallfluxz1(:,1,:)
        endif
     endif
+#ifdef ADIOS2
+    call decomp_2d_end_io(io_bc, bc_dir)
+#endif
 
     return
 
@@ -296,7 +329,11 @@ contains
 
     if (mod(itime, ioutput).eq.0) then
 
+#ifndef ADIOS2
        write(filename, "('nut_smag',I4.4)") itime / ioutput
+#else
+       write(filename, "(A)") 'nut_smag'
+#endif
        call decomp_2d_write_one(1, nut1, turb_dir, filename, 2, io_turb)
 
     endif
@@ -852,10 +889,18 @@ contains
        ! write(filename, "('./data/dsmagcst_initial',I4.4)") itime / imodulo
        ! call decomp_2d_write_one(1, smagC1, filename, 2)
 
+#ifndef ADIOS2
        write(filename, "('dsmagcst_final',I4.4)") itime / ioutput
+#else
+       write(filename, "(A)") 'dsmagcst_final'
+#endif
        call decomp_2d_write_one(1, dsmagcst1, turb_dir, filename, 2, io_turb)
 
+#ifndef ADIOS2
        write(filename, "('nut_dynsmag',I4.4)") itime / ioutput
+#else
+       write(filename, "(A)") 'nut_dynsmag'
+#endif
        call decomp_2d_write_one(1, nut1, turb_dir, filename, 2, io_turb)
     endif
 
@@ -1033,7 +1078,11 @@ contains
 
   if (mod(itime, ioutput).eq.0) then
 
+#ifndef ADIOS2
      write(filename, "('nut_wale',I4.4)") itime / ioutput
+#else
+     write(filename, "(A)") 'nut_wale'
+#endif
      call decomp_2d_write_one(1, nut1, turb_dir, filename, 2, io_turb)
 
   endif

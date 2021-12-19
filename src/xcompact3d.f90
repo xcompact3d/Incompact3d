@@ -300,11 +300,12 @@ subroutine finalise_xcompact3d()
   use decomp_2d_io, only : decomp_2d_io_finalise
 
   use tools, only : simu_stats
-  use param, only : itype
+  use param, only : itype, jles
   use probes, only : finalize_probes
   use visu, only : visu_finalise
   use case, only : visu_case_finalise
-
+  use les, only : finalise_explicit_les
+  
   implicit none
 
   integer :: ierr
@@ -324,6 +325,9 @@ subroutine finalise_xcompact3d()
   call finalize_probes()
   call visu_finalise()
   call visu_case_finalise()
+  if (jles > 0) then
+     call finalise_explicit_les()
+  end if
   call decomp_2d_io_finalise()
   call decomp_2d_finalize
   CALL MPI_FINALIZE(ierr)

@@ -285,7 +285,7 @@ contains
     ! Write scalars
     if (iscalar.ne.0) then
       do is = 1, numscalar
-        write(scname,"('phi',I2.2)") is
+        write(scname,"('phi',A)") char(48+is)
         call write_field(phi1(:,:,:,is), ".", trim(scname), trim(num), .true.)
       enddo
     endif

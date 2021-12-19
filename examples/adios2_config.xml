@@ -40,4 +40,12 @@
       <parameter key="ProfileUnits" value="Milliseconds"/>
     </transport>
   </io>
+  <io name="turb-io">
+    <engine type="BP4">
+    </engine>
+    <transport type="File">
+      <parameter key="Library" value="fstream"/>
+      <parameter key="ProfileUnits" value="Milliseconds"/>
+    </transport>
+  </io>
 </adios-config>
