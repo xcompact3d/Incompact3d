@@ -67,7 +67,8 @@ contains
     real(mytype) :: phimax,phimin,phimax1,phimin1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
     real(mytype),dimension(2,numscalar) :: phimaxin,phimaxout
-
+    character(len=30) :: varname
+    
     do is=1, numscalar
 
       ta1(:,:,:) = phi(:,:,:,is)
@@ -90,7 +91,8 @@ contains
         phimin1 = -phimaxout(1,is)
         phimax1 =  phimaxout(2,is)
 
-        write(*,*) 'Phi'//char(48+is)//' min max=', real(phimin1,4), real(phimax1,4)
+        write(varname, "('Phi', I2.2)") is
+        write(*,*) varname//" min max = ", real(phimin1,4), real(phimax1,4)
 
         if (abs_prec(phimax1) > 100._mytype) then !if phi control turned off
            write(*,*) 'Scalar diverged! SIMULATION IS STOPPED!'
