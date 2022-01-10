@@ -203,146 +203,141 @@ contains
     endif
 
   end subroutine restart_forces
-end module forces
 
-!***********************************************************************
-subroutine force(ux1,uy1,ep1)
+  subroutine force(ux1,uy1,ep1)
 
-  !***********************************************************************
+    USE param
+    USE variables
+    USE decomp_2d
+    USE MPI
+    USE ibm
 
-  USE forces
-  USE param
-  USE variables
-  USE decomp_2d
-  USE MPI
-  USE ibm
+    use var, only : ta1, tb1, tc1, td1, di1
+    use var, only : ux2, uy2, ta2, tb2, tc2, td2, di2
 
-  use var, only : ta1, tb1, tc1, td1, di1
-  use var, only : ux2, uy2, ta2, tb2, tc2, td2, di2
+    implicit none
+    character(len=30) :: filename, filename2
+    integer :: nzmsize
+    integer                                             :: i, iv, j, k, kk, code, jj
+    integer                                             :: nvect1,nvect2,nvect3
 
-  implicit none
-  character(len=30) :: filename, filename2
-  integer :: nzmsize
-  integer                                             :: i, iv, j, k, kk, code, jj
-  integer                                             :: nvect1,nvect2,nvect3
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1, uy1
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ep1
 
-  real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1, uy1
-  real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ep1
+    real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: ppi2
 
-  real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: ppi2
+    real(mytype), dimension(nz) :: yLift,xDrag
+    real(mytype) :: yLift_mean,xDrag_mean
 
-  real(mytype), dimension(nz) :: yLift,xDrag
-  real(mytype) :: yLift_mean,xDrag_mean
+    real(mytype), dimension(ny-1) :: del_y
 
-  real(mytype), dimension(ny-1) :: del_y
+    real(mytype), dimension(nz) :: tunstxl, tunstyl
+    real(mytype), dimension(nz) :: tconvxl,tconvyl
+    real(mytype), dimension(nz) :: tpresxl,tpresyl
+    real(mytype), dimension(nz) :: tdiffxl,tdiffyl
 
-  real(mytype), dimension(nz) :: tunstxl, tunstyl
-  real(mytype), dimension(nz) :: tconvxl,tconvyl
-  real(mytype), dimension(nz) :: tpresxl,tpresyl
-  real(mytype), dimension(nz) :: tdiffxl,tdiffyl
+    real(mytype), dimension(nz) :: tunstx, tunsty
+    real(mytype), dimension(nz) :: tconvx,tconvy
+    real(mytype), dimension(nz) :: tpresx,tpresy
+    real(mytype), dimension(nz) :: tdiffx,tdiffy
 
-  real(mytype), dimension(nz) :: tunstx, tunsty
-  real(mytype), dimension(nz) :: tconvx,tconvy
-  real(mytype), dimension(nz) :: tpresx,tpresy
-  real(mytype), dimension(nz) :: tdiffx,tdiffy
+    real(mytype) :: uxmid,uymid,prmid
+    real(mytype) :: dudxmid,dudymid,dvdxmid,dvdymid
+    real(mytype) :: fac,tsumx,tsumy
+    real(mytype) :: fcvx,fcvy,fprx,fpry,fdix,fdiy
+    real(mytype) :: xmom,ymom
 
-  real(mytype) :: uxmid,uymid,prmid
-  real(mytype) :: dudxmid,dudymid,dvdxmid,dvdymid
-  real(mytype) :: fac,tsumx,tsumy
-  real(mytype) :: fcvx,fcvy,fprx,fpry,fdix,fdiy
-  real(mytype) :: xmom,ymom
+    nvect1=xsize(1)*xsize(2)*xsize(3)
+    nvect2=ysize(1)*ysize(2)*ysize(3)
+    nvect3=zsize(1)*zsize(2)*zsize(3)
 
-  nvect1=xsize(1)*xsize(2)*xsize(3)
-  nvect2=ysize(1)*ysize(2)*ysize(3)
-  nvect3=zsize(1)*zsize(2)*zsize(3)
+    do jj = 1, ny-1
+       if (istret.eq.0) then
+          del_y(jj)=dy
+       else
+          del_y(jj)=yp(jj+1)-yp(jj) 
+       endif
+    enddo
 
-  do jj = 1, ny-1
-    if (istret.eq.0) then
-      del_y(jj)=dy
-    else
-      del_y(jj)=yp(jj+1)-yp(jj) 
+    if (itime.eq.1) then
+       do k = 1, xsize(3)
+          do j = 1, xsize(2)
+             do i = 1, xsize(1)
+                ux11(i,j,k)=ux1(i,j,k)
+                uy11(i,j,k)=uy1(i,j,k)
+             enddo
+          enddo
+       enddo
+       return
+    elseif (itime.eq.2) then
+       do k = 1, xsize(3)
+          do j = 1, xsize(2)
+             do i = 1, xsize(1)
+                ux01(i,j,k)=ux1(i,j,k)
+                uy01(i,j,k)=uy1(i,j,k)
+             enddo
+          enddo
+       enddo
+       return
     endif
-  enddo
 
-  if (itime.eq.1) then
-     do k = 1, xsize(3)
-        do j = 1, xsize(2)
-           do i = 1, xsize(1)
-              ux11(i,j,k)=ux1(i,j,k)
-              uy11(i,j,k)=uy1(i,j,k)
-           enddo
-        enddo
-     enddo
-     return
-  elseif (itime.eq.2) then
-     do k = 1, xsize(3)
-        do j = 1, xsize(2)
-           do i = 1, xsize(1)
-              ux01(i,j,k)=ux1(i,j,k)
-              uy01(i,j,k)=uy1(i,j,k)
-           enddo
-        enddo
-     enddo
-     return
-  endif
+    call ibm_derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)    ! dudx
+    call ibm_derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy) ! dvdx
+    call transpose_x_to_y(ta1,ta2) ! dudx
+    call transpose_x_to_y(tb1,tb2) ! dvdx
 
-  call ibm_derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)    ! dudx
-  call ibm_derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy) ! dvdx
-  call transpose_x_to_y(ta1,ta2) ! dudx
-  call transpose_x_to_y(tb1,tb2) ! dvdx
+    call transpose_x_to_y(ux1,ux2)
+    call transpose_x_to_y(uy1,uy2)
+    call transpose_x_to_y(ppi1,ppi2)
 
-  call transpose_x_to_y(ux1,ux2)
-  call transpose_x_to_y(uy1,uy2)
-  call transpose_x_to_y(ppi1,ppi2)
+    call ibm_dery (tc2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx) ! dudy
+    call ibm_dery (td2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)    ! dvdy
+    call transpose_y_to_x(tc2,tc1) ! dudy
+    call transpose_y_to_x(td2,td1) ! dvdy
 
-  call ibm_dery (tc2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx) ! dudy
-  call ibm_dery (td2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)    ! dvdy
-  call transpose_y_to_x(tc2,tc1) ! dudy
-  call transpose_y_to_x(td2,td1) ! dvdy
+    !*****************************************************************
+    !      Drag and Lift coefficients
+    !*****************************************************************
+    do iv=1,nvol
 
-  !*****************************************************************
-  !      Drag and Lift coefficients
-  !*****************************************************************
-  do iv=1,nvol
+       !*****************************************************************
+       !        Calculation of the momentum terms
+       !*****************************************************************
+       !
+       !     Calculation of the momentum terms. First we integrate the 
+       !     time rate of momentum along the CV.
+       !
+       !         Excluding the body internal cells. If the centroid 
+       !         of the cell falls inside the body the cell is 
+       !         excluded.
 
-     !*****************************************************************
-     !        Calculation of the momentum terms
-     !*****************************************************************
-     !
-     !     Calculation of the momentum terms. First we integrate the 
-     !     time rate of momentum along the CV.
-     !
-     !         Excluding the body internal cells. If the centroid 
-     !         of the cell falls inside the body the cell is 
-     !         excluded.
+       tunstxl=zero
+       tunstyl=zero
+       do k=1,xsize(3)
+          tsumx=zero
+          tsumy=zero
+          do j=jcvlw_lx(iv),jcvup_lx(iv)
+             do i=icvlf_lx(iv),icvrt_lx(iv)
+                !     The velocity time rate has to be relative to the cell center, 
+                !     and not to the nodes, because, here, we have an integral 
+                !     relative to the volume, and, therefore, this has a sense 
+                !     of a "source".
+                !         fac   = (1.5*ux1(i,j,k)-2.0*ux01(i,j,k)+0.5*ux11(i,j,k))*epcv1(i,j,k)
+                fac   = (onepfive*ux1(i,j,k)-two*ux01(i,j,k)+half*ux11(i,j,k))*(one-ep1(i,j,k))
+                tsumx = tsumx+fac*dx*del_y(j+(xstart(2)-1))/dt    !tsumx+fac*dx*dy/dt
+                !sumx(k) = sumx(k)+dudt1*dx*dy
 
-     tunstxl=zero
-     tunstyl=zero
-     do k=1,xsize(3)
-        tsumx=zero
-        tsumy=zero
-        do j=jcvlw_lx(iv),jcvup_lx(iv)
-           do i=icvlf_lx(iv),icvrt_lx(iv)
-              !     The velocity time rate has to be relative to the cell center, 
-              !     and not to the nodes, because, here, we have an integral 
-              !     relative to the volume, and, therefore, this has a sense 
-              !     of a "source".
-              !         fac   = (1.5*ux1(i,j,k)-2.0*ux01(i,j,k)+0.5*ux11(i,j,k))*epcv1(i,j,k)
-              fac   = (onepfive*ux1(i,j,k)-two*ux01(i,j,k)+half*ux11(i,j,k))*(one-ep1(i,j,k))
-              tsumx = tsumx+fac*dx*del_y(j+(xstart(2)-1))/dt    !tsumx+fac*dx*dy/dt
-              !sumx(k) = sumx(k)+dudt1*dx*dy
-
-              !         fac   = (1.5*uy1(i,j,k)-2.0*uy01(i,j,k)+0.5*uy11(i,j,k))*epcv1(i,j,k)
-              fac   = (onepfive*uy1(i,j,k)-two*uy01(i,j,k)+half*uy11(i,j,k))*(one-ep1(i,j,k))
-              tsumy = tsumy+fac*dx*del_y(j+(xstart(2)-1))/dt !tsumy+fac*dx*dy/dt
-              !sumy(k) = sumy(k)+dudt1*dx*dy
-           enddo
-        enddo
-        tunstxl(xstart(3)-1+k)=tsumx
-        tunstyl(xstart(3)-1+k)=tsumy
-     enddo
-     call MPI_ALLREDUCE(tunstxl,tunstx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     call MPI_ALLREDUCE(tunstyl,tunsty,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+                !         fac   = (1.5*uy1(i,j,k)-2.0*uy01(i,j,k)+0.5*uy11(i,j,k))*epcv1(i,j,k)
+                fac   = (onepfive*uy1(i,j,k)-two*uy01(i,j,k)+half*uy11(i,j,k))*(one-ep1(i,j,k))
+                tsumy = tsumy+fac*dx*del_y(j+(xstart(2)-1))/dt !tsumy+fac*dx*dy/dt
+                !sumy(k) = sumy(k)+dudt1*dx*dy
+             enddo
+          enddo
+          tunstxl(xstart(3)-1+k)=tsumx
+          tunstyl(xstart(3)-1+k)=tsumy
+       enddo
+       call MPI_ALLREDUCE(tunstxl,tunstx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(tunstyl,tunsty,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
 !!$!*********************************************************************************
 !!$!     Secondly, the surface momentum fluxes
@@ -357,209 +352,210 @@ subroutine force(ux1,uy1,ep1)
 !!$!        \       CV   \
 !!$!(jcvlw) A____________D      
 
-     tconvxl=zero
-     tconvyl=zero
-     tdiffxl=zero
-     tdiffyl=zero
-     tpresxl=zero
-     tpresyl=zero
-     !BC and AD : x-pencils
-     !AD
-     if ((jcvlw(iv).ge.xstart(2)).and.(jcvlw(iv).le.xend(2))) then
-        j=jcvlw(iv)-xstart(2)+1
-        do k=1,xsize(3)
-           kk=xstart(3)-1+k
-           fcvx=zero
-           fcvy=zero
-           fpry=zero
-           fdix=zero
-           fdiy=zero
-           do i=icvlf_lx(iv),icvrt_lx(iv)-1
-              !momentum flux
-              uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
-              uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
-              fcvx  = fcvx -uxmid*uymid*dx
-              fcvy  = fcvy -uymid*uymid*dx
+       tconvxl=zero
+       tconvyl=zero
+       tdiffxl=zero
+       tdiffyl=zero
+       tpresxl=zero
+       tpresyl=zero
+       !BC and AD : x-pencils
+       !AD
+       if ((jcvlw(iv).ge.xstart(2)).and.(jcvlw(iv).le.xend(2))) then
+          j=jcvlw(iv)-xstart(2)+1
+          do k=1,xsize(3)
+             kk=xstart(3)-1+k
+             fcvx=zero
+             fcvy=zero
+             fpry=zero
+             fdix=zero
+             fdiy=zero
+             do i=icvlf_lx(iv),icvrt_lx(iv)-1
+                !momentum flux
+                uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
+                uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
+                fcvx  = fcvx -uxmid*uymid*dx
+                fcvy  = fcvy -uymid*uymid*dx
 
-              !pressure
-              prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))
-              fpry  = fpry +prmid*dx
+                !pressure
+                prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))
+                fpry  = fpry +prmid*dx
 
-              !viscous term
-              dudymid = half*(tc1(i,j,k)+tc1(i+1,j,k))
-              dvdxmid = half*(tb1(i,j,k)+tb1(i+1,j,k))
-              dvdymid = half*(td1(i,j,k)+td1(i+1,j,k))
-              fdix    = fdix -(xnu*(dudymid+dvdxmid)*dx)
-              fdiy    = fdiy -two*xnu*dvdymid*dx
+                !viscous term
+                dudymid = half*(tc1(i,j,k)+tc1(i+1,j,k))
+                dvdxmid = half*(tb1(i,j,k)+tb1(i+1,j,k))
+                dvdymid = half*(td1(i,j,k)+td1(i+1,j,k))
+                fdix    = fdix -(xnu*(dudymid+dvdxmid)*dx)
+                fdiy    = fdiy -two*xnu*dvdymid*dx
 
-           enddo
+             enddo
 
-           tconvxl(kk)=tconvxl(kk)+fcvx
-           tconvyl(kk)=tconvyl(kk)+fcvy
-           tpresyl(kk)=tpresyl(kk)+fpry
-           tdiffxl(kk)=tdiffxl(kk)+fdix
-           tdiffyl(kk)=tdiffyl(kk)+fdiy
-        enddo
-     endif
-     !BC
-     if ((jcvup(iv).ge.xstart(2)).and.(jcvup(iv).le.xend(2))) then
-        j=jcvup(iv)-xstart(2)+1
-        do k=1,xsize(3)
-           kk=xstart(3)-1+k
-           fcvx=zero
-           fcvy=zero
-           fpry=zero
-           fdix=zero
-           fdiy=zero
-           do i=icvlf_lx(iv),icvrt_lx(iv)-1
-              !momentum flux
-              uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
-              uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
-              fcvx= fcvx +uxmid*uymid*dx
-              fcvy= fcvy +uymid*uymid*dx
+             tconvxl(kk)=tconvxl(kk)+fcvx
+             tconvyl(kk)=tconvyl(kk)+fcvy
+             tpresyl(kk)=tpresyl(kk)+fpry
+             tdiffxl(kk)=tdiffxl(kk)+fdix
+             tdiffyl(kk)=tdiffyl(kk)+fdiy
+          enddo
+       endif
+       !BC
+       if ((jcvup(iv).ge.xstart(2)).and.(jcvup(iv).le.xend(2))) then
+          j=jcvup(iv)-xstart(2)+1
+          do k=1,xsize(3)
+             kk=xstart(3)-1+k
+             fcvx=zero
+             fcvy=zero
+             fpry=zero
+             fdix=zero
+             fdiy=zero
+             do i=icvlf_lx(iv),icvrt_lx(iv)-1
+                !momentum flux
+                uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
+                uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
+                fcvx= fcvx +uxmid*uymid*dx
+                fcvy= fcvy +uymid*uymid*dx
 
-              !pressure
-              prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))
-              fpry = fpry -prmid*dx
+                !pressure
+                prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))
+                fpry = fpry -prmid*dx
 
-              !viscous term
-              dudymid = half*(tc1(i,j,k)+tc1(i+1,j,k))
-              dvdxmid = half*(tb1(i,j,k)+tb1(i+1,j,k))
-              dvdymid = half*(td1(i,j,k)+td1(i+1,j,k))
-              fdix = fdix +(xnu*(dudymid+dvdxmid)*dx)
-              fdiy = fdiy +two*xnu*dvdymid*dx
+                !viscous term
+                dudymid = half*(tc1(i,j,k)+tc1(i+1,j,k))
+                dvdxmid = half*(tb1(i,j,k)+tb1(i+1,j,k))
+                dvdymid = half*(td1(i,j,k)+td1(i+1,j,k))
+                fdix = fdix +(xnu*(dudymid+dvdxmid)*dx)
+                fdiy = fdiy +two*xnu*dvdymid*dx
 
-           enddo
-           tconvxl(kk)=tconvxl(kk)+fcvx
-           tconvyl(kk)=tconvyl(kk)+fcvy
-           tpresyl(kk)=tpresyl(kk)+fpry
-           tdiffxl(kk)=tdiffxl(kk)+fdix
-           tdiffyl(kk)=tdiffyl(kk)+fdiy
-        enddo
-     endif
-     !AB and DC : y-pencils
-     !AB
-     if ((icvlf(iv).ge.ystart(1)).and.(icvlf(iv).le.yend(1))) then
-        i=icvlf(iv)-ystart(1)+1
-        do k=1,ysize(3)
-           kk=ystart(3)-1+k
-           fcvx=zero
-           fcvy=zero
-           fprx=zero
-           fdix=zero
-           fdiy=zero
-           do j=jcvlw_ly(iv),jcvup_ly(iv)-1
-              !momentum flux
-              uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k))
-              uymid = half*(uy2(i,j,k)+uy2(i,j+1,k))
-              fcvx= fcvx -uxmid*uxmid*del_y(j)
-              fcvy= fcvy -uxmid*uymid*del_y(j)
+             enddo
+             tconvxl(kk)=tconvxl(kk)+fcvx
+             tconvyl(kk)=tconvyl(kk)+fcvy
+             tpresyl(kk)=tpresyl(kk)+fpry
+             tdiffxl(kk)=tdiffxl(kk)+fdix
+             tdiffyl(kk)=tdiffyl(kk)+fdiy
+          enddo
+       endif
+       !AB and DC : y-pencils
+       !AB
+       if ((icvlf(iv).ge.ystart(1)).and.(icvlf(iv).le.yend(1))) then
+          i=icvlf(iv)-ystart(1)+1
+          do k=1,ysize(3)
+             kk=ystart(3)-1+k
+             fcvx=zero
+             fcvy=zero
+             fprx=zero
+             fdix=zero
+             fdiy=zero
+             do j=jcvlw_ly(iv),jcvup_ly(iv)-1
+                !momentum flux
+                uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k))
+                uymid = half*(uy2(i,j,k)+uy2(i,j+1,k))
+                fcvx= fcvx -uxmid*uxmid*del_y(j)
+                fcvy= fcvy -uxmid*uymid*del_y(j)
 
-              !pressure
-              prmid=half*(ppi2(i,j,k)+ppi2(i,j+1,k))
-              fprx = fprx +prmid*del_y(j)
+                !pressure
+                prmid=half*(ppi2(i,j,k)+ppi2(i,j+1,k))
+                fprx = fprx +prmid*del_y(j)
 
-              !viscous term
-              dudxmid = half*(ta2(i,j,k)+ta2(i,j+1,k))
-              dudymid = half*(tc2(i,j,k)+tc2(i,j+1,k))
-              dvdxmid = half*(tb2(i,j,k)+tb2(i,j+1,k))
-              fdix = fdix -two*xnu*dudxmid*del_y(j)
-              fdiy = fdiy -xnu*(dvdxmid+dudymid)*del_y(j)
-           enddo
-           tconvxl(kk)=tconvxl(kk)+fcvx
-           tconvyl(kk)=tconvyl(kk)+fcvy
-           tpresxl(kk)=tpresxl(kk)+fprx
-           tdiffxl(kk)=tdiffxl(kk)+fdix
-           tdiffyl(kk)=tdiffyl(kk)+fdiy
-        enddo
-     endif
-     !DC
-     if ((icvrt(iv).ge.ystart(1)).and.(icvrt(iv).le.yend(1))) then
-        i=icvrt(iv)-ystart(1)+1
-        do k=1,ysize(3)
-           kk=ystart(3)-1+k
-           fcvx=zero
-           fcvy=zero
-           fprx=zero
-           fdix=zero
-           fdiy=zero
-           do j=jcvlw_ly(iv),jcvup_ly(iv)-1
-              !momentum flux
-              uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k))
-              uymid = half*(uy2(i,j,k)+uy2(i,j+1,k))
-              fcvx= fcvx +uxmid*uxmid*del_y(j)
-              fcvy= fcvy +uxmid*uymid*del_y(j)
+                !viscous term
+                dudxmid = half*(ta2(i,j,k)+ta2(i,j+1,k))
+                dudymid = half*(tc2(i,j,k)+tc2(i,j+1,k))
+                dvdxmid = half*(tb2(i,j,k)+tb2(i,j+1,k))
+                fdix = fdix -two*xnu*dudxmid*del_y(j)
+                fdiy = fdiy -xnu*(dvdxmid+dudymid)*del_y(j)
+             enddo
+             tconvxl(kk)=tconvxl(kk)+fcvx
+             tconvyl(kk)=tconvyl(kk)+fcvy
+             tpresxl(kk)=tpresxl(kk)+fprx
+             tdiffxl(kk)=tdiffxl(kk)+fdix
+             tdiffyl(kk)=tdiffyl(kk)+fdiy
+          enddo
+       endif
+       !DC
+       if ((icvrt(iv).ge.ystart(1)).and.(icvrt(iv).le.yend(1))) then
+          i=icvrt(iv)-ystart(1)+1
+          do k=1,ysize(3)
+             kk=ystart(3)-1+k
+             fcvx=zero
+             fcvy=zero
+             fprx=zero
+             fdix=zero
+             fdiy=zero
+             do j=jcvlw_ly(iv),jcvup_ly(iv)-1
+                !momentum flux
+                uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k))
+                uymid = half*(uy2(i,j,k)+uy2(i,j+1,k))
+                fcvx= fcvx +uxmid*uxmid*del_y(j)
+                fcvy= fcvy +uxmid*uymid*del_y(j)
 
-              !pressure
-              prmid=half*(ppi2(i,j,k)+ppi2(i,j+1,k))
-              fprx = fprx -prmid*del_y(j)
+                !pressure
+                prmid=half*(ppi2(i,j,k)+ppi2(i,j+1,k))
+                fprx = fprx -prmid*del_y(j)
 
-              !viscous term
-              dudxmid = half*(ta2(i,j,k)+ta2(i,j+1,k))
-              dudymid = half*(tc2(i,j,k)+tc2(i,j+1,k))
-              dvdxmid = half*(tb2(i,j,k)+tb2(i,j+1,k))
-              fdix = fdix +two*xnu*dudxmid*del_y(j)
-              fdiy = fdiy +xnu*(dvdxmid+dudymid)*del_y(j)
-           enddo
-           tconvxl(kk)=tconvxl(kk)+fcvx
-           tconvyl(kk)=tconvyl(kk)+fcvy
-           tpresxl(kk)=tpresxl(kk)+fprx
-           tdiffxl(kk)=tdiffxl(kk)+fdix
-           tdiffyl(kk)=tdiffyl(kk)+fdiy
-        enddo
-     endif
-     call MPI_ALLREDUCE(tconvxl,tconvx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     call MPI_ALLREDUCE(tconvyl,tconvy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     call MPI_ALLREDUCE(tpresxl,tpresx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     call MPI_ALLREDUCE(tpresyl,tpresy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     call MPI_ALLREDUCE(tdiffxl,tdiffx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-     call MPI_ALLREDUCE(tdiffyl,tdiffy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+                !viscous term
+                dudxmid = half*(ta2(i,j,k)+ta2(i,j+1,k))
+                dudymid = half*(tc2(i,j,k)+tc2(i,j+1,k))
+                dvdxmid = half*(tb2(i,j,k)+tb2(i,j+1,k))
+                fdix = fdix +two*xnu*dudxmid*del_y(j)
+                fdiy = fdiy +xnu*(dvdxmid+dudymid)*del_y(j)
+             enddo
+             tconvxl(kk)=tconvxl(kk)+fcvx
+             tconvyl(kk)=tconvyl(kk)+fcvy
+             tpresxl(kk)=tpresxl(kk)+fprx
+             tdiffxl(kk)=tdiffxl(kk)+fdix
+             tdiffyl(kk)=tdiffyl(kk)+fdiy
+          enddo
+       endif
+       call MPI_ALLREDUCE(tconvxl,tconvx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(tconvyl,tconvy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(tpresxl,tpresx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(tpresyl,tpresy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(tdiffxl,tdiffx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(tdiffyl,tdiffy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
-     do k=1,zsize(3)
+       do k=1,zsize(3)
 
-        tpresx(k)=tpresx(k)/dt
-        tpresy(k)=tpresy(k)/dt
+          tpresx(k)=tpresx(k)/dt
+          tpresy(k)=tpresy(k)/dt
 
-        xmom    = tunstx(k)+tconvx(k)
-        ymom    = tunsty(k)+tconvy(k)
-        xDrag(k) = two*(tdiffx(k)+tpresx(k)-xmom)
-        yLift(k) = two*(tdiffy(k)+tpresy(k)-ymom)
+          xmom    = tunstx(k)+tconvx(k)
+          ymom    = tunsty(k)+tconvy(k)
+          xDrag(k) = two*(tdiffx(k)+tpresx(k)-xmom)
+          yLift(k) = two*(tdiffy(k)+tpresy(k)-ymom)
 
-     enddo
+       enddo
 
-     !Edited by F. Schuch
-     xDrag_mean = sum(xDrag(:))/real(nz,mytype)
-     yLift_mean = sum(yLift(:))/real(nz,mytype)
+       !Edited by F. Schuch
+       xDrag_mean = sum(xDrag(:))/real(nz,mytype)
+       yLift_mean = sum(yLift(:))/real(nz,mytype)
 
-!     if ((itime==ifirst).or.(itime==0)) then
-!        if (nrank .eq. 0) then
-!        write(filename,"('aerof',I1.1)") iv
-!        open(38+(iv-1),file=filename,status='unknown',form='formatted')
-!        endif
-!     endif
-     if (nrank .eq. 0) then
-        write(38,*) t,xDrag_mean,yLift_mean
-        call flush(38)
-     endif
-     if (mod(itime, icheckpoint).eq.0) then
-        if (nrank .eq. 0) then
-           write(filename,"('forces.dat',I7.7)") itime
-           call system("cp forces.dat " //filename)
-        endif
-     endif
-  enddo
+       !     if ((itime==ifirst).or.(itime==0)) then
+       !        if (nrank .eq. 0) then
+       !        write(filename,"('aerof',I1.1)") iv
+       !        open(38+(iv-1),file=filename,status='unknown',form='formatted')
+       !        endif
+       !     endif
+       if (nrank .eq. 0) then
+          write(38,*) t,xDrag_mean,yLift_mean
+          call flush(38)
+       endif
+       if (mod(itime, icheckpoint).eq.0) then
+          if (nrank .eq. 0) then
+             write(filename,"('forces.dat',I7.7)") itime
+             call system("cp forces.dat " //filename)
+          endif
+       endif
+    enddo
 
-  do k = 1, xsize(3)
-     do j = 1, xsize(2)
-        do i = 1, xsize(1)
-           ux11(i,j,k)=ux01(i,j,k)
-           uy11(i,j,k)=uy01(i,j,k)
-           ux01(i,j,k)=ux1(i,j,k)
-           uy01(i,j,k)=uy1(i,j,k)
-        enddo
-     enddo
-  enddo
+    do k = 1, xsize(3)
+       do j = 1, xsize(2)
+          do i = 1, xsize(1)
+             ux11(i,j,k)=ux01(i,j,k)
+             uy11(i,j,k)=uy01(i,j,k)
+             ux01(i,j,k)=ux1(i,j,k)
+             uy01(i,j,k)=uy1(i,j,k)
+          enddo
+       enddo
+    enddo
 
-  return
+    return
 
-end subroutine force
+  end subroutine force
+end module forces
