@@ -405,7 +405,11 @@ contains
     else if (itype .eq. itype_lockexch) then
 
        call visu_lockexch_init(case_visu_init)
-      
+
+    else if (itype .eq. itype_uniform) then
+
+       call visu_uniform_init(case_visu_init)      
+
     end if
     
   end subroutine visu_case_init
@@ -455,6 +459,11 @@ contains
        call visu_tbl(ux1, uy1, uz1, pp3, phi1, ep1, num)
        called_visu = .true.
        
+   elseif (itype.eq.itype_uniform) then
+
+       call visu_uniform(ux1, uy1, uz1, pp3, phi1, ep1, num)
+       called_visu = .true.
+
     endif
 
     if (called_visu .and. (.not. case_visu_init)) then
