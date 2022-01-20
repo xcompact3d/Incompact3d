@@ -3286,7 +3286,7 @@ subroutine derzvp(tz,uz,rz,sz,cfz6,csz6,cwz6,nx,ny,nz,nzm,npaire)
      if (npaire==1) then
         do concurrent (j=1:ny, i=1:nx)
            tz(i,j,nzm-1) = aciz6*(uz(i,j,nzm)-uz(i,j,nzm-1)) &
-                         + bciz6*(uz(nz,j,k)-uz(nzm-2,j,k))
+                         + bciz6*(uz(i,j,nz)-uz(i,j,nzm-2))
         enddo
         do concurrent (j=1:ny, i=1:nx)
            tz(i,j,nzm  ) = aciz6*(uz(i,j,nz)-uz(i,j,nzm)) &
