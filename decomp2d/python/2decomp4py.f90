@@ -42,6 +42,7 @@ module decomp4py
   
   private
   public :: init_decomp4py
+  public :: get_grid_size
   public :: transpose
 
 contains
@@ -63,6 +64,23 @@ contains
     
   end subroutine init_decomp4py
 
+  function get_grid_size(ax)
+
+    character(len=*), intent(in) :: ax
+    integer, dimension(3) :: get_grid_size
+    
+    if (ax == "x") then
+       get_grid_size = xsize
+    else if (ax == "y") then
+       get_grid_size = ysize
+    else if (ax == "z") then
+       get_grid_size = zsize
+    else
+       print *, "ERROR: Only the x/y/z grid size can be queried."
+    end if
+    
+  end function get_grid_size
+  
   subroutine transpose(arr_in, op, arr_tp)
     !
 
