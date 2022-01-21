@@ -5038,7 +5038,7 @@ subroutine derzvp(tz,uz,rz,sz,cfz6,csz6,cwz6,nx,ny,nz,nzm,npaire)
         do j=1,ny
            do i=1,nx
               tz(i,j,nzm-1)=aciz6*(uz(i,j,nzm)-uz(i,j,nzm-1))&
-                   +bciz6*(uz(nz,j,k)-uz(nzm-2,j,k))
+                   +bciz6*(uz(i,j,nz)-uz(i,j,nzm-2))
               tz(i,j,nzm)=aciz6*(uz(i,j,nz)-uz(i,j,nzm))&
                    +bciz6*(uz(i,j,nzm)-uz(i,j,nzm-1))
            enddo
