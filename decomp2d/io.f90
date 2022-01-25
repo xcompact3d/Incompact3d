@@ -249,7 +249,7 @@ contains
        
        allocate(character(len(trim(dirname)) + 1 + len(trim(varname))) :: full_io_name)
        full_io_name = dirname//"/"//varname
-       call decomp_2d_open_io(io_name, full_io_name, decomp_2d_write_mode)
+       call decomp_2d_open_io(io_name, full_io_name, decomp_2d_read_mode)
        idx = get_io_idx(io_name, full_io_name)
        opened_new = .true.
     end if
