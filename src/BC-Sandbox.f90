@@ -128,7 +128,7 @@ contains
         nzi.eq.xstart(3).and.nzf.eq.xend(3)) then
         !
         if (nrank.eq.0) write(*,*) 'reading : ', './data/geometry/epsilon.bin'
-        call decomp_2d_read_one(1,epsi,'./data/geometry','epsilon.bin',io_sandbox)
+        call decomp_2d_read_one(1,epsi,'./data','geometry/epsilon.bin',io_sandbox)
         !
     else
       ! Just the standard epsi(nx,ny,nz) is loaded
@@ -439,6 +439,9 @@ contains
     ! read(10, nml=CASE); rewind(10) !! Read case-specific variables
     ! close(10)
 
+    call decomp_2d_open_io(io_sandbox, './data', decomp_2d_read_mode)
+    call decomp_2d_start_io(io_sandbox, './data')
+    
     !! Sponge Zone A for recycling inflow condition
     if (sz_a_length .gt. 0.0) sz_a_i = int(sz_a_length / dx) + 1
 
@@ -569,6 +572,9 @@ contains
       enddo
     endif
 
+    call decomp_2d_end_io(io_sandbox, './data')
+    call decomp_2d_close_io(io_sandbox, './data')
+    
     return
   end subroutine init_sandbox
 
