@@ -229,11 +229,31 @@ contains
     real(mytype_single), allocatable, dimension(:,:,:) :: varsingle
     integer :: idx
     integer :: disp_bytes
-
+    character(len=:), allocatable :: full_io_name
+    logical :: opened_new, dir_exists
+    
     read_reduce_prec = .true.
     
     idx = get_io_idx(io_name, dirname)
 #ifndef ADIOS2
+    opened_new = .false.
+    if (idx .lt. 1) then
+       ! Create folder if needed
+       if (nrank==0) then
+          inquire(file=dirname, exist=dir_exists)
+          if (.not.dir_exists) then
+             print *, "ERROR: cannot read from", dirname, " directory doesn't exist!"
+             stop
+          end if
+       end if
+       
+       allocate(character(len(trim(dirname)) + 1 + len(trim(varname))) :: full_io_name)
+       full_io_name = dirname//"/"//varname
+       call decomp_2d_open_io(io_name, full_io_name, decomp_2d_write_mode)
+       idx = get_io_idx(io_name, full_io_name)
+       opened_new = .true.
+    end if
+    
     if (present(reduce_prec)) then
        if (.not. reduce_prec) then
           read_reduce_prec = .false.
@@ -307,6 +327,11 @@ contains
 
       disp = disp + sizes(1) * sizes(2) * sizes(3) * disp_bytes
     end associate
+
+    if (opened_new) then
+       call decomp_2d_close_io(io_name, full_io_name)
+       deallocate(full_io_name)
+    end if
 #else
     call adios2_read_one_real(ipencil, var, dirname, varname, io_name)
 #endif
