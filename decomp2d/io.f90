@@ -238,17 +238,17 @@ contains
 #ifndef ADIOS2
     opened_new = .false.
     if (idx .lt. 1) then
-       ! Create folder if needed
+       ! Check file exists
+       allocate(character(len(trim(dirname)) + 1 + len(trim(varname))) :: full_io_name)
+       full_io_name = dirname//"/"//varname
        if (nrank==0) then
-          inquire(file=dirname, exist=dir_exists)
+          inquire(file=full_io_name, exist=dir_exists)
           if (.not.dir_exists) then
-             print *, "ERROR: cannot read from", dirname, " directory doesn't exist!"
+             print *, "ERROR: cannot read from", full_io_name, " directory doesn't exist!"
              stop
           end if
        end if
        
-       allocate(character(len(trim(dirname)) + 1 + len(trim(varname))) :: full_io_name)
-       full_io_name = dirname//"/"//varname
        call decomp_2d_open_io(io_name, full_io_name, decomp_2d_read_mode)
        idx = get_io_idx(io_name, full_io_name)
        opened_new = .true.
