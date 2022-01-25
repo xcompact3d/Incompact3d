@@ -281,8 +281,8 @@ contains
        ! There was a check for nvisu = 1 before
        call decomp_2d_read_one(1, array, stat_dir, filename, io_statistics)
     else
-      call decomp_2d_write_one(1, array, stat_dir, filename, 1, io_statistics)
-   endif
+       call decomp_2d_write_one(1, array, stat_dir, filename, 1, io_statistics)
+    endif
 
   end subroutine read_or_write_one_stat
 
