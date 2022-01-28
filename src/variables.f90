@@ -36,6 +36,8 @@ module var
   USE variables
   USE param
   USE complex_geometry
+
+  implicit none
   
   ! define all major arrays here
   real(mytype), save, allocatable, dimension(:,:,:) :: ux1, ux2, ux3, po3, dv3
@@ -110,6 +112,8 @@ contains
 
     TYPE(DECOMP_INFO), save :: ph! decomposition object
 
+    integer :: i, j, k
+    
 #ifdef DEBG
     if (nrank == 0) write(*,*) '# Init_variables start'
 #endif
@@ -177,9 +181,9 @@ contains
     call alloc_x(ti1)
     ti1 = zero
     call alloc_x(di1)
-    tdi1 = zero
+    di1 = zero
     call alloc_x(ep1)
-    tep1 = zero
+    ep1 = zero
     if (ilmn) then
       call alloc_x(mu1, opt_global=.true.)
       mu1 = one
@@ -329,7 +333,7 @@ contains
     call alloc_y(uy2)
     uy2=zero
     call alloc_y(uz2)
-    uzj2=zero
+    uz2=zero
     call alloc_y(ta2)
     ta2=zero
     call alloc_y(tb2)
