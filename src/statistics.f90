@@ -280,9 +280,9 @@ contains
 
     if (flag_read) then
        ! There was a check for nvisu = 1 before
-       call decomp_2d_read_one(1, array, stat_dir, filename, io_statistics)
+       call decomp_2d_read_one(1, array, stat_dir, filename, io_statistics, reduce_prec=.false.)
     else
-       call decomp_2d_write_one(1, array, stat_dir, filename, 1, io_statistics)
+       call decomp_2d_write_one(1, array, stat_dir, filename, 1, io_statistics, reduce_prec=.false.)
     endif
 
   end subroutine read_or_write_one_stat
