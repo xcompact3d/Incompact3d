@@ -128,7 +128,7 @@ contains
         nzi.eq.xstart(3).and.nzf.eq.xend(3)) then
         !
         if (nrank.eq.0) write(*,*) 'reading : ', './data/geometry/epsilon.bin'
-        call decomp_2d_read_one(1,epsi,'./data/geometry','epsilon.bin',io_sandbox)
+        call decomp_2d_read_one(1,epsi,'data','geometry/epsilon.bin',io_sandbox)
         !
     else
       ! Just the standard epsi(nx,ny,nz) is loaded
@@ -438,7 +438,7 @@ contains
     ! open(10, file=InputFN)
     ! read(10, nml=CASE); rewind(10) !! Read case-specific variables
     ! close(10)
-
+    
     !! Sponge Zone A for recycling inflow condition
     if (sz_a_length .gt. 0.0) sz_a_i = int(sz_a_length / dx) + 1
 
@@ -448,17 +448,17 @@ contains
       if (iscalar .ne. 0) then
         do is = 1, numscalar
           if (nrank.eq.0) write(*,*) 'reading : ', './data/phi'//char(is+48)//'.bin'
-          call decomp_2d_read_one(1, phi1(:,:,:,is), './data','phi'//char(is+48)//'.bin',io_sandbox)
+          call decomp_2d_read_one(1, phi1(:,:,:,is), 'data','phi'//char(is+48)//'.bin',io_sandbox)
         enddo
       endif
 
       !Read velocity field
       if (nrank.eq.0) write(*,*) 'reading : ', './data/ux.bin'
-      call decomp_2d_read_one(1,ux1,'./data','ux.bin',io_sandbox)
+      call decomp_2d_read_one(1,ux1,'data','ux.bin',io_sandbox)
       if (nrank.eq.0) write(*,*) 'reading : ', './data/uy.bin'
-      call decomp_2d_read_one(1,uy1,'./data','uy.bin',io_sandbox)
+      call decomp_2d_read_one(1,uy1,'data','uy.bin',io_sandbox)
       if (nrank.eq.0) write(*,*) 'reading : ', './data/uz.bin'
-      call decomp_2d_read_one(1,uz1,'./data','uz.bin',io_sandbox)
+      call decomp_2d_read_one(1,uz1,'data','uz.bin',io_sandbox)
     
     endif
 
@@ -568,7 +568,7 @@ contains
         !
       enddo
     endif
-
+    
     return
   end subroutine init_sandbox
 

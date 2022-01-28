@@ -36,6 +36,8 @@ module stats
 
   character(len=*), parameter :: io_statistics = "statistics-io", &
        stat_dir = "statistics"
+
+  integer :: stats_time
   
   private
   public overall_statistic
@@ -153,15 +155,13 @@ contains
 
   function gen_statname(stat) result(newname)
 
-    use param, only : itime
-
     implicit none
     
     character(len=*), intent(in) :: stat
     character(len=30) :: newname
     
 #ifndef ADIOS2
-    write(newname, "(A,'.dat',I7.7)") stat, itime
+    write(newname, "(A,'.dat',I7.7)") stat, stats_time
 #else
     write(newname, *) stat
 #endif
@@ -203,14 +203,15 @@ contains
         it = itime - 1
     else
         it = itime
-    endif
+     endif
+     stats_time = it
 
     if (nrank==0) then
       print *,'==========================================================='
       if (flag_read) then
-        print *,'Reading stat file', it
+        print *,'Reading stat file', stats_time
       else
-        print *,'Writing stat file', it
+        print *,'Writing stat file', stats_time
       endif
     endif
 
