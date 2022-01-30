@@ -217,7 +217,7 @@ contains
     real(mytype), dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize,npress), intent(in) :: pp3
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar), intent(in) :: phi1
     integer, intent(in) :: itime
-    character(len=32), intent(out) :: num
+    integer, intent(out) :: num
 
     ! Local variables
     integer :: is
@@ -241,23 +241,23 @@ contains
 #ifndef ADIOS2
     if (filenamedigits) then
        ! New enumeration system, it works integrated with xcompact3d_toolbox
-       write(num, ifilenameformat) itime
+       num = itime
     else
        ! Classic enumeration system
-       write(num, ifilenameformat) itime/ioutput
+       num = itime / ioutput
     endif
 #else
     ! ADIOS2 is zero-indexed
-    write(num, '(I0)') itime/ioutput - 1
+    num = itime/ioutput - 1
 #endif
     
     ! Write XDMF header
-    if (use_xdmf) call write_xdmf_header(".", "snapshot", trim(num))
+    if (use_xdmf) call write_xdmf_header(".", "snapshot", num)
 
     ! Write velocity
-    call write_field(ux1, ".", "ux", trim(num))
-    call write_field(uy1, ".", "uy", trim(num))
-    call write_field(uz1, ".", "uz", trim(num))
+    call write_field(ux1, ".", "ux", num)
+    call write_field(uy1, ".", "uy", num)
+    call write_field(uz1, ".", "uz", num)
 
     ! Interpolate pressure
     !WORK Z-PENCILS
@@ -277,16 +277,16 @@ contains
     call rescale_pressure(ta1)
 
     ! Write pressure
-    call write_field(ta1, ".", "pp", trim(num), .true., flush=.true.)
+    call write_field(ta1, ".", "pp", num, .true., flush=.true.)
 
     ! LMN - write density
-    if (ilmn) call write_field(rho1(:,:,:,1), ".", "rho", trim(num))
+    if (ilmn) call write_field(rho1(:,:,:,1), ".", "rho", num)
 
     ! Write scalars
     if (iscalar.ne.0) then
       do is = 1, numscalar
         write(scname,"('phi',I2.2)") is
-        call write_field(phi1(:,:,:,is), ".", trim(scname), trim(num), .true.)
+        call write_field(phi1(:,:,:,is), ".", trim(scname), num, .true.)
       enddo
     endif
 
@@ -303,8 +303,10 @@ contains
     implicit none
 
     integer, intent(in) :: itime
-    character(len=32), intent(in) :: num
+    integer, intent(in) :: num
 
+    character(len=:), allocatable :: filename
+    
     character(len=32) :: fmt2, fmt3, fmt4
     integer :: is
     integer :: ierr
@@ -320,7 +322,8 @@ contains
         write(fmt3,'("(A,F16.4)")')
         write(fmt4,'("(A,F16.12)")')
 
-        open(newunit=is,file="./data/snap"//trim(num)//".ini",action='write',status='replace')
+        write(filename, '(A, I0, A)') "./data/snap", num, ".ini"
+        open(newunit=is,file=filename,action='write',status='replace')
         write(is,'(A)')'[domain]'
         write(is,fmt2) 'nx=      ',nx
         write(is,fmt2) 'ny=      ',ny
@@ -364,7 +367,8 @@ contains
     implicit none
 
     ! Arguments
-    character(len=*), intent(in) :: pathname, filename, num
+    character(len=*), intent(in) :: pathname, filename
+    integer, intent(in) :: num
 
     ! Local variables
     integer :: i,k
@@ -452,7 +456,7 @@ contains
         write(ioxdmf,*)'        </DataItem>'
         write(ioxdmf,*)'    </Geometry>'
       endif
-      write(ioxdmf,*)'    <Grid Name="'//num//'" GridType="Uniform">'
+      write(ioxdmf,'(A, I0, A)')'    <Grid Name="', num, '" GridType="Uniform">'
       write(ioxdmf,*)'        <Topology Reference="/Xdmf/Domain/Topology[1]"/>'
       write(ioxdmf,*)'        <Geometry Reference="/Xdmf/Domain/Geometry[1]"/>'
     endif
@@ -497,7 +501,8 @@ contains
     implicit none
 
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: f1
-    character(len=*), intent(in) :: pathname, filename, num 
+    character(len=*), intent(in) :: pathname, filename
+    integer, intent(in) :: num
     logical, optional, intent(in) :: skip_ibm, flush
 
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: local_array
@@ -576,22 +581,23 @@ contains
   end subroutine write_field
 
   function gen_snapshotname(pathname, varname, num, ext)
-    character(len=*), intent(in) :: pathname, varname, num, ext
+    character(len=*), intent(in) :: pathname, varname, ext
+    integer, intent(in) :: num
+    character(len=:), allocatable :: gen_snapshotname
 #ifndef ADIOS2
-    character(len=(len(pathname) + 1 + len(varname) + 1 + len(num) + 1 + len(ext))) :: gen_snapshotname
-    write(gen_snapshotname, "(A)") gen_filename(pathname, varname, num, ext)
+    gen_snapshotname = gen_filename(pathname, varname, num, ext)
 #else
-    character(len=(len(varname) + 1 + len(num) + 1 + len(ext))) :: gen_snapshotname
-    write(gen_snapshotname, "(A)") varname//'-'//num//'.'//ext
+    gen_snapshotname = varname//'-'//int_to_str(num)//'.'//ext
 #endif
   end function gen_snapshotname
   
   function gen_filename(pathname, varname, num, ext)
 
-    character(len=*), intent(in) :: pathname, varname, num, ext
+    character(len=*), intent(in) :: pathname, varname, ext
+    integer, intent(in) :: num
 #ifndef ADIOS2
-    character(len=(len(pathname) + 1 + len(varname) + 1 + len(num) + 1 + len(ext))) :: gen_filename
-    write(gen_filename, "(A)") pathname//'/'//varname//'-'//num//'.'//ext
+    character(len=:), allocatable :: gen_filename
+    gen_filename = pathname//'/'//varname//'-'//int_to_str(num)//'.'//ext
 #else
     character(len=len(varname)) :: gen_filename
     write(gen_filename, "(A)") varname
@@ -601,17 +607,25 @@ contains
 
   function gen_h5path(filename, num)
 
-    character(len=*), intent(in) :: filename, num
+    character(len=*), intent(in) :: filename
+    integer, intent(in) :: num
 #ifndef ADIOS2
     character(len=*), parameter :: path_to_h5file = "./"
     character(len=(len(path_to_h5file) + len(filename))) :: gen_h5path
     write(gen_h5path, "(A)") path_to_h5file//filename
 #else
     character(len=*), parameter :: path_to_h5file = "../data.hdf5:/Step"
-    character(len=(len(path_to_h5file) + len(num) + 1+ len(filename))) :: gen_h5path
-    write(gen_h5path, "(A)") path_to_h5file//num//"/"//filename
+    character(len=:), allocatable :: gen_h5path
+    gen_h5path = path_to_h5file//int_to_str(num)//"/"//filename
 #endif
     
   end function gen_h5path
+
+  function int_to_str(i)
+    integer, intent(in) :: i
+    character(len=(1 + int(log10(real(i))))) :: int_to_str
+
+    write(int_to_str, "(I0)") i
+  end function int_to_str
   
 end module visu
