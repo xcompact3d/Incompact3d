@@ -322,7 +322,7 @@ contains
         write(fmt3,'("(A,F16.4)")')
         write(fmt4,'("(A,F16.12)")')
 
-        write(filename, '(A, I0, A)') "./data/snap", num, ".ini"
+        filename = "./data/snap"//int_to_str(num)//".ini"
         open(newunit=is,file=filename,action='write',status='replace')
         write(is,'(A)')'[domain]'
         write(is,fmt2) 'nx=      ',nx
