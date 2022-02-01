@@ -336,7 +336,7 @@ contains
 
        ! Write info file for restart - Kay Schäfer
        if (nrank == 0) then
-         write(filename,"('restart',I7.7,'.info')") itime
+          write(filename,"(A)") 'restart.info'
          write(fmt2,'("(A,I16)")')
          write(fmt3,'("(A,F16.4)")')
          write(fmt4,'("(A,F16.12)")')
@@ -439,7 +439,7 @@ contains
        call decomp_2d_close_io(io_restart, resfile)
 
        !! Read time of restart file
-       write(filename,"('restart',I7.7,'.info')") ifirst-1
+       write(filename,"(A)") 'restart.info'
        inquire(file=filename, exist=fexists)
        if (nrank==0) write(*,*) filename
        ! file exists???
