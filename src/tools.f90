@@ -249,8 +249,10 @@ contains
           write(*,*) 'Writing restart point ',filename !itime/icheckpoint
        endif
 
-       ! First, rename old checkpoint in case of error
-       call rename(resfile, resfile_old)
+       if (adios2_restart_initialised) then
+          ! First, rename old checkpoint in case of error
+          call rename(resfile, resfile_old)
+       end if
     end if
 
     if (.not. adios2_restart_initialised) then
@@ -1010,6 +1012,7 @@ contains
 
     use MPI
     use decomp_2d, only : nrank, decomp_2d_abort
+    use decomp_2d_io, only : gen_iodir_name
     
     character(len=*), intent(in) :: oldname
     character(len=*), intent(in) :: newname
@@ -1021,6 +1024,8 @@ contains
 
     integer :: ierror
 
+    character(len=:), allocatable :: oldname_ext
+    
     if (present(opt_rank)) then
        exe_rank = opt_rank
     else
@@ -1028,9 +1033,10 @@ contains
     end if
 
     if (nrank == exe_rank) then
-       inquire(file=oldname, exist=exist)
+       oldname_ext = gen_iodir_name(oldname, io_restart)
+       inquire(file=oldname_ext, exist=exist)
        if (exist) then
-          cmd = "mv "//oldname//" "//newname
+          cmd = "mv "//oldname_ext//" "//newname
           call execute_command_line(cmd)
        end if
     end if
@@ -1088,6 +1094,7 @@ contains
 
     use MPI
     use decomp_2d, only : nrank, decomp_2d_abort
+    use decomp_2d_io, only : gen_iodir_name
     
     character(len=*), intent(in) :: refname
     character(len=*), intent(in) :: testname
@@ -1102,6 +1109,8 @@ contains
 
     logical :: refexist, testexist
     logical, save :: checked_initial = .false.
+
+    character(len=:), allocatable :: testname_ext
     
     if (present(opt_rank)) then
        exe_rank = opt_rank
@@ -1112,8 +1121,10 @@ contains
     if (nrank == exe_rank) then
        success = .true.
 
+       testname_ext = gen_iodir_name(testname, io_restart)
+       
        inquire(file=refname, size=refsize, exist=refexist)
-       inquire(file=testname, size=testsize, exist=testexist)
+       inquire(file=testname_ext, size=testsize, exist=testexist)
 
        if (testexist) then
           if (refexist) then
@@ -1122,7 +1133,7 @@ contains
              end if
           else
              if (checked_initial) then
-                print *, "ERROR: old restart", refname, " doesn't exist!"
+                print *, "ERROR: old restart ", refname, " doesn't exist!"
                 success = .false.
              else
                 ! Must assume this is the first call to restart, no old restart should exist
