@@ -10,6 +10,7 @@ module tools
 
   character(len=*), parameter :: io_restart = "restart-io"
   character(len=*), parameter :: resfile = "checkpoint"
+  character(len=*), parameter :: resfile_old = "checkpoint.old"
   character(len=*), parameter :: io_ioflow = "in-outflow-io"
   
   private
@@ -247,6 +248,9 @@ contains
           write(*,*) '===========================================================<<<<<'
           write(*,*) 'Writing restart point ',filename !itime/icheckpoint
        endif
+
+       ! First, rename old checkpoint in case of error
+       call rename(resfile, resfile_old)
     end if
 
     if (.not. adios2_restart_initialised) then
@@ -307,6 +311,9 @@ contains
        call decomp_2d_end_io(io_restart, resfile)
        call decomp_2d_close_io(io_restart, resfile)
 
+       ! Validate restart file then remove old file and update restart.info
+       call delete_filedir(resfile_old)
+       
        ! Write info file for restart - Kay Schäfer
        if (nrank == 0) then
          write(filename,"('restart',I7.7,'.info')") itime
@@ -988,6 +995,90 @@ contains
     return
 
   end subroutine avg3d
+
+  ! Subroutine to rename a file/directory
+  !
+  ! [string, in]           oldname  - name of existing file
+  ! [string, in]           newname  - existing file to be renamed as
+  ! [string, in, optional] opt_rank - which rank should perform the operation? all others will wait.
+  subroutine rename(oldname, newname, opt_rank)
+
+    use MPI
+    use decomp_2d, only : nrank, decomp_2d_abort
+    
+    character(len=*), intent(in) :: oldname
+    character(len=*), intent(in) :: newname
+    integer, intent(in), optional :: opt_rank
+
+    integer :: exe_rank
+    logical :: exist
+    character(len=:), allocatable :: cmd
+
+    integer :: ierror
+
+    if (present(opt_rank)) then
+       exe_rank = opt_rank
+    else
+       exe_rank = 0
+    end if
+
+    if (nrank == exe_rank) then
+       inquire(file=oldname, exist=exist)
+       if (exist) then
+          cmd = "mv "//oldname//" "//newname
+          call execute_command_line(cmd)
+       end if
+    end if
+
+    call MPI_Barrier(MPI_COMM_WORLD, ierror)
+    if (ierror /= 0) then
+       call decomp_2d_abort(ierror, &
+            "Error in MPI_Barrier!")
+    end if
+    
+  end subroutine rename
+
+  ! Subroutine to delete a file/director
+  !
+  ! [string, in]           name     - name of file to delete
+  ! [string, in, optional] opt_rank - which rank should perform the operation? all others will wait.
+  subroutine delete_filedir(name, opt_rank)
+
+    use MPI
+    use decomp_2d, only : nrank, decomp_2d_abort
+    
+    character(len=*), intent(in) :: name
+    integer, intent(in), optional :: opt_rank
+
+    integer :: exe_rank
+    logical :: exist
+    integer :: unit
+
+    integer :: ierror
+
+    if (present(opt_rank)) then
+       exe_rank = opt_rank
+    else
+       exe_rank = 0
+    end if
+
+    if (nrank == exe_rank) then
+       inquire(file=name, exist=exist)
+       if (exist) then
+          ! Open file so it can be deleted on close
+          open(newunit=unit, file=name)
+          close(unit, status='delete')
+       end if
+    end if
+
+    call MPI_Barrier(MPI_COMM_WORLD, ierror)
+    if (ierror /= 0) then
+       call decomp_2d_abort(ierror, &
+            "Error in MPI_Barrier!")
+    end if
+    
+  end subroutine delete_filedir
+  
 end module tools
 !##################################################################
 
