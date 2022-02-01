@@ -1065,8 +1065,10 @@ contains
     logical :: exist
     integer :: unit
 
-    integer :: ierror
+    character(len=:), allocatable :: cmd
 
+    integer :: ierror
+    
     if (present(opt_rank)) then
        exe_rank = opt_rank
     else
@@ -1076,9 +1078,16 @@ contains
     if (nrank == exe_rank) then
        inquire(file=name, exist=exist)
        if (exist) then
-          ! Open file so it can be deleted on close
-          open(newunit=unit, file=name)
-          close(unit, status='delete')
+          inquire(file=name//"/.", exist=exist)
+          if (.not. exist) then
+             ! Open file so it can be deleted on close
+             open(newunit=unit, file=name)
+             close(unit, status='delete')
+          else
+             ! Directory - hopefully rm should work...
+             cmd = "rm -r "//name
+             call execute_command_line(cmd)
+          end if
        end if
     end if
 
