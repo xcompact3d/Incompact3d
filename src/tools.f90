@@ -1005,9 +1005,9 @@ contains
 
   ! Subroutine to rename a file/directory
   !
-  ! [string, in]           oldname  - name of existing file
-  ! [string, in]           newname  - existing file to be renamed as
-  ! [string, in, optional] opt_rank - which rank should perform the operation? all others will wait.
+  ! [string, in]            oldname  - name of existing file
+  ! [string, in]            newname  - existing file to be renamed as
+  ! [integer, in, optional] opt_rank - which rank should perform the operation? all others will wait.
   subroutine rename(oldname, newname, opt_rank)
 
     use MPI
@@ -1051,8 +1051,8 @@ contains
 
   ! Subroutine to delete a file/director
   !
-  ! [string, in]           name     - name of file to delete
-  ! [string, in, optional] opt_rank - which rank should perform the operation? all others will wait.
+  ! [string, in]            name     - name of file to delete
+  ! [integer, in, optional] opt_rank - which rank should perform the operation? all others will wait.
   subroutine delete_filedir(name, opt_rank)
 
     use MPI
@@ -1099,6 +1099,12 @@ contains
     
   end subroutine delete_filedir
 
+  ! Relatively crude validation function, checks that old and new checkpoints are the same size.
+  ! XXX: for ADIOS2/BP4 this isn't really correct/useful as it's a directory...
+  !
+  ! [string, in]            refname  - name of previous checkpoint
+  ! [string, in]            testname - name of new checkpoint
+  ! [integer, in, optional] opt_rank - which rank should perform the operation? all others will wait.
   logical function validate_restart(refname, testname, opt_rank)
 
     use MPI
