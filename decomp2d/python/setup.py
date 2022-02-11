@@ -1,6 +1,8 @@
 import os
 from numpy.distutils.core import Extension
 
+import decomp2d_options
+
 VERSION="0.0.0"
 REQUIREMENTS=[
     "numpy",
@@ -20,9 +22,7 @@ d2dext = Extension(
         D2DDIR,
         X3DDIR
     ],
-    define_macros = [
-        ("DOUBLE_PREC", None)
-    ],
+    define_macros = decomp2d_options.define_macros,
     extra_objects = [
       os.path.join(D2DDIR, "decomp_2d.o")  
     ],

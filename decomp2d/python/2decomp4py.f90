@@ -105,9 +105,9 @@ contains
   subroutine transpose(arr_in, op, arr_tp)
     !
 
-    D2DREAL, dimension(:,:,:), intent(in) :: arr_in
+    real(kind(0.0d0)), dimension(:,:,:), intent(in) :: arr_in
     character(len=*), intent(in) :: op
-    D2DREAL, dimension(:,:,:), intent(out) :: arr_tp
+    real(kind(0.0d0)), dimension(:,:,:), intent(inout) :: arr_tp
 
     if (op == "xy") then
        call transpose_x_to_y(arr_in, arr_tp)
