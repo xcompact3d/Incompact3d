@@ -3,9 +3,12 @@ FC = mpif90
 
 INSTALL_DIR = ~/.local
 
-PIP = pip3
+PIP = pip3 --verbose
 PIPFLAGS = --prefix=$(INSTALL_DIR) \
-	--install-option=config_fc --install-option=--f90exec=$(FC)
+	--install-option=config_fc \
+	--install-option=--f90exec=$(FC) \
+	# --install-option=build_src \
+	# --install-option=--f2cmap="/Users/paulbartholomew/src/fortran/Xcompact3d/decomp2d/python/.f2py_f2cmap"
 
 all: .f2py_f2cmap decomp2d_options.py
 	$(PIP) install $(PIPFLAGS) .

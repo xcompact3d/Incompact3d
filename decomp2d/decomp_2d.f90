@@ -1208,8 +1208,8 @@ contains
     
     character(len=100) :: tmp_char
     if (nrank==0) then
-     open(newunit=i,file='temp.dat', form='unformatted')
-         write(i) decomp%x1dist,decomp%y1dist,decomp%y2dist,decomp%z2dist, &
+     open(newunit=i,file='temp.dat')
+     write(i) decomp%x1dist,decomp%y1dist,decomp%y2dist,decomp%z2dist, &
               decomp%xsz,decomp%ysz,decomp%zsz
      close(i)
      call system("rm temp.dat")
