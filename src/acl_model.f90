@@ -1,3 +1,7 @@
+!Copyright (c) 2012-2022, Xcompact3d
+!This file is part of Xcompact3d (xcompact3d.com)
+!SPDX-License-Identifier: BSD 3-Clause
+
 module actuator_line_model
 
     use decomp_2d, only: mytype, nrank

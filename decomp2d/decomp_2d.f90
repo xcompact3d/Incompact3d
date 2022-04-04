@@ -511,7 +511,7 @@ contains
     integer :: buf_size, status, errorcode
 
     ! verify the global size can actually be distributed as pencils
-    if (nx<dims(1) .or. ny<dims(1) .or. ny<dims(2) .or. nz<dims(2)) then
+    if (nx_global<dims(1) .or. ny_global<dims(1) .or. ny_global<dims(2) .or. nz_global<dims(2)) then
        errorcode = 6
        call decomp_2d_abort(errorcode, &
             'Invalid 2D processor grid. ' // &
@@ -1208,10 +1208,10 @@ contains
     
     character(len=100) :: tmp_char
     if (nrank==0) then
-     open(101,file='temp.dat', form='unformatted')
-         write(101) decomp%x1dist,decomp%y1dist,decomp%y2dist,decomp%z2dist, &
+     open(newunit=i,file='temp.dat', form='unformatted')
+         write(i) decomp%x1dist,decomp%y1dist,decomp%y2dist,decomp%z2dist, &
               decomp%xsz,decomp%ysz,decomp%zsz
-     close(101)
+     close(i)
      call system("rm temp.dat")
     endif
 

@@ -1,38 +1,6 @@
-!################################################################################
-!This file is part of Xcompact3d.
-!
-!Xcompact3d
-!Copyright (c) 2012 Eric Lamballais and Sylvain Laizet
-!eric.lamballais@univ-poitiers.fr / sylvain.laizet@gmail.com
-!
-!    Xcompact3d is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU General Public License as published by
-!    the Free Software Foundation.
-!
-!    Xcompact3d is distributed in the hope that it will be useful,
-!    but WITHOUT ANY WARRANTY; without even the implied warranty of
-!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU General Public License for more details.
-!
-!    You should have received a copy of the GNU General Public License
-!    along with the code.  If not, see <http://www.gnu.org/licenses/>.
-!-------------------------------------------------------------------------------
-!-------------------------------------------------------------------------------
-!    We kindly request that you cite Xcompact3d/Incompact3d in your
-!    publications and presentations. The following citations are suggested:
-!
-!    1-Bartholomew P., Deskos G., Frantz R.A.S., Schuch F.N., Lamballais E. &
-!    Laizet S., 2020, Xcompact3D: An open-source framework for solving
-!    turbulence problems on a Cartesian mesh, SoftwareX, vol 12, pp 100550
-!
-!    2-Laizet S. & Lamballais E., 2009, High-order compact schemes for
-!    incompressible flows: a simple and efficient method with the quasi-spectral
-!    accuracy, J. Comp. Phys.,  vol 228 (15), pp 5989-6015
-!
-!    3-Laizet S. & Li N., 2011, Incompact3d: a powerful tool to tackle turbulence
-!    problems with up to 0(10^5) computational cores, Int. J. of Numerical
-!    Methods in Fluids, vol 67 (11), pp 1735-1757
-!################################################################################
+!Copyright (c) 2012-2022, Xcompact3d
+!This file is part of Xcompact3d (xcompact3d.com)
+!SPDX-License-Identifier: BSD 3-Clause
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!
@@ -128,7 +96,7 @@ contains
         nzi.eq.xstart(3).and.nzf.eq.xend(3)) then
         !
         if (nrank.eq.0) write(*,*) 'reading : ', './data/geometry/epsilon.bin'
-        call decomp_2d_read_one(1,epsi,'./data/geometry','epsilon.bin',io_sandbox)
+        call decomp_2d_read_one(1,epsi,'data','geometry/epsilon.bin',io_sandbox)
         !
     else
       ! Just the standard epsi(nx,ny,nz) is loaded
@@ -438,7 +406,7 @@ contains
     ! open(10, file=InputFN)
     ! read(10, nml=CASE); rewind(10) !! Read case-specific variables
     ! close(10)
-
+    
     !! Sponge Zone A for recycling inflow condition
     if (sz_a_length .gt. 0.0) sz_a_i = int(sz_a_length / dx) + 1
 
@@ -448,17 +416,17 @@ contains
       if (iscalar .ne. 0) then
         do is = 1, numscalar
           if (nrank.eq.0) write(*,*) 'reading : ', './data/phi'//char(is+48)//'.bin'
-          call decomp_2d_read_one(1, phi1(:,:,:,is), './data','phi'//char(is+48)//'.bin',io_sandbox)
+          call decomp_2d_read_one(1, phi1(:,:,:,is), 'data','phi'//char(is+48)//'.bin',io_sandbox)
         enddo
       endif
 
       !Read velocity field
       if (nrank.eq.0) write(*,*) 'reading : ', './data/ux.bin'
-      call decomp_2d_read_one(1,ux1,'./data','ux.bin',io_sandbox)
+      call decomp_2d_read_one(1,ux1,'data','ux.bin',io_sandbox)
       if (nrank.eq.0) write(*,*) 'reading : ', './data/uy.bin'
-      call decomp_2d_read_one(1,uy1,'./data','uy.bin',io_sandbox)
+      call decomp_2d_read_one(1,uy1,'data','uy.bin',io_sandbox)
       if (nrank.eq.0) write(*,*) 'reading : ', './data/uz.bin'
-      call decomp_2d_read_one(1,uz1,'./data','uz.bin',io_sandbox)
+      call decomp_2d_read_one(1,uz1,'data','uz.bin',io_sandbox)
     
     endif
 
@@ -568,7 +536,7 @@ contains
         !
       enddo
     endif
-
+    
     return
   end subroutine init_sandbox
 

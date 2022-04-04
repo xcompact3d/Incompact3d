@@ -1,34 +1,6 @@
-!################################################################################
-!This file is part of Xcompact3d.
-!
-!Xcompact3d
-!Copyright (c) 2012 Eric Lamballais and Sylvain Laizet
-!eric.lamballais@univ-poitiers.fr / sylvain.laizet@gmail.com
-!
-!    Xcompact3d is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU General Public License as published by
-!    the Free Software Foundation.
-!
-!    Xcompact3d is distributed in the hope that it will be useful,
-!    but WITHOUT ANY WARRANTY; without even the implied warranty of
-!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU General Public License for more details.
-!
-!    You should have received a copy of the GNU General Public License
-!    along with the code.  If not, see <http://www.gnu.org/licenses/>.
-!-------------------------------------------------------------------------------
-!-------------------------------------------------------------------------------
-!    We kindly request that you cite Xcompact3d/Incompact3d in your
-!    publications and presentations. The following citations are suggested:
-!
-!    1-Laizet S. & Lamballais E., 2009, High-order compact schemes for
-!    incompressible flows: a simple and efficient method with the quasi-spectral
-!    accuracy, J. Comp. Phys.,  vol 228 (15), pp 5989-6015
-!
-!    2-Laizet S. & Li N., 2011, Incompact3d: a powerful tool to tackle turbulence
-!    problems with up to 0(10^5) computational cores, Int. J. of Numerical
-!    Methods in Fluids, vol 67 (11), pp 1735-1757
-!################################################################################
+!Copyright (c) 2012-2022, Xcompact3d
+!This file is part of Xcompact3d (xcompact3d.com)
+!SPDX-License-Identifier: BSD 3-Clause
 
 module case
 
@@ -370,7 +342,7 @@ contains
     endif
 
     if (iforces.eq.1) then
-       call force(ux,uy,uz,ep)
+       call force(ux,uy,ep)
        call restart_forces(1)
     endif
 
@@ -405,7 +377,11 @@ contains
     else if (itype .eq. itype_lockexch) then
 
        call visu_lockexch_init(case_visu_init)
-      
+
+    else if (itype .eq. itype_uniform) then
+
+       call visu_uniform_init(case_visu_init)      
+
     end if
     
   end subroutine visu_case_init
@@ -455,6 +431,11 @@ contains
        call visu_tbl(ux1, uy1, uz1, pp3, phi1, ep1, num)
        called_visu = .true.
        
+   elseif (itype.eq.itype_uniform) then
+
+       call visu_uniform(ux1, uy1, uz1, pp3, phi1, ep1, num)
+       called_visu = .true.
+
     endif
 
     if (called_visu .and. (.not. case_visu_init)) then
