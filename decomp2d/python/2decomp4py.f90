@@ -37,6 +37,7 @@ module decomp4py
   
   use mpi
   use decomp_2d
+  use decomp_2d_io
   
   implicit none
   
@@ -45,7 +46,8 @@ module decomp4py
   public :: get_grid_size
   public :: get_grid_start
   public :: transpose
-
+  public :: read_field
+  
 contains
 
   subroutine init_decomp4py(nx, ny, nz, p_row, p_col)
@@ -122,5 +124,24 @@ contains
     end if
        
   end subroutine transpose
+
+  subroutine read_field(ipencil, var, dirname, varname, io_name, reduce_prec)
+
+    integer, intent(IN) :: ipencil
+    real(kind(0.0d0)), dimension(:,:,:), intent(INOUT) :: var
+    character(len=*), intent(IN) :: varname, dirname, io_name
+    logical, intent(in), optional :: reduce_prec
+
+    logical :: pred_reduce_prec
+
+    if (present(reduce_prec)) then
+       pred_reduce_prec = reduce_prec
+    else
+       pred_reduce_prec = .false.
+    end if
+    
+    call decomp_2d_read_one(ipencil,var,dirname,varname,io_name,reduce_prec=pred_reduce_prec)
+    
+  end subroutine read_field
   
 end module decomp4py

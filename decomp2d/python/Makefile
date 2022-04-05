@@ -15,7 +15,7 @@ all: .f2py_f2cmap decomp2d_options.py
 
 clean:
 	$(PIP) uninstall decomp-2d4py
-	rm -r build decopm_2d4py.egg-info __pycache__
+	rm -rf build decomp_2d4py.egg-info __pycache__
 
 # TODO: Make this settable based on presence of -DDOUBLE_PREC in a variable.
 #       In principle this would then be picked up when called by a Makefile in 2DECOMP&FFT or

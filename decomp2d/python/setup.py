@@ -24,7 +24,8 @@ d2dext = Extension(
     ],
     define_macros = decomp2d_options.define_macros,
     extra_objects = [
-      os.path.join(D2DDIR, "decomp_2d.o")  
+        os.path.join(D2DDIR, "decomp_2d.o"),  
+        os.path.join(D2DDIR, "io.o")  
     ],
     extra_f90_compile_args = [
         "-cpp"
