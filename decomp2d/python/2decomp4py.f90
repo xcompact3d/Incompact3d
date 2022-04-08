@@ -1,6 +1,8 @@
 !!! 2decomp4py.f90 provides a light-weight interface to
 !!!                2decomp&fft/Xcompact3d for wrapping with f2py.
 !!! Copyright (C) 2021-      University of Edinburgh
+!!!
+!!! 2DECOMP&FFT:
 !!! Copyright (C) 2011-2021, The Numerical Algorithms Group (NAG) All rights reserved.
 !!! 
 !!! Redistribution and use in source and binary forms, with or without modification, are permitted
