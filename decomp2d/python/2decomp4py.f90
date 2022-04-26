@@ -62,12 +62,17 @@ contains
     !f2py intent(in) p_row
     !f2py intent(in) col
     integer :: ierr
+    integer :: nvisu
 
     ! XXX: Need to initialise the nproc and nrank variables from 2decomp&fft.
     call MPI_Comm_size(MPI_COMM_WORLD, nproc, ierr)
     call MPI_Comm_rank(MPI_COMM_WORLD, nrank, ierr)
     
     call decomp_2d_init(nx, ny, nz, p_row, p_col)
+    call decomp_2d_io_init()
+
+    nvisu = 1
+    call init_coarser_mesh_statV(nvisu, nvisu, nvisu, .true.)
     
   end subroutine init_decomp4py
 
