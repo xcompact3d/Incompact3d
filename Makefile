@@ -137,3 +137,6 @@ clean:
 .PHONY: cleanall
 cleanall: clean
 	rm -f *~ \#*\# out/* data/* stats/* planes/* *.xdmf *.log *.out nodefile core sauve*
+
+2decomp4py: xcompact3d
+	make -C decomp2d/python
