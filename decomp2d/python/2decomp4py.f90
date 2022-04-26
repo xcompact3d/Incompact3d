@@ -56,7 +56,11 @@ contains
     
     integer, intent(in) :: nx, ny, nz
     integer, intent(in) :: p_row, p_col
-
+    !f2py intent(in) nx
+    !f2py intent(in) ny
+    !f2py intent(in) nz
+    !f2py intent(in) p_row
+    !f2py intent(in) col
     integer :: ierr
 
     ! XXX: Need to initialise the nproc and nrank variables from 2decomp&fft.
@@ -71,7 +75,9 @@ contains
 
     character(len=*), intent(in) :: ax
     integer, dimension(3) :: get_grid_size
-
+    !f2py intent(in) ax
+    !f2py intent(out) get_grid_size
+    
     if (ax == "x") then
        get_grid_size = xsize
     else if (ax == "y") then
@@ -88,6 +94,8 @@ contains
 
     character(len=*), intent(in) :: ax
     integer, dimension(3) :: get_grid_start
+    !f2py intent(in) ax
+    !f2py intent(out) get_grid_start
     type(decomp_info) :: decomp
 
     call get_decomp_info(decomp)
@@ -110,7 +118,10 @@ contains
     real(kind(0.0d0)), dimension(:,:,:), intent(in) :: arr_in
     character(len=*), intent(in) :: op
     real(kind(0.0d0)), dimension(:,:,:), intent(inout) :: arr_tp
-
+    !f2py intent(in) arr_in
+    !f2py intent(in) op
+    !f2py intent(inout) arr_tp
+    
     if (op == "xy") then
        call transpose_x_to_y(arr_in, arr_tp)
     else if (op == "yz") then
