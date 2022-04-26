@@ -136,22 +136,19 @@ contains
        
   end subroutine transpose
 
-  subroutine read_field(ipencil, var, dirname, varname, io_name, reduce_prec)
+  subroutine read_field(ipencil, var, dirname, varname, io_name, nx, ny, nz)
 
-    integer, intent(IN) :: ipencil
-    real(kind(0.0d0)), dimension(:,:,:), intent(INOUT) :: var
-    character(len=*), intent(IN) :: varname, dirname, io_name
-    logical, intent(in), optional :: reduce_prec
-
-    logical :: pred_reduce_prec
-
-    if (present(reduce_prec)) then
-       pred_reduce_prec = reduce_prec
-    else
-       pred_reduce_prec = .false.
-    end if
+    integer, intent(in) :: ipencil
+    real(kind(0.0d0)), dimension(nx, ny, nz), intent(inout) :: var
+    character(len=*), intent(in) :: varname, dirname, io_name
+    integer, intent(in) :: nx, ny, nz
+    !f2py intent(in) ipencil
+    !f2py intent(inout) var
+    !f2py intent(in) varname
+    !f2py intent(in) dirname
+    !f2py intent(in) io_name
     
-    call decomp_2d_read_one(ipencil,var,dirname,varname,io_name,reduce_prec=pred_reduce_prec)
+    call decomp_2d_read_one(ipencil,var,dirname,varname,io_name)
     
   end subroutine read_field
   
