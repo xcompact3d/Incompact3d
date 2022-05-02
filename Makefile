@@ -107,7 +107,7 @@ xcompact3d : $(OBJDECOMP) $(OBJ)
 	$(FC) -o $@ $(LINKOPT) $(OBJDECOMP) $(OBJ) $(LIBFFT) $(LIBIO)
 
 $(OBJDECOMP):$(DECOMPDIR)%.o : $(DECOMPDIR)%.f90
-	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(DEFS2) $(INC) -c $<
+	$(FC) $(FFLAGS) -fPIC $(OPT) $(DEFS) $(DEFS2) $(INC) -c $<
 	mv $(@F) ${DECOMPDIR}
 	#mv *.mod ${DECOMPDIR}
 
