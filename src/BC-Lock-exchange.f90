@@ -25,6 +25,7 @@ module lockexch
   use param, only : ilmn, ibirman_eos
   use param, only : itime, ioutput, iprocessing
   use param, only : t
+  use param, only : io_bc, bc_dir
 
   implicit none
 
@@ -36,9 +37,6 @@ module lockexch
   character(len=1),parameter :: NL=char(10) !new line character
 
   logical, save :: init = .FALSE.
-
-  character(len=*), parameter :: io_bcle = "BC-lock-exchange-io", &
-       bcle_dir = "data-lock-exchange"
   
   private
   public :: init_lockexch, boundary_conditions_lockexch, postprocess_lockexch, &
@@ -247,15 +245,21 @@ contains
   subroutine visu_lockexch_init(visu_initialised)
 
     use decomp_2d, only : mytype
-    use decomp_2d_io, only : decomp_2d_register_variable
+    use decomp_2d_io, only : decomp_2d_register_variable, decomp_2d_init_io
     
     implicit none
 
     logical, intent(out) :: visu_initialised
-
-    call decomp_2d_register_variable(io_bcle, "dissm", 3, 0, 3, mytype)
-    call decomp_2d_register_variable(io_bcle, "dep", 2, 0, 2, mytype)
-
+    character(len=30) :: varname
+    integer :: is
+    
+    call decomp_2d_register_variable(io_bc, "diss", 1, 0, 0, mytype)
+    call decomp_2d_register_variable(io_bc, "dissm", 3, 0, 3, mytype)
+    do is = 1, numscalar
+       write(varname, "('dep',I1.1)") is
+       call decomp_2d_register_variable(io_bc, varname, 2, 0, 2, mytype)
+    end do
+    
     visu_initialised = .true.
     
   end subroutine visu_lockexch_init
@@ -263,6 +267,8 @@ contains
   subroutine postprocess_lockexch(rho1,ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
     use decomp_2d, only : alloc_x
+    use decomp_2d_io, only : decomp_2d_open_io, decomp_2d_start_io, decomp_2d_end_io, &
+         decomp_2d_write_mode
 
     use var, only : phi2, rho2
     use var, only : phi3, rho3
@@ -581,16 +587,25 @@ contains
        !if (save_diss.eq.1) then
        uvisu=zero
        call fine_to_coarseV(1,diss1,uvisu)
+#ifndef ADIOS2
        write(filename,"('diss',I4.4)") itime/ioutput
-       call decomp_2d_write_one(1,uvisu,bcle_dir,filename,2,io_bcle)
+#else
+       write(filename,"(A)") "diss"
+#endif
+       call decomp_2d_write_one(1,uvisu,bc_dir,filename,2,io_bc,&
+            opt_deferred_writes=.false.)
        !endif
 
        !if (save_dissm.eq.1) then
        call transpose_x_to_y (diss1,temp2)
        call transpose_y_to_z (temp2,temp3)
        call mean_plane_z(temp3,zsize(1),zsize(2),zsize(3),temp3(:,:,1))
+#ifndef ADIOS2
        write(filename,"('dissm',I4.4)") itime/ioutput
-       call decomp_2d_write_plane(3,temp3,3,1,bcle_dir,filename,io_bcle)
+#else
+       write(filename,"(A)") "dissm"
+#endif
+       call decomp_2d_write_plane(3,temp3,3,1,bc_dir,filename,io_bc)
        !endif
     endif
 
@@ -626,8 +641,12 @@ contains
           end do
        end do
 
+#ifndef ADIOS2
        write(filename,"('dep',I1.1,I4.4)") is,itime/iprocessing
-       call decomp_2d_write_plane(2,tempdep2(:,:,:,is),2,1,bcle_dir,filename,io_bcle)
+#else
+       write(filename,"('dep',I1.1)") is
+#endif
+       call decomp_2d_write_plane(2,tempdep2(:,:,:,is),2,1,bc_dir,filename,io_bc)
     enddo
 
   end subroutine dep

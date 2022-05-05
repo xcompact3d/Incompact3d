@@ -1170,7 +1170,7 @@ contains
     end if
 #else
     if (.not. engine_live(idx)) then
-       print *, "ERROR: Engine is not live!"
+       print *, "ERROR: Engine is not live!", io_name, dirname
        stop
     end if
     

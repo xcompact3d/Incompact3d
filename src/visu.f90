@@ -48,6 +48,7 @@ contains
     integer :: noutput, nsnapout
     real(mytype) :: memout
 
+    character(len=30) :: varname
     integer :: is
 
     ! HDD usage of visu module
@@ -93,7 +94,8 @@ contains
     endif
     if (iscalar.ne.0) then
        do is = 1, numscalar
-          call decomp_2d_register_variable(io_name, "phi"//char(48+is), 1, 0, output2D, mytype)
+          write(varname, "('phi',I2.2)") is
+          call decomp_2d_register_variable(io_name, trim(varname), 1, 0, output2D, mytype)
        enddo
     endif
     
