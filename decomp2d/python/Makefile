@@ -4,11 +4,21 @@ F77 = mpif77
 
 INSTALL_DIR = ~/.local
 
+ifeq ($(IO),adios2)
+	PIPINC = $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-flags)
+	PIPINC := $(PIPINC:-D%=--install-option=-D%)
+	PIPINC := $(PIPINC:-I%=--install-option=-I%)
+	PIPLIB = $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-libs)
+	PIPLIB := $(PIPLIB:%=--install-option=-l%)
+endif
+
 PIP = pip3 --verbose
 PIPFLAGS = --prefix=$(INSTALL_DIR) \
 	--install-option=config_fc \
 	--install-option=--f90exec=$(FC) \
 	--install-option=--f77exec=$(F77) \
+	--install-option=build_ext \
+	$(PIPINC) $(PIPLIB)
 	# --install-option=build_src \
 	# --install-option=--f2cmap="/Users/paulbartholomew/src/fortran/Xcompact3d/decomp2d/python/.f2py_f2cmap"
 
