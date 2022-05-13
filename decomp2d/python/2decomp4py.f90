@@ -38,6 +38,9 @@ module decomp4py
   use mpi
   use decomp_2d
   use decomp_2d_io
+#ifdef ADIOS2
+  use adios2
+#endif
   
   implicit none
   
