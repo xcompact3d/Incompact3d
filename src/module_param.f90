@@ -301,7 +301,7 @@ module param
   real(mytype) :: wrotation,ro
   real(mytype) :: dens1, dens2
   real(mytype) :: C_filter
-  character(len=100) :: inflowpath
+  character(len=512) :: inflowpath
 
   ! Logical, true when synchronization is needed
   logical, save :: sync_vel_needed = .true.
