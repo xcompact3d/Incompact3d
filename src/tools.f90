@@ -643,7 +643,7 @@ contains
     real(mytype), dimension(NTimeSteps,xsize(2),xsize(3)) :: ux1,uy1,uz1
     character(20) :: fninflow
 
-    character(80) :: inflow_file
+    character(len=1024) :: inflow_file
     
     ! Recirculate inflows 
     if (ifileinflow>=ninflows) then 
