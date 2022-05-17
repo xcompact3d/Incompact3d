@@ -6,23 +6,26 @@ INSTALL_DIR = ~/.local
 
 ifeq ($(IO),adios2)
 	PIPINC = $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-flags)
-	PIPINC := $(PIPINC:-D%=--install-option=-D%)
-	PIPINC := $(PIPINC:-I%=--install-option=-I%)
+	PIPINC := $(PIPINC:-D%=--install-option="-D%")
+	PIPINC := $(PIPINC:-I%=--install-option="-I%")
 	PIPLIB = $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-libs)
-	PIPLIB := $(PIPLIB:$(ADIOS2DIR)/lib/lib%.dylib=--install-option=-l%)
-	PIPLIB := --install-option=-L$(ADIOS2DIR)/lib $(PIPLIB) \
-		--install-option=-R$(ADIOS2DIR)/lib
-	PIPDEF = --install-option=-DADIOS2
+	PIPLIB := $(PIPLIB:%.a=-L$(dir %) -l$(notdir %))
+	PIPLIB := $(PIPLIB:-llib%=-l%)
+	PIPLIB := $(PIPLIB:%=--install-option="%")
+	PIPDEF = -DADIOS2
+	PIPDEF := $(PIPDEF:%=--install-option="%")
 endif
 
-PIP = pip3 --verbose
+PIP = pip3 #--verbose
 PIPFLAGS = --prefix=$(INSTALL_DIR) \
-	--install-option=config_fc \
-	--install-option=--f90exec=$(FC) \
-	--install-option=--f77exec=$(F77) \
-	 --install-option=build_ext \
+	--install-option="config_fc" \
+	--install-option="--verbose" \
+	--install-option="--f90exec=$(FC)" \
+	--install-option="--f77exec=$(F77)" \
+	--install-option="build_ext" \
 	$(PIPDEF) \
-	# $(PIPINC) $(PIPLIB)
+	$(PIPINC) \
+	$(PIPLIB)
 	# --install-option=build_src \
 	# --install-option=--f2cmap="/Users/paulbartholomew/src/fortran/Xcompact3d/decomp2d/python/.f2py_f2cmap"
 
