@@ -133,6 +133,7 @@ clean:
 	rm -f $(DECOMPDIR)/*.o $(DECOMPDIR)/*.mod $(DECOMPDIR)/*.smod
 	rm -f $(SRCDIR)/*.o $(SRCDIR)/*.mod $(SRCDIR)/*.smod
 	rm -f *.o *.mod *.smod xcompact3d
+	make -C decomp2d/python clean
 
 .PHONY: cleanall
 cleanall: clean

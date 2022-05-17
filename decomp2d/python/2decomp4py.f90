@@ -43,6 +43,12 @@ module decomp4py
 #endif
   
   implicit none
+
+#ifdef ADIOS2
+  logical, public, parameter :: have_adios2 = .true.
+#else
+  logical, public, parameter :: have_adios2 = .false.
+#endif
   
   private
   public :: init_decomp4py
