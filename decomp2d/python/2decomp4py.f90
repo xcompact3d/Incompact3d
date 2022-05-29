@@ -56,6 +56,7 @@ module decomp4py
   public :: get_grid_start
   public :: transpose
   public :: read_field
+  public :: register
   
 contains
 
@@ -165,5 +166,18 @@ contains
     call decomp_2d_read_one(ipencil,var,dirname,varname,io_name)
     
   end subroutine read_field
+
+  subroutine register(field_name, io_name)
+
+    use decomp_2d_io, only : decomp_2d_register_variable
+    
+    character(len=*), intent(in) :: field_name
+    character(len=*), intent(in) :: io_name
+
+    integer, parameter :: output2D = 0
+    
+    call decomp_2d_register_variable(io_name, field_name, 1, 0, output2D, kind(0.0d0))
+    
+  end subroutine register
   
 end module decomp4py
