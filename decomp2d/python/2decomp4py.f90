@@ -56,7 +56,9 @@ module decomp4py
   public :: get_grid_start
   public :: transpose
   public :: read_field
-  public :: register
+  public :: register_variable
+  public :: init_io
+  public :: open_io, close_io
   
 contains
 
@@ -167,7 +169,7 @@ contains
     
   end subroutine read_field
 
-  subroutine register(field_name, io_name)
+  subroutine register_variable(field_name, io_name)
 
     use decomp_2d_io, only : decomp_2d_register_variable
     
@@ -178,6 +180,38 @@ contains
     
     call decomp_2d_register_variable(io_name, field_name, 1, 0, output2D, kind(0.0d0))
     
-  end subroutine register
+  end subroutine register_variable
+
+  subroutine init_io(io_name)
+
+    use decomp_2d_io, only : decomp_2d_init_io
+
+    character(len=*), intent(in) :: io_name
+
+    call decomp_2d_init_io(io_name)
+    
+  end subroutine init_io
+
+  subroutine open_io(io_name, file_name)
+
+    use decomp_2d_io, only : decomp_2d_open_io, decomp_2d_read_mode
+    
+    character(len=*), intent(in) :: io_name
+    character(len=*), intent(in) :: file_name
+
+    call decomp_2d_open_io(io_name, file_name, decomp_2d_read_mode)
+
+  end subroutine open_io
+
+  subroutine close_io(io_name, file_name)
+
+    use decomp_2d_io, only : decomp_2d_close_io
+    
+    character(len=*), intent(in) :: io_name
+    character(len=*), intent(in) :: file_name
+
+    call decomp_2d_close_io(io_name, file_name)
+
+  end subroutine close_io
   
 end module decomp4py
