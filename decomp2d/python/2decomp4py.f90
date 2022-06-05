@@ -59,6 +59,7 @@ module decomp4py
   public :: register_variable
   public :: init_io
   public :: open_io, close_io
+  public :: start_io, end_io
   
 contains
 
@@ -213,5 +214,27 @@ contains
     call decomp_2d_close_io(io_name, file_name)
 
   end subroutine close_io
+
+  subroutine start_io(io_name, file_name)
+
+    use decomp_2d_io, only : decomp_2d_start_io
+    
+    character(len=*), intent(in) :: io_name
+    character(len=*), intent(in) :: file_name
+
+    call decomp_2d_start_io(io_name, file_name)
+
+  end subroutine start_io
+    
+  subroutine end_io(io_name, file_name)
+
+    use decomp_2d_io, only : decomp_2d_end_io
+    
+    character(len=*), intent(in) :: io_name
+    character(len=*), intent(in) :: file_name
+
+    call decomp_2d_end_io(io_name, file_name)
+
+  end subroutine end_io
   
 end module decomp4py

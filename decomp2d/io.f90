@@ -1824,6 +1824,8 @@ contains
        ext = ".bp4"
     else if (io%engine_type .eq. "HDF5") then
        ext = ".hdf5"
+    else if (io%engine_type .eq. "SST") then
+       ext = ""
     else
        print *, "ERROR: Unkown engine type! ", io%engine_type
        print *, "-  IO: ", io_name
