@@ -1830,7 +1830,7 @@ contains
        print *, "- DIR:", io_dir
        stop
     endif
-    write(gen_iodir_name, "(A,A)") io_dir, trim(ext)
+    write(gen_iodir_name, "(A,A)") trim(io_dir), trim(ext)
 #endif
     
   end function gen_iodir_name
