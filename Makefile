@@ -28,7 +28,7 @@ FC = mpif90
 #FFLAGS = -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -x f95-cpp-input
 ifeq ($(BUILD),debug)
 FFLAGS = -cpp -g3 -Og
-FFLAGS += -ffpe-trap=invalid,zero -fcheck=bounds
+FFLAGS += -ffpe-trap=invalid,zero -fcheck=bounds -fimplicit-none
 else
 FFLAGS = -cpp -O3 -funroll-loops -floop-optimize -g
 endif
