@@ -1169,6 +1169,9 @@ contains
        deallocate(varsingle)
     end if
 #else
+    if (idx < 1) then
+       print *, "ERROR: failed to find engine for ", io_name, " ", dirname
+    end if
     if (.not. engine_live(idx)) then
        print *, "ERROR: Engine is not live!"
        stop
