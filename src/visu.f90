@@ -24,7 +24,7 @@ module visu
 
   private
   public :: output2D, visu_init, visu_ready, visu_finalise, write_snapshot, end_snapshot, &
-       write_field, io_name
+       write_field, io_name, gen_filename
 
 contains
 

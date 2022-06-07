@@ -1169,6 +1169,9 @@ contains
        deallocate(varsingle)
     end if
 #else
+    if (idx < 1) then
+       print *, "ERROR: failed to find engine for ", io_name, " ", dirname
+    end if
     if (.not. engine_live(idx)) then
        print *, "ERROR: Engine is not live!"
        stop
@@ -1830,7 +1833,7 @@ contains
        print *, "- DIR:", io_dir
        stop
     endif
-    write(gen_iodir_name, "(A,A)") io_dir, trim(ext)
+    write(gen_iodir_name, "(A,A)") trim(io_dir), trim(ext)
 #endif
     
   end function gen_iodir_name
