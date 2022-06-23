@@ -106,35 +106,39 @@ contains
   !
   subroutine visu_ready ()
 
-    use decomp_2d_io, only : decomp_2d_open_io, decomp_2d_append_mode, decomp_2d_write_mode
+    use decomp_2d_io, only : decomp_2d_open_io, decomp_2d_append_mode, decomp_2d_write_mode, gen_iodir_name
 
+    use param, only : irestart
+    
     implicit none
 
     integer :: mode
     
 #ifdef ADIOS2
+    logical, save :: outloc_init
+    logical :: dir_exists
     
     mode = decomp_2d_write_mode
 
-    ! XXX: Currently opening BP4 files in append mode seems to corrupt data.
-    ! if (.not.outloc_init) then
-    !    if (irestart == 1) then
-    !       !! Restarting - is the output already available to write to?
-    !       inquire(file=gen_iodir_name("data", io_name), exist=dir_exists)
-    !       if (dir_exists) then
-    !          outloc_init = .true.
-    !       end if
-    !    end if
+    ! XXX: A fix was applied to ADIOS2.7.1 series to prevent corrupting files when appended from Fortran
+    if (.not.outloc_init) then
+       if (irestart == 1) then
+          !! Restarting - is the output already available to write to?
+          inquire(file=gen_iodir_name("data", io_name), exist=dir_exists)
+          if (dir_exists) then
+             outloc_init = .true.
+          end if
+       end if
        
-    !    if (.not.outloc_init) then !! Yes, yes, but check the restart check above.
-    !       mode = decomp_2d_write_mode
-    !    else
-    !       mode = decomp_2d_append_mode
-    !    end if
-    !    outloc_init = .true.
-    ! else
-    !    mode = decomp_2d_append_mode
-    ! end if
+       if (.not.outloc_init) then !! Yes, yes, but check the restart check above.
+          mode = decomp_2d_write_mode
+       else
+          mode = decomp_2d_append_mode
+       end if
+       outloc_init = .true.
+    else
+       mode = decomp_2d_append_mode
+    end if
 
     call decomp_2d_open_io(io_name, "data", mode)
 #endif
