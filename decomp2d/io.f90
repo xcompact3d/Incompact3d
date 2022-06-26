@@ -313,6 +313,9 @@ contains
       call MPI_FILE_SET_VIEW(fh,disp,data_type, &
            newtype,'native',MPI_INFO_NULL,ierror)
       if (read_reduce_prec) then
+         if (read_reduce_prec) then
+            allocate (varsingle(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
+         end if
          call MPI_FILE_READ_ALL(fh, varsingle, &
               subsizes(1)*subsizes(2)*subsizes(3), &
               data_type, MPI_STATUS_IGNORE, ierror)
@@ -378,6 +381,9 @@ contains
     type(adios2_variable) :: var_handle
     integer :: idx
 
+    integer(kind=8) :: nsteps
+    integer(kind=8) :: curstep
+    
     call adios2_at_io(io_handle, adios, io_name, ierror)
     call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
     if (.not.var_handle % valid) then
@@ -385,8 +391,20 @@ contains
        stop
     endif
 
+    call adios2_variable_steps(nsteps, var_handle, ierror)
+    print *, "AVAILABLE steps for ", nsteps
+    
+    print *, "IO_NAME: ", io_name
+    print *, "ENGINE_NAME: ", engine_name
+    print *, "VAR_NAME: ", varname
     idx = get_io_idx(io_name, engine_name)
+    print *, idx
     call adios2_get(engine_registry(idx), var_handle, var, adios2_mode_deferred, ierror)
+
+    print *, "MAX: ", maxval(var)
+    
+    call adios2_current_step(curstep, engine_registry(idx), ierror)
+    print *, "Current step: ", curstep
 
     return
     

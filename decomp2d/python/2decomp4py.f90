@@ -156,10 +156,13 @@ contains
 
   subroutine read_field(ipencil, var, dirname, varname, io_name, nx, ny, nz)
 
+    ! Arguments automatically determined by f2py
+    integer, intent(in) :: nx, ny, nz
+
+    ! Input arguments
     integer, intent(in) :: ipencil
     real(kind(0.0d0)), dimension(nx, ny, nz), intent(inout) :: var
     character(len=*), intent(in) :: varname, dirname, io_name
-    integer, intent(in) :: nx, ny, nz
     !f2py intent(in) ipencil
     !f2py intent(inout) var
     !f2py intent(in) varname
