@@ -107,7 +107,7 @@ xcompact3d : $(OBJDECOMP) $(OBJ)
 	$(FC) -o $@ $(LINKOPT) $(OBJDECOMP) $(OBJ) $(LIBFFT) $(LIBIO)
 
 $(OBJDECOMP):$(DECOMPDIR)%.o : $(DECOMPDIR)%.f90
-	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(DEFS2) $(INC) -c $<
+	$(FC) $(FFLAGS) -fPIC $(OPT) $(DEFS) $(DEFS2) $(INC) -c $<
 	mv $(@F) ${DECOMPDIR}
 	#mv *.mod ${DECOMPDIR}
 
@@ -133,7 +133,11 @@ clean:
 	rm -f $(DECOMPDIR)/*.o $(DECOMPDIR)/*.mod $(DECOMPDIR)/*.smod
 	rm -f $(SRCDIR)/*.o $(SRCDIR)/*.mod $(SRCDIR)/*.smod
 	rm -f *.o *.mod *.smod xcompact3d
+	make -C decomp2d/python clean
 
 .PHONY: cleanall
 cleanall: clean
 	rm -f *~ \#*\# out/* data/* stats/* planes/* *.xdmf *.log *.out nodefile core sauve*
+
+2decomp4py: xcompact3d
+	make -C decomp2d/python
