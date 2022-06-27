@@ -716,12 +716,23 @@ contains
     logical, save :: clean = .true.
     integer :: iomode
 
+    logical :: dir_exists
+
+#ifdef ADIOS2
     if (clean .and. (irestart .eq. 0)) then
        iomode = decomp_2d_write_mode
        clean = .false.
     else
-       iomode = decomp_2d_append_mode
+       inquire(file=gen_iodir_name("./out/inflow", io_ioflow), exist=dir_exists)
+       if (dir_exists) then
+          iomode = decomp_2d_append_mode
+       else
+          iomode = decomp_2d_write_mode
+       end if
     end if
+#else
+    iomode = decomp_2d_write_mode
+#endif
     
     write(fnoutflow,'(i20)') ifileoutflow
 #ifndef ADIOS2
