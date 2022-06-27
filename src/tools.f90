@@ -660,13 +660,15 @@ contains
     if (nrank==0) print *,'READING INFLOW FROM ',inflow_file
     
     call decomp_2d_open_io(io_ioflow, inflow_file, decomp_2d_read_mode)
-    call decomp_2d_start_io(io_ioflow, inflow_file)
 
+    !! XXX: we don't use streaming I/O here - no start/end I/O step!
+    
+    call decomp_2d_set_io_step(io_ioflow, inflow_file, ifileinflow)
+    
     call decomp_2d_read_inflow(inflow_file,"ux",ntimesteps,ux_inflow,io_ioflow)
     call decomp_2d_read_inflow(inflow_file,"uy",ntimesteps,uy_inflow,io_ioflow)
     call decomp_2d_read_inflow(inflow_file,"uz",ntimesteps,uz_inflow,io_ioflow)
 
-    call decomp_2d_end_io(io_ioflow, inflow_file)
     call decomp_2d_close_io(io_ioflow, inflow_file)
 
   end subroutine read_inflow

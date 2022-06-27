@@ -32,6 +32,7 @@ module decomp_2d_io
   integer, parameter :: MAX_IOH = 10 ! How many live IO things should we handle?
   character(len=*), parameter :: io_sep = "::"
   integer, save :: nreg_io = 0
+  integer, dimension(MAX_IOH), save :: io_step
 #ifndef ADIOS2
   integer, dimension(MAX_IOH), save :: fh_registry
   logical, dimension(MAX_IOH), target, save :: fh_live
@@ -57,7 +58,8 @@ module decomp_2d_io
        decomp_2d_register_variable, &
        decomp_2d_open_io, decomp_2d_close_io, &
        decomp_2d_start_io, decomp_2d_end_io, &
-       gen_iodir_name
+       gen_iodir_name, &
+       decomp_2d_set_io_step
 
   ! Generic interface to handle multiple data types
 
@@ -530,6 +532,7 @@ contains
     integer :: ierror, newtype, data_type
     integer :: idx
 #ifdef ADIOS2
+    integer(kind=8) :: steps
     type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
 #endif
@@ -541,6 +544,23 @@ contains
     return
   end subroutine read_inflow
 
+  subroutine decomp_2d_set_io_step(io_name, io_dir, step)
+
+    character(len=*), intent(in) :: io_name, io_dir
+    integer, intent(in) :: step
+
+    integer :: idx
+
+    idx = get_io_idx(io_name, io_dir)
+    if (idx < 1) then
+       print *, "ERROR!"
+       stop
+    end if
+
+    io_step(idx) = step
+    
+  end subroutine decomp_2d_set_io_step
+  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Write scalar variables as part of a big MPI-IO file, starting from 
   !  displacement 'disp'; 'disp' will be updated after the reading
@@ -1743,6 +1763,8 @@ contains
          stop
       end if
     end associate
+
+    io_step(idx) = -1
 #endif
     
   end subroutine decomp_2d_start_io
@@ -1768,6 +1790,8 @@ contains
          stop
       end if
     end associate
+
+    io_step(idx) = -1
 #endif
 
   end subroutine decomp_2d_end_io

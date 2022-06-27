@@ -66,6 +66,16 @@ if (.not.var_handle % valid) then
    stop
 endif
 
+if (io_step(idx) >= 0) then
+   print *, "IO_STEP: ", io_step(idx)
+   call adios2_variable_steps(steps, var_handle, ierror)
+   if (io_step(idx) >= steps) then
+      print *, "ERROR: trying to read a step that doesn't exist!"
+      stop
+   end if
+   call adios2_set_step_selection(var_handle, int(io_step(idx), kind=8), int(1, kind=8), ierror)
+end if
+
 !! Note - need to use sync mode as we are using a view into the array - unsure how this works with deferred writes
 ! call adios2_set_step_selection(var_handle, int(0, kind=8), int(1, kind=8), ierror)
 call adios2_get(engine_registry(idx), var_handle, var, adios2_mode_sync, ierror)
