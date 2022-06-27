@@ -67,7 +67,6 @@ if (.not.var_handle % valid) then
 endif
 
 if (io_step(idx) >= 0) then
-   print *, "IO_STEP: ", io_step(idx)
    call adios2_variable_steps(steps, var_handle, ierror)
    if (io_step(idx) >= steps) then
       print *, "ERROR: trying to read a step that doesn't exist!"
