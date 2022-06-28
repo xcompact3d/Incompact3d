@@ -643,7 +643,7 @@ contains
     real(mytype), dimension(NTimeSteps,xsize(2),xsize(3)) :: ux1,uy1,uz1
     character(20) :: fninflow
 
-    character(80) :: inflow_file
+    character(len=1024) :: inflow_file
     
     ! Recirculate inflows 
     if (ifileinflow>=ninflows) then 
@@ -660,13 +660,15 @@ contains
     if (nrank==0) print *,'READING INFLOW FROM ',inflow_file
     
     call decomp_2d_open_io(io_ioflow, inflow_file, decomp_2d_read_mode)
-    call decomp_2d_start_io(io_ioflow, inflow_file)
 
+    !! XXX: we don't use streaming I/O here - no start/end I/O step!
+    
+    call decomp_2d_set_io_step(io_ioflow, inflow_file, ifileinflow)
+    
     call decomp_2d_read_inflow(inflow_file,"ux",ntimesteps,ux_inflow,io_ioflow)
     call decomp_2d_read_inflow(inflow_file,"uy",ntimesteps,uy_inflow,io_ioflow)
     call decomp_2d_read_inflow(inflow_file,"uz",ntimesteps,uz_inflow,io_ioflow)
 
-    call decomp_2d_end_io(io_ioflow, inflow_file)
     call decomp_2d_close_io(io_ioflow, inflow_file)
 
   end subroutine read_inflow
@@ -716,12 +718,23 @@ contains
     logical, save :: clean = .true.
     integer :: iomode
 
+    logical :: dir_exists
+
+#ifdef ADIOS2
     if (clean .and. (irestart .eq. 0)) then
        iomode = decomp_2d_write_mode
        clean = .false.
     else
-       iomode = decomp_2d_append_mode
+       inquire(file=gen_iodir_name("./out/inflow", io_ioflow), exist=dir_exists)
+       if (dir_exists) then
+          iomode = decomp_2d_append_mode
+       else
+          iomode = decomp_2d_write_mode
+       end if
     end if
+#else
+    iomode = decomp_2d_write_mode
+#endif
     
     write(fnoutflow,'(i20)') ifileoutflow
 #ifndef ADIOS2
