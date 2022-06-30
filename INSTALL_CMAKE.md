@@ -10,18 +10,19 @@ Instructions on installations using the Makefile provided are given in the READM
 This document provides more detailed instructions on the CMake building and installation together with 
 some of the knows issues. 
 
+If you cloned Xcompact3d to `/path/to/Xcompact3d/root` a simple configuration/build is performed by:
 ```
   $ export FC=mpif90
-  $ mkdir=build
+  $ mkdir build
   $ cd build
-  $ cmake ~/path_to_sources
+  $ cmake /path/to/Xcompact3d/root
   $ make -j n
   $ make install 
 ```
 where n is the number of tasks that you would like to use and are available on your installation system. 
 The default installation will be located under 
 
-    $ ~/path_to_build/opt
+    $ /path/to/build/opt
 
 The installation directory will cointain:
 * The *bin* directory with two execulables: **xcompaxt3d** for the main execution of the code and **xcompact3d_paraview_vtk** to convert the *.bin* files into vtk text format. The converter is useful when the default *xdmf* format is not working with Paraview
@@ -41,21 +42,20 @@ Four tests are performed:
 
 The simulations results are located under 
 
-    $ ~/path_to_build/Test
+    $ /path/to/build/Test
 
 and the standard output from the simulations is in 
 
-    $ ~/path_to_build/Testing/Temporary/
+    $ /path/to/build/Testing/Temporary/
 
 ## Known issues
 * Sometimes the *CMake* find MPI function does not properly locate the *mpiexec* for the given compiler. Please look at the output of 
 
-     $ cmake ~/path_to_sources
+     $ cmake /path/to/Xcompact3d/root
 
 and make sure that the path to *mpiexec* is the correct one
 
-     $ -- MPI EXEC: ~/my_correct_path_to_mpiexec
-
+     $ -- MPI EXEC: /path/to/correct/mpiexec
 If the path is not correct you might have problems in running *CTest*.
 To solve the issue do the following 
   * run *ccmake* at the root of the build directory
