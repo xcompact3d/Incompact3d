@@ -7,7 +7,6 @@ User Guide \& How-To's
     :titlesonly:
     :glob:
 
-    user_guide/building_the_documentation.rst
     user_guide/code-snippets.rst
     user_guide/developer_guidance.rst
     user_guide/parameters.rst
