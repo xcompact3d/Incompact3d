@@ -18,7 +18,7 @@ When dealing with incompressible flows, the fractional step method used to advan
 First, make sure you have all the [required dependencies](#required-build-tools-and-external-libraries) installed.
 Then, acquire the source code by cloning the git repository:
 
-    git clone git@github.com:xcompact3d/Incompact3d.git
+    git clone https://github.com/xcompact3d/Incompact3d
 
 (If you are behind a firewall, you may need to use the `https` protocol instead of the `git` protocol:
 
@@ -26,9 +26,9 @@ Then, acquire the source code by cloning the git repository:
 
 Be sure to also configure your system to use the appropriate proxy settings, e.g. by setting the `https_proxy` and `http_proxy` variables.)
 
-By default you will be building the latest unstable version of Incompact3d. However, most users should use the most recent stable version of Incompact3d, which is currently the `3.0` series of releases. You can get this version by changing to the Incompact3d directory and running
+By default you will be building the latest unstable version of Incompact3d. However, most users should use the most recent stable version of Incompact3d, which is currently the `4.0` series of releases. You can get this version by changing to the Incompact3d directory and running
 
-    git checkout v3.0
+    git checkout v4.0
 
 Now run `make` to build the `Incompact3d` executable. To perform a parallel build, use `make -j N` and supply the maximum number of concurrent processes. (See [Platform Specific Build Notes] for details.)
 This takes a while, but only has to be done once. If the defaults in the build do not work for you, and you need to set specific make parameters, you can save them in `Make.user`. The build will automatically check for the existence of `Makefile` and use it if it exists.
