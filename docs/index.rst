@@ -61,7 +61,6 @@ To reach realistic Reynolds numbers, an implicit LES strategy can be implemented
    :caption: Contents:
 
    pages/installation.rst
-   pages/tutorials.rst
    pages/benchmark_cases.rst
    pages/user_guide.rst
    pages/methodology.rst
