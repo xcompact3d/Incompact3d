@@ -1,7 +1,7 @@
 Parameters
 ==========
 
-As part of the upgrade from **Incompact3d 2.0** to the now called **Xcompact3d 3.0**, the parameters file was reconfigured to support *NAMELIST I/O*, which produces format-free input for groups of variables. A set of demonstrations of the supported flow configurations are available at :ref:`Benchmark Cases`.
+As part of the upgrade from **Incompact3d 2.0** to the now called **Xcompact3d 4.0**, the parameters file was reconfigured to support *NAMELIST I/O*, which produces format-free input for groups of variables. A set of demonstrations of the supported flow configurations are available at :ref:`Benchmark Cases`.
 
 For a complete view about how the `.i3d` files are handled, besides to the default value applied to each parameter when not defined by the user, take a look at `parameters.f90 <https://github.com/xcompact3d/Incompact3d/blob/master/src/parameters.f90>`_\ .
 
