@@ -93,17 +93,17 @@ See *airay, T., Lamballais, E., Laizet, S., & Vassilicos, J. C. (2017)*, **Numer
     
     Note that the fractional step method in the code does not need explicit boundary conditions for the pressure field. 
 
-* ``ivisu`` enables I/O for 3D snapshots (every ``ioutput`` time step);
+* ``ivisu`` enables I/O for 3D snapshots if equal to 1 (every ``ioutput`` time step);
 
-* ``ipost`` enables online postprocessing [not supported anymore].
+* ``ipost`` enables online postprocessing if equal to 1.
 
-* ``gravx``, ``gravy`` & ``gravz`` are the three components of the unitary vector pointing in the gravity's direction;
+* ``gravx``, ``gravy`` & ``gravz`` are the three components of the unitary vector pointing in the gravity's direction, only experimented for gravity currents.
 
-* ``cpg`` is a logical parameter for the momentum source term (Turbulent Channel only). True (False) for an imposed pressure gradient (flow rate);
+* ``cpg`` is a logical parameter for the momentum source term (Turbulent Channel case only). True / False for an imposed pressure gradient / flow rate.
 
-* ``ifilter`` & ``C_filter`` 
+* ``ifilter`` & ``C_filter`` to filter the solution [set to 0 & 0 except for ABL and wind turbines cases. ``ifilter`` activates the filtering (with different direction combinations given by different values, e.g., 1 is for all directions, 2 for x-z filtering etc) and ``C_filter`` is the filter constant (e.g., C_filter=0 filters at 2Delta, C_filter=0.5 does nothing)
 
-* ``iturbine`` 
+* ``iturbine`` case-specific parameter for the wind farm simulator with 1: Actuator line, 2: actuator disk
 
 NumOptions
 ----------
