@@ -652,18 +652,10 @@ contains
 
     ! Read inflow
     write(fninflow,'(i20)') ifileinflow+1
-#ifndef ADIOS2
     write(inflow_file, "(A)") trim(inflowpath)//'inflow'//trim(adjustl(fninflow))
-#else
-    write(inflow_file, "(A)") trim(inflowpath)//'inflow'
-#endif
     if (nrank==0) print *,'READING INFLOW FROM ',inflow_file
     
     call decomp_2d_open_io(io_ioflow, inflow_file, decomp_2d_read_mode)
-
-    !! XXX: we don't use streaming I/O here - no start/end I/O step!
-    
-    call decomp_2d_set_io_step(io_ioflow, inflow_file, ifileinflow)
     
     call decomp_2d_read_inflow(inflow_file,"ux",ntimesteps,ux_inflow,io_ioflow)
     call decomp_2d_read_inflow(inflow_file,"uy",ntimesteps,uy_inflow,io_ioflow)
@@ -720,28 +712,10 @@ contains
 
     logical :: dir_exists
 
-#ifdef ADIOS2
-    if (clean .and. (irestart .eq. 0)) then
-       iomode = decomp_2d_write_mode
-       clean = .false.
-    else
-       inquire(file=gen_iodir_name("./out/inflow", io_ioflow), exist=dir_exists)
-       if (dir_exists) then
-          iomode = decomp_2d_append_mode
-       else
-          iomode = decomp_2d_write_mode
-       end if
-    end if
-#else
     iomode = decomp_2d_write_mode
-#endif
     
     write(fnoutflow,'(i20)') ifileoutflow
-#ifndef ADIOS2
     write(outflow_file, "(A)") './out/inflow'//trim(adjustl(fnoutflow))
-#else
-    write(outflow_file, "(A)") './out/inflow'
-#endif
     if (nrank==0) print *,'WRITING OUTFLOW TO ', outflow_file
     
     call decomp_2d_open_io(io_ioflow, outflow_file, iomode)
