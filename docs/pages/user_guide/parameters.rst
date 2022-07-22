@@ -77,10 +77,10 @@ You can modify the ``BC-<flow-configuration>.f90`` file to change the inlet and/
 * ``ilesmod`` Enables Large-Eddy simulations (LES) methodologies:
 
     - 0 - Off.
-    - 1 - Smag.
-    - 2 - WALE. [suitable for wall-bounded flows]
-    - 3 - dyn Smag [avoid as the filtering procedure is expensive]
-    - 4 - ILES [prefered options for LES]
+    - 1 - Smagorinsky 
+    - 2 - WALE **- suitable for wall-bounded flows**
+    - 3 - dynamic Smagorinsky **- avoid as the filtering procedure is expensive**
+    - 4 - ILES **- prefered options for LES**
 
 Please note that we will eventually remove all explicit LES models from the code as our ILES approach is cheaper with the same quality of results, if not better. 
 See *Dairay, T., Lamballais, E., Laizet, S., & Vassilicos, J. C. (2017)*, **Numerical dissipation vs. subgrid-scale modelling for large eddy simulation**, *Journal of Computational Physics, 337, 252-274* and *Mahfoze, O. A., & Laizet, S. (2021)*, **Non-explicit large eddy simulations of turbulent channel flows from Reτ= 180 up to Reτ= 5,200**, *Computers & Fluids, 228, 105019*.
@@ -132,24 +132,34 @@ NumOptions
 
     - 1 - Forwards Euler;
     - 2 - Adams-Bashforth 2;
-    - 3 - Adams-Bashforth 3;
+    - 3 - Adams-Bashforth 3 **- recommended option when using immersed boundary methods**;
     - 4 - Adams-Bashforth 4 **- not implemented yet**;
-    - 5 - Runge-kutta 3;
+    - 5 - Runge-kutta 3 **- recommended option when not using immersed boundary methods**;
     - 6 - Runge-kutta 4 **- not implemented yet**;
-    - 7 - Semi-implict CN+AB3;
-    - 8 - Semi-implict CN+RK3.
+    - 7 - Semi-implict Crank-Nicolson + Adams-Bashforth 3 **- does not work yet for all cases**;
+    - 8 - Semi-implict Crank-Nicolson + Runge-kutta 3 **- does not work yet for all cases**.
 
 * ``iimplicit`` Time integration scheme for the Y-diffusive term:
 
-    - 0 - Explicit, default
-    - 1 - Euler implicit
-    - 2 - Crank-Nicolson
+    - 0 - Explicit, default;
+    - 1 - Euler implicit **- does not work yet for all cases**;
+    - 2 - Crank-Nicolson **- does not work yet for all cases**;
 
 * ``nu0nu`` Ratio between hyperviscosity/viscosity at nu;
 
 * ``cnu`` Ratio between hypervisvosity at :math:`k_m=2/3\pi` and :math:`k_c= \pi`.
 
+For more details about these two parameters, please have a look at:
+   
+   - *Lamballais, E., Fortuné, V., & Laizet, S. (2011).* **Straightforward high-order numerical dissipation via the viscous term for direct and large eddy simulation.** *Journal of Computational Physics, 230(9), 3270-3275.*
+   - *Dairay, T., Lamballais, E., Laizet, S., & Vassilicos, J. C. (2017)*, **Numerical dissipation vs. subgrid-scale modelling for large eddy simulation**, *Journal of Computational Physics, 337, 252-274.* 
+
+Default values are ``cnu=0.44`` and ``nu0nu=4`` which are ideal in a DNS context. 
+
 * ``ipinter`` 
+    - 1 - conventional sixth-order interpolation coefficients as described in `Lele 1992 <https://www.sciencedirect.com/science/article/pii/002199919290324R>`_\;
+    - 2 - optimal sixth-order interpolation coefficients designed to be as close as possible to spectral interpolators **- recommended option**;
+    - 3 - aggressive sixth-order interpolation coefficients designed to add some numerical dissipation at small scales but they could result in spurious oscillations close to a wall.
 
 InOutParam
 ----------
