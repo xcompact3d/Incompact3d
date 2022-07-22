@@ -83,7 +83,7 @@ You can modify the ``BC-<flow-configuration>.f90`` file to change the inlet and/
     - 4 - ILES [prefered options for LES]
 
 Please note that we will eventually remove all explicit LES models from the code as our ILES approach is cheaper with the same quality of results, if not better. 
-See *airay, T., Lamballais, E., Laizet, S., & Vassilicos, J. C. (2017)*, **Numerical dissipation vs. subgrid-scale modelling for large eddy simulation**, *Journal of Computational Physics, 337, 252-274* and *Mahfoze, O. A., & Laizet, S. (2021)*, **Non-explicit large eddy simulations of turbulent channel flows from Reτ= 180 up to Reτ= 5,200**, *Computers & Fluids, 228, 105019*.
+See *Dairay, T., Lamballais, E., Laizet, S., & Vassilicos, J. C. (2017)*, **Numerical dissipation vs. subgrid-scale modelling for large eddy simulation**, *Journal of Computational Physics, 337, 252-274* and *Mahfoze, O. A., & Laizet, S. (2021)*, **Non-explicit large eddy simulations of turbulent channel flows from Reτ= 180 up to Reτ= 5,200**, *Computers & Fluids, 228, 105019*.
 
 * ``nclx1``, ``nclxn``, ``ncly1``, ``nclyn``, ``nclz1`` & ``nclzn`` define the velocity's boundary condition:
 
@@ -110,27 +110,32 @@ NumOptions
 
 * ``ifirstder`` Scheme for first order derivative:
 
-    - 1 - 2nd central;
-    - 2 - 4th central;
-    - 3 - 4th compact;
-    - 4 - 6th compact.
+    - 1 - 2nd central explicite finite-difference schemes;
+    - 2 - 4th central explicite finite-difference schemes **- under development**;
+    - 3 - 4th compact finite-difference schemes **- under development**;
+    - 4 - 6th compact finite-difference schemes **- prefered option**
 
 * ``isecondder`` Scheme for second derivative:
 
-    - 1 - 2nd central;
-    - 2 - 4th central;
-    - 3 - 4th compact;
-    - 4 - 6th compact;
-    - 5 - hyperviscous 6th.
+    - 1 - 2nd central explicite finite-difference schemes;
+    - 2 - 4th central explicite finite-difference schemes **- under development**;
+    - 3 - 4th compact finite-difference schemes **- under development**;
+    - 4 - 6th compact finite-difference schemes **- prefered option for DNS & Explicit LES**
+    - 5 - hyperviscous 6th compact finite-difference schemes **- for Implicit LES**
+   
+   For more details about these different options, and in particular for the customized hyperviscous schemes, please have a look at:
+   
+   - *Lamballais, E., Fortuné, V., & Laizet, S. (2011).* **Straightforward high-order numerical dissipation via the viscous term for direct and large eddy simulation.** *Journal of Computational Physics, 230(9), 3270-3275.*
+   - *Dairay, T., Lamballais, E., Laizet, S., & Vassilicos, J. C. (2017)*, **Numerical dissipation vs. subgrid-scale modelling for large eddy simulation**, *Journal of Computational Physics, 337, 252-274.* 
 
 * ``itimescheme`` Time integration scheme:
 
     - 1 - Forwards Euler;
     - 2 - Adams-Bashforth 2;
     - 3 - Adams-Bashforth 3;
-    - 4 - Adams-Bashforth 4 (not implemented yet);
+    - 4 - Adams-Bashforth 4 **- not implemented yet**;
     - 5 - Runge-kutta 3;
-    - 6 - Runge-kutta 4 (not implemented yet);
+    - 6 - Runge-kutta 4 **- not implemented yet**;
     - 7 - Semi-implict CN+AB3;
     - 8 - Semi-implict CN+RK3.
 
