@@ -88,7 +88,7 @@ See *Dairay, T., Lamballais, E., Laizet, S., & Vassilicos, J. C. (2017)*, **Nume
 * ``nclx1``, ``nclxn``, ``ncly1``, ``nclyn``, ``nclz1`` & ``nclzn`` define the velocity's boundary condition:
 
     - 0 - Periodic boundary conditions;
-    - 1 - Free-slip boundary conditions (with two options: symmetry or anti-symmetry via the parameter ``npaire``;
+    - 1 - Free-slip boundary conditions, with two options depending on the velocity components: symmetry or anti-symmetry via the parameter ``npaire``. Basically, a free-slip periodic boundary condition in the vertical direction corresponds to u=w=constant (similar to a symmetry boundary condition for which the gradient of u and w in the vertical direction is equal to zero), and to v=0 (similar to an anti-symmetry boundary condition);
     - 2 - Dirichlet boundary conditions.
     
     Note that the fractional step method in the code does not need explicit boundary conditions for the pressure field. 
@@ -164,38 +164,38 @@ Default values are ``cnu=0.44`` and ``nu0nu=4`` which are ideal in a DNS context
 InOutParam
 ----------
 
-* ``irestart`` Reads initial flow field if equals to 1;
-* ``icheckpoint`` Frequency for writing backup file;
-* ``ioutput`` Frequency for visualization;
-* ``nvisu`` Size for visual collection;
-* ``iprocessing`` Frequency for online postprocessing.
-* ``ninflows`` 
-* ``ntimesteps`` 
-* ``inflowpath`` 
-* ``ioutflow`` 
-* ``output2D`` Shape of the visualization snapshots
+* ``irestart`` Reads initial flow field if equals to 1. This is when you are using the restarting/checkpointing procedure (have a look at the subroutine ``restart``;
+* ``icheckpoint`` Frequency for writing backup file (every ``icheckpoint`` time steps). Note that Xcompact3d will only keep on the disc the latest restart file;
+* ``ioutput`` Frequency to generate the 3D snapshots (every ``ioutput`` time steps);
+* ``nvisu`` Size for the 3D snapshots to be written on the disc (every ``nvisu`` mesh nodes). By default, use ``nvisu=1`` which corresponds to 3D snapshots of size ``nx x ny x nz``;
+* ``iprocessing`` Frequency for online postprocessing **- not supported anymore as the guideline is to use our Python post-processing framework**;
+* ``ninflows`` For precursor simulations for atmospheric boundary layers **- will evolve soon!**
+* ``ntimesteps`` For precursor simulations for atmospheric boundary layers **- will evolve soon!**
+* ``inflowpath`` For precursor simulations for atmospheric boundary layers **- will evolve soon!**
+* ``ioutflow`` For precursor simulations for atmospheric boundary layers **- will evolve soon!**
+* ``output2D`` **- not supported anymore (will be removed eventually). Keep default value to zero**
 
     - 0 - 3D, default
     - 1 - 2D, averaged over X
     - 2 - 2D, averaged over Y
     - 3 - 2D, averaged over Z
 
-* ``nprobes`` Number of probes inside the domain (see :ref:`ProbesParam`). Default is 0.
+* ``nprobes`` **- not supported anymore (will be removed eventually). Keep default value to zero**
 
 Statistics
 ----------
 
-* ``wrotation`` Amplitude of the rotation source term (Channel Flow only);
-* ``spinup_time`` Time after which the rotation source term is removed (Channel Flow only, in seconds);
-* ``nstat`` Size arrays for statistic collection;
+* ``wrotation`` Rotation speed (Rosby number) of a source term in the equations to trigger turbulence (Channel Flow only);
+* ``spinup_time`` number of time steps after which the rotation source term is removed (Channel Flow only);
+* ``nstat`` Size arrays for statistic collection (every ``nstat`` mesh nodes). By default, use ``nstat=1`` which corresponds to 3D statistic arrays of size ``nx x ny x nz``;
 * ``initstat`` Time step when collection of statistics starts.
 
 ProbesParam
 -----------
 
-* ``flag_all_digits`` When False (default), 6 digits are recorded. Set to True to record 16 digits;
-* ``flag_extra_probes`` Default is False. Set to True to monitor the velocity / pressure / scalars gradients;
-* ``xyzprobes`` Array of size (3,nprobes) containing the location of the probes.
+* ``flag_all_digits`` When False (default), 6 digits are recorded. Set to True to record 16 digits **- not supported anymore (will be removed eventually)**;
+* ``flag_extra_probes`` Default is False. Set to True to monitor the velocity / pressure / scalars gradients **- not supported anymore (will be removed eventually)**;
+* ``xyzprobes`` Array of size (3,nprobes) containing the location of the probes **- not supported anymore (will be removed eventually)**.
 
 ScalarParam
 -----------
