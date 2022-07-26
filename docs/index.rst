@@ -13,8 +13,6 @@ XCompact3d is currently able to solve the incompressible and low-Mach number var
 
 * **We kindly ask you to cite the relevant references (when suitable) in your work based on Xcompact3d.**
 
-* **Have a look the `publications <https://www.incompact3d.com/impact.html>`_ based on Xcompact3d results!**
-
 .. note::
     This website is still **under development**!
     
