@@ -212,6 +212,7 @@ contains
 
     if (iscalar==1) then
        do is=1, numscalar
+          write(filename,"('phi',I2.2)") is
           call read_or_write_one_stat(flag_read, gen_statname(filename), phimean(:,:,:,is))
           write(filename,"('phiphi',I2.2)") is
           call read_or_write_one_stat(flag_read, gen_statname(filename), phiphimean(:,:,:,is))
