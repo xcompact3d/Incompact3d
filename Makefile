@@ -20,9 +20,12 @@ BUILD ?=
 #######CMP settings###########
 ifeq ($(CMP),intel)
 FC = mpiifort
-#FFLAGS = -fpp -O3 -xHost -heap-arrays -shared-intel -mcmodel=large -safe-cray-ptr -g -traceback
-FFLAGS = -fpp -O3 -xSSE4.2 -axAVX,CORE-AVX-I,CORE-AVX2 -ipo -fp-model fast=2 -mcmodel=large -safe-cray-ptr -I$(MPI_ROOT)/lib
-##debuggin test: -check all -check bounds -chintel eck uninit -gen-interfaces -warn interfaces
+FFLAGS = -fpp
+ifeq ($(BUILD),debug)
+FFLAGS += -g -O0
+else
+FFLAGS += -O3 -xSSE4.2 -axAVX,CORE-AVX-I,CORE-AVX2 -ipo -fp-model fast=2 -mcmodel=large -safe-cray-ptr -I$(MPI_ROOT)/lib
+endif
 else ifeq ($(CMP),gcc)
 FC = mpif90
 #FFLAGS = -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -x f95-cpp-input

@@ -60,4 +60,4 @@ jobs:
 
     # Runs a set of commands using the runners shell
     - name: Compile
-      run: source /opt/intel/oneapi/setvars.sh && make CMP=intel
+      run: source /opt/intel/oneapi/setvars.sh && make CMP=intel BUILD=debug
