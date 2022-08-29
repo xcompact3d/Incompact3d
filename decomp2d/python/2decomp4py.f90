@@ -60,6 +60,7 @@ module decomp4py
   public :: init_io
   public :: open_io, close_io
   public :: start_io, end_io
+  public :: get_io_extents
   
 contains
 
@@ -239,5 +240,14 @@ contains
     call decomp_2d_end_io(io_name, file_name)
 
   end subroutine end_io
+
+  subroutine get_io_extents(ipencil, sizes, subsizes, starts)
+
+    integer, intent(in) :: ipencil
+    integer, dimension(3), intent(out) :: sizes, subsizes, starts
+
+    call coarse_extents(ipencil, 0, sizes, subsizes, starts)
+
+  end subroutine get_io_extents
   
 end module decomp4py

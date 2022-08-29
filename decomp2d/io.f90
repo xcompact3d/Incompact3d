@@ -57,7 +57,8 @@ module decomp_2d_io
        decomp_2d_register_variable, &
        decomp_2d_open_io, decomp_2d_close_io, &
        decomp_2d_start_io, decomp_2d_end_io, &
-       gen_iodir_name
+       gen_iodir_name, &
+       coarse_extents
 
   ! Generic interface to handle multiple data types
 
@@ -267,9 +268,6 @@ contains
     call MPI_TYPE_SIZE(data_type,disp_bytes,ierror)
 
     !! Use MPIIO
-    if (read_reduce_prec) then
-       allocate (varsingle(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
-    end if
     
     if (present(opt_decomp)) then
        decomp = opt_decomp
@@ -313,9 +311,7 @@ contains
       call MPI_FILE_SET_VIEW(fh,disp,data_type, &
            newtype,'native',MPI_INFO_NULL,ierror)
       if (read_reduce_prec) then
-         if (read_reduce_prec) then
-            allocate (varsingle(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
-         end if
+         allocate (varsingle(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
          call MPI_FILE_READ_ALL(fh, varsingle, &
               subsizes(1)*subsizes(2)*subsizes(3), &
               data_type, MPI_STATUS_IGNORE, ierror)
