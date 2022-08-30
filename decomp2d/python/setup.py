@@ -10,9 +10,10 @@ REQUIREMENTS=[
     "mpi4py"
 ]
 
-X3DDIR="/home/paul/src/Xcompact3d/Xcompact3d"
+X3DDIR="/work/e690/e690/ptb690/src/Incompact3d"
+ADIOS2DIR="/work/e690/e690/ptb690/opt/gnu/cpe-21.04/adios2/v2.8.0"
 D2DDIR=os.path.join(X3DDIR, "decomp2d")
-ADIOS2INC="/home/paul/opt/adios2/v2.8.0/include/adios2/fortran"
+ADIOS2INC=os.path.join(ADIOS2DIR, "include/adios2/fortran")
 
 macros = decomp2d_options.define_macros
 macros = macros + decomp2d_io_options.define_macros
@@ -31,10 +32,12 @@ if with_adios2:
         "adios2_fortran"
     ]
     lib_dirs = lib_dirs + [
-        "/home/paul/opt/adios2/v2.8.0/lib"
+        os.path.join(ADIOS2DIR, "lib"),
+        os.path.join(ADIOS2DIR, "lib64")
     ]
     rlib_dirs = rlib_dirs + [
-        "/home/paul/opt/adios2/v2.8.0/lib"
+        os.path.join(ADIOS2DIR, "lib"),
+        os.path.join(ADIOS2DIR, "lib64")
     ]
 
 d2dext = Extension(
