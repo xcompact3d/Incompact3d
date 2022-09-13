@@ -871,6 +871,11 @@ subroutine derz_00(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nz) :: ffz,fsz,fwz
   real(mytype)                      :: lind
 
+  if (nz==1) then
+     tz = 0.
+     return
+  endif
+
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)
 
@@ -2931,6 +2936,11 @@ subroutine derzz_00(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nz) :: sfz,ssz,swz
   real(mytype)                      :: lind
 
+  if (nz==1) then
+     tz = 0.
+     return
+  endif
+
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)
 
@@ -4924,6 +4934,11 @@ subroutine derzvp(tz,uz,rz,sz,cfz6,csz6,cwz6,nx,ny,nz,nzm,npaire)
   real(mytype), dimension(nzm) :: cfz6,csz6,cwz6
   integer :: i,j,k
 
+  if (nz==1) then
+     tz = 0.
+     return
+  endif
+
   if (nclz) then
      do j=1,ny
         do i=1,nx
@@ -5102,6 +5117,11 @@ subroutine interzvp(tz,uz,rz,sz,cifz6,cisz6,ciwz6,nx,ny,nz,nzm,npaire)
   real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nzm) :: cifz6,cisz6,ciwz6
   integer :: i,j,k
+
+  if (nz==1 .and. nzm==1) then
+     tz = uz
+     return
+  endif
 
   if (nclz) then
      do j=1,ny
@@ -5282,6 +5302,11 @@ subroutine derzpv(tz,uz,rz,sz,cfiz6,csiz6,cwiz6,cfz6,csz6,cwz6,&
   real(mytype), dimension(nz) :: cfz6,csz6,cwz6
   integer :: i,j,k
 
+  if (nz==1) then
+     tz = 0.
+     return
+  endif
+
   if (nclz) then
      do j=1,ny
         do i=1,nx
@@ -5416,6 +5441,11 @@ subroutine interzpv(tz,uz,rz,sz,cifiz6,cisiz6,ciwiz6,cifz6,cisz6,ciwz6,&
   real(mytype), dimension(nz) :: cifiz6,cisiz6,ciwiz6
   real(mytype), dimension(nz) :: cifz6,cisz6,ciwz6
   integer :: i,j,k
+
+  if (nz==1 .and. nzm==1) then
+     tz = uz
+     return
+  endif
 
   if (nclz) then
      do j=1,ny

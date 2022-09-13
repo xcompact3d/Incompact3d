@@ -98,6 +98,12 @@ subroutine parameter(input_i3d)
 
   !! These are the 'essential' parameters
   read(10, nml=BasicParam); rewind(10)
+  if (nz==1) then
+     nclz1 = 0
+     nclzn = 0
+     p_row = nproc
+     p_col = 1
+  endif
   read(10, nml=NumOptions); rewind(10)
   read(10, nml=InOutParam); rewind(10)
   read(10, nml=Statistics); rewind(10)
@@ -184,6 +190,10 @@ subroutine parameter(input_i3d)
   endif
   if (numscalar.ne.0) then
      read(10, nml=ScalarParam); rewind(10)
+     if (nz==1) then
+        nclzS1 = 0
+        nclzSn = 0
+     endif
   endif
   ! !! These are the 'optional'/model parameters
   ! read(10, nml=ScalarParam)
