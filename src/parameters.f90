@@ -99,6 +99,7 @@ subroutine parameter(input_i3d)
   !! These are the 'essential' parameters
   read(10, nml=BasicParam); rewind(10)
   if (nz==1) then
+     if (nrank==0) write(*,*) "Warning : support for 2D simulations is experimental"
      nclz1 = 0
      nclzn = 0
      p_row = nproc
