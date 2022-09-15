@@ -737,7 +737,11 @@ contains
     integer :: iend, jend, kend
     integer :: i, j, k
 
+    ! Return directly if richardson is zero
+    if (abs(richardson) < tiny(richardson)) return
+
     !! X-gravity
+    if (abs(gravx) > tiny(gravx)) then
     if ((nclx1.eq.0).and.(nclxn.eq.0)) then
        istart = 1
        iend = xsize(1)
@@ -773,8 +777,10 @@ contains
           enddo
        enddo
     enddo
+    endif
 
     !! Y-gravity
+    if (abs(gravy) > tiny(gravy)) then
     if (nclx1.eq.2) then
        istart = 2
     else
@@ -812,8 +818,10 @@ contains
           enddo
        enddo
     enddo
+    endif
 
     !! Z-gravity
+    if (abs(gravz) > tiny(gravz)) then
     if (nclx1.eq.2) then
        istart = 2
     else
@@ -851,7 +859,7 @@ contains
           enddo
        enddo
     enddo
-
+    endif
 
   end subroutine momentum_gravity
   !############################################################################
