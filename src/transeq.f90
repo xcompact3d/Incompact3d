@@ -738,10 +738,10 @@ contains
     integer :: i, j, k
 
     ! Return directly if richardson is zero
-    if (abs(richardson) < epsilon(richardson)) return
+    if (abs(richardson) < tiny(richardson)) return
 
     !! X-gravity
-    if (abs(gravx) > epsilon(gravx)) then
+    if (abs(gravx) > tiny(gravx)) then
     if ((nclx1.eq.0).and.(nclxn.eq.0)) then
        istart = 1
        iend = xsize(1)
@@ -780,7 +780,7 @@ contains
     endif
 
     !! Y-gravity
-    if (abs(gravy) > epsilon(gravy)) then
+    if (abs(gravy) > tiny(gravy)) then
     if (nclx1.eq.2) then
        istart = 2
     else
@@ -821,7 +821,7 @@ contains
     endif
 
     !! Z-gravity
-    if (abs(gravz) > epsilon(gravz)) then
+    if (abs(gravz) > tiny(gravz)) then
     if (nclx1.eq.2) then
        istart = 2
     else
