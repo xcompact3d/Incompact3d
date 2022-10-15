@@ -44,13 +44,14 @@ module decomp4py
   
   implicit none
 
+  private
+
 #ifdef ADIOS2
-  logical, public, parameter :: have_adios2 = .true.
+  logical, parameter :: have_adios2 = .true.
 #else
-  logical, public, parameter :: have_adios2 = .false.
+  logical, parameter :: have_adios2 = .false.
 #endif
   
-  private
   public :: init_decomp4py
   public :: get_grid_size
   public :: get_grid_start
@@ -61,6 +62,7 @@ module decomp4py
   public :: open_io, close_io
   public :: start_io, end_io
   public :: get_io_extents
+  public :: adios2_status
   
 contains
 
@@ -249,5 +251,13 @@ contains
     call coarse_extents(ipencil, 0, sizes, subsizes, starts)
 
   end subroutine get_io_extents
+  
+  function adios2_status() result(stat)
+
+    logical :: stat
+
+    stat = have_adios2
+
+  end function
   
 end module decomp4py
