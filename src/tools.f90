@@ -235,6 +235,8 @@ contains
     NAMELIST /Time/ tfield, itime
     NAMELIST /NumParam/ nx, ny, nz, istret, beta, dt, itimescheme
 
+    real :: tstart, tend
+    
     write(filename,"('restart',I7.7)") itime
     write(filestart,"('restart',I7.7)") ifirst-1
 
@@ -255,6 +257,10 @@ contains
     end if
 
     if (iresflg==1) then !write
+       if(nrank == 0) then
+          call cpu_time(tstart)
+       end if
+       
        call decomp_2d_open_io(io_restart, resfile, decomp_2d_write_mode)
        call decomp_2d_start_io(io_restart, resfile)
 
@@ -307,6 +313,11 @@ contains
        call decomp_2d_end_io(io_restart, resfile)
        call decomp_2d_close_io(io_restart, resfile)
 
+       if (nrank == 0) then
+          call cpu_time(tend)
+          write(*, "(' Time for writing checkpoint (s): ', F12.8)") tend - tstart
+       end if
+
        ! Write info file for restart - Kay Schäfer
        if (nrank == 0) then
          write(filename,"('restart',I7.7,'.info')") itime
@@ -346,7 +357,10 @@ contains
          write(*,*)'==========================================================='
          write(*,*)'RESTART from file:', filestart
          write(*,*)'==========================================================='
+
+         call cpu_time(tstart)
        end if
+       
        call decomp_2d_open_io(io_restart, resfile, decomp_2d_read_mode)
        call decomp_2d_start_io(io_restart, resfile)
 
@@ -410,6 +424,11 @@ contains
 
        call decomp_2d_end_io(io_restart, resfile)
        call decomp_2d_close_io(io_restart, resfile)
+
+       if (nrank == 0) then
+          call cpu_time(tend)
+          write(*, "(' Time for reading checkpoint (s): ', F12.8)") tend - tstart
+       end if
 
        !! Read time of restart file
        write(filename,"('restart',I7.7,'.info')") ifirst-1
