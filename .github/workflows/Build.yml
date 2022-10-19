@@ -42,6 +42,7 @@ jobs:
         ./configure --prefix=$(pwd)/installed
         make all install
 
-    # Runs a set of commands using the runners shell
-    - name: Compile
-      run: make BUILD=debug
+    - name: Build Incompact3d
+      run: |
+        export PATH=$(pwd)/openmpi-4.1.2/installed/bin/:$PATH
+        make BUILD=debug
