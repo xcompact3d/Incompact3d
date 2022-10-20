@@ -34,7 +34,7 @@ jobs:
     - name: Run TGV case
       run: |
         cp test/data/Taylor-Green-Vortex/input_DNS_Re1600.i3d input.i3d
-        ./xcompact3d
+        mpirun -np 2 xcompact3d
 
     - name: Compare output time evolution to reference output
       run: |
