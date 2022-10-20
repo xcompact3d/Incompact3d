@@ -39,6 +39,6 @@ jobs:
     - name: Compare output time evolution to reference output
       run: |
         python compare_TGV_time_evolution.py \
-            --input time_evol.dat
+            --input time_evol.dat \
             --reference test/data/Taylor-Green-Vortex/reference_time_evol.dat
 
