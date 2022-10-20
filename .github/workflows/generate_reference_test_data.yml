@@ -1,0 +1,46 @@
+name: "Generate reference test data"
+
+on:
+  workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    # We don't want to build openmpi each time this workflow is
+    # run. Setup caching of OpenMPI after it is built and installed.
+    # See "Caching dependencies to speed up workflows" on the GH
+    # actions docs.
+    - name: Cache OpenMPI
+      id: cache-openmpi
+      uses: actions/cache@v2
+      with:
+        path: openmpi-4.1.2/installed
+        key: openmpi-4.1.2
+    - name: Build openmpi
+      if: steps.cache-openmpi.outputs.cache-hit != 'true'
+      run: |
+        wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.2.tar.gz
+        tar -xf openmpi-4.1.2.tar.gz
+        cd openmpi-4.1.2/ && mkdir installed
+        ./configure --prefix=$(pwd)/installed
+        make all install
+    - name: Build Incompact3d and run TGV reference test case
+      run: |
+        export PATH=$(pwd)/openmpi-4.1.2/installed/bin/:$PATH
+        make
+        cp test/data/Taylor-Green-Vortex/reference_input.i3d input.i3d
+        mpirun -np 2 xcompact3d
+    - name: Store new reference output
+      run: |
+        cp -v time_evol.dat test/data/Taylor-Green-Vortex/reference_time_evol.dat
+    - name: Create new Pull Request updating the reference output
+      uses: peter-evans/create-pull-request@v4
+      with:
+        title: Update reference output TGV data
+        commit-message: Update reference TGV data and metadata
+        add-paths: |
+          test/data/Taylor-Green-Vortex/reference_input.i3d
+          test/data/Taylor-Green-Vortex/versions.txt
