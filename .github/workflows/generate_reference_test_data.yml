@@ -27,6 +27,16 @@ jobs:
         cd openmpi-4.1.2/ && mkdir installed
         ./configure --prefix=$(pwd)/installed
         make all install
+    - name: Record metadata
+      run: |
+        echo $(date) > metadata.txt
+        echo "Incompact3d HEAD: $(git rev-parse HEAD)" >> metadata.txt
+        echo "make cmd: make" >> metadata.txt
+        echo "run cmd: mpirun -np 2 xcompact3d" >> metadata.txt
+        export PATH=$(pwd)/openmpi-4.1.2/installed/bin/:$PATH
+        echo "mpif90 version: $(mpif90 --version | head -1)" >> metadata.txt
+        echo "mpirun version: $(mpirun --version | head -1)" >> metadata.txt
+        mv metadata.txt test/data/Taylor-Green-Vortex/
     - name: Build Incompact3d and run TGV reference test case
       run: |
         export PATH=$(pwd)/openmpi-4.1.2/installed/bin/:$PATH
@@ -42,5 +52,5 @@ jobs:
         title: Update reference output TGV data
         commit-message: Update reference TGV data and metadata
         add-paths: |
-          test/data/Taylor-Green-Vortex/reference_input.i3d
-          test/data/Taylor-Green-Vortex/versions.txt
+          test/data/Taylor-Green-Vortex/reference_time_evol.dat
+          test/data/Taylor-Green-Vortex/metadata.txt
