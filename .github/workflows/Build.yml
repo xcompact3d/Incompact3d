@@ -30,19 +30,19 @@ jobs:
       id: cache-openmpi
       uses: actions/cache@v2
       with:
-        path: openmpi-4.1.2/installed
-        key: openmpi-4.1.2
+        path: openmpi-4.1.4/installed
+        key: openmpi-4.1.4
 
     - name: Build openmpi
       if: steps.cache-openmpi.outputs.cache-hit != 'true'
       run: |
-        wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.2.tar.gz
-        tar -xf openmpi-4.1.2.tar.gz
-        cd openmpi-4.1.2/ && mkdir installed
+        wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.4.tar.gz
+        tar -xf openmpi-4.1.4.tar.gz
+        cd openmpi-4.1.4/ && mkdir installed
         ./configure --prefix=$(pwd)/installed
         make all install
 
     - name: Build Incompact3d
       run: |
-        export PATH=$(pwd)/openmpi-4.1.2/installed/bin/:$PATH
+        export PATH=$(pwd)/openmpi-4.1.4/installed/bin/:$PATH
         make BUILD=debug
