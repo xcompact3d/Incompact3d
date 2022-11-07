@@ -374,9 +374,6 @@ module param
   character, dimension(100) :: TurbinesPath*80, ActuatorlinesPath*80
   real(mytype) :: eps_factor ! Smoothing factor
   
-  !! Case-specific variables
-  logical :: tgv_twod
-
   character :: filesauve*80, filenoise*80, &
        nchamp*80,filepath*80, fileturb*80, filevisu*80, datapath*80
   real(mytype), dimension(5) :: adt,bdt,cdt,ddt,gdt

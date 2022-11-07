@@ -66,18 +66,10 @@ contains
              do i=1,xsize(1)
                 x=real(i-1,mytype)*dx
 
-                if (.not.tgv_twod) then
-                   ux1(i,j,k)=+sin_prec(x)*cos_prec(y)*cos_prec(z)
-                   uy1(i,j,k)=-cos_prec(x)*sin_prec(y)*cos_prec(z)
-                   if (iscalar == 1) then
-                      phi1(i,j,k,1:numscalar)=sin_prec(x)*sin_prec(y)*cos_prec(z)
-                   endif
-                else
-                   ux1(i,j,k)=+sin_prec(x)*cos_prec(y)
-                   uy1(i,j,k)=-cos_prec(x)*sin_prec(y)
-                   if (iscalar == 1) then
-                      phi1(i,j,k,1:numscalar)=sin_prec(x)*sin_prec(y)
-                   endif
+                ux1(i,j,k)=+sin_prec(x)*cos_prec(y)*cos_prec(z)
+                uy1(i,j,k)=-cos_prec(x)*sin_prec(y)*cos_prec(z)
+                if (iscalar == 1) then
+                   phi1(i,j,k,1:numscalar)=sin_prec(x)*sin_prec(y)*cos_prec(z)
                 endif
                 uz1(i,j,k)=zero
              enddo

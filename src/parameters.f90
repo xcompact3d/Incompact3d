@@ -68,7 +68,7 @@ subroutine parameter(input_i3d)
   NAMELIST /ABL/ z_zero, iwallmodel, k_roughness, ustar, dBL, &
        imassconserve, ibuoyancy, iPressureGradient, iCoriolis, CoriolisFreq, &
        istrat, idamping, iheight, TempRate, TempFlux, itherm, gravv, UG, T_wall, T_top, ishiftedper, iconcprec, pdl 
-  NAMELIST /CASE/ tgv_twod, pfront
+  NAMELIST /CASE/ pfront
   NAMELIST/ALMParam/iturboutput,NTurbines,TurbinesPath,NActuatorlines,ActuatorlinesPath,eps_factor,rho_air
   NAMELIST/ADMParam/Ndiscs,ADMcoords,C_T,aind,iturboutput,rho_air
 
@@ -534,8 +534,6 @@ subroutine parameter(input_i3d)
      !! Print case-specific information
      if (itype==itype_lockexch) then
         write(*,*)  "Initial front location: ", pfront
-     elseif (itype==itype_tgv) then
-        write(*,*)  "TGV 2D: ", tgv_twod
      endif
      write(*,*) '==========================================================='
   endif
@@ -683,9 +681,6 @@ subroutine parameter_defaults()
   izap = 1
 
   imodulo2 = 1
-
-  !! CASE specific variables
-  tgv_twod = .FALSE.
 
   !! TRIPPING
   A_tr=zero
