@@ -21,6 +21,7 @@ module case
   use abl
   use uniform
   use sandbox
+  use cavity
 
   use var, only : nzmsize
 
@@ -110,6 +111,10 @@ contains
    
        call init_sandbox (ux1, uy1, uz1, ep1, phi1, 0)
 
+    elseif (itype.eq.itype_cavity) then
+
+       call init_cavity(ux1, uy1, uz1, ep1, phi1)
+
     else
   
          if (nrank.eq.0) then
@@ -193,6 +198,10 @@ contains
     elseif (itype.EQ.itype_sandbox) THEN
    
        call boundary_conditions_sandbox (ux, uy, uz, phi)
+
+    elseif (itype.eq.itype_cavity) then
+
+       call boundary_conditions_cavity(ux, uy, uz, phi)
 
     endif
 
@@ -339,6 +348,10 @@ contains
    
        call postprocess_sandbox (ux, uy, uz, phi, ep)
 
+    elseif (itype.eq.itype_cavity) then
+
+       call postprocess_cavity(ux, uy, uz, phi)
+
     endif
 
     if (iforces.eq.1) then
@@ -431,7 +444,7 @@ contains
        call visu_tbl(ux1, uy1, uz1, pp3, phi1, ep1, num)
        called_visu = .true.
        
-   elseif (itype.eq.itype_uniform) then
+    elseif (itype.eq.itype_uniform) then
 
        call visu_uniform(ux1, uy1, uz1, pp3, phi1, ep1, num)
        called_visu = .true.

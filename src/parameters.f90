@@ -344,7 +344,9 @@ subroutine parameter(input_i3d)
      elseif (itype.eq.itype_uniform) then
         print *,'Uniform flow'
      elseif (itype.eq.itype_sandbox) then
-           print *,'Sandbox'
+        print *,'Sandbox'
+     elseif (itype.eq.itype_cavity) then
+        print *,'Cavity'  
      else
         print *,'Unknown itype: ', itype
         stop
