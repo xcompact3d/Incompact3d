@@ -49,7 +49,7 @@ jobs:
 
     - name: Run TGV case
       run: |
-        cp test/data/Taylor-Green-Vortex/input_DNS_Re1600.i3d input.i3d
+        cp test/data/Taylor-Green-Vortex/reference_input.i3d input.i3d
         export PATH=$(pwd)/openmpi-4.1.4/installed/bin/:$PATH
         mpirun -np 2 xcompact3d
 
