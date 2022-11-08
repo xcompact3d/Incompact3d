@@ -35,7 +35,7 @@ contains
       real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
 
       real(mytype) :: x
-      integer :: k, j, i, is
+      integer :: i
 
       ! This does not apply in case of restart
       if (irestart == 0) then
