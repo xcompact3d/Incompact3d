@@ -17,14 +17,14 @@ jobs:
       id: cache-openmpi
       uses: actions/cache@v2
       with:
-        path: openmpi-4.1.2/installed
-        key: openmpi-4.1.2
+        path: openmpi-4.1.4/installed
+        key: openmpi-4.1.4
     - name: Build openmpi
       if: steps.cache-openmpi.outputs.cache-hit != 'true'
       run: |
-        wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.2.tar.gz
-        tar -xf openmpi-4.1.2.tar.gz
-        cd openmpi-4.1.2/ && mkdir installed
+        wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.4.tar.gz
+        tar -xf openmpi-4.1.4.tar.gz
+        cd openmpi-4.1.4/ && mkdir installed
         ./configure --prefix=$(pwd)/installed
         make all install
     - name: Record metadata
@@ -33,13 +33,13 @@ jobs:
         echo "Incompact3d HEAD: $(git rev-parse HEAD)" >> metadata.txt
         echo "make cmd: make" >> metadata.txt
         echo "run cmd: mpirun -np 2 xcompact3d" >> metadata.txt
-        export PATH=$(pwd)/openmpi-4.1.2/installed/bin/:$PATH
+        export PATH=$(pwd)/openmpi-4.1.4/installed/bin/:$PATH
         echo "mpif90 version: $(mpif90 --version | head -1)" >> metadata.txt
         echo "mpirun version: $(mpirun --version | head -1)" >> metadata.txt
         mv metadata.txt test/data/Taylor-Green-Vortex/
     - name: Build Incompact3d and run TGV reference test case
       run: |
-        export PATH=$(pwd)/openmpi-4.1.2/installed/bin/:$PATH
+        export PATH=$(pwd)/openmpi-4.1.4/installed/bin/:$PATH
         make
         cp test/data/Taylor-Green-Vortex/reference_input.i3d input.i3d
         mpirun -np 2 xcompact3d
