@@ -46,3 +46,16 @@ jobs:
       run: |
         export PATH=$(pwd)/openmpi-4.1.4/installed/bin/:$PATH
         make BUILD=debug
+
+    - name: Run TGV case
+      run: |
+        cp test/data/Taylor-Green-Vortex/reference_input.i3d input.i3d
+        export PATH=$(pwd)/openmpi-4.1.4/installed/bin/:$PATH
+        mpirun -np 2 xcompact3d
+
+    - name: Compare output time evolution to reference output
+      run: |
+        pip install numpy
+        python test/compare_TGV_time_evolution.py \
+            --input time_evol.dat \
+            --reference test/data/Taylor-Green-Vortex/reference_time_evol.dat
