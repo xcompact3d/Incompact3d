@@ -18,9 +18,6 @@ contains
     use variables
     use decomp_2d
     use ydiff_implicit, only : inttimp
-#ifdef DEBG 
-    use tools, only : avg3d
-#endif
 
     implicit none
 
@@ -35,20 +32,20 @@ contains
     !! LOCAL
     integer :: is, code, ierror
 
-#ifdef DEBG 
-    real(mytype) avg_param
-#endif
-
 #ifdef DEBG
-    avg_param = zero
-    call avg3d (var1, avg_param)
-    if (nrank == 0) write(*,*)'## SUB intt VAR var1 (start) AVG ', avg_param
-    avg_param = zero
-    call avg3d (dvar1(:,:,:,1), avg_param)
-    if (nrank == 0) write(*,*)'## SUB intt VAR dvar1(1) (start) AVG ', avg_param
-    avg_param = zero
-    call avg3d (dvar1(:,:,:,2), avg_param)
-    if (nrank == 0) write(*,*)'## SUB intt VAR dvar1(2) (start) AVG ', avg_param
+    real(mytype) :: dep, dep1
+#endif
+    
+#ifdef DEBG
+    dep=maxval(abs(var1))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## SUB intt VAR var1 (start) MAX ', dep1
+    dep=maxval(abs(dvar1(:,:,:,1)))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## SUB intt VAR dvar1(1) (start) MAX ', dep1
+    dep=maxval(abs(dvar1(:,:,:,2)))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## SUB intt VAR dvar1(2) (start) MAX ', dep1
 #endif
 
     if (iimplicit.ge.1) then
@@ -159,7 +156,7 @@ contains
     elseif(itimescheme.eq.6) then
 
        if (nrank==0) then
-          write(*,*) "RK4 not implemented!"
+          write(*,*) "RK4 not implemented yet!"
           STOP
        endif
 
@@ -173,12 +170,12 @@ contains
     endif
 
 #ifdef DEBG
-    avg_param = zero
-    call avg3d (var1, avg_param)
-    if (nrank == 0) write(*,*)'## SUB intt VAR var1 AVG ', avg_param
-    avg_param = zero
-    call avg3d (dvar1(:,:,:,1), avg_param)
-    if (nrank == 0) write(*,*)'## SUB intt VAR dvar1 AVG ', avg_param
+    dep=maxval(abs(var1))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## SUB intt VAR var1 MAX ', dep1
+    dep=maxval(abs(dvar1(:,:,:,1)))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## SUB intt VAR dvar1 MAX ', dep1
     if (nrank   ==  0) write(*,*)'# intt done'
 #endif
 
@@ -198,7 +195,7 @@ contains
 
   SUBROUTINE int_time(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
 
-    use decomp_2d, only : mytype, xsize, nrank
+    use decomp_2d, only : mytype, xsize, nrank, real_type
     use param, only : zero, one
     use param, only : ntime, nrhotime, ilmn, iscalar, ilmn_solve_temp,itimescheme
     use param, only : iimplicit, sc_even
@@ -206,9 +203,8 @@ contains
     use param, only : scalar_lbound, scalar_ubound
     use variables, only : numscalar,nu0nu
     use var, only : ta1, tb1
-#ifdef DEBG 
-    use tools, only : avg3d
-#endif
+    use MPI
+
 
     IMPLICIT NONE
 
@@ -223,22 +219,24 @@ contains
 
     !! LOCAL
     integer :: is, i, j, k
+    
 #ifdef DEBG
-    real(mytype) avg_param
+    real(mytype) :: dep, dep1
+    integer :: code
     if (nrank .eq. 0) write(*,*)'## Init int_time'
 #endif
 
     call int_time_momentum(ux1, uy1, uz1, dux1, duy1, duz1)
 #ifdef DEBG
-     avg_param = zero
-     call avg3d (dux1, avg_param)
-     if (nrank == 0) write(*,*)'## int_time dux1 ', avg_param
-     avg_param = zero
-     call avg3d (duy1, avg_param)
-     if (nrank == 0) write(*,*)'## int_time duy1 ', avg_param
-     avg_param = zero
-     call avg3d (duz1, avg_param)
-     if (nrank == 0) write(*,*)'## int_time duz1 ', avg_param
+    dep=maxval(abs(dux1))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## int_time dux1 ', dep1
+    dep=maxval(abs(duy1))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## int_time duy1 ', dep1
+    dep=maxval(abs(duz1))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## int_time duz1 ', dep1
 #endif
 
     IF (ilmn) THEN
