@@ -1,0 +1,25 @@
+&TurbineSpecs
+name='NTNU_HATT_2'          ! Turbine Name
+origin = 4.47,0.817,1.7!2.125   ! Turbine Origin 
+numblades=3                 ! Number of Blades
+blade_geom='./Blade_N52.al' ! Blade Specification
+numfoil=1                   ! Number of Airfoils
+afname='./Airfoils/S826.air'
+towerFlag = 1               ! Tower Flag (0: No Tower, 1: Tower)
+towerOffset=0.14            ! TowerOffset
+tower_geom='./Tower.al'     ! Tower geometry
+tower_drag=1.0              ! Tower Drag
+tower_lift=0.3              ! Tower Lift
+tower_strouhal=0.21         ! Tower Strouhal Number
+TypeFlag=1                  ! 1: HAT, 2: VAT
+OperFlag=1                  ! 1: Constant rotation, 2: Force_based
+uref=10.0                   ! Reference Velocity
+tsr=8                       ! Tip Speed Ratio
+RotFlag=2                   ! 1: Clockwise, 2: Counterclockwise
+AddedMassFlag=0             ! 0: No added mass, 1: Added mass
+RandomWalkForcingFlag=0     ! 0: No Random Walk turbulence from blades
+EndEffectsFlag=0	    ! 0: TLC, 1: Glauert,  2: Shen et al 2005
+TipCorr=0
+RootCorr=0
+DynStallFlag=0
+/End

@@ -7,4 +7,6 @@ User Guide \& How-To's
     :titlesonly:
     :glob:
 
-    user_guide/*
+    user_guide/restart_simu.rst
+    user_guide/developer_guidance.rst
+    user_guide/parameters.rst

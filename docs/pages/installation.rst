@@ -6,6 +6,8 @@ Xcompact3d supports both traditional Makefile and `cmake` based builds.
 In both cases, the only requirements is a Fortran 90-compatible compiler and working `MPI`
 installation.
 
+Have a look at the following `video <https://www.youtube.com/watch?v=MPKlSnwIi_w>`_ to see how easy it is to compile the code with the Makefile or with cmake!
+
 --------
 Makefile
 --------
@@ -22,17 +24,10 @@ On successful completion you will have an executable `xcompact3d`.
 **N.B.** The Makefile currently does not support parallel builds *i.e.* `make -jN`.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
-Building on Cray systems
+Building on different systems
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The Makefile supports building on Cray systems using the Cray compiler with `make CMP=cray`, if
-using another environment on a Cray machine (such as `PrgEnv-gnu`) then you should use that
-compiler's setting for `CMP` and set `FC=ftn`:
-``
-# After loading the PrgEnv-gnu environment
-
-make CMP=gnu FC=ftn
-``
+The Makefile supports building on different systems using different Fortran compilers. It has been tested with the GCC, Intel and NVIDIA Fortran compilers, and the CRAY compiler on the UK Supercomputing Facility ARCHER2.
 
 -----
 CMake
@@ -53,6 +48,11 @@ variables to their desired values (be sure in particular to check the value of
 Once the build has been configured run `make` to compile, followed by `make install` which will
 install the `xcompact3d` executable to `${CMAKE_INSTALL_PREFIX/bin/}`, you can optionally run tests
 on the build by executing `make test`.
+
+-------------------------------------
+Fast Fourier Transforms (FFT) engine
+-------------------------------------
+By default you do not need to plug a external FFT library, as the code can use an internal generic FFT engine. Please feel free to modify the Makefile if you wish to use an external FFT engine like FFTW.
 
 ---------------
 Enabling ADIOS2

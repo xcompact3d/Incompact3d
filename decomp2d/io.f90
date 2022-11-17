@@ -32,14 +32,15 @@ module decomp_2d_io
   integer, parameter :: MAX_IOH = 10 ! How many live IO things should we handle?
   character(len=*), parameter :: io_sep = "::"
   integer, save :: nreg_io = 0
+  integer, dimension(MAX_IOH), save :: io_step
 #ifndef ADIOS2
   integer, dimension(MAX_IOH), save :: fh_registry
   logical, dimension(MAX_IOH), target, save :: fh_live
-  character(len=80), dimension(MAX_IOH), target, save :: fh_names
+  character(len=1024), dimension(MAX_IOH), target, save :: fh_names
   integer(kind=MPI_OFFSET_KIND), dimension(MAX_IOH), save :: fh_disp
 #else
   type(adios2_adios) :: adios
-  character(len=80), dimension(MAX_IOH), target, save :: engine_names
+  character(len=1024), dimension(MAX_IOH), target, save :: engine_names
   logical, dimension(MAX_IOH), target, save :: engine_live
   type(adios2_engine), dimension(MAX_IOH), save :: engine_registry
 #endif
@@ -57,7 +58,8 @@ module decomp_2d_io
        decomp_2d_register_variable, &
        decomp_2d_open_io, decomp_2d_close_io, &
        decomp_2d_start_io, decomp_2d_end_io, &
-       gen_iodir_name
+       gen_iodir_name, &
+       decomp_2d_set_io_step
 
   ! Generic interface to handle multiple data types
 
@@ -530,6 +532,7 @@ contains
     integer :: ierror, newtype, data_type
     integer :: idx
 #ifdef ADIOS2
+    integer(kind=8) :: steps
     type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
 #endif
@@ -541,6 +544,23 @@ contains
     return
   end subroutine read_inflow
 
+  subroutine decomp_2d_set_io_step(io_name, io_dir, step)
+
+    character(len=*), intent(in) :: io_name, io_dir
+    integer, intent(in) :: step
+
+    integer :: idx
+
+    idx = get_io_idx(io_name, io_dir)
+    if (idx < 1) then
+       print *, "ERROR!"
+       stop
+    end if
+
+    io_step(idx) = step
+    
+  end subroutine decomp_2d_set_io_step
+  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Write scalar variables as part of a big MPI-IO file, starting from 
   !  displacement 'disp'; 'disp' will be updated after the reading
@@ -1169,6 +1189,9 @@ contains
        deallocate(varsingle)
     end if
 #else
+    if (idx < 1) then
+       print *, "ERROR: failed to find engine for ", io_name, " ", dirname
+    end if
     if (.not. engine_live(idx)) then
        print *, "ERROR: Engine is not live!"
        stop
@@ -1599,7 +1622,7 @@ contains
     integer, intent(in) :: mode
 
     logical, dimension(:), pointer :: live_ptrh
-    character(len=80), dimension(:), pointer :: names_ptr
+    character(len=1024), dimension(:), pointer :: names_ptr
     character(len=(len(io_name)+len(io_sep)+len(io_dir))) :: full_name
     
     integer :: idx, ierror
@@ -1696,7 +1719,7 @@ contains
 
     character(len=*), intent(in) :: io_name, io_dir
     
-    character(len=80), dimension(:), pointer :: names_ptr
+    character(len=1024), dimension(:), pointer :: names_ptr
     logical, dimension(:), pointer :: live_ptrh
     integer :: idx, ierror
 
@@ -1740,6 +1763,8 @@ contains
          stop
       end if
     end associate
+
+    io_step(idx) = -1
 #endif
     
   end subroutine decomp_2d_start_io
@@ -1765,6 +1790,8 @@ contains
          stop
       end if
     end associate
+
+    io_step(idx) = -1
 #endif
 
   end subroutine decomp_2d_end_io
@@ -1780,7 +1807,7 @@ contains
     integer :: idx
     logical :: found
 
-    character(len=80), dimension(:), pointer :: names_ptr
+    character(len=1024), dimension(:), pointer :: names_ptr
 
 #ifndef ADIOS2
     names_ptr => fh_names
@@ -1830,7 +1857,7 @@ contains
        print *, "- DIR:", io_dir
        stop
     endif
-    write(gen_iodir_name, "(A,A)") io_dir, trim(ext)
+    write(gen_iodir_name, "(A,A)") trim(io_dir), trim(ext)
 #endif
     
   end function gen_iodir_name

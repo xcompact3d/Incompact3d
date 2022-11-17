@@ -1,34 +1,7 @@
-!################################################################################
-!This file is part of Xcompact3d.
-!
-!Xcompact3d
-!Copyright (c) 2012 Eric Lamballais and Sylvain Laizet
-!eric.lamballais@univ-poitiers.fr / sylvain.laizet@gmail.com
-!
-!    Xcompact3d is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU General Public License as published by
-!    the Free Software Foundation.
-!
-!    Xcompact3d is distributed in the hope that it will be useful,
-!    but WITHOUT ANY WARRANTY; without even the implied warranty of
-!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU General Public License for more details.
-!
-!    You should have received a copy of the GNU General Public License
-!    along with the code.  If not, see <http://www.gnu.org/licenses/>.
-!-------------------------------------------------------------------------------
-!-------------------------------------------------------------------------------
-!    We kindly request that you cite Xcompact3d/Incompact3d in your
-!    publications and presentations. The following citations are suggested:
-!
-!    1-Laizet S. & Lamballais E., 2009, High-order compact schemes for
-!    incompressible flows: a simple and efficient method with the quasi-spectral
-!    accuracy, J. Comp. Phys.,  vol 228 (15), pp 5989-6015
-!
-!    2-Laizet S. & Li N., 2011, Incompact3d: a powerful tool to tackle turbulence
-!    problems with up to 0(10^5) computational cores, Int. J. of Numerical
-!    Methods in Fluids, vol 67 (11), pp 1735-1757
-!################################################################################
+!Copyright (c) 2012-2022, Xcompact3d
+!This file is part of Xcompact3d (xcompact3d.com)
+!SPDX-License-Identifier: BSD 3-Clause
+
 module tools
 
   implicit none
@@ -37,6 +10,7 @@ module tools
 
   character(len=*), parameter :: io_restart = "restart-io"
   character(len=*), parameter :: resfile = "checkpoint"
+  character(len=*), parameter :: resfile_old = "checkpoint.old"
   character(len=*), parameter :: io_ioflow = "in-outflow-io"
   
   private
@@ -46,8 +20,7 @@ module tools
        simu_stats, &
        apply_spatial_filter, read_inflow, append_outflow, write_outflow, init_inflow_outflow, &
        compute_cfldiff, compute_cfl, &
-       rescale_pressure, mean_plane_x, mean_plane_y, mean_plane_z, &
-       avg3d
+       rescale_pressure, mean_plane_x, mean_plane_y, mean_plane_z
 
 contains
   !##################################################################
@@ -274,6 +247,11 @@ contains
           write(*,*) '===========================================================<<<<<'
           write(*,*) 'Writing restart point ',filename !itime/icheckpoint
        endif
+
+       if (adios2_restart_initialised) then
+          ! First, rename old checkpoint in case of error
+          call rename(resfile, resfile_old)
+       end if
     end if
 
     if (.not. adios2_restart_initialised) then
@@ -334,39 +312,47 @@ contains
        call decomp_2d_end_io(io_restart, resfile)
        call decomp_2d_close_io(io_restart, resfile)
 
-       ! Write info file for restart - Kay Schäfer
-       if (nrank == 0) then
-          write(filename,"(A)") 'restart.info'
-         write(fmt2,'("(A,I16)")')
-         write(fmt3,'("(A,F16.4)")')
-         write(fmt4,'("(A,F16.12)")')
-         !
-         open (111,file=filename,action='write',status='replace')
-         write(111,'(A)')'!========================='
-         write(111,'(A)')'&Time'
-         write(111,'(A)')'!========================='
-         write(111,fmt3) 'tfield=   ',t
-         write(111,fmt2) 'itime=    ',itime
-         write(111,'(A)')'/End'
-         write(111,'(A)')'!========================='
-         write(111,'(A)')'&NumParam'
-         write(111,'(A)')'!========================='
-         write(111,fmt2) 'nx=       ',nx
-         write(111,fmt2) 'ny=       ',ny
-         write(111,fmt2) 'nz=       ',nz
-         write(111,fmt3) 'Lx=       ',xlx
-         write(111,fmt3) 'Ly=       ',yly
-         write(111,fmt3) 'Lz=       ',zlz
-         write(111,fmt2) 'istret=   ',istret
-         write(111,fmt4) 'beta=     ',beta
-         write(111,fmt2) 'iscalar=  ',iscalar
-         write(111,fmt2) 'numscalar=',numscalar
-         write(111,'(A,I14)') 'itimescheme=',itimescheme
-         write(111,fmt2) 'iimplicit=',iimplicit
-         write(111,'(A)')'/End'
-         write(111,'(A)')'!========================='
+       ! Validate restart file then remove old file and update restart.info
+       if (validate_restart(resfile_old, resfile)) then
+          call delete_filedir(resfile_old)
 
-         close(111)
+          ! Write info file for restart - Kay Schäfer
+          if (nrank == 0) then
+             write(filename,"('restart',I7.7,'.info')") itime
+             write(fmt2,'("(A,I16)")')
+             write(fmt3,'("(A,F16.4)")')
+             write(fmt4,'("(A,F16.12)")')
+             !
+             open (111,file=filename,action='write',status='replace')
+             write(111,'(A)')'!========================='
+             write(111,'(A)')'&Time'
+             write(111,'(A)')'!========================='
+             write(111,fmt3) 'tfield=   ',t
+             write(111,fmt2) 'itime=    ',itime
+             write(111,'(A)')'/End'
+             write(111,'(A)')'!========================='
+             write(111,'(A)')'&NumParam'
+             write(111,'(A)')'!========================='
+             write(111,fmt2) 'nx=       ',nx
+             write(111,fmt2) 'ny=       ',ny
+             write(111,fmt2) 'nz=       ',nz
+             write(111,fmt3) 'Lx=       ',xlx
+             write(111,fmt3) 'Ly=       ',yly
+             write(111,fmt3) 'Lz=       ',zlz
+             write(111,fmt2) 'istret=   ',istret
+             write(111,fmt4) 'beta=     ',beta
+             write(111,fmt2) 'iscalar=  ',iscalar
+             write(111,fmt2) 'numscalar=',numscalar
+             write(111,'(A,I14)') 'itimescheme=',itimescheme
+             write(111,fmt2) 'iimplicit=',iimplicit
+             write(111,'(A)')'/End'
+             write(111,'(A)')'!========================='
+
+             close(111)
+          end if
+       else
+          call decomp_2d_abort(1, &
+               "Writing restart - validation failed!")
        end if
     else
        if (nrank==0) then
@@ -670,7 +656,7 @@ contains
     real(mytype), dimension(NTimeSteps,xsize(2),xsize(3)) :: ux1,uy1,uz1
     character(20) :: fninflow
 
-    character(80) :: inflow_file
+    character(len=1024) :: inflow_file
     
     ! Recirculate inflows 
     if (ifileinflow>=ninflows) then 
@@ -679,21 +665,15 @@ contains
 
     ! Read inflow
     write(fninflow,'(i20)') ifileinflow+1
-#ifndef ADIOS2
     write(inflow_file, "(A)") trim(inflowpath)//'inflow'//trim(adjustl(fninflow))
-#else
-    write(inflow_file, "(A)") trim(inflowpath)//'inflow'
-#endif
     if (nrank==0) print *,'READING INFLOW FROM ',inflow_file
     
     call decomp_2d_open_io(io_ioflow, inflow_file, decomp_2d_read_mode)
-    call decomp_2d_start_io(io_ioflow, inflow_file)
-
+    
     call decomp_2d_read_inflow(inflow_file,"ux",ntimesteps,ux_inflow,io_ioflow)
     call decomp_2d_read_inflow(inflow_file,"uy",ntimesteps,uy_inflow,io_ioflow)
     call decomp_2d_read_inflow(inflow_file,"uz",ntimesteps,uz_inflow,io_ioflow)
 
-    call decomp_2d_end_io(io_ioflow, inflow_file)
     call decomp_2d_close_io(io_ioflow, inflow_file)
 
   end subroutine read_inflow
@@ -743,19 +723,12 @@ contains
     logical, save :: clean = .true.
     integer :: iomode
 
-    if (clean .and. (irestart .eq. 0)) then
-       iomode = decomp_2d_write_mode
-       clean = .false.
-    else
-       iomode = decomp_2d_append_mode
-    end if
+    logical :: dir_exists
+
+    iomode = decomp_2d_write_mode
     
     write(fnoutflow,'(i20)') ifileoutflow
-#ifndef ADIOS2
     write(outflow_file, "(A)") './out/inflow'//trim(adjustl(fnoutflow))
-#else
-    write(outflow_file, "(A)") './out/inflow'
-#endif
     if (nrank==0) print *,'WRITING OUTFLOW TO ', outflow_file
     
     call decomp_2d_open_io(io_ioflow, outflow_file, iomode)
@@ -946,75 +919,174 @@ contains
     return
 
   end subroutine mean_plane_z
-  !############################################################################
-  !!
-  !!  SUBROUTINE: avg3d
-  !!      AUTHOR: Stefano Rolfo
-  !! DESCRIPTION: Compute the total sum of a a 3d field
-  !!
-  !############################################################################
-  subroutine avg3d (var, avg)
+  ! Subroutine to rename a file/directory
+  !
+  ! [string, in]            oldname  - name of existing file
+  ! [string, in]            newname  - existing file to be renamed as
+  ! [integer, in, optional] opt_rank - which rank should perform the operation? all others will wait.
+  subroutine rename(oldname, newname, opt_rank)
 
-    use decomp_2d, only: real_type, xsize, xend
-    use param
-    use variables, only: nx,ny,nz,nxm,nym,nzm
-    use mpi
+    use MPI
+    use decomp_2d, only : nrank, decomp_2d_abort
+    use decomp_2d_io, only : gen_iodir_name
+    
+    character(len=*), intent(in) :: oldname
+    character(len=*), intent(in) :: newname
+    integer, intent(in), optional :: opt_rank
 
-    implicit none
+    integer :: exe_rank
+    logical :: exist
+    character(len=:), allocatable :: cmd
 
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: var
-    real(mytype), intent(out) :: avg
-    real(mytype)              :: dep
+    integer :: ierror
 
-    integer :: i,j,k, code
-    integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
-
-    if (nclx1==1.and.xend(1)==nx) then
-       xsize1=xsize(1)-1
+    character(len=:), allocatable :: oldname_ext
+    
+    if (present(opt_rank)) then
+       exe_rank = opt_rank
     else
-       xsize1=xsize(1)
-    endif
-    if (ncly1==1.and.xend(2)==ny) then
-       xsize2=xsize(2)-1
-    else
-       xsize2=xsize(2)
-    endif
-    if (nclz1==1.and.xend(3)==nz) then
-       xsize3=xsize(3)-1
-    else
-       xsize3=xsize(3)
-    endif
-    if (nclx1==1) then
-       nxc=nxm
-    else
-       nxc=nx
-    endif
-    if (ncly1==1) then
-       nyc=nym
-    else
-       nyc=ny
-    endif
-    if (nclz1==1) then
-       nzc=nzm
-    else
-       nzc=nz
-    endif
+       exe_rank = 0
+    end if
 
-    dep=zero
-    do k=1,xsize3
-       do j=1,xsize2
-          do i=1,xsize1
-             !dep=dep+var(i,j,k)**2
-             dep=dep+var(i,j,k)
-          enddo
-       enddo
-    enddo
-    call MPI_ALLREDUCE(dep,avg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    avg=avg/(nxc*nyc*nzc)
+    if (nrank == exe_rank) then
+       oldname_ext = gen_iodir_name(oldname, io_restart)
+       inquire(file=oldname_ext, exist=exist)
+       if (exist) then
+          cmd = "mv "//oldname_ext//" "//newname
+          call execute_command_line(cmd)
+       end if
+    end if
 
-    return
+    call MPI_Barrier(MPI_COMM_WORLD, ierror)
+    if (ierror /= 0) then
+       call decomp_2d_abort(ierror, &
+            "Error in MPI_Barrier!")
+    end if
+    
+  end subroutine rename
 
-  end subroutine avg3d
+  ! Subroutine to delete a file/director
+  !
+  ! [string, in]            name     - name of file to delete
+  ! [integer, in, optional] opt_rank - which rank should perform the operation? all others will wait.
+  subroutine delete_filedir(name, opt_rank)
+
+    use MPI
+    use decomp_2d, only : nrank, decomp_2d_abort
+    
+    character(len=*), intent(in) :: name
+    integer, intent(in), optional :: opt_rank
+
+    integer :: exe_rank
+    logical :: exist
+    integer :: unit
+
+    character(len=:), allocatable :: cmd
+
+    integer :: ierror
+    
+    if (present(opt_rank)) then
+       exe_rank = opt_rank
+    else
+       exe_rank = 0
+    end if
+
+    if (nrank == exe_rank) then
+       inquire(file=name, exist=exist)
+       if (exist) then
+          inquire(file=name//"/.", exist=exist)
+          if (.not. exist) then
+             ! Open file so it can be deleted on close
+             open(newunit=unit, file=name)
+             close(unit, status='delete')
+          else
+             ! Directory - hopefully rm should work...
+             cmd = "rm -r "//name
+             call execute_command_line(cmd)
+          end if
+       end if
+    end if
+
+    call MPI_Barrier(MPI_COMM_WORLD, ierror)
+    if (ierror /= 0) then
+       call decomp_2d_abort(ierror, &
+            "Error in MPI_Barrier!")
+    end if
+    
+  end subroutine delete_filedir
+
+  ! Relatively crude validation function, checks that old and new checkpoints are the same size.
+  ! XXX: for ADIOS2/BP4 this isn't really correct/useful as it's a directory...
+  !
+  ! [string, in]            refname  - name of previous checkpoint
+  ! [string, in]            testname - name of new checkpoint
+  ! [integer, in, optional] opt_rank - which rank should perform the operation? all others will wait.
+  logical function validate_restart(refname, testname, opt_rank)
+
+    use MPI
+    use decomp_2d, only : nrank, decomp_2d_abort
+    use decomp_2d_io, only : gen_iodir_name
+    
+    character(len=*), intent(in) :: refname
+    character(len=*), intent(in) :: testname
+    integer, intent(in), optional :: opt_rank
+
+    integer :: exe_rank
+    logical :: success
+    integer :: ierror
+
+    integer :: refsize
+    integer :: testsize
+
+    logical :: refexist, testexist
+    logical, save :: checked_initial = .false.
+
+    character(len=:), allocatable :: testname_ext
+    
+    if (present(opt_rank)) then
+       exe_rank = opt_rank
+    else
+       exe_rank = 0
+    end if
+
+    if (nrank == exe_rank) then
+       success = .true.
+
+       testname_ext = gen_iodir_name(testname, io_restart)
+       
+       inquire(file=refname, size=refsize, exist=refexist)
+       inquire(file=testname_ext, size=testsize, exist=testexist)
+
+       if (testexist) then
+          if (refexist) then
+             if (testsize /= refsize) then
+                success = .false.
+             end if
+          else
+             if (checked_initial) then
+                print *, "ERROR: old restart ", refname, " doesn't exist!"
+                success = .false.
+             else
+                ! Must assume this is the first call to restart, no old restart should exist
+                success = .true.
+             end if
+             checked_initial = .true.
+          end if
+       else
+          success = .false.
+       end if
+    end if
+
+    call MPI_Bcast(success, 1, MPI_LOGICAL, exe_rank, MPI_COMM_WORLD, ierror)
+    if (ierror /= 0) then
+       call decomp_2d_abort(ierror, &
+            "Error in MPI_Allreduce")
+    end if
+
+    validate_restart = success
+    
+  end function validate_restart
+  
 end module tools
 !##################################################################
 

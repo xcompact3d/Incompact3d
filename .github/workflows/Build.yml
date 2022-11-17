@@ -22,11 +22,40 @@ jobs:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
 
-    # Runs a single command using the runners shell
-    - name: Install requirements
-      run: |
-        sudo apt-get update; sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev
+    # We don't want to build openmpi each time this workflow is
+    # run. Setup caching of OpenMPI after it is built and installed.
+    # See "Caching dependencies to speed up workflows" on the GH
+    # actions docs.
+    - name: Cache OpenMPI
+      id: cache-openmpi
+      uses: actions/cache@v2
+      with:
+        path: openmpi-4.1.4/installed
+        key: openmpi-4.1.4
 
-    # Runs a set of commands using the runners shell
-    - name: Compile
-      run: make
+    - name: Build openmpi
+      if: steps.cache-openmpi.outputs.cache-hit != 'true'
+      run: |
+        wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.4.tar.gz
+        tar -xf openmpi-4.1.4.tar.gz
+        cd openmpi-4.1.4/ && mkdir installed
+        ./configure --prefix=$(pwd)/installed
+        make all install
+
+    - name: Build Incompact3d
+      run: |
+        export PATH=$(pwd)/openmpi-4.1.4/installed/bin/:$PATH
+        make BUILD=debug
+
+    - name: Run TGV case
+      run: |
+        cp test/data/Taylor-Green-Vortex/reference_input.i3d input.i3d
+        export PATH=$(pwd)/openmpi-4.1.4/installed/bin/:$PATH
+        mpirun -np 2 xcompact3d
+
+    - name: Compare output time evolution to reference output
+      run: |
+        pip install numpy
+        python test/compare_TGV_time_evolution.py \
+            --input time_evol.dat \
+            --reference test/data/Taylor-Green-Vortex/reference_time_evol.dat

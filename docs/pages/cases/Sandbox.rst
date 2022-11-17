@@ -1,2 +1,0 @@
-Sandbox Flow Configuration
-==========================

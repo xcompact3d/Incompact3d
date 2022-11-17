@@ -1,34 +1,6 @@
-!################################################################################
-!This file is part of Xcompact3d.
-!
-!Xcompact3d
-!Copyright (c) 2012 Eric Lamballais and Sylvain Laizet
-!eric.lamballais@univ-poitiers.fr / sylvain.laizet@gmail.com
-!
-!    Xcompact3d is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU General Public License as published by
-!    the Free Software Foundation.
-!
-!    Xcompact3d is distributed in the hope that it will be useful,
-!    but WITHOUT ANY WARRANTY; without even the implied warranty of
-!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU General Public License for more details.
-!
-!    You should have received a copy of the GNU General Public License
-!    along with the code.  If not, see <http://www.gnu.org/licenses/>.
-!-------------------------------------------------------------------------------
-!-------------------------------------------------------------------------------
-!    We kindly request that you cite Xcompact3d/Incompact3d in your
-!    publications and presentations. The following citations are suggested:
-!
-!    1-Laizet S. & Lamballais E., 2009, High-order compact schemes for
-!    incompressible flows: a simple and efficient method with the quasi-spectral
-!    accuracy, J. Comp. Phys.,  vol 228 (15), pp 5989-6015
-!
-!    2-Laizet S. & Li N., 2011, Incompact3d: a powerful tool to tackle turbulence
-!    problems with up to 0(10^5) computational cores, Int. J. of Numerical
-!    Methods in Fluids, vol 67 (11), pp 1735-1757
-!################################################################################
+!Copyright (c) 2012-2022, Xcompact3d
+!This file is part of Xcompact3d (xcompact3d.com)
+!SPDX-License-Identifier: BSD 3-Clause
 
 module decomp_2d_poisson
 
@@ -717,8 +689,6 @@ contains
     real(mytype) :: rl, iy
     external cx, rl, iy
 
-    real(mytype) :: avg_param
-
 100 format(1x,a8,3I4,2F12.6)
 
     nx = nx_global
@@ -1064,6 +1034,7 @@ contains
   subroutine poisson_11x(rhs)
 
     use dbg_schemes, only: abs_prec
+    use mpi
     
 
     implicit none
@@ -1080,7 +1051,8 @@ contains
     real(mytype) :: rl, iy
     external cx, rl, iy
 #ifdef DEBG
-    real(mytype) avg_param
+    real(mytype) :: dep, dep1
+    integer :: code
 #endif
 
 100 format(1x,a8,3I4,2F12.6)
@@ -1122,9 +1094,9 @@ contains
        end do
     end do
 #ifdef DEBG
-    avg_param = zero
-    call avg3d (rw2b, avg_param)
-    if (nrank == 0) write(*,*)'## Poisson11X Start rw2 ', avg_param
+    dep=maxval(abs(rw2b))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Start rw2 ', dep1
 #endif
 
     ! the global operations in X
@@ -1141,9 +1113,9 @@ contains
        end do
     end do
 #ifdef DEBG
-    avg_param = zero
-    call avg3d (rw1b, avg_param)
-    if (nrank == 0) write(*,*)'## Poisson11X Start rw1 ', avg_param
+    dep=maxval(abs(rw1b))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Start rw1 ', dep1
 #endif
 
     ! back to Z-pencil
@@ -1162,17 +1134,6 @@ contains
     ! normalisation
     cw1 = cw1 / real(nx, kind=mytype) /real(ny, kind=mytype) &
          / real(nz, kind=mytype)
-#ifdef DEBUG
-    do k = sp%xst(3),sp%xen(3)
-       do j = sp%xst(2),sp%xen(2)
-          do i = sp%xst(1),sp%xen(1)
-             if (abs_prec(cw1(i,j,k)) > 1.0e-4) then
-                write(*,100) 'START',i,j,k,cw1(i,j,k)
-             end if
-          end do
-       end do
-    end do
-#endif
 
     ! post-processing in spectral space
 
@@ -1184,17 +1145,13 @@ contains
              tmp2 = iy(cw1(i,j,k))
              cw1(i,j,k) = cx(tmp1 * bz(k) + tmp2 * az(k), &
                              tmp2 * bz(k) - tmp1 * az(k))
-#ifdef DEBUG
-             if (abs_prec(cw1(i,j,k)) > 1.0e-4) &
-                  write(*,100) 'after z',i,j,k,cw1(i,j,k)
-#endif
           end do
        end do
     end do
 #ifdef DEBG
-    avg_param = zero
-    call avg3d (abs(cw1), avg_param)
-    if (nrank == 0) write(*,*)'## Poisson11X Post in Z cw1 ', avg_param
+    dep=maxval(abs(cw1))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Post in Z cw1 ', dep1
 #endif
 
     ! POST PROCESSING IN Y
@@ -1222,26 +1179,17 @@ contains
        end do
     end do
 #ifdef DEBG
-    avg_param = zero
-    call avg3d (abs(cw2), avg_param)
-    if (nrank == 0) write(*,*)'## Poisson11X Post in Y cw2 ', avg_param
+    dep=maxval(abs(cw2))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Post in Y cw2 ', dep1
 #endif
 
     ! back to X-pencil
     call transpose_y_to_x(cw2b,cw1,sp)
 #ifdef DEBUG
-    do k = sp%xst(3), sp%xen(3)
-       do j = sp%xst(2), sp%xen(2)
-          do i = sp%xst(1), sp%xen(1)
-             if (abs_prec(cw1(i,j,k)) > 1.0e-4) then
-                write(*,100) 'after y',i,j,k,cw1(i,j,k)
-             end if
-          end do
-       end do
-    end do
-    avg_param = zero
-    call avg3d (cw1, avg_param)
-    if (nrank == 0) write(*,*)'## Poisson11X Back to X cw1 ', avg_param
+    dep=maxval(abs(cw1))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Back to X cw1 ', dep1
 #endif
 
     ! POST PROCESSING IN X
@@ -1266,20 +1214,10 @@ contains
           end do
        end do
     end do
-
 #ifdef DEBUG
-    do k = sp%xst(3), sp%xen(3)
-       do j = sp%xst(2), sp%xen(2)
-          do i = sp%xst(1), sp%xen(1)
-             if (abs_prec(cw1b(i,j,k)) > 1.0e-4) then
-                write(*,*) 'BEFORE',i,j,k,cw1b(i,j,k)
-             end if
-          end do
-       end do
-    end do
-    avg_param = zero
-    call avg3d (abs(cw1b), avg_param)
-    if (nrank == 0) write(*,*)'## Poisson11X Back to X cw1b ', avg_param
+    dep=maxval(abs(cw1b))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Back to X cw1b ', cw1b
 #endif
 
     if (istret == 0) then
@@ -1307,9 +1245,9 @@ contains
           end do
        end do
 #ifdef DEBUG
-       avg_param = zero
-       call avg3d (cw1b, avg_param)
-       if (nrank == 0) write(*,*)'## Poisson11X Solve Pois istret 0 ', avg_param
+       dep=maxval(abs(cw1b))
+       call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       if (nrank == 0) write(*,*)'## Poisson11X Solve Pois istret 0 ', dep1
 #endif
 
     else
@@ -1378,9 +1316,9 @@ contains
              enddo
           enddo
 #ifdef DEBUG
-          avg_param = zero
-          call avg3d (cw2b, avg_param)
-          if (nrank == 0) write(*,*)'## Poisson11X Solve Pois istret < 3 ', avg_param
+          dep=maxval(abs(cw2b))
+          call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+          if (nrank == 0) write(*,*)'## Poisson11X Solve Pois istret < 3 ', dep1
 #endif
        else
           cw2 = zero
@@ -1403,27 +1341,18 @@ contains
           enddo
        endif
 #ifdef DEBUG
-          avg_param = zero
-          call avg3d (cw2b, avg_param)
-          if (nrank == 0) write(*,*)'## Poisson11X Solve Pois istret = 3 ', avg_param
+       dep=maxval(abs(cw2b))
+       call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       if (nrank == 0) write(*,*)'## Poisson11X Solve Pois istret = 3 ', dep1
 #endif
        !we have to go back in X pencils
        call transpose_y_to_x(cw2b,cw1b,sp)
     endif
 
 #ifdef DEBUG
-    do k = sp%xst(3),sp%xen(3)
-       do j = sp%xst(2),sp%xen(2)
-          do i = sp%xst(1),sp%xen(1)
-             if (abs_prec(cw1b(i,j,k)) > 1.0e-6) then
-                write(*,*) 'AFTER',i,j,k,cw1b(i,j,k)
-             end if
-          end do
-       end do
-    end do
-    avg_param = zero
-    call avg3d (cw1b, avg_param)
-    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois AFTER ', avg_param
+    dep=maxval(abs(cw1b))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois AFTER ', dep1
 #endif
     !stop
     ! post-processing backward
@@ -1450,18 +1379,9 @@ contains
        end do
     end do
 #ifdef DEBUG
-    do k = sp%xst(3), sp%xen(3)
-       do j = sp%xst(2), sp%xen(2)
-          do i = sp%xst(1), sp%xen(1)
-             if (abs_prec(cw1(i,j,k)) > 1.0e-4) then
-                write(*,100) 'AFTER X',i,j,k,cw1(i,j,k)
-             end if
-          end do
-       end do
-    end do
-    avg_param = zero
-    call avg3d (cw1, avg_param)
-    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois POSTPR X ', avg_param
+    dep=maxval(abs(cw1))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois POSTPR X ', dep1
 #endif
 
     ! POST PROCESSING IN Y
@@ -1489,18 +1409,9 @@ contains
        end do
     end do
 #ifdef DEBUG
-    do k = sp%yst(3), sp%yen(3)
-       do j = sp%yst(2), sp%yen(2)
-          do i = sp%yst(1), sp%yen(1)
-             if (abs_prec(cw2b(i,j,k)) > 1.0e-4) then
-                write(*,100) 'AFTER Y',i,j,k,cw2b(i,j,k)
-             end if
-          end do
-       end do
-    end do
-   avg_param = zero
-   call avg3d (abs(cw2b), avg_param)
-   if (nrank == 0) write(*,*)'## Poisson11X Solve Pois POSTPR Y ', avg_param
+    dep=maxval(abs(cw2b))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois POSTPR Y ', dep1
 #endif
     ! back to X-pencil
     call transpose_y_to_x(cw2b,cw1,sp)
@@ -1513,25 +1424,21 @@ contains
              tmp2 = iy(cw1(i,j,k))
              cw1(i,j,k) = cx(tmp1 * bz(k) - tmp2 * az(k), &
                              tmp2 * bz(k) + tmp1 * az(k))
-#ifdef DEBUG
-             if (abs_prec(cw1(i,j,k)) > 1.0e-4) &
-                  write(*,100) 'END',i,j,k,cw1(i,j,k)
-#endif
           end do
        end do
     end do
 #ifdef DEBUG
-    avg_param = zero
-    call avg3d (cw1, avg_param)
-    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois POSTPR Z ', avg_param
+    dep=maxval(abs(cw1))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois POSTPR Z ', dep1
 #endif
 
     ! compute c2r transform, back to physical space
     call decomp_2d_fft_3d(cw1,rhs)
 #ifdef DEBUG
-    avg_param = zero
-    call avg3d (rhs, avg_param)
-    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois Back Phy RHS ', avg_param
+    dep=maxval(abs(rhs))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois Back Phy RHS ', dep1
 #endif
 
     if (bcz == 1) then 
@@ -2375,71 +2282,6 @@ contains
 
     return
   end subroutine matrice_refinement
-!=====================================
-subroutine avg3d (var, avg)
-
-  use decomp_2d, only: real_type, xsize, xend
-  use param
-  use dbg_schemes, only: sqrt_prec
-  use variables, only: nx,ny,nz,nxm,nym,nzm
-  use mpi
-
-  implicit none
-
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: var
-  real(mytype), intent(out) :: avg
-  real(mytype)              :: dep
-
-  integer :: i,j,k, code
-  integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
-
-  if (nclx1==1.and.xend(1)==nx) then
-     xsize1=xsize(1)-1
-  else
-     xsize1=xsize(1)
-  endif
-  if (ncly1==1.and.xend(2)==ny) then
-     xsize2=xsize(2)-1
-  else
-     xsize2=xsize(2)
-  endif
-  if (nclz1==1.and.xend(3)==nz) then
-     xsize3=xsize(3)-1
-  else
-     xsize3=xsize(3)
-  endif
-  if (nclx1==1) then
-     nxc=nxm
-  else
-     nxc=nx
-  endif
-  if (ncly1==1) then
-     nyc=nym
-  else
-     nyc=ny
-  endif
-  if (nclz1==1) then
-     nzc=nzm
-  else
-     nzc=nz
-  endif
-
-  dep=zero
-  do k=1,xsize3
-     do j=1,xsize2
-        do i=1,xsize1
-           !dep=dep+var(i,j,k)**2
-           dep=dep+var(i,j,k)
-        enddo
-     enddo
-  enddo
-  call MPI_ALLREDUCE(dep,avg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-  !avg=sqrt_prec(avg)/(nxc*nyc*nzc)
-  avg=avg/(nxc*nyc*nzc)
-
-  return
-
-end subroutine avg3d
 
 end module decomp_2d_poisson
 

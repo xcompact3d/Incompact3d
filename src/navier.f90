@@ -1,34 +1,7 @@
-!################################################################################
-!This file is part of Xcompact3d.
-!
-!Xcompact3d
-!Copyright (c) 2012 Eric Lamballais and Sylvain Laizet
-!eric.lamballais@univ-poitiers.fr / sylvain.laizet@gmail.com
-!
-!    Xcompact3d is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU General Public License as published by
-!    the Free Software Foundation.
-!
-!    Xcompact3d is distributed in the hope that it will be useful,
-!    but WITHOUT ANY WARRANTY; without even the implied warranty of
-!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU General Public License for more details.
-!
-!    You should have received a copy of the GNU General Public License
-!    along with the code.  If not, see <http://www.gnu.org/licenses/>.
-!-------------------------------------------------------------------------------
-!-------------------------------------------------------------------------------
-!    We kindly request that you cite Xcompact3d/Incompact3d in your
-!    publications and presentations. The following citations are suggested:
-!
-!    1-Laizet S. & Lamballais E., 2009, High-order compact schemes for
-!    incompressible flows: a simple and efficient method with the quasi-spectral
-!    accuracy, J. Comp. Phys.,  vol 228 (15), pp 5989-6015
-!
-!    2-Laizet S. & Li N., 2011, Incompact3d: a powerful tool to tackle turbulence
-!    problems with up to 0(10^5) computational cores, Int. J. of Numerical
-!    Methods in Fluids, vol 67 (11), pp 1735-1757
-!################################################################################
+!Copyright (c) 2012-2022, Xcompact3d
+!This file is part of Xcompact3d (xcompact3d.com)
+!SPDX-License-Identifier: BSD 3-Clause
+
 module navier
 
   implicit none
@@ -49,13 +22,14 @@ contains
   !############################################################################
   SUBROUTINE solve_poisson(pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
 
-    USE decomp_2d, ONLY : mytype, xsize, zsize, ph1, nrank
+    USE decomp_2d, ONLY : mytype, xsize, zsize, ph1, nrank, real_type
     USE decomp_2d_poisson, ONLY : poisson
     USE var, ONLY : nzmsize
     USE var, ONLY : dv3
     USE param, ONLY : ntime, nrhotime, npress
     USE param, ONLY : ilmn, ivarcoeff, zero, one 
-
+    USE mpi
+    
     implicit none
 
     !! Inputs
@@ -74,7 +48,8 @@ contains
     LOGICAL :: converged
     REAL(mytype) :: atol, rtol, rho0, divup3norm
 #ifdef DEBG
-    real(mytype) avg_param
+    real(mytype) :: dep, dep1
+    integer :: code
 #endif
 
     nlock = 1 !! Corresponds to computing div(u*)
@@ -115,32 +90,32 @@ contains
 
        IF (.NOT.converged) THEN
 #ifdef DEBG
-          avg_param = zero
-          call avg3d (pp3(:,:,:,1), avg_param)
-          if (nrank == 0) write(*,*)'## Solve Poisson before1 pp3', avg_param
+          dep=maxval(abs(pp3(:,:,:,1)))
+          call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+          if (nrank == 0) write(*,*)'## Solve Poisson before1 pp3', dep1
 #endif
           CALL poisson(pp3(:,:,:,1))
 #ifdef DEBG
-          avg_param = zero
-          call avg3d (pp3(:,:,:,1), avg_param)
-          if (nrank == 0) write(*,*)'## Solve Poisson after call  pp3', avg_param
+          dep=maxval(abs(pp3(:,:,:,1)))
+          call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+          if (nrank == 0) write(*,*)'## Solve Poisson after call  pp3', dep1
 #endif
 
           !! Need to update pressure gradient here for varcoeff
           CALL gradp(px1,py1,pz1,pp3(:,:,:,1))
 #ifdef DEBG
-          avg_param = zero
-          call avg3d (pp3(:,:,:,1), avg_param)
-          if (nrank == 0) write(*,*)'## Solve Poisson pp3', avg_param
-          avg_param = zero
-          call avg3d (px1, avg_param)
-          if (nrank == 0) write(*,*)'## Solve Poisson px', avg_param
-          avg_param = zero
-          call avg3d (py1, avg_param)
-          if (nrank == 0) write(*,*)'## Solve Poisson py', avg_param
-          avg_param = zero
-          call avg3d (pz1, avg_param)
-          if (nrank == 0) write(*,*)'## Solve Poisson pz', avg_param
+          dep=maxval(abs(pp3(:,:,:,1)))
+          call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+          if (nrank == 0) write(*,*)'## Solve Poisson pp3', dep1
+          dep=maxval(abs(px1))
+          call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+          if (nrank == 0) write(*,*)'## Solve Poisson px', dep1
+          dep=maxval(abs(py1))
+          call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+          if (nrank == 0) write(*,*)'## Solve Poisson py', dep1
+          dep=maxval(abs(pz1))
+          call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+          if (nrank == 0) write(*,*)'## Solve Poisson pz', dep1
 #endif
          
 
@@ -232,34 +207,36 @@ contains
     USE decomp_2d
     USE variables
     USE param
+    USE mpi
 
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: px,py,pz
 #ifdef DEBG
-    real(mytype) avg_param
+    real(mytype) :: dep, dep1
+    integer :: code
 #endif
 
 #ifdef DEBG
-    avg_param = zero
-    call avg3d (ux, avg_param)
-    if (nrank == 0) write(*,*)'## Cor Vel ux', avg_param
-    avg_param = zero
-    call avg3d (uy, avg_param)
-    if (nrank == 0) write(*,*)'## Cor Vel uy', avg_param
-    avg_param = zero
-    call avg3d (uz, avg_param)
-    if (nrank == 0) write(*,*)'## Cor Vel uz', avg_param
-    avg_param = zero
-    call avg3d (px, avg_param)
-    if (nrank == 0) write(*,*)'## Cor Vel px', avg_param
-    avg_param = zero
-    call avg3d (py, avg_param)
-    if (nrank == 0) write(*,*)'## Cor Vel py', avg_param
-    avg_param = zero
-    call avg3d (pz, avg_param)
-    if (nrank == 0) write(*,*)'## Cor Vel pz', avg_param
+        dep=maxval(abs(ux))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Cor Vel ux', dep1
+        dep=maxval(abs(uy))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Cor Vel uy', dep1
+        dep=maxval(abs(uz))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Cor Vel uz', dep1
+        dep=maxval(abs(px))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Cor Vel px', dep1
+        dep=maxval(abs(py))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Cor Vel py', dep1
+        dep=maxval(abs(pz))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Cor Vel pz', dep1
 #endif
 
     ux(:,:,:)=ux(:,:,:)-px(:,:,:)
@@ -540,7 +517,7 @@ contains
     integer, dimension(2) :: dims, dummy_coords
     logical, dimension(2) :: dummy_periods
 #ifdef DEBG
-    real(mytype) avg_param
+    real(mytype) dep, dep1
 #endif
 
     call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, dims, dummy_periods, dummy_coords, code)
@@ -752,15 +729,15 @@ contains
        endif
     endif
 #ifdef DEBG
-    avg_param = zero
-    call avg3d (ux, avg_param)
-    if (nrank == 0) write(*,*)'## Pres corr ux ', avg_param
-    avg_param = zero
-    call avg3d (uy, avg_param)
-    if (nrank == 0) write(*,*)'## Pres corr uy ', avg_param
-    avg_param = zero
-    call avg3d (uz, avg_param)
-    if (nrank == 0) write(*,*)'## Pres corr uz ', avg_param
+    dep=maxval(abs(ux))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Pres corr ux ', dep1
+    dep=maxval(abs(uy))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Pres corr uy ', dep1
+    dep=maxval(abs(uz))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Pres corr uz ', dep1
 #endif
 
     if (iibm==1) then !solid body old school
@@ -1303,76 +1280,5 @@ contains
     enddo
 
   end subroutine tbl_flrt
-!############################################################################
-!!
-!!  SUBROUTINE: avg3d
-!!      AUTHOR: Stefano Rolfo
-!! DESCRIPTION: Compute the total sum of a a 3d field
-!!
-!############################################################################
-subroutine avg3d (var, avg)
-
-  use decomp_2d, only: real_type, xsize, xend
-  use param
-  use dbg_schemes, only: sqrt_prec
-  use variables, only: nx,ny,nz,nxm,nym,nzm
-  use mpi
-
-  implicit none
-
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: var
-  real(mytype), intent(out) :: avg
-  real(mytype)              :: dep
-
-  integer :: i,j,k, code
-  integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
-
-  if (nclx1==1.and.xend(1)==nx) then
-     xsize1=xsize(1)-1
-  else
-     xsize1=xsize(1)
-  endif
-  if (ncly1==1.and.xend(2)==ny) then
-     xsize2=xsize(2)-1
-  else
-     xsize2=xsize(2)
-  endif
-  if (nclz1==1.and.xend(3)==nz) then
-     xsize3=xsize(3)-1
-  else
-     xsize3=xsize(3)
-  endif
-  if (nclx1==1) then
-     nxc=nxm
-  else
-     nxc=nx
-  endif
-  if (ncly1==1) then
-     nyc=nym
-  else
-     nyc=ny
-  endif
-  if (nclz1==1) then
-     nzc=nzm
-  else
-     nzc=nz
-  endif
-
-  dep=zero
-  do k=1,xsize3
-     do j=1,xsize2
-        do i=1,xsize1
-           !dep=dep+var(i,j,k)**2
-           dep=dep+var(i,j,k)
-        enddo
-     enddo
-  enddo
-  call MPI_ALLREDUCE(dep,avg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-  !avg=sqrt_prec(avg)/(nxc*nyc*nzc)
-  avg=avg/(nxc*nyc*nzc)
-
-  return
-
-end subroutine avg3d
 
 endmodule navier

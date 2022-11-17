@@ -1,34 +1,6 @@
-!################################################################################
-!This file is part of Xcompact3d.
-!
-!Xcompact3d
-!Copyright (c) 2012 Eric Lamballais and Sylvain Laizet
-!eric.lamballais@univ-poitiers.fr / sylvain.laizet@gmail.com
-!
-!    Xcompact3d is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU General Public License as published by
-!    the Free Software Foundation.
-!
-!    Xcompact3d is distributed in the hope that it will be useful,
-!    but WITHOUT ANY WARRANTY; without even the implied warranty of
-!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU General Public License for more details.
-!
-!    You should have received a copy of the GNU General Public License
-!    along with the code.  If not, see <http://www.gnu.org/licenses/>.
-!-------------------------------------------------------------------------------
-!-------------------------------------------------------------------------------
-!    We kindly request that you cite Xcompact3d/Incompact3d in your
-!    publications and presentations. The following citations are suggested:
-!
-!    1-Laizet S. & Lamballais E., 2009, High-order compact schemes for
-!    incompressible flows: a simple and efficient method with the quasi-spectral
-!    accuracy, J. Comp. Phys.,  vol 228 (15), pp 5989-6015
-!
-!    2-Laizet S. & Li N., 2011, Incompact3d: a powerful tool to tackle turbulence
-!    problems with up to 0(10^5) computational cores, Int. J. of Numerical
-!    Methods in Fluids, vol 67 (11), pp 1735-1757
-!################################################################################
+!Copyright (c) 2012-2022, Xcompact3d
+!This file is part of Xcompact3d (xcompact3d.com)
+!SPDX-License-Identifier: BSD 3-Clause
 
 module time_integrators
 
@@ -46,9 +18,6 @@ contains
     use variables
     use decomp_2d
     use ydiff_implicit, only : inttimp
-#ifdef DEBG 
-    use tools, only : avg3d
-#endif
 
     implicit none
 
@@ -63,20 +32,20 @@ contains
     !! LOCAL
     integer :: is, code, ierror
 
-#ifdef DEBG 
-    real(mytype) avg_param
-#endif
-
 #ifdef DEBG
-    avg_param = zero
-    call avg3d (var1, avg_param)
-    if (nrank == 0) write(*,*)'## SUB intt VAR var1 (start) AVG ', avg_param
-    avg_param = zero
-    call avg3d (dvar1(:,:,:,1), avg_param)
-    if (nrank == 0) write(*,*)'## SUB intt VAR dvar1(1) (start) AVG ', avg_param
-    avg_param = zero
-    call avg3d (dvar1(:,:,:,2), avg_param)
-    if (nrank == 0) write(*,*)'## SUB intt VAR dvar1(2) (start) AVG ', avg_param
+    real(mytype) :: dep, dep1
+#endif
+    
+#ifdef DEBG
+    dep=maxval(abs(var1))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## SUB intt VAR var1 (start) MAX ', dep1
+    dep=maxval(abs(dvar1(:,:,:,1)))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## SUB intt VAR dvar1(1) (start) MAX ', dep1
+    dep=maxval(abs(dvar1(:,:,:,2)))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## SUB intt VAR dvar1(2) (start) MAX ', dep1
 #endif
 
     if (iimplicit.ge.1) then
@@ -187,7 +156,7 @@ contains
     elseif(itimescheme.eq.6) then
 
        if (nrank==0) then
-          write(*,*) "RK4 not implemented!"
+          write(*,*) "RK4 not implemented yet!"
           STOP
        endif
 
@@ -201,12 +170,12 @@ contains
     endif
 
 #ifdef DEBG
-    avg_param = zero
-    call avg3d (var1, avg_param)
-    if (nrank == 0) write(*,*)'## SUB intt VAR var1 AVG ', avg_param
-    avg_param = zero
-    call avg3d (dvar1(:,:,:,1), avg_param)
-    if (nrank == 0) write(*,*)'## SUB intt VAR dvar1 AVG ', avg_param
+    dep=maxval(abs(var1))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## SUB intt VAR var1 MAX ', dep1
+    dep=maxval(abs(dvar1(:,:,:,1)))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## SUB intt VAR dvar1 MAX ', dep1
     if (nrank   ==  0) write(*,*)'# intt done'
 #endif
 
@@ -226,7 +195,7 @@ contains
 
   SUBROUTINE int_time(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
 
-    use decomp_2d, only : mytype, xsize, nrank
+    use decomp_2d, only : mytype, xsize, nrank, real_type
     use param, only : zero, one
     use param, only : ntime, nrhotime, ilmn, iscalar, ilmn_solve_temp,itimescheme
     use param, only : iimplicit, sc_even
@@ -234,9 +203,8 @@ contains
     use param, only : scalar_lbound, scalar_ubound
     use variables, only : numscalar,nu0nu
     use var, only : ta1, tb1
-#ifdef DEBG 
-    use tools, only : avg3d
-#endif
+    use MPI
+
 
     IMPLICIT NONE
 
@@ -251,22 +219,24 @@ contains
 
     !! LOCAL
     integer :: is, i, j, k
+    
 #ifdef DEBG
-    real(mytype) avg_param
+    real(mytype) :: dep, dep1
+    integer :: code
     if (nrank .eq. 0) write(*,*)'## Init int_time'
 #endif
 
     call int_time_momentum(ux1, uy1, uz1, dux1, duy1, duz1)
 #ifdef DEBG
-     avg_param = zero
-     call avg3d (dux1, avg_param)
-     if (nrank == 0) write(*,*)'## int_time dux1 ', avg_param
-     avg_param = zero
-     call avg3d (duy1, avg_param)
-     if (nrank == 0) write(*,*)'## int_time duy1 ', avg_param
-     avg_param = zero
-     call avg3d (duz1, avg_param)
-     if (nrank == 0) write(*,*)'## int_time duz1 ', avg_param
+    dep=maxval(abs(dux1))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## int_time dux1 ', dep1
+    dep=maxval(abs(duy1))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## int_time duy1 ', dep1
+    dep=maxval(abs(duz1))
+    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## int_time duz1 ', dep1
 #endif
 
     IF (ilmn) THEN

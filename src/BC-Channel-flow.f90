@@ -1,34 +1,7 @@
-!################################################################################
-!This file is part of Xcompact3d.
-!
-!Xcompact3d
-!Copyright (c) 2012 Eric Lamballais and Sylvain Laizet
-!eric.lamballais@univ-poitiers.fr / sylvain.laizet@gmail.com
-!
-!    Xcompact3d is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU General Public License as published by
-!    the Free Software Foundation.
-!
-!    Xcompact3d is distributed in the hope that it will be useful,
-!    but WITHOUT ANY WARRANTY; without even the implied warranty of
-!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU General Public License for more details.
-!
-!    You should have received a copy of the GNU General Public License
-!    along with the code.  If not, see <http://www.gnu.org/licenses/>.
-!-------------------------------------------------------------------------------
-!-------------------------------------------------------------------------------
-!    We kindly request that you cite Xcompact3d/Incompact3d in your
-!    publications and presentations. The following citations are suggested:
-!
-!    1-Laizet S. & Lamballais E., 2009, High-order compact schemes for
-!    incompressible flows: a simple and efficient method with the quasi-spectral
-!    accuracy, J. Comp. Phys.,  vol 228 (15), pp 5989-6015
-!
-!    2-Laizet S. & Li N., 2011, Incompact3d: a powerful tool to tackle turbulence
-!    problems with up to 0(10^5) computational cores, Int. J. of Numerical
-!    Methods in Fluids, vol 67 (11), pp 1735-1757
-!################################################################################
+!Copyright (c) 2012-2022, Xcompact3d
+!This file is part of Xcompact3d (xcompact3d.com)
+!SPDX-License-Identifier: BSD 3-Clause
+
 module channel
 
   use decomp_2d
@@ -56,10 +29,6 @@ contains
     use param
     use MPI
     use dbg_schemes, only: exp_prec, abs_prec, sqrt_prec
-#ifdef DEBG 
-    use tools, only : avg3d
-#endif
-    
 
     implicit none
 
@@ -84,10 +53,6 @@ contains
     real(mytype), dimension(3) :: dim_min, dim_max
     real( kind = 8 ) :: r8_random
     external r8_random, return_30k
-#ifdef DEBG 
-    real(mytype) avg_param
-#endif
-
 
     if (idir_stream /= 1 .and. idir_stream /= 3) then
        if (nrank == 0) then
@@ -276,19 +241,6 @@ contains
           enddo
        enddo
     enddo
-
-#ifdef DEBG
-    avg_param = zero
-    call avg3d (ux1, avg_param)
-    if (nrank == 0) write(*,*)'## SUB Channel Init ux_avg ', avg_param
-    avg_param = zero
-    call avg3d (uy1, avg_param)
-    if (nrank == 0) write(*,*)'## SUB Channel Init uy_avg ', avg_param
-    avg_param = zero
-    call avg3d (uz1, avg_param)
-    if (nrank == 0) write(*,*)'## SUB Channel Init uz_avg ', avg_param
-    if (nrank .eq. 0) write(*,*) '# init end ok'
-#endif
 
     return
   end subroutine init_channel

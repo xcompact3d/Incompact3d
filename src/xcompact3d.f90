@@ -1,34 +1,6 @@
-!################################################################################
-!This file is part of Xcompact3d.
-!
-!Xcompact3d
-!Copyright (c) 2012 Eric Lamballais and Sylvain Laizet
-!eric.lamballais@univ-poitiers.fr / sylvain.laizet@gmail.com
-!
-!    Xcompact3d is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU General Public License as published by
-!    the Free Software Foundation.
-!
-!    Xcompact3d is distributed in the hope that it will be useful,
-!    but WITHOUT ANY WARRANTY; without even the implied warranty of
-!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU General Public License for more details.
-!
-!    You should have received a copy of the GNU General Public License
-!    along with the code.  If not, see <http://www.gnu.org/licenses/>.
-!-------------------------------------------------------------------------------
-!-------------------------------------------------------------------------------
-!    We kindly request that you cite Xcompact3d/Incompact3d in your
-!    publications and presentations. The following citations are suggested:
-!
-!    1-Laizet S. & Lamballais E., 2009, High-order compact schemes for
-!    incompressible flows: a simple and efficient method with the quasi-spectral
-!    accuracy, J. Comp. Phys.,  vol 228 (15), pp 5989-6015
-!
-!    2-Laizet S. & Li N., 2011, Incompact3d: a powerful tool to tackle turbulence
-!    problems with up to 0(10^5) computational cores, Int. J. of Numerical
-!    Methods in Fluids, vol 67 (11), pp 1735-1757
-!################################################################################
+!Copyright (c) 2012-2022, Xcompact3d
+!This file is part of Xcompact3d (xcompact3d.com)
+!SPDX-License-Identifier: BSD 3-Clause
 
 program xcompact3d
 
@@ -300,9 +272,10 @@ subroutine finalise_xcompact3d()
   use decomp_2d_io, only : decomp_2d_io_finalise
 
   use tools, only : simu_stats
-  use param, only : itype
+  use param, only : itype, jles, ilesmod
   use probes, only : finalize_probes
   use visu, only : visu_finalise
+  use les, only: finalise_explicit_les
 
   implicit none
 
@@ -322,6 +295,9 @@ subroutine finalise_xcompact3d()
   call simu_stats(4)
   call finalize_probes()
   call visu_finalise()
+  if (ilesmod.ne.0) then
+     if (jles.gt.0) call finalise_explicit_les()
+  endif
   call decomp_2d_io_finalise()
   call decomp_2d_finalize
   CALL MPI_FINALIZE(ierr)
@@ -331,22 +307,24 @@ endsubroutine finalise_xcompact3d
 subroutine check_transients()
 
   use decomp_2d, only : mytype
-
+  use mpi
   use var
-  use tools, only : avg3d
   
   implicit none
 
-  real(mytype) avg_param
-  
-  avg_param = zero
-  call avg3d (dux1, avg_param)
-  if (nrank == 0) write(*,*)'## Main dux1 ', avg_param
-  avg_param = zero
-  call avg3d (duy1, avg_param)
-  if (nrank == 0) write(*,*)'## Main duy1 ', avg_param
-  avg_param = zero
-  call avg3d (duz1, avg_param)
-  if (nrank == 0) write(*,*)'## Main duz1 ', avg_param
+  real(mytype) :: dep, dep1
+  integer :: code
+   
+  dep=maxval(abs(dux1))
+  call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+  if (nrank == 0) write(*,*)'## MAX dux1 ', dep1
+ 
+  dep=maxval(abs(duy1))
+  call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+  if (nrank == 0) write(*,*)'## MAX duy1 ', dep1
+ 
+  dep=maxval(abs(duz1))
+  call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+  if (nrank == 0) write(*,*)'## MAX duz1 ', dep1
   
 end subroutine check_transients

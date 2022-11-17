@@ -1,36 +1,10 @@
-!################################################################################
-!This file is part of Xcompact3d.
-!
-!Xcompact3d
-!Copyright (c) 2012 Eric Lamballais and Sylvain Laizet
-!eric.lamballais@univ-poitiers.fr / sylvain.laizet@gmail.com
-!
-!    Xcompact3d is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU General Public License as published by
-!    the Free Software Foundation.
-!
-!    Xcompact3d is distributed in the hope that it will be useful,
-!    but WITHOUT ANY WARRANTY; without even the implied warranty of
-!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU General Public License for more details.
-!
-!    You should have received a copy of the GNU General Public License
-!    along with the code.  If not, see <http://www.gnu.org/licenses/>.
-!-------------------------------------------------------------------------------
-!-------------------------------------------------------------------------------
-!    We kindly request that you cite Xcompact3d/Incompact3d in your
-!    publications and presentations. The following citations are suggested:
-!
-!    1-Laizet S. & Lamballais E., 2009, High-order compact schemes for
-!    incompressible flows: a simple and efficient method with the quasi-spectral
-!    accuracy, J. Comp. Phys.,  vol 228 (15), pp 5989-6015
-!
-!    2-Laizet S. & Li N., 2011, Incompact3d: a powerful tool to tackle turbulence
-!    problems with up to 0(10^5) computational cores, Int. J. of Numerical
-!    Methods in Fluids, vol 67 (11), pp 1735-1757
-!################################################################################
+!Copyright (c) 2012-2022, Xcompact3d
+!This file is part of Xcompact3d (xcompact3d.com)
+!SPDX-License-Identifier: BSD 3-Clause
 
 module les
+
+  use visu, only : gen_filename, output2D
 
   character(len=*), parameter :: io_turb = "turb-io", &
        turb_dir = "turb-data"
@@ -48,6 +22,7 @@ contains
     USE param
     USE variables
     USE decomp_2d
+    use decomp_2d_io, only : decomp_2d_init_io, decomp_2d_register_variable, decomp_2d_open_io, decomp_2d_write_mode
 
     implicit none
 
@@ -85,7 +60,32 @@ contains
        write(*, *) ' '
     endif
 
+    !! Initialise visualisation output
+    call decomp_2d_init_io(io_turb)
+
+    if (jles .eq. 1) then ! Smagorinsky
+       call decomp_2d_register_variable(io_turb, "nut_smag", 1, 0, output2D, mytype)
+    else if (jles .eq. 2) then ! WALE
+       call decomp_2d_register_variable(io_turb, "nut_wale", 1, 0, output2D, mytype)
+    else if (jles .eq. 3) then ! Lilly-style Dynamic Smagorinsky
+       call decomp_2d_register_variable(io_turb, "dsmagcst_final", 1, 0, output2D, mytype)
+       call decomp_2d_register_variable(io_turb, "nut_dynsmag", 1, 0, output2D, mytype)
+    end if
+
+    call decomp_2d_open_io(io_turb, turb_dir, decomp_2d_write_mode)
+       
   end subroutine init_explicit_les
+  subroutine finalise_explicit_les()
+
+    use decomp_2d_io, only : decomp_2d_close_io
+    implicit none
+    
+#ifdef ADIOS2
+    call decomp_2d_close_io(io_turb, turb_dir)
+#endif
+
+  end subroutine finalise_explicit_les
+  
   !************************************************************
   subroutine Compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,phi1,ep1,iconservative)
     !================================================================================
@@ -296,8 +296,7 @@ contains
 
     if (mod(itime, ioutput).eq.0) then
 
-       write(filename, "('nut_smag',I4.4)") itime / ioutput
-       call decomp_2d_write_one(1, nut1, turb_dir, filename, 2, io_turb)
+      call decomp_2d_write_one(1, nut1, turb_dir, gen_filename("", "nut_smag", itime / ioutput, ""), 2, io_turb)
 
     endif
 
@@ -849,14 +848,11 @@ contains
 
     if (mod(itime, ioutput) == 0) then
 
-       ! write(filename, "('./data/dsmagcst_initial',I4.4)") itime / imodulo
-       ! call decomp_2d_write_one(1, smagC1, filename, 2)
+      ! write(filename, "('./data/dsmagcst_initial',I4.4)") itime / imodulo
+      ! call decomp_2d_write_one(1, smagC1, filename, 2)
 
-       write(filename, "('dsmagcst_final',I4.4)") itime / ioutput
-       call decomp_2d_write_one(1, dsmagcst1, turb_dir, filename, 2, io_turb)
-
-       write(filename, "('nut_dynsmag',I4.4)") itime / ioutput
-       call decomp_2d_write_one(1, nut1, turb_dir, filename, 2, io_turb)
+       call decomp_2d_write_one(1, dsmagcst1, turb_dir, gen_filename("", "dsmagcst_final", itime / ioutput, ""), 2, io_turb)
+       call decomp_2d_write_one(1, nut1, turb_dir, gen_filename("", "nut_dynsmag", itime / ioutput, ""), 2, io_turb)
     endif
 
   end subroutine dynsmag
@@ -1033,8 +1029,7 @@ contains
 
   if (mod(itime, ioutput).eq.0) then
 
-     write(filename, "('nut_wale',I4.4)") itime / ioutput
-     call decomp_2d_write_one(1, nut1, turb_dir, filename, 2, io_turb)
+     call decomp_2d_write_one(1, nut1, turb_dir, gen_filename("", "nut_wale", itime / ioutput, ""), 2, io_turb)
 
   endif
 
