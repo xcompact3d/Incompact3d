@@ -390,7 +390,7 @@ contains
     real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
-    character(len=32), intent(in) :: num
+    integer, intent(in) :: num
 
     ! Write vorticity as an example of post processing
 
@@ -437,7 +437,7 @@ contains
                  - td1(:,:,:) * tb1(:,:,:) &
                  - tg1(:,:,:) * tc1(:,:,:) &
                  - th1(:,:,:) * tf1(:,:,:)
-    call write_field(di1, ".", "critq", trim(num), flush = .true.) ! Reusing temporary array, force flush
+    call write_field(di1, ".", "critq", num, flush = .true.) ! Reusing temporary array, force flush
 
   end subroutine visu_channel
   !############################################################################
