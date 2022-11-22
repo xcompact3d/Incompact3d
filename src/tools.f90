@@ -438,8 +438,8 @@ contains
          t0 = tfield
          itime0 = 0
        else
-         print *, "Restart info file "//filename//" missing!"
-         stop
+         t0 = zero
+         itime0 = 0
        end if
        
     endif
