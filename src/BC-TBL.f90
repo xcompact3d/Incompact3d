@@ -352,7 +352,7 @@ contains
     real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
-    character(len=32), intent(in) :: num
+    integer, intent(in) :: num
 
     ! Write vorticity as an example of post processing
 
@@ -398,7 +398,7 @@ contains
     di1(:,:,:)=sqrt(  (tf1(:,:,:)-th1(:,:,:))**2 &
                     + (tg1(:,:,:)-tc1(:,:,:))**2 &
                     + (tb1(:,:,:)-td1(:,:,:))**2)
-    call write_field(di1, ".", "vort", trim(num), flush=.true.) ! Reusing temporary array, force flush
+    call write_field(di1, ".", "vort", num, flush=.true.) ! Reusing temporary array, force flush
 
   end subroutine visu_tbl
 

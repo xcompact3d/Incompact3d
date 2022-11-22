@@ -296,8 +296,7 @@ contains
 
     if (mod(itime, ioutput).eq.0) then
 
-       write(filename, "(I0)") itime / ioutput
-      call decomp_2d_write_one(1, nut1, turb_dir, gen_filename("", "nut_smag", filename, ""), 2, io_turb)
+      call decomp_2d_write_one(1, nut1, turb_dir, gen_filename("", "nut_smag", itime / ioutput, ""), 2, io_turb)
 
     endif
 
@@ -852,9 +851,8 @@ contains
       ! write(filename, "('./data/dsmagcst_initial',I4.4)") itime / imodulo
       ! call decomp_2d_write_one(1, smagC1, filename, 2)
 
-       write(filename, "(I0)") itime / ioutput
-       call decomp_2d_write_one(1, dsmagcst1, turb_dir, gen_filename("", "dsmagcst_final", filename, ""), 2, io_turb)
-       call decomp_2d_write_one(1, nut1, turb_dir, gen_filename("", "nut_dynsmag", filename, ""), 2, io_turb)
+       call decomp_2d_write_one(1, dsmagcst1, turb_dir, gen_filename("", "dsmagcst_final", itime / ioutput, ""), 2, io_turb)
+       call decomp_2d_write_one(1, nut1, turb_dir, gen_filename("", "nut_dynsmag", itime / ioutput, ""), 2, io_turb)
     endif
 
   end subroutine dynsmag
@@ -1031,8 +1029,7 @@ contains
 
   if (mod(itime, ioutput).eq.0) then
 
-     write(filename, "(I0)") itime / ioutput
-     call decomp_2d_write_one(1, nut1, turb_dir, gen_filename("", "nut_wale", filename, ""), 2, io_turb)
+     call decomp_2d_write_one(1, nut1, turb_dir, gen_filename("", "nut_wale", itime / ioutput, ""), 2, io_turb)
 
   endif
 

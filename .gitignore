@@ -9,15 +9,12 @@
 .#*
 *.jpg
 *.pdf
-*.png
 *.svg
 *.swp
-*.dat
 *~
 sauve*
 incompact3d
 xcompact3d
-data/
 out/
 stats/
 planes/
@@ -30,7 +27,6 @@ lint.txt
 docs/_build/
 build*
 Test*
-test*
 .cproject
 .project
 .settings
