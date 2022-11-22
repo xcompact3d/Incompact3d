@@ -439,8 +439,8 @@ contains
          t0 = tfield
          itime0 = 0
        else
-         t0 = zero
-         itime0 = ifirst-1
+         print *, "Restart info file "//filename//" missing!"
+         stop
        end if
        
     endif
