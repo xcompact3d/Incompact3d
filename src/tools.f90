@@ -235,6 +235,8 @@ contains
     NAMELIST /Time/ tfield, itime
     NAMELIST /NumParam/ nx, ny, nz, istret, beta, dt, itimescheme
 
+    logical, save :: first_restart = .true.
+    
     write(filename,"('restart',I7.7)") itime
     write(filestart,"('restart',I7.7)") ifirst-1
 
@@ -318,7 +320,7 @@ contains
 
           ! Write info file for restart - Kay Schäfer
           if (nrank == 0) then
-             write(filename,"('restart',I7.7,'.info')") itime
+             write(filename,"('restart.info')")
              write(fmt2,'("(A,I16)")')
              write(fmt3,'("(A,F16.4)")')
              write(fmt4,'("(A,F16.12)")')
@@ -437,7 +439,7 @@ contains
          itime0 = 0
        else
          t0 = zero
-         itime0 = ifirst-1
+         itime0 = 0
        end if
        
     endif
