@@ -130,12 +130,12 @@ contains
     implicit none
     
     character(len=*), intent(in) :: stat
-    character(len=30) :: newname
+    character(len=:), allocatable :: newname
     
 #ifndef ADIOS2
-    write(newname, "(A,'.dat',I7.7)") stat, stats_time
+    newname = stat//".dat"//int_to_str(stats_time)
 #else
-    write(newname, *) stat
+    newname = stat
 #endif
     
   end function gen_statname
@@ -212,9 +212,10 @@ contains
 
     if (iscalar==1) then
        do is=1, numscalar
-          call read_or_write_one_stat(flag_read, gen_statname(filename), phimean(:,:,:,is))
+          write(filename,"('phi',I2.2)") is
+          call read_or_write_one_stat(flag_read, gen_statname(trim(filename)), phimean(:,:,:,is))
           write(filename,"('phiphi',I2.2)") is
-          call read_or_write_one_stat(flag_read, gen_statname(filename), phiphimean(:,:,:,is))
+          call read_or_write_one_stat(flag_read, gen_statname(trim(filename)), phiphimean(:,:,:,is))
        enddo
     endif
 
@@ -428,5 +429,11 @@ contains
 
   end subroutine update_variance_vector
 
+  function int_to_str(i)
+    integer, intent(in) :: i
+    character(len=(1 + int(log10(real(i))))) :: int_to_str
+
+    write(int_to_str, "(I0)") i
+  end function int_to_str
 endmodule stats
 

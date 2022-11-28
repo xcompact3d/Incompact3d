@@ -137,7 +137,7 @@ SmagWallDamp = 1      ! Smagorinsky damping function for ABL if 1
  izap=1         ! How many points to skip for reconstruction (Range: 0-3) (Reccomended: 1)
  ianal=0        ! Boundary position approximation? (0: Refinement Approximation, 1: Analytical)
 
-iforces=1
+iforces=0
 nvol=1        !Number of volumes for computing force balance
 
 /End
