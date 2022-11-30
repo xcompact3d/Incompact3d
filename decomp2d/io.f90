@@ -307,6 +307,12 @@ contains
        starts(3) = decomp%zst(3)-1
     endif
 
+    if ((subsizes(1) > size(var, 1)) .or. (subsizes(2) > size(var, 2)) &
+         .or. (subsizes(3) > size(var, 3))) then
+       print *, "ERROR: trying to read ", subsizes, "sized array for "//varname//" variable array is ", size(var)
+       stop
+    end if
+
     associate(fh => fh_registry(idx), &
          disp => fh_disp(idx))
       call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
@@ -325,6 +331,10 @@ contains
               subsizes(1)*subsizes(2)*subsizes(3), &
               data_type, MPI_STATUS_IGNORE, ierror)
       endif
+      if (ierror /= 0) then
+         print *, "ERROR in MPI_FILE_READ_ALL"
+         stop
+      end if
       call MPI_TYPE_FREE(newtype,ierror)
 
       disp = disp + sizes(1) * sizes(2) * sizes(3) * disp_bytes
@@ -1134,6 +1144,13 @@ contains
     else
        call coarse_extents(ipencil, icoarse, sizes, subsizes, starts)
     end if
+
+    if ((subsizes(1) > size(var, 1)) .or. (subsizes(2) > size(var, 2)) &
+         .or. (subsizes(3) > size(var, 3))) then
+       print *, "ERROR: trying to write ", subsizes, "sized array for "//varname//" variable array is ", size(var)
+       stop
+    end if
+    
     if (write_reduce_prec) then
        allocate (varsingle(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
        varsingle=real(var, mytype_single)
@@ -1175,6 +1192,10 @@ contains
        call MPI_FILE_WRITE_ALL(fh_registry(idx), var, &
             subsizes(1)*subsizes(2)*subsizes(3), &
             real_type, MPI_STATUS_IGNORE, ierror)
+    end if
+    if (ierror /= 0) then
+       print *, "ERROR in MPI_FILE_WRITE_ALL"
+       stop
     end if
     
     fh_disp(idx) = fh_disp(idx) + sizes(1) * sizes(2) * sizes(3) * disp_bytes
