@@ -244,8 +244,7 @@ contains
     opened_new = .false.
     if (idx .lt. 1) then
        ! Check file exists
-       allocate(character(len(trim(dirname)) + 1 + len(trim(varname))) :: full_io_name)
-       full_io_name = dirname//"/"//varname
+       full_io_name = trim(dirname)//"/"//trim(varname)
        if (nrank==0) then
           inquire(file=full_io_name, exist=dir_exists)
           if (.not.dir_exists) then
@@ -1187,8 +1186,7 @@ contains
              call system("mkdir "//dirname//" 2> /dev/null")
           end if
        end if
-       allocate(character(len(trim(dirname)) + 1 + len(trim(varname))) :: full_io_name)
-       full_io_name = dirname//"/"//varname
+       full_io_name = trim(dirname)//"/"//trim(varname)
        call decomp_2d_open_io(io_name, full_io_name, decomp_2d_write_mode)
        idx = get_io_idx(io_name, full_io_name)
        opened_new = .true.
