@@ -341,7 +341,10 @@ contains
       end if
       call MPI_TYPE_FREE(newtype,ierror)
 
-      disp = disp + sizes(1) * sizes(2) * sizes(3) * disp_bytes
+      disp = disp + int(sizes(1), MPI_OFFSET_KIND) * &
+                    int(sizes(2), MPI_OFFSET_KIND) * &
+                    int(sizes(3), MPI_OFFSET_KIND) * &
+                    int(disp_bytes, MPI_OFFSET_KIND)
     end associate
 
     if (opened_new) then
@@ -1210,7 +1213,10 @@ contains
        stop
     end if
     
-    fh_disp(idx) = fh_disp(idx) + sizes(1) * sizes(2) * sizes(3) * disp_bytes
+    fh_disp(idx) = fh_disp(idx) + int(sizes(1), MPI_OFFSET_KIND) * &
+                                  int(sizes(2), MPI_OFFSET_KIND) * &
+                                  int(sizes(3), MPI_OFFSET_KIND) * &
+                                  int(disp_bytes, MPI_OFFSET_KIND)
     
     if (opened_new) then
        call decomp_2d_close_io(io_name, full_io_name)
