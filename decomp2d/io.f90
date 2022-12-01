@@ -233,7 +233,10 @@ contains
     integer :: disp_bytes
     character(len=:), allocatable :: full_io_name
     logical :: opened_new, dir_exists
-    
+ 
+    ! Safety check
+    if (.not. is_contiguous(var)) call decomp_2d_abort(-1, "read_one_real : argument must be contiguous")
+
     read_reduce_prec = .true.
     
     idx = get_io_idx(io_name, dirname)
@@ -1127,6 +1130,9 @@ contains
     type(adios2_variable) :: var_handle
     integer :: write_mode
 #endif
+
+    ! Safety check
+    if (.not. is_contiguous(var)) call decomp_2d_abort(-1, "mpiio_write_real_coarse : argument must be contiguous")
 
     !! Set defaults
     write_reduce_prec = .true.
