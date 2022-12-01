@@ -252,7 +252,7 @@ contains
              stop
           end if
        end if
-       
+       call MPI_BARRIER(MPI_COMM_WORLD, ierror)
        call decomp_2d_open_io(io_name, full_io_name, decomp_2d_read_mode)
        idx = get_io_idx(io_name, full_io_name)
        opened_new = .true.
@@ -1187,6 +1187,7 @@ contains
           end if
        end if
        full_io_name = trim(dirname)//"/"//trim(varname)
+       call MPI_BARRIER(MPI_COMM_WORLD, ierror)
        call decomp_2d_open_io(io_name, full_io_name, decomp_2d_write_mode)
        idx = get_io_idx(io_name, full_io_name)
        opened_new = .true.
