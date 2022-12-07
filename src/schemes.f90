@@ -313,6 +313,8 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
      afm  = (three/four)/d
   endif
 
+  if (n==1) return
+
   if     (ncl1.eq.0) then !Periodic
      ff(1)   =alfai
      ff(2)   =alfai
@@ -530,6 +532,8 @@ subroutine second_derivative(alsa1,as1,bs1,&
   bstt = (three/fortyfour)/d2
   cstt = zero
 
+  if (n==1) return
+
   if     (ncl1.eq.0) then !Periodic
      sf(1)   =alsai
      sf(2)   =alsai
@@ -687,6 +691,40 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      bcix6=(17._mytype/62._mytype)/three/dx
   endif
 
+  if (ifirstder == 1) then
+     ailcaix6 = zero
+     aicix6   = half
+     bicix6   = zero
+     cicix6   = zero
+     dicix6   = zero
+  else if (ipinter.eq.1) then
+     ailcaix6=three/ten
+     aicix6=three/four
+     bicix6=one/(two*ten)
+     cicix6=zero
+     dicix6=zero
+  else if (ipinter.eq.2) then
+     ailcaix6=0.461658_mytype
+
+     dicix6=0.00293016_mytype
+     aicix6=one/64._mytype *(75._mytype +70._mytype *ailcaix6-320._mytype *dicix6)
+     bicix6=one/128._mytype *(126._mytype *ailcaix6-25._mytype +1152._mytype *dicix6)
+     cicix6=one/128._mytype *(-ten*ailcaix6+three-640._mytype *dicix6)
+
+     aicix6=aicix6/two
+     bicix6=bicix6/two
+     cicix6=cicix6/two
+     dicix6=dicix6/two
+  else if (ipinter.eq.3) then
+     ailcaix6=0.49_mytype
+     aicix6=one/128._mytype *(75._mytype +70._mytype*ailcaix6)
+     bicix6=one/256._mytype *(126._mytype*ailcaix6-25._mytype)
+     cicix6=one/256._mytype *(-ten*ailcaix6+three)
+     dicix6=zero
+  endif
+
+  if (nx==1) return
+
   cfx6(1)=alcaix6
   cfx6(2)=alcaix6
   cfx6(nxm-2)=alcaix6
@@ -732,38 +770,6 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
      cci6(i)=one
      cbi6(i)=alcaix6
   enddo
-
-  if (ifirstder == 1) then
-     ailcaix6 = zero
-     aicix6   = half
-     bicix6   = zero
-     cicix6   = zero
-     dicix6   = zero
-  else if (ipinter.eq.1) then
-     ailcaix6=three/ten
-     aicix6=three/four
-     bicix6=one/(two*ten)
-     cicix6=zero
-     dicix6=zero
-  else if (ipinter.eq.2) then
-     ailcaix6=0.461658_mytype
-
-     dicix6=0.00293016_mytype
-     aicix6=one/64._mytype *(75._mytype +70._mytype *ailcaix6-320._mytype *dicix6)
-     bicix6=one/128._mytype *(126._mytype *ailcaix6-25._mytype +1152._mytype *dicix6)
-     cicix6=one/128._mytype *(-ten*ailcaix6+three-640._mytype *dicix6)
-
-     aicix6=aicix6/two
-     bicix6=bicix6/two
-     cicix6=cicix6/two
-     dicix6=dicix6/two
-  else if (ipinter.eq.3) then
-     ailcaix6=0.49_mytype
-     aicix6=one/128._mytype *(75._mytype +70._mytype*ailcaix6)
-     bicix6=one/256._mytype *(126._mytype*ailcaix6-25._mytype)
-     cicix6=one/256._mytype *(-ten*ailcaix6+three)
-     dicix6=zero
-  endif
 
   cifx6(1)=ailcaix6
   cifx6(2)=ailcaix6

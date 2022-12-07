@@ -1004,6 +1004,11 @@ subroutine filz_00(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nz) :: fiffz,fifsz,fifwz
   real(mytype)                      :: lind
 
+  if (nz==1) then
+    tz = uz
+    return
+  endif
+
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)
 
