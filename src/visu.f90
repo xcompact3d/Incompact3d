@@ -351,6 +351,8 @@ contains
     integer :: i,k
     real(mytype) :: xp(xszV(1)), zp(zszV(3))
 
+    character(len=:), allocatable :: fmt
+    
     if (nrank.eq.0) then
       OPEN(newunit=ioxdmf,file="./data/"//gen_snapshotname(pathname, filename, num, "xdmf"))
 
@@ -358,6 +360,7 @@ contains
       write(ioxdmf,*)'<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>'
       write(ioxdmf,*)'<Xdmf xmlns:xi="http://www.w3.org/2001/XInclude" Version="2.0">'
       write(ioxdmf,*)'<Domain>'
+      call write_xdmf_topo()
       if (istret.ne.0) then
         do i=1,xszV(1)
           xp(i) = real(i-1,mytype)*dx*nvisu
@@ -365,17 +368,6 @@ contains
         do k=1,zszV(3)
           zp(k) = real(k-1,mytype)*dz*nvisu
         enddo
-        write(ioxdmf,*)'    <Topology name="topo" TopologyType="3DRectMesh"'
-        if (output2D.eq.0) then
-          write(ioxdmf,*)'        Dimensions="',zszV(3),yszV(2),xszV(1),'">'
-        else if (output2D.eq.1) then
-          write(ioxdmf,*)'        Dimensions="',zszV(3),yszV(2),1,'">'
-        else if (output2D.eq.2) then
-          write(ioxdmf,*)'        Dimensions="',zszV(3),1,xszV(1),'">'
-        else if (output2D.eq.3) then
-          write(ioxdmf,*)'        Dimensions="',1,yszV(2),xszV(1),'">'
-        endif
-        write(ioxdmf,*)'    </Topology>'
         write(ioxdmf,*)'    <Geometry name="geo" Type="VXVYVZ">'
         if (output2D.ne.1) then
           write(ioxdmf,*)'        <DataItem Dimensions="',xszV(1),'" NumberType="Float" Precision="4" Format="XML">'
@@ -403,17 +395,6 @@ contains
         write(ioxdmf,*)'        </DataItem>'
         write(ioxdmf,*)'    </Geometry>'
       else
-        write(ioxdmf,*)'    <Topology name="topo" TopologyType="3DCoRectMesh"'
-        if (output2D.eq.0) then
-          write(ioxdmf,*)'        Dimensions="',zszV(3),yszV(2),xszV(1),'">'
-        else if (output2D.eq.1) then
-          write(ioxdmf,*)'        Dimensions="',zszV(3),yszV(2),1,'">'
-        else if (output2D.eq.2) then
-          write(ioxdmf,*)'        Dimensions="',zszV(3),1,xszV(1),'">'
-        else if (output2D.eq.3) then
-          write(ioxdmf,*)'        Dimensions="',1,yszV(2),xszV(1),'">'
-        endif
-        write(ioxdmf,*)'    </Topology>'
         write(ioxdmf,*)'    <Geometry name="geo" Type="ORIGIN_DXDYDZ">'
         write(ioxdmf,*)'        <!-- Origin -->'
         write(ioxdmf,*)'        <DataItem Format="XML" Dimensions="3">'
@@ -421,14 +402,19 @@ contains
         write(ioxdmf,*)'        </DataItem>'
         write(ioxdmf,*)'        <!-- DxDyDz -->'
         write(ioxdmf,*)'        <DataItem Format="XML" Dimensions="3">'
+        if (mytype == kind(0.0d0)) then
+           fmt = "(A, E24.17, A, E24.17, A, E24.17)"
+        else
+           fmt = "(A, E16.9, A, E16.9, A, E16.9)"
+        end if
         if (output2D.eq.0) then
-          write(ioxdmf,*)'        ',nvisu*dz,nvisu*dy,nvisu*dx
+          write(ioxdmf,fmt)'        ',nvisu*dz," ",nvisu*dy," ",nvisu*dx
         else if (output2D.eq.1) then
-          write(ioxdmf,*)'        ',dz,dy,1.
+          write(ioxdmf,fmt)'        ',dz," ",dy," ",1.
         else if (output2D.eq.2) then
-          write(ioxdmf,*)'        ',dz,1.,dx
+          write(ioxdmf,fmt)'        ',dz," ",1.," ",dx
         else if (output2D.eq.3) then
-          write(ioxdmf,*)'        ',1.,dy,dx
+          write(ioxdmf,fmt)'        ',1.," ",dy," ",dx
         endif
         write(ioxdmf,*)'        </DataItem>'
         write(ioxdmf,*)'    </Geometry>'
@@ -439,6 +425,37 @@ contains
     endif
   end subroutine write_xdmf_header
 
+  subroutine write_xdmf_topo()
+
+    use decomp_2d, only : xszV, yszV, zszV
+    use param, only : istret
+    
+    implicit none
+
+    character(len=:), allocatable :: topo_type
+    character(len=:), allocatable :: fmt
+    
+    if (istret /= 0) then
+       topo_type = "3DRectMesh"
+    else
+       topo_type = "3DCoRectMesh"
+    end if
+    
+    write(ioxdmf,'(A)')'    <Topology name="topo" TopologyType="'//topo_type//'"'
+
+    fmt = "(A, I0, A, I0, A, I0, A)"
+    if (output2D.eq.0) then
+       write(ioxdmf,fmt)'        Dimensions="',zszV(3)," ",yszV(2)," ",xszV(1),'">'
+    else if (output2D.eq.1) then
+       write(ioxdmf,fmt)'        Dimensions="',zszV(3)," ",yszV(2)," ",1,'">'
+    else if (output2D.eq.2) then
+       write(ioxdmf,fmt)'        Dimensions="',zszV(3)," ",1," ",xszV(1),'">'
+    else if (output2D.eq.3) then
+       write(ioxdmf,fmt)'        Dimensions="',1," ",yszV(2)," ",xszV(1),'">'
+    endif
+    write(ioxdmf,'(A)')'    </Topology>'
+  end subroutine write_xdmf_topo
+  
   !
   ! Write the footer of the XDMF file
   ! Adapted from https://github.com/fschuch/Xcompact3d/blob/master/src/visu.f90
@@ -487,6 +504,9 @@ contains
     
     integer :: ierr
 
+    integer :: precision
+    character(len=:), allocatable :: fmt
+    
 #ifndef ADIOS2
     mpiio = .true.
 #else
@@ -507,29 +527,35 @@ contains
 #else
           write(ioxdmf,*)'           <DataItem Format="HDF"'
 #endif
+
 #ifdef DOUBLE_PREC
 #ifdef SAVE_SINGLE
           if (output2D.eq.0) then
-             write(ioxdmf,*)'            DataType="Float" Precision="4" Endian="little" Seek="0"'
+             precision = 4
           else
-             write(ioxdmf,*)'            DataType="Float" Precision="8" Endian="little" Seek="0"'
+             precision = 8
           endif
 #else
-          write(ioxdmf,*)'            DataType="Float" Precision="8" Endian="little" Seek="0"'
+          precision = 8
 #endif
 #else
-          write(ioxdmf,*)'            DataType="Float" Precision="4" Endian="little" Seek="0"'
+          precision = 8
 #endif
+          write(ioxdmf,"(A,I0,A)")'            DataType="Float" Precision="', precision, '" Endian="little" Seek="0"'
+
+          fmt = "(A, I0, A, I0, A, I0, A)"
           if (output2D.eq.0) then
-             write(ioxdmf,*)'            Dimensions="',zszV(3),yszV(2),xszV(1),'">'
+             write(ioxdmf,fmt)'            Dimensions="',zszV(3)," ",yszV(2)," ",xszV(1),'">'
           else if (output2D.eq.1) then
-             write(ioxdmf,*)'            Dimensions="',zszV(3),yszV(2),1,'">'
+             write(ioxdmf,fmt)'            Dimensions="',zszV(3)," ",yszV(2)," ",1,'">'
           else if (output2D.eq.2) then
-             write(ioxdmf,*)'            Dimensions="',zszV(3),1,xszV(1),'">'
+             write(ioxdmf,fmt)'            Dimensions="',zszV(3)," ",1," ",xszV(1),'">'
           else if (output2D.eq.3) then
-             write(ioxdmf,*)'            Dimensions="',1,yszV(2),xszV(1),'">'
+             write(ioxdmf,fmt)'            Dimensions="',1," ",yszV(2)," ",xszV(1),'">'
           endif
+
           write(ioxdmf,*)'              '//gen_h5path(gen_filename(pathname, filename, num, 'bin'), num)
+
           write(ioxdmf,*)'           </DataItem>'
           write(ioxdmf,*)'        </Attribute>'
        endif
