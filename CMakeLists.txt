@@ -60,10 +60,10 @@ elseif (Fortran_COMPILER_NAME MATCHES "Cray")
   set(CMAKE_Fortran_FLAGS "-eF -g -N 1023")
   set (CMAKE_Fortran_FLAGS_RELEASE "-O3")
   set (CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g")
-elseif (Fortran_COMPILER_NAME MATCHES "PGI")
-  message(STATUS "Setting PGI fortran flags")
-  set(CMAKE_Fortran_FLAGS "-cpp -acc -Mfree -Kieee -Minfo=accel -g")
-  set (CMAKE_Fortran_FLAGS_RELEASE "-O3")
+elseif (Fortran_COMPILER_NAME MATCHES "NVHPC")
+  message(STATUS "Setting NVHPC fortran flags")
+  set(CMAKE_Fortran_FLAGS "-cpp -Mfree -Kieee -g")
+  set (CMAKE_Fortran_FLAGS_RELEASE "-O3 -fast")
   set (CMAKE_Fortran_FLAGS_DEBUG   "-O0 -DDEBG")
 elseif (Fortran_COMPILER_NAME MATCHES "Fujitsu")
   message(STATUS "Setting Fujitsu fortran flags")
@@ -155,19 +155,27 @@ if (${BUILD_TESTING})
   include(CTest)
   message(STATUS "MPI INCL ALSO FOUND: ${MPI_INCLUDE_PATH}")
   message(STATUS "MPI EXEC: ${MPIEXEC_EXECUTABLE}")
-  add_test(NAME TGvortex COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test.i3d WORKING_DIRECTORY ${test_dir}/TGV)
+  # ABL
+  add_test(NAME ABL-Convective COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_convective_test.i3d WORKING_DIRECTORY ${test_dir}/ABL-Convective)
+  add_test(NAME ABL-Neutral COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_neutral_test.i3d WORKING_DIRECTORY ${test_dir}/ABL-Neutral)
+  add_test(NAME ABL-Stable COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_stable_test.i3d WORKING_DIRECTORY ${test_dir}/ABL-Stable)
+  # Channel
   add_test(NAME Channel-Flow-X COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test_x.i3d WORKING_DIRECTORY ${test_dir}/Channel-Flow-X)
   add_test(NAME Channel-Flow-Z COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test_z.i3d WORKING_DIRECTORY ${test_dir}/Channel-Flow-Z)
+  # Cylinder
   if(NOT ${USE_ADIOS2})
     add_test(NAME Cylinder COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test.i3d WORKING_DIRECTORY ${test_dir}/Cylinder)
     add_test(NAME CylinderMoving COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test_moving.i3d WORKING_DIRECTORY ${test_dir}/CylinderMoving)
   endif()
+  # Lock excahnge
   add_test(NAME Lock-exchange COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test.i3d WORKING_DIRECTORY ${test_dir}/Lock-exchange)
+  # Mixing Layer
   add_test(NAME Mixing-layer COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test.i3d WORKING_DIRECTORY ${test_dir}/Mixing-layer)
-  add_test(NAME ABL-Convective COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_convective_test.i3d WORKING_DIRECTORY ${test_dir}/ABL-Convective)
-  add_test(NAME ABL-Neutral COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_neutral_test.i3d WORKING_DIRECTORY ${test_dir}/ABL-Neutral)
-  add_test(NAME ABL-Stable COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_stable_test.i3d WORKING_DIRECTORY ${test_dir}/ABL-Stable)
+  # TGV
+  add_test(NAME TGvortex COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test.i3d WORKING_DIRECTORY ${test_dir}/TGV)
+  # TBL
   add_test(NAME TBL COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test.i3d WORKING_DIRECTORY ${test_dir}/TBL)
+  # Wind Turbines
   add_test(NAME Wind-Turbine COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d input_test.i3d WORKING_DIRECTORY ${test_dir}/Wind-Turbine)
 endif()
 
