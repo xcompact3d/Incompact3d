@@ -15,7 +15,6 @@ module case
   use dbg_schemes
   use channel
   use mixlayer
-  use jet
   use lockexch
   use tbl
   use abl
@@ -91,10 +90,10 @@ contains
 
        call init_mixlayer(rho1, ux1, uy1, uz1)
 
-    elseif (itype.eq.itype_jet) then
-
-       call init_jet(rho1, ux1, uy1, uz1, ep1, phi1)
-
+!!!    elseif (itype.eq.itype_jet) then
+!!!
+!!!       call init_jet(rho1, ux1, uy1, uz1, ep1, phi1)
+!!!
     elseif (itype.eq.itype_tbl) then
 
        call init_tbl (ux1, uy1, uz1, ep1, phi1)
@@ -179,10 +178,10 @@ contains
 
        call boundary_conditions_dbg (ux, uy, uz, phi)
 
-    elseif (itype.eq.itype_jet) then
-
-       call boundary_conditions_jet (rho,ux,uy,uz,phi)
-
+!!!    elseif (itype.eq.itype_jet) then
+!!!
+!!!       call boundary_conditions_jet (rho,ux,uy,uz,phi)
+!!!
     elseif (itype.eq.itype_tbl) then
 
        call boundary_conditions_tbl (ux, uy, uz, phi)
@@ -328,10 +327,10 @@ contains
 
        call postprocess_dbg (ux, uy, uz, phi, ep)
 
-    elseif (itype.eq.itype_jet) then
-
-       call postprocess_jet (ux, uy, uz, phi, ep)
-
+!!!    elseif (itype.eq.itype_jet) then
+!!!
+!!!       call postprocess_jet (ux, uy, uz, phi, ep)
+!!!
     elseif (itype.eq.itype_tbl) then
 
        call postprocess_tbl (ux, uy, uz, ep)
@@ -482,10 +481,10 @@ contains
 
        call momentum_forcing_channel(dux1, duy1, duz1, ux1, uy1, uz1)
 
-    elseif (itype.eq.itype_jet) then
-
-       call momentum_forcing_jet(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
-
+!!!    elseif (itype.eq.itype_jet) then
+!!!
+!!!       call momentum_forcing_jet(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
+!!!
     elseif (itype.eq.itype_abl) then
 
        call momentum_forcing_abl(dux1, duy1, duz1, ux1, uy1, uz1, phi1)
