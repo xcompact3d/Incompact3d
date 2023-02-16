@@ -16,10 +16,10 @@ add_executable(xcompact3d
                     adm.f90
                     airfoils.f90
                     BC-ABL.f90
+                    BC-Cavity.f90
                     BC-Channel-flow.f90
                     BC-Cylinder.f90
                     BC-dbg-schemes.f90
-                    BC-Jet.f90
                     BC-Lock-exchange.f90
                     BC-Mixing-layer.f90
                     BC-Periodic-hill.f90

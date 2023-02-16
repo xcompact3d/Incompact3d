@@ -15,7 +15,7 @@ jobs:
     # actions docs.
     - name: Cache OpenMPI
       id: cache-openmpi
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: openmpi-4.1.4/installed
         key: openmpi-4.1.4

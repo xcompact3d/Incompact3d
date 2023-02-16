@@ -15,12 +15,12 @@ module case
   use dbg_schemes
   use channel
   use mixlayer
-  use jet
   use lockexch
   use tbl
   use abl
   use uniform
   use sandbox
+  use cavity
 
   use var, only : nzmsize
 
@@ -90,10 +90,10 @@ contains
 
        call init_mixlayer(rho1, ux1, uy1, uz1)
 
-    elseif (itype.eq.itype_jet) then
-
-       call init_jet(rho1, ux1, uy1, uz1, ep1, phi1)
-
+!!!    elseif (itype.eq.itype_jet) then
+!!!
+!!!       call init_jet(rho1, ux1, uy1, uz1, ep1, phi1)
+!!!
     elseif (itype.eq.itype_tbl) then
 
        call init_tbl (ux1, uy1, uz1, ep1, phi1)
@@ -109,6 +109,10 @@ contains
     elseif (itype.EQ.itype_sandbox) THEN
    
        call init_sandbox (ux1, uy1, uz1, ep1, phi1, 0)
+
+    elseif (itype.eq.itype_cavity) then
+
+       call init_cavity(ux1, uy1, uz1, ep1, phi1)
 
     else
   
@@ -174,10 +178,10 @@ contains
 
        call boundary_conditions_dbg (ux, uy, uz, phi)
 
-    elseif (itype.eq.itype_jet) then
-
-       call boundary_conditions_jet (rho,ux,uy,uz,phi)
-
+!!!    elseif (itype.eq.itype_jet) then
+!!!
+!!!       call boundary_conditions_jet (rho,ux,uy,uz,phi)
+!!!
     elseif (itype.eq.itype_tbl) then
 
        call boundary_conditions_tbl (ux, uy, uz, phi)
@@ -193,6 +197,10 @@ contains
     elseif (itype.EQ.itype_sandbox) THEN
    
        call boundary_conditions_sandbox (ux, uy, uz, phi)
+
+    elseif (itype.eq.itype_cavity) then
+
+       call boundary_conditions_cavity(ux, uy, uz, phi)
 
     endif
 
@@ -319,10 +327,10 @@ contains
 
        call postprocess_dbg (ux, uy, uz, phi, ep)
 
-    elseif (itype.eq.itype_jet) then
-
-       call postprocess_jet (ux, uy, uz, phi, ep)
-
+!!!    elseif (itype.eq.itype_jet) then
+!!!
+!!!       call postprocess_jet (ux, uy, uz, phi, ep)
+!!!
     elseif (itype.eq.itype_tbl) then
 
        call postprocess_tbl (ux, uy, uz, ep)
@@ -338,6 +346,10 @@ contains
     elseif (itype.EQ.itype_sandbox) THEN
    
        call postprocess_sandbox (ux, uy, uz, phi, ep)
+
+    elseif (itype.eq.itype_cavity) then
+
+       call postprocess_cavity(ux, uy, uz, phi)
 
     endif
 
@@ -431,7 +443,7 @@ contains
        call visu_tbl(ux1, uy1, uz1, pp3, phi1, ep1, num)
        called_visu = .true.
        
-   elseif (itype.eq.itype_uniform) then
+    elseif (itype.eq.itype_uniform) then
 
        call visu_uniform(ux1, uy1, uz1, pp3, phi1, ep1, num)
        called_visu = .true.
@@ -469,10 +481,10 @@ contains
 
        call momentum_forcing_channel(dux1, duy1, duz1, ux1, uy1, uz1)
 
-    elseif (itype.eq.itype_jet) then
-
-       call momentum_forcing_jet(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
-
+!!!    elseif (itype.eq.itype_jet) then
+!!!
+!!!       call momentum_forcing_jet(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
+!!!
     elseif (itype.eq.itype_abl) then
 
        call momentum_forcing_abl(dux1, duy1, duz1, ux1, uy1, uz1, phi1)

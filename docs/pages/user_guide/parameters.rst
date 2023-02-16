@@ -24,7 +24,7 @@ BasicParam
     - 5 - Flow over a Cylinder;
     - 6 - Debug Schemes (for developers);
     - 7 - Mixing Layer;
-    - 8 - Turbulent Jet;
+    - 8 - Turbulent Jet (work in progress, currently unsupported);
     - 9 - Turbulent Boundary Layer;
     - 10 - Atmospheric Boundary Layer;
     - 11 - Uniform flow.
