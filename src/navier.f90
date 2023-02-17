@@ -524,7 +524,7 @@ contains
 
     !********NCLX==2*************************************
     !we are in X pencils:
-    if ((itype.eq.itype_channel.or.itype.eq.itype_uniform).and.(nclx1==2.and.nclxn==2)) then
+    if ((itype.eq.itype_channel.or.itype.eq.itype_uniform.or.itype.eq.itype_abl).and.(nclx1==2.and.nclxn==2)) then
 
        !Computation of the flow rate Inflow/Outflow
        ut1=zero

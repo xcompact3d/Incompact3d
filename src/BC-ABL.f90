@@ -162,8 +162,133 @@ contains
       call fringe_region(ux,uy,uz)
     endif
 
+    if (nclx1.eq.2) then
+      if (iscalar.eq.0.or.(iscalar.eq.1.and.nclxS1.eq.2)) then
+        call inflow(ux,uy,uz,phi)
+      endif
+    endif
+
+    if (nclxn.eq.2) then
+      if (iscalar.eq.0.or.(iscalar.eq.1.and.nclxSn.eq.2)) then
+        call outflow(ux,uy,uz,phi)
+      endif
+    endif
+
     return
   end subroutine boundary_conditions_abl
+
+  !*******************************************************************************
+  !
+  subroutine inflow (ux,uy,uz,phi)
+  !
+  !*******************************************************************************
+  
+    USE param
+    USE variables
+    USE decomp_2d
+    USE MPI
+    USE var, only: ux_inflow, uy_inflow, uz_inflow
+  
+    implicit none
+  
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
+
+    real(mytype) :: um
+    integer :: i,j,k,itime_input
+    
+    um=0.5*(u1+u2)
+    do k=1,xsize(3)
+    do j=1,xsize(2)
+      bxx1(j,k)=um
+      bxy1(j,k)=zero
+      bxz1(j,k)=zero
+    enddo
+    enddo
+ 
+    if (iin.eq.1.or.iin.eq.2) then
+      call random_number(bxo)
+      call random_number(byo)
+      call random_number(bzo)
+
+      do k=1,xsize(3)
+      do j=1,xsize(2)
+        bxx1(j,k)=bxx1(j,k)+(two*bxo(j,k)-one)*inflow_noise*um
+        bxy1(j,k)=bxy1(j,k)+(two*byo(j,k)-one)*inflow_noise*um
+        bxz1(j,k)=bxz1(j,k)+(two*bzo(j,k)-one)*inflow_noise*um
+        if (iscalar.eq.1) then
+          phi(1,j,k,:)=one
+        endif
+      enddo
+      enddo
+    else if (iin.eq.3) then
+      ! Reading from files (when precursor simulations exist)
+      itime_input=mod(itime,ntimesteps)
+      if (itime_input==0) itime_input=ntimesteps
+      if (mod(itime,ilist)==0.and.nrank==0) print *,'Reading inflow from a file, time step: ', itime_input
+      do k=1,xsize(3)
+      do j=1,xsize(2)
+        ! Case 1: Inflow is turbulence added to mean flow profile
+        !bxx1(j,k)=bxx1(j,k)+ux_inflow(itime_input,j,k)
+        !bxy1(j,k)=bxy1(j,k)+uy_inflow(itime_input,j,k)
+        !bxz1(j,k)=bxz1(j,k)+uz_inflow(itime_input,j,k)
+        ! Case 2: Inflow is full velocity field
+        bxx1(j,k)=ux_inflow(itime_input,j,k)
+        bxy1(j,k)=uy_inflow(itime_input,j,k)
+        bxz1(j,k)=uz_inflow(itime_input,j,k)
+      enddo
+      enddo
+    endif
+
+    return
+  end subroutine inflow 
+    
+  !*******************************************************************************
+  !
+  subroutine outflow (ux,uy,uz,phi)
+  !
+  !*******************************************************************************
+
+    USE param
+    USE variables
+    USE decomp_2d
+    USE MPI
+
+    implicit none
+
+    integer :: j,k,code
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
+    real(mytype) :: udx,udy,udz,uddx,uddy,uddz,cx,uxmin,uxmax,uxmin1,uxmax1
+
+    udx=one/dx; udy=one/dy; udz=one/dz; uddx=half/dx; uddy=half/dy; uddz=half/dz
+
+    uxmax=-1609.
+    uxmin=1609.
+    do k=1,xsize(3)
+      do j=1,xsize(2)
+        if (ux(nx-1,j,k).gt.uxmax) uxmax=ux(nx-1,j,k)
+        if (ux(nx-1,j,k).lt.uxmin) uxmin=ux(nx-1,j,k)
+      enddo
+    enddo
+
+    call MPI_ALLREDUCE(uxmax,uxmax1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(uxmin,uxmin1,1,real_type,MPI_MIN,MPI_COMM_WORLD,code)
+
+    cx=0.5*(uxmax1+uxmin1)*gdt(itr)*udx
+    do k=1,xsize(3)
+      do j=1,xsize(2)
+        bxxn(j,k)=ux(nx,j,k)-cx*(ux(nx,j,k)-ux(nx-1,j,k))
+        bxyn(j,k)=uy(nx,j,k)-cx*(uy(nx,j,k)-uy(nx-1,j,k))
+        bxzn(j,k)=uz(nx,j,k)-cx*(uz(nx,j,k)-uz(nx-1,j,k))
+        if (iscalar.eq.1) then
+          phi(nx,j,k,:)=phi(nx,j,k,:)-cx*(phi(nx,j,k,:)-phi(nx-1,j,k,:))
+        endif
+      enddo
+    enddo
+
+    return
+  end subroutine outflow 
 
   !*******************************************************************************
   !
