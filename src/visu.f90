@@ -626,7 +626,7 @@ contains
 
   function int_to_str(i)
     integer, intent(in) :: i
-    character(len=(1 + int(log10(real(i))))) :: int_to_str
+    character(len=(1 + int(log10(real(max(i, 1)))))) :: int_to_str
 
     write(int_to_str, "(I0)") i
   end function int_to_str
