@@ -624,8 +624,14 @@ contains
     
   end function gen_h5path
 
+  ! Function converting an integer to a string.
   function int_to_str(i)
-    integer, intent(in) :: i
+
+    integer, intent(in) :: i ! Integer input.
+
+    ! String return value. The string must be long enough to contain all the characters required to
+    ! represent the integer, i.e 1 + log_10(i). To protect against calling with integer 0 the value
+    ! passed to log_10 must be >= 1.
     character(len=(1 + int(log10(real(max(i, 1)))))) :: int_to_str
 
     write(int_to_str, "(I0)") i
