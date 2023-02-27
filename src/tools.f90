@@ -686,7 +686,7 @@ contains
  
     use decomp_2d
     use decomp_2d_io
-    use var, only: ux_recoutflow, uy_recoutflow, uz_recoutflow
+    use var, only: ux_recoutflow, uy_recoutflow, uz_recoutflow, ilist
     use param
 
     implicit none
@@ -695,7 +695,7 @@ contains
     integer, intent(in) :: timestep
     integer :: j,k
 
-    if (nrank==0) print *, 'Appending outflow', timestep 
+    if (nrank==0.and.mod(itime,ilist)==0) print *, 'Appending outflow', timestep 
     do k=1,xsize(3)
     do j=1,xsize(2)
       ux_recoutflow(timestep,j,k)=ux(xend(1),j,k)
