@@ -372,7 +372,9 @@ contains
 
   !*******************************************************************************
   !
-  subroutine wall_sgs(ux,uy,uz,phi,nut1,wallfluxx,wallfluxy,wallfluxz)
+  subroutine wall_sgs_slip(ux,uy,uz,phi,nut1,wallfluxx,wallfluxy,wallfluxz)
+  !
+  ! Outputs fluxes, only compatible with iconserv=0
   !
   !*******************************************************************************
 
@@ -575,7 +577,7 @@ contains
            tauwallzy(i,k)=-(k_roughness/(log_prec(delta/z_zero)-PsiM(i,k)))**two*uz12*S12
          endif
          ! Apply second-order upwind scheme for the near wall
-         ! Below should change for non-uniform grids, same for wall_sgs_scalar
+         ! Below should change for non-uniform grids, same for wall_sgs_slip_scalar
          wallfluxx(i,1,k) = -(-half*(-two*nut1(i,3,k)*sxy1(i,3,k))+&
                             two*(-two*nut1(i,2,k)*sxy1(i,2,k))-three/two*tauwallxy(i,k))/(two*delta)
          wallfluxy(i,1,k) = zero
@@ -645,11 +647,11 @@ contains
     endif
 
     return
-  end subroutine wall_sgs
+  end subroutine wall_sgs_slip
 
   !*******************************************************************************
   !
-  subroutine wall_sgs_scalar(sgsphi1,nut1,dphidy1)
+  subroutine wall_sgs_slip_scalar(sgsphi1,nut1,dphidy1)
   !
   !*******************************************************************************
 
@@ -679,7 +681,154 @@ contains
        enddo
     endif
 
-  end subroutine wall_sgs_scalar
+  end subroutine wall_sgs_slip_scalar
+
+  !*******************************************************************************
+  !
+  subroutine wall_sgs_noslip(ux1,uy1,uz1,nut1,wallsgsx1,wallsgsy1,wallsgsz1)
+  !
+  ! Outputs stresses if iconserv=1 and fluxes if iconserv=0 (wallsgsx,wallsgsy,wallsgsz)
+  !
+  !*******************************************************************************
+
+    use MPI
+    use decomp_2d
+    use param
+    use variables
+    use var, only: di1, di2, di3
+    use var, only: sxy1, syz1, tb1, ta2, tb2
+    use dbg_schemes, only: log_prec, sqrt_prec
+    use ibm_param, only : ubcx, ubcy, ubcz
+   
+    implicit none
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1,uy1,uz1,nut1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(out) :: wallsgsx1,wallsgsy1,wallsgsz1
+    real(mytype),dimension(ysize(1),ysize(3)) :: tauwallxy2, tauwallzy2
+    integer :: i,j,k,code,j0
+    integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
+    real(mytype) :: delta
+    real(mytype) :: ux_HAve_local, uz_HAve_local
+    real(mytype) :: ux_HAve, uz_HAve, S_HAve, ux_delta, uz_delta, S_delta
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: txy1,tyz1,dtwxydx
+    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: txy2,tyz2,wallsgsx2,wallsgsz2
+    real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: tyz3,dtwyzdz
+    
+    real(mytype)               :: y_sampling
+    
+    ! Reset wall flux/stresses values
+    wallsgsx1 = zero
+    wallsgsy1 = zero
+    wallsgsz1 = zero
+    
+    ! Set sampling distance for the wall model
+    delta=dsampling*dy
+    
+    if(iconserv==0) then
+      ! Construct Smag SGS stress tensor 
+      txy1 = -2.0*nut1*sxy1
+      tyz1 = -2.0*nut1*syz1
+      call transpose_x_to_y(txy1,txy2)
+      call transpose_x_to_y(tyz1,tyz2)
+    endif
+
+    ! Work on Y-pencil
+    call transpose_x_to_y(ux1,ta2)
+    call transpose_x_to_y(uz1,tb2)
+ 
+    ! Apply BCs locally
+    do k=1,ysize(3)
+    do i=1,ysize(1)
+      !sampling at dsampling*dy from wall
+      j0=floor(delta/dy)
+      y_sampling=delta-real(j0,mytype)*dy
+      ux_delta=(1-y_sampling/dy)*ta2(i,j0+1,k)+(y_sampling/dy)*ta2(i,j0+2,k)
+      uz_delta=(1-y_sampling/dy)*tb2(i,j0+1,k)+(y_sampling/dy)*tb2(i,j0+2,k)
+      S_delta=sqrt_prec(ux_delta**2.+uz_delta**2.)
+      tauwallxy2(i,k)=-(k_roughness/(log_prec(delta/z_zero)))**two*ux_delta*S_delta
+      tauwallzy2(i,k)=-(k_roughness/(log_prec(delta/z_zero)))**two*uz_delta*S_delta
+      txy2(i,2,k) = tauwallxy2(i,k)
+      tyz2(i,2,k) = tauwallzy2(i,k)
+    enddo
+    enddo
+
+    if (iconserv==0) then
+      ! Derivative of wallmodel-corrected SGS stress tensor
+      call dery_22(wallsgsx2,txy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),1,ubcy)
+      call dery_22(wallsgsz2,tyz2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),1,ubcy)
+      call transpose_y_to_x(wallsgsx2,wallsgsx1)
+      call transpose_y_to_x(wallsgsz2,wallsgsz1)
+      call derx(dtwxydx,txy1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+      call transpose_y_to_z(tyz2,tyz3)
+      call derz(dtwyzdz,tyz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
+      call transpose_z_to_y(dtwyzdz,tb2)
+      call transpose_y_to_x(tb2,tb1)
+      wallsgsy1 = dtwxydx + tb1
+    elseif (iconserv==1) then 
+      call transpose_y_to_x(txy2,wallsgsx1)
+      call transpose_y_to_x(tyz2,wallsgsz1)
+    endif
+    
+
+    ! Print information at y=5*dy
+    ux_HAve_local  =zero
+    uz_HAve_local  =zero
+    if (nclx1==1.and.xend(1)==nx) then
+       xsize1=xsize(1)-1
+    else
+       xsize1=xsize(1)
+    endif
+    if (ncly1==1.and.xend(2)==ny) then
+       xsize2=xsize(2)-1
+    else
+       xsize2=xsize(2)
+    endif
+    if (nclz1==1.and.xend(3)==nz) then
+       xsize3=xsize(3)-1
+    else
+       xsize3=xsize(3)
+    endif
+    if (nclx1==1) then
+       nxc=nxm
+    else
+       nxc=nx
+    endif
+    if (ncly1==1) then
+       nyc=nym
+    else
+       nyc=ny
+    endif
+    if (nclz1==1) then
+       nzc=nzm
+    else
+       nzc=nz
+    endif
+    do k=1,ysize(3)
+    do i=1,ysize(1)
+       ux_HAve_local=ux_HAve_local+ta2(i,6,k)
+       uz_HAve_local=uz_HAve_local+tb2(i,6,k)
+    enddo
+    enddo
+    ux_HAve_local=ux_HAve_local
+    uz_HAve_local=uz_HAve_local
+    call MPI_ALLREDUCE(ux_HAve_local,ux_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(uz_HAve_local,uz_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    ux_HAve=ux_HAve/(nxc*nzc)
+    uz_HAve=uz_HAve/(nxc*nzc)
+    S_HAve=sqrt_prec(ux_HAve**2.+uz_HAve**2.)
+    u_shear=k_roughness*S_HAve/log_prec(5*dy/z_zero)
+    
+    if (mod(itime,ilist)==0.and.nrank==0) then
+       ! Write u_shear in file
+       write(42,'(20e20.12)') (itime-1)*dt,u_shear
+       call flush(42)
+       ! Print in terminal
+       write(*,*)  ' ABL:'
+       write(*,*)  ' Horizontally-averaged velocity at 5*dy: ', ux_HAve,uz_HAve
+       write(*,*)  ' Friction velocity at 5*dy: ', u_shear
+    endif
+
+    return
+  end subroutine wall_sgs_noslip
 
   !*******************************************************************************
   !
