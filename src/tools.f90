@@ -281,7 +281,7 @@ contains
           call decomp_2d_write_one(1,duz1(:,:,:,3),resfile,"duz-3",0,io_restart,reduce_prec=.false.)
        end if
        !
-       call decomp_2d_write_one(3,pp3,resfile,"pp",0,io_restart,phG,reduce_prec=.false.)
+       call decomp_2d_write_one(3,pp3,resfile,"pp",0,io_restart,opt_decomp=phG,reduce_prec=.false.)
        !
        if (iscalar==1) then
           do is=1, numscalar
@@ -381,7 +381,7 @@ contains
           call decomp_2d_read_one(1,duz1(:,:,:,3),resfile,"duz-3",io_restart,reduce_prec=.false.)
        end if
        !
-       call decomp_2d_read_one(3,pp3,resfile,"pp",io_restart,phG,reduce_prec=.false.)
+       call decomp_2d_read_one(3,pp3,resfile,"pp",io_restart,opt_decomp=phG,reduce_prec=.false.)
        !
        if (iscalar==1) then
          do is=1, numscalar

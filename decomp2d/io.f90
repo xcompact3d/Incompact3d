@@ -233,7 +233,10 @@ contains
     integer :: disp_bytes
     character(len=:), allocatable :: full_io_name
     logical :: opened_new, dir_exists
-    
+ 
+    ! Safety check
+    if (.not. is_contiguous(var)) call decomp_2d_abort(-1, "read_one_real : argument must be contiguous")
+
     read_reduce_prec = .true.
     
     idx = get_io_idx(io_name, dirname)
@@ -241,8 +244,7 @@ contains
     opened_new = .false.
     if (idx .lt. 1) then
        ! Check file exists
-       allocate(character(len(trim(dirname)) + 1 + len(trim(varname))) :: full_io_name)
-       full_io_name = dirname//"/"//varname
+       full_io_name = trim(dirname)//"/"//trim(varname)
        if (nrank==0) then
           inquire(file=full_io_name, exist=dir_exists)
           if (.not.dir_exists) then
@@ -305,7 +307,15 @@ contains
        starts(1) = decomp%zst(1)-1
        starts(2) = decomp%zst(2)-1
        starts(3) = decomp%zst(3)-1
+    else
+       call decomp_2d_abort(-1, "IO/read_one_real : Wrong value for ipencil")
     endif
+
+    if ((subsizes(1) > size(var, 1)) .or. (subsizes(2) > size(var, 2)) &
+         .or. (subsizes(3) > size(var, 3))) then
+       print *, "ERROR: trying to read ", subsizes, "sized array for "//varname//" variable array is ", size(var)
+       stop
+    end if
 
     associate(fh => fh_registry(idx), &
          disp => fh_disp(idx))
@@ -325,9 +335,16 @@ contains
               subsizes(1)*subsizes(2)*subsizes(3), &
               data_type, MPI_STATUS_IGNORE, ierror)
       endif
+      if (ierror /= 0) then
+         print *, "ERROR in MPI_FILE_READ_ALL"
+         stop
+      end if
       call MPI_TYPE_FREE(newtype,ierror)
 
-      disp = disp + sizes(1) * sizes(2) * sizes(3) * disp_bytes
+      disp = disp + int(sizes(1), MPI_OFFSET_KIND) * &
+                    int(sizes(2), MPI_OFFSET_KIND) * &
+                    int(sizes(3), MPI_OFFSET_KIND) * &
+                    int(disp_bytes, MPI_OFFSET_KIND)
     end associate
 
     if (opened_new) then
@@ -1017,6 +1034,8 @@ contains
        elseif (ipencil == 3) then
           subsizes(1:3) = decomp%zsz(1:3)
           starts(1:3) = decomp%zst(1:3) - 1
+       else
+          call decomp_2d_abort(-1, "IO/coarse_extents : Wrong value for ipencil")
        endif
     elseif (icoarse==1) then
        sizes(1) = xszS(1)
@@ -1044,6 +1063,8 @@ contains
           starts(1) = zstS(1)-1
           starts(2) = zstS(2)-1
           starts(3) = zstS(3)-1
+       else
+          call decomp_2d_abort(-1, "IO/coarse_extents : Wrong value for ipencil")
        endif
     elseif (icoarse==2) then
        sizes(1) = xszV(1)
@@ -1071,6 +1092,8 @@ contains
           starts(1) = zstV(1)-1
           starts(2) = zstV(2)-1
           starts(3) = zstV(3)-1
+       else
+          call decomp_2d_abort(-1, "IO/coarse_extents : Wrong value for ipencil")
        endif
     endif
     
@@ -1110,6 +1133,9 @@ contains
     integer :: write_mode
 #endif
 
+    ! Safety check
+    if (.not. is_contiguous(var)) call decomp_2d_abort(-1, "mpiio_write_real_coarse : argument must be contiguous")
+
     !! Set defaults
     write_reduce_prec = .true.
     deferred_writes = .true.
@@ -1134,6 +1160,13 @@ contains
     else
        call coarse_extents(ipencil, icoarse, sizes, subsizes, starts)
     end if
+
+    if ((subsizes(1) > size(var, 1)) .or. (subsizes(2) > size(var, 2)) &
+         .or. (subsizes(3) > size(var, 3))) then
+       print *, "ERROR: trying to write ", subsizes, "sized array for "//varname//" variable array is ", size(var)
+       stop
+    end if
+    
     if (write_reduce_prec) then
        allocate (varsingle(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
        varsingle=real(var, mytype_single)
@@ -1156,8 +1189,7 @@ contains
              call system("mkdir "//dirname//" 2> /dev/null")
           end if
        end if
-       allocate(character(len(trim(dirname)) + 1 + len(trim(varname))) :: full_io_name)
-       full_io_name = dirname//"/"//varname
+       full_io_name = trim(dirname)//"/"//trim(varname)
        call decomp_2d_open_io(io_name, full_io_name, decomp_2d_write_mode)
        idx = get_io_idx(io_name, full_io_name)
        opened_new = .true.
@@ -1176,8 +1208,15 @@ contains
             subsizes(1)*subsizes(2)*subsizes(3), &
             real_type, MPI_STATUS_IGNORE, ierror)
     end if
+    if (ierror /= 0) then
+       print *, "ERROR in MPI_FILE_WRITE_ALL"
+       stop
+    end if
     
-    fh_disp(idx) = fh_disp(idx) + sizes(1) * sizes(2) * sizes(3) * disp_bytes
+    fh_disp(idx) = fh_disp(idx) + int(sizes(1), MPI_OFFSET_KIND) * &
+                                  int(sizes(2), MPI_OFFSET_KIND) * &
+                                  int(sizes(3), MPI_OFFSET_KIND) * &
+                                  int(disp_bytes, MPI_OFFSET_KIND)
     
     if (opened_new) then
        call decomp_2d_close_io(io_name, full_io_name)
