@@ -99,7 +99,7 @@ nstat = 1             ! Size arrays for statistic collection
 jles=1
 smagcst=0.1
 walecst=0.5 
-iwall=0
+iconserv = 0          ! Formulation SGS divergence (0: non conservative, 1: conservative)
 /End
 
 !=================

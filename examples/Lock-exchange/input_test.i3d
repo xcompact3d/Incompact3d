@@ -145,7 +145,7 @@ cp(1) = 1.0
 jles=1
 smagcst=0.1
 walecst=0.5 
-iwall=0
+iconserv = 0          ! Formulation SGS divergence (0: non conservative, 1: conservative)
 /End
 
 !=================

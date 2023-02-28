@@ -596,7 +596,7 @@ subroutine parameter_defaults()
   !! LES stuff
   smagwalldamp=1
   nSmag=1
-  iconserv=1
+  iconserv=0
 
   !! IBM stuff
   nraf = 0

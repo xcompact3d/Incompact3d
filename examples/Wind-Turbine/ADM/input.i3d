@@ -123,15 +123,7 @@ smagcst = 0.14        ! Smagorinsky constant
 SmagWallDamp = 1      ! 1: Mason and Thomson Damping function, otherwise OFF
 nSmag = 3             ! Smag damping coeff (for use with M+T damping
 walecst = 0.5         ! WALES Model Coefficient
-iwall = 0             ! 0: non conservative form SGS divergence
-
-/End
-
-!================
-&TurbulenceWallModel
-!================
-
-SmagWallDamp = 1      ! Smagorinsky damping function for ABL if 1
+iconserv = 0          ! Formulation SGS divergence (0: non conservative, 1: conservative)
 
 /End
 
