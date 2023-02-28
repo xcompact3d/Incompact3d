@@ -122,16 +122,9 @@ nclzSn = 1
 
 jles = 2              ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Smag, 4: iSVV, 5: dyn SEV)
 smagcst = 0.14        ! Smagorinsky constant
+SmagWallDamp = 1      ! 1: Mason and Thomson Damping function, otherwise OFF
 walecst = 0.325       ! WALES Model Coefficient
-iwall = 0             ! Enable wall modeling
-
-/End
-
-!================
-&WallModel
-!================
-
-SmagWallDamp = 1      ! Smagorinsky damping function for ABL if 1
+iconserv = 0          ! Formulation SGS divergence (0: non conservative, 1: conservative)
 
 /End
 

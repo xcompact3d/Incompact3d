@@ -87,10 +87,10 @@ contains
   end subroutine finalise_explicit_les
   
   !************************************************************
-  subroutine Compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,phi1,ep1,iconservative)
+  subroutine compute_SGS(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,phi1,ep1)
     !================================================================================
     !
-    !  SUBROUTINE: Compute_SGS
+    !  SUBROUTINE: compute_SGS
     ! DESCRIPTION: computes the SGS terms (divergence of the SGS stresses) used in the
     !              momentum equation
     !      AUTHOR: G. Deskos <g.deskos14@imperial.ac.uk>
@@ -102,14 +102,14 @@ contains
     USE decomp_2d
     USE decomp_2d_io
     use var, only: nut1
-    USE abl, only: wall_sgs
+    USE abl, only: wall_sgs_slip, wall_sgs_noslip
     implicit none
 
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, ep1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sgsx1, sgsy1, sgsz1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: wallfluxx1, wallfluxy1, wallfluxz1
-    integer :: iconservative
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: wallsgsx1, wallsgsy1, wallsgsz1
 
     ! Calculate eddy-viscosity
     if(jles.eq.1) then ! Smagorinsky
@@ -123,30 +123,38 @@ contains
 
     endif
 
-    if(iconservative.eq.0) then ! Non-conservative form for calculating the divergence of the SGS stresses
-
+    if(iconserv.eq.0) then ! Non-conservative form for calculating the divergence of the SGS stresses
        call sgs_mom_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
-       !call sgs_scalar_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
 
-    elseif (iconservative.eq.1) then ! Conservative form for calculating the divergence of the SGS stresses (used with wall functions)
-
-       ! Call les_conservative
-
-    endif
-
-    ! SGS correction for ABL
-    if(itype.eq.itype_abl) then
-       call wall_sgs(ux1,uy1,uz1,phi1,nut1,wallfluxx1,wallfluxy1,wallfluxz1)
-       if (xstart(2)==1) then
-          sgsx1(:,1,:) = wallfluxx1(:,1,:)
-          sgsy1(:,1,:) = wallfluxy1(:,1,:)
-          sgsz1(:,1,:) = wallfluxz1(:,1,:)
+       ! SGS correction for ABL
+       if(itype.eq.itype_abl) then
+          ! No-slip wall
+          if (ncly1==2) then 
+             call wall_sgs_noslip(ux1,uy1,uz1,nut1,wallfluxx1,wallfluxy1,wallfluxz1)
+             if(xstart(2)==1) then
+               sgsx1(:,2,:) = -wallfluxx1(:,2,:)
+               sgsy1(:,2,:) = -wallfluxy1(:,2,:)
+               sgsz1(:,2,:) = -wallfluxz1(:,2,:)
+             endif
+          ! Slip wall
+          elseif (ncly1==1) then
+             call wall_sgs_slip(ux1,uy1,uz1,phi1,nut1,wallfluxx1,wallfluxy1,wallfluxz1)
+             if(xstart(2)==1) then
+                sgsx1(:,1,:) = wallfluxx1(:,1,:)
+                sgsy1(:,1,:) = wallfluxy1(:,1,:)
+                sgsz1(:,1,:) = wallfluxz1(:,1,:)
+             endif
+          endif
        endif
+
+    elseif (iconserv.eq.1) then ! Conservative form for calculating the divergence of the SGS stresses (used with wall functions)
+       call sgs_mom_conservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1)
+
     endif
 
     return
 
-  end subroutine Compute_SGS
+  end subroutine compute_SGS
 
 
   subroutine smag(nut1,ux1,uy1,uz1)
@@ -1206,7 +1214,7 @@ end subroutine wale
     USE decomp_2d
 
     USE var, only: di1,tb1,di2,tb2,di3,tb3,tc1,tc2,tc3
-    USE abl, only: wall_sgs_scalar
+    USE abl, only: wall_sgs_slip_scalar
 
     implicit none
 
@@ -1268,9 +1276,139 @@ end subroutine wale
     ! SGS correction for ABL
     if (itype.eq.itype_abl.and.is==1.and.ibuoyancy.eq.1) then
        call transpose_y_to_x(tb2,dphidy1)
-       call wall_sgs_scalar(sgsphi1,nut1,dphidy1)
+       call wall_sgs_slip_scalar(sgsphi1,nut1,dphidy1)
     endif
 
   end subroutine sgs_scalar_nonconservative
+
+  !************************************************************
+  subroutine sgs_mom_conservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1)
+
+    USE param
+    USE variables
+    USE decomp_2d
+    use MPI
+    USE var, only : ta1,tb1,tc1,di1
+    USE var, only : ta2,tb2,tc2,di2
+    USE var, only : ta3,tb3,tc3,di3
+    USE var, only : sgsx2,sgsy2,sgsz2
+    USE var, only : sgsx3,sgsy3,sgsz3
+    USE var, only : sxx1,sxy1,sxz1,syy1,syz1,szz1
+    USE abl, only : wall_sgs_noslip
+    use ibm_param, only: ubcx, ubcy, ubcz
+    
+    implicit none 
+
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, nut1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sgsx1, sgsy1, sgsz1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: wallsgsx1, wallsgsy1, wallsgsz1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: txx1, txy1, txz1, tyy1, tyz1, tzz1 
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: taf1, tbf1, tcf1
+    real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: txy2, txz2, tyy2, tyz2, tzz2 
+    real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: taf2, tbf2, tcf2
+    real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: txz3, tyz3, tzz3 
+    real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: taf3, tbf3, tcf3 
+
+    integer :: i, j, k, code, ierr
+    
+    ! Construct stress tensor
+    txx1 = 2.0*nut1*sxx1
+    txy1 = 2.0*nut1*sxy1
+    txz1 = 2.0*nut1*sxz1
+    tyy1 = 2.0*nut1*syy1
+    tyz1 = 2.0*nut1*syz1
+    tzz1 = 2.0*nut1*szz1   
+    
+    ! Add wall model for ABL
+    if (itype.eq.itype_abl) then
+      if (ncly1==2) then 
+        call wall_sgs_noslip(ux1,uy1,uz1,nut1,wallsgsx1,wallsgsy1,wallsgsz1)
+        if (xstart(2)==1) then
+          txx1(:,2,:) = 0.
+          txy1(:,2,:) = - wallsgsx1(:,2,:)! txy1(:,2,:)
+          txz1(:,2,:) = 0.
+          tyy1(:,2,:) = 0.
+          tyz1(:,2,:) = - wallsgsz1(:,2,:)! tyz1(:,2,:)
+          tzz1(:,2,:) = 0.
+        endif
+      elseif (ncly1==1) then 
+        write(*,*) 'Simulation stopped: slip bottom wall not supported with iconserv=1'
+        call MPI_ABORT(MPI_COMM_WORLD,code,ierr); stop 
+      endif
+    endif
+    
+    ! Compute derivatives
+    ta1 = zero; ta2 = zero; ta3 = zero
+    tb1 = zero; tb2 = zero; tb3 = zero
+    tc1 = zero; tc2 = zero; tc3 = zero
+    sgsx1=0.;sgsy1=0.;sgsz1=0.
+    sgsx2=0.;sgsy2=0.;sgsz2=0.
+    sgsx3=0.;sgsy3=0.;sgsz3=0.
+
+    ! WORK X-PENCILS
+    call derx (ta1,txx1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,zero)
+    call derx (tb1,txy1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,zero)
+    call derx (tc1,txz1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,zero)
+
+    !call filter(0.48d0)
+    !call filx(taf1,ta1,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,zero)
+    !call filx(tbf1,tb1,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,zero)
+    !call filx(tcf1,tc1,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,zero)
+
+    sgsx1 = ta1
+    sgsy1 = tb1
+    sgsz1 = tc1
+
+    ! WORK Y-PENCILS
+    call transpose_x_to_y(txy1, txy2)
+    call transpose_x_to_y(tyy1, tyy2)
+    call transpose_x_to_y(tyz1, tyz2)
+    call transpose_x_to_y(txz1, txz2)
+    call transpose_x_to_y(tzz1, tzz2)
+    call transpose_x_to_y(sgsx1, sgsx2)
+    call transpose_x_to_y(sgsy1, sgsy2)
+    call transpose_x_to_y(sgsz1, sgsz2)
+
+    call dery (ta2,txy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,zero)
+    call dery (tb2,tyy2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,zero)
+    call dery (tc2,tyz2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,zero)
+
+    !call fily(taf2,ta2,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,zero)
+    !call fily(tbf2,tb2,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,zero)
+    !call fily(tcf2,tc2,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,zero)
+
+    sgsx2 = sgsx2 + ta2
+    sgsy2 = sgsy2 + tb2
+    sgsz2 = sgsz2 + tc2
+
+    ! WORK Z-PENCILS
+    call transpose_y_to_z(sgsx2, sgsx3)
+    call transpose_y_to_z(sgsy2, sgsy3)
+    call transpose_y_to_z(sgsz2, sgsz3)
+    call transpose_y_to_z(txz2, txz3)
+    call transpose_y_to_z(tyz2, tyz3)
+    call transpose_y_to_z(tzz2, tzz3)
+
+    call derz (ta3, txz3, di3, sz, ffz, fsz, fwz, zsize(1), zsize(2), zsize(3), 0, zero)
+    call derz (tb3, tyz3, di3, sz, ffz, fsz, fwz, zsize(1), zsize(2), zsize(3), 0, zero)
+    call derz (tc3, tzz3, di3, sz, ffz, fsz, fwz, zsize(1), zsize(2), zsize(3), 0, zero)
+
+    !call filz(taf3,ta3,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,zero)
+    !call filz(tbf3,tb3,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,zero)
+    !call filz(tcf3,tc3,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,zero)
+
+    sgsx3 = sgsx3 + ta3
+    sgsy3 = sgsy3 + tb3
+    sgsz3 = sgsz3 + tc3
+
+    call transpose_z_to_y(sgsx3, sgsx2)
+    call transpose_z_to_y(sgsy3, sgsy2)
+    call transpose_z_to_y(sgsz3, sgsz2)
+
+    call transpose_y_to_x(sgsx2, sgsx1)
+    call transpose_y_to_x(sgsy2, sgsy1)
+    call transpose_y_to_x(sgsz2, sgsz1)
+
+  end subroutine sgs_mom_conservative
 
 end module les
