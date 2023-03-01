@@ -69,7 +69,7 @@ subroutine parameter(input_i3d)
        istrat, idamping, iheight, TempRate, TempFlux, itherm, gravv, UG, T_wall, T_top, ishiftedper, iconcprec, pdl, dsampling 
   NAMELIST /CASE/ pfront
   NAMELIST/ALMParam/iturboutput,NTurbines,TurbinesPath,NActuatorlines,ActuatorlinesPath,eps_factor,rho_air
-  NAMELIST/ADMParam/Ndiscs,ADMcoords,C_T,aind,iturboutput,rho_air
+  NAMELIST/ADMParam/Ndiscs,ADMcoords,iturboutput,rho_air,T_relax
 
 #ifdef DEBG
   if (nrank == 0) write(*,*) '# parameter start'
@@ -661,6 +661,7 @@ subroutine parameter_defaults()
   !! Turbine modelling
   iturbine=0
   rho_air=one
+  T_relax=-1.0_mytype
 
   !! IO
   ivisu = 1

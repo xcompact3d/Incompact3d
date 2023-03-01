@@ -369,7 +369,7 @@ module param
   ! Actuator disk
   character(len=100) :: admCoords
   integer :: Ndiscs          ! number of actuator discs
-  real(mytype) :: C_T, aind
+  real(mytype) :: T_relax
   ! Actuator line
   integer :: NTurbines, NActuatorlines
   character, dimension(100) :: TurbinesPath*80, ActuatorlinesPath*80

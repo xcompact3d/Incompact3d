@@ -28,7 +28,7 @@ contains
          call actuator_line_model_init(Nturbines,Nactuatorlines,TurbinesPath,ActuatorlinesPath,dt)
          call initialize_actuator_source
       else if (iturbine.eq.2) then
-         call actuator_disc_model_init(Ndiscs,admCoords,C_T,aind)
+         call actuator_disc_model_init(Ndiscs,admCoords)
       endif
 
     end subroutine init_turbines
