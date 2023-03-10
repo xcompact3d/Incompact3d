@@ -38,7 +38,7 @@ numscalar = 0         ! How many scalars? (Set to zero to disable scalars)
 iibm=0                ! Flag for immersed boundary method
 
 ! Boundary and initial conditions
-iin = 2               ! Inflow conditions (1: classic, 2: turbinit, 4: SEM [Currently unsupported])
+iin = 4               ! Inflow conditions (1: classic, 2: turbinit, 4: SEM)
 u1  = 1.              ! u1 (max velocity) (for inflow condition)
 u2  = 1.              ! u2 (min velocity) (for inflow condition)
 init_noise = 0.03     ! Turbulence intensity (1=100%) !! Initial condition

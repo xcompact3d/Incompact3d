@@ -104,12 +104,6 @@ subroutine parameter(input_i3d)
      p_row = nproc
      p_col = 1
   endif
-  if (iin == 4) then
-     if (nrank==0) write(*,*) "Error : SEM is not supported currently"
-     close(10)
-     CALL MPI_FINALIZE(is)
-     stop
-  endif
   read(10, nml=NumOptions); rewind(10)
   read(10, nml=InOutParam); rewind(10)
   read(10, nml=Statistics); rewind(10)
