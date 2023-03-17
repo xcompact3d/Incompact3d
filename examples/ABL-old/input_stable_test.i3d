@@ -65,7 +65,7 @@ isecondder = 4        ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th
 ipinter = 1           ! interpolation scheme (1: classic, 2: optimized, 3: optimized agressive)
 
 ! Time scheme
-itimescheme = 5       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4, 7->Semi-implicit)
+itimescheme = 3       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4, 7->Semi-implicit)
 
 ! Dissipation control
 nu0nu = 3.0           ! Ratio between hyperviscosity/viscosity at nu
@@ -140,7 +140,6 @@ ustar=0.42            ! friction velocity
 dBL=200               ! Boundary layer height
 iPressureGradient=0   ! 0: Geostrophic Vel 1: PG forcing
 UG=8,0,0
-iwallmodel=1          ! 0: Local 1: HA formulation for wall model
 ibuoyancy=1           ! Buoyancy effects 
 idamping=0            ! Damping zone
 istrat=0              ! 0: Stable BL 1: Convective BL
