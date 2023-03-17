@@ -819,7 +819,7 @@ contains
     
     if (mod(itime,ilist)==0.and.nrank==0) then
        ! Write u_shear in file
-       write(42,'(20e20.12)') (itime-1)*dt,u_shear
+       write(42,'(20e20.12)') t,u_shear
        call flush(42)
        ! Print in terminal
        write(*,*)  ' ABL:'
