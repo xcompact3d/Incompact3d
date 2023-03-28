@@ -372,11 +372,9 @@ contains
     real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: smagC2, smagC2f, dsmagcst2
     real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: smagC3, smagC3f, dsmagcst3
 
-    integer :: i,j,k, ijk, nvect1
+    integer :: i,j,k
 
     character(len = 30) :: filename
-
-    nvect1=xsize(1)*xsize(2)*xsize(3)
 
     if((iibm==1).or.(iibm==2).or.(iibm==3)) then
        ta1 = ux1 * (one - ep1)
@@ -782,11 +780,15 @@ contains
     lzz1 = lzz1 - (lxx1 + lyy1 + lzz1) / three
 
     if((iibm==1).or.(iibm==2).or.(iibm==3)) then
-       do ijk = 1, nvect1
-          if (ep1(ijk, 1, 1) .eq. one) then
-             ta1(ijk, 1, 1) = zero
-             tb1(ijk, 1, 1) = one
-          endif
+       do k = 1, xsize(3)
+          do j = 1, xsize(2)
+             do i = 1, xsize(1)
+                if (ep1(i, j, k) .eq. one) then
+                   ta1(i, j, k) = zero
+                   tb1(i, j, k) = one
+                endif
+             enddo
+          enddo
        enddo
     endif
 
@@ -794,9 +796,14 @@ contains
     smagC1 = (lxx1 * mxx1 + lyy1 * myy1 + lzz1 * mzz1 + two * (lxy1 * mxy1 + lxz1 * mxz1 + lyz1 * myz1)) / &
          (mxx1 * mxx1 + myy1 * myy1 + mzz1 * mzz1 + two * (mxy1 * mxy1 + mxz1 * mxz1 + myz1 * myz1)) !l/M
 
-    do ijk = 1, nvect1 ! Limiter for the dynamic Smagorinsky constant
-       if (smagC1(ijk, 1, 1).gt. maxdsmagcst) smagC1(ijk, 1, 1) = zero
-       if (smagC1(ijk, 1, 1).lt. 0.0) smagC1(ijk, 1, 1) = zero
+    ! Limiter for the dynamic Smagorinsky constant
+    do k = 1, xsize(3)
+       do j = 1, xsize(2)
+          do i = 1, xsize(1)
+             if (smagC1(i, j, k).gt. maxdsmagcst) smagC1(i, j, k) = zero
+             if (smagC1(i, j, k).lt. 0.0) smagC1(i, j, k) = zero
+          enddo
+       enddo
     enddo
 
     !FILTERING THE NON-CONSTANT CONSTANT
