@@ -231,6 +231,7 @@ subroutine parameter(input_i3d)
   if (ncly1.eq.0.and.nclyn.eq.0) then
      ncly=.true.
      nym=ny
+     if (istret.ne.0) call decomp_2d_abort(istret, "Invalid options (stretching + periodicity)")
   else
      ncly=.false.
      nym=ny-1
