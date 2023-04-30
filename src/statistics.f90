@@ -64,7 +64,7 @@ contains
   !
   subroutine init_statistic
 
-    use param, only : zero, iscalar
+    use param, only : zero, iscalar, istatfreq
     use var, only : tmean
     use var, only : pmean
     use var, only : umean, uumean
@@ -373,7 +373,7 @@ contains
   subroutine update_average_scalar(um, ux, ep)
 
     use decomp_2d, only : mytype, xsize, xstS, xenS, fine_to_coarseS
-    use param, only : itime, initstat
+    use param, only : itime, initstat,istatfreq
     use var, only : di1, tmean
 
     implicit none
@@ -381,10 +381,12 @@ contains
     ! inputs
     real(mytype), dimension(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)), intent(inout) :: um
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux, ep
-
+    real(mytype) :: stat_inc
     di1 = one_minus_ep1(ux, ep)
     call fine_to_coarseS(1, di1, tmean)
-    um = um + (tmean - um) / real(itime-initstat+1, kind=mytype)
+
+    stat_inc = real((itime-initstat)/istatfreq+1, kind=mytype)
+    um = um + (tmean - um) / stat_inc
 
   end subroutine update_average_scalar
 
