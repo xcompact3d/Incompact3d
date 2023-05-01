@@ -304,6 +304,7 @@ contains
        call restart_statistic()
     endif
 
+    if (mod(itime,istatfreq)/=0) return
     !! Mean pressure
     !WORK Z-PENCILS
     call interzpv(ppi3,pp3(:,:,:,1),dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
