@@ -233,15 +233,8 @@ contains
   subroutine postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
 
     use decomp_2d, only : mytype, xsize, ph1
-    use visu, only  : write_snapshot, end_snapshot
-    use stats, only : overall_statistic
-
     use var, only : nzmsize
-    use var, only : itime
     use var, only : numscalar, nrhotime, npress
-
-    use turbine, only : turbine_output
-    use probes, only : write_probes
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux1, uy1, uz1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(in) :: phi1
