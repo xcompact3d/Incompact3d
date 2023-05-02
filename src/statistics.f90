@@ -64,7 +64,7 @@ contains
   !
   subroutine init_statistic
 
-    use param, only : zero, iscalar
+    use param, only : zero, iscalar, istatfreq
     use var, only : tmean
     use var, only : pmean
     use var, only : umean, uumean
@@ -304,41 +304,42 @@ contains
        call restart_statistic()
     endif
 
-    !! Mean pressure
-    !WORK Z-PENCILS
-    call interzpv(ppi3,pp3(:,:,:,1),dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
-         (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
-    !WORK Y-PENCILS
-    call transpose_z_to_y(ppi3,pp2,ph3) !nxm nym nz
-    call interypv(ppi2,pp2,dip2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
-         (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
-    !WORK X-PENCILS
-    call transpose_y_to_x(ppi2,pp1,ph2) !nxm ny nz
-    call interxpv(ta1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
-         nxmsize,xsize(1),xsize(2),xsize(3),1)
-    ! Convert to physical pressure
-    call rescale_pressure(ta1)
-    call update_average_scalar(pmean, ta1, ep1)
+    if (mod(itime-initstat,istatfreq)==0) then
+      !! Mean pressure
+      !WORK Z-PENCILS
+      call interzpv(ppi3,pp3(:,:,:,1),dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
+          (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
+      !WORK Y-PENCILS
+      call transpose_z_to_y(ppi3,pp2,ph3) !nxm nym nz
+      call interypv(ppi2,pp2,dip2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
+          (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
+      !WORK X-PENCILS
+      call transpose_y_to_x(ppi2,pp1,ph2) !nxm ny nz
+      call interxpv(ta1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
+          nxmsize,xsize(1),xsize(2),xsize(3),1)
+      ! Convert to physical pressure
+      call rescale_pressure(ta1)
+      call update_average_scalar(pmean, ta1, ep1)
 
-    !! Mean velocity
-    call update_average_vector(umean, vmean, wmean, &
-                               ux1, uy1, uz1, ep1)
-
-    !! Second-order velocity moments
-    call update_variance_vector(uumean, vvmean, wwmean, uvmean, uwmean, vwmean, &
+      !! Mean velocity
+      call update_average_vector(umean, vmean, wmean, &
                                 ux1, uy1, uz1, ep1)
 
-    !! Scalar statistics
-    if (iscalar==1) then
-       do is=1, numscalar
-          !pmean=phi1
-          call update_average_scalar(phimean(:,:,:,is), phi1(:,:,:,is), ep1)
+      !! Second-order velocity moments
+      call update_variance_vector(uumean, vvmean, wwmean, uvmean, uwmean, vwmean, &
+                                  ux1, uy1, uz1, ep1)
 
-          !phiphimean=phi1*phi1
-          call update_average_scalar(phiphimean(:,:,:,is), phi1(:,:,:,is)*phi1(:,:,:,is), ep1)
-       enddo
+      !! Scalar statistics
+      if (iscalar==1) then
+        do is=1, numscalar
+            !pmean=phi1
+            call update_average_scalar(phimean(:,:,:,is), phi1(:,:,:,is), ep1)
+
+            !phiphimean=phi1*phi1
+            call update_average_scalar(phiphimean(:,:,:,is), phi1(:,:,:,is)*phi1(:,:,:,is), ep1)
+        enddo
+      endif
     endif
-
     ! Write all statistics
     if (mod(itime,icheckpoint)==0) then
        call read_or_write_all_stats(.false.)
@@ -373,7 +374,7 @@ contains
   subroutine update_average_scalar(um, ux, ep)
 
     use decomp_2d, only : mytype, xsize, xstS, xenS, fine_to_coarseS
-    use param, only : itime, initstat
+    use param, only : itime, initstat,istatfreq
     use var, only : di1, tmean
 
     implicit none
@@ -381,10 +382,12 @@ contains
     ! inputs
     real(mytype), dimension(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)), intent(inout) :: um
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux, ep
-
+    real(mytype) :: stat_inc
     di1 = one_minus_ep1(ux, ep)
     call fine_to_coarseS(1, di1, tmean)
-    um = um + (tmean - um) / real(itime-initstat+1, kind=mytype)
+
+    stat_inc = 1._mytype/real((itime-initstat)/istatfreq+1, kind=mytype)
+    um = um + (tmean - um) * stat_inc
 
   end subroutine update_average_scalar
 
