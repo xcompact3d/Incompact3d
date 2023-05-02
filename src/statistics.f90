@@ -387,7 +387,7 @@ contains
     call fine_to_coarseS(1, di1, tmean)
 
     stat_inc = 1._mytype/real((itime-initstat)/istatfreq+1, kind=mytype)
-    um = um + (tmean - um) / stat_inc
+    um = um + (tmean - um) * stat_inc
 
   end subroutine update_average_scalar
 
