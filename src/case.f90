@@ -250,33 +250,55 @@ contains
     real(mytype),dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
 
     integer :: j
-    integer :: num
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: T ! FIXME This can be huge
-
-    T = zero
 
     ! Recover temperature when decomposed (pressure to be recovered externally)
     if (itype.eq.itype_abl.and.ibuoyancy.eq.1) then
       do j=1,xsize(2) 
         T(:,j,:,1) = phi1(:,j,:,1) + Tstat(j,1)
       enddo
+      call real_postprocessing(rho1, ux1, uy1, uz1, pp3, T, ep1)
     else
-      T = phi1
+      call real_postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
     endif
 
+  end subroutine postprocessing
+  !##################################################################
+  !##################################################################
+  subroutine real_postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
+
+    use decomp_2d, only : mytype, xsize, ph1
+    use visu, only  : write_snapshot, end_snapshot
+    use stats, only : overall_statistic
+
+    use var, only : nzmsize
+    use var, only : itime
+    use var, only : numscalar, nrhotime, npress
+
+    use turbine, only : turbine_output
+    use probes, only : write_probes
+
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux1, uy1, uz1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(in) :: phi1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime), intent(in) :: rho1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ep1
+    real(mytype),dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
+
+    integer :: num
+
     if ((ivisu.ne.0).and.(mod(itime, ioutput).eq.0)) then
-       call write_snapshot(rho1, ux1, uy1, uz1, pp3, T, ep1, itime, num)
+       call write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime, num)
 
        ! XXX: Ultimate goal for ADIOS2 is to pass do all postproc online - do we need this?
        !      Currently, needs some way to "register" variables for IO
-       call visu_case(rho1, ux1, uy1, uz1, pp3, T, ep1, num)
+       call visu_case(rho1, ux1, uy1, uz1, pp3, phi1, ep1, num)
 
        call end_snapshot(itime, num)
     end if
 
-    call postprocess_case(rho1, ux1, uy1, uz1, pp3, T, ep1)
+    call postprocess_case(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
 
-    call overall_statistic(ux1, uy1, uz1, T, pp3, ep1)
+    call overall_statistic(ux1, uy1, uz1, phi1, pp3, ep1)
 
     if (iturbine.ne.0) then 
       call turbine_output()
@@ -284,7 +306,7 @@ contains
 
     call write_probes(ux1, uy1, uz1, pp3, phi1)
 
-  end subroutine postprocessing
+  end subroutine real_postprocessing
   !##################################################################
   !##################################################################
   subroutine postprocess_case(rho,ux,uy,uz,pp,phi,ep)
