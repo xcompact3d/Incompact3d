@@ -250,15 +250,15 @@ contains
       do j=1,xsize(2) 
         T(:,j,:,1) = phi1(:,j,:,1) + Tstat(j,1)
       enddo
-      call real_postprocessing(rho1, ux1, uy1, uz1, pp3, T, ep1)
+      call run_postprocessing(rho1, ux1, uy1, uz1, pp3, T, ep1)
     else
-      call real_postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
+      call run_postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
     endif
 
   end subroutine postprocessing
   !##################################################################
   !##################################################################
-  subroutine real_postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
+  subroutine run_postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
 
     use decomp_2d, only : mytype, xsize, ph1
     use visu, only  : write_snapshot, end_snapshot
@@ -299,7 +299,7 @@ contains
 
     call write_probes(ux1, uy1, uz1, pp3, phi1)
 
-  end subroutine real_postprocessing
+  end subroutine run_postprocessing
   !##################################################################
   !##################################################################
   subroutine postprocess_case(rho,ux,uy,uz,pp,phi,ep)
