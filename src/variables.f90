@@ -69,6 +69,7 @@ module var
 
   ! working arrays for ABL
   real(mytype), save, allocatable, dimension(:,:) :: heatflux
+  real(mytype), save, allocatable, dimension(:,:,:,:) :: abl_T
 
   ! arrays for turbine modelling
   real(mytype), save, allocatable, dimension(:,:,:) :: FTx, FTy, FTz, Fdiscx, Fdiscy, Fdiscz
@@ -1312,6 +1313,10 @@ contains
     PsiH = zero
     allocate(Tstat(xsize(2),1))
     Tstat = zero
+    if (itype.eq.itype_abl.and.ibuoyancy.eq.1) then
+       allocate(abl_T(xsize(1),xsize(2),xsize(3),numscalar))
+       abl_T = zero
+    endif
 
     !! Turbine Modelling
     if (iturbine.eq.1) then

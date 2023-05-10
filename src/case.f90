@@ -233,8 +233,7 @@ contains
   subroutine postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
 
     use decomp_2d, only : mytype, xsize, ph1
-    use var, only : nzmsize
-    use var, only : numscalar, nrhotime, npress
+    use var, only : nzmsize, numscalar, nrhotime, npress, abl_T
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux1, uy1, uz1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(in) :: phi1
@@ -243,14 +242,13 @@ contains
     real(mytype),dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
 
     integer :: j
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: T ! FIXME This can be huge
 
     ! Recover temperature when decomposed (pressure to be recovered externally)
     if (itype.eq.itype_abl.and.ibuoyancy.eq.1) then
       do j=1,xsize(2) 
-        T(:,j,:,1) = phi1(:,j,:,1) + Tstat(j,1)
+        abl_T(:,j,:,1) = phi1(:,j,:,1) + Tstat(j,1)
       enddo
-      call run_postprocessing(rho1, ux1, uy1, uz1, pp3, T, ep1)
+      call run_postprocessing(rho1, ux1, uy1, uz1, pp3, abl_T, ep1)
     else
       call run_postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
     endif
