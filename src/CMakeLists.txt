@@ -26,6 +26,7 @@ add_executable(xcompact3d
 		    BC-Sandbox.f90
                     BC-TBL.f90
                     BC-TGV.f90
+                    BC-TTBL.f90
                     BC-Uniform.f90
                     BC-User.f90
                     case.f90

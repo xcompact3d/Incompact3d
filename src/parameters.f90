@@ -347,6 +347,8 @@ subroutine parameter(input_i3d)
         print *,'Sandbox'
      elseif (itype.eq.itype_cavity) then
         print *,'Cavity'  
+     elseif (itype.eq.itype_ttbl) then
+        print *,'Temporal turbulent boundary layer' 
      else
         print *,'Unknown itype: ', itype
         stop

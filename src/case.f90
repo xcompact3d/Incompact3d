@@ -21,6 +21,7 @@ module case
   use uniform
   use sandbox
   use cavity
+  use ttbl
 
   use var, only : nzmsize
 
@@ -114,6 +115,10 @@ contains
 
        call init_cavity(ux1, uy1, uz1, ep1, phi1)
 
+    elseif (itype.eq.itype_ttbl) then
+
+       call init_ttbl(ux1, uy1, uz1, ep1, phi1)
+
     else
   
          if (nrank.eq.0) then
@@ -202,6 +207,10 @@ contains
 
        call boundary_conditions_cavity(ux, uy, uz, phi)
 
+    elseif (itype.eq.itype_ttbl) then
+
+       call boundary_conditions_ttbl(ux, uy, uz, phi, ep)
+
     endif
 
   end subroutine boundary_conditions
@@ -264,7 +273,7 @@ contains
       T = phi1
     endif
 
-    if ((ivisu.ne.0).and.(mod(itime, ioutput).eq.0)) then
+    if ((ivisu.ne.0).and.(itime.eq.1.or.(mod(itime, ioutput).eq.0))) then
        call write_snapshot(rho1, ux1, uy1, uz1, pp3, T, ep1, itime, num)
 
        ! XXX: Ultimate goal for ADIOS2 is to pass do all postproc online - do we need this?
@@ -276,7 +285,7 @@ contains
 
     call postprocess_case(rho1, ux1, uy1, uz1, pp3, T, ep1)
 
-    call overall_statistic(ux1, uy1, uz1, T, pp3, ep1)
+    if(itype.ne.itype_ttbl)call overall_statistic(ux1, uy1, uz1, T, pp3, ep1)
 
     if (iturbine.ne.0) then 
       call turbine_output()
@@ -298,6 +307,8 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep
     real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp
+    logical, save :: init
+    data init /.false./
 
     if (itype.eq.itype_user) then
 
@@ -351,7 +362,16 @@ contains
 
        call postprocess_cavity(ux, uy, uz, phi)
 
+    elseif (itype.eq.itype_ttbl) then
+      
+       if (.not.init) then
+          call postprocess_ttbl_init
+       else
+          call postprocess_ttbl (ux, uy, uz, pp, phi, ep)
+       endif
+
     endif
+    init = .true.
 
     if (iforces.eq.1) then
        call force(ux,uy,ep)
@@ -393,6 +413,10 @@ contains
     else if (itype .eq. itype_uniform) then
 
        call visu_uniform_init(case_visu_init)      
+
+    else if (itype .eq. itype_ttbl) then
+
+       call visu_ttbl_init(case_visu_init)
 
     end if
     
@@ -448,6 +472,11 @@ contains
        call visu_uniform(ux1, uy1, uz1, pp3, phi1, ep1, num)
        called_visu = .true.
 
+    elseif (itype.eq.itype_ttbl) then
+
+       call visu_ttbl(ux1, uy1, uz1, pp3, phi1, ep1, num)
+       called_visu = .true.
+
     endif
 
     if (called_visu .and. (.not. case_visu_init)) then
@@ -489,6 +518,10 @@ contains
 
        call momentum_forcing_abl(dux1, duy1, duz1, ux1, uy1, uz1, phi1)
 
+    elseif (itype.eq.itype_ttbl) then
+
+       call momentum_forcing_ttbl(dux1, duy1, duz1, ux1, uy1, uz1, phi1)
+
     endif
 
   end subroutine momentum_forcing
@@ -512,6 +545,10 @@ contains
     if (itype.eq.itype_abl) then
 
        call scalar_forcing_abl(uy1, dphi1, phi1)
+
+    elseif (itype.eq.itype_ttbl) then
+
+       call scalar_forcing_ttbl(uy1, dphi1, phi1)
 
     endif
 

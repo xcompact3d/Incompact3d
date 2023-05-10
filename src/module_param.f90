@@ -223,6 +223,10 @@ module variables
   real(mytype), save, allocatable, dimension(:,:) :: byx1,byy1,byz1,byxn,byyn,byzn
   real(mytype), save, allocatable, dimension(:,:) :: bzx1,bzy1,bzz1,bzxn,bzyn,bzzn
 
+  real(mytype), save, allocatable, dimension(:,:) :: byx1_2,byxn_2
+  real(mytype), save, allocatable, dimension(:,:) :: byy1_2,byyn_2
+  real(mytype), save, allocatable, dimension(:,:) :: byz1_2,byzn_2
+
   !module derpres
   real(mytype),allocatable,dimension(:) :: cfx6,ccx6,cbx6,cfxp6,ciwxp6,csxp6,&
        cwxp6,csx6,cwx6,cifx6,cicx6,cisx6
@@ -251,7 +255,7 @@ module variables
   !module mesh
   real(mytype),allocatable,dimension(:) :: ppy,pp2y,pp4y
   real(mytype),allocatable,dimension(:) :: ppyi,pp2yi,pp4yi
-  real(mytype),allocatable,dimension(:) :: xp,xpi,yp,ypi,dyp,zp,zpi,del
+  real(mytype),allocatable,dimension(:) :: xp,xpi,yp,ypi,dyp,zp,zpi,del,ypw
   real(mytype),allocatable,dimension(:) :: yeta,yetai
   real(mytype) :: alpha,beta
 
@@ -284,7 +288,8 @@ module param
        itype_abl = 10, &
        itype_uniform = 11, &
        itype_sandbox = 12, &
-       itype_cavity = 13
+       itype_cavity = 13, &
+       itype_ttbl = 14
 
   integer :: cont_phi,itr,itime,itest,iprocessing
   integer :: ifft,istret,iforc_entree,iturb
