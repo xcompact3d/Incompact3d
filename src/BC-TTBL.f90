@@ -28,7 +28,7 @@ module ttbl
    real(mytype), save, allocatable, dimension(:, :) :: jet_mask1, jet_mask2
 
    real(mytype), save, allocatable, dimension(:) :: ttd1a, ttd1b, ttd1c
-   !real(mytype),save, allocatable, dimension(:) :: ttd2a,ttd2b,ttd2c
+   real(mytype), save, allocatable, dimension(:) :: ttd2a, ttd2b, ttd2c
    real(mytype), save, allocatable, dimension(:) :: ttd3a, ttd3b, ttd3c
    private
    public :: init_ttbl, boundary_conditions_ttbl, momentum_forcing_ttbl, scalar_forcing_ttbl, postprocess_ttbl_init, postprocess_ttbl, visu_ttbl_init, visu_ttbl
@@ -357,27 +357,24 @@ contains
    !############################################################################
    !############################################################################
    subroutine comp_thetad(ux2, uy2, ux2m)
-      use var, only: ta1, tb1, tc1, ta2, tb2, tc2, di2
-      use ibm_param, only: ubcx, ubcy, ubcz
+      use var, only: di2
+      use ibm_param, only: ubcy
       use MPI
       implicit none
-      integer :: i, j, k, code, maxit
+      integer :: j, it, maxit, code, n12, nmax
       real(mytype), intent(in), dimension(ysize(1), ysize(2), ysize(3)) :: ux2, uy2
       real(mytype), intent(in), dimension(ysize(2)) :: ux2m
       real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ux2p, dudy2
       real(mytype), dimension(ysize(2)) :: uxuy2pm, ux2mm
       real(mytype), dimension(ysize(2)) :: ydudy2m, dudy2m, du2dy22m, duxuy2pm
-      real(mytype) :: tol, resi, thetad1, thetad2, thetad3, theta1, theta3, theta2
-      !real(8)      :: tstart
-      !tstart=MPI_WTIME()
-      logical reset
+      real(mytype) :: thetad1, thetad2, thetad3, theta1, theta2, theta3, res1, res2, res3, tol, k1, k2, delta, denom, r, sigma, temp, thetad1_m1, thetad2_m1, x12, xf, xt
+      logical :: fail
 
-      call extract_fluctuat(ux2, ux2m, ux2p) ! ux'
-      call horizontal_avrge(ux2p * uy2, uxuy2pm) ! ux'uy' in profile
-      call dery(duxuy2pm, uxuy2pm, di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy) !0*1=0
+      call extract_fluctuat(ux2, ux2m, ux2p)
+      call horizontal_avrge(ux2p * uy2, uxuy2pm)
+      call dery(duxuy2pm, uxuy2pm, di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy)
       call dery(dudy2m, ux2m, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, ubcy)
       call dery(ydudy2m, ux2m * yp, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, ubcy)
-      !ydudy2m = ydudy2m - ux2m !ydudy = (duydy+u) - u = ydudy
 
       if (iimplicit <= 0) then
          call deryy(du2dy22m, ux2m, di2, sy, sfyp, ssyp, swyp, 1, ysize(2), 1, 1, ubcy)
@@ -386,111 +383,153 @@ contains
                du2dy22m(j) = du2dy22m(j) * pp2y(j) - pp4y(j) * dudy2m(j)
             end do
          end if
-      else ! (semi)implicit Y diffusion
+      else
          do j = 1, ysize(2)
             du2dy22m(j) = -pp4y(j) * dudy2m(j)
          end do
       end if
 
-      !DEBUG
-      !call outpdt(ux2m    ,'ux2m')
-      !call outpdt(dudy2m  ,'dudy2m')
-      !call outpdt(du2dy22m,'du2dy22m')
-      !call outpdt(duxuy2pm,'duxuy2pm')
-      !ux2m(:) = ux2m_old(:)+dt*(thetad1*yp(:)*dudy2m(:)+xnu*du2dy22m(:)-duxuy2pm(:))
-      !theta1 = sum((ux2m*(one-ux2m))*ypw)
-      !call outpdt(ux2m    ,'ux2m_theta1')
-      !ux2m(:) = ux2m_old(:)+dt*(thetad2*yp(:)*dudy2m(:)+xnu*du2dy22m(:)-duxuy2pm(:))
-      !theta2 = sum((ux2m*(one-ux2m))*ypw)
-      !call outpdt(ux2m    ,'ux2m_theta2')
-
 #ifdef DOUBLE_PREC
-      tol = 1.0e-12
-      maxit = 50
+      tol = 1.0e-12_mytype
 #else
-      tol = 1.0e-7
-      maxit = 25
+      tol = 1.0e-6_mytype
 #endif
+      maxit = 100
+      k1 = 0.1_mytype
+      k2 = 0.98_mytype * (one + (one + sqrt(five)) / two)
 
-      if (itime > (ifirst + 3)) then !skipping Euler and AB2
+      if (itime > (ifirst + 3)) then
 
          if (nrank == 0 .and. mod(itime, 4) == 0) then
 
-            ! get the intervals for bisection ! do not go to wide
-            thetad = thetad !+! dt*(theta-one)
-            i = 0; resi = one; 
-            thetad1 = thetad - dt !1e-2
-            thetad2 = thetad + dt !1e-2
-            reset = .false.
-
-            do while (abs(resi) >= tol) ! error >= tolerance
-
-               i = i + 1
-               if (i > maxit) then
-                  write (6, *) 'skip thetad after', i, 'thtd', thetad3, 'tht3=', theta3; exit
-               end if
-
-               ! remember here : if (itimescheme.eq.3) then ! AB3
-               !  adt(1)= (twentythree/twelve)*dt
-               !  bdt(1)=-(    sixteen/twelve)*dt
-               !  cdt(1)= (       five/twelve)*dt
-
+            do it = 1, maxit
+               thetad1 = thetad - two ** (it - 1) * dt
                ttd1a(:) = thetad1 * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
                ux2mm(:) = ux2m(:) + adt(1) * ttd1a(:) + bdt(1) * ttd1b(:) + cdt(1) * ttd1c(:)
                theta1 = sum((ux2mm * (one - ux2mm)) * ypw)
+               res1 = theta1 - one
+               thetad2 = thetad + two ** (it - 1) * dt
+               ttd2a(:) = thetad2 * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
+               ux2mm(:) = ux2m(:) + adt(1) * ttd2a(:) + bdt(1) * ttd2b(:) + cdt(1) * ttd2c(:)
+               theta2 = sum((ux2mm * (one - ux2mm)) * ypw)
+               res2 = theta2 - one
+               if (res1 * res2 < zero) then
+                  exit
+               endif
+            enddo
 
-               thetad3 = half * (thetad1 + thetad2)
-               ttd3a(:) = thetad3 * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
-               ux2mm(:) = ux2m(:) + adt(1) * ttd3a(:) + bdt(1) * ttd3b(:) + cdt(1) * ttd3c(:)
-               theta3 = sum((ux2mm * (one - ux2mm)) * ypw)
+            if (res1 * res2 > zero) then
+               print*,"Cannot find a valid window for thetad"
+               call MPI_ABORT(MPI_COMM_WORLD, -1, code)
+            endif
 
-               ! flip flip flip ! key point
-               if ((theta1 - one) * (theta3 - one) < zero) then
-                  thetad2 = thetad3
-               else
-                  thetad1 = thetad3
-               end if
+            if (res1 > res2) then
+               temp = thetad1
+               thetad1 = thetad2
+               thetad2 = temp
+               temp = theta1
+               theta1 = theta2
+               theta2 = temp
+               temp = res1
+               res1 = res2
+               res2 = temp
+            endif
 
-               !   if(theta1.gt.1.1)then
-               !    write(6,*) 'RESET RESET RESET'
-               !    reset=.true.
-               !   endif
-               !   if(reset)then
-               !   thetad1=1e-5
-               !   thetad2=0.20d0
-               !   reset=.false.
-               !  endif
-               resi = theta1 - one
-               !if(resi.lt.zero)then ! incrase bounds
-               !  thetad1=thetad1-dt
-               !  thetad2=thetad2+dt
-               !endif
-               !write(6,*)'residual',resi,thetad3
+            n12 = ceiling(log((thetad2 - thetad1) / (two * tol)) / log(two))
+            nmax = n12 + 1
+            thetad1_m1 = huge(one)
+            thetad2_m1 = huge(one)
 
-            end do
+            do it = 1, maxit
+               denom = res2 - res1
+               fail = abs(denom) <= tiny(one)
 
-            if (abs(resi) < tol) then
-               write (6, *) 'theta dot computed in', i, 'with', thetad3, 'theta3=', theta3
-               thetad_target = thetad3
-               !print *,'Time computing theta dot (s)', real(MPI_WTIME()-tstart,4)
-            end if
+               if (.not. fail) then
+                  ! Interpolation
+                  xf = (res2 * thetad1 - res1 * thetad2) / denom
+                  ! Truncation
+                  x12 = (thetad1 + thetad2) / two
+                  sigma = sign(one, x12 - xf)
+                  delta = k1 * (thetad2 - thetad1) ** k2
+                  if (delta <= abs(x12 - xf)) then
+                     xt = xf + sigma * delta
+                  else
+                     xt = x12
+                  endif
+                  ! Projection
+                  r = max(tol * two ** (nmax - (it - 1)) - (thetad2 - thetad1) / two, zero)
+                  if (abs(xt - x12) <= r) then
+                     thetad3 = xt
+                  else
+                     thetad3 = x12 - sigma * r
+                  end if
+                  ! Update
+                  ttd3a(:) = thetad3 * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
+                  ux2mm(:) = ux2m(:) + adt(1) * ttd3a(:) + bdt(1) * ttd3b(:) + cdt(1) * ttd3c(:)
+                  theta3 = sum((ux2mm * (one - ux2mm)) * ypw)
+                  res3 = theta3 - one
+                  if (abs(res3) < tol) then
+                     thetad_target = thetad3
+                     exit
+                  endif
+                  if (res3 > zero) then
+                     thetad2 = thetad3
+                     theta2 = theta3
+                     res2 = res3
+                  elseif (res3 < 0) then
+                     thetad1 = thetad3
+                     theta1 = theta3
+                     res1 = res3
+                  else
+                     thetad1 = thetad3
+                     thetad2 = thetad3
+                  endif
+               endif
 
-         end if !nrank.eq.0
+               if (fail .or. (thetad1 == thetad1_m1 .and. thetad2 == thetad2_m1)) then
+                  thetad3 = (thetad1 + thetad2) / two
+                  ttd3a(:) = thetad3 * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
+                  ux2mm(:) = ux2m(:) + adt(1) * ttd3a(:) + bdt(1) * ttd3b(:) + cdt(1) * ttd3c(:)
+                  theta3 = sum((ux2mm * (one - ux2mm)) * ypw)
+                  res3 = theta3 - one
+                  if (abs(res3) < tol) then
+                     thetad_target = thetad3
+                     exit
+                  endif
+                  if (res1 * res3 < zero) then
+                     thetad2 = thetad3
+                     theta2 = theta3
+                     res2 = res3
+                  else
+                     thetad1 = thetad3
+                     theta1 = theta3
+                     res1 = res3
+                  endif
+               endif
+               thetad1_m1 = thetad1
+               thetad2_m1 = thetad2
+
+               if (abs(thetad2 - thetad1) < two * tol) then
+                  thetad_target = thetad3
+                  exit
+               endif
+            enddo
+
+            write (6, *) 'theta dot computed in', it, 'with', thetad3, 'theta3=', theta3
+
+         end if
 
          call MPI_BCAST(thetad_target, 1, real_type, 0, MPI_COMM_WORLD, code)
 
-      else !itime.gt.ifirst+3
-
-         !all the same in first time-steps
-         thetad1 = thetad; thetad2 = thetad
+      else
+         thetad1 = thetad; thetad2 = thetad; thetad3 = thetad
          ttd1a(:) = thetad1 * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
-         !ttd2a(:) = thetad2*ydudy2m(:)+xnu*du2dy22m(:)-duxuy2pm(:)
-         ttd3a(:) = ((thetad1 + thetad2) * 0.5) * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
-
+         ttd2a(:) = thetad2 * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
+         ttd3a(:) = thetad3 * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
       end if
 
       ttd1c(:) = ttd1b(:); ttd1b(:) = ttd1a(:)
-      !ttd2c(:)=ttd2b(:);ttd2b(:)=ttd2a(:)
+      ttd2c(:) = ttd2b(:); ttd2b(:) = ttd2a(:)
       ttd3c(:) = ttd3b(:); ttd3b(:) = ttd3a(:)
 
       return
@@ -707,7 +746,7 @@ contains
       allocate (dphidysxz(ysize(2), int(ioutput / ilist)))
 
       allocate (ttd1a(ysize(2)), ttd1b(ysize(2)), ttd1c(ysize(2)))
-      !allocate(ttd2a(ysize(2)),ttd2b(ysize(2)),ttd2c(ysize(2))) ! we might not need this intermediary step
+      allocate (ttd2a(ysize(2)), ttd2b(ysize(2)), ttd2c(ysize(2)))
       allocate (ttd3a(ysize(2)), ttd3b(ysize(2)), ttd3c(ysize(2)))
 
       ! Atempt to do a vertically periodic domain !
