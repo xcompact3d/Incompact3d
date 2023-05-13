@@ -27,9 +27,7 @@ module ttbl
 
    real(mytype), save, allocatable, dimension(:, :) :: jet_mask1, jet_mask2
 
-   real(mytype), save, allocatable, dimension(:) :: ttd1a, ttd1b, ttd1c
-   real(mytype), save, allocatable, dimension(:) :: ttd2a, ttd2b, ttd2c
-   real(mytype), save, allocatable, dimension(:) :: ttd3a, ttd3b, ttd3c
+   real(mytype), save, allocatable, dimension(:) :: ttda, ttdb, ttdc
    private
    public :: init_ttbl, boundary_conditions_ttbl, momentum_forcing_ttbl, scalar_forcing_ttbl, postprocess_ttbl_init, postprocess_ttbl, visu_ttbl_init, visu_ttbl
 
@@ -356,19 +354,168 @@ contains
    end subroutine boundary_conditions_ttbl
    !############################################################################
    !############################################################################
+   function comp_theta(thetad, ydudy2m, du2dy22m, duxuy2pm, ux2m, ux2mm) result(theta)
+      implicit none
+      real(mytype), intent(in) :: thetad
+      real(mytype), intent(in), dimension(ysize(2)) :: ydudy2m, du2dy22m, duxuy2pm, ux2m
+      real(mytype), intent(inout), dimension(ysize(2)) :: ux2mm
+      real(mytype) :: theta
+      ttda(:) = thetad * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
+      ux2mm(:) = ux2m(:) + adt(1) * ttda(:) + bdt(1) * ttdb(:) + cdt(1) * ttdc(:)
+      theta = sum((ux2mm * (one - ux2mm)) * ypw)
+   end function
+   !############################################################################
+   !############################################################################
+   subroutine swap(x, y)
+      implicit none
+      real(mytype), intent(inout) :: x, y
+      real(mytype) :: temp
+      temp = x
+      x = y
+      y = temp
+   end subroutine swap
+   !############################################################################
+   !############################################################################
+   subroutine itp(fun, x0, dx, x, it, success)
+
+      implicit none
+      real(mytype), intent(in) :: x0, dx
+      integer :: it
+      real(mytype), intent(out) :: x
+      logical, intent(out) :: success
+
+      integer :: n12, nmax
+      real(mytype) :: ax, bx, fax, fbx, axm1, bxm1, denom, xf, x12, sigma, delta, xt, r, xitp, yitp
+      logical :: too_small
+
+      integer, parameter :: maxit = 100
+      real(mytype), parameter :: k1 = 0.1_mytype, k2 = 0.98_mytype * (one + (one + sqrt(five)) / two)
+#ifdef DOUBLE_PREC
+      real(mytype), parameter :: tol = 1.0e-12_mytype
+#else
+      real(mytype), parameter :: tol = 1.0e-6_mytype
+#endif
+
+      ! Interface for function
+      interface
+         real(mytype) function fun(x)
+            use param
+            real(mytype), intent(in) :: x
+         end function
+      end interface
+
+      ! Initalise outputs
+      x = huge(one)
+      success = .false.
+
+      ! Find window to search
+      do it = 1, maxit
+         ax = x0 - two**(it - 1) * dx
+         bx = x0 + two**(it - 1) * dx
+         fax = fun(ax)
+         fbx = fun(bx)
+         if (fax * fbx < zero) exit
+         if (it == maxit) return
+      end do
+
+      ! Swap values if necessary
+      if (fax > fbx) then
+         call swap(ax, bx)
+         call swap(fax, fbx)
+      end if
+
+      ! Initialise additional parameters
+      n12 = ceiling(log((bx - ax) / (two * tol)) / log(two))
+      nmax = n12 + 1
+      axm1 = huge(one)
+      bxm1 = huge(one)
+
+      ! Find root
+      do it = 1, maxit
+         denom = fbx - fax
+         too_small = abs(denom) <= tiny(one)
+
+         ! ITP method
+         if (.not. too_small) then
+            ! Interpolation
+            xf = (fbx * ax - fax * bx) / denom
+            ! Truncation
+            x12 = (ax + bx) / two
+            sigma = sign(one, x12 - xf)
+            delta = k1 * (bx - ax)**k2
+            if (delta <= abs(x12 - xf)) then
+               xt = xf + sigma * delta
+            else
+               xt = x12
+            end if
+            ! Projection
+            r = max(tol * two**(nmax - (it - 1)) - (bx - ax) / two, zero)
+            if (abs(xt - x12) <= r) then
+               xitp = xt
+            else
+               xitp = x12 - sigma * r
+            end if
+            ! Update
+            yitp = fun(xitp)
+            if (abs(yitp) < tol) then
+               x = xitp
+               success = .true.
+               return
+            end if
+            if (yitp > zero) then
+               bx = xitp
+               fbx = yitp
+            elseif (yitp < zero) then
+               ax = xitp
+               fax = yitp
+            else
+               ax = xitp
+               bx = xitp
+            end if
+         end if
+
+         ! Bisection method
+         if (too_small .or. (ax == axm1 .and. bx == bxm1)) then
+            xitp = (ax + bx) / two
+            yitp = fun(xitp)
+            if (abs(yitp) < tol) then
+               x = xitp
+               success = .true.
+               return
+            end if
+            if (fax * yitp < zero) then
+               bx = xitp
+               fbx = yitp
+            else
+               ax = xitp
+               fax = yitp
+            end if
+         end if
+         axm1 = ax
+         bxm1 = bx
+
+         ! Check convergence
+         if (abs(bx - ax) < two * tol) then
+            x = (ax + bx) / two
+            success = .true.
+            return
+         end if
+      end do
+   end subroutine itp
+   !############################################################################
+   !############################################################################
    subroutine comp_thetad(ux2, uy2, ux2m)
       use var, only: di2
       use ibm_param, only: ubcy
       use MPI
       implicit none
-      integer :: j, it, maxit, code, n12, nmax
+      integer :: j, code, it
       real(mytype), intent(in), dimension(ysize(1), ysize(2), ysize(3)) :: ux2, uy2
       real(mytype), intent(in), dimension(ysize(2)) :: ux2m
-      real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ux2p, dudy2
+      real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ux2p
       real(mytype), dimension(ysize(2)) :: uxuy2pm, ux2mm
       real(mytype), dimension(ysize(2)) :: ydudy2m, dudy2m, du2dy22m, duxuy2pm
-      real(mytype) :: thetad1, thetad2, thetad3, theta1, theta2, theta3, res1, res2, res3, tol, k1, k2, delta, denom, r, sigma, temp, thetad1_m1, thetad2_m1, x12, xf, xt
-      logical :: fail
+      logical :: success
 
       call extract_fluctuat(ux2, ux2m, ux2p)
       call horizontal_avrge(ux2p * uy2, uxuy2pm)
@@ -389,150 +536,31 @@ contains
          end do
       end if
 
-#ifdef DOUBLE_PREC
-      tol = 1.0e-12_mytype
-#else
-      tol = 1.0e-6_mytype
-#endif
-      maxit = 100
-      k1 = 0.1_mytype
-      k2 = 0.98_mytype * (one + (one + sqrt(five)) / two)
-
+      ! Iteratively find optimal thetad
       if (itime > (ifirst + 3)) then
-
          if (nrank == 0 .and. mod(itime, 4) == 0) then
-
-            do it = 1, maxit
-               thetad1 = thetad - two ** (it - 1) * dt
-               ttd1a(:) = thetad1 * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
-               ux2mm(:) = ux2m(:) + adt(1) * ttd1a(:) + bdt(1) * ttd1b(:) + cdt(1) * ttd1c(:)
-               theta1 = sum((ux2mm * (one - ux2mm)) * ypw)
-               res1 = theta1 - one
-               thetad2 = thetad + two ** (it - 1) * dt
-               ttd2a(:) = thetad2 * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
-               ux2mm(:) = ux2m(:) + adt(1) * ttd2a(:) + bdt(1) * ttd2b(:) + cdt(1) * ttd2c(:)
-               theta2 = sum((ux2mm * (one - ux2mm)) * ypw)
-               res2 = theta2 - one
-               if (res1 * res2 < zero) then
-                  exit
-               endif
-            enddo
-
-            if (res1 * res2 > zero) then
-               print*,"Cannot find a valid window for thetad"
+            call itp(comp_theta_res, thetad, dt, thetad_target, it, success)
+            if (success) then
+               write (6, *) 'Theta dot computed in', it, 'with thetad = ', thetad_target, 'theta = ', comp_theta(thetad_target, ydudy2m, du2dy22m, duxuy2pm, ux2m, ux2mm)
+            else
+               write (6, *) 'Computing theta dot failed'
                call MPI_ABORT(MPI_COMM_WORLD, -1, code)
-            endif
-
-            if (res1 > res2) then
-               temp = thetad1
-               thetad1 = thetad2
-               thetad2 = temp
-               temp = theta1
-               theta1 = theta2
-               theta2 = temp
-               temp = res1
-               res1 = res2
-               res2 = temp
-            endif
-
-            n12 = ceiling(log((thetad2 - thetad1) / (two * tol)) / log(two))
-            nmax = n12 + 1
-            thetad1_m1 = huge(one)
-            thetad2_m1 = huge(one)
-
-            do it = 1, maxit
-               denom = res2 - res1
-               fail = abs(denom) <= tiny(one)
-
-               if (.not. fail) then
-                  ! Interpolation
-                  xf = (res2 * thetad1 - res1 * thetad2) / denom
-                  ! Truncation
-                  x12 = (thetad1 + thetad2) / two
-                  sigma = sign(one, x12 - xf)
-                  delta = k1 * (thetad2 - thetad1) ** k2
-                  if (delta <= abs(x12 - xf)) then
-                     xt = xf + sigma * delta
-                  else
-                     xt = x12
-                  endif
-                  ! Projection
-                  r = max(tol * two ** (nmax - (it - 1)) - (thetad2 - thetad1) / two, zero)
-                  if (abs(xt - x12) <= r) then
-                     thetad3 = xt
-                  else
-                     thetad3 = x12 - sigma * r
-                  end if
-                  ! Update
-                  ttd3a(:) = thetad3 * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
-                  ux2mm(:) = ux2m(:) + adt(1) * ttd3a(:) + bdt(1) * ttd3b(:) + cdt(1) * ttd3c(:)
-                  theta3 = sum((ux2mm * (one - ux2mm)) * ypw)
-                  res3 = theta3 - one
-                  if (abs(res3) < tol) then
-                     thetad_target = thetad3
-                     exit
-                  endif
-                  if (res3 > zero) then
-                     thetad2 = thetad3
-                     theta2 = theta3
-                     res2 = res3
-                  elseif (res3 < 0) then
-                     thetad1 = thetad3
-                     theta1 = theta3
-                     res1 = res3
-                  else
-                     thetad1 = thetad3
-                     thetad2 = thetad3
-                  endif
-               endif
-
-               if (fail .or. (thetad1 == thetad1_m1 .and. thetad2 == thetad2_m1)) then
-                  thetad3 = (thetad1 + thetad2) / two
-                  ttd3a(:) = thetad3 * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
-                  ux2mm(:) = ux2m(:) + adt(1) * ttd3a(:) + bdt(1) * ttd3b(:) + cdt(1) * ttd3c(:)
-                  theta3 = sum((ux2mm * (one - ux2mm)) * ypw)
-                  res3 = theta3 - one
-                  if (abs(res3) < tol) then
-                     thetad_target = thetad3
-                     exit
-                  endif
-                  if (res1 * res3 < zero) then
-                     thetad2 = thetad3
-                     theta2 = theta3
-                     res2 = res3
-                  else
-                     thetad1 = thetad3
-                     theta1 = theta3
-                     res1 = res3
-                  endif
-               endif
-               thetad1_m1 = thetad1
-               thetad2_m1 = thetad2
-
-               if (abs(thetad2 - thetad1) < two * tol) then
-                  thetad_target = thetad3
-                  exit
-               endif
-            enddo
-
-            write (6, *) 'theta dot computed in', it, 'with', thetad3, 'theta3=', theta3
-
+            end if
          end if
-
          call MPI_BCAST(thetad_target, 1, real_type, 0, MPI_COMM_WORLD, code)
-
       else
-         thetad1 = thetad; thetad2 = thetad; thetad3 = thetad
-         ttd1a(:) = thetad1 * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
-         ttd2a(:) = thetad2 * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
-         ttd3a(:) = thetad3 * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
+         ttda(:) = thetad * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
       end if
+      ttdc(:) = ttdb(:); ttdb(:) = ttda(:)
 
-      ttd1c(:) = ttd1b(:); ttd1b(:) = ttd1a(:)
-      ttd2c(:) = ttd2b(:); ttd2b(:) = ttd2a(:)
-      ttd3c(:) = ttd3b(:); ttd3b(:) = ttd3a(:)
-
-      return
+      ! Internal wrapper to pass to ITP
+   contains
+      function comp_theta_res(thetad) result(theta_res)
+         implicit none
+         real(mytype), intent(in) :: thetad
+         real(mytype) :: theta_res
+         theta_res = comp_theta(thetad, ydudy2m, du2dy22m, duxuy2pm, ux2m, ux2mm) - one
+      end function
    end subroutine comp_thetad
    !############################################################################
    !############################################################################
@@ -745,9 +773,7 @@ contains
       allocate (wpphipsxz(ysize(2), int(ioutput / ilist)))
       allocate (dphidysxz(ysize(2), int(ioutput / ilist)))
 
-      allocate (ttd1a(ysize(2)), ttd1b(ysize(2)), ttd1c(ysize(2)))
-      allocate (ttd2a(ysize(2)), ttd2b(ysize(2)), ttd2c(ysize(2)))
-      allocate (ttd3a(ysize(2)), ttd3b(ysize(2)), ttd3c(ysize(2)))
+      allocate (ttda(ysize(2)), ttdb(ysize(2)), ttdc(ysize(2)))
 
       ! Atempt to do a vertically periodic domain !
       !call alloc_x(lm1); lm1(:,:,:)=one
