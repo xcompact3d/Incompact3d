@@ -1285,12 +1285,6 @@ contains
 
       logical, intent(out) :: visu_initialised
 
-      call decomp_2d_register_variable(io_name, "vort", 1, 0, output2D, mytype)
-      call decomp_2d_register_variable(io_name, "vorx", 1, 0, output2D, mytype)
-      call decomp_2d_register_variable(io_name, "vory", 1, 0, output2D, mytype)
-      call decomp_2d_register_variable(io_name, "vorz", 1, 0, output2D, mytype)
-      call decomp_2d_register_variable(io_name, "critq", 1, 0, output2D, mytype)
-
       visu_initialised = .true.
 
    end subroutine visu_ttbl_init
@@ -1312,89 +1306,6 @@ contains
       real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
       real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ep1
       integer, intent(in) :: num
-
-      ! Perform communications if needed (new stuf, added by Paul)
-      if (sync_vel_needed) then
-         call transpose_x_to_y(ux1, ux2)
-         call transpose_x_to_y(uy1, uy2)
-         call transpose_x_to_y(uz1, uz2)
-         call transpose_y_to_z(ux2, ux3)
-         call transpose_y_to_z(uy2, uy3)
-         call transpose_y_to_z(uz2, uz3)
-         sync_vel_needed = .false.
-      end if
-
-      !Performing transpose operations to synchronize velocity components three times during post-processing can be a waste of time
-      !if post-processing at each time step
-
-      !x-derivatives
-      call derx(ta1, ux1, di1, sx, ffx, fsx, fwx, xsize(1), xsize(2), xsize(3), 0, ubcx)
-      call derx(tb1, uy1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, ubcy)
-      call derx(tc1, uz1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, ubcz)
-      !y-derivatives
-      call dery(ta2, ux2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, ubcx)
-      call dery(tb2, uy2, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0, ubcy)
-      call dery(tc2, uz2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, ubcz)
-    !!z-derivatives
-      call derz(ta3, ux3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, ubcx)
-      call derz(tb3, uy3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, ubcy)
-      call derz(tc3, uz3, di3, sz, ffz, fsz, fwz, zsize(1), zsize(2), zsize(3), 0, ubcz)
-    !!all back to x-pencils
-      call transpose_z_to_y(ta3, td2)
-      call transpose_z_to_y(tb3, te2)
-      call transpose_z_to_y(tc3, tf2)
-      call transpose_y_to_x(td2, tg1)
-      call transpose_y_to_x(te2, th1)
-      call transpose_y_to_x(tf2, ti1)
-      call transpose_y_to_x(ta2, td1)
-      call transpose_y_to_x(tb2, te1)
-      call transpose_y_to_x(tc2, tf1)
-
-      !du/dx=ta1 du/dy=td1 and du/dz=tg1
-      !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
-      !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
-
-      !VORTICITY FIELD (magnitude and 3 components)
-      di1 = zero
-      di1(:, :, :) = sqrt((tf1(:, :, :) - th1(:, :, :))**2 &
-                          + (tg1(:, :, :) - tc1(:, :, :))**2 &
-                          + (tb1(:, :, :) - td1(:, :, :))**2)
-      call write_field(di1, ".", "vort", num, flush=.true.)
-
-      di1 = zero
-      di1(:, :, :) = tf1(:, :, :) - th1(:, :, :)
-      call write_field(di1, ".", "vorx", num, flush=.true.)
-
-      di1 = zero
-      di1(:, :, :) = tg1(:, :, :) - tc1(:, :, :)
-      call write_field(di1, ".", "vory", num, flush=.true.)
-
-      di1 = zero
-      di1(:, :, :) = tb1(:, :, :) - td1(:, :, :)
-      call write_field(di1, ".", "vorz", num, flush=.true.)
-
-      !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
-      di1 = zero
-      di1(:, :, :) = -0.5 * (ta1(:, :, :)**2 + te1(:, :, :)**2 + ti1(:, :, :)**2) &
-                     - td1(:, :, :) * tb1(:, :, :) &
-                     - tg1(:, :, :) * tc1(:, :, :) &
-                     - th1(:, :, :) * tf1(:, :, :)
-      call write_field(di1, ".", "critq", num, flush=.true.)
-
-      ! lambda never worked !  (unfished)
-      !call write_field(lambda1, ".", "lambda", num)
-      !  di1=zero
-      !  write(filename,"('utmap',I4.4)") itime/imodulo
-      !  do ijk=1,nvect1
-      !     di1(ijk,1,1)=sqrt(sqrt((td1(ijk,1,1)**2)+(tf1(ijk,1,1)**2))*xnu)
-      !  enddo
-
-      ! writing tau u and w and friction velocity (unfished)
-      !  call decomp_2d_write_plane(1,di1,2,1,filename)
-      !  write(filename,"('tau_u',I4.4)") itime/imodulo
-      !  call decomp_2d_write_plane(1,td1,2,1,filename)
-      !  write(filename,"('tau_w',I4.4)") itime/imodulo
-      !  call decomp_2d_write_plane(1,tf1,2,1,filename)
 
    end subroutine visu_ttbl
 
