@@ -5,24 +5,19 @@
 module ttbl
 
    use decomp_2d
-   use decomp_2d_io
    use variables
    use param
    use MPI
 
    implicit none
 
-   integer :: FS!,rc1 ! rc1 is the point for periodicity (idea)
+   integer :: FS
    character(len=100) :: fileformat
-   character(len=1), parameter :: NL = char(10) !new line character
-   logical :: if_irrot
-   character(len=*), parameter :: io_ttbl = "io-ttbl"
 
-   !real(mytype),save,allocatable,dimension(:,:,:) :: lm1,lm2
    real(mytype), save, allocatable, dimension(:, :) :: phisxz, phipphipsxz, upphipsxz, vpphipsxz, wpphipsxz, dphidysxz
-   real(mytype), save, allocatable, dimension(:, :) :: enssxz, psxz, usxz, vsxz, wsxz, upupsxz, enspenspsxz
+   real(mytype), save, allocatable, dimension(:, :) :: usxz, vsxz, wsxz, upupsxz
    real(mytype), save, allocatable, dimension(:, :) :: vpvpsxz, wpwpsxz, upvpsxz, vpwpsxz, upwpsxz
-   real(mytype), save, allocatable, dimension(:, :) :: tkesxz, Isxz, epssxz
+   real(mytype), save, allocatable, dimension(:, :) :: tkesxz, epssxz
    real(mytype), save :: thetad, thetad_target
 
    real(mytype), save, allocatable, dimension(:, :) :: jet_mask1, jet_mask2
@@ -32,7 +27,8 @@ module ttbl
    public :: init_ttbl, boundary_conditions_ttbl, momentum_forcing_ttbl, scalar_forcing_ttbl, postprocess_ttbl_init, postprocess_ttbl, visu_ttbl_init, visu_ttbl
 
 contains
-
+   !############################################################################
+   !############################################################################
    subroutine init_ttbl(ux1, uy1, uz1, ep1, phi1)
       implicit none
       real(mytype), intent(inout), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
@@ -354,216 +350,6 @@ contains
    end subroutine boundary_conditions_ttbl
    !############################################################################
    !############################################################################
-   function comp_theta(thetad, ydudy2m, du2dy22m, duxuy2pm, ux2m, ux2mm) result(theta)
-      implicit none
-      real(mytype), intent(in) :: thetad
-      real(mytype), intent(in), dimension(ysize(2)) :: ydudy2m, du2dy22m, duxuy2pm, ux2m
-      real(mytype), intent(inout), dimension(ysize(2)) :: ux2mm
-      real(mytype) :: theta
-      ttda(:) = thetad * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
-      ux2mm(:) = ux2m(:) + adt(1) * ttda(:) + bdt(1) * ttdb(:) + cdt(1) * ttdc(:)
-      theta = sum((ux2mm * (one - ux2mm)) * ypw)
-   end function
-   !############################################################################
-   !############################################################################
-   subroutine swap(x, y)
-      implicit none
-      real(mytype), intent(inout) :: x, y
-      real(mytype) :: temp
-      temp = x
-      x = y
-      y = temp
-   end subroutine swap
-   !############################################################################
-   !############################################################################
-   subroutine itp(fun, x0, dx, x, it, success)
-
-      implicit none
-      real(mytype), intent(in) :: x0, dx
-      integer :: it
-      real(mytype), intent(out) :: x
-      logical, intent(out) :: success
-
-      integer :: n12, nmax
-      real(mytype) :: ax, bx, fax, fbx, axm1, bxm1, denom, xf, x12, sigma, delta, xt, r, xitp, yitp
-      logical :: too_small
-
-      integer, parameter :: maxit = 100
-      real(mytype), parameter :: k1 = 0.1_mytype, k2 = 0.98_mytype * (one + (one + sqrt(five)) / two)
-#ifdef DOUBLE_PREC
-      real(mytype), parameter :: tol = 1.0e-12_mytype
-#else
-      real(mytype), parameter :: tol = 1.0e-6_mytype
-#endif
-
-      ! Interface for function
-      interface
-         real(mytype) function fun(x)
-            use param
-            real(mytype), intent(in) :: x
-         end function
-      end interface
-
-      ! Initalise outputs
-      x = huge(one)
-      success = .false.
-
-      ! Find window to search
-      do it = 1, maxit
-         ax = x0 - two**(it - 1) * dx
-         bx = x0 + two**(it - 1) * dx
-         fax = fun(ax)
-         fbx = fun(bx)
-         if (fax * fbx < zero) exit
-         if (it == maxit) return
-      end do
-
-      ! Swap values if necessary
-      if (fax > fbx) then
-         call swap(ax, bx)
-         call swap(fax, fbx)
-      end if
-
-      ! Initialise additional parameters
-      n12 = ceiling(log((bx - ax) / (two * tol)) / log(two))
-      nmax = n12 + 1
-      axm1 = huge(one)
-      bxm1 = huge(one)
-
-      ! Find root
-      do it = 1, maxit
-         denom = fbx - fax
-         too_small = abs(denom) <= tiny(one)
-
-         ! ITP method
-         if (.not. too_small) then
-            ! Interpolation
-            xf = (fbx * ax - fax * bx) / denom
-            ! Truncation
-            x12 = (ax + bx) / two
-            sigma = sign(one, x12 - xf)
-            delta = k1 * (bx - ax)**k2
-            if (delta <= abs(x12 - xf)) then
-               xt = xf + sigma * delta
-            else
-               xt = x12
-            end if
-            ! Projection
-            r = max(tol * two**(nmax - (it - 1)) - (bx - ax) / two, zero)
-            if (abs(xt - x12) <= r) then
-               xitp = xt
-            else
-               xitp = x12 - sigma * r
-            end if
-            ! Update
-            yitp = fun(xitp)
-            if (abs(yitp) < tol) then
-               x = xitp
-               success = .true.
-               return
-            end if
-            if (yitp > zero) then
-               bx = xitp
-               fbx = yitp
-            elseif (yitp < zero) then
-               ax = xitp
-               fax = yitp
-            else
-               ax = xitp
-               bx = xitp
-            end if
-         end if
-
-         ! Bisection method
-         if (too_small .or. (ax == axm1 .and. bx == bxm1)) then
-            xitp = (ax + bx) / two
-            yitp = fun(xitp)
-            if (abs(yitp) < tol) then
-               x = xitp
-               success = .true.
-               return
-            end if
-            if (fax * yitp < zero) then
-               bx = xitp
-               fbx = yitp
-            else
-               ax = xitp
-               fax = yitp
-            end if
-         end if
-         axm1 = ax
-         bxm1 = bx
-
-         ! Check convergence
-         if (abs(bx - ax) < two * tol) then
-            x = (ax + bx) / two
-            success = .true.
-            return
-         end if
-      end do
-   end subroutine itp
-   !############################################################################
-   !############################################################################
-   subroutine comp_thetad(ux2, uy2, ux2m)
-      use var, only: di2
-      use ibm_param, only: ubcy
-      use MPI
-      implicit none
-      integer :: j, code, it
-      real(mytype), intent(in), dimension(ysize(1), ysize(2), ysize(3)) :: ux2, uy2
-      real(mytype), intent(in), dimension(ysize(2)) :: ux2m
-      real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ux2p
-      real(mytype), dimension(ysize(2)) :: uxuy2pm, ux2mm
-      real(mytype), dimension(ysize(2)) :: ydudy2m, dudy2m, du2dy22m, duxuy2pm
-      logical :: success
-
-      call extract_fluctuat(ux2, ux2m, ux2p)
-      call horizontal_avrge(ux2p * uy2, uxuy2pm)
-      call dery(duxuy2pm, uxuy2pm, di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy)
-      call dery(dudy2m, ux2m, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, ubcy)
-      call dery(ydudy2m, ux2m * yp, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, ubcy)
-
-      if (iimplicit <= 0) then
-         call deryy(du2dy22m, ux2m, di2, sy, sfyp, ssyp, swyp, 1, ysize(2), 1, 1, ubcy)
-         if (istret /= 0) then
-            do j = 1, ysize(2)
-               du2dy22m(j) = du2dy22m(j) * pp2y(j) - pp4y(j) * dudy2m(j)
-            end do
-         end if
-      else
-         do j = 1, ysize(2)
-            du2dy22m(j) = -pp4y(j) * dudy2m(j)
-         end do
-      end if
-
-      ! Iteratively find optimal thetad
-      if (itime > (ifirst + 3)) then
-         if (nrank == 0 .and. mod(itime, 4) == 0) then
-            call itp(comp_theta_res, thetad, dt, thetad_target, it, success)
-            if (success) then
-               write (6, *) 'Theta dot computed in', it, 'with thetad = ', thetad_target, 'theta = ', comp_theta(thetad_target, ydudy2m, du2dy22m, duxuy2pm, ux2m, ux2mm)
-            else
-               write (6, *) 'Computing theta dot failed'
-               call MPI_ABORT(MPI_COMM_WORLD, -1, code)
-            end if
-         end if
-         call MPI_BCAST(thetad_target, 1, real_type, 0, MPI_COMM_WORLD, code)
-      else
-         ttda(:) = thetad * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
-      end if
-      ttdc(:) = ttdb(:); ttdb(:) = ttda(:)
-
-      ! Internal wrapper to pass to ITP
-   contains
-      function comp_theta_res(thetad) result(theta_res)
-         implicit none
-         real(mytype), intent(in) :: thetad
-         real(mytype) :: theta_res
-         theta_res = comp_theta(thetad, ydudy2m, du2dy22m, duxuy2pm, ux2m, ux2mm) - one
-      end function
-   end subroutine comp_thetad
-   !############################################################################
-   !############################################################################
    subroutine momentum_forcing_ttbl(dux1, duy1, duz1, ux1, uy1, uz1, phi1)
       use var, only: ta1, tb1, tc1, ux2, uy2, uz2, ta2, tb2, tc2, di2
       use ibm_param, only: ubcx, ubcy, ubcz
@@ -751,20 +537,16 @@ contains
       end if
 
       if (nrank == 0) write (6, *) 'Allocating statistics variables!', ioutput / ilist
-      !allocate(enssxz(ysize(2),      int(ioutput/ilist)))
-      allocate (psxz(ysize(2), int(ioutput / ilist)))
       allocate (usxz(ysize(2), int(ioutput / ilist)))
       allocate (vsxz(ysize(2), int(ioutput / ilist)))
       allocate (wsxz(ysize(2), int(ioutput / ilist)))
       allocate (upupsxz(ysize(2), int(ioutput / ilist)))
-      allocate (enspenspsxz(ysize(2), int(ioutput / ilist)))
       allocate (vpvpsxz(ysize(2), int(ioutput / ilist)))
       allocate (wpwpsxz(ysize(2), int(ioutput / ilist)))
       allocate (upvpsxz(ysize(2), int(ioutput / ilist)))
       allocate (vpwpsxz(ysize(2), int(ioutput / ilist)))
       allocate (upwpsxz(ysize(2), int(ioutput / ilist)))
       allocate (tkesxz(ysize(2), int(ioutput / ilist)))
-      !allocate(Isxz(ysize(2),        int(ioutput/ilist)))
       allocate (epssxz(ysize(2), int(ioutput / ilist)))
       allocate (phisxz(ysize(2), int(ioutput / ilist)))
       allocate (phipphipsxz(ysize(2), int(ioutput / ilist)))
@@ -1208,35 +990,39 @@ contains
    end subroutine postprocess_ttbl
    !############################################################################
    !############################################################################
-   subroutine outp(field, filename) ! Written by R Frantz
-      !outpost to disk buffered quantities - avoid IO at every iteration
+   subroutine visu_ttbl_init(visu_initialised)
+
+      use decomp_2d, only: mytype
+      use decomp_2d_io, only: decomp_2d_register_variable
+      use visu, only: io_name, output2D
+
       implicit none
-      real(mytype), intent(IN), dimension(ysize(2), ioutput) :: field
-      character(len=*), intent(IN) :: filename
-      integer :: i
-      character(len=1), parameter :: NL = char(10)
-      character(len=300) :: fileformat
-      write (fileformat, '( "(",I4,"(E16.8),A)" )') ny
-      open (67, file=trim(filename), status='unknown', form='formatted', access='direct', recl=(ny * 16 + 1))
-      do i = 1, ioutput / ilist
-         write (67, fileformat, rec=itime / ilist - ioutput / ilist + i) field(:, i), NL
-      end do
-      close (67)
-   end subroutine outp
+
+      logical, intent(out) :: visu_initialised
+
+      visu_initialised = .true.
+
+   end subroutine visu_ttbl_init
    !############################################################################
    !############################################################################
-   subroutine outpd(field, filename) ! Written by R Frantz
+   subroutine visu_ttbl(ux1, uy1, uz1, pp3, phi1, ep1, num)
+
+      use var, only: ux2, uy2, uz2, ux3, uy3, uz3
+      use var, only: ta1, tb1, tc1, td1, te1, tf1, tg1, th1, ti1, di1
+      use var, only: ta2, tb2, tc2, td2, te2, tf2, di2, ta3, tb3, tc3, td3, te3, tf3, di3
+      use var, only: nxmsize, nymsize, nzmsize
+      use visu, only: write_field
+      use ibm_param, only: ubcx, ubcy, ubcz
+
       implicit none
-      real(mytype), intent(IN), dimension(ysize(2)) :: field
-      character(len=*), intent(IN) :: filename
-      integer :: i
-      character(len=1), parameter :: NL = char(10)
-      character(len=300) :: fileformat
-      write (fileformat, '( "(",I4,"(E16.8),A)" )') ny
-      open (67, file=trim(filename), status='unknown', form='formatted', access='direct', recl=(ny * 16 + 1))
-      write (67, fileformat, rec=itime / ioutput) field, NL
-      close (67)
-   end subroutine outpd
+
+      real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+      real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
+      real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
+      real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ep1
+      integer, intent(in) :: num
+
+   end subroutine visu_ttbl
    !############################################################################
    !############################################################################
    subroutine horizontal_avrge(field2, profile) ! Written by R Frantz
@@ -1280,6 +1066,247 @@ contains
       !     field2p(:,j,:) = field2(:,j,:) - profile(j)
       !  enddo
    end subroutine extract_fluctuat
+   !############################################################################
+   !############################################################################
+   subroutine comp_thetad(ux2, uy2, ux2m)
+      use var, only: di2
+      use ibm_param, only: ubcy
+      use MPI
+      implicit none
+      integer :: j, code, it
+      real(mytype), intent(in), dimension(ysize(1), ysize(2), ysize(3)) :: ux2, uy2
+      real(mytype), intent(in), dimension(ysize(2)) :: ux2m
+      real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ux2p
+      real(mytype), dimension(ysize(2)) :: uxuy2pm, ux2mm
+      real(mytype), dimension(ysize(2)) :: ydudy2m, dudy2m, du2dy22m, duxuy2pm
+      logical :: success
+
+      call extract_fluctuat(ux2, ux2m, ux2p)
+      call horizontal_avrge(ux2p * uy2, uxuy2pm)
+      call dery(duxuy2pm, uxuy2pm, di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy)
+      call dery(dudy2m, ux2m, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, ubcy)
+      call dery(ydudy2m, ux2m * yp, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, ubcy)
+
+      if (iimplicit <= 0) then
+         call deryy(du2dy22m, ux2m, di2, sy, sfyp, ssyp, swyp, 1, ysize(2), 1, 1, ubcy)
+         if (istret /= 0) then
+            do j = 1, ysize(2)
+               du2dy22m(j) = du2dy22m(j) * pp2y(j) - pp4y(j) * dudy2m(j)
+            end do
+         end if
+      else
+         do j = 1, ysize(2)
+            du2dy22m(j) = -pp4y(j) * dudy2m(j)
+         end do
+      end if
+
+      ! Iteratively find optimal thetad
+      if (itime > (ifirst + 3)) then
+         if (nrank == 0 .and. mod(itime, 4) == 0) then
+            call itp(comp_theta_res, thetad, dt, thetad_target, it, success)
+            if (success) then
+               write (6, *) 'Theta dot computed in', it, 'with thetad = ', thetad_target, 'theta = ', comp_theta(thetad_target, ydudy2m, du2dy22m, duxuy2pm, ux2m, ux2mm)
+            else
+               write (6, *) 'Computing theta dot failed'
+               call MPI_ABORT(MPI_COMM_WORLD, -1, code)
+            end if
+         end if
+         call MPI_BCAST(thetad_target, 1, real_type, 0, MPI_COMM_WORLD, code)
+      else
+         ttda(:) = thetad * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
+      end if
+      ttdc(:) = ttdb(:); ttdb(:) = ttda(:)
+
+      ! Internal wrapper to pass to ITP
+   contains
+      function comp_theta_res(thetad) result(theta_res)
+         implicit none
+         real(mytype), intent(in) :: thetad
+         real(mytype) :: theta_res
+         theta_res = comp_theta(thetad, ydudy2m, du2dy22m, duxuy2pm, ux2m, ux2mm) - one
+      end function
+   end subroutine comp_thetad
+   !############################################################################
+   !############################################################################
+   function comp_theta(thetad, ydudy2m, du2dy22m, duxuy2pm, ux2m, ux2mm) result(theta)
+      implicit none
+      real(mytype), intent(in) :: thetad
+      real(mytype), intent(in), dimension(ysize(2)) :: ydudy2m, du2dy22m, duxuy2pm, ux2m
+      real(mytype), intent(inout), dimension(ysize(2)) :: ux2mm
+      real(mytype) :: theta
+      ttda(:) = thetad * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
+      ux2mm(:) = ux2m(:) + adt(1) * ttda(:) + bdt(1) * ttdb(:) + cdt(1) * ttdc(:)
+      theta = sum((ux2mm * (one - ux2mm)) * ypw)
+   end function
+   !############################################################################
+   !############################################################################
+   subroutine itp(fun, x0, dx, x, it, success)
+
+      implicit none
+      real(mytype), intent(in) :: x0, dx
+      integer :: it
+      real(mytype), intent(out) :: x
+      logical, intent(out) :: success
+
+      integer :: n12, nmax
+      real(mytype) :: ax, bx, fax, fbx, axm1, bxm1, denom, xf, x12, sigma, delta, xt, r, xitp, yitp
+      logical :: too_small
+
+      integer, parameter :: maxit = 100
+      real(mytype), parameter :: k1 = 0.1_mytype, k2 = 0.98_mytype * (one + (one + sqrt(five)) / two)
+#ifdef DOUBLE_PREC
+      real(mytype), parameter :: tol = 1.0e-12_mytype
+#else
+      real(mytype), parameter :: tol = 1.0e-6_mytype
+#endif
+
+      ! Interface for function
+      interface
+         real(mytype) function fun(x)
+            use param
+            real(mytype), intent(in) :: x
+         end function
+      end interface
+
+      ! Initalise outputs
+      x = huge(one)
+      success = .false.
+
+      ! Find window to search
+      do it = 1, maxit
+         ax = x0 - two**(it - 1) * dx
+         bx = x0 + two**(it - 1) * dx
+         fax = fun(ax)
+         fbx = fun(bx)
+         if (fax * fbx < zero) exit
+         if (it == maxit) return
+      end do
+
+      ! Swap values if necessary
+      if (fax > fbx) then
+         call swap(ax, bx)
+         call swap(fax, fbx)
+      end if
+
+      ! Initialise additional parameters
+      n12 = ceiling(log((bx - ax) / (two * tol)) / log(two))
+      nmax = n12 + 1
+      axm1 = huge(one)
+      bxm1 = huge(one)
+
+      ! Find root
+      do it = 1, maxit
+         denom = fbx - fax
+         too_small = abs(denom) <= tiny(one)
+
+         ! ITP method
+         if (.not. too_small) then
+            ! Interpolation
+            xf = (fbx * ax - fax * bx) / denom
+            ! Truncation
+            x12 = (ax + bx) / two
+            sigma = sign(one, x12 - xf)
+            delta = k1 * (bx - ax)**k2
+            if (delta <= abs(x12 - xf)) then
+               xt = xf + sigma * delta
+            else
+               xt = x12
+            end if
+            ! Projection
+            r = max(tol * two**(nmax - (it - 1)) - (bx - ax) / two, zero)
+            if (abs(xt - x12) <= r) then
+               xitp = xt
+            else
+               xitp = x12 - sigma * r
+            end if
+            ! Update
+            yitp = fun(xitp)
+            if (abs(yitp) < tol) then
+               x = xitp
+               success = .true.
+               return
+            end if
+            if (yitp > zero) then
+               bx = xitp
+               fbx = yitp
+            elseif (yitp < zero) then
+               ax = xitp
+               fax = yitp
+            else
+               ax = xitp
+               bx = xitp
+            end if
+         end if
+
+         ! Bisection method
+         if (too_small .or. (ax == axm1 .and. bx == bxm1)) then
+            xitp = (ax + bx) / two
+            yitp = fun(xitp)
+            if (abs(yitp) < tol) then
+               x = xitp
+               success = .true.
+               return
+            end if
+            if (fax * yitp < zero) then
+               bx = xitp
+               fbx = yitp
+            else
+               ax = xitp
+               fax = yitp
+            end if
+         end if
+         axm1 = ax
+         bxm1 = bx
+
+         ! Check convergence
+         if (abs(bx - ax) < two * tol) then
+            x = (ax + bx) / two
+            success = .true.
+            return
+         end if
+      end do
+   end subroutine itp
+   !############################################################################
+   !############################################################################
+   subroutine swap(x, y)
+      implicit none
+      real(mytype), intent(inout) :: x, y
+      real(mytype) :: temp
+      temp = x
+      x = y
+      y = temp
+   end subroutine swap
+   !############################################################################
+   !############################################################################
+   subroutine outp(field, filename) ! Written by R Frantz
+      !outpost to disk buffered quantities - avoid IO at every iteration
+      implicit none
+      real(mytype), intent(IN), dimension(ysize(2), ioutput) :: field
+      character(len=*), intent(IN) :: filename
+      integer :: i
+      character(len=1), parameter :: NL = char(10)
+      character(len=300) :: fileformat
+      write (fileformat, '( "(",I4,"(E16.8),A)" )') ny
+      open (67, file=trim(filename), status='unknown', form='formatted', access='direct', recl=(ny * 16 + 1))
+      do i = 1, ioutput / ilist
+         write (67, fileformat, rec=itime / ilist - ioutput / ilist + i) field(:, i), NL
+      end do
+      close (67)
+   end subroutine outp
+   !############################################################################
+   !############################################################################
+   subroutine outpd(field, filename) ! Written by R Frantz
+      implicit none
+      real(mytype), intent(IN), dimension(ysize(2)) :: field
+      character(len=*), intent(IN) :: filename
+      integer :: i
+      character(len=1), parameter :: NL = char(10)
+      character(len=300) :: fileformat
+      write (fileformat, '( "(",I4,"(E16.8),A)" )') ny
+      open (67, file=trim(filename), status='unknown', form='formatted', access='direct', recl=(ny * 16 + 1))
+      write (67, fileformat, rec=itime / ioutput) field, NL
+      close (67)
+   end subroutine outpd
    !############################################################################
    !############################################################################
    subroutine pressure_x(pp3, pre1)
@@ -1338,40 +1365,4 @@ contains
       end do
       return
    end subroutine dissipation
-   !############################################################################
-   !############################################################################
-   subroutine visu_ttbl_init(visu_initialised)
-
-      use decomp_2d, only: mytype
-      use decomp_2d_io, only: decomp_2d_register_variable
-      use visu, only: io_name, output2D
-
-      implicit none
-
-      logical, intent(out) :: visu_initialised
-
-      visu_initialised = .true.
-
-   end subroutine visu_ttbl_init
-   !############################################################################
-   !############################################################################
-   subroutine visu_ttbl(ux1, uy1, uz1, pp3, phi1, ep1, num)
-
-      use var, only: ux2, uy2, uz2, ux3, uy3, uz3
-      use var, only: ta1, tb1, tc1, td1, te1, tf1, tg1, th1, ti1, di1
-      use var, only: ta2, tb2, tc2, td2, te2, tf2, di2, ta3, tb3, tc3, td3, te3, tf3, di3
-      use var, only: nxmsize, nymsize, nzmsize
-      use visu, only: write_field
-      use ibm_param, only: ubcx, ubcy, ubcz
-
-      implicit none
-
-      real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
-      real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
-      real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
-      real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ep1
-      integer, intent(in) :: num
-
-   end subroutine visu_ttbl
-
 end module ttbl
