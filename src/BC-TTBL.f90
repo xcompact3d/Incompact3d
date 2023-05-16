@@ -1025,46 +1025,29 @@ contains
    end subroutine visu_ttbl
    !############################################################################
    !############################################################################
-   subroutine horizontal_avrge(field2, profile) ! Written by R Frantz
+   subroutine horizontal_avrge(field, profile)
       implicit none
-      real(mytype), intent(in), dimension(ysize(1), ysize(2), ysize(3)) :: field2
-      real(mytype), dimension(ysize(2)) :: sxz, sxz1
+      real(mytype), intent(in), dimension(ysize(1), ysize(2), ysize(3)) :: field
       real(mytype), intent(out), dimension(ysize(2)) :: profile
-      integer :: i, j, k, code
-      sxz = zero
-      do k = 1, ysize(3)
-         do j = 1, ysize(2)
-            do i = 1, ysize(1)
-               sxz(j) = sxz(j) + field2(i, j, k)
-            end do
-         end do
+      real(mytype), dimension(ysize(2)) :: sxz
+      integer :: j, code
+      do j = 1, ysize(2)
+         sxz(j) = sum(field(:,j,:))
       end do
-      ! Why not ?
-      !  do j=1,ysize(2)
-      !     sxz(j) = sum(field2(:,j,:))
-      !  enddo
-      call MPI_ALLREDUCE(sxz, sxz1, ny, real_type, MPI_SUM, MPI_COMM_WORLD, code)
-      profile = sxz1 / real(nx * nz, mytype)
+      call MPI_ALLREDUCE(MPI_IN_PLACE, sxz, ny, real_type, MPI_SUM, MPI_COMM_WORLD, code)
+      profile = sxz / real(nx * nz, mytype)
    end subroutine horizontal_avrge
    !############################################################################
    !############################################################################
-   subroutine extract_fluctuat(field2, profile, field2p) ! Written by R Frantz
+   subroutine extract_fluctuat(field, profile, fieldp)
       implicit none
-      real(mytype), intent(in), dimension(ysize(1), ysize(2), ysize(3)) :: field2
+      real(mytype), intent(in), dimension(ysize(1), ysize(2), ysize(3)) :: field
       real(mytype), intent(in), dimension(ysize(2)) :: profile
-      real(mytype), intent(out), dimension(ysize(1), ysize(2), ysize(3)) :: field2p
-      integer :: i, j, k
-      do k = 1, ysize(3)
-         do j = 1, ysize(2)
-            do i = 1, ysize(1)
-               field2p(i, j, k) = field2(i, j, k) - profile(j)
-            end do
-         end do
+      real(mytype), intent(out), dimension(ysize(1), ysize(2), ysize(3)) :: fieldp
+      integer :: j
+      do j = 1, ysize(2)
+         fieldp(:,j,:) = field(:,j,:) - profile(j)
       end do
-      ! why not ?
-      !  do j=1,ysize(2)
-      !     field2p(:,j,:) = field2(:,j,:) - profile(j)
-      !  enddo
    end subroutine extract_fluctuat
    !############################################################################
    !############################################################################
@@ -1079,6 +1062,7 @@ contains
       real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ux2p
       real(mytype), dimension(ysize(2)) :: uxuy2pm, ux2mm
       real(mytype), dimension(ysize(2)) :: ydudy2m, dudy2m, du2dy22m, duxuy2pm
+      real(mytype) :: theta
       logical :: success
 
       call extract_fluctuat(ux2, ux2m, ux2p)
@@ -1105,7 +1089,8 @@ contains
          if (nrank == 0 .and. mod(itime, 4) == 0) then
             call itp(comp_theta_res, thetad, dt, thetad_target, it, success)
             if (success) then
-               write (6, *) 'Theta dot computed in', it, 'with thetad = ', thetad_target, 'theta = ', comp_theta(thetad_target, ydudy2m, du2dy22m, duxuy2pm, ux2m, ux2mm)
+               theta = comp_theta(thetad_target, ydudy2m, du2dy22m, duxuy2pm, ux2m, ux2mm)
+               write (6, *) 'Theta dot computed in', it, 'with thetad = ', thetad_target, 'theta = ', theta
             else
                write (6, *) 'Computing theta dot failed'
                call MPI_ABORT(MPI_COMM_WORLD, -1, code)
