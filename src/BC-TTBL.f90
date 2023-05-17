@@ -18,7 +18,7 @@ module ttbl
    real(mytype), save, allocatable, dimension(:, :) :: vpvpsxz, wpwpsxz, upvpsxz, vpwpsxz, upwpsxz
    real(mytype), save, allocatable, dimension(:, :) :: tkesxz, epssxz
    real(mytype), save, allocatable, dimension(:) :: ttda, ttdb, ttdc
-   real(mytype), save :: thetad, thetad_target
+   real(mytype), save :: thetad
 
    public :: init_ttbl, boundary_conditions_ttbl, momentum_forcing_ttbl, scalar_forcing_ttbl, postprocess_ttbl, visu_ttbl_init, visu_ttbl
 
@@ -169,108 +169,71 @@ contains
       implicit none
       real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
       real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
-      real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: dux2, duy2, duz2
       real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
-      real(mytype), dimension(ysize(2)) :: ux2m
-      real(mytype) :: y, ttheta, delay
+
+      real(mytype), dimension(ysize(2)) :: ux2m, ydudy2m, dudy2m, du2dy22m, duxuy2pm
+      real(mytype) :: y, delta, theta, tau_wall, ufric
       integer :: i, j, k, code
 
-      real(mytype), dimension(ysize(2)) :: ydudy2m, dudy2m, du2dy22m, duxuy2pm
-      real(mytype) :: cf_ref, delta, tau_wall, tau_wall1, ufric, temp, utau
-      if (itime > ifirst) then ! we need to have start postprocess_init
+      ! Get velocities and derivatives 
+      call transpose_x_to_y(ux1, ux2)
+      call transpose_x_to_y(uy1, uy2)
+      call transpose_x_to_y(uz1, uz2)
+      call dery(ta2, ux2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, ubcx)
+      call dery(tb2, uy2, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0, ubcy)
+      call dery(tc2, uz2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, ubcz)
+      call transpose_y_to_x(ta2, ta1)
+      call transpose_y_to_x(tb2, tb1)
+      call transpose_y_to_x(tc2, tc1)
+      call horizontal_avrge(ux2, ux2m)
 
-         call transpose_x_to_y(ux1, ux2)
-         call transpose_x_to_y(uy1, uy2)
-         call horizontal_avrge(ux2, ux2m)
-
-         ttheta = sum((ux2m * (one - ux2m)) * ypw)
-         call MPI_BCAST(ttheta, 1, real_type, 0, MPI_COMM_WORLD, code)
-         delta = sum((one - ux2m) * ypw)
-         call MPI_BCAST(delta, 1, real_type, 0, MPI_COMM_WORLD, code)
-
-         if (itime == (ifirst + 1)) then
-
-            thetad = 0.1092267 * xnu ! laminar value
-            if (inflow_noise > 0 .and. inflow_noise < 1) thetad = inflow_noise ! we need to provide the value for restarting
-            if (nrank == 0) write (*, "(' initializing thetad= ',E14.7)") thetad
-
-         else
-
-            ! Option 1: Damien paper
-            call comp_thetad(ux2, uy2, ux2m) ! bisection method ! updates thetad_target
-            thetad = thetad_target
-
-            ! Option 1.1: Average to filter oscillations
-            ! thetad = half*(thetad+thetad_target)
-
-            ! Option 1.2: Delayed to filter strong oscillations
-            ! delay = dt
-            ! thetad = thetad*(one-delay) + delay*thetad_target
-
-            ! Option 2: do not need the bisection !
-            ! thetad = thetad + dt*(ttheta-one)
-            ! if(nrank.eq.0)write(6,*) 'simple thetad method =',thetad
-
-            ! broadcast final value
-            call MPI_BCAST(thetad, 1, real_type, 0, MPI_COMM_WORLD, code)
-
-         end if
-         if (mod(itime, ilist) == 0 .or. itime == (ifirst + 1)) then
-
-            call transpose_x_to_y(uz1, uz2)
-            call dery(ta2, ux2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, ubcx)
-            call dery(tb2, uy2, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0, ubcy)
-            call dery(tc2, uz2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, ubcz)
-            call transpose_y_to_x(ta2, ta1)
-            call transpose_y_to_x(tb2, tb1)
-            call transpose_y_to_x(tc2, tc1)
-
-            !temp = sum(ta2(1:rc1,1,:)) ! when adding inflow/outflow
-            temp = sum(ta2(:, 1, :))
-            call MPI_ALLREDUCE(temp, tau_wall1, 1, real_type, MPI_SUM, MPI_COMM_WORLD, code)
-            !tau_wall=tau_wall1/real(rc1*nz,mytype) ! when adding inflow/outflow
-            tau_wall = tau_wall1 / real(nx * nz, mytype)
-            ufric = sqrt(tau_wall * xnu)
-
-            if (nrank == 0) then
-
-               write (6, "(' thetad= ',E13.4,' theta= ',F14.10,' H= ',F8.6)") thetad, ttheta, delta / ttheta
-               write (6, "(' tau_wall=',F15.7,' u_tau=',F15.7,' cf=',F15.7)") tau_wall, ufric, 2 * ufric**2
-               write (6, "(' Re_theta=',F15.7,' Re_delta=',F15.7)") 1.0 / (ttheta * xnu), 1.0 / (xnu / delta)
-               write (6, "(' dx+=',F12.6,' dz+=',F12.6,' dy+min,max=',2F12.6)") dx * ufric * re, dz * ufric * re, dyp(1) * ufric * re, dyp(ny) * ufric * re
-
-               ! outposting to file ttbl_scales.dat
-               FS = 7; write (fileformat, '( "(",I4,"(E15.7),A)" )') FS; FS = FS * 15 + 1
-               open (unit=67, file='ttbl_scales.dat', status='unknown', form='formatted', recl=FS, action='write', position='append')
-               write (67, fileformat) t, tau_wall, ufric, 2 * ufric**2, thetad, ttheta, delta; close (67)
-
-               ! outposting to file ttbl_scales2.dat (optional, just for eventual plotting)
-               FS = 6; write (fileformat, '( "(",I4,"(E13.4),A)" )') FS; FS = FS * 15 + 1
-               open (unit=67, file='ttbl_scales2.dat', status='unknown', form='formatted', recl=FS, action='write', position='append')
-               write (67, fileformat) t, dx * ufric * re, dz * ufric * re, dyp(1) * ufric * re, dyp(ny) * ufric * re, dt * ufric * re; close (67)
-
-            end if ! nrank.eq.0
-
-         end if
-
-         if (thetad > 0) then
-            do k = 1, xsize(3)
-               do j = 1, xsize(2)
-                  do i = 1, xsize(1)
-                     if (istret == 0) y = (j + xstart(2) - 1 - 1) * dy
-                     if (istret /= 0) y = yp(j + xstart(2) - 1)
-                     dux1(i, j, k, 1) = dux1(i, j, k, 1) + thetad * y * ta1(i, j, k)!*lm1(i,j,k) !+ dpdx*(one-ux2m(j))
-                     duy1(i, j, k, 1) = duy1(i, j, k, 1) + thetad * y * tb1(i, j, k)!*lm1(i,j,k)
-                     ! if active scalar field on -- active coupling
-                     if (iscalar == 1 .and. ri(1) /= 0) duy1(i, j, k, 1) = duy1(i, j, k, 1) + ri(1) * phi1(i, j, k, 1)
-                     duz1(i, j, k, 1) = duz1(i, j, k, 1) + thetad * y * tc1(i, j, k)!*lm1(i,j,k)
-                  end do
-               end do
-            end do
-         end if
+      ! Compute thetad
+      if (itime == ifirst) then
+         thetad = 0.1092267 * xnu
+         if (nrank == 0) write (*, *) 'Initial thetad = ', thetad
+      else
+         thetad = comp_thetad(thetad, ux2, uy2, ux2m)
       end if
 
-      return
+      ! Apply forcing
+      do k = 1, xsize(3)
+         do j = 1, xsize(2)
+            do i = 1, xsize(1)
+               if (istret == 0) y = (j + xstart(2) - 1 - 1) * dy
+               if (istret /= 0) y = yp(j + xstart(2) - 1)
+               dux1(i, j, k, 1) = dux1(i, j, k, 1) + thetad * y * ta1(i, j, k)
+               duy1(i, j, k, 1) = duy1(i, j, k, 1) + thetad * y * tb1(i, j, k)
+               if (iscalar == 1 .and. ri(1) /= 0) duy1(i, j, k, 1) = duy1(i, j, k, 1) + ri(1) * phi1(i, j, k, 1)
+               duz1(i, j, k, 1) = duz1(i, j, k, 1) + thetad * y * tc1(i, j, k)
+            end do
+         end do
+      end do
+
+      ! Write out values
+      if (mod(itime, ilist) == 0) then
+
+         ! Calculate quantities
+         delta = sum((one - ux2m) * ypw)
+         theta = sum((ux2m * (one - ux2m)) * ypw)
+         tau_wall = sum(ta2(:, 1, :))
+         call MPI_ALLREDUCE(MPI_IN_PLACE, tau_wall, 1, real_type, MPI_SUM, MPI_COMM_WORLD, code)
+         tau_wall = tau_wall / real(nx * nz, mytype)
+         ufric = sqrt(tau_wall * xnu)
+
+         ! Write out
+         if (nrank == 0) then
+            write (6, "(' thetad = ',E13.4,' theta = ',F14.10,' H = ',F8.6)") thetad, theta, delta / theta
+            write (6, "(' tau_wall =',F15.7,' u_tau =',F15.7,' cf =',F15.7)") tau_wall, ufric, two * ufric**2
+            write (6, "(' Re_theta =',F15.7,' Re_delta=',F15.7)") one / (theta * xnu), one / (xnu / delta)
+            write (6, "(' dx+ =',F12.6,' dz+ =',F12.6,' dy+min,max=',2F12.6)") dx * ufric * re, dz * ufric * re, dyp(1) * ufric * re, dyp(ny) * ufric * re
+            FS = 7; write (fileformat, '( "(",I4,"(E15.7),A)" )') FS; FS = FS * 15 + 1
+            open (unit=67, file='ttbl_scales.dat', status='unknown', form='formatted', recl=FS, action='write', position='append')
+            write (67, fileformat) t, tau_wall, ufric, 2 * ufric**2, thetad, theta, delta; close (67)
+            FS = 6; write (fileformat, '( "(",I4,"(E13.4),A)" )') FS; FS = FS * 15 + 1
+            open (unit=67, file='ttbl_scales2.dat', status='unknown', form='formatted', recl=FS, action='write', position='append')
+            write (67, fileformat) t, dx * ufric * re, dz * ufric * re, dyp(1) * ufric * re, dyp(ny) * ufric * re, dt * ufric * re; close (67)
+         end if
+      end if
    end subroutine momentum_forcing_ttbl
    !############################################################################
    !############################################################################
@@ -723,37 +686,20 @@ contains
    !############################################################################
    !############################################################################
    subroutine visu_ttbl_init(visu_initialised)
-
-      use decomp_2d, only: mytype
-      use decomp_2d_io, only: decomp_2d_register_variable
-      use visu, only: io_name, output2D
-
       implicit none
-
       logical, intent(out) :: visu_initialised
-
       visu_initialised = .true.
-
    end subroutine visu_ttbl_init
    !############################################################################
    !############################################################################
    subroutine visu_ttbl(ux1, uy1, uz1, pp3, phi1, ep1, num)
-
-      use var, only: ux2, uy2, uz2, ux3, uy3, uz3
-      use var, only: ta1, tb1, tc1, td1, te1, tf1, tg1, th1, ti1, di1
-      use var, only: ta2, tb2, tc2, td2, te2, tf2, di2, ta3, tb3, tc3, td3, te3, tf3, di3
-      use var, only: nxmsize, nymsize, nzmsize
-      use visu, only: write_field
-      use ibm_param, only: ubcx, ubcy, ubcz
-
+      use var, only: nzmsize
       implicit none
-
       real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
       real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
       real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
       real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ep1
       integer, intent(in) :: num
-
    end subroutine visu_ttbl
    !############################################################################
    !############################################################################
@@ -783,26 +729,34 @@ contains
    end subroutine extract_fluctuat
    !############################################################################
    !############################################################################
-   subroutine comp_thetad(ux2, uy2, ux2m)
+   function comp_thetad(thetad0, ux2, uy2, ux2m) result(thetad)
       use var, only: di2
       use ibm_param, only: ubcy
       use MPI
+
       implicit none
-      integer :: j, code, it
+      real(mytype), intent(in) :: thetad0
       real(mytype), intent(in), dimension(ysize(1), ysize(2), ysize(3)) :: ux2, uy2
       real(mytype), intent(in), dimension(ysize(2)) :: ux2m
+
       real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ux2p
       real(mytype), dimension(ysize(2)) :: uxuy2pm, ux2mm
       real(mytype), dimension(ysize(2)) :: ydudy2m, dudy2m, du2dy22m, duxuy2pm
-      real(mytype) :: theta
+      real(mytype) :: thetad
+      integer :: j, code, it
       logical :: success
 
+      integer, parameter :: freq = 1
+
+      ! Calculate averaged derivatives
       call extract_fluctuat(ux2, ux2m, ux2p)
       call horizontal_avrge(ux2p * uy2, uxuy2pm)
       call dery(duxuy2pm, uxuy2pm, di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy)
       call dery(dudy2m, ux2m, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, ubcy)
-      call dery(ydudy2m, ux2m * yp, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, ubcy)
+      ! call dery(ydudy2m, ux2m * yp, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, ubcy)
+      ydudy2m = dudy2m * yp
 
+      ! Implicit viscous term
       if (iimplicit <= 0) then
          call deryy(du2dy22m, ux2m, di2, sy, sfyp, ssyp, swyp, 1, ysize(2), 1, 1, ubcy)
          if (istret /= 0) then
@@ -817,21 +771,22 @@ contains
       end if
 
       ! Iteratively find optimal thetad
-      if (itime > (ifirst + 3)) then
-         if (nrank == 0 .and. mod(itime, 4) == 0) then
-            call itp(comp_theta_res, thetad, dt, thetad_target, it, success)
+      thetad = thetad0
+      if (itime >= ifirst + 2 .and. mod(itime, freq) == 0) then
+         if (nrank == 0) then
+            call itp(comp_theta_res, thetad0, dt, thetad, it, success)
             if (success) then
-               theta = comp_theta(thetad_target, ydudy2m, du2dy22m, duxuy2pm, ux2m, ux2mm)
-               write (6, *) 'Theta dot computed in', it, 'with thetad = ', thetad_target, 'theta = ', theta
+               if (mod(itime, ilist) == 0) then
+                  write (6, *) 'Theta dot computed in', it, 'with thetad = ', thetad, 'theta = ', comp_theta(thetad, ydudy2m, du2dy22m, duxuy2pm, ux2m, ux2mm)
+               end if
             else
                write (6, *) 'Computing theta dot failed'
                call MPI_ABORT(MPI_COMM_WORLD, -1, code)
             end if
          end if
-         call MPI_BCAST(thetad_target, 1, real_type, 0, MPI_COMM_WORLD, code)
-      else
-         ttda(:) = thetad * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
+         call MPI_BCAST(thetad, 1, real_type, 0, MPI_COMM_WORLD, code)
       end if
+      ttda(:) = thetad * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
       ttdc(:) = ttdb(:); ttdb(:) = ttda(:)
 
       ! Internal wrapper to pass to ITP
@@ -842,14 +797,14 @@ contains
          real(mytype) :: theta_res
          theta_res = comp_theta(thetad, ydudy2m, du2dy22m, duxuy2pm, ux2m, ux2mm) - one
       end function
-   end subroutine comp_thetad
+   end function
    !############################################################################
    !############################################################################
    function comp_theta(thetad, ydudy2m, du2dy22m, duxuy2pm, ux2m, ux2mm) result(theta)
       implicit none
       real(mytype), intent(in) :: thetad
       real(mytype), intent(in), dimension(ysize(2)) :: ydudy2m, du2dy22m, duxuy2pm, ux2m
-      real(mytype), intent(inout), dimension(ysize(2)) :: ux2mm
+      real(mytype), intent(out), dimension(ysize(2)) :: ux2mm
       real(mytype) :: theta
       ttda(:) = thetad * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
       ux2mm(:) = ux2m(:) + adt(1) * ttda(:) + bdt(1) * ttdb(:) + cdt(1) * ttdc(:)
@@ -858,11 +813,10 @@ contains
    !############################################################################
    !############################################################################
    subroutine itp(fun, x0, dx, x, it, success)
-
       implicit none
       real(mytype), intent(in) :: x0, dx
-      integer :: it
       real(mytype), intent(out) :: x
+      integer, intent(out) :: it
       logical, intent(out) :: success
 
       integer :: n12, nmax
@@ -880,7 +834,7 @@ contains
       ! Interface for function
       interface
          real(mytype) function fun(x)
-            use param
+            use param, only: mytype
             real(mytype), intent(in) :: x
          end function
       end interface
