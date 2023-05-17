@@ -539,7 +539,7 @@ contains
           precision = 8
 #endif
 #else
-          precision = 8
+          precision = 4
 #endif
           write(ioxdmf,"(A,I0,A)")'            DataType="Float" Precision="', precision, '" Endian="little" Seek="0"'
 
