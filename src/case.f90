@@ -209,7 +209,7 @@ contains
 
     elseif (itype.eq.itype_ttbl) then
 
-       call boundary_conditions_ttbl(ux, uy, uz, phi, ep)
+       call boundary_conditions_ttbl(ux, uy, uz, phi)
 
     endif
 

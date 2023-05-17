@@ -3,7 +3,6 @@
 !SPDX-License-Identifier: BSD 3-Clause
 
 module ttbl
-
    use decomp_2d
    use variables
    use param
@@ -18,12 +17,9 @@ module ttbl
    real(mytype), save, allocatable, dimension(:, :) :: usxz, vsxz, wsxz, upupsxz
    real(mytype), save, allocatable, dimension(:, :) :: vpvpsxz, wpwpsxz, upvpsxz, vpwpsxz, upwpsxz
    real(mytype), save, allocatable, dimension(:, :) :: tkesxz, epssxz
+   real(mytype), save, allocatable, dimension(:) :: ttda, ttdb, ttdc
    real(mytype), save :: thetad, thetad_target
 
-   real(mytype), save, allocatable, dimension(:, :) :: jet_mask1, jet_mask2
-
-   real(mytype), save, allocatable, dimension(:) :: ttda, ttdb, ttdc
-   private
    public :: init_ttbl, boundary_conditions_ttbl, momentum_forcing_ttbl, scalar_forcing_ttbl, postprocess_ttbl, visu_ttbl_init, visu_ttbl
 
 contains
@@ -114,27 +110,18 @@ contains
    end subroutine init_ttbl
    !############################################################################
    !############################################################################
-   subroutine boundary_conditions_ttbl(ux, uy, uz, phi, ep)
-
-      use var, only: ux2, uy2, uz2, ux3, uy3, uz3
-      use var, only: ta1, ta2, tb1, tb2, tc1, tc2
-      use var, only: td2, td3, te2, te3, tf2, tf3
-      use var, only: tg1, tg2, ti1, ti2, th1, th2
-      use var, only: di1, di3
-      use ibm_param, only: ubcx, ubcy, ubcz
-      use navier, only: tbl_flrt
-
+   subroutine boundary_conditions_ttbl(ux, uy, uz, phi)
       implicit none
-      real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux, uy, uz, ep
+      real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux, uy, uz
       real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi
-      real(mytype) :: dyp2, cx, x, z, r0, r1, r2, r3, r4, r5, r6, r7, r8, D, rdx, r, dzz, dxx
-      integer :: i, j, k, rc2, xx, zz
 
-      if (itime == ifirst) then ! static BCs just computed first time step !
-         phi(:, :, :, :) = zero
+      integer :: i, k
 
-         if (ncly1 == 2) then ! Bottom Boundary
+      ! Set BCs at initialisation
+      if (itime == ifirst) then
 
+         ! Bottom boundary
+         if (ncly1 == 2) then
             do k = 1, xsize(3)
                do i = 1, xsize(1)
                   byx1(i, k) = zero
@@ -142,52 +129,17 @@ contains
                   byz1(i, k) = zero
                end do
             end do
-
-            do k = 1, ysize(3) ! semi implicit condition
+            ! Semi-implicit condition
+            do k = 1, ysize(3)
                do i = 1, ysize(1)
                   byx1_2(i, k) = zero
                   byy1_2(i, k) = zero
                   byz1_2(i, k) = zero
                end do
             end do
+         end if
 
-            if (inflow_noise == 4) then  ! steady jets in crossflow via Dirichlet
-               allocate (jet_mask1(xsize(1), xsize(3)))
-               allocate (jet_mask2(ysize(1), ysize(3)))
-               D = 3
-               rdx = 0.7_mytype ! peplinkski 2015
-               R = half
-               dxx = 5 * D
-               dzz = 2 * D
-               tg1(:, :, :) = zero
-               do k = 1, xsize(3)
-                  z = real((k + xstart(3) - 2), mytype) * dz
-                  do i = 1, xsize(1)
-                     x = real(i - 1, mytype) * dx
-                     do xx = 1, (int(xlx / dxx) + 2) ! centre x
-                        do zz = 1, (int(zlz / dzz) + 2) ! centre y
-                           r = (two / D) * sqrt((x - ((xx - 1) * dxx))**2 + (z - ((zz - 1) * dzz))**2)
-                           tg1(i, :, k) = tg1(i, :, k) + abs((two * R) * (one - r**2) * exp(-(r / rdx)**4))
-                        end do
-                     end do
-                  end do
-               end do
-               do k = 1, xsize(3)
-                  do i = 1, xsize(1)
-                     jet_mask1(i, k) = tg1(i, 1, k)
-                  end do
-               end do
-               call transpose_x_to_y(tg1, tg2)
-               do k = 1, ysize(3)
-                  do i = 1, ysize(1)
-                     jet_mask2(i, k) = tg2(i, 1, k)
-                  end do
-               end do
-            end if ! inflow_noise == 4 ! jets in crossflow via Dirichlet
-
-         end if ! ncly1 == 2
-
-    !! Top Boundary
+         ! Top boundary
          if (nclyn == 2) then
             do k = 1, xsize(3)
                do i = 1, xsize(1)
@@ -196,180 +148,17 @@ contains
                   byzn(i, k) = zero
                end do
             end do
-            do k = 1, ysize(3) ! semi implicit condition
+            ! Semi-implicit condition
+            do k = 1, ysize(3)
                do i = 1, ysize(1)
                   byxn_2(i, k) = one
                   byyn_2(i, k) = zero
                   byzn_2(i, k) = zero
                end do
             end do
-         end if ! nclyn == 2
-
-      end if ! itime.eq.ifirst
-
-      if (inflow_noise == 4) then  ! steady jets in crossflow via Dirichlet
-         if (ncly1 == 2) then
-            do k = 1, xsize(3)
-               do i = 1, xsize(1)
-                  byy1(i, k) = jet_mask1(i, k)!*half+half*tanh((t-ten))
-               end do
-            end do
-            !call transpose_x_to_y(tg1,tg2)
-            do k = 1, ysize(3)
-               do i = 1, ysize(1)
-                  byy1_2(i, k) = jet_mask2(i, k)!*half+half*tanh((t-ten))
-               end do
-            end do
          end if
+         phi = zero
       end if
-
-      !if (iscalar==1.and.nclyS1.eq.2.and.xstart(2).eq.1) then
-      !   do k=1,xsize(3)
-      !      do i=1,xsize(1)
-      !      !phi2(i,yend(2),k)= phi2(i,yend(2)-1,k) / (1.+uset(is)*dy*sc(is)/xnu) !Robin on top BC
-      !      phi(i,1,k,1) = one - (jet_mask1(i,k)/maxval(jet_mask1(:,:))) !phi1(i,j+1,k,is)! dc/dn=0
-      !      enddo
-      !   enddo
-      !endif
-
-      ! if (nclx1 == 2) then ! new spatial option
-
-      ! recirculation inflow condition
-      !    do k=1,xsize(3)
-      !       do j=1,xsize(2)
-      !          bxx1(j,k)=ux(rc1,j,k)
-      !          bxy1(j,k)=uy(rc1,j,k)
-      !          bxz1(j,k)=uz(rc1,j,k)
-      !          if (iscalar==1) phi(1,j,k,:)=zero
-      !       enddo
-      !    enddo
-
-      !subrecirculation zone to ensure aperiodicity
-      !rc2 = int(rc1/1.61803398875d0)
-      !do k=1,xsize(3)
-      !   do j=1,xsize(2)
-      !      ux(rc2,j,k)=ux(rc2,j,k)
-      !      uy(rc2,j,k)=uy(rc2,j,k)
-      !      uz(rc2,j,k)=uz(rc2,j,k)
-      !   enddo
-      !enddo
-
-      !OUTFLOW based on a 1D convection equation
-      !if (nclxn == 2) then
-      !   do k=1,xsize(3)
-      !      do j=1,xsize(2)
-      !         cx=ux(nx,j,k)*gdt(itr)*(one/dx)
-      !         if(cx.lt.0.0) cx=zero
-      !         bxxn(j,k)=ux(nx,j,k)-cx*(ux(nx,j,k)-ux(nx-1,j,k))
-      !         bxyn(j,k)=uy(nx,j,k)-cx*(uy(nx,j,k)-uy(nx-1,j,k))
-      !         bxzn(j,k)=uz(nx,j,k)-cx*(uz(nx,j,k)-uz(nx-1,j,k))
-      !         if (iscalar==1)phi(nx,j,k,:)=phi(nx,j,k,:)-cx*(phi(nx,j,k,:)-phi(nx-1,j,k,:))
-      !      enddo
-      !   enddo
-      !endif
-
-       !! Top Boundary
-      !if (nclyn == 2) then
-      !   do k = 1, xsize(3)
-      !      do i = 1, xsize(1)
-      !         byxn(i, k) = ux(i, xsize(2) - 1, k)
-      !         byyn(i, k) = uy(i, xsize(2) - 1, k)
-      !         byzn(i, k) = uz(i, xsize(2) - 1, k)
-      !      enddo
-      !   enddo
-      !   do k = 1, ysize(3)
-      !      do i = 1, ysize(1)
-      !         byxn_2(i, k) = ux(i, xsize(2) - 1, k)
-      !         byyn_2(i, k) = uy(i, xsize(2) - 1, k)
-      !         byzn_2(i, k) = uz(i, xsize(2) - 1, k)
-      !      enddo
-      !   enddo
-      !endif
-
-      !update of the flow rate (what is coming in the domain is getting out)
-      !call tbl_flrt(ux,uy,uz)
-
-      !endif
-
-      !  if(inflow_noise==5)then  ! irrotational top BC
-
-      !     call derxx (ta1,ux,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0,ubcx)
-      !     call derxx (tb1,uy,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,ubcy)
-      !     call derxx (tc1,uz,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,ubcz)
-
-      !     call transpose_x_to_y(ta1,ta2)
-      !     call transpose_x_to_y(tb1,tb2)
-      !     call transpose_x_to_y(tc1,tc2)
-
-      !     call transpose_x_to_y(ux,ux2)
-      !     call transpose_x_to_y(uy,uy2)
-      !     call transpose_x_to_y(uz,uz2)
-
-      !     call transpose_y_to_z(ux2,ux3)
-      !     call transpose_y_to_z(uy2,uy3)
-      !     call transpose_y_to_z(uz2,uz3)
-
-      !     call derzz (td3,ux3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,ubcx)
-      !     call derzz (te3,uy3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,ubcy)
-      !     call derzz (tf3,uz3,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0,ubcz)
-
-      !     call transpose_z_to_y(td3,td2)
-      !     call transpose_z_to_y(te3,te2)
-      !     call transpose_z_to_y(tf3,tf2)
-
-      !     !new diverge free BC to allow vertical outflow and minimize pressure bump
-      !     !must compute in Y pencil on a 3D field and transpose field to X to extract plane
-      !     tg2(:,:,:)=zero
-      !     th2(:,:,:)=zero
-      !     ti2(:,:,:)=zero
-      !     !dyp2 = dyp(ny)*dyp(ny-1); print *, dyp2
-      !     dyp2 = (yp(ny)-yp(ny-1))*(yp(ny-1)-yp(ny-2))!; print *, dyp2
-
-      !     do k=1,ysize(3)
-      !        do j=1,ysize(2)
-      !           do i=1,ysize(1)
-      !              tg2(i,j,k)= (-ta2(i,ny-1,k) -td2(i,ny-1,k))*dyp2 +ux2(i,ny-1,k) -ux2(i,ny-2,k)
-      !              th2(i,j,k)= (-tb2(i,ny-1,k) -te2(i,ny-1,k))*dyp2 +uy2(i,ny-1,k) -uy2(i,ny-2,k)
-      !              ti2(i,j,k)= (-tc2(i,ny-1,k) -tf2(i,ny-1,k))*dyp2 +uz2(i,ny-1,k) -uz2(i,ny-2,k)
-      !           enddo
-      !        enddo
-      !     enddo
-
-      !     ! saving upper BC planes *_2 in a lapis Y variable to apply BCs at iimplicit.f90 in variable bctop
-      !     do k=1,ysize(3)
-      !        do i=1,ysize(1)
-      !           byxn_2(i, k)=tg2(i,ny,k)
-      !           byyn_2(i, k)=th2(i,ny,k)
-      !           byzn_2(i, k)=ti2(i,ny,k)
-      !        enddo
-      !     enddo
-
-      !     call transpose_y_to_x(tg2,tg1)
-      !     call transpose_y_to_x(th2,th1)
-      !     call transpose_y_to_x(ti2,ti1)
-
-      !     do k = 1, xsize(3)
-      !        do i = 1, xsize(1)
-      !           byxn(i, k) = tg1(i,ny,k)
-      !           byyn(i, k) = th1(i,ny,k)
-      !           byzn(i, k) = ti1(i,ny,k)
-      !        enddo
-      !     enddo
-
-      !     !if(nrank.eq.0)then
-      !        !  write(6,*) nrank,minval(tg2(:,:,:)),maxval(tg2(:,:,:))
-      !        !  write(6,*) nrank,minval(byxn_2(:,:)),maxval(byxn_2(:,:))
-      !        !  write(6,*) nrank,minval(tg1(:,:,:)),maxval(tg1(:,:,:))
-      !     !   write(6,*) 'ux',minval(byxn(:,:)),maxval(byxn(:,:))
-      !     !   write(6,*) 'uy',minval(byyn(:,:)),maxval(byyn(:,:))
-      !     !   write(6,*) 'uz',minval(byzn(:,:)),maxval(byzn(:,:))
-      !     !endif
-
-      !  endif ! inflow_noise==5 ! irrotational top BC
-
-      !du/dy = -lambda*u !lambda <<1 Newman; lambda >> 1 Dirichlet; lambda = 1/Ly -> mixed
-      !byxn(i,k)=ux(:,ny-1,:) - dy*lambda*ux(:,ny-1,:) = (1-lambda*dy)*ux(:,ny-1,:)
-
    end subroutine boundary_conditions_ttbl
    !############################################################################
    !############################################################################
