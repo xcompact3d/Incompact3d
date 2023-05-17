@@ -273,7 +273,7 @@ contains
       T = phi1
     endif
 
-    if ((ivisu.ne.0).and.(itime.eq.1.or.(mod(itime, ioutput).eq.0))) then
+    if ((ivisu.ne.0).and.(mod(itime, ioutput).eq.0)) then
        call write_snapshot(rho1, ux1, uy1, uz1, pp3, T, ep1, itime, num)
 
        ! XXX: Ultimate goal for ADIOS2 is to pass do all postproc online - do we need this?
