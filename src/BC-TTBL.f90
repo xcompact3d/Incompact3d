@@ -24,70 +24,93 @@ module ttbl
 
    real(mytype), save, allocatable, dimension(:) :: ttda, ttdb, ttdc
    private
-   public :: init_ttbl, boundary_conditions_ttbl, momentum_forcing_ttbl, scalar_forcing_ttbl, postprocess_ttbl_init, postprocess_ttbl, visu_ttbl_init, visu_ttbl
+   public :: init_ttbl, boundary_conditions_ttbl, momentum_forcing_ttbl, scalar_forcing_ttbl, postprocess_ttbl, visu_ttbl_init, visu_ttbl
 
 contains
    !############################################################################
    !############################################################################
-   subroutine init_ttbl(ux1, uy1, uz1, ep1, phi1)
+   subroutine init_ttbl(ux1, uy1, uz1, phi1)
       implicit none
       real(mytype), intent(inout), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
-      real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ep1
       real(mytype), intent(inout), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
 
-      real(mytype) :: x, y, z, aform
       real(mytype), dimension(ysize(2)) :: um
-      integer :: k, j, i, ii, is, code
-      integer(kind=MPI_OFFSET_KIND) :: disp
-      integer, dimension(:), allocatable :: seed
+      real(mytype) :: x, y, z, aform
+      integer :: i, j, k, ii, code
 
+      ! Set initial conditions
       ux1 = zero; uy1 = zero; uz1 = zero
-      if (iin /= 0) then
-         call system_clock(count=code)
-         if (iin == 2) code = 0
-         call random_seed(size=ii)
-         call random_seed(put=code + 63946 * (nrank + 1) * (/(i - 1, i=1, ii)/))
-         !call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /))
-         call random_number(ux1)
-         call random_number(uy1)
-         call random_number(uz1)
-      end if
-
-      if (iin == 3) then
-
-         if (nrank == 0) write (*, *) 'READING FILES FOR INITIAL CONDITION'
-
-         !  call decomp_2d_read_one(1,ux1,'ux.ic')
-         !  call decomp_2d_read_one(1,uy1,'uy.ic')
-         !  call decomp_2d_read_one(1,uz1,'uz.ic')
-
-      else
-
-         aform = sqrt(0.10922670d0 / 2.0d0)
-         if (nrank == 0) write (*, *) 'INITIAL CONDITION WITH GOLDEN RATION', aform, init_noise
-         do k = 1, xsize(3)
-            z = real((k + xstart(3) - 1 - 1), mytype) * dz
-            do j = 1, xsize(2)
-               if (istret == 0) y = real(j + xstart(2) - 1 - 1, mytype) * dy
-               if (istret /= 0) y = yp(j + xstart(2) - 1)
-               um = (one - erf(aform * y))
-               do i = 1, xsize(1)
-                  x = real(i - 1, mytype) * dx
-                  ux1(i, j, k) = init_noise * um(j) * (two * ux1(i, j, k) - one) + erf(y * aform) + &
-                                 4 * init_noise * (y * exp(-y) / 0.3678784468818499_mytype) * &
-                                 (cos(z * pi / five) * cos(x * pi / five) + &
-                                  cos((x + ((one + sqrt(five)) * half)) * pi / five) * cos((z + ((one + sqrt(five)) * half)) * pi / five))
-                  uy1(i, j, k) = init_noise * um(j) * (two * uy1(i, j, k) - one)
-                  uz1(i, j, k) = init_noise * um(j) * (two * uz1(i, j, k) - one)
+      if (iin > 0) then
+         if (iin <= 2) then
+            call system_clock(count=code)
+            if (iin == 2) code = 0
+            call random_seed(size=ii)
+            call random_seed(put=code + 63946 * (nrank + 1) * (/(i - 1, i=1, ii)/))
+            call random_number(ux1)
+            call random_number(uy1)
+            call random_number(uz1)
+            aform = sqrt(0.10922670d0 / 2.0d0)
+            do k = 1, xsize(3)
+               z = real((k + xstart(3) - 1 - 1), mytype) * dz
+               do j = 1, xsize(2)
+                  if (istret == 0) y = real(j + xstart(2) - 1 - 1, mytype) * dy
+                  if (istret /= 0) y = yp(j + xstart(2) - 1)
+                  um = (one - erf(aform * y))
+                  do i = 1, xsize(1)
+                     x = real(i - 1, mytype) * dx
+                     ux1(i, j, k) = init_noise * um(j) * (two * ux1(i, j, k) - one) + erf(y * aform) + &
+                                    4 * init_noise * (y * exp(-y) / 0.3678784468818499_mytype) * &
+                                    (cos(z * pi / five) * cos(x * pi / five) + &
+                                     cos((x + ((one + sqrt(five)) * half)) * pi / five) * cos((z + ((one + sqrt(five)) * half)) * pi / five))
+                     uy1(i, j, k) = init_noise * um(j) * (two * uy1(i, j, k) - one)
+                     uz1(i, j, k) = init_noise * um(j) * (two * uz1(i, j, k) - one)
+                  end do
                end do
             end do
-         end do
+         else
+            if (nrank == 0) write (6, *) 'Invalid inflow conditions for TTBL'
+            call MPI_ABORT(MPI_COMM_WORLD, -1, code)
+         end if
+      end if
+      phi1 = zero
 
+      ! Check for valid output parameters
+      if (ioutput < ilist .or. mod(ioutput, ilist) /= 0) then
+         if (nrank == 0) write (6, *) 'ioutput must be exactly divisible by ilist'
+         call MPI_ABORT(MPI_COMM_WORLD, -1, code)
       end if
 
-      phi1(:, :, :, :) = zero
+      ! Allocate output buffers for postprocessing
+      if (nrank == 0) write (6, *) 'Output buffer size for postprocessing = ', ioutput / ilist
+      allocate (usxz(ysize(2), int(ioutput / ilist)))
+      allocate (vsxz(ysize(2), int(ioutput / ilist)))
+      allocate (wsxz(ysize(2), int(ioutput / ilist)))
+      allocate (upupsxz(ysize(2), int(ioutput / ilist)))
+      allocate (vpvpsxz(ysize(2), int(ioutput / ilist)))
+      allocate (wpwpsxz(ysize(2), int(ioutput / ilist)))
+      allocate (upvpsxz(ysize(2), int(ioutput / ilist)))
+      allocate (vpwpsxz(ysize(2), int(ioutput / ilist)))
+      allocate (upwpsxz(ysize(2), int(ioutput / ilist)))
+      allocate (tkesxz(ysize(2), int(ioutput / ilist)))
+      allocate (epssxz(ysize(2), int(ioutput / ilist)))
+      allocate (phisxz(ysize(2), int(ioutput / ilist)))
+      allocate (phipphipsxz(ysize(2), int(ioutput / ilist)))
+      allocate (upphipsxz(ysize(2), int(ioutput / ilist)))
+      allocate (vpphipsxz(ysize(2), int(ioutput / ilist)))
+      allocate (wpphipsxz(ysize(2), int(ioutput / ilist)))
+      allocate (dphidysxz(ysize(2), int(ioutput / ilist)))
 
-      return
+      ! Allocate arrays for time integration
+      allocate (ttda(ysize(2)), ttdb(ysize(2)), ttdc(ysize(2)))
+
+      ! Print mesh resolution
+      if (nrank == 0) then
+         write (6, *) 'Resolution details:'
+         write (6, "(' dx =',F12.6)") dx
+         write (6, "(' dz =',F12.6)") dz
+         write (6, "(' dx/dz =',F12.6)") dx / dz
+         write (6, "(' dy (min,max) =',2F12.6)") dyp(1), dyp(ny)
+      end if
    end subroutine init_ttbl
    !############################################################################
    !############################################################################
@@ -504,86 +527,6 @@ contains
 
       return
    end subroutine scalar_forcing_ttbl
-   !############################################################################
-   !############################################################################
-   subroutine postprocess_ttbl_init
-      implicit none
-      real(mytype) :: dxdydz
-      integer :: i, j, k, code, ierr
-      character :: a
-
-      ! Simpson method integral operator !
-      !  call alloc_x(vol1, opt_global=.true.)
-      !  vol1 = zero
-      !  dxdydz=dx*dy*dz
-      !  do k=xstart(3),xend(3)
-      !     do j=xstart(2),xend(2)
-      !        do i=xstart(1),xend(1)
-      !           vol1(i,j,k)=dxdydz
-      !           if (i .eq. 1.or. i .eq. nx) vol1(i,j,k) = vol1(i,j,k) * (five/twelve)
-      !           if (j .eq. 1.or. j .eq. ny) vol1(i,j,k) = vol1(i,j,k) * (five/twelve)
-      !           if (k .eq. 1.or. k .eq. nz) vol1(i,j,k) = vol1(i,j,k) * (five/twelve)
-      !           if (i .eq. 2.or. i .eq. nx-1) vol1(i,j,k) = vol1(i,j,k) * (thirteen/twelve)
-      !           if (j .eq. 2.or. j .eq. ny-1) vol1(i,j,k) = vol1(i,j,k) * (thirteen/twelve)
-      !           if (k .eq. 2.or. k .eq. nz-1) vol1(i,j,k) = vol1(i,j,k) * (thirteen/twelve)
-      !        end do
-      !     end do
-      !  end do
-
-      ! Check for valid output parameters
-      if (ioutput < ilist .or. mod(ioutput, ilist) /= 0) then
-         if (nrank == 0) print*,"ioutput must be exactly divisible by ilist"
-         call MPI_ABORT(MPI_COMM_WORLD, -1, ierr)
-      end if
-
-      if (nrank == 0) write (6, *) 'Allocating statistics variables!', ioutput / ilist
-      allocate (usxz(ysize(2), int(ioutput / ilist)))
-      allocate (vsxz(ysize(2), int(ioutput / ilist)))
-      allocate (wsxz(ysize(2), int(ioutput / ilist)))
-      allocate (upupsxz(ysize(2), int(ioutput / ilist)))
-      allocate (vpvpsxz(ysize(2), int(ioutput / ilist)))
-      allocate (wpwpsxz(ysize(2), int(ioutput / ilist)))
-      allocate (upvpsxz(ysize(2), int(ioutput / ilist)))
-      allocate (vpwpsxz(ysize(2), int(ioutput / ilist)))
-      allocate (upwpsxz(ysize(2), int(ioutput / ilist)))
-      allocate (tkesxz(ysize(2), int(ioutput / ilist)))
-      allocate (epssxz(ysize(2), int(ioutput / ilist)))
-      allocate (phisxz(ysize(2), int(ioutput / ilist)))
-      allocate (phipphipsxz(ysize(2), int(ioutput / ilist)))
-      allocate (upphipsxz(ysize(2), int(ioutput / ilist)))
-      allocate (vpphipsxz(ysize(2), int(ioutput / ilist)))
-      allocate (wpphipsxz(ysize(2), int(ioutput / ilist)))
-      allocate (dphidysxz(ysize(2), int(ioutput / ilist)))
-
-      allocate (ttda(ysize(2)), ttdb(ysize(2)), ttdc(ysize(2)))
-
-      ! Atempt to do a vertically periodic domain !
-      !call alloc_x(lm1); lm1(:,:,:)=one
-      !call alloc_y(lm2); lm2(:,:,:)=one
-      !if(nclx1==0)rc1=nx ! normal case
-      !if(nclx1==2)then
-      !   rc1 = nx-1
-      !   rc1 = int(0.40*nx) ! define a perfecentage here
-      !   do i=1,xsize(1)
-      !      !x=real(i-1,mytype)*dx
-      !      !lambda1(i,j,k) = (half-half*tanh((x-(0.40*xlx))*150.0))
-      !      !lambda1(i,j,k) = (half-half*tanh((x-(recirc*xlx))*1000.0))
-      !      if(i.gt.rc1) lm1(i,:,:) = zero
-      !   end do
-      !   call transpose_x_to_y(lm1,lm2)
-      !else
-      !   rc1=nx
-      !endif
-      ! NOT GOOD !
-
-      if (nrank == 0) then
-         write (6, *) 'Resolution details:'
-         write (6, "(' dx  =',F12.6)") dx
-         write (6, "(' dz  =',F12.6)") dz
-         write (6, "(' dx/dz  =',F12.6)") dx / dz
-         write (6, "(' dy  min,max =',2F12.6)") dyp(1), dyp(ny)
-      end if
-   end subroutine postprocess_ttbl_init
    !############################################################################
    !############################################################################
    subroutine postprocess_ttbl(ux1, uy1, uz1, pp3, phi1, ep1)
@@ -1032,7 +975,7 @@ contains
       real(mytype), dimension(ysize(2)) :: sxz
       integer :: j, code
       do j = 1, ysize(2)
-         sxz(j) = sum(field(:,j,:))
+         sxz(j) = sum(field(:, j, :))
       end do
       call MPI_ALLREDUCE(MPI_IN_PLACE, sxz, ny, real_type, MPI_SUM, MPI_COMM_WORLD, code)
       profile = sxz / real(nx * nz, mytype)
@@ -1046,7 +989,7 @@ contains
       real(mytype), intent(out), dimension(ysize(1), ysize(2), ysize(3)) :: fieldp
       integer :: j
       do j = 1, ysize(2)
-         fieldp(:,j,:) = field(:,j,:) - profile(j)
+         fieldp(:, j, :) = field(:, j, :) - profile(j)
       end do
    end subroutine extract_fluctuat
    !############################################################################

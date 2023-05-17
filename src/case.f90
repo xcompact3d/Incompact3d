@@ -117,7 +117,7 @@ contains
 
     elseif (itype.eq.itype_ttbl) then
 
-       call init_ttbl(ux1, uy1, uz1, ep1, phi1)
+       call init_ttbl(ux1, uy1, uz1, phi1)
 
     else
   
@@ -307,8 +307,6 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep
     real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp
-    logical, save :: init
-    data init /.false./
 
     if (itype.eq.itype_user) then
 
@@ -364,14 +362,9 @@ contains
 
     elseif (itype.eq.itype_ttbl) then
       
-       if (.not.init) then
-          call postprocess_ttbl_init
-       else
-          call postprocess_ttbl (ux, uy, uz, pp, phi, ep)
-       endif
+       call postprocess_ttbl (ux, uy, uz, pp, phi, ep)
 
     endif
-    init = .true.
 
     if (iforces.eq.1) then
        call force(ux,uy,ep)
