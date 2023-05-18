@@ -175,7 +175,7 @@ contains
       real(mytype) :: y, delta, theta, tau_wall, ufric
       integer :: i, j, k, code
 
-      ! Get velocities and derivatives 
+      ! Get velocities and derivatives
       call transpose_x_to_y(ux1, ux2)
       call transpose_x_to_y(uy1, uy2)
       call transpose_x_to_y(uz1, uz2)
@@ -188,12 +188,7 @@ contains
       call horizontal_avrge(ux2, ux2m)
 
       ! Compute thetad
-      if (itime == ifirst) then
-         thetad = 0.1092267 * xnu
-         if (nrank == 0) write (*, *) 'Initial thetad = ', thetad
-      else
-         thetad = comp_thetad(thetad, ux2, uy2, ux2m)
-      end if
+      thetad = comp_thetad(thetad, ux2, uy2, ux2m)
 
       ! Apply forcing
       do k = 1, xsize(3)
@@ -772,7 +767,10 @@ contains
 
       ! Iteratively find optimal thetad
       thetad = thetad0
-      if (itime >= ifirst + 2 .and. mod(itime, freq) == 0) then
+      if (itime == ifirst) then
+         thetad = 0.1092267 * xnu
+         if (nrank == 0) write (6, *) 'Initial thetad = ', thetad
+      else if (itime >= ifirst + 2 .and. mod(itime, freq) == 0) then
          if (nrank == 0) then
             call itp(comp_theta_res, thetad0, dt, thetad, it, success)
             if (success) then
