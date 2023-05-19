@@ -285,7 +285,7 @@ contains
 
     call postprocess_case(rho1, ux1, uy1, uz1, pp3, T, ep1)
 
-    if(itype.ne.itype_ttbl)call overall_statistic(ux1, uy1, uz1, T, pp3, ep1)
+    call overall_statistic(ux1, uy1, uz1, T, pp3, ep1)
 
     if (iturbine.ne.0) then 
       call turbine_output()
