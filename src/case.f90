@@ -330,7 +330,7 @@ contains
 
     elseif (itype.eq.itype_hill) then
 
-       call postprocess_hill(ux, uy, uz, phi, ep)
+       call postprocess_hill(ux, uy, uz, pp, phi, ep)
 
     elseif (itype.eq.itype_cyl) then
 
@@ -391,6 +391,10 @@ contains
 
        call visu_channel_init(case_visu_init)
 
+    else if (itype .eq. itype_hill) then
+
+       call visu_hill_init(case_visu_init)
+
     else if (itype .eq. itype_cyl) then
 
        call visu_cyl_init(case_visu_init)
@@ -444,6 +448,11 @@ contains
     elseif (itype.eq.itype_channel) then
 
        call visu_channel(ux1, uy1, uz1, pp3, phi1, ep1, num)
+       called_visu = .true.
+
+    elseif (itype.eq.itype_hill) then
+
+       call visu_hill(ux1, uy1, uz1, pp3, phi1, ep1, num)
        called_visu = .true.
 
     elseif (itype.eq.itype_cyl) then
