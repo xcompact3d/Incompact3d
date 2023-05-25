@@ -26,7 +26,8 @@ module hill
   character(len=1),parameter :: NL=char(10) !new line character
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_hill, boundary_conditions_hill, postprocess_hill, geomcomplex_hill
+  PUBLIC :: init_hill, boundary_conditions_hill, postprocess_hill, geomcomplex_hill, &
+       visu_hill, visu_hill_init
 
 contains
 
