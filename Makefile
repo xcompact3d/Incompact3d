@@ -121,11 +121,6 @@ $(OBJ):$(SRCDIR)%.o : $(SRCDIR)%.f90
 %.o : %.f90
 	$(FC) $(FFLAGS) $(DEFS) $(DEFS2) $(INC) -c $<
 
-.PHONY: post
-post:
-	$(FC) $(FFLAGS) $(DEFS) $(DEFS2) post.f90 -c
-	$(FC) $(FFLAGS) -o $@ $(PSRC:.f90=.o)
-
 .PHONY: clean
 
 
