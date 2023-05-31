@@ -181,7 +181,7 @@ contains
           if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy-yly*half
           if (istret.ne.0) y=yp(j+xstart(2)-1)-yly*half
           do i=1,xsize(1)
-             ux1(i,j,k)=one-y*y
+             ux1(i,j,k)=ux1(i,j,k)+one-y*y
              uy1(i,j,k)=0.
              uz1(i,j,k)=0.
           enddo
