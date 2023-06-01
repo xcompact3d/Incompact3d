@@ -5,11 +5,12 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!
 !!!        FILE: BC-Periodic-hill.f90
-!!!      AUTHOR: ??
+!!!      AUTHOR: Sylvain Laizet
 !!!    MODIFIED: Paul Bartholomew
 !!! DESCRIPTION: This module describes the periodic hill flow.
 !!!   CHANGELOG: [2019-02-19] Making module private by default
 !!               [2019-02-19] Turning file into a module
+!!               [2023-06-01] Implementing ready-to-run input file
 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -31,7 +32,9 @@ module hill
 
 contains
 
+!############################################################################
   subroutine geomcomplex_hill(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
+!############################################################################
 
     use decomp_2d, only : mytype
     use param, only : zero, one, two, three, nine, fourteen, twenty, twentyeight
@@ -105,8 +108,10 @@ contains
     return
   end subroutine geomcomplex_hill
 
-  !********************************************************************
+!############################################################################
   subroutine boundary_conditions_hill (ux,uy,uz,phi,ep1)
+!############################################################################
+  
 
     USE param
     USE variables
@@ -127,8 +132,9 @@ contains
     return
   end subroutine boundary_conditions_hill
 
-  !********************************************************************
+!############################################################################
   subroutine init_hill (ux1,uy1,uz1,ep1,phi1)
+!############################################################################
 
     USE decomp_2d
     USE decomp_2d_io
@@ -205,20 +211,19 @@ contains
 
     return
   end subroutine init_hill
-  !********************************************************************
 
+!############################################################################
   subroutine init_post(ep1)
+!############################################################################
 
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ep1
 
   end subroutine init_post
 
 
-  !********************************************************************
-  !
+!############################################################################
   subroutine hill_flrt (ux,constant)
-    !
-    !********************************************************************
+!############################################################################
 
     USE decomp_2d
     USE decomp_2d_poisson
@@ -253,10 +258,8 @@ contains
     ut3=ut3/(real(nx*nz,mytype))
 
     call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-
+    
     can=-(constant-ut4)
-
-    !if (nrank==0) write(*,*) nrank,'UT',ut4,can
 
     do k=1,ysize(3)
        do i=1,ysize(1)
@@ -268,10 +271,10 @@ contains
 
     return
   end subroutine hill_flrt
-  !********************************************************************
-  !############################################################################
+  
+!############################################################################
   subroutine postprocess_hill(ux1,uy1,uz1,pp3,phi1,ep1)
-
+!############################################################################
     use var, ONLY : nzmsize
 
     implicit none
@@ -296,14 +299,10 @@ contains
     visu_initialised = .true.
     
   end subroutine visu_hill_init
-  !############################################################################
-  !!
-  !!  SUBROUTINE: visu_hill
-  !!      AUTHOR: FS
-  !! DESCRIPTION: Performs hill-specific visualization
-  !!
-  !############################################################################
+  
+!############################################################################
   subroutine visu_hill(ux1, uy1, uz1, pp3, phi1, ep1, num)
+!############################################################################
 
     use var, only : ux2, uy2, uz2, ux3, uy3, uz3
     use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
