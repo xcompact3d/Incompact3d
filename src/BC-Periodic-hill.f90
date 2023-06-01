@@ -5,11 +5,12 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!
 !!!        FILE: BC-Periodic-hill.f90
-!!!      AUTHOR: ??
+!!!      AUTHOR: Sylvain Laizet
 !!!    MODIFIED: Paul Bartholomew
 !!! DESCRIPTION: This module describes the periodic hill flow.
 !!!   CHANGELOG: [2019-02-19] Making module private by default
 !!               [2019-02-19] Turning file into a module
+!!               [2023-06-01] Implementing ready-to-run input file
 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -26,11 +27,14 @@ module hill
   character(len=1),parameter :: NL=char(10) !new line character
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_hill, boundary_conditions_hill, postprocess_hill, geomcomplex_hill
+  PUBLIC :: init_hill, boundary_conditions_hill, postprocess_hill, geomcomplex_hill, &
+       visu_hill, visu_hill_init
 
 contains
 
+!############################################################################
   subroutine geomcomplex_hill(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
+!############################################################################
 
     use decomp_2d, only : mytype
     use param, only : zero, one, two, three, nine, fourteen, twenty, twentyeight
@@ -104,8 +108,10 @@ contains
     return
   end subroutine geomcomplex_hill
 
-  !********************************************************************
+!############################################################################
   subroutine boundary_conditions_hill (ux,uy,uz,phi,ep1)
+!############################################################################
+  
 
     USE param
     USE variables
@@ -126,8 +132,9 @@ contains
     return
   end subroutine boundary_conditions_hill
 
-  !********************************************************************
+!############################################################################
   subroutine init_hill (ux1,uy1,uz1,ep1,phi1)
+!############################################################################
 
     USE decomp_2d
     USE decomp_2d_io
@@ -177,24 +184,16 @@ contains
     !initial velocity profile
     do k=1,xsize(3)
        do j=1,xsize(2)
-          if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy
-          if (istret.ne.0) y=yp(j+xstart(2)-1)
-          if (y.lt.yly-two) then
-             do i=1,xsize(1)
-                ux1(i,j,k) = zero
-                uy1(i,j,k) = zero
-                uz1(i,j,k) = zero
-             enddo
-          else
-             do i=1,xsize(1)
-                ux1(i,j,k)=(ux1(i,j,k)+one)*(one-(y+one-yly)**two)
-                uy1(i,j,k)=(uy1(i,j,k))*(one-(y+one-yly)**two)
-                uz1(i,j,k)=(uz1(i,j,k))*(one-(y+one-yly)**two)
-             enddo
-          endif
+          if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy-yly*half
+          if (istret.ne.0) y=yp(j+xstart(2)-1)-yly*half
+          do i=1,xsize(1)
+             ux1(i,j,k)=ux1(i,j,k)+one-y*y
+             uy1(i,j,k)=0.
+             uz1(i,j,k)=0.
+          enddo
        enddo
     enddo
-
+    
     !INIT FOR G AND U=MEAN FLOW + NOISE
     do k=1,xsize(3)
        do j=1,xsize(2)
@@ -212,38 +211,19 @@ contains
 
     return
   end subroutine init_hill
-  !********************************************************************
 
+!############################################################################
   subroutine init_post(ep1)
+!############################################################################
 
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ep1
 
   end subroutine init_post
 
-  !############################################################################
-  subroutine postprocess_hill(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
-    USE MPI
-    USE decomp_2d
-    USE decomp_2d_io
-    USE var, only : umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
-    USE var, only : uvisu
-    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-    USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
-
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-    character(len=30) :: filename
-
-    return
-  end subroutine postprocess_hill
-  !############################################################################
-
-  !********************************************************************
-  !
+!############################################################################
   subroutine hill_flrt (ux,constant)
-    !
-    !********************************************************************
+!############################################################################
 
     USE decomp_2d
     USE decomp_2d_poisson
@@ -278,10 +258,8 @@ contains
     ut3=ut3/(real(nx*nz,mytype))
 
     call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-
+    
     can=-(constant-ut4)
-
-    if (nrank==0) write(*,*) nrank,'UT',ut4,can
 
     do k=1,ysize(3)
        do i=1,ysize(1)
@@ -293,6 +271,103 @@ contains
 
     return
   end subroutine hill_flrt
-  !********************************************************************
+  
+!############################################################################
+  subroutine postprocess_hill(ux1,uy1,uz1,pp3,phi1,ep1)
+!############################################################################
+    use var, ONLY : nzmsize
+
+    implicit none
+
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
+
+  end subroutine postprocess_hill
+  subroutine visu_hill_init(visu_initialised)
+
+    use decomp_2d, only : mytype
+    use decomp_2d_io, only : decomp_2d_register_variable
+    use visu, only : io_name, output2D
+    
+    implicit none
+
+    logical, intent(out) :: visu_initialised
+
+    call decomp_2d_register_variable(io_name, "critq", 1, 0, output2D, mytype)
+
+    visu_initialised = .true.
+    
+  end subroutine visu_hill_init
+  
+!############################################################################
+  subroutine visu_hill(ux1, uy1, uz1, pp3, phi1, ep1, num)
+!############################################################################
+
+    use var, only : ux2, uy2, uz2, ux3, uy3, uz3
+    use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    use var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+    use var, ONLY : nzmsize
+    use visu, only : write_field
+    
+    use ibm_param, only : ubcx,ubcy,ubcz
+
+    implicit none
+
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1
+    real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
+    integer, intent(in) :: num
+
+    ! Write vorticity as an example of post processing
+
+    ! Perform communications if needed
+    if (sync_vel_needed) then
+      call transpose_x_to_y(ux1,ux2)
+      call transpose_x_to_y(uy1,uy2)
+      call transpose_x_to_y(uz1,uz2)
+      call transpose_y_to_z(ux2,ux3)
+      call transpose_y_to_z(uy2,uy3)
+      call transpose_y_to_z(uz2,uz3)
+      sync_vel_needed = .false.
+    endif
+
+    !x-derivatives
+    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
+    !y-derivatives
+    call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+    call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+    call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
+    !!z-derivatives
+    call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+    call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+    call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
+    !!all back to x-pencils
+    call transpose_z_to_y(ta3,td2)
+    call transpose_z_to_y(tb3,te2)
+    call transpose_z_to_y(tc3,tf2)
+    call transpose_y_to_x(td2,tg1)
+    call transpose_y_to_x(te2,th1)
+    call transpose_y_to_x(tf2,ti1)
+    call transpose_y_to_x(ta2,td1)
+    call transpose_y_to_x(tb2,te1)
+    call transpose_y_to_x(tc2,tf1)
+    !du/dx=ta1 du/dy=td1 and du/dz=tg1
+    !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
+    !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
+
+    !Q=-0.5*(ta1**2+te1**2+di1**2)-td1*tb1-tg1*tc1-th1*tf1
+    di1 = zero
+    di1(:,:,:) = - half*(ta1(:,:,:)**2 + te1(:,:,:)**2 + ti1(:,:,:)**2) &
+                 - td1(:,:,:) * tb1(:,:,:) &
+                 - tg1(:,:,:) * tc1(:,:,:) &
+                 - th1(:,:,:) * tf1(:,:,:)
+    call write_field(di1, ".", "critq", num, flush = .true.) ! Reusing temporary array, force flush
+
+  end subroutine visu_hill
+  
 end module hill
 
