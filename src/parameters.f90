@@ -59,7 +59,7 @@ subroutine parameter(input_i3d)
        alpha_sc, beta_sc, g_sc, Tref
   NAMELIST /LESModel/ jles, smagcst, smagwalldamp, nSmag, walecst, maxdsmagcst, iconserv
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
-  NAMELIST /ibmstuff/ cex,cey,cez,ra,nobjmax,nraf,nvol,iforces, npif, izap, ianal, imove, thickness, chord, omega ,ubcx,ubcy,ubcz,rads, c_air
+  NAMELIST /ibmstuff/ cex,cey,cez,ra,rao,nobjmax,nraf,nvol,iforces, npif, izap, ianal, imove, thickness, chord, omega ,ubcx,ubcy,ubcz,rads, c_air
   NAMELIST /ForceCVs/ xld, xrd, yld, yud!, zld, zrd
   NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, &
        massfrac, mol_weight, imultispecies, primary_species, &
@@ -327,6 +327,8 @@ subroutine parameter(input_i3d)
         print *,'Simulating TGV'
      elseif (itype.eq.itype_channel) then
         print *,'Simulating channel'
+     elseif (itype.eq.itype_pipe) then
+        print *,'Simulating pipe'
      elseif (itype.eq.itype_hill) then
         print *,'Simulating periodic hill'
      elseif (itype.eq.itype_cyl) then
@@ -565,6 +567,7 @@ subroutine parameter_defaults()
   use variables
   use decomp_2d
   use complex_geometry
+  use ibm_param
 
   use probes, only : nprobes, flag_all_digits, flag_extra_probes
   use visu, only : output2D
@@ -634,6 +637,10 @@ subroutine parameter_defaults()
   !! Channel
   cpg = .false.
   idir_stream = 1
+
+  !! Pipe
+  ra  = 0.5 !inner radius
+  rao = 0.6 !outer radius
 
   !! Filter
   ifilter=0
