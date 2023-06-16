@@ -66,6 +66,11 @@ contains
          end if
       end if
       phi1 = zero
+      if (xstart(2) == 1) then
+         ux1(:, 1, :) = zero
+         uy1(:, 1, :) = zero
+         uz1(:, 1, :) = zero
+      end if
 
       ! Check for valid output parameters
       if (ioutput < ilist .or. mod(ioutput, ilist) /= 0) then
