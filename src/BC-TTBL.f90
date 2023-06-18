@@ -71,35 +71,6 @@ contains
          uy1(:, 1, :) = zero
          uz1(:, 1, :) = zero
       end if
-
-      ! Check for valid output parameters
-      if (ioutput < ilist .or. mod(ioutput, ilist) /= 0) then
-         if (nrank == 0) write (6, *) 'ioutput must be exactly divisible by ilist'
-         call MPI_ABORT(MPI_COMM_WORLD, -1, code)
-      end if
-
-      ! Allocate output buffers for postprocessing
-      if (nrank == 0) write (6, *) 'Output buffer size for postprocessing = ', ioutput / ilist
-      allocate (usxz(ysize(2), ioutput / ilist))
-      allocate (vsxz(ysize(2), ioutput / ilist))
-      allocate (wsxz(ysize(2), ioutput / ilist))
-      allocate (upupsxz(ysize(2), ioutput / ilist))
-      allocate (vpvpsxz(ysize(2), ioutput / ilist))
-      allocate (wpwpsxz(ysize(2), ioutput / ilist))
-      allocate (upvpsxz(ysize(2), ioutput / ilist))
-      allocate (vpwpsxz(ysize(2), ioutput / ilist))
-      allocate (upwpsxz(ysize(2), ioutput / ilist))
-      allocate (tkesxz(ysize(2), ioutput / ilist))
-      allocate (epssxz(ysize(2), ioutput / ilist))
-      allocate (phisxz(ysize(2), ioutput / ilist))
-      allocate (phipphipsxz(ysize(2), ioutput / ilist))
-      allocate (upphipsxz(ysize(2), ioutput / ilist))
-      allocate (vpphipsxz(ysize(2), ioutput / ilist))
-      allocate (wpphipsxz(ysize(2), ioutput / ilist))
-      allocate (dphidysxz(ysize(2), ioutput / ilist))
-
-      ! Allocate arrays for time integration
-      allocate (ttda(ysize(2)), ttdb(ysize(2)), ttdc(ysize(2)))
    end subroutine init_ttbl
    !############################################################################
    !############################################################################
@@ -168,6 +139,16 @@ contains
       real(mytype) :: y, theta, delta, tau_wall, ufric
       integer :: i, j, k, code
 
+      ! Allocate arrays and read data (if restart)
+      if (itime == ifirst) then
+         allocate (ttda(ysize(2)), ttdb(ysize(2)), ttdc(ysize(2)))
+         if (irestart == 1) then
+            open (unit=67, file='checkpoint_ttbl', status='unknown', form='unformatted', action='read')
+            read (67) thetad, ttda, ttdb, ttdc
+            close (67)
+         end if
+      end if
+
       ! Get velocities and derivatives
       call transpose_x_to_y(ux1, ux2)
       call transpose_x_to_y(uy1, uy2)
@@ -182,6 +163,13 @@ contains
 
       ! Compute thetad
       thetad = comp_thetad(thetad, ux2, uy2, ux2m)
+
+      ! Write data for restart
+      if (nrank == 0 .and. mod(itime, icheckpoint) == 0) then
+         open (unit=67, file='checkpoint_ttbl', status='unknown', form='unformatted', action='write')
+         write (67) thetad, ttda, ttdb, ttdc
+         close (67)
+      end if
 
       ! Apply forcing
       do k = 1, xsize(3)
@@ -296,6 +284,27 @@ contains
 
       real(8) :: tstart
       integer :: j, b
+
+      ! Allocate arrays
+      if (itime == ifirst) then
+         allocate (usxz(ysize(2), ioutput / ilist))
+         allocate (vsxz(ysize(2), ioutput / ilist))
+         allocate (wsxz(ysize(2), ioutput / ilist))
+         allocate (upupsxz(ysize(2), ioutput / ilist))
+         allocate (vpvpsxz(ysize(2), ioutput / ilist))
+         allocate (wpwpsxz(ysize(2), ioutput / ilist))
+         allocate (upvpsxz(ysize(2), ioutput / ilist))
+         allocate (vpwpsxz(ysize(2), ioutput / ilist))
+         allocate (upwpsxz(ysize(2), ioutput / ilist))
+         allocate (tkesxz(ysize(2), ioutput / ilist))
+         allocate (epssxz(ysize(2), ioutput / ilist))
+         allocate (phisxz(ysize(2), ioutput / ilist))
+         allocate (phipphipsxz(ysize(2), ioutput / ilist))
+         allocate (upphipsxz(ysize(2), ioutput / ilist))
+         allocate (vpphipsxz(ysize(2), ioutput / ilist))
+         allocate (wpphipsxz(ysize(2), ioutput / ilist))
+         allocate (dphidysxz(ysize(2), ioutput / ilist))
+      end if
 
       ! Compute quantities and store in buffer
       if (itime > ceiling(real(initstat, mytype) / real(ioutput, mytype)) * ioutput .and. mod(itime, ilist) == 0) then
@@ -662,10 +671,10 @@ contains
 
       ! Iteratively find optimal thetad
       thetad = thetad0
-      if (itime == ifirst) then
+      if (itime == ifirst .and. irestart == 0) then
          thetad = 0.1092267 * xnu
          if (nrank == 0) write (6, *) 'Initial thetad = ', thetad
-      else if (itime >= ifirst + 2 .and. mod(itime, freq) == 0) then
+      else if ((itime >= ifirst + 2 .or. irestart == 1) .and. mod(itime, freq) == 0) then
          if (nrank == 0) then
             call itp(comp_theta_res, thetad0, dt, thetad, it, success)
             if (success) then

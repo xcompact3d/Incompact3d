@@ -35,7 +35,7 @@ subroutine parameter(input_i3d)
 
   character(len=80), intent(in) :: input_i3d
   real(mytype) :: theta, cfl,cf2
-  integer :: longueur ,impi,j, is, total
+  integer :: longueur ,impi,j, is, total, ierr
 
   NAMELIST /BasicParam/ p_row, p_col, nx, ny, nz, istret, beta, xlx, yly, zlz, &
        itype, iin, re, u1, u2, init_noise, inflow_noise, &
@@ -539,6 +539,15 @@ subroutine parameter(input_i3d)
      if (itype==itype_lockexch) then
         write(*,*)  "Initial front location: ", pfront
      endif
+     ! Check output parameters are valid for TTBL
+     if (itype.eq.itype_ttbl) then
+        if (ioutput < ilist .or. mod(ioutput, ilist) /= 0) then
+           if (nrank == 0) write (*, *) 'ioutput must be exactly divisible by ilist'
+           call MPI_ABORT(MPI_COMM_WORLD, -1, ierr)
+        else
+           if (nrank == 0) write (*, *) 'Output buffer size for TTBL postprocessing = ', ioutput / ilist
+        end if
+     end if
      write(*,*) '==========================================================='
   endif
   
