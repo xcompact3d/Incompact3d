@@ -21,6 +21,7 @@ module case
   use uniform
   use sandbox
   use cavity
+  use pipe
 
   use var, only : nzmsize
 
@@ -37,6 +38,7 @@ contains
   !##################################################################
   subroutine init (rho1, ux1, uy1, uz1, ep1, phi1, drho1, dux1, duy1, duz1, dphi1, &
        pp3, px1, py1, pz1)
+
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
@@ -113,6 +115,10 @@ contains
     elseif (itype.eq.itype_cavity) then
 
        call init_cavity(ux1, uy1, uz1, ep1, phi1)
+
+    elseif (itype.eq.itype_pipe) then
+
+       call init_pipe(ux1, uy1, uz1, ep1, phi1)
 
     else
   

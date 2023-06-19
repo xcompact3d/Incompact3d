@@ -16,7 +16,7 @@ module pipe
   character(len=1),parameter :: NL=char(10) !new line character
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: geomcomplex_pipe
+  PUBLIC :: geomcomplex_pipe, init_pipe
   !!$PUBLIC :: geomcomplex_pipe, init_pipe, boundary_conditions_pipe, postprocess_pipe, &
   !!$          momentum_forcing_pipe, axial_averaging
 
@@ -39,7 +39,6 @@ contains
     use MPI
     use param,only : zero,one,two,yly,zlz
     use ibm_param
-    !!$use ibm
 
     implicit none
 
@@ -76,327 +75,104 @@ contains
     return
 
   end subroutine geomcomplex_pipe
-!!$!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!$  !!
-!!$  !!  subroutine: exact_ib_pipe
-!!$  !!      AUTHOR: Rodrigo Vicente Cruz
-!!$  !! DESCRIPTION: Replaces IB coordinates (yi, yf/zi, zf) by the
-!!$  !!              exact position
-!!$  !!
-!!$!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!$  !********************************************************************
-!!$  !
-!!$  subroutine exact_ib_pipe(ep1,xi,xf,yi,yf,zi,zf,nobjx,nobjy,nobjz,yp)
-!!$  !
-!!$  !********************************************************************
-!!$
-!!$    use decomp_2d, only : mytype
-!!$    use param, only : zero,one,two,yly,zlz
-!!$    use ibm
-!!$    use var, only : ta2,ta3
-!!$    use complex_geometry, only : nobjmax
-!!$    use variables, only: xp,zp
-!!$
-!!$    implicit none
-!!$
-!!$    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
-!!$    real(mytype),dimension(nobjmax,xsize(2),xsize(3))  :: xi,xf
-!!$    real(mytype),dimension(nobjmax,ysize(1),ysize(3))  :: yi,yf
-!!$    real(mytype),dimension(nobjmax,zsize(1),zsize(2))  :: zi,zf
-!!$    integer,     dimension(xsize(2),xsize(3))          :: nobjx
-!!$    integer,     dimension(ysize(1),ysize(3))          :: nobjy
-!!$    integer,     dimension(zsize(1),zsize(2))          :: nobjz
-!!$    real(mytype)                                       :: yc,zc
-!!$    real(mytype),dimension(ny)                         :: yp
-!!$
-!!$    !LOCALS
-!!$    real(mytype)                     :: y,z
-!!$    integer                          :: i,j,k,jnum,knum
-!!$
-!!$    !MESH
-!!$    !!$allocate(xp(nx),zp(nz))
-!!$    !!$do i=1,nx
-!!$    !!$    xp(i)=real(i-1,mytype)*dx
-!!$    !!$enddo
-!!$    !!$do k=1,nz
-!!$    !!$    zp(k)=real(k-1,mytype)*dz
-!!$    !!$enddo
-!!$    
-!!$    !Y-PENCILS
-!!$    call transpose_x_to_y(ep1,ta2)
-!!$    do k=1,ysize(3)
-!!$        z=real(ystart(3)-1+k-1,8)*dz-half*zlz
-!!$        do i=1,ysize(1)
-!!$            !IB COORDINATES
-!!$            do j=1,nobjy(i,k)
-!!$                if (j.eq.1) then
-!!$                    !yi
-!!$                    yi(j,i,k)=-(abs(rao*rao-z*z)**half)+half*yly
-!!$                    !yf
-!!$                    if (nobjy(i,k).eq.1) then
-!!$                        yf(j,i,k)= (abs(rao*rao-z*z)**half)+half*yly
-!!$                    elseif (nobjy(i,k).eq.2) then
-!!$                        yf(j,i,k)=-(abs(ra*ra-z*z)**half)+half*yly
-!!$                    endif
-!!$                elseif (j.eq.2) then
-!!$                    !yi
-!!$                    yi(j,i,k)= (abs(ra*ra-z*z)**half)+half*yly
-!!$                    !yf
-!!$                    yf(j,i,k)= (abs(rao*rao-z*z)**half)+half*yly
-!!$                endif
-!!$            enddo
-!!$
-!!$            !FIX PROBLEMATIC IB
-!!$            jnum=0
-!!$            do j=1,ysize(2)
-!!$                if (ta2(i,j,k).eq.0..and.ta2(i,j+1,k).eq.1.) then
-!!$                    jnum=jnum+1
-!!$                    !if (abs(yp(j+1)-yi(jnum,i,k)).lt.tol) then
-!!$                    if (yi(jnum,i,k).gt.yp(j+1)) then
-!!$                        yi(jnum,i,k)=yp(j+1) 
-!!$                        !!=====DEBUG
-!!$                        !if (ystart(1)+i-1.eq.nx/2+1) print*,'(yi2)', z, yp(j+1), yi(jnum,i,k)
-!!$                        !if (ystart(1)+i-1.eq.nx/2+1) print*,'(dyi2)', z, yp(j+1)-yi(jnum,i,k), jnum
-!!$                        !!==========
-!!$                    endif
-!!$                    !!=====DEBUG
-!!$                    !if (ystart(1)+i-1.eq.nx/2+1) print*,'(yi)', z, yp(j+1), yi(jnum,i,k)
-!!$                    !if (ystart(1)+i-1.eq.nx/2+1) print*,'(dyi)', z, yp(j+1)-yi(jnum,i,k), jnum
-!!$                    !!!==========
-!!$                elseif (ta2(i,j,k).eq.1..and.ta2(i,j+1,k).eq.0.) then
-!!$                    !if (abs(yp(j)-yf(jnum,i,k)).lt.tol) then
-!!$                    if (yp(j).gt.yf(jnum,i,k)) then
-!!$                        yf(jnum,i,k)=yp(j)
-!!$                        !!=====DEBUG
-!!$                        !if (ystart(1)+i-1.eq.nx/2+1) print*,'(yf2)', z, yp (j), yf(jnum,i,k)
-!!$                        !if (ystart(1)+i-1.eq.nx/2+1) print*,'(dyf2)', z, yf(jnum,i,k)-yp(j), jnum
-!!$                        !!==========
-!!$                    endif
-!!$                    !!=====DEBUG
-!!$                    !if (ystart(1)+i-1.eq.nx/2+1) print*,'(yf)', z, yp(j), yf(jnum,i,k)
-!!$                    !if (ystart(1)+i-1.eq.nx/2+1) print*,'(dyf)', z, yf(jnum,i,k)-yp(j), jnum
-!!$                    !!!==========
-!!$                endif
-!!$            enddo
-!!$            !=========
-!!$        enddo
-!!$    enddo
-!!$
-!!$    !Z-PENCILS
-!!$    call transpose_y_to_z(ta2,ta3)
-!!$    do j=1,zsize(2)
-!!$        y=real(zstart(2)-1+j-1,8)*dy-half*yly
-!!$        do i=1,zsize(1)
-!!$            !IB COORDINATES
-!!$            do k=1,nobjz(i,j)
-!!$                if (k.eq.1) then
-!!$                    !zi
-!!$                    zi(k,i,j)=-(abs(rao*rao-y*y)**half)+half*zlz
-!!$                    !zf
-!!$                    if (nobjz(i,j).eq.1) then
-!!$                        zf(k,i,j)= (abs(rao*rao-y*y)**half)+half*zlz
-!!$                    elseif (nobjz(i,j).eq.2) then
-!!$                        zf(k,i,j)=-(abs(ra*ra-y*y)**half)+half*zlz
-!!$                    endif
-!!$                elseif (k.eq.2) then
-!!$                    !zi
-!!$                    zi(k,i,j)= (abs(ra*ra-y*y)**half)+half*zlz
-!!$                    !zf
-!!$                    zf(k,i,j)= (abs(rao*rao-y*y)**half)+half*zlz
-!!$                endif
-!!$            enddo
-!!$
-!!$            !FIX PROBLEMATIC IB
-!!$            knum=0
-!!$            do k=1,zsize(3)
-!!$                if (ta3(i,j,k).eq.0..and.ta3(i,j,k+1).eq.1.) then
-!!$                    knum=knum+1
-!!$                    !if (abs(zp(k+1)-zi(knum,i,j)).lt.tol) then
-!!$                    if (zi(knum,i,j).gt.zp(k+1)) then
-!!$                        zi(knum,i,j)=zp(k+1) 
-!!$                        !!=====DEBUG
-!!$                        !if (zstart(1)+i-1.eq.nx/2+1) print*,'(zi2)', y, zp(k+1), zi(knum,i,j)
-!!$                        !if (zstart(1)+i-1.eq.nx/2+1) print*,'(dzi2)', y, zp(k+1)-zi(knum,i,j), knum
-!!$                        !!==========
-!!$                    endif
-!!$                    !!=====DEBUG
-!!$                    !if (zstart(1)+i-1.eq.nx/2+1) print*,'(zi)', y, zp(k+1), zi(knum,i,j)
-!!$                    !if (zstart(1)+i-1.eq.nx/2+1) print*,'(dzi)', y, zp(k+1)-zi(knum,i,j), knum
-!!$                    !!!==========
-!!$                elseif (ta3(i,j,k).eq.1..and.ta3(i,j,k+1).eq.0.) then
-!!$                    !if (abs(zp(k)-zf(knum,i,j)).lt.tol) then
-!!$                    if (zp(k).gt.zf(knum,i,j)) then
-!!$                        zf(knum,i,j)=zp(k)
-!!$                        !!=====DEBUG
-!!$                        !if (zstart(1)+i-1.eq.nx/2+1) print*,'(zf2)', y, zp(k), zf(knum,i,j)
-!!$                        !if (zstart(1)+i-1.eq.nx/2+1) print*,'(dzf2)', y, zf(knum,i,j)-zp(k), knum
-!!$                        !!==========
-!!$                    endif
-!!$                    !!=====DEBUG
-!!$                    !if (zstart(1)+i-1.eq.nx/2+1) print*,'(zf)', y, zp(k), zf(knum,i,j)
-!!$                    !if (zstart(1)+i-1.eq.nx/2+1) print*,'(dzf)', y, zf(knum,i,j)-zp(k), knum
-!!$                    !!!==========
-!!$                endif
-!!$            enddo
-!!$        enddo
-!!$    enddo
-!!$    !
-!!$    return
-!!$  end subroutine exact_ib_pipe
-!!$
-!!$!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!$  !!
-!!$  !!  subroutine: int_pipe
-!!$  !!      AUTHOR: Rodrigo Vicente Cruz
-!!$  !! DESCRIPTION: Initial laminar conditions in pipe
-!!$  !!
-!!$!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!$  !********************************************************************
-!!$  !
-!!$  subroutine init_pipe (ux1,uy1,uz1,ep1,phi1)
-!!$  !
-!!$  !********************************************************************
-!!$
-!!$    use decomp_2d
-!!$    use decomp_2d_io
-!!$    use variables
-!!$    use param
-!!$    use ibm
-!!$    use MPI
-!!$    use var, ONLY: phis1
-!!$
-!!$    implicit none
-!!$
-!!$    real(mytype),dimension(xsize(1),xsize(2),xsize(3))              :: ux1,uy1,uz1,ep1
-!!$    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar)    :: phi1
-!!$
-!!$    real(mytype)                    :: r,ym,zm,theta
-!!$    real(mytype)                    :: um,yc,zc
-!!$    real(mytype)                    :: Nu
-!!$    integer                         :: k,j,i,fh,ierror,ii,is,it,icht,code
-!!$    integer (kind=MPI_OFFSET_KIND)  :: disp
-!!$    !
-!!$    yc = yly / two
-!!$    zc = zlz / two
-!!$
-!!$    if (iscalar.ne.0) then
-!!$        !Analytical laminar temperature profile, with Nu=4.36
-!!$        !Nu=4.36_mytype
-!!$        Nu=real(48./11.,8)
-!!$        icht=0
-!!$        do is=1,numscalar
-!!$            if (itbc(is).eq.1) then !MIXED-TYPE BOUNDARY CONDITION
-!!$                do k=1,xsize(3)
-!!$                    zm=dz*real(xstart(3)-1+k-1,mytype)-zc 
-!!$                    do j=1,xsize(2)
-!!$                        if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
-!!$                        if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
-!!$                        r=sqrt(ym*ym+zm*zm)
-!!$                        do i=1,xsize(1)
-!!$                            if (r.le.ra.and.ep1(i,j,k).eq.0) then
-!!$                                phi1(i,j,k,is)=two*Nu*(three/sixteen + r**four - r**two)
-!!$                            else
-!!$                                phi1(i,j,k,is)=zero
-!!$                            endif
-!!$                        enddo
-!!$                    enddo
-!!$                enddo
-!!$            elseif (itbc(is).eq.2) then  !IMPOSED FLUX BOUNDARY CONDITION
-!!$                do k=1,xsize(3)
-!!$                    zm=dz*real(xstart(3)-1+k-1,mytype)-zc 
-!!$                    do j=1,xsize(2)
-!!$                        if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
-!!$                        if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
-!!$                        r=sqrt(ym*ym+zm*zm)    
-!!$                        do i=1,xsize(1)
-!!$                            if (r.le.ra.and.ep1(i,j,k).eq.0) then
-!!$                                phi1(i,j,k,is)=two*(three/sixteen+(r**four)-&
-!!$                                               (r**two))-(one/Nu)
-!!$                            else
-!!$                                phi1(i,j,k,is)=-one/Nu !For reconstruction smoothness
-!!$                            endif
-!!$                        enddo
-!!$                    enddo
-!!$                enddo
-!!$            elseif (itbc(is).eq.3) then  !CONJUGATE HEAT TRANSFER
-!!$                icht=icht+1
-!!$                do k=1,xsize(3)
-!!$                    zm=dz*real(xstart(3)-1+k-1,mytype)-zc 
-!!$                    do j=1,xsize(2)
-!!$                        if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
-!!$                        if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
-!!$                        r=sqrt(ym*ym+zm*zm)    
-!!$                        do i=1,xsize(1)
-!!$                            if (r.le.ra.and.ep1(i,j,k).eq.0) then !fluid zone
-!!$                                !fluid
-!!$                                    phi1(i,j,k,is)=two*(three/sixteen+(r**four)-&
-!!$                                                   (r**two))-(one/Nu)
-!!$                                !solid
-!!$                                    !phis1(i,j,k,icht)=-one/Nu
-!!$                                    phis1(i,j,k,icht)=zero
-!!$
-!!$                            !elseif (r.ge.ra.and.r.le.rao.and.ep1(i,j,k).eq.1) then !solid zone
-!!$                            elseif (ep1(i,j,k).eq.1) then !solid zone
-!!$                                !fluid
-!!$                                    phi1(i,j,k,is)=-one/Nu !for reconstruction smoothness
-!!$                                !solid
-!!$                                    phis1(i,j,k,icht)=(ra/g2(is))*log(ra/r)-(one/Nu)
-!!$
-!!$                            else !buffer fluid zone
-!!$                                !fluid
-!!$                                    phi1(i,j,k,is)=-one/Nu !for reconstruction smoothness
-!!$                                !solid
-!!$                                    phis1(i,j,k,icht)=zero
-!!$                            endif
-!!$                        enddo
-!!$                    enddo
-!!$                enddo
-!!$            endif
-!!$        enddo
-!!$    endif
-!!$
-!!$    ux1=zero;uy1=zero;uz1=zero
-!!$    if (iin.ne.0) then
-!!$       call system_clock(count=code)
-!!$       if (iin.eq.2) code=0
-!!$       call random_seed(size = ii)
-!!$       call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /))
-!!$       call random_number(ux1)
-!!$       call random_number(uy1)
-!!$       call random_number(uz1)
-!!$    endif
-!!$    !modulation of the random noise + initial velocity profile
-!!$    do k=1,xsize(3)
-!!$        zm=dz*real(xstart(3)-1+k-1,mytype)-zc 
-!!$        do j=1,xsize(2)
-!!$            if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
-!!$            if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
-!!$            r=sqrt(ym*ym+zm*zm)    
-!!$            um=exp(-ten*r*r)
-!!$            !Poiseuille flow
-!!$            bxx1(j,k)=two*(one-(ym**two+zm**two)/(ra**two))
-!!$            bxy1(j,k)=zero
-!!$            bxz1(j,k)=zero
-!!$            do i=1,xsize(1)
-!!$                if (r.le.ra.and.ep1(i,j,k).eq.0) then
-!!$                    ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+bxx1(j,k)
-!!$                    uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)+bxy1(j,k)
-!!$                    uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)+bxz1(j,k)
-!!$                else
-!!$                    ux1(i,j,k)=zero
-!!$                    uy1(i,j,k)=zero
-!!$                    uz1(i,j,k)=zero
-!!$                endif
-!!$            enddo
-!!$        enddo
-!!$    enddo
-!!$
-!!$#ifdef DEBG
-!!$    if (nrank .eq. 0) print *,'# init end ok'
-!!$#endif
-!!$    return
-!!$
-!!$  end subroutine init_pipe
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!
+  !!  subroutine: init_pipe
+  !!      AUTHOR: Rodrigo Vicente Cruz
+  !! DESCRIPTION: Initial laminar conditions in pipe
+  !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !********************************************************************
+  !
+  subroutine init_pipe (ux1,uy1,uz1,ep1,phi1)
+  !
+  !********************************************************************
+
+    use decomp_2d
+    use decomp_2d_io
+    use variables
+    use param
+    use ibm_param
+    use MPI
+
+    implicit none
+
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3))              :: ux1,uy1,uz1,ep1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar)    :: phi1
+
+    real(mytype)                    :: r,ym,zm,theta
+    real(mytype)                    :: um,yc,zc
+    real(mytype)                    :: nu
+    integer                         :: k,j,i,fh,ierror,ii,is,it,icht,code
+    integer (kind=MPI_OFFSET_KIND)  :: disp
+    !
+    yc = yly / two
+    zc = zlz / two
+
+    if (iscalar.ne.0) then
+        !Analytical laminar temperature profile, with nu=4.36
+        nu=real(48./11.,8)
+        do is=1,numscalar
+            do k=1,xsize(3) !MIXED-TYPE BOUNDARY CONDITION : PHI = (Tw-T)/(Tw-Tb)
+                zm=dz*real(xstart(3)-1+k-1,mytype)-zc 
+                do j=1,xsize(2)
+                    if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
+                    if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
+                    r=sqrt(ym*ym+zm*zm)
+                    do i=1,xsize(1)
+                        if (r.le.ra.and.ep1(i,j,k).eq.0) then
+                            phi1(i,j,k,is)=two*nu*(three/sixteen + r**four - r**two)
+                        else
+                            phi1(i,j,k,is)=zero
+                        endif
+                    enddo
+                enddo
+            enddo
+        enddo
+    endif
+
+    ux1=zero;uy1=zero;uz1=zero
+    if (iin.ne.0) then
+       call system_clock(count=code)
+       if (iin.eq.2) code=0
+       call random_seed(size = ii)
+       call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /))
+       call random_number(ux1)
+       call random_number(uy1)
+       call random_number(uz1)
+    endif
+    !modulation of the random noise + initial velocity profile
+    do k=1,xsize(3)
+        zm=dz*real(xstart(3)-1+k-1,mytype)-zc 
+        do j=1,xsize(2)
+            if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
+            if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
+            r=sqrt(ym*ym+zm*zm)    
+            um=exp(-twenty*r*r)
+            !Poiseuille flow
+            bxx1(j,k)=two*(one-(ym**two+zm**two)/(ra**two))
+            bxy1(j,k)=zero
+            bxz1(j,k)=zero
+            do i=1,xsize(1)
+                if (r.le.ra.and.ep1(i,j,k).eq.0) then
+                    ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+bxx1(j,k)
+                    uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)+bxy1(j,k)
+                    uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)+bxz1(j,k)
+                else
+                    ux1(i,j,k)=zero
+                    uy1(i,j,k)=zero
+                    uz1(i,j,k)=zero
+                endif
+            enddo
+        enddo
+    enddo
+
+#ifdef DEBG
+    if (nrank .eq. 0) print *,'# init end ok'
+#endif
+    return
+
+  end subroutine init_pipe
 !!$  !********************************************************************
 !!$  !
 !!$  subroutine boundary_conditions_pipe (ux,uy,uz,phi)
