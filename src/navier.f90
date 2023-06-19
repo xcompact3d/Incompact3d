@@ -522,6 +522,15 @@ contains
 
     call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, dims, dummy_periods, dummy_coords, code)
 
+    !********NCLX==0*************************************
+    !we are in X pencils:
+    if ((itype.eq.itype_pipe).and.(nclx1==0.and.nclxn==0)) then
+
+        !Correct bulk velocity and temperature
+        call pipe_bulk(ux,uy,uz,ep)
+
+    endif
+
     !********NCLX==2*************************************
     !we are in X pencils:
     if ((itype.eq.itype_channel.or.itype.eq.itype_uniform.or.itype.eq.itype_abl).and.(nclx1==2.and.nclxn==2)) then
@@ -1280,5 +1289,255 @@ contains
     enddo
 
   end subroutine tbl_flrt
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!
+  !!  subroutine: pipe_bulk / pipe_bulk_u / pipe_bulk_phi
+  !!      AUTHOR: Rodrigo Vicente Cruz
+  !! DESCRIPTION: Correction of pipe's bulk velocity (constant 
+  !!              flow rate) and bulk temperature
+  !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !********************************************************************
+  !
+  subroutine pipe_bulk(ux,uy,uz,ep)
+  !
+  !********************************************************************
+
+    use param
+    use decomp_2d
+    use variables
+    use var,  only: phi1
+
+    implicit none
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3))  :: ux,uy,uz,ep
+    integer                                             :: is
+
+    !Bulk temperature correction
+    if (numscalar.ne.0) then
+        do is=1,numscalar
+            call pipe_bulk_phi(phi1(:,:,:,is),ux,ep,is,one)
+        enddo
+    endif
+
+    !Bulk velocity correction
+    call pipe_bulk_u(ux,uy,uz,ep,one)
+
+  end subroutine pipe_bulk
+  !********************************************************************
+  !
+  subroutine pipe_bulk_u(ux,uy,uz,ep,constant)
+  !
+  !********************************************************************
+
+    use decomp_2d
+    use variables
+    use param
+    use var
+    use ibm_param, only: ra
+    use MPI
+
+    implicit none
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3))  :: ux,uy,uz,ep
+    real(mytype)                                        :: constant !bulk velocity value
+    real(mytype)                                        :: qm,qmm   !flow rate
+    real(mytype)                                        :: ym,zm,yc,zc,r
+    real(mytype)                                        :: ncount,ncountt
+    integer                                             :: is,j,i,k,code
+    character(len=30)                                   :: filename
+
+    yc = yly/two
+    zc = zlz/two
+
+    if (itime.eq.ifirst.and.nrank.eq.0) then
+       open(96,file='Ub.dat',status='unknown')
+    endif
+
+    !--------------------------- Bulk Velocity ---------------------------
+    !Calculate loss of streamwise mean pressure gradient
+    qm=zero
+    ncount=zero
+    do k=1,xsize(3)
+        zm=dz*real(xstart(3)-1+k-1,mytype)-zc
+        do j=1,xsize(2)
+            if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
+            if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
+            r=sqrt(ym*ym+zm*zm)
+            do i=1,xsize(1)
+                if (r.le.ra.and.ep(i,j,k).eq.0) then
+                    qm=qm+ux(i,j,k)
+                    ncount=ncount+one
+                endif
+            enddo
+        enddo
+    enddo
+    call MPI_ALLREDUCE(qm,qmm,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(ncount,ncountt,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    qmm=qmm/ncountt
+    if (nrank==0) then
+       if (mod(itime, ilist)==0) print *,'Velocity:'
+       if (mod(itime, ilist)==0) print *,'    Bulk velocity before',qmm
+       write(96,*) real((itime-1)*dt,mytype), qmm !write pressure drop
+    endif
+
+    !Correction
+    do j=1,xsize(2)
+        if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
+        if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
+        do k=1,xsize(3)
+            zm=dz*real(xstart(3)-1+k-1,mytype)-zc
+            r=sqrt(ym*ym+zm*zm)
+            do i=1,xsize(1)
+                if (r.le.ra.and.ep(i,j,k).eq.0) then
+                    ux(i,j,k)=ux(i,j,k)+(constant-qmm)
+                endif
+            enddo
+        enddo
+    enddo
+
+    !Check new bulk velocity
+    qmm     = zero
+    ncountt = zero
+    qm      = zero
+    ncount  = zero
+    do k=1,xsize(3)
+        zm=dz*real(xstart(3)-1+k-1,mytype)-zc
+        do j=1,xsize(2)
+            if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
+            if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
+            r=sqrt(ym*ym+zm*zm)
+            do i=1,xsize(1)
+                if (r.le.ra.and.ep(i,j,k).eq.0) then
+                    qm=qm+ux(i,j,k)
+                    ncount=ncount+one
+                else
+                    !Cancel solid zone (ra <= r <= ra+wt)
+                    !and buffer zone (r > ra+wt)
+                    ux(i,j,k)=zero
+                    uy(i,j,k)=zero
+                    uz(i,j,k)=zero
+                endif
+            enddo
+        enddo
+    enddo
+    call MPI_ALLREDUCE(qm,qmm,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(ncount,ncountt,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    qmm=qmm/ncountt
+    if ((nrank==0).and.(mod(itime, ilist)==0)) print *,'    Bulk velocity  after',qmm
+    !
+    return
+    !
+  end subroutine pipe_bulk_u
+  !********************************************************************
+  !
+  subroutine pipe_bulk_phi(phi,ux,ep,is,constant)
+  !
+  !********************************************************************
+
+    use decomp_2d
+    use decomp_2d_poisson
+    use variables
+    use param
+    use ibm_param, only: ra
+    use MPI
+
+    implicit none
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3))  :: phi,ux,ep
+    real(mytype)                                        :: constant      !bulk temperature value
+    real(mytype)                                        :: qv,qvm,qm,qmm !volumetric averaged values
+    real(mytype)                                        :: ym,zm,yc,zc,r
+    real(mytype)                                        :: ncount,ncountt
+    real(mytype)                                        :: phi_out
+    integer                                             :: ifile,is,j,i,k,code
+    character(len=30)                                   :: filename
+
+    if (iscalar.eq.0) return
+
+255 format('Tb_',I2.2,'.dat')
+256 format(' Scalar:                       #',I2)
+
+    ifile=50+is
+    if (itime.eq.ifirst.and.nrank.eq.0) then
+        write(filename,255) is
+        open(ifile,file=filename,status='unknown')
+    endif
+
+    yc = yly / two
+    zc = zlz / two
+    phi_out =zero !for reconstruction smoothness
+
+    !--------------------------- Bulk Temperature ---------------------------
+    !                  with corrected streamwise velocity
+    qm=zero
+    qv=zero
+    ncount=zero
+    do k=1,xsize(3)
+        zm=dz*real(xstart(3)-1+k-1,mytype)-zc
+        do j=1,xsize(2)
+            if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
+            if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
+            r=sqrt(ym*ym+zm*zm)
+            do i=1,xsize(1)
+                if (r.le.ra.and.ep(i,j,k).eq.0) then
+                    qm=qm+ux(i,j,k)*phi(i,j,k)
+                    qv=qv+ux(i,j,k)*ux(i,j,k)
+                    ncount=ncount+one
+                endif
+            enddo
+        enddo
+    enddo
+    call MPI_ALLREDUCE(qm,qmm,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(qv,qvm,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(ncount,ncountt,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    qmm=qmm/ncountt
+    qvm=qvm/ncountt
+    if (nrank.eq.0) then
+        if (mod(itime, ilist)==0) write(*,256) is
+        if (mod(itime, ilist)==0) print *,'         Bulk phi before',qmm
+        write(ifile,*) real(itime*dt,mytype),(constant-qmm)/(qvm*dt)
+    endif
+
+    !Correction
+    do j=1,xsize(2)
+        if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
+        if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
+        do k=1,xsize(3)
+            zm=dz*real(xstart(3)-1+k-1,mytype)-zc
+            r=sqrt(ym*ym+zm*zm)
+            do i=1,xsize(1)
+                if (r.le.ra.and.ep(i,j,k).eq.0) then
+                    phi(i,j,k)=phi(i,j,k)+ux(i,j,k)*((constant-qmm)/qvm)
+                endif
+            enddo
+        enddo
+    enddo
+
+    !Check new bulk temperature
+    qmm     = zero
+    ncountt = zero
+    qm      = zero
+    ncount  = zero
+    do k=1,xsize(3)
+        zm=dz*real(xstart(3)-1+k-1,mytype)-zc
+        do j=1,xsize(2)
+            if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
+            if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
+            r=sqrt(ym*ym+zm*zm)
+            do i=1,xsize(1)
+                if (r.le.ra.and.ep(i,j,k).eq.0) then
+                    qm=qm+ux(i,j,k)*phi(i,j,k)
+                    ncount=ncount+one
+                else !smoothness for reconstruction
+                    phi(i,j,k)=phi_out
+                endif
+            enddo
+        enddo
+    enddo
+    call MPI_ALLREDUCE(qm,qmm,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(ncount,ncountt,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    qmm=qmm/ncountt
+    if ((nrank==0).and.(mod(itime, ilist)==0)) print *,'          Bulk phi after',qmm
+
+    return
+  end subroutine pipe_bulk_phi
 
 endmodule navier

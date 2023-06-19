@@ -16,7 +16,7 @@ module pipe
   character(len=1),parameter :: NL=char(10) !new line character
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: geomcomplex_pipe, init_pipe
+  PUBLIC :: geomcomplex_pipe, init_pipe, boundary_conditions_pipe
   !!$PUBLIC :: geomcomplex_pipe, init_pipe, boundary_conditions_pipe, postprocess_pipe, &
   !!$          momentum_forcing_pipe, axial_averaging
 
@@ -173,280 +173,28 @@ contains
     return
 
   end subroutine init_pipe
-!!$  !********************************************************************
-!!$  !
-!!$  subroutine boundary_conditions_pipe (ux,uy,uz,phi)
-!!$  !
-!!$  !********************************************************************
-!!$
-!!$    use param
-!!$    use variables
-!!$    use decomp_2d
-!!$
-!!$    implicit none
-!!$
-!!$    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
-!!$    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
-!!$
-!!$    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: gx
-!!$    real(mytype) :: x, y, z
-!!$    integer :: i, j, k, is
-!!$!
-!!$    return
-!!$  end subroutine boundary_conditions_pipe
-!!$
-!!$!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!$  !!
-!!$  !!  subroutine: pipe_flrt
-!!$  !!      AUTHOR: Rodrigo Vicente Cruz
-!!$  !! DESCRIPTION: Adjustement of bulk velocity to keep constant 
-!!$  !!              flow rate
-!!$  !!
-!!$!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!$  !********************************************************************
-!!$  !
-!!$  subroutine pipe_flrt(ux,uy,uz,ep,constant)
-!!$  !
-!!$  !********************************************************************
-!!$
-!!$    use decomp_2d
-!!$    use decomp_2d_poisson
-!!$    use variables
-!!$    use param
-!!$    use var
-!!$    use ibm, ONLY: ra
-!!$    use MPI
-!!$
-!!$    implicit none
-!!$    real(mytype),dimension(xsize(1),xsize(2),xsize(3))  :: ux,uy,uz,ep
-!!$    real(mytype)                                        :: constant
-!!$    real(mytype)                                        :: qm,qmm
-!!$    real(mytype)                                        :: ym,zm,yc,zc,r
-!!$    real(mytype)                                        :: ncount,ncountt
-!!$    integer                                             :: ivar
-!!$    integer                                             :: is,j,i,k,code
-!!$    character(len=30)                                   :: filename
-!!$
-!!$    yc = yly / two
-!!$    zc = zlz / two
-!!$
-!!$    if (itime.eq.ifirst.and.nrank.eq.0) then
-!!$       open(96,file='Ub.dat',status='unknown')
-!!$    endif
-!!$
-!!$    !--------------------------- Bulk Velocity ---------------------------
-!!$    !Calculate loss of streamwise mean pressure gradient
-!!$    qm=zero
-!!$    ncount=zero
-!!$    do k=1,xsize(3)
-!!$        zm=dz*real(xstart(3)-1+k-1,mytype)-zc 
-!!$        do j=1,xsize(2)
-!!$            if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
-!!$            if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
-!!$            r=sqrt(ym*ym+zm*zm)     
-!!$            do i=1,xsize(1)
-!!$                if (r.le.ra.and.ep(i,j,k).eq.0) then
-!!$                    qm=qm+ux(i,j,k)
-!!$                    ncount=ncount+one
-!!$                endif
-!!$            enddo
-!!$        enddo
-!!$    enddo
-!!$    call MPI_ALLREDUCE(qm,qmm,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-!!$    call MPI_ALLREDUCE(ncount,ncountt,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-!!$    qmm=qmm/ncountt
-!!$    if (nrank==0) then
-!!$       print *,'Velocity:'
-!!$       print *,'    Mean velocity before',qmm
-!!$       write(96,*) real((itime-1)*dt,mytype), qmm
-!!$    endif
-!!$
-!!$    !Correction
-!!$    do j=1,xsize(2)
-!!$        if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
-!!$        if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
-!!$        do k=1,xsize(3)
-!!$            zm=dz*real(xstart(3)-1+k-1,mytype)-zc 
-!!$            r=sqrt(ym*ym+zm*zm)     
-!!$            do i=1,xsize(1)
-!!$                if (r.le.ra.and.ep(i,j,k).eq.0) then
-!!$                    ux(i,j,k)=ux(i,j,k)+(constant-qmm)
-!!$                endif
-!!$            enddo
-!!$        enddo
-!!$    enddo
-!!$
-!!$    !Check new bulk velocity
-!!$    qmm     = zero
-!!$    ncountt = zero
-!!$    qm      = zero
-!!$    ncount  = zero
-!!$    do k=1,xsize(3)
-!!$        zm=dz*real(xstart(3)-1+k-1,mytype)-zc 
-!!$        do j=1,xsize(2)
-!!$            if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
-!!$            if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
-!!$            r=sqrt(ym*ym+zm*zm)     
-!!$            do i=1,xsize(1)
-!!$                if (r.le.ra.and.ep(i,j,k).eq.0) then
-!!$                    qm=qm+ux(i,j,k)
-!!$                    ncount=ncount+one
-!!$                else
-!!$                    !Cancel solid zone (ra <= r <= ra+wt) 
-!!$                    !and buffer zone (r > ra+wt)
-!!$                    ux(i,j,k)=zero
-!!$                    uy(i,j,k)=zero
-!!$                    uz(i,j,k)=zero
-!!$                endif
-!!$            enddo
-!!$        enddo
-!!$    enddo
-!!$    call MPI_ALLREDUCE(qm,qmm,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-!!$    call MPI_ALLREDUCE(ncount,ncountt,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-!!$    qmm=qmm/ncountt
-!!$    if (nrank==0) print *,'    Mean velocity  after',qmm
-!!$        
-!!$    return
-!!$  end subroutine pipe_flrt
-!!$
-!!$!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!$  !!
-!!$  !!  subroutine: pipe_blkt
-!!$  !!      AUTHOR: Rodrigo Vicente Cruz
-!!$  !! DESCRIPTION: Adjustment of bulk temperature according to the 
-!!$  !!              thermal boundary condition
-!!$  !!
-!!$!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!$  !********************************************************************
-!!$  !
-!!$  subroutine pipe_blkt(ux,phi,ep,is)
-!!$  !
-!!$  !********************************************************************
-!!$
-!!$    use decomp_2d
-!!$    use decomp_2d_poisson
-!!$    use variables
-!!$    use param
-!!$    use ibm, ONLY: ra
-!!$    use MPI
-!!$
-!!$    implicit none
-!!$    real(mytype),dimension(xsize(1),xsize(2),xsize(3))  :: phi,ux,ep
-!!$    real(mytype)                                        :: constant
-!!$    real(mytype)                                        :: qv,qvm,qm,qmm
-!!$    real(mytype)                                        :: ym,zm,yc,zc,r
-!!$    real(mytype)                                        :: ncount,ncountt
-!!$    real(mytype)                                        :: phi_out !smoothness for reconstruction
-!!$    integer                                             :: ifile,is,j,i,k,code
-!!$    character(len=30)                                   :: filename
-!!$
-!!$    if (iscalar.eq.0) return
-!!$
-!!$!255 format('Tb_correc_',I2.2,'.dat')
-!!$255 format('Tb_',I2.2,'.dat')
-!!$256 format(' Scalar:                       #',I2)
-!!$
-!!$    ifile=50+is
-!!$    if (itime.eq.ifirst.and.nrank.eq.0) then
-!!$        write(filename,255) is
-!!$        open(ifile,file=filename,status='unknown')
-!!$    endif
-!!$
-!!$    if (itbc(is).eq.1) then     !1.MBC
-!!$        constant=one
-!!$        phi_out =zero
-!!$    elseif (itbc(is).eq.2) then !2.IF
-!!$        constant=zero
-!!$        phi_out =-one/nuw(is)
-!!$    elseif (itbc(is).eq.3) then !3.CHT
-!!$        constant=zero
-!!$        phi_out =-one/nuw(is)
-!!$    endif
-!!$
-!!$    yc = yly / two
-!!$    zc = zlz / two
-!!$    !--------------------------- Bulk Temperature ---------------------------
-!!$    !                  with corrected streamwise velocity
-!!$    qm=zero
-!!$    qv=zero
-!!$    ncount=zero
-!!$    do k=1,xsize(3)
-!!$        zm=dz*real(xstart(3)-1+k-1,mytype)-zc 
-!!$        do j=1,xsize(2)
-!!$            if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
-!!$            if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
-!!$            r=sqrt(ym*ym+zm*zm)     
-!!$            do i=1,xsize(1)
-!!$                if (r.le.ra.and.ep(i,j,k).eq.0) then
-!!$                    qm=qm+ux(i,j,k)*phi(i,j,k)
-!!$                    qv=qv+ux(i,j,k)*ux(i,j,k)
-!!$                    ncount=ncount+one
-!!$                endif
-!!$            enddo
-!!$        enddo
-!!$    enddo
-!!$    call MPI_ALLREDUCE(qm,qmm,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-!!$    call MPI_ALLREDUCE(qv,qvm,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-!!$    call MPI_ALLREDUCE(ncount,ncountt,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-!!$    qmm=qmm/ncountt
-!!$    qvm=qvm/ncountt
-!!$    if (nrank.eq.0) then
-!!$        write(*,256) is
-!!$        print *,'         Mean phi before',qmm
-!!$        write(ifile,*) real(itime*dt,mytype),(constant-qmm)/(qvm*dt)
-!!$    endif
-!!$
-!!$    !Correction
-!!$    do j=1,xsize(2)
-!!$        if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
-!!$        if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
-!!$        do k=1,xsize(3)
-!!$            zm=dz*real(xstart(3)-1+k-1,mytype)-zc 
-!!$            r=sqrt(ym*ym+zm*zm)     
-!!$            do i=1,xsize(1)
-!!$                if (r.le.ra.and.ep(i,j,k).eq.0) then
-!!$                    phi(i,j,k)=phi(i,j,k)+ux(i,j,k)*((constant-qmm)/qvm)
-!!$                endif
-!!$            enddo
-!!$        enddo
-!!$    enddo
-!!$
-!!$    !Check new bulk temperature
-!!$    qmm     = zero
-!!$    ncountt = zero
-!!$    qm      = zero
-!!$    ncount  = zero
-!!$    do k=1,xsize(3)
-!!$        zm=dz*real(xstart(3)-1+k-1,mytype)-zc 
-!!$        do j=1,xsize(2)
-!!$            if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
-!!$            if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
-!!$            r=sqrt(ym*ym+zm*zm)     
-!!$            do i=1,xsize(1)
-!!$                if (r.le.ra.and.ep(i,j,k).eq.0) then
-!!$                    qm=qm+ux(i,j,k)*phi(i,j,k)
-!!$                    ncount=ncount+one
-!!$                else !smoothness for reconstruction
-!!$                    phi(i,j,k)=phi_out
-!!$                endif
-!!$            enddo
-!!$        enddo
-!!$    enddo
-!!$    call MPI_ALLREDUCE(qm,qmm,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-!!$    call MPI_ALLREDUCE(ncount,ncountt,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-!!$    qmm=qmm/ncountt
-!!$    if (nrank==0) print *,'          Mean phi after',qmm
-!!$
-!!$    return
-!!$  end subroutine pipe_blkt
-!!$
-!!$!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!$  !!
-!!$  !!  subroutine: postprocess_pipe
-!!$  !!      AUTHOR: Rodrigo Vicente Cruz
-!!$  !! DESCRIPTION: Statistics collection for pipe
-!!$  !!
-!!$!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !********************************************************************
+  !
+  subroutine boundary_conditions_pipe (ux,uy,uz,phi)
+  !
+  !********************************************************************
+
+    use param
+    use variables
+    use decomp_2d
+
+    implicit none
+
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
+
+    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: gx
+    real(mytype) :: x, y, z
+    integer :: i, j, k, is
+    !
+    return
+    !
+  end subroutine boundary_conditions_pipe
 !!$  !********************************************************************
 !!$  !
 !!$  subroutine postprocess_pipe(ux1,uy1,uz1,pp3,phi1,ep1) !By Rodrigo Vicente Cruz
@@ -689,20 +437,6 @@ contains
 !!$
 !!$    return
 !!$  end subroutine postprocess_pipe
-!!$  !********************************************************************
-!!$  !
-!!$  subroutine momentum_forcing_pipe(dux1, duy1, ux1, uy1)
-!!$  !
-!!$  !********************************************************************
-!!$
-!!$    implicit none
-!!$
-!!$    REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ux1, uy1
-!!$    REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1
-!!$
-!!$    return
-!!$
-!!$  ENDsubroutine momentum_forcing_pipe
 !!$
 !!$  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!$    !!

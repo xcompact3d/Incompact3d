@@ -208,6 +208,10 @@ contains
 
        call boundary_conditions_cavity(ux, uy, uz, phi)
 
+    elseif (itype.eq.itype_pipe) then
+
+       call boundary_conditions_pipe (ux, uy, uz, phi)
+
     endif
 
   end subroutine boundary_conditions
