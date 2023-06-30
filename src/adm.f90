@@ -52,7 +52,7 @@ contains
       character(1000) :: ReadLine
       real(mytype) :: GammaDisc_tot,GammaDisc_partial
       integer :: idisc,i,j,k,ierr,code
-      real(mytype) :: xmesh,ymesh,zmesh,deltax,deltay,deltaz,deltan,deltar,disc_thick,hgrid
+      real(mytype) :: xmesh,ymesh,zmesh,deltax,deltay,deltaz,deltan,deltar,disc_thick,hgrid,projected_x,projected_y,projected_z
 
       ! ADM not yet set-up for stretched grids
       if (istret/=0) then
@@ -109,20 +109,23 @@ contains
                      deltay=ymesh-actuatordisc(idisc)%COR(2)
                      deltaz=zmesh-actuatordisc(idisc)%COR(3)
                      
-                     ! deltan: distance along the normal to the disc rotation axis (dot product of distance to centre and normal to disc vectors)
-                     deltan=abs(deltax*actuatordisc(idisc)%RotN(1)+&
-                                deltay*actuatordisc(idisc)%RotN(2)+&
-                              (-deltaz*actuatordisc(idisc)%RotN(3))) 
+                     ! Projection of the vector (xmesh-COR(1), ymesh-COR(2), zmesh-COR(3)) onto the plane's normal vector (ROT(1), ROT(2), ROT(3))
+                     ! deltan: distance from the point (xmesh,ymesh,zmesh) to the wind turbine plane along the plane's normal vector
+                     deltan = deltax*actuatordisc(idisc)%RotN(1)+deltay*actuatordisc(idisc)%RotN(2)-deltaz*actuatordisc(idisc)%RotN(3)
                      
-                     ! deltar: distance between the disc centre and the point resulting from the intersection of the
-                     ! current point along the normal to the disc and the disc plane (radial distance)
-                     deltar=sqrt( (deltax+sign(one,-deltax)*deltan*  actuatordisc(idisc)%RotN(1) )**2.+&
-                                  (deltay+sign(one,-deltay)*deltan*  actuatordisc(idisc)%RotN(2) )**2.+&
-                                  (deltaz+sign(one, deltaz)*deltan*(-actuatordisc(idisc)%RotN(3)))**2.)
+                     ! projected_: coordinates of the projected point
+                     projected_x = xmesh-deltan*  actuatordisc(idisc)%RotN(1)
+                     projected_y = ymesh-deltan*  actuatordisc(idisc)%RotN(2)
+                     projected_z = zmesh-deltan*(-actuatordisc(idisc)%RotN(3))
+                     
+                     ! deltar: distance between the wind turbine's centre and the projected point
+                     deltar = sqrt((projected_x-actuatordisc(idisc)%COR(1))**2+&
+                                   (projected_y-actuatordisc(idisc)%COR(2))**2+&
+                                   (projected_z-actuatordisc(idisc)%COR(3))**2)
                     
                      ! Compute Gamma [smearing using super-Gaussian functions, see also King et al. (2017) Wind Energ. Sci., 2, 115-131]
                      GammaDisc(i,j,k,idisc)=exp( -(deltan/(disc_thick/2.0))**2.0 -(deltar/(actuatordisc(idisc)%D/2.0))**8.0 )
-                     GammaDisc_partial=GammaDisc_partial + GammaDisc(i,j,k,idisc)*dx*dy*dz 
+                     GammaDisc_partial=GammaDisc_partial + GammaDisc(i,j,k,idisc) 
                   enddo
                enddo
             enddo
@@ -131,8 +134,8 @@ contains
             GammaDisc(:,:,:,idisc)=GammaDisc(:,:,:,idisc)/GammaDisc_tot
             !if (nrank==0) then
             !   write(*,*) 'Disc thickness :', disc_thick
-            !   write(*,*) 'Total Gamma : ', GammaDisc_tot
-            !   write(*,*) 'Total Gamma : ', pi*actuatordisc(idisc)%D**2.0/4.0*disc_thick
+            !   write(*,*) 'Total Gamma volume: ', GammaDisc_tot*dx*dy*dz
+            !   write(*,*) 'Aprox. disc volume: ', pi*actuatordisc(idisc)%D**2.0/4.0*disc_thick
             !endif
          enddo
 
@@ -180,7 +183,7 @@ contains
             do j=1,xsize(2)
                do i=1,xsize(1)
                   ! Take the inner product to compute the rotor-normal velocity
-                  uave=uave+GammaDisc(i,j,k,idisc)*dx*dy*dz*(&
+                  uave=uave+GammaDisc(i,j,k,idisc)*(&  
                        ux1(i,j,k)*  actuatordisc(idisc)%RotN(1)+&
                        uy1(i,j,k)*  actuatordisc(idisc)%RotN(2)+&
                        uz1(i,j,k)*(-actuatordisc(idisc)%RotN(3)))
@@ -218,9 +221,9 @@ contains
          actuatordisc(idisc)%Power =0.5_mytype*rho_air*CTprime*actuatordisc(idisc)%UF**2.0_mytype*actuatordisc(idisc)%UF&
                                    *pi*actuatordisc(idisc)%D**2._mytype/4._mytype
          ! Distribute thrust force
-         Fdiscx(:,:,:)=Fdiscx(:,:,:)-actuatordisc(idisc)%Thrust*GammaDisc(:,:,:,idisc)*actuatordisc(idisc)%RotN(1)
-         Fdiscy(:,:,:)=Fdiscy(:,:,:)-actuatordisc(idisc)%Thrust*GammaDisc(:,:,:,idisc)*actuatordisc(idisc)%RotN(2)
-         Fdiscz(:,:,:)=Fdiscz(:,:,:)-actuatordisc(idisc)%Thrust*GammaDisc(:,:,:,idisc)*(-actuatordisc(idisc)%RotN(3))
+         Fdiscx(:,:,:)=Fdiscx(:,:,:)-actuatordisc(idisc)%Thrust*GammaDisc(:,:,:,idisc)*actuatordisc(idisc)%RotN(1)/(dx*dy*dz)
+         Fdiscy(:,:,:)=Fdiscy(:,:,:)-actuatordisc(idisc)%Thrust*GammaDisc(:,:,:,idisc)*actuatordisc(idisc)%RotN(2)/(dx*dy*dz)
+         Fdiscz(:,:,:)=Fdiscz(:,:,:)-actuatordisc(idisc)%Thrust*GammaDisc(:,:,:,idisc)*(-actuatordisc(idisc)%RotN(3))/(dx*dy*dz)
       enddo
         
       ! Compute statistics
