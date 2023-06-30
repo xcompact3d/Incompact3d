@@ -1344,12 +1344,13 @@ contains
     real(mytype)                                        :: ncount,ncountt
     integer                                             :: is,j,i,k,code
     character(len=30)                                   :: filename
+    integer, save                                       :: local_io_unit=-1
 
     yc = yly/two
     zc = zlz/two
 
     if (itime.eq.ifirst.and.nrank.eq.0) then
-       open(96,file='Ub.dat',status='unknown')
+       open(newunit=local_io_unit,file='Ub.dat',status='unknown')
     endif
 
     !--------------------------- Bulk Velocity ---------------------------
@@ -1376,7 +1377,7 @@ contains
     if (nrank==0) then
        if (mod(itime, ilist)==0) print *,'Velocity:'
        if (mod(itime, ilist)==0) print *,'    Bulk velocity before',qmm
-       write(96,*) real((itime-1)*dt,mytype), qmm !write pressure drop
+       write(local_io_unit,*) real((itime-1)*dt,mytype), qmm !write pressure drop
     endif
 
     !Correction
@@ -1447,18 +1448,21 @@ contains
     real(mytype)                                        :: ym,zm,yc,zc,r
     real(mytype)                                        :: ncount,ncountt
     real(mytype)                                        :: phi_out
-    integer                                             :: ifile,is,j,i,k,code
+    integer                                             :: is,j,i,k,code
     character(len=30)                                   :: filename
+    integer, allocatable, save, dimension(:)            :: local_io_unit
 
     if (iscalar.eq.0) return
 
 255 format('Tb_',I2.2,'.dat')
 256 format(' Scalar:                       #',I2)
 
-    ifile=50+is
+    ! Safety check
+    if (is<1.or.is>numscalar) return
+
     if (itime.eq.ifirst.and.nrank.eq.0) then
-        write(filename,255) is
-        open(ifile,file=filename,status='unknown')
+        if (.not.allocated(local_io_unit)) allocate(local_io_unit(numscalar))
+        open(newunit=local_io_unit(is),file=filename,status='unknown')
     endif
 
     yc = yly / two
@@ -1493,7 +1497,7 @@ contains
     if (nrank.eq.0) then
         if (mod(itime, ilist)==0) write(*,256) is
         if (mod(itime, ilist)==0) print *,'         Bulk phi before',qmm
-        write(ifile,*) real(itime*dt,mytype),(constant-qmm)/(qvm*dt)
+        write(local_io_unit(is),*) real(itime*dt,mytype),(constant-qmm)/(qvm*dt)
     endif
 
     !Correction
