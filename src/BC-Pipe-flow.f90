@@ -46,12 +46,26 @@ contains
     real(mytype)                                    :: dx,dz,remp,tol
     !LOCALS
     real(mytype)                                    :: r,ym,zm,yc,zc
-    integer                                         :: i,j,k
+    integer                                         :: i,j,k,code,ierror
 
     epsi(:,:,:) = zero
     yc = yly/two
     zc = zlz/two
     tol=1e-15
+
+    !safety check
+    if (nrank == 0) then
+       if (rai.le.0) then
+           write(*,*) 'SIMULATION IS STOPPED!'
+           write(*,*) 'Please specify a valid value for the pipe inner radius in input.i3d (rai)'
+           call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
+       endif
+       if (rao.le.0) then
+           write(*,*) 'SIMULATION IS STOPPED!'
+           write(*,*) 'Please specify a valid value for the pipe outer radius in input.i3d (rao)'
+           call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
+       endif
+    endif
 
     do k=nzi,nzf
         zm=real(k-1,mytype)*dz-zc
@@ -59,9 +73,9 @@ contains
             ym=yp(j)-yc
             r=sqrt(ym*ym+zm*zm)
             do i=nxi,nxf
-                if (r.gt.ra.and.r.lt.rao) then
+                if (r.gt.rai.and.r.lt.rao) then
                    epsi(i,j,k)=remp
-                elseif (abs(r-ra).lt.tol) then
+                elseif (abs(r-rai).lt.tol) then
                     epsi(i,j,k)=remp
                 elseif (abs(r-rao).lt.tol) then
                     epsi(i,j,k)=remp
@@ -118,7 +132,7 @@ contains
                     if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
                     r=sqrt(ym*ym+zm*zm)
                     do i=1,xsize(1)
-                        if (r.le.ra.and.ep1(i,j,k).eq.0) then
+                        if (r.le.rai.and.ep1(i,j,k).eq.0) then
                             phi1(i,j,k,is)=two*nu*(three/sixteen + r**four - r**two)
                         else
                             phi1(i,j,k,is)=zero
@@ -148,11 +162,11 @@ contains
             r=sqrt(ym*ym+zm*zm)    
             um=exp(-twenty*r*r)
             !Poiseuille flow
-            bxx1(j,k)=two*(one-(ym**two+zm**two)/(ra**two))
+            bxx1(j,k)=two*(one-(ym**two+zm**two)/(rai**two))
             bxy1(j,k)=zero
             bxz1(j,k)=zero
             do i=1,xsize(1)
-                if (r.le.ra.and.ep1(i,j,k).eq.0) then
+                if (r.le.rai.and.ep1(i,j,k).eq.0) then
                     ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+bxx1(j,k)
                     uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)+bxy1(j,k)
                     uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)+bxz1(j,k)

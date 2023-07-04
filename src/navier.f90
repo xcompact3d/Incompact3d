@@ -1333,7 +1333,7 @@ contains
     use variables
     use param
     use var
-    use ibm_param, only: ra
+    use ibm_param, only: rai
     use MPI
 
     implicit none
@@ -1367,7 +1367,7 @@ contains
             if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
             r=sqrt(ym*ym+zm*zm)
             do i=1,xsize(1)
-                if (r.le.ra.and.ep(i,j,k).eq.0) then
+                if (r.le.rai.and.ep(i,j,k).eq.0) then
                     qm=qm+ux(i,j,k)
                     ncount=ncount+one
                 endif
@@ -1391,7 +1391,7 @@ contains
             zm=dz*real(xstart(3)-1+k-1,mytype)-zc
             r=sqrt(ym*ym+zm*zm)
             do i=1,xsize(1)
-                if (r.le.ra.and.ep(i,j,k).eq.0) then
+                if (r.le.rai.and.ep(i,j,k).eq.0) then
                     ux(i,j,k)=ux(i,j,k)+(ub_constant-qmm)
                 endif
             enddo
@@ -1410,12 +1410,12 @@ contains
             if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
             r=sqrt(ym*ym+zm*zm)
             do i=1,xsize(1)
-                if (r.le.ra.and.ep(i,j,k).eq.0) then
+                if (r.le.rai.and.ep(i,j,k).eq.0) then
                     qm=qm+ux(i,j,k)
                     ncount=ncount+one
                 else
-                    !Cancel solid zone (ra <= r <= ra+wt)
-                    !and buffer zone (r > ra+wt)
+                    !Cancel solid zone (rai <= r <= rao)
+                    !and buffer zone (r > rao)
                     ux(i,j,k)=zero
                     uy(i,j,k)=zero
                     uz(i,j,k)=zero
@@ -1441,7 +1441,7 @@ contains
     use decomp_2d_poisson
     use variables
     use param
-    use ibm_param, only: ra
+    use ibm_param, only: rai
     use MPI
 
     implicit none
@@ -1488,7 +1488,7 @@ contains
             if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
             r=sqrt(ym*ym+zm*zm)
             do i=1,xsize(1)
-                if (r.le.ra.and.ep(i,j,k).eq.0) then
+                if (r.le.rai.and.ep(i,j,k).eq.0) then
                     qm=qm+ux(i,j,k)*phi(i,j,k)
                     qv=qv+ux(i,j,k)*ux(i,j,k)
                     ncount=ncount+one
@@ -1515,7 +1515,7 @@ contains
             zm=dz*real(xstart(3)-1+k-1,mytype)-zc
             r=sqrt(ym*ym+zm*zm)
             do i=1,xsize(1)
-                if (r.le.ra.and.ep(i,j,k).eq.0) then
+                if (r.le.rai.and.ep(i,j,k).eq.0) then
                     phi(i,j,k)=phi(i,j,k)+ux(i,j,k)*((phib_constant-qmm)/qvm)
                 endif
             enddo
@@ -1534,7 +1534,7 @@ contains
             if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
             r=sqrt(ym*ym+zm*zm)
             do i=1,xsize(1)
-                if (r.le.ra.and.ep(i,j,k).eq.0) then
+                if (r.le.rai.and.ep(i,j,k).eq.0) then
                     qm=qm+ux(i,j,k)*phi(i,j,k)
                     ncount=ncount+one
                 else !smoothness for reconstruction
