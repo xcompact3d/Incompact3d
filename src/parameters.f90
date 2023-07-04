@@ -409,7 +409,7 @@ subroutine parameter(input_i3d)
        endif
      endif
      !
-     if (ilesmod.ne.0) then
+     if (ilesmod == 0) then ! Non-zero enables LES
        write(*,*) '                   : DNS'
      else
        if (jles==1) then
