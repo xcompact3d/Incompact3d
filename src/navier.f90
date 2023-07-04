@@ -1325,7 +1325,7 @@ contains
   end subroutine pipe_bulk
   !********************************************************************
   !
-  subroutine pipe_bulk_u(ux,uy,uz,ep,constant)
+  subroutine pipe_bulk_u(ux,uy,uz,ep,ub_constant)
   !
   !********************************************************************
 
@@ -1337,14 +1337,17 @@ contains
     use MPI
 
     implicit none
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3))  :: ux,uy,uz,ep
-    real(mytype)                                        :: constant !bulk velocity value
-    real(mytype)                                        :: qm,qmm   !flow rate
-    real(mytype)                                        :: ym,zm,yc,zc,r
-    real(mytype)                                        :: ncount,ncountt
-    integer                                             :: is,j,i,k,code
-    character(len=30)                                   :: filename
-    integer, save                                       :: local_io_unit=-1
+    !INPUTS
+    real(mytype),intent(inout),dimension(xsize(1),xsize(2),xsize(3))    :: ux,uy,uz
+    real(mytype),intent(in   ),dimension(xsize(1),xsize(2),xsize(3))    :: ep
+    real(mytype),intent(in   )                                          :: ub_constant !bulk velocity value
+    !LOCALS
+    real(mytype)                                                        :: qm,qmm      !flow rate
+    real(mytype)                                                        :: ym,zm,yc,zc,r
+    real(mytype)                                                        :: ncount,ncountt
+    integer                                                             :: j,i,k,code
+    character(len=30)                                                   :: filename
+    integer, save                                                       :: local_io_unit=-1
 
     yc = yly/two
     zc = zlz/two
@@ -1389,7 +1392,7 @@ contains
             r=sqrt(ym*ym+zm*zm)
             do i=1,xsize(1)
                 if (r.le.ra.and.ep(i,j,k).eq.0) then
-                    ux(i,j,k)=ux(i,j,k)+(constant-qmm)
+                    ux(i,j,k)=ux(i,j,k)+(ub_constant-qmm)
                 endif
             enddo
         enddo
@@ -1430,7 +1433,7 @@ contains
   end subroutine pipe_bulk_u
   !********************************************************************
   !
-  subroutine pipe_bulk_phi(phi,ux,ep,is,constant)
+  subroutine pipe_bulk_phi(phi,ux,ep,is,phib_constant)
   !
   !********************************************************************
 
@@ -1442,15 +1445,18 @@ contains
     use MPI
 
     implicit none
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3))  :: phi,ux,ep
-    real(mytype)                                        :: constant      !bulk temperature value
-    real(mytype)                                        :: qv,qvm,qm,qmm !volumetric averaged values
-    real(mytype)                                        :: ym,zm,yc,zc,r
-    real(mytype)                                        :: ncount,ncountt
-    real(mytype)                                        :: phi_out
-    integer                                             :: is,j,i,k,code
-    character(len=30)                                   :: filename
-    integer, allocatable, save, dimension(:)            :: local_io_unit
+    !INPUTS
+    real(mytype),intent(inout),dimension(xsize(1),xsize(2),xsize(3))  :: phi,ux
+    real(mytype),intent(in   ),dimension(xsize(1),xsize(2),xsize(3))  :: ep
+    real(mytype),intent(in   )                                        :: phib_constant !bulk temperature value
+    !LOCALS
+    real(mytype)                                                      :: qv,qvm,qm,qmm !volumetric averaged values
+    real(mytype)                                                      :: ym,zm,yc,zc,r
+    real(mytype)                                                      :: ncount,ncountt
+    real(mytype)                                                      :: phi_out
+    integer                                                           :: is,j,i,k,code
+    character(len=30)                                                 :: filename
+    integer, allocatable, save, dimension(:)                          :: local_io_unit
 
     if (iscalar.eq.0) return
 
@@ -1461,6 +1467,7 @@ contains
     if (is<1.or.is>numscalar) return
 
     if (itime.eq.ifirst.and.nrank.eq.0) then
+        write(filename,255) is
         if (.not.allocated(local_io_unit)) allocate(local_io_unit(numscalar))
         open(newunit=local_io_unit(is),file=filename,status='unknown')
     endif
@@ -1497,7 +1504,7 @@ contains
     if (nrank.eq.0) then
         if (mod(itime, ilist)==0) write(*,256) is
         if (mod(itime, ilist)==0) print *,'         Bulk phi before',qmm
-        write(local_io_unit(is),*) real(itime*dt,mytype),(constant-qmm)/(qvm*dt)
+        write(local_io_unit(is),*) real(itime*dt,mytype),(phib_constant-qmm)/(qvm*dt)
     endif
 
     !Correction
@@ -1509,7 +1516,7 @@ contains
             r=sqrt(ym*ym+zm*zm)
             do i=1,xsize(1)
                 if (r.le.ra.and.ep(i,j,k).eq.0) then
-                    phi(i,j,k)=phi(i,j,k)+ux(i,j,k)*((constant-qmm)/qvm)
+                    phi(i,j,k)=phi(i,j,k)+ux(i,j,k)*((phib_constant-qmm)/qvm)
                 endif
             enddo
         enddo
