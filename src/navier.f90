@@ -1294,7 +1294,8 @@ contains
   !!  subroutine: pipe_bulk / pipe_bulk_u / pipe_bulk_phi
   !!      AUTHOR: Rodrigo Vicente Cruz
   !! DESCRIPTION: Correction of pipe's bulk velocity (constant 
-  !!              flow rate) and bulk temperature
+  !!              flow rate) and bulk temperature.
+  !!              See Thesis Vicente Cruz 2021 for help.
   !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !********************************************************************
@@ -1312,15 +1313,15 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3))  :: ux,uy,uz,ep
     integer                                             :: is
 
+    !Bulk velocity correction
+    call pipe_bulk_u(ux,uy,uz,ep,one)
+
     !Bulk temperature correction
     if (numscalar.ne.0) then
         do is=1,numscalar
             call pipe_bulk_phi(phi1(:,:,:,is),ux,ep,is,one)
         enddo
     endif
-
-    !Bulk velocity correction
-    call pipe_bulk_u(ux,uy,uz,ep,one)
 
   end subroutine pipe_bulk
   !********************************************************************
@@ -1352,7 +1353,7 @@ contains
     yc = yly/two
     zc = zlz/two
 
-    if (itime.eq.ifirst.and.nrank.eq.0) then
+    if (local_io_unit.eq.-1 .and. nrank.eq.0) then
        open(newunit=local_io_unit,file='Ub.dat',status='unknown')
     endif
 
@@ -1380,7 +1381,7 @@ contains
     if (nrank==0) then
        if (mod(itime, ilist)==0) print *,'Velocity:'
        if (mod(itime, ilist)==0) print *,'    Bulk velocity before',qmm
-       write(local_io_unit,*) real((itime-1)*dt,mytype), qmm !write pressure drop
+       write(local_io_unit,*) real((itime-1)*dt,mytype), (ub_constant-qmm) !write pressure drop
     endif
 
     !Correction
@@ -1466,9 +1467,13 @@ contains
     ! Safety check
     if (is<1.or.is>numscalar) return
 
-    if (itime.eq.ifirst.and.nrank.eq.0) then
+    if (.not.allocated(local_io_unit)) then
+        allocate(local_io_unit(numscalar))
+        local_io_unit(:)=-1
+    endif
+
+    if (local_io_unit(is).eq.-1.and.nrank.eq.0) then
         write(filename,255) is
-        if (.not.allocated(local_io_unit)) allocate(local_io_unit(numscalar))
         open(newunit=local_io_unit(is),file=filename,status='unknown')
     endif
 
@@ -1504,7 +1509,7 @@ contains
     if (nrank.eq.0) then
         if (mod(itime, ilist)==0) write(*,256) is
         if (mod(itime, ilist)==0) print *,'         Bulk phi before',qmm
-        write(local_io_unit(is),*) real(itime*dt,mytype),(phib_constant-qmm)/(qvm*dt)
+        write(local_io_unit(is),*) real((itime-1)*dt,mytype),(phib_constant-qmm)/(qvm)
     endif
 
     !Correction
