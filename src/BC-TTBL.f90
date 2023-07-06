@@ -13,7 +13,7 @@ module ttbl
    real(mytype), save, allocatable, dimension(:, :) :: usxz, vsxz, wsxz, upupsxz, vpvpsxz, wpwpsxz, upvpsxz
    real(mytype), save, allocatable, dimension(:, :) :: presxz, prep2sxz
    real(mytype), save, allocatable, dimension(:, :) :: dudysxz, dvdysxz, dwdysxz
-   real(mytype), save, allocatable, dimension(:, :) :: tkesxz, meanconvsxz, turbconvsxz, prestransxz
+   real(mytype), save, allocatable, dimension(:, :) :: tkesxz, meanconvsxz, viscdiffsxz, turbconvsxz, prestransxz
    real(mytype), save, allocatable, dimension(:) :: ttda, ttdb, ttdc
    real(mytype), save :: thetad
 
@@ -260,9 +260,9 @@ contains
       real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
       real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
 
-      real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: pre1, tke1
-      real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ux2p, uy2p, uz2p, pre2, pre2p, tke2
-      real(mytype), dimension(ysize(2)) :: tempa2, tempb2
+      real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: pre1
+      real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ux2p, uy2p, uz2p, pre2, pre2p
+      real(mytype), dimension(ysize(2)) :: tempa2, tempb2, tempc2
 
       real(8) :: tstart
       integer :: j, b
@@ -283,6 +283,7 @@ contains
          allocate (dwdysxz(ysize(2), ioutput / ilist))
          allocate (tkesxz(ysize(2), ioutput / ilist))
          allocate (meanconvsxz(ysize(2), ioutput / ilist))
+         allocate (viscdiffsxz(ysize(2), ioutput / ilist))
          allocate (turbconvsxz(ysize(2), ioutput / ilist))
          allocate (prestransxz(ysize(2), ioutput / ilist))
       end if
@@ -316,34 +317,44 @@ contains
          call horizontal_avrge(pre2p**2, prep2sxz(:, b))
 
          ! Velocity derivatives
-         call dery(ta2, ux2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, ubcx)
-         call horizontal_avrge(ta2, dudysxz(:, b))
-         call dery(tb2, uy2, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0, ubcy)
-         call horizontal_avrge(tb2, dvdysxz(:, b))
-         call dery(tc2, uz2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, ubcz)
-         call horizontal_avrge(tc2, dwdysxz(:, b))
+         call dery(dudysxz(:, b), usxz(:, b), di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, ubcx)
+         call dery(dvdysxz(:, b), vsxz(:, b), di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy)
+         call dery(dwdysxz(:, b), wsxz(:, b), di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, ubcz)
 
          ! TKE
-         tke2 = half * (ux2p**2 + uy2p**2 + uz2p**2)
-         call horizontal_avrge(tke2, tkesxz(:, b))
+         tkesxz(:, b) = half * (upupsxz(:, b) + vpvpsxz(:, b) + wpwpsxz(:, b))
 
          ! TKE BALANCE
          ! Mean convection
-         call transpose_y_to_x(tke2, tke1)
-         call derx(ta1, tke1, di1, sx, ffx, fsx, fwx, xsize(1), xsize(2), xsize(3), 0, ubcx)
-         call dery(tb2, tke2, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0, ubcy)
-         call transpose_x_to_y(ta1, ta2)
-         call horizontal_avrge(ta2, tempa2)
-         call horizontal_avrge(tb2, tempb2)
-         meanconvsxz(:, b) = -(usxz(:, b) * tempa2 + vsxz(:, b) * tempb2)
+         call dery(tempa2, tkesxz(:, b), di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy)
+         meanconvsxz(:, b) = -(vsxz(:, b) * tempa2)
+
+         ! Viscous diffusion rate
+         tempb2 = zero
+         call dery(tempa2, tkesxz(:, b), di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy)
+         if (iimplicit <= 0) then
+            call deryy(tempb2, tkesxz(:, b), di2, sy, sfyp, ssyp, swyp, 1, ysize(2), 1, 1, ubcx)
+            if (istret /= 0) then
+               do j = 1, ysize(2)
+                  tempb2(j) = tempb2(j) * pp2y(j) - pp4y(j) * tempa2(j)
+               end do
+            end if
+         else
+            do j = 1, ysize(2)
+               tempb2(j) = -pp4y(j) * tempa2(j)
+            end do
+         end if
+         viscdiffsxz(:, b) = xnu * tempb2
 
          ! Turbulent convection
-         call horizontal_avrge(-half * uy2p * (ux2p * ux2p + uy2p * uy2p + uz2p * uz2p), tempa2)
-         call dery(turbconvsxz(:, b), tempa2, di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy * (ubcx * ubcx + ubcy * ubcy + ubcz * ubcz))
+         call horizontal_avrge(uy2p * ux2p * ux2p, tempa2)
+         call horizontal_avrge(uy2p * uy2p * uy2p, tempb2)
+         call horizontal_avrge(uy2p * uz2p * uz2p, tempc2)
+         call dery(prestransxz(:, b), -half * (tempa2 + tempb2 + tempc2), di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy * (ubcx * ubcx + ubcy * ubcy + ubcz * ubcz))
 
          ! Pressure transport
-         call horizontal_avrge(-(uy2p * pre2p), tempa2)
-         call dery(prestransxz(:, b), tempa2, di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy)
+         call horizontal_avrge(uy2p * pre2p, tempa2)
+         call dery(prestransxz(:, b), -tempa2, di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy)
 
          ! Write compute time
          if (nrank == 0) write (*, "(' Time computing statistics = ',F18.12,'(s)')") MPI_WTIME() - tstart
@@ -372,6 +383,7 @@ contains
             call outp(wpwpsxz, 'out/dwdy.dat')
             call outp(tkesxz, 'out/tke.dat')
             call outp(meanconvsxz, 'out/mean_conv.dat')
+            call outp(viscdiffsxz, 'out/visc_diff.dat')
             call outp(turbconvsxz, 'out/turb_conv.dat')
             call outp(prestransxz, 'out/pres_tran.dat')
             if (nrank == 0) write (*, "(' Time writing statistics = ',F18.12,'(s)')") MPI_WTIME() - tstart
