@@ -366,27 +366,14 @@ contains
          call horizontal_avrge(-ta2, disssxz(:, b))
 
          ! Viscous diffusion rate
-         tempb2 = zero
-         call dery(tempa2, tkesxz(:, b), di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy)
-         if (iimplicit <= 0) then
-            call deryy(tempb2, tkesxz(:, b), di2, sy, sfyp, ssyp, swyp, 1, ysize(2), 1, 1, ubcx)
-            if (istret /= 0) then
-               do j = 1, ysize(2)
-                  tempb2(j) = tempb2(j) * pp2y(j) - pp4y(j) * tempa2(j)
-               end do
-            end if
-         else
-            do j = 1, ysize(2)
-               tempb2(j) = -pp4y(j) * tempa2(j)
-            end do
-         end if
+         call deryy(tempb2, tkesxz(:, b), di2, sy, sfyp, ssyp, swyp, 1, ysize(2), 1, 1, ubcx)
          viscdiffsxz(:, b) = xnu * tempb2
 
          ! Turbulent convection
          call horizontal_avrge(uy2p * ux2p * ux2p, tempa2)
          call horizontal_avrge(uy2p * uy2p * uy2p, tempb2)
          call horizontal_avrge(uy2p * uz2p * uz2p, tempc2)
-         call dery(prestransxz(:, b), -half * (tempa2 + tempb2 + tempc2), di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy * (ubcx * ubcx + ubcy * ubcy + ubcz * ubcz))
+         call dery(turbconvsxz(:, b), -half * (tempa2 + tempb2 + tempc2), di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy * (ubcx * ubcx + ubcy * ubcy + ubcz * ubcz))
 
          ! Pressure transport
          call horizontal_avrge(uy2p * pre2p, tempa2)
