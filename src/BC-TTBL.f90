@@ -13,7 +13,7 @@ module ttbl
    real(mytype), save, allocatable, dimension(:, :) :: usxz, vsxz, wsxz, upupsxz, vpvpsxz, wpwpsxz, upvpsxz
    real(mytype), save, allocatable, dimension(:, :) :: presxz, prep2sxz
    real(mytype), save, allocatable, dimension(:, :) :: dudysxz, dvdysxz, dwdysxz
-   real(mytype), save, allocatable, dimension(:, :) :: tkesxz, meanconvsxz, viscdiffsxz, turbconvsxz, prestransxz
+   real(mytype), save, allocatable, dimension(:, :) :: tkesxz, meanconvsxz, prodsxz, disssxz, viscdiffsxz, turbconvsxz, prestransxz
    real(mytype), save, allocatable, dimension(:) :: ttda, ttdb, ttdc
    real(mytype), save :: thetad
 
@@ -260,8 +260,9 @@ contains
       real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
       real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
 
-      real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: pre1
+      real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1p, uy1p, uz1p, pre1, diss1
       real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ux2p, uy2p, uz2p, pre2, pre2p
+      real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: ux3p, uy3p, uz3p
       real(mytype), dimension(ysize(2)) :: tempa2, tempb2, tempc2
 
       real(8) :: tstart
@@ -283,6 +284,8 @@ contains
          allocate (dwdysxz(ysize(2), ioutput / ilist))
          allocate (tkesxz(ysize(2), ioutput / ilist))
          allocate (meanconvsxz(ysize(2), ioutput / ilist))
+         allocate (prodsxz(ysize(2), ioutput / ilist))
+         allocate (disssxz(ysize(2), ioutput / ilist))
          allocate (viscdiffsxz(ysize(2), ioutput / ilist))
          allocate (turbconvsxz(ysize(2), ioutput / ilist))
          allocate (prestransxz(ysize(2), ioutput / ilist))
@@ -326,8 +329,41 @@ contains
 
          ! TKE BALANCE
          ! Mean convection
-         call dery(tempa2, tkesxz(:, b), di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy)
-         meanconvsxz(:, b) = -(vsxz(:, b) * tempa2)
+         call dery(tempb2, tkesxz(:, b), di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy)
+         meanconvsxz(:, b) = -(vsxz(:, b) * tempb2)
+
+         ! Production
+         call horizontal_avrge(uz2p * uy2p, tempc2)
+         prodsxz(:, b) = -(upvpsxz(:, b) * dudysxz(:, b) + vpvpsxz(:, b) * dvdysxz(:, b) + tempc2 * dwdysxz(:, b))
+
+         ! Dissipation
+         call transpose_y_to_x(ux2p, ux1p)
+         call transpose_y_to_x(uy2p, uy1p)
+         call transpose_y_to_x(uz2p, uz1p)
+         call transpose_y_to_z(ux2p, ux3p)
+         call transpose_y_to_z(uy2p, uy3p)
+         call transpose_y_to_z(uz2p, uz3p)
+         call derx(ta1, ux1p, di1, sx, ffx, fsx, fwx, xsize(1), xsize(2), xsize(3), 0, ubcx)
+         call derx(tb1, uy1p, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, ubcy)
+         call derx(tc1, uz1p, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, ubcz)
+         call dery(ta2, ux2p, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, ubcx)
+         call dery(tb2, uy2p, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0, ubcy)
+         call dery(tc2, uz2p, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, ubcz)
+         call derz(ta3, ux3p, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, ubcx)
+         call derz(tb3, uy3p, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, ubcy)
+         call derz(tc3, uz3p, di3, sz, ffz, fsz, fwz, zsize(1), zsize(2), zsize(3), 0, ubcz)
+         call transpose_z_to_y(ta3, td2)
+         call transpose_z_to_y(tb3, te2)
+         call transpose_z_to_y(tc3, tf2)
+         call transpose_y_to_x(td2, tg1)
+         call transpose_y_to_x(te2, th1)
+         call transpose_y_to_x(tf2, ti1)
+         call transpose_y_to_x(ta2, td1)
+         call transpose_y_to_x(tb2, te1)
+         call transpose_y_to_x(tc2, tf1)
+         call dissipation(ta1, tb1, tc1, td1, te1, tf1, tg1, th1, ti1, diss1)
+         call transpose_x_to_y(diss1, ta2)
+         call horizontal_avrge(-ta2, disssxz(:, b))
 
          ! Viscous diffusion rate
          tempb2 = zero
@@ -383,6 +419,8 @@ contains
             call outp(wpwpsxz, 'out/dwdy.dat')
             call outp(tkesxz, 'out/tke.dat')
             call outp(meanconvsxz, 'out/mean_conv.dat')
+            call outp(prodsxz, 'out/prod.dat')
+            call outp(disssxz, 'out/diss.dat')
             call outp(viscdiffsxz, 'out/visc_diff.dat')
             call outp(turbconvsxz, 'out/turb_conv.dat')
             call outp(prestransxz, 'out/pres_tran.dat')
@@ -695,4 +733,32 @@ contains
                     nxmsize, xsize(1), xsize(2), xsize(3), 1)
       call rescale_pressure(pre1)
    end subroutine pressure_x
+   !############################################################################
+   !############################################################################
+   subroutine dissipation(ta1, tb1, tc1, td1, te1, tf1, tg1, th1, ti1, diss1)
+      implicit none
+      real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ta1, tb1, tc1, td1, te1, tf1, tg1, th1, ti1
+      real(mytype), intent(out), dimension(xsize(1), xsize(2), xsize(3)) :: diss1
+
+      real(mytype), dimension(3, 3, xsize(1), xsize(2), xsize(3)) :: A
+      integer :: l, m
+
+      ! Instantaneous dissipation rate
+      A(:, :, :, :, :) = zero
+      A(1, 1, :, :, :) = ta1(:, :, :)
+      A(2, 1, :, :, :) = tb1(:, :, :)
+      A(3, 1, :, :, :) = tc1(:, :, :)
+      A(1, 2, :, :, :) = td1(:, :, :)
+      A(2, 2, :, :, :) = te1(:, :, :)
+      A(3, 2, :, :, :) = tf1(:, :, :)
+      A(1, 3, :, :, :) = tg1(:, :, :)
+      A(2, 3, :, :, :) = th1(:, :, :)
+      A(3, 3, :, :, :) = ti1(:, :, :)
+      diss1 = zero
+      do m = 1, 3
+         do l = 1, 3
+            diss1 = diss1 + two * xnu * half * half * (A(l, m, :, :, :) + A(m, l, :, :, :))**two
+         end do
+      end do
+   end subroutine dissipation
 end module ttbl
