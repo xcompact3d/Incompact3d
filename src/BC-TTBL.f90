@@ -748,4 +748,34 @@ contains
          end do
       end do
    end subroutine dissipation
+   !############################################################################
+   !############################################################################
+   subroutine stress_budget(ui2, ui2sxz, ui2p, uj2, uj2sxz, uj2p, ux2p, uy2p, uz2p, mean_conv, prod, diss, visc_diff, turb_conv, press_tran)
+      use var, only: ux2, uy2, uz2
+      use var, only: ta1, tb1, tc1, td1, te1, tf1, tg1, th1, ti1, di1
+      use var, only: ta2, tb2, tc2, td2, te2, tf2, di2
+      use var, only: ta3, tb3, tc3, td3, te3, tf3, di3, nzmsize, phi2
+      use ibm_param, only: ubcx, ubcy, ubcz
+
+      implicit none
+      real(mytype), intent(in), dimension(ysize(1), ysize(2), ysize(3)) :: ui2, ui2p, uj2, uj2p, ux2p, uy2p, uz2p
+      real(mytype), intent(in), dimension(ysize(2)) :: ui2sxz, uj2sxz
+      real(mytype), intent(out), dimension(ysize(2)) :: mean_conv, prod, diss, visc_diff, turb_conv, press_tran
+
+      real(mytype), dimension(ysize(2)) :: tempa2, tempb2, tempc2, tempd2
+
+      ! Production
+      call horizontal_avrge(ui2p * uy2p, tempa2)
+      call dery(tempb2, uj2sxz, di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy)
+      call horizontal_avrge(uj2p * uy2p, tempc2)
+      call dery(tempd2, ui2sxz, di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy)
+      prod = -(tempa2 * tempb2 + tempc2 * tempd2)
+
+      ! Dissipation
+      call dery(ta2, ui2p, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0, ubcy)
+      call dery(tb2, uj2p, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0, ubcy)
+      call horizontal_avrge(ta2 * tb2, tempa2)
+      diss = -two * xnu * tempa2
+
+   end subroutine stress_budget
 end module ttbl
