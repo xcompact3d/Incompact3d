@@ -16,7 +16,7 @@ module pipe
   character(len=1),parameter :: NL=char(10) !new line character
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: geomcomplex_pipe, init_pipe, boundary_conditions_pipe
+  PUBLIC :: geomcomplex_pipe, init_pipe, boundary_conditions_pipe, postprocess_pipe
 
 contains
 
@@ -207,5 +207,20 @@ contains
     return
     !
   end subroutine boundary_conditions_pipe
+  !********************************************************************
+  !
+  subroutine postprocess_pipe(ux1,uy1,uz1,pp3,phi1,ep1)
+  !
+  !********************************************************************
+
+    use var, ONLY : nzmsize
+
+    implicit none
+
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
+
+  end subroutine postprocess_pipe
 
 end module pipe

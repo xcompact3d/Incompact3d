@@ -374,6 +374,10 @@ contains
 
        call postprocess_cavity(ux, uy, uz, phi)
 
+    elseif (itype.eq.itype_pipe) then
+
+       call postprocess_pipe(ux, uy, uz, pp, phi, ep)
+
     endif
 
     if (iforces.eq.1) then
