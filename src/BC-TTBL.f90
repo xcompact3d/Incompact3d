@@ -408,17 +408,17 @@ contains
 
          ! Stress budget: uu
          ta2 = zero
-         call stress_budget(usxz(:, b), ux2p, usxz(:, b), ux2p, ta2, ta2, uy2p, meanconvsxz_uu, prodsxz_uu, disssxz_uu, viscdiffsxz_uu, turbconvsxz_uu, prestransxz_uu)
+         call stress_budget(usxz(:, b), ux2p, usxz(:, b), ux2p, ta2, ta2, uy2p, meanconvsxz_uu(:, b), prodsxz_uu(:, b), disssxz_uu(:, b), viscdiffsxz_uu(:, b), turbconvsxz_uu(:, b), prestransxz_uu(:, b))
 
          ! Stress budget: vv
          call dery(tb2, pre2p, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0, ubcy)
-         call stress_budget(vsxz(:, b), uy2p, vsxz(:, b), uy2p, tb2, tb2, uy2p, meanconvsxz_vv, prodsxz_vv, disssxz_vv, viscdiffsxz_vv, turbconvsxz_vv, prestransxz_vv)
+         call stress_budget(vsxz(:, b), uy2p, vsxz(:, b), uy2p, tb2, tb2, uy2p, meanconvsxz_vv(:, b), prodsxz_vv(:, b), disssxz_vv(:, b), viscdiffsxz_vv(:, b), turbconvsxz_vv(:, b), prestransxz_vv(:, b))
 
          ! Stress budget: ww
-         call stress_budget(wsxz(:, b), uz2p, wsxz(:, b), uz2p, ta2, ta2, uy2p, meanconvsxz_ww, prodsxz_ww, disssxz_ww, viscdiffsxz_ww, turbconvsxz_ww, prestransxz_ww)
+         call stress_budget(wsxz(:, b), uz2p, wsxz(:, b), uz2p, ta2, ta2, uy2p, meanconvsxz_ww(:, b), prodsxz_ww(:, b), disssxz_ww(:, b), viscdiffsxz_ww(:, b), turbconvsxz_ww(:, b), prestransxz_ww(:, b))
 
          ! Stress budget: uv
-         call stress_budget(usxz(:, b), ux2p, vsxz(:, b), uy2p, ta2, tb2, uy2p, meanconvsxz_uv, prodsxz_uv, disssxz_uv, viscdiffsxz_uv, turbconvsxz_uv, prestransxz_uv)
+         call stress_budget(usxz(:, b), ux2p, vsxz(:, b), uy2p, ta2, tb2, uy2p, meanconvsxz_uv(:, b), prodsxz_uv(:, b), disssxz_uv(:, b), viscdiffsxz_uv(:, b), turbconvsxz_uv(:, b), prestransxz_uv(:, b))
 
          ! Write compute time
          if (nrank == 0) write (*, "(' Time computing statistics = ',F18.12,'(s)')") MPI_WTIME() - tstart
