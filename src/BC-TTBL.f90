@@ -558,18 +558,12 @@ contains
       call dery(dudy2m, ux2m, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, ubcy)
       ydudy2m = dudy2m * yp
 
-      ! Implicit viscous term
-      if (iimplicit <= 0) then
-         call deryy(du2dy22m, ux2m, di2, sy, sfyp, ssyp, swyp, 1, ysize(2), 1, 1, ubcy)
-         if (istret /= 0) then
-            do j = 1, ysize(2)
-               du2dy22m(j) = du2dy22m(j) * pp2y(j) - pp4y(j) * dudy2m(j)
-            end do
-         end if
-      else
-         do j = 1, ysize(2)
-            du2dy22m(j) = -pp4y(j) * dudy2m(j)
-         end do
+      ! Viscous term
+      iimplicit = -iimplicit
+      call deryy(du2dy22m, ux2m, di2, sy, sfyp, ssyp, swyp, 1, ysize(2), 1, 1, ubcx)
+      iimplicit = -iimplicit
+      if (istret /= 0) then
+         du2dy22m = du2dy22m * pp2y - pp4y * dudy2m
       end if
 
       ! Iteratively find optimal thetad
