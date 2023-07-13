@@ -393,7 +393,13 @@ contains
          call horizontal_avrge(-ta2, disssxz(:, b))
 
          ! Viscous diffusion
+         iimplicit = -iimplicit
          call deryy(tempb2, tkesxz(:, b), di2, sy, sfyp, ssyp, swyp, 1, ysize(2), 1, 1, ubcx)
+         iimplicit = -iimplicit
+         if (istret /= 0) then
+            call dery(tempc2, tkesxz(:, b), di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, ubcx)
+            tempb2 = tempb2 * pp2y - pp4y * tempc2
+         end if
          viscdiffsxz(:, b) = xnu * tempb2
 
          ! Turbulent convection
@@ -850,7 +856,13 @@ contains
 
       ! Viscous diffusion
       call horizontal_avrge(ui2p * uj2p, tempa2)
+      iimplicit = -iimplicit
       call deryy(tempb2, tempa2, di2, sy, sfyp, ssyp, swyp, 1, ysize(2), 1, 1, ubcx)
+      iimplicit = -iimplicit
+      if (istret /= 0) then
+         call dery(tempc2, tempa2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, ubcx)
+         tempb2 = tempb2 * pp2y - pp4y * tempc2
+      end if
       visc_diff = xnu * tempb2
 
       ! Turbulent convection
