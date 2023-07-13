@@ -534,7 +534,7 @@ contains
    !############################################################################
    function comp_thetad(thetad0, ux2, uy2, ux2m) result(thetad)
       use var, only: di2
-      use ibm_param, only: ubcy
+      use ibm_param, only: ubcx, ubcy, ubcz
       use MPI
 
       implicit none
