@@ -10,14 +10,14 @@ module ttbl
 
    implicit none
 
-   real(mytype), save, allocatable, dimension(:, :) :: usxz, vsxz, wsxz, upupsxz, vpvpsxz, wpwpsxz, upvpsxz
+   real(mytype), save, allocatable, dimension(:, :) :: usxz, vsxz, wsxz, upupsxz, vpvpsxz, wpwpsxz, upvpsxz, tkesxz
    real(mytype), save, allocatable, dimension(:, :) :: presxz, prep2sxz
    real(mytype), save, allocatable, dimension(:, :) :: dudysxz, dvdysxz, dwdysxz
-   real(mytype), save, allocatable, dimension(:, :) :: tkesxz, meanconvsxz, prodsxz, disssxz, viscdiffsxz, turbconvsxz, prestransxz
-   real(mytype), save, allocatable, dimension(:, :) :: meanconvsxz_uu, prodsxz_uu, disssxz_uu, viscdiffsxz_uu, turbconvsxz_uu, prestransxz_uu
-   real(mytype), save, allocatable, dimension(:, :) :: meanconvsxz_vv, prodsxz_vv, disssxz_vv, viscdiffsxz_vv, turbconvsxz_vv, prestransxz_vv
-   real(mytype), save, allocatable, dimension(:, :) :: meanconvsxz_ww, prodsxz_ww, disssxz_ww, viscdiffsxz_ww, turbconvsxz_ww, prestransxz_ww
-   real(mytype), save, allocatable, dimension(:, :) :: meanconvsxz_uv, prodsxz_uv, disssxz_uv, viscdiffsxz_uv, turbconvsxz_uv, prestransxz_uv
+   real(mytype), save, allocatable, dimension(:, :) :: meanconvsxz_uu, turbconvsxz_uu, viscdiffsxz_uu, prodsxz_uu, prestransxz_uu, disssxz_uu
+   real(mytype), save, allocatable, dimension(:, :) :: meanconvsxz_vv, turbconvsxz_vv, viscdiffsxz_vv, prodsxz_vv, prestransxz_vv, disssxz_vv
+   real(mytype), save, allocatable, dimension(:, :) :: meanconvsxz_ww, turbconvsxz_ww, viscdiffsxz_ww, prodsxz_ww, prestransxz_ww, disssxz_ww
+   real(mytype), save, allocatable, dimension(:, :) :: meanconvsxz_uv, turbconvsxz_uv, viscdiffsxz_uv, prodsxz_uv, prestransxz_uv, disssxz_uv
+   real(mytype), save, allocatable, dimension(:, :) :: meanconvsxz_k, turbconvsxz_k, viscdiffsxz_k, prodsxz_k, prestransxz_k, disssxz_k
    real(mytype), save, allocatable, dimension(:) :: ttda, ttdb, ttdc
    real(mytype), save :: thetad
 
@@ -281,42 +281,42 @@ contains
          allocate (vpvpsxz(ysize(2), ioutput / ilist))
          allocate (wpwpsxz(ysize(2), ioutput / ilist))
          allocate (upvpsxz(ysize(2), ioutput / ilist))
+         allocate (tkesxz(ysize(2), ioutput / ilist))
          allocate (presxz(ysize(2), ioutput / ilist))
          allocate (prep2sxz(ysize(2), ioutput / ilist))
          allocate (dudysxz(ysize(2), ioutput / ilist))
          allocate (dvdysxz(ysize(2), ioutput / ilist))
          allocate (dwdysxz(ysize(2), ioutput / ilist))
-         allocate (tkesxz(ysize(2), ioutput / ilist))
-         allocate (meanconvsxz(ysize(2), ioutput / ilist))
-         allocate (prodsxz(ysize(2), ioutput / ilist))
-         allocate (disssxz(ysize(2), ioutput / ilist))
-         allocate (viscdiffsxz(ysize(2), ioutput / ilist))
-         allocate (turbconvsxz(ysize(2), ioutput / ilist))
-         allocate (prestransxz(ysize(2), ioutput / ilist))
          allocate (meanconvsxz_uu(ysize(2), ioutput / ilist))
-         allocate (prodsxz_uu(ysize(2), ioutput / ilist))
-         allocate (disssxz_uu(ysize(2), ioutput / ilist))
-         allocate (viscdiffsxz_uu(ysize(2), ioutput / ilist))
          allocate (turbconvsxz_uu(ysize(2), ioutput / ilist))
+         allocate (viscdiffsxz_uu(ysize(2), ioutput / ilist))
+         allocate (prodsxz_uu(ysize(2), ioutput / ilist))
          allocate (prestransxz_uu(ysize(2), ioutput / ilist))
+         allocate (disssxz_uu(ysize(2), ioutput / ilist))
          allocate (meanconvsxz_vv(ysize(2), ioutput / ilist))
-         allocate (prodsxz_vv(ysize(2), ioutput / ilist))
-         allocate (disssxz_vv(ysize(2), ioutput / ilist))
-         allocate (viscdiffsxz_vv(ysize(2), ioutput / ilist))
          allocate (turbconvsxz_vv(ysize(2), ioutput / ilist))
+         allocate (viscdiffsxz_vv(ysize(2), ioutput / ilist))
+         allocate (prodsxz_vv(ysize(2), ioutput / ilist))
          allocate (prestransxz_vv(ysize(2), ioutput / ilist))
+         allocate (disssxz_vv(ysize(2), ioutput / ilist))
          allocate (meanconvsxz_ww(ysize(2), ioutput / ilist))
-         allocate (prodsxz_ww(ysize(2), ioutput / ilist))
-         allocate (disssxz_ww(ysize(2), ioutput / ilist))
-         allocate (viscdiffsxz_ww(ysize(2), ioutput / ilist))
          allocate (turbconvsxz_ww(ysize(2), ioutput / ilist))
+         allocate (viscdiffsxz_ww(ysize(2), ioutput / ilist))
+         allocate (prodsxz_ww(ysize(2), ioutput / ilist))
          allocate (prestransxz_ww(ysize(2), ioutput / ilist))
+         allocate (disssxz_ww(ysize(2), ioutput / ilist))
          allocate (meanconvsxz_uv(ysize(2), ioutput / ilist))
-         allocate (prodsxz_uv(ysize(2), ioutput / ilist))
-         allocate (disssxz_uv(ysize(2), ioutput / ilist))
-         allocate (viscdiffsxz_uv(ysize(2), ioutput / ilist))
          allocate (turbconvsxz_uv(ysize(2), ioutput / ilist))
+         allocate (viscdiffsxz_uv(ysize(2), ioutput / ilist))
+         allocate (prodsxz_uv(ysize(2), ioutput / ilist))
          allocate (prestransxz_uv(ysize(2), ioutput / ilist))
+         allocate (disssxz_uv(ysize(2), ioutput / ilist))
+         allocate (meanconvsxz_k(ysize(2), ioutput / ilist))
+         allocate (turbconvsxz_k(ysize(2), ioutput / ilist))
+         allocate (viscdiffsxz_k(ysize(2), ioutput / ilist))
+         allocate (prodsxz_k(ysize(2), ioutput / ilist))
+         allocate (prestransxz_k(ysize(2), ioutput / ilist))
+         allocate (disssxz_k(ysize(2), ioutput / ilist))
       end if
 
       ! Compute quantities and store in buffer
@@ -341,6 +341,7 @@ contains
          call horizontal_avrge(uy2p**2, vpvpsxz(:, b))
          call horizontal_avrge(uz2p**2, wpwpsxz(:, b))
          call horizontal_avrge(ux2p * uy2p, upvpsxz(:, b))
+         tkesxz(:, b) = half * (upupsxz(:, b) + vpvpsxz(:, b) + wpwpsxz(:, b))
          call pressure_x(pp3, pre1)
          call transpose_x_to_y(pre1, pre2)
          call horizontal_avrge(pre2, presxz(:, b))
@@ -352,79 +353,47 @@ contains
          call dery(dvdysxz(:, b), vsxz(:, b), di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy)
          call dery(dwdysxz(:, b), wsxz(:, b), di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, ubcz)
 
-         ! TKE
-         tkesxz(:, b) = half * (upupsxz(:, b) + vpvpsxz(:, b) + wpwpsxz(:, b))
-
          ! Mean convection
-         call dery(tempb2, tkesxz(:, b), di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy)
-         meanconvsxz(:, b) = -(vsxz(:, b) * tempb2)
-
-         ! Production
-         call horizontal_avrge(uz2p * uy2p, tempc2)
-         prodsxz(:, b) = -(upvpsxz(:, b) * dudysxz(:, b) + vpvpsxz(:, b) * dvdysxz(:, b) + tempc2 * dwdysxz(:, b))
-
-         ! Dissipation
-         call transpose_y_to_x(ux2p, ux1p)
-         call transpose_y_to_x(uy2p, uy1p)
-         call transpose_y_to_x(uz2p, uz1p)
-         call transpose_y_to_z(ux2p, ux3p)
-         call transpose_y_to_z(uy2p, uy3p)
-         call transpose_y_to_z(uz2p, uz3p)
-         call derx(ta1, ux1p, di1, sx, ffx, fsx, fwx, xsize(1), xsize(2), xsize(3), 0, ubcx)
-         call derx(tb1, uy1p, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, ubcy)
-         call derx(tc1, uz1p, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, ubcz)
-         call dery(ta2, ux2p, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, ubcx)
-         call dery(tb2, uy2p, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0, ubcy)
-         call dery(tc2, uz2p, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, ubcz)
-         call derz(ta3, ux3p, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, ubcx)
-         call derz(tb3, uy3p, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, ubcy)
-         call derz(tc3, uz3p, di3, sz, ffz, fsz, fwz, zsize(1), zsize(2), zsize(3), 0, ubcz)
-         call transpose_z_to_y(ta3, td2)
-         call transpose_z_to_y(tb3, te2)
-         call transpose_z_to_y(tc3, tf2)
-         call transpose_y_to_x(td2, tg1)
-         call transpose_y_to_x(te2, th1)
-         call transpose_y_to_x(tf2, ti1)
-         call transpose_y_to_x(ta2, td1)
-         call transpose_y_to_x(tb2, te1)
-         call transpose_y_to_x(tc2, tf1)
-         call dissipation(ta1, tb1, tc1, td1, te1, tf1, tg1, th1, ti1, diss1)
-         call transpose_x_to_y(diss1, ta2)
-         call horizontal_avrge(-ta2, disssxz(:, b))
-
-         ! Viscous diffusion
-         iimplicit = -iimplicit
-         call deryy(tempb2, tkesxz(:, b), di2, sy, sfyp, ssyp, swyp, 1, ysize(2), 1, 1, ubcx)
-         iimplicit = -iimplicit
-         if (istret /= 0) then
-            call dery(tempc2, tkesxz(:, b), di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, ubcx)
-            tempb2 = tempb2 * pp2y - pp4y * tempc2
-         end if
-         viscdiffsxz(:, b) = xnu * tempb2
+         call mean_convection(ux2p**2, usxz(:, b), vsxz(:, b), wsxz(:, b), meanconvsxz_uu(:, b))
+         call mean_convection(uy2p**2, usxz(:, b), vsxz(:, b), wsxz(:, b), meanconvsxz_vv(:, b))
+         call mean_convection(uz2p**2, usxz(:, b), vsxz(:, b), wsxz(:, b), meanconvsxz_ww(:, b))
+         call mean_convection(ux2p * uy2p, usxz(:, b), vsxz(:, b), wsxz(:, b), meanconvsxz_uv(:, b))
+         meanconvsxz_k(:, b) = half * (meanconvsxz_uu(:, b) + meanconvsxz_vv(:, b) + meanconvsxz_ww(:, b))
 
          ! Turbulent convection
-         call horizontal_avrge(uy2p * ux2p * ux2p, tempa2)
-         call horizontal_avrge(uy2p * uy2p * uy2p, tempb2)
-         call horizontal_avrge(uy2p * uz2p * uz2p, tempc2)
-         call dery(turbconvsxz(:, b), -half * (tempa2 + tempb2 + tempc2), di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy * (ubcx * ubcx + ubcy * ubcy + ubcz * ubcz))
+         call turb_convection(ux2p**2, ux2p, uy2p, uz2p, turbconvsxz_uu(:, b))
+         call turb_convection(uy2p**2, ux2p, uy2p, uz2p, turbconvsxz_vv(:, b))
+         call turb_convection(uz2p**2, ux2p, uy2p, uz2p, turbconvsxz_ww(:, b))
+         call turb_convection(ux2p * uy2p, ux2p, uy2p, uz2p, turbconvsxz_uv(:, b))
+         turbconvsxz_k(:, b) = half * (turbconvsxz_uu(:, b) + turbconvsxz_vv(:, b) + turbconvsxz_ww(:, b))
+
+         ! Viscous diffusion
+         call visc_diffusion(ux2p**2, viscdiffsxz_uu(:, b))
+         call visc_diffusion(uy2p**2, viscdiffsxz_vv(:, b))
+         call visc_diffusion(uz2p**2, viscdiffsxz_ww(:, b))
+         call visc_diffusion(ux2p * uy2p, viscdiffsxz_uv(:, b))
+         viscdiffsxz_k(:, b) = half * (viscdiffsxz_uu(:, b) + viscdiffsxz_vv(:, b) + viscdiffsxz_ww(:, b))
+
+         ! Production
+         call production(ux2, ux2, ux2p, ux2p, ux2p, uy2p, uz2p, prodsxz_uu(:, b))
+         call production(uy2, uy2, uy2p, uy2p, ux2p, uy2p, uz2p, prodsxz_vv(:, b))
+         call production(uz2, uz2, uz2p, uz2p, ux2p, uy2p, uz2p, prodsxz_ww(:, b))
+         call production(ux2, uy2, ux2p, uy2p, ux2p, uy2p, uz2p, prodsxz_uv(:, b))
+         prodsxz_k(:, b) = half * (prodsxz_uu(:, b) + prodsxz_vv(:, b) + prodsxz_ww(:, b))
 
          ! Pressure transport
-         call horizontal_avrge(uy2p * pre2p, tempa2)
-         call dery(prestransxz(:, b), -tempa2, di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy)
+         call pres_transport(1, 1, ux2p, ux2p, pre2p, prestransxz_uu(:, b))
+         call pres_transport(2, 2, uy2p, uy2p, pre2p, prestransxz_vv(:, b))
+         call pres_transport(3, 3, uz2p, uz2p, pre2p, prestransxz_ww(:, b))
+         call pres_transport(1, 2, ux2p, uy2p, pre2p, prestransxz_uv(:, b))
+         prestransxz_k(:, b) = half * (prestransxz_uu(:, b) + prestransxz_vv(:, b) + prestransxz_ww(:, b))
 
-         ! Stress budget: uu
-         ta2 = zero
-         call stress_budget(usxz(:, b), ux2p, usxz(:, b), ux2p, ta2, ta2, uy2p, meanconvsxz_uu(:, b), prodsxz_uu(:, b), disssxz_uu(:, b), viscdiffsxz_uu(:, b), turbconvsxz_uu(:, b), prestransxz_uu(:, b))
-
-         ! Stress budget: vv
-         call dery(tb2, pre2p, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0, ubcy)
-         call stress_budget(vsxz(:, b), uy2p, vsxz(:, b), uy2p, tb2, tb2, uy2p, meanconvsxz_vv(:, b), prodsxz_vv(:, b), disssxz_vv(:, b), viscdiffsxz_vv(:, b), turbconvsxz_vv(:, b), prestransxz_vv(:, b))
-
-         ! Stress budget: ww
-         call stress_budget(wsxz(:, b), uz2p, wsxz(:, b), uz2p, ta2, ta2, uy2p, meanconvsxz_ww(:, b), prodsxz_ww(:, b), disssxz_ww(:, b), viscdiffsxz_ww(:, b), turbconvsxz_ww(:, b), prestransxz_ww(:, b))
-
-         ! Stress budget: uv
-         call stress_budget(usxz(:, b), ux2p, vsxz(:, b), uy2p, ta2, tb2, uy2p, meanconvsxz_uv(:, b), prodsxz_uv(:, b), disssxz_uv(:, b), viscdiffsxz_uv(:, b), turbconvsxz_uv(:, b), prestransxz_uv(:, b))
+         ! Dissipation
+         call dissipation(ux2p, ux2p, disssxz_uu(:, b))
+         call dissipation(uy2p, uy2p, disssxz_vv(:, b))
+         call dissipation(uz2p, uz2p, disssxz_ww(:, b))
+         call dissipation(ux2p, uy2p, disssxz_uv(:, b))
+         disssxz_k(:, b) = half * (disssxz_uu(:, b) + disssxz_vv(:, b) + disssxz_ww(:, b))
 
          ! Write compute time
          if (nrank == 0) write (*, "(' Time computing statistics = ',F18.12,'(s)')") MPI_WTIME() - tstart
@@ -446,42 +415,42 @@ contains
             call outp(vpvpsxz, 'out/vp2.dat')
             call outp(wpwpsxz, 'out/wp2.dat')
             call outp(upvpsxz, 'out/upvp.dat')
+            call outp(tkesxz, 'out/tke.dat')
             call outp(presxz, 'out/pre.dat')
             call outp(prep2sxz, 'out/prep2.dat')
             call outp(dudysxz, 'out/dudy.dat')
             call outp(dvdysxz, 'out/dvdy.dat')
             call outp(dwdysxz, 'out/dwdy.dat')
-            call outp(tkesxz, 'out/tke.dat')
-            call outp(meanconvsxz, 'out/mean_conv.dat')
-            call outp(prodsxz, 'out/prod.dat')
-            call outp(disssxz, 'out/diss.dat')
-            call outp(viscdiffsxz, 'out/visc_diff.dat')
-            call outp(turbconvsxz, 'out/turb_conv.dat')
-            call outp(prestransxz, 'out/pres_tran.dat')
             call outp(meanconvsxz_uu, 'out/mean_conv_uu.dat')
-            call outp(prodsxz_uu, 'out/prod_uu.dat')
-            call outp(disssxz_uu, 'out/diss_uu.dat')
-            call outp(viscdiffsxz_uu, 'out/visc_diff_uu.dat')
             call outp(turbconvsxz_uu, 'out/turb_conv_uu.dat')
+            call outp(viscdiffsxz_uu, 'out/visc_diff_uu.dat')
+            call outp(prodsxz_uu, 'out/prod_uu.dat')
             call outp(prestransxz_uu, 'out/pres_tran_uu.dat')
+            call outp(disssxz_uu, 'out/diss_uu.dat')
             call outp(meanconvsxz_vv, 'out/mean_conv_vv.dat')
-            call outp(prodsxz_vv, 'out/prod_vv.dat')
-            call outp(disssxz_vv, 'out/diss_vv.dat')
-            call outp(viscdiffsxz_vv, 'out/visc_diff_vv.dat')
             call outp(turbconvsxz_vv, 'out/turb_conv_vv.dat')
+            call outp(viscdiffsxz_vv, 'out/visc_diff_vv.dat')
+            call outp(prodsxz_vv, 'out/prod_vv.dat')
             call outp(prestransxz_vv, 'out/pres_tran_vv.dat')
+            call outp(disssxz_vv, 'out/diss_vv.dat')
             call outp(meanconvsxz_ww, 'out/mean_conv_ww.dat')
-            call outp(prodsxz_ww, 'out/prod_ww.dat')
-            call outp(disssxz_ww, 'out/diss_ww.dat')
-            call outp(viscdiffsxz_ww, 'out/visc_diff_ww.dat')
             call outp(turbconvsxz_ww, 'out/turb_conv_ww.dat')
+            call outp(viscdiffsxz_ww, 'out/visc_diff_ww.dat')
+            call outp(prodsxz_ww, 'out/prod_ww.dat')
             call outp(prestransxz_ww, 'out/pres_tran_ww.dat')
+            call outp(disssxz_ww, 'out/diss_ww.dat')
             call outp(meanconvsxz_uv, 'out/mean_conv_uv.dat')
-            call outp(prodsxz_uv, 'out/prod_uv.dat')
-            call outp(disssxz_uv, 'out/diss_uv.dat')
-            call outp(viscdiffsxz_uv, 'out/visc_diff_uv.dat')
             call outp(turbconvsxz_uv, 'out/turb_conv_uv.dat')
+            call outp(viscdiffsxz_uv, 'out/visc_diff_uv.dat')
+            call outp(prodsxz_uv, 'out/prod_uv.dat')
             call outp(prestransxz_uv, 'out/pres_tran_uv.dat')
+            call outp(disssxz_uv, 'out/diss_uv.dat')
+            call outp(meanconvsxz_k, 'out/mean_conv_k.dat')
+            call outp(turbconvsxz_k, 'out/turb_conv_k.dat')
+            call outp(viscdiffsxz_k, 'out/visc_diff_k.dat')
+            call outp(prodsxz_k, 'out/prod_k.dat')
+            call outp(prestransxz_k, 'out/pres_tran_k.dat')
+            call outp(disssxz_k, 'out/diss_k.dat')
             if (nrank == 0) write (*, "(' Time writing statistics = ',F18.12,'(s)')") MPI_WTIME() - tstart
          end if
       end if
@@ -787,83 +756,211 @@ contains
    end subroutine pressure_x
    !############################################################################
    !############################################################################
-   subroutine dissipation(ta1, tb1, tc1, td1, te1, tf1, tg1, th1, ti1, diss1)
-      implicit none
-      real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ta1, tb1, tc1, td1, te1, tf1, tg1, th1, ti1
-      real(mytype), intent(out), dimension(xsize(1), xsize(2), xsize(3)) :: diss1
-
-      real(mytype), dimension(3, 3, xsize(1), xsize(2), xsize(3)) :: A
-      integer :: l, m
-
-      ! Instantaneous dissipation rate
-      A(:, :, :, :, :) = zero
-      A(1, 1, :, :, :) = ta1(:, :, :)
-      A(2, 1, :, :, :) = tb1(:, :, :)
-      A(3, 1, :, :, :) = tc1(:, :, :)
-      A(1, 2, :, :, :) = td1(:, :, :)
-      A(2, 2, :, :, :) = te1(:, :, :)
-      A(3, 2, :, :, :) = tf1(:, :, :)
-      A(1, 3, :, :, :) = tg1(:, :, :)
-      A(2, 3, :, :, :) = th1(:, :, :)
-      A(3, 3, :, :, :) = ti1(:, :, :)
-      diss1 = zero
-      do m = 1, 3
-         do l = 1, 3
-            diss1 = diss1 + two * xnu * half * half * (A(l, m, :, :, :) + A(m, l, :, :, :))**two
-         end do
-      end do
-   end subroutine dissipation
-   !############################################################################
-   !############################################################################
-   subroutine stress_budget(ui2sxz, ui2p, uj2sxz, uj2p, dprepdi2, dprepdj2, uy2p, mean_conv, prod, diss, visc_diff, turb_conv, press_tran)
-      use var, only: ux2, uy2, uz2
-      use var, only: ta1, tb1, tc1, td1, te1, tf1, tg1, th1, ti1, di1
-      use var, only: ta2, tb2, tc2, td2, te2, tf2, di2
-      use var, only: ta3, tb3, tc3, td3, te3, tf3, di3, nzmsize, phi2
-      use ibm_param, only: ubcx, ubcy, ubcz
+   subroutine mean_convection(u1pu2p, um, vm, wm, mean_conv)
+      use var, only: ta1, tb1, tc1, di1
+      use var, only: ta2, tb2, tc2, di2
+      use var, only: ta3, tb3, tc3, di3
 
       implicit none
-      real(mytype), intent(in), dimension(ysize(1), ysize(2), ysize(3)) :: ui2p, uj2p, dprepdi2, dprepdj2, uy2p
-      real(mytype), intent(in), dimension(ysize(2)) :: ui2sxz, uj2sxz
-      real(mytype), intent(out), dimension(ysize(2)) :: mean_conv, prod, diss, visc_diff, turb_conv, press_tran
+      real(mytype), intent(in), dimension(ysize(1), ysize(2), ysize(3)) :: u1pu2p
+      real(mytype), intent(in), dimension(ysize(2)) :: um, vm, wm
+      real(mytype), intent(out), dimension(ysize(2)) :: mean_conv
+
+      real(mytype), dimension(ysize(2)) :: tempa2, tempb2, tempc2
+
+      call transpose_y_to_x(u1pu2p, ta1)
+      call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
+      call transpose_x_to_y(tb1, ta2)
+      call horizontal_avrge(ta2, tempa2)
+      call horizontal_avrge(u1pu2p, tempc2)
+      call dery(tempb2, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
+      call transpose_y_to_z(u1pu2p, ta3)
+      call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
+      call transpose_z_to_y(tb3, tc2)
+      call horizontal_avrge(tc2, tempc2)
+      mean_conv = -(um * tempa2 + vm * tempb2 + wm * tempc2)
+   end subroutine mean_convection
+   !############################################################################
+   !############################################################################
+   subroutine turb_convection(u1pu2p, up, vp, wp, turb_conv)
+      use var, only: ta1, tb1, tc1, di1
+      use var, only: ta2, tb2, tc2, di2
+      use var, only: ta3, tb3, tc3, di3
+
+      implicit none
+      real(mytype), intent(in), dimension(ysize(1), ysize(2), ysize(3)) :: u1pu2p, up, vp, wp
+      real(mytype), intent(out), dimension(ysize(2)) :: turb_conv
+
+      real(mytype), dimension(ysize(2)) :: tempa2, tempb2, tempc2
+
+      call transpose_y_to_x(u1pu2p * up, ta1)
+      call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
+      call transpose_x_to_y(tb1, ta2)
+      call horizontal_avrge(ta2, tempa2)
+      call horizontal_avrge(u1pu2p * vp, tempc2)
+      call dery(tempb2, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
+      call transpose_y_to_z(u1pu2p * wp, ta3)
+      call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
+      call transpose_z_to_y(tb3, tc2)
+      call horizontal_avrge(tc2, tempc2)
+      turb_conv = -(tempa2 + tempb2 + tempc2)
+   end subroutine turb_convection
+   !############################################################################
+   !############################################################################
+   subroutine visc_diffusion(u1pu2p, visc_diff)
+      use var, only: ta1, tb1, tc1, di1
+      use var, only: ta2, tb2, tc2, di2
+      use var, only: ta3, tb3, tc3, di3
+
+      implicit none
+      real(mytype), intent(in), dimension(ysize(1), ysize(2), ysize(3)) :: u1pu2p
+      real(mytype), intent(out), dimension(ysize(2)) :: visc_diff
 
       real(mytype), dimension(ysize(2)) :: tempa2, tempb2, tempc2, tempd2
 
-      ! Mean convection
-      call horizontal_avrge(ui2p * uj2p, tempa2)
-      call dery(tempb2, tempa2, di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy)
-      call horizontal_avrge(uy2p, tempc2)
-      mean_conv = -tempc2 * tempb2
-
-      ! Production
-      call horizontal_avrge(ui2p * uy2p, tempa2)
-      call dery(tempb2, uj2sxz, di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy)
-      call horizontal_avrge(uj2p * uy2p, tempc2)
-      call dery(tempd2, ui2sxz, di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy)
-      prod = -(tempa2 * tempb2 + tempc2 * tempd2)
-
-      ! Dissipation
-      call dery(ta2, ui2p, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0, ubcy)
-      call dery(tb2, uj2p, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0, ubcy)
-      call horizontal_avrge(ta2 * tb2, tempa2)
-      diss = -two * xnu * tempa2
-
-      ! Viscous diffusion
-      call horizontal_avrge(ui2p * uj2p, tempa2)
+      call transpose_y_to_x(u1pu2p, ta1)
+      call derxx(tb1, ta1, di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1, zero)
+      call transpose_x_to_y(tb1, ta2)
+      call horizontal_avrge(ta2, tempa2)
+      call horizontal_avrge(u1pu2p, tempc2)
       iimplicit = -iimplicit
-      call deryy(tempb2, tempa2, di2, sy, sfyp, ssyp, swyp, 1, ysize(2), 1, 1, ubcx)
+      call deryy(tempb2, tempc2, di2, sy, sfyp, ssyp, swyp, 1, ysize(2), 1, 1, zero)
       iimplicit = -iimplicit
       if (istret /= 0) then
-         call dery(tempc2, tempa2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, ubcx)
-         tempb2 = tempb2 * pp2y - pp4y * tempc2
+         call dery(tempd2, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
+         tempb2 = tempb2 * pp2y - pp4y * tempd2
       end if
-      visc_diff = xnu * tempb2
+      call transpose_y_to_z(u1pu2p, ta3)
+      call derzz(tb3, ta3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1, zero)
+      call transpose_z_to_y(tb3, tc2)
+      call horizontal_avrge(tc2, tempc2)
+      visc_diff = xnu * (tempa2 + tempb2 + tempc2)
+   end subroutine visc_diffusion
+   !############################################################################
+   !############################################################################
+   subroutine production(u1, u2, u1p, u2p, up, vp, wp, prod)
+      use var, only: ta1, tb1, tc1, di1
+      use var, only: ta2, tb2, tc2, di2
+      use var, only: ta3, tb3, tc3, di3
 
-      ! Turbulent convection
-      call horizontal_avrge(ui2p * uj2p * uy2p, tempa2)
-      call dery(turb_conv, -tempa2, di2, sy, ffy, fsy, fwy, ppy, 1, ysize(2), 1, 0, ubcy)
+      implicit none
+      real(mytype), intent(in), dimension(ysize(1), ysize(2), ysize(3)) :: u1, u2, u1p, u2p, up, vp, wp
+      real(mytype), intent(out), dimension(ysize(2)) :: prod
 
-      ! Pressure transport
-      call horizontal_avrge(-(ui2p * dprepdj2 + uj2p * dprepdi2), press_tran)
-   end subroutine stress_budget
+      real(mytype), dimension(ysize(2)) :: tempa2, tempb2, tempc2, dudx, dudy, dudz
+
+      call transpose_y_to_x(u2, ta1)
+      call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
+      call transpose_x_to_y(tb1, ta2)
+      call horizontal_avrge(ta2, dudx)
+      call horizontal_avrge(u2, tempc2)
+      call dery(dudy, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
+      call transpose_y_to_z(u2, ta3)
+      call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
+      call transpose_z_to_y(tb3, tc2)
+      call horizontal_avrge(tc2, dudz)
+      call horizontal_avrge(u1 * up, tempa2)
+      call horizontal_avrge(u1 * vp, tempb2)
+      call horizontal_avrge(u1 * wp, tempc2)
+      prod = -(tempa2 * dudx + tempb2 * dudy + tempc2 * dudz)
+      call transpose_y_to_x(u1, ta1)
+      call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
+      call transpose_x_to_y(tb1, ta2)
+      call horizontal_avrge(ta2, dudx)
+      call horizontal_avrge(u1, tempc2)
+      call dery(dudy, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
+      call transpose_y_to_z(u1, ta3)
+      call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
+      call transpose_z_to_y(tb3, tc2)
+      call horizontal_avrge(tc2, dudz)
+      call horizontal_avrge(u2 * up, tempa2)
+      call horizontal_avrge(u2 * vp, tempb2)
+      call horizontal_avrge(u2 * wp, tempc2)
+      prod = prod - (tempa2 * dudx + tempb2 * dudy + tempc2 * dudz)
+   end subroutine production
+   !############################################################################
+   !############################################################################
+   subroutine pres_transport(one, two, u1p, u2p, prep, pres_tran)
+      use var, only: ta1, tb1, tc1, di1
+      use var, only: ta2, tb2, tc2, di2
+      use var, only: ta3, tb3, tc3, di3
+
+      implicit none
+      integer, intent(in) :: one, two
+      real(mytype), intent(in), dimension(ysize(1), ysize(2), ysize(3)) :: u1p, u2p, prep
+      real(mytype), intent(out), dimension(ysize(2)) :: pres_tran
+
+      integer :: code
+      real(mytype), dimension(ysize(2)) :: tempa2, tempb2, tempc2
+
+      ta2 = u1p * prep
+      if (two == 1) then
+         call transpose_y_to_x(ta2, ta1)
+         call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
+         call transpose_x_to_y(tb1, ta2)
+         call horizontal_avrge(ta2, tempa2)
+      else if (two == 2) then
+         call horizontal_avrge(ta2, tempc2)
+         call dery(tempa2, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
+      else if (two == 3) then
+         call transpose_y_to_z(ta2, ta3)
+         call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
+         call transpose_z_to_y(tb3, tc2)
+         call horizontal_avrge(tc2, tempa2)
+      else
+         if (nrank == 0) write (6, *) 'Invalid component index for pressure transport'
+         call MPI_ABORT(MPI_COMM_WORLD, -1, code)
+      end if
+      ta2 = u2p * prep
+      if (one == 1) then
+         call transpose_y_to_x(ta2, ta1)
+         call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
+         call transpose_x_to_y(tb1, ta2)
+         call horizontal_avrge(ta2, tempb2)
+      else if (one == 2) then
+         call horizontal_avrge(ta2, tempc2)
+         call dery(tempb2, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
+      else if (one == 3) then
+         call transpose_y_to_z(ta2, ta3)
+         call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
+         call transpose_z_to_y(tb3, tc2)
+         call horizontal_avrge(tc2, tempb2)
+      else
+         if (nrank == 0) write (6, *) 'Invalid component index for pressure transport'
+         call MPI_ABORT(MPI_COMM_WORLD, -1, code)
+      end if
+      pres_tran = -(tempa2 + tempb2)
+   end subroutine pres_transport
+   !############################################################################
+   !############################################################################
+   subroutine dissipation(u1p, u2p, diss)
+      use var, only: ta1, tb1, tc1, di1
+      use var, only: ta2, tb2, tc2, di2
+      use var, only: ta3, tb3, tc3, di3
+
+      implicit none
+      real(mytype), intent(in), dimension(ysize(1), ysize(2), ysize(3)) :: u1p, u2p
+      real(mytype), intent(out), dimension(ysize(2)) :: diss
+
+      real(mytype), dimension(ysize(2)) :: tempa2, tempb2, tempc2
+
+      call transpose_y_to_x(u1p, ta1)
+      call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
+      call transpose_x_to_y(tb1, ta2)
+      call transpose_y_to_x(u2p, ta1)
+      call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
+      call transpose_x_to_y(tb1, tb2)
+      call horizontal_avrge(ta2 * tb2, tempa2)
+      call dery(ta2, u1p, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
+      call dery(tb2, u2p, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
+      call horizontal_avrge(ta2 * tb2, tempb2)
+      call transpose_y_to_z(u1p, ta3)
+      call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
+      call transpose_z_to_y(tb3, ta2)
+      call transpose_y_to_z(u2p, ta3)
+      call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
+      call transpose_z_to_y(tb3, tb2)
+      call horizontal_avrge(ta2 * tb2, tempc2)
+      diss = -two * xnu * (tempa2 + tempb2 + tempc2)
+   end subroutine dissipation
 end module ttbl
