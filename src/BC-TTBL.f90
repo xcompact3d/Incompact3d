@@ -13,6 +13,7 @@ module ttbl
    real(mytype), save, allocatable, dimension(:, :) :: usxz, vsxz, wsxz, upupsxz, vpvpsxz, wpwpsxz, upvpsxz, tkesxz
    real(mytype), save, allocatable, dimension(:, :) :: presxz, prep2sxz
    real(mytype), save, allocatable, dimension(:, :) :: dudysxz, dvdysxz, dwdysxz
+   real(mytype), save, allocatable, dimension(:, :) :: oxpsxz, oypsxz, ozpsxz
    real(mytype), save, allocatable, dimension(:, :) :: meanconvsxz_uu, turbconvsxz_uu, viscdiffsxz_uu, prodsxz_uu, prestransxz_uu, disssxz_uu
    real(mytype), save, allocatable, dimension(:, :) :: meanconvsxz_vv, turbconvsxz_vv, viscdiffsxz_vv, prodsxz_vv, prestransxz_vv, disssxz_vv
    real(mytype), save, allocatable, dimension(:, :) :: meanconvsxz_ww, turbconvsxz_ww, viscdiffsxz_ww, prodsxz_ww, prestransxz_ww, disssxz_ww
@@ -253,7 +254,11 @@ contains
    !############################################################################
    subroutine postprocess_ttbl(ux1, uy1, uz1, pp3, phi1, ep1)
       use var, only: ux2, uy2, uz2
-      use var, only: nzmsize, di2, td2, te2, tf2, tg2
+      use var, only: ux3, uy3, uz3
+      use var, only: nzmsize
+      use var, only: ta1, tb1, tc1, td1, te1, tf1, di1
+      use var, only: ta2, tb2, tc2, td2, te2, tf2, tg2, th2, ti2, di2
+      use var, only: ta3, tb3, tc3, td3, te3, tf3, di3
 
       implicit none
       real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, ep1
@@ -281,6 +286,9 @@ contains
          allocate (dudysxz(ysize(2), ioutput / ilist))
          allocate (dvdysxz(ysize(2), ioutput / ilist))
          allocate (dwdysxz(ysize(2), ioutput / ilist))
+         allocate (oxpsxz(ysize(2), ioutput / ilist))
+         allocate (oypsxz(ysize(2), ioutput / ilist))
+         allocate (ozpsxz(ysize(2), ioutput / ilist))
          allocate (meanconvsxz_uu(ysize(2), ioutput / ilist))
          allocate (turbconvsxz_uu(ysize(2), ioutput / ilist))
          allocate (viscdiffsxz_uu(ysize(2), ioutput / ilist))
@@ -331,11 +339,10 @@ contains
          call transpose_x_to_y(uz1, uz2)
          call horizontal_avrge(uz2, wsxz(:, b))
          call extract_fluctuat(uz2, wsxz(:, b), uz2p)
-         td2 = ux2p**2; te2 = uy2p**2; tf2 = uz2p**2; tg2 = ux2p * uy2p
-         call horizontal_avrge(td2, upupsxz(:, b))
-         call horizontal_avrge(te2, vpvpsxz(:, b))
-         call horizontal_avrge(tf2, wpwpsxz(:, b))
-         call horizontal_avrge(tg2, upvpsxz(:, b))
+         call horizontal_avrge(ux2p**2, upupsxz(:, b))
+         call horizontal_avrge(uy2p**2, vpvpsxz(:, b))
+         call horizontal_avrge(uz2p**2, wpwpsxz(:, b))
+         call horizontal_avrge(ux2p * uy2p, upvpsxz(:, b))
          tkesxz(:, b) = half * (upupsxz(:, b) + vpvpsxz(:, b) + wpwpsxz(:, b))
          call pressure_x(pp3, pre1)
          call transpose_x_to_y(pre1, pre2)
@@ -343,10 +350,40 @@ contains
          call extract_fluctuat(pre2, presxz(:, b), pre2p)
          call horizontal_avrge(pre2p**2, prep2sxz(:, b))
 
-         ! Velocity derivatives
+         ! Wall-normal derivatives of mean velocity
          call dery(dudysxz(:, b), usxz(:, b), di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
          call dery(dvdysxz(:, b), vsxz(:, b), di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
          call dery(dwdysxz(:, b), wsxz(:, b), di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
+
+         ! Cross derivatives of fluctuating velocity
+         call transpose_y_to_x(uy2p, tb1)
+         call transpose_y_to_x(uz2p, tc1)
+         call transpose_y_to_z(ux2p, ta3)
+         call transpose_y_to_z(uy2p, tb3)
+         call derx(te1, tb1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
+         call derx(tf1, tc1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
+         call dery(td2, ux2p, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
+         call dery(tf2, uz2p, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
+         call derz(td3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
+         call derz(te3, tb3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
+         call transpose_x_to_y(te1, tb2)
+         call transpose_x_to_y(tf1, tc2)
+         call transpose_z_to_y(td3, tg2)
+         call transpose_z_to_y(te3, th2)
+
+         ! Vorticity
+         ta2 = tf2 - th2
+         te2 = tg2 - tc2
+         ti2 = tb2 - td2
+         call horizontal_avrge(ta2**2, oxpsxz(:, b))
+         call horizontal_avrge(te2**2, oypsxz(:, b))
+         call horizontal_avrge(ti2**2, ozpsxz(:, b))
+
+         ! Reynolds stress components
+         td2 = ux2p**2
+         te2 = uy2p**2
+         tf2 = uz2p**2
+         tg2 = ux2p * uy2p
 
          ! Mean convection
          call mean_convection(td2, usxz(:, b), vsxz(:, b), wsxz(:, b), meanconvsxz_uu(:, b))
@@ -416,6 +453,9 @@ contains
             call outp(dudysxz, 'out/dudy.dat')
             call outp(dvdysxz, 'out/dvdy.dat')
             call outp(dwdysxz, 'out/dwdy.dat')
+            call outp(oxpsxz, 'out/oxp2.dat')
+            call outp(oypsxz, 'out/oyp2.dat')
+            call outp(ozpsxz, 'out/ozp2.dat')
             call outp(meanconvsxz_uu, 'out/mean_conv_uu.dat')
             call outp(turbconvsxz_uu, 'out/turb_conv_uu.dat')
             call outp(viscdiffsxz_uu, 'out/visc_diff_uu.dat')
