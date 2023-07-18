@@ -199,10 +199,6 @@ contains
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
-
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: gx
-    real(mytype) :: x, y, z
-    integer :: i, j, k, is
     !
     return
     !
