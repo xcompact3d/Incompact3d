@@ -1394,26 +1394,6 @@ contains
             do i=1,xsize(1)
                 if (r.le.rai.and.ep(i,j,k).eq.0) then
                     ux(i,j,k)=ux(i,j,k)+(ub_constant-qmm)
-                endif
-            enddo
-        enddo
-    enddo
-
-    !Check new bulk velocity
-    qmm     = zero
-    ncountt = zero
-    qm      = zero
-    ncount  = zero
-    do k=1,xsize(3)
-        zm=dz*real(xstart(3)-1+k-1,mytype)-zc
-        do j=1,xsize(2)
-            if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
-            if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
-            r=sqrt(ym*ym+zm*zm)
-            do i=1,xsize(1)
-                if (r.le.rai.and.ep(i,j,k).eq.0) then
-                    qm=qm+ux(i,j,k)
-                    ncount=ncount+one
                 else
                     !Cancel solid zone (rai <= r <= rao)
                     !and buffer zone (r > rao)
@@ -1424,10 +1404,32 @@ contains
             enddo
         enddo
     enddo
-    call MPI_ALLREDUCE(qm,qmm,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    call MPI_ALLREDUCE(ncount,ncountt,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    qmm=qmm/ncountt
-    if ((nrank==0).and.(mod(itime, ilist)==0)) print *,'    Bulk velocity  after',qmm
+
+    !Check new bulk velocity
+    if (mod(itime, ilist)==0) then
+        qmm     = zero
+        ncountt = zero
+        qm      = zero
+        ncount  = zero
+        do k=1,xsize(3)
+            zm=dz*real(xstart(3)-1+k-1,mytype)-zc
+            do j=1,xsize(2)
+                if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
+                if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
+                r=sqrt(ym*ym+zm*zm)
+                do i=1,xsize(1)
+                    if (r.le.rai.and.ep(i,j,k).eq.0) then
+                        qm=qm+ux(i,j,k)
+                        ncount=ncount+one
+                    endif
+                enddo
+            enddo
+        enddo
+        call MPI_ALLREDUCE(qm,qmm,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        call MPI_ALLREDUCE(ncount,ncountt,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        qmm=qmm/ncountt
+        if (nrank==0) print *,'    Bulk velocity  after',qmm
+    endif
     !
     return
     !
@@ -1522,38 +1524,41 @@ contains
             do i=1,xsize(1)
                 if (r.le.rai.and.ep(i,j,k).eq.0) then
                     phi(i,j,k)=phi(i,j,k)+ux(i,j,k)*((phib_constant-qmm)/qvm)
-                endif
-            enddo
-        enddo
-    enddo
-
-    !Check new bulk temperature
-    qmm     = zero
-    ncountt = zero
-    qm      = zero
-    ncount  = zero
-    do k=1,xsize(3)
-        zm=dz*real(xstart(3)-1+k-1,mytype)-zc
-        do j=1,xsize(2)
-            if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
-            if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
-            r=sqrt(ym*ym+zm*zm)
-            do i=1,xsize(1)
-                if (r.le.rai.and.ep(i,j,k).eq.0) then
-                    qm=qm+ux(i,j,k)*phi(i,j,k)
-                    ncount=ncount+one
                 else !smoothness for reconstruction
                     phi(i,j,k)=phi_out
                 endif
             enddo
         enddo
     enddo
-    call MPI_ALLREDUCE(qm,qmm,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    call MPI_ALLREDUCE(ncount,ncountt,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    qmm=qmm/ncountt
-    if ((nrank==0).and.(mod(itime, ilist)==0)) print *,'          Bulk phi after',qmm
 
+    !Check new bulk temperature
+    if (mod(itime, ilist)==0) then
+        qmm     = zero
+        ncountt = zero
+        qm      = zero
+        ncount  = zero
+        do k=1,xsize(3)
+            zm=dz*real(xstart(3)-1+k-1,mytype)-zc
+            do j=1,xsize(2)
+                if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
+                if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
+                r=sqrt(ym*ym+zm*zm)
+                do i=1,xsize(1)
+                    if (r.le.rai.and.ep(i,j,k).eq.0) then
+                        qm=qm+ux(i,j,k)*phi(i,j,k)
+                        ncount=ncount+one
+                    endif
+                enddo
+            enddo
+        enddo
+        call MPI_ALLREDUCE(qm,qmm,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        call MPI_ALLREDUCE(ncount,ncountt,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        qmm=qmm/ncountt
+        if (nrank==0) print *,'          Bulk phi after',qmm
+    endif
+    !
     return
+
   end subroutine pipe_bulk_phi
 
 endmodule navier
