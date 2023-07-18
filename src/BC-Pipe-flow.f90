@@ -160,7 +160,7 @@ contains
             if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
             if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
             r=sqrt(ym*ym+zm*zm)    
-            um=exp(-twenty*r*r)
+            um=exp(-fifteen*r*r)
             !Poiseuille flow
             bxx1(j,k)=two*(one-(ym**two+zm**two)/(rai**two))
             bxy1(j,k)=zero
