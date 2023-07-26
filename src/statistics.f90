@@ -252,7 +252,7 @@ contains
     integer :: ierror
 
     if (flag_read) then
-       ! There was a check for nvisu = 1 before
+       ! Here, nstat = 1 (checked in the subroutine restart_statistic)
        call decomp_2d_read_one(1, array, stat_dir, filename, io_statistics, reduce_prec=.false.)
     else
        call decomp_2d_write_one(1, array, stat_dir, filename, 1, io_statistics, reduce_prec=.false.)
