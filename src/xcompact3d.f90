@@ -234,7 +234,7 @@ subroutine init_xcompact3d()
 
   if ((iibm.eq.2).or.(iibm.eq.3)) then
      call genepsi3d(ep1)
-  else if ((iibm.eq.1).or.(iibm.eq.3)) then
+  else if (iibm.eq.1) then
      call body(ux1,uy1,uz1,ep1)
   endif
 
