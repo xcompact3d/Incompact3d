@@ -407,7 +407,7 @@ subroutine parameter(input_i3d)
        endif
      endif
      !
-     if (ilesmod == 0) then ! Non-zero enables LES
+     if (ilesmod.ne.0) then
        write(*,*) '                   : DNS'
      else
        if (jles==1) then
@@ -598,6 +598,8 @@ subroutine parameter_defaults()
   smagwalldamp=1
   nSmag=1
   iconserv=0
+  smagcst=0.15
+  maxdsmagcst=0.3
 
   !! IBM stuff
   nraf = 0

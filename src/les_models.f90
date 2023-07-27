@@ -76,7 +76,7 @@ contains
 #ifdef ADIOS2
     call decomp_2d_open_io(io_turb, turb_dir, decomp_2d_write_mode)
 #endif
-    
+
   end subroutine init_explicit_les
   subroutine finalise_explicit_les()
 
@@ -299,9 +299,11 @@ contains
       call MPI_ALLREDUCE(srtmax_loc,srtmax,1,real_type,MPI_MAX,MPI_COMM_WORLD,ierr)
       call MPI_ALLREDUCE(nutmax_loc,nutmax,1,real_type,MPI_MAX,MPI_COMM_WORLD,ierr)
 
-      if (nrank==0) then 
-         write(*,*) "smag srt_smag min max= ", srtmin, srtmax  
-         write(*,*) "smag nut1     min max= ", nutmin, nutmax
+      if (mod(itime, ilist) == 0) then
+         if (nrank==0) then 
+            write(*,*) "smag srt_smag min max= ", srtmin, srtmax  
+            write(*,*) "smag nut1     min max= ", nutmin, nutmax
+         endif
       endif
     endif
 
@@ -401,6 +403,8 @@ contains
        tc1 = uz1
     endif
 
+    if (itime.eq.ifirst) call smag(nut1,ux1,uy1,uz1)
+
     uxx1 = ta1 * ta1
     uyy1 = tb1 * tb1
     uzz1 = tc1 * tc1
@@ -423,7 +427,7 @@ contains
     call filx(uxz1f, uxz1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,ubcx*ubcz) !ux1*uz1
     call filx(uyz1f, uyz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcy*ubcz) !uy1*uz1
 
-    if (mod(itime, ioutput) == 0) then
+    if (mod(itime, ilist) == 0) then
        if (nrank==0) write(*,*) "filx ux= ", maxval(ta1), maxval(ux1f), maxval(ta1) - maxval(ux1f)
     endif
 
@@ -462,7 +466,7 @@ contains
     call fily(uxz2f, th2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,ubcx*ubcz) !ux2*uz2
     call fily(uyz2f, ti2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,ubcy*ubcz) !uy2*uz2
 
-    if (mod(itime, ioutput) == 0) then
+    if (mod(itime, ilist) == 0) then
        if (nrank==0) write(*,*) "fily ux= ", maxval(ta2), maxval(ux2f), maxval(ta2) - maxval(ux2f)
     endif
 
@@ -504,7 +508,7 @@ contains
     call filz(uxz3f, th3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,ubcx*ubcz) !ux3*uz3
     call filz(uyz3f, ti3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,ubcy*ubcz) !uy3*uz3
 
-    if (mod(itime, ioutput) == 0) then
+    if (mod(itime, ilist) == 0) then
        if (nrank==0) write(*,*) "filz ux= ", maxval(ta3), maxval(ux3f), maxval(ta3) - maxval(ux3f)
     endif
 
@@ -691,7 +695,7 @@ contains
     call filx(axz1f, axz1, di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,zero)
     call filx(ayz1f, ayz1, di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,zero)
 
-    if (mod(itime, ioutput) == 0) then
+    if (mod(itime, ilist) == 0) then
        if (nrank==0) write(*,*) "filx axx1= ", maxval(axx1), maxval(axx1f), maxval(axx1) - maxval(axx1f)
     endif
 
@@ -719,7 +723,7 @@ contains
     call fily(axz2f, te2, di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,zero)
     call fily(ayz2f, tf2, di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,zero)
 
-    if (mod(itime, ioutput) == 0) then
+    if (mod(itime, ilist) == 0) then
        if (nrank==0) write(*,*) "fily axx2= ", maxval(ta2), maxval(axx2f), maxval(ta2) - maxval(axx2f)
     endif
 
@@ -751,7 +755,7 @@ contains
     call filz(axz3f, te3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,zero)
     call filz(ayz3f, tf3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,zero)
 
-    if (mod(itime, ioutput) == 0) then
+    if (mod(itime, ilist) == 0) then
        if (nrank==0) write(*,*) "filz axx3= ", maxval(ta3), maxval(axx3f), maxval(ta3) - maxval(axx3f)
     endif
 
@@ -815,7 +819,7 @@ contains
     do k = 1, xsize(3)
        do j = 1, xsize(2)
           do i = 1, xsize(1)
-             if (smagC1(i, j, k).gt. maxdsmagcst) smagC1(i, j, k) = zero
+             if (smagC1(i, j, k).gt. maxdsmagcst) smagC1(i, j, k) = maxdsmagcst!zero
              if (smagC1(i, j, k).lt. 0.0) smagC1(i, j, k) = zero
           enddo
        enddo
@@ -830,7 +834,7 @@ contains
     call transpose_y_to_z(smagC2f, ta3)
     call filz(smagC3f, ta3, di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,zero)
 
-    if (mod(itime, ioutput) == 0) then
+    if (mod(itime, ilist) == 0) then
        if (nrank==0) write(*,*) "filx smagC1= ", maxval(smagC1), maxval(smagC1f), maxval(smagC1) - maxval(smagC1f)
        if (nrank==0) write(*,*) "fily smagC1= ", maxval(ta2), maxval(smagC2f), maxval(ta2) - maxval(smagC2f)
        if (nrank==0) write(*,*) "filz smagC1= ", maxval(ta3), maxval(smagC3f), maxval(ta3) - maxval(smagC3f)
@@ -876,7 +880,7 @@ contains
     enddo
     call transpose_y_to_x(nut2, nut1)
 
-    if (mod(itime,itest)==0) then
+    if (mod(itime,ilist)==0) then
        !if (nrank==0) write(*,*) "dsmagc init   min max= ", minval(smagC1), maxval(smagC1)
        if (nrank==0) write(*,*) "dsmagc final  min max= ", minval(dsmagcst1), maxval(dsmagcst1)
        if (nrank==0) write(*,*) "dsmag nut1    min max= ", minval(nut1), maxval(nut1)
@@ -1062,9 +1066,11 @@ contains
   enddo
   call transpose_y_to_x(nut2, nut1)
 
-  if (nrank==0) write(*,*) "WALE SS min max= ", minval(srt_wale), maxval(srt_wale)
-  if (nrank==0) write(*,*) "WALE SdSd min max= ", minval(srt_wale3), maxval(srt_wale3)
-  if (nrank==0) write(*,*) "WALE nut1     min max= ", minval(nut1), maxval(nut1)
+  if (mod(itime, ilist) == 0) then
+     if (nrank==0) write(*,*) "WALE SS min max= ", minval(srt_wale), maxval(srt_wale)
+     if (nrank==0) write(*,*) "WALE SdSd min max= ", minval(srt_wale3), maxval(srt_wale3)
+     if (nrank==0) write(*,*) "WALE nut1     min max= ", minval(nut1), maxval(nut1)
+  endif
 
   if (mod(itime, ioutput).eq.0) then
 
