@@ -598,6 +598,8 @@ subroutine parameter_defaults()
   smagwalldamp=1
   nSmag=1
   iconserv=0
+  smagcst=0.15
+  maxdsmagcst=0.3
 
   !! IBM stuff
   nraf = 0
