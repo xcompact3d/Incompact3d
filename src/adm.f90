@@ -22,6 +22,7 @@ type ActuatorDiscType
     real(mytype) :: UF                  ! Disc-averaged velocity -- filtered
     real(mytype) :: YawAng              ! Rotor yaw angle (in degrees, with respect to y-axis)
     real(mytype) :: TiltAng             ! Rotor tilt angle (in degrees, with respect to z-axis)
+    real(mytype) :: Area
     real(mytype) :: Power
     real(mytype) :: Thrust
     real(mytype) :: Udisc_ave=0.0_mytype
@@ -84,6 +85,7 @@ contains
             ActuatorDisc(idisc)%RotN(1)=cos(ActuatorDisc(idisc)%YawAng*conrad)*cos(ActuatorDisc(idisc)%TiltAng*conrad)  
             ActuatorDisc(idisc)%RotN(2)=sin(ActuatorDisc(idisc)%TiltAng*conrad)
             ActuatorDisc(idisc)%RotN(3)=sin(ActuatorDisc(idisc)%YawAng*conrad)  
+            ActuatorDisc(idisc)%Area=pi*(ActuatorDisc(idisc)%D**2._mytype)/4._mytype
          enddo
          close(15)
           
@@ -104,7 +106,7 @@ contains
                   do i=1,xsize(1)
                      xmesh=(xstart(1)+i-1-1)*dx
                      ! Compute distance of mesh node to centre of disc 
-                     ! [Quick fix to simulate a plate: set deltaz to zero]
+                     ! [Quick fix to simulate a plate: set deltaz to zero and modify area]
                      deltax=xmesh-actuatordisc(idisc)%COR(1)
                      deltay=ymesh-actuatordisc(idisc)%COR(2)
                      deltaz=zmesh-actuatordisc(idisc)%COR(3)
@@ -135,7 +137,7 @@ contains
             !if (nrank==0) then
             !   write(*,*) 'Disc thickness :', disc_thick
             !   write(*,*) 'Total Gamma volume: ', GammaDisc_tot*dx*dy*dz
-            !   write(*,*) 'Aprox. disc volume: ', pi*actuatordisc(idisc)%D**2.0/4.0*disc_thick
+            !   write(*,*) 'Approx. disc volume: ', actuatordisc(idisc)%Area*disc_thick
             !endif
          enddo
 
@@ -216,10 +218,8 @@ contains
          ! Compute local thrust coefficient
          CTprime=actuatordisc(idisc)%C_T/(1-actuatordisc(idisc)%alpha)**2.
          ! Compute power and thrust (a power coefficient may be considered here)
-         actuatordisc(idisc)%Thrust=0.5_mytype*rho_air*CTprime*actuatordisc(idisc)%UF**2.0_mytype&
-                                   *pi*actuatordisc(idisc)%D**2._mytype/4._mytype
-         actuatordisc(idisc)%Power =0.5_mytype*rho_air*CTprime*actuatordisc(idisc)%UF**2.0_mytype*actuatordisc(idisc)%UF&
-                                   *pi*actuatordisc(idisc)%D**2._mytype/4._mytype
+         actuatordisc(idisc)%Thrust=0.5_mytype*rho_air*CTprime*actuatordisc(idisc)%UF**2.0_mytype*actuatordisc(idisc)%Area
+         actuatordisc(idisc)%Power =actuatordisc(idisc)%Thrust*actuatordisc(idisc)%UF
          ! Distribute thrust force
          Fdiscx(:,:,:)=Fdiscx(:,:,:)-actuatordisc(idisc)%Thrust*GammaDisc(:,:,:,idisc)*actuatordisc(idisc)%RotN(1)/(dx*dy*dz)
          Fdiscy(:,:,:)=Fdiscy(:,:,:)-actuatordisc(idisc)%Thrust*GammaDisc(:,:,:,idisc)*actuatordisc(idisc)%RotN(2)/(dx*dy*dz)
