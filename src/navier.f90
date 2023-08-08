@@ -1345,9 +1345,7 @@ contains
     !LOCALS
     real(mytype)                                                        :: qm      !flow rate
     real(mytype)                                                        :: ym,zm,yc,zc,r
-    real(mytype)                                                        :: ncount
-    integer                                                             :: j,i,k,code
-    character(len=30)                                                   :: filename
+    integer                                                             :: j,i,k
     integer, save                                                       :: local_io_unit=-1
 
     yc = yly/two
@@ -1367,11 +1365,11 @@ contains
     endif
 
     !Correction
-    do j=1,xsize(2)
-        if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
-        if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
-        do k=1,xsize(3)
-            zm=dz*real(xstart(3)-1+k-1,mytype)-zc
+    do k=1,xsize(3)
+        zm=dz*real(xstart(3)-1+k-1,mytype)-zc
+        do j=1,xsize(2)
+            if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
+            if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
             r=sqrt(ym*ym+zm*zm)
             do i=1,xsize(1)
                 if (r.le.rai.and.ep(i,j,k).eq.0) then
@@ -1417,9 +1415,8 @@ contains
     !LOCALS
     real(mytype)                                                      :: qv,qm !volumetric averaged values
     real(mytype)                                                      :: ym,zm,yc,zc,r
-    real(mytype)                                                      :: ncount
     real(mytype)                                                      :: phi_out
-    integer                                                           :: is,j,i,k,code
+    integer                                                           :: is,j,i,k
     character(len=30)                                                 :: filename
     integer, allocatable, save, dimension(:)                          :: local_io_unit
 
@@ -1456,11 +1453,11 @@ contains
     endif
 
     !Correction
-    do j=1,xsize(2)
-        if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
-        if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
-        do k=1,xsize(3)
-            zm=dz*real(xstart(3)-1+k-1,mytype)-zc
+    do k=1,xsize(3)
+        zm=dz*real(xstart(3)-1+k-1,mytype)-zc
+        do j=1,xsize(2)
+            if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
+            if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
             r=sqrt(ym*ym+zm*zm)
             do i=1,xsize(1)
                 if (r.le.rai.and.ep(i,j,k).eq.0) then
