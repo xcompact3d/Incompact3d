@@ -45,12 +45,14 @@ contains
 !############################################################################
   subroutine geomcomplex(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
 
-    USE param, ONLY : itype, itype_cyl, itype_hill, itype_channel,itype_sandbox
+    USE param, ONLY : itype, itype_cyl, itype_hill, itype_channel,&
+                      itype_sandbox, itype_pipe
     USE decomp_2d, ONLY : mytype
     USE cyl, ONLY : geomcomplex_cyl
     USE hill, ONLY : geomcomplex_hill
     USE channel, ONLY : geomcomplex_channel
     USE sandbox, ONLY : geomcomplex_sandbox
+    USE pipe, ONLY : geomcomplex_pipe
 
     IMPLICIT NONE
 
@@ -75,6 +77,10 @@ contains
     ELSEIF (itype.EQ.itype_sandbox) THEN
      
        CALL  geomcomplex_sandbox(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, yp, remp)
+
+    ELSEIF (itype.EQ.itype_pipe) THEN
+
+       CALL geomcomplex_pipe(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
 
     ENDIF
 
