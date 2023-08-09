@@ -1311,22 +1311,26 @@ contains
 
     implicit none
     real(mytype),dimension(xsize(1),xsize(2),xsize(3))  :: ux,uy,uz,ep
+    real(mytype)                                        :: ncount
     integer                                             :: is
 
+    !Compute total # of inner (fluid) mesh nodes
+    ncount=pipe_fluid_nodes(ep)
+
     !Bulk velocity correction
-    call pipe_bulk_u(ux,uy,uz,ep,one)
+    call pipe_bulk_u(ux,uy,uz,ep,one,ncount)
 
     !Bulk temperature correction
     if (numscalar.ne.0) then
         do is=1,numscalar
-            call pipe_bulk_phi(phi1(:,:,:,is),ux,ep,is,one)
+            call pipe_bulk_phi(phi1(:,:,:,is),ux,ep,is,one,ncount)
         enddo
     endif
 
   end subroutine pipe_bulk
   !********************************************************************
   !
-  subroutine pipe_bulk_u(ux,uy,uz,ep,ub_constant)
+  subroutine pipe_bulk_u(ux,uy,uz,ep,ub_constant,ncount)
   !
   !********************************************************************
 
@@ -1342,6 +1346,7 @@ contains
     real(mytype),intent(inout),dimension(xsize(1),xsize(2),xsize(3))    :: ux,uy,uz
     real(mytype),intent(in   ),dimension(xsize(1),xsize(2),xsize(3))    :: ep
     real(mytype),intent(in   )                                          :: ub_constant !bulk velocity value
+    real(mytype)                                                        :: ncount
     !LOCALS
     real(mytype)                                                        :: qm      !flow rate
     real(mytype)                                                        :: ym,zm,yc,zc,r
@@ -1357,7 +1362,7 @@ contains
 
     !--------------------------- Bulk Velocity ---------------------------
     !Calculate loss of streamwise mean pressure gradient
-    call pipe_volume_avg(ux,qm,ep)
+    call pipe_volume_avg(ux,qm,ep,ncount)
     if (nrank==0) then
        if (mod(itime, ilist)==0) print *,'Velocity:'
        if (mod(itime, ilist)==0) print *,'    Bulk velocity before',qm
@@ -1387,7 +1392,7 @@ contains
 
     !Check new bulk velocity
     if (mod(itime, ilist)==0) then
-        call pipe_volume_avg(ux,qm,ep)
+        call pipe_volume_avg(ux,qm,ep,ncount)
         if (nrank==0) print *,'    Bulk velocity  after',qm
     endif
     !
@@ -1396,7 +1401,7 @@ contains
   end subroutine pipe_bulk_u
   !********************************************************************
   !
-  subroutine pipe_bulk_phi(phi,ux,ep,is,phib_constant)
+  subroutine pipe_bulk_phi(phi,ux,ep,is,phib_constant,ncount)
   !
   !********************************************************************
 
@@ -1412,6 +1417,7 @@ contains
     real(mytype),intent(inout),dimension(xsize(1),xsize(2),xsize(3))  :: phi,ux
     real(mytype),intent(in   ),dimension(xsize(1),xsize(2),xsize(3))  :: ep
     real(mytype),intent(in   )                                        :: phib_constant !bulk temperature value
+    real(mytype)                                                      :: ncount
     !LOCALS
     real(mytype)                                                      :: qv,qm !volumetric averaged values
     real(mytype)                                                      :: ym,zm,yc,zc,r
@@ -1444,8 +1450,8 @@ contains
 
     !--------------------------- Bulk Temperature ---------------------------
     !                  with corrected streamwise velocity
-    call pipe_volume_avg(ux*phi,qm,ep)
-    call pipe_volume_avg(ux*ux ,qv,ep)
+    call pipe_volume_avg(ux*phi,qm,ep,ncount)
+    call pipe_volume_avg(ux*ux ,qv,ep,ncount)
     if (nrank.eq.0) then
         if (mod(itime, ilist)==0) write(*,256) is
         if (mod(itime, ilist)==0) print *,'         Bulk phi before',qm
@@ -1471,7 +1477,7 @@ contains
 
     !Check new bulk temperature
     if (mod(itime, ilist)==0) then
-        call pipe_volume_avg(ux*phi,qm,ep)
+        call pipe_volume_avg(ux*phi,qm,ep,ncount)
         if (nrank==0) print *,'          Bulk phi after',qm
     endif
     !
@@ -1480,7 +1486,7 @@ contains
   end subroutine pipe_bulk_phi
   !********************************************************************
   !
-  subroutine pipe_volume_avg(var,qm,ep)
+  subroutine pipe_volume_avg(var,qm,ep,ncount)
   !
   !********************************************************************
 
@@ -1495,8 +1501,8 @@ contains
     !INPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3))  :: var,ep
     real(mytype)                                        :: qm
-    !LOCALS
     real(mytype)                                        :: ncount
+    !LOCALS
     real(mytype)                                        :: ym,yc,zm,zc,r
     integer                                             :: i,j,k,code
 
@@ -1505,7 +1511,6 @@ contains
     yc=yly/two
     zc=zlz/two
     qm=zero
-    ncount=zero
     do k=1,xsize(3)
         zm=dz*real(xstart(3)-1+k-1,mytype)-zc
         do j=1,xsize(2)
@@ -1515,17 +1520,57 @@ contains
             do i=1,xsize(1)
                 if (r.le.rai.and.ep(i,j,k).eq.0) then
                     qm=qm+var(i,j,k)
-                    ncount=ncount+one
                 endif
             enddo
         enddo
     enddo
     call MPI_ALLREDUCE(MPI_IN_PLACE,qm,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    call MPI_ALLREDUCE(MPI_IN_PLACE,ncount,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     qm=qm/ncount
     !
     return
 
   end subroutine pipe_volume_avg
+  !***************************************************************************
+  !
+  function pipe_fluid_nodes(ep) !Compute total # of inner (fluid) mesh nodes
+  !
+  !***************************************************************************
+
+    use param
+    use variables
+    use decomp_2d
+    use MPI
+    use ibm_param, only: rai
+
+    implicit none
+
+    !INPUTS
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3))  :: ep
+    real(mytype)                                        :: pipe_fluid_nodes
+    !LOCALS
+    real(mytype)                                        :: ym,yc,zm,zc,r
+    integer                                             :: i,j,k,code
+
+    !Compute # of inner mesh nodes (r < rai)
+    yc=yly/two
+    zc=zlz/two
+    pipe_fluid_nodes=zero
+    do k=1,xsize(3)
+        zm=dz*real(xstart(3)-1+k-1,mytype)-zc
+        do j=1,xsize(2)
+            if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
+            if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
+            r=sqrt(ym*ym+zm*zm)
+            do i=1,xsize(1)
+                if (r.le.rai.and.ep(i,j,k).eq.0) &
+                    pipe_fluid_nodes=pipe_fluid_nodes+one
+            enddo
+        enddo
+    enddo
+    call MPI_ALLREDUCE(MPI_IN_PLACE,pipe_fluid_nodes,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    !
+    return
+
+  end function pipe_fluid_nodes
 
 endmodule navier
