@@ -1304,18 +1304,21 @@ contains
   !
   !********************************************************************
 
-    use param
-    use decomp_2d
-    use variables
-    use var,  only: phi1
+    use param, only: one
+    use decomp_2d, only: mytype, xsize
+    use variables, only: numscalar
+    use var, only: ta1, phi1
 
     implicit none
     real(mytype),dimension(xsize(1),xsize(2),xsize(3))  :: ux,uy,uz,ep
-    real(mytype)                                        :: ncount
+    real(mytype),save                                   :: ncount = -one
     integer                                             :: is
 
-    !Compute total # of inner (fluid) mesh nodes
-    ncount=pipe_fluid_nodes(ep)
+    !Compute the number of cells inside the pipe at the beginning
+    if (ncount < 0) then
+       ta1(:,:,:) = one
+       call pipe_volume_avg(ta1,ncount,ep,one)
+    endif
 
     !Bulk velocity correction
     call pipe_bulk_u(ux,uy,uz,ep,one,ncount)
@@ -1346,7 +1349,7 @@ contains
     real(mytype),intent(inout),dimension(xsize(1),xsize(2),xsize(3))    :: ux,uy,uz
     real(mytype),intent(in   ),dimension(xsize(1),xsize(2),xsize(3))    :: ep
     real(mytype),intent(in   )                                          :: ub_constant !bulk velocity value
-    real(mytype)                                                        :: ncount
+    real(mytype),intent(in   )                                          :: ncount !numer of cells inside the pipe
     !LOCALS
     real(mytype)                                                        :: qm      !flow rate
     real(mytype)                                                        :: ym,zm,yc,zc,r
@@ -1417,7 +1420,7 @@ contains
     real(mytype),intent(inout),dimension(xsize(1),xsize(2),xsize(3))  :: phi,ux
     real(mytype),intent(in   ),dimension(xsize(1),xsize(2),xsize(3))  :: ep
     real(mytype),intent(in   )                                        :: phib_constant !bulk temperature value
-    real(mytype)                                                      :: ncount
+    real(mytype),intent(in   )                                        :: ncount !numer of cells inside the pipe
     !LOCALS
     real(mytype)                                                      :: qv,qm !volumetric averaged values
     real(mytype)                                                      :: ym,zm,yc,zc,r
@@ -1500,8 +1503,8 @@ contains
 
     !INPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3))  :: var,ep
-    real(mytype)                                        :: qm
-    real(mytype)                                        :: ncount
+    real(mytype),intent(out)                            :: qm
+    real(mytype),intent(in)                             :: ncount
     !LOCALS
     real(mytype)                                        :: ym,yc,zm,zc,r
     integer                                             :: i,j,k,code
@@ -1530,47 +1533,5 @@ contains
     return
 
   end subroutine pipe_volume_avg
-  !***************************************************************************
-  !
-  function pipe_fluid_nodes(ep) !Compute total # of inner (fluid) mesh nodes
-  !
-  !***************************************************************************
-
-    use param
-    use variables
-    use decomp_2d
-    use MPI
-    use ibm_param, only: rai
-
-    implicit none
-
-    !INPUTS
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3))  :: ep
-    real(mytype)                                        :: pipe_fluid_nodes
-    !LOCALS
-    real(mytype)                                        :: ym,yc,zm,zc,r
-    integer                                             :: i,j,k,code
-
-    !Compute # of inner mesh nodes (r < rai)
-    yc=yly/two
-    zc=zlz/two
-    pipe_fluid_nodes=zero
-    do k=1,xsize(3)
-        zm=dz*real(xstart(3)-1+k-1,mytype)-zc
-        do j=1,xsize(2)
-            if (istret.eq.0) ym=real(j+xstart(2)-1-1,mytype)*dy-yc
-            if (istret.ne.0) ym=yp(j+xstart(2)-1)-yc
-            r=sqrt(ym*ym+zm*zm)
-            do i=1,xsize(1)
-                if (r.le.rai.and.ep(i,j,k).eq.0) &
-                    pipe_fluid_nodes=pipe_fluid_nodes+one
-            enddo
-        enddo
-    enddo
-    call MPI_ALLREDUCE(MPI_IN_PLACE,pipe_fluid_nodes,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    !
-    return
-
-  end function pipe_fluid_nodes
 
 endmodule navier
