@@ -158,7 +158,7 @@ contains
     call alloc_x(ep1)
     ep1 = zero
     if (ilmn) then
-      call alloc_x(mu1, opt_global=.true.)
+      call alloc_x(mu1)
       mu1 = one
     endif
 
@@ -1341,7 +1341,7 @@ contains
     if (.not.ilmn) then
        nrhotime = 1 !! Save some space
     endif
-    allocate(rho1(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),nrhotime)) !Need to store old density values to extrapolate drhodt
+    allocate(rho1(xsize(1),xsize(2),xsize(3),nrhotime)) !Need to store old density values to extrapolate drhodt
     rho1=one
     call alloc_y(rho2)
     rho2=zero
