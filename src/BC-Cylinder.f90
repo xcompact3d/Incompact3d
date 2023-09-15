@@ -26,6 +26,7 @@ contains
     use param, only : one, two, ten
     use ibm_param
     use dbg_schemes, only: sqrt_prec
+    use actuator_line_model_utils, only: EllipsoidalRadius
 
     implicit none
 
@@ -35,15 +36,20 @@ contains
     real(mytype)               :: dx
     real(mytype)               :: remp
     integer                    :: i,j,k
-    real(mytype)               :: xm,ym,r,rads2,kcon
+    real(mytype)               :: xm,ym,zm,r,rads2,kcon
     real(mytype)               :: zeromach
-    real(mytype)               :: cexx,ceyy,dist_axi
+    real(mytype)               :: cexx,ceyy,cezz,dist_axi
+    real(mytype)               :: point(3), ce(3), orientation(4), shape(3)
 
     zeromach=one
     do while ((one + zeromach / two) .gt. one)
        zeromach = zeromach/two
     end do
     zeromach = ten*zeromach
+
+    orientation=[1.0, 0.0, 0.0, 0.0]
+    shape=[1.0, 1.0, 1.0]
+
 
     ! Intitialise epsi
     epsi(:,:,:)=zero
@@ -55,23 +61,31 @@ contains
     if (t.ne.0.) then
        cexx=cex+ubcx*(t-ifirst*dt)
        ceyy=cey+ubcy*(t-ifirst*dt)
+       cezz=cez+ubcz*(t-ifirst*dt)
     else
        cexx=cex
        ceyy=cey
+       cezz=cez
     endif
+
+    ce=[cexx, ceyy, cezz]
     !
     ! Define adjusted smoothing constant
 !    kcon = log((one-0.0001)/0.0001)/(smoopar*0.5*dx) ! 0.0001 is the y-value, smoopar: desired number of affected points 
-!
+!   
     do k=nzi,nzf
+      zm=(real(xstart(3)+k-2,mytype))*dz
        do j=nyi,nyf
           ym=yp(j)
           do i=nxi,nxf
              xm=real(i-1,mytype)*dx
-             r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two)
+             point=[xm, ym, zm]
+             call EllipsoidalRadius(point, ce, orientation, shape, r)
+            !  r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two+(zm-cezz)**two)
              if (r-ra.gt.zeromach) then
                 cycle
              endif
+             write(*,*) i, j, k
              epsi(i,j,k)=remp
           enddo
        enddo

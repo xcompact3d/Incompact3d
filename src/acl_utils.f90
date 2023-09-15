@@ -130,6 +130,133 @@ contains
 
     end subroutine QuatRot
 
+
+
+    subroutine NormalizeQuaternion(quaternion) 
+      real(mytype), intent(in) :: quaternion(4)
+      real(mytype) :: normalizedQuaternion(4)
+    
+      ! Compute the magnitude of the quaternion
+      real(mytype) :: magnitude
+      magnitude = sqrt(quaternion(1)**2 + quaternion(2)**2 + quaternion(3)**2 + quaternion(4)**2)
+    
+      ! Normalize the quaternion
+      normalizedQuaternion = quaternion / magnitude
+    
+    end subroutine NormalizeQuaternion
+
+    subroutine QuaternionConjugate(q)
+      real(mytype), intent(inout) :: q(4)
+
+      q = [q(1), -q(2), -q(3), -q(4)]
+    end subroutine
+
+
+    subroutine QuaternionMultiply(q1, q2, result)
+      real(mytype), intent(in) :: q1(4), q2(4)
+      real(mytype), intent(out) :: result(4)
+      
+      result(1) = q1(1) * q2(1) - q1(2) * q2(2) - q1(3) * q2(3) - q1(4) * q2(4)
+      result(2) = q1(1) * q2(2) + q1(2) * q2(1) + q1(3) * q2(4) - q1(4) * q2(3)
+      result(3) = q1(1) * q2(3) - q1(2) * q2(4) + q1(3) * q2(1) + q1(4) * q2(2)
+      result(4) = q1(1) * q2(4) + q1(2) * q2(3) - q1(3) * q2(2) + q1(4) * q2(1)
+    end subroutine QuaternionMultiply
+
+
+    subroutine RotatePoint(point, quaternion, rotatedPoint)
+      real(mytype), intent(in) :: point(3), quaternion(4)
+      real(mytype), intent(out) :: rotatedPoint(3)
+      real(mytype) :: conjugateQuaternion(4)
+      real(mytype) :: resultQuaternion(4)
+      real(mytype) :: rotatedPointQuaternion(4)
+
+      ! Convert the point to a quaternion
+      real(mytype) :: pointQuaternion(4)
+      pointQuaternion(1) = 0.0D0
+      pointQuaternion(2:4) = point(:)
+    
+      ! Perform the rotation
+      
+      conjugateQuaternion = [quaternion(1), -quaternion(2), -quaternion(3), -quaternion(4)]
+    
+      call QuaternionMultiply(quaternion, pointQuaternion, resultQuaternion)
+      call QuaternionMultiply(resultQuaternion, conjugateQuaternion, rotatedPointQuaternion)
+    
+      ! Convert the rotated quaternion back to a 3D point
+      rotatedPoint = rotatedPointQuaternion(2:4)
+    end subroutine RotatePoint
+
+    subroutine EllipsoidalRadius(point, centre, orientation, shape, radius)
+      real(mytype), intent(in) :: point(3), centre(3), orientation(4), shape(3)
+      real(mytype), intent(out) :: radius
+      real(mytype) :: trans_point(3),rotated_point(3),scaled_point(3)
+      integer :: i
+
+      !translate point to body frame
+      trans_point = point-centre
+
+      call QuaternionConjugate(orientation)
+
+      !rotate point into body frame (using inverse(conjugate) of orientation)
+      call RotatePoint(trans_point, orientation, rotated_point)
+
+      do i = 1,3
+         scaled_point(i)=rotated_point(i)/shape(i)
+      end do 
+
+      radius=sqrt_prec(scaled_point(1)**two+scaled_point(2)**two+scaled_point(3)**two)
+
+   end subroutine
+
+    
+    
+    
+
+    subroutine CrossProduct(a, b, result)
+      real(mytype), intent(in) :: a(3), b(3)
+      real(mytype), intent(inout) :: result(3)
+    
+      result(1) = a(2) * b(3) - a(3) * b(2)
+      result(2) = a(3) * b(1) - a(1) * b(3)
+      result(3) = a(1) * b(2) - a(2) * b(1)
+    end subroutine CrossProduct
+    
+    subroutine CalculatePointVelocity(point, center, angularVelocity, velocity)
+      real(mytype), intent(in) :: point(3), center(3), angularVelocity(3)
+      real(mytype), intent(out) :: velocity(3)
+      real(mytype) :: crossed(3)
+      ! Compute the distance vector from the center to the point
+      real(mytype) :: distance(3)
+      distance = point - center
+    
+      ! Compute the cross product of angular velocity and distance vector
+      
+      call CrossProduct(angularVelocity, distance, crossed)
+    
+      ! Calculate the velocity at the point
+      velocity = crossed
+    end subroutine CalculatePointVelocity
+    
+    
+
+   !  subroutine CalculatePointVelocity(point, center, angularVelocity, velocity)
+   !    real(mytype), intent(in) :: point(3), center(3), angularVelocity(3)
+   !    real(mytype), intent(out) :: velocity(3)
+   !    real(mytype) :: distance(3)
+   !    real(mytype) :: crossProduct(3)
+
+    
+   !    ! Compute the distance vector from the center to the point
+   !    distance = point - center
+    
+   !    ! Compute the cross product of angular velocity and distance vector
+   !    call CrossProduct(angularVelocity, distance, crossProduct)
+    
+   !    ! Calculate the velocity at the point
+   !    velocity = crossProduct
+   !  end subroutine CalculatePointVelocity
+    
+
     !*******************************************************************************
     !
     subroutine IDW(Ncol,Xcol,Ycol,Zcol,Fxcol,Fycol,Fzcol,p,Xmesh,Ymesh,Zmesh,Fxmesh,Fymesh,Fzmesh)
