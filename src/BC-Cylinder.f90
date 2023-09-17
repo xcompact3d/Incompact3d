@@ -26,7 +26,7 @@ contains
     use param, only : one, two, ten
     use ibm_param
     use dbg_schemes, only: sqrt_prec
-    use actuator_line_model_utils, only: EllipsoidalRadius
+   !  use actuator_line_model_utils, only: EllipsoidalRadius
 
     implicit none
 
@@ -80,8 +80,8 @@ contains
           do i=nxi,nxf
              xm=real(i-1,mytype)*dx
              point=[xm, ym, zm]
-             call EllipsoidalRadius(point, ce, orientation, shape, r)
-            !  r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two+(zm-cezz)**two)
+            !  call EllipsoidalRadius(point, ce, orientation, shape, r)
+             r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two+(zm-cezz)**two)
              if (r-ra.gt.zeromach) then
                 cycle
              endif

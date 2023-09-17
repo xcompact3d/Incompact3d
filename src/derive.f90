@@ -18,7 +18,7 @@ subroutine derx_00(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz):: sx
   real(mytype), dimension(nx):: ffx,fsx,fwx
-  real(mytype)                      :: lind
+  integer                      :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -79,7 +79,7 @@ subroutine derx_11(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz):: sx
   real(mytype), dimension(nx):: ffx,fsx,fwx
-  real(mytype)                      :: lind
+  integer                     :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -152,7 +152,7 @@ subroutine derx_12(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz):: sx
   real(mytype), dimension(nx):: ffx,fsx,fwx
-  real(mytype)                      :: lind
+  integer                    :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -222,7 +222,7 @@ subroutine derx_21(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz):: sx
   real(mytype), dimension(nx):: ffx,fsx,fwx
-  real(mytype)                      :: lind
+  integer                        :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -292,7 +292,7 @@ subroutine derx_22(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz):: sx
   real(mytype), dimension(nx):: ffx,fsx,fwx
-  real(mytype)                      :: lind
+  integer                      :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -1365,7 +1365,7 @@ subroutine derxx_00(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: sx
   real(mytype),  dimension(nx):: sfx,ssx,swx
-  real(mytype)                      :: lind
+  integer                      :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -1492,7 +1492,7 @@ subroutine derxx_11(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: sx
   real(mytype),  dimension(nx):: sfx,ssx,swx
-  real(mytype)                      :: lind
+  integer                       :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -1677,7 +1677,7 @@ subroutine derxx_12(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: sx
   real(mytype),  dimension(nx):: sfx,ssx,swx
-  real(mytype)                      :: lind
+  integer                     :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -1833,7 +1833,7 @@ subroutine derxx_21(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: sx
   real(mytype),  dimension(nx):: sfx,ssx,swx
-  real(mytype)                      :: lind
+  integer                       :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -1989,7 +1989,7 @@ subroutine derxx_22(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: sx
   real(mytype),  dimension(nx):: sfx,ssx,swx
-  real(mytype)                      :: lind
+  integer                        :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)

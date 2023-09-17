@@ -9,7 +9,7 @@ module actuator_line_model_utils
     use dbg_schemes, only: sqrt_prec, cos_prec, exp_prec, sin_prec
     
     implicit none
-    public QuatRot, cross, IsoKernel, AnIsoKernel, int2str
+    public QuatRot, cross, IsoKernel, AnIsoKernel, int2str, EllipsoidalRadius
 
 contains
 
@@ -145,10 +145,11 @@ contains
     
     end subroutine NormalizeQuaternion
 
-    subroutine QuaternionConjugate(q)
-      real(mytype), intent(inout) :: q(4)
+    subroutine QuaternionConjugate(q,q_c)
+      real(mytype), intent(in) :: q(4)
+      real(mytype), intent(out):: q_c(4)
 
-      q = [q(1), -q(2), -q(3), -q(4)]
+      q_c = [q(1), -q(2), -q(3), -q(4)]
     end subroutine
 
 
@@ -189,16 +190,16 @@ contains
     subroutine EllipsoidalRadius(point, centre, orientation, shape, radius)
       real(mytype), intent(in) :: point(3), centre(3), orientation(4), shape(3)
       real(mytype), intent(out) :: radius
-      real(mytype) :: trans_point(3),rotated_point(3),scaled_point(3)
+      real(mytype) :: trans_point(3),rotated_point(3),scaled_point(3),orientation_c(4)
       integer :: i
 
       !translate point to body frame
       trans_point = point-centre
 
-      call QuaternionConjugate(orientation)
+      call QuaternionConjugate(orientation,orientation_c)
 
       !rotate point into body frame (using inverse(conjugate) of orientation)
-      call RotatePoint(trans_point, orientation, rotated_point)
+      call RotatePoint(trans_point, orientation_c, rotated_point)
 
       do i = 1,3
          scaled_point(i)=rotated_point(i)/shape(i)
@@ -221,8 +222,8 @@ contains
       result(3) = a(1) * b(2) - a(2) * b(1)
     end subroutine CrossProduct
     
-    subroutine CalculatePointVelocity(point, center, angularVelocity, velocity)
-      real(mytype), intent(in) :: point(3), center(3), angularVelocity(3)
+    subroutine CalculatePointVelocity(point, center, angularVelocity, linearVelocity, velocity)
+      real(mytype), intent(in) :: point(3), center(3), angularVelocity(3), linearVelocity(3)
       real(mytype), intent(out) :: velocity(3)
       real(mytype) :: crossed(3)
       ! Compute the distance vector from the center to the point
@@ -232,9 +233,10 @@ contains
       ! Compute the cross product of angular velocity and distance vector
       
       call CrossProduct(angularVelocity, distance, crossed)
-    
+   
       ! Calculate the velocity at the point
-      velocity = crossed
+      velocity = crossed + linearVelocity
+
     end subroutine CalculatePointVelocity
     
     

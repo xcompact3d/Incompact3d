@@ -401,6 +401,7 @@ subroutine cubsplx(u,lind)
   USE decomp_2d
   USE variables
   USE ibm_param
+  USE actuator_line_model_utils
   !
   implicit none
   !
@@ -413,24 +414,29 @@ subroutine cubsplx(u,lind)
   real(mytype)                                       :: xpol,ypol       ! Position and Value of the Reconstructed Solution 
   real(mytype),dimension(10)                         :: xa,ya           ! Position and Value of the Input Data Function 
   integer                                            :: ia,na           
-  real(mytype)                                       :: lind            ! Identifying which BC to Impose
+  integer                                            :: lind            ! Identifying which BC to Impose
   real(mytype)                                       :: bcimp           ! Imposed BC 
   integer                                            :: inxi,inxf
   real(mytype)                                       :: ana_resi,ana_resf         ! Position of Boundary (Analytically)
+  real(mytype)                                       :: point(3),centre(3),angularVelocity(3),linearVelocity(3),pointVelocity(3)
+  real(mytype)                                       :: xm,ym,zm,x_pv,y_pv,z_pv
   !
   ! Initialise Arrays
   xa(:)=0.
   ya(:)=0.
   !
   ! Impose the Correct BC
-  bcimp=lind  
+!   bcimp=lind  
   !
   do k=1,xsize(3)
+   zm=real(xstart(3)+k-2,mytype)*dz
      do j=1,xsize(2)
+      ym=real(xstart(2)+j-2,mytype)*dy
         if(nobjx(j,k).ne.0)then
            ia=0
            do i=1,nobjx(j,k)          
-              !  1st Boundary
+              !  1st Boundary - I DON'T UNDERSTAND THIS XM CONVERSION.
+            xm=real(xstart(1)+i-2,mytype)*dx
               nxpif=npif
               ia=ia+1
               if (ianal.eq.0) then
@@ -439,6 +445,32 @@ subroutine cubsplx(u,lind)
               else
                  call analitic_x(j,xi(i,j,k),ana_resi,k) ! Calculate the position of BC analytically
                  xa(ia)=ana_resi
+              endif
+              point=[xm,ym,zm]
+              call CalculatePointVelocity(point, centre, angularVelocity, linearVelocity, pointVelocity)
+              vx=pointVelocity(1)
+              vy=pointVelocity(2)
+              vz=pointVelocity(3)
+              if (lind.eq.0) then
+               bcimp=zero
+              elseif (lind.eq.1) then
+               bcimp=x_pv
+              elseif (lind.eq.2) then
+               bcimp=y_pv
+              elseif (lind.eq.3) then
+               bcimp=z_pv
+              elseif (lind.eq.4) then 
+               bcimp=x_pv*x_pv
+              elseif (lind.eq.5) then
+               bcimp=y_pv*y_pv
+              elseif (lind.eq.6) then 
+               bcimp=z_pv*z_pv
+              elseif (lind.eq.7) then
+               bcimp=x_pv*y_pv 
+              elseif (lind.eq.8) then 
+               bcimp=x_pv*z_pv
+              elseif (lind.eq.9) then
+               bcimp=y_pv*z_pv
               endif
               ya(ia)=bcimp
               if(xi(i,j,k).gt.0.)then ! Immersed Object

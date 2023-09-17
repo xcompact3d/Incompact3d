@@ -229,7 +229,7 @@ subroutine filx_00(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: fisx
   real(mytype), dimension(nx) :: fiffx,fifsx,fifwx
-  real(mytype)                :: lind
+  integer                     :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -300,7 +300,7 @@ subroutine filx_11(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: fisx
   real(mytype), dimension(nx) :: fiffx,fifsx,fifwx
-  real(mytype)                      :: lind
+  integer                        :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -392,7 +392,7 @@ subroutine filx_12(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: fisx
   real(mytype), dimension(nx) :: fiffx,fifsx,fifwx
-  real(mytype)                      :: lind
+  integer                     :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -478,7 +478,7 @@ subroutine filx_21(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: fisx
   real(mytype), dimension(nx) :: fiffx,fifsx,fifwx
-  real(mytype)                      :: lind
+  integer                       :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -566,7 +566,7 @@ subroutine filx_22(tx,ux,rx,fisx,fiffx,fifsx,fifwx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: fisx
   real(mytype), dimension(nx) :: fiffx,fifsx,fifwx
-  real(mytype)                      :: lind
+  integer                      :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
