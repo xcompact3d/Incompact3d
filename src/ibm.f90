@@ -448,9 +448,9 @@ subroutine cubsplx(u,lind)
               endif
               point=[xm,ym,zm]
               call CalculatePointVelocity(point, centre, angularVelocity, linearVelocity, pointVelocity)
-              vx=pointVelocity(1)
-              vy=pointVelocity(2)
-              vz=pointVelocity(3)
+              x_pv=pointVelocity(1)
+              y_pv=pointVelocity(2)
+              z_pv=pointVelocity(3)
               if (lind.eq.0) then
                bcimp=zero
               elseif (lind.eq.1) then
