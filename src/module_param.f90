@@ -134,7 +134,7 @@ module variables
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(ny,nz):: s
        real(mytype), dimension(nx):: ff,fs,fw
-       real(mytype) :: lind
+       integer :: lind
      END SUBROUTINE DERIVATIVE_X
      SUBROUTINE DERIVATIVE_Y(t,u,r,s,ff,fs,fw,pp,nx,ny,nz,npaire,lind)
        use decomp_2d, only : mytype

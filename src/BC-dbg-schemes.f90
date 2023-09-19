@@ -411,10 +411,10 @@ contains
           enddo
        enddo
     enddo
-    call derx (dfdx1 ,fx1 ,di1,sx,ffx ,fsx ,fwx ,xsize(1),xsize(2),xsize(3),0,zero)
-    call derx (dfdxp1,fxp1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,zero)
-    call derxx (dfdxx1 ,fx1 ,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0,zero)
-    call derxx (dfdxxp1,fxp1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,zero)
+    call derx (dfdx1 ,fx1 ,di1,sx,ffx ,fsx ,fwx ,xsize(1),xsize(2),xsize(3),0,0) !zero is 0.
+    call derx (dfdxp1,fxp1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,0)
+    call derxx (dfdxx1 ,fx1 ,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0,0)
+    call derxx (dfdxxp1,fxp1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,0)
     if (nrank.eq.0) then
        write(filename,"('schemes_x',I1.1,I1.1,I1.1,I4.4)") jles,nclx1,nclxn,nx
        open(67,file=trim(filename),status='unknown',form='formatted')
@@ -692,8 +692,8 @@ contains
           enddo
        enddo
     enddo
-    call derx (dfdx1 ,fx1 ,di1,sx,ffx ,fsx ,fwx ,xsize(1),xsize(2),xsize(3),0,zero)
-    call derxx (dfdxx1 ,fx1 ,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0,zero)
+    call derx (dfdx1 ,fx1 ,di1,sx,ffx ,fsx ,fwx ,xsize(1),xsize(2),xsize(3),0,0) !zero is 0.
+    call derxx (dfdxx1 ,fx1 ,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0,0)
     if (nrank.eq.0) then
        write(filename,"('schemes_x',I1.1,I1.1,I1.1,I4.4)") jles,nclx1,nclxn,nx
        open(67,file=trim(filename),status='unknown',form='formatted')
@@ -847,10 +847,10 @@ contains
           enddo
        enddo
     enddo
-    call derx (dfdx1 ,fx1 ,di1,sx,ffx ,fsx ,fwx ,xsize(1),xsize(2),xsize(3),0,zero)
-    call derx (dfdxp1,fxp1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,zero)
-    call derxx (dfdxx1 ,fx1 ,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0,zero)
-    call derxx (dfdxxp1,fxp1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,zero)
+    call derx (dfdx1 ,fx1 ,di1,sx,ffx ,fsx ,fwx ,xsize(1),xsize(2),xsize(3),0,0) !zero is 0.
+    call derx (dfdxp1,fxp1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,0)
+    call derxx (dfdxx1 ,fx1 ,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0,0)
+    call derxx (dfdxxp1,fxp1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,0)
     if (nrank.eq.0) then
        write(filename,"('schemes_x',I1.1,I1.1,I1.1,I4.4)") jles,nclx1,nclxn,nx
        open(67,file=trim(filename),status='unknown',form='formatted')
@@ -1016,10 +1016,10 @@ contains
           enddo
        enddo
     enddo
-    call derx (dfdx1 ,fx1 ,di1,sx,ffx ,fsx ,fwx ,xsize(1),xsize(2),xsize(3),0,zero)
-    call derx (dfdxp1,fxp1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,zero)
-    call derxx (dfdxx1 ,fx1 ,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0,zero)
-    call derxx (dfdxxp1,fxp1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,zero)
+    call derx (dfdx1 ,fx1 ,di1,sx,ffx ,fsx ,fwx ,xsize(1),xsize(2),xsize(3),0,0) !zero is 0.
+    call derx (dfdxp1,fxp1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,0)
+    call derxx (dfdxx1 ,fx1 ,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0,0)
+    call derxx (dfdxxp1,fxp1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,0)
     if (nrank.eq.0) then
        write(filename,"('schemes_x',I1.1,I1.1,I1.1,I4.4)") jles,nclx1,nclxn,nx
        open(67,file=trim(filename),status='unknown',form='formatted')
@@ -1211,8 +1211,8 @@ contains
           enddo
        enddo
     enddo
-    call derx (dfdx1 ,fx1 ,di1,sx,ffx ,fsx ,fwx ,xsize(1),xsize(2),xsize(3),0,zero)
-    call derxx (dfdxx1 ,fx1 ,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0,zero)
+    call derx (dfdx1 ,fx1 ,di1,sx,ffx ,fsx ,fwx ,xsize(1),xsize(2),xsize(3),0,0) !zero is 0.
+    call derxx (dfdxx1 ,fx1 ,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0,0)
     if (nrank.eq.0) then
        write(filename,"('schemes_x',I1.1,I1.1,I1.1,I4.4)") jles,nclx1,nclxn,nx
        open(67,file=trim(filename),status='unknown',form='formatted')
