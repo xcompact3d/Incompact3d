@@ -431,9 +431,9 @@ contains
     call transpose_y_to_x(tc2,tc1) !diff+conv. terms
 
     !DIFFUSIVE TERMS IN X
-    call derxx (td1,ux1,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0,ubcx)
-    call derxx (te1,uy1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,ubcy)
-    call derxx (tf1,uz1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,ubcz)
+    call derxx (td1,ux1,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0,1) !ubcx is 1.
+    call derxx (te1,uy1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,2) !ubcy is 2.
+    call derxx (tf1,uz1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,3) !ubcz is 3/
 
     if (ilmn) then
       td1(:,:,:) = mu1(:,:,:) * xnu * td1(:,:,:)
@@ -636,7 +636,7 @@ contains
     call transpose_y_to_x(tc2, tf1)
     call transpose_y_to_x(th2, tg1)
 
-    call derx(td1,tg1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,zero)
+    call derx(td1,tg1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,0) !zero is 0.
 
     dux1(:,:,:) = dux1(:,:,:) + mu1(:,:,:) * one_third * xnu * td1(:,:,:)
     duy1(:,:,:) = duy1(:,:,:) + mu1(:,:,:) * one_third * xnu * te1(:,:,:)
@@ -908,11 +908,11 @@ contains
     !X PENCILS
     if (skewsc) ta1(:,:,:) = ux1(:,:,:) * phi1(:,:,:)
     if (evensc) then
-      call derxS (tb1,phi1(:,:,:),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1,zero)
-      if (skewsc) call derxS (tc1,ta1,di1,sx,ffxS,fsxS,fwxS,xsize(1),xsize(2),xsize(3),0,zero)
+      call derxS (tb1,phi1(:,:,:),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1,0) !zero is 0.
+      if (skewsc) call derxS (tc1,ta1,di1,sx,ffxS,fsxS,fwxS,xsize(1),xsize(2),xsize(3),0,0) !zero is 0.
     else
-      call derxS (tb1,phi1(:,:,:),di1,sx,ffxS,fsxS,fwxS,xsize(1),xsize(2),xsize(3),0,zero)
-      if (skewsc) call derxS (tc1,ta1,di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1,zero) 
+      call derxS (tb1,phi1(:,:,:),di1,sx,ffxS,fsxS,fwxS,xsize(1),xsize(2),xsize(3),0,0) !zero is 0.
+      if (skewsc) call derxS (tc1,ta1,di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1,0) !zero is 0. 
     endif
     if (ilmn) then
       tb1(:,:,:) = rho1(:,:,:,1) * ux1(:,:,:) * tb1(:,:,:)
@@ -925,9 +925,9 @@ contains
     endif
 
     if (evensc) then
-      call derxxS (ta1,phi1(:,:,:),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1,zero)
+      call derxxS (ta1,phi1(:,:,:),di1,sx,sfxpS,ssxpS,swxpS,xsize(1),xsize(2),xsize(3),1,0) !zero is 0.
     else
-      call derxxS (ta1,phi1(:,:,:),di1,sx,sfxS,ssxS,swxS,xsize(1),xsize(2),xsize(3),0,zero)
+      call derxxS (ta1,phi1(:,:,:),di1,sx,sfxS,ssxS,swxS,xsize(1),xsize(2),xsize(3),0,0) !zero is 0.
     endif
 
     ! Add convective and diffusive scalar terms of x-pencil
@@ -1229,7 +1229,7 @@ contains
        ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
        call transpose_y_to_x(ta2, ta1)
 
-       call derxx (tb1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1, zero)
+       call derxx (tb1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1, 0) !zero is 0.
        ta1(:,:,:) = ta1(:,:,:) + tb1(:,:,:)
 
        drho1(:,:,:,1) = drho1(:,:,:,1) + invpe * ta1(:,:,:)

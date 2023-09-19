@@ -337,7 +337,7 @@ subroutine dery_00(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: sy
   real(mytype), dimension(ny) :: ffy,fsy,fwy,ppy
-  real(mytype)                      :: lind
+  integer                           :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -435,7 +435,7 @@ subroutine dery_11(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: sy
   real(mytype), dimension(ny) :: ffy,fsy,fwy,ppy
-  real(mytype)                      :: lind
+  integer                           :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -557,7 +557,7 @@ subroutine dery_12(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: sy
   real(mytype), dimension(ny) :: ffy,fsy,fwy,ppy
-  real(mytype)                      :: lind
+  integer                           :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -676,7 +676,7 @@ subroutine dery_21(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: sy
   real(mytype), dimension(ny) :: ffy,fsy,fwy,ppy
-  real(mytype)                      :: lind
+  integer                           :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -795,7 +795,7 @@ subroutine dery_22(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: sy
   real(mytype), dimension(ny) :: ffy,fsy,fwy,ppy
-  real(mytype)                      :: lind
+  integer                           :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -2063,7 +2063,7 @@ subroutine deryy_00(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ty,uy,ry
   real(mytype), dimension(nx,nz) :: sy
   real(mytype), dimension(ny) :: sfy,ssy,swy
-  real(mytype)                      :: lind
+  integer                           :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -2218,7 +2218,7 @@ subroutine deryy_11(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ty,uy,ry
   real(mytype), dimension(nx,nz) :: sy
   real(mytype), dimension(ny) :: sfy,ssy,swy
-  real(mytype)                      :: lind
+  integer                           :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -2444,7 +2444,7 @@ subroutine deryy_12(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ty,uy,ry
   real(mytype), dimension(nx,nz) :: sy
   real(mytype), dimension(ny) :: sfy,ssy,swy
-  real(mytype)                      :: lind
+  integer                           :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -2642,7 +2642,7 @@ subroutine deryy_21(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ty,uy,ry
   real(mytype), dimension(nx,nz) :: sy
   real(mytype), dimension(ny) :: sfy,ssy,swy
-  real(mytype)                      :: lind
+  integer                           :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -2840,7 +2840,7 @@ subroutine deryy_22(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ty,uy,ry
   real(mytype), dimension(nx,nz) :: sy
   real(mytype), dimension(ny) :: sfy,ssy,swy
-  real(mytype)                      :: lind
+  integer                           :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
