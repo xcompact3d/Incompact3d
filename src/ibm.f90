@@ -12,7 +12,7 @@ contains
     USE param
     USE decomp_2d
     USE variables
-    USE actuator_line_model_utils, ONLY: CalculatePointVelocity
+    
     implicit none
     integer :: i,j,k,nlock
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,px,py,pz
@@ -402,8 +402,8 @@ subroutine cubsplx(u,lind)
   USE decomp_2d
   USE variables
   USE ibm_param
-  USE actuator_line_model_utils
-  !
+  USE ellipsoid_utils, ONLY: CalculatePointVelocity
+    !
   implicit none
   !
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: u
@@ -419,7 +419,7 @@ subroutine cubsplx(u,lind)
   real(mytype)                                       :: bcimp           ! Imposed BC 
   integer                                            :: inxi,inxf
   real(mytype)                                       :: ana_resi,ana_resf         ! Position of Boundary (Analytically)
-  real(mytype)                                       :: point(3),centre(3),angularVelocity(3),linearVelocity(3),pointVelocity(3)
+  real(mytype)                                       :: point(3),pointVelocity(3)
   real(mytype)                                       :: xm,ym,zm,x_pv,y_pv,z_pv
   !
   ! Initialise Arrays
@@ -448,7 +448,7 @@ subroutine cubsplx(u,lind)
                  xa(ia)=ana_resi
               endif
               point=[xm,ym,zm]
-              call CalculatePointVelocity(point, centre, angularVelocity, linearVelocity, pointVelocity)
+              call CalculatePointVelocity(point, position, angularVelocity, linearVelocity, pointVelocity)
               x_pv=pointVelocity(1)
               y_pv=pointVelocity(2)
               z_pv=pointVelocity(3)
@@ -592,6 +592,7 @@ subroutine cubsply(u,lind)
   USE decomp_2d
   USE variables
   USE ibm_param
+  USE ellipsoid_utils, ONLY: CalculatePointVelocity
   !
   implicit none
   !
@@ -608,7 +609,7 @@ subroutine cubsply(u,lind)
   real(mytype)                                       :: bcimp           ! Imposed BC 
   integer                                            :: inxi,inxf  
   real(mytype)                                       :: ana_resi,ana_resf
-  real(mytype)                                       :: point(3),centre(3),angularVelocity(3),linearVelocity(3),pointVelocity(3)
+  real(mytype)                                       :: point(3),pointVelocity(3)
   real(mytype)                                       :: xm,ym,zm,x_pv,y_pv,z_pv
   !
   ! Initialise Arrays
@@ -637,7 +638,7 @@ subroutine cubsply(u,lind)
                  xa(ia)=ana_resi
               endif  
               point=[xm,ym,zm]
-              call CalculatePointVelocity(point, centre, angularVelocity, linearVelocity, pointVelocity)
+              call CalculatePointVelocity(point, position, angularVelocity, linearVelocity, pointVelocity)
               x_pv=pointVelocity(1)
               y_pv=pointVelocity(2)
               z_pv=pointVelocity(3)
@@ -786,6 +787,7 @@ subroutine cubsplz(u,lind)
   USE decomp_2d
   USE variables
   USE ibm_param
+  USE ellipsoid_utils, ONLY: CalculatePointVelocity
   !
   implicit none
   !
@@ -802,7 +804,7 @@ subroutine cubsplz(u,lind)
   real(mytype)                                       :: bcimp           ! Imposed BC 
   integer                                            :: inxi,inxf  
   real(mytype)                                       :: ana_resi,ana_resf
-  real(mytype)                                       :: point(3),centre(3),angularVelocity(3),linearVelocity(3),pointVelocity(3)
+  real(mytype)                                       :: point(3),pointVelocity(3)
   real(mytype)                                       :: xm,ym,zm,x_pv,y_pv,z_pv
 
   !
@@ -811,7 +813,7 @@ subroutine cubsplz(u,lind)
   ya(:)=zero
   !
   ! Impose the Correct BC
-  bcimp=lind  
+!   bcimp=lind  
   !
   do j=1,zsize(2)
    ym=real(zstart(2)+j-2,mytype)*dy
@@ -832,7 +834,7 @@ subroutine cubsplz(u,lind)
                  xa(ia)=ana_resi
               endif  
               point=[xm,ym,zm]
-              call CalculatePointVelocity(point, centre, angularVelocity, linearVelocity, pointVelocity)
+              call CalculatePointVelocity(point, position, angularVelocity, linearVelocity, pointVelocity)
               x_pv=pointVelocity(1)
               y_pv=pointVelocity(2)
               z_pv=pointVelocity(3)

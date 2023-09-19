@@ -222,9 +222,9 @@ contains
       result(3) = a(1) * b(2) - a(2) * b(1)
     end subroutine CrossProduct
     
-    subroutine CalculatePointVelocity(point, center, linearVelocity, angularVelocity, velocity)
+    subroutine CalculatePointVelocity(point, center, linearVelocity, angularVelocity, pointVelocity)
       real(mytype), intent(in) :: point(3), center(3), linearVelocity(3), angularVelocity(3)
-      real(mytype), intent(out) :: velocity(3)
+      real(mytype), intent(out) :: pointVelocity(3)
       real(mytype) :: crossed(3)
       ! Compute the distance vector from the center to the point
       real(mytype) :: distance(3)
@@ -235,7 +235,7 @@ contains
       call CrossProduct(angularVelocity, distance, crossed)
     
       ! Calculate the velocity at the point
-      velocity = crossed + linearVelocity
+      pointVelocity = crossed + linearVelocity
     end subroutine CalculatePointVelocity
     
     

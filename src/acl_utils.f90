@@ -9,8 +9,7 @@ module actuator_line_model_utils
     use dbg_schemes, only: sqrt_prec, cos_prec, exp_prec, sin_prec
     
     implicit none
-    public QuatRot, cross, IsoKernel, AnIsoKernel, int2str, EllipsoidalRadius
-
+    public QuatRot, cross, IsoKernel, AnIsoKernel, int2str
 contains
 
     !*******************************************************************************

@@ -39,7 +39,7 @@ contains
     real(mytype)               :: xm,ym,zm,r,rads2,kcon
     real(mytype)               :: zeromach
     real(mytype)               :: cexx,ceyy,cezz,dist_axi
-    real(mytype)               :: point(3), ce(3), orientation(4), orientation_normalized(4),shape(3)
+    real(mytype)               :: point(3)
 
     zeromach=one
     do while ((one + zeromach / two) .gt. one)
@@ -47,29 +47,29 @@ contains
     end do
     zeromach = ten*zeromach
 
-    orientation=[1.0, -1.0, 1.0, 0.0]
+   !  orientation=[oriw, orii, orij, orik]
     call NormalizeQuaternion(orientation)
-    shape=[1.0, 0.6, 0.4]
+   !  shape=[shx, shy, shz]
+   !  write(*,*) shape, 'SHAPE'
 
 
     ! Intitialise epsi
     epsi(:,:,:)=zero
 
-    ! Update center of moving Cylinder
-    !cexx=cex+ubcx*t
-    !ceyy=cey+ubcy*t
-    ! Update center of moving Cylinder
-    if (t.ne.0.) then
-       cexx=cex+ubcx*(t-ifirst*dt)
-       ceyy=cey+ubcy*(t-ifirst*dt)
-       cezz=cez+ubcz*(t-ifirst*dt)
-    else
-       cexx=cex
-       ceyy=cey
-       cezz=cez
-    endif
 
-    ce=[cexx, ceyy, cezz]
+    ! Update center of moving ellipsoid
+    if (t.ne.0.) then
+       cex=cex+lvx*(t-ifirst*dt)
+       cey=cey+lvy*(t-ifirst*dt)
+       cez=cez+lvz*(t-ifirst*dt)
+    else
+       cex=cex
+       cey=cey
+       cez=cez
+    endif
+    position=[cex,cey,cez]
+   !  write(*,*) position
+   !  ce=[cexx, ceyy, cezz]
     !
     ! Define adjusted smoothing constant
 !    kcon = log((one-0.0001)/0.0001)/(smoopar*0.5*dx) ! 0.0001 is the y-value, smoopar: desired number of affected points 
@@ -82,7 +82,7 @@ contains
           do i=nxi,nxf
              xm=real(i-1,mytype)*dx
              point=[xm, ym, zm]
-             call EllipsoidalRadius(point, ce, orientation, shape, r)
+             call EllipsoidalRadius(point, position, orientation, shape, r)
             !  r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two+(zm-cezz)**two)
             !  r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two)
 
@@ -232,15 +232,33 @@ contains
     USE variables
     USE param
     USE MPI
+    USE ibm_param
     use dbg_schemes, only: exp_prec
+    use ellipsoid_utils, only: NormalizeQuaternion
+
 
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
-    real(mytype) :: y,um
+    real(mytype) :: y,um,eqr
     integer :: k,j,i,ii,is,code
+
+    eqr=(shx*shy*shz)**(1.0/3.0)
+    shape=[shx/eqr,shy/eqr,shz/eqr]
+
+    orientation=[oriw,orii,orij,orik]
+    call NormalizeQuaternion(orientation)
+    position=[cex,cey,cez]
+    linearVelocity=[lvx,lvy,lvz]
+    angularVelocity=[avx,avy,avz]
+
+    write(*,*) 'set shape = ', shape
+    write(*,*) 'set orientation = ', orientation
+    write(*,*) 'set position = ', position
+    write(*,*) 'set linear velocity = ', linearVelocity
+    write(*,*) 'set angular velocity = ', angularVelocity
 
     if (iscalar==1) then
 

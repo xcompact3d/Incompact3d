@@ -189,7 +189,7 @@ contains
     integer                          :: numvis
     integer                          :: mpi_aux_i, code
 
-    write(*,*)'Inside gene_epsi_3D'
+   !  write(*,*)'Inside gene_epsi_3D'
     !x-pencil
     ep1=zero
     call geomcomplex(ep1,xstart(1),xend(1),ny,xstart(2),xend(2),xstart(3),xend(3),dx,yp,dz,one)
