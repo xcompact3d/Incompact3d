@@ -49,7 +49,7 @@ contains
 
     orientation=[1.0, -1.0, 1.0, 0.0]
     call NormalizeQuaternion(orientation)
-    shape=[1.0, 1.0, 1.0]
+    shape=[1.0, 0.6, 0.4]
 
 
     ! Intitialise epsi

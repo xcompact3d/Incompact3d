@@ -236,7 +236,7 @@ contains
     call write_field(uy1, ".", "uy", num)
     call write_field(uz1, ".", "uz", num)
     call write_field(ep1, ".", "ep1", num, skip_ibm = .true.)
-
+    
 
     ! Interpolate pressure
     !WORK Z-PENCILS
