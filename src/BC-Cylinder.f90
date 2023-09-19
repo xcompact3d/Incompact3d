@@ -84,6 +84,8 @@ contains
              point=[xm, ym, zm]
              call EllipsoidalRadius(point, ce, orientation, shape, r)
             !  r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two+(zm-cezz)**two)
+            !  r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two)
+
              if (r-ra.gt.zeromach) then
                !  write(*,*) i, j, k
                 cycle
