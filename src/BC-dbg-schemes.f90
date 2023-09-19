@@ -479,8 +479,8 @@ contains
        enddo
     enddo
 
-    call filx (fiffx1  ,ffx1  ,di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,zero)
-    call filx (fiffxp1 ,ffxp1 ,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,zero)
+    call filx (fiffx1  ,ffx1  ,di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,0)
+    call filx (fiffxp1 ,ffxp1 ,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,0)
     if (nrank.eq.0) then
        write(filename,"('filter_x',I1.1,I1.1,I1.1,I4.4)") jles,nclx1,nclxn,nx
        open(70,file=trim(filename),status='unknown',form='formatted')
@@ -502,11 +502,11 @@ contains
           enddo
        enddo
     enddo
-    call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0,zero)
-    call dery (dfdyp2,fyp2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,zero)
+    call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0,0)
+    call dery (dfdyp2,fyp2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,0)
     iimplicit = -iimplicit
-    call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0,zero)
-    call deryy (dfdyyp2,fyp2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,zero)
+    call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0,0)
+    call deryy (dfdyyp2,fyp2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,0)
     iimplicit = -iimplicit
     if (nrank.eq.0) then
        write(filename,"('schemes_y',I1.1,I1.1,I1.1,I4.4)") jles,ncly1,nclyn,ny
@@ -571,8 +571,8 @@ contains
        enddo
     enddo
 
-    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,zero)
-    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,zero)
+    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,0)
+    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,0)
     if (nrank.eq.0) then
        write(filename,"('filter_y',I1.1,I1.1,I1.1,I4.4)") jles,ncly1,nclyn,ny
        open(70,file=trim(filename),status='unknown',form='formatted')
@@ -594,10 +594,10 @@ contains
           enddo
        enddo
     enddo
-    call derz (dfdz3 ,fz3 ,di3,sz,ffz ,fsz ,fwz ,zsize(1),zsize(2),zsize(3),0,zero)
-    call derz (dfdzp3,fzp3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,zero)
-    call derzz (dfdzz3 ,fz3 ,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0,zero)
-    call derzz (dfdzzp3,fzp3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,zero)
+    call derz (dfdz3 ,fz3 ,di3,sz,ffz ,fsz ,fwz ,zsize(1),zsize(2),zsize(3),0,0)
+    call derz (dfdzp3,fzp3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,0)
+    call derzz (dfdzz3 ,fz3 ,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0,0)
+    call derzz (dfdzzp3,fzp3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,0)
     if (nrank.eq.0) then
        write(filename,"('schemes_z',I1.1,I1.1,I1.1,I4.4)") jles,nclz1,nclzn,nz
        open(67,file=trim(filename),status='unknown',form='formatted')
@@ -659,8 +659,8 @@ contains
           enddo
        enddo
     enddo
-    call filz (fiffz3  ,ffz3  ,di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,zero)
-    call filz (fiffzp3 ,ffzp3 ,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,zero)
+    call filz (fiffz3  ,ffz3  ,di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,0)
+    call filz (fiffzp3 ,ffzp3 ,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,0)
     if (nrank.eq.0) then
        write(filename,"('filter_z',I1.1,I1.1,I1.1,I4.4)") jles,nclz1,nclzn,nz
        open(70,file=trim(filename),status='unknown',form='formatted')
@@ -719,8 +719,8 @@ contains
        enddo
     enddo
 
-    call filx (fiffx1  ,ffx1  ,di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,zero)
-    call filx (fiffxp1 ,ffxp1 ,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,zero)
+    call filx (fiffx1  ,ffx1  ,di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,0)
+    call filx (fiffxp1 ,ffxp1 ,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,0)
     if (nrank.eq.0) then
        write(filename,"('filter_x',I1.1,I1.1,I1.1,I4.4)") jles,nclx1,nclxn,nx
        open(70,file=trim(filename),status='unknown',form='formatted')
@@ -741,9 +741,9 @@ contains
           enddo
        enddo
     enddo
-    call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0,zero)
+    call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0,0)
     iimplicit = -iimplicit
-    call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0,zero)
+    call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0,0)
     iimplicit = -iimplicit
     if (nrank.eq.0) then
        write(filename,"('schemes_y',I1.1,I1.1,I1.1,I4.4)") jles,ncly1,nclyn,ny
@@ -768,8 +768,8 @@ contains
        enddo
     enddo
 
-    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,zero)
-    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,zero)
+    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,0)
+    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,0)
     if (nrank.eq.0) then
        write(filename,"('filter_y',I1.1,I1.1,I1.1,I4.4)") jles,ncly1,nclyn,ny
        open(70,file=trim(filename),status='unknown',form='formatted')
@@ -789,8 +789,8 @@ contains
           enddo
        enddo
     enddo
-    call derz (dfdz3 ,fz3 ,di3,sz,ffz ,fsz ,fwz ,zsize(1),zsize(2),zsize(3),0,zero)
-    call derzz (dfdzz3 ,fz3 ,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0,zero)
+    call derz (dfdz3 ,fz3 ,di3,sz,ffz ,fsz ,fwz ,zsize(1),zsize(2),zsize(3),0,0)
+    call derzz (dfdzz3 ,fz3 ,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0,0)
     if (nrank.eq.0) then
        write(filename,"('schemes_z',I1.1,I1.1,I1.1,I4.4)") jles,nclz1,nclzn,nz
        open(67,file=trim(filename),status='unknown',form='formatted')
@@ -813,8 +813,8 @@ contains
           enddo
        enddo
     enddo
-    call filz (fiffz3  ,ffz3  ,di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,zero)
-    call filz (fiffzp3 ,ffzp3 ,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,zero)
+    call filz (fiffz3  ,ffz3  ,di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,0)
+    call filz (fiffzp3 ,ffzp3 ,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,0)
     if (nrank.eq.0) then
        write(filename,"('filter_z',I1.1,I1.1,I1.1,I4.4)") jles,nclz1,nclzn,nz
        open(70,file=trim(filename),status='unknown',form='formatted')
@@ -877,8 +877,8 @@ contains
        enddo
     enddo
 
-    call filx (fiffx1  ,ffx1  ,di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,zero)
-    call filx (fiffxp1 ,ffxp1 ,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,zero)
+    call filx (fiffx1  ,ffx1  ,di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,0)
+    call filx (fiffxp1 ,ffxp1 ,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,0)
     if (nrank.eq.0) then
        write(filename,"('filter_x',I1.1,I1.1,I1.1,I4.4)") jles,nclx1,nclxn,nx
        open(70,file=trim(filename),status='unknown',form='formatted')
@@ -900,11 +900,11 @@ contains
           enddo
        enddo
     enddo
-    call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0,zero)
-    call dery (dfdyp2,fyp2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,zero)
+    call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0,0)
+    call dery (dfdyp2,fyp2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,0)
     iimplicit = -iimplicit
-    call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0,zero)
-    call deryy (dfdyyp2,fyp2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,zero)
+    call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0,0)
+    call deryy (dfdyyp2,fyp2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,0)
     iimplicit = -iimplicit
     if (nrank.eq.0) then
        write(filename,"('schemes_y',I1.1,I1.1,I1.1,I4.4)") jles,ncly1,nclyn,ny
@@ -931,8 +931,8 @@ contains
        enddo
     enddo
 
-    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,zero)
-    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,zero)
+    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,0)
+    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,0)
     if (nrank.eq.0) then
        write(filename,"('filter_y',I1.1,I1.1,I1.1,I4.4)") jles,ncly1,nclyn,ny
        open(70,file=trim(filename),status='unknown',form='formatted')
@@ -954,10 +954,10 @@ contains
           enddo
        enddo
     enddo
-    call derz (dfdz3 ,fz3 ,di3,sz,ffz ,fsz ,fwz ,zsize(1),zsize(2),zsize(3),0,zero)
-    call derz (dfdzp3,fzp3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,zero)
-    call derzz (dfdzz3 ,fz3 ,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0,zero)
-    call derzz (dfdzzp3,fzp3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,zero)
+    call derz (dfdz3 ,fz3 ,di3,sz,ffz ,fsz ,fwz ,zsize(1),zsize(2),zsize(3),0,0)
+    call derz (dfdzp3,fzp3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,0)
+    call derzz (dfdzz3 ,fz3 ,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0,0)
+    call derzz (dfdzzp3,fzp3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,0)
     if (nrank.eq.0) then
        write(filename,"('schemes_z',I1.1,I1.1,I1.1,I4.4)") jles,nclz1,nclzn,nz
        open(67,file=trim(filename),status='unknown',form='formatted')
@@ -982,8 +982,8 @@ contains
           enddo
        enddo
     enddo
-    call filz (fiffz3  ,ffz3  ,di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,zero)
-    call filz (fiffzp3 ,ffzp3 ,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,zero)
+    call filz (fiffz3  ,ffz3  ,di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,0)
+    call filz (fiffzp3 ,ffzp3 ,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,0)
     if (nrank.eq.0) then
        write(filename,"('filter_z',I1.1,I1.1,I1.1,I4.4)") jles,nclz1,nclzn,nz
        open(70,file=trim(filename),status='unknown',form='formatted')
@@ -1046,8 +1046,8 @@ contains
        enddo
     enddo
 
-    call filx (fiffx1  ,ffx1  ,di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,zero)
-    call filx (fiffxp1 ,ffxp1 ,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,zero)
+    call filx (fiffx1  ,ffx1  ,di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,0)
+    call filx (fiffxp1 ,ffxp1 ,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,0)
     if (nrank.eq.0) then
        write(filename,"('filter_x',I1.1,I1.1,I1.1,I4.4)") jles,nclx1,nclxn,nx
        open(70,file=trim(filename),status='unknown',form='formatted')
@@ -1069,11 +1069,11 @@ contains
           enddo
        enddo
     enddo
-    call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0,zero)
-    call dery (dfdyp2,fyp2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,zero)
+    call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0,0)
+    call dery (dfdyp2,fyp2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,0)
     iimplicit = -iimplicit
-    call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0,zero)
-    call deryy (dfdyyp2,fyp2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,zero)
+    call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0,0)
+    call deryy (dfdyyp2,fyp2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,0)
     iimplicit = -iimplicit
     if (nrank.eq.0) then
        write(filename,"('schemes_y',I1.1,I1.1,I1.1,I4.4)") jles,ncly1,nclyn,ny
@@ -1100,8 +1100,8 @@ contains
        enddo
     enddo
 
-    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,zero)
-    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,zero)
+    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,0)
+    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,0)
     if (nrank.eq.0) then
        write(filename,"('filter_y',I1.1,I1.1,I1.1,I4.4)") jles,ncly1,nclyn,ny
        open(70,file=trim(filename),status='unknown',form='formatted')
@@ -1123,10 +1123,10 @@ contains
           enddo
        enddo
     enddo
-    call derz (dfdz3 ,fz3 ,di3,sz,ffz ,fsz ,fwz ,zsize(1),zsize(2),zsize(3),0,zero)
-    call derz (dfdzp3,fzp3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,zero)
-    call derzz (dfdzz3 ,fz3 ,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0,zero)
-    call derzz (dfdzzp3,fzp3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,zero)
+    call derz (dfdz3 ,fz3 ,di3,sz,ffz ,fsz ,fwz ,zsize(1),zsize(2),zsize(3),0,0)
+    call derz (dfdzp3,fzp3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,0)
+    call derzz (dfdzz3 ,fz3 ,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0,0)
+    call derzz (dfdzzp3,fzp3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,0)
     if (nrank.eq.0) then
        write(filename,"('schemes_z',I1.1,I1.1,I1.1,I4.4)") jles,nclz1,nclzn,nz
        open(67,file=trim(filename),status='unknown',form='formatted')
@@ -1151,8 +1151,8 @@ contains
           enddo
        enddo
     enddo
-    call filz (fiffz3  ,ffz3  ,di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,zero)
-    call filz (fiffzp3 ,ffzp3 ,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,zero)
+    call filz (fiffz3  ,ffz3  ,di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,0)
+    call filz (fiffzp3 ,ffzp3 ,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,0)
     if (nrank.eq.0) then
        write(filename,"('filter_z',I1.1,I1.1,I1.1,I4.4)") jles,nclz1,nclzn,nz
        open(70,file=trim(filename),status='unknown',form='formatted')
@@ -1274,8 +1274,8 @@ contains
        enddo
     enddo
 
-    call filx (fiffx1  ,ffx1  ,di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,zero)
-    call filx (fiffxp1 ,ffxp1 ,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,zero)
+    call filx (fiffx1  ,ffx1  ,di1,fisx,fiffx ,fifsx ,fifwx ,xsize(1),xsize(2),xsize(3),0,0)
+    call filx (fiffxp1 ,ffxp1 ,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,0)
     if (nrank.eq.0) then
        write(filename,"('filter_x',I1.1,I1.1,I1.1,I4.4)") jles,nclx1,nclxn,nx
        open(70,file=trim(filename),status='unknown',form='formatted')
@@ -1297,9 +1297,9 @@ contains
           enddo
        enddo
     enddo
-    call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0,zero)
+    call dery (dfdy2 ,fy2 ,di2,sy,ffy ,fsy ,fwy ,ppy,ysize(1),ysize(2),ysize(3),0,0)
     iimplicit = -iimplicit
-    call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0,zero)
+    call deryy (dfdyy2 ,fy2 ,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0,0)
     iimplicit = -iimplicit
     if (nrank.eq.0) then
        write(filename,"('schemes_y',I1.1,I1.1,I1.1,I4.4)") jles,ncly1,nclyn,ny
@@ -1361,8 +1361,8 @@ contains
        enddo
     enddo
 
-    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,zero)
-    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,zero)
+    call fily (fiffy2  ,ffy2  ,di2,fisy,fiffy ,fifsy ,fifwy ,ysize(1),ysize(2),ysize(3),0,0)
+    call fily (fiffyp2 ,ffyp2 ,di2,fisy,fiffyp,fifsyp,fifwyp,ysize(1),ysize(2),ysize(3),1,0)
     if (nrank.eq.0) then
        write(filename,"('filter_y',I1.1,I1.1,I1.1,I4.4)") jles,ncly1,nclyn,ny
        open(70,file=trim(filename),status='unknown',form='formatted')
@@ -1383,8 +1383,8 @@ contains
           enddo
        enddo
     enddo
-    call derz (dfdz3 ,fz3 ,di3,sz,ffz ,fsz ,fwz ,zsize(1),zsize(2),zsize(3),0,zero)
-    call derzz (dfdzz3 ,fz3 ,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0,zero)
+    call derz (dfdz3 ,fz3 ,di3,sz,ffz ,fsz ,fwz ,zsize(1),zsize(2),zsize(3),0,0)
+    call derzz (dfdzz3 ,fz3 ,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0,0)
     if (nrank.eq.0) then
        write(filename,"('schemes_z',I1.1,I1.1,I1.1,I4.4)") jles,nclz1,nclzn,nz
        open(67,file=trim(filename),status='unknown',form='formatted')
@@ -1442,8 +1442,8 @@ contains
           enddo
        enddo
     enddo
-    call filz (fiffz3  ,ffz3  ,di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,zero)
-    call filz (fiffzp3 ,ffzp3 ,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,zero)
+    call filz (fiffz3  ,ffz3  ,di3,fisz,fiffz ,fifsz ,fifwz ,zsize(1),zsize(2),zsize(3),0,0)
+    call filz (fiffzp3 ,ffzp3 ,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,0)
     if (nrank.eq.0) then
        write(filename,"('filter_z',I1.1,I1.1,I1.1,I4.4)") jles,nclz1,nclzn,nz
        open(70,file=trim(filename),status='unknown',form='formatted')

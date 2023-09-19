@@ -142,7 +142,7 @@ module variables
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,nz):: s
        real(mytype), dimension(ny):: ff,fs,fw,pp
-       real(mytype) :: lind
+       integer :: lind
      END SUBROUTINE DERIVATIVE_Y
      SUBROUTINE DERIVATIVE_YY(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
        use decomp_2d, only : mytype
@@ -150,7 +150,7 @@ module variables
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,nz):: s
        real(mytype), dimension(ny):: ff,fs,fw
-       real(mytype) :: lind
+       integer :: lind
      END SUBROUTINE DERIVATIVE_YY
      SUBROUTINE DERIVATIVE_Z(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
        use decomp_2d, only : mytype
@@ -158,7 +158,7 @@ module variables
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,ny):: s
        real(mytype), dimension(nz):: ff,fs,fw
-       real(mytype) :: lind
+       integer :: lind
      END SUBROUTINE DERIVATIVE_Z
   END INTERFACE
 
@@ -186,7 +186,7 @@ module variables
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(ny,nz):: s
        real(mytype), dimension(nx):: ff,fs,fw
-       real(mytype) :: lind
+       integer :: lind
      END SUBROUTINE FILTER_X
      SUBROUTINE FILTER_Y(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
        use decomp_2d, only : mytype
@@ -194,7 +194,7 @@ module variables
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,nz):: s
        real(mytype), dimension(ny):: ff,fs,fw
-       real(mytype) :: lind
+       integer :: lind
      END SUBROUTINE FILTER_Y
      SUBROUTINE FILTER_Z(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
        use decomp_2d, only : mytype
@@ -202,7 +202,7 @@ module variables
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,ny):: s
        real(mytype), dimension(nz):: ff,fs,fw
-       real(mytype) :: lind
+       integer :: lind
      END SUBROUTINE FILTER_Z
   END INTERFACE
 

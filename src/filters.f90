@@ -614,7 +614,7 @@ subroutine fily_00(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: fisy
   real(mytype), dimension(ny) :: fiffy,fifsy,fifwy
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -690,7 +690,7 @@ subroutine fily_11(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: fisy
   real(mytype), dimension(ny) :: fiffy,fifsy,fifwy
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -783,7 +783,7 @@ subroutine fily_12(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: fisy
   real(mytype), dimension(ny) :: fiffy,fifsy,fifwy
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -868,7 +868,7 @@ subroutine fily_21(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: fisy
   real(mytype), dimension(ny) :: fiffy,fifsy,fifwy
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -954,7 +954,7 @@ subroutine fily_22(ty,uy,ry,fisy,fiffy,fifsy,fifwy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: fisy
   real(mytype), dimension(ny) :: fiffy,fifsy,fifwy
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -1002,7 +1002,7 @@ subroutine filz_00(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: fisz
   real(mytype), dimension(nz) :: fiffz,fifsz,fifwz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (nz==1) then
     tz = uz
@@ -1078,7 +1078,7 @@ subroutine filz_11(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: fisz
   real(mytype), dimension(nz) :: fiffz,fifsz,fifwz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)
@@ -1168,7 +1168,7 @@ subroutine filz_12(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: fisz
   real(mytype), dimension(nz) :: fiffz,fifsz,fifwz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)
@@ -1253,7 +1253,7 @@ subroutine filz_21(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: fisz
   real(mytype), dimension(nz) :: fiffz,fifsz,fifwz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)
@@ -1339,7 +1339,7 @@ subroutine filz_22(tz,uz,rz,fisz,fiffz,fifsz,fifwz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: fisz
   real(mytype), dimension(nz) :: fiffz,fifsz,fifwz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)

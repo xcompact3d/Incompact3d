@@ -869,7 +869,7 @@ subroutine derz_00(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: ffz,fsz,fwz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (nz==1) then
      tz = 0.
@@ -962,7 +962,7 @@ subroutine derz_11(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: ffz,fsz,fwz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)
@@ -1075,7 +1075,7 @@ subroutine derz_12(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: ffz,fsz,fwz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)
@@ -1187,7 +1187,7 @@ subroutine derz_21(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: ffz,fsz,fwz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)
@@ -1299,7 +1299,7 @@ subroutine derz_22(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: ffz,fsz,fwz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)
@@ -2934,7 +2934,7 @@ subroutine derzz_00(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: sfz,ssz,swz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (nz==1) then
      tz = 0.
@@ -3093,7 +3093,7 @@ subroutine derzz_11(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: sfz,ssz,swz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)
@@ -3318,7 +3318,7 @@ subroutine derzz_12(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: sfz,ssz,swz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)
@@ -3514,7 +3514,7 @@ subroutine derzz_21(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: sfz,ssz,swz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)
@@ -3710,7 +3710,7 @@ subroutine derzz_22(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: sfz,ssz,swz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)
