@@ -59,15 +59,15 @@ contains
 
     ! Update center of moving ellipsoid
     if (t.ne.0.) then
-       cex=cex+lvx*(t-ifirst*dt)
-       cey=cey+lvy*(t-ifirst*dt)
-       cez=cez+lvz*(t-ifirst*dt)
+       cexx=cex+lvx*(t-ifirst*dt)
+       ceyy=cey+lvy*(t-ifirst*dt)
+       cezz=cez+lvz*(t-ifirst*dt)
     else
-       cex=cex
-       cey=cey
-       cez=cez
+       cexx=cex
+       ceyy=cey
+       cezz=cez
     endif
-    position=[cex,cey,cez]
+    position=[cexx,ceyy,cezz]
    !  write(*,*) position
    !  ce=[cexx, ceyy, cezz]
     !

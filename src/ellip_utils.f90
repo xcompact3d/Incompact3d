@@ -237,7 +237,35 @@ contains
       ! Calculate the velocity at the point
       pointVelocity = crossed + linearVelocity
     end subroutine CalculatePointVelocity
-    
+
+    subroutine navierFieldGen(center, linearVelocity, angularVelocity, ep1_x, ep1_y, ep1_z)
+      use param
+      use decomp_2d
+      real(mytype), intent(in) :: center(3), linearVelocity(3), angularVelocity(3)
+      real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(out) :: ep1_x, ep1_y, ep1_z
+      real(mytype) :: xm, ym, zm, point(3), x_pv, y_pv, z_pv, pointVelocity(3)
+      integer :: i,j,k
+
+      do k = 1,xsize(3)
+        zm=real(k+xstart(3)-2, mytype)*dz
+        do j = 1,xsize(2)
+          ym=real(j+xstart(2)-2, mytype)*dy
+          do i = 1,xsize(1)
+            xm=real(i+xstart(1)-2, mytype)*dx
+            point=[xm,ym,zm]
+            call CalculatePointVelocity(point, center, linearVelocity, angularVelocity, pointVelocity)
+            x_pv=pointVelocity(1)
+            y_pv=pointVelocity(2)
+            z_pv=pointVelocity(3)
+            ep1_x(i,j,k)=x_pv
+            ep1_y(i,j,k)=y_pv
+            ep1_z(i,j,k)=z_pv
+          end do
+        end do
+      end do
+
+      end subroutine navierFieldGen
+
     
 
    !  subroutine CalculatePointVelocity(point, center, angularVelocity, velocity)

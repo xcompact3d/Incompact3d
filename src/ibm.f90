@@ -428,6 +428,7 @@ subroutine cubsplx(u,lind)
   !
   ! Impose the Correct BC
 !   bcimp=lind  
+  write(*,*) lind
   !
   do k=1,xsize(3)
    zm=real(xstart(3)+k-2,mytype)*dz
@@ -456,6 +457,7 @@ subroutine cubsplx(u,lind)
                bcimp=zero
               elseif (lind.eq.1) then
                bcimp=x_pv
+               write(*,*) bcimp
               elseif (lind.eq.2) then
                bcimp=y_pv
               elseif (lind.eq.3) then
@@ -618,6 +620,8 @@ subroutine cubsply(u,lind)
   !
   ! Impose the Correct BC
 !   bcimp=lind  
+  write(*,*) lind
+
   !
   do k=1,ysize(3)
    zm=real(ystart(3)+k-2,mytype)*dz
@@ -814,6 +818,8 @@ subroutine cubsplz(u,lind)
   !
   ! Impose the Correct BC
 !   bcimp=lind  
+  write(*,*) lind
+
   !
   do j=1,zsize(2)
    ym=real(zstart(2)+j-2,mytype)*dy
