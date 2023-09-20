@@ -21,6 +21,7 @@ module case
   use uniform
   use sandbox
   use cavity
+  use ellip
 
   use var, only : nzmsize
 
@@ -114,6 +115,10 @@ contains
 
        call init_cavity(ux1, uy1, uz1, ep1, phi1)
 
+    elseif (itype.eq.itype_ellip) then
+
+       call init_ellip (ux1, uy1, uz1, phi1)
+
     else
   
          if (nrank.eq.0) then
@@ -201,6 +206,10 @@ contains
     elseif (itype.eq.itype_cavity) then
 
        call boundary_conditions_cavity(ux, uy, uz, phi)
+
+    elseif (itype.eq.itype_ellip) then
+
+       call boundary_conditions_ellip(ux, uy, uz, phi)
 
     endif
 
@@ -351,6 +360,10 @@ contains
 
        call postprocess_cavity(ux, uy, uz, phi)
 
+    elseif (itype.eq.itype_ellip) then
+
+       call postprocess_ellip(ux, uy, uz, ep)
+
     endif
 
     if (iforces.eq.1) then
@@ -392,7 +405,11 @@ contains
 
     else if (itype .eq. itype_uniform) then
 
-       call visu_uniform_init(case_visu_init)      
+       call visu_uniform_init(case_visu_init)    
+       
+    else if (itype.eq.itype_ellip) then 
+
+       call visu_ellip_init(case_visu_init)
 
     end if
     
@@ -447,6 +464,11 @@ contains
 
        call visu_uniform(ux1, uy1, uz1, pp3, phi1, ep1, num)
        called_visu = .true.
+
+    elseif (itype.eq.itype_ellip) then
+
+      call visu_ellip(ux1, uy1, uz1, pp3, phi1, ep1, num)
+      called_visu = .true.
 
     endif
 

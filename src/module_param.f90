@@ -284,7 +284,8 @@ module param
        itype_abl = 10, &
        itype_uniform = 11, &
        itype_sandbox = 12, &
-       itype_cavity = 13
+       itype_cavity = 13, &
+       itype_ellip = 14
 
   integer :: cont_phi,itr,itime,itest,iprocessing
   integer :: ifft,istret,iforc_entree,iturb

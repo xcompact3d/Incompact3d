@@ -348,6 +348,8 @@ subroutine parameter(input_i3d)
         print *,'Sandbox'
      elseif (itype.eq.itype_cavity) then
         print *,'Cavity'  
+     elseif (itype.eq.itype_ellip) then
+        print *,'Simulating Ellipsoid'
      else
         print *,'Unknown itype: ', itype
         stop
