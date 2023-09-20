@@ -145,6 +145,14 @@ contains
     
     end subroutine NormalizeQuaternion
 
+    subroutine QuaternionNorm(q,norm)
+      real(mytype),intent(in) :: q(4)
+      real(mytype),intent(out):: norm
+
+      norm = sqrt_prec(q(1)**2+q(2)**2+q(3)**2+q(4)**2)
+
+    end subroutine QuaternionNorm
+
     subroutine QuaternionConjugate(q, q_c)
       real(mytype), intent(in) :: q(4)
       real(mytype), intent(out) :: q_c(4)
@@ -207,289 +215,235 @@ contains
 
       radius=sqrt_prec(scaled_point(1)**two+scaled_point(2)**two+scaled_point(3)**two)
 
-   end subroutine
+   end subroutine    
 
+  subroutine CrossProduct(a, b, result)
+    real(mytype), intent(in) :: a(3), b(3)
+    real(mytype), intent(inout) :: result(3)
+  
+    result(1) = a(2) * b(3) - a(3) * b(2)
+    result(2) = a(3) * b(1) - a(1) * b(3)
+    result(3) = a(1) * b(2) - a(2) * b(1)
+  end subroutine CrossProduct
+  
+  subroutine CalculatePointVelocity(point, center, linearVelocity, angularVelocity, pointVelocity)
+    real(mytype), intent(in) :: point(3), center(3), linearVelocity(3), angularVelocity(3)
+    real(mytype), intent(out) :: pointVelocity(3)
+    real(mytype) :: crossed(3)
+    ! Compute the distance vector from the center to the point
+    real(mytype) :: distance(3)
+    distance = point - center
+  
+    ! Compute the cross product of angular velocity and distance vector
     
-    
-    
+    call CrossProduct(angularVelocity, distance, crossed)
+  
+    ! Calculate the velocity at the point
+    pointVelocity = crossed + linearVelocity
+  end subroutine CalculatePointVelocity
 
-    subroutine CrossProduct(a, b, result)
-      real(mytype), intent(in) :: a(3), b(3)
-      real(mytype), intent(inout) :: result(3)
-    
-      result(1) = a(2) * b(3) - a(3) * b(2)
-      result(2) = a(3) * b(1) - a(1) * b(3)
-      result(3) = a(1) * b(2) - a(2) * b(1)
-    end subroutine CrossProduct
-    
-    subroutine CalculatePointVelocity(point, center, linearVelocity, angularVelocity, pointVelocity)
-      real(mytype), intent(in) :: point(3), center(3), linearVelocity(3), angularVelocity(3)
-      real(mytype), intent(out) :: pointVelocity(3)
-      real(mytype) :: crossed(3)
-      ! Compute the distance vector from the center to the point
-      real(mytype) :: distance(3)
-      distance = point - center
-    
-      ! Compute the cross product of angular velocity and distance vector
-      
-      call CrossProduct(angularVelocity, distance, crossed)
-    
-      ! Calculate the velocity at the point
-      pointVelocity = crossed + linearVelocity
-    end subroutine CalculatePointVelocity
+  subroutine navierFieldGen(center, linearVelocity, angularVelocity, ep1, ep1_x, ep1_y, ep1_z)
+    use param
+    use decomp_2d
+    real(mytype), intent(in) :: center(3), linearVelocity(3), angularVelocity(3)
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ep1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(out) :: ep1_x, ep1_y, ep1_z
+    real(mytype) :: xm, ym, zm, point(3), x_pv, y_pv, z_pv, pointVelocity(3)
+    integer :: i,j,k
 
-    subroutine navierFieldGen(center, linearVelocity, angularVelocity, ep1, ep1_x, ep1_y, ep1_z)
-      use param
-      use decomp_2d
-      real(mytype), intent(in) :: center(3), linearVelocity(3), angularVelocity(3)
-      real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ep1
-      real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(out) :: ep1_x, ep1_y, ep1_z
-      real(mytype) :: xm, ym, zm, point(3), x_pv, y_pv, z_pv, pointVelocity(3)
-      integer :: i,j,k
-
-      do k = 1,xsize(3)
-        zm=real(k+xstart(3)-2, mytype)*dz
-        do j = 1,xsize(2)
-          ym=real(j+xstart(2)-2, mytype)*dy
-          do i = 1,xsize(1)
-            xm=real(i+xstart(1)-2, mytype)*dx
-            point=[xm,ym,zm]
-            if (ep1(i,j,k).eq.1) then 
-              call CalculatePointVelocity(point, center, linearVelocity, angularVelocity, pointVelocity)
-              x_pv=pointVelocity(1)
-              y_pv=pointVelocity(2)
-              z_pv=pointVelocity(3)
-            else
-              x_pv=0
-              y_pv=0
-              z_pv=0
-            endif
-            ep1_x(i,j,k)=x_pv
-            ep1_y(i,j,k)=y_pv
-            ep1_z(i,j,k)=z_pv
-          end do
+    do k = 1,xsize(3)
+      zm=real(k+xstart(3)-2, mytype)*dz
+      do j = 1,xsize(2)
+        ym=real(j+xstart(2)-2, mytype)*dy
+        do i = 1,xsize(1)
+          xm=real(i+xstart(1)-2, mytype)*dx
+          point=[xm,ym,zm]
+          if (ep1(i,j,k).eq.1) then 
+            call CalculatePointVelocity(point, center, linearVelocity, angularVelocity, pointVelocity)
+            x_pv=pointVelocity(1)
+            y_pv=pointVelocity(2)
+            z_pv=pointVelocity(3)
+          else
+            x_pv=0
+            y_pv=0
+            z_pv=0
+          endif
+          ep1_x(i,j,k)=x_pv
+          ep1_y(i,j,k)=y_pv
+          ep1_z(i,j,k)=z_pv
         end do
       end do
+    end do
 
-      end subroutine navierFieldGen
+    end subroutine navierFieldGen
 
+  
+    subroutine body_to_lab(p_body, q, p_lab)
+      real(mytype),intent(in) :: p_body(4), q(4)
+      real(mytype),intent(out):: p_lab(4)
+      real(mytype)            :: q_inv(4),q_m(4)
+
+      call QuaternionConjugate(q, q_inv)
+
+      call QuaternionMultiply(p_body,q_inv,q_m)
+      call QuaternionMultiply(q,q_m, p_lab)
+
+    end subroutine body_to_lab
+
+    subroutine lab_to_body(p_lab, q, p_body)
+      real(mytype),intent(in) :: p_lab(4), q(4)
+      real(mytype),intent(out):: p_body(4)
+      real(mytype)            :: q_inv(4),q_m(4)
+
+      call QuaternionConjugate(q, q_inv)
+
+      call QuaternionMultiply(p_lab,q,q_m)
+      call QuaternionMultiply(q_inv,q_m, p_body)
+
+    end subroutine lab_to_body
+
+    subroutine omega_stepper(omega_n, ang_accel, dt, omega_n1)
+      real(mytype),intent(in) :: omega_n(4), ang_accel(4), dt
+      real(mytype),intent(out):: omega_n1(4)
+      
+      omega_n1 = omega_n + ang_accel * dt
+
+    end subroutine omega_stepper
+
+    subroutine orientation_stepper(q1, omega_q, time_step, q_n1)
+      use param
+      real(mytype),intent(in) :: q1(4),omega_q(4),time_step
+      real(mytype),intent(out):: q_n1(4)
+      real(mytype)            :: mag, re_part, im_sc, im_part(3), omega_n1(4)
+
+      call QuaternionNorm(omega_q, mag)
+      re_part=cos_prec(mag*dt*half)
+      if (mag.gt.zero) then
+        im_sc = sin_prec(mag*dt*half)/mag
+      else 
+        im_sc = zero
+      endif
+      im_part=im_sc * omega_q(2:4)
+      omega_n1=[re_part,im_part(1),im_part(2),im_part(3)]
+      
+      call QuaternionMultiply(omega_n1,q1,q_n1)
+
+    end subroutine orientation_stepper
+
+    subroutine invert_3x3_matrix(matrix, inverse)
+      real(mytype), intent(in) :: matrix(3, 3)
+      real(mytype), intent(out) :: inverse(3, 3)
+      real(mytype) :: det
+    
+      ! Calculate the determinant of the 3x3 matrix
+      det = matrix(1, 1) * (matrix(2, 2) * matrix(3, 3) - matrix(3, 2) * matrix(2, 3)) &
+          - matrix(1, 2) * (matrix(2, 1) * matrix(3, 3) - matrix(3, 1) * matrix(2, 3)) &
+          + matrix(1, 3) * (matrix(2, 1) * matrix(3, 2) - matrix(3, 1) * matrix(2, 2))
+    
+      ! Check if the determinant is zero (singular matrix)
+      if (abs(det) < 1e-10) then
+        write(*, *) "Matrix is singular. Inverse does not exist."
+        return
+      end if
+    
+      ! Calculate the elements of the inverse matrix using Cramer's rule
+      inverse(1, 1) = (matrix(2, 2) * matrix(3, 3) - matrix(3, 2) * matrix(2, 3)) / det
+      inverse(1, 2) = (matrix(1, 3) * matrix(3, 2) - matrix(3, 3) * matrix(1, 2)) / det
+      inverse(1, 3) = (matrix(1, 2) * matrix(2, 3) - matrix(2, 2) * matrix(1, 3)) / det
+      inverse(2, 1) = (matrix(2, 3) * matrix(3, 1) - matrix(3, 3) * matrix(2, 1)) / det
+      inverse(2, 2) = (matrix(1, 1) * matrix(3, 3) - matrix(3, 1) * matrix(1, 3)) / det
+      inverse(2, 3) = (matrix(1, 3) * matrix(2, 1) - matrix(2, 3) * matrix(1, 1)) / det
+      inverse(3, 1) = (matrix(2, 1) * matrix(3, 2) - matrix(3, 1) * matrix(2, 2)) / det
+      inverse(3, 2) = (matrix(1, 2) * matrix(3, 1) - matrix(3, 2) * matrix(1, 1)) / det
+      inverse(3, 3) = (matrix(1, 1) * matrix(2, 2) - matrix(2, 1) * matrix(1, 2)) / det
+    end subroutine invert_3x3_matrix
+
+    subroutine matrix_vector_multiply(matrix, vector, result)
+      real(mytype), intent(in) :: matrix(3, 3)
+      real(mytype), intent(in) :: vector(3)
+      real(mytype), intent(out) :: result(3)
+      integer :: i, j
+    
+      do i = 1, 3
+        result(i) = zero
+        do j = 1, 3
+          result(i) = result(i) + matrix(i, j) * vector(j)
+        end do
+      end do
+    end subroutine matrix_vector_multiply
+    
     
 
-   !  subroutine CalculatePointVelocity(point, center, angularVelocity, velocity)
-   !    real(mytype), intent(in) :: point(3), center(3), angularVelocity(3)
-   !    real(mytype), intent(out) :: velocity(3)
-   !    real(mytype) :: distance(3)
-   !    real(mytype) :: crossProduct(3)
+    subroutine accel_get(omega, inertia, torque_b, ang_accel)
+      real(mytype),intent(in)  :: omega(4),inertia(3,3),torque_b(4) 
+      real(mytype),intent(out) :: ang_accel(4)
+      real(mytype)             :: inertia_inv(3,3),omega_v(3),torque_v(3),test(3),crossed(3)
 
-    
-   !    ! Compute the distance vector from the center to the point
-   !    distance = point - center
-    
-   !    ! Compute the cross product of angular velocity and distance vector
-   !    call CrossProduct(angularVelocity, distance, crossProduct)
-    
-   !    ! Calculate the velocity at the point
-   !    velocity = crossProduct
-   !  end subroutine CalculatePointVelocity
-    
+      call invert_3x3_matrix(inertia,inertia_inv)
+      omega_v=omega(2:4)
+      torque_v=torque_b(2:4)
+      call matrix_vector_multiply(inertia,omega_v,test)
+      call CrossProduct(omega_v,test,crossed)
+      call matrix_vector_multiply(inertia_inv,(torque_v-crossed),ang_accel)
 
-    ! !*******************************************************************************
-    ! !
-    ! subroutine IDW(Ncol,Xcol,Ycol,Zcol,Fxcol,Fycol,Fzcol,p,Xmesh,Ymesh,Zmesh,Fxmesh,Fymesh,Fzmesh)
-    ! !
-    ! !*******************************************************************************
+    end subroutine accel_get
 
-    !   implicit none
-    !   integer, intent(in) :: Ncol
-    !   real(mytype), dimension(Ncol), intent(in) :: Xcol,Ycol,Zcol,Fxcol,Fycol,Fzcol
-    !   real(mytype), intent(in) :: Xmesh,Ymesh,Zmesh
-    !   integer,intent(in) :: p
-    !   real(mytype), intent(inout) :: Fxmesh,Fymesh,Fzmesh
-    !   real(mytype), dimension(Ncol) :: d(Ncol), w(Ncol)
-    !   real(mytype) ::  wsum
-    !   integer :: i,imin
 
-    !   wsum=zero
-    !   do i=1,Ncol
-    !      d(i)=sqrt_prec((Xcol(i)-Xmesh)**2+(Ycol(i)-Ymesh)**2+(Zcol(i)-Zmesh)**2)
-    !      w(i)=one/d(i)**p
-    !      wsum=wsum+w(i)
-    !   enddo
 
-    !   if (minval(d)<0.001_mytype) then
-    !      imin=minloc(d,1)
-    !      Fxmesh=Fxcol(imin)
-    !      Fymesh=Fycol(imin)
-    !      Fzmesh=Fzcol(imin)
-    !   else
-    !      Fxmesh=zero
-    !      Fymesh=zero
-    !      Fzmesh=zero
-    !      do i=1,Ncol
-    !         Fxmesh=Fxmesh+w(i)*Fxcol(i)/wsum
-    !         Fymesh=Fymesh+w(i)*Fycol(i)/wsum
-    !         Fzmesh=Fzmesh+w(i)*Fzcol(i)/wsum
-    !      enddo
-    !   endif
+    subroutine ang_half_step(q, omega_q, torque, q_new, o_new)
+      use param
+      real(mytype),intent(in)  :: q(4),omega_q(4),torque(3)
+      real(mytype),intent(out) :: q_new(4),o_new(4)
+      real(mytype)             :: inertia(3,3)
+      real(mytype)             :: omega_b(4),torque_q(4),ang_accel_b(4),torque_b(4)
+      real(mytype)             :: omega_n_quarter_b(4),omega_n_quarter(4),omega_n_half_b(4),omega_n_half(4)
+      real(mytype)             :: q_half_predict(4)
 
-    ! end subroutine IDW
+      call lab_to_body(omega_q,q,omega_b)
+      torque_q(1)=zero
+      torque_q(2:4)=torque
 
-    ! !*******************************************************************************
-    ! !
-    ! real(mytype) function IsoKernel(dr,epsilon_par,dim)
-    ! !
-    ! !*******************************************************************************
+      call lab_to_body(torque_q,q,torque_b)
 
-    !   use constants
+      call accel_get(omega_b, inertia, torque_b, ang_accel_b)
 
-    !   implicit none
-    !   integer, intent(in) :: dim
-    !   real(mytype), intent(in) :: dr, epsilon_par
+      call omega_stepper(omega_b,ang_accel_b,dt*0.25,omega_n_quarter_b)
+      call omega_stepper(omega_b,ang_accel_b,dt*half,omega_n_half_b)
 
-    !   if (dim==2) then
-    !      IsoKernel = one/(epsilon_par**2*pi)*exp_prec(-(dr/epsilon_par)**2.0)
-    !   else if (dim==3) then
-    !      IsoKernel = one/(epsilon_par**3.0*pi**1.5)*exp_prec(-(dr/epsilon_par)**2.0)
-    !   else
-    !      write(*,*) "1D source not implemented"
-    !      stop
-    !   endif
+      call body_to_lab(omega_n_quarter_b,q,omega_n_quarter)
+      call orientation_stepper(q,omega_n_quarter,dt*half,q_half_predict)
+      
+      call body_to_lab(omega_n_half_b,q,omega_n_half)
 
-    ! end function IsoKernel
+      q_new=q_half_predict
+      o_new=omega_n_half
 
-    ! !*******************************************************************************
-    ! !
-    ! real(mytype) function AnIsoKernel(dx,dy,dz,nx,ny,nz,tx,ty,tz,sx,sy,sz,ec,et,es)
-    ! !
-    ! !*******************************************************************************
+    end subroutine ang_half_step
 
-    !   use constants
+    subroutine ang_full_step(q,omega_q,q_half,omega_n_half,torque,q_full,omega_full)
+      use param
+      real(mytype),intent(in)  :: q(4),omega_q(4),q_half(4),omega_n_half(4),torque(3)
+      real(mytype),intent(out) :: q_full(4),omega_full(4)
+      real(mytype)             :: inertia(3,3)
+      real(mytype)             :: omega_b(4),omega_n_half_b(4),omega_full_b(4)
+      real(mytype)             :: torque_q(4),torque_b(4)
+      real(mytype)             :: ang_accel_half_b(4),omega_n_half2(4)
 
-    !   implicit none
-    !   real(mytype), intent(in) :: dx,dy,dz,nx,ny,nz,tx,ty,tz,sx,sy,sz,ec,et,es
-    !   real(mytype) :: n,t,s
+      call lab_to_body(omega_q, q, omega_b)
+      call lab_to_body(omega_n_half,q_half,omega_n_half_b)
 
-    !   n=dx*nx+dy*ny+dz*nz ! normal projection
-    !   t=dx*tx+dy*ty+dz*tz ! Chordwise projection
-    !   s=dx*sx+dy*sy+dz*sz ! Spanwise projection
+      torque_q(1)=zero
+      torque_q(2:4)=torque
+      call lab_to_body(torque_q,q_half,torque_b)
 
-    !   if (abs(s)<=es) then
-    !      AnIsoKernel = exp_prec(-((n/et)**2.0+(t/ec)**2.0))/(ec*et*pi)
-    !   else
-    !      AnIsoKernel = zero
-    !   endif
+      call accel_get(omega_n_half_b,inertia,torque_b,ang_accel_half_b)
+      call body_to_lab(omega_n_half_b,q_half,omega_n_half2)
 
-    ! end function AnIsoKernel
+      call orientation_stepper(q,omega_n_half2,dt,q_full)
 
-    ! !*******************************************************************************
-    ! !
-    ! integer function FindMinimum(x,Start,End)
-    ! !
-    ! !*******************************************************************************
+      call omega_stepper(omega_b,ang_accel_half_b,dt,omega_full_b)
+      call body_to_lab(omega_full_b,q_full,omega_full)
 
-    !   implicit none
-    !   integer, dimension(1:), intent(in) :: x
-    !   integer, intent(in) :: Start, End
-    !   integer :: Minimum
-    !   integer :: Location
-    !   integer :: i
-
-    !   minimum = x(start)
-    !   Location = Start
-    !   do i=start+1,End
-    !      if (x(i) < Minimum) then
-    !         Minimum = x(i)
-    !         Location = i
-    !      endif
-    !   enddo
-    !   FindMinimum = Location
-
-    ! end function FindMinimum
-
-    ! !*******************************************************************************
-    ! !
-    ! subroutine swap(a,b)
-    ! !
-    ! !*******************************************************************************
-
-    !   implicit none
-    !   integer, intent(inout) :: a,b
-    !   integer :: Temp
-
-    !   Temp = a
-    !   a = b
-    !   b = Temp
-
-    ! end subroutine swap
-
-    ! !*******************************************************************************
-    ! !
-    ! subroutine sort(x,size)
-    ! !
-    ! !*******************************************************************************
-
-    !   implicit none
-    !   integer, dimension(1:), intent(inout) :: x
-    !   integer, intent(in) :: size
-    !   integer :: i
-    !   integer :: Location
-
-    !   do i=1,Size-1
-    !      location=FindMinimum(x,i,size)
-    !      call swap(x(i),x(Location))
-    !   enddo
-
-    ! end subroutine sort
-
-    ! !*******************************************************************************
-    ! !
-    ! function dirname(number)
-    ! !
-    ! !*******************************************************************************
-
-    !   integer, intent(in) :: number
-    !   character(len=6) :: dirname
-
-    !   ! Cast the (rounded) number to string using 6 digits and leading zeros
-    !   write (dirname, '(I6.1)')  number
-    !   ! This is the same w/o leading zeros
-    !   !write (dirname, '(I6)')  nint(number)
-    !   ! This is for one digit (no rounding)
-    !   !write (dirname, '(F4.1)')  number
-
-    ! end function dirname
-
-    ! !*******************************************************************************
-    ! !
-    ! function outdirname(number)
-    ! !
-    ! !*******************************************************************************
-
-    !   integer, intent(in) :: number
-    !   character(len=6) :: outdirname
-
-    !   ! Cast the (rounded) number to string using 6 digits and leading zeros
-    !   write (outdirname, '(I6.1)')  number
-    !   ! This is the same w/o leading zeros
-    !   !write (dirname, '(I6)')  nint(number)
-    !   ! This is for one digit (no rounding)
-    !   !write (dirname, '(F4.1)')  number
- 
-    ! end function outdirname
-
-    ! !*******************************************************************************
-    ! !
-    ! character(20) function int2str(num)
-    ! !
-    ! !*******************************************************************************
-
-    !   integer, intent(in) ::num
-    !   character(20) :: str
-
-    !   ! convert integer to string using formatted write
-    !   write(str, '(i20)') num
-    !   int2str = adjustl(str)
-
-    ! end function int2str
+    end subroutine ang_full_step
 
 end module ellipsoid_utils
