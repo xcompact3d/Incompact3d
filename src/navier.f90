@@ -264,6 +264,7 @@ contains
          duxydxyp3, uzp3, po3, dipp3, nxmsize, nymsize, nzmsize
     USE MPI
     USE ibm_param
+    USE ellipsoid_utils, ONLY: navierFieldGen
 
     implicit none
 
@@ -276,7 +277,7 @@ contains
     !Z PENCILS NXM NYM NZ  -->NXM NYM NZM
     real(mytype),dimension(zsize(1),zsize(2),zsize(3)),intent(in) :: divu3
     real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: pp3
-
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3))     :: ep1_ux,ep1_uy,ep1_uz
     integer :: nvect3,i,j,k,nlock
     integer :: code
     real(mytype) :: tmax,tmoy,tmax1,tmoy1
@@ -287,6 +288,11 @@ contains
        ta1(:,:,:) = ux1(:,:,:)
        tb1(:,:,:) = uy1(:,:,:)
        tc1(:,:,:) = uz1(:,:,:)
+    else if (itype.eq.itype_ellip) then
+       call navierFieldGen(position, linearVelocity, angularVelocity,ep1, ep1_ux, ep1_uy, ep1_uz)
+       ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:) + ep1(:,:,:)*ep1_ux(:,:,:)
+       tb1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:) + ep1(:,:,:)*ep1_uy(:,:,:)
+       tc1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:) + ep1(:,:,:)*ep1_uz(:,:,:)
     else
        ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:) + ep1(:,:,:)*lvx
        tb1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:) + ep1(:,:,:)*lvy

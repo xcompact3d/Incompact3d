@@ -16,6 +16,7 @@ program xcompact3d
   use ibm_param
   use ibm, only : body
   use genepsi, only : genepsi3d
+  use ellipsoid_utils, only: lin_step
 
   implicit none
 
@@ -74,6 +75,11 @@ program xcompact3d
         endif
         
         call test_flow(rho1,ux1,uy1,uz1,phi1,ep1,drho1,divu3)
+
+        call lin_step(position,linearVelocity,linearAcceleration,dt,position_1,linearVelocity_1)
+
+        position = position_1
+        linearVelocity = linearVelocity_1
 
      enddo !! End sub timesteps
 

@@ -446,4 +446,12 @@ contains
 
     end subroutine ang_full_step
 
+    subroutine lin_step(position,linearVelocity,linearAcceleration,time_step,position_1,linearVelocity_1)
+      real(mytype),intent(in)   :: position(3),linearVelocity(3),linearAcceleration(3),time_step
+      real(mytype),intent(out)  :: position_1(3),linearVelocity_1(3)
+
+      position_1(:) = position(:) + time_step*linearVelocity(:)
+      linearVelocity_1 = linearVelocity(:) + time_step*linearAcceleration(:)
+
+    end subroutine lin_step
 end module ellipsoid_utils
