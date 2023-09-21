@@ -22,7 +22,7 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,remp)
     use param, only : one, two, ten
     use ibm_param
     use dbg_schemes, only: sqrt_prec
-    use ellipsoid_utils, only: EllipsoidalRadius, NormalizeQuaternion
+    use ellipsoid_utils, only: NormalizeQuaternion, is_inside_ellipsoid
 
     implicit none
 
@@ -36,6 +36,7 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,remp)
     real(mytype)               :: zeromach
     real(mytype)               :: cexx,ceyy,cezz,dist_axi
     real(mytype)               :: point(3)
+    logical                    :: is_inside
 
     zeromach=one
     do while ((one + zeromach / two) .gt. one)
@@ -54,16 +55,16 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,remp)
 
 
     ! Update center of moving ellipsoid
-    if (t.ne.0.) then
-        cexx=cex+lvx*(t-ifirst*dt)
-        ceyy=cey+lvy*(t-ifirst*dt)
-        cezz=cez+lvz*(t-ifirst*dt)
-    else
-        cexx=cex
-        ceyy=cey
-        cezz=cez
-    endif
-    position=[cexx,ceyy,cezz]
+    ! if (t.ne.0.) then
+    !     cexx=cex+lvx*(t-ifirst*dt)
+    !     ceyy=cey+lvy*(t-ifirst*dt)
+    !     cezz=cez+lvz*(t-ifirst*dt)
+    ! else
+    !     cexx=cex
+    !     ceyy=cey
+    !     cezz=cez
+    ! endif
+    ! position=[cexx,ceyy,cezz]
     !  write(*,*) position
     !  ce=[cexx, ceyy, cezz]
     !
@@ -78,11 +79,12 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,remp)
         do i=nxi,nxf
             xm=real(i-1,mytype)*dx
             point=[xm, ym, zm]
-            call EllipsoidalRadius(point, position, orientation, shape, r)
+            ! call EllipsoidalRadius(point, position, orientation, shape, r)
+            call is_inside_ellipsoid(point, position, orientation, shape, ra, zeromach, is_inside)
             !  r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two+(zm-cezz)**two)
             !  r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two)
 
-            if (r-ra.gt.zeromach) then
+            if (.not.is_inside) then
                 !  write(*,*) i, j, k
                 cycle
             endif
@@ -230,7 +232,7 @@ subroutine init_ellip (ux1,uy1,uz1,phi1)
     USE MPI
     USE ibm_param
     use dbg_schemes, only: exp_prec
-    use ellipsoid_utils, only: NormalizeQuaternion
+    use ellipsoid_utils, only: NormalizeQuaternion,ellipInertiaCalculate
 
 
     implicit none
@@ -248,13 +250,18 @@ subroutine init_ellip (ux1,uy1,uz1,phi1)
     call NormalizeQuaternion(orientation)
     position=[cex,cey,cez]
     linearVelocity=[lvx,lvy,lvz]
-    angularVelocity=[avx,avy,avz]
-
-    write(*,*) 'set shape = ', shape
-    write(*,*) 'set orientation = ', orientation
-    write(*,*) 'set position = ', position
-    write(*,*) 'set linear velocity = ', linearVelocity
-    write(*,*) 'set angular velocity = ', angularVelocity
+    angularVelocity=[zero,avx,avy,avz]
+    call ellipInertiaCalculate(shape,rho_s,inertia)
+    
+    if (nrank==0) then 
+        write(*,*) 'set shape = ', shape
+        write(*,*) 'set orientation = ', orientation
+        write(*,*) 'set position = ', position
+        write(*,*) 'set linear velocity = ', linearVelocity
+        write(*,*) 'set angular velocity = ', angularVelocity
+        write(*,*) 'set moment of inertia = ', inertia
+        write(*,*) 'density of solid = ', rho_s
+    end if
 
     if (iscalar==1) then
 

@@ -617,9 +617,9 @@ end module simulation_stats
 !############################################################################
 module ibm_param
   use decomp_2d, only : mytype
-  real(mytype) :: cex,cey,cez,shx,shy,shz,oriw,orii,orij,orik,lvx,lvy,lvz,avx,avy,avz,ra,ubcx,ubcy,ubcz,rads, c_air
-  real(mytype) :: position(3),orientation(4),linearVelocity(3),angularVelocity(3),linearAcceleration(3),shape(3)
-  real(mytype) :: position_1(3),linearVelocity_1(3)
+  real(mytype) :: cex,cey,cez,shx,shy,shz,oriw,orii,orij,orik,lvx,lvy,lvz,avx,avy,avz,ra,ubcx,ubcy,ubcz,rads,rho_s,c_air
+  real(mytype) :: position(3),orientation(4),linearVelocity(3),angularVelocity(4),linearAcceleration(3),torque(3),shape(3),inertia(3,3)
+  real(mytype) :: position_1(3),linearVelocity_1(3),orientation_1(4),angularVelocity_1(4)
   real(mytype) :: chord,thickness,omega
   integer :: inana ! Analytical BC as Input
   integer :: imove
