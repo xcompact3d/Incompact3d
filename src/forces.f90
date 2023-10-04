@@ -17,11 +17,13 @@ module forces
   implicit none
 
   integer :: nvol,iforces
-  real(mytype),save,allocatable,dimension(:,:,:) :: ux01, uy01, ux11, uy11, ppi1
-  real(mytype),allocatable,dimension(:) :: xld,xrd,yld,yud
-  integer,allocatable,dimension(:) :: icvlf,icvrt,jcvlw,jcvup
-  integer,allocatable,dimension(:) :: icvlf_lx,icvrt_lx,icvlf_ly,icvrt_ly
-  integer,allocatable,dimension(:) :: jcvlw_lx,jcvup_lx,jcvlw_ly,jcvup_ly
+  real(mytype),save,allocatable,dimension(:,:,:) :: ux01, uy01, ux11, uy11, ppi1, uz01, uz11
+  real(mytype),allocatable,dimension(:) :: xld, xrd, yld, yud, xld2, xrd2, yld2, yud2, zld, zrd
+  integer,allocatable,dimension(:) :: icvlf,icvrt,jcvlw,jcvup,zcvlf,zcvrt
+  integer,allocatable,dimension(:) :: icvlf_lx, icvrt_lx, icvlf_ly, icvrt_ly, icvlf_lz, icvrt_lz
+  integer,allocatable,dimension(:) :: jcvlw_lx, jcvup_lx, jcvlw_ly, jcvup_ly, jcvlw_lz, jcvup_lz
+  integer,allocatable,dimension(:) :: zcvlf_lx, zcvrt_lx, zcvlf_ly, zcvrt_ly
+  
 
   character(len=*), parameter :: io_restart_forces = "restart-forces-io", &
        resfile = "restart-forces"
@@ -43,16 +45,34 @@ contains
     call alloc_x(ux11)
     call alloc_x(uy11)
     call alloc_x(ppi1)
+    call alloc_x(uz01)
+    call alloc_x(uz11)
 
     ux01 = zero
     uy01 = zero
     ux11 = zero
     uy11 = zero
+    uz01 = zero
+    uz11 = zero    
 
-    allocate(icvlf(nvol),icvrt(nvol),jcvlw(nvol),jcvup(nvol))
-    allocate(icvlf_lx(nvol),icvrt_lx(nvol),icvlf_ly(nvol),icvrt_ly(nvol))
-    allocate(jcvlw_lx(nvol),jcvup_lx(nvol),jcvlw_ly(nvol),jcvup_ly(nvol))
+    allocate(icvlf(nvol), icvrt(nvol), jcvlw(nvol), jcvup(nvol), zcvlf(nvol), zcvrt(nvol))
+    allocate(icvlf_lx(nvol), icvrt_lx(nvol), icvlf_ly(nvol), icvrt_ly(nvol), icvlf_lz(nvol), icvrt_lz(nvol))
+    allocate(jcvlw_lx(nvol), jcvup_lx(nvol), jcvlw_ly(nvol), jcvup_ly(nvol), jcvlw_lz(nvol), jcvup_lz(nvol))
+    allocate(zcvlf_lx(nvol), zcvrt_lx(nvol), zcvlf_ly(nvol), zcvrt_ly(nvol))
+    allocate(xld2(nvol), xrd2(nvol), yld2(nvol), yud2(nvol))
 
+   !  if ((iibm.ne.0).and.(t.ne.0.)) then
+   !    xld2(:) = xld(:) + (t-ifirst*dt)*ubcx
+   !    xrd2(:) = xrd(:) + (t-ifirst*dt)*ubcx
+   !    yld2(:) = yld(:) + (t-ifirst*dt)*ubcy
+   !    yud2(:) = yud(:) + (t-ifirst*dt)*ubcy
+   ! else
+      xld2(:) = xld(:)
+      xrd2(:) = xrd(:)
+      yld2(:) = yld(:)
+      yud2(:) = yud(:)
+   ! endif
+  
     !     Definition of the Control Volume
     !*****************************************************************
     !! xld,xrd,yld,yud: limits of control volume (!!don't use cex and cey anymore!!)
@@ -82,10 +102,22 @@ contains
        icvrt_lx(iv) = icvrt(iv)
        jcvlw_lx(iv) = max(jcvlw(iv)+1-xstart(2),1)
        jcvup_lx(iv) = min(jcvup(iv)+1-xstart(2),xsize(2))
+       jcvlw_lz(iv) = max(jcvlw(iv)+1-zstart(2),1)
+       jcvup_lz(iv) = min(jcvup(iv)+1-zstart(2),zsize(2))       
+  
        icvlf_ly(iv) = max(icvlf(iv)+1-ystart(1),1)
        icvrt_ly(iv) = min(icvrt(iv)+1-ystart(1),ysize(1))
+       icvlf_lz(iv) = max(icvlf(iv)+1-zstart(1),1)
+       icvrt_lz(iv) = min(icvrt(iv)+1-zstart(1),zsize(1))   
        jcvlw_ly(iv) = jcvlw(iv)
        jcvup_ly(iv) = jcvup(iv)
+
+       zcvlf(iv) = nint(zld(iv)/dz)+1
+       zcvrt(iv) = nint(zrd(iv)/dz)+1
+       zcvlf_lx(iv) = max(zcvlf(iv)+1-xstart(3),1)
+       zcvrt_lx(iv) = min(zcvrt(iv)+1-xstart(3),xsize(3)) 
+       zcvlf_ly(iv) = max(zcvlf(iv)+1-ystart(3),1)
+       zcvrt_ly(iv) = min(zcvrt(iv)+1-ystart(3),ysize(3))        
     enddo
 
     if (nrank==0) then
@@ -104,6 +136,8 @@ contains
           write(*,"('     xrd, icvrt     : (',F6.2,',',I6,')')") xrd(iv), icvrt(iv)
           write(*,"('     yld, jcvlw     : (',F6.2,',',I6,')')") yld(iv), jcvlw(iv)
           write(*,"('     yud, jcvup     : (',F6.2,',',I6,')')") yud(iv), jcvup(iv)
+          write(*,"('     zld, zcvlf     : (',F6.2,',',I6,')')") zld(iv), zcvlf(iv)
+          write(*,"('     zrd, zcvrt     : (',F6.2,',',I6,')')") zrd(iv), zcvrt(iv)      
        enddo
        write(*,*) '==========================================================='
     endif
@@ -113,7 +147,9 @@ contains
     call decomp_2d_register_variable(io_restart_forces, "uy01", 1, 0, 0, mytype)
     call decomp_2d_register_variable(io_restart_forces, "ux11", 1, 0, 0, mytype)
     call decomp_2d_register_variable(io_restart_forces, "uy11", 1, 0, 0, mytype)
-    
+    call decomp_2d_register_variable(io_restart_forces, "uz01", 1, 0, 0, mytype)
+    call decomp_2d_register_variable(io_restart_forces, "uz11", 1, 0, 0, mytype)
+
   end subroutine init_forces
 
   subroutine restart_forces(itest1)
