@@ -232,7 +232,7 @@ subroutine init_ellip (ux1,uy1,uz1,phi1)
     USE MPI
     USE ibm_param
     use dbg_schemes, only: exp_prec
-    use ellipsoid_utils, only: NormalizeQuaternion,ellipInertiaCalculate
+    use ellipsoid_utils, only: NormalizeQuaternion,ellipInertiaCalculate,ellipMassCalculate
 
 
     implicit none
@@ -252,6 +252,7 @@ subroutine init_ellip (ux1,uy1,uz1,phi1)
     linearVelocity=[lvx,lvy,lvz]
     angularVelocity=[zero,avx,avy,avz]
     call ellipInertiaCalculate(shape,rho_s,inertia)
+    call ellipMassCalculate(shape,rho_s,ellip_m)
     
     if (nrank==0) then 
         write(*,*) 'set shape = ', shape

@@ -314,11 +314,11 @@ contains
 
     end subroutine lab_to_body
 
-    subroutine omega_stepper(omega_n, ang_accel, dt, omega_n1)
-      real(mytype),intent(in) :: omega_n(4), ang_accel(4), dt
+    subroutine omega_stepper(omega_n, ang_accel, time_step, omega_n1)
+      real(mytype),intent(in) :: omega_n(4), ang_accel(4), time_step
       real(mytype),intent(out):: omega_n1(4)
       
-      omega_n1 = omega_n + ang_accel * dt
+      omega_n1 = omega_n + ang_accel * time_step
 
     end subroutine omega_stepper
 
@@ -329,9 +329,9 @@ contains
       real(mytype)            :: mag, re_part, im_sc, im_part(3), omega_n1(4)
 
       call QuaternionNorm(omega_q, mag)
-      re_part=cos_prec(mag*dt*half)
+      re_part=cos_prec(mag*time_step*half)
       if (mag.gt.zero) then
-        im_sc = sin_prec(mag*dt*half)/mag
+        im_sc = sin_prec(mag*time_step*half)/mag
       else 
         im_sc = zero
       endif
@@ -389,7 +389,7 @@ contains
     subroutine accel_get(omega, inertia, torque_b, ang_accel)
       real(mytype),intent(in)  :: omega(4),inertia(3,3),torque_b(4) 
       real(mytype),intent(out) :: ang_accel(4)
-      real(mytype)             :: inertia_inv(3,3),omega_v(3),torque_v(3),test(3),crossed(3)
+      real(mytype)             :: inertia_inv(3,3),omega_v(3),torque_v(3),test(3),crossed(3),ang_accel_v(3)
 
       ! write(*,*) 'inverting ', inertia
       call invert_3x3_matrix(inertia,inertia_inv)
@@ -397,7 +397,9 @@ contains
       torque_v=torque_b(2:4)
       call matrix_vector_multiply(inertia,omega_v,test)
       call CrossProduct(omega_v,test,crossed)
-      call matrix_vector_multiply(inertia_inv,(torque_v-crossed),ang_accel)
+      call matrix_vector_multiply(inertia_inv,(torque_v-crossed),ang_accel_v)
+      ang_accel(:)=0_mytype
+      ang_accel(2:4)=ang_accel_v(1:3)
 
     end subroutine accel_get
 
@@ -461,7 +463,7 @@ contains
 
     subroutine ang_step(q,omega_q,torque_vec,time_step,q1,omega1)
       use param
-      use ibm_param
+      use ibm_param, only: inertia
       real(mytype),intent(in) :: q(4),omega_q(4),torque_vec(3),time_step
       real(mytype),intent(out):: q1(4),omega1(4)
       real(mytype)            :: torque_q(4),omega_b(4),torque_b(4),omega_half_b(4),omega1_b(4)
@@ -494,10 +496,13 @@ contains
     end subroutine ang_step
 
 
-    subroutine lin_step(position,linearVelocity,linearAcceleration,time_step,position_1,linearVelocity_1)
-      real(mytype),intent(in)   :: position(3),linearVelocity(3),linearAcceleration(3),time_step
+    subroutine lin_step(position,linearVelocity,linearForce,time_step,position_1,linearVelocity_1)
+      use ibm_param, only: ellip_m
+      real(mytype),intent(in)   :: position(3),linearVelocity(3),linearForce(3),time_step
       real(mytype),intent(out)  :: position_1(3),linearVelocity_1(3)
+      real(mytype)              :: linearAcceleration(3)
 
+      linearAcceleration(:) = linearForce(:) / ellip_m
       position_1(:) = position(:) + time_step*linearVelocity(:)
       linearVelocity_1 = linearVelocity(:) + time_step*linearAcceleration(:)
 

@@ -212,7 +212,7 @@ contains
 
   end subroutine restart_forces
 
-  subroutine force(ux1,uy1,ep1)
+  subroutine force(ux1,uy1,uz1,ep1)
 
     USE param
     USE variables
@@ -220,40 +220,62 @@ contains
     USE MPI
     USE ibm_param
 
-    use var, only : ta1, tb1, tc1, td1, di1
-    use var, only : ux2, uy2, ta2, tb2, tc2, td2, di2
-
+    use var, only : ta1, tb1, tc1, td1, te1, tf1, tg1, th1, ti1, di1
+    use var, only : ux2, uy2, uz2, ta2, tb2, tc2, td2, te2, tf2, tg2, th2, ti2, di2
+    use var, only : ux3, uy3, uz3, ta3, tb3, tc3, td3, te3, tf3, tg3, th3, ti3, di3
+      
+  
     implicit none
     character(len=30) :: filename, filename2
     integer :: nzmsize
     integer                                             :: i, iv, j, k, kk, code, jj
     integer                                             :: nvect1,nvect2,nvect3
 
-    real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1, uy1
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1, uy1, uz1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ep1
 
     real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: ppi2
+    real(mytype), dimension(zsize(1),zsize(2),zsize(3)) :: ppi3
 
-    real(mytype), dimension(nz) :: yLift,xDrag
-    real(mytype) :: yLift_mean,xDrag_mean
+    real(mytype), dimension(nz) :: yLift,xDrag, zLat
+    real(mytype) :: yLift_mean,xDrag_mean,zLat_mean
 
     real(mytype), dimension(ny-1) :: del_y
 
-    real(mytype), dimension(nz) :: tunstxl, tunstyl
-    real(mytype), dimension(nz) :: tconvxl,tconvyl
+    real(mytype), dimension(nz) :: tunstxl, tunstyl, tunstzl
+    real(mytype), dimension(nz) :: tconvxl,tconvyl,tconvzl
     real(mytype), dimension(nz) :: tpresxl,tpresyl
-    real(mytype), dimension(nz) :: tdiffxl,tdiffyl
+    real(mytype), dimension(nz) :: tdiffxl,tdiffyl,tdiffzl
 
-    real(mytype), dimension(nz) :: tunstx, tunsty
-    real(mytype), dimension(nz) :: tconvx,tconvy
+    real(mytype), dimension(nz) :: tunstx, tunsty, tunstz
+    real(mytype), dimension(nz) :: tconvx,tconvy,tconvz
     real(mytype), dimension(nz) :: tpresx,tpresy
-    real(mytype), dimension(nz) :: tdiffx,tdiffy
+    real(mytype), dimension(nz) :: tdiffx,tdiffy,tdiffz
 
-    real(mytype) :: uxmid,uymid,prmid
-    real(mytype) :: dudxmid,dudymid,dvdxmid,dvdymid
-    real(mytype) :: fac,tsumx,tsumy
-    real(mytype) :: fcvx,fcvy,fprx,fpry,fdix,fdiy
-    real(mytype) :: xmom,ymom
+        
+    
+    real(mytype), dimension(ny) :: tconvxl2, tconvyl2, tconvzl2
+    real(mytype), dimension(ny) :: tdiffxl2, tdiffyl2, tdiffzl2
+    real(mytype), dimension(ny) :: tconvx2, tconvy2, tconvz2
+    real(mytype), dimension(ny) :: tdiffx2, tdiffy2, tdiffz2
+    real(mytype), dimension(ny) :: tpreszl, tpresz
+    
+    
+    real(mytype) :: uxmid,uymid,uzmid,prmid
+    real(mytype) :: dudxmid,dudymid,dudzmid,dvdxmid,dvdymid,dvdzmid
+    real(mytype) :: dwdxmid,dwdymid,dwdzmid
+    real(mytype) :: fac,tsumx,tsumy,tsumz
+    real(mytype) :: fcvx,fcvy,fcvz,fprx,fpry,fprz,fdix,fdiy,fdiz
+    real(mytype) :: xmom,ymom,zmom
+    real(mytype), dimension(ny) :: ztpresx, ztpresy
+    real(mytype), dimension(nz) :: zyLift, zxDrag, zzLat
+    real(mytype) :: zyLift_mean, zxDrag_mean, zzLat_mean
+
+
+    real(mytype), dimension(nz) :: drag1, drag2, drag11, drag22
+    real(mytype), dimension(nz) :: drag3, drag4, drag33, drag44
+    real(mytype) :: mom1, mom2, mom3, tp1, tp2, tp3, dra1, dra2, dra3
+  
 
     nvect1=xsize(1)*xsize(2)*xsize(3)
     nvect2=ysize(1)*ysize(2)*ysize(3)
@@ -273,6 +295,7 @@ contains
              do i = 1, xsize(1)
                 ux11(i,j,k)=ux1(i,j,k)
                 uy11(i,j,k)=uy1(i,j,k)
+                uz11(i,j,k)=uz1(i,j,k)
              enddo
           enddo
        enddo
@@ -283,6 +306,7 @@ contains
              do i = 1, xsize(1)
                 ux01(i,j,k)=ux1(i,j,k)
                 uy01(i,j,k)=uy1(i,j,k)
+                uz01(i,j,k)=uz1(i,j,k)
              enddo
           enddo
        enddo
@@ -291,18 +315,40 @@ contains
 
     call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,1)    ! dudx !x is 1
     call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,2) ! dvdx !y is 2
+    call derx (te1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,3) ! dw/dx!z is 3
+
     call transpose_x_to_y(ta1,ta2) ! dudx
     call transpose_x_to_y(tb1,tb2) ! dvdx
+    call transpose_x_to_y(te1,te2) ! dw/dx
 
     call transpose_x_to_y(ux1,ux2)
     call transpose_x_to_y(uy1,uy2)
+    call transpose_x_to_y(uz1,uz2)
     call transpose_x_to_y(ppi1,ppi2)
 
     call dery (tc2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,1) ! dudy !x is 1
     call dery (td2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,2)    ! dvdy !y is 2
+    call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,3) ! dw/dy!z is 3
+    
+
+    call transpose_y_to_z(ux2,ux3)
+    call transpose_y_to_z(uy2,uy3)
+    call transpose_y_to_z(uz2,uz3)
+
+    call derz (tg3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,1)  ! du/dz
+    call derz (th3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,2)  ! dv/dz
+    call derz (ti3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,3)     ! dw/dz
+  
+    call transpose_z_to_y(tg3,tg2) ! du/dz
+    call transpose_z_to_y(th3,th2) ! dv/dz
+    call transpose_z_to_y(ti3,ti2) ! 
+
     call transpose_y_to_x(tc2,tc1) ! dudy
     call transpose_y_to_x(td2,td1) ! dvdy
-
+    call transpose_y_to_x(th2,th1) ! dv/dz
+    call transpose_y_to_x(tf2,tf1) ! dw/dy
+    call transpose_y_to_x(tg2,tg1) ! 
+    call transpose_y_to_x(ti2,ti1) ! 
     !*****************************************************************
     !      Drag and Lift coefficients
     !*****************************************************************
@@ -321,9 +367,11 @@ contains
 
        tunstxl=zero
        tunstyl=zero
+       tunstzl=zero
        do k=1,xsize(3)
           tsumx=zero
           tsumy=zero
+          tsumz=zero
           do j=jcvlw_lx(iv),jcvup_lx(iv)
              do i=icvlf_lx(iv),icvrt_lx(iv)
                 !     The velocity time rate has to be relative to the cell center, 
@@ -339,13 +387,18 @@ contains
                 fac   = (onepfive*uy1(i,j,k)-two*uy01(i,j,k)+half*uy11(i,j,k))*(one-ep1(i,j,k))
                 tsumy = tsumy+fac*dx*del_y(j+(xstart(2)-1))/dt !tsumy+fac*dx*dy/dt
                 !sumy(k) = sumy(k)+dudt1*dx*dy
+
+                fac   = (onepfive*uz1(i,j,k)-two*uz01(i,j,k)+half*uz11(i,j,k))*(one-ep1(i,j,k))
+                tsumz = tsumz+fac*dx*dy*dz/dt     
              enddo
           enddo
           tunstxl(xstart(3)-1+k)=tsumx
           tunstyl(xstart(3)-1+k)=tsumy
+          tunstzl(xstart(3)-1+k)=tsumz
        enddo
        call MPI_ALLREDUCE(tunstxl,tunstx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        call MPI_ALLREDUCE(tunstyl,tunsty,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(tunstzl,tunstz,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
 !!$!*********************************************************************************
 !!$!     Secondly, the surface momentum fluxes
@@ -358,14 +411,34 @@ contains
 !!$!        \    \__\    \
 !!$!        \            \
 !!$!        \       CV   \
-!!$!(jcvlw) A____________D      
+!!$!(jcvlw) A____________D     
+       
+  drag1(:)=0.
+  drag2(:)=0.
+  drag3(:)=0.
+  drag4(:)=0.
+  
+  drag11(:)=0.
+  drag22(:)=0.
+  drag33(:)=0.
+  drag44(:)=0.
 
        tconvxl=zero
        tconvyl=zero
+       tconvzl=zero
        tdiffxl=zero
        tdiffyl=zero
+       tdiffzl=zero
        tpresxl=zero
        tpresyl=zero
+       tpreszl=zero
+
+       tconvxl2=zero
+       tconvyl2=zero
+       tconvzl2=zero
+       tdiffxl2=zero
+       tdiffyl2=zero
+       tdiffzl2=zero  
        !BC and AD : x-pencils
        !AD
        if ((jcvlw(iv).ge.xstart(2)).and.(jcvlw(iv).le.xend(2))) then
@@ -374,34 +447,47 @@ contains
              kk=xstart(3)-1+k
              fcvx=zero
              fcvy=zero
+             fcvz=zero
              fpry=zero
              fdix=zero
              fdiy=zero
+             fdiz=zero
              do i=icvlf_lx(iv),icvrt_lx(iv)-1
                 !momentum flux
                 uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
                 uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
-                fcvx  = fcvx -uxmid*uymid*dx
-                fcvy  = fcvy -uymid*uymid*dx
+                uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k))
+
+                fcvx  = fcvx -uxmid*uymid*dx*dz
+                fcvy  = fcvy -uymid*uymid*dx*dz
+                fcvz  = fcvz -uymid*uzmid*dx*dz
+
 
                 !pressure
                 prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))
-                fpry  = fpry +prmid*dx
+                fpry  = fpry +prmid*dx*dz
 
                 !viscous term
                 dudymid = half*(tc1(i,j,k)+tc1(i+1,j,k))
                 dvdxmid = half*(tb1(i,j,k)+tb1(i+1,j,k))
                 dvdymid = half*(td1(i,j,k)+td1(i+1,j,k))
-                fdix    = fdix -(xnu*(dudymid+dvdxmid)*dx)
-                fdiy    = fdiy -two*xnu*dvdymid*dx
+                dwdymid = half*(tf1(i,j,k)+tf1(i+1,j,k))
+                dvdzmid = half*(th1(i,j,k)+th1(i+1,j,k))
+
+                fdix    = fdix -(xnu*(dudymid+dvdxmid)*dx*dz)
+                fdiy    = fdiy -two*xnu*dvdymid*dx*dz
+                fdiz = fdiz -(xnu*(dwdymid+dvdzmid)*dx*dz)
+
 
              enddo
 
              tconvxl(kk)=tconvxl(kk)+fcvx
              tconvyl(kk)=tconvyl(kk)+fcvy
+             tconvzl(kk)=tconvzl(kk)+fcvz
              tpresyl(kk)=tpresyl(kk)+fpry
              tdiffxl(kk)=tdiffxl(kk)+fdix
              tdiffyl(kk)=tdiffyl(kk)+fdiy
+             tdiffzl(kk)=tdiffzl(kk)+fdiz
           enddo
        endif
        !BC
@@ -411,33 +497,47 @@ contains
              kk=xstart(3)-1+k
              fcvx=zero
              fcvy=zero
+             fcvz=zero
              fpry=zero
              fdix=zero
              fdiy=zero
+             fdiz=zero
              do i=icvlf_lx(iv),icvrt_lx(iv)-1
                 !momentum flux
                 uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
                 uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
-                fcvx= fcvx +uxmid*uymid*dx
-                fcvy= fcvy +uymid*uymid*dx
+                uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k))
+
+                fcvx= fcvx +uxmid*uymid*dx*dz
+                fcvy= fcvy +uymid*uymid*dx*dz
+                fcvz= fcvz +uymid*uzmid*dx*dz
+
 
                 !pressure
                 prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))
-                fpry = fpry -prmid*dx
+                fpry = fpry -prmid*dx*dz
 
                 !viscous term
                 dudymid = half*(tc1(i,j,k)+tc1(i+1,j,k))
                 dvdxmid = half*(tb1(i,j,k)+tb1(i+1,j,k))
                 dvdymid = half*(td1(i,j,k)+td1(i+1,j,k))
-                fdix = fdix +(xnu*(dudymid+dvdxmid)*dx)
-                fdiy = fdiy +two*xnu*dvdymid*dx
+                dwdymid = half*(tf1(i,j,k)+tf1(i+1,j,k))
+                dvdzmid = half*(th1(i,j,k)+th1(i+1,j,k))
+  
+                fdix = fdix +(xnu*(dudymid+dvdxmid)*dx*dz)
+                fdiy = fdiy +two*xnu*dvdymid*dx*dz
+                fdiz = fdiz +(xnu*(dwdymid+dvdzmid)*dx*dz)
 
              enddo
              tconvxl(kk)=tconvxl(kk)+fcvx
              tconvyl(kk)=tconvyl(kk)+fcvy
+             tconvzl(kk)=tconvzl(kk)+fcvz
+
              tpresyl(kk)=tpresyl(kk)+fpry
              tdiffxl(kk)=tdiffxl(kk)+fdix
              tdiffyl(kk)=tdiffyl(kk)+fdiy
+             tdiffzl(kk)=tdiffzl(kk)+fdiz
+
           enddo
        endif
        !AB and DC : y-pencils
@@ -448,32 +548,46 @@ contains
              kk=ystart(3)-1+k
              fcvx=zero
              fcvy=zero
+             fcvz=zero
              fprx=zero
              fdix=zero
              fdiy=zero
+             fdiz=zero
              do j=jcvlw_ly(iv),jcvup_ly(iv)-1
                 !momentum flux
                 uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k))
                 uymid = half*(uy2(i,j,k)+uy2(i,j+1,k))
-                fcvx= fcvx -uxmid*uxmid*del_y(j)
-                fcvy= fcvy -uxmid*uymid*del_y(j)
+                uzmid = half*(uz2(i,j,k)+uz2(i,j+1,k))
+
+                fcvx= fcvx -uxmid*uxmid*del_y(j)*dz
+                fcvy= fcvy -uxmid*uymid*del_y(j)*dz
+                fcvz= fcvz -uxmid*uzmid*del_y(j)*dz
+
 
                 !pressure
                 prmid=half*(ppi2(i,j,k)+ppi2(i,j+1,k))
-                fprx = fprx +prmid*del_y(j)
+                fprx = fprx +prmid*del_y(j)*dz
 
                 !viscous term
                 dudxmid = half*(ta2(i,j,k)+ta2(i,j+1,k))
                 dudymid = half*(tc2(i,j,k)+tc2(i,j+1,k))
                 dvdxmid = half*(tb2(i,j,k)+tb2(i,j+1,k))
-                fdix = fdix -two*xnu*dudxmid*del_y(j)
-                fdiy = fdiy -xnu*(dvdxmid+dudymid)*del_y(j)
+                dwdxmid = half*(te2(i,j,k)+te2(i,j+1,k))
+                dudzmid = half*(tg2(i,j,k)+tg2(i,j+1,k))
+
+                fdix = fdix -two*xnu*dudxmid*del_y(j)*dz
+                fdiy = fdiy -xnu*(dvdxmid+dudymid)*del_y(j)*dz
+                fdiz = fdiz -xnu*(dwdxmid+dudzmid)*del_y(j)*dz
              enddo
              tconvxl(kk)=tconvxl(kk)+fcvx
              tconvyl(kk)=tconvyl(kk)+fcvy
+             tconvzl(kk)=tconvzl(kk)+fcvz
+
              tpresxl(kk)=tpresxl(kk)+fprx
              tdiffxl(kk)=tdiffxl(kk)+fdix
              tdiffyl(kk)=tdiffyl(kk)+fdiy
+             tdiffzl(kk)=tdiffzl(kk)+fdiz
+
           enddo
        endif
        !DC
@@ -483,50 +597,198 @@ contains
              kk=ystart(3)-1+k
              fcvx=zero
              fcvy=zero
+             fcvz=zero
              fprx=zero
              fdix=zero
              fdiy=zero
+             fdiz=zero
              do j=jcvlw_ly(iv),jcvup_ly(iv)-1
                 !momentum flux
                 uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k))
                 uymid = half*(uy2(i,j,k)+uy2(i,j+1,k))
-                fcvx= fcvx +uxmid*uxmid*del_y(j)
-                fcvy= fcvy +uxmid*uymid*del_y(j)
+                uzmid = half*(uz2(i,j,k)+uz2(i,j+1,k))
+
+                fcvx= fcvx +uxmid*uxmid*del_y(j)*dz
+                fcvy= fcvy +uxmid*uymid*del_y(j)*dz
+                fcvz= fcvz +uxmid*uzmid*del_y(j)*dz
+
 
                 !pressure
                 prmid=half*(ppi2(i,j,k)+ppi2(i,j+1,k))
-                fprx = fprx -prmid*del_y(j)
+                fprx = fprx -prmid*del_y(j)*dz
 
                 !viscous term
                 dudxmid = half*(ta2(i,j,k)+ta2(i,j+1,k))
                 dudymid = half*(tc2(i,j,k)+tc2(i,j+1,k))
                 dvdxmid = half*(tb2(i,j,k)+tb2(i,j+1,k))
-                fdix = fdix +two*xnu*dudxmid*del_y(j)
-                fdiy = fdiy +xnu*(dvdxmid+dudymid)*del_y(j)
+                dwdxmid = half*(te2(i,j,k)+te2(i,j+1,k))
+                dudzmid = half*(tg2(i,j,k)+tg2(i,j+1,k))
+
+                fdix = fdix +two*xnu*dudxmid*del_y(j)*dz
+                fdiy = fdiy +xnu*(dvdxmid+dudymid)*del_y(j)*dz
+                fdiz = fdiz +xnu*(dwdxmid+dudzmid)*del_y(j)*dz
+
              enddo
              tconvxl(kk)=tconvxl(kk)+fcvx
              tconvyl(kk)=tconvyl(kk)+fcvy
+             tconvzl(kk)=tconvzl(kk)+fcvz
+
              tpresxl(kk)=tpresxl(kk)+fprx
              tdiffxl(kk)=tdiffxl(kk)+fdix
              tdiffyl(kk)=tdiffyl(kk)+fdiy
+             tdiffzl(kk)=tdiffzl(kk)+fdiz
+
           enddo
        endif
+
+       !Left & Right : 
+       !Left
+       if ((zcvlf(iv).ge.xstart(3)).and.(zcvlf(iv).le.xend(3))) then
+         k=zcvlf(iv)-xstart(3)+1
+         
+ 
+         fcvx=zero
+         fcvy=zero
+         fcvz=zero
+         fprz=zero
+         fdix=zero
+         fdiy=zero
+         fdiz=zero
+         do j=jcvlw_lx(iv),jcvup_lx(iv)
+          kk = xstart(2)-1+j
+            do i=icvlf_lx(iv),icvrt_lx(iv)-1
+               !momentum flux
+               uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
+               uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
+               uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k))
+ 
+               fcvx= fcvx +uxmid*uzmid*dx*dy
+               fcvy= fcvy +uymid*uzmid*dx*dy
+               fcvz= fcvz +uzmid*uzmid*dx*dy
+ 
+               !pressure
+               prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))
+               fprz = fprz -prmid*dx*dy
+ 
+               !viscous term
+               dudzmid = half*(tg1(i,j,k)+tg1(i+1,j,k))
+               dwdxmid = half*(te1(i,j,k)+te1(i+1,j,k))
+               dvdzmid = half*(th1(i,j,k)+th1(i+1,j,k))
+               dwdymid = half*(tf1(i,j,k)+tf1(i+1,j,k))
+               dwdzmid = half*(ti1(i,j,k)+ti1(i+1,j,k))
+                                                                   
+               fdix = fdix +(xnu*(dudzmid+dwdxmid)*dx*dy)
+               fdiy = fdiy +(xnu*(dvdzmid+dwdymid)*dx*dy)
+               fdiz = fdiz +two*xnu*dwdzmid*dx*dy
+            enddo
+         enddo
+ !print*, kk
+ !        drag3(kk)=drag3(kk)+fcvx   ! Should be size ny
+ !        print*, drag3(kk)
+         tconvxl2(kk)=tconvxl2(kk)+fcvx
+         tconvyl2(kk)=tconvyl2(kk)+fcvy
+         tconvzl2(kk)=tconvzl2(kk)+fcvz
+         tpreszl(kk) =tpreszl(kk) +fprz
+         tdiffxl2(kk)=tdiffxl2(kk)+fdix
+         tdiffyl2(kk)=tdiffyl2(kk)+fdiy
+         tdiffzl2(kk)=tdiffzl2(kk)+fdiz        
+      endif 
+      !Right
+      if ((zcvrt(iv).ge.xstart(3)).and.(zcvrt(iv).le.xend(3))) then
+         k=zcvrt(iv)-xstart(3)+1
+ !        kk=nrank+1
+ 
+         fcvx=zero
+         fcvy=zero
+         fcvz=zero
+         fprz=zero
+         fdix=zero
+         fdiy=zero
+         fdiz=zero
+ !        do k=1,xsize(3)
+         do j=jcvlw_lx(iv),jcvup_lx(iv)
+          kk = xstart(2)-1+j 
+           do i=icvlf_lx(iv),icvrt_lx(iv)-1
+               !momentum flux
+               uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
+               uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
+               uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k))
+ 
+               fcvx= fcvx -uxmid*uzmid*dx*dy
+               fcvy= fcvy -uymid*uzmid*dx*dy
+               fcvz= fcvz -uzmid*uzmid*dx*dy
+ 
+               !pressure
+               prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))
+               fprz = fprz +prmid*dx*dy
+ 
+               !viscous term
+               dudzmid = half*(tg1(i,j,k)+tg1(i+1,j,k))
+               dwdxmid = half*(te1(i,j,k)+te1(i+1,j,k))
+               dvdzmid = half*(th1(i,j,k)+th1(i+1,j,k))
+               dwdymid = half*(tf1(i,j,k)+tf1(i+1,j,k))
+               dwdzmid = half*(ti1(i,j,k)+ti1(i+1,j,k))
+                                                   
+               fdix = fdix -(xnu*(dudzmid+dwdxmid)*dx*dy)
+               fdiy = fdiy -(xnu*(dvdzmid+dwdymid)*dx*dy)
+               fdiz = fdiz -two*xnu*dwdzmid*dx*dy
+ 
+            enddo
+         enddo
+ !        drag4(kk)=drag4(kk)+fcvx    ! Should be size ny
+         tconvxl2(kk)=tconvxl2(kk)+fcvx
+         tconvyl2(kk)=tconvyl2(kk)+fcvy
+         tconvzl2(kk)=tconvzl2(kk)+fcvz
+         tpreszl(kk) =tpreszl(kk) +fprz
+         tdiffxl2(kk)=tdiffxl2(kk)+fdix
+         tdiffyl2(kk)=tdiffyl2(kk)+fdiy
+         tdiffzl2(kk)=tdiffzl2(kk)+fdiz
+      endif     
+     
        call MPI_ALLREDUCE(tconvxl,tconvx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        call MPI_ALLREDUCE(tconvyl,tconvy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(tconvzl,tconvz,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+
        call MPI_ALLREDUCE(tpresxl,tpresx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        call MPI_ALLREDUCE(tpresyl,tpresy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        call MPI_ALLREDUCE(tdiffxl,tdiffx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        call MPI_ALLREDUCE(tdiffyl,tdiffy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(tdiffzl,tdiffz,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
+       call MPI_ALLREDUCE(tconvxl2,tconvx2,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(tconvyl2,tconvy2,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(tconvzl2,tconvz2,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)     
+       call MPI_ALLREDUCE(tpreszl, tpresz ,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(tdiffxl2,tdiffx2,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(tdiffyl2,tdiffy2,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(tdiffzl2,tdiffz2,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+  
+
+       tp1 = sum(tpresx(:))/dt
+       tp2 = sum(tpresy(:))/dt
+       tp3 = sum(tpresz(:))/dt
+    
+       mom1 = sum(tunstx(:) + tconvx(:) + tconvx2(:))
+       mom2 = sum(tunsty(:) + tconvy(:) + tconvy2(:))
+       mom3 = sum(tunstz(:) + tconvz(:) + tconvz2(:))
+  
+       dra1 = 2.0*(sum(tdiffx) + sum(tdiffx2) + tp1 - mom1)
+       dra2 = 2.0*(sum(tdiffy) + sum(tdiffy2) + tp2 - mom2)
+       dra3 = 2.0*(sum(tdiffz) + sum(tdiffz2) + tp3 - mom3)
+       
        do k=1,zsize(3)
 
           tpresx(k)=tpresx(k)/dt
           tpresy(k)=tpresy(k)/dt
+          tpresz(k)=tpresz(k)/dt
+
 
           xmom    = tunstx(k)+tconvx(k)
           ymom    = tunsty(k)+tconvy(k)
+          zmom    = tunstz(k)+tconvz(k)
           xDrag(k) = two*(tdiffx(k)+tpresx(k)-xmom)
           yLift(k) = two*(tdiffy(k)+tpresy(k)-ymom)
+          zLat(k)  = two*(tdiffz(k)+tpresz(k)-zmom)
 
        enddo
 

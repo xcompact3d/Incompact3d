@@ -16,9 +16,10 @@ program xcompact3d
   use ibm_param
   use ibm, only : body
   use genepsi, only : genepsi3d
-  use ellipsoid_utils, only: lin_step, ang_step
+  use ellipsoid_utils, only: lin_step, ang_step, QuaternionNorm
 
   implicit none
+  real(mytype)  :: dummy 
 
 
   call init_xcompact3d()
@@ -78,17 +79,25 @@ program xcompact3d
 
         !Add force calculation here
 
-        linearAcceleration(:)=zero
+        linearForce(:)=zero
         torque(:)=zero
 
-        call lin_step(position,linearVelocity,linearAcceleration,dt,position_1,linearVelocity_1)
-        call ang_step(orientation,angularVelocity,torque,dt,orientation_1,angularVelocity_1)
+        if (nrank==0) then
 
-        position = position_1
-        linearVelocity = linearVelocity_1
+         call lin_step(position,linearVelocity,linearForce,dt,position_1,linearVelocity_1)
+         call ang_step(orientation,angularVelocity,torque,dt,orientation_1,angularVelocity_1)
 
-        orientation = orientation_1
-        angularVelocity = angularVelocity_1
+         position = position_1
+         linearVelocity = linearVelocity_1
+
+         orientation = orientation_1
+         angularVelocity = angularVelocity_1
+
+         call QuaternionNorm(angularVelocity,dummy)
+
+         write(*,*) 'Norm of angvel = ', dummy
+
+        endif 
 
       !   if (nrank==0) then 
       !    write(*,*) 'Centroid position is ', position
