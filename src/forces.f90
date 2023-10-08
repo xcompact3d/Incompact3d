@@ -163,7 +163,7 @@ contains
     implicit none
 
     integer :: ierror,code,itest1
-    integer :: ierror_o=0 !error to open sauve file during restart
+    integer :: ierror_o=0 !error to open save file during restart
     character(len=30) :: filename, filestart
 
 
@@ -212,7 +212,7 @@ contains
 
   end subroutine restart_forces
 
-  subroutine force(ux1,uy1,uz1,ep1)
+  subroutine force(ux1,uy1,uz1,ep1,xDrag_tot,yLift_tot,zLat_tot)
 
     USE param
     USE variables
@@ -233,6 +233,7 @@ contains
 
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1, uy1, uz1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ep1
+    real(mytype), intent(out)                                       :: xDrag_tot,yLift_tot,zLat_tot
 
     real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: ppi2
     real(mytype), dimension(zsize(1),zsize(2),zsize(3)) :: ppi3
@@ -796,6 +797,10 @@ contains
        xDrag_mean = sum(xDrag(:))/real(nz,mytype)
        yLift_mean = sum(yLift(:))/real(nz,mytype)
 
+       xDrag_tot = sum(xDrag(:))
+       yLift_tot = sum(yLift(:))
+       zLat_tot  = sum(zLat(:))
+
        !     if ((itime==ifirst).or.(itime==0)) then
        !        if (nrank .eq. 0) then
        !        write(filename,"('aerof',I1.1)") iv
@@ -819,8 +824,10 @@ contains
           do i = 1, xsize(1)
              ux11(i,j,k)=ux01(i,j,k)
              uy11(i,j,k)=uy01(i,j,k)
+             uz11(i,j,k)=uz01(i,j,k)
              ux01(i,j,k)=ux1(i,j,k)
              uy01(i,j,k)=uy1(i,j,k)
+             uz01(i,j,k)=uz1(i,j,k)
           enddo
        enddo
     enddo

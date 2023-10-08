@@ -899,7 +899,6 @@ module forces
              uz11(i,j,k)=uz01(i,j,k)
              ux01(i,j,k)=ux1(i,j,k)
              uy01(i,j,k)=uy1(i,j,k)
-             uz01(i,j,k)=uz1(i,j,k)
           enddo
        enddo
     enddo

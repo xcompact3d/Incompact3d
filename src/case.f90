@@ -307,6 +307,7 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep
     real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp
+    real(mytype)      :: dummy1,dummy2,dummy3
 
     if (itype.eq.itype_user) then
 
@@ -367,7 +368,7 @@ contains
     endif
 
     if (iforces.eq.1) then
-       call force(ux,uy,ep)
+       call force(ux,uy,uz,ep,dummy1,dummy2,dummy3)
        call restart_forces(1)
     endif
 
