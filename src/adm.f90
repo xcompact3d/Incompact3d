@@ -245,20 +245,30 @@ contains
     !
     !*******************************************************************************
 
-      use param, only: itime, initstat
+      use param, only: itime, initstat, dt
 
       implicit none
       integer, intent(in) :: dump_no
       integer :: idisc
 
       if (Nad>0) then
-         open(2020,File='discs_time'//trim(int2str(dump_no))//'.adm')
-         write(2020,*) 'UF, Power, Thrust, Udisc_ave, Power_ave, Thrust_ave'
-         do idisc=1,Nad
-            write(2020,*) actuatordisc(idisc)%UF,actuatordisc(idisc)%Power,actuatordisc(idisc)%Thrust,&
-                          actuatordisc(idisc)%Udisc_ave/(itime-initstat+1),actuatordisc(idisc)%Power_ave/(itime-initstat+1),actuatordisc(idisc)%Thrust_ave/(itime-initstat+1)
+         do idisc=1, Nad
+             if (dump_no==1) then
+                 open(2020,File='disc'//trim(int2str(idisc))//'.adm')
+                 write(2020,*) 'i, Time, UF, Power, Thrust, Udisc_ave, Power_ave, Thrust_ave'
+                 close(2020)
+             endif
+             open(2020,File='disc'//trim(int2str(idisc))//'.adm', position="append", status="old", action="write")
+             write(2020,*)itime,&
+                          itime*dt,&
+                          actuatordisc(idisc)%UF,&
+                          actuatordisc(idisc)%Power,&
+                          actuatordisc(idisc)%Thrust,&
+                          actuatordisc(idisc)%Udisc_ave/(itime-initstat+1),&
+                          actuatordisc(idisc)%Power_ave/(itime-initstat+1),&
+                          actuatordisc(idisc)%Thrust_ave/(itime-initstat+1)
+             close(2020)
          enddo
-         close(2020)
       endif
 
       return 
