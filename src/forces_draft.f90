@@ -87,17 +87,17 @@ module forces
       allocate(xld2(nvol), xrd2(nvol), yld2(nvol), yud2(nvol))
   
       ! Update Control Volume based on moving cylinder case
-      if ((iibm.ne.0).and.(t.ne.0.)) then
-         xld2(:) = xld(:) + (t-ifirst*dt)*ubcx
-         xrd2(:) = xrd(:) + (t-ifirst*dt)*ubcx
-         yld2(:) = yld(:) + (t-ifirst*dt)*ubcy
-         yud2(:) = yud(:) + (t-ifirst*dt)*ubcy
-      else
-         xld2(:) = xld(:)
-         xrd2(:) = xrd(:)
-         yld2(:) = yld(:)
-         yud2(:) = yud(:)
-      endif
+      ! if ((iibm.ne.0).and.(t.ne.0.)) then
+      !    xld2(:) = xld(:) + (t-ifirst*dt)*ubcx
+      !    xrd2(:) = xrd(:) + (t-ifirst*dt)*ubcx
+      !    yld2(:) = yld(:) + (t-ifirst*dt)*ubcy
+      !    yud2(:) = yud(:) + (t-ifirst*dt)*ubcy
+      ! else
+      !    xld2(:) = xld(:)
+      !    xrd2(:) = xrd(:)
+      !    yld2(:) = yld(:)
+      !    yud2(:) = yud(:)
+      ! endif
       
       !     Definition of the Control Volume
       !*****************************************************************
