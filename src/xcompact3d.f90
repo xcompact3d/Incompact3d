@@ -17,7 +17,7 @@ program xcompact3d
   use ibm, only : body
   use genepsi, only : genepsi3d
   use ellipsoid_utils, only: lin_step, ang_step, QuaternionNorm
-  use forces, only : force, init_forces, iforces
+  use forces, only : force, init_forces, iforces, xld,xrd,yld,yud,zld,zrd
   implicit none
   real(mytype)  :: dummy,drag,lift,lat
 
@@ -49,12 +49,12 @@ program xcompact3d
           if ((iibm.eq.2).or.(iibm.eq.3)) then
              call genepsi3d(ep1)
              if (iforces.eq.1) then
-               xld = position(1) - ra * cvl_scalar
-               xrd = position(1) + ra * cvl_scalar
-               yld = position(2) - ra * cvl_scalar
-               yud = position(2) + ra * cvl_scalar
-               zld = position(3) - ra * cvl_scalar
-               zrd = position(3) + ra * cvl_scalar
+               xld(1) = position(1) - shape(1) * cvl_scalar
+               xrd(1) = position(1) + shape(1) * cvl_scalar
+               yld(1) = position(2) - shape(1) * cvl_scalar
+               yud(1) = position(2) + shape(1) * cvl_scalar
+               zld(1) = position(3) - shape(1) * cvl_scalar
+               zrd(1) = position(3) + shape(1) * cvl_scalar
                call init_forces()
              endif
           else if (iibm.eq.1) then
@@ -163,7 +163,7 @@ subroutine init_xcompact3d()
   use ibm, only : body
 
   use probes, only : init_probes
-
+!   use case, only : param_assign
   implicit none
 
   integer :: ierr
@@ -231,6 +231,7 @@ subroutine init_xcompact3d()
   endif
 
   if ((iibm.eq.2).or.(iibm.eq.3)) then
+   !   call boundary_conditions()
      call genepsi3d(ep1)
   else if (iibm.eq.1) then
      call epsi_init(ep1)

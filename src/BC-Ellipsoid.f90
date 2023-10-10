@@ -255,13 +255,13 @@ subroutine init_ellip (ux1,uy1,uz1,phi1)
     call ellipMassCalculate(shape,rho_s,ellip_m)
     
     if (nrank==0) then 
-        write(*,*) 'set shape = ', shape
-        write(*,*) 'set orientation = ', orientation
-        write(*,*) 'set position = ', position
-        write(*,*) 'set linear velocity = ', linearVelocity
-        write(*,*) 'set angular velocity = ', angularVelocity
+        write(*,*) 'set shape             = ', shape
+        write(*,*) 'set orientation       = ', orientation
+        write(*,*) 'set position          = ', position
+        write(*,*) 'set linear velocity   = ', linearVelocity
+        write(*,*) 'set angular velocity  = ', angularVelocity
         write(*,*) 'set moment of inertia = ', inertia
-        write(*,*) 'density of solid = ', rho_s
+        write(*,*) 'density of solid      = ', rho_s
     end if
 
     if (iscalar==1) then

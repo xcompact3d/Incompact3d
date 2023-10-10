@@ -29,7 +29,7 @@ subroutine parameter(input_i3d)
 
   use probes, only : nprobes, setup_probes, flag_all_digits, flag_extra_probes, xyzprobes
   use visu, only : output2D
-  use forces, only : iforces, nvol, xld, xrd, yld, yud!, zld, zrd
+  use forces, only : iforces, nvol, xld, xrd, yld, yud, zld, zrd
 
   implicit none
 
@@ -61,7 +61,7 @@ subroutine parameter(input_i3d)
   NAMELIST /WallModel/ smagwalldamp
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
   NAMELIST /ibmstuff/ cex,cey,cez,shx,shy,shz,oriw,orii,orij,orik,lvx,lvy,lvz,avx,avy,avz,ra,nobjmax,nraf,nvol,iforces, cvl_scalar, npif, izap, ianal, imove, thickness, chord, omega ,ubcx,ubcy,ubcz,rads,rho_s, c_air
-  NAMELIST /ForceCVs/ xld, xrd, yld, yud!, zld, zrd
+  NAMELIST /ForceCVs/ xld, xrd, yld, yud, zld, zrd
   NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, &
        massfrac, mol_weight, imultispecies, primary_species, &
        Fr, ibirman_eos
@@ -116,7 +116,7 @@ subroutine parameter(input_i3d)
      read(10, nml=ProbesParam); rewind(10)
   endif
   if (iforces.eq.1) then
-     allocate(xld(nvol), xrd(nvol), yld(nvol), yud(nvol))!, zld(nvol), zrd(nvol))
+     allocate(xld(nvol), xrd(nvol), yld(nvol), yud(nvol), zld(nvol), zrd(nvol))
      read(10, nml=ForceCVs); rewind(10)
   endif
   

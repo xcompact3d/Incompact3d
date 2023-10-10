@@ -18,7 +18,7 @@ module forces
 
   integer :: nvol,iforces
   real(mytype),save,allocatable,dimension(:,:,:) :: ux01, uy01, ux11, uy11, ppi1, uz01, uz11
-  real(mytype),allocatable,dimension(:) :: xld, xrd, yld, yud, xld2, xrd2, yld2, yud2, zld, zrd
+  real(mytype),allocatable,dimension(:) :: xld, xrd, yld, yud, zld, zrd, xld2, xrd2, yld2, yud2, zld2, zrd2
   integer,allocatable,dimension(:) :: icvlf,icvrt,jcvlw,jcvup,zcvlf,zcvrt
   integer,allocatable,dimension(:) :: icvlf_lx, icvrt_lx, icvlf_ly, icvrt_ly, icvlf_lz, icvrt_lz
   integer,allocatable,dimension(:) :: jcvlw_lx, jcvup_lx, jcvlw_ly, jcvup_ly, jcvlw_lz, jcvup_lz
@@ -59,7 +59,7 @@ contains
     allocate(icvlf_lx(nvol), icvrt_lx(nvol), icvlf_ly(nvol), icvrt_ly(nvol), icvlf_lz(nvol), icvrt_lz(nvol))
     allocate(jcvlw_lx(nvol), jcvup_lx(nvol), jcvlw_ly(nvol), jcvup_ly(nvol), jcvlw_lz(nvol), jcvup_lz(nvol))
     allocate(zcvlf_lx(nvol), zcvrt_lx(nvol), zcvlf_ly(nvol), zcvrt_ly(nvol))
-    allocate(xld2(nvol), xrd2(nvol), yld2(nvol), yud2(nvol))
+    allocate(xld2(nvol), xrd2(nvol), yld2(nvol), yud2(nvol), zld2(nvol), zrd2(nvol))
 
    !  if ((iibm.ne.0).and.(t.ne.0.)) then
    !    xld2(:) = xld(:) + (t-ifirst*dt)*ubcx
@@ -71,6 +71,8 @@ contains
       xrd2(:) = xrd(:)
       yld2(:) = yld(:)
       yud2(:) = yud(:)
+      zld2(:) = zld(:)
+      zrd2(:) = zrd(:)
    ! endif
   
     !     Definition of the Control Volume
@@ -151,7 +153,7 @@ contains
     call decomp_2d_register_variable(io_restart_forces, "uz11", 1, 0, 0, mytype)
 
   end subroutine init_forces
-  if ((iibm.ne.0).and.(t.ne.0.)) then
+!   if ((iibm.ne.0).and.(t.ne.0.)) then
    !    xld2(:) = xld(:) + (t-ifirst*dt)*ubcx
    !    xrd2(:) = xrd(:) + (t-ifirst*dt)*ubcx
    !    yld2(:) = yld(:) + (t-ifirst*dt)*ubcy
@@ -391,16 +393,16 @@ contains
                 !     of a "source".
                 !         fac   = (1.5*ux1(i,j,k)-2.0*ux01(i,j,k)+0.5*ux11(i,j,k))*epcv1(i,j,k)
                 fac   = (onepfive*ux1(i,j,k)-two*ux01(i,j,k)+half*ux11(i,j,k))*(one-ep1(i,j,k))
-                tsumx = tsumx+fac*dx*del_y(j+(xstart(2)-1))/dt    !tsumx+fac*dx*dy/dt
+                tsumx = tsumx+fac*dx*del_y(j+(xstart(2)-1))*dz/dt    !tsumx+fac*dx*dy/dt
                 !sumx(k) = sumx(k)+dudt1*dx*dy
 
                 !         fac   = (1.5*uy1(i,j,k)-2.0*uy01(i,j,k)+0.5*uy11(i,j,k))*epcv1(i,j,k)
                 fac   = (onepfive*uy1(i,j,k)-two*uy01(i,j,k)+half*uy11(i,j,k))*(one-ep1(i,j,k))
-                tsumy = tsumy+fac*dx*del_y(j+(xstart(2)-1))/dt !tsumy+fac*dx*dy/dt
+                tsumy = tsumy+fac*dx*del_y(j+(xstart(2)-1))*dz/dt !tsumy+fac*dx*dy/dt
                 !sumy(k) = sumy(k)+dudt1*dx*dy
 
                 fac   = (onepfive*uz1(i,j,k)-two*uz01(i,j,k)+half*uz11(i,j,k))*(one-ep1(i,j,k))
-                tsumz = tsumz+fac*dx*dy*dz/dt     
+                tsumz = tsumz+fac*dx*del_y(j+(xstart(2)-1))*dz/dt     
              enddo
           enddo
           tunstxl(xstart(3)-1+k)=tsumx
@@ -794,12 +796,12 @@ contains
           tpresz(k)=tpresz(k)/dt
 
 
-          xmom    = tunstx(k)+tconvx(k)
-          ymom    = tunsty(k)+tconvy(k)
-          zmom    = tunstz(k)+tconvz(k)
-          xDrag(k) = two*(tdiffx(k)+tpresx(k)-xmom)
-          yLift(k) = two*(tdiffy(k)+tpresy(k)-ymom)
-          zLat(k)  = two*(tdiffz(k)+tpresz(k)-zmom)
+          xmom    = tunstx(k)+tconvx(k)+tconvx2(k)
+          ymom    = tunsty(k)+tconvy(k)+tconvy2(k)
+          zmom    = tunstz(k)+tconvz(k)+tconvz2(k)
+          xDrag(k) = two*(tdiffx(k)+tdiffx2(k)+tpresx(k)-xmom)
+          yLift(k) = two*(tdiffy(k)+tdiffy2(k)+tpresy(k)-ymom)
+          zLat(k)  = two*(tdiffz(k)+tdiffz2(k)+tpresz(k)-zmom)
 
        enddo
 

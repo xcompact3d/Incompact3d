@@ -139,7 +139,10 @@ contains
       ! Compute the magnitude of the quaternion
       real(mytype) :: magnitude
       magnitude = sqrt(quaternion(1)**2 + quaternion(2)**2 + quaternion(3)**2 + quaternion(4)**2)
-    
+      if (magnitude < 0.0001) then
+        magnitude = one
+        write(*,*) "Tried to normalize a zero quaternion"
+      endif
       ! Normalize the quaternion
       normalizedQuaternion = quaternion / magnitude
     

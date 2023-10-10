@@ -85,6 +85,26 @@ contains
 
   end subroutine geomcomplex
 !############################################################################
+
+  subroutine param_assign()
+   
+   use ibm_param
+   use ellipsoid_utils, only: NormalizeQuaternion,ellipInertiaCalculate,ellipMassCalculate
+   use param
+   real(mytype) :: eqr
+
+   eqr=(shx*shy*shz)**(1.0/3.0)
+   shape=[shx/eqr,shy/eqr,shz/eqr]
+
+   orientation=[oriw,orii,orij,orik]
+   call NormalizeQuaternion(orientation)
+   position=[cex,cey,cez]
+   linearVelocity=[lvx,lvy,lvz]
+   angularVelocity=[zero,avx,avy,avz]
+   call ellipInertiaCalculate(shape,rho_s,inertia)
+   call ellipMassCalculate(shape,rho_s,ellip_m)
+
+  end subroutine param_assign
 !############################################################################
   subroutine genepsi3d(ep1)
 
@@ -93,6 +113,7 @@ contains
     use param, only : itime
     USE complex_geometry
     use decomp_2d
+
 
     implicit none
 
@@ -109,6 +130,8 @@ contains
     !
     logical :: dir_exists
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
+
+    call param_assign()
     !
     if (nrank==0.and.mod(itime,ilist)==0) then
       write(*,*)'==========================================================='

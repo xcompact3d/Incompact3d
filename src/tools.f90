@@ -162,8 +162,8 @@ contains
           write(*,*) '==========================================================='
           write(*,"(' Time step =',i7,'/',i7,', Time unit =',F9.4)") itime,ilast,t
           write(*,*) 'Centroid position = ',real(position(1),4),real(position(2),4),real(position(3),4)
-          write(*,*) 'Orientation = ',real(orientation(1),4),real(orientation(2),4),real(orientation(3),4),real(orientation(4),4)
-          write(*,*) 'Angular velocity = ', real(angularVelocity(1),4),real(angularVelocity(2),4),real(angularVelocity(3),4),real(angularVelocity(4),4)
+          write(*,*) 'Orientation       = ',real(orientation(1),4),real(orientation(2),4),real(orientation(3),4),real(orientation(4),4)
+          write(*,*) 'Angular velocity  = ',real(angularVelocity(1),4),real(angularVelocity(2),4),real(angularVelocity(3),4),real(angularVelocity(4),4)
          endif
     else if ((iwhen == 3).and.(itime > ifirst)) then !AT THE END OF A TIME STEP
        if (nrank == 0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime==ilast)) then
