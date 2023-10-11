@@ -49,12 +49,12 @@ program xcompact3d
           if ((iibm.eq.2).or.(iibm.eq.3)) then
              call genepsi3d(ep1)
              if (iforces.eq.1) then
-               xld(1) = position(1) - shape(1) * cvl_scalar
-               xrd(1) = position(1) + shape(1) * cvl_scalar
-               yld(1) = position(2) - shape(1) * cvl_scalar
-               yud(1) = position(2) + shape(1) * cvl_scalar
-               zld(1) = position(3) - shape(1) * cvl_scalar
-               zrd(1) = position(3) + shape(1) * cvl_scalar
+               xld(1) = position(1) - shape(1) * ra * cvl_scalar
+               xrd(1) = position(1) + shape(1) * ra * cvl_scalar
+               yld(1) = position(2) - shape(1) * ra * cvl_scalar
+               yud(1) = position(2) + shape(1) * ra * cvl_scalar
+               zld(1) = position(3) - shape(1) * ra * cvl_scalar
+               zrd(1) = position(3) + shape(1) * ra * cvl_scalar
                call init_forces()
              endif
           else if (iibm.eq.1) then
