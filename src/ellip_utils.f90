@@ -345,6 +345,85 @@ contains
 
     end subroutine orientation_stepper
 
+    SUBROUTINE ConvertToMovingRotatingFrame(vI, positionI, originO, vO, Omega, vR)
+      IMPLICIT NONE
+    
+      ! Arguments:
+      ! vI       : Velocity in the inertial frame (3-element array)
+      ! positionI: Position in the inertial frame (3-element array)
+      ! originO  : Position of the origin of the rotating frame in the inertial frame (3-element array)
+      ! vO       : Linear velocity of the origin of the rotating frame
+      ! Omega    : Angular velocity of the rotating frame (3-element array)
+      ! vR       : Velocity in the moving and rotating frame (Output, 3-element array)
+    
+      real(mytype), INTENT(IN)  :: vI(3), positionI(3), originO(3), vO(3), Omega(3)
+      real(mytype), INTENT(OUT) :: vR(3)
+      real(mytype) :: r(3), crossProduct(3)
+    
+      ! Compute r = positionI - originO
+      r(1) = positionI(1) - originO(1)
+      r(2) = positionI(2) - originO(2)
+      r(3) = positionI(3) - originO(3)
+    
+      ! Compute Omega x r (cross product)
+      crossProduct(1) = Omega(2)*r(3) - Omega(3)*r(2)
+      crossProduct(2) = Omega(3)*r(1) - Omega(1)*r(3)
+      crossProduct(3) = Omega(1)*r(2) - Omega(2)*r(1)
+    
+      ! Compute vR = vI - vO - Omega x r
+      vR(1) = vI(1) - vO(1) - crossProduct(1)
+      vR(2) = vI(2) - vO(2) - crossProduct(2)
+      vR(3) = vI(3) - vO(3) - crossProduct(3)
+    
+    END SUBROUTINE ConvertToMovingRotatingFrame
+
+    subroutine coriolis_force(omega, vr, fcoriolis)
+      implicit none
+        
+      ! Arguments:
+      ! omega      : Angular velocity of the rotating frame (3-element array)
+      ! vr         : Velocity in the rotating frame (3-element array)
+      ! fcoriolis  : Coriolis force (Output, 3-element array)
+    
+      real(mytype), intent(in)  :: omega(3), vr(3)
+      real(mytype), intent(out) :: fcoriolis(3)
+    
+      ! Compute 2 * omega x vr (cross product)
+      fcoriolis(1) = 2.0_mytype * (omega(2)*vr(3) - omega(3)*vr(2))
+      fcoriolis(2) = 2.0_mytype * (omega(3)*vr(1) - omega(1)*vr(3))
+      fcoriolis(3) = 2.0_mytype * (omega(1)*vr(2) - omega(2)*vr(1))
+    
+    end subroutine coriolis_force
+
+    subroutine centrifugal_force(omega, r, fcentrifugal)
+      implicit none
+    
+      ! Parameters:
+      integer, parameter :: mytype = selected_real_kind(p=15) ! Assuming double precision
+    
+      ! Arguments:
+      ! omega        : Angular velocity of the rotating frame (3-element array)
+      ! r            : Position vector in the rotating frame (3-element array)
+      ! fcentrifugal : Centrifugal force (Output, 3-element array)
+    
+      real(mytype), intent(in)  :: omega(3), r(3)
+      real(mytype), intent(out) :: fcentrifugal(3)
+      real(mytype) :: cross_product_omega_r(3)
+    
+      ! Compute omega x r (cross product)
+      cross_product_omega_r(1) = omega(2)*r(3) - omega(3)*r(2)
+      cross_product_omega_r(2) = omega(3)*r(1) - omega(1)*r(3)
+      cross_product_omega_r(3) = omega(1)*r(2) - omega(2)*r(1)
+    
+      ! Compute fcentrifugal = -omega x (omega x r)
+      fcentrifugal(1) = -(omega(2)*cross_product_omega_r(3) - omega(3)*cross_product_omega_r(2))
+      fcentrifugal(2) = -(omega(3)*cross_product_omega_r(1) - omega(1)*cross_product_omega_r(3))
+      fcentrifugal(3) = -(omega(1)*cross_product_omega_r(2) - omega(2)*cross_product_omega_r(1))
+    
+    end subroutine centrifugal_force
+    
+    
+    
     subroutine invert_3x3_matrix(matrix, inverse)
       real(mytype), intent(in) :: matrix(3, 3)
       real(mytype), intent(out) :: inverse(3, 3)
