@@ -15,22 +15,30 @@ contains
     subroutine actuator_line_element_write_output(act_line,dir)
     !
     !*******************************************************************************
+      use param, only: itime, dt
 
       implicit none
       type(ActuatorLineType), intent(in) :: act_line
       character(len=100), intent(in) :: dir
       character(len=22) :: Format
       integer :: ielem
+      logical :: exists
 
-      open(2017,File=trim(dir)//'_'//trim(act_line%name)//'.load')
-      write(2017,*) 'ielem,X,Y,Z,rdist/R,AOA,adot,RE,ur,CL,CD,CM25,Cn,Ct,Fn,Ft,F1'
-      write(2017,*) '[-], [m],[m],[m],[-],[deg],[deg/s],[-],[m/s],[-],[-],[-],[-],[-],[N],[N],[-]'
-      Format="(I5,A,19(E14.7,A))"
       do ielem=1,act_line%NElem
-         write(2017,Format) ielem,',',act_line%PEx(ielem),',',act_line%PEy(ielem),',',act_line%PEz(ielem),',',act_line%ERdist(ielem)/act_line%L,',',act_line%EAOA(ielem)*180/pi,',',act_line%EAOAdot(ielem)*pi/180,',',act_line%ERE(ielem),',',act_line%EUr(ielem),',',act_line%ECL(ielem),',',act_line%ECD(ielem),',',act_line%ECM(ielem),',',act_line%ECN(ielem),',',act_line%ECT(ielem),',',act_line%EFn(ielem),',',act_line%EFt(ielem),',',act_line%EEndeffects_factor(ielem)
+          inquire (File='loads/'//trim(act_line%name)//'_element_'//trim(int2str(ielem))//'.load', exist=exists)
+          if (.not. exists) then
+            call system('mkdir -p loads 2> /dev/null')
+            open(2017,File='loads/'//trim(act_line%name)//'_element_'//trim(int2str(ielem))//'.load')
+            write(2017,*) 'iteration,time,X,Y,Z,rdist/R,AOA,adot,RE,ur,CL,CD,CM25,Cn,Ct,Fn,Ft,F1'
+            write(2017,*) '[-],[s],[m],[m],[m],[-],[deg],[deg/s],[-],[m/s],[-],[-],[-],[-],[-],[N],[N],[-]'
+            close(2017)
+          end if
+          open(2017,File='loads/'//trim(act_line%name)//'_element_'//trim(int2str(ielem))//'.load', position="append", status="old", action="write")
+          Format="(I5,A,20(E14.7,A))"
+          write(2017,Format) itime,',',itime*dt,',',act_line%PEx(ielem),',',act_line%PEy(ielem),',',act_line%PEz(ielem),',',act_line%ERdist(ielem)/act_line%L,',',act_line%EAOA(ielem)*180/pi,',',act_line%EAOAdot(ielem)*pi/180,',',act_line%ERE(ielem),',',act_line%EUr(ielem),',',act_line%ECL(ielem),',',act_line%ECD(ielem),',',act_line%ECM(ielem),',',act_line%ECN(ielem),',',act_line%ECT(ielem),',',act_line%EFn(ielem),',',act_line%EFt(ielem),',',act_line%EEndeffects_factor(ielem)
+          close(2017)
       enddo
-      close(2017)
- 
+
     end subroutine actuator_line_element_write_output
     
     !*******************************************************************************
