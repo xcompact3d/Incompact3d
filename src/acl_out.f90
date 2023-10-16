@@ -61,16 +61,29 @@ contains
     !
     !*******************************************************************************
 
+      use param, only: itime, dt
+
       implicit none
       type(TurbineType), intent(in) :: turbine
       character(len=100), intent(in) :: dir
       character(len=22) :: Format
-        
-      open(2016,File=trim(dir)//'_'//trim(turbine%name)//'.perf')
-      write(2016,*) 'Number of Revs, GeneratorSpeed, GeneratorTorque, BladePitch1, BladePitch2, BladePitch3, Omega, DOmega, Ux, Uy, Uz, Thrust, Torque, Power'
-      write(2016,*) '[-], [rad/s], [N m], [deg], [deg], [deg], [rad/s], [rad/s], [m/s], [m/s], [m/s], [N], [N m], [W]'
-      Format="(14(E14.7,A))" 
-      write(2016,Format) turbine%AzimAngle/(2*pi),',',turbine%controller%GenSpeed,',',turbine%controller%GenTrq,',',turbine%controller%PitCom(1)*180.0_mytype/pi,',',turbine%controller%PitCom(2)*180.0_mytype/pi,',',turbine%controller%PitCom(3)*180.0_mytype/pi,',',turbine%angularVel,',',turbine%deltaOmega,',',turbine%Ux_upstream,',',turbine%Uy_upstream,',',turbine%Uz_upstream,',',turbine%Thrust,',',turbine%Torque,',',turbine%Power
+      logical :: exists
+
+      !file that uses dir will be different each time step - dont use dir!
+      inquire (File=trim(turbine%name)//'.perf', exist=exists)
+      if (.not. exists) then
+          open(2016,File=trim(turbine%name)//'.perf')
+          write(2016,*) 'Iteration, Time, Number of Revs, GeneratorSpeed, GeneratorTorque, BladePitch1, BladePitch2, BladePitch3, Omega, DOmega, Ux, Uy, Uz, Thrust, Torque, Power'
+          write(2016,*) '[-], [s], [-], [rad/s], [N m], [deg], [deg], [deg], [rad/s], [rad/s], [m/s], [m/s], [m/s], [N], [N m], [W]'
+          close(2016)
+      end if
+      open(2016, File=trim(turbine%name)//'.perf', position="append", status="old", action="write")
+      Format="(14(E14.7,A))"
+      write(2016,Format) itime, itime*dt, turbine%AzimAngle/(2*pi),',',turbine%controller%GenSpeed,',',&
+              turbine%controller%GenTrq,',',turbine%controller%PitCom(1)*180.0_mytype/pi,',',&
+              turbine%controller%PitCom(2)*180.0_mytype/pi,',',turbine%controller%PitCom(3)*180.0_mytype/pi,',',&
+              turbine%angularVel,',',turbine%deltaOmega,',',turbine%Ux_upstream,',',turbine%Uy_upstream,',',&
+              turbine%Uz_upstream,',',turbine%Thrust,',',turbine%Torque,',',turbine%Power
       close(2016)
 
     end subroutine actuator_line_turbine_write_output   
@@ -81,13 +94,21 @@ contains
     !
     !*******************************************************************************
 
+      use param, only: itime, dt
+
       implicit none
       type(TurbineType), intent(in) :: turbine
       character(len=100), intent(in) :: dir
-        
-      open(2019,File=trim(dir)//'_'//trim(turbine%name)//'.stat')
-      write(2019,*) 'T_ave, P_ave, Torque_ave'
-      write(2019,*) turbine%T_ave,turbine%P_ave,turbine%Torque_ave
+      logical exists
+
+      inquire (File=trim(turbine%name)//'.stat', exist=exists)
+      if (.not. exists) then
+          open(2019, File=trim(turbine%name)//'.stat')
+          write(2019, *) 'Iteration Time T_ave, P_ave, Torque_ave'
+          close(2019)
+      end if
+      open(2019, File=trim(turbine%name)//'.stat', position="append", status="old", action="write")
+      write(2019,*) itime,itime*dt,turbine%T_ave,turbine%P_ave,turbine%Torque_ave
       close(2019)
 
     end subroutine actuator_line_turbine_write_statistics
