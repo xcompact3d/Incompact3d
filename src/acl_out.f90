@@ -46,21 +46,29 @@ contains
     subroutine dynamic_stall_write_output(act_line,dir)
     !
     !*******************************************************************************
+      use param, only: itime, dt
 
       implicit none
       type(ActuatorLineType), intent(in) :: act_line
       character(len=100), intent(in) :: dir
       character(len=22) :: Format
       integer :: ielem
+      logical :: exists
 
-      open(2018,File=trim(dir)//'_'//trim(act_line%name)//'.dynstall')
-      write(2018,*) 'ielem,rdist/R,pitch,AOA,f'
-      Format="(I5,A,15(E14.7,A))"
       do ielem=1,act_line%NElem
-         write(2018,Format)ielem,',',act_line%ERdist(ielem)/act_line%L,',',act_line%Epitch(ielem)*180/pi,',',act_line%EAOA(ielem)*180/pi,',',act_line%EDynstall(ielem)%fprime
+          inquire (File='loads/'//trim(act_line%name)//'_element_'//trim(int2str(ielem))//'.dynstall', exist=exists)
+          if (.not. exists) then
+              call system('mkdir -p loads 2> /dev/null')
+              open(2018,File='loads/'//trim(act_line%name)//'_element_'//trim(int2str(ielem))//'.dynstall')
+              write(2018,*) 'iteration,time,rdist/R,pitch,AOA,f'
+              close(2018)
+          end if
+          open(2018,File='loads/'//trim(act_line%name)//'_element_'//trim(int2str(ielem))//'.dynstall', position="append", status="old", action="write")
+          Format="(I5,A,5(E14.7,A))"
+          write(2018,Format)itime,',',itime*dt,',',act_line%ERdist(ielem)/act_line%L,',',act_line%Epitch(ielem)*180/pi,',',act_line%EAOA(ielem)*180/pi,',',act_line%EDynstall(ielem)%fprime
+          close(2018)
       enddo
-      close(2018)
- 
+
     end subroutine dynamic_stall_write_output
     
     !*******************************************************************************
