@@ -78,7 +78,7 @@ contains
           close(2016)
       end if
       open(2016, File=trim(turbine%name)//'.perf', position="append", status="old", action="write")
-      Format="(16(E14.7,A))"
+      Format="(i5,A, 15(E14.7,A))"
       write(2016,Format) itime,',',itime*dt,',',turbine%AzimAngle/(2*pi),',',turbine%controller%GenSpeed,',',&
               turbine%controller%GenTrq,',',turbine%controller%PitCom(1)*180.0_mytype/pi,',',&
               turbine%controller%PitCom(2)*180.0_mytype/pi,',',turbine%controller%PitCom(3)*180.0_mytype/pi,',',&
