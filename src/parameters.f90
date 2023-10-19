@@ -50,7 +50,8 @@ subroutine parameter(input_i3d)
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, iimplicit, &
        nu0nu, cnu, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu, ilist, iprocessing, &
-       ninflows, ntimesteps, inflowpath, ioutflow, output2D, nprobes
+       ninflows, ntimesteps, inflowpath, ioutflow, output2D, nprobes, &
+       validation_restart
   NAMELIST /Statistics/ wrotation,spinup_time, nstat, initstat, istatfreq
   NAMELIST /ProbesParam/ flag_all_digits, flag_extra_probes, xyzprobes
   NAMELIST /ScalarParam/ sc, ri, uset, cp, &
@@ -685,6 +686,7 @@ subroutine parameter_defaults()
   ioutflow=0
   output2D = 0
   nprobes=0
+  validation_restart = .true.
 
   !! PROBES
   flag_all_digits = .false.
