@@ -319,8 +319,7 @@ contains
           if (validate_restart(resfile_old, resfile)) then
              call delete_filedir(resfile_old)
           else
-          call decomp_2d_abort(1, &                                                                  
-               "Writing restart - validation failed!")
+             call decomp_2d_abort(1, "Writing restart - validation failed!")
           endif
        endif
 
