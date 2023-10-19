@@ -252,7 +252,7 @@ contains
 
        if (adios2_restart_initialised) then
           ! First, rename old checkpoint in case of error
-          call rename(resfile, resfile_old)
+          if (validation_restart) call rename(resfile, resfile_old)
        end if
     end if
 
@@ -315,46 +315,48 @@ contains
        call decomp_2d_close_io(io_restart, resfile)
 
        ! Validate restart file then remove old file and update restart.info
-       if (validate_restart(resfile_old, resfile)) then
-          call delete_filedir(resfile_old)
-
-          ! Write info file for restart - Kay Schäfer
-          if (nrank == 0) then
-             write(filename,"('restart.info')")
-             write(fmt2,'("(A,I16)")')
-             write(fmt3,'("(A,F16.4)")')
-             write(fmt4,'("(A,F16.12)")')
-             !
-             open (111,file=filename,action='write',status='replace')
-             write(111,'(A)')'!========================='
-             write(111,'(A)')'&Time'
-             write(111,'(A)')'!========================='
-             write(111,fmt3) 'tfield=   ',t
-             write(111,fmt2) 'itime=    ',itime
-             write(111,'(A)')'/End'
-             write(111,'(A)')'!========================='
-             write(111,'(A)')'&NumParam'
-             write(111,'(A)')'!========================='
-             write(111,fmt2) 'nx=       ',nx
-             write(111,fmt2) 'ny=       ',ny
-             write(111,fmt2) 'nz=       ',nz
-             write(111,fmt3) 'Lx=       ',xlx
-             write(111,fmt3) 'Ly=       ',yly
-             write(111,fmt3) 'Lz=       ',zlz
-             write(111,fmt2) 'istret=   ',istret
-             write(111,fmt4) 'beta=     ',beta
-             write(111,fmt2) 'iscalar=  ',iscalar
-             write(111,fmt2) 'numscalar=',numscalar
-             write(111,'(A,I14)') 'itimescheme=',itimescheme
-             write(111,fmt2) 'iimplicit=',iimplicit
-             write(111,'(A)')'/End'
-             write(111,'(A)')'!========================='
-
-             close(111)
-          end if
-       else
-          call decomp_2d_abort(1, &
+       if (validation_restart) then
+          if (validate_restart(resfile_old, resfile)) then
+             call delete_filedir(resfile_old)
+          else
+          call decomp_2d_abort(1, &                                                                  
                "Writing restart - validation failed!")
+          endif
+       endif
+
+       ! Write info file for restart - Kay Schäfer
+       if (nrank == 0) then
+          write(filename,"('restart.info')")
+          write(fmt2,'("(A,I16)")')
+          write(fmt3,'("(A,F16.4)")')
+          write(fmt4,'("(A,F16.12)")')
+          !
+          open (111,file=filename,action='write',status='replace')
+          write(111,'(A)')'!========================='
+          write(111,'(A)')'&Time'
+          write(111,'(A)')'!========================='
+          write(111,fmt3) 'tfield=   ',t
+          write(111,fmt2) 'itime=    ',itime
+          write(111,'(A)')'/End'
+          write(111,'(A)')'!========================='
+          write(111,'(A)')'&NumParam'
+          write(111,'(A)')'!========================='
+          write(111,fmt2) 'nx=       ',nx
+          write(111,fmt2) 'ny=       ',ny
+          write(111,fmt2) 'nz=       ',nz
+          write(111,fmt3) 'Lx=       ',xlx
+          write(111,fmt3) 'Ly=       ',yly
+          write(111,fmt3) 'Lz=       ',zlz
+          write(111,fmt2) 'istret=   ',istret
+          write(111,fmt4) 'beta=     ',beta
+          write(111,fmt2) 'iscalar=  ',iscalar
+          write(111,fmt2) 'numscalar=',numscalar
+          write(111,'(A,I14)') 'itimescheme=',itimescheme
+          write(111,fmt2) 'iimplicit=',iimplicit
+          write(111,'(A)')'/End'
+          write(111,'(A)')'!========================='
+
+          close(111)
        end if
     else
        if (nrank==0) then

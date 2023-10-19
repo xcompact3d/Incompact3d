@@ -304,6 +304,7 @@ module param
   real(mytype) :: dens1, dens2
   real(mytype) :: C_filter
   character(len=512) :: inflowpath
+  logical :: validation_restart
 
   ! Logical, true when synchronization is needed
   logical, save :: sync_vel_needed = .true.
