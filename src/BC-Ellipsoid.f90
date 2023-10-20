@@ -43,7 +43,7 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,remp)
         zeromach = zeromach/two
     end do
     zeromach = ten*zeromach
-
+    is_inside=.false.
     !  orientation=[oriw, orii, orij, orik]
     call NormalizeQuaternion(orientation)
     !  shape=[shx, shy, shz]
@@ -83,11 +83,12 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,remp)
             call is_inside_ellipsoid(point, position, orientation, shape, ra, zeromach, is_inside)
             !  r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two+(zm-cezz)**two)
             !  r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two)
-
             if (.not.is_inside) then
                 !  write(*,*) i, j, k
                 cycle
             endif
+            ! write(*,*) is_inside
+
             !  write(*,*) i, j, k, zm
             epsi(i,j,k)=remp
             !  write(*,*) remp
@@ -242,6 +243,8 @@ subroutine init_ellip (ux1,uy1,uz1,phi1)
 
     real(mytype) :: y,um,eqr
     integer :: k,j,i,ii,is,code
+
+    write(*,*) 'INSIDE INIT ELLIP'
 
     eqr=(shx*shy*shz)**(1.0/3.0)
     shape=[shx/eqr,shy/eqr,shz/eqr]

@@ -239,7 +239,7 @@ subroutine init_xcompact3d()
   endif
 
   if (iforces.eq.1) then
-     call init_forces()
+   !   call init_forces()
      if (irestart==1) then
         call restart_forces(0)
      endif

@@ -40,6 +40,8 @@ contains
 
     integer :: iv,stp1,stp2,h
 
+    write(*,*) 'Inside INIT_FORCES'
+
     call alloc_x(ux01)
     call alloc_x(uy01)
     call alloc_x(ux11)
@@ -55,11 +57,15 @@ contains
     uz01 = zero
     uz11 = zero    
 
+    write(*,*) 'Alloc_x called'
+
     allocate(icvlf(nvol), icvrt(nvol), jcvlw(nvol), jcvup(nvol), zcvlf(nvol), zcvrt(nvol))
     allocate(icvlf_lx(nvol), icvrt_lx(nvol), icvlf_ly(nvol), icvrt_ly(nvol), icvlf_lz(nvol), icvrt_lz(nvol))
     allocate(jcvlw_lx(nvol), jcvup_lx(nvol), jcvlw_ly(nvol), jcvup_ly(nvol), jcvlw_lz(nvol), jcvup_lz(nvol))
     allocate(zcvlf_lx(nvol), zcvrt_lx(nvol), zcvlf_ly(nvol), zcvrt_ly(nvol))
     allocate(xld2(nvol), xrd2(nvol), yld2(nvol), yud2(nvol), zld2(nvol), zrd2(nvol))
+
+    write(*,*) 'allocate called'
 
    !  if ((iibm.ne.0).and.(t.ne.0.)) then
    !    xld2(:) = xld(:) + (t-ifirst*dt)*ubcx
@@ -78,6 +84,7 @@ contains
     !     Definition of the Control Volume
     !*****************************************************************
     !! xld,xrd,yld,yud: limits of control volume (!!don't use cex and cey anymore!!)
+
 
     do iv=1,nvol
        ! ok for istret=0 (!!to do for istret=1!!)
@@ -288,6 +295,9 @@ contains
     real(mytype), dimension(nz) :: drag1, drag2, drag11, drag22
     real(mytype), dimension(nz) :: drag3, drag4, drag33, drag44
     real(mytype) :: mom1, mom2, mom3, tp1, tp2, tp3, dra1, dra2, dra3
+
+    write(*,*) 'Inside FORCE'
+
   
 
     nvect1=xsize(1)*xsize(2)*xsize(3)
