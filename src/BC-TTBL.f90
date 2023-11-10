@@ -1014,7 +1014,13 @@ contains
          call transpose_x_to_y(tb1, ta2)
          call horizontal_avrge(ta2, tempb2)
       else if (one == 2) then
-         call horizontal_avrge(ta2, tempc2)
+         call horizontal_avrge
+
+         From: Saeed Parvar <s.parvar@hotmail.com>
+         Sent: Thursday, November 9, 2023 5:46 PM
+         To: Olga.Franceschi@chestertons.co.uk <Olga.Franceschi@chestertons.co.uk>
+         Cc: Abbi Harrap <Abbi.Harrap@chestertons.co.uk>
+         Subject: Re: Maintenance Request for Flat 18, 36 Penywern Road(ta2, tempc2)
          call dery(tempb2, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
       else if (one == 3) then
          call transpose_y_to_z(ta2, ta3)
