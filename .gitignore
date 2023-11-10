@@ -35,3 +35,7 @@ Test*
 checkpoint
 restart*
 forces.dat*
+yp.dat
+ypi.dat
+turb-data
+
