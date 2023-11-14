@@ -620,7 +620,7 @@ subroutine cubsply(u,lind)
   !
   ! Impose the Correct BC
 !   bcimp=lind  
-  write(*,*) lind
+!   write(*,*) lind
 
   !
   do k=1,ysize(3)
@@ -818,7 +818,7 @@ subroutine cubsplz(u,lind)
   !
   ! Impose the Correct BC
 !   bcimp=lind  
-  write(*,*) lind
+!   write(*,*) lind
 
   !
   do j=1,zsize(2)

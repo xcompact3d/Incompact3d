@@ -16,7 +16,7 @@ PUBLIC :: init_ellip, boundary_conditions_ellip, postprocess_ellip, &
 
 contains
 
-subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,remp)
+subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
 
     use decomp_2d, only : mytype
     use param, only : one, two, ten
@@ -29,7 +29,7 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,remp)
     integer                    :: nxi,nxf,ny,nyi,nyf,nzi,nzf
     real(mytype),dimension(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
     real(mytype),dimension(ny) :: yp
-    real(mytype)               :: dx
+    real(mytype)               :: dx,dz
     real(mytype)               :: remp
     integer                    :: i,j,k
     real(mytype)               :: xm,ym,zm,r,rads2,kcon
@@ -244,7 +244,7 @@ subroutine init_ellip (ux1,uy1,uz1,phi1)
     real(mytype) :: y,um,eqr
     integer :: k,j,i,ii,is,code
 
-    write(*,*) 'INSIDE INIT ELLIP'
+    ! write(*,*) 'INSIDE INIT ELLIP'
 
     eqr=(shx*shy*shz)**(1.0/3.0)
     shape=[shx/eqr,shy/eqr,shz/eqr]

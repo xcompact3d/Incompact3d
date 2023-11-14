@@ -26,7 +26,7 @@ contains
     use param, only : one, two, ten
     use ibm_param
     use dbg_schemes, only: sqrt_prec
-    use ellipsoid_utils, only: EllipsoidalRadius, NormalizeQuaternion
+   !  use ellipsoid_utils, only: EllipsoidalRadius, NormalizeQuaternion
 
     implicit none
 

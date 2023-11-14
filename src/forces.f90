@@ -40,7 +40,7 @@ contains
 
     integer :: iv,stp1,stp2,h
 
-    write(*,*) 'Inside INIT_FORCES'
+   !  write(*,*) 'Inside INIT_FORCES'
 
     call alloc_x(ux01)
     call alloc_x(uy01)
@@ -57,7 +57,7 @@ contains
     uz01 = zero
     uz11 = zero    
 
-    write(*,*) 'Alloc_x called'
+   !  write(*,*) 'Alloc_x called'
 
     allocate(icvlf(nvol), icvrt(nvol), jcvlw(nvol), jcvup(nvol), zcvlf(nvol), zcvrt(nvol))
     allocate(icvlf_lx(nvol), icvrt_lx(nvol), icvlf_ly(nvol), icvrt_ly(nvol), icvlf_lz(nvol), icvrt_lz(nvol))
@@ -65,7 +65,7 @@ contains
     allocate(zcvlf_lx(nvol), zcvrt_lx(nvol), zcvlf_ly(nvol), zcvrt_ly(nvol))
     allocate(xld2(nvol), xrd2(nvol), yld2(nvol), yud2(nvol), zld2(nvol), zrd2(nvol))
 
-    write(*,*) 'allocate called'
+   !  write(*,*) 'allocate called'
 
    !  if ((iibm.ne.0).and.(t.ne.0.)) then
    !    xld2(:) = xld(:) + (t-ifirst*dt)*ubcx
@@ -160,6 +160,138 @@ contains
     call decomp_2d_register_variable(io_restart_forces, "uz11", 1, 0, 0, mytype)
 
   end subroutine init_forces
+
+  subroutine update_forces
+
+   USE decomp_2d
+   USE decomp_2d_io, only : decomp_2d_register_variable, decomp_2d_init_io
+   USE param
+   USE variables
+   implicit none
+
+   integer :: iv,stp1,stp2,h
+
+!   !  write(*,*) 'Inside INIT_FORCES'
+
+!    call alloc_x(ux01)
+!    call alloc_x(uy01)
+!    call alloc_x(ux11)
+!    call alloc_x(uy11)
+!    call alloc_x(ppi1)
+!    call alloc_x(uz01)
+!    call alloc_x(uz11)
+
+!    ux01 = zero
+!    uy01 = zero
+!    ux11 = zero
+!    uy11 = zero
+!    uz01 = zero
+!    uz11 = zero    
+
+!   !  write(*,*) 'Alloc_x called'
+
+!    allocate(icvlf(nvol), icvrt(nvol), jcvlw(nvol), jcvup(nvol), zcvlf(nvol), zcvrt(nvol))
+!    allocate(icvlf_lx(nvol), icvrt_lx(nvol), icvlf_ly(nvol), icvrt_ly(nvol), icvlf_lz(nvol), icvrt_lz(nvol))
+!    allocate(jcvlw_lx(nvol), jcvup_lx(nvol), jcvlw_ly(nvol), jcvup_ly(nvol), jcvlw_lz(nvol), jcvup_lz(nvol))
+!    allocate(zcvlf_lx(nvol), zcvrt_lx(nvol), zcvlf_ly(nvol), zcvrt_ly(nvol))
+!    allocate(xld2(nvol), xrd2(nvol), yld2(nvol), yud2(nvol), zld2(nvol), zrd2(nvol))
+
+  !  write(*,*) 'allocate called'
+
+  !  if ((iibm.ne.0).and.(t.ne.0.)) then
+  !    xld2(:) = xld(:) + (t-ifirst*dt)*ubcx
+  !    xrd2(:) = xrd(:) + (t-ifirst*dt)*ubcx
+  !    yld2(:) = yld(:) + (t-ifirst*dt)*ubcy
+  !    yud2(:) = yud(:) + (t-ifirst*dt)*ubcy
+  ! else
+     xld2(:) = xld(:)
+     xrd2(:) = xrd(:)
+     yld2(:) = yld(:)
+     yud2(:) = yud(:)
+     zld2(:) = zld(:)
+     zrd2(:) = zrd(:)
+  ! endif
+ 
+   !     Definition of the Control Volume
+   !*****************************************************************
+   !! xld,xrd,yld,yud: limits of control volume (!!don't use cex and cey anymore!!)
+
+
+   do iv=1,nvol
+      ! ok for istret=0 (!!to do for istret=1!!)
+      icvlf(iv) = nint(xld(iv)/dx)+1
+      icvrt(iv) = nint(xrd(iv)/dx)+1
+      if (istret.eq.0) then 
+        jcvlw(iv) = nint(yld(iv)/dy)+1
+        jcvup(iv) = nint(yud(iv)/dy)+1
+      else
+        stp1=0
+        stp2=0
+        do h = 1, ny-1  
+          if ((-yp(h+1)-yp(h)+two*yld(iv)).lt.(yld(iv)-yp(h)).and.(stp1.eq.0)) then 
+            jcvlw(iv) = h+1
+            stp1=1
+          endif
+          if ((-yp(h+1)-yp(h)+two*yud(iv)).lt.(yud(iv)-yp(h)).and.(stp2.eq.0)) then
+            jcvup(iv) = h
+            stp2=1 
+          endif
+        enddo
+      endif
+      icvlf_lx(iv) = icvlf(iv)
+      icvrt_lx(iv) = icvrt(iv)
+      jcvlw_lx(iv) = max(jcvlw(iv)+1-xstart(2),1)
+      jcvup_lx(iv) = min(jcvup(iv)+1-xstart(2),xsize(2))
+      jcvlw_lz(iv) = max(jcvlw(iv)+1-zstart(2),1)
+      jcvup_lz(iv) = min(jcvup(iv)+1-zstart(2),zsize(2))       
+ 
+      icvlf_ly(iv) = max(icvlf(iv)+1-ystart(1),1)
+      icvrt_ly(iv) = min(icvrt(iv)+1-ystart(1),ysize(1))
+      icvlf_lz(iv) = max(icvlf(iv)+1-zstart(1),1)
+      icvrt_lz(iv) = min(icvrt(iv)+1-zstart(1),zsize(1))   
+      jcvlw_ly(iv) = jcvlw(iv)
+      jcvup_ly(iv) = jcvup(iv)
+
+      zcvlf(iv) = nint(zld(iv)/dz)+1
+      zcvrt(iv) = nint(zrd(iv)/dz)+1
+      zcvlf_lx(iv) = max(zcvlf(iv)+1-xstart(3),1)
+      zcvrt_lx(iv) = min(zcvrt(iv)+1-xstart(3),xsize(3)) 
+      zcvlf_ly(iv) = max(zcvlf(iv)+1-ystart(3),1)
+      zcvrt_ly(iv) = min(zcvrt(iv)+1-ystart(3),ysize(3))        
+   enddo
+
+   ! if (nrank==0) then
+   !    write(*,*) '========================Forces============================='
+   !    write(*,*) '                       (icvlf)      (icvrt) '
+   !    write(*,*) '                (jcvup) B____________C '
+   !    write(*,*) '                        \            \ '
+   !    write(*,*) '                        \     __     \ '
+   !    write(*,*) '                        \    \__\    \ '
+   !    write(*,*) '                        \            \ '
+   !    write(*,*) '                        \       CV   \ '
+   !    write(*,*) '                (jcvlw) A____________D '
+   !    do iv=1,nvol
+   !       write(*,"(' Control Volume     : #',I1)") iv
+   !       write(*,"('     xld, icvlf     : (',F6.2,',',I6,')')") xld(iv), icvlf(iv)
+   !       write(*,"('     xrd, icvrt     : (',F6.2,',',I6,')')") xrd(iv), icvrt(iv)
+   !       write(*,"('     yld, jcvlw     : (',F6.2,',',I6,')')") yld(iv), jcvlw(iv)
+   !       write(*,"('     yud, jcvup     : (',F6.2,',',I6,')')") yud(iv), jcvup(iv)
+   !       write(*,"('     zld, zcvlf     : (',F6.2,',',I6,')')") zld(iv), zcvlf(iv)
+   !       write(*,"('     zrd, zcvrt     : (',F6.2,',',I6,')')") zrd(iv), zcvrt(iv)      
+   !    enddo
+   !    write(*,*) '==========================================================='
+   ! endif
+
+   ! call decomp_2d_init_io(io_restart_forces)
+   ! call decomp_2d_register_variable(io_restart_forces, "ux01", 1, 0, 0, mytype)
+   ! call decomp_2d_register_variable(io_restart_forces, "uy01", 1, 0, 0, mytype)
+   ! call decomp_2d_register_variable(io_restart_forces, "ux11", 1, 0, 0, mytype)
+   ! call decomp_2d_register_variable(io_restart_forces, "uy11", 1, 0, 0, mytype)
+   ! call decomp_2d_register_variable(io_restart_forces, "uz01", 1, 0, 0, mytype)
+   ! call decomp_2d_register_variable(io_restart_forces, "uz11", 1, 0, 0, mytype)
+
+
+  end subroutine update_forces
 !   if ((iibm.ne.0).and.(t.ne.0.)) then
    !    xld2(:) = xld(:) + (t-ifirst*dt)*ubcx
    !    xrd2(:) = xrd(:) + (t-ifirst*dt)*ubcx
@@ -296,7 +428,7 @@ contains
     real(mytype), dimension(nz) :: drag3, drag4, drag33, drag44
     real(mytype) :: mom1, mom2, mom3, tp1, tp2, tp3, dra1, dra2, dra3
 
-    write(*,*) 'Inside FORCE'
+   !  write(*,*) 'Inside FORCE'
 
   
 

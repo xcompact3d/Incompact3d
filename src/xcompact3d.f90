@@ -17,7 +17,7 @@ program xcompact3d
   use ibm, only : body
   use genepsi, only : genepsi3d
   use ellipsoid_utils, only: lin_step, ang_step, QuaternionNorm
-  use forces, only : force, init_forces, iforces, xld,xrd,yld,yud,zld,zrd
+  use forces, only : force, init_forces, iforces,update_forces, xld,xrd,yld,yud,zld,zrd
   implicit none
   real(mytype)  :: dummy,drag,lift,lat
 
@@ -40,6 +40,7 @@ program xcompact3d
         call apply_spatial_filter(ux1,uy1,uz1,phi1)
      endif
 
+
      do itr=1,iadvance_time
 
         call set_fluid_properties(rho1,mu1)
@@ -55,7 +56,11 @@ program xcompact3d
                yud(1) = position(2) + shape(1) * ra * cvl_scalar
                zld(1) = position(3) - shape(1) * ra * cvl_scalar
                zrd(1) = position(3) + shape(1) * ra * cvl_scalar
-               call init_forces()
+               if (itime.eq.ifirst) then 
+                  call init_forces()
+               else 
+                  call update_forces()
+               endif
              endif
           else if (iibm.eq.1) then
              call body(ux1,uy1,uz1,ep1)
@@ -90,9 +95,12 @@ program xcompact3d
         call force(ux1,uy1,uz1,ep1,drag,lift,lat)
 
         linearForce=[drag,lift,lat]
+        if (nrank==0) then 
+            write(*,*) "Time = , ", t, " Linear Force = ,", linearForce
+        endif
         torque(:)=zero
 
-        if (nrank==0) then
+      !   if (nrank==0) then
 
          call lin_step(position,linearVelocity,linearForce,dt,position_1,linearVelocity_1)
          call ang_step(orientation,angularVelocity,torque,dt,orientation_1,angularVelocity_1)
@@ -103,11 +111,18 @@ program xcompact3d
          orientation = orientation_1
          angularVelocity = angularVelocity_1
 
+         if (nrank==0) then 
+            write(*,*) "Position = ", position_1
+            write(*,*) "Orientation = ", orientation_1
+            write(*,*) "Linear velocity = ", linearVelocity
+            write(*,*) "Angular velocity = ", angularVelocity
+
          call QuaternionNorm(angularVelocity,dummy)
 
          write(*,*) 'Norm of angvel = ', dummy
+         endif   
 
-        endif 
+      !   endif 
 
       !   if (nrank==0) then 
       !    write(*,*) 'Centroid position is ', position
@@ -159,7 +174,7 @@ subroutine init_xcompact3d()
 
   use visu, only : visu_init, visu_ready
 
-  use genepsi, only : genepsi3d, epsi_init
+  use genepsi, only : genepsi3d, epsi_init, param_assign
   use ibm, only : body
 
   use probes, only : init_probes
@@ -220,6 +235,7 @@ subroutine init_xcompact3d()
   call decomp_info_init(nxm, nym, nz, ph3)
 
   call init_variables()
+  call param_assign()
 
   call schemes()
 

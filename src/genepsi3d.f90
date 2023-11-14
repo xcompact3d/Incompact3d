@@ -79,7 +79,7 @@ contains
 
     ELSEIF (itype.EQ.itype_ellip) THEN
 
-       CALL geomcomplex_ellip(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, remp)
+       CALL geomcomplex_ellip(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
 
     ENDIF
 
@@ -131,7 +131,7 @@ contains
     logical :: dir_exists
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
 
-    call param_assign()
+   !  call param_assign()
     !
     if (nrank==0.and.mod(itime,ilist)==0) then
       write(*,*)'==========================================================='
