@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Generic options
+#SBATCH --job-name=TTBL_DNS_1st
+#SBATCH --account=e01-ICL-Laizet
+#SBATCH --partition=standard
+#SBATCH --output=Terminal.out
+#SBATCH --error=Terminal.out
+#SBATCH --open-mode=append
+
+# Resource options
+#SBATCH --qos=standard
+#SBATCH --nodes=8
+#SBATCH --tasks-per-node=128
+#SBATCH --cpus-per-task=1
+#SBATCH --time=24:00:00
+
+# Setup striping
+lfs setstripe -c -1 .
+
+# Setup environment
+module swap PrgEnv-cray PrgEnv-gnu
+export OMP_NUM_THREADS=1
+
+# Print job ID and modules to output file
+printf "Job ID: ${SLURM_JOB_ID} on ${SLURMD_NODENAME}\n\n"
+module list
+
+# Run Xcompact3d
+srun --distribution=block:block --hint=nomultithread xcompact3d

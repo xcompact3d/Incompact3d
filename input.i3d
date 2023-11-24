@@ -10,16 +10,16 @@ p_row = 0               ! Row partition
 p_col = 0               ! Column partition
 
 ! Mesh
-nx = 128                ! X-direction nodes
-ny = 257                ! Y-direction nodes
-nz = 128                ! Z-direction nodes
+nx = 32                ! X-direction nodes
+ny = 65                ! Y-direction nodes
+nz = 32                ! Z-direction nodes
 istret = 3              ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
-beta = 1.1              ! Refinement parameter (beta)
+beta = 1.515331892554091              ! Refinement parameter (beta)
 
 ! Domain
-xlx = 60.0              ! Lx (Size of the box in x-direction)
-yly = 50.0              ! Ly (Size of the box in y-direction)
-zlz = 30.0             ! Lz (Size of the box in z-direction)
+xlx = 30.0              ! Lx (Size of the box in x-direction)
+yly = 25.0              ! Ly (Size of the box in y-direction)
+zlz = 15.0              ! Lz (Size of the box in z-direction)
 
 ! Boundary conditions
 nclx1 = 0
@@ -38,12 +38,12 @@ init_noise = 0.02       ! Turbulence intensity (1=100%) !! Initial condition
 inflow_noise = 0.0      ! Turbulence intensity (1=100%) !! Inflow condition
 
 ! Time stepping
-dt = 0.005              ! Time step
+dt = 0.01            ! Time step
 ifirst = 1              ! First iteration
-ilast = 100000          ! Last iteration
+ilast = 200000          ! Last iteration
 
 ! Enable modelling tools
-ilesmod = 1             ! if 0 then DNS
+ilesmod = 0             ! if 0 then DNS
 
 /End
 
@@ -60,8 +60,8 @@ iimplicit = 2           ! Implicit scheme for y-diffusive term
 itimescheme = 3         ! Time integration scheme
 
 ! Dissipation control
-nu0nu = 55.5             ! Ratio between hyperviscosity/viscosity at nu
-cnu = 0.35              ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
+nu0nu = 4.0             ! Ratio between hyperviscosity/viscosity at nu
+cnu = 0.44              ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 
 /End
 
@@ -70,9 +70,9 @@ cnu = 0.35              ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 !=================
 ! Basic I/O
 irestart = 0            ! Read initial flow field ?
-icheckpoint = 20000     ! Frequency for writing backup file
-ioutput = 5000          ! Frequency for visualization
-ilist = 10              ! Frequency for writing to screen
+icheckpoint = 50000     ! Frequency for writing backup file
+ioutput = 500           ! Frequency for visualization
+ilist = 100             ! Frequency for writing to screen
 nvisu = 1               ! Size for visualisation collection
 
 /End
@@ -81,7 +81,7 @@ nvisu = 1               ! Size for visualisation collection
 &Statistics
 !=================
 nstat = 1               ! Size arrays for statistic collection
-initstat = 20000       ! Time steps after which statistics are collected
+initstat = 1000         ! Time steps after which statistics are collected
 
 /End
 
@@ -91,9 +91,9 @@ initstat = 20000       ! Time steps after which statistics are collected
 !================
 &LESModel
 !================
-jles = 4                ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Smag, 4: iSVV, 5: dyn SEV)
+jles = 0                ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Smag, 4: iSVV, 5: dyn SEV)
 
 /End
 
 &CASE
-/End
+/End:wqwqwqqw
