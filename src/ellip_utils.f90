@@ -133,7 +133,7 @@ contains
 
 
     subroutine NormalizeQuaternion(quaternion) 
-      real(mytype), intent(in) :: quaternion(4)
+      real(mytype), intent(inout) :: quaternion(4)
       real(mytype) :: normalizedQuaternion(4)
     
       ! Compute the magnitude of the quaternion
@@ -144,7 +144,7 @@ contains
         write(*,*) "Tried to normalize a zero quaternion"
       endif
       ! Normalize the quaternion
-      normalizedQuaternion = quaternion / magnitude
+      quaternion = quaternion / magnitude
     
     end subroutine NormalizeQuaternion
 

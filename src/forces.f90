@@ -22,7 +22,7 @@ module forces
   integer,allocatable,dimension(:) :: icvlf,icvrt,jcvlw,jcvup,zcvlf,zcvrt
   integer,allocatable,dimension(:) :: icvlf_lx, icvrt_lx, icvlf_ly, icvrt_ly, icvlf_lz, icvrt_lz
   integer,allocatable,dimension(:) :: jcvlw_lx, jcvup_lx, jcvlw_ly, jcvup_ly, jcvlw_lz, jcvup_lz
-  integer,allocatable,dimension(:) :: zcvlf_lx, zcvrt_lx, zcvlf_ly, zcvrt_ly
+  integer,allocatable,dimension(:) :: zcvlf_lx, zcvrt_lx, zcvlf_ly, zcvrt_ly, zcvlf_lz, zcvrt_lz
   
 
   character(len=*), parameter :: io_restart_forces = "restart-forces-io", &
@@ -62,7 +62,7 @@ contains
     allocate(icvlf(nvol), icvrt(nvol), jcvlw(nvol), jcvup(nvol), zcvlf(nvol), zcvrt(nvol))
     allocate(icvlf_lx(nvol), icvrt_lx(nvol), icvlf_ly(nvol), icvrt_ly(nvol), icvlf_lz(nvol), icvrt_lz(nvol))
     allocate(jcvlw_lx(nvol), jcvup_lx(nvol), jcvlw_ly(nvol), jcvup_ly(nvol), jcvlw_lz(nvol), jcvup_lz(nvol))
-    allocate(zcvlf_lx(nvol), zcvrt_lx(nvol), zcvlf_ly(nvol), zcvrt_ly(nvol))
+    allocate(zcvlf_lx(nvol), zcvrt_lx(nvol), zcvlf_ly(nvol), zcvrt_ly(nvol), zcvlf_lz(nvol), zcvrt_lz(nvol))
     allocate(xld2(nvol), xrd2(nvol), yld2(nvol), yud2(nvol), zld2(nvol), zrd2(nvol))
 
    !  write(*,*) 'allocate called'
@@ -126,7 +126,9 @@ contains
        zcvlf_lx(iv) = max(zcvlf(iv)+1-xstart(3),1)
        zcvrt_lx(iv) = min(zcvrt(iv)+1-xstart(3),xsize(3)) 
        zcvlf_ly(iv) = max(zcvlf(iv)+1-ystart(3),1)
-       zcvrt_ly(iv) = min(zcvrt(iv)+1-ystart(3),ysize(3))        
+       zcvrt_ly(iv) = min(zcvrt(iv)+1-ystart(3),ysize(3))       
+       zcvlf_lz(iv) = zcvlf(iv)
+       zcvrt_lz(iv) = zcvrt(iv) 
     enddo
 
     if (nrank==0) then
@@ -370,6 +372,7 @@ contains
     USE decomp_2d
     USE MPI
     USE ibm_param
+    USE ellipsoid_utils, only : CrossProduct,centrifugal_force,coriolis_force
 
     use var, only : ta1, tb1, tc1, td1, te1, tf1, tg1, th1, ti1, di1
     use var, only : ux2, uy2, uz2, ta2, tb2, tc2, td2, te2, tf2, tg2, th2, ti2, di2
@@ -379,7 +382,7 @@ contains
     implicit none
     character(len=30) :: filename, filename2
     integer :: nzmsize
-    integer                                             :: i, iv, j, k, kk, code, jj
+    integer                                             :: i, iv, j, k, kk, code, jj, ii
     integer                                             :: nvect1,nvect2,nvect3
 
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1, uy1, uz1
@@ -391,6 +394,7 @@ contains
 
     real(mytype), dimension(nz) :: yLift,xDrag, zLat
     real(mytype) :: yLift_mean,xDrag_mean,zLat_mean
+    real(mytype) :: xm,ym,zm,rotationalComponent(3)
 
     real(mytype), dimension(ny-1) :: del_y
 
@@ -416,7 +420,7 @@ contains
     real(mytype) :: uxmid,uymid,uzmid,prmid
     real(mytype) :: dudxmid,dudymid,dudzmid,dvdxmid,dvdymid,dvdzmid
     real(mytype) :: dwdxmid,dwdymid,dwdzmid
-    real(mytype) :: fac,tsumx,tsumy,tsumz
+    real(mytype) :: fac,fac1,fac2,fac3,tsumx,tsumy,tsumz,centrifugal(3),coriolis(3)
     real(mytype) :: fcvx,fcvy,fcvz,fprx,fpry,fprz,fdix,fdiy,fdiz
     real(mytype) :: xmom,ymom,zmom
     real(mytype), dimension(ny) :: ztpresx, ztpresy
@@ -527,24 +531,31 @@ contains
           tsumx=zero
           tsumy=zero
           tsumz=zero
+          zm=real(xstart(3)+k-1,mytype)*dz
           do j=jcvlw_lx(iv),jcvup_lx(iv)
+            ym=real(xstart(2)+j-1,mytype)*dy
              do i=icvlf_lx(iv),icvrt_lx(iv)
+               xm=real(xstart(1)+i-1,mytype)*dx
+
+               fac1   = (onepfive*ux1(i,j,k)-two*ux01(i,j,k)+half*ux11(i,j,k))*(one-ep1(i,j,k))
+               fac2   = (onepfive*uy1(i,j,k)-two*uy01(i,j,k)+half*uy11(i,j,k))*(one-ep1(i,j,k))
+               fac3   = (onepfive*uz1(i,j,k)-two*uz01(i,j,k)+half*uz11(i,j,k))*(one-ep1(i,j,k))
+
+                call coriolis_force(angularVelocity,[fac1,fac2,fac3],coriolis)
+                call centrifugal_force(angularVelocity, [xm,ym,zm]-position,centrifugal)
                 !     The velocity time rate has to be relative to the cell center, 
                 !     and not to the nodes, because, here, we have an integral 
                 !     relative to the volume, and, therefore, this has a sense 
                 !     of a "source".
                 !         fac   = (1.5*ux1(i,j,k)-2.0*ux01(i,j,k)+0.5*ux11(i,j,k))*epcv1(i,j,k)
-                fac   = (onepfive*ux1(i,j,k)-two*ux01(i,j,k)+half*ux11(i,j,k))*(one-ep1(i,j,k))
-                tsumx = tsumx+fac*dx*del_y(j+(xstart(2)-1))*dz/dt    !tsumx+fac*dx*dy/dt
+                tsumx = tsumx+(fac1-coriolis(1)-centrifugal(1))*dx*del_y(j+(xstart(2)-1))*dz/dt    !tsumx+fac*dx*dy/dt
                 !sumx(k) = sumx(k)+dudt1*dx*dy
 
                 !         fac   = (1.5*uy1(i,j,k)-2.0*uy01(i,j,k)+0.5*uy11(i,j,k))*epcv1(i,j,k)
-                fac   = (onepfive*uy1(i,j,k)-two*uy01(i,j,k)+half*uy11(i,j,k))*(one-ep1(i,j,k))
-                tsumy = tsumy+fac*dx*del_y(j+(xstart(2)-1))*dz/dt !tsumy+fac*dx*dy/dt
+                tsumy = tsumy+(fac2-coriolis(2)-centrifugal(2))*dx*del_y(j+(xstart(2)-1))*dz/dt !tsumy+fac*dx*dy/dt
                 !sumy(k) = sumy(k)+dudt1*dx*dy
 
-                fac   = (onepfive*uz1(i,j,k)-two*uz01(i,j,k)+half*uz11(i,j,k))*(one-ep1(i,j,k))
-                tsumz = tsumz+fac*dx*del_y(j+(xstart(2)-1))*dz/dt     
+                tsumz = tsumz+(fac3-coriolis(3)-centrifugal(3))*dx*del_y(j+(xstart(2)-1))*dz/dt     
              enddo
           enddo
           tunstxl(xstart(3)-1+k)=tsumx
@@ -598,8 +609,11 @@ contains
        !AD
        if ((jcvlw(iv).ge.xstart(2)).and.(jcvlw(iv).le.xend(2))) then
           j=jcvlw(iv)-xstart(2)+1
+          jj=jcvlw(iv)
+          ym=real(jj,mytype)*dy
           do k=1,xsize(3)
              kk=xstart(3)-1+k
+             zm=real(kk,mytype)*dz
              fcvx=zero
              fcvy=zero
              fcvz=zero
@@ -608,10 +622,14 @@ contains
              fdiy=zero
              fdiz=zero
              do i=icvlf_lx(iv),icvrt_lx(iv)-1
+                
+                ii=xstart(1)+i-1
+                xm=real(ii,mytype)*dx
                 !momentum flux
-                uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
-                uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
-                uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k))
+                call crossProduct(angularVelocity,[xm,ym,zm]-position,rotationalComponent)
+                uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(1) - rotationalComponent(1)
+                uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) - rotationalComponent(2)
+                uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) - rotationalComponent(3)
 
                 fcvx  = fcvx -uxmid*uymid*dx*dz
                 fcvy  = fcvy -uymid*uymid*dx*dz
@@ -648,8 +666,11 @@ contains
        !BC
        if ((jcvup(iv).ge.xstart(2)).and.(jcvup(iv).le.xend(2))) then
           j=jcvup(iv)-xstart(2)+1
+          jj=jcvup(iv)
+          ym=real(jj,mytype)*dy
           do k=1,xsize(3)
-             kk=xstart(3)-1+k
+             kk=xstart(3)-1+k   
+             zm=real(kk,mytype)*dz
              fcvx=zero
              fcvy=zero
              fcvz=zero
@@ -658,14 +679,17 @@ contains
              fdiy=zero
              fdiz=zero
              do i=icvlf_lx(iv),icvrt_lx(iv)-1
-                !momentum flux
-                uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
-                uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
-                uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k))
+               ii=xstart(1)+i-1
+               xm=real(ii,mytype)*dx
+               !momentum flux
+               call crossProduct(angularVelocity,[xm,ym,zm]-position,rotationalComponent)
+               uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(1) - rotationalComponent(1)
+               uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) - rotationalComponent(2)
+               uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) - rotationalComponent(3)
 
-                fcvx= fcvx +uxmid*uymid*dx*dz
-                fcvy= fcvy +uymid*uymid*dx*dz
-                fcvz= fcvz +uymid*uzmid*dx*dz
+                fcvx = fcvx +uxmid*uymid*dx*dz
+                fcvy = fcvy +uymid*uymid*dx*dz
+                fcvz = fcvz +uymid*uzmid*dx*dz
 
 
                 !pressure
@@ -699,8 +723,11 @@ contains
        !AB
        if ((icvlf(iv).ge.ystart(1)).and.(icvlf(iv).le.yend(1))) then
           i=icvlf(iv)-ystart(1)+1
+          ii=icvlf(iv)
+          xm=real(ii,mytype)*dx
           do k=1,ysize(3)
-             kk=ystart(3)-1+k
+             kk=ystart(3)+k-1
+             zm=real(kk,mytype)*dz
              fcvx=zero
              fcvy=zero
              fcvz=zero
@@ -709,10 +736,15 @@ contains
              fdiy=zero
              fdiz=zero
              do j=jcvlw_ly(iv),jcvup_ly(iv)-1
+
+                jj=ystart(2)+j-1
+                ym=real(jj,mytype)*dz
                 !momentum flux
-                uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k))
-                uymid = half*(uy2(i,j,k)+uy2(i,j+1,k))
-                uzmid = half*(uz2(i,j,k)+uz2(i,j+1,k))
+               call crossProduct(angularVelocity,[xm,ym,zm]-position,rotationalComponent)
+               uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(1) - rotationalComponent(1)
+               uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) - rotationalComponent(2)
+               uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) - rotationalComponent(3)
+
 
                 fcvx= fcvx -uxmid*uxmid*del_y(j)*dz
                 fcvy= fcvy -uxmid*uymid*del_y(j)*dz
@@ -748,8 +780,11 @@ contains
        !DC
        if ((icvrt(iv).ge.ystart(1)).and.(icvrt(iv).le.yend(1))) then
           i=icvrt(iv)-ystart(1)+1
+          ii=icvrt(iv)
+          xm=real(ii,mytype)*dx
           do k=1,ysize(3)
              kk=ystart(3)-1+k
+             zm=real(kk,mytype)*dz
              fcvx=zero
              fcvy=zero
              fcvz=zero
@@ -758,10 +793,14 @@ contains
              fdiy=zero
              fdiz=zero
              do j=jcvlw_ly(iv),jcvup_ly(iv)-1
+                jj=ystart(2)+j-1
+                ym=real(jj,mytype)*dy
                 !momentum flux
-                uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k))
-                uymid = half*(uy2(i,j,k)+uy2(i,j+1,k))
-                uzmid = half*(uz2(i,j,k)+uz2(i,j+1,k))
+               call crossProduct(angularVelocity,[xm,ym,zm]-position,rotationalComponent)
+               uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(1) - rotationalComponent(1)
+               uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) - rotationalComponent(2)
+               uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) - rotationalComponent(3)
+
 
                 fcvx= fcvx +uxmid*uxmid*del_y(j)*dz
                 fcvy= fcvy +uxmid*uymid*del_y(j)*dz
@@ -800,7 +839,8 @@ contains
        !Left
        if ((zcvlf(iv).ge.xstart(3)).and.(zcvlf(iv).le.xend(3))) then
          k=zcvlf(iv)-xstart(3)+1
-         
+         kk=zcvlf(iv)
+         zm=real(kk,mytype)*dz
  
          fcvx=zero
          fcvy=zero
@@ -811,11 +851,17 @@ contains
          fdiz=zero
          do j=jcvlw_lx(iv),jcvup_lx(iv)
           kk = xstart(2)-1+j
+          jj = xstart(2)-1+j
+
+          ym=real(jj,mytype)*dy
             do i=icvlf_lx(iv),icvrt_lx(iv)-1
+               ii=xstart(1)+i-1
+               xm=real(ii,mytype)*dx
                !momentum flux
-               uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
-               uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
-               uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k))
+               call crossProduct(angularVelocity,[xm,ym,zm]-position,rotationalComponent)
+               uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(1) - rotationalComponent(1)
+               uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) - rotationalComponent(2)
+               uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) - rotationalComponent(3)
  
                fcvx= fcvx +uxmid*uzmid*dx*dy
                fcvy= fcvy +uymid*uzmid*dx*dy
@@ -851,6 +897,8 @@ contains
       !Right
       if ((zcvrt(iv).ge.xstart(3)).and.(zcvrt(iv).le.xend(3))) then
          k=zcvrt(iv)-xstart(3)+1
+         kk=zcvrt(iv)
+         zm=real(kk,mytype)*dz
  !        kk=nrank+1
  
          fcvx=zero
@@ -863,11 +911,16 @@ contains
  !        do k=1,xsize(3)
          do j=jcvlw_lx(iv),jcvup_lx(iv)
           kk = xstart(2)-1+j 
+          jj = xstart(2)-1+j
+          ym=real(jj,mytype)*dy
            do i=icvlf_lx(iv),icvrt_lx(iv)-1
+             ii=xstart(1)+i-1
+             xm=real(ii,mytype)*dx
                !momentum flux
-               uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
-               uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
-               uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k))
+             call crossProduct(angularVelocity,[xm,ym,zm]-position,rotationalComponent)
+             uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(1) - rotationalComponent(1)
+             uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) - rotationalComponent(2)
+             uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) - rotationalComponent(3)
  
                fcvx= fcvx -uxmid*uzmid*dx*dy
                fcvy= fcvy -uymid*uzmid*dx*dy

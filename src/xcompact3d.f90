@@ -94,7 +94,7 @@ program xcompact3d
         !Add force calculation here
         call force(ux1,uy1,uz1,ep1,drag,lift,lat)
 
-        linearForce=[drag,lift,lat]
+        linearForce=[drag,lift,lat-grav]
         if (nrank==0) then 
             write(*,*) "Time = , ", t, " Linear Force = ,", linearForce
         endif
@@ -111,15 +111,15 @@ program xcompact3d
          orientation = orientation_1
          angularVelocity = angularVelocity_1
 
-         if (nrank==0) then 
-            write(*,*) "Position = ", position_1
-            write(*,*) "Orientation = ", orientation_1
-            write(*,*) "Linear velocity = ", linearVelocity
+         if ((nrank==0).and.(mod(itime,ilist)==0)) then 
+            write(*,*) "Position =         ", position_1
+            write(*,*) "Orientation =      ", orientation_1
+            write(*,*) "Linear velocity =  ", linearVelocity
             write(*,*) "Angular velocity = ", angularVelocity
 
-         call QuaternionNorm(angularVelocity,dummy)
+         ! call QuaternionNorm(angularVelocity,dummy)
 
-         write(*,*) 'Norm of angvel = ', dummy
+         ! write(*,*) 'Norm of angvel = ', dummy
          endif   
 
       !   endif 
