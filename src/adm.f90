@@ -53,6 +53,7 @@ contains
       character(1000) :: ReadLine
       real(mytype) :: GammaDisc_tot,GammaDisc_partial
       integer :: idisc,i,j,k,ierr,code
+      real :: temp
       real(mytype) :: xmesh,ymesh,zmesh,deltax,deltay,deltaz,deltan,deltar,disc_thick,hgrid,projected_x,projected_y,projected_z
 
       ! ADM not yet set-up for stretched grids
@@ -141,18 +142,18 @@ contains
             !endif
          enddo
 
-         ! Read data if restarting simulation
          if (irestart==1) then
-            open(15,File='discs_time'//trim(int2str(itime/iturboutput))//'.adm')
-            read(15,*)
-            do idisc=1,Nad
-               read(15,*) actuatordisc(idisc)%UF,actuatordisc(idisc)%Power,actuatordisc(idisc)%Thrust,actuatordisc(idisc)%Udisc_ave,actuatordisc(idisc)%Power_ave,actuatordisc(idisc)%Thrust_ave
-               actuatordisc(idisc)%Udisc_ave=actuatordisc(idisc)%Udisc_ave*(itime-initstat+1)
-               actuatordisc(idisc)%Power_ave=actuatordisc(idisc)%Power_ave*(itime-initstat+1)
-               actuatordisc(idisc)%Thrust_ave=actuatordisc(idisc)%Thrust_ave*(itime-initstat+1)
-            enddo
-            close(15)
+             do idisc=1,Nad
+                 open(15,File='disc'//trim(int2str(idisc))//'.adm', position="append", status='old', action='read')
+                 backspace(15)
+                 read(15,*) temp,temp,actuatordisc(idisc)%UF,actuatordisc(idisc)%Power,actuatordisc(idisc)%Thrust,actuatordisc(idisc)%Udisc_ave,actuatordisc(idisc)%Power_ave,actuatordisc(idisc)%Thrust_ave
+                 actuatordisc(idisc)%Udisc_ave=actuatordisc(idisc)%Udisc_ave*(itime-initstat+1)
+                 actuatordisc(idisc)%Power_ave=actuatordisc(idisc)%Power_ave*(itime-initstat+1)
+                 actuatordisc(idisc)%Thrust_ave=actuatordisc(idisc)%Thrust_ave*(itime-initstat+1)
+                 close(15)
+             end do
          endif
+
       endif
 
       return
