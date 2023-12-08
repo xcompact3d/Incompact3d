@@ -106,7 +106,7 @@ subroutine init_xcompact3d()
   use tools, only : test_speed_min_max, test_scalar_min_max, &
        restart, &
        simu_stats, compute_cfldiff, &
-       init_inflow_outflow
+       init_inflow_outflow, read_inflow
 
   use param, only : ilesmod, jles,itype
   use param, only : irestart
@@ -230,6 +230,9 @@ subroutine init_xcompact3d()
 
   if ((ioutflow.eq.1).or.(iin.eq.3)) then
      call init_inflow_outflow()
+     if ((irestart==1).and.(iin.eq.3)) then
+        call read_inflow(ux_inflow,uy_inflow,uz_inflow,itime/ntimesteps)
+     endif
   end if
 
   if ((iibm.eq.2).or.(iibm.eq.3)) then
