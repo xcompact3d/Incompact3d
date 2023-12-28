@@ -344,6 +344,9 @@ module param
   integer :: smagwalldamp
   real(mytype) :: smagcst,nSmag,walecst,FSGS,pr_t,maxdsmagcst
 
+  !Theta Model
+  integer :: jtheta
+
   !! Gravity field (vector components)
   real(mytype) :: gravx, gravy, gravz
 

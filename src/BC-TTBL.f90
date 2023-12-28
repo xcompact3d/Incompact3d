@@ -166,7 +166,11 @@ contains
       call horizontal_avrge(ux2, ux2m)
 
       ! Compute thetad
-      thetad = comp_thetad(thetad, ux2, uy2, ux2m)
+      if (jtheta == 0 ) then
+         thetad = comp_thetad(thetad, ux2, uy2, ux2m)
+      else if (jtheta == 1 ) then
+         thetad = comp_thetad_II(ux2, uy2, ux2m)
+      end if
 
       ! Write data for restart
       if (nrank == 0 .and. mod(itime, icheckpoint) == 0) then
@@ -1059,4 +1063,50 @@ contains
       call horizontal_avrge(ta2 * tb2, tempc2)
       diss = -two * xnu * (tempa2 + tempb2 + tempc2)
    end subroutine dissipation
+   
+   function comp_thetad_II(ux2, uy2, ux2m) result(thetad)
+      use var, only: di2
+      use MPI
+
+      implicit none
+      real(mytype), intent(in), dimension(ysize(1), ysize(2), ysize(3)) :: ux2, uy2
+      real(mytype), intent(in), dimension(ysize(2)) :: ux2m
+
+      real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ux2p
+      real(mytype), dimension(ysize(2)) :: uxuy2pm, ux2mm
+      real(mytype), dimension(ysize(2)) :: ydudy2m, dudy2m,dypm
+      real(mytype) :: thetad, RHS,Andy
+      integer :: j, code, it
+      logical :: success
+
+      integer, parameter :: freq = 1
+
+      ! Calculate averaged derivatives
+      call extract_fluctuat(ux2, ux2m, ux2p)
+      call horizontal_avrge(ux2p * uy2, uxuy2pm)
+      call dery(dudy2m, ux2m, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
+      call dery(dypm, yp, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
+      
+      RHS = 0.
+      do j = 2, ysize(2)-1
+         RHS = RHS + dudy2m(j)*(xnu * dudy2m(j) - uxuy2pm(j))*dypm(j)
+      end do  
+      Andy = 0.5 * (dudy2m(1)*(xnu * dudy2m(1) - uxuy2pm(1))*dypm(1) + 2.0 * RHS + &
+                   dudy2m(ysize(2))*(xnu * dudy2m(ysize(2)) - uxuy2pm(ysize(2)))*dypm(ysize(2)))
+
+      thetad = xnu * dudy2m(1) - 2.0 * Andy
+
+      ! Iteratively find optimal thetad
+      if ((itime >= ifirst + 2 .or. irestart == 1) .and. mod(itime, freq) == 0) then
+         if (nrank == 0) then
+           if (mod(itime, ilist) == 0) then
+              write (6, *) 'Theta dot is computed , theta = ', thetad
+            end if
+         end if
+         call MPI_BCAST(thetad, 1, real_type, 0, MPI_COMM_WORLD, code)
+      end if
+   end function
+   !############################################################################
+   !############################################################################
+   
 end module ttbl

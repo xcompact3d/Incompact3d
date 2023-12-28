@@ -70,7 +70,7 @@ subroutine parameter(input_i3d)
   NAMELIST /CASE/ pfront
   NAMELIST/ALMParam/iturboutput,NTurbines,TurbinesPath,NActuatorlines,ActuatorlinesPath,eps_factor,rho_air
   NAMELIST/ADMParam/Ndiscs,ADMcoords,iturboutput,rho_air,T_relax
-
+  NAMELIST /ThetaModel/ jtheta
 #ifdef DEBG
   if (nrank == 0) write(*,*) '# parameter start'
 #endif
@@ -217,6 +217,9 @@ subroutine parameter(input_i3d)
   endif
   ! read(10, nml=TurbulenceWallModel)
   read(10, nml=CASE); rewind(10) !! Read case-specific variables
+
+  !!==> Pasha
+
   close(10)
 
   ! allocate(sc(numscalar),cp(numscalar),ri(numscalar),group(numscalar))
@@ -422,6 +425,13 @@ subroutine parameter(input_i3d)
        else
        endif
      endif
+
+      if (jtheta==0) then
+         write(*,*) '                   : Biao Model'
+      else if (jtheta==1) then
+         write(*,*) '                   : Andy Model'
+      endif
+
      write(*,*) '==========================================================='
      write(*,"(' ifirst                 : ',I17)") ifirst
      write(*,"(' ilast                  : ',I17)") ilast
@@ -704,5 +714,8 @@ subroutine parameter_defaults()
   ys_tr_tbl=0.350508_mytype
   ts_tr_tbl=1.402033_mytype
   x0_tr_tbl=3.505082_mytype
+   
+  !! theta model
+  jtheta = 0 
 
 end subroutine parameter_defaults
