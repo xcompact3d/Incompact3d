@@ -58,6 +58,7 @@ subroutine parameter(input_i3d)
        scalar_lbound, scalar_ubound, sc_even, sc_skew, &
        alpha_sc, beta_sc, g_sc, Tref
   NAMELIST /LESModel/ jles, smagcst, smagwalldamp, nSmag, walecst, maxdsmagcst, iconserv
+  NAMELIST /ThetaDotModel/ jtheta_dot,jthickness,K_theta
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
   NAMELIST /ibmstuff/ cex,cey,cez,ra,nobjmax,nraf,nvol,iforces, npif, izap, ianal, imove, thickness, chord, omega ,ubcx,ubcy,ubcz,rads, c_air
   NAMELIST /ForceCVs/ xld, xrd, yld, yud!, zld, zrd
@@ -70,7 +71,6 @@ subroutine parameter(input_i3d)
   NAMELIST /CASE/ pfront
   NAMELIST/ALMParam/iturboutput,NTurbines,TurbinesPath,NActuatorlines,ActuatorlinesPath,eps_factor,rho_air
   NAMELIST/ADMParam/Ndiscs,ADMcoords,iturboutput,rho_air,T_relax
-  NAMELIST /ThetaModel/ jtheta
 #ifdef DEBG
   if (nrank == 0) write(*,*) '# parameter start'
 #endif
@@ -197,13 +197,21 @@ subroutine parameter(input_i3d)
   endif
   ! !! These are the 'optional'/model parameters
   ! read(10, nml=ScalarParam)
-  if(ilesmod==0) then
-     nu0nu=four
-     cnu=0.44_mytype
-  endif
+
+  ! Disable by Pasha
+  !if(ilesmod==0) then
+  !   nu0nu=four
+  !   cnu=0.44_mytype
+  !endif
+
   if(ilesmod.ne.0) then
      read(10, nml=LESModel); rewind(10)
   endif
+  !!==> Pasha
+  if(itype .eq. 14) then
+     read(10, nml=ThetaDotModel); rewind(10)
+  end if
+
   if (itype.eq.itype_tbl) then
      read(10, nml=Tripping); rewind(10)
   endif
@@ -217,8 +225,6 @@ subroutine parameter(input_i3d)
   endif
   ! read(10, nml=TurbulenceWallModel)
   read(10, nml=CASE); rewind(10) !! Read case-specific variables
-
-  !!==> Pasha
 
   close(10)
 
@@ -425,11 +431,18 @@ subroutine parameter(input_i3d)
        else
        endif
      endif
-
-      if (jtheta==0) then
-         write(*,*) '                   : Biao Model'
-      else if (jtheta==1) then
-         write(*,*) '                   : Andy Model'
+     
+     write(*,*) '==========================================================='
+      if (jtheta_dot==0) then
+         write(*,*) ' Theta Model            : Biao '
+      else if (jtheta_dot==1) then
+         write(*,*) ' Theta Model            : Andy '
+         if (jthickness ==0) then 
+            write(*,*) ' Andy Model works based on : Momentum Thickness '
+         else
+            write(*,*) ' Andy Model works based on : Displacement Thickness '
+         end if
+         write(*,*) ' K ==> e(theta) coefficient is :', K_theta 
       endif
 
      write(*,*) '==========================================================='
@@ -714,8 +727,5 @@ subroutine parameter_defaults()
   ys_tr_tbl=0.350508_mytype
   ts_tr_tbl=1.402033_mytype
   x0_tr_tbl=3.505082_mytype
-   
-  !! theta model
-  jtheta = 0 
-
-end subroutine parameter_defaults
+ 
+ end subroutine parameter_defaults

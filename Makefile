@@ -136,4 +136,4 @@ clean:
 
 .PHONY: cleanall
 cleanall: clean
-	rm -f *~ \#*\# out/* data/* statistics/* planes/* *.xdmf *.log *.out nodefile core sauve*
+	rm -f *~ \#*\# out/* data/* statistics/* planes/* *.xdmf *.log *.out yp* checkpoin*  nodefile core sauve*

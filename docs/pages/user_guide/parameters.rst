@@ -269,3 +269,7 @@ ialmrestart,filealmrestart,iturboutput,NTurbines,TurbinesPath,NActuatorlines,Act
 ADMParam
 --------
 Ndiscs,ADMcoords,C_T,aind,iturboutput,rho_air
+
+ThetaDotModel
+--------
+jtheta_dot ,jthickness , K_theta

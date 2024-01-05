@@ -20,6 +20,7 @@ module ttbl
    real(mytype), save, allocatable, dimension(:, :) :: meanconvsxz_uv, turbconvsxz_uv, viscdiffsxz_uv, prodsxz_uv, prestransxz_uv, disssxz_uv
    real(mytype), save, allocatable, dimension(:, :) :: meanconvsxz_k, turbconvsxz_k, viscdiffsxz_k, prodsxz_k, prestransxz_k, disssxz_k
    real(mytype), save, allocatable, dimension(:) :: ttda, ttdb, ttdc
+   real(mytype), save :: theta_a, theta_b, theta_c, ZTm
    real(mytype), save :: thetad
 
    public :: init_ttbl, boundary_conditions_ttbl, momentum_forcing_ttbl, scalar_forcing_ttbl, postprocess_ttbl, visu_ttbl_init, visu_ttbl
@@ -145,10 +146,15 @@ contains
 
       ! Allocate arrays and read data (if restart)
       if (itime == ifirst) then
-         allocate (ttda(ysize(2)), ttdb(ysize(2)), ttdc(ysize(2)))
          if (irestart == 1) then
             open (unit=67, file='checkpoint_ttbl', status='unknown', form='unformatted', action='read')
-            read (67) thetad, ttda, ttdb, ttdc
+            if (jtheta_dot ==0) then
+               allocate (ttda(ysize(2)), ttdb(ysize(2)), ttdc(ysize(2)))
+               read (67) thetad, ttda, ttdb, ttdc
+            !==> Andy method
+            else if ((jtheta_dot ==1) .and. (ilesmod /=0) )then
+               read (67) thetad, theta_a, theta_b, theta_c , ZTm
+            end if 
             close (67)
          end if
       end if
@@ -165,17 +171,23 @@ contains
       call transpose_y_to_x(tc2, tc1)
       call horizontal_avrge(ux2, ux2m)
 
-      ! Compute thetad
-      if (jtheta == 0 ) then
+      ! Compute thetad (0: Biao, 1: Andy)
+      if (jtheta_dot == 0 ) then
          thetad = comp_thetad(thetad, ux2, uy2, ux2m)
-      else if (jtheta == 1 ) then
+      else if (jtheta_dot == 1 ) then
          thetad = comp_thetad_II(ux2, uy2, ux2m)
       end if
 
       ! Write data for restart
       if (nrank == 0 .and. mod(itime, icheckpoint) == 0) then
          open (unit=67, file='checkpoint_ttbl', status='unknown', form='unformatted', action='write')
-         write (67) thetad, ttda, ttdb, ttdc
+         !==> Biao method
+         if (jtheta_dot ==0) then
+            write (67) thetad, ttda, ttdb, ttdc
+         !==> Andy method
+         else if ((jtheta_dot ==1) .and. (ilesmod /=0) )then
+               write (67) thetad, theta_a, theta_b, theta_c, ZTm
+         end if 
          close (67)
       end if
 
@@ -1074,10 +1086,9 @@ contains
 
       real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ux2p
       real(mytype), dimension(ysize(2)) :: uxuy2pm, ux2mm
-      real(mytype), dimension(ysize(2)) :: ydudy2m, dudy2m,dypm
-      real(mytype) :: thetad, RHS,Andy
-      integer :: j, code, it
-      logical :: success
+      real(mytype), dimension(ysize(2)) :: ydudy2m, dudy2m
+      real(mytype) :: thetad, RHS,GT,FT,int_GT,theta,ET,ZTmm
+      integer :: j, code
 
       integer, parameter :: freq = 1
 
@@ -1085,18 +1096,30 @@ contains
       call extract_fluctuat(ux2, ux2m, ux2p)
       call horizontal_avrge(ux2p * uy2, uxuy2pm)
       call dery(dudy2m, ux2m, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
-      call dery(dypm, yp, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
       
-      RHS = 0.
-      do j = 2, ysize(2)-1
-         RHS = RHS + dudy2m(j)*(xnu * dudy2m(j) - uxuy2pm(j))*dypm(j)
-      end do  
-      Andy = 0.5 * (dudy2m(1)*(xnu * dudy2m(1) - uxuy2pm(1))*dypm(1) + 2.0 * RHS + &
-                   dudy2m(ysize(2))*(xnu * dudy2m(ysize(2)) - uxuy2pm(ysize(2)))*dypm(ysize(2)))
+      ! Calculate quantities
+      theta = sum((ux2m * (one - ux2m)) * ypw)
+      ET = one - theta
 
-      thetad = xnu * dudy2m(1) - 2.0 * Andy
+      ! G(t) Model based on (0: Momentum Thickness, 1: Displacement Thickness)
+      if (jthickness ==0) then 
+         int_GT = sum((dudy2m*(xnu * dudy2m - uxuy2pm))*ypw)
+         GT = 2.0 * int_GT - xnu * dudy2m(1)
+      else if (jthickness ==1) then    
+         GT = - xnu * dudy2m(1)
+      end if
 
-      ! Iteratively find optimal thetad
+      ! For DNS simulation
+      if (ilesmod ==0) then  
+         FT = (-K_theta * ET + GT)/theta
+      else ! For LES simulation
+         theta_a = ET; 
+         ZTmm = ZTm + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
+         FT = (-2.0*K_theta * ET + GT - ((K_theta** 2) * ZTmm))/theta
+      end if
+
+      thetad = FT
+
       if ((itime >= ifirst + 2 .or. irestart == 1) .and. mod(itime, freq) == 0) then
          if (nrank == 0) then
            if (mod(itime, ilist) == 0) then
@@ -1105,6 +1128,9 @@ contains
          end if
          call MPI_BCAST(thetad, 1, real_type, 0, MPI_COMM_WORLD, code)
       end if
+      Ztm = ZTmm
+      theta_c = theta_b; theta_b = theta_a
+
    end function
    !############################################################################
    !############################################################################
