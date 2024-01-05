@@ -21,6 +21,8 @@ lfs setstripe -c -1 .
 # Setup environment
 module swap PrgEnv-cray PrgEnv-gnu
 export OMP_NUM_THREADS=1
+export OMP_NUM_THREADS=1
+export FI_OFI_RXM_SAR_LIMIT=64K export MPICH_MPIIO_HINTS=":cray_cb_write_lock_mode=2,:cray_cb_nodes_multiplier=4"
 
 # Print job ID and modules to output file
 printf "Job ID: ${SLURM_JOB_ID} on ${SLURMD_NODENAME}\n\n"

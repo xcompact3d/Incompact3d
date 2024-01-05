@@ -411,38 +411,39 @@ subroutine parameter(input_i3d)
      !
      if (iimplicit.ne.0) then
        if (iimplicit.eq.1) then
-         write(*,"('                          ',A40)") "With backward Euler for Y diffusion"
+         write(*,"('                        : ',A40)") "With backward Euler for Y diffusion"
        else if (iimplicit.eq.2) then
-         write(*,"('                          ',A40)") "With CN for Y diffusion"
+         write(*,"('                        : ',A30)") "With CN for Y diffusion"
        endif
      endif
      !
-     if (ilesmod.ne.0) then
-       write(*,*) '                   : DNS'
+     write(*,*) '==========================================================='
+     if (ilesmod.eq.0) then
+      write(*,"(' Performing             : ',A10)") "DNS"
      else
        if (jles==1) then
-          write(*,*) '                   : Phys Smag'
+          write(*,"(' Performing LES         : ',A10)") "Phys Smag"
        else if (jles==2) then
-          write(*,*) '                   : Phys WALE'
+          write(*,"(' Performing LES         : ',A10)") "Phys WALE"
        else if (jles==3) then
-          write(*,*) '                   : Phys dyn. Smag'
+          write(*,"(' Performing LES         : ',A15)") "Phys dyn. Smag"
        else if (jles==4) then
-          write(*,*) '                   : iSVV'
+          write(*,"(' Performing LES         : ',A10)") "iSVV"
        else
        endif
      endif
-     
+  
      write(*,*) '==========================================================='
       if (jtheta_dot==0) then
-         write(*,*) ' Theta Model            : Biao '
+         write(*,"(' Theta dot Model        : ',A10)") "Biao"
       else if (jtheta_dot==1) then
-         write(*,*) ' Theta Model            : Andy '
+         write(*,"(' Theta dot Model        : ',A10)") "Andy"
          if (jthickness ==0) then 
-            write(*,*) ' Andy Model works based on : Momentum Thickness '
+            write(*,"(' Model works based on   : ',A20)") "Momentum Thickness"
          else
-            write(*,*) ' Andy Model works based on : Displacement Thickness '
+            write(*,"(' Model works based on   : ',A20)") "Displacement Thickness"
          end if
-         write(*,*) ' K ==> e(theta) coefficient is :', K_theta 
+         write(*,"(' K coefficient => e(Th) : ',I4)") K_theta 
       endif
 
      write(*,*) '==========================================================='
