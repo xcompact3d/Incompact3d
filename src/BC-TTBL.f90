@@ -146,10 +146,10 @@ contains
 
       ! Allocate arrays and read data (if restart)
       if (itime == ifirst) then
+         if (jtheta_dot ==0) allocate (ttda(ysize(2)), ttdb(ysize(2)), ttdc(ysize(2))) 
          if (irestart == 1) then
             open (unit=67, file='checkpoint_ttbl', status='unknown', form='unformatted', action='read')
             if (jtheta_dot ==0) then
-               allocate (ttda(ysize(2)), ttdb(ysize(2)), ttdc(ysize(2)))
                read (67) thetad, ttda, ttdb, ttdc
             !==> Andy method
             else if ((jtheta_dot ==1) .and. (ilesmod /=0) )then

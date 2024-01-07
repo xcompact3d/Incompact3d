@@ -39,11 +39,11 @@ inflow_noise = 0.0      ! Turbulence intensity (1=100%) !! Inflow condition
 
 ! Time stepping
 dt = 0.01             ! Time step
-ifirst = 1001            ! First iteration
-ilast = 2000           ! Last iteration
+ifirst = 1            ! First iteration
+ilast = 2000          ! Last iteration
 
 ! Enable modelling tools
-ilesmod = 1            ! if 0 then DNS
+ilesmod = 0            ! if 0 then DNS
 
 /End
 
@@ -69,7 +69,7 @@ cnu = 0.44              ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 &InOutParam
 !=================
 ! Basic I/O
-irestart = 1            ! Read initial flow field ?
+irestart = 0            ! Read initial flow field ?
 icheckpoint = 500       ! Frequency for writing backup file
 ioutput = 500            ! Frequency for visualization
 ilist = 50              ! Frequency for writing to screen
@@ -91,7 +91,7 @@ initstat = 1000         ! Time steps after which statistics are collected
 !================
 &LESModel
 !================
-jles = 4                ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Smag, 4: iSVV, 5: dyn SEV)
+jles = 0                ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Smag, 4: iSVV, 5: dyn SEV)
 
 /End
 
@@ -101,9 +101,9 @@ jles = 4                ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Sm
 !================
 &ThetaDotModel
 !================
-jtheta_dot = 1              ! Theta dot Model (0: Biao, 1: Andy)
+jtheta_dot = 0              ! Theta dot Model (0: Biao, 1: Andy)
 jthickness = 0              ! Model based on (0: Momentum Thickness, 1: Displacement Thickness)
-K_theta    = 5              ! K coefficient for e(theta)
+K_theta    = 0              ! K coefficient for e(theta)
 
 /End
 
