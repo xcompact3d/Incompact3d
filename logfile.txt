@@ -1,30 +1,6 @@
 hwloc/linux: Ignoring PCI device with non-16bit domain.
 Pass --enable-32bits-pci-domain to configure to support such devices
 (warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
  Xcompact3d is run with the default file -->input.i3d
  ===========================================================
  ======================Xcompact3D===========================
@@ -33,7 +9,7 @@ Pass --enable-32bits-pci-domain to configure to support such devices
  ===Modified by Paul Bartholomew, Georgios Deskos and=======
  ===Sylvain Laizet -- 2018- ================================
  ===========================================================
- Git version        : 0949485
+ Git version        : 0e0ccd9
  Warning : support for implicit Y diffusion and isecondder=5 is experimental
  ===========================================================
  Temporal turbulent boundary layer
@@ -47,14 +23,14 @@ Pass --enable-32bits-pci-domain to configure to support such devices
  Temporal scheme        :    Adams-bashforth 3
                         :        With CN for Y diffusion
  ===========================================================
- Performing LES         :       iSVV
+ Performing             :        DNS
  ===========================================================
  Theta dot Model        :       Andy
- Model works based on   : Displacement Thickne
- K coefficient => e(Th) :    5
+ Model works based on   :    Displacement Thickness
+ K coefficient => e(Th) :    1
  ===========================================================
  ifirst                 :                 1
- ilast                  :              2000
+ ilast                  :            100000
  ===========================================================
  Lx                     :       40.00000000
  Ly                     :       30.00000000
@@ -65,8 +41,8 @@ Pass --enable-32bits-pci-domain to configure to support such devices
  ===========================================================
  istret                 :                 3
  beta                   :        4.50000000
- ===========================================================1
- nu0nu                  :       44.00000000
+ ===========================================================
+ nu0nu                  :        4.00000000
  cnu                    :        0.44000000
  ===========================================================
  Scalar                 :               off
@@ -87,24 +63,17 @@ Pass --enable-32bits-pci-domain to configure to support such devices
  High and low speed : u1=  1.00 and u2=  1.00
  Gravity vector     : (gx, gy, gz)=(     0.00000000,     0.00000000,     0.00000000)
   
- Output buffer size for TTBL postprocessing =           10
+ Output buffer size for TTBL postprocessing =          200
  ===========================================================
  In auto-tuning mode......
- factors:            1           2           4           8
- p_row x p_col           2           4
+ factors:            1           2           3           6
+ p_row x p_col           2           3
  # Initializing variables...
- Using the hyperviscous operator with (nu_0/nu,c_nu) = (   44.000000000000000      ,  0.44000000000000000      )
- Using the hyperviscous operator with (nu_0/nu,c_nu) = (   44.000000000000000      ,  0.44000000000000000      )
- Using the hyperviscous operator with (nu_0/nu,c_nu) = (   44.000000000000000      ,  0.44000000000000000      )
-  
- ++++++++++++++++++++++++++++++++
- LES Modelling
- ++++++++++++++++++++++++++++++++
- ++++++++++++++++++++++++++++++++
-  
- Initialising IO for turb-io
+ Using the hyperviscous operator with (nu_0/nu,c_nu) = (   4.0000000000000000      ,  0.44000000000000000      )
+ Using the hyperviscous operator with (nu_0/nu,c_nu) = (   4.0000000000000000      ,  0.44000000000000000      )
+ Using the hyperviscous operator with (nu_0/nu,c_nu) = (   4.0000000000000000      ,  0.44000000000000000      )
  ===========================================================
- Visu module requires   0.270532608     GB
+ Visu module requires   0.676331520     GB
  ===========================================================
  Initialising IO for solution-io
  ===========================================================
@@ -114,1314 +83,340 @@ Pass --enable-32bits-pci-domain to configure to support such devices
  cfl_diff_z             :           0.00009102
  cfl_diff_sum           :           0.00071976
  ===========================================================
- U,V,W min=  -2.27336157E-02  -1.95045304E-02  -1.95092503E-02
- U,V,W max=   1.00000083       1.95092279E-02   1.95074566E-02
+ U,V,W min=  -2.22767703E-02  -1.95071660E-02  -1.95085183E-02
+ U,V,W max=   1.00000083       1.95092279E-02   1.95060167E-02
  ===========================================================
- Time step =      1/   2000, Time unit =   0.0100
- DIV U* max mean=  0.85167555683883378        2.9213498728458305E-002
+ Time step =      1/ 100000, Time unit =   0.0100
+ DIV U* max mean=  0.80714309573627252        3.2416758873269717E-002
   
  ***** Using the generic FFT engine *****
   
- DIV U  max mean=   1.1481370981557271E-004   1.0344393289955702E-004
- U,V,W min=  -5.38166352E-02  -2.91399229E-02  -6.54332712E-02
- U,V,W max=   1.00021911       2.88606454E-02   6.47662804E-02
- CFL_x                  :        0.03200701
- CFL_y                  :        0.00312188
- CFL_z                  :        0.00279182
+ DIV U  max mean=   1.1506757933015845E-004   1.0304338805263895E-004
+ U,V,W min=  -5.58616035E-02  -2.84695551E-02  -6.53943419E-02
+ U,V,W max=   1.00021064       2.84878332E-02   6.45909905E-02
+ CFL_x                  :        0.03200674
+ CFL_y                  :        0.00304125
+ CFL_z                  :        0.00279016
  ===========================================================
- Time step =     50/   2000, Time unit =   0.5000
- Theta dot is computed , theta =    1.2158148266820124E-004
- thetad = 0.000121581483    theta = 1.000025516995    delta = 2.414885525506    H = 2.414823906457
- tau_wall = 0.264664034499    u_tau = 0.011503565415    cf = 0.000264664034
- Re_theta =  1999.948967313142    Re_delta =  4829.771051011492
- dx+ =   7.189728384169    dz+ =   5.392296288127    dy+(min,max) =   2.140704254274 13.579778676410
- DIV U* max mean=   4.3151564912063921E-003   4.7349435013156380E-005
- DIV U  max mean=   1.6898039231984145E-008   5.9012714534787435E-008
- U,V,W min=  -9.85582080E-03  -2.38811579E-02  -5.93694039E-02
- U,V,W max=   1.00000596       2.37209480E-02   6.05688915E-02
- CFL_x                  :        0.03200019
- CFL_y                  :        0.00238440
- CFL_z                  :        0.00258427
- Time for this time step (s):  0.351081997    
- Remaining time:       0 h 10 min
+ Time step =     50/ 100000, Time unit =   0.5000
+ Theta dot is computed , theta =   0.46421720481347273     
+ thetad = 0.464217204813    theta = 0.772857518636    delta = 1.866744510415    H = 2.415379892672
+ tau_wall = 0.339183378045    u_tau = 0.013022737386    cf = 0.000339183378
+ Re_theta =  2587.799111443917    Re_delta =  3733.489020829136
+ dx+ =   8.139210866200    dz+ =   6.104408149650    dy+(min,max) =   2.423407727902 15.373137378457
+ DIV U* max mean=   5.9399889026199304E-003   1.2183222889906121E-004
+ DIV U  max mean=   5.0898591613690071E-008   7.3624297146217637E-008
+ U,V,W min=  -1.93186534E-05  -2.46722065E-02  -7.12426156E-02
+ U,V,W max=   1.00338686       2.58608200E-02   6.62088469E-02
+ CFL_x                  :        0.03210838
+ CFL_y                  :        0.00262728
+ CFL_z                  :        0.00303968
+ Time for this time step (s):  0.323558986    
+ Remaining time:       8 h 14 min
  Elapsed time:         0 h  0 min
  ===========================================================
- Time step =    100/   2000, Time unit =   1.0000
- Theta dot is computed , theta =    1.0364099203510271E-004
- thetad = 0.000103640992    theta = 1.000006297377    delta = 2.414809201471    H = 2.414793994604
- tau_wall = 0.264506444747    u_tau = 0.011500140102    cf = 0.000264506445
- Re_theta =  1999.987405326155    Re_delta =  4829.618402941565
- dx+ =   7.187587563959    dz+ =   5.390690672969    dy+(min,max) =   2.140066836185 13.575735148882
- DIV U* max mean=   2.6305559758318421E-003   2.7672243098895982E-005
- DIV U  max mean=   2.5202590536266365E-008   6.1043167334680210E-008
- U,V,W min=  -6.33714581E-03  -2.23741475E-02  -5.77231646E-02
- U,V,W max=   1.00000465       2.36572530E-02   5.78724854E-02
- CFL_x                  :        0.03200015
- CFL_y                  :        0.00233178
- CFL_z                  :        0.00246923
- Time for this time step (s):  0.357266009    
- Remaining time:       0 h 10 min
+ Time step =    100/ 100000, Time unit =   1.0000
+ Theta dot is computed , theta =   0.34454375362751016     
+ thetad = 0.344543753628    theta = 0.631652795578    delta = 1.525972979082    H = 2.415841408072
+ tau_wall = 0.417041869795    u_tau = 0.014440253976    cf = 0.000417041870
+ Re_theta =  3166.296443237688    Re_delta =  3051.945958163889
+ dx+ =   9.025158735130    dz+ =   6.768869051348    dy+(min,max) =   2.687194100731 17.046493496528
+ DIV U* max mean=   8.8084205650098245E-003   8.8323726477363849E-005
+ DIV U  max mean=   1.9737016154270553E-008   9.2669884792108510E-008
+ U,V,W min=  -2.84071994E-05  -2.11936738E-02  -6.22168928E-02
+ U,V,W max=   1.00993609       2.31217667E-02   6.14517629E-02
+ CFL_x                  :        0.03231796
+ CFL_y                  :        0.00238450
+ CFL_z                  :        0.00265459
+ Time for this time step (s):  0.321476996    
+ Remaining time:       8 h  6 min
  Elapsed time:         0 h  0 min
  ===========================================================
- Time step =    150/   2000, Time unit =   1.5000
- Theta dot is computed , theta =    1.0103054647719578E-004
- thetad = 0.000101030546    theta = 1.000001846485    delta = 2.414753198429    H = 2.414748739631
- tau_wall = 0.264443934252    u_tau = 0.011498781115    cf = 0.000264443934
- Re_theta =  1999.996307035890    Re_delta =  4829.506396858928
- dx+ =   7.186738196752    dz+ =   5.390053647564    dy+(min,max) =   2.139813941514 13.574130885402
- DIV U* max mean=   2.0900439278067513E-003   2.1307996712152124E-005
- DIV U  max mean=   3.8338108036511504E-008   6.1217878774303185E-008
- U,V,W min=  -3.26835364E-03  -2.14609597E-02  -5.71860299E-02
- U,V,W max=   1.00000465       2.33781077E-02   5.71433268E-02
- CFL_x                  :        0.03200015
- CFL_y                  :        0.00230426
- CFL_z                  :        0.00243994
- Time for this time step (s):  0.353756994    
- Remaining time:       0 h  9 min
+ Time step =    150/ 100000, Time unit =   1.5000
+ Theta dot is computed , theta =   0.24183777488964067     
+ thetad = 0.241837774890    theta = 0.546010672131    delta = 1.319298236575    H = 2.416249908495
+ tau_wall = 0.484173251794    u_tau = 0.015559133199    cf = 0.000484173252
+ Re_theta =  3662.932067229710    Re_delta =  2638.596473150057
+ dx+ =   9.724458249228    dz+ =   7.293343686921    dy+(min,max) =   2.895406896103 18.367312882539
+ DIV U* max mean=   9.6149542378511487E-003   7.3965709782858045E-005
+ DIV U  max mean=   1.7915103162785030E-008   9.7290987154847747E-008
+ U,V,W min=  -1.29009277E-05  -1.95623823E-02  -6.26880452E-02
+ U,V,W max=   1.02787185       1.99402720E-02   5.80085106E-02
+ CFL_x                  :        0.03289190
+ CFL_y                  :        0.00210063
+ CFL_z                  :        0.00267469
+ Time for this time step (s):  0.331101000    
+ Remaining time:       8 h  4 min
  Elapsed time:         0 h  0 min
  ===========================================================
- Time step =    200/   2000, Time unit =   2.0000
- Theta dot is computed , theta =    1.1127964241588743E-004
- thetad = 0.000111279642    theta = 1.000001145307    delta = 2.414690799899    H = 2.414688034339
- tau_wall = 0.264423127376    u_tau = 0.011498328735    cf = 0.000264423127
- Re_theta =  1999.997709387933    Re_delta =  4829.381599797963
- dx+ =   7.186455459100    dz+ =   5.389841594325    dy+(min,max) =   2.139729757847 13.573596857614
- DIV U* max mean=   1.6892496109420785E-003   1.8074059356921915E-005
- DIV U  max mean=   5.1861412170804699E-008   5.9523332398550697E-008
- U,V,W min=  -8.33972881E-04  -2.11386718E-02  -5.66179007E-02
- U,V,W max=   1.00000453       2.30512843E-02   5.71608767E-02
- CFL_x                  :        0.03200014
- CFL_y                  :        0.00226709
- CFL_z                  :        0.00243886
- Time for this time step (s):  0.353399009    
- Remaining time:       0 h  9 min
+ Time step =    200/ 100000, Time unit =   2.0000
+ Theta dot is computed , theta =   0.16218746688419197     
+ thetad = 0.162187466884    theta = 0.494017185347    delta = 1.193904389000    H = 2.416726430605
+ tau_wall = 0.536120892687    u_tau = 0.016372551614    cf = 0.000536120893
+ Re_theta =  4048.442158133931    Re_delta =  2387.808778000413
+ dx+ =  10.232844758571    dz+ =   7.674633568928    dy+(min,max) =   3.046776336674 19.327540572664
+ DIV U* max mean=   6.4865118330711784E-003   5.3147576709427099E-005
+ DIV U  max mean=   2.6037886598293935E-008   9.6743182911459616E-008
+ U,V,W min=  -6.23969663E-06  -1.82640627E-02  -5.96130900E-02
+ U,V,W max=   1.02701592       1.88883785E-02   5.57102524E-02
+ CFL_x                  :        0.03286451
+ CFL_y                  :        0.00198686
+ CFL_z                  :        0.00254349
+ Time for this time step (s):  0.323991001    
+ Remaining time:       8 h  3 min
+ Elapsed time:         0 h  0 min
+ ===========================================================
+ Time step =    250/ 100000, Time unit =   2.5000
+ Theta dot is computed , theta =   0.10519431700668444     
+ thetad = 0.105194317007    theta = 0.462520737082    delta = 1.117881535720    H = 2.416932790459
+ tau_wall = 0.573502151325    u_tau = 0.016933725983    cf = 0.000573502151
+ Re_theta =  4324.130443574523    Re_delta =  2235.763071440248
+ dx+ =  10.583578739284    dz+ =   7.937684054463    dy+(min,max) =   3.151205556321 19.989998120137
+ DIV U* max mean=   3.6461746461045417E-003   3.8727210809418157E-005
+ DIV U  max mean=   3.7455518777821739E-008   9.1017211075961873E-008
+ U,V,W min=  -5.73545958E-06  -1.69600639E-02  -5.60673065E-02
+ U,V,W max=   1.02842283       1.87748522E-02   5.50702214E-02
+ CFL_x                  :        0.03290953
+ CFL_y                  :        0.00197492
+ CFL_z                  :        0.00239221
+ Time for this time step (s):  0.327977985    
+ Remaining time:       8 h  3 min
  Elapsed time:         0 h  1 min
  ===========================================================
- Time step =    250/   2000, Time unit =   2.5000
- Theta dot is computed , theta =    1.2319126440567558E-004
- thetad = 0.000123191264    theta = 1.000001009884    delta = 2.414614800897    H = 2.414612362417
- tau_wall = 0.264426874952    u_tau = 0.011498410215    cf = 0.000264426875
- Re_theta =  1999.997980233203    Re_delta =  4829.229601793386
- dx+ =   7.186506384477    dz+ =   5.389879788358    dy+(min,max) =   2.139744920614 13.573693044190
- DIV U* max mean=   1.3869978802721408E-003   1.6042447789430068E-005
- DIV U  max mean=   6.9655152873902837E-008   5.6448454677282631E-008
- U,V,W min=  -1.41958907E-07  -2.08495650E-02  -5.60957789E-02
- U,V,W max=   1.00000453       2.29015350E-02   5.65254167E-02
- CFL_x                  :        0.03200014
- CFL_y                  :        0.00226078
- CFL_z                  :        0.00241175
- Time for this time step (s):  0.347712010    
- Remaining time:       0 h  9 min
+ Time step =    300/ 100000, Time unit =   3.0000
+ Theta dot is computed , theta =    6.6677216159674951E-002
+ thetad = 0.066677216160    theta = 0.443419692672    delta = 1.071761641856    H = 2.417036634970
+ tau_wall = 0.599118381189    u_tau = 0.017307778326    cf = 0.000599118381
+ Re_theta =  4510.399589937483    Re_delta =  2143.523283712590
+ dx+ =  10.817361453979    dz+ =   8.113021090484    dy+(min,max) =   3.220813144422 20.431561049124
+ DIV U* max mean=   1.7270327754648051E-003   3.1140187823806885E-005
+ DIV U  max mean=   5.3441871957285447E-008   8.3600326127449711E-008
+ U,V,W min=  -9.46412342E-07  -1.63897388E-02  -5.64022511E-02
+ U,V,W max=   1.02597392       1.79947931E-02   5.57149500E-02
+ CFL_x                  :        0.03283117
+ CFL_y                  :        0.00189361
+ CFL_z                  :        0.00240650
+ Time for this time step (s):  0.322421998    
+ Remaining time:       8 h  3 min
  Elapsed time:         0 h  1 min
  ===========================================================
- Time step =    300/   2000, Time unit =   3.0000
- Theta dot is computed , theta =    1.3470166276163370E-004
- thetad = 0.000134701663    theta = 1.000000943935    delta = 2.414524742288    H = 2.414522463136
- tau_wall = 0.264447512772    u_tau = 0.011498858917    cf = 0.000264447513
- Re_theta =  1999.998112132556    Re_delta =  4829.049484575415
- dx+ =   7.186786822936    dz+ =   5.390090117202    dy+(min,max) =   2.139828419707 13.574222729319
- DIV U* max mean=   1.1531540203532035E-003   1.4658177918915289E-005
- DIV U  max mean=   8.8735813186000777E-008   5.3024556254241390E-008
- U,V,W min=  -1.41862557E-07  -2.05891393E-02  -5.56471571E-02
- U,V,W max=   1.00000441       2.30464097E-02   5.63581847E-02
- CFL_x                  :        0.03200014
- CFL_y                  :        0.00228657
- CFL_z                  :        0.00240462
- Time for this time step (s):  0.349097997    
- Remaining time:       0 h  8 min
+ Time step =    350/ 100000, Time unit =   3.5000
+ Theta dot is computed , theta =    4.1652677609353914E-002
+ thetad = 0.041652677609    theta = 0.431844429554    delta = 1.043784487528    H = 2.417038211204
+ tau_wall = 0.616137550852    u_tau = 0.017551888087    cf = 0.000616137551
+ Re_theta =  4631.297437515547    Re_delta =  2087.568975056156
+ dx+ =  10.969930054511    dz+ =   8.227447540883    dy+(min,max) =   3.266239652181 20.719728795872
+ DIV U* max mean=   9.1356353243492953E-004   2.6056908096179544E-005
+ DIV U  max mean=   7.0975435601666748E-008   7.5661699853550574E-008
+ U,V,W min=  -2.12866576E-06  -1.54481279E-02  -5.61731495E-02
+ U,V,W max=   1.02181971       1.85232740E-02   5.76820150E-02
+ CFL_x                  :        0.03269823
+ CFL_y                  :        0.00196040
+ CFL_z                  :        0.00246110
+ Time for this time step (s):  0.322537988    
+ Remaining time:       8 h  2 min
  Elapsed time:         0 h  1 min
  ===========================================================
- Time step =    350/   2000, Time unit =   3.5000
- Theta dot is computed , theta =    1.4544234551762769E-004
- thetad = 0.000145442346    theta = 1.000000880539    delta = 2.414421355389    H = 2.414419229400
- tau_wall = 0.264480770316    u_tau = 0.011499581956    cf = 0.000264480770
- Re_theta =  1999.998238924049    Re_delta =  4828.842710778984
- dx+ =   7.187238722375    dz+ =   5.390429041781    dy+(min,max) =   2.139962970416 13.575076265647
- DIV U* max mean=   9.6952994956149563E-004   1.3687240368796562E-005
- DIV U  max mean=   1.0714061410201786E-007   5.0155221504355428E-008
- U,V,W min=  -1.33717677E-07  -2.03954801E-02  -5.52737415E-02
- U,V,W max=   1.00000429       2.31419932E-02   5.68328276E-02
- CFL_x                  :        0.03200014
- CFL_y                  :        0.00229606
- CFL_z                  :        0.00242487
- Time for this time step (s):  0.354220986    
- Remaining time:       0 h  8 min
+ Time step =    400/ 100000, Time unit =   4.0000
+ Theta dot is computed , theta =    2.5805016032197432E-002
+ thetad = 0.025805016032    theta = 0.424833384081    delta = 1.026810492659    H = 2.416972232255
+ tau_wall = 0.627262867763    u_tau = 0.017709642398    cf = 0.000627262868
+ Re_theta =  4707.727958634804    Re_delta =  2053.620985317950
+ dx+ =  11.068526499041    dz+ =   8.301394874281    dy+(min,max) =   3.295596231037 20.905955287814
+ DIV U* max mean=   6.4111693079697135E-004   2.3036259386404572E-005
+ DIV U  max mean=   8.9178275645919371E-008   6.8486551523699159E-008
+ U,V,W min=  -5.98566828E-07  -1.51651297E-02  -5.60125522E-02
+ U,V,W max=   1.02201843       1.91478375E-02   5.82664050E-02
+ CFL_x                  :        0.03270459
+ CFL_y                  :        0.00202058
+ CFL_z                  :        0.00248603
+ Time for this time step (s):  0.321736991    
+ Remaining time:       8 h  2 min
  Elapsed time:         0 h  1 min
  ===========================================================
- Time step =    400/   2000, Time unit =   4.0000
- Theta dot is computed , theta =    1.5530762658334547E-004
- thetad = 0.000155307627    theta = 1.000000812352    delta = 2.414305623962    H = 2.414303662699
- tau_wall = 0.264523784305    u_tau = 0.011500517038    cf = 0.000264523784
- Re_theta =  1999.998375298183    Re_delta =  4828.611247923918
- dx+ =   7.187823149058    dz+ =   5.390867361793    dy+(min,max) =   2.140136980423 13.576180116110
- DIV U* max mean=   8.4186008810015200E-004   1.2989183122145825E-005
- DIV U  max mean=   1.2672377906405852E-007   4.8382705384070248E-008
- U,V,W min=  -1.35583861E-07  -2.03412455E-02  -5.64158112E-02
- U,V,W max=   1.00000429       2.30600853E-02   5.73345460E-02
- CFL_x                  :        0.03200014
- CFL_y                  :        0.00234274
- CFL_z                  :        0.00244627
- Time for this time step (s):  0.355343014    
- Remaining time:       0 h  8 min
+ Time step =    450/ 100000, Time unit =   4.5000
+ Theta dot is computed , theta =    1.5933243288163049E-002
+ thetad = 0.015933243288    theta = 0.420594380513    delta = 1.016513610836    H = 2.416850195661
+ tau_wall = 0.634504336705    u_tau = 0.017811574000    cf = 0.000634504337
+ Re_theta =  4755.175277336423    Re_delta =  2033.027221671048
+ dx+ =  11.132233749912    dz+ =   8.349175312434    dy+(min,max) =   3.314564733834 21.026283945682
+ DIV U* max mean=   6.1999093193563191E-004   2.0910929181938997E-005
+ DIV U  max mean=   1.1026706182382454E-007   6.2732054193711015E-008
+ U,V,W min=  -8.01573549E-07  -1.64990481E-02  -5.70408925E-02
+ U,V,W max=   1.02112556       1.95990503E-02   5.87342121E-02
+ CFL_x                  :        0.03267602
+ CFL_y                  :        0.00207981
+ CFL_z                  :        0.00250599
+ Time for this time step (s):  0.374781996    
+ Remaining time:       8 h  4 min
  Elapsed time:         0 h  2 min
  ===========================================================
- Time step =    450/   2000, Time unit =   4.5000
- Theta dot is computed , theta =    1.6424296848700318E-004
- thetad = 0.000164242968    theta = 1.000000739762    delta = 2.414178629561    H = 2.414176843645
- tau_wall = 0.264574325695    u_tau = 0.011501615662    cf = 0.000264574326
- Re_theta =  1999.998520476928    Re_delta =  4828.357259122303
- dx+ =   7.188509789054    dz+ =   5.391382341790    dy+(min,max) =   2.140341423913 13.577477024515
- DIV U* max mean=   7.5752162095751169E-004   1.2479573930731696E-005
- DIV U  max mean=   1.4521695812451072E-007   4.8203959438488512E-008
- U,V,W min=  -1.39876320E-07  -2.02707630E-02  -5.73094338E-02
- U,V,W max=   1.00000405       2.32549123E-02   5.79535179E-02
- CFL_x                  :        0.03200013
- CFL_y                  :        0.00235597
- CFL_z                  :        0.00247268
- Time for this time step (s):  0.357962012    
- Remaining time:       0 h  8 min
+ Time step =    500/ 100000, Time unit =   5.0000
+ Theta dot is computed , theta =    9.8476343937156843E-003
+ thetad = 0.009847634394    theta = 0.418039232640    delta = 1.010268375567    H = 2.416683164368
+ tau_wall = 0.639243928982    u_tau = 0.017877974284    cf = 0.000639243929
+ Re_theta =  4784.239956066151    Re_delta =  2020.536751133207
+ dx+ =  11.173733927350    dz+ =   8.380300445513    dy+(min,max) =   3.326921195949 21.104668440135
+ DIV U* max mean=   7.1178928379751760E-004   1.9324265094772478E-005
+ DIV U  max mean=   1.3066652384142313E-007   5.9185837836488792E-008
+ U,V,W min=  -5.70665463E-07  -1.57877635E-02  -5.89155778E-02
+ U,V,W max=   1.02020144       1.98416039E-02   5.81321605E-02
+ CFL_x                  :        0.03264645
+ CFL_y                  :        0.00209993
+ CFL_z                  :        0.00251373
+ Time for this time step (s):  0.326857001    
+ Remaining time:       8 h  6 min
  Elapsed time:         0 h  2 min
  ===========================================================
- Time step =    500/   2000, Time unit =   5.0000
- Theta dot is computed , theta =    1.7221520990292583E-004
- thetad = 0.000172215210    theta = 1.000000664048    delta = 2.414041510790    H = 2.414039907751
- tau_wall = 0.264630468814    u_tau = 0.011502835929    cf = 0.000264630469
- Re_theta =  1999.998671904033    Re_delta =  4828.083021580062
- dx+ =   7.189272455560    dz+ =   5.391954341670    dy+(min,max) =   2.140568503901 13.578917529888
- DIV U* max mean=   6.9645316339848190E-004   1.2102133769010677E-005
- DIV U  max mean=   1.6481083009878966E-007   4.9821169652642900E-008
- U,V,W min=  -1.40813881E-07  -2.01738197E-02  -5.77997528E-02
- U,V,W max=   1.00000405       2.33662240E-02   5.86615801E-02
- CFL_x                  :        0.03200013
- CFL_y                  :        0.00233825
- CFL_z                  :        0.00250289
- ===========================================================<<<<<
- Writing restart point restart0000500                
- Initialising IO for restart-io
- Restart point restart0000500 saved successfully!
- If necesseary restart from:         501
- Time for this time step (s):  0.542693019    
- Remaining time:       0 h  7 min
- Elapsed time:         0 h  2 min
- Writing snapshots =>           1
- Time for writing snapshots (s):   0.22744751
- ===========================================================
- Time step =    550/   2000, Time unit =   5.5000
- Theta dot is computed , theta =    1.7920785999998769E-004
- thetad = 0.000179207860    theta = 1.000000586521    delta = 2.413895439446    H = 2.413894023646
- tau_wall = 0.264690451559    u_tau = 0.011504139506    cf = 0.000264690452
- Re_theta =  1999.998826958026    Re_delta =  4827.790878892985
- dx+ =   7.190087191409    dz+ =   5.392565393556    dy+(min,max) =   2.140811087265 13.580456382527
- DIV U* max mean=   6.4456388807335868E-004   1.1809542202076138E-005
- DIV U  max mean=   1.8341490490357375E-007   5.2908321791566007E-008
- U,V,W min=  -1.32323109E-07  -2.00420190E-02  -5.96644580E-02
- U,V,W max=   1.00000393       2.35259514E-02   5.88444136E-02
- CFL_x                  :        0.03200013
- CFL_y                  :        0.00237691
- CFL_z                  :        0.00254568
- Time for this time step (s):  0.348845989    
- Remaining time:       0 h  7 min
+ Time step =    550/ 100000, Time unit =   5.5000
+ Theta dot is computed , theta =    6.1201242565666674E-003
+ thetad = 0.006120124257    theta = 0.416506620158    delta = 1.006480982858    H = 2.416482557890
+ tau_wall = 0.642388362280    u_tau = 0.017921891115    cf = 0.000642388362
+ Re_theta =  4801.844444250104    Re_delta =  2012.961965716206
+ dx+ =  11.201181946915    dz+ =   8.400886460187    dy+(min,max) =   3.335093701100 21.156511571180
+ DIV U* max mean=   7.3213165538287515E-004   1.8013436511953094E-005
+ DIV U  max mean=   1.5167177974239471E-007   5.8134762697614801E-008
+ U,V,W min=  -5.68671510E-07  -1.59756821E-02  -6.07527904E-02
+ U,V,W max=   1.01796746       1.97439883E-02   5.97931929E-02
+ CFL_x                  :        0.03257496
+ CFL_y                  :        0.00208960
+ CFL_z                  :        0.00259212
+ Time for this time step (s):  0.329048008    
+ Remaining time:       8 h  4 min
  Elapsed time:         0 h  2 min
  ===========================================================
- Time step =    600/   2000, Time unit =   6.0000
- Theta dot is computed , theta =    1.8521963394892754E-004
- thetad = 0.000185219634    theta = 1.000000508422    delta = 2.413741600187    H = 2.413740372989
- tau_wall = 0.264752629571    u_tau = 0.011505490636    cf = 0.000264752630
- Re_theta =  1999.998983156977    Re_delta =  4827.483200374437
- dx+ =   7.190931647782    dz+ =   5.393198735836    dy+(min,max) =   2.141062519760 13.582051370548
- DIV U* max mean=   6.2383723304787128E-004   1.1580509647567561E-005
- DIV U  max mean=   2.0246924960481277E-007   5.7153029778364841E-008
- U,V,W min=  -1.39323063E-07  -1.99328307E-02  -6.12626113E-02
- U,V,W max=   1.00000393       2.41182614E-02   6.02408983E-02
- CFL_x                  :        0.03200012
- CFL_y                  :        0.00243675
- CFL_z                  :        0.00261387
- Time for this time step (s):  0.350908995    
- Remaining time:       0 h  7 min
+ Time step =    600/ 100000, Time unit =   6.0000
+ Theta dot is computed , theta =    3.8459867197026738E-003
+ thetad = 0.003845986720    theta = 0.415594938180    delta = 1.004184337695    H = 2.416257382954
+ tau_wall = 0.644516136851    u_tau = 0.017951547800    cf = 0.000644516137
+ Re_theta =  4812.378150608351    Re_delta =  2008.368675390670
+ dx+ =  11.219717375168    dz+ =   8.414788031376    dy+(min,max) =   3.340612528515 21.191520823253
+ DIV U* max mean=   7.4537902522924101E-004   1.6873754627488335E-005
+ DIV U  max mean=   1.7194441865510542E-007   5.8823929241318845E-008
+ U,V,W min=  -5.80398194E-07  -1.64709073E-02  -6.30497411E-02
+ U,V,W max=   1.01787269       2.02189032E-02   6.09868728E-02
+ CFL_x                  :        0.03257192
+ CFL_y                  :        0.00213986
+ CFL_z                  :        0.00269012
+ Time for this time step (s):  0.323477000    
+ Remaining time:       8 h  4 min
+ Elapsed time:         0 h  2 min
+ ===========================================================
+ Time step =    650/ 100000, Time unit =   6.5000
+ Theta dot is computed , theta =    2.4619340258827745E-003
+ thetad = 0.002461934026    theta = 0.415060424395    delta = 1.002791802491    H = 2.416014015194
+ tau_wall = 0.645990462522    u_tau = 0.017972068085    cf = 0.000645990463
+ Re_theta =  4818.575519251204    Re_delta =  2005.583604981378
+ dx+ =  11.232542553285    dz+ =   8.424406914964    dy+(min,max) =   3.344431158634 21.215744698066
+ DIV U* max mean=   6.9001009790021204E-004   1.5876776433715273E-005
+ DIV U  max mean=   1.8698671705474380E-007   6.0731585180608144E-008
+ U,V,W min=  -5.76425350E-07  -1.64195690E-02  -6.65787309E-02
+ U,V,W max=   1.01699519       1.99190788E-02   6.19818494E-02
+ CFL_x                  :        0.03254385
+ CFL_y                  :        0.00210196
+ CFL_z                  :        0.00284069
+ Time for this time step (s):  0.326155007    
+ Remaining time:       8 h  3 min
  Elapsed time:         0 h  3 min
  ===========================================================
- Time step =    650/   2000, Time unit =   6.5000
- Theta dot is computed , theta =    1.9026324375756863E-004
- thetad = 0.000190263244    theta = 1.000000430902    delta = 2.413581171992    H = 2.413580131976
- tau_wall = 0.264815479315    u_tau = 0.011506856202    cf = 0.000264815479
- Re_theta =  1999.999138196972    Re_delta =  4827.162343984395
- dx+ =   7.191785126360    dz+ =   5.393838844770    dy+(min,max) =   2.141316638571 13.583663399484
- DIV U* max mean=   6.0614556634675421E-004   1.1387608861299489E-005
- DIV U  max mean=   2.1749415663435453E-007   6.2309000854413138E-008
- U,V,W min=  -1.48093804E-07  -1.98456552E-02  -6.22788891E-02
- U,V,W max=   1.00000381       2.42514871E-02   6.14347830E-02
- CFL_x                  :        0.03200012
- CFL_y                  :        0.00246010
- CFL_z                  :        0.00265723
- Time for this time step (s):  0.347099990    
- Remaining time:       0 h  7 min
+ Time step =    700/ 100000, Time unit =   7.0000
+ Theta dot is computed , theta =    1.6208971473156268E-003
+ thetad = 0.001620897147    theta = 0.414755141556    delta = 1.001947572723    H = 2.415756846231
+ tau_wall = 0.647037521290    u_tau = 0.017986627273    cf = 0.000647037521
+ Re_theta =  4822.122258683004    Re_delta =  2003.895145446063
+ dx+ =  11.241642045402    dz+ =   8.431231534052    dy+(min,max) =   3.347140485113 21.232931590591
+ DIV U* max mean=   6.7939345601584220E-004   1.4948295060143170E-005
+ DIV U  max mean=   2.0297858641036082E-007   6.3578344629285902E-008
+ U,V,W min=  -5.82835980E-07  -1.64890997E-02  -6.82885572E-02
+ U,V,W max=   1.01697803       2.07025614E-02   6.29435554E-02
+ CFL_x                  :        0.03254330
+ CFL_y                  :        0.00218464
+ CFL_z                  :        0.00291365
+ Time for this time step (s):  0.325011998    
+ Remaining time:       8 h  2 min
  Elapsed time:         0 h  3 min
  ===========================================================
- Time step =    700/   2000, Time unit =   7.0000
- Theta dot is computed , theta =    1.9436406237470041E-004
- thetad = 0.000194364062    theta = 1.000000355011    delta = 2.413415311352    H = 2.413414454562
- tau_wall = 0.264877624816    u_tau = 0.011508206307    cf = 0.000264877625
- Re_theta =  1999.999289977424    Re_delta =  4826.830622703425
- dx+ =   7.192628941976    dz+ =   5.394471706482    dy+(min,max) =   2.141567880284 13.585257177260
- DIV U* max mean=   6.0011976356067268E-004   1.1218925873319870E-005
- DIV U  max mean=   2.3264074959408309E-007   6.8023759313833383E-008
- U,V,W min=  -1.49616525E-07  -1.98271535E-02  -6.26366660E-02
- U,V,W max=   1.00000370       2.39831880E-02   6.20619990E-02
- CFL_x                  :        0.03200012
- CFL_y                  :        0.00242179
- CFL_z                  :        0.00267250
- Time for this time step (s):  0.347918004    
- Remaining time:       0 h  6 min
+ Time step =    750/ 100000, Time unit =   7.5000
+ Theta dot is computed , theta =    1.1103649493333506E-003
+ thetad = 0.001110364949    theta = 0.414589298181    delta = 1.001435858182    H = 2.415488925003
+ tau_wall = 0.647797811237    u_tau = 0.017997191604    cf = 0.000647797811
+ Re_theta =  4824.051196627437    Re_delta =  2002.871716363097
+ dx+ =  11.248244752280    dz+ =   8.436183564210    dy+(min,max) =   3.349106406765 21.245402617767
+ DIV U* max mean=   5.6379114862278520E-004   1.4092981785234255E-005
+ DIV U  max mean=   2.1292766865356819E-007   6.7252669200500299E-008
+ U,V,W min=  -5.97990663E-07  -1.61302742E-02  -6.93479031E-02
+ U,V,W max=   1.01616824       2.11947858E-02   6.59716949E-02
+ CFL_x                  :        0.03251738
+ CFL_y                  :        0.00223658
+ CFL_z                  :        0.00295884
+ Time for this time step (s):  0.338963002    
+ Remaining time:       8 h  2 min
  Elapsed time:         0 h  3 min
  ===========================================================
- Time step =    750/   2000, Time unit =   7.5000
- Theta dot is computed , theta =    1.9755864804308669E-004
- thetad = 0.000197558648    theta = 1.000000281688    delta = 2.413245137305    H = 2.413244457522
- tau_wall = 0.264937871450    u_tau = 0.011509515008    cf = 0.000264937871
- Re_theta =  1999.999436623589    Re_delta =  4826.490274609994
- dx+ =   7.193446880147    dz+ =   5.395085160110    dy+(min,max) =   2.141811417123 13.586802078366
- DIV U* max mean=   5.8733655912568752E-004   1.1064728586961143E-005
- DIV U  max mean=   2.4299537075556099E-007   7.3693721265057393E-008
- U,V,W min=  -1.39308156E-07  -1.97145622E-02  -6.39048889E-02
- U,V,W max=   1.00000358       2.46365201E-02   6.23867549E-02
- CFL_x                  :        0.03200011
- CFL_y                  :        0.00247602
- CFL_z                  :        0.00272661
- Time for this time step (s):  0.350692987    
- Remaining time:       0 h  6 min
+ Time step =    800/ 100000, Time unit =   8.0000
+ Theta dot is computed , theta =    8.0070608345375800E-004
+ thetad = 0.000800706083    theta = 0.414508380281    delta = 1.001125786886    H = 2.415212416710
+ tau_wall = 0.648358755512    u_tau = 0.018004982026    cf = 0.000648358756
+ Re_theta =  4824.992919668559    Re_delta =  2002.251573771236
+ dx+ =  11.253113766241    dz+ =   8.439835324681    dy+(min,max) =   3.350556130363 21.254599089237
+ DIV U* max mean=   5.3625156507274268E-004   1.3253059681197066E-005
+ DIV U  max mean=   2.2861916382146269E-007   7.1407665245679579E-008
+ U,V,W min=  -4.94762389E-07  -1.64480656E-02  -7.09402040E-02
+ U,V,W max=   1.01628339       2.12958902E-02   6.80392534E-02
+ CFL_x                  :        0.03252107
+ CFL_y                  :        0.00224725
+ CFL_z                  :        0.00302678
+ Time for this time step (s):  0.344633996    
+ Remaining time:       8 h  4 min
  Elapsed time:         0 h  3 min
  ===========================================================
- Time step =    800/   2000, Time unit =   8.0000
- Theta dot is computed , theta =    1.9989317185157963E-004
- thetad = 0.000199893172    theta = 1.000000211748    delta = 2.413071718451    H = 2.413071207487
- tau_wall = 0.264995235946    u_tau = 0.011510760964    cf = 0.000264995236
- Re_theta =  1999.999576503874    Re_delta =  4826.143436901318
- dx+ =   7.194225602571    dz+ =   5.395669201928    dy+(min,max) =   2.142043277677 13.588272909753
- DIV U* max mean=   5.6582147942929768E-004   1.0915324568291148E-005
- DIV U  max mean=   2.5179868837688029E-007   7.8776604900161485E-008
- U,V,W min=  -1.42179829E-07  -1.99218113E-02  -6.49049804E-02
- U,V,W max=   1.00000346       2.49514207E-02   6.38335124E-02
- CFL_x                  :        0.03200011
- CFL_y                  :        0.00251875
- CFL_z                  :        0.00276928
- Time for this time step (s):  0.352355003    
- Remaining time:       0 h  6 min
+ Time step =    850/ 100000, Time unit =   8.5000
+ Theta dot is computed , theta =    6.1302540795987129E-004
+ thetad = 0.000613025408    theta = 0.414479278547    delta = 1.000937988057    H = 2.414928899618
+ tau_wall = 0.648775276429    u_tau = 0.018010764509    cf = 0.000648775276
+ Re_theta =  4825.331695735216    Re_delta =  2001.875976113371
+ dx+ =  11.256727818397    dz+ =   8.442545863798    dy+(min,max) =   3.351632195607 21.261425220320
+ DIV U* max mean=   5.0178918458682227E-004   1.2454828840675395E-005
+ DIV U  max mean=   2.3920177094445745E-007   7.6353128877686894E-008
+ U,V,W min=  -5.48699461E-07  -1.68589409E-02  -7.26449043E-02
+ U,V,W max=   1.01518166       2.20635794E-02   6.95585385E-02
+ CFL_x                  :        0.03248581
+ CFL_y                  :        0.00233509
+ CFL_z                  :        0.00309952
+ Time for this time step (s):  0.322463006    
+ Remaining time:       8 h  3 min
  Elapsed time:         0 h  4 min
  ===========================================================
- Time step =    850/   2000, Time unit =   8.5000
- Theta dot is computed , theta =    2.0142179668039255E-004
- thetad = 0.000201421797    theta = 1.000000145880    delta = 2.412896062004    H = 2.412895710011
- tau_wall = 0.265048967145    u_tau = 0.011511927883    cf = 0.000265048967
- Re_theta =  1999.999708240425    Re_delta =  4825.792124007514
- dx+ =   7.194954926581    dz+ =   5.396216194936    dy+(min,max) =   2.142260430110 13.589650438653
- DIV U* max mean=   5.4956542713735512E-004   1.0767127875801819E-005
- DIV U  max mean=   2.5751016351195443E-007   8.2980314849382544E-008
- U,V,W min=  -1.40849139E-07  -1.97936036E-02  -6.57934621E-02
- U,V,W max=   1.00000322       2.48676203E-02   6.52050897E-02
- CFL_x                  :        0.03200010
- CFL_y                  :        0.00250768
- CFL_z                  :        0.00280719
- Time for this time step (s):  0.348877013    
- Remaining time:       0 h  6 min
+ Time step =    900/ 100000, Time unit =   9.0000
+ Theta dot is computed , theta =    4.9937250827653044E-004
+ thetad = 0.000499372508    theta = 0.414481873880    delta = 1.000824325409    H = 2.414639549954
+ tau_wall = 0.649082511448    u_tau = 0.018015028607    cf = 0.000649082511
+ Re_theta =  4825.301481289502    Re_delta =  2001.648650818896
+ dx+ =  11.259392879598    dz+ =   8.444544659699    dy+(min,max) =   3.352425703727 21.266458921085
+ DIV U* max mean=   4.9743088510143668E-004   1.1686995655213551E-005
+ DIV U  max mean=   2.4914886833163341E-007   8.2234304695305866E-008
+ U,V,W min=  -4.87674981E-07  -1.65722165E-02  -7.33748898E-02
+ U,V,W max=   1.01535702       2.24248189E-02   7.21433833E-02
+ CFL_x                  :        0.03249143
+ CFL_y                  :        0.00237332
+ CFL_z                  :        0.00313066
+ Time for this time step (s):  0.326784998    
+ Remaining time:       8 h  3 min
  Elapsed time:         0 h  4 min
  ===========================================================
- Time step =    900/   2000, Time unit =   9.0000
- Theta dot is computed , theta =    2.0220505109697109E-004
- thetad = 0.000202205051    theta = 1.000000084644    delta = 2.412719104922    H = 2.412718900701
- tau_wall = 0.265098556288    u_tau = 0.011513004740    cf = 0.000265098556
- Re_theta =  1999.999830712957    Re_delta =  4825.438209844123
- dx+ =   7.195627962526    dz+ =   5.396720971894    dy+(min,max) =   2.142460823064 13.590921652067
- DIV U* max mean=   5.6061520255024783E-004   1.0614120565596949E-005
- DIV U  max mean=   2.6317047855584010E-007   8.6095553574309751E-008
- U,V,W min=  -1.31011646E-07  -1.96615718E-02  -6.74099401E-02
- U,V,W max=   1.00000310       2.43782923E-02   6.72383010E-02
- CFL_x                  :        0.03200010
- CFL_y                  :        0.00244881
- CFL_z                  :        0.00287616
- Time for this time step (s):  0.345057011    
- Remaining time:       0 h  5 min
+ Time step =    950/ 100000, Time unit =   9.5000
+ Theta dot is computed , theta =    4.3062857042887504E-004
+ thetad = 0.000430628570    theta = 0.414503933337    delta = 1.000755605751    H = 2.414345257700
+ tau_wall = 0.649303590685    u_tau = 0.018018096330    cf = 0.000649303591
+ Re_theta =  4825.044683888016    Re_delta =  2001.511211502392
+ dx+ =  11.261310205998    dz+ =   8.445982654498    dy+(min,max) =   3.352996577696 21.270080319108
+ DIV U* max mean=   4.8359783317036137E-004   1.0966821310719443E-005
+ DIV U  max mean=   2.5912002309482797E-007   8.7860701323413163E-008
+ U,V,W min=  -4.13023599E-07  -1.56961028E-02  -7.47992918E-02
+ U,V,W max=   1.01477301       2.23649777E-02   7.31861740E-02
+ CFL_x                  :        0.03247274
+ CFL_y                  :        0.00236699
+ CFL_z                  :        0.00319144
+ Time for this time step (s):  0.323462009    
+ Remaining time:       8 h  2 min
  Elapsed time:         0 h  4 min
- ===========================================================
- Time step =    950/   2000, Time unit =   9.5000
- Theta dot is computed , theta =    2.0230823696554755E-004
- thetad = 0.000202308237    theta = 1.000000028472    delta = 2.412541707073    H = 2.412541638384
- tau_wall = 0.265143737941    u_tau = 0.011513985799    cf = 0.000265143738
- Re_theta =  1999.999943056230    Re_delta =  4825.083414146753
- dx+ =   7.196241124130    dz+ =   5.397180843097    dy+(min,max) =   2.142643388744 13.592079776330
- DIV U* max mean=   5.5839243529356986E-004   1.0456897156315270E-005
- DIV U  max mean=   2.6340922605920178E-007   8.8128542162839094E-008
- U,V,W min=  -1.24218815E-07  -1.97746791E-02  -6.84315041E-02
- U,V,W max=   1.00000298       2.42877267E-02   6.88952953E-02
- CFL_x                  :        0.03200010
- CFL_y                  :        0.00244293
- CFL_z                  :        0.00293953
- Time for this time step (s):  0.351473004    
- Remaining time:       0 h  5 min
- Elapsed time:         0 h  5 min
- ===========================================================
- Time step =   1000/   2000, Time unit =  10.0000
- Theta dot is computed , theta =    2.0179990313345730E-004
- thetad = 0.000201799903    theta = 0.999999977674    delta = 2.412364646371    H = 2.412364700229
- tau_wall = 0.265184482863    u_tau = 0.011514870448    cf = 0.000265184483
- Re_theta =  2000.000044651929    Re_delta =  4824.729292741550
- dx+ =   7.196794029921    dz+ =   5.397595522441    dy+(min,max) =   2.142808013570 13.593124090922
- DIV U* max mean=   5.4030786992768226E-004   1.0294533278594562E-005
- DIV U  max mean=   2.6526228900924931E-007   8.8978221158063242E-008
- U,V,W min=  -1.23440103E-07  -1.95749179E-02  -6.94163814E-02
- U,V,W max=   1.00000286       2.45076735E-02   6.97435513E-02
- CFL_x                  :        0.03200009
- CFL_y                  :        0.00246181
- CFL_z                  :        0.00297572
- ===========================================================<<<<<
- Writing restart point restart0001000                
- Restart point restart0001000 saved successfully!
- If necesseary restart from:        1001
- Time for this time step (s):  0.617626011    
- Remaining time:       0 h  5 min
- Elapsed time:         0 h  5 min
- Writing snapshots =>           2
- Time for writing snapshots (s):   0.22753906
- Initialising IO for statistics-io
- ===========================================================
- Writing stat file        1000
- Write stat done!
- ===========================================================
- ===========================================================
- Time step =   1050/   2000, Time unit =  10.5000
- Theta dot is computed , theta =    2.0075041569217795E-004
- thetad = 0.000200750416    theta = 0.999999932442    delta = 2.412188615763    H = 2.412188778725
- tau_wall = 0.265220983419    u_tau = 0.011515662886    cf = 0.000265220983
- Re_theta =  2000.000135115457    Re_delta =  4824.377231525460
- dx+ =   7.197289303894    dz+ =   5.397966977921    dy+(min,max) =   2.142955478821 13.594059551984
- DIV U* max mean=   5.3813723552816051E-004   1.0125921216956442E-005
- DIV U  max mean=   2.6302087012414831E-007   8.8315787464469673E-008
- U,V,W min=  -1.16111018E-07  -1.91424657E-02  -7.09645972E-02
- U,V,W max=   1.00000274       2.43011247E-02   7.08643273E-02
- CFL_x                  :        0.03200009
- CFL_y                  :        0.00244106
- CFL_z                  :        0.00302782
- Time for this time step (s):  0.365653992    
- Remaining time:       0 h  5 min
- Elapsed time:         0 h  5 min
- Time computing statistics =     0.495167750000(s)
- ===========================================================
- Time step =   1100/   2000, Time unit =  11.0000
- Theta dot is computed , theta =    1.9923066013840079E-004
- thetad = 0.000199230660    theta = 0.999999892861    delta = 2.412014221926    H = 2.412014480346
- tau_wall = 0.265253631847    u_tau = 0.011516371647    cf = 0.000265253632
- Re_theta =  2000.000214277161    Re_delta =  4824.028443852683
- dx+ =   7.197732279686    dz+ =   5.398299209765    dy+(min,max) =   2.143087372560 13.594896233551
- DIV U* max mean=   5.5953899435173815E-004   9.9507538515163564E-006
- DIV U  max mean=   2.5941819849315905E-007   8.6136590223719011E-008
- U,V,W min=  -1.08549550E-07  -1.92405544E-02  -7.21001998E-02
- U,V,W max=   1.00000262       2.38537006E-02   7.23081455E-02
- CFL_x                  :        0.03200008
- CFL_y                  :        0.00238166
- CFL_z                  :        0.00308515
- Time for this time step (s):  0.366052002    
- Remaining time:       0 h  4 min
- Elapsed time:         0 h  5 min
- Time computing statistics =     0.490854671000(s)
- ===========================================================
- Time step =   1150/   2000, Time unit =  11.5000
- Theta dot is computed , theta =    1.9731090658571567E-004
- thetad = 0.000197310907    theta = 0.999999858921    delta = 2.411841985471    H = 2.411842325732
- tau_wall = 0.265282992067    u_tau = 0.011517008988    cf = 0.000265282992
- Re_theta =  2000.000282158460    Re_delta =  4823.683970942865
- dx+ =   7.198130617607    dz+ =   5.398597963205    dy+(min,max) =   2.143205975606 13.595648604227
- DIV U* max mean=   5.6823252865511632E-004   9.7719571769626244E-006
- DIV U  max mean=   2.5113265961478753E-007   8.2679034058946862E-008
- U,V,W min=  -1.09696146E-07  -1.90069117E-02  -7.37073049E-02
- U,V,W max=   1.00000262       2.31879223E-02   7.30161518E-02
- CFL_x                  :        0.03200008
- CFL_y                  :        0.00231519
- CFL_z                  :        0.00314485
- Time for this time step (s):  0.365395993    
- Remaining time:       0 h  4 min
- Elapsed time:         0 h  6 min
- Time computing statistics =     0.493145940000(s)
- ===========================================================
- Time step =   1200/   2000, Time unit =  12.0000
- Theta dot is computed , theta =    1.9505985516116226E-004
- thetad = 0.000195059855    theta = 0.999999830528    delta = 2.411672342434    H = 2.411672751145
- tau_wall = 0.265309766488    u_tau = 0.011517590167    cf = 0.000265309766
- Re_theta =  2000.000338944704    Re_delta =  4823.344684867335
- dx+ =   7.198493854076    dz+ =   5.398870390557    dy+(min,max) =   2.143314127376 13.596334676160
- DIV U* max mean=   5.6204717021777519E-004   9.5923013384022111E-006
- DIV U  max mean=   2.4282818288957897E-007   7.8231081193879592E-008
- U,V,W min=  -1.04281085E-07  -1.84470378E-02  -7.52225891E-02
- U,V,W max=   1.00000250       2.24451609E-02   7.39459321E-02
- CFL_x                  :        0.03200008
- CFL_y                  :        0.00225649
- CFL_z                  :        0.00320950
- Time for this time step (s):  0.347824007    
- Remaining time:       0 h  4 min
- Elapsed time:         0 h  6 min
- Time computing statistics =     0.493182029000(s)
- ===========================================================
- Time step =   1250/   2000, Time unit =  12.5000
- Theta dot is computed , theta =    1.9254385643040827E-004
- thetad = 0.000192543856    theta = 0.999999807521    delta = 2.411505646829    H = 2.411506110993
- tau_wall = 0.265334759947    u_tau = 0.011518132660    cf = 0.000265334760
- Re_theta =  2000.000384957746    Re_delta =  4823.011293657766
- dx+ =   7.198832912499    dz+ =   5.399124684374    dy+(min,max) =   2.143415080259 13.596975081207
- DIV U* max mean=   5.4006258000004019E-004   9.4106672420743025E-006
- DIV U  max mean=   2.3301367717736779E-007   7.3417847247553442E-008
- U,V,W min=  -1.07997693E-07  -1.84058845E-02  -7.71375224E-02
- U,V,W max=   1.00000262       2.20845025E-02   7.53306001E-02
- CFL_x                  :        0.03200008
- CFL_y                  :        0.00221840
- CFL_z                  :        0.00329120
- Time for this time step (s):  0.369123012    
- Remaining time:       0 h  4 min
- Elapsed time:         0 h  6 min
- Time computing statistics =     0.492740679000(s)
- ===========================================================
- Time step =   1300/   2000, Time unit =  13.0000
- Theta dot is computed , theta =    1.8982628277185767E-004
- thetad = 0.000189826283    theta = 0.999999789684    delta = 2.411342174060    H = 2.411342681203
- tau_wall = 0.265358843154    u_tau = 0.011518655372    cf = 0.000265358843
- Re_theta =  2000.000420631175    Re_delta =  4822.684348119465
- dx+ =   7.199159607452    dz+ =   5.399369705589    dy+(min,max) =   2.143512351983 13.597592134442
- DIV U* max mean=   5.0278926875805402E-004   9.2287332556216302E-006
- DIV U  max mean=   2.2462406728224291E-007   6.8766751487320467E-008
- U,V,W min=  -1.01819630E-07  -1.79676600E-02  -7.83630833E-02
- U,V,W max=   1.00000250       2.16907989E-02   7.67741799E-02
- CFL_x                  :        0.03200008
- CFL_y                  :        0.00217885
- CFL_z                  :        0.00334349
- Time for this time step (s):  0.343560994    
- Remaining time:       0 h  3 min
- Elapsed time:         0 h  7 min
- Time computing statistics =     0.493240841000(s)
- ===========================================================
- Time step =   1350/   2000, Time unit =  13.5000
- Theta dot is computed , theta =    1.8696702107794276E-004
- thetad = 0.000186967021    theta = 0.999999776755    delta = 2.411182125001    H = 2.411182663285
- tau_wall = 0.265382917929    u_tau = 0.011519177877    cf = 0.000265382918
- Re_theta =  2000.000446489512    Re_delta =  4822.364250002849
- dx+ =   7.199486173188    dz+ =   5.399614629891    dy+(min,max) =   2.143609585234 13.598208943616
- DIV U* max mean=   4.9635117905725765E-004   9.0503660826587631E-006
- DIV U  max mean=   2.1579288331341763E-007   6.4211401227228186E-008
- U,V,W min=  -1.07265457E-07  -1.75107401E-02  -8.00070241E-02
- U,V,W max=   1.00000250       2.14782022E-02   7.77342990E-02
- CFL_x                  :        0.03200008
- CFL_y                  :        0.00217002
- CFL_z                  :        0.00341363
- Time for this time step (s):  0.347990006    
- Remaining time:       0 h  3 min
- Elapsed time:         0 h  7 min
- Time computing statistics =     0.492661581000(s)
- ===========================================================
- Time step =   1400/   2000, Time unit =  14.0000
- Theta dot is computed , theta =    1.8402206669723836E-004
- thetad = 0.000184022067    theta = 0.999999768435    delta = 2.411025630627    H = 2.411026188937
- tau_wall = 0.265407886344    u_tau = 0.011519719752    cf = 0.000265407886
- Re_theta =  2000.000463130554    Re_delta =  4822.051261253752
- dx+ =   7.199824845199    dz+ =   5.399868633899    dy+(min,max) =   2.143710423065 13.598848618817
- DIV U* max mean=   4.9517392704002267E-004   8.8737513238076910E-006
- DIV U  max mean=   2.0605916949081195E-007   5.9633906719597125E-008
- U,V,W min=  -1.06624846E-07  -1.76699422E-02  -8.10600743E-02
- U,V,W max=   1.00000250       2.11087931E-02   7.90266022E-02
- CFL_x                  :        0.03200008
- CFL_y                  :        0.00213269
- CFL_z                  :        0.00345856
- Time for this time step (s):  0.344722003    
- Remaining time:       0 h  3 min
- Elapsed time:         0 h  7 min
- Time computing statistics =     0.489976209000(s)
- ===========================================================
- Time step =   1450/   2000, Time unit =  14.5000
- Theta dot is computed , theta =    1.8104321346242052E-004
- thetad = 0.000181043213    theta = 0.999999764396    delta = 2.410872757049    H = 2.410873325061
- tau_wall = 0.265434625422    u_tau = 0.011520300027    cf = 0.000265434625
- Re_theta =  2000.000471208977    Re_delta =  4821.745514097105
- dx+ =   7.200187516846    dz+ =   5.400140637634    dy+(min,max) =   2.143818406662 13.599533623928
- DIV U* max mean=   4.8181900518997831E-004   8.7034437994711660E-006
- DIV U  max mean=   1.9604886105327457E-007   5.5292736189184345E-008
- U,V,W min=  -1.06621094E-07  -1.78688522E-02  -8.24214146E-02
- U,V,W max=   1.00000250       2.05493774E-02   8.05440098E-02
- CFL_x                  :        0.03200008
- CFL_y                  :        0.00206420
- CFL_z                  :        0.00351665
- Time for this time step (s):  0.365671992    
- Remaining time:       0 h  3 min
- Elapsed time:         0 h  8 min
- Time computing statistics =     0.491005275000(s)
- ===========================================================
- Time step =   1500/   2000, Time unit =  15.0000
- Theta dot is computed , theta =    1.7807784581278573E-004
- thetad = 0.000178077846    theta = 0.999999764290    delta = 2.410723510854    H = 2.410724079085
- tau_wall = 0.265463968178    u_tau = 0.011520936771    cf = 0.000265463968
- Re_theta =  2000.000471419550    Re_delta =  4821.447021707803
- dx+ =   7.200585482081    dz+ =   5.400439111561    dy+(min,max) =   2.143936898743 13.600285290685
- DIV U* max mean=   4.5721048207091400E-004   8.5394595098177109E-006
- DIV U  max mean=   1.8548110988347161E-007   5.1467125321521263E-008
- U,V,W min=  -1.03508413E-07  -1.74027607E-02  -8.33640918E-02
- U,V,W max=   1.00000250       2.01228037E-02   8.10970590E-02
- CFL_x                  :        0.03200008
- CFL_y                  :        0.00203308
- CFL_z                  :        0.00355687
- ===========================================================<<<<<
- Writing restart point restart0001500                
- Restart point restart0001500 saved successfully!
- If necesseary restart from:        1501
- Time for this time step (s):  0.612999022    
- Remaining time:       0 h  2 min
- Elapsed time:         0 h  8 min
- Writing snapshots =>           3
- Time for writing snapshots (s):   0.21899414
- Time computing statistics =     0.493082235000(s)
- Time writing statistics =     0.034580165000(s)
- ===========================================================
- Writing stat file        1500
- Write stat done!
- ===========================================================
- ===========================================================
- Time step =   1550/   2000, Time unit =  15.5000
- Theta dot is computed , theta =    1.7516883875812430E-004
- thetad = 0.000175168839    theta = 0.999999767760    delta = 2.410577844605    H = 2.410578404437
- tau_wall = 0.265496690892    u_tau = 0.011521646820    cf = 0.000265496691
- Re_theta =  2000.000464479630    Re_delta =  4821.155689210105
- dx+ =   7.201029262534    dz+ =   5.400771946900    dy+(min,max) =   2.144069032065 13.601123492075
- DIV U* max mean=   4.3588214169020673E-004   8.3828001028466308E-006
- DIV U  max mean=   1.7425008271010345E-007   4.8262237941981005E-008
- U,V,W min=  -1.00943602E-07  -1.76592283E-02  -8.42928737E-02
- U,V,W max=   1.00000250       1.97738241E-02   8.22639465E-02
- CFL_x                  :        0.03200008
- CFL_y                  :        0.00199782
- CFL_z                  :        0.00359650
- Time for this time step (s):  0.366207987    
- Remaining time:       0 h  2 min
- Elapsed time:         0 h  8 min
- Time computing statistics =     0.491626507000(s)
- ===========================================================
- Time step =   1600/   2000, Time unit =  16.0000
- Theta dot is computed , theta =    1.7235456216267069E-004
- thetad = 0.000172354562    theta = 0.999999774444    delta = 2.410435662373    H = 2.410436206061
- tau_wall = 0.265533505933    u_tau = 0.011522445616    cf = 0.000265533506
- Re_theta =  2000.000451112022    Re_delta =  4820.871324745191
- dx+ =   7.201528509803    dz+ =   5.401146382352    dy+(min,max) =   2.144217680345 13.602066457799
- DIV U* max mean=   4.4516755256027163E-004   8.2358587910500837E-006
- DIV U  max mean=   1.6508851765663357E-007   4.5650813670703279E-008
- U,V,W min=  -1.00680005E-07  -1.78817045E-02  -8.57335925E-02
- U,V,W max=   1.00000250       1.92662254E-02   8.38007480E-02
- CFL_x                  :        0.03200008
- CFL_y                  :        0.00193530
- CFL_z                  :        0.00365797
- Time for this time step (s):  0.346646011    
- Remaining time:       0 h  2 min
- Elapsed time:         0 h  8 min
- Time computing statistics =     0.491256872000(s)
- ===========================================================
- Time step =   1650/   2000, Time unit =  16.5000
- Theta dot is computed , theta =    1.6966897901955289E-004
- thetad = 0.000169668979    theta = 0.999999783985    delta = 2.410296825184    H = 2.410297345844
- tau_wall = 0.265575059459    u_tau = 0.011523347158    cf = 0.000265575059
- Re_theta =  2000.000432029215    Re_delta =  4820.593650368835
- dx+ =   7.202091973908    dz+ =   5.401568980431    dy+(min,max) =   2.144385448853 13.603130714670
- DIV U* max mean=   4.5476166981563843E-004   8.1005001546879230E-006
- DIV U  max mean=   1.5553670313544002E-007   4.3498878183045493E-008
- U,V,W min=  -9.56352935E-08  -1.74525641E-02  -8.66830274E-02
- U,V,W max=   1.00000238       1.88885964E-02   8.45743120E-02
- CFL_x                  :        0.03200008
- CFL_y                  :        0.00190838
- CFL_z                  :        0.00369848
- Time for this time step (s):  0.348271996    
- Remaining time:       0 h  1 min
- Elapsed time:         0 h  9 min
- Time computing statistics =     0.490487219000(s)
- ===========================================================
- Time step =   1700/   2000, Time unit =  17.0000
- Theta dot is computed , theta =    1.6714181991675978E-004
- thetad = 0.000167141820    theta = 0.999999796040    delta = 2.410161156289    H = 2.410161647866
- tau_wall = 0.265621933606    u_tau = 0.011524364052    cf = 0.000265621934
- Re_theta =  2000.000407920061    Re_delta =  4820.322312578053
- dx+ =   7.202727532500    dz+ =   5.402045649375    dy+(min,max) =   2.144574683120 13.604331141800
- DIV U* max mean=   4.5827954409022841E-004   7.9773389181663520E-006
- DIV U  max mean=   1.4742055842644625E-007   4.1648765211773019E-008
- U,V,W min=  -9.15732912E-08  -1.70750506E-02  -8.78147855E-02
- U,V,W max=   1.00000238       1.85716283E-02   8.63672048E-02
- CFL_x                  :        0.03200008
- CFL_y                  :        0.00187479
- CFL_z                  :        0.00374676
- Time for this time step (s):  0.368055999    
- Remaining time:       0 h  1 min
- Elapsed time:         0 h  9 min
- Time computing statistics =     0.493260250000(s)
- ===========================================================
- Time step =   1750/   2000, Time unit =  17.5000
- Theta dot is computed , theta =    1.6479882088003825E-004
- thetad = 0.000164798821    theta = 0.999999810281    delta = 2.410028446152    H = 2.410028903381
- tau_wall = 0.265674652883    u_tau = 0.011525507644    cf = 0.000265674653
- Re_theta =  2000.000379438593    Re_delta =  4820.056892304809
- dx+ =   7.203442277222    dz+ =   5.402581707917    dy+(min,max) =   2.144787494646 13.605681133708
- DIV U* max mean=   4.6214198730265901E-004   7.8663638565896103E-006
- DIV U  max mean=   1.4043530362325342E-007   4.0076609652945042E-008
- U,V,W min=  -8.98894257E-08  -1.73036139E-02  -8.87311399E-02
- U,V,W max=   1.00000238       1.82686560E-02   8.72859210E-02
- CFL_x                  :        0.03200008
- CFL_y                  :        0.00185122
- CFL_z                  :        0.00378586
- Time for this time step (s):  0.347281009    
- Remaining time:       0 h  1 min
- Elapsed time:         0 h  9 min
- Time computing statistics =     0.493049978000(s)
- ===========================================================
- Time step =   1800/   2000, Time unit =  18.0000
- Theta dot is computed , theta =    1.6266201438659545E-004
- thetad = 0.000162662014    theta = 0.999999826403    delta = 2.409898457121    H = 2.409898875472
- tau_wall = 0.265733694213    u_tau = 0.011526788239    cf = 0.000265733694
- Re_theta =  2000.000347194618    Re_delta =  4819.796914241136
- dx+ =   7.204242649372    dz+ =   5.403181987029    dy+(min,max) =   2.145025801294 13.607192856554
- DIV U* max mean=   4.6294152002258025E-004   7.7694213174321086E-006
- DIV U  max mean=   1.3295818585435520E-007   3.8922446228240730E-008
- U,V,W min=  -8.33177722E-08  -1.71555746E-02  -8.92365128E-02
- U,V,W max=   1.00000238       1.78547408E-02   8.87575969E-02
- CFL_x                  :        0.03200008
- CFL_y                  :        0.00183795
- CFL_z                  :        0.00380742
- Time for this time step (s):  0.345753014    
- Remaining time:       0 h  1 min
- Elapsed time:         0 h 10 min
- Time computing statistics =     0.492322639000(s)
- ===========================================================
- Time step =   1850/   2000, Time unit =  18.5000
- Theta dot is computed , theta =    1.6075006537784699E-004
- thetad = 0.000160750065    theta = 0.999999844127    delta = 2.409770927690    H = 2.409771303308
- tau_wall = 0.265799499489    u_tau = 0.011528215376    cf = 0.000265799499
- Re_theta =  2000.000311745833    Re_delta =  4819.541855380077
- dx+ =   7.205134609709    dz+ =   5.403850957281    dy+(min,max) =   2.145291377847 13.608877568870
- DIV U* max mean=   4.7192697506382927E-004   7.6864640748061618E-006
- DIV U  max mean=   1.2610239636356587E-007   3.8176674125972884E-008
- U,V,W min=  -8.18357506E-08  -1.69049148E-02  -9.02147964E-02
- U,V,W max=   1.00000238       1.75746512E-02   8.97293836E-02
- CFL_x                  :        0.03200008
- CFL_y                  :        0.00180856
- CFL_z                  :        0.00384916
- Time for this time step (s):  0.361328006    
- Remaining time:       0 h  0 min
- Elapsed time:         0 h 10 min
- Time computing statistics =     0.493128962000(s)
- ===========================================================
- Time step =   1900/   2000, Time unit =  19.0000
- Theta dot is computed , theta =    1.5907863911742342E-004
- thetad = 0.000159078639    theta = 0.999999863204    delta = 2.409645576341    H = 2.409645905971
- tau_wall = 0.265872489222    u_tau = 0.011529798117    cf = 0.000265872489
- Re_theta =  2000.000273592045    Re_delta =  4819.291152681265
- dx+ =   7.206123822917    dz+ =   5.404592867188    dy+(min,max) =   2.145585910938 13.610745969972
- DIV U* max mean=   4.7754855317890151E-004   7.6191601233799308E-006
- DIV U  max mean=   1.1865728049079149E-007   3.7703141027011244E-008
- U,V,W min=  -7.96770649E-08  -1.68637000E-02  -9.03838202E-02
- U,V,W max=   1.00000238       1.72610655E-02   9.09338370E-02
- CFL_x                  :        0.03200008
- CFL_y                  :        0.00180416
- CFL_z                  :        0.00387984
- Time for this time step (s):  0.361966014    
- Remaining time:       0 h  0 min
- Elapsed time:         0 h 10 min
- Time computing statistics =     0.489467863000(s)
- ===========================================================
- Time step =   1950/   2000, Time unit =  19.5000
- Theta dot is computed , theta =    1.5766078326085776E-004
- thetad = 0.000157660783    theta = 0.999999883414    delta = 2.409522104904    H = 2.409522385821
- tau_wall = 0.265953075925    u_tau = 0.011531545341    cf = 0.000265953076
- Re_theta =  2000.000233172102    Re_delta =  4819.044209808410
- dx+ =   7.207215838423    dz+ =   5.405411878818    dy+(min,max) =   2.145911052879 13.612808541476
- DIV U* max mean=   4.7784727783560001E-004   7.5657968491345753E-006
- DIV U  max mean=   1.1194367368532257E-007   3.7390732246313000E-008
- U,V,W min=  -7.44943875E-08  -1.65623110E-02  -9.12786573E-02
- U,V,W max=   1.00000238       1.73968971E-02   9.17260870E-02
- CFL_x                  :        0.03200008
- CFL_y                  :        0.00179410
- CFL_z                  :        0.00391365
- Time for this time step (s):  0.347119987    
- Remaining time:       0 h  0 min
- Elapsed time:         0 h 11 min
- Time computing statistics =     0.492551132000(s)
- ===========================================================
- Time step =   2000/   2000, Time unit =  20.0000
- Theta dot is computed , theta =    1.5650730164794657E-004
- thetad = 0.000156507302    theta = 0.999999904568    delta = 2.409400201468    H = 2.409400431402
- tau_wall = 0.266041676232    u_tau = 0.011533466006    cf = 0.000266041676
- Re_theta =  2000.000190864243    Re_delta =  4818.800402935045
- dx+ =   7.208416253871    dz+ =   5.406312190403    dy+(min,max) =   2.146268470339 13.615075856070
- DIV U* max mean=   4.7361549699927348E-004   7.5254030312800457E-006
- DIV U  max mean=   1.0576022798903415E-007   3.7230401393531496E-008
- U,V,W min=  -7.39153023E-08  -1.65140517E-02  -9.20145884E-02
- U,V,W max=   1.00000238       1.75105538E-02   9.28585306E-02
- CFL_x                  :        0.03200008
- CFL_y                  :        0.00179729
- CFL_z                  :        0.00396196
- ===========================================================<<<<<
- Writing restart point restart0002000                
- Restart point restart0002000 saved successfully!
- If necesseary restart from:        2001
- Time for this time step (s):  0.574837029    
- Remaining time:       0 h  0 min
- Elapsed time:         0 h 11 min
- Writing snapshots =>           4
- Time for writing snapshots (s):   0.22247314
- Time computing statistics =     0.492271716000(s)
- Time writing statistics =     0.033247348000(s)
- ===========================================================
- Writing stat file        2000
- Write stat done!
- ===========================================================
- ===========================================================
-                                                            
- Good job! Xcompact3d finished successfully!                
-                                                            
- 2DECOMP with p_row*p_col=           0           0
-                                                            
- nx*ny*nz=     2113536
- nx,ny,nz=         128         129         128
- dx,dy,dz=  0.31250000000000000       0.23437500000000000       0.23437500000000000     
-                                                            
- Averaged time per step (s):  0.344404638    
- Total wallclock (s):   688.809265    
- Total wallclock (m):   11.4801550    
- Total wallclock (h):  0.191335917    
-                                                            
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
- Xcompact3d is run with the default file -->input.i3d
- ===========================================================
- ======================Xcompact3D===========================
- ===Copyright (c) 2018 Eric Lamballais and Sylvain Laizet===
- ===Modified by Felipe Schuch and Ricardo Frantz============
- ===Modified by Paul Bartholomew, Georgios Deskos and=======
- ===Sylvain Laizet -- 2018- ================================
- ===========================================================
- Git version        : 0949485
- Warning : support for implicit Y diffusion and isecondder=5 is experimental
- ===========================================================
- Temporal turbulent boundary layer
- ===========================================================
- Reynolds number Re     :          2000.000
- xnu                    :        0.00050000
- ===========================================================
- p_row, p_col           :         0       0
- ===========================================================
- Time step dt           :        0.01000000
- Temporal scheme        :    Adams-bashforth 3
-                        :        With CN for Y diffusion
- ===========================================================
- Performing             :        DNS
- ===========================================================
- Theta dot Model        :       Biao
- ===========================================================
- ifirst                 :                 1
- ilast                  :              2000
- ===========================================================
- Lx                     :       40.00000000
- Ly                     :       30.00000000
- Lz                     :       30.00000000
- nx                     :               128
- ny                     :               129
- nz                     :               128
- ===========================================================
- istret                 :                 3
- beta                   :        4.50000000
- ===========================================================
- nu0nu                  :       44.00000000
- cnu                    :        0.44000000
- ===========================================================
- Scalar                 :               off
- numscalar              :                 0
- ===========================================================
- spinup_time            :                 0
- wrotation              :        0.00000000
- ===========================================================
- Immersed boundary      :               off
- ===========================================================
- Boundary condition velocity field: 
- nclx1, nclxn           :               0,0
- ncly1, nclyn           :               2,2
- nclz1, nclzn           :               0,0
- ===========================================================
- Numerical precision: Double
- ===========================================================
- High and low speed : u1=  1.00 and u2=  1.00
- Gravity vector     : (gx, gy, gz)=(     0.00000000,     0.00000000,     0.00000000)
-  
- Output buffer size for TTBL postprocessing =           10
- ===========================================================
- In auto-tuning mode......
- factors:            1           2           4           8
- p_row x p_col           2           4
- # Initializing variables...
- Using the hyperviscous operator with (nu_0/nu,c_nu) = (   44.000000000000000      ,  0.44000000000000000      )
- Using the hyperviscous operator with (nu_0/nu,c_nu) = (   44.000000000000000      ,  0.44000000000000000      )
- Using the hyperviscous operator with (nu_0/nu,c_nu) = (   44.000000000000000      ,  0.44000000000000000      )
- ===========================================================
- Visu module requires   0.270532608     GB
- ===========================================================
- Initialising IO for solution-io
- ===========================================================
- Diffusion number
- cfl_diff_x             :           0.00005120
- cfl_diff_y             :           0.00057754
- cfl_diff_z             :           0.00009102
- cfl_diff_sum           :           0.00071976
- ===========================================================
- U,V,W min=  -2.27336157E-02  -1.95045304E-02  -1.95092503E-02
- U,V,W max=   1.00000083       1.95092279E-02   1.95074566E-02
- ===========================================================
- Time step =      1/   2000, Time unit =   0.0100
-
-Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
-
-Backtrace for this error:
-
-Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
-
-Backtrace for this error:
-
-Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
-
-Backtrace for this error:
-
-Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
-
-Backtrace for this error:
-
-Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
-
-Backtrace for this error:
-
-Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
-
-Backtrace for this error:
-
-Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
-
-Backtrace for this error:
-
-Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
-
-Backtrace for this error:
- Initial thetad =    5.4613351821899414E-005
-#0  0x7faab8623960 in ???
-#1  0x7faab8622ac5 in ???
-#2  0x7faab804251f in ???
-#0  0x7fbefc423960 in ???
-#1  0x7fbefc422ac5 in ???
-#2  0x7fbefc04251f in ???
-#0  0x7f8855423960 in ???
-#1  0x7f8855422ac5 in ???
-#2  0x7f8854e4251f in ???
-#0  0x7f43b5623960 in ???
-#1  0x7f43b5622ac5 in ???
-#2  0x7f43b524251f in ???
-#3  0x5598328fce87 in __ttbl_MOD_comp_thetad
-#3  0x5555df248e87 in __ttbl_MOD_comp_thetad
-	at src/BC-TTBL.f90:669
-#4  0x5555df25b82e in __ttbl_MOD_momentum_forcing_ttbl
-	at src/BC-TTBL.f90:176
-	at src/BC-TTBL.f90:669
-#4  0x55983290f82e in __ttbl_MOD_momentum_forcing_ttbl
-#3  0x556037f0fe87 in __ttbl_MOD_comp_thetad
-	at src/BC-TTBL.f90:669
-#4  0x556037f2282e in __ttbl_MOD_momentum_forcing_ttbl
-	at src/BC-TTBL.f90:176
-#3  0x5582227c1e87 in __ttbl_MOD_comp_thetad
-	at src/BC-TTBL.f90:669
-#4  0x5582227d482e in __ttbl_MOD_momentum_forcing_ttbl
-	at src/BC-TTBL.f90:176
-	at src/BC-TTBL.f90:176
-#5  0x5555df2e0eb6 in momentum_rhs_eq
-	at src/transeq.f90:531
-#6  0x5555df30d5b2 in __transeq_MOD_calculate_transeq_rhs
-	at src/transeq.f90:38
-#7  0x5555def2e942 in xcompact3d
-	at src/xcompact3d.f90:53
-#8  0x5555def2e942 in main
-	at src/xcompact3d.f90:7
-#5  0x558222859eb6 in momentum_rhs_eq
-	at src/transeq.f90:531
-#6  0x5582228865b2 in __transeq_MOD_calculate_transeq_rhs
-	at src/transeq.f90:38
-#5  0x556037fa7eb6 in momentum_rhs_eq
-	at src/transeq.f90:531
-#6  0x556037fd45b2 in __transeq_MOD_calculate_transeq_rhs
-	at src/transeq.f90:38
-#5  0x559832994eb6 in momentum_rhs_eq
-	at src/transeq.f90:531
-#6  0x5598329c15b2 in __transeq_MOD_calculate_transeq_rhs
-	at src/transeq.f90:38
-#7  0x5582224a7942 in xcompact3d
-	at src/xcompact3d.f90:53
-#8  0x5582224a7942 in main
-	at src/xcompact3d.f90:7
-#7  0x556037bf5942 in xcompact3d
-	at src/xcompact3d.f90:53
-#8  0x556037bf5942 in main
-	at src/xcompact3d.f90:7
-#7  0x5598325e2942 in xcompact3d
-	at src/xcompact3d.f90:53
-#8  0x5598325e2942 in main
-	at src/xcompact3d.f90:7
-#0  0x7fc8e2423960 in ???
-#1  0x7fc8e2422ac5 in ???
-#2  0x7fc8e1e4251f in ???
-#3  0x55d56e7e5e87 in __ttbl_MOD_comp_thetad
-	at src/BC-TTBL.f90:669
-#4  0x55d56e7f882e in __ttbl_MOD_momentum_forcing_ttbl
-	at src/BC-TTBL.f90:176
-#0  0x7fc0e0023960 in ???
-#1  0x7fc0e0022ac5 in ???
-#2  0x7fc0dfc4251f in ???
-#0  0x7f0ba8c23960 in ???
-#1  0x7f0ba8c22ac5 in ???
-#2  0x7f0ba864251f in ???
-#0  0x7fe886423960 in ???
-#1  0x7fe886422ac5 in ???
-#2  0x7fe885e4251f in ???
-#5  0x55d56e87deb6 in momentum_rhs_eq
-	at src/transeq.f90:531
-#6  0x55d56e8aa5b2 in __transeq_MOD_calculate_transeq_rhs
-	at src/transeq.f90:38
-#7  0x55d56e4cb942 in xcompact3d
-	at src/xcompact3d.f90:53
-#8  0x55d56e4cb942 in main
-	at src/xcompact3d.f90:7
-#3  0x558f5d71be87 in __ttbl_MOD_comp_thetad
-	at src/BC-TTBL.f90:669
-#4  0x558f5d72e82e in __ttbl_MOD_momentum_forcing_ttbl
-	at src/BC-TTBL.f90:176
-#3  0x558a66f3de87 in __ttbl_MOD_comp_thetad
-	at src/BC-TTBL.f90:669
-#4  0x558a66f5082e in __ttbl_MOD_momentum_forcing_ttbl
-	at src/BC-TTBL.f90:176
-#3  0x557cbd088e87 in __ttbl_MOD_comp_thetad
-	at src/BC-TTBL.f90:669
-#4  0x557cbd09b82e in __ttbl_MOD_momentum_forcing_ttbl
-	at src/BC-TTBL.f90:176
-#5  0x558f5d7b3eb6 in momentum_rhs_eq
-	at src/transeq.f90:531
-#6  0x558f5d7e05b2 in __transeq_MOD_calculate_transeq_rhs
-	at src/transeq.f90:38
-#7  0x558f5d401942 in xcompact3d
-	at src/xcompact3d.f90:53
-#8  0x558f5d401942 in main
-	at src/xcompact3d.f90:7
-#5  0x557cbd120eb6 in momentum_rhs_eq
-	at src/transeq.f90:531
-#6  0x557cbd14d5b2 in __transeq_MOD_calculate_transeq_rhs
-	at src/transeq.f90:38
-#5  0x558a66fd5eb6 in momentum_rhs_eq
-	at src/transeq.f90:531
-#6  0x558a670025b2 in __transeq_MOD_calculate_transeq_rhs
-	at src/transeq.f90:38
-#7  0x557cbcd6e942 in xcompact3d
-	at src/xcompact3d.f90:53
-#8  0x557cbcd6e942 in main
-	at src/xcompact3d.f90:7
-#7  0x558a66c23942 in xcompact3d
-	at src/xcompact3d.f90:53
-#8  0x558a66c23942 in main
-	at src/xcompact3d.f90:7
---------------------------------------------------------------------------
-Primary job  terminated normally, but 1 process returned
-a non-zero exit code. Per user-direction, the job has been aborted.
---------------------------------------------------------------------------
---------------------------------------------------------------------------
-mpirun noticed that process rank 4 with PID 0 on node Talesh exited on signal 11 (Segmentation fault).
---------------------------------------------------------------------------
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
-hwloc/linux: Ignoring PCI device with non-16bit domain.
-Pass --enable-32bits-pci-domain to configure to support such devices
-(warning: it would break the library ABI, don't enable unless really needed).
- Xcompact3d is run with the default file -->input.i3d
- ===========================================================
- ======================Xcompact3D===========================
- ===Copyright (c) 2018 Eric Lamballais and Sylvain Laizet===
- ===Modified by Felipe Schuch and Ricardo Frantz============
- ===Modified by Paul Bartholomew, Georgios Deskos and=======
- ===Sylvain Laizet -- 2018- ================================
- ===========================================================
- Git version        : 0949485
- Warning : support for implicit Y diffusion and isecondder=5 is experimental
- ===========================================================
- Temporal turbulent boundary layer
- ===========================================================
- Reynolds number Re     :          2000.000
- xnu                    :        0.00050000
- ===========================================================
- p_row, p_col           :         0       0
- ===========================================================
- Time step dt           :        0.01000000
- Temporal scheme        :    Adams-bashforth 3
-                        :        With CN for Y diffusion
- ===========================================================
- Performing             :        DNS
- ===========================================================
- Theta dot Model        :       Biao
- ===========================================================
- ifirst                 :                 1
- ilast                  :              2000
- ===========================================================
- Lx                     :       40.00000000
- Ly                     :       30.00000000
- Lz                     :       30.00000000
- nx                     :               128
- ny                     :               129
- nz                     :               128
- ===========================================================
- istret                 :                 3
- beta                   :        4.50000000
- ===========================================================
- nu0nu                  :       44.00000000
- cnu                    :        0.44000000
- ===========================================================
- Scalar                 :               off
- numscalar              :                 0
- ===========================================================
- spinup_time            :                 0
- wrotation              :        0.00000000
- ===========================================================
- Immersed boundary      :               off
- ===========================================================
- Boundary condition velocity field: 
- nclx1, nclxn           :               0,0
- ncly1, nclyn           :               2,2
- nclz1, nclzn           :               0,0
- ===========================================================
- Numerical precision: Double
- ===========================================================
- High and low speed : u1=  1.00 and u2=  1.00
- Gravity vector     : (gx, gy, gz)=(     0.00000000,     0.00000000,     0.00000000)
-  
- Output buffer size for TTBL postprocessing =           10
- ===========================================================
- In auto-tuning mode......
- factors:            1           2           4           8
- p_row x p_col           2           4
- # Initializing variables...
- Using the hyperviscous operator with (nu_0/nu,c_nu) = (   44.000000000000000      ,  0.44000000000000000      )
- Using the hyperviscous operator with (nu_0/nu,c_nu) = (   44.000000000000000      ,  0.44000000000000000      )
- Using the hyperviscous operator with (nu_0/nu,c_nu) = (   44.000000000000000      ,  0.44000000000000000      )
- ===========================================================
- Visu module requires   0.270532608     GB
- ===========================================================
- Initialising IO for solution-io
- ===========================================================
- Diffusion number
- cfl_diff_x             :           0.00005120
- cfl_diff_y             :           0.00057754
- cfl_diff_z             :           0.00009102
- cfl_diff_sum           :           0.00071976
- ===========================================================
- U,V,W min=  -2.27336157E-02  -1.95045304E-02  -1.95092503E-02
- U,V,W max=   1.00000083       1.95092279E-02   1.95074566E-02
- ===========================================================
- Time step =      1/   2000, Time unit =   0.0100
-
-Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
-
-Backtrace for this error:
-
-Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
-
-Backtrace for this error:
-
-Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
-
-Backtrace for this error:
-
-Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
-
-Backtrace for this error:
-
-Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
-
-Backtrace for this error:
-
-Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
-
-Backtrace for this error:
-
-Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
-
-Backtrace for this error:
-
-Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
-
-Backtrace for this error:
- Initial thetad =    5.4613351821899414E-005
-#0  0x7f6fcb223960 in ???
-#1  0x7f6fcb222ac5 in ???
-#2  0x7f6fcac4251f in ???
-#0  0x7f994da23960 in ???
-#1  0x7f994da22ac5 in ???
-#2  0x7f994d64251f in ???
-#0  0x7fe93d623960 in ???
-#1  0x7fe93d622ac5 in ???
-#2  0x7fe93d24251f in ???
-#0  0x7f50c9423960 in ???
-#1  0x7f50c9422ac5 in ???
-#2  0x7f50c904251f in ???
-#3  0x55cba5c9ce87 in __ttbl_MOD_comp_thetad
-	at src/BC-TTBL.f90:669
-#4  0x55cba5caf82e in __ttbl_MOD_momentum_forcing_ttbl
-	at src/BC-TTBL.f90:176
-#3  0x55d8c7911e87 in __ttbl_MOD_comp_thetad
-	at src/BC-TTBL.f90:669
-#4  0x55d8c792482e in __ttbl_MOD_momentum_forcing_ttbl
-	at src/BC-TTBL.f90:176
-#3  0x5589a8da5e87 in __ttbl_MOD_comp_thetad
-	at src/BC-TTBL.f90:669
-#4  0x5589a8db882e in __ttbl_MOD_momentum_forcing_ttbl
-	at src/BC-TTBL.f90:176
-#3  0x55568c1e7e87 in __ttbl_MOD_comp_thetad
-	at src/BC-TTBL.f90:669
-#4  0x55568c1fa82e in __ttbl_MOD_momentum_forcing_ttbl
-	at src/BC-TTBL.f90:176
-#5  0x55cba5d34eb6 in momentum_rhs_eq
-	at src/transeq.f90:531
-#6  0x55cba5d615b2 in __transeq_MOD_calculate_transeq_rhs
-	at src/transeq.f90:38
-#7  0x55cba5982942 in xcompact3d
-	at src/xcompact3d.f90:53
-#8  0x55cba5982942 in main
-	at src/xcompact3d.f90:7
-#5  0x55d8c79a9eb6 in momentum_rhs_eq
-	at src/transeq.f90:531
-#6  0x55d8c79d65b2 in __transeq_MOD_calculate_transeq_rhs
-	at src/transeq.f90:38
-#7  0x55d8c75f7942 in xcompact3d
-	at src/xcompact3d.f90:53
-#8  0x55d8c75f7942 in main
-	at src/xcompact3d.f90:7
-#5  0x5589a8e3deb6 in momentum_rhs_eq
-	at src/transeq.f90:531
-#6  0x5589a8e6a5b2 in __transeq_MOD_calculate_transeq_rhs
-	at src/transeq.f90:38
-#5  0x55568c27feb6 in momentum_rhs_eq
-	at src/transeq.f90:531
-#6  0x55568c2ac5b2 in __transeq_MOD_calculate_transeq_rhs
-	at src/transeq.f90:38
-#7  0x5589a8a8b942 in xcompact3d
-	at src/xcompact3d.f90:53
-#8  0x5589a8a8b942 in main
-	at src/xcompact3d.f90:7
-#7  0x55568becd942 in xcompact3d
-	at src/xcompact3d.f90:53
-#8  0x55568becd942 in main
-	at src/xcompact3d.f90:7
-#0  0x7f09fbc23960 in ???
-#1  0x7f09fbc22ac5 in ???
-#2  0x7f09fb64251f in ???
-#0  0x7fb263023960 in ???
-#1  0x7fb263022ac5 in ???
-#2  0x7fb262c4251f in ???
-#3  0x55af626ece87 in __ttbl_MOD_comp_thetad
-	at src/BC-TTBL.f90:669
-#4  0x55af626ff82e in __ttbl_MOD_momentum_forcing_ttbl
-	at src/BC-TTBL.f90:176
-#3  0x55b2c79f8e87 in __ttbl_MOD_comp_thetad
-	at src/BC-TTBL.f90:669
-#4  0x55b2c7a0b82e in __ttbl_MOD_momentum_forcing_ttbl
-	at src/BC-TTBL.f90:176
-#5  0x55af62784eb6 in momentum_rhs_eq
-	at src/transeq.f90:531
-#6  0x55af627b15b2 in __transeq_MOD_calculate_transeq_rhs
-	at src/transeq.f90:38
-#5  0x55b2c7a90eb6 in momentum_rhs_eq
-	at src/transeq.f90:531
-#6  0x55b2c7abd5b2 in __transeq_MOD_calculate_transeq_rhs
-	at src/transeq.f90:38
-#7  0x55af623d2942 in xcompact3d
-	at src/xcompact3d.f90:53
-#8  0x55af623d2942 in main
-	at src/xcompact3d.f90:7
-#7  0x55b2c76de942 in xcompact3d
-	at src/xcompact3d.f90:53
-#8  0x55b2c76de942 in main
-	at src/xcompact3d.f90:7
-#0  0x7fb7ed423960 in ???
-#1  0x7fb7ed422ac5 in ???
-#2  0x7fb7ed04251f in ???
-#0  0x7fa6bca23960 in ???
-#1  0x7fa6bca22ac5 in ???
-#2  0x7fa6bc44251f in ???
-#3  0x565344c4fe87 in __ttbl_MOD_comp_thetad
-	at src/BC-TTBL.f90:669
-#4  0x565344c6282e in __ttbl_MOD_momentum_forcing_ttbl
-	at src/BC-TTBL.f90:176
-#3  0x555f1b206e87 in __ttbl_MOD_comp_thetad
-	at src/BC-TTBL.f90:669
-#4  0x555f1b21982e in __ttbl_MOD_momentum_forcing_ttbl
-	at src/BC-TTBL.f90:176
-#5  0x555f1b29eeb6 in momentum_rhs_eq
-	at src/transeq.f90:531
-#6  0x555f1b2cb5b2 in __transeq_MOD_calculate_transeq_rhs
-	at src/transeq.f90:38
-#5  0x565344ce7eb6 in momentum_rhs_eq
-	at src/transeq.f90:531
-#6  0x565344d145b2 in __transeq_MOD_calculate_transeq_rhs
-	at src/transeq.f90:38
-#7  0x555f1aeec942 in xcompact3d
-	at src/xcompact3d.f90:53
-#8  0x555f1aeec942 in main
-	at src/xcompact3d.f90:7
-#7  0x565344935942 in xcompact3d
-	at src/xcompact3d.f90:53
-#8  0x565344935942 in main
-	at src/xcompact3d.f90:7
---------------------------------------------------------------------------
-Primary job  terminated normally, but 1 process returned
-a non-zero exit code. Per user-direction, the job has been aborted.
---------------------------------------------------------------------------
---------------------------------------------------------------------------
-mpirun noticed that process rank 5 with PID 0 on node Talesh exited on signal 11 (Segmentation fault).
---------------------------------------------------------------------------

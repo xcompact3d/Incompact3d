@@ -439,9 +439,9 @@ subroutine parameter(input_i3d)
       else if (jtheta_dot==1) then
          write(*,"(' Theta dot Model        : ',A10)") "Andy"
          if (jthickness ==0) then 
-            write(*,"(' Model works based on   : ',A20)") "Momentum Thickness"
+            write(*,"(' Model works based on   : ',A25)") "Momentum Thickness"
          else
-            write(*,"(' Model works based on   : ',A20)") "Displacement Thickness"
+            write(*,"(' Model works based on   : ',A25)") "Displacement Thickness"
          end if
          write(*,"(' K coefficient => e(Th) : ',I4)") K_theta 
       endif

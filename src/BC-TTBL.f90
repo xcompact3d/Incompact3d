@@ -1087,7 +1087,7 @@ contains
       real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ux2p
       real(mytype), dimension(ysize(2)) :: uxuy2pm, ux2mm
       real(mytype), dimension(ysize(2)) :: ydudy2m, dudy2m
-      real(mytype) :: thetad, RHS,GT,FT,int_GT,theta,ET,ZTmm
+      real(mytype) :: thetad, RHS,GT,FT,int_GT,theta,ET,ZTmm,Disp
       integer :: j, code
 
       integer, parameter :: freq = 1
@@ -1096,30 +1096,35 @@ contains
       call extract_fluctuat(ux2, ux2m, ux2p)
       call horizontal_avrge(ux2p * uy2, uxuy2pm)
       call dery(dudy2m, ux2m, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
-      
-      ! Calculate quantities
-      theta = sum((ux2m * (one - ux2m)) * ypw)
-      ET = one - theta
-
       ! G(t) Model based on (0: Momentum Thickness, 1: Displacement Thickness)
       if (jthickness ==0) then 
+         ! Calculate quantities         
+         theta = sum((ux2m * (one - ux2m)) * ypw)
+         ET = one - theta
          int_GT = sum((dudy2m*(xnu * dudy2m - uxuy2pm))*ypw)
          GT = 2.0 * int_GT - xnu * dudy2m(1)
-      else if (jthickness ==1) then    
+         ! For DNS simulation
+         if (ilesmod ==0) then  
+            FT = (-K_theta * ET + GT)/theta
+         else ! For LES simulation
+            theta_a = ET; 
+            ZTmm = ZTm + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
+            FT = (-2.0*K_theta * ET + GT - ((K_theta** 2) * ZTmm))/theta
+         end if
+      else if (jthickness ==1) then  
+         Disp  = sum((one - ux2m) * ypw)
+         ET = one - Disp
          GT = - xnu * dudy2m(1)
+         ! For DNS simulation
+         if (ilesmod ==0) then  
+            FT = (-K_theta * ET + GT)/Disp
+         else ! For LES simulation
+            theta_a = ET; 
+            ZTmm = ZTm + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
+            FT = (-2.0*K_theta * ET + GT - ((K_theta** 2) * ZTmm))/Disp
+         end if
       end if
-
-      ! For DNS simulation
-      if (ilesmod ==0) then  
-         FT = (-K_theta * ET + GT)/theta
-      else ! For LES simulation
-         theta_a = ET; 
-         ZTmm = ZTm + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
-         FT = (-2.0*K_theta * ET + GT - ((K_theta** 2) * ZTmm))/theta
-      end if
-
       thetad = FT
-
       if ((itime >= ifirst + 2 .or. irestart == 1) .and. mod(itime, freq) == 0) then
          if (nrank == 0) then
            if (mod(itime, ilist) == 0) then
