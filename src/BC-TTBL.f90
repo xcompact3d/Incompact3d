@@ -20,7 +20,7 @@ module ttbl
    real(mytype), save, allocatable, dimension(:, :) :: meanconvsxz_uv, turbconvsxz_uv, viscdiffsxz_uv, prodsxz_uv, prestransxz_uv, disssxz_uv
    real(mytype), save, allocatable, dimension(:, :) :: meanconvsxz_k, turbconvsxz_k, viscdiffsxz_k, prodsxz_k, prestransxz_k, disssxz_k
    real(mytype), save, allocatable, dimension(:) :: ttda, ttdb, ttdc
-   real(mytype), save :: theta_a, theta_b, theta_c, ZTm
+   real(mytype), save :: theta_a, theta_b, theta_c, ZTn
    real(mytype), save :: thetad
 
    public :: init_ttbl, boundary_conditions_ttbl, momentum_forcing_ttbl, scalar_forcing_ttbl, postprocess_ttbl, visu_ttbl_init, visu_ttbl
@@ -153,7 +153,7 @@ contains
                read (67) thetad, ttda, ttdb, ttdc
             !==> Andy method
             else if ((jtheta_dot ==1) .and. (ilesmod /=0) )then
-               read (67) thetad, theta_a, theta_b, theta_c , ZTm
+               read (67) thetad, theta_a, theta_b, theta_c , ZTn
             end if 
             close (67)
          end if
@@ -186,7 +186,7 @@ contains
             write (67) thetad, ttda, ttdb, ttdc
          !==> Andy method
          else if ((jtheta_dot ==1) .and. (ilesmod /=0) )then
-               write (67) thetad, theta_a, theta_b, theta_c, ZTm
+               write (67) thetad, theta_a, theta_b, theta_c, ZTn
          end if 
          close (67)
       end if
@@ -1087,53 +1087,71 @@ contains
       real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ux2p
       real(mytype), dimension(ysize(2)) :: uxuy2pm, ux2mm
       real(mytype), dimension(ysize(2)) :: ydudy2m, dudy2m
-      real(mytype) :: thetad, RHS,GT,FT,int_GT,theta,ET,ZTmm,Disp
+      real(mytype) :: thetad, RHS,GT,FT,int_GT,theta,ET,ZTnp1,Disp
       integer :: j, code
 
       integer, parameter :: freq = 1
+
+
+      if (itime == ifirst .and. irestart == 0) then 
+         ZTn = 0.0
+         theta_a = 0.0
+         theta_b = 0.0
+         theta_c = 0.0
+      end if
 
       ! Calculate averaged derivatives
       call extract_fluctuat(ux2, ux2m, ux2p)
       call horizontal_avrge(ux2p * uy2, uxuy2pm)
       call dery(dudy2m, ux2m, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
-      ! G(t) Model based on (0: Momentum Thickness, 1: Displacement Thickness)
-      if (jthickness ==0) then 
+      
+      ! G(t) Model based on (0: Momentum Thickness)
+      if (jthickness == 0) then 
          ! Calculate quantities         
          theta = sum((ux2m * (one - ux2m)) * ypw)
          ET = one - theta
          int_GT = sum((dudy2m*(xnu * dudy2m - uxuy2pm))*ypw)
          GT = 2.0 * int_GT - xnu * dudy2m(1)
+         
          ! For DNS simulation
-         if (ilesmod ==0) then  
+         if (ilesmod == 0) then  
             FT = (-K_theta * ET + GT)/theta
          else ! For LES simulation
             theta_a = ET; 
-            ZTmm = ZTm + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
-            FT = (-2.0*K_theta * ET + GT - ((K_theta** 2) * ZTmm))/theta
+            ZTnp1 = ZTn + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
+            FT = (-2.0*K_theta * ET + GT - ((K_theta ** 2) * ZTnp1))/theta
          end if
-      else if (jthickness ==1) then  
+      
+      ! G(t) Model based on (1: Displacement Thickness)
+      else if (jthickness == 1) then  
          Disp  = sum((one - ux2m) * ypw)
          ET = one - Disp
-         GT = - xnu * dudy2m(1)
+         GT = + xnu * dudy2m(1)
+
          ! For DNS simulation
-         if (ilesmod ==0) then  
+         if (ilesmod == 0) then  
             FT = (-K_theta * ET + GT)/Disp
          else ! For LES simulation
             theta_a = ET; 
-            ZTmm = ZTm + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
-            FT = (-2.0*K_theta * ET + GT - ((K_theta** 2) * ZTmm))/Disp
+            ZTnp1 = ZTn + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
+            FT = (-2.0*K_theta * ET + GT - ((K_theta ** 2) * ZTnp1))/Disp
          end if
+
       end if
+
       thetad = FT
+      
       if ((itime >= ifirst + 2 .or. irestart == 1) .and. mod(itime, freq) == 0) then
          if (nrank == 0) then
            if (mod(itime, ilist) == 0) then
-              write (6, *) 'Theta dot is computed , theta = ', thetad
+              write (6, *) 'F(t) is computed , F(T) = ', thetad
             end if
          end if
          call MPI_BCAST(thetad, 1, real_type, 0, MPI_COMM_WORLD, code)
       end if
-      Ztm = ZTmm
+      
+      ! Saving for next time step
+      ZTn = ZTnp1
       theta_c = theta_b; theta_b = theta_a
 
    end function
