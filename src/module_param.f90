@@ -345,7 +345,7 @@ module param
   real(mytype) :: smagcst,nSmag,walecst,FSGS,pr_t,maxdsmagcst
 
   !Theta Dot Model
-  integer :: jtheta_dot,jthickness,K_theta
+  integer :: jtheta_dot,jthickness
   real(mytype) :: K_theta
 
   !! Gravity field (vector components)

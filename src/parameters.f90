@@ -443,7 +443,7 @@ subroutine parameter(input_i3d)
          else
             write(*,"(' Model works based on   : ',A25)") "Displacement Thickness"
          end if
-         write(*,"(' K coefficient => e(Th) : ',I4)") K_theta 
+         write(*,"(' K coefficient => e(Th) : ',F12.6)") K_theta 
       endif
 
      write(*,*) '==========================================================='
