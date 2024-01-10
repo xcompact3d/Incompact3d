@@ -1126,7 +1126,7 @@ contains
       else if (jthickness == 1) then  
          Disp  = sum((one - ux2m) * ypw)
          ET = one - Disp
-         GT = + xnu * dudy2m(1)
+         GT = xnu * dudy2m(1)
 
          ! For DNS simulation
          if (ilesmod == 0) then  
