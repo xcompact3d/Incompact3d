@@ -346,6 +346,7 @@ module param
 
   !Theta Dot Model
   integer :: jtheta_dot,jthickness,K_theta
+  real(mytype) :: K_theta
 
   !! Gravity field (vector components)
   real(mytype) :: gravx, gravy, gravz
