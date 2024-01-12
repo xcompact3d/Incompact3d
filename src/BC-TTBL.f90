@@ -220,8 +220,8 @@ contains
          if (nrank == 0) then
             write (6, "(' thetad = ',F14.12,'    theta = ',F14.12,'    delta = ',F14.12,'    H = ',F14.12)") thetad, theta, delta, delta / theta
             write (6, "(' tau_wall = ',F14.12,'    u_tau = ',F14.12,'    cf = ',F14.12)") tau_wall, ufric, two * ufric**2
-            write (6, "(' Re_theta = ',F18.12,'    Re_delta = ',F18.12)") one / (theta * xnu), one / (xnu / delta)
-            write (6, "(' dx+ = ',F16.12,'    dz+ = ',F16.12,'    dy+(min,max) = ',2F16.12)") dx * ufric * re, dz * ufric * re, dyp(1) * ufric * re, dyp(ny) * ufric * re
+            write (6, "(' Re_theta = ',F16.8,'    Re_delta = ',F16.8)") one*theta*re, one*delta*re !(xnu=one/re)
+            write (6, "(' dx+ = ',F12.8,'    dz+ = ',F12.8,'    dy+(min,max) = (',F12.8,',',F12.8,')')") dx * ufric * re, dz * ufric * re, dyp(1) * ufric * re, dyp(ny) * ufric * re
             open (unit=67, file='out/ttbl.dat', status='unknown', form='formatted', action='write', position='append')
             if (itime == ilist) write (67, "(11A20)") 't', 'thetad', 'theta', 'delta', 'tau_wall', 'u_tau', 'cf', 'dx+', 'dz+', 'dy+_min', 'dy+_max'
             write (67, "(11E20.12)") t, thetad, theta, delta, tau_wall, ufric, two * ufric**2, dx * ufric * re, dz * ufric * re, dyp(1) * ufric * re, dyp(ny) * ufric * re
@@ -1044,7 +1044,7 @@ contains
       pres_tran = -(tempa2 + tempb2)
    end subroutine pres_transport
    !############################################################################
-   !############################################################################
+   !############################################################################1
    subroutine dissipation(u1p, u2p, diss)
       use var, only: ta1, tb1, tc1, di1
       use var, only: ta2, tb2, tc2, di2
@@ -1120,6 +1120,9 @@ contains
             theta_a = ET; 
             ZTnp1 = ZTn + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
             FT = (-2.0*K_theta * ET + GT - ((K_theta ** 2) * ZTnp1))/theta
+            ! Saving for next time step
+            ZTn = ZTnp1
+            theta_c = theta_b; theta_b = theta_a
          end if
       
       ! G(t) Model based on (1: Displacement Thickness)
@@ -1135,6 +1138,9 @@ contains
             theta_a = ET; 
             ZTnp1 = ZTn + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
             FT = (-2.0*K_theta * ET + GT - ((K_theta ** 2) * ZTnp1))/Disp
+            ! Saving for next time step
+            ZTn = ZTnp1
+            theta_c = theta_b; theta_b = theta_a
          end if
 
       end if
@@ -1149,10 +1155,6 @@ contains
          end if
          call MPI_BCAST(thetad, 1, real_type, 0, MPI_COMM_WORLD, code)
       end if
-      
-      ! Saving for next time step
-      ZTn = ZTnp1
-      theta_c = theta_b; theta_b = theta_a
 
    end function
    !############################################################################

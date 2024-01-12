@@ -81,7 +81,7 @@ subroutine parameter(input_i3d)
      write(*,*) '===Copyright (c) 2018 Eric Lamballais and Sylvain Laizet==='
      write(*,*) '===Modified by Felipe Schuch and Ricardo Frantz============'
      write(*,*) '===Modified by Paul Bartholomew, Georgios Deskos and======='
-     write(*,*) '===Sylvain Laizet -- 2018- ================================'
+     write(*,*) '===Sylvain Laizet -- 2018- == && ==  Pasha -- 2023   ======'
      write(*,*) '==========================================================='
 #if defined(VERSION)
      write(*,*)'Git version        : ', VERSION
@@ -207,6 +207,7 @@ subroutine parameter(input_i3d)
   if(ilesmod.ne.0) then
      read(10, nml=LESModel); rewind(10)
   endif
+  
   !!==> Pasha
   if(itype .eq. 14) then
      read(10, nml=ThetaDotModel); rewind(10)
