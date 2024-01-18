@@ -272,4 +272,4 @@ Ndiscs,ADMcoords,C_T,aind,iturboutput,rho_air
 
 ThetaDotModel
 --------
-jtheta_dot ,jthickness , K_theta
+jtheta_dot ,jthickness , K_theta, H_12

@@ -54,6 +54,8 @@ contains
                do j = 1, xsize(2)
                   if (istret == 0) y = real(j + xstart(2) - 1 - 1, mytype) * dy
                   if (istret /= 0) y = yp(j + xstart(2) - 1)
+                  !==> Pasha
+                  if ((jtheta_dot == 1) .and. (jthickness == 1)) y = y * (H_12**TP_H_12)
                   um = (one - erf(aform * y))
                   do i = 1, xsize(1)
                      x = real(i - 1, mytype) * dx
