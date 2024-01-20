@@ -72,7 +72,7 @@ cnu = 0.44              ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 irestart = 0            ! Read initial flow field ?
 icheckpoint = 10001     ! Frequency for writing backup file
 ioutput = 10000         ! Frequency for visualization
-ilist = 50               ! Frequency for writing to screen
+ilist = 1               ! Frequency for writing to screen
 nvisu = 1               ! Size for visualisation collection
 
 /End
@@ -104,8 +104,7 @@ jles = 4               ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Sma
 jtheta_dot = 1              ! Theta dot Model (0: Biao, 1: Andy)
 jthickness = 1              ! Model based on (0: Momentum Thickness, 1: Displacement Thickness)
 K_theta    = 1.0            ! K coefficient for e(theta)
-H_12       = 1.432          ! The ratio of displacement thickness to momentum thickness 
-TP_H_12    = 2.454          ! Scaling ratio (1430,1.432,2.454) (2750,1.374,2.774)
+H_12       = 2.4144         ! The ratio of displacement thickness to momentum thickness (laminar flow)
 
 /End
 
