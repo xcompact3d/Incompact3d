@@ -128,15 +128,11 @@ contains
 
 #ifdef ADIOS2
   integer :: ierror
-  logical :: adios2_debug_mode
   character(len=80) :: config_file="adios2_config.xml"
 #endif
 
 #ifdef ADIOS2
-  !! TODO: make this a runtime-option
-  adios2_debug_mode = .true.
-
-  call adios2_init(adios, trim(config_file), MPI_COMM_WORLD, adios2_debug_mode, ierror)
+  call adios2_init(adios, trim(config_file), MPI_COMM_WORLD, ierror)
   if (ierror.ne.0) then
      print *, "Error initialising ADIOS2 - is adios2_config.xml present and valid?"
      call MPI_ABORT(MPI_COMM_WORLD, -1, ierror)
