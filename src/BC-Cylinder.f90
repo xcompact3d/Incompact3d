@@ -4,6 +4,8 @@
 
 module cyl
 
+  USE decomp_2d_constants
+  USE decomp_2d_mpi
   USE decomp_2d
   USE variables
   USE param
@@ -22,7 +24,6 @@ contains
 
   subroutine geomcomplex_cyl(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,remp)
 
-    use decomp_2d, only : mytype
     use param, only : one, two, ten
     use ibm_param
     use dbg_schemes, only: sqrt_prec
@@ -85,7 +86,6 @@ contains
 
     USE param
     USE variables
-    USE decomp_2d
 
     implicit none
 
@@ -102,7 +102,6 @@ contains
 
     USE param
     USE variables
-    USE decomp_2d
     USE ibm_param
 
     implicit none
@@ -138,7 +137,6 @@ contains
 
     USE param
     USE variables
-    USE decomp_2d
     USE MPI
     USE ibm_param
 
@@ -207,7 +205,6 @@ contains
   !********************************************************************
   subroutine init_cyl (ux1,uy1,uz1,phi1)
 
-    USE decomp_2d
     USE decomp_2d_io
     USE variables
     USE param
@@ -288,7 +285,6 @@ contains
   subroutine postprocess_cyl(ux1,uy1,uz1,ep1)
 
     USE MPI
-    USE decomp_2d
     USE decomp_2d_io
     USE var, only : uvisu
     USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
@@ -302,7 +298,6 @@ contains
 
   subroutine visu_cyl_init (visu_initialised)
 
-    use decomp_2d, only : mytype
     use decomp_2d_io, only : decomp_2d_register_variable
     use visu, only : io_name, output2D
     

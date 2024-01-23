@@ -4,7 +4,7 @@
 
 module actuator_line_model_utils
 
-    use decomp_2d, only: mytype
+    use decomp_2d_constants, only: mytype
     use param, only: zero, one, two
     use dbg_schemes, only: sqrt_prec, cos_prec, exp_prec, sin_prec
     

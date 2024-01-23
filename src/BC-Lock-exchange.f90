@@ -4,11 +4,12 @@
 
 module lockexch
 
-  use decomp_2d, only : mytype, real_type, real2_type
+  use decomp_2d_constants, only : mytype, real_type, real2_type
   use decomp_2d, only : xsize, ysize, zsize
   use decomp_2d, only : xstart, ystart, zstart
   use decomp_2d, only : xend, yend, zend
   use decomp_2d, only : transpose_x_to_y, transpose_y_to_z, transpose_z_to_y, transpose_y_to_x
+  use decomp_2d, only : xszV, alloc_x, fine_to_coarsev
 
   use variables, only : numscalar
 
@@ -50,7 +51,6 @@ contains
 
     USE param
     USE variables
-    USE decomp_2d
     USE MPI
 
     implicit none
@@ -98,7 +98,6 @@ contains
 
   subroutine init_lockexch (rho1,ux1,uy1,uz1,ep1,phi1)
 
-    USE decomp_2d
     USE decomp_2d_io
     USE variables
     USE param
@@ -246,7 +245,6 @@ contains
 
   subroutine visu_lockexch_init(visu_initialised)
 
-    use decomp_2d, only : mytype
     use decomp_2d_io, only : decomp_2d_register_variable
     
     implicit none
@@ -261,8 +259,6 @@ contains
   end subroutine visu_lockexch_init
 
   subroutine postprocess_lockexch(rho1,ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
-
-    use decomp_2d, only : alloc_x
 
     use var, only : phi2, rho2
     use var, only : phi3, rho3
@@ -377,7 +373,6 @@ contains
 
   subroutine budget(rho1,ux1,uy1,uz1,phi1,vol1)
 
-    USE decomp_2d
     USE decomp_2d_io
     USE MPI
 

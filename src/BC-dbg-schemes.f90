@@ -4,7 +4,9 @@
 
 module dbg_schemes
 
+  use decomp_2d_constants
   use decomp_2d
+  use decomp_2d_mpi
   use variables
   use param
 
@@ -22,7 +24,6 @@ contains
   !********************************************************************
   subroutine init_dbg (ux1,uy1,uz1,ep1,phi1)
 
-    use decomp_2d
     use decomp_2d_io
     use variables
     use param
@@ -45,7 +46,6 @@ contains
 
     use param
     use variables
-    use decomp_2d
 
     implicit none
 
@@ -60,7 +60,7 @@ contains
   ! Math functions for Single/double precision
   !-------------------------------------------
   function sin_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    USE decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -71,7 +71,7 @@ contains
   end function sin_prec
   !-------------------------------------------
   function cos_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    USE decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -82,7 +82,7 @@ contains
   end function cos_prec
   !-------------------------------------------
   function tan_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    USE decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -93,7 +93,7 @@ contains
   end function tan_prec
   !-------------------------------------------
   function asin_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    USE decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -104,7 +104,7 @@ contains
   end function asin_prec
   !-------------------------------------------
   function acos_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    USE decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -115,7 +115,7 @@ contains
   end function acos_prec
   !-------------------------------------------
   function atan_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    USE decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -126,7 +126,7 @@ contains
   end function atan_prec
   !-------------------------------------------
   function sinh_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    USE decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -137,7 +137,7 @@ contains
   end function sinh_prec
   !-------------------------------------------
   function cosh_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    USE decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -148,7 +148,7 @@ contains
   end function cosh_prec
   !-------------------------------------------
   function tanh_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    USE decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -159,7 +159,7 @@ contains
   end function tanh_prec
   !-------------------------------------------
   function exp_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    USE decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -170,7 +170,7 @@ contains
   end function exp_prec
   !-------------------------------------------
   function log_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    USE decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -181,7 +181,7 @@ contains
   end function log_prec
   !-------------------------------------------
   function log10_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    USE decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -192,7 +192,7 @@ contains
   end function log10_prec
   !-------------------------------------------
   function sqrt_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    USE decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -203,7 +203,7 @@ contains
   end function sqrt_prec
   !-------------------------------------------
   function abs_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    USE decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC

@@ -13,9 +13,11 @@
 
 module probes
 
-  USE decomp_2d, only : ph1, nrank, mytype
+  USE decomp_2d, only : ph1
+  use decomp_2d_mpi, only : nrank
+  use decomp_2d_constants, only : mytype
   USE decomp_2d, only : xstart, xend, ystart, yend, zstart, zend
-  USE decomp_2d, only : decomp_2d_abort
+  USE decomp_2d_mpi, only : decomp_2d_abort
 
   IMPLICIT NONE
 
@@ -73,7 +75,7 @@ contains
   !
   subroutine init_probes()
 
-    USE decomp_2d, only : real_type
+    USE decomp_2d_constants, only : real_type
     USE MPI
     USE param, only : dx, dy, dz, nclx, ncly, nclz, xlx, yly, zlz, istret, one, half
     USE param, only : irestart, ifirst

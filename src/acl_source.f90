@@ -4,8 +4,8 @@
 
 module actuator_line_source
 
-    use decomp_2d, only: mytype
-    use decomp_2d, only: real_type
+    use decomp_2d_constants, only : mytype
+    use decomp_2d_constants, only: real_type
     use variables, only: ilist
     use param, only: itime, zero, half, one
     use dbg_schemes, only: sin_prec, sqrt_prec
@@ -257,7 +257,8 @@ contains
     !
     !*******************************************************************************
 
-      use decomp_2d, only: nproc, xstart, xend, xsize, update_halo
+      use decomp_2d_mpi, only: nproc
+      use decomp_2d, only: xstart, xend, xsize, update_halo
       use MPI
       use param, only: dx,dy,dz,eps_factor,xnu,istret,xlx,yly,zlz
       use var, only: ux1, uy1, uz1, FTx, FTy, FTz, yp

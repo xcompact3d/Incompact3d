@@ -4,6 +4,8 @@
 
 module channel
 
+  use decomp_2d_constants
+  use decomp_2d_mpi
   use decomp_2d
   use variables
   use param
@@ -23,7 +25,6 @@ contains
   !############################################################################
   subroutine init_channel (ux1,uy1,uz1,ep1,phi1)
 
-    use decomp_2d
     use decomp_2d_io
     use variables
     use param
@@ -152,7 +153,6 @@ contains
     use param
     use var, only : di2
     use variables
-    use decomp_2d
 
     implicit none
 
@@ -255,7 +255,6 @@ contains
   end subroutine postprocess_channel
   subroutine visu_channel_init(visu_initialised)
 
-    use decomp_2d, only : mytype
     use decomp_2d_io, only : decomp_2d_register_variable
     use visu, only : io_name, output2D
     
@@ -378,7 +377,6 @@ contains
   !############################################################################
   subroutine geomcomplex_channel(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,yp,remp)
 
-    use decomp_2d, only : mytype
     use param, only : zero, one, two, ten
     use ibm
 

@@ -268,6 +268,7 @@ endsubroutine init_xcompact3d
 subroutine finalise_xcompact3d()
 
   use MPI
+  use decomp_2d_mpi
   use decomp_2d
   use decomp_2d_io, only : decomp_2d_io_finalise
 
@@ -306,7 +307,7 @@ endsubroutine finalise_xcompact3d
 
 subroutine check_transients()
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
   use mpi
   use var
   

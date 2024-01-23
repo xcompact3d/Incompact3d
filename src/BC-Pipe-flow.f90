@@ -4,6 +4,8 @@
 
 module pipe
 
+  use decomp_2d_constants
+  use decomp_2d_mpi
   use decomp_2d
   use variables
   use param
@@ -33,7 +35,6 @@ contains
   !
   !********************************************************************
 
-    use decomp_2d,only : mytype
     use MPI
     use param,only : zero,one,two,yly,zlz
     use ibm_param
@@ -100,7 +101,6 @@ contains
   !
   !********************************************************************
 
-    use decomp_2d
     use decomp_2d_io
     use variables
     use param
@@ -193,7 +193,6 @@ contains
 
     use param
     use variables
-    use decomp_2d
 
     implicit none
 

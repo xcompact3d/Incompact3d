@@ -4,6 +4,8 @@
 
 module mixlayer
 
+  USE decomp_2d_constants
+  USE decomp_2d_mpi
   USE decomp_2d
   USE variables
   USE param
@@ -17,7 +19,6 @@ contains
 
   subroutine init_mixlayer (rho1,ux1,uy1,uz1)
 
-    use decomp_2d, only : mytype, xsize
     use param, only : u1, u2, dens1, dens2
     use param, only : half, one, two, four, eight, sixteen
     use param, only : ntime, nrhotime

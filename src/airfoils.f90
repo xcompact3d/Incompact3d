@@ -4,7 +4,7 @@
 
 module Airfoils
 
-    use decomp_2d, only: mytype
+    use decomp_2d_constants, only: mytype
     use actuator_line_model_utils
     use constants
 

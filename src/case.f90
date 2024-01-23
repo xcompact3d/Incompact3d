@@ -5,7 +5,7 @@
 module case
 
   use param
-  use decomp_2d
+  use decomp_2d_constants
   use variables
 
   use user_sim
@@ -219,7 +219,7 @@ contains
   !##################################################################
   subroutine preprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
 
-    use decomp_2d, only : mytype, xsize, ph1
+    use decomp_2d, only : xsize, ph1
     use visu, only  : write_snapshot
     use stats, only : overall_statistic
 
@@ -242,7 +242,7 @@ contains
   !##################################################################
   subroutine postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
 
-    use decomp_2d, only : mytype, xsize, ph1
+    use decomp_2d, only : xsize, ph1
     use var, only : nzmsize, numscalar, nrhotime, npress, abl_T
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux1, uy1, uz1
@@ -268,7 +268,7 @@ contains
   !##################################################################
   subroutine run_postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
 
-    use decomp_2d, only : mytype, xsize, ph1
+    use decomp_2d, only : xsize, ph1
     use visu, only  : write_snapshot, end_snapshot
     use stats, only : overall_statistic
 

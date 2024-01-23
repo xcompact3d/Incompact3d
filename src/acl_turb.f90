@@ -4,8 +4,8 @@
 
 module actuator_line_turbine
     
-    use decomp_2d, only: mytype, nrank
-    use decomp_2d, only: real_type
+    use decomp_2d_constants, only: mytype, real_type
+    use decomp_2d_mpi, only: nrank
     use variables, only: ilist
     use param, only: itime, zero, zpone, half, one, two, onethousand
     use dbg_schemes, only: cos_prec, sin_prec, abs_prec, exp_prec, acos_prec, sqrt_prec
