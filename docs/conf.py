@@ -43,12 +43,17 @@ except Exception:
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx_copybutton',
-    'sphinx.ext.intersphinx',
+    'sphinx.ext.todo',
+    'sphinx.ext.coverage',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.napoleon',
     'sphinx.ext.mathjax',
-    'sphinx.ext.autosectionlabel'
-    #,
-    #'nbsphinx"
+    'sphinx_click.ext',
+    'recommonmark',
+    'nbsphinx',
+    'sphinx_rtd_theme'
 ]
 
 source_suffix = [".rst", ".md"]
