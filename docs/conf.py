@@ -49,8 +49,9 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
-    'sphinx.ext.mathjax',
-    'sphinx_click.ext'
+    'sphinx.ext.mathjax'
+    #,
+#    'sphinx_click.ext'
     #,
 #    'recommonmark',
 #    'nbsphinx',
