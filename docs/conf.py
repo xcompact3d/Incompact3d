@@ -50,6 +50,8 @@ extensions = [
     "sphinx.ext.autosectionlabel",
 ]
 
+source_suffix = [".rst", ".md"]
+
 intersphinx_mapping = {
     "toolbox": ("https://xcompact3d.readthedocs.io/en/stable/", None,),
 }
