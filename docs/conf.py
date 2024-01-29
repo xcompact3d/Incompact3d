@@ -51,7 +51,7 @@ extensions = [
 ]
 
 intersphinx_mapping = {
-    "toolbox": ("https://xcompact3d-toolbox.readthedocs.io/en/stable/", None,),
+    "toolbox": ("https://xcompact3d.readthedocs.io/en/stable/", None,),
 }
 
 # Add any paths that contain templates here, relative to this directory.
