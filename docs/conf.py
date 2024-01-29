@@ -46,8 +46,9 @@ extensions = [
     'sphinx_copybutton',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
-    'sphinx.ext.autosectionlabel',
-    'nbsphinx"
+    'sphinx.ext.autosectionlabel'
+    #,
+    #'nbsphinx"
 ]
 
 source_suffix = [".rst", ".md"]
