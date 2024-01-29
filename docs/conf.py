@@ -50,10 +50,11 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx.ext.mathjax',
-    'sphinx_click.ext',
-    'recommonmark',
-    'nbsphinx',
-    'sphinx_rtd_theme'
+    'sphinx_click.ext'
+    #,
+#    'recommonmark',
+#    'nbsphinx',
+#    'sphinx_rtd_theme'
 ]
 
 source_suffix = [".rst", ".md"]
