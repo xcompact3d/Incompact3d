@@ -84,10 +84,6 @@ contains
 
        call init_cyl (ux1, uy1, uz1, phi1)
 
-    elseif (itype.eq.itype_dbg) then
-
-       call init_dbg (ux1, uy1, uz1, ep1, phi1)
-
     elseif (itype.eq.itype_mixlayer) then
 
        call init_mixlayer(rho1, ux1, uy1, uz1)
@@ -180,14 +176,6 @@ contains
 
        call boundary_conditions_cyl (ux, uy, uz, phi)
 
-    elseif (itype.eq.itype_dbg) then
-
-       call boundary_conditions_dbg (ux, uy, uz, phi)
-
-!!!    elseif (itype.eq.itype_jet) then
-!!!
-!!!       call boundary_conditions_jet (rho,ux,uy,uz,phi)
-!!!
     elseif (itype.eq.itype_tbl) then
 
        call boundary_conditions_tbl (ux, uy, uz, phi)
@@ -346,14 +334,6 @@ contains
 
        call postprocess_cyl (ux, uy, uz, ep)
 
-    elseif (itype.eq.itype_dbg) then
-
-       call postprocess_dbg (ux, uy, uz, phi, ep)
-
-!!!    elseif (itype.eq.itype_jet) then
-!!!
-!!!       call postprocess_jet (ux, uy, uz, phi, ep)
-!!!
     elseif (itype.eq.itype_tbl) then
 
        call postprocess_tbl (ux, uy, uz, ep)

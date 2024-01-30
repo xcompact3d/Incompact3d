@@ -2035,3 +2035,5 @@ subroutine test_min_max(name,text,array_tmp,i_size_array_tmp)
 
   return
 end subroutine test_min_max
+
+
