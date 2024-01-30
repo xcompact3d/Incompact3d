@@ -3,6 +3,8 @@ List of files with description
 
 SRC directory
 -------------
+This directory contains all the Fortran files related to solving the Navier-Stokes equations via a fractioanl step method on a Cartesian mesh using sixth-order implicit finite-difference schemes.
+
 ``xcompact3d.f90``: This is the main file where the time advancement of the Navier-Stokes equations is performed, as well as the post-processing and checkpointing procedure. This file also contain the subroutines for the initialisation and finalisation of the code.
 
 ``time_integrators.f90`` and ``implicit.f90``: These files contains the subroutines related to the time advancement of the Navier-Stokes equations via a fractional step method. Typically, you would use an explicit time advancement (Adams Bashforth/ Runge Kutta). For wall-bounded flows, it is possible to use a semi-implicit approach for the viscous terms.
@@ -46,6 +48,26 @@ If a stretching is used in the Y-direction, then the pressure field can be obtai
 
 EXAMPLES directory
 ------------------
+This directory contains a series of input files for various ready-to-run simulations.
+
+``Taylor-Green-Vortex``: Folder with input files for the Taylor-Green vortex flow. It also contains some data files for comparison. 
+
+**input_DNS_Re1600.i3d**: input file for a 3D DNS with a Reynolds number equal to 1,600. 
+
+**input_2D.i3d**: input file for a 2D DNS with a Reynolds number equal to 1,600.
+
+**input_ILES_Re5000.i3d **: input file for an 3D implicit LES with a Reynolds number equal to 5,000.
+
+``Cylinder``: Folder with input files for the flow around a circular cylinder. 
+
+**input_DNS300_LR.i3d**: input file for a 3D DNS with a Reynolds number equal to 300 and a fixed cylinder.
+
+**input_DNS300_LR_2D.i3d**: input file for a 2D DNS with a Reynolds number equal to 300 and a fixed cylinder.
+
+**input_DNS300_LR_MOVING.i3d**:input file for a 3D DNS with a Reynolds number equal to 300 and a moving cylinder.
+
+
 
 2DECOMP directory
 ------------------
+This directory contains all the files related to the 2DECOMP&FFT library. More information can be found `<here https://2decomp-fft.github.io/.>`_.
