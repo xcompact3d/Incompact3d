@@ -89,12 +89,12 @@ contains
              um=exp(-zptwo*y*y)
              do i=1,xsize(1)
                 if (idir_stream == 1) then
-                   ux1(i,j,k)=0.5+0.5*y!one-y*y
+                   ux1(i,j,k)=one-y*y
                    uy1(i,j,k)=zero
                    uz1(i,j,k)=sin(real(i-1,mytype)*dx)+cos(real(k-1,mytype)*dz)
                 else
                         print *,'test'
-                   uz1(i,j,k)=0.5+0.5*y!one-y*y
+                   uz1(i,j,k)=one-y*y
                    uy1(i,j,k)=zero
                    ux1(i,j,k)=zero
                 endif
@@ -118,11 +118,11 @@ contains
              um=exp(-zptwo*y*y)
              do i=1,xsize(1)
                 if (idir_stream == 1) then
-                   ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+0.5*y!one-y*y
+                   ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
                    uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
                    uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
                 else
-                   uz1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+0.5*y!one-y*y
+                   uz1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
                    uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
                    ux1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
                 endif
@@ -162,9 +162,9 @@ contains
 
     if (.not. cpg ) then ! if not constant pressure gradient
        if (idir_stream == 1) then
-       !   call channel_cfr(ux,two/three)
+          call channel_cfr(ux,two/three)
        else
-       !   call channel_cfr(uz,two/three)
+          call channel_cfr(uz,two/three)
        endif
     end if
 

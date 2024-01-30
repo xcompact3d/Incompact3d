@@ -623,7 +623,7 @@ contains
           enddo
           do k=1,xsize(3)
              do i=1,xsize(1)
-                ux(i,1,k)=-0.5!byx1(i,k)+dpdxy1(i,k)
+                ux(i,1,k)=byx1(i,k)+dpdxy1(i,k)
                 uy(i,1,k)=byy1(i,k)
                 uz(i,1,k)=byz1(i,k)+dpdzy1(i,k)
              enddo
@@ -643,7 +643,7 @@ contains
        if (dims(1)==1) then
           do k=1,xsize(3)
              do i=1,xsize(1)
-                ux(i,xsize(2),k)=0.5!byxn(i,k)+dpdxyn(i,k)
+                ux(i,xsize(2),k)=byxn(i,k)+dpdxyn(i,k)
                 uy(i,xsize(2),k)=byyn(i,k)
                 uz(i,xsize(2),k)=byzn(i,k)+dpdzyn(i,k)
              enddo
@@ -651,7 +651,7 @@ contains
        elseif (ny - (nym / dims(1)) == xstart(2)) then
           do k=1,xsize(3)
              do i=1,xsize(1)
-                ux(i,xsize(2),k)=0.5!byxn(i,k)+dpdxyn(i,k)
+                ux(i,xsize(2),k)=byxn(i,k)+dpdxyn(i,k)
                 uy(i,xsize(2),k)=byyn(i,k)
                 uz(i,xsize(2),k)=byzn(i,k)+dpdzyn(i,k)
              enddo
