@@ -56,7 +56,7 @@ This directory contains a series of input files for various ready-to-run simulat
 
 **input_2D.i3d**: input file for a 2D DNS with a Reynolds number equal to 1,600.
 
-**input_ILES_Re5000.i3d **: input file for an 3D implicit LES with a Reynolds number equal to 5,000.
+**input_ILES_Re5000.i3d**: input file for an 3D implicit LES with a Reynolds number equal to 5,000.
 
 ``Cylinder``: Folder with input files for the flow around a circular cylinder. 
 
@@ -66,8 +66,16 @@ This directory contains a series of input files for various ready-to-run simulat
 
 **input_DNS300_LR_MOVING.i3d**:input file for a 3D DNS with a Reynolds number equal to 300 and a moving cylinder.
 
+``Channel-Flow``: Folder with input files for the periodic turbulent channel flow. It also contains a Fortran programme called ``stretching_parameter_channel.f90`` to determine the correct ``beta`` parameter for the stretching of the mesh in the wall-normal direction.
+
+**input_DNS_Re180_LR_explicittime.i3d**: input file for a 3D DNS with a Reynolds number of 180.
+
+**input_WALE_LES.i3d**: input file for a 3D explicit LES (WALE model) with a Reynolds number of 180.
+
+``Turbulent-Boundary-Layer``: Folder with input files for a spatially evolving turbulent boundary layer (zero pressure gradient).
+
 
 
 2DECOMP directory
 ------------------
-This directory contains all the files related to the 2DECOMP&FFT library. More information can be found `<here https://2decomp-fft.github.io/.>`_.
+This directory contains all the files related to the 2DECOMP&FFT library. More information can be found `here <https://2decomp-fft.github.io/.>`_.
