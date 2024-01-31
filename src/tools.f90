@@ -2031,7 +2031,7 @@ subroutine test_min_max(name,text,array_tmp,i_size_array_tmp)
      write(*,*) trim(text)//' Tot ',name,tot_tot
      write(*,*) trim(text)//' Min ',name,min_tot
      write(*,*) " "
-     call flush(6)
+     flush(6)
   endif
 
   return

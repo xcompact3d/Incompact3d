@@ -397,7 +397,7 @@ contains
        
        if (nrank==0) then
           write(42,'(20e20.12)') (itime-1)*dt,eek,eps,eps2,enst
-          call flush(42)
+          flush(42)
        endif
     endif
 

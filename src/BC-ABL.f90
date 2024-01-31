@@ -815,7 +815,7 @@ contains
     if (mod(itime,ilist)==0.and.nrank==0) then
        ! Write u_shear in file
        write(42,'(20e20.12)') t,u_shear
-       call flush(42)
+       flush(42)
        ! Print in terminal
        write(*,*)  ' ABL:'
        write(*,*)  ' Horizontally-averaged velocity at 5*dy: ', ux_HAve,uz_HAve

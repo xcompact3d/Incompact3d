@@ -37,6 +37,12 @@ include(X3D_Compilers)
 # Add the sources
 add_subdirectory(src)
 
+# Add tests
+option(BUILD_TESTING "Build with tests" ON)
+if (${BUILD_TESTING})
+  include(CTest)
+  add_subdirectory(examples)
+endif (${BUILD_TESTING})
 
 # Add a prettify target
 #add_custom_target(format sh ${CMAKE_SOURCE_DIR}/scripts/format.sh

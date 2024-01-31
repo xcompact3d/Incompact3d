@@ -191,6 +191,7 @@ contains
     implicit none
     character(len=30) :: filename, filename2
     integer :: nzmsize
+    integer :: ierror
     integer                                             :: i, iv, j, k, kk, code, jj
     integer                                             :: nvect1,nvect2,nvect3
 
@@ -507,12 +508,14 @@ contains
        !     endif
        if (nrank .eq. 0) then
           write(38,*) t,xDrag_mean,yLift_mean
-          call flush(38)
+          flush(38)
        endif
        if (mod(itime, icheckpoint).eq.0) then
           if (nrank .eq. 0) then
              write(filename,"('forces.dat',I7.7)") itime
-             call system("cp forces.dat " //filename)
+             !ierror=system("cp forces.dat " //filename)
+             call execute_command_line ("cp forces.dat "//filename, &
+                                        exitstat=ierror)
           endif
        endif
     enddo
