@@ -1,5 +1,5 @@
-include_directories(${CMAKE_SOURCE_DIR}/decomp2d
-	            ${CMAKE_SOURCE_DIR}/src)
+include_directories(${2decomp_INCLUDE_DIR}
+                    ${CMAKE_SOURCE_DIR}/src)
 
 message(STATUS "CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
 message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
@@ -19,7 +19,6 @@ add_executable(xcompact3d
                     BC-Cavity.f90
                     BC-Channel-flow.f90
                     BC-Cylinder.f90
-                    BC-dbg-schemes.f90
                     BC-Lock-exchange.f90
                     BC-Mixing-layer.f90
                     BC-Periodic-hill.f90
@@ -54,16 +53,17 @@ add_executable(xcompact3d
                     variables.f90
                     visu.f90
                     xcompact3d.f90)
-#add_executable(xcompact3d ${files_xcompact})
-target_include_directories(xcompact3d PRIVATE ${PROJECT_BINARY_DIR}/decomp2d)
+
 target_link_libraries(xcompact3d PRIVATE decomp2d)
+
 if (MPI_FOUND)
   target_link_libraries(xcompact3d PRIVATE MPI::MPI_Fortran)
 endif (MPI_FOUND)
-if(ADIOS2_FOUND)
-  #target_link_libraries(xcompact3d ${ADIOS_LIBRARIES})
-  target_link_libraries(xcompact3d PRIVATE adios2::fortran_mpi)
-endif()
+
+#if(ADIOS2_FOUND)
+#  #target_link_libraries(xcompact3d ${ADIOS_LIBRARIES})
+#  target_link_libraries(xcompact3d PRIVATE adios2::fortran_mpi)
+#endif()
 
 install(TARGETS xcompact3d
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
