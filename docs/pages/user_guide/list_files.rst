@@ -74,7 +74,32 @@ This directory contains a series of input files for various ready-to-run simulat
 
 ``Turbulent-Boundary-Layer``: Folder with input files for a spatially evolving turbulent boundary layer (zero pressure gradient).
 
+**input_LR_lowRe_implicit.i3d**: input fiel for a 3D DNS for low Reynolds numbers.
 
+``2D-hill``: Folder with input files for the turbulent flow around a 2D periodic hill.
+
+**input_LR_Re1000.i3d**: input file for a 3D DNS with a Reynolds number of 1000.
+
+
+``Cavity``: Folder with input files for a cavity flow.
+
+**input_2D_LR_Re14084.i3d**: input file for a 2D DNS with a Reynolds number of 14084.
+
+``Lock-exchange``: Folder with input files for gravity currents in the lock exchange set-up (finite release of heavy fluid in light ambient).
+
+**input_gravitycurrent_3DRe2236_LR.i3d**: input file for a 3D DNS with a Reynolds number of 2236.
+
+``Mixing-layer``: Folder with input files for a mixing-layer flow.
+
+**input_2D_LR_periodic.i3d**: input file for a 2D DNS with a Reynolds number of 400.
+
+``Wind-Turbine``: Folder with input files for wind turbines simulations.
+
+**two_turbines/input.i3d**: input files for a two-turbine set-up with aligned turbines.
+
+``ABL``: Folder with input files for atmospheric boundary layer simulations.
+
+**input_neutral.i3d**: input file for a 3D LES of a neutrally stable atmospheric boundary layer at 10 m/s.
 
 2DECOMP directory
 ------------------
