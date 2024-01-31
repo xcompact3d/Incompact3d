@@ -30,9 +30,9 @@ endif (NOT CMAKE_BUILD_TYPE)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" "${CMAKE_SOURCE_DIR}/cmake/compilers" "${CMAKE_SOURCE_DIR}/cmake/fft")
 find_package(DECOMP2D REQUIRED)
 
-include(I3D_MPI)
+include(X3D_MPI)
 
-include(I3D_Compilers)
+include(X3D_Compilers)
 
 # Add the sources
 add_subdirectory(src)

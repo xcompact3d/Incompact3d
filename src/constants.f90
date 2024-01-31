@@ -4,7 +4,7 @@
 
 module constants
 
-    use decomp_2d, only: mytype
+    use decomp_2d_constants, only: mytype
     use param, only: onehundredeighty
 
     ! Mathematical constants

@@ -13,7 +13,11 @@
 !=======================================================================
 
 module forces
+
+  use decomp_2d_constants
+  use decomp_2d_mpi
   USE decomp_2d
+
   implicit none
 
   integer :: nvol,iforces
@@ -30,7 +34,6 @@ contains
 
   subroutine init_forces
 
-    USE decomp_2d
     USE decomp_2d_io, only : decomp_2d_register_variable, decomp_2d_init_io
     USE param
     USE variables
@@ -118,7 +121,6 @@ contains
 
   subroutine restart_forces(itest1)
 
-    USE decomp_2d
     USE decomp_2d_io
     USE variables
     USE param
@@ -180,7 +182,6 @@ contains
 
     USE param
     USE variables
-    USE decomp_2d
     USE MPI
     USE ibm_param
 

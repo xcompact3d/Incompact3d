@@ -20,6 +20,7 @@ subroutine parameter(input_i3d)
   use variables
   use complex_geometry
   use decomp_2d
+  use decomp_2d_mpi
   use ibm_param
   use dbg_schemes, only: sin_prec, cos_prec
 
@@ -532,7 +533,7 @@ subroutine parameter(input_i3d)
         else
            write(*,*)  "LMN boundedness    : Not enforced"
         endif
-        write(*,"(' dens1 and dens2    : ',F6.2' ',F6.2)") dens1, dens2
+        write(*,"(' dens1 and dens2    : ',F6.2,' ',F6.2)") dens1, dens2
         write(*,"(' Prandtl number Re  : ',F15.8)") prandtl
      endif
      if (angle.ne.0.) write(*,"(' Solid rotation     : ',F6.2)") angle

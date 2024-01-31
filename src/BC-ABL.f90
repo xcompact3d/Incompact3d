@@ -4,6 +4,10 @@
 
 module abl
 
+use decomp_2d_constants
+use decomp_2d_mpi
+use decomp_2d
+
 contains
 
   !*******************************************************************************
@@ -12,7 +16,6 @@ contains
   !
   !*******************************************************************************
 
-    use decomp_2d
     use decomp_2d_io
     use variables
     use param
@@ -144,7 +147,6 @@ contains
 
     USE param
     USE variables
-    USE decomp_2d
 
     implicit none
 
@@ -185,7 +187,6 @@ contains
   
     USE param
     USE variables
-    USE decomp_2d
     USE MPI
     USE var, only: ux_inflow, uy_inflow, uz_inflow
   
@@ -251,7 +252,6 @@ contains
 
     USE param
     USE variables
-    USE decomp_2d
     USE MPI
 
     implicit none
@@ -298,7 +298,6 @@ contains
 
     USE param
     USE variables
-    USE decomp_2d
 
     implicit none
 
@@ -350,7 +349,6 @@ contains
 
     USE param
     USE variables
-    USE decomp_2d
 
     implicit none
 
@@ -379,7 +377,6 @@ contains
   !*******************************************************************************
 
     use MPI
-    use decomp_2d
     use param
     use variables
     use var, only: uxf1, uzf1, phif1, uxf3, uzf3, phif3
@@ -655,7 +652,6 @@ contains
   !
   !*******************************************************************************
 
-    use decomp_2d
     use param
     use var, only: heatflux
     use variables
@@ -692,7 +688,6 @@ contains
   !*******************************************************************************
 
     use MPI
-    use decomp_2d
     use param
     use variables
     use var, only: di1, di2, di3
@@ -836,7 +831,6 @@ contains
   !
   !*******************************************************************************
 
-    use decomp_2d
     use decomp_2d_poisson
     use param
     use var
@@ -899,7 +893,6 @@ contains
   !
   !*******************************************************************************
 
-    USE decomp_2d
     USE param
     USE var
 
@@ -1000,7 +993,6 @@ contains
   !
   !*******************************************************************************
 
-    use decomp_2d
     use param
     use var, only: yp
     use dbg_schemes, only: sin_prec, cos_prec, log_prec
@@ -1064,7 +1056,6 @@ contains
   !
   !*******************************************************************************
 
-    use decomp_2d
     use param
     use var, only: yp
     use dbg_schemes, only: sin_prec
@@ -1103,7 +1094,6 @@ contains
   !
   !*******************************************************************************
 
-    use decomp_2d
     use MPI
     use param
     use variables
@@ -1194,7 +1184,6 @@ contains
   !*******************************************************************************
 
     USE MPI
-    USE decomp_2d
     USE decomp_2d_io
     USE var, only : umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
     USE var, only : uvisu

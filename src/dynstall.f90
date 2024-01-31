@@ -4,7 +4,8 @@
 
 module dynstall
     
-    use decomp_2d, only: nrank, mytype
+    use decomp_2d_mpi, only: nrank
+    use decomp_2d_constants, only : mytype
     use airfoils
 
     implicit none

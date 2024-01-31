@@ -4,6 +4,8 @@
 
 module uniform
 
+  USE decomp_2d_constants
+  USE decomp_2d_mpi
   USE decomp_2d
   USE variables
   USE param
@@ -26,7 +28,6 @@ contains
   !
   !*******************************************************************************
 
-    USE decomp_2d
     USE decomp_2d_io
     USE variables
     USE param
@@ -89,7 +90,6 @@ contains
 
     USE param
     USE variables
-    USE decomp_2d
     USE MPI
 
     implicit none
@@ -120,7 +120,6 @@ contains
   
     USE param
     USE variables
-    USE decomp_2d
     USE MPI
     USE var, only: ux_inflow, uy_inflow, uz_inflow
   
@@ -186,7 +185,6 @@ contains
 
     USE param
     USE variables
-    USE decomp_2d
     USE MPI
 
     implicit none
@@ -234,7 +232,6 @@ contains
   !*******************************************************************************
 
     USE MPI
-    USE decomp_2d
     USE decomp_2d_io
     USE var, only : uvisu
     USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
@@ -248,7 +245,6 @@ contains
   
    subroutine visu_uniform_init (visu_initialised)
 
-    use decomp_2d, only : mytype
     use decomp_2d_io, only : decomp_2d_register_variable
     use visu, only : io_name, output2D
     

@@ -4,6 +4,9 @@
 
 module ibm
 
+  use decomp_2d_constants
+  use decomp_2d_mpi, only : nrank
+
   public
 
 contains
@@ -48,7 +51,7 @@ contains
   !############################################################################
   subroutine body(ux1,uy1,uz1,ep1)
     use param, only : zero, one, dx, dz
-    use decomp_2d, only : xstart, xend, xsize, mytype, nrank
+    use decomp_2d, only : xstart, xend, xsize
     !use decomp_2d_io
     use variables, only : ny
     implicit none
@@ -1026,7 +1029,7 @@ end subroutine ana_x_cyl
 SUBROUTINE analitic_x(j,x_pos,ana_res,k)
 
   USE param, ONLY : itype, itype_cyl
-  USE decomp_2d, ONLY : mytype
+  USE decomp_2d_constants, ONLY : mytype
 !  USE cyl, ONLY : geomcomplex_cyl
 
   IMPLICIT NONE
@@ -1046,7 +1049,7 @@ END SUBROUTINE analitic_x
 SUBROUTINE analitic_y(i,y_pos,ana_res,k)
 
   USE param, ONLY : itype, itype_cyl
-  USE decomp_2d, ONLY : mytype
+  USE decomp_2d_constants, ONLY : mytype
 !  USE cyl, ONLY : geomcomplex_cyl
 
   IMPLICIT NONE

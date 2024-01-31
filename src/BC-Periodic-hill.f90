@@ -16,6 +16,8 @@
 
 module hill
 
+  USE decomp_2d_constants
+  USE decomp_2d_mpi
   USE decomp_2d
   USE variables
   USE param
@@ -36,7 +38,6 @@ contains
   subroutine geomcomplex_hill(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
 !############################################################################
 
-    use decomp_2d, only : mytype
     use param, only : zero, one, two, three, nine, fourteen, twenty, twentyeight
     use ibm
 
@@ -115,7 +116,6 @@ contains
 
     USE param
     USE variables
-    USE decomp_2d
 
     implicit none
 
@@ -136,7 +136,6 @@ contains
   subroutine init_hill (ux1,uy1,uz1,ep1,phi1)
 !############################################################################
 
-    USE decomp_2d
     USE decomp_2d_io
     USE variables
     USE param
@@ -225,7 +224,6 @@ contains
   subroutine hill_flrt (ux,constant)
 !############################################################################
 
-    USE decomp_2d
     USE decomp_2d_poisson
     USE variables
     USE param
@@ -286,7 +284,6 @@ contains
   end subroutine postprocess_hill
   subroutine visu_hill_init(visu_initialised)
 
-    use decomp_2d, only : mytype
     use decomp_2d_io, only : decomp_2d_register_variable
     use visu, only : io_name, output2D
     
