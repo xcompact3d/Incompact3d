@@ -1,17 +1,33 @@
-install(DIRECTORY DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/Cylinder)
-install(FILES input_test.i3d DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/Cylinder)
-# If testing active add test for Cylinder case
-if (${BUILD_TESTING})
-  set(case_dir "${test_dir}/Cylinder")
-  file(MAKE_DIRECTORY ${case_dir})
-  file(COPY input_test.i3d DESTINATION ${case_dir})
+# Cylinder
+set(case "Cylinder")
+set(case_dir "${test_dir}/${case}")
+file(MAKE_DIRECTORY ${case_dir})
+set(input_file "input_test.i3d")
+install(DIRECTORY DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/${case})
+install(FILES ${input_file} DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/${case})
+if(${USE_ADIOS2})
+  install(FILES ../adios2_config.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/${case})
 endif()
-# Moving Cylinder
-install(DIRECTORY DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/CylinderMoving)
-install(FILES input_test_moving.i3d DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/CylinderMoving)
-# If testing active add test for Cylinder case
-if (${BUILD_TESTING})
-  set(case_dir "${test_dir}/CylinderMoving")
-  file(MAKE_DIRECTORY ${case_dir})
-  file(COPY input_test_moving.i3d DESTINATION ${case_dir})
+# If testing active add test for TGV case
+file(COPY ${input_file} DESTINATION ${case_dir})
+if(${USE_ADIOS2})
+  file(COPY ../adios2_config.xml DESTINATION ${case_dir})
 endif()
+add_test(NAME ${case} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:xcompact3d> ${input_file} WORKING_DIRECTORY ${case_dir})
+
+# Cylinder Moving
+set(case "CylinderMoving")
+set(case_dir "${test_dir}/${case}")
+file(MAKE_DIRECTORY ${case_dir})
+set(input_file "input_test_moving.i3d")
+install(DIRECTORY DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/${case})
+install(FILES ${input_file} DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/${case})
+if(${USE_ADIOS2})
+  install(FILES ../adios2_config.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/${case})
+endif()
+# If testing active add test for TGV case
+file(COPY ${input_file} DESTINATION ${case_dir})
+if(${USE_ADIOS2})
+  file(COPY ../adios2_config.xml DESTINATION ${case_dir})
+endif()
+add_test(NAME ${case} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:xcompact3d> ${input_file} WORKING_DIRECTORY ${case_dir})
