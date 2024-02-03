@@ -38,10 +38,12 @@ include(X3D_Compilers)
 add_subdirectory(src)
 
 # Add tests
-option(BUILD_TESTING "Build with tests" ON)
+option(BUILD_TESTING "Build with test and use only TGV case" ON)
+option(BUILD_TESTING_FULL "Build all tests" OFF)
 if (${BUILD_TESTING})
   include(CTest)
   add_subdirectory(examples)
+  add_subdirectory(test) 
 endif (${BUILD_TESTING})
 
 # Add a prettify target

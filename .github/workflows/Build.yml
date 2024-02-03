@@ -42,20 +42,19 @@ jobs:
         ./configure --prefix=$(pwd)/installed
         make all install
 
-    - name: Build Incompact3d
+    - name: Build Xcompact3d
       run: |
         export PATH=$(pwd)/openmpi-4.1.4/installed/bin/:$PATH
-        make BUILD=debug
-
-    - name: Run TGV case
-      run: |
-        cp test/data/Taylor-Green-Vortex/reference_input.i3d input.i3d
-        export PATH=$(pwd)/openmpi-4.1.4/installed/bin/:$PATH
-        mpirun -np 2 xcompact3d
+        export FC=mpif90
+        cmake -S . -B build 
+        cmake --build build -j 2
+        cmake --install build
+        ctest --test-dir build
 
     - name: Compare output time evolution to reference output
       run: |
         pip install numpy
-        python test/compare_TGV_time_evolution.py \
+        cd build/RunTests/TGV
+        python compare_TGV_time_evolution.py \
             --input time_evol.dat \
-            --reference test/data/Taylor-Green-Vortex/reference_time_evol.dat
+            --reference reference_time_evol.dat
