@@ -57,7 +57,7 @@ cmake --build $path_to_build_directory -DBUILD_TESTING_FULL=ON
 or by using `ccmake.
 `
 The installation directory will cointain:
-* The *bin* directory with two execulables: **xcompaxt3d** for the main execution of the code 
+* The *bin* directory with two execulables: **xcompact3d** for the main execution of the code 
 * The *example* directory with few example of input *.i3d* files for **Xcompact3d**
 * The *lib* directory with the archive for the **decomp2d** library
 * The directories *Testing* and *RunTests* with the logs of CTest and the results respectively. 
