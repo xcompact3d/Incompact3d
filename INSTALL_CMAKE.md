@@ -69,11 +69,11 @@ ctest --test-dir $path_to_build_directory
 ```
 Four tests are performed:
 * Taylor Green Vortex (TGV)
-* Atmosferic Boundary layer (ABL) in neutral conditions (new set-up)
-* Atmosferic Boundary layer (ABL) in neutral conditions (old set-up)
-* Atmosferic Boundary layer (ABL) in convective conditions (old set-up)
-* Atmosferic Boundary layer (ABL) in stable conditions (old set-up)
-* Cavity
+* Atmospheric Boundary layer (ABL) in neutral conditions (new set-up)
+* Atmospheric Boundary layer (ABL) in neutral conditions (old set-up)
+* Atmospheric Boundary layer (ABL) in convective conditions (old set-up)
+* Atmospheric Boundary layer (ABL) in stable conditions (old set-up)
+* Differentially heated cavity
 * Turbulent Channel Flow with X as streamwise direction
 * Turbulent Channel Flow with Z as streamwise direction
 * Flow around a circular cylinder
