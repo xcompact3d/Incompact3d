@@ -520,6 +520,8 @@ contains
     real(mytype),dimension(ny), intent(in) :: l1m,l2m,l3m
     real(mytype),dimension(ny), intent(in) :: u1m,u2m,u3m
 
+    xsol = 0._mytype
+
     write(*,*) 'NOT READY YET! SIMULATION IS STOPPED!'
     call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
 
