@@ -548,14 +548,17 @@ contains
                 !     relative to the volume, and, therefore, this has a sense 
                 !     of a "source".
                 !         fac   = (1.5*ux1(i,j,k)-2.0*ux01(i,j,k)+0.5*ux11(i,j,k))*epcv1(i,j,k)
-                tsumx = tsumx+(fac1-coriolis(1)-centrifugal(1))*dx*del_y(j+(xstart(2)-1))*dz/dt    !tsumx+fac*dx*dy/dt
+                !  tsumx = tsumx+(fac1-coriolis(1)-centrifugal(1))*dx*del_y(j+(xstart(2)-1))*dz/dt    !tsumx+fac*dx*dy/dt
+                tsumx = tsumx+fac1*dx*del_y(j+xstart(2)-1)*dz/dt
                 !sumx(k) = sumx(k)+dudt1*dx*dy
 
                 !         fac   = (1.5*uy1(i,j,k)-2.0*uy01(i,j,k)+0.5*uy11(i,j,k))*epcv1(i,j,k)
-                tsumy = tsumy+(fac2-coriolis(2)-centrifugal(2))*dx*del_y(j+(xstart(2)-1))*dz/dt !tsumy+fac*dx*dy/dt
+               !  tsumy = tsumy+(fac2-coriolis(2)-centrifugal(2))*dx*del_y(j+(xstart(2)-1))*dz/dt !tsumy+fac*dx*dy/dt
+                tsumy = tsumy+fac2*dx*del_y(j+xstart(2)-1)*dz/dt
                 !sumy(k) = sumy(k)+dudt1*dx*dy
 
-                tsumz = tsumz+(fac3-coriolis(3)-centrifugal(3))*dx*del_y(j+(xstart(2)-1))*dz/dt     
+               !  tsumz = tsumz+(fac3-coriolis(3)-centrifugal(3))*dx*del_y(j+(xstart(2)-1))*dz/dt     
+                tsumz = tsumz+fac3*dx*del_y(xstart(2)-1)*dz/dt
              enddo
           enddo
           tunstxl(xstart(3)-1+k)=tsumx
