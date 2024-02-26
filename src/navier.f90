@@ -843,11 +843,11 @@ contains
     USE param, ONLY : ibirman_eos
     USE param, ONLY : xnu, prandtl
     USE param, ONLY : one
-    USE param, ONLY : iimplicit
+    USE param, ONLY : iimplicit, istret
     USE variables
 
     USE var, ONLY : ta1, tb1, tc1, td1, di1
-    USE var, ONLY : phi2, ta2, tb2, tc2, td2, te2, di2
+    USE var, ONLY : phi2, ta2, tb2, tc2, td2, te2, tf2, di2
     USE var, ONLY : phi3, ta3, tb3, tc3, td3, rho3, di3
     USE param, only : zero
     IMPLICIT NONE
@@ -858,6 +858,8 @@ contains
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
     REAL(mytype), INTENT(OUT), DIMENSION(zsize(1), zsize(2), zsize(3)) :: divu3
 
+    integer :: i, j, k
+   
     IF (ilmn.and.(.not.ibirman_eos)) THEN
        !!------------------------------------------------------------------------------
        !! X-pencil
@@ -901,6 +903,16 @@ contains
        tmp = iimplicit
        iimplicit = 0
        CALL deryy (tc2, ta2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1, zero)
+       if (istret /= 0) then
+          call dery (td2, ta2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
+          do k = 1,ysize(3)
+             do j = 1,ysize(2)
+                do i = 1,ysize(1)
+                   tc2(i,j,k) = tc2(i,j,k)*pp2y(j)-pp4y(j)*td2(i,j,k)
+                enddo
+             enddo
+          enddo
+       end if
        iimplicit = tmp
        IF (imultispecies) THEN
           tc2(:,:,:) = (xnu / prandtl) * tc2(:,:,:) / ta2(:,:,:)
@@ -919,6 +931,16 @@ contains
                 tmp = iimplicit
                 iimplicit = 0
                 CALL deryy (td2, phi2(:,:,:,is), di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1, zero)
+                if (istret /= 0) then
+                   call dery (tf2, phi2(:,:,:,is), di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
+                   do k = 1,ysize(3)
+                      do j = 1,ysize(2)
+                         do i = 1,ysize(1)
+                            td2(i,j,k) = td2(i,j,k)*pp2y(j)-pp4y(j)*tf2(i,j,k)
+                         enddo
+                      enddo
+                   enddo
+                end if
                 iimplicit = tmp
                 tc2(:,:,:) = tc2(:,:,:) + (xnu / sc(is)) * (te2(:,:,:) / mol_weight(is)) * td2(:,:,:)
              ENDIF
@@ -1041,13 +1063,13 @@ contains
 
     USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
     USE decomp_2d, ONLY : transpose_x_to_y, transpose_y_to_z, transpose_z_to_y, transpose_y_to_x
-    USE variables, ONLY : derxx, deryy, derzz
+    USE variables, ONLY : derxx, dery, deryy, derzz
     USE param, ONLY : nrhotime
     USE param, ONLY : xnu, prandtl
-    USE param, ONLY : iimplicit
+    USE param, ONLY : iimplicit, istret
 
     USE var, ONLY : td1, te1, di1, sx, sfxp, ssxp, swxp
-    USE var, ONLY : rho2, ta2, tb2, di2, sy, sfyp, ssyp, swyp
+    USE var, ONLY : rho2, ta2, tb2, tc2, di2, sy, sfyp, ssyp, swyp, ffyp, fsyp, fwyp, ppy, pp4y, pp2y
     USE var, ONLY : rho3, ta3, di3, sz, sfzp, sszp, swzp
     USE param, only : zero
     IMPLICIT NONE
@@ -1056,6 +1078,8 @@ contains
     REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: drhodt1_next
 
     REAL(mytype) :: invpe
+
+    integer :: i, j, k
 
     invpe = xnu / prandtl
 
@@ -1068,6 +1092,16 @@ contains
 
     iimplicit = -iimplicit
     CALL deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1, zero)
+    if (istret /= 0) then
+       call dery (tc2, rho2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
+       do k = 1,ysize(3)
+          do j = 1,ysize(2)
+             do i = 1,ysize(1)
+                ta2(i,j,k) = ta2(i,j,k)*pp2y(j)-pp4y(j)*tc2(i,j,k)
+             enddo
+          enddo
+       enddo
+    end if
     iimplicit = -iimplicit
     ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
     CALL transpose_y_to_x(ta2, te1)

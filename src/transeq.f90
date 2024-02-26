@@ -1181,10 +1181,11 @@ contains
     use param, only : ntime, nrhotime, ibirman_eos, zero
     use param, only : xnu, prandtl
     use param, only : iimplicit
+    use param, only : istret
     use variables
 
     use var, only : ta1, tb1, di1
-    use var, only : rho2, uy2, ta2, tb2, di2
+    use var, only : rho2, uy2, ta2, tb2, tc2, di2
     use var, only : rho3, uz3, ta3, di3
 
     implicit none
@@ -1197,6 +1198,8 @@ contains
 
     real(mytype) :: invpe
 
+    integer :: i, j, k
+    
     invpe = xnu / prandtl
 
     !! XXX All variables up to date - no need to transpose
@@ -1219,6 +1222,16 @@ contains
 
        iimplicit = -iimplicit
        call deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1, zero)
+       if (istret /= 0) then
+          call dery (tc2, rho2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
+          do k = 1,ysize(3)
+             do j = 1,ysize(2)
+                do i = 1,ysize(1)
+                   ta2(i,j,k) = ta2(i,j,k)*pp2y(j)-pp4y(j)*tc2(i,j,k)
+                enddo
+             enddo
+          enddo
+       end if
        iimplicit = -iimplicit
        ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
        call transpose_y_to_x(ta2, ta1)
