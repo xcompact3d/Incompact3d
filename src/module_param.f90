@@ -622,6 +622,6 @@ module ibm_param
   real(mytype) :: position_1(3),linearVelocity_1(3),orientation_1(4),angularVelocity_1(4)
   real(mytype) :: chord,thickness,omega
   integer :: inana ! Analytical BC as Input
-  integer :: imove
+  integer :: imove, nozdrift
 end module ibm_param
 !############################################################################

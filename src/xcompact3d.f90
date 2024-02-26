@@ -97,6 +97,9 @@ program xcompact3d
         grav_effy = grav_y*(rho_s-1.0)
         grav_effz = grav_z*(rho_s-1.0)
         linearForce=[drag-grav_effx,lift-grav_effy,lat-grav_effz]
+        if (nozdrift==1) then
+            linearForce(3)=zero
+        endif
         if (nrank==0) then 
             write(*,*) "Time =  ", t, ", Linear Force = ", linearForce
         endif
