@@ -617,7 +617,7 @@ end module simulation_stats
 !############################################################################
 module ibm_param
   use decomp_2d, only : mytype
-  real(mytype) :: cex,cey,cez,shx,shy,shz,oriw,orii,orij,orik,lvx,lvy,lvz,avx,avy,avz,ra,ubcx,ubcy,ubcz,rads,rho_s,ellip_m,c_air,cvl_scalar,grav
+  real(mytype) :: cex,cey,cez,shx,shy,shz,oriw,orii,orij,orik,lvx,lvy,lvz,avx,avy,avz,ra,ubcx,ubcy,ubcz,rads,rho_s,ellip_m,c_air,cvl_scalar,grav_y,grav_x,grav_z
   real(mytype) :: position(3),orientation(4),linearVelocity(3),angularVelocity(4),linearAcceleration(3),linearForce(3),torque(3),shape(3),inertia(3,3)
   real(mytype) :: position_1(3),linearVelocity_1(3),orientation_1(4),angularVelocity_1(4)
   real(mytype) :: chord,thickness,omega

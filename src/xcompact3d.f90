@@ -19,7 +19,7 @@ program xcompact3d
   use ellipsoid_utils, only: lin_step, ang_step, QuaternionNorm
   use forces, only : force, init_forces, iforces,update_forces, xld,xrd,yld,yud,zld,zrd
   implicit none
-  real(mytype)  :: dummy,drag,lift,lat,grav_eff
+  real(mytype)  :: dummy,drag,lift,lat,grav_effy,grav_effx,grav_effz
 
 
   call init_xcompact3d()
@@ -93,8 +93,10 @@ program xcompact3d
 
         !Add force calculation here
         call force(ux1,uy1,uz1,ep1,drag,lift,lat)
-        grav_eff = grav*(rho_s-1.0)
-        linearForce=[drag,lift-grav_eff,lat]
+        grav_effx = grav_x*(rho_s-1.0)
+        grav_effy = grav_y*(rho_s-1.0)
+        grav_effz = grav_z*(rho_s-1.0)
+        linearForce=[drag-grav_effx,lift-grav_effy,lat-grav_effz]
         if (nrank==0) then 
             write(*,*) "Time =  ", t, ", Linear Force = ", linearForce
         endif

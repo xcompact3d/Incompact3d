@@ -1021,7 +1021,7 @@ contains
           write(38,*) t,xDrag_mean,yLift_mean
           call flush(38)
        endif
-       if (mod(itime, icheckpoint).eq.0) then
+       if (mod(itime, ioutput).eq.0) then
           if (nrank .eq. 0) then
              write(filename,"('forces.dat',I7.7)") itime
              call system("cp forces.dat " //filename)
