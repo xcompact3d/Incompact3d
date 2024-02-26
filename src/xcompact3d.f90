@@ -100,9 +100,7 @@ program xcompact3d
         if (nozdrift==1) then
             linearForce(3)=zero
         endif
-        if (nrank==0) then 
-            write(*,*) "Time =  ", t, ", Linear Force = ", linearForce
-        endif
+        
         torque(:)=zero
 
       !   if (nrank==0) then
@@ -121,6 +119,7 @@ program xcompact3d
             write(*,*) "Orientation =      ", orientation_1
             write(*,*) "Linear velocity =  ", linearVelocity
             write(*,*) "Angular velocity = ", angularVelocity
+            write(*,*) "Linear Force = ", linearForce
 
          ! call QuaternionNorm(angularVelocity,dummy)
 
