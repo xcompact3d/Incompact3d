@@ -365,7 +365,7 @@ contains
 
   end subroutine restart_forces
 
-  subroutine force(ux1,uy1,uz1,ep1,xDrag_tot,yLift_tot,zLat_tot)
+  subroutine force(ux1,uy1,uz1,ep1,dra1,dra2,dra3)
 
     USE param
     USE variables
@@ -387,7 +387,7 @@ contains
 
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1, uy1, uz1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ep1
-    real(mytype), intent(out)                                       :: xDrag_tot,yLift_tot,zLat_tot
+    real(mytype), intent(out)                                       :: dra1,dra2,dra3
 
     real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: ppi2
     real(mytype), dimension(zsize(1),zsize(2),zsize(3)) :: ppi3
@@ -430,7 +430,7 @@ contains
 
     real(mytype), dimension(nz) :: drag1, drag2, drag11, drag22
     real(mytype), dimension(nz) :: drag3, drag4, drag33, drag44
-    real(mytype) :: mom1, mom2, mom3, tp1, tp2, tp3, dra1, dra2, dra3
+    real(mytype) :: mom1, mom2, mom3, tp1, tp2, tp3
 
    !  write(*,*) 'Inside FORCE'
 
@@ -558,7 +558,7 @@ contains
                 !sumy(k) = sumy(k)+dudt1*dx*dy
 
                !  tsumz = tsumz+(fac3-coriolis(3)-centrifugal(3))*dx*del_y(j+(xstart(2)-1))*dz/dt     
-                tsumz = tsumz+fac3*dx*del_y(xstart(2)-1)*dz/dt
+                tsumz = tsumz+fac3*dx*del_y(j+xstart(2)-1)*dz/dt
              enddo
           enddo
           tunstxl(xstart(3)-1+k)=tsumx
@@ -652,7 +652,7 @@ contains
 
                 fdix    = fdix -(xnu*(dudymid+dvdxmid)*dx*dz)
                 fdiy    = fdiy -two*xnu*dvdymid*dx*dz
-                fdiz = fdiz -(xnu*(dwdymid+dvdzmid)*dx*dz)
+                fdiz    = fdiz -(xnu*(dwdymid+dvdzmid)*dx*dz)
 
 
              enddo
@@ -684,6 +684,7 @@ contains
              do i=icvlf_lx(iv),icvrt_lx(iv)-1
                ii=xstart(1)+i-1
                xm=real(ii,mytype)*dx
+               ! write(*,*) 'xm = ', xm
                !momentum flux
                call crossProduct(angularVelocity,[xm,ym,zm]-position,rotationalComponent)
                uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(1) - rotationalComponent(1)
@@ -706,9 +707,9 @@ contains
                 dwdymid = half*(tf1(i,j,k)+tf1(i+1,j,k))
                 dvdzmid = half*(th1(i,j,k)+th1(i+1,j,k))
   
-                fdix = fdix +(xnu*(dudymid+dvdxmid)*dx*dz)
-                fdiy = fdiy +two*xnu*dvdymid*dx*dz
-                fdiz = fdiz +(xnu*(dwdymid+dvdzmid)*dx*dz)
+                fdix = fdix + (xnu*(dudymid+dvdxmid)*dx*dz)
+                fdiy = fdiy + two*xnu*dvdymid*dx*dz
+                fdiz = fdiz + (xnu*(dwdymid+dvdzmid)*dx*dz)
 
              enddo
              tconvxl(kk)=tconvxl(kk)+fcvx
@@ -743,19 +744,19 @@ contains
                 jj=ystart(2)+j-1
                 ym=real(jj,mytype)*dz
                 !momentum flux
-               call crossProduct(angularVelocity,[xm,ym,zm]-position,rotationalComponent)
-               uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(1) - rotationalComponent(1)
-               uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) - rotationalComponent(2)
-               uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) - rotationalComponent(3)
+                call crossProduct(angularVelocity,[xm,ym,zm]-position,rotationalComponent)
+                uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(1) - rotationalComponent(1)
+                uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) - rotationalComponent(2)
+                uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) - rotationalComponent(3)
 
 
-                fcvx= fcvx -uxmid*uxmid*del_y(j)*dz
-                fcvy= fcvy -uxmid*uymid*del_y(j)*dz
-                fcvz= fcvz -uxmid*uzmid*del_y(j)*dz
+                fcvx = fcvx -uxmid*uxmid*del_y(j)*dz
+                fcvy = fcvy -uxmid*uymid*del_y(j)*dz
+                fcvz = fcvz -uxmid*uzmid*del_y(j)*dz
 
 
                 !pressure
-                prmid=half*(ppi2(i,j,k)+ppi2(i,j+1,k))
+                prmid = half*(ppi2(i,j,k)+ppi2(i,j+1,k))
                 fprx = fprx +prmid*del_y(j)*dz
 
                 !viscous term
@@ -799,19 +800,19 @@ contains
                 jj=ystart(2)+j-1
                 ym=real(jj,mytype)*dy
                 !momentum flux
-               call crossProduct(angularVelocity,[xm,ym,zm]-position,rotationalComponent)
-               uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(1) - rotationalComponent(1)
-               uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) - rotationalComponent(2)
-               uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) - rotationalComponent(3)
+                call crossProduct(angularVelocity,[xm,ym,zm]-position,rotationalComponent)
+                uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(1) - rotationalComponent(1)
+                uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) - rotationalComponent(2)
+                uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) - rotationalComponent(3)
 
 
-                fcvx= fcvx +uxmid*uxmid*del_y(j)*dz
-                fcvy= fcvy +uxmid*uymid*del_y(j)*dz
-                fcvz= fcvz +uxmid*uzmid*del_y(j)*dz
+                fcvx = fcvx + uxmid*uxmid*del_y(j)*dz
+                fcvy = fcvy + uxmid*uymid*del_y(j)*dz
+                fcvz = fcvz + uxmid*uzmid*del_y(j)*dz
 
 
                 !pressure
-                prmid=half*(ppi2(i,j,k)+ppi2(i,j+1,k))
+                prmid = half*(ppi2(i,j,k)+ppi2(i,j+1,k))
                 fprx = fprx -prmid*del_y(j)*dz
 
                 !viscous term
@@ -821,9 +822,9 @@ contains
                 dwdxmid = half*(te2(i,j,k)+te2(i,j+1,k))
                 dudzmid = half*(tg2(i,j,k)+tg2(i,j+1,k))
 
-                fdix = fdix +two*xnu*dudxmid*del_y(j)*dz
-                fdiy = fdiy +xnu*(dvdxmid+dudymid)*del_y(j)*dz
-                fdiz = fdiz +xnu*(dwdxmid+dudzmid)*del_y(j)*dz
+                fdix = fdix + two*xnu*dudxmid*del_y(j)*dz
+                fdiy = fdiy + xnu*(dvdxmid+dudymid)*del_y(j)*dz
+                fdiz = fdiz + xnu*(dwdxmid+dudzmid)*del_y(j)*dz
 
              enddo
              tconvxl(kk)=tconvxl(kk)+fcvx
@@ -913,7 +914,7 @@ contains
          fdiz=zero
  !        do k=1,xsize(3)
          do j=jcvlw_lx(iv),jcvup_lx(iv)
-          kk = xstart(2)-1+j 
+         !  kk = xstart(2)-1+j 
           jj = xstart(2)-1+j
           ym=real(jj,mytype)*dy
            do i=icvlf_lx(iv),icvrt_lx(iv)-1
@@ -1007,9 +1008,9 @@ contains
        xDrag_mean = sum(xDrag(:))/real(nz,mytype)
        yLift_mean = sum(yLift(:))/real(nz,mytype)
 
-       xDrag_tot = sum(xDrag(:))
-       yLift_tot = sum(yLift(:))
-       zLat_tot  = sum(zLat(:))
+      !  xDrag_tot = sum(xDrag(:))
+      !  yLift_tot = sum(yLift(:))
+      !  zLat_tot  = sum(zLat(:))
 
        !     if ((itime==ifirst).or.(itime==0)) then
        !        if (nrank .eq. 0) then

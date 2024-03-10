@@ -1031,6 +1031,12 @@ subroutine cubic_spline(xa,ya,n,x,y)
    alpha(nc)= three*yprf - three*(aa(nc)-aa(nc-1))/hh(nc-1)
    !
    do i=2,nc-1
+      if (hh(i).lt.0.0004) then 
+       write(*,*) 'i = ', i, 'dividing by ', hh(i)
+      end if 
+      if (hh(i-1).lt.0.0004) then 
+         write(*,*) 'i = ', i, 'dividing by hh(i-1)=  ', hh(i)
+        end if 
       alpha(i)=(three/hh(i))*(aa(i+1)-aa(i))-(three/hh(i-1))*(aa(i)-aa(i-1))
    enddo
    ll(1)=two*hh(1)

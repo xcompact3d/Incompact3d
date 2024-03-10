@@ -20,9 +20,33 @@ program xcompact3d
   use forces, only : force, init_forces, iforces,update_forces, xld,xrd,yld,yud,zld,zrd
   implicit none
   real(mytype)  :: dummy,drag,lift,lat,grav_effy,grav_effx,grav_effz
+  integer :: iounit,ierr,i
+  real, dimension(100) :: x
 
 
   call init_xcompact3d()
+
+  iounit = 135
+  !Print forces out on ellip
+  if ((nrank==0).and.(force_csv.eq.1)) then 
+   open(unit=20, file='force_out.dat', status='replace',action='write',iostat=ierr)
+   if (ierr /= 0) then
+      print *, 'Error opening file.'
+      stop
+   end if
+   write(*,*) 'Outputting forces'
+  end if 
+
+  do i = 1,100
+   x(i) = i
+  enddo
+  open(unit=3, file='testcsv.dat', status='new',action='write',iostat=ierr)
+
+  do i = 1,100
+   write(3,*) x(i)
+  enddo
+
+  
 
   do itime=ifirst,ilast
      !t=itime*dt
@@ -100,6 +124,13 @@ program xcompact3d
         if (nozdrift==1) then
             linearForce(3)=zero
         endif
+
+        if ((nrank==0).and.(force_csv.eq.1)) then
+         open(unit=20, file='force_out.dat', action='write')
+         write(20, *) linearForce(1), linearForce(2), linearForce(3), '\n'
+         write(*,*) 'Writing forces', linearForce(1), linearForce(2), linearForce(3)
+         close(20)
+        endif 
         
         torque(:)=zero
 
@@ -142,6 +173,8 @@ program xcompact3d
      call postprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
 
   enddo !! End time loop
+
+  close(iounit)
 
   call finalise_xcompact3d()
 
