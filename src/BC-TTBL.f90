@@ -86,51 +86,76 @@ contains
       implicit none
       real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux, uy, uz
       real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi
-
+      real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ux_2, uy_2, uz_2
       integer :: i, k
+      real(mytype) :: xloc
 
-      ! Set BCs at initialisation
-      if (itime == ifirst) then
+      call transpose_x_to_y(ux,ux_2)
+      call transpose_x_to_y(uy,uy_2)
+      call transpose_x_to_y(uz,uz_2)
 
+!      Set BCs at initialisation
+!      if (itime == ifirst) then
+!      end if
          ! Bottom boundary
          if (ncly1 == 2) then
             do k = 1, xsize(3)
                do i = 1, xsize(1)
+                  xloc=real(i+xstart(1)-2,mytype)*dx
                   byx1(i, k) = zero
                   byy1(i, k) = zero
                   byz1(i, k) = zero
+                  if (Blowing ==1 .and.  (xloc >= Xst_Blowing) .and. (xloc <= Xen_Blowing)) then 
+                     byy1(i, k) = A_Blowing
+                  end if
                end do
             end do
             ! Semi-implicit condition
             do k = 1, ysize(3)
                do i = 1, ysize(1)
+                  xloc=real(i+ystart(1)-2,mytype)*dx
                   byx1_2(i, k) = zero
                   byy1_2(i, k) = zero
                   byz1_2(i, k) = zero
+                  if (Blowing ==1 .and.  (xloc >= Xst_Blowing) .and. (xloc <= Xen_Blowing)) then 
+                     byy1_2(i, k) = A_Blowing
+                  end if
                end do
             end do
          end if
 
-         ! Top boundary
+      ! Top boundary
          if (nclyn == 2) then
             do k = 1, xsize(3)
                do i = 1, xsize(1)
-                  byxn(i, k) = one
-                  byyn(i, k) = zero
-                  byzn(i, k) = zero
+                  if (FreeStream == 0) then
+                     byxn(i, k) = one
+                     byyn(i, k) = zero
+                     byzn(i, k) = zero
+                  else
+                     byxn(i, k) = one
+                     byyn(i, k) = uy(i, xsize(2) - 1, k)
+                     byzn(i, k) = uz(i, xsize(2) - 1, k)
+                  end if   
                end do
             end do
             ! Semi-implicit condition
             do k = 1, ysize(3)
                do i = 1, ysize(1)
-                  byxn_2(i, k) = one
-                  byyn_2(i, k) = zero
-                  byzn_2(i, k) = zero
+                  if (FreeStream == 0) then
+                     byxn_2(i, k) = one
+                     byyn_2(i, k) = zero
+                     byzn_2(i, k) = zero
+                  else
+                     byxn_2(i, k) = one
+                     byyn_2(i, k) = uy_2(i, ysize(2) - 1, k)
+                     byzn_2(i, k) = uz_2(i, ysize(2) - 1, k)
+                  end if
                end do
             end do
          end if
          phi = zero
-      end if
+      !end if
    end subroutine boundary_conditions_ttbl
    !############################################################################
    !############################################################################
@@ -154,7 +179,8 @@ contains
             if (jtheta_dot ==0) then
                read (67) thetad, ttda, ttdb, ttdc
             !==> Andy method
-            else if ((jtheta_dot ==1) .and. (ilesmod /=0) )then
+            !else if ((jtheta_dot ==1) .and. (ilesmod /=0) )then
+            else if (jtheta_dot ==1)then
                read (67) thetad, theta_a, theta_b, theta_c , ZTn
             end if 
             close (67)
@@ -187,7 +213,8 @@ contains
          if (jtheta_dot ==0) then
             write (67) thetad, ttda, ttdb, ttdc
          !==> Andy method
-         else if ((jtheta_dot ==1) .and. (ilesmod /=0) )then
+         !else if ((jtheta_dot ==1) .and. (ilesmod /=0) )then
+         else if (jtheta_dot ==1)then
                write (67) thetad, theta_a, theta_b, theta_c, ZTn
          end if 
          close (67)
@@ -217,6 +244,9 @@ contains
          call MPI_ALLREDUCE(MPI_IN_PLACE, tau_wall, 1, real_type, MPI_SUM, MPI_COMM_WORLD, code)
          tau_wall = tau_wall / real(nx * nz, mytype)
          ufric = sqrt(tau_wall * xnu)
+         
+         !Check the flow rate (what is coming in the domain is getting out)
+         call tbl_flrt_Check(ux1)
 
          ! Write out
          if (nrank == 0) then
@@ -224,6 +254,7 @@ contains
             write (6, "(' tau_wall = ',F14.12,'    u_tau = ',F14.12,'    cf = ',F14.12)") tau_wall, ufric, two * ufric**2
             write (6, "(' Re_theta = ',F16.8,'    Re_delta = ',F16.8)") one*theta*re, one*delta*re !(xnu=one/re)
             write (6, "(' dx+ = ',F12.8,'    dz+ = ',F12.8,'    dy+(min,max) = (',F12.8,',',F12.8,')')") dx * ufric * re, dz * ufric * re, dyp(1) * ufric * re, dyp(ny) * ufric * re
+            write (6, "(' Y_size1 = ',I8,' Y_size2 = ',I8,' Y_size3 = ',I8)") ysize(1), ysize(2), ysize(3)
             open (unit=67, file='out/ttbl.dat', status='unknown', form='formatted', action='write', position='append')
             if (itime == ilist) write (67, "(11A20)") 't', 'thetad', 'theta', 'delta', 'tau_wall', 'u_tau', 'cf', 'dx+', 'dz+', 'dy+_min', 'dy+_max'
                 write (67, "(11E20.12)") t, thetad, theta, delta, tau_wall, ufric, two * ufric**2, dx * ufric * re, dz * ufric * re, dyp(1) * ufric * re, dyp(ny) * ufric * re
@@ -449,11 +480,11 @@ contains
          if (nrank == 0) write (*, "(' Time computing statistics = ',F18.12,'(s)')") MPI_WTIME() - tstart
 
          ! Write times to disk
-	 if (nrank == 0) then
-            open (unit=67, file='out/times.dat', status='unknown', form='formatted', action='write', position='append')
-            if (itime == ceiling(real(initstat, mytype) / real(ioutput, mytype)) * ioutput + ilist) write (67, "(A12,A15,A20)") 'itime', 't' , 'Stat File #'
-            write (67, "(I12,E20.12,I9)") itime, t, (itime-initstat)/ioutput; close (67)
-	 end if
+         if (nrank == 0) then
+                  open (unit=67, file='out/times.dat', status='unknown', form='formatted', action='write', position='append')
+                  if (itime == ceiling(real(initstat, mytype) / real(ioutput, mytype)) * ioutput + ilist) write (67, "(A12,A15,A20)") 'itime', 't' , 'Stat File #'
+                  write (67, "(I12,E20.12,I9)") itime, t, (itime-initstat)/ilist; close (67)
+         end if
 
          ! Write to disk
          if (nrank == 0 .and. mod(itime, ioutput) == 0) then
@@ -596,11 +627,11 @@ contains
       real(mytype), intent(out), dimension(ysize(2)) :: profile
       real(mytype), dimension(ysize(2)) :: sxz
       integer :: j, code
-      do j = 1, ysize(2)
-         sxz(j) = sum(field(:, j, :))
-      end do
-      call MPI_ALLREDUCE(MPI_IN_PLACE, sxz, ny, real_type, MPI_SUM, MPI_COMM_WORLD, code)
-      profile = sxz / real(nx * nz, mytype)
+         do j = 1, ysize(2)
+            sxz(j) = sum(field(:, j, :))
+         end do
+         call MPI_ALLREDUCE(MPI_IN_PLACE, sxz, ny, real_type, MPI_SUM, MPI_COMM_WORLD, code)
+         profile = sxz / real(nx * nz, mytype)
    end subroutine horizontal_avrge
    !############################################################################
    !############################################################################
@@ -1116,16 +1147,16 @@ contains
          GT = 2.0 * int_GT - xnu * dudy2m(1)
          
          ! For DNS simulation
-         if (ilesmod == 0) then  
-            FT = (-K_theta * ET + GT)/theta
-         else ! For LES simulation
+         !if (ilesmod == 0) then  
+         !   FT = (-K_theta * ET + GT)/theta
+         !else ! For LES simulation
             theta_a = ET; 
             ZTnp1 = ZTn + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
             FT = (-2.0*K_theta * ET + GT - ((K_theta ** 2) * ZTnp1))/theta
             ! Saving for next time step
             ZTn = ZTnp1
             theta_c = theta_b; theta_b = theta_a
-         end if
+         !end if
       
       ! G(t) Model based on (1: Displacement Thickness)
       else if (jthickness == 1) then  
@@ -1134,16 +1165,16 @@ contains
          GT = xnu * dudy2m(1)
 
          ! For DNS simulation
-         if (ilesmod == 0) then  
-            FT = (-K_theta * ET + GT)/Disp
-         else ! For LES simulation
+         !if (ilesmod == 0) then  
+         !   FT = (-K_theta * ET + GT)/Disp
+         !else ! For LES simulation
             theta_a = ET; 
             ZTnp1 = ZTn + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
             FT = (-2.0*K_theta * ET + GT - ((K_theta ** 2) * ZTnp1))/Disp
             ! Saving for next time step
             ZTn = ZTnp1
             theta_c = theta_b; theta_b = theta_a
-         end if
+         !end if
 
       end if
 
@@ -1159,7 +1190,54 @@ contains
       end if
 
    end function
-   !############################################################################
-   !############################################################################
-   
+
+!############################################################################
+!############################################################################
+!********************************************************************
+!*** Added by Pasha
+   subroutine tbl_flrt_Check (ux1)
+    
+        USE decomp_2d
+        USE decomp_2d_poisson
+        USE variables
+        USE param
+        USE MPI
+    
+        implicit none
+        real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1
+        real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux2
+    
+        integer :: j,i,k,code
+        real(mytype) :: can,ut1,ut2,utt1,utt2
+    
+        call transpose_x_to_y(ux1,ux2)
+        ! Flow rate at the inlet
+        ut1=zero;utt1=zero
+        if (ystart(1)==1) then !! CPUs at the inlet
+          do k=1,ysize(3)
+            do j=1,ysize(2)-1
+              ut1=ut1+(yp(j+1)-yp(j))*(ux2(1,j+1,k)-half*(ux2(1,j+1,k)-ux2(1,j,k)))
+            enddo
+          enddo
+        endif
+        call MPI_ALLREDUCE(ut1,utt1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        utt1=utt1/real(nz,mytype) !! Volume flow rate per unit spanwise dist
+        ! Flow rate at the outlet
+        ut2=zero;utt2=zero
+        if (yend(1)==nx) then !! CPUs at the outlet
+          do k=1,ysize(3)
+            do j=1,ysize(2)-1
+              ut2=ut2+(yp(j+1)-yp(j))*(ux2(ysize(1),j+1,k)-half*(ux2(ysize(1),j+1,k)-ux2(ysize(1),j,k)))
+            enddo
+          enddo
+        endif
+    
+        call MPI_ALLREDUCE(ut2,utt2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        utt2=utt2/real(nz,mytype) !! Volume flow rate per unit spanwise dist
+        if ((nrank==0).and.(mod(itime,ilist)==0)) then
+          write(*,"(' Mass balance: L-BC, R-BC, diff :',2f12.6,f12.9)") utt1,utt2,abs(utt2-utt1)
+        endif
+
+      end subroutine tbl_flrt_Check
+
 end module ttbl

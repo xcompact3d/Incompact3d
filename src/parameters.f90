@@ -46,7 +46,7 @@ subroutine parameter(input_i3d)
        ivisu, ipost, &
        gravx, gravy, gravz, &
        cpg, idir_stream, &
-       ifilter, C_filter, iturbine
+       ifilter, C_filter, iturbine,FreeStream
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, iimplicit, &
        nu0nu, cnu, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu, ilist, iprocessing, &
@@ -59,6 +59,7 @@ subroutine parameter(input_i3d)
        alpha_sc, beta_sc, g_sc, Tref
   NAMELIST /LESModel/ jles, smagcst, smagwalldamp, nSmag, walecst, maxdsmagcst, iconserv
   NAMELIST /ThetaDotModel/ jtheta_dot,jthickness,K_theta,H_12
+  NAMELIST /BlowingModel/ Blowing,A_Blowing,Thick_Control,Xst_Blowing,Xen_Blowing  
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
   NAMELIST /ibmstuff/ cex,cey,cez,ra,nobjmax,nraf,nvol,iforces, npif, izap, ianal, imove, thickness, chord, omega ,ubcx,ubcy,ubcz,rads, c_air
   NAMELIST /ForceCVs/ xld, xrd, yld, yud!, zld, zrd
@@ -69,8 +70,8 @@ subroutine parameter(input_i3d)
        imassconserve, ibuoyancy, iPressureGradient, iCoriolis, CoriolisFreq, &
        istrat, idamping, iheight, TempRate, TempFlux, itherm, gravv, UG, T_wall, T_top, ishiftedper, iconcprec, pdl, dsampling 
   NAMELIST /CASE/ pfront
-  NAMELIST/ALMParam/iturboutput,NTurbines,TurbinesPath,NActuatorlines,ActuatorlinesPath,eps_factor,rho_air
-  NAMELIST/ADMParam/Ndiscs,ADMcoords,iturboutput,rho_air,T_relax
+  NAMELIST /ALMParam/ iturboutput,NTurbines,TurbinesPath,NActuatorlines,ActuatorlinesPath,eps_factor,rho_air
+  NAMELIST /ADMParam/ Ndiscs,ADMcoords,iturboutput,rho_air,T_relax
 #ifdef DEBG
   if (nrank == 0) write(*,*) '# parameter start'
 #endif
@@ -211,6 +212,9 @@ subroutine parameter(input_i3d)
   !!==> Pasha
   if(itype .eq. 14) then
      read(10, nml=ThetaDotModel); rewind(10)
+     read(10, nml=BlowingModel); rewind(10)
+     Xst_Blowing = 0.5*(xlx-Thick_Control) ! Start Control Region
+     Xen_Blowing = 0.5*(xlx+Thick_Control) ! End Control Region
   end if
 
   if (itype.eq.itype_tbl) then
@@ -433,9 +437,9 @@ subroutine parameter(input_i3d)
        else
        endif
      endif
-  
+ 
      write(*,*) '==========================================================='
-      if (jtheta_dot==0) then
+      if (jtheta_dot==0) then 
          write(*,"(' Theta dot Model        : ',A10)") "Biao"
       else if (jtheta_dot==1) then
          write(*,"(' Theta dot Model        : ',A10)") "Andy"
@@ -446,6 +450,17 @@ subroutine parameter(input_i3d)
             write(*,"(' H_12 for scaling       : ',F12.6)") H_12 
          end if
          write(*,"(' K coefficient => e(Th) : ',F12.6)") K_theta 
+      endif
+
+      write(*,*) '==========================================================='
+      if (Blowing==0) then 
+         write(*,"(' Blowing                 : ',A10)") "Off"
+      elseif (Blowing==1) then
+         write(*,"(' Blowing                 : ',A10)") "On"
+         write(*,"(' Blowing Amplitude       : ',F12.6)") A_Blowing
+         write(*,"(' Control Region Thickness: ',F12.6)") Thick_Control
+         write(*,"(' Blowing Region Start    : ',F12.6)") Xst_Blowing
+         write(*,"(' Blowing Region End      : ',F12.6)") Xen_Blowing
       endif
 
      write(*,*) '==========================================================='
@@ -523,6 +538,7 @@ subroutine parameter(input_i3d)
      write(*,"(' nclx1, nclxn           : ',I15,',',I1 )") nclx1,nclxn
      write(*,"(' ncly1, nclyn           : ',I15,',',I1 )") ncly1,nclyn
      write(*,"(' nclz1, nclzn           : ',I15,',',I1 )") nclz1,nclzn
+     write(*,"(' FreeStream             : ',I15 )") FreeStream
      write(*,*) '==========================================================='
      if ((iscalar==1).or.(ilmn)) then
        write(*,"(' Boundary condition scalar field: ')")

@@ -266,7 +266,7 @@ module param
 
   use decomp_2d, only : mytype
 
-  integer :: nclx1,nclxn,ncly1,nclyn,nclz1,nclzn
+  integer :: nclx1,nclxn,ncly1,nclyn,nclz1,nclzn,FreeStream
   integer :: nclxS1,nclxSn,nclyS1,nclySn,nclzS1,nclzSn
 
   !logical variable for boundary condition that is true in periodic case
@@ -347,6 +347,10 @@ module param
   !Theta Dot Model
   integer :: jtheta_dot,jthickness
   real(mytype) :: K_theta, H_12
+
+  !Blowing Model
+  integer :: Blowing
+  real(mytype) :: A_Blowing,Thick_Control,Xst_Blowing,Xen_Blowing
 
   !! Gravity field (vector components)
   real(mytype) :: gravx, gravy, gravz

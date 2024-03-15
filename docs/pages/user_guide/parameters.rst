@@ -85,7 +85,7 @@ You can modify the ``BC-<flow-configuration>.f90`` file to change the inlet and/
 Please note that we will eventually remove all explicit LES models from the code as our ILES approach is cheaper with the same quality of results, if not better. 
 See *Dairay, T., Lamballais, E., Laizet, S., & Vassilicos, J. C. (2017)*, **Numerical dissipation vs. subgrid-scale modelling for large eddy simulation**, *Journal of Computational Physics, 337, 252-274* and *Mahfoze, O. A., & Laizet, S. (2021)*, **Non-explicit large eddy simulations of turbulent channel flows from Reτ= 180 up to Reτ= 5,200**, *Computers & Fluids, 228, 105019*.
 
-* ``nclx1``, ``nclxn``, ``ncly1``, ``nclyn``, ``nclz1`` & ``nclzn`` define the velocity's boundary condition:
+* ``nclx1``, ``nclxn``, ``ncly1``, ``nclyn``, ``nclz1`` & ``nclzn`` define the velocity's boundary condition: 
 
     - 0 - Periodic boundary conditions;
     - 1 - Free-slip boundary conditions, with two options depending on the velocity components: symmetry or anti-symmetry via the parameter ``npaire``. Basically, a free-slip periodic boundary condition in the vertical direction corresponds to u=w=constant (similar to a symmetry boundary condition for which the gradient of u and w in the vertical direction is equal to zero), and to v=0 (similar to an anti-symmetry boundary condition);
@@ -273,3 +273,7 @@ Ndiscs,ADMcoords,C_T,aind,iturboutput,rho_air
 ThetaDotModel
 --------
 jtheta_dot ,jthickness , K_theta, H_12
+
+BlowingModel
+--------
+Blowing,A_Blowing,Thick_Control,Xst_Blowing,Xen_Blowing
