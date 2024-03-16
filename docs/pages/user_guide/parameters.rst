@@ -276,4 +276,4 @@ jtheta_dot ,jthickness , K_theta, H_12
 
 BlowingModel
 --------
-Blowing,A_Blowing,Thick_Control,Xst_Blowing,Xen_Blowing
+Blowing,A_Blowing,Xst_Blowing,Xen_Blowing

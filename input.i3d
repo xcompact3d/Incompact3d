@@ -117,7 +117,8 @@ H_12       = 2.4144         ! The ratio of displacement thickness to momentum th
 !================
 Blowing = 1                 ! Blowing (0: Off, 1: On)
 A_Blowing = 0.01            ! Blowing Power
-Thick_Control = 5.0         ! Control Region Thickness
+Xst_Blowing = 17.5          ! Start Control Region
+Xen_Blowing = 22.5          ! End Control Region
 
 /End
 

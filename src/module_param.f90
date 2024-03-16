@@ -350,7 +350,7 @@ module param
 
   !Blowing Model
   integer :: Blowing
-  real(mytype) :: A_Blowing,Thick_Control,Xst_Blowing,Xen_Blowing
+  real(mytype) :: A_Blowing,Xst_Blowing,Xen_Blowing
 
   !! Gravity field (vector components)
   real(mytype) :: gravx, gravy, gravz
