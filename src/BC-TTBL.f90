@@ -106,7 +106,7 @@ contains
                   byy1(i, k) = zero
                   byz1(i, k) = zero
                   if (Blowing ==1 .and.  (xloc >= Xst_Blowing) .and. (xloc <= Xen_Blowing)) then 
-                     byy1(i, k) = A_Blowing
+                     byy1(i, k) = smoothening_function(xloc,Xst_Blowing,Xen_Blowing,Range_Smooth,A_Blowing) !A_Blowing
                   end if
                end do
             end do
@@ -118,7 +118,7 @@ contains
                   byy1_2(i, k) = zero
                   byz1_2(i, k) = zero
                   if (Blowing ==1 .and.  (xloc >= Xst_Blowing) .and. (xloc <= Xen_Blowing)) then 
-                     byy1_2(i, k) = A_Blowing
+                     byy1_2(i, k) = smoothening_function(xloc,Xst_Blowing,Xen_Blowing,Range_Smooth,A_Blowing) !A_Blowing
                   end if
                end do
             end do
@@ -157,6 +157,19 @@ contains
          phi = zero
       !end if
    end subroutine boundary_conditions_ttbl
+   function smoothening_function(x, start_transition, end_transition, transition_width, constant_value) result(output)
+      real(mytype), intent(in) :: x, start_transition, end_transition, transition_width, constant_value
+      real :: output
+      
+      ! Compute the transition regions using the tanh function
+      real :: transition_start, transition_end
+      transition_start = 0.5 * (1.0 + tanh((x - start_transition) / transition_width))
+      transition_end = 0.5 * (1.0 + tanh((end_transition - x) / transition_width))
+      
+      ! Combine the transition regions and constant value
+      output = transition_start * transition_end * constant_value
+      
+  end function smoothening_function
    !############################################################################
    !############################################################################
    subroutine momentum_forcing_ttbl(dux1, duy1, duz1, ux1, uy1, uz1, phi1)
@@ -1146,35 +1159,25 @@ contains
          int_GT = sum((dudy2m*(xnu * dudy2m - uxuy2pm))*ypw)
          GT = 2.0 * int_GT - xnu * dudy2m(1)
          
-         ! For DNS simulation
-         !if (ilesmod == 0) then  
-         !   FT = (-K_theta * ET + GT)/theta
-         !else ! For LES simulation
-            theta_a = ET; 
-            ZTnp1 = ZTn + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
-            FT = (-2.0*K_theta * ET + GT - ((K_theta ** 2) * ZTnp1))/theta
-            ! Saving for next time step
-            ZTn = ZTnp1
-            theta_c = theta_b; theta_b = theta_a
-         !end if
-      
+         theta_a = ET; 
+         ZTnp1 = ZTn + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
+         FT = (-2.0*K_theta * ET + GT - ((K_theta ** 2) * ZTnp1))/theta
+         ! Saving for next time step
+         ZTn = ZTnp1
+         theta_c = theta_b; theta_b = theta_a
+   
       ! G(t) Model based on (1: Displacement Thickness)
       else if (jthickness == 1) then  
          Disp  = sum((one - ux2m) * ypw)
          ET = one - Disp
          GT = xnu * dudy2m(1)
 
-         ! For DNS simulation
-         !if (ilesmod == 0) then  
-         !   FT = (-K_theta * ET + GT)/Disp
-         !else ! For LES simulation
-            theta_a = ET; 
-            ZTnp1 = ZTn + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
-            FT = (-2.0*K_theta * ET + GT - ((K_theta ** 2) * ZTnp1))/Disp
-            ! Saving for next time step
-            ZTn = ZTnp1
-            theta_c = theta_b; theta_b = theta_a
-         !end if
+         theta_a = ET; 
+         ZTnp1 = ZTn + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
+         FT = (-2.0*K_theta * ET + GT - ((K_theta ** 2) * ZTnp1))/Disp
+         ! Saving for next time step
+         ZTn = ZTnp1
+         theta_c = theta_b; theta_b = theta_a
 
       end if
 

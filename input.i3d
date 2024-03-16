@@ -119,6 +119,7 @@ Blowing = 1                 ! Blowing (0: Off, 1: On)
 A_Blowing = 0.01            ! Blowing Power
 Xst_Blowing = 17.5          ! Start Control Region
 Xen_Blowing = 22.5          ! End Control Region
+Range_Smooth = 0.5          ! Adjust this value to control the smoothness of the transition
 
 /End
 

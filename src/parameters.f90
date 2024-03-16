@@ -59,7 +59,7 @@ subroutine parameter(input_i3d)
        alpha_sc, beta_sc, g_sc, Tref
   NAMELIST /LESModel/ jles, smagcst, smagwalldamp, nSmag, walecst, maxdsmagcst, iconserv
   NAMELIST /ThetaDotModel/ jtheta_dot,jthickness,K_theta,H_12
-  NAMELIST /BlowingModel/ Blowing,A_Blowing,Xst_Blowing,Xen_Blowing  
+  NAMELIST /BlowingModel/ Blowing,A_Blowing,Xst_Blowing,Xen_Blowing,Range_Smooth  
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
   NAMELIST /ibmstuff/ cex,cey,cez,ra,nobjmax,nraf,nvol,iforces, npif, izap, ianal, imove, thickness, chord, omega ,ubcx,ubcy,ubcz,rads, c_air
   NAMELIST /ForceCVs/ xld, xrd, yld, yud!, zld, zrd
@@ -459,6 +459,7 @@ subroutine parameter(input_i3d)
          write(*,"(' Blowing Region Start    : ',F12.6)") Xst_Blowing
          write(*,"(' Blowing Region End      : ',F12.6)") Xen_Blowing
          write(*,"(' Control Region Thickness: ',F12.6)") Xen_Blowing-Xst_Blowing
+         write(*,"(' Smoothening Range       : ',F12.6)") Range_Smooth
       endif
 
      write(*,*) '==========================================================='
