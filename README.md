@@ -53,12 +53,12 @@ from the small turbulent scales that are not resolved.
 
 The current V5 release of the code is using only CMake for building and installing. Indeed, the 2DECOMP&FFT 
 library is now distributed independently and can be downloaded from 
-[http2s://github.com/2decomp-fft/2decomp-fft](this repository). 
+[this repository](http2s://github.com/2decomp-fft/2decomp-fft). 
 Please have a look at [INSTALL.md](INSTALL.md) for the instructions on how to download, build and install 
 the code.
 If you want to keep using the previous version V4.1 of the code with Make for the buding system and V1.4 for 
-2DECOMP&FFT you can find the archived sources at this 
-[https://github.com/xcompact3d/Incompact3d/releases/tag/V4.1](page) or alternatevely
+2DECOMP&FFT you can find the archived sources at this  
+[page](https://github.com/xcompact3d/Incompact3d/releases/tag/V4.1) or alternatevely
 ```
 $ git clone --branch V4.1 git@github.com:xcompact3d/Incompact3d.git 
 ```
