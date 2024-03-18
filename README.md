@@ -57,8 +57,7 @@ Moreover, the 2DECOMP&FFT library is now distributed independently and can be do
 Please have a look at [INSTALL.md](INSTALL.md) for the instructions on how to download, build and install 
 the code.
 If you want to keep using the previous version V4.1 of the code with Make for the buding system and V1.4 for 
-2DECOMP&FFT you can find the archived sources at this  
-[page](https://github.com/xcompact3d/Incompact3d/releases/tag/V4.1) or alternatevely
+2DECOMP&FFT you can find the archived sources at this  [page](https://github.com/xcompact3d/Incompact3d/releases/tag/V4.1) or alternatevely
 ```
 $ git clone --branch V4.1 git@github.com:xcompact3d/Incompact3d.git 
 ```
