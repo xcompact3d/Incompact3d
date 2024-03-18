@@ -58,7 +58,7 @@ cmake --build $path_to_build_directory -DBUILD_TESTING_FULL=ON
 or by using `ccmake.
 `
 The installation directory will cointain:
-* The *bin* directory with two execulables: **xcompaxt3d** for the main execution of the code 
+* The *bin* directory with two execulables: **xcompact3d** for the main execution of the code 
 * The *example* directory with few example of input *.i3d* files for **Xcompact3d**
 * The *lib* directory with the archive for the **decomp2d** library
 * The directories *Testing* and *RunTests* with the logs of CTest and the results respectively. 
@@ -70,11 +70,11 @@ ctest --test-dir $path_to_build_directory
 ```
 15 tests are available:
 * Taylor Green Vortex (TGV)
-* Atmosferic Boundary layer (ABL) in neutral conditions (new set-up)
-* Atmosferic Boundary layer (ABL) in neutral conditions (old set-up)
-* Atmosferic Boundary layer (ABL) in convective conditions (old set-up)
-* Atmosferic Boundary layer (ABL) in stable conditions (old set-up)
-* Cavity
+* Atmospheric Boundary layer (ABL) in neutral conditions (new set-up)
+* Atmospheric Boundary layer (ABL) in neutral conditions (old set-up)
+* Atmospheric Boundary layer (ABL) in convective conditions (old set-up)
+* Atmospheric Boundary layer (ABL) in stable conditions (old set-up)
+* Differentially heated cavity
 * Turbulent Channel Flow with X as streamwise direction
 * Turbulent Channel Flow with Z as streamwise direction
 * Flow around a circular cylinder
