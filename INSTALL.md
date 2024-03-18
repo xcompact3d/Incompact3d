@@ -1,10 +1,7 @@
-XCompact3d installation documentation
+Xcompact3d installation documentation
 =====================================
 
 ## Source Download and Compilation
-
-Please have a look at [INSTALL.md](INSTALL.md) for the instructions on how to download, build and install 
-the code. 
 
 Xcompact3d sources can be acquired by cloning the git repository: 
 
@@ -17,10 +14,12 @@ If you are behind a firewall, you may need to use the `https` protocol instead o
 Be sure to also configure your system to use the appropriate proxy settings, 
 e.g. by setting the `https_proxy` and `http_proxy` variables.
 
-**Note:** The compiling process
+### The compiling process
+
 The build system for Xcompact3d is based on CMake. 
 It is good practice to directly point to the 
-MPI Fortran wrapper that you would like to use to guarantee consistency between Fortran compiler and MPI. 
+MPI Fortran wrapper that you would like to use to guarantee consistency 
+between Fortran compiler and MPI. 
 This can be done by setting the default Fortran environmental variable 
 ```
 export FC=my_mpif90
@@ -33,8 +32,10 @@ for example
 ```
 cmake -S . -B build  
 ```
-By defult the build system will also download 2DECOMP&FFT and perform the build install using the
-Generic FFT backend. 
+By defult the build system will also download 2DECOMP&FFT 
+and perform the build install using the
+Generic FFT backend. Version 2.0.3 is the default for Xcompact3d building
+and all tests are performed against this specific version.
 If the directory does not exist it will be generated and it will contain the configuration files.
 The configuration can be further
 edited by using the `ccmake` utility as
@@ -67,7 +68,7 @@ To test your installation you can also type in the terminal from your *build* di
 ```
 ctest --test-dir $path_to_build_directory 
 ```
-Four tests are performed:
+15 tests are available:
 * Taylor Green Vortex (TGV)
 * Atmosferic Boundary layer (ABL) in neutral conditions (new set-up)
 * Atmosferic Boundary layer (ABL) in neutral conditions (old set-up)
@@ -92,8 +93,14 @@ $ /path/to/build/Testing/Temporary/
 ```
 
 ### Build with an already present 2DECOMP&FFT
-If different options from the defualt such as a different backend for the FFT rather than the generic or 
-IO with ADIOS2 are necessary, 2DECOMP&FFT needs to be pre-installed as described [here](https://github.com/2decomp-fft/2decomp-fft/blob/dev/INSTALL.md).
+If different options from the default 
+(i.e. Generic FFT backend and double precision) are necessary, 
+2DECOMP&FFT needs to be pre-installed as described [here](https://github.com/2decomp-fft/2decomp-fft/blob/dev/INSTALL.md).
+Alternative available options are: 
+* FFTW or MKL for the FFT backend engine;
+* ADIOS2 instead of MPI-IO for the IO operations;
+* SINGLE precision for the build.
+
 2DECOMP&FFT installation provides CMake configuration file that can be used to find the installation directory. 
 To allow the `find_package` of CMake to work the following variable needs to be set as
 ```

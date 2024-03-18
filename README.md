@@ -51,59 +51,18 @@ from the small turbulent scales that are not resolved.
 
 ## Source Download and Compilation
 
+The current V5 release of the code is using only CMake for building and installing. Indeed, the 2DECOMP&FFT 
+library is now distributed independently and can be downloaded from 
+[http2s://github.com/2decomp-fft/2decomp-fft](this repository). 
 Please have a look at [INSTALL.md](INSTALL.md) for the instructions on how to download, build and install 
-the code. 
+the code.
+If you want to keep using the previous version V4.1 of the code with Make for the buding system and V1.4 for 
+2DECOMP&FFT you can find the archived sources at this 
+[https://github.com/xcompact3d/Incompact3d/releases/tag/V4.1](page) or alternatevely
+```
+$ git clone --branch V4.1 git@github.com:xcompact3d/Incompact3d.git 
+```
 
-Xcompact3d sources can be acquired by cloning the git repository: 
-
-   git clone https://github.com/xcompact3d/Incompact3d
-
-If you are behind a firewall, you may need to use the `https` protocol instead of the `git` protocol:
-
-   git config --global url."https://".insteadOf git@
-
-Be sure to also configure your system to use the appropriate proxy settings, 
-e.g. by setting the `https_proxy` and `http_proxy` variables.
-
-
-**Note:** The compiling process
-The build system for Xcompact3d is based on CMake. 
-It is good practice to directly point to the 
-MPI Fortran wrapper that you would like to use to guarantee consistency between Fortran compiler and MPI. 
-This can be done by setting the default Fortran environmental variable 
-```
-export FC=my_mpif90
-```
-To generate the build system run 
-```
-cmake -S $path_to_sources -B $path_to_build_directory -DOPTION1 -DOPTION2 ... 
-```
-for example 
-```
-cmake -S . -B build  
-```
-By defult the build system will also download 2DECOMP&FFT and perform the build install using the
-Generic FFT backend. 
-If the directory does not exist it will be generated and it will contain the configuration files.
-The configuration can be further
-edited by using the `ccmake` utility as
-```
-ccmake $path_to_build_directory
-```
-To compile the sources 
-```
-cmake --build $path_to_build_directory -j <nproc> 
-```
-By defult the Taylor-Green-Vortex case is also activated and can performed with
-```
-ctest --test-dir $path_to_build_directory
-```
-The full test suite, which includes 14 differents tests, can be activated with the variable
-`BUILD_TESTING_FULL` as 
-```
-cmake --build $path_to_build_directory -DBUILD_TESTING_FULL=ON 
-```
-Please have a look at [HOWTO.md](HOWTO.md)
 
 ### Releases
 
