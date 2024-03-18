@@ -51,8 +51,8 @@ from the small turbulent scales that are not resolved.
 
 ## Source Download and Compilation
 
-The current V5 release of the code is using only CMake for building and installing. Indeed, the 2DECOMP&FFT 
-library is now distributed independently and can be downloaded from 
+The current V5 release of the code is using only CMake for building and installing. 
+Moreover, the 2DECOMP&FFT library is now distributed independently and can be downloaded from 
 [this repository](http2s://github.com/2decomp-fft/2decomp-fft). 
 Please have a look at [INSTALL.md](INSTALL.md) for the instructions on how to download, build and install 
 the code.
