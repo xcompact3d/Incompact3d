@@ -4,13 +4,13 @@ Xcompact3d installation documentation
 ## Source Download and Compilation
 
 Xcompact3d sources can be acquired by cloning the git repository: 
-
-   git clone https://github.com/xcompact3d/Incompact3d
-
+```
+$ git clone https://github.com/xcompact3d/Incompact3d
+```
 If you are behind a firewall, you may need to use the `https` protocol instead of the `git` protocol:
-
-   git config --global url."https://".insteadOf git@
-
+```
+$ git config --global url."https://".insteadOf git@
+```
 Be sure to also configure your system to use the appropriate proxy settings, 
 e.g. by setting the `https_proxy` and `http_proxy` variables.
 
