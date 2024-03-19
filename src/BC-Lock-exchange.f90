@@ -415,7 +415,7 @@ contains
     real(mytype),dimension(xszV(1),xszV(2),xszV(3)) :: uvisu
 
     real(8) :: ek,ek1,dek,dek1,ep,ep1,dep,dep1,xvol
-    integer :: ijk,i,j,k,l,m,is,code
+    integer :: i,j,k,l,m,is,code
     character(len=30) :: filename
 
     real(mytype) :: visc
@@ -482,10 +482,14 @@ contains
        enddo
     enddo
 
-    do ijk=1,xsize(1)*xsize(2)*xsize(3)
-       xvol=real(vol1(ijk,1,1),8)
-       ek = ek + half * xvol * rho1(ijk,1,1,1) * (ux1(ijk,1,1)**2+uy1(ijk,1,1)**2+uz1(ijk,1,1)**2)
-       dek = dek + xvol * diss1(ijk,1,1)
+    do k=1,xsize(3)
+       do j=1,xsize(2)
+          do i=1,xsize(1)
+             xvol=real(vol1(i,j,k),8)
+             ek = ek + half * xvol * rho1(i,j,k,1) * (ux1(i,j,k)**2+uy1(i,j,k)**2+uz1(i,j,k)**2)
+             dek = dek + xvol * diss1(i,j,k)
+          enddo
+       enddo
     enddo
 
     call transpose_x_to_y(vol1,vol2)
