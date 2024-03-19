@@ -1,5 +1,6 @@
 # Flags for GNU compiler
-set(X3D_FFLAGS "-cpp -std=f2008 -ffree-line-length-none -g -Warray-bounds -fcray-pointer -fbacktrace")
+#
+set(X3D_FFLAGS "-cpp -std=f2008 -ffree-line-length-none -Warray-bounds -fcray-pointer -fbacktrace")
 if (CMAKE_Fortran_COMPILER_VERSION GREATER_EQUAL "10")
   message(STATUS "Set New Fortran basic flags")
   set(X3D_FFLAGS "${X3D_FFLAGS} -fallow-argument-mismatch")
