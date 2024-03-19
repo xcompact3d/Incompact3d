@@ -467,7 +467,7 @@ contains
     ! normalisation
     cw1 = cw1 / real(nx, kind=mytype) /real(ny, kind=mytype) &
          / real(nz, kind=mytype)
-#ifdef DEBUG
+#ifdef DEBG
     do k = sp%xst(3), sp%xen(3)
        do j = sp%xst(2), sp%xen(2)
           do i = sp%xst(1), sp%xen(1)
@@ -489,7 +489,7 @@ contains
              tmp2 = iy(cw1(i,j,k))
              cw1(i,j,k) = cx(tmp1 * bz(k) + tmp2 * az(k), &
                              tmp2 * bz(k) - tmp1 * az(k))
-#ifdef DEBUG
+#ifdef DEBG
              if (abs_prec(cw1(i,j,k)) > 1.0e-4) &
                   write(*,100) 'after z',i,j,k,cw1(i,j,k)
 #endif
@@ -506,7 +506,7 @@ contains
              cw1(i,j,k) = cx(tmp1 * by(j) + tmp2 * ay(j), &
                              tmp2 * by(j) - tmp1 * ay(j))
              if (j > (ny/2+1)) cw1(i,j,k) = -cw1(i,j,k)
-#ifdef DEBUG
+#ifdef DEBG
              if (abs_prec(cw1(i,j,k)) > 1.0e-4) &
                   write(*,100) 'after y',i,j,k,cw1(i,j,k)
 #endif
@@ -536,7 +536,7 @@ contains
           end do
        end do
     end do
-#ifdef DEBUG
+#ifdef DEBG
     do k = sp%xst(3), sp%xen(3)
        do j = sp%xst(2), sp%xen(2)
           do i = sp%xst(1), sp%xen(1)
@@ -567,7 +567,7 @@ contains
              if ((abs_prec(tmp1) >= epsilon).and.(abs_prec(tmp2) >= epsilon)) then
                 cw1b(i,j,k)=cx(rl(cw1b(i,j,k)) / (-tmp1), iy(cw1b(i,j,k)) / (-tmp2))
              end if
-#ifdef DEBUG
+#ifdef DEBG
              if (abs_prec(cw1b(i,j,k)) > 1.0e-4) &
                   write(*,100) 'AFTER',i,j,k,cw1b(i,j,k)
 #endif
@@ -599,7 +599,7 @@ contains
           end do
        end do
     end do
-#ifdef DEBUG
+#ifdef DEBG
     do k = sp%xst(3),sp%xen(3)
        do j = sp%xst(2),sp%xen(2)
           do i = sp%xst(1),sp%xen(1)
@@ -620,7 +620,7 @@ contains
              cw1(i,j,k) = cx(tmp1 * by(j) - tmp2 * ay(j), &
                              tmp2 * by(j) + tmp1 * ay(j))
              if (j > (ny/2+1)) cw1(i,j,k) = -cw1(i,j,k)
-#ifdef DEBUG
+#ifdef DEBG
              if (abs_prec(cw1(i,j,k)) > 1.0e-4) &
                   write(*,100) 'AFTER Y',i,j,k,cw1(i,j,k)
 #endif
@@ -636,7 +636,7 @@ contains
              tmp2 = iy(cw1(i,j,k))
              cw1(i,j,k) = cx(tmp1 * bz(k) - tmp2 * az(k), &
                              tmp2 * bz(k) + tmp1 * az(k))
-#ifdef DEBUG
+#ifdef DEBG
              if (abs_prec(cw1(i,j,k)) > 1.0e-4) &
                   write(*,100) 'END',i,j,k,cw1(i,j,k)
 #endif
@@ -723,7 +723,7 @@ contains
     ! normalisation
     cw1 = cw1 / real(nx, kind=mytype) /real(ny, kind=mytype) &
          / real(nz, kind=mytype)
-#ifdef DEBUG
+#ifdef DEBG
     do k = sp%xst(3), sp%xen(3)
        do j = sp%xst(2), sp%xen(2)
           do i = sp%xst(1), sp%xen(1)
@@ -745,7 +745,7 @@ contains
              tmp2 = iy(cw1(i,j,k))
              cw1(i,j,k) = cx(tmp1 * bz(k) + tmp2 * az(k), &
                              tmp2 * bz(k) - tmp1 * az(k))
-#ifdef DEBUG
+#ifdef DEBG
              if (abs_prec(cw1(i,j,k)) > 1.0e-4) &
                   write(*,100) 'after z',i,j,k,cw1(i,j,k)
 #endif
@@ -762,7 +762,7 @@ contains
              cw1(i,j,k) = cx(tmp1 * bx(i) + tmp2 * ax(i), &
                              tmp2 * bx(i) - tmp1 * ax(i))
              if (i.gt.(nx/2+1)) cw1(i,j,k)=-cw1(i,j,k)
-#ifdef DEBUG
+#ifdef DEBG
              if (abs_prec(cw1(i,j,k)) > 1.0e-4) &
                   write(*,100) 'after x',i,j,k,cw1(i,j,k)
 #endif
@@ -795,7 +795,7 @@ contains
           end do
        end do
     end do
-#ifdef DEBUG
+#ifdef DEBG
     do k = sp%yst(3), sp%yen(3)
        do j = sp%yst(2), sp%yen(2)
           do i = sp%yst(1), sp%yen(1)
@@ -922,7 +922,7 @@ contains
           endif
        enddo
     enddo
-#ifdef DEBUG
+#ifdef DEBG
     do k = sp%yst(3), sp%yen(3)
        do j = sp%yst(2), sp%yen(2)
           do i = sp%yst(1), sp%yen(1)
@@ -961,7 +961,7 @@ contains
 
     ! Back to X-pencil
     call transpose_y_to_x(cw2,cw1,sp)
-#ifdef DEBUG
+#ifdef DEBG
     do k = sp%xst(3),sp%xen(3)
        do j = sp%xst(2),sp%xen(2)
           do i = sp%xst(1),sp%xen(1)
@@ -982,7 +982,7 @@ contains
              cw1(i,j,k) = cx(tmp1 * bx(i) - tmp2 * ax(i), &
                              tmp2 * bx(i) + tmp1 * ax(i))
              if (i > (nx/2 + 1)) cw1(i,j,k) = -cw1(i,j,k)
-#ifdef DEBUG
+#ifdef DEBG
              if (abs_prec(cw1(i,j,k)) > 1.0e-4) &
                   write(*,100) 'AFTER X',i,j,k,cw1(i,j,k)
 #endif
@@ -998,7 +998,7 @@ contains
              tmp2 = iy(cw1(i,j,k))
              cw1(i,j,k) = cx(tmp1 * bz(k) - tmp2 * az(k), &
                              tmp2 * bz(k) + tmp1 * az(k))
-#ifdef DEBUG
+#ifdef DEBG
              if (abs_prec(cw1(i,j,k)) > 1.0e-4) &
                   write(*,100) 'END',i,j,k,cw1(i,j,k)
 #endif
@@ -1187,7 +1187,7 @@ contains
 
     ! back to X-pencil
     call transpose_y_to_x(cw2b,cw1,sp)
-#ifdef DEBUG
+#ifdef DEBG
     dep=maxval(abs(cw1))
     call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     if (nrank == 0) write(*,*)'## Poisson11X Back to X cw1 ', dep1
@@ -1215,7 +1215,7 @@ contains
           end do
        end do
     end do
-#ifdef DEBUG
+#ifdef DEBG
     dep=maxval(abs(cw1b))
     call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     if (nrank == 0) write(*,*)'## Poisson11X Back to X cw1b ', cw1b
@@ -1245,7 +1245,7 @@ contains
              end do
           end do
        end do
-#ifdef DEBUG
+#ifdef DEBG
        dep=maxval(abs(cw1b))
        call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        if (nrank == 0) write(*,*)'## Poisson11X Solve Pois istret 0 ', dep1
@@ -1316,7 +1316,7 @@ contains
                 enddo
              enddo
           enddo
-#ifdef DEBUG
+#ifdef DEBG
           dep=maxval(abs(cw2b))
           call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
           if (nrank == 0) write(*,*)'## Poisson11X Solve Pois istret < 3 ', dep1
@@ -1341,7 +1341,7 @@ contains
              enddo
           enddo
        endif
-#ifdef DEBUG
+#ifdef DEBG
        dep=maxval(abs(cw2b))
        call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        if (nrank == 0) write(*,*)'## Poisson11X Solve Pois istret = 3 ', dep1
@@ -1350,7 +1350,7 @@ contains
        call transpose_y_to_x(cw2b,cw1b,sp)
     endif
 
-#ifdef DEBUG
+#ifdef DEBG
     dep=maxval(abs(cw1b))
     call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     if (nrank == 0) write(*,*)'## Poisson11X Solve Pois AFTER ', dep1
@@ -1379,7 +1379,7 @@ contains
           end do
        end do
     end do
-#ifdef DEBUG
+#ifdef DEBG
     dep=maxval(abs(cw1))
     call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     if (nrank == 0) write(*,*)'## Poisson11X Solve Pois POSTPR X ', dep1
@@ -1409,7 +1409,7 @@ contains
           end do
        end do
     end do
-#ifdef DEBUG
+#ifdef DEBG
     dep=maxval(abs(cw2b))
     call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     if (nrank == 0) write(*,*)'## Poisson11X Solve Pois POSTPR Y ', dep1
@@ -1428,7 +1428,7 @@ contains
           end do
        end do
     end do
-#ifdef DEBUG
+#ifdef DEBG
     dep=maxval(abs(cw1))
     call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     if (nrank == 0) write(*,*)'## Poisson11X Solve Pois POSTPR Z ', dep1
@@ -1436,7 +1436,7 @@ contains
 
     ! compute c2r transform, back to physical space
     call decomp_2d_fft_3d(cw1,rhs)
-#ifdef DEBUG
+#ifdef DEBG
     dep=maxval(abs(rhs))
     call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     if (nrank == 0) write(*,*)'## Poisson11X Solve Pois Back Phy RHS ', dep1
