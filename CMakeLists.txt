@@ -26,6 +26,7 @@ if (NOT CMAKE_BUILD_TYPE)
        "Choose the type of build, options are: NONE DEV DEBUG RELEASE."
        FORCE)
 endif (NOT CMAKE_BUILD_TYPE)
+string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE)
 if (CMAKE_BUILD_TYPE MATCHES "NONE")
   message (STATUS "Selected build type : None")
 elseif (CMAKE_BUILD_TYPE MATCHES "RELEASE")
