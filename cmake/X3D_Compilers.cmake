@@ -48,6 +48,10 @@ if (CMAKE_BUILD_TYPE MATCHES "DEBUG")
   add_definitions("-DDEBUG")
 endif (CMAKE_BUILD_TYPE MATCHES "DEBUG")
 
+if (CMAKE_BUILD_TYPE MATCHES "DEV")
+  message(FATAL_ERROR "The code is not ready for DEV builds")
+endif (CMAKE_BUILD_TYPE MATCHES "DEV")
+
 if (ENABLE_INPLACE)
   add_definitions("-DOVERWRITE")
 endif ()
