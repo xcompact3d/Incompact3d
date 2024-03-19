@@ -7,12 +7,12 @@ Xcompact3d is a Fortran-based framework of high-order finite-difference flow sol
 dedicated to the study of turbulent flows using high fidelity modelling such as 
 Direct and Large Eddy Simulations (DNS/LES), for which the largest turbulent scales are simulated.
 Xcompact3d can combine the versatility of industrial codes with the accuracy of spectral codes by using 
-the Immerse Boundary Method (IBM) to simulate comples geometries, while retaining high order accuracy. 
+the Immersed Boundary Method (IBM) to simulate comples geometries, while retaining high order accuracy. 
 Its user-friendliness, simplicity, versatility, accuracy, scalability, portability and efficiency 
 makes it an attractive tool for the Computational Fluid Dynamics community.
 
 Xcompact3d is currently able to solve the incompressible and low-Mach number variable density 
-Navier-Stokes equations up to a sixth-order compact finite-difference schemes 
+Navier-Stokes equations up to a sixth-order accuracy using compact finite-difference schemes 
 with a spectral-like accuracy on a monobloc Cartesian mesh.  
 It was initially designed in France in the mid-90's for serial processors and later ported to HPC systems. 
 It can now be used efficiently on hundreds of thousands CPU cores to investigate turbulence 
@@ -21,9 +21,8 @@ which is a Fortran-based 2D pencil/1D slabs decomposition framework to support b
 large-scale parallel applications on distributed memory systems using MPI. 
 The library has a distributed Fast Fourier Transform module as well as I/O capabilities.
 
-Fractional time stepping is using for the time advancement, 
-as well as solving a Poisson equation for the incompressible flew. 
-The Poisson's equation is fully solved in spectral space via the use of relevant 3D Fast Fourier transforms (FFTs),
+Fractional time stepping is used for the time advancement, solving a Poisson equation to enforce the incompressible condition. 
+The Poisson equation is fully solved in spectral space via the use of relevant 3D Fast Fourier transforms (FFTs),
 allowing the use of any kind of boundary conditions for the velocity field. 
 Using the concept of the modified wavenumber (to allow for operations in the spectral space 
 to have the same accuracy as if they were performed in the physical space), 
