@@ -414,7 +414,7 @@ contains
 
     real(mytype),dimension(xszV(1),xszV(2),xszV(3)) :: uvisu
 
-    real(8) :: ek,ek1,dek,dek1,ep,ep1,dep,dep1,xvol
+    real(mytype) :: ek,ek1,dek,dek1,ep,ep1,dep,dep1,xvol
     integer :: i,j,k,l,m,is,code
     character(len=30) :: filename
 
@@ -485,7 +485,7 @@ contains
     do k=1,xsize(3)
        do j=1,xsize(2)
           do i=1,xsize(1)
-             xvol=real(vol1(i,j,k),8)
+             xvol=real(vol1(i,j,k), mytype)
              ek = ek + half * xvol * rho1(i,j,k,1) * (ux1(i,j,k)**2+uy1(i,j,k)**2+uz1(i,j,k)**2)
              dek = dek + xvol * diss1(i,j,k)
           enddo
@@ -523,7 +523,7 @@ contains
           do j=1,ysize(2)
              y = (j + ystart(2) - 2) * dy
              do i=1,ysize(1)
-                xvol=real(vol2(i,j,k),8)
+                xvol=real(vol2(i,j,k),mytype)
                 ep = ep - xvol * ri(is) * phi2(i,j,k,is) * (gravy * y)
                 dep = dep &
                      - xvol * ri(is) * (ddphi2(i,j,k)*xnu/sc(is) &
@@ -551,7 +551,7 @@ contains
           do j = 1, ysize(2)
              y = (j + ystart(2) - 2) * dy
              do i = 1, ysize(1)
-                xvol = real(vol2(i, j, k), 8)
+                xvol = real(vol2(i, j, k), mytype)
                 ep = ep - xvol * (one / Fr**2) * rho2(i, j, k) * (gravy * y)
                 dep = dep - xvol * ((xnu / prandtl / (Fr**2)) &
                      * (ta2(i, j, k) + tb2(i, j, k) + tc2(i, j, k))) &
