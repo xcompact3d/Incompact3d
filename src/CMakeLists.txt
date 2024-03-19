@@ -19,12 +19,11 @@ add_executable(xcompact3d
                     BC-Cavity.f90
                     BC-Channel-flow.f90
                     BC-Cylinder.f90
-                    BC-dbg-schemes.f90
                     BC-Lock-exchange.f90
                     BC-Mixing-layer.f90
                     BC-Periodic-hill.f90
                     BC-Pipe-flow.f90
-		    BC-Sandbox.f90
+                    BC-Sandbox.f90
                     BC-TBL.f90
                     BC-TGV.f90
                     BC-Uniform.f90
