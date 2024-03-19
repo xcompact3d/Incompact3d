@@ -210,6 +210,7 @@ contains
     use param
     use MPI
     use navier, only : gradp
+    use mhd,    only : mhd_active,mhd_equation,Bm
 
     implicit none
 
@@ -309,6 +310,12 @@ contains
              call decomp_2d_write_one(1,drho1(:,:,:,is),resfile,varname,0,io_restart,reduce_prec=.false.)
           enddo
           call decomp_2d_write_one(1,mu1(:,:,:),resfile,"mu",0,io_restart,reduce_prec=.false.)
+       endif
+
+       if(mhd_active .and. mhd_equation) then
+        call decomp_2d_write_one(1,Bm(:,:,:,1),resfile,'bx',0,io_restart,reduce_prec=.false.)
+        call decomp_2d_write_one(1,Bm(:,:,:,2),resfile,'by',0,io_restart,reduce_prec=.false.)
+        call decomp_2d_write_one(1,Bm(:,:,:,3),resfile,'bz',0,io_restart,reduce_prec=.false.)
        endif
 
        call decomp_2d_end_io(io_restart, resfile)
@@ -423,6 +430,12 @@ contains
           enddo
           call decomp_2d_read_one(1,mu1,resfile,"mu",io_restart,reduce_prec=.false.)
        end if
+
+       if(mhd_active .and. mhd_equation) then
+        call decomp_2d_read_one(1,Bm(:,:,:,1),resfile,'bx',io_restart,reduce_prec=.false.)
+        call decomp_2d_read_one(1,Bm(:,:,:,2),resfile,'by',io_restart,reduce_prec=.false.)
+        call decomp_2d_read_one(1,Bm(:,:,:,3),resfile,'bz',io_restart,reduce_prec=.false.)
+       endif
 
        call decomp_2d_end_io(io_restart, resfile)
        call decomp_2d_close_io(io_restart, resfile)
@@ -756,6 +769,7 @@ contains
      use param, only : cfl_diff_sum, cfl_diff_x, cfl_diff_y, cfl_diff_z
      use variables, only : dyp
      use decomp_2d, only : nrank
+     use mhd, only: mhd_active, mhd_equation,rem
 
      implicit none
 
@@ -779,6 +793,30 @@ contains
         write(*,"(' cfl_diff_sum           :        ',F13.8)") cfl_diff_sum
         write(*,*) '==========================================================='
      endif
+     
+     if( mhd_active.and.mhd_equation) then
+ 
+        cfl_diff_x = dt/ (dx**2) / rem
+        cfl_diff_z = dt/ (dz**2) / rem
+   
+        if (istret == 0) then
+           cfl_diff_y = dt / (dy**2) / rem
+        else
+           cfl_diff_y = dt / (minval(dyp)**2) / rem
+        end if
+   
+        cfl_diff_sum = cfl_diff_x + cfl_diff_y + cfl_diff_z
+   
+        if (nrank==0) then
+           write(*,*) '==========================================================='
+           write(*,*) 'Magnetic Diffusion number'
+           write(*,"(' B cfl_diff_x             :        ',F13.8)") cfl_diff_x
+           write(*,"(' B cfl_diff_y             :        ',F13.8)") cfl_diff_y
+           write(*,"(' B cfl_diff_z             :        ',F13.8)") cfl_diff_z
+           write(*,"(' B cfl_diff_sum           :        ',F13.8)") cfl_diff_sum
+           write(*,*) '==========================================================='
+        endif
+     endif  
 
      return
   end subroutine compute_cfldiff
