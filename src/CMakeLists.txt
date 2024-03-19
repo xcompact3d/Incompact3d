@@ -39,7 +39,9 @@ add_executable(xcompact3d
                     ibm.f90
                     implicit.f90
                     les_models.f90
+                    mhd.f90
                     module_param.f90
+                    mptool.f90
                     navier.f90
                     parameters.f90
                     poisson.f90

@@ -28,6 +28,7 @@ contains
     use variables
     use param
     use MPI
+    use mhd, only : mhd_active, Bm,Bmean
 
     implicit none
 
@@ -144,6 +145,20 @@ contains
        enddo
     enddo
 
+    if(mhd_active) then
+
+      Bmean(:,:,:,1)=0.d0
+      Bmean(:,:,:,2)=1.d0
+      Bmean(:,:,:,3)=0.d0
+
+      Bm(:,:,:,1)=0.d0
+      Bm(:,:,:,2)=0.d0
+      Bm(:,:,:,3)=0.d0
+      
+      if(nrank==0) print*,'** magnetic field initilised'
+
+    endif
+
     return
   end subroutine init_channel
   !############################################################################
@@ -154,6 +169,7 @@ contains
     use var, only : di2
     use variables
     use decomp_2d
+    use mhd, only : Bm, mhd_active, mhd_equation 
 
     implicit none
 
@@ -188,6 +204,15 @@ contains
           ! Top temperature if alpha_sc(:,2)=1 and beta_sc(:,2)=0 (default)
           !if (nclySn.eq.2) g_sc(:,2) = zero
        endif
+    endif
+
+    if( mhd_active .and. iimplicit==0 .and. mhd_equation ) then
+       Bm(:,1,:,2)  = zero
+       Bm(:,ny,:,2) = zero
+       Bm(:,1,:,1)  = zero
+       Bm(:,ny,:,1) = zero
+       Bm(:,1,:,3)  = zero
+       Bm(:,ny,:,3) = zero
     endif
 
   end subroutine boundary_conditions_channel
@@ -283,6 +308,7 @@ contains
     use var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
     use var, ONLY : nzmsize
     use visu, only : write_field
+    use mhd, only : mhd_active,Je, Bm
     
     use ibm_param, only : ubcx,ubcy,ubcz
 
@@ -341,6 +367,16 @@ contains
                  - th1(:,:,:) * tf1(:,:,:)
     call write_field(di1, ".", "critq", num, flush = .true.) ! Reusing temporary array, force flush
 
+    if(mhd_active) then
+      call write_field(Je(:,:,:,1), ".", "J_x", num, flush = .true.)
+      call write_field(Je(:,:,:,2), ".", "J_y", num, flush = .true.)
+      call write_field(Je(:,:,:,3), ".", "J_z", num, flush = .true.)
+      call write_field(Bm(:,:,:,1), ".", "B_x", num, flush = .true.)
+      call write_field(Bm(:,:,:,2), ".", "B_y", num, flush = .true.)
+      call write_field(Bm(:,:,:,3), ".", "B_z", num, flush = .true.)
+
+    endif
+    
   end subroutine visu_channel
   !############################################################################
   !############################################################################

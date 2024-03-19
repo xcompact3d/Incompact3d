@@ -27,6 +27,7 @@ contains
     use variables
     use param
     use MPI
+    use mhd, only: mhd_active,Bm,Bmean,test_magnetic
     use dbg_schemes, only: sin_prec, cos_prec
 
     implicit none
@@ -66,12 +67,40 @@ contains
              do i=1,xsize(1)
                 x=real(i-1,mytype)*dx
 
-                ux1(i,j,k)=+sin_prec(x)*cos_prec(y)*cos_prec(z)
-                uy1(i,j,k)=-cos_prec(x)*sin_prec(y)*cos_prec(z)
-                if (iscalar == 1) then
-                   phi1(i,j,k,1:numscalar)=sin_prec(x)*sin_prec(y)*cos_prec(z)
-                endif
+                ! ux1(i,j,k)=+sin_prec(x)*cos_prec(y)*cos_prec(z)
+                ! uy1(i,j,k)=-cos_prec(x)*sin_prec(y)*cos_prec(z)
+                ! if (iscalar == 1) then
+                !    phi1(i,j,k,1:numscalar)=sin_prec(x)*sin_prec(y)*cos_prec(z)
+                ! endif
+
+                ux1(i,j,k)= -2.d0*sin_prec(y)*cos_prec(z)
+                uy1(i,j,k)=  2.d0*sin_prec(x)*cos_prec(z)
+
                 uz1(i,j,k)=zero
+                
+                if(mhd_active) then
+                  Bm(i,j,k,1)=-2.d0*sin_prec(y)
+                  Bm(i,j,k,2)= 2.d0*sin_prec(2.d0*x)
+                  Bm(i,j,k,3)=zero
+
+                  ! Bm(i,j,k,1)=0.8d0*(-2.d0*sin_prec(2.d0*y) + sin_prec(z))
+                  ! Bm(i,j,k,2)=0.8d0*( 2.d0*sin_prec(x)      + sin_prec(z))
+                  ! Bm(i,j,k,3)=0.8d0*(      sin_prec(x)      + sin_prec(y))
+                  !
+                  ! Bm(i,j,k,1)=-2.d0*sin_prec(2.d0*y) + sin_prec(z)
+                  ! Bm(i,j,k,2)= 2.d0*sin_prec(x)      + sin_prec(z)
+                  ! Bm(i,j,k,3)=      sin_prec(x)      + sin_prec(y)
+                  !
+                  ! Bm(i,j,k,1)=sin_prec(x)*sin_prec(y)*cos_prec(z)
+                  ! Bm(i,j,k,2)=cos_prec(x)*cos_prec(y)*cos_prec(z)
+                  ! Bm(i,j,k,3)=zero
+                  !
+                  Bmean(i,j,k,1)=zero
+                  Bmean(i,j,k,2)=zero
+                  Bmean(i,j,k,3)=zero
+
+                endif
+
              enddo
           enddo
        enddo
@@ -124,6 +153,8 @@ contains
           enddo
        enddo
     enddo
+
+    ! if(mhd_active) call test_magnetic
 
 #ifdef DEBG
     if (nrank  ==  0) write(*,*) '# init end ok'
@@ -441,6 +472,7 @@ contains
     USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
     use var, ONLY : nxmsize, nymsize, nzmsize
     use visu, only : write_field
+    use mhd, only : mhd_active,Bm
     use ibm_param, only : ubcx,ubcy,ubcz
 
     implicit none
@@ -503,6 +535,12 @@ contains
                   - tg1(:,:,:)*tc1(:,:,:) &
                   - th1(:,:,:)*tf1(:,:,:)
     call write_field(di1, ".", "critq", num, flush=.true.) ! Reusing temporary array, force flush
+
+    if(mhd_active) then
+      call write_field(Bm(:,:,:,1), ".", "B_x", num, flush = .true.)
+      call write_field(Bm(:,:,:,2), ".", "B_y", num, flush = .true.)
+      call write_field(Bm(:,:,:,3), ".", "B_z", num, flush = .true.)
+    endif
 
   end subroutine visu_tgv
   !############################################################################

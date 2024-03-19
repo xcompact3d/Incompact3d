@@ -544,7 +544,7 @@ module ydiff_implicit
 !    isc : 0 for momentum, id of the scalar otherwise
 !    forcing1 : r.h.s. term not present in dvar1 (pressure gradient)
 !
-subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
+subroutine  inttimp (var1,dvar1,npaire,isc,forcing1,mhdvar)
 
   USE MPI
   USE param
@@ -561,6 +561,7 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   !! IN
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)), optional, intent(in) :: forcing1
   integer, intent(in) :: npaire, isc
+  integer, optional, intent(in) :: mhdvar !if integrating an MHD variable: 1=bx, 2=by, 3=bz
 
   !! IN/OUT
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: var1
@@ -660,6 +661,17 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   else if (isc.ne.0) then
      bcbot(:,:) = g_sc(isc, 1)
      bctop(:,:) = g_sc(isc, 2)
+  elseif(present(mhdvar)) then
+     if(mhdvar.eq.1) then
+        bcbot(:,:) = zero
+        bctop(:,:) = zero   
+     elseif(mhdvar.eq.2) then
+        bcbot(:,:) = zero
+        bctop(:,:) = zero   
+     elseif(mhdvar.eq.3) then
+        bcbot(:,:) = zero
+        bctop(:,:) = zero
+     endif
   else
      bcbot(:,:) = zero
      bctop(:,:) = zero
@@ -673,6 +685,8 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   if (isecondder.ne.5) then
      if (isc.eq.0) then
         call multmatrix7(td2,ta2,tb2,npaire,ncly1,nclyn,xcst)
+     elseif(present(mhdvar)) then
+        call multmatrix7(td2,ta2,tb2,npaire,nclyB1(mhdvar),nclyBn(mhdvar),xcstB)
      else
         call multmatrix7(td2,ta2,tb2,npaire,nclyS1,nclySn,xcst_sc(isc))
      endif
@@ -693,6 +707,15 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   !
   ! Apply boundary conditions
   !
+  if(present(mhdvar)) then
+     if ( nclyB1(mhdvar).eq.2 ) then
+        ta2(:,1,:) = bcbot(:,:)
+     endif
+     if ( nclyBn(mhdvar).eq.2 ) then
+        ta2(:,ny,:) = bctop(:,:)
+     endif
+  endif
+
   if ((isc.eq.0.and.ncly1.eq.2).or.(isc.gt.0.and.nclyS1.eq.2)) then
      ta2(:,1,:) = bcbot(:,:)
   endif
@@ -739,6 +762,11 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
         gg=>ggm211; hh=>hhm211; ss=>ssm211; rr=>rrm211; vv=>vvm211; ww=>wwm211; zz=>zzm211
      elseif ((isc.gt.0).and.(nclyS1.eq.2).and.(nclySn.eq.1).and.(npaire.eq.1)) then
         gg=>ggm211t(:,isc); hh=>hhm211t(:,isc); ss=>ssm211t(:,isc); rr=>rrm211t(:,isc); vv=>vvm211t(:,isc); ww=>wwm211t(:,isc); zz=>zzm211t(:,isc)
+     elseif(present(mhdvar)) then
+          if (nclyB1(mhdvar).eq.2 .and. nclyBn(mhdvar).eq.2) then   
+             gg=>ggmB(:,mhdvar); hh=>hhmB(:,mhdvar); ss=>ssmB(:,mhdvar); rr=>rrmB(:,mhdvar); vv=>vvmB(:,mhdvar); ww=>wwmB(:,mhdvar);
+             zz=>zzmB(:,mhdvar)
+          endif
      else
         ! We should not be here
         if (nrank == 0) then
