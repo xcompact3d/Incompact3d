@@ -23,9 +23,20 @@ INCLUDE(CMakeParseArguments)
 # make sure that the default is a RELEASE
 if (NOT CMAKE_BUILD_TYPE)
   set (CMAKE_BUILD_TYPE RELEASE CACHE STRING
-      "Choose the type of build, options are: None Dev Debug Release."
-      FORCE)
+       "Choose the type of build, options are: NONE DEV DEBUG RELEASE."
+       FORCE)
 endif (NOT CMAKE_BUILD_TYPE)
+if (CMAKE_BUILD_TYPE MATCHES "NONE")
+  message (STATUS "Selected build type : None")
+elseif (CMAKE_BUILD_TYPE MATCHES "RELEASE")
+  message (STATUS "Selected build type : Release")
+elseif (CMAKE_BUILD_TYPE MATCHES "DEBUG")
+  message (STATUS "Selected build type : Debug")
+elseif (CMAKE_BUILD_TYPE MATCHES "DEV")
+  message (STATUS "Selected build type : Dev")
+else (CMAKE_BUILD_TYPE MATCHES "NONE")
+  message (FATAL_ERROR "Invalid build type, options are: NONE DEV DEBUG RELEASE.")
+endif (CMAKE_BUILD_TYPE MATCHES "NONE")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" "${CMAKE_SOURCE_DIR}/cmake/compilers" "${CMAKE_SOURCE_DIR}/cmake/fft")
 find_package(DECOMP2D REQUIRED)
