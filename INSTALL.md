@@ -87,7 +87,7 @@ The testing suite for the **xcompact3d** solver is composed by 14 tests as follo
 1. Taylor Green Vortex (TGV)
 
 By default only the  Taylor Green Vortex case is activated, while the full 
-testing suite needs to be activated using the `BUILD_TESTING_FULL` flag as 
+testing suite needs to be enable by using the `BUILD_TESTING_FULL` flag as 
 ```
 cmake --build $path_to_build_directory -DBUILD_TESTING_FULL=ON 
 ```
