@@ -44,53 +44,69 @@ ccmake $path_to_build_directory
 ```
 To compile the sources 
 ```
-cmake --build $path_to_build_directory -j <nproc> 
+cmake --build $path_to_build_directory -j <nproc>
 ```
-By defult the Taylor-Green-Vortex case is also activated and can performed with
+appending `-v` will display additional information about the build, such as compiler flags.
+
+After building the library can be tested. Please see the section [Testing](#testing-and-examples)
+for the available options. 
+Finally the code can be installed using 
 ```
-ctest --test-dir $path_to_build_directory
+cmake --install $path_to_build_directory
 ```
-The full test suite, which includes 14 differents tests, can be activated with the variable
-`BUILD_TESTING_FULL` as 
+By default the installation directory is located under 
+```
+$ $path_to_build_directory/opt
+```
+To change the default location the `CMAKE_INSTALL_PREFIX` can be modified using 
+```
+cmake --build $path_to_build_directory -DCMAKE_INSTALL_PREFIX=$path_to_my_opt
+```
+or via the `ccmake` interface. 
+
+The installation directory will cointain:
+* The *bin* directory with two execulables: **xcompact3d** for the main execution of the code;
+* The *example* directory with some examples of input *.i3d* files for the **xcompact3d** solver.
+
+### Testing
+The testing suite for the **xcompact3d** solver is composed by 14 tests as follows 
+1 Atmospheric Boundary layer (ABL) in neutral conditions (new set-up)
+1 Atmospheric Boundary layer (ABL) in neutral conditions (old set-up)
+1 Atmospheric Boundary layer (ABL) in convective conditions (old set-up)
+1 Atmospheric Boundary layer (ABL) in stable conditions (old set-up)
+1 Differentially heated cavity
+1 Turbulent Channel Flow with X as streamwise direction
+1 Turbulent Channel Flow with Z as streamwise direction
+1 Flow around a circular cylinder
+1 Flow around a moving circular cylinder
+1 Lock exchange
+1 Mixing Layer
+1 Turbulent Boundary Layer (TBL)
+1 Wind Turbine
+1 Taylor Green Vortex (TGV)
+
+By default only the  Taylor Green Vortex case is activated, while the full 
+testing suite needs to be activated using the `BUILD_TESTING_FULL` flag as 
 ```
 cmake --build $path_to_build_directory -DBUILD_TESTING_FULL=ON 
 ```
 or by using `ccmake.
-`
-The installation directory will cointain:
-* The *bin* directory with two execulables: **xcompact3d** for the main execution of the code 
-* The *example* directory with few example of input *.i3d* files for **Xcompact3d**
-* The *lib* directory with the archive for the **decomp2d** library
-* The directories *Testing* and *RunTests* with the logs of CTest and the results respectively. 
 
-### CTest
-To test your installation you can also type in the terminal from your *build* directory
+The test are performed using `CTest` using 
 ```
-ctest --test-dir $path_to_build_directory 
+ctest --test-dir $path_to_build_directory
 ```
-15 tests are available:
-* Taylor Green Vortex (TGV)
-* Atmospheric Boundary layer (ABL) in neutral conditions (new set-up)
-* Atmospheric Boundary layer (ABL) in neutral conditions (old set-up)
-* Atmospheric Boundary layer (ABL) in convective conditions (old set-up)
-* Atmospheric Boundary layer (ABL) in stable conditions (old set-up)
-* Differentially heated cavity
-* Turbulent Channel Flow with X as streamwise direction
-* Turbulent Channel Flow with Z as streamwise direction
-* Flow around a circular cylinder
-* Flow around a moving circular cylinder
-* Lock exchange
-* Turbulent Boundary Layer (TBL)
-* Wind Turbine
 
-The simulations results are located under 
+Every test is performed in a dedicated working directory that is located under the following path 
 ```
 $ /path/to/build/RunTests
 ```
-and the standard output from the simulations is in 
+All standard outputs from all test runs are collated under the file
 ```
-$ /path/to/build/Testing/Temporary/
+$ /path/to/build/Testing/Temporary/LastTest.log
 ```
+together with additional files detailing additional informations such as 
+the elapse time for the different tests and the eventual failed cases. 
 
 ### Build with an already present 2DECOMP&FFT
 If different options from the default 
