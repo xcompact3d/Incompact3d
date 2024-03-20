@@ -70,27 +70,28 @@ The installation directory will cointain:
 
 ### Testing
 The testing suite for the **xcompact3d** solver is composed by 14 tests as follows 
-1 Atmospheric Boundary layer (ABL) in neutral conditions (new set-up)
-1 Atmospheric Boundary layer (ABL) in neutral conditions (old set-up)
-1 Atmospheric Boundary layer (ABL) in convective conditions (old set-up)
-1 Atmospheric Boundary layer (ABL) in stable conditions (old set-up)
-1 Differentially heated cavity
-1 Turbulent Channel Flow with X as streamwise direction
-1 Turbulent Channel Flow with Z as streamwise direction
-1 Flow around a circular cylinder
-1 Flow around a moving circular cylinder
-1 Lock exchange
-1 Mixing Layer
-1 Turbulent Boundary Layer (TBL)
-1 Wind Turbine
-1 Taylor Green Vortex (TGV)
+
+ 1 Atmospheric Boundary layer (ABL) in neutral conditions (new set-up)
+ 1 Atmospheric Boundary layer (ABL) in neutral conditions (old set-up)
+ 1 Atmospheric Boundary layer (ABL) in convective conditions (old set-up)
+ 1 Atmospheric Boundary layer (ABL) in stable conditions (old set-up)
+ 1 Differentially heated cavity
+ 1 Turbulent Channel Flow with X as streamwise direction
+ 1 Turbulent Channel Flow with Z as streamwise direction
+ 1 Flow around a circular cylinder
+ 1 Flow around a moving circular cylinder
+ 1 Lock exchange
+ 1 Mixing Layer
+ 1 Turbulent Boundary Layer (TBL)
+ 1 Wind Turbine
+ 1 Taylor Green Vortex (TGV)
 
 By default only the  Taylor Green Vortex case is activated, while the full 
 testing suite needs to be activated using the `BUILD_TESTING_FULL` flag as 
 ```
 cmake --build $path_to_build_directory -DBUILD_TESTING_FULL=ON 
 ```
-or by using `ccmake.
+or by using `ccmake`.
 
 The test are performed using `CTest` using 
 ```
