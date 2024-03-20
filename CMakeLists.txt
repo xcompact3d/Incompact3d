@@ -3,8 +3,6 @@ cmake_policy(SET CMP0074 NEW)
 
 project(Incompact3d LANGUAGES Fortran)
 
-set(AUTHOR "Stefano Rolfo;Charles Moulinec;Paul Bartholomew")
-set(AUTHOR_DETAILS "stefano.rolfo@stfc.ac.uk;charles.moulinec@stfc.ac.uk;p.bartholomew@epcc.ed.ac.uk")
 set(DESCRIPTION "Building Incompact3d using cmake")
 
 message(STATUS "building ${PROJECT_NAME}")
