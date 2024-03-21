@@ -22,15 +22,15 @@ MPI Fortran wrapper that you would like to use to guarantee consistency
 between Fortran compiler and MPI. 
 This can be done by setting the default Fortran environmental variable 
 ```
-export FC=my_mpif90
+$ export FC=my_mpif90
 ```
 To generate the build system run 
 ```
-cmake -S $path_to_sources -B $path_to_build_directory -DOPTION1 -DOPTION2 ... 
+$ cmake -S $path_to_sources -B $path_to_build_directory -DOPTION1 -DOPTION2 ... 
 ```
 for example 
 ```
-cmake -S . -B build  
+$ cmake -S . -B build  
 ```
 By defult the build system will also download 2DECOMP&FFT 
 and perform the build install using the
@@ -40,11 +40,11 @@ If the directory does not exist it will be generated and it will contain the con
 The configuration can be further
 edited by using the `ccmake` utility as
 ```
-ccmake $path_to_build_directory
+$ ccmake $path_to_build_directory
 ```
 To compile the sources 
 ```
-cmake --build $path_to_build_directory -j <nproc>
+$ cmake --build $path_to_build_directory -j <nproc>
 ```
 appending `-v` will display additional information about the build, such as compiler flags.
 
@@ -52,7 +52,7 @@ After building the library can be tested. Please see the section [Testing](#test
 for the available options. 
 Finally the code can be installed using 
 ```
-cmake --install $path_to_build_directory
+$ cmake --install $path_to_build_directory
 ```
 By default the installation directory is located under 
 ```
@@ -60,13 +60,13 @@ $ $path_to_build_directory/opt
 ```
 To change the default location the `CMAKE_INSTALL_PREFIX` can be modified using 
 ```
-cmake --build $path_to_build_directory -DCMAKE_INSTALL_PREFIX=$path_to_my_opt
+$ cmake --build $path_to_build_directory -DCMAKE_INSTALL_PREFIX=$path_to_my_opt
 ```
 or via the `ccmake` interface. 
 
 The installation is finally completed by typing 
 ```
-cmake --install $path_to_build_directory
+$ cmake --install $path_to_build_directory
 ```
 The installation directory `opt` will cointain:
 * The *bin* directory with the execulables **xcompact3d** for the main execution of the code;
@@ -93,13 +93,13 @@ The testing suite for the **xcompact3d** solver is composed by 14 tests as follo
 By default only the  Taylor Green Vortex case is activated, while the full 
 testing suite needs to be enable by using the `BUILD_TESTING_FULL` flag as 
 ```
-cmake --build $path_to_build_directory -DBUILD_TESTING_FULL=ON 
+$ cmake --build $path_to_build_directory -DBUILD_TESTING_FULL=ON 
 ```
 or by using `ccmake`.
 
 The tests are performed using `CTest` as  
 ```
-ctest --test-dir $path_to_build_directory
+$ ctest --test-dir $path_to_build_directory
 ```
 
 Every test is performed in a dedicated working directory that is located under the following path 
@@ -130,7 +130,15 @@ $ export decomp2d_DIR=/path/to/2decomp/install/opt/lib/decomp2d
 Depending on the system *lib* can be *lib64* 
 
 ## Known issues
-
-
-
+The tests performed under `CTest` rely on the `CMake` ability to properly find the MPI executable *mpirun*. 
+The build system will try to enforce consistency between the MPI Fortran used and the MPI executable, 
+for the first iteration of the configure step. 
+In case no MPI executable is not found or correct please modify manually the `MPIEXEC_EXECUTABLE` by using 
+```
+$ cmake -S . -B build -DMPIEXEC_EXECUTABLE=/correct/path/to/mpirun
+```
+or by using 
+```
+$ ccmake $path_to_build_directory
+```
 
