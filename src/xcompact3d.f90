@@ -37,14 +37,14 @@ program xcompact3d
    write(*,*) 'Outputting forces'
   end if 
 
-  do i = 1,100
-   x(i) = i
-  enddo
-  open(unit=3, file='testcsv.dat', status='new',action='write',iostat=ierr)
+!   do i = 1,100
+!    x(i) = i
+!   enddo
+!   open(unit=3, file='testcsv.dat', status='new',action='write',iostat=ierr)
 
-  do i = 1,100
-   write(3,*) x(i)
-  enddo
+!   do i = 1,100
+!    write(3,*) x(i)
+!   enddo
 
   
 
@@ -136,6 +136,7 @@ program xcompact3d
 
       !   if (nrank==0) then
 
+        if (bodies_fixed==0) then 
          call lin_step(position,linearVelocity,linearForce,dt,position_1,linearVelocity_1)
          call ang_step(orientation,angularVelocity,torque,dt,orientation_1,angularVelocity_1)
 
@@ -144,6 +145,7 @@ program xcompact3d
 
          orientation = orientation_1
          angularVelocity = angularVelocity_1
+        endif 
 
          if ((nrank==0).and.(mod(itime,ilist)==0)) then 
             write(*,*) "Position =         ", position_1
