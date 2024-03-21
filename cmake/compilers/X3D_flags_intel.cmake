@@ -1,6 +1,6 @@
 # Compilers Flags for Intel
 
-set(X3D_FFLAGS "-fpp -std08 -xHost -heaparrays -safe-cray-ptr -g -traceback")
+set(X3D_FFLAGS "-fpp -xHost -heaparrays -safe-cray-ptr -g -traceback")
 set(X3D_FFLAGS_RELEASE "-O3 -ipo")
 set(X3D_FFLAGS_DEBUG   "-g -O0 -debug extended -traceback -DDEBUG")
 set(X3D_FFLAGS_DEV     "${X3D_FFLAGS_DEBUG} -warn all,noexternal")
