@@ -125,6 +125,10 @@ program xcompact3d
             linearForce(3)=zero
         endif
 
+        if (bodies_fixed==1) then
+            linearForce(:)=zero
+        endif
+
         if ((nrank==0).and.(force_csv.eq.1)) then
          open(unit=20, file='force_out.dat', action='write')
          write(20, *) linearForce(1), linearForce(2), linearForce(3), '\n'
@@ -136,7 +140,7 @@ program xcompact3d
 
       !   if (nrank==0) then
 
-        if (bodies_fixed==0) then 
+      !   if (bodies_fixed==0) then 
          call lin_step(position,linearVelocity,linearForce,dt,position_1,linearVelocity_1)
          call ang_step(orientation,angularVelocity,torque,dt,orientation_1,angularVelocity_1)
 
@@ -145,7 +149,7 @@ program xcompact3d
 
          orientation = orientation_1
          angularVelocity = angularVelocity_1
-        endif 
+      !   endif 
 
          if ((nrank==0).and.(mod(itime,ilist)==0)) then 
             write(*,*) "Position =         ", position_1
