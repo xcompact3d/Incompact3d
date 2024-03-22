@@ -449,6 +449,13 @@ contains
     enddo
 
     if (itime.eq.1) then
+      do iv=1,nvol
+         if (nrank .eq. 0) then
+            write(filename,"('forces.dat',I1.1)") iv
+            open(38+(iv-1),file=filename,status='unknown',form='formatted')
+            ! write(*,*) 'Opened file: ', filename, 'number = ', 38+(iv-1)
+         endif
+      enddo
        do k = 1, xsize(3)
           do j = 1, xsize(2)
              do i = 1, xsize(1)
@@ -1011,23 +1018,22 @@ contains
       !  xDrag_tot = sum(xDrag(:))
       !  yLift_tot = sum(yLift(:))
       !  zLat_tot  = sum(zLat(:))
-
-       !     if ((itime==ifirst).or.(itime==0)) then
-       !        if (nrank .eq. 0) then
-       !        write(filename,"('aerof',I1.1)") iv
-       !        open(38+(iv-1),file=filename,status='unknown',form='formatted')
-       !        endif
-       !     endif
+      
+      if ((itime==ifirst).or.(itime==0)) then
+         
+      endif
        if (nrank .eq. 0) then
-          write(38,*) t,xDrag_mean,yLift_mean
-          call flush(38)
+         ! write(*,*) 'TIME STEP = ', itime
+          write(38+(iv-1),*) t,dra1,dra2,dra3
+         !  write(*,*) 'written to file number', 38+(iv-1), t, dra1,dra2,dra3
+          call flush(38+(iv-1))
        endif
-       if (mod(itime, ioutput).eq.0) then
-          if (nrank .eq. 0) then
-             write(filename,"('forces.dat',I7.7)") itime
-             call system("cp forces.dat " //filename)
-          endif
-       endif
+      !  if (mod(itime, ioutput).eq.0) then
+      !     if (nrank .eq. 0) then
+      !        write(filename,"('forces.dat',I7.7)") itime
+      !        call system("cp forces.dat " //filename)
+      !     endif
+      !  endif
     enddo
 
     do k = 1, xsize(3)
