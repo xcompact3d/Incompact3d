@@ -4,6 +4,8 @@
 
 module user_sim
 
+  USE decomp_2d_constants
+  USE decomp_2d_mpi
   USE decomp_2d
   USE variables
   USE param

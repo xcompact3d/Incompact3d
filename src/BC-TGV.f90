@@ -4,6 +4,8 @@
 
 module tgv
 
+  USE decomp_2d_constants
+  USE decomp_2d_mpi
   USE decomp_2d
   USE variables
   USE param
@@ -22,7 +24,6 @@ contains
 
   subroutine init_tgv (ux1,uy1,uz1,ep1,phi1)
 
-    use decomp_2d
     use decomp_2d_io
     use variables
     use param
@@ -137,7 +138,6 @@ contains
 
     USE param
     USE variables
-    USE decomp_2d
 
     implicit none
 
@@ -215,7 +215,6 @@ contains
   !############################################################################
   subroutine postprocess_tgv(ux1,uy1,uz1,phi1,ep1)
 
-    USE decomp_2d
     USE decomp_2d_io
     USE variables, only: nx,ny,nz
     USE MPI
@@ -398,7 +397,7 @@ contains
        
        if (nrank==0) then
           write(42,'(20e20.12)') (itime-1)*dt,eek,eps,eps2,enst
-          call flush(42)
+          flush(42)
        endif
     endif
 
@@ -413,7 +412,6 @@ contains
   !############################################################################
   subroutine visu_tgv_init (visu_initialised)
 
-    use decomp_2d, only : mytype
     use decomp_2d_io, only : decomp_2d_register_variable
     use visu, only : io_name, output2D
     
@@ -537,7 +535,6 @@ contains
 
     USE param
     USE variables
-    USE decomp_2d
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,diss1
@@ -575,7 +572,6 @@ contains
   !############################################################################
   subroutine error_tgv2D(ux1,uy1,phi1)
 
-    use decomp_2d
     use MPI
     use param, only : one, two, xnu, ifirst, itime
     use variables, only : numscalar, sc
@@ -738,7 +734,6 @@ contains
   ! Compute the damping factors
   subroutine compute_tgv2D_errors(xdamping, ydamping, sdamping)
 
-    use decomp_2d
     use param, only : one, two, xnu, ifirst, itime, itimescheme, iimplicit
     use variables, only : numscalar, sc
     use dbg_schemes, only: exp_prec
@@ -841,7 +836,6 @@ contains
   ! Warning : we use the X momentum wavenumber for Y momentum and for the scalars
   subroutine compute_k2(kin, k2out)
 
-    use decomp_2d, only : mytype
     use param
     use derivx, only : alsaix, asix, bsix, csix, dsix
     use dbg_schemes, only: cos_prec
@@ -868,7 +862,6 @@ contains
   ! Compute L1, L2 and Linf norm of given 3D array
   subroutine error_L1_L2_Linf(err, l1, l2, linf)
 
-    USE decomp_2d
     USE MPI
     
     implicit none

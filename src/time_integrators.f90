@@ -4,6 +4,10 @@
 
 module time_integrators
 
+  use decomp_2d_constants
+  use decomp_2d_mpi
+  use decomp_2d
+
   implicit none
 
   private
@@ -16,7 +20,6 @@ contains
     use MPI
     use param
     use variables
-    use decomp_2d
     use ydiff_implicit, only : inttimp
 
     implicit none
@@ -195,7 +198,6 @@ contains
 
   SUBROUTINE int_time(rho1, ux1, uy1, uz1, phi1, drho1, dux1, duy1, duz1, dphi1)
 
-    use decomp_2d, only : mytype, xsize, nrank, real_type
     use param, only : zero, one
     use param, only : ntime, nrhotime, ilmn, iscalar, ilmn_solve_temp,itimescheme
     use param, only : iimplicit, sc_even
@@ -323,7 +325,6 @@ contains
     USE param
     USE variables
     USE var, ONLY: px1, py1, pz1
-    USE decomp_2d
 
     implicit none
 
@@ -359,7 +360,6 @@ contains
 
     USE param
     USE variables
-    USE decomp_2d
 
     implicit none
 
@@ -425,7 +425,6 @@ contains
 
     USE param
     USE variables
-    USE decomp_2d
 
     USE navier, ONLY : lmn_t_to_rho_trans
     USE var, ONLY : tc1, tb1

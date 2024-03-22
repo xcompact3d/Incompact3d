@@ -4,7 +4,7 @@
 
 module ludecomp
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
 
   implicit none
 
@@ -36,7 +36,7 @@ contains
   subroutine ludecomp7_12(aam,bbm,ccm,ddm,eem,qqm,ggm,hhm,ssm,rrm,vvm,wwm,zzm,ny)
 !
 !*******************************************************************
-    use decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     USE param
     implicit none
     
@@ -83,7 +83,7 @@ contains
   subroutine ludecomp7_0(aam,bbm,ccm,ddm,eem,qqm,ggm,hhm,ssm,rrm,vvm,wwm,zzm,l1m,l2m,l3m,u1m,u2m,u3m,ny)
 !
 !*******************************************************************
-    use decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     USE param
     
     implicit none
@@ -207,7 +207,7 @@ contains
   subroutine ludecomp9_12(aam,bbm,ccm,ddm,eem,qqm,ggm,hhm,ssm,rrm,vvm,wwm,zzm,ttm,uum,sssm,zzzm,ny)
 !
 !*******************************************************************
-    use decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     use param
 
     implicit none
@@ -268,7 +268,7 @@ contains
   subroutine ludecomp9_0(aam,bbm,ccm,ddm,eem,qqm,ggm,hhm,ssm,rrm,vvm,wwm,zzm,l1m,l2m,l3m,u1m,u2m,u3m,ny)
 !
 !*******************************************************************
-    use decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     use param
     USE MPI
 
@@ -302,7 +302,7 @@ end module ludecomp
 !
 module matinv
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
 
   implicit none
 
@@ -332,7 +332,7 @@ contains
   subroutine septinv_12(xsol,bbb,ggm,hhm,ssm,rrm,vvm,wwm,zzm,nx,ny,nz)
     !
     !********************************************************************
-    use decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
 
     implicit none
 
@@ -390,7 +390,7 @@ contains
   subroutine septinv_0(xsol,bbb,ggm,hhm,ssm,rrm,vvm,wwm,zzm,l1m,l2m,l3m,u1m,u2m,u3m,nx,ny,nz)
 !    
 !********************************************************************
-    use decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
 
     implicit none
 
@@ -457,7 +457,7 @@ contains
   subroutine nonainv_12(xSol,bbb,ggm,hhm,ssm,sssm,ttm,zzzm,zzm,wwm,vvm,nx,ny,nz)
 !
 !********************************************************************
-    use decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
 
     implicit none
 
@@ -505,7 +505,7 @@ contains
   subroutine nonainv_0(xsol,bbb,ggm,hhm,ssm,rrm,vvm,wwm,zzm,l1m,l2m,l3m,u1m,u2m,u3m,nx,ny,nz)
     !
     !********************************************************************
-    use decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     USE MPI
     
     implicit none
@@ -519,6 +519,8 @@ contains
     real(mytype),dimension(ny), intent(in)    :: vvm,wwm,zzm
     real(mytype),dimension(ny), intent(in) :: l1m,l2m,l3m
     real(mytype),dimension(ny), intent(in) :: u1m,u2m,u3m
+
+    xsol = 0._mytype
 
     write(*,*) 'NOT READY YET! SIMULATION IS STOPPED!'
     call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
@@ -551,6 +553,7 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   USE variables
   USE var, ONLY: ta1, ta2, tb2, tc2, td2
   USE decomp_2d
+  use decomp_2d_mpi
   use derivY
   use matinv
 
@@ -2224,7 +2227,7 @@ end subroutine init_implicit
 !
 subroutine init_implicit_coef(tab1d, tab2d)
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
   use variables, only : ny, numscalar
 
   implicit none

@@ -5,7 +5,7 @@
 module variables
   !USE param
   !USE var
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
 
   ! Boundary conditions : ncl = 2 --> Dirichlet
   ! Boundary conditions : ncl = 1 --> Free-slip
@@ -129,7 +129,7 @@ module variables
 
   ABSTRACT INTERFACE
      SUBROUTINE DERIVATIVE_X(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
-       use decomp_2d, only : mytype
+       use decomp_2d_constants, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(ny,nz):: s
@@ -137,7 +137,7 @@ module variables
        real(mytype) :: lind
      END SUBROUTINE DERIVATIVE_X
      SUBROUTINE DERIVATIVE_Y(t,u,r,s,ff,fs,fw,pp,nx,ny,nz,npaire,lind)
-       use decomp_2d, only : mytype
+       use decomp_2d_constants, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,nz):: s
@@ -145,7 +145,7 @@ module variables
        real(mytype) :: lind
      END SUBROUTINE DERIVATIVE_Y
      SUBROUTINE DERIVATIVE_YY(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
-       use decomp_2d, only : mytype
+       use decomp_2d_constants, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,nz):: s
@@ -153,7 +153,7 @@ module variables
        real(mytype) :: lind
      END SUBROUTINE DERIVATIVE_YY
      SUBROUTINE DERIVATIVE_Z(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
-       use decomp_2d, only : mytype
+       use decomp_2d_constants, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,ny):: s
@@ -181,7 +181,7 @@ module variables
 
   ABSTRACT INTERFACE
      SUBROUTINE FILTER_X(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
-       use decomp_2d, only : mytype
+       use decomp_2d_constants, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(ny,nz):: s
@@ -189,7 +189,7 @@ module variables
        real(mytype) :: lind
      END SUBROUTINE FILTER_X
      SUBROUTINE FILTER_Y(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
-       use decomp_2d, only : mytype
+       use decomp_2d_constants, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,nz):: s
@@ -197,7 +197,7 @@ module variables
        real(mytype) :: lind
      END SUBROUTINE FILTER_Y
      SUBROUTINE FILTER_Z(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
-       use decomp_2d, only : mytype
+       use decomp_2d_constants, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,ny):: s
@@ -260,7 +260,7 @@ end module variables
 !############################################################################
 module param
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
 
   integer :: nclx1,nclxn,ncly1,nclyn,nclz1,nclzn
   integer :: nclxS1,nclxSn,nclyS1,nclySn,nclzS1,nclzSn
@@ -501,7 +501,7 @@ end module param
 !############################################################################
 module complex_geometry
 
-  use decomp_2d,only : mytype
+  use decomp_2d_constants,only : mytype
   use variables,only : nx,ny,nz,nxm,nym,nzm
 
   integer     ,allocatable,dimension(:,:)   :: nobjx,nobjy,nobjz
@@ -513,7 +513,7 @@ end module complex_geometry
 !############################################################################
 module derivX
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
 
   real(mytype) :: alcaix6,acix6,bcix6
   real(mytype) :: ailcaix6,aicix6,bicix6,cicix6,dicix6
@@ -533,7 +533,7 @@ end module derivX
 !############################################################################
 module derivY
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
 
   real(mytype) :: alcaiy6,aciy6,bciy6
   real(mytype) :: ailcaiy6,aiciy6,biciy6,ciciy6,diciy6
@@ -553,7 +553,7 @@ end module derivY
 !############################################################################
 module derivZ
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
 
   real(mytype) :: alcaiz6,aciz6,bciz6
   real(mytype) :: ailcaiz6,aiciz6,biciz6,ciciz6,diciz6
@@ -574,7 +574,7 @@ end module derivZ
 !############################################################################
 ! Describes the parameters for the discrete filters in X-Pencil
 module parfiX
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
   real(mytype) :: fial1x, fia1x, fib1x, fic1x, fid1x, fie1x, fif1x  ! Coefficients for filter at boundary point 1
   real(mytype) :: fial2x, fia2x, fib2x, fic2x, fid2x, fie2x, fif2x  ! Coefficients for filter at boundary point 2
   real(mytype) :: fial3x, fia3x, fib3x, fic3x, fid3x, fie3x, fif3x  ! Coefficients for filter at boundary point 3
@@ -587,7 +587,7 @@ end module parfiX
 !############################################################################
 module parfiY
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
   real(mytype) :: fial1y, fia1y, fib1y, fic1y, fid1y, fie1y, fif1y ! Coefficients for filter at boundary point 1
   real(mytype) :: fial2y, fia2y, fib2y, fic2y, fid2y, fie2y, fif2y ! Coefficients for filter at boundary point 2
   real(mytype) :: fial3y, fia3y, fib3y, fic3y, fid3y, fie3y, fif3y ! Coefficients for filter at boundary point 3
@@ -600,7 +600,7 @@ end module parfiY
 !############################################################################
 module parfiZ
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
   real(mytype) :: fial1z, fia1z, fib1z, fic1z, fid1z, fie1z, fif1z ! Coefficients for filter at boundary point 1
   real(mytype) :: fial2z, fia2z, fib2z, fic2z, fid2z, fie2z, fif2z ! Coefficients for filter at boundary point 2
   real(mytype) :: fial3z, fia3z, fib3z, fic3z, fid3z, fie3z, fif3z ! Coefficients for filter at boundary point 3
@@ -617,12 +617,13 @@ end module simulation_stats
 !############################################################################
 !############################################################################
 module ibm_param
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
   real(mytype) :: cex,cey,cez,ra,rai,rao,ubcx,ubcy,ubcz,rads, c_air
   real(mytype) :: chord,thickness,omega
   integer :: inana ! Analytical BC as Input
   integer :: imove
 end module ibm_param
+!############################################################################
 !############################################################################
 module dbg_schemes
 
@@ -641,14 +642,14 @@ module dbg_schemes
             sqrt_prec,  abs_prec
 
 contains
- 
+
 
   !##################################################################
   !********************************************************************
   ! Math functions for Single/double precision
   !-------------------------------------------
   function sin_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -659,7 +660,7 @@ contains
   end function sin_prec
   !-------------------------------------------
   function cos_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -670,7 +671,7 @@ contains
   end function cos_prec
   !-------------------------------------------
   function tan_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -681,7 +682,7 @@ contains
   end function tan_prec
   !-------------------------------------------
   function asin_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -692,7 +693,7 @@ contains
   end function asin_prec
   !-------------------------------------------
   function acos_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -703,7 +704,7 @@ contains
   end function acos_prec
   !-------------------------------------------
   function atan_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -714,7 +715,7 @@ contains
   end function atan_prec
   !-------------------------------------------
   function sinh_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -725,7 +726,7 @@ contains
   end function sinh_prec
   !-------------------------------------------
   function cosh_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -736,7 +737,7 @@ contains
   end function cosh_prec
   !-------------------------------------------
   function tanh_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -747,7 +748,7 @@ contains
   end function tanh_prec
   !-------------------------------------------
   function exp_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -758,7 +759,7 @@ contains
   end function exp_prec
   !-------------------------------------------
   function log_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -769,7 +770,7 @@ contains
   end function log_prec
   !-------------------------------------------
   function log10_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -780,7 +781,7 @@ contains
   end function log10_prec
   !-------------------------------------------
   function sqrt_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -791,7 +792,7 @@ contains
   end function sqrt_prec
   !-------------------------------------------
   function abs_prec(x) result(y)
-    USE decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     real(mytype), intent(in) :: x
     real(mytype) :: y
 #ifdef DOUBLE_PREC
@@ -800,5 +801,4 @@ contains
     y = abs(x)
 #endif
   end function abs_prec
-  end module dbg_schemes
-
+end module dbg_schemes

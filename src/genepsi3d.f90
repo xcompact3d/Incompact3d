@@ -4,6 +4,9 @@
 
 module genepsi
 
+  use decomp_2d_constants
+  use decomp_2d_mpi
+
   public
 
 contains
@@ -11,7 +14,7 @@ contains
   subroutine epsi_init(ep1)
 
     USE param, only : zero, one, dx, dz
-    USE decomp_2d, only : xstart, xend, xsize, mytype, nrank
+    USE decomp_2d, only : xstart, xend, xsize
     !USE decomp_2d_io
     USE variables, only : yp, ny
 
@@ -28,7 +31,7 @@ contains
     if (nrank==0) then
       inquire(file="geometry", exist=dir_exists)
       if (.not.dir_exists) then
-        call system("mkdir geometry 2> /dev/null")
+        call execute_command_line("mkdir geometry 2> /dev/null")
       end if
     end if
     !###################################################################
@@ -47,7 +50,6 @@ contains
 
     USE param, ONLY : itype, itype_cyl, itype_hill, itype_channel,&
                       itype_sandbox, itype_pipe
-    USE decomp_2d, ONLY : mytype
     USE cyl, ONLY : geomcomplex_cyl
     USE hill, ONLY : geomcomplex_hill
     USE channel, ONLY : geomcomplex_channel
@@ -121,11 +123,11 @@ contains
     if (nrank==0) then
       inquire(file="data", exist=dir_exists)
       if (.not.dir_exists) then
-        call system("mkdir data 2> /dev/null")
+        call execute_command_line("mkdir data 2> /dev/null")
       end if
       inquire(file="data/geometry", exist=dir_exists)
       if (.not.dir_exists) then
-        call system("mkdir data/geometry 2> /dev/null")
+        call execute_command_line("mkdir data/geometry 2> /dev/null")
       end if
     end if
     !###################################################################

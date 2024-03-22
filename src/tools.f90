@@ -4,6 +4,10 @@
 
 module tools
 
+  use decomp_2d_constants
+  use decomp_2d_mpi
+  use decomp_2d
+
   implicit none
 
   logical, save :: adios2_restart_initialised = .false.
@@ -27,7 +31,6 @@ contains
   !##################################################################
   subroutine test_scalar_min_max(phi)
 
-    use decomp_2d
     use variables
     use param
     use var
@@ -78,7 +81,6 @@ contains
   !##################################################################
   subroutine test_speed_min_max(ux,uy,uz)
 
-    use decomp_2d
     use variables
     use param
     use var
@@ -139,7 +141,6 @@ contains
   !##################################################################
   subroutine simu_stats(iwhen)
 
-    use decomp_2d
     use simulation_stats
     use var
     use MPI
@@ -204,7 +205,6 @@ contains
   !##############################################################################
   subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1,rho1,drho1,mu1,iresflg)
 
-    use decomp_2d
     use decomp_2d_io
     use variables
     use param
@@ -477,7 +477,6 @@ contains
   
   subroutine init_restart_adios2()
 
-    use decomp_2d, only : mytype, phG
     use decomp_2d_io, only : decomp_2d_register_variable, decomp_2d_init_io
     use variables, only : numscalar
     use param, only : ilmn, nrhotime, ntime
@@ -546,7 +545,6 @@ contains
   !############################################################################
   subroutine apply_spatial_filter(ux1,uy1,uz1,phi1)
 
-    use decomp_2d
     use param
     use var, only: uxf1,uyf1,uzf1,uxf2,uyf2,uzf2,uxf3,uyf3,uzf3,di1,di2,di3,phif1,phif2,phif3
     use variables
@@ -626,7 +624,6 @@ contains
   !############################################################################
   subroutine init_inflow_outflow()
 
-    use decomp_2d, only : mytype
     use decomp_2d_io, only : decomp_2d_init_io, decomp_2d_register_variable
 
     use param, only : ntimesteps
@@ -647,7 +644,6 @@ contains
   !############################################################################
   subroutine read_inflow(ux1,uy1,uz1,ifileinflow)
 
-    use decomp_2d
     use decomp_2d_io
     use var, only: ux_inflow, uy_inflow, uz_inflow
     use param
@@ -685,7 +681,6 @@ contains
   !############################################################################
   subroutine append_outflow(ux,uy,uz,timestep)
  
-    use decomp_2d
     use decomp_2d_io
     use var, only: ux_recoutflow, uy_recoutflow, uz_recoutflow, ilist
     use param
@@ -712,7 +707,6 @@ contains
   !############################################################################
   subroutine write_outflow(ifileoutflow)
 
-    use decomp_2d
     use decomp_2d_io
     use param
     use var, only: ux_recoutflow, uy_recoutflow, uz_recoutflow
@@ -755,7 +749,6 @@ contains
      use param, only : xnu,dt,dx,dy,dz,istret
      use param, only : cfl_diff_sum, cfl_diff_x, cfl_diff_y, cfl_diff_z
      use variables, only : dyp
-     use decomp_2d, only : nrank
 
      implicit none
 
@@ -789,7 +782,6 @@ contains
   !##################################################################
   subroutine compute_cfl(ux,uy,uz)
     use param, only : dx,dy,dz,dt,istret
-    use decomp_2d, only : nrank, mytype, xsize, xstart, xend, real_type
     use mpi
     use variables, only : dyp
 
@@ -852,7 +844,6 @@ contains
   !##################################################################
   elemental subroutine rescale_pressure(pre1)
 
-    use decomp_2d, only : mytype
     use param, only : itimescheme, gdt
     implicit none
 
@@ -930,7 +921,6 @@ contains
   subroutine rename(oldname, newname, opt_rank)
 
     use MPI
-    use decomp_2d, only : nrank, decomp_2d_abort
     use decomp_2d_io, only : gen_iodir_name
     
     character(len=*), intent(in) :: oldname
@@ -975,7 +965,6 @@ contains
   subroutine delete_filedir(name, opt_rank)
 
     use MPI
-    use decomp_2d, only : nrank, decomp_2d_abort
     
     character(len=*), intent(in) :: name
     integer, intent(in), optional :: opt_rank
@@ -1027,7 +1016,6 @@ contains
   logical function validate_restart(refname, testname, opt_rank)
 
     use MPI
-    use decomp_2d, only : nrank, decomp_2d_abort
     use decomp_2d_io, only : gen_iodir_name
     
     character(len=*), intent(in) :: refname
@@ -1100,6 +1088,7 @@ end module tools
 !##################################################################
 subroutine cfl_compute(uxmax,uymax,uzmax)
 
+  use decomp_2d_constants
   use param
   use variables
   use var
@@ -1156,6 +1145,7 @@ end subroutine cfl_compute
 subroutine stretching()
 
   use decomp_2d
+  use decomp_2d_constants
   !use decomp_2d_poisson
   use variables
   use param
@@ -1344,6 +1334,7 @@ end subroutine stretching
 subroutine inversion5_v1(aaa_in,eee,spI)
 
   use decomp_2d
+  use decomp_2d_constants
   !use decomp_2d_poisson
   use variables
   use param
@@ -1487,6 +1478,7 @@ end subroutine inversion5_v1
 subroutine inversion5_v2(aaa,eee,spI)
 
   use decomp_2d
+  use decomp_2d_constants
   !use decomp_2d_poisson
   use variables
   use param
@@ -1628,6 +1620,8 @@ subroutine tripping(tb,ta)
   use param
   use variables
   use decomp_2d
+  use decomp_2d_constants
+  use decomp_2d_mpi
   use mpi
   use dbg_schemes, only: sqrt_prec, sin_prec, exp_prec
 
@@ -1748,6 +1742,8 @@ subroutine tbl_tripping(tb,ta)
   use param
   use variables
   use decomp_2d
+  use decomp_2d_constants
+  use decomp_2d_mpi
   use mpi
   use dbg_schemes, only: sqrt_prec, exp_prec, sin_prec
 
@@ -1918,6 +1914,7 @@ end function cx
 subroutine calc_temp_eos(temp, rho, phi, mweight, xlen, ylen, zlen)
 
   use decomp_2d
+  use decomp_2d_constants
   use param, only : pressure0, imultispecies
   use var, only : numscalar
 
@@ -1946,6 +1943,7 @@ endsubroutine calc_temp_eos
 subroutine calc_rho_eos(rho, temp, phi, mweight, xlen, ylen, zlen)
 
   use decomp_2d
+  use decomp_2d_constants
   use param, only : pressure0, imultispecies
   use var, only : numscalar
 
@@ -1974,6 +1972,7 @@ endsubroutine calc_rho_eos
 subroutine calc_mweight(mweight, phi, xlen, ylen, zlen)
 
   use decomp_2d
+  use decomp_2d_constants
   use param, only : zero, one
   use param, only : massfrac, mol_weight
   use var, only : numscalar
@@ -2003,6 +2002,8 @@ subroutine test_min_max(name,text,array_tmp,i_size_array_tmp)
   use param
   use variables
   use decomp_2d
+  use decomp_2d_constants
+  use decomp_2d_mpi
   use MPI
 
   implicit none
@@ -2030,7 +2031,7 @@ subroutine test_min_max(name,text,array_tmp,i_size_array_tmp)
      write(*,*) trim(text)//' Tot ',name,tot_tot
      write(*,*) trim(text)//' Min ',name,min_tot
      write(*,*) " "
-     call flush(6)
+     flush(6)
   endif
 
   return

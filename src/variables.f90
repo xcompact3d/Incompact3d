@@ -4,7 +4,9 @@
 
 module var
 
+  use decomp_2d_constants
   use decomp_2d
+  use decomp_2d_mpi
   USE variables
   USE param
   USE complex_geometry

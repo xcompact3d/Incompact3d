@@ -4,6 +4,9 @@
 
 module transeq
 
+  use decomp_2d_constants
+  use decomp_2d_mpi
+
   private
   public :: calculate_transeq_rhs
 
@@ -16,7 +19,7 @@ contains
   !############################################################################
   subroutine calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
-    use decomp_2d, only : mytype, xsize, zsize
+    use decomp_2d, only : xsize, zsize
     use variables, only : numscalar
     use param, only : ntime, ilmn, nrhotime, ilmn_solve_temp
 
@@ -1176,7 +1179,7 @@ contains
   !############################################################################
   subroutine continuity_rhs_eq(drho1, rho1, ux1, divu3)
 
-    use decomp_2d, only : mytype, xsize, ysize, zsize
+    use decomp_2d, only : xsize, ysize, zsize
     use decomp_2d, only : transpose_z_to_y, transpose_y_to_x
     use param, only : ntime, nrhotime, ibirman_eos, zero
     use param, only : xnu, prandtl

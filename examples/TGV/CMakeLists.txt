@@ -1,5 +1,5 @@
-# ABL Neutral
-set(case "TBL")
+# TGV
+set(case "TGV")
 set(case_dir "${test_dir}/${case}")
 file(MAKE_DIRECTORY ${case_dir})
 set(input_file "input_test.i3d")
