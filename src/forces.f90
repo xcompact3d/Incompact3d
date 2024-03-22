@@ -512,7 +512,6 @@ contains
        if (mod(itime, icheckpoint).eq.0) then
           if (nrank .eq. 0) then
              write(filename,"('forces.dat',I7.7)") itime
-             !ierror=system("cp forces.dat " //filename)
              call execute_command_line ("cp forces.dat "//filename)
           endif
        endif
