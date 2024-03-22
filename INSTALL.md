@@ -58,19 +58,15 @@ By default the installation directory is located under
 ```
 $ $path_to_build_directory/opt
 ```
+and it will cointain: 
+* The *bin* directory with the execulables **xcompact3d** for the main execution of the code;
+* The *example* directory with some examples of input *.i3d* files.
+
 To change the default location the `CMAKE_INSTALL_PREFIX` can be modified using 
 ```
 $ cmake --build $path_to_build_directory -DCMAKE_INSTALL_PREFIX=$path_to_my_opt
 ```
 or via the `ccmake` interface. 
-
-The installation is finally completed by typing 
-```
-$ cmake --install $path_to_build_directory
-```
-The installation directory `opt` will cointain:
-* The *bin* directory with the execulables **xcompact3d** for the main execution of the code;
-* The *example* directory with some examples of input *.i3d* files.
 
 ### Testing
 The testing suite for the **xcompact3d** solver is composed by 14 tests as follows 
