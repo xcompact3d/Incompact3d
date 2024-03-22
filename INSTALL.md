@@ -123,11 +123,26 @@ Alternative available options are:
 * SINGLE precision for the build.
 
 2DECOMP&FFT installation provides CMake configuration file that can be used to find the installation directory. 
-To allow the `find_package` of CMake to work the following variable needs to be set as
+To allow the `find_package` of `CMake` to work the following variable needs to be set as
 ```
 $ export decomp2d_DIR=/path/to/2decomp/install/opt/lib/decomp2d 
 ```
-Depending on the system *lib* can be *lib64* 
+Depending on the system *lib* can be *lib64*.
+
+***Note***
+Some of the alternative options for FFT and IO backends required additional input
+* For MKL FFT the location of the MKL libraires needs to be passed to the configure as 
+for the 2DECOMP&FFT installation with 
+```
+$ export MKL_DIR=${MKLROOT}/lib/cmake/mkl
+```
+
+* For ADIOS the installation directory needs to be passes to the configure as
+```
+$ cmake -S . -B ./build -DIO_BACKEND=adios2 -Dadios2_DIR=/path/to/adios2/install/lib/cmake/adios2
+```
+
+Both steps are necessary for correct linking of the target **xcompact3d** with the libraries 
 
 ## Known issues
 The tests performed under `CTest` rely on the `CMake` ability to properly find the MPI executable *mpirun*. 

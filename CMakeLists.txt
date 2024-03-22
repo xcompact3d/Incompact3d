@@ -1,9 +1,14 @@
 cmake_minimum_required(VERSION 3.20)                        
 cmake_policy(SET CMP0074 NEW)
 
-project(Incompact3d LANGUAGES Fortran)
+project(Xcompact3d LANGUAGES Fortran)
+set(version 5.0)
+if (IO_BACKEND MATCHES "adios2")
+  # Can be useful to also activate CXX, sometimes is needed by packages
+  enable_language(C CXX)
+endif (IO_BACKEND MATCHES "adios2")
 
-set(DESCRIPTION "Building Incompact3d using cmake")
+set(DESCRIPTION "Building Xcompact3d using cmake")
 
 message(STATUS "building ${PROJECT_NAME}")
 
@@ -39,6 +44,10 @@ endif (CMAKE_BUILD_TYPE MATCHES "NONE")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" "${CMAKE_SOURCE_DIR}/cmake/compilers" "${CMAKE_SOURCE_DIR}/cmake/fft")
 find_package(DECOMP2D REQUIRED)
+
+# Despite IO is handled by 2DECOMP&FFT we need to set it
+set (IO_BACKEND "mpi" CACHE STRING "Default IO backend (mpi (default) or adios2)")
+set_property(CACHE IO_BACKEND PROPERTY STRINGS mpi adios2)
 
 include(X3D_MPI)
 
