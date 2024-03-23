@@ -368,7 +368,8 @@ contains
     endif
 
     if (iforces.eq.1) then
-       call force(ux,uy,uz,ep,dummy1,dummy2,dummy3)
+      !  write(*,*) "Calling force from case"
+       call force(ux,uy,uz,ep,dummy1,dummy2,dummy3,0)
        call restart_forces(1)
     endif
 

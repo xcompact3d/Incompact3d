@@ -365,7 +365,7 @@ contains
 
   end subroutine restart_forces
 
-  subroutine force(ux1,uy1,uz1,ep1,dra1,dra2,dra3)
+  subroutine force(ux1,uy1,uz1,ep1,dra1,dra2,dra3,record_var)
 
     USE param
     USE variables
@@ -387,6 +387,7 @@ contains
 
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1, uy1, uz1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ep1
+    integer, intent(in) ::record_var
     real(mytype), intent(out)                                       :: dra1,dra2,dra3
 
     real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: ppi2
@@ -450,7 +451,7 @@ contains
 
     if (itime.eq.1) then
       do iv=1,nvol
-         if (nrank .eq. 0) then
+         if ((nrank .eq. 0).and.(record_var.eq.1)) then
             write(filename,"('forces.dat',I1.1)") iv
             open(38+(iv-1),file=filename,status='unknown',form='formatted')
             ! write(*,*) 'Opened file: ', filename, 'number = ', 38+(iv-1)
@@ -1022,7 +1023,7 @@ contains
       if ((itime==ifirst).or.(itime==0)) then
          
       endif
-       if (nrank .eq. 0) then
+       if ((nrank .eq. 0).and.(record_var.eq.1)) then
          ! write(*,*) 'TIME STEP = ', itime
           write(38+(iv-1),*) t,dra1,dra2,dra3
          !  write(*,*) 'written to file number', 38+(iv-1), t, dra1,dra2,dra3
