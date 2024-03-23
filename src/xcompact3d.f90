@@ -116,9 +116,9 @@ program xcompact3d
         call test_flow(rho1,ux1,uy1,uz1,phi1,ep1,drho1,divu3)
 
         !Add force calculation here
-        if (nrank.eq.0) then 
-        write(*,*) 'Going to call force from xcompact3d, itr = ', itr
-        endif 
+      !   if (nrank.eq.0) then 
+      !   write(*,*) 'Going to call force from xcompact3d, itr = ', itr
+      !   endif 
         call force(ux1,uy1,uz1,ep1,drag,lift,lat,1)
         grav_effx = grav_x*(rho_s-1.0)
         grav_effy = grav_y*(rho_s-1.0)
