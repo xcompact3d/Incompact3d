@@ -622,7 +622,7 @@ contains
           j=jcvlw(iv)-xstart(2)+1
           jj=jcvlw(iv)
           ym=real(jj,mytype)*dy
-          do k=1,xsize(3)
+          do k=zcvlf_lx(iv),zcvrt_lx(iv)
              kk=xstart(3)-1+k
              zm=real(kk,mytype)*dz
              fcvx=zero
@@ -679,7 +679,7 @@ contains
           j=jcvup(iv)-xstart(2)+1
           jj=jcvup(iv)
           ym=real(jj,mytype)*dy
-          do k=1,xsize(3)
+          do k=zcvlf_lx(iv),zcvrt_lx(iv)
              kk=xstart(3)-1+k   
              zm=real(kk,mytype)*dz
              fcvx=zero
@@ -737,7 +737,7 @@ contains
           i=icvlf(iv)-ystart(1)+1
           ii=icvlf(iv)
           xm=real(ii,mytype)*dx
-          do k=1,ysize(3)
+          do k=zcvlf_ly(iv),zcvrt_ly(iv)
              kk=ystart(3)+k-1
              zm=real(kk,mytype)*dz
              fcvx=zero
@@ -794,7 +794,7 @@ contains
           i=icvrt(iv)-ystart(1)+1
           ii=icvrt(iv)
           xm=real(ii,mytype)*dx
-          do k=1,ysize(3)
+          do k=zcvlf_ly(iv),zcvrt_ly(iv)
              kk=ystart(3)-1+k
              zm=real(kk,mytype)*dz
              fcvx=zero
@@ -804,7 +804,7 @@ contains
              fdix=zero
              fdiy=zero
              fdiz=zero
-             do j=jcvlw_ly(iv),jcvup_ly(iv)-1
+             do j=jcvlw_ly(iv),jcvup_ly(iv)-1 !!!What's going on here?
                 jj=ystart(2)+j-1
                 ym=real(jj,mytype)*dy
                 !momentum flux
