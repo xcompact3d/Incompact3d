@@ -535,7 +535,7 @@ contains
        tunstxl=zero
        tunstyl=zero
        tunstzl=zero
-       do k=1,xsize(3)
+       do k=zcvlf_lx(iv),zcvrt_lx(iv)
           tsumx=zero
           tsumy=zero
           tsumz=zero
@@ -862,7 +862,7 @@ contains
          fdiy=zero
          fdiz=zero
          do j=jcvlw_lx(iv),jcvup_lx(iv)
-          kk = xstart(2)-1+j
+         !  kk = xstart(2)-1+j
           jj = xstart(2)-1+j
 
           ym=real(jj,mytype)*dy
