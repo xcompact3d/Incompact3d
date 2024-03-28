@@ -272,8 +272,12 @@ Ndiscs,ADMcoords,C_T,aind,iturboutput,rho_air
 
 ThetaDotModel
 --------
-jtheta_dot ,jthickness , K_theta, H_12
+jtheta_dot ,jthickness, Method_FT , K_theta, H_12
 
 BlowingModel
 --------
 Blowing,A_Blowing,Xst_Blowing,Xen_Blowing
+
+AdversePresGrad
+--------
+AdvPre,DpDX

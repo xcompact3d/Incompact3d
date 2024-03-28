@@ -345,12 +345,16 @@ module param
   real(mytype) :: smagcst,nSmag,walecst,FSGS,pr_t,maxdsmagcst
 
   !Theta Dot Model
-  integer :: jtheta_dot,jthickness
+  integer :: jtheta_dot,jthickness,Method_FT
   real(mytype) :: K_theta, H_12
 
   !Blowing Model
   integer :: Blowing
   real(mytype) :: A_Blowing,Xst_Blowing,Xen_Blowing,Range_Smooth
+
+  !Adverse Pressure Gradient
+  integer :: AdvPre
+  real(mytype) :: Adv_DpDX
 
   !! Gravity field (vector components)
   real(mytype) :: gravx, gravy, gravz

@@ -58,8 +58,9 @@ subroutine parameter(input_i3d)
        scalar_lbound, scalar_ubound, sc_even, sc_skew, &
        alpha_sc, beta_sc, g_sc, Tref
   NAMELIST /LESModel/ jles, smagcst, smagwalldamp, nSmag, walecst, maxdsmagcst, iconserv
-  NAMELIST /ThetaDotModel/ jtheta_dot,jthickness,K_theta,H_12
+  NAMELIST /ThetaDotModel/ jtheta_dot,jthickness,Method_FT,K_theta,H_12
   NAMELIST /BlowingModel/ Blowing,A_Blowing,Xst_Blowing,Xen_Blowing,Range_Smooth  
+  NAMELIST /AdversePresGrad/ AdvPre,Adv_DpDX
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
   NAMELIST /ibmstuff/ cex,cey,cez,ra,nobjmax,nraf,nvol,iforces, npif, izap, ianal, imove, thickness, chord, omega ,ubcx,ubcy,ubcz,rads, c_air
   NAMELIST /ForceCVs/ xld, xrd, yld, yud!, zld, zrd
@@ -213,6 +214,7 @@ subroutine parameter(input_i3d)
   if(itype .eq. 14) then
      read(10, nml=ThetaDotModel); rewind(10)
      read(10, nml=BlowingModel); rewind(10)
+     read(10, nml=AdversePresGrad); rewind(10)
   end if
 
   if (itype.eq.itype_tbl) then
@@ -422,46 +424,59 @@ subroutine parameter(input_i3d)
      !
      write(*,*) '==========================================================='
      if (ilesmod.eq.0) then
-      write(*,"(' Performing             : ',A10)") "DNS"
+      write(*,"(' Performing                : ',A10)") "DNS"
      else
        if (jles==1) then
-          write(*,"(' Performing LES         : ',A10)") "Phys Smag"
+          write(*,"(' Performing LES            : ',A10)") "Phys Smag"
        else if (jles==2) then
-          write(*,"(' Performing LES         : ',A10)") "Phys WALE"
+          write(*,"(' Performing LES            : ',A10)") "Phys WALE"
        else if (jles==3) then
-          write(*,"(' Performing LES         : ',A15)") "Phys dyn. Smag"
-       else if (jles==4) then
-          write(*,"(' Performing LES         : ',A10)") "iSVV"
+          write(*,"(' Performing LES            : ',A15)") "Phys dyn. Smag"
+       else if (jles==4) then 
+          write(*,"(' Performing LES            : ',A10)") "iSVV"
        else
        endif
      endif
  
      write(*,*) '==========================================================='
       if (jtheta_dot==0) then 
-         write(*,"(' Theta dot Model        : ',A10)") "Biao"
+         write(*,"(' Theta dot Model           : ',A10)") "Biau"
       else if (jtheta_dot==1) then
-         write(*,"(' Theta dot Model        : ',A10)") "Andy"
+         write(*,"(' Theta dot Model           : ',A10)") "Andy"
          if (jthickness ==0) then 
-            write(*,"(' Model works based on   : ',A25)") "Momentum Thickness"
+            write(*,"(' Model works based on      : ',A25)") "Momentum Thickness"
          else
-            write(*,"(' Model works based on   : ',A25)") "Displacement Thickness"
-            write(*,"(' H_12 for scaling       : ',F12.6)") H_12 
+            write(*,"(' Model works based on      : ',A25)") "Displacement Thickness"
+            write(*,"(' H_12 for scaling          : ',F12.6)") H_12 
          end if
-         write(*,"(' K coefficient => e(Th) : ',F12.6)") K_theta 
+         if (Method_FT ==0) then 
+            write(*,"(' Theta Model version       : ',A25)") " v1.0 "
+         elseif (Method_FT ==1) then 
+            write(*,"(' Theta Model version       : ',A25)") " v2.0 "
+         end if
+         write(*,"(' K coefficient => e(Th)    : ',F12.6)") K_theta 
       endif
 
       write(*,*) '==========================================================='
       if (Blowing==0) then 
-         write(*,"(' Blowing                 : ',A10)") "Off"
+         write(*,"(' Blowing                   : ',A10)") "Off"
       elseif (Blowing==1) then
-         write(*,"(' Blowing                 : ',A10)") "On"
-         write(*,"(' Blowing Amplitude       : ',F12.6)") A_Blowing
-         write(*,"(' Blowing Region Start    : ',F12.6)") Xst_Blowing
-         write(*,"(' Blowing Region End      : ',F12.6)") Xen_Blowing
-         write(*,"(' Control Region Thickness: ',F12.6)") Xen_Blowing-Xst_Blowing
-         write(*,"(' Smoothening Range       : ',F12.6)") Range_Smooth
+         write(*,"(' Blowing                   : ',A10)") "On"
+         write(*,"(' Blowing Amplitude         : ',F12.6)") A_Blowing
+         write(*,"(' Blowing Region Start      : ',F12.6)") Xst_Blowing
+         write(*,"(' Blowing Region End        : ',F12.6)") Xen_Blowing
+         write(*,"(' Control Region Thickness  : ',F12.6)") Xen_Blowing-Xst_Blowing
+         write(*,"(' Smoothening Range         : ',F12.6)") Range_Smooth
       endif
 
+      write(*,*) '==========================================================='
+      if (AdvPre==0) then 
+         write(*,"(' Adverse Pressure Gradient : ',A10)") "Off"
+      elseif (AdvPre==1) then
+         write(*,"(' Adverse Pressure Gradient : ',A10)") "On"
+         write(*,"(' Pressure Gradient         : ',F12.6)") Adv_DpDX
+       endif
+     
      write(*,*) '==========================================================='
      write(*,"(' ifirst                 : ',I17)") ifirst
      write(*,"(' ilast                  : ',I17)") ilast

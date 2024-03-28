@@ -132,9 +132,9 @@ contains
                      byxn(i, k) = one
                      byyn(i, k) = zero
                      byzn(i, k) = zero
-                  else
-                     byxn(i, k) = one
-                     byyn(i, k) = uy(i, xsize(2) - 1, k)
+                  else if (FreeStream == 1 .or. AdvPre == 1) then
+                     byxn(i, k) = ux(i, xsize(2) - 1, k)
+                     byyn(i, k) = zero
                      byzn(i, k) = uz(i, xsize(2) - 1, k)
                   end if   
                end do
@@ -146,9 +146,9 @@ contains
                      byxn_2(i, k) = one
                      byyn_2(i, k) = zero
                      byzn_2(i, k) = zero
-                  else
-                     byxn_2(i, k) = one
-                     byyn_2(i, k) = uy_2(i, ysize(2) - 1, k)
+                  else if (FreeStream == 1 .or. AdvPre == 1) then
+                     byxn_2(i, k) = ux_2(i, ysize(2) - 1, k)
+                     byyn_2(i, k) = zero
                      byzn_2(i, k) = uz_2(i, ysize(2) - 1, k)
                   end if
                end do
@@ -192,8 +192,7 @@ contains
             if (jtheta_dot ==0) then
                read (67) thetad, ttda, ttdb, ttdc
             !==> Andy method
-            !else if ((jtheta_dot ==1) .and. (ilesmod /=0) )then
-            else if (jtheta_dot ==1)then
+            else if (((jtheta_dot ==1) .and. (ilesmod /=0) ) .or. ((jtheta_dot ==1) .and. (Method_FT ==1) ) )then
                read (67) thetad, theta_a, theta_b, theta_c , ZTn
             end if 
             close (67)
@@ -212,7 +211,7 @@ contains
       call transpose_y_to_x(tc2, tc1)
       call horizontal_avrge(ux2, ux2m)
 
-      ! Compute thetad (0: Biao, 1: Andy)
+      ! Compute thetad (0: Biau, 1: Andy)
       if (jtheta_dot == 0 ) then
          thetad = comp_thetad(thetad, ux2, uy2, ux2m)
       else if (jtheta_dot == 1 ) then
@@ -222,12 +221,12 @@ contains
       ! Write data for restart
       if (nrank == 0 .and. mod(itime, icheckpoint) == 0) then
          open (unit=67, file='checkpoint_ttbl', status='unknown', form='unformatted', action='write')
-         !==> Biao method
+         !==> Biau method
          if (jtheta_dot ==0) then
             write (67) thetad, ttda, ttdb, ttdc
          !==> Andy method
-         !else if ((jtheta_dot ==1) .and. (ilesmod /=0) )then
-         else if (jtheta_dot ==1)then
+         else if (((jtheta_dot ==1) .and. (ilesmod /=0) ) .or. ((jtheta_dot ==1) .and. (Method_FT ==1) ) )then
+         !else if (jtheta_dot ==1)then
                write (67) thetad, theta_a, theta_b, theta_c, ZTn
          end if 
          close (67)
@@ -239,7 +238,11 @@ contains
             do i = 1, xsize(1)
                if (istret == 0) y = (j + xstart(2) - 1 - 1) * dy
                if (istret /= 0) y = yp(j + xstart(2) - 1)
-               dux1(i, j, k, 1) = dux1(i, j, k, 1) + thetad * y * ta1(i, j, k)
+               if (AdvPre == 0) then 
+                  dux1(i, j, k, 1) = dux1(i, j, k, 1) + thetad * y * ta1(i, j, k)
+               else if (AdvPre == 1) then 
+                  dux1(i, j, k, 1) = dux1(i, j, k, 1) + thetad * y * ta1(i, j, k) - Adv_DpDX * (one -ux1(i, j, k)) 
+               end if
                duy1(i, j, k, 1) = duy1(i, j, k, 1) + thetad * y * tb1(i, j, k)
                if (iscalar == 1 .and. ri(1) /= 0) duy1(i, j, k, 1) = duy1(i, j, k, 1) + ri(1) * phi1(i, j, k, 1)
                duz1(i, j, k, 1) = duz1(i, j, k, 1) + thetad * y * tc1(i, j, k)
@@ -259,7 +262,7 @@ contains
          ufric = sqrt(tau_wall * xnu)
          
          !Check the flow rate (what is coming in the domain is getting out)
-         call tbl_flrt_Check(ux1)
+         if (mod(itime, ilist) == 0) call tbl_flrt_Check(ux1)
 
          ! Write out
          if (nrank == 0) then
@@ -712,7 +715,11 @@ contains
          end if
          call MPI_BCAST(thetad, 1, real_type, 0, MPI_COMM_WORLD, code)
       end if
-      ttda(:) = thetad * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
+      if (AdvPre == 0) then 
+         ttda(:) = thetad * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:) 
+      elseif (AdvPre == 1) then 
+         ttda(:) = thetad * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:) - Adv_DpDX*(one-ux2m)
+      end if
       ttdc(:) = ttdb(:); ttdb(:) = ttda(:)
 
       ! Internal wrapper to pass to ITP
@@ -732,7 +739,11 @@ contains
       real(mytype), intent(in), dimension(ysize(2)) :: ydudy2m, du2dy22m, duxuy2pm, ux2m
       real(mytype), intent(out), dimension(ysize(2)) :: ux2mm
       real(mytype) :: theta
-      ttda(:) = thetad * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
+      if (AdvPre == 0) then 
+         ttda(:) = thetad * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
+      elseif (AdvPre == 1) then 
+         ttda(:) = thetad * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:) - Adv_DpDX*(one-ux2m)
+      end if 
       ux2mm(:) = ux2m(:) + adt(1) * ttda(:) + bdt(1) * ttdb(:) + cdt(1) * ttdc(:)
       theta = sum((ux2mm * (one - ux2mm)) * ypw)
    end function
@@ -1151,33 +1162,62 @@ contains
       call horizontal_avrge(ux2p * uy2, uxuy2pm)
       call dery(dudy2m, ux2m, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
       
-      ! G(t) Model based on (0: Momentum Thickness)
-      if (jthickness == 0) then 
+      
+       ! G(t) Model based on (0: Momentum Thickness)
+      if (jthickness == 0) then
          ! Calculate quantities         
          theta = sum((ux2m * (one - ux2m)) * ypw)
          ET = one - theta
          int_GT = sum((dudy2m*(xnu * dudy2m - uxuy2pm))*ypw)
          GT = 2.0 * int_GT - xnu * dudy2m(1)
-         
-         theta_a = ET; 
-         ZTnp1 = ZTn + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
-         FT = (-2.0*K_theta * ET + GT - ((K_theta ** 2) * ZTnp1))/theta
-         ! Saving for next time step
-         ZTn = ZTnp1
-         theta_c = theta_b; theta_b = theta_a
-   
+
+         ! For DNS simulation
+         if (ilesmod == 0) then  
+            if (Method_FT ==0) then
+               FT = (-K_theta * ET + GT)/theta
+            else if (Method_FT ==1) then
+               theta_a = ET;
+               ZTnp1 = ZTn + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
+               FT = (-2.0*K_theta * ET + GT - ((K_theta ** 2) * ZTnp1))/theta
+               ! Saving for next time step
+               ZTn = ZTnp1
+               theta_c = theta_b; theta_b = theta_a
+            end if
+         else ! For LES simulation
+            theta_a = ET;
+            ZTnp1 = ZTn + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
+            FT = (-2.0*K_theta * ET + GT - ((K_theta ** 2) * ZTnp1))/theta
+            ! Saving for next time step
+            ZTn = ZTnp1
+            theta_c = theta_b; theta_b = theta_a
+         end if
+
       ! G(t) Model based on (1: Displacement Thickness)
-      else if (jthickness == 1) then  
+      else if (jthickness == 1) then
          Disp  = sum((one - ux2m) * ypw)
          ET = one - Disp
          GT = xnu * dudy2m(1)
 
-         theta_a = ET; 
-         ZTnp1 = ZTn + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
-         FT = (-2.0*K_theta * ET + GT - ((K_theta ** 2) * ZTnp1))/Disp
-         ! Saving for next time step
-         ZTn = ZTnp1
-         theta_c = theta_b; theta_b = theta_a
+         ! For DNS simulation
+         if (ilesmod == 0) then  
+            if (Method_FT ==0) then
+               FT = (-K_theta * ET + GT)/theta
+            else if (Method_FT ==1) then
+               theta_a = ET;
+               ZTnp1 = ZTn + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
+               FT = (-2.0*K_theta * ET + GT - ((K_theta ** 2) * ZTnp1))/theta
+               ! Saving for next time step
+               ZTn = ZTnp1
+               theta_c = theta_b; theta_b = theta_a
+            end if
+         else ! For LES simulation
+            theta_a = ET;
+            ZTnp1 = ZTn + adt(1) * theta_a + bdt(1) * theta_b + cdt(1) * theta_c
+            FT = (-2.0*K_theta * ET + GT - ((K_theta ** 2) * ZTnp1))/theta
+            ! Saving for next time step
+            ZTn = ZTnp1
+            theta_c = theta_b; theta_b = theta_a
+         end if
 
       end if
 
