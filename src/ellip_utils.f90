@@ -358,7 +358,7 @@ contains
     
       real(mytype), INTENT(IN)  :: vI(3), positionI(3), originO(3), vO(3), Omega(3)
       real(mytype), INTENT(OUT) :: vR(3)
-      real(mytype) :: r(3), crossProduct(3)
+      real(mytype) :: r(3), crossProduct_v(3)
     
       ! Compute r = positionI - originO
       r(1) = positionI(1) - originO(1)
@@ -366,14 +366,14 @@ contains
       r(3) = positionI(3) - originO(3)
     
       ! Compute Omega x r (cross product)
-      crossProduct(1) = Omega(2)*r(3) - Omega(3)*r(2)
-      crossProduct(2) = Omega(3)*r(1) - Omega(1)*r(3)
-      crossProduct(3) = Omega(1)*r(2) - Omega(2)*r(1)
+      crossProduct_v(1) = Omega(2)*r(3) - Omega(3)*r(2)
+      crossProduct_v(2) = Omega(3)*r(1) - Omega(1)*r(3)
+      crossProduct_v(3) = Omega(1)*r(2) - Omega(2)*r(1)
     
       ! Compute vR = vI - vO - Omega x r
-      vR(1) = vI(1) - vO(1) - crossProduct(1)
-      vR(2) = vI(2) - vO(2) - crossProduct(2)
-      vR(3) = vI(3) - vO(3) - crossProduct(3)
+      vR(1) = vI(1) - vO(1) - crossProduct_v(1)
+      vR(2) = vI(2) - vO(2) - crossProduct_v(2)
+      vR(3) = vI(3) - vO(3) - crossProduct_v(3)
     
     END SUBROUTINE ConvertToMovingRotatingFrame
 
