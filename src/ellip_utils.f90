@@ -229,7 +229,7 @@ contains
     result(3) = a(1) * b(2) - a(2) * b(1)
   end subroutine CrossProduct
   
-  subroutine CalculatePointVelocity(point, center, linearVelocity, angularVelocity, pointVelocity)
+  subroutine CalculatePointVelocity(point, center, angularVelocity, linearVelocity, pointVelocity)
     real(mytype), intent(in) :: point(3), center(3), linearVelocity(3), angularVelocity(3)
     real(mytype), intent(out) :: pointVelocity(3)
     real(mytype) :: crossed(3)
@@ -274,7 +274,7 @@ contains
           xm=real(i+xstart(1)-2, mytype)*dx
           point=[xm,ym,zm]
           if (ep1(i,j,k).eq.1) then 
-            call CalculatePointVelocity(point, center, linearVelocity, angularVelocity, pointVelocity)
+            call CalculatePointVelocity(point, center, angularVelocity, linearVelocity, pointVelocity)
             x_pv=pointVelocity(1)
             y_pv=pointVelocity(2)
             z_pv=pointVelocity(3)
