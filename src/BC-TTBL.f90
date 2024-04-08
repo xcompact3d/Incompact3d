@@ -132,7 +132,7 @@ contains
                      byxn(i, k) = one
                      byyn(i, k) = zero
                      byzn(i, k) = zero
-                  else if (FreeStream == 1 .or. AdvPre == 1) then
+                  else if (FreeStream == 1) then
                      byxn(i, k) = ux(i, xsize(2) - 1, k)
                      byyn(i, k) = zero
                      byzn(i, k) = uz(i, xsize(2) - 1, k)
@@ -146,7 +146,7 @@ contains
                      byxn_2(i, k) = one
                      byyn_2(i, k) = zero
                      byzn_2(i, k) = zero
-                  else if (FreeStream == 1 .or. AdvPre == 1) then
+                  else if (FreeStream == 1) then
                      byxn_2(i, k) = ux_2(i, ysize(2) - 1, k)
                      byyn_2(i, k) = zero
                      byzn_2(i, k) = uz_2(i, ysize(2) - 1, k)
@@ -241,7 +241,7 @@ contains
                if (AdvPre == 0) then 
                   dux1(i, j, k, 1) = dux1(i, j, k, 1) + thetad * y * ta1(i, j, k)
                else if (AdvPre == 1) then 
-                  dux1(i, j, k, 1) = dux1(i, j, k, 1) + thetad * y * ta1(i, j, k) - Adv_DpDX * (one -ux1(i, j, k)) 
+                  dux1(i, j, k, 1) = dux1(i, j, k, 1) + thetad * y * ta1(i, j, k) - Adv_DpDX * (one -ux2m(j)) 
                end if
                duy1(i, j, k, 1) = duy1(i, j, k, 1) + thetad * y * tb1(i, j, k)
                if (iscalar == 1 .and. ri(1) /= 0) duy1(i, j, k, 1) = duy1(i, j, k, 1) + ri(1) * phi1(i, j, k, 1)
@@ -267,7 +267,7 @@ contains
          ! Write out
          if (nrank == 0) then
             write (6, "(' thetad = ',F14.12,'    theta = ',F14.12,'    delta = ',F14.12,'    H = ',F14.12)") thetad, theta, delta, delta / theta
-            write (6, "(' tau_wall = ',F14.12,'    u_tau = ',F14.12,'    cf = ',F14.12)") tau_wall, ufric, two * ufric**2
+            write (6, "(' tau_wall = ',F16.12,'    u_tau = ',F16.12,'    cf = ',F16.12)") tau_wall, ufric, two * ufric**2
             write (6, "(' Re_theta = ',F16.8,'    Re_delta = ',F16.8)") one*theta*re, one*delta*re !(xnu=one/re)
             write (6, "(' dx+ = ',F12.8,'    dz+ = ',F12.8,'    dy+(min,max) = (',F12.8,',',F12.8,')')") dx * ufric * re, dz * ufric * re, dyp(1) * ufric * re, dyp(ny) * ufric * re
             write (6, "(' Y_size1 = ',I8,' Y_size2 = ',I8,' Y_size3 = ',I8)") ysize(1), ysize(2), ysize(3)

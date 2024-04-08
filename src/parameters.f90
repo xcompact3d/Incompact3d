@@ -437,7 +437,12 @@ subroutine parameter(input_i3d)
        else
        endif
      endif
- 
+     write(*,*) '==========================================================='
+     if (FreeStream==0) then 
+         write(*,"(' FreeStream (BC)           : ',A10)") "Off"
+     else if (FreeStream==1) then
+         write(*,"(' FreeStream (BC)           : ',A10)") "On"
+     end if         
      write(*,*) '==========================================================='
       if (jtheta_dot==0) then 
          write(*,"(' Theta dot Model           : ',A10)") "Biau"

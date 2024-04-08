@@ -10,16 +10,16 @@ p_row = 0               ! Row partition
 p_col = 0               ! Column partition
 
 ! Mesh
-nx = 112                 ! X-direction nodes
-ny = 161                 ! Y-direction nodes
-nz = 80                  ! Z-direction nodes
-istret = 3               ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
-beta = 0.868971866422306 ! Refinement parameter (beta)
+nx = 160                ! X-direction nodes
+ny = 97                 ! Y-direction nodes
+nz = 128                ! Z-direction nodes
+istret = 3              ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
+beta = 0.7435858606037865 ! Refinement parameter (beta)
 
 ! Domain
-xlx = 40.0              ! Lx (Size of the box in x-direction)
+xlx = 100.0             ! Lx (Size of the box in x-direction)
 yly = 30.0              ! Ly (Size of the box in y-direction)
-zlz = 15.0              ! Lz (Size of the box in z-direction)
+zlz = 50.0              ! Lz (Size of the box in z-direction)
 
 ! Boundary conditions
 nclx1 = 0
@@ -28,10 +28,10 @@ ncly1 = 2
 nclyn = 2
 nclz1 = 0
 nclzn = 0
-FreeStream = 1          ! 0 FreeStream off 1 0 FreeStream on
+FreeStream = 1          ! 0 FreeStream off 1 FreeStream on
 
 ! Flow parameters
-re = 600                ! nu=1/re (Kinematic Viscosity)
+re = 1400               ! nu=1/re (Kinematic Viscosity)
 iin = 2                 ! Inflow conditions (1: classic, 2: turbinit)
 u1 = 1.0                ! u1 (max velocity) (for inflow condition)
 u2 = 1.0                ! u2 (min velocity) (for inflow condition)
@@ -39,12 +39,12 @@ init_noise = 0.02       ! Turbulence intensity (1=100%) !! Initial condition
 inflow_noise = 0.0      ! Turbulence intensity (1=100%) !! Inflow condition
 
 ! Time stepping
-dt = 0.0125           ! Time step
-ifirst = 1            ! First iteration
-ilast = 50000         ! Last iteration
+dt = 0.01               ! Time step
+ifirst = 1              ! First iteration
+ilast = 50000           ! Last iteration
 
 ! Enable modelling tools
-ilesmod = 0            ! if 0 then DNS
+ilesmod = 1            ! if 0 then DNS
 
 /End
 
@@ -61,8 +61,8 @@ iimplicit = 2           ! Implicit scheme for y-diffusive term
 itimescheme = 3         ! Time integration scheme
 
 ! Dissipation control
-nu0nu = 4.0             ! Ratio between hyperviscosity/viscosity at nu
-cnu = 0.44              ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
+nu0nu = 10.835304271883967  ! Ratio between hyperviscosity/viscosity at nu
+cnu = 0.22              ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 
 /End
 
@@ -71,9 +71,9 @@ cnu = 0.44              ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 !=================
 ! Basic I/O
 irestart = 0            ! Read initial flow field ?
-icheckpoint = 100       ! Frequency for writing backup file
-ioutput = 100           ! Frequency for visualization
-ilist = 5               ! Frequency for writing to screen
+icheckpoint = 500       ! Frequency for writing backup file
+ioutput = 500           ! Frequency for visualization
+ilist = 20              ! Frequency for writing to screen
 nvisu = 1               ! Size for visualisation collection
 
 /End
@@ -92,7 +92,7 @@ initstat = 30000        ! Time steps after which statistics are collected
 !================
 &LESModel
 !================
-jles = 0               ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Smag, 4: iSVV, 5: dyn SEV)
+jles = 4               ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Smag, 4: iSVV, 5: dyn SEV)
 
 /End
 
@@ -102,7 +102,7 @@ jles = 0               ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Sma
 !================
 &ThetaDotModel
 !================
-jtheta_dot = 1              ! Theta dot Model (0: Biau, 1: Andy)
+jtheta_dot = 0              ! Theta dot Model (0: Biau, 1: Andy)
 jthickness = 0              ! Model based on (0: Momentum Thickness, 1: Displacement Thickness)
 Method_FT  = 1              ! (0: old, 1: New)
 K_theta    = 1.0            ! K coefficient for e(theta)
