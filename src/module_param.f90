@@ -353,8 +353,8 @@ module param
   real(mytype) :: A_Blowing,Xst_Blowing,Xen_Blowing,Range_Smooth
 
   !Adverse Pressure Gradient
-  integer :: AdvPre
-  real(mytype) :: Adv_DpDX
+  integer :: APG
+  real(mytype) :: APG_DpDX
 
   !! Gravity field (vector components)
   real(mytype) :: gravx, gravy, gravz

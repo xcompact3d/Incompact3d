@@ -10,16 +10,16 @@ p_row = 0               ! Row partition
 p_col = 0               ! Column partition
 
 ! Mesh
-nx = 160                ! X-direction nodes
-ny = 97                 ! Y-direction nodes
-nz = 128                ! Z-direction nodes
+nx = 60                 ! X-direction nodes
+ny = 81                 ! Y-direction nodes
+nz = 45                 ! Z-direction nodes
 istret = 3              ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
-beta = 0.7435858606037865 ! Refinement parameter (beta)
+beta =  1.5             ! Refinement parameter (beta)
 
 ! Domain
-xlx = 100.0             ! Lx (Size of the box in x-direction)
+xlx = 40.0              ! Lx (Size of the box in x-direction)
 yly = 30.0              ! Ly (Size of the box in y-direction)
-zlz = 50.0              ! Lz (Size of the box in z-direction)
+zlz = 15.0              ! Lz (Size of the box in z-direction)
 
 ! Boundary conditions
 nclx1 = 0
@@ -28,7 +28,7 @@ ncly1 = 2
 nclyn = 2
 nclz1 = 0
 nclzn = 0
-FreeStream = 1          ! 0 FreeStream off 1 FreeStream on
+FreeStream = 0          ! 0 FreeStream off 1 FreeStream on
 
 ! Flow parameters
 re = 1400               ! nu=1/re (Kinematic Viscosity)
@@ -39,9 +39,9 @@ init_noise = 0.02       ! Turbulence intensity (1=100%) !! Initial condition
 inflow_noise = 0.0      ! Turbulence intensity (1=100%) !! Inflow condition
 
 ! Time stepping
-dt = 0.01               ! Time step
-ifirst = 1              ! First iteration
-ilast = 50000           ! Last iteration
+dt = 0.05               ! Time step
+ifirst = 10001              ! First iteration
+ilast = 20000           ! Last iteration
 
 ! Enable modelling tools
 ilesmod = 1            ! if 0 then DNS
@@ -61,7 +61,7 @@ iimplicit = 2           ! Implicit scheme for y-diffusive term
 itimescheme = 3         ! Time integration scheme
 
 ! Dissipation control
-nu0nu = 10.835304271883967  ! Ratio between hyperviscosity/viscosity at nu
+nu0nu = 8.42978         ! Ratio between hyperviscosity/viscosity at nu
 cnu = 0.22              ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 
 /End
@@ -70,10 +70,10 @@ cnu = 0.22              ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 &InOutParam
 !=================
 ! Basic I/O
-irestart = 0            ! Read initial flow field ?
-icheckpoint = 500       ! Frequency for writing backup file
-ioutput = 500           ! Frequency for visualization
-ilist = 20              ! Frequency for writing to screen
+irestart = 1            ! Read initial flow field ?
+icheckpoint = 2000      ! Frequency for writing backup file
+ioutput = 2000          ! Frequency for visualization
+ilist = 100             ! Frequency for writing to screen
 nvisu = 1               ! Size for visualisation collection
 
 /End
@@ -82,7 +82,7 @@ nvisu = 1               ! Size for visualisation collection
 &Statistics
 !=================
 nstat = 1               ! Size arrays for statistic collection
-initstat = 30000        ! Time steps after which statistics are collected
+initstat = 100000        ! Time steps after which statistics are collected
 
 /End
 
@@ -130,8 +130,8 @@ Range_Smooth = 0.5          ! Adjust this value to control the smoothness of the
 !================
 &AdversePresGrad
 !================ 
-AdvPre     = 1             ! Adverse Pressure Gradient (0: Off, 1: On)
-Adv_DpDX   = 2.e-3         ! Pressure gradient
+APG     = 1               ! Adverse Pressure Gradient (0: Off, 1: On)
+APG_DpDX   =2.e-3         ! Pressure gradient
 
 /End
 

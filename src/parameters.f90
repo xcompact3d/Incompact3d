@@ -60,7 +60,7 @@ subroutine parameter(input_i3d)
   NAMELIST /LESModel/ jles, smagcst, smagwalldamp, nSmag, walecst, maxdsmagcst, iconserv
   NAMELIST /ThetaDotModel/ jtheta_dot,jthickness,Method_FT,K_theta,H_12
   NAMELIST /BlowingModel/ Blowing,A_Blowing,Xst_Blowing,Xen_Blowing,Range_Smooth  
-  NAMELIST /AdversePresGrad/ AdvPre,Adv_DpDX
+  NAMELIST /AdversePresGrad/ APG,APG_DpDX
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
   NAMELIST /ibmstuff/ cex,cey,cez,ra,nobjmax,nraf,nvol,iforces, npif, izap, ianal, imove, thickness, chord, omega ,ubcx,ubcy,ubcz,rads, c_air
   NAMELIST /ForceCVs/ xld, xrd, yld, yud!, zld, zrd
@@ -475,11 +475,11 @@ subroutine parameter(input_i3d)
       endif
 
       write(*,*) '==========================================================='
-      if (AdvPre==0) then 
+      if (APG==0) then 
          write(*,"(' Adverse Pressure Gradient : ',A10)") "Off"
-      elseif (AdvPre==1) then
+      elseif (APG==1) then
          write(*,"(' Adverse Pressure Gradient : ',A10)") "On"
-         write(*,"(' Pressure Gradient         : ',F12.6)") Adv_DpDX
+         write(*,"(' Pressure Gradient         : ',F12.6)") APG_DpDX
        endif
      
      write(*,*) '==========================================================='

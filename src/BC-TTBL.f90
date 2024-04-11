@@ -238,10 +238,10 @@ contains
             do i = 1, xsize(1)
                if (istret == 0) y = (j + xstart(2) - 1 - 1) * dy
                if (istret /= 0) y = yp(j + xstart(2) - 1)
-               if (AdvPre == 0) then 
+               if (APG == 0) then 
                   dux1(i, j, k, 1) = dux1(i, j, k, 1) + thetad * y * ta1(i, j, k)
-               else if (AdvPre == 1) then 
-                  dux1(i, j, k, 1) = dux1(i, j, k, 1) + thetad * y * ta1(i, j, k) - Adv_DpDX * (one -ux2m(j)) 
+               else if (APG == 1) then 
+                  dux1(i, j, k, 1) = dux1(i, j, k, 1) + thetad * y * ta1(i, j, k) - APG_DpDX * (one - ux2m(j+xstart(2)-1) ) 
                end if
                duy1(i, j, k, 1) = duy1(i, j, k, 1) + thetad * y * tb1(i, j, k)
                if (iscalar == 1 .and. ri(1) /= 0) duy1(i, j, k, 1) = duy1(i, j, k, 1) + ri(1) * phi1(i, j, k, 1)
@@ -272,8 +272,8 @@ contains
             write (6, "(' dx+ = ',F12.8,'    dz+ = ',F12.8,'    dy+(min,max) = (',F12.8,',',F12.8,')')") dx * ufric * re, dz * ufric * re, dyp(1) * ufric * re, dyp(ny) * ufric * re
             write (6, "(' Y_size1 = ',I8,' Y_size2 = ',I8,' Y_size3 = ',I8)") ysize(1), ysize(2), ysize(3)
             open (unit=67, file='out/ttbl.dat', status='unknown', form='formatted', action='write', position='append')
-            if (itime == ilist) write (67, "(11A20)") 't', 'thetad', 'theta', 'delta', 'tau_wall', 'u_tau', 'cf', 'dx+', 'dz+', 'dy+_min', 'dy+_max'
-                write (67, "(11E20.12)") t, thetad, theta, delta, tau_wall, ufric, two * ufric**2, dx * ufric * re, dz * ufric * re, dyp(1) * ufric * re, dyp(ny) * ufric * re
+            if (itime == ilist) write (67, "(12A20)") 't', 'thetad', 'theta', 'delta', 'tau_wall', 'u_tau', 'cf', 'dx+', 'dz+', 'dy+_min', 'dy+_max' 
+                write (67, "(12E20.12)") t, thetad, theta, delta, tau_wall, ufric, two * ufric**2, dx * ufric * re, dz * ufric * re, dyp(1) * ufric * re, dyp(ny) * ufric * re
             close (67)
          end if
       end if
@@ -715,10 +715,10 @@ contains
          end if
          call MPI_BCAST(thetad, 1, real_type, 0, MPI_COMM_WORLD, code)
       end if
-      if (AdvPre == 0) then 
+      if (APG == 0) then 
          ttda(:) = thetad * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:) 
-      elseif (AdvPre == 1) then 
-         ttda(:) = thetad * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:) - Adv_DpDX*(one-ux2m)
+      elseif (APG == 1) then 
+         ttda(:) = thetad * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:) - APG_DpDX*(one-ux2m(:))
       end if
       ttdc(:) = ttdb(:); ttdb(:) = ttda(:)
 
@@ -739,10 +739,10 @@ contains
       real(mytype), intent(in), dimension(ysize(2)) :: ydudy2m, du2dy22m, duxuy2pm, ux2m
       real(mytype), intent(out), dimension(ysize(2)) :: ux2mm
       real(mytype) :: theta
-      if (AdvPre == 0) then 
+      if (APG == 0) then 
          ttda(:) = thetad * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:)
-      elseif (AdvPre == 1) then 
-         ttda(:) = thetad * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:) - Adv_DpDX*(one-ux2m)
+      elseif (APG == 1) then 
+         ttda(:) = thetad * ydudy2m(:) + xnu * du2dy22m(:) - duxuy2pm(:) - APG_DpDX*(one-ux2m(:))
       end if 
       ux2mm(:) = ux2m(:) + adt(1) * ttda(:) + bdt(1) * ttdb(:) + cdt(1) * ttdc(:)
       theta = sum((ux2mm * (one - ux2mm)) * ypw)
@@ -1144,7 +1144,7 @@ contains
       real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: ux2p
       real(mytype), dimension(ysize(2)) :: uxuy2pm, ux2mm
       real(mytype), dimension(ysize(2)) :: ydudy2m, dudy2m
-      real(mytype) :: thetad, RHS,GT,FT,int_GT,theta,ET,ZTnp1,Disp
+      real(mytype) :: thetad, RHS,GT,FT,int_GT,theta,ET,ZTnp1,Disp,Fy_Tot
       integer :: j, code
 
       integer, parameter :: freq = 1
@@ -1220,17 +1220,25 @@ contains
          end if
 
       end if
-
+      
       thetad = FT
+      call MPI_BCAST(thetad, 1, real_type, 0, MPI_COMM_WORLD, code)
       
       if ((itime >= ifirst + 2 .or. irestart == 1) .and. mod(itime, freq) == 0) then
+         ! total force require to keep Theta = 1
+         Fy_Tot = sum(thetad * ypw* dudy2m)
+         call MPI_BCAST(Fy_Tot, 1, real_type, 0, MPI_COMM_WORLD, code)
          if (nrank == 0) then
-           if (mod(itime, ilist) == 0) then
-              write (6, *) 'F(t) is computed , F(T) = ', thetad
+            if (mod(itime, ilist) == 0) then
+               write (6, "(' F(t) =',F14.12,'  &   Total Force(y) =',F14.12)") thetad,Fy_Tot
+               open (unit=67, file='out/Force.dat', status='unknown', form='formatted', action='write', position='append')
+               if (itime == ilist) write (67, "(2A20)") 'F(T)','Total Force(y)' 
+                  write (67, "(2E20.12)") thetad,Fy_Tot
+               close (67)
             end if
          end if
-         call MPI_BCAST(thetad, 1, real_type, 0, MPI_COMM_WORLD, code)
       end if
+      
 
    end function
 
