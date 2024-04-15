@@ -62,7 +62,7 @@ subroutine parameter(input_i3d)
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
   NAMELIST /ibmstuff/ cex,cey,cez,shx,shy,shz,oriw,orii,orij,orik,lvx,lvy,lvz,avx,avy,avz,ra, &
       nobjmax,nraf,nvol,iforces, cvl_scalar, npif, izap, ianal, imove, thickness, chord, omega , &
-      ubcx,ubcy,ubcz,rads,rho_s, c_air, grav_x,grav_y,grav_z, nozdrift, force_csv, bodies_fixed
+      ubcx,ubcy,ubcz,rads,rho_s, c_air, grav_x,grav_y,grav_z, nozdrift, force_csv, bodies_fixed, cube_flag
   NAMELIST /ForceCVs/ xld, xrd, yld, yud, zld, zrd
   NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, &
        massfrac, mol_weight, imultispecies, primary_species, &

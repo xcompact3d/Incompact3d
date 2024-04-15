@@ -80,7 +80,11 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
             xm=real(i-1,mytype)*dx
             point=[xm, ym, zm]
             ! call EllipsoidalRadius(point, position, orientation, shape, r)
-            call is_inside_ellipsoid(point, position, orientation, shape, ra, zeromach, is_inside)
+            if (cube_flag.eq.0) then 
+                call is_inside_ellipsoid(point, position, orientation, shape, ra, zeromach, is_inside)
+            else if (cube_flag.eq.1) then
+                is_inside = (abs(xm-position(1)).lt.ra).and.(abs(ym-position(2)).lt.ra).and.(abs(zm-position(3)).lt.ra)
+            endif
             !  r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two+(zm-cezz)**two)
             !  r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two)
             if (.not.is_inside) then
