@@ -100,10 +100,6 @@ contains
 
        call init_abl (ux1, uy1, uz1, ep1, phi1)
 
-    elseif (itype.eq.itype_uniform) then
-
-       call init_uniform (ux1, uy1, uz1, ep1, phi1)
-
     elseif (itype.EQ.itype_sandbox) THEN
    
        call init_sandbox (ux1, uy1, uz1, ep1, phi1, 0)
@@ -183,10 +179,6 @@ contains
     elseif (itype.eq.itype_abl) then
 
        call boundary_conditions_abl (ux, uy, uz, phi)
-
-    elseif (itype.eq.itype_uniform) then
-
-       call boundary_conditions_uniform (ux, uy, uz, phi)
 
     elseif (itype.EQ.itype_sandbox) THEN
    
@@ -342,10 +334,6 @@ contains
 
        call postprocess_abl (ux, uy, uz, ep)
 
-    elseif (itype.eq.itype_uniform) then
-
-       call postprocess_uniform (ux, uy, uz, ep)
-
     elseif (itype.EQ.itype_sandbox) THEN
    
        call postprocess_sandbox (ux, uy, uz, phi, ep)
@@ -401,10 +389,6 @@ contains
 
        call visu_lockexch_init(case_visu_init)
 
-    else if (itype .eq. itype_uniform) then
-
-       call visu_uniform_init(case_visu_init)      
-
     end if
     
   end subroutine visu_case_init
@@ -459,11 +443,6 @@ contains
        call visu_tbl(ux1, uy1, uz1, pp3, phi1, ep1, num)
        called_visu = .true.
        
-    elseif (itype.eq.itype_uniform) then
-
-       call visu_uniform(ux1, uy1, uz1, pp3, phi1, ep1, num)
-       called_visu = .true.
-
     endif
 
     if (called_visu .and. (.not. case_visu_init)) then
