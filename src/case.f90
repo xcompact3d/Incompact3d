@@ -18,6 +18,7 @@ module case
   use gravitycur
   use tbl
   use abl
+  use uniform
   use sandbox
   use cavity
   use pipe
