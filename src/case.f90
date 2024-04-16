@@ -8,14 +8,14 @@ module case
   use decomp_2d_constants
   use variables
 
-  use user_sim
+  use case_generic
   use tgv
   use cyl
   use hill
   use dbg_schemes
   use channel
   use mixlayer
-  use lockexch
+  use gravitycur
   use tbl
   use abl
   use uniform
@@ -60,13 +60,13 @@ contains
     pressure0 = one
     rho1(:,:,:,:) = one
 
-    if (itype.eq.itype_user) then
+    if (itype.eq.itype_generic) then
 
-       call init_user (ux1, uy1, uz1, ep1, phi1)
+       call init_generic (ux1, uy1, uz1, ep1, phi1)
 
-    elseif (itype.eq.itype_lockexch) then
+    elseif (itype.eq.itype_gravitycur) then
 
-       call init_lockexch(rho1, ux1, uy1, uz1, ep1, phi1)
+       call init_gravitycur(rho1, ux1, uy1, uz1, ep1, phi1)
 
     elseif (itype.eq.itype_tgv) then
 
@@ -88,10 +88,6 @@ contains
 
        call init_mixlayer(rho1, ux1, uy1, uz1)
 
-!!!    elseif (itype.eq.itype_jet) then
-!!!
-!!!       call init_jet(rho1, ux1, uy1, uz1, ep1, phi1)
-!!!
     elseif (itype.eq.itype_tbl) then
 
        call init_tbl (ux1, uy1, uz1, ep1, phi1)
@@ -152,13 +148,13 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho
     
-    if (itype == itype_user) then
+    if (itype == itype_generic) then
 
-       call boundary_conditions_user (ux,uy,uz,phi,ep)
+       call boundary_conditions_generic (ux,uy,uz,phi,ep)
 
-    elseif (itype.eq.itype_lockexch) then
+    elseif (itype.eq.itype_gravitycur) then
 
-       call boundary_conditions_lockexch(rho, phi)
+       call boundary_conditions_gravitycur(rho, phi)
 
     elseif (itype.eq.itype_tgv) then
 
@@ -310,13 +306,13 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep
     real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp
 
-    if (itype.eq.itype_user) then
+    if (itype.eq.itype_generic) then
 
-       call postprocess_user (ux, uy, uz, phi, ep)
+       call postprocess_generic (ux, uy, uz, phi, ep)
 
-    elseif (itype.eq.itype_lockexch) then
+    elseif (itype.eq.itype_gravitycur) then
 
-       call postprocess_lockexch(rho, ux, uy, uz, phi, ep)
+       call postprocess_gravitycur(rho, ux, uy, uz, phi, ep)
 
     elseif (itype.eq.itype_tgv) then
 
@@ -397,9 +393,9 @@ contains
 
        call visu_tbl_init(case_visu_init)
 
-    else if (itype .eq. itype_lockexch) then
+    else if (itype .eq. itype_gravitycur) then
 
-       call visu_lockexch_init(case_visu_init)
+       call visu_gravitycur_init(case_visu_init)
 
     else if (itype .eq. itype_uniform) then
 
@@ -429,9 +425,9 @@ contains
 
     logical :: called_visu = .false.
     
-    if (itype.eq.itype_user) then
+    if (itype.eq.itype_generic) then
 
-       call visu_user(ux1, uy1, uz1, pp3, phi1, ep1, num)
+       call visu_generic(ux1, uy1, uz1, pp3, phi1, ep1, num)
        called_visu = .true.
        
     elseif (itype.eq.itype_tgv) then
@@ -499,10 +495,6 @@ contains
 
        call momentum_forcing_channel(dux1, duy1, duz1, ux1, uy1, uz1)
 
-!!!    elseif (itype.eq.itype_jet) then
-!!!
-!!!       call momentum_forcing_jet(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
-!!!
     elseif (itype.eq.itype_abl) then
 
        call momentum_forcing_abl(dux1, duy1, duz1, ux1, uy1, uz1, phi1)
@@ -547,10 +539,10 @@ contains
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: rho1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: mu1
 
-    if (itype.eq.itype_lockexch) then
+    if (itype.eq.itype_gravitycur) then
 
        if (ilmn) then 
-          call set_fluid_properties_lockexch(rho1, mu1)
+          call set_fluid_properties_gravitycur(rho1, mu1)
        end if
        
     endif

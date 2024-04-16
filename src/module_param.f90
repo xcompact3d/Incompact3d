@@ -300,15 +300,13 @@ module param
 
   integer :: itype
   integer, parameter :: &
-       itype_user = 0, &
-       itype_lockexch = 1, &
+       itype_generic = 0, &
+       itype_gravitycur = 1, &
        itype_tgv = 2, &
        itype_channel = 3, &
        itype_hill = 4, &
        itype_cyl = 5, &
-       itype_dbg = 6, &
        itype_mixlayer = 7, &
-       itype_jet = 8, &
        itype_tbl = 9, &
        itype_abl = 10, &
        itype_uniform = 11, &

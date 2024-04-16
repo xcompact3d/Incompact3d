@@ -26,7 +26,7 @@ subroutine parameter(input_i3d)
 
   use var, only : dphi1
 
-  use lockexch, only : pfront
+  use gravitycur, only : pfront
 
   use probes, only : nprobes, setup_probes, flag_all_digits, flag_extra_probes, xyzprobes
   use visu, only : output2D
@@ -356,10 +356,10 @@ subroutine parameter(input_i3d)
 #endif
   if (nrank==0) then
      print *,'==========================================================='
-     if (itype.eq.itype_user) then
-        print *,'User-defined simulation'
-     elseif (itype.eq.itype_lockexch) then
-        print *,'Simulating lock-exchange'
+     if (itype.eq.itype_generic) then
+        print *,'Generic simulation'
+     elseif (itype.eq.itype_gravitycur) then
+        print *,'Simulating gravity current'
      elseif (itype.eq.itype_tgv) then
         print *,'Simulating TGV'
      elseif (itype.eq.itype_channel) then
@@ -370,13 +370,8 @@ subroutine parameter(input_i3d)
         print *,'Simulating periodic hill'
      elseif (itype.eq.itype_cyl) then
         print *,'Simulating cylinder'
-     elseif (itype.eq.itype_dbg) then
-        print *,'Debug schemes'
      elseif (itype.eq.itype_mixlayer) then
         print *,'Mixing layer'
-     elseif (itype.eq.itype_jet) then
-        print *,'Jet is currently unsupported!'
-        stop
      elseif (itype.eq.itype_tbl) then
         print *,'Turbulent boundary layer'
      elseif (itype.eq.itype_abl) then
@@ -574,7 +569,7 @@ subroutine parameter(input_i3d)
      if (angle.ne.0.) write(*,"(' Solid rotation     : ',F6.2)") angle
      write(*,*) ' '
      !! Print case-specific information
-     if (itype==itype_lockexch) then
+     if (itype==itype_gravitycur) then
         write(*,*)  "Initial front location: ", pfront
      endif
      write(*,*) '==========================================================='
