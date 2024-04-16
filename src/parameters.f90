@@ -335,8 +335,6 @@ subroutine parameter(input_i3d)
         print *,'Simulating periodic hill'
      elseif (itype.eq.itype_cyl) then
         print *,'Simulating cylinder'
-     elseif (itype.eq.itype_dbg) then
-        print *,'Debug schemes'
      elseif (itype.eq.itype_mixlayer) then
         print *,'Mixing layer'
      elseif (itype.eq.itype_jet) then
