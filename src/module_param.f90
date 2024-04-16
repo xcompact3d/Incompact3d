@@ -272,7 +272,7 @@ module param
   integer :: itype
   integer, parameter :: &
        itype_generic = 0, &
-       itype_lockexch = 1, &
+       itype_gravitycur = 1, &
        itype_tgv = 2, &
        itype_channel = 3, &
        itype_hill = 4, &
