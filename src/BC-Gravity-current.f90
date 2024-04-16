@@ -2,7 +2,7 @@
 !This file is part of Xcompact3d (xcompact3d.com)
 !SPDX-License-Identifier: BSD 3-Clause
 
-module lockexch
+module gravitycur
 
   use decomp_2d_constants, only : mytype, real_type, real2_type
   use decomp_2d, only : xsize, ysize, zsize
@@ -42,12 +42,16 @@ module lockexch
        bcle_dir = "data-lock-exchange"
   
   private
-  public :: init_lockexch, boundary_conditions_lockexch, postprocess_lockexch, &
-       pfront, set_fluid_properties_lockexch, visu_lockexch_init
+  public :: init_gravitycur, &
+            boundary_conditions_gravitycur, &
+            postprocess_gravitycur, &
+            pfront, &
+            set_fluid_properties_gravitycur, &
+            visu_gravitycur_init
 
 contains
 
-  subroutine boundary_conditions_lockexch (rho1, phi1)
+  subroutine boundary_conditions_gravitycur (rho1, phi1)
 
     USE param
     USE variables
@@ -94,9 +98,9 @@ contains
     endif
 
     return
-  end subroutine boundary_conditions_lockexch
+  end subroutine boundary_conditions_gravitycur
 
-  subroutine init_lockexch (rho1,ux1,uy1,uz1,ep1,phi1)
+  subroutine init_gravitycur (rho1,ux1,uy1,uz1,ep1,phi1)
 
     USE decomp_2d_io
     USE variables
@@ -147,7 +151,7 @@ contains
     enddo
 
     if (ilmn) then
-       call set_fluid_properties_lockexch(rho1, mu1)
+       call set_fluid_properties_gravitycur(rho1, mu1)
     end if
     
     ux1=zero; uy1=zero; uz1=zero
@@ -241,9 +245,9 @@ contains
 #endif
 
     return
-  end subroutine init_lockexch
+  end subroutine init_gravitycur
 
-  subroutine visu_lockexch_init(visu_initialised)
+  subroutine visu_gravitycur_init(visu_initialised)
 
     use decomp_2d_io, only : decomp_2d_register_variable
     
@@ -256,9 +260,9 @@ contains
 
     visu_initialised = .true.
     
-  end subroutine visu_lockexch_init
+  end subroutine visu_gravitycur_init
 
-  subroutine postprocess_lockexch(rho1,ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
+  subroutine postprocess_gravitycur(rho1,ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
     use var, only : phi2, rho2
     use var, only : phi3, rho3
@@ -369,7 +373,7 @@ contains
        close(67)
     end if
 
-  end subroutine postprocess_lockexch
+  end subroutine postprocess_gravitycur
 
   subroutine budget(rho1,ux1,uy1,uz1,phi1,vol1)
 
@@ -741,7 +745,7 @@ contains
 
   end subroutine front2d
 
-  subroutine set_fluid_properties_lockexch(rho1, mu1)
+  subroutine set_fluid_properties_gravitycur(rho1, mu1)
 
     implicit none
 
@@ -750,6 +754,6 @@ contains
 
     mu1(:,:,:) = rho1(:,:,:)
 
-  endsubroutine set_fluid_properties_lockexch
+  endsubroutine set_fluid_properties_gravitycur
 
-end module lockexch
+end module gravitycur

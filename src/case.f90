@@ -15,7 +15,7 @@ module case
   use dbg_schemes
   use channel
   use mixlayer
-  use lockexch
+  use gravitycur
   use tbl
   use abl
   use uniform
@@ -64,9 +64,9 @@ contains
 
        call init_generic (ux1, uy1, uz1, ep1, phi1)
 
-    elseif (itype.eq.itype_lockexch) then
+    elseif (itype.eq.itype_gravitycur) then
 
-       call init_lockexch(rho1, ux1, uy1, uz1, ep1, phi1)
+       call init_gravitycur(rho1, ux1, uy1, uz1, ep1, phi1)
 
     elseif (itype.eq.itype_tgv) then
 
@@ -148,9 +148,9 @@ contains
 
        call boundary_conditions_generic (ux,uy,uz,phi,ep)
 
-    elseif (itype.eq.itype_lockexch) then
+    elseif (itype.eq.itype_gravitycur) then
 
-       call boundary_conditions_lockexch(rho, phi)
+       call boundary_conditions_gravitycur(rho, phi)
 
     elseif (itype.eq.itype_tgv) then
 
@@ -302,9 +302,9 @@ contains
 
        call postprocess_generic (ux, uy, uz, phi, ep)
 
-    elseif (itype.eq.itype_lockexch) then
+    elseif (itype.eq.itype_gravitycur) then
 
-       call postprocess_lockexch(rho, ux, uy, uz, phi, ep)
+       call postprocess_gravitycur(rho, ux, uy, uz, phi, ep)
 
     elseif (itype.eq.itype_tgv) then
 
@@ -381,9 +381,9 @@ contains
 
        call visu_tbl_init(case_visu_init)
 
-    else if (itype .eq. itype_lockexch) then
+    else if (itype .eq. itype_gravitycur) then
 
-       call visu_lockexch_init(case_visu_init)
+       call visu_gravitycur_init(case_visu_init)
 
     end if
     
@@ -512,10 +512,10 @@ contains
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: rho1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: mu1
 
-    if (itype.eq.itype_lockexch) then
+    if (itype.eq.itype_gravitycur) then
 
        if (ilmn) then 
-          call set_fluid_properties_lockexch(rho1, mu1)
+          call set_fluid_properties_gravitycur(rho1, mu1)
        end if
        
     endif
