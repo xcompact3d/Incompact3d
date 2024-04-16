@@ -2,7 +2,7 @@
 !This file is part of Xcompact3d (xcompact3d.com)
 !SPDX-License-Identifier: BSD 3-Clause
 
-module user_sim
+module case_generic
 
   USE decomp_2d_constants
   USE decomp_2d_mpi
@@ -18,11 +18,14 @@ module user_sim
   character(len=1),parameter :: NL=char(10) !new line character
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_user, boundary_conditions_user, postprocess_user, visu_user
+  PUBLIC :: init_generic, &
+            boundary_conditions_generic, &
+            postprocess_generic, &
+            visu_generic
 
 contains
 
-  subroutine init_user (ux1,uy1,uz1,ep1,phi1)
+  subroutine init_generic (ux1,uy1,uz1,ep1,phi1)
 
     USE decomp_2d_io
     USE MPI
@@ -71,9 +74,9 @@ contains
 #endif
 
     return
-  end subroutine init_user
+  end subroutine init_generic
 
-  subroutine boundary_conditions_user (ux,uy,uz,phi,ep)
+  subroutine boundary_conditions_generic (ux,uy,uz,phi,ep)
 
     implicit none
 
@@ -95,25 +98,25 @@ contains
     IF (nclzn.EQ.2) THEN
     ENDIF
 
-  end subroutine boundary_conditions_user
+  end subroutine boundary_conditions_generic
 
-  subroutine postprocess_user(ux1,uy1,uz1,phi1,ep1)
+  subroutine postprocess_generic(ux1,uy1,uz1,phi1,ep1)
 
     implicit none
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
-  end subroutine postprocess_user
+  end subroutine postprocess_generic
 
   !############################################################################
   !!
-  !!  SUBROUTINE: visu_user
+  !!  SUBROUTINE: visu_generic
   !!      AUTHOR: CF
   !! DESCRIPTION: Performs case-specific visualization
   !!
   !############################################################################
-  subroutine visu_user(ux1, uy1, uz1, pp3, phi1, ep1, num)
+  subroutine visu_generic(ux1, uy1, uz1, pp3, phi1, ep1, num)
 
     use var, only : ux2, uy2, uz2, ux3, uy3, uz3
     USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
@@ -129,6 +132,6 @@ contains
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
     integer, intent(in) :: num
 
-  end subroutine visu_user
+  end subroutine visu_generic
 
-end module user_sim
+end module case_generic

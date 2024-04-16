@@ -321,8 +321,8 @@ subroutine parameter(input_i3d)
 #endif
   if (nrank==0) then
      print *,'==========================================================='
-     if (itype.eq.itype_user) then
-        print *,'User-defined simulation'
+     if (itype.eq.itype_generic) then
+        print *,'Generic simulation'
      elseif (itype.eq.itype_lockexch) then
         print *,'Simulating lock-exchange'
      elseif (itype.eq.itype_tgv) then
