@@ -278,7 +278,6 @@ module param
        itype_hill = 4, &
        itype_cyl = 5, &
        itype_mixlayer = 7, &
-       itype_jet = 8, &
        itype_tbl = 9, &
        itype_abl = 10, &
        itype_sandbox = 12, &

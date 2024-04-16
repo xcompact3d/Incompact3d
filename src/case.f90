@@ -88,10 +88,6 @@ contains
 
        call init_mixlayer(rho1, ux1, uy1, uz1)
 
-!!!    elseif (itype.eq.itype_jet) then
-!!!
-!!!       call init_jet(rho1, ux1, uy1, uz1, ep1, phi1)
-!!!
     elseif (itype.eq.itype_tbl) then
 
        call init_tbl (ux1, uy1, uz1, ep1, phi1)
@@ -476,10 +472,6 @@ contains
 
        call momentum_forcing_channel(dux1, duy1, duz1, ux1, uy1, uz1)
 
-!!!    elseif (itype.eq.itype_jet) then
-!!!
-!!!       call momentum_forcing_jet(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
-!!!
     elseif (itype.eq.itype_abl) then
 
        call momentum_forcing_abl(dux1, duy1, duz1, ux1, uy1, uz1, phi1)
