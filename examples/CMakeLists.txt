@@ -12,7 +12,6 @@ option(USE_ADIOS2 "Build XCompact with ADIOS2 library" OFF)
 
 if (${BUILD_TESTING_FULL})
   add_subdirectory(ABL-Atmospheric-Boundary-Layer)
-  add_subdirectory(ABL-Atmospheric-Boundary-Layer/legacy)
   add_subdirectory(Cavity)
   add_subdirectory(Channel)
   if(NOT ${USE_ADIOS2})
