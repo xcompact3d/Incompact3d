@@ -15,19 +15,19 @@ add_executable(xcompact3d
                     acl_utils.f90 
                     adm.f90
                     airfoils.f90
-                    BC-ABL.f90
-                    BC-Cavity.f90
-                    BC-Channel.f90
-                    BC-Cylinder-wake.f90
-                    BC-Generic.f90
-		    BC-Gravity-current.f90
-                    BC-Mixing-layer.f90
-                    BC-Periodic-hill.f90
-                    BC-Pipe-flow.f90
-		    BC-Sandbox.f90
-                    BC-TBL.f90
-                    BC-TGV.f90
-		    BC-Uniform.f90
+                    Case-ABL.f90
+                    Case-Cavity.f90
+                    Case-Channel.f90
+                    Case-Cylinder-wake.f90
+                    Case-Generic.f90
+                    Case-Gravity-current.f90
+                    Case-Mixing-layer.f90
+                    Case-Periodic-hill.f90
+                    Case-Pipe-flow.f90
+                    Case-Sandbox.f90
+                    Case-TBL.f90
+                    Case-TGV.f90
+                    Case-Uniform.f90
                     case.f90
                     constants.f90
                     derive.f90
