@@ -277,7 +277,6 @@ module param
        itype_channel = 3, &
        itype_hill = 4, &
        itype_cyl = 5, &
-       itype_dbg = 6, &
        itype_mixlayer = 7, &
        itype_jet = 8, &
        itype_tbl = 9, &
