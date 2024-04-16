@@ -20,6 +20,7 @@ add_executable(xcompact3d
                     BC-Channel.f90
                     BC-Cylinder-wake.f90
                     BC-Generic.f90
+		    BC-Gravity-current.f90
                     BC-Mixing-layer.f90
                     BC-Periodic-hill.f90
                     BC-Pipe-flow.f90
