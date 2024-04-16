@@ -346,8 +346,6 @@ subroutine parameter(input_i3d)
         print *,'Turbulent boundary layer'
      elseif (itype.eq.itype_abl) then
         print *,'Atmospheric boundary layer'
-     elseif (itype.eq.itype_uniform) then
-        print *,'Uniform flow'
      elseif (itype.eq.itype_sandbox) then
         print *,'Sandbox'
      elseif (itype.eq.itype_cavity) then
