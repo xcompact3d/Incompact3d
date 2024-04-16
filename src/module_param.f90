@@ -280,6 +280,7 @@ module param
        itype_mixlayer = 7, &
        itype_tbl = 9, &
        itype_abl = 10, &
+       itype_uniform = 11, &
        itype_sandbox = 12, &
        itype_cavity = 13, &
        itype_pipe = 14
