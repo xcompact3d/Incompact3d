@@ -8,7 +8,7 @@ module case
   use decomp_2d_constants
   use variables
 
-  use user_sim
+  use case_generic
   use tgv
   use cyl
   use hill
@@ -60,9 +60,9 @@ contains
     pressure0 = one
     rho1(:,:,:,:) = one
 
-    if (itype.eq.itype_user) then
+    if (itype.eq.itype_generic) then
 
-       call init_user (ux1, uy1, uz1, ep1, phi1)
+       call init_generic (ux1, uy1, uz1, ep1, phi1)
 
     elseif (itype.eq.itype_lockexch) then
 
@@ -148,9 +148,9 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho
     
-    if (itype == itype_user) then
+    if (itype == itype_generic) then
 
-       call boundary_conditions_user (ux,uy,uz,phi,ep)
+       call boundary_conditions_generic (ux,uy,uz,phi,ep)
 
     elseif (itype.eq.itype_lockexch) then
 
@@ -302,9 +302,9 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep
     real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp
 
-    if (itype.eq.itype_user) then
+    if (itype.eq.itype_generic) then
 
-       call postprocess_user (ux, uy, uz, phi, ep)
+       call postprocess_generic (ux, uy, uz, phi, ep)
 
     elseif (itype.eq.itype_lockexch) then
 
@@ -413,9 +413,9 @@ contains
 
     logical :: called_visu = .false.
     
-    if (itype.eq.itype_user) then
+    if (itype.eq.itype_generic) then
 
-       call visu_user(ux1, uy1, uz1, pp3, phi1, ep1, num)
+       call visu_generic(ux1, uy1, uz1, pp3, phi1, ep1, num)
        called_visu = .true.
        
     elseif (itype.eq.itype_tgv) then
