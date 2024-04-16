@@ -1,5 +1,5 @@
 # TGV
-set(case "TGV")
+set(case "TGV-Taylor-Green-vortex")
 set(case_dir "${test_dir}/${case}")
 file(MAKE_DIRECTORY ${case_dir})
 set(input_file "reference_input.i3d")
