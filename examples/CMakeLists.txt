@@ -7,9 +7,6 @@ file(MAKE_DIRECTORY ${test_dir})
 # We need to find a way to check if 2DECOMP&FFT is build with ADIOS2
 option(USE_ADIOS2 "Build XCompact with ADIOS2 library" OFF)
 
-# TGV is from tests
-#add_subdirectory(TGV)
-
 if (${BUILD_TESTING_FULL})
   add_subdirectory(ABL-Atmospheric-Boundary-Layer)
   add_subdirectory(Cavity)
