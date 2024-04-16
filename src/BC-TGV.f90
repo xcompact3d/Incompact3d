@@ -102,8 +102,8 @@ contains
                     phi1(i,j,k,1:numscalar)=sin_prec(x)*sin_prec(y)*cos_prec(z)
                  endif
 
-                 ux1(i,j,k)= -2.d0*sin_prec(y)*cos_prec(z)
-                 uy1(i,j,k)=  2.d0*sin_prec(x)*cos_prec(z)
+                 !ux1(i,j,k)= -2.d0*sin_prec(y)*cos_prec(z)
+                 !uy1(i,j,k)=  2.d0*sin_prec(x)*cos_prec(z)
 
                  uz1(i,j,k)=zero
                  

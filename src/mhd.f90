@@ -11,7 +11,8 @@ module mhd
   !
   implicit none
   !
-  logical :: mhd_active,mhd_equation,sync_Bm_needed= .true.
+  !logical :: mhd_active,mhd_equation,sync_Bm_needed= .true.
+  logical :: mhd_active,mhd_equation,sync_Bm_needed= .false.
   real(8) :: hartmann,stuart,rem
   !+------------+------------------------------------------------------+
   !|  mhd_active| the swith to activate the mhd module.                |
@@ -57,7 +58,7 @@ module mhd
     if(nrank==0) then
       !
       print*,'** MHD Module activated'
-      print*,'**    MHD equation:',mhd_equation
+      print*,'**    MHD equation: ',mhd_equation
       print*,'** Hartmann number: ',hartmann
       print*,'**   Stuart number: ',stuart
       print*,'**              Re: ',re
@@ -75,12 +76,6 @@ module mhd
     !
     if(nrank==0) print*,'** MHD fields allocated'
     !
-    ! Bmean(:,:,:,1)=0._mytype
-    ! Bmean(:,:,:,2)=1._mytype
-    ! Bmean(:,:,:,3)=0._mytype
-    ! !
-    ! if(nrank==0) print*,'** magnetic field initilised'
-    ! !
   end subroutine mhd_init
   !+-------------------------------------------------------------------+
   !| The end of the subroutine mhd_init.                               |
@@ -148,46 +143,6 @@ module mhd
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: omega
     !
-    ! Perform communications if needed
-    ! if (sync_vel_needed) then
-    !   call transpose_x_to_y(ux1,ux2)
-    !   call transpose_x_to_y(uy1,uy2)
-    !   call transpose_x_to_y(uz1,uz2)
-    !   call transpose_y_to_z(ux2,ux3)
-    !   call transpose_y_to_z(uy2,uy3)
-    !   call transpose_y_to_z(uz2,uz3)
-    !   sync_vel_needed = .false.
-    ! endif
-
-    ! !x-derivatives
-    ! call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
-    ! call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
-    ! call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
-    ! !y-derivatives
-    ! call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
-    ! call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
-    ! call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
-    ! !!z-derivatives
-    ! call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
-    ! call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
-    ! call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
-    ! !!all back to x-pencils
-    ! call transpose_z_to_y(ta3,td2)
-    ! call transpose_z_to_y(tb3,te2)
-    ! call transpose_z_to_y(tc3,tf2)
-    ! call transpose_y_to_x(td2,tg1)
-    ! call transpose_y_to_x(te2,th1)
-    ! call transpose_y_to_x(tf2,ti1)
-    ! call transpose_y_to_x(ta2,td1)
-    ! call transpose_y_to_x(tb2,te1)
-    ! call transpose_y_to_x(tc2,tf1)
-
-    ! omega(:,:,:)=sqrt(  (tf1(:,:,:)-th1(:,:,:))**2 &
-    !                   + (tg1(:,:,:)-tc1(:,:,:))**2 &
-    !                   + (tb1(:,:,:)-td1(:,:,:))**2)
-    ! omega(:,:,:)=sqrt(  (duz1(:,:,:,2)-duy1(:,:,:,3))**2 &
-    !                   + (dux1(:,:,:,3)-duz1(:,:,:,1))**2 &
-    !                   + (duy1(:,:,:,1)-dux1(:,:,:,2))**2)
     omega(:,:,:)=duy1(:,:,:,1)-dux1(:,:,:,2)
     !
     return
@@ -322,67 +277,6 @@ module mhd
     real(mytype) :: xx(xsize(1)),yy(xsize(2)),zz(xsize(3))
     !
     !
-    ! do i=1,xsize(1)
-    !   xx(i)=real(i-1,mytype)*dx
-    ! enddo
-    ! do j=1,xsize(2)
-    !   !
-    !   if(j+xstart(2)-1>ny) then
-    !     yy(j)=2._mytype*yp(ny)-yp(ny-1)
-    !   elseif(j+xstart(2)-1<1) then
-    !     yy(j)=2._mytype*yp(1)-yp(2)
-    !   else
-    !     yy(j)=yp(j+xstart(2)-1)
-    !   endif
-    !   !
-    ! enddo
-    ! do k=1,xsize(3)
-    !   zz(k)=real((k+xstart(3)-2),mytype)*dz
-    ! enddo
-    ! !
-    ! do k = 1, xsize(3)
-    ! do j = 1, xsize(2)
-    ! do i = 1, xsize(1)
-    !   ! elcpot(i,j,k)=sin(xx(i)*pi)
-    !   ! elcpot(i,j,k)=sin(zz(k)*pi)
-    !   elcpot(i,j,k)=sin(0.._mytype*yy(j)*pi)
-    ! enddo
-    ! enddo
-    ! enddo
-    !
-    ! Je=electric_field(elcpot)
-    ! to obtain the electric field from electric potential
-    !
-    ! write(rankname,'(i4.4)')nrank
-    ! open(18,file='testout/profile'//rankname//'.dat')
-    ! ! do i = 1, xsize(1)
-    !   ! write(18,*)xx(i),elcpot(i,1,1),Je(i,1,1,1)
-    ! ! do k = 1, xsize(3)
-    ! !   write(18,*)zz(k),elcpot(1,1,k),Je(1,1,k,3)
-    ! do j = 1, xsize(2)
-    !   write(18,*)yy(j),elcpot(1,j,1),Je(1,j,1,2)
-    ! enddo
-    ! close(18)
-    ! !
-    ! write(rankname,'(i4.4)')nrank
-    ! open(18,file='mhd_force'//rankname//'.dat')
-    !
-    ! ub = zero
-    ! uball = zero
-    ! coeff = dy / (yly * real(xsize(1) * zsize(3), kind=mytype))
-
-    ! do k = 1, xsize(3)
-    !    do jloc = 1, xsize(2)
-    !       j = jloc + xstart(2) - 1
-    !       do i = 1, xsize(1)
-    !         ub = ub + ux1(i,jloc,k) / ppy(j)
-    !       enddo
-    !    enddo
-    ! enddo
-
-    ! ub = ub * coeff
-
-    ! call MPI_ALLREDUCE(ub,uball,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     
     if(mhd_equation) then
       Je=del_cross_prod(Bm+Bmean)/Rem
@@ -394,35 +288,16 @@ module mhd
     do j = 1, xsize(2)
     do i = 1, xsize(1)
       !
-      ! Ebar(1)=0._mytype
-      ! Ebar(2)=0._mytype
-      ! Ebar(3)=-Bm(i,j,k,2)*uball
-      !
-      ! elecur(:)=Je(i,j,k,:)+Ebar
-      ! elecur(:)=Je(i,j,k,:)
-      !
-      ! Je(i,j,k,:)
-      !
       eforce=cross_product(Je(i,j,k,:),Bm(i,j,k,:)+Bmean(i,j,k,:))*stuart
       !
       dux1(i,j,k) = dux1(i,j,k)+eforce(1)
       duy1(i,j,k) = duy1(i,j,k)+eforce(2)
       duz1(i,j,k) = duz1(i,j,k)+eforce(3)
-      
-      ! if(i==1 .and. k==1) then
-      !   write(18,*)yy(j),Bm(i,j,k,2),Je(i,j,k,3),eforce(1)
-      ! endif
-      !
-      ! print*,i,j,k,Bm(i,j,k,:)
       !
     enddo
     enddo
     enddo
     !
-    ! close(18)
-    ! print*,' << mhd_force',rankname,'.dat'
-    ! !
-    ! call mpistop
     !
   end subroutine momentum_forcing_mhd
   !+-------------------------------------------------------------------+
