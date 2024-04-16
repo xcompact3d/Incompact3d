@@ -20,7 +20,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     # We don't want to build openmpi each time this workflow is
     # run. Setup caching of OpenMPI after it is built and installed.
@@ -28,7 +28,7 @@ jobs:
     # actions docs.
     - name: Cache OpenMPI
       id: cache-openmpi
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: openmpi-4.1.4/installed
         key: openmpi-4.1.4
@@ -42,20 +42,19 @@ jobs:
         ./configure --prefix=$(pwd)/installed
         make all install
 
-    - name: Build Incompact3d
+    - name: Build Xcompact3d
       run: |
         export PATH=$(pwd)/openmpi-4.1.4/installed/bin/:$PATH
-        make BUILD=debug
-
-    - name: Run TGV case
-      run: |
-        cp test/data/Taylor-Green-Vortex/reference_input.i3d input.i3d
-        export PATH=$(pwd)/openmpi-4.1.4/installed/bin/:$PATH
-        mpirun -np 2 xcompact3d
+        export FC=mpif90
+        cmake -S . -B build 
+        cmake --build build -j 2
+        cmake --install build
+        ctest --test-dir build
 
     - name: Compare output time evolution to reference output
       run: |
         pip install numpy
-        python test/compare_TGV_time_evolution.py \
+        cd build/RunTests/TGV
+        python compare_TGV_time_evolution.py \
             --input time_evol.dat \
-            --reference test/data/Taylor-Green-Vortex/reference_time_evol.dat
+            --reference reference_time_evol.dat

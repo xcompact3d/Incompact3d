@@ -5,6 +5,8 @@
 module tbl
 
   use decomp_2d
+  use decomp_2d_constants
+  use decomp_2d_mpi
   use variables
   use param
 
@@ -317,7 +319,6 @@ contains
 
   subroutine visu_tbl_init (visu_initialised)
 
-    use decomp_2d, only : mytype
     use decomp_2d_io, only : decomp_2d_register_variable
     use visu, only : io_name, output2D
     

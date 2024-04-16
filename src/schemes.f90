@@ -8,6 +8,7 @@ subroutine schemes()
   !
   !********************************************************************
 
+  use decomp_2d_mpi
   USE param
   USE derivX
   USE derivY
@@ -413,7 +414,7 @@ subroutine prepare (b,c,f,s,w,n)
   !
   !*******************************************************************
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
   use param, only : one
 
   implicit none
@@ -445,7 +446,8 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
   !
   !*******************************************************************
 
-  use decomp_2d, only : mytype, nrank
+  use decomp_2d_constants, only : mytype
+  use decomp_2d_mpi, only : nrank
   use param
   use MPI
 
@@ -606,7 +608,8 @@ subroutine second_derivative(alsa1,as1,bs1,&
      sf,ss,sw,sfp,ssp,swp,d2,n,ncl1,ncln)
   !*******************************************************************
 
-  use decomp_2d, only : mytype, nrank
+  use decomp_2d_constants, only : mytype
+  use decomp_2d_mpi, only : nrank
   use param
   use MPI
   use variables, only : nu0nu,cnu
@@ -866,7 +869,7 @@ subroutine interpolation(dx,nxm,nx,nclx1,nclxn,&
   !
   !*******************************************************************
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
   use param, only : zero, half, one, two, three, four, nine, ten
   use param, only : ipinter, ifirstder
 

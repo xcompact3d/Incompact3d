@@ -4,8 +4,8 @@
 
 module actuator_disc_model
 
-    use decomp_2d, only: mytype, nrank
-    use decomp_2d, only: real_type
+    use decomp_2d_mpi, only: nrank, nproc
+    use decomp_2d_constants, only: mytype, real_type
     use actuator_line_model_utils 
     use airfoils
 
@@ -165,7 +165,7 @@ contains
     !
     !*******************************************************************************
         
-      use decomp_2d, only: mytype, nproc, xsize
+      use decomp_2d, only: xsize
       use MPI
       use param, only: dx, dy, dz, dt, itime, initstat, rho_air, T_relax, dBL, ustar
       use var, only: Fdiscx, Fdiscy, Fdiscz, GammaDisc

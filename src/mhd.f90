@@ -1,14 +1,12 @@
-!+---------------------------------------------------------------------+
-!| this module contains variables, arraies and subroutines related to  |
-!| the mhd functionality.                                              |
-!+---------------------------------------------------------------------+
-!| change record                                                       |
-!| -------------                                                       |
-!| 28-Oct-2022  | Created by J. Fang STFC Daresbury Laboratory         |
-!+---------------------------------------------------------------------+
+!Copyright (c) 2012-2022, Xcompact3d
+!This file is part of Xcompact3d (xcompact3d.com)
+!SPDX-License-Identifier: BSD 3-Clause
+
 module mhd
   !
-  use decomp_2d, only : mytype,xsize,nrank,nproc
+  use decomp_2d_constants, only : mytype, real_type
+  use decomp_2d_mpi, only : nrank,nproc
+  use decomp_2d, only : xsize
   use mptool, only: mpistop,rankname,psum,pmax,cross_product
   !
   implicit none
@@ -77,9 +75,9 @@ module mhd
     !
     if(nrank==0) print*,'** MHD fields allocated'
     !
-    ! Bmean(:,:,:,1)=0.d0
-    ! Bmean(:,:,:,2)=1.d0
-    ! Bmean(:,:,:,3)=0.d0
+    ! Bmean(:,:,:,1)=0._mytype
+    ! Bmean(:,:,:,2)=1._mytype
+    ! Bmean(:,:,:,3)=0._mytype
     ! !
     ! if(nrank==0) print*,'** magnetic field initilised'
     ! !
@@ -92,7 +90,7 @@ module mhd
     !
     USE param
     USE variables
-    USE decomp_2d
+    !USE decomp_2d
     use ydiff_implicit
 
     implicit none
@@ -137,7 +135,7 @@ module mhd
   !
   function vortcal(dux1,duy1,duz1) result(omega)
     !
-    USE decomp_2d
+    !USE decomp_2d
     USE variables
     USE param
     use var, only : ux2, uy2, uz2, ux3, uy3, uz3
@@ -205,7 +203,7 @@ module mhd
   !+-------------------------------------------------------------------+
   subroutine mhd_sta(ux1,uy1,uz1)
     !
-    use decomp_2d
+    !use decomp_2d
     use param,     only : ntime,t,nclx1, ncly1, nclz1,re
     use var,       only : itime
     use variables, only : nx, ny, nz, nxm, nym, nzm
@@ -248,10 +246,10 @@ module mhd
       !
     endif
     !
-    Ek=0.d0
-    Em=0.d0
-    Omegam=0.d0
-    Jmax=0.d0
+    Ek=0._mytype
+    Em=0._mytype
+    Omegam=0._mytype
+    Jmax=0._mytype
     do k=1,xsize(3)
     do j=1,xsize(2)
     do i=1,xsize(1)
@@ -272,9 +270,9 @@ module mhd
     Omegam=psum(Omegam)
     Jmax  =pmax(Jmax)
     !
-    Ek    =Ek    /dble(nxc*nyc*nzc)/2.d0
-    Em    =Em    /dble(nxc*nyc*nzc)/2.d0
-    Omegam=Omegam/dble(nxc*nyc*nzc)/2.d0*Rem*Rem
+    Ek    =Ek    /real(nxc*nyc*nzc,mytype)/2._mytype
+    Em    =Em    /real(nxc*nyc*nzc,mytype)/2._mytype
+    Omegam=Omegam/real(nxc*nyc*nzc,mytype)/2._mytype*Rem*Rem
     Jmax  =sqrt(Jmax)*Rem
     !
     disrat=Ek/re+Em/rem
@@ -300,7 +298,7 @@ module mhd
   !+-------------------------------------------------------------------+
   subroutine momentum_forcing_mhd(dux1,duy1,duz1,ux1,uy1,uz1)
     !
-    USE decomp_2d
+    !USE decomp_2d
     use mpi
     use param,     only : dx,dz
     use variables, only : ppy
@@ -330,9 +328,9 @@ module mhd
     ! do j=1,xsize(2)
     !   !
     !   if(j+xstart(2)-1>ny) then
-    !     yy(j)=2.d0*yp(ny)-yp(ny-1)
+    !     yy(j)=2._mytype*yp(ny)-yp(ny-1)
     !   elseif(j+xstart(2)-1<1) then
-    !     yy(j)=2.d0*yp(1)-yp(2)
+    !     yy(j)=2._mytype*yp(1)-yp(2)
     !   else
     !     yy(j)=yp(j+xstart(2)-1)
     !   endif
@@ -347,7 +345,7 @@ module mhd
     ! do i = 1, xsize(1)
     !   ! elcpot(i,j,k)=sin(xx(i)*pi)
     !   ! elcpot(i,j,k)=sin(zz(k)*pi)
-    !   elcpot(i,j,k)=sin(0.5d0*yy(j)*pi)
+    !   elcpot(i,j,k)=sin(0.._mytype*yy(j)*pi)
     ! enddo
     ! enddo
     ! enddo
@@ -396,8 +394,8 @@ module mhd
     do j = 1, xsize(2)
     do i = 1, xsize(1)
       !
-      ! Ebar(1)=0.d0
-      ! Ebar(2)=0.d0
+      ! Ebar(1)=0._mytype
+      ! Ebar(2)=0._mytype
       ! Ebar(3)=-Bm(i,j,k,2)*uball
       !
       ! elecur(:)=Je(i,j,k,:)+Ebar
@@ -527,7 +525,8 @@ module mhd
   !+-------------------------------------------------------------------+
   function solve_mhd_potential_poisson(ux1,uy1,uz1) result(jcurrent)
 
-    use decomp_2d, only : mytype, xsize, zsize, ph1, nrank
+    use decomp_2d, only : zsize, ph1
+    use decomp_2d_mpi, only: nrank
     use decomp_2d_poisson, only : poisson
     use var, only : nzmsize,dv3
     use param, only : ntime, nrhotime, npress,ilmn, ivarcoeff, zero, one 
@@ -624,7 +623,8 @@ module mhd
   !
   subroutine test_magnetic
     !
-    use decomp_2d, only : mytype, xsize, zsize, ph1, nrank
+    use decomp_2d, only : zsize, ph1
+    use decomp_2d_mpi, only : nrank
     use var,       only : nzmsize,itime,ilist,ifirst,ilast,numscalar, dv3
     use navier, only : divergence
     use param, only : ntime,nrhotime
@@ -652,269 +652,6 @@ module mhd
     endif
     !
   end subroutine test_magnetic
-  !
-  ! subroutine mhd_rhs_eq(dB,B,B0,ux1,uy1,uz1)
-
-  !   use param
-  !   use variables
-  !   use decomp_2d
-  !   use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1,mu1,mu2,mu3
-  !   use var, only : ux2,uy2,uz2,ta2,tb2,tc2,td2,te2,tf2,tg2,th2,ti2,tj2,di2
-  !   use var, only : ux3,uy3,uz3,ta3,tb3,tc3,td3,te3,tf3,tg3,th3,ti3,di3
-  !   use var, only : sgsx1,sgsy1,sgsz1
-  !   use var, only : FTx, FTy, FTz, Fdiscx, Fdiscy, Fdiscz
-  !   use ibm_param, only : ubcx,ubcy,ubcz
-  !   use mpi
-
-  !   implicit none
-
-  !   !! INPUTS
-  !   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
-
-  !   !! OUTPUTS
-  !   real(mytype),dimension(xsize(1),xsize(2),xsize(3),1:3) :: dB,B,B0
-    
-  !   integer :: i,j,k,is
-  !   !
-
-  !   ! local 
-  !   real(mytype) :: rrem
-  !   real(mytype), save, allocatable, dimension(:,:,:) :: tx1,ty1,tz1,tx2,ty2,tz2, &
-  !                                                        tx3,ty3,tz3,bx2,by2,bz2, &
-  !                                                        bx3,by3,bz3,cx2,cy2,cz2, &
-  !                                                        cx3,cy3,cz3
-  !   real(mytype),dimension(xsize(1),xsize(2),xsize(3),1:3) :: bt
-  !   logical,save :: firstcal=.true.
-
-  !   if(firstcal) then
-  !     !
-  !     call alloc_x(tx1)
-  !     tx1 = zero
-  !     call alloc_x(ty1)
-  !     ty1 = zero
-  !     call alloc_x(tz1)
-  !     tz1 = zero
-  
-  !     call alloc_y(tx2)
-  !     tx2=zero
-  !     call alloc_y(ty2)
-  !     ty2=zero
-  !     call alloc_y(tz2)
-  !     tz2=zero
-  
-  !     call alloc_z(tx3)
-  !     tx3=zero
-  !     call alloc_z(ty3)
-  !     ty3=zero
-  !     call alloc_z(tz3)
-  !     tz3=zero
-  !     !
-  !     call alloc_y(bx2)
-  !     bx2=zero
-  !     call alloc_y(by2)
-  !     by2=zero
-  !     call alloc_y(bz2)
-  !     bz2=zero
-
-  !     call alloc_z(bx3)
-  !     bx3=zero
-  !     call alloc_z(by3)
-  !     by3=zero
-  !     call alloc_z(bz3)
-  !     bz3=zero
-  !     !
-  !     call alloc_y(cx2)
-  !     cx2=zero
-  !     call alloc_y(cy2)
-  !     cy2=zero
-  !     call alloc_y(cz2)
-  !     cz2=zero
-
-  !     call alloc_z(cx3)
-  !     cx3=zero
-  !     call alloc_z(cy3)
-  !     cy3=zero
-  !     call alloc_z(cz3)
-  !     cz3=zero
-  !     !
-  !     firstcal=.false.
-  !   endif
-
-  !   rrem=1.d0/Rem
-
-  !   bt=B+B0
-
-  !   !WORK X-PENCILS
-  !   tb1(:,:,:) = ux1(:,:,:) * bt(:,:,:,3) - bt(:,:,:,1) * uz1(:,:,:)
-  !   tc1(:,:,:) = ux1(:,:,:) * bt(:,:,:,2) - bt(:,:,:,1) * uy1(:,:,:)
-
-  !   call derxBy (te1,tb1,di1,sx,ffxB(:,2),fsxB(:,2),fwxB(:,2),xsize(1),xsize(2),xsize(3),0,ubcx*ubcy)
-  !   call derxBz (tf1,tc1,di1,sx,ffxB(:,3),fsxB(:,3),fwxB(:,3),xsize(1),xsize(2),xsize(3),0,ubcx*ubcz)
-
-  !   call transpose_x_to_y(ux1,ux2)
-  !   call transpose_x_to_y(uy1,uy2)
-  !   call transpose_x_to_y(uz1,uz2)
-    
-  !   call transpose_x_to_y(bt(:,:,:,1),bx2)
-  !   call transpose_x_to_y(bt(:,:,:,2),by2)
-  !   call transpose_x_to_y(bt(:,:,:,3),bz2)
-
-  !   call transpose_x_to_y(B(:,:,:,1),cx2)
-  !   call transpose_x_to_y(B(:,:,:,2),cy2)
-  !   call transpose_x_to_y(B(:,:,:,3),cz2)
-
-  !   !WORK Y-PENCILS
-  !   ta2(:,:,:) = uy2(:,:,:) * Bz2(:,:,:) - by2 * uz2(:,:,:) 
-  !   tc2(:,:,:) = ux2(:,:,:) * by2(:,:,:) - bx2 * uy2(:,:,:)
-
-  !   call deryBx (td2,ta2,di2,sy,ffyB(:,1),  fsyB(:,1), fwyB(:,1),ppy,ysize(1),ysize(2),ysize(3),0,ubcx*ubcy)
-  !   call deryBz (tf2,tc2,di2,sy,ffyB(:,3),  fsyB(:,3), fwyB(:,3),ppy,ysize(1),ysize(2),ysize(3),0,ubcz*ubcy)
-
-
-  !   call transpose_y_to_z(ux2,ux3)
-  !   call transpose_y_to_z(uy2,uy3)
-  !   call transpose_y_to_z(uz2,uz3)
-
-  !   call transpose_y_to_z(bx2,bx3)
-  !   call transpose_y_to_z(by2,by3)
-  !   call transpose_y_to_z(bz2,bz3)
-
-  !   !WORK Z-PENCILS
-
-  !   ta3(:,:,:) =  uy3(:,:,:)*bz3(:,:,:) - by3(:,:,:)*uz3(:,:,:)
-  !   tb3(:,:,:) =  ux3(:,:,:)*bz3(:,:,:) - bx3(:,:,:)*uz3(:,:,:)
-  !   tc3(:,:,:) =  ux3(:,:,:)*by3(:,:,:) - bx3(:,:,:)*uy3(:,:,:)
-
-
-  !   call derzBx (td3,ta3,di3,sz,ffzB(:,1),fszB(:,1),fwzB(:,1),zsize(1),zsize(2),zsize(3),0,ubcx*ubcz)
-  !   call derzBy (te3,tb3,di3,sz,ffzB(:,2),fszB(:,2),fwzB(:,2),zsize(1),zsize(2),zsize(3),0,ubcy*ubcz)
-  !   call derzBz (tf3,tc3,di3,sz,ffzpB(:,3),fszpB(:,3),fwzpB(:,3),zsize(1),zsize(2),zsize(3),1,ubcz*ubcz)
-
-  !   !DIFFUSIVE TERMS IN Z
-  !   call derzzBx (ta3,bx3,di3,sz,sfzpB(:,1),sszpB(:,1),swzpB(:,1),zsize(1),zsize(2),zsize(3),1,ubcx)
-  !   call derzzBy (tb3,by3,di3,sz,sfzpB(:,2),sszpB(:,2),swzpB(:,2),zsize(1),zsize(2),zsize(3),1,ubcy)
-  !   call derzzBz (tc3,bz3,di3,sz,sfzB(:,3) ,sszB(:,3) ,swzB(:,3) ,zsize(1),zsize(2),zsize(3),0,ubcz)
-
-  !   ! Add convective and diffusive terms of z-pencil (half for skew-symmetric)
-
-  !   td3(:,:,:) = rrem*ta3(:,:,:) - te3(:,:,:)
-  !   te3(:,:,:) = rrem*tb3(:,:,:) + te3(:,:,:)
-  !   tf3(:,:,:) = rrem*tc3(:,:,:)
-
-
-  !   !WORK Y-PENCILS
-  !   call transpose_z_to_y(td3,ta2)
-  !   call transpose_z_to_y(te3,tb2)
-  !   call transpose_z_to_y(tf3,tc2)
-
-  !   ta2(:,:,:) = ta2(:,:,:) + tf2(:,:,:)
-  !   tb2(:,:,:) = tb2(:,:,:) 
-  !   tc2(:,:,:) = tc2(:,:,:) - td2(:,:,:)
-
-
-  !   !DIFFUSIVE TERMS IN Y
-  !   if (iimplicit.le.0) then
-  !      !-->for ux
-  !      call deryyBx (td2,bx2,di2,sy,sfypB(:,1),ssypB(:,1),swypB(:,1),ysize(1),ysize(2),ysize(3),1,ubcx)
-  !      if (istret.ne.0) then
-  !         call deryBx (te2,bx2,di2,sy,ffypB(:,1),fsypB(:,1),fwypB(:,1),ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
-  !         do k = 1,ysize(3)
-  !            do j = 1,ysize(2)
-  !               do i = 1,ysize(1)
-  !                  td2(i,j,k) = td2(i,j,k)*pp2y(j)-pp4y(j)*te2(i,j,k)
-  !               enddo
-  !            enddo
-  !         enddo
-  !      endif
-
-  !      !-->for uy
-  !   call deryyBy (te2,by2,di2,sy,sfyB(:,2),ssyB(:,2),swyB(:,2),ysize(1),ysize(2),ysize(3),0,ubcy)
-  !      if (istret.ne.0) then
-  !         call deryBy (tf2,by2,di2,sy,ffyB(:,2),fsyB(:,2),fwyB(:,2),ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
-  !         do k = 1,ysize(3)
-  !            do j = 1,ysize(2)
-  !               do i = 1,ysize(1)
-  !                  te2(i,j,k) = te2(i,j,k)*pp2y(j)-pp4y(j)*tf2(i,j,k)
-  !               enddo
-  !            enddo
-  !         enddo
-  !      endif
-
-  !      !-->for uz
-  !   call deryyBz (tf2,bz2,di2,sy,sfypB(:,3),ssypB(:,3),swypB(:,3),ysize(1),ysize(2),ysize(3),1,ubcz)
-  !      if (istret.ne.0) then
-  !         call deryBz (tj2,bz2,di2,sy,ffypB(:,3),fsypB(:,3),fwypB(:,3),ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
-  !         do k = 1,ysize(3)
-  !            do j = 1,ysize(2)
-  !               do i = 1,ysize(1)
-  !                  tf2(i,j,k) = tf2(i,j,k)*pp2y(j)-pp4y(j)*tj2(i,j,k)
-  !               enddo
-  !            enddo
-  !         enddo
-  !      endif
-  !   else ! (semi)implicit Y diffusion
-  !      if (istret.ne.0) then
-
-  !         !-->for ux
-  !         call deryBx (te2,bx2,di2,sy,ffypB(:,1),fsypB(:,1),fwypB(:,1),ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
-  !         do k=1,ysize(3)
-  !            do j=1,ysize(2)
-  !               do i=1,ysize(1)
-  !                  td2(i,j,k)=-pp4y(j)*te2(i,j,k)
-  !               enddo
-  !            enddo
-  !         enddo
-  !         !-->for uy
-  !         call deryBy (tf2,by2,di2,sy,ffyB(:,2),fsyB(:,2),fwyB(:,2),ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
-  !         do k=1,ysize(3)
-  !            do j=1,ysize(2)
-  !               do i=1,ysize(1)
-  !                  te2(i,j,k)=-pp4y(j)*tf2(i,j,k)
-  !               enddo
-  !            enddo
-  !         enddo
-  !         !-->for uz
-  !         call deryBz (tj2,bz2,di2,sy,ffypB(:,3),fsypB(:,3),fwypB(:,3),ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
-  !         do k=1,ysize(3)
-  !            do j=1,ysize(2)
-  !               do i=1,ysize(1)
-  !                  tf2(i,j,k)=-pp4y(j)*tj2(i,j,k)
-  !               enddo
-  !            enddo
-  !         enddo
-
-  !      else
-       
-  !         td2(:,:,:) = zero
-  !         te2(:,:,:) = zero
-  !         tf2(:,:,:) = zero
-          
-  !      endif
-  !   endif
-
-  !   ! Add diffusive terms of y-pencil to convective and diffusive terms of y- and z-pencil
-  !   ta2(:,:,:) = rrem*td2(:,:,:) + ta2(:,:,:)
-  !   tb2(:,:,:) = rrem*te2(:,:,:) + tb2(:,:,:)
-  !   tc2(:,:,:) = rrem*tf2(:,:,:) + tc2(:,:,:)
-
-  !   !WORK X-PENCILS
-  !   call transpose_y_to_x(ta2,ta1)
-  !   call transpose_y_to_x(tb2,tb1)
-  !   call transpose_y_to_x(tc2,tc1) !diff+conv. terms
-
-  !   !DIFFUSIVE TERMS IN X
-  !   call derxxBx (td1,bt(:,:,:,1),di1,sx,sfxB(:,1) ,ssxB(:,1) ,swxB(:,1) ,xsize(1),xsize(2),xsize(3),0,ubcx)
-  !   call derxxBy (te1,bt(:,:,:,2),di1,sx,sfxpB(:,2),ssxpB(:,2),swxpB(:,2),xsize(1),xsize(2),xsize(3),1,ubcy)
-  !   call derxxBz (tf1,bt(:,:,:,3),di1,sx,sfxpB(:,3),ssxpB(:,3),swxpB(:,3),xsize(1),xsize(2),xsize(3),1,ubcz)
-
-  !   !FINAL SUM: DIFF TERMS + CONV TERMS
-  !   dB(:,:,:,1) = rrem * td1(:,:,:) + ta1(:,:,:) 
-  !   dB(:,:,:,2) = rrem * te1(:,:,:) + tb1(:,:,:) -tf1(:,:,:)
-  !   dB(:,:,:,3) = rrem * te1(:,:,:) + tc1(:,:,:) +te1(:,:,:)
-
-  !   return
-
-  ! end subroutine mhd_rhs_eq
   !
   subroutine mhd_rhs_eq(dB,B,B0,ux1,uy1,uz1)
 
@@ -1003,7 +740,7 @@ module mhd
       firstcal=.false.
     endif
 
-    rrem=1.d0/Rem
+    rrem=1._mytype/Rem
 
     Bsum=B+B0
 
@@ -1249,7 +986,8 @@ module mhd
   !
   subroutine solve_poisson_mhd
     !
-    use decomp_2d, only : mytype, xsize, zsize, ph1, nrank
+    use decomp_2d, only : zsize, ph1
+    use decomp_2d_mpi, only : nrank
     use decomp_2d_poisson, only : poisson
     use var, only : nzmsize,dv3
     use param, only : ntime, nrhotime, npress,ilmn, ivarcoeff, zero, one 
@@ -1273,77 +1011,6 @@ module mhd
     sync_Bm_needed=.true.
     !
   end subroutine solve_poisson_mhd
-  !
-  ! subroutine solve_poisson_mhd2(rho1, ep1, drho1, divu3)
-
-  !   USE decomp_2d, ONLY : mytype, xsize, zsize, ph1, nrank, real_type
-  !   USE decomp_2d_poisson, ONLY : poisson
-  !   USE var, ONLY : nzmsize,dv3
-  !   USE param, ONLY : ntime, nrhotime, npress,ilmn, ivarcoeff, zero, one 
-  !   USE mpi
-  !   use navier,only : gradp,velocity_to_momentum,divergence
-    
-  !   implicit none
-
-  !   !! Inputs
-  !   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)), INTENT(IN) :: ep1
-  !   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime), INTENT(IN) :: rho1
-  !   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3), ntime), INTENT(IN) :: drho1
-  !   REAL(mytype), DIMENSION(zsize(1), zsize(2), zsize(3)), INTENT(IN) :: divu3
-
-  !   !! Outputs
-  !   REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
-  !   REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: px1, py1, pz1
-
-  !   !! Locals
-  !   INTEGER :: nlock, poissiter
-  !   LOGICAL :: converged
-  !   REAL(mytype) :: atol, rtol, rho0, divup3norm
-
-
-  !   nlock = 1 !! Corresponds to computing div(u*)
-  !   converged = .FALSE.
-  !   poissiter = 0
-  !   rho0 = one
-
-
-
-  !   CALL divergence(pp3(:,:,:,1),rho1,Bm(:,:,:,1),Bm(:,:,:,2),Bm(:,:,:,3),ep1,drho1,divu3,nlock,identifier='B')
-  !   !
-  !   IF (ilmn.AND.ivarcoeff) THEN
-  !      dv3(:,:,:) = pp3(:,:,:,1)
-  !   ENDIF
-
-  !   do while(.not.converged)
-
-  !      IF (.NOT.converged) THEN
-  !         CALL poisson(pp3(:,:,:,1))
-
-
-  !         !! Need to update pressure gradient here for varcoeff
-  !         CALL gradp(px1,py1,pz1,pp3(:,:,:,1))
-
-         
-
-  !         IF ((.NOT.ilmn).OR.(.NOT.ivarcoeff)) THEN
-  !            !! Once-through solver
-  !            !! - Incompressible flow
-  !            !! - LMN - constant-coefficient solver
-  !            converged = .TRUE.
-  !         ENDIF
-  !      ENDIF
-
-  !      poissiter = poissiter + 1
-  !   enddo
-
-
-  !   Bm(:,:,:,1)=Bm(:,:,:,1)-px1
-  !   Bm(:,:,:,2)=Bm(:,:,:,2)-py1
-  !   Bm(:,:,:,3)=Bm(:,:,:,3)-pz1
-
-  !   sync_Bm_needed=.true.
-  !   !
-  ! end subroutine solve_poisson_mhd2
   !
   subroutine  div_check(divec,divmax,divmean)
     !
@@ -1446,8 +1113,8 @@ module mhd
     real(8) :: ux_m,uy_m,uz_m,ux_f,uy_f,uz_f
     integer :: i,j,k
     !
-    ux_m=0.d0; uy_m=0.d0; uz_m=0.d0
-    ux_f=0.d0; uy_f=0.d0; uz_f=0.d0
+    ux_m=0._mytype; uy_m=0._mytype; uz_m=0._mytype
+    ux_f=0._mytype; uy_f=0._mytype; uz_f=0._mytype
     !
     if (xstart(2)==1) then
       do k=1,xsize(3)
@@ -1479,12 +1146,12 @@ module mhd
       enddo
     endif
     !
-    ux_m=psum(ux_m)/(nx*nz)
-    ux_f=psum(ux_f)/(nx*nz)
-    uy_m=psum(uy_m)/(nx*nz)
-    uy_f=psum(uy_f)/(nx*nz)
-    uz_m=psum(uz_m)/(nx*nz)
-    uz_f=psum(uz_f)/(nx*nz)
+    ux_m=psum(ux_m)/real(nx*nz,mytype)
+    ux_f=psum(ux_f)/real(nx*nz,mytype)
+    uy_m=psum(uy_m)/real(nx*nz,mytype)
+    uy_f=psum(uy_f)/real(nx*nz,mytype)
+    uz_m=psum(uz_m)/real(nx*nz,mytype)
+    uz_f=psum(uz_f)/real(nx*nz,mytype)
     !
     if (nrank == 0) then
       !

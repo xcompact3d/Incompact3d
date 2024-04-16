@@ -63,7 +63,8 @@ subroutine set_filter_coefficients(af,alfa1,a1,b1,c1,d1,alfa2,a2,b2,c2,d2,alfa3,
      alfan,an,bn,cn,dn,alfam,am,bm,cm,dm,alfap,ap,bp,cp,dp,ep,fp,&
      alfai,ai,bi,ci,di,ff,fs,fw,ffp,fsp,fwp,n,ncl1,ncln)
 
-  use decomp_2d, only : mytype, nrank
+  use decomp_2d_constants, only : mytype
+  use decomp_2d_mpi, only : nrank
   use param
 
   implicit none

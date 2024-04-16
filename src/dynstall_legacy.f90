@@ -82,7 +82,7 @@ contains
     !
     !*******************************************************************************
 
-      use decomp_2d, only: mytype
+      use decomp_2d_constants, only : mytype
       use param, only: one, two, thirty
       use dbg_schemes, only: sin_prec
     
@@ -153,7 +153,7 @@ contains
     !
     !*******************************************************************************
         
-      use decomp_2d, only: mytype
+      use decomp_2d_constants, only : mytype
       use param, only: half, one, two, three, four, eleven
       use dbg_schemes, only: exp_prec
 
@@ -309,7 +309,7 @@ contains
     !
     !*******************************************************************************
 
-      use decomp_2d, only: mytype
+      use decomp_2d_constants, only : mytype
       use param, only: zero, zpone, zptwofive, one, two, four, fifty
       use dbg_schemes, only: abs_prec, sqrt_prec, sin_prec, cos_prec, exp_prec
 

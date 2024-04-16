@@ -4,6 +4,10 @@
 
 module navier
 
+  use decomp_2d_constants
+  use decomp_2d_mpi
+  use decomp_2d
+
   implicit none
 
   private
@@ -22,7 +26,6 @@ contains
   !############################################################################
   SUBROUTINE solve_poisson(pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
 
-    USE decomp_2d, ONLY : mytype, xsize, zsize, ph1, nrank, real_type
     USE decomp_2d_poisson, ONLY : poisson
     USE var, ONLY : nzmsize
     USE var, ONLY : dv3
@@ -150,7 +153,6 @@ contains
   !############################################################################
   SUBROUTINE lmn_t_to_rho_trans(drho1, dtemp1, rho1, dphi1, phi1)
 
-    USE decomp_2d
     USE param, ONLY : zero
     USE param, ONLY : imultispecies, massfrac, mol_weight
     USE param, ONLY : ntime
@@ -204,7 +206,6 @@ contains
   !############################################################################
   subroutine cor_vel (ux,uy,uz,px,py,pz)
 
-    USE decomp_2d
     USE variables
     USE param
     USE mpi
@@ -257,7 +258,6 @@ contains
   subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
 
     USE param
-    USE decomp_2d
     USE variables
     USE var, ONLY: ta1, tb1, tc1, pp1, pgy1, pgz1, di1, &
          duxdxp2, uyp2, uzp2, duydypi2, upi2, ta2, dipp2, &
@@ -384,7 +384,6 @@ contains
   subroutine gradp(px1,py1,pz1,pp3)
 
     USE param
-    USE decomp_2d
     USE variables
     USE MPI
     USE var, only: pp1,pgy1,pgz1,di1,pp2,ppi2,pgy2,pgz2,pgzi2,dip2,&
@@ -500,7 +499,6 @@ contains
   !############################################################################
   subroutine pre_correc(ux,uy,uz,ep)
 
-    USE decomp_2d
     USE variables
     USE param
     USE var
@@ -762,7 +760,6 @@ contains
   !! Convert to/from conserved/primary variables
   SUBROUTINE primary_to_conserved(rho1, var1)
 
-    USE decomp_2d, ONLY : mytype, xsize
     USE param, ONLY : nrhotime
 
     IMPLICIT NONE
@@ -777,7 +774,6 @@ contains
   !############################################################################
   SUBROUTINE velocity_to_momentum (rho1, ux1, uy1, uz1)
 
-    USE decomp_2d, ONLY : mytype, xsize
     USE param, ONLY : nrhotime
     USE var, ONLY : ilmn
 
@@ -799,7 +795,6 @@ contains
   !############################################################################
   SUBROUTINE conserved_to_primary(rho1, var1)
 
-    USE decomp_2d, ONLY : mytype, xsize
     USE param, ONLY : nrhotime
 
     IMPLICIT NONE
@@ -814,7 +809,6 @@ contains
   !############################################################################
   SUBROUTINE momentum_to_velocity (rho1, ux1, uy1, uz1)
 
-    USE decomp_2d, ONLY : mytype, xsize
     USE param, ONLY : nrhotime
     USE var, ONLY : ilmn
 
@@ -837,8 +831,6 @@ contains
   !! Calculate velocity-divergence constraint
   SUBROUTINE calc_divu_constraint(divu3, rho1, phi1)
 
-    USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
-    USE decomp_2d, ONLY : transpose_x_to_y, transpose_y_to_z
     USE param, ONLY : nrhotime, zero, ilmn, pressure0, imultispecies, massfrac, mol_weight
     USE param, ONLY : ibirman_eos
     USE param, ONLY : xnu, prandtl
@@ -978,7 +970,6 @@ contains
   ! Calculate extrapolation drhodt 
   SUBROUTINE extrapol_drhodt(drhodt1_next, rho1, drho1)
 
-    USE decomp_2d, ONLY : mytype, xsize, nrank
     USE param, ONLY : ntime, nrhotime, itime, itimescheme, itr, dt, gdt, irestart
     USE param, ONLY : half, three, four
     USE param, ONLY : ibirman_eos
@@ -1039,8 +1030,6 @@ contains
 
   SUBROUTINE birman_drhodt_corr(drhodt1_next, rho1)
 
-    USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
-    USE decomp_2d, ONLY : transpose_x_to_y, transpose_y_to_z, transpose_z_to_y, transpose_y_to_x
     USE variables, ONLY : derxx, deryy, derzz
     USE param, ONLY : nrhotime
     USE param, ONLY : xnu, prandtl
@@ -1088,7 +1077,6 @@ contains
   SUBROUTINE test_varcoeff(converged, divup3norm, pp3, dv3, atol, rtol, poissiter)
 
     USE MPI
-    USE decomp_2d, ONLY: mytype, ph1, real_type, nrank
     USE var, ONLY : nzmsize
     USE param, ONLY : npress, itime
     USE variables, ONLY : nxm, nym, nzm, ilist
@@ -1160,8 +1148,6 @@ contains
 
     USE MPI
 
-    USE decomp_2d
-
     USE param, ONLY : nrhotime, ntime
     USE param, ONLY : one
 
@@ -1213,7 +1199,6 @@ contains
   !
   !********************************************************************
 
-    USE decomp_2d
     USE decomp_2d_poisson
     USE variables
     USE param
@@ -1305,7 +1290,6 @@ contains
   !********************************************************************
 
     use param, only: one
-    use decomp_2d, only: mytype, xsize
     use variables, only: numscalar
     use var, only: ta1, phi1
 
@@ -1337,7 +1321,6 @@ contains
   !
   !********************************************************************
 
-    use decomp_2d
     use variables
     use param
     use var
@@ -1408,7 +1391,6 @@ contains
   !
   !********************************************************************
 
-    use decomp_2d
     use decomp_2d_poisson
     use variables
     use param
@@ -1495,7 +1477,6 @@ contains
 
     use param
     use variables
-    use decomp_2d
     use MPI
     use ibm_param, only: rai
 

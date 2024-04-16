@@ -20,12 +20,12 @@
 
 module sandbox
 
-  use decomp_2d, only : mytype, real_type, real2_type
+  use decomp_2d_constants, only : mytype, real_type, real2_type
   use decomp_2d, only : xsize, ysize, zsize
   use decomp_2d, only : xstart, ystart, zstart
   use decomp_2d, only : xend, yend, zend
   use decomp_2d, only : transpose_x_to_y, transpose_y_to_z, &
-      transpose_z_to_y, transpose_y_to_x
+      transpose_z_to_y, transpose_y_to_x, alloc_x
 
   use variables, only : numscalar
 
@@ -74,7 +74,6 @@ contains
 
   subroutine geomcomplex_sandbox(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, yp, remp)
 
-    use decomp_2d, only : mytype, xstart, xend
     use decomp_2d_io, only : decomp_2d_read_one
     use param, only : one, two
     use variables, only : nx, nz
@@ -111,7 +110,6 @@ contains
 
     USE param
     USE variables
-    USE decomp_2d
     USE MPI
 
     implicit none
@@ -138,7 +136,6 @@ contains
     !================================================================================
     USE param
     USE variables
-    USE decomp_2d
     USE MPI
     USE var, only : phi2, phi3, ta2, di2
 
@@ -196,7 +193,6 @@ contains
 
     USE param
     USE variables
-    USE decomp_2d
 
     implicit none
 
@@ -226,7 +222,6 @@ contains
 
     USE param
     USE variables
-    USE decomp_2d
     USE MPI
 
     implicit none
@@ -301,7 +296,6 @@ contains
     !================================================================================
     USE param
     USE variables
-    USE decomp_2d
     USE MPI
 
     implicit none
@@ -336,7 +330,6 @@ contains
     !================================================================================
     USE param
     USE variables
-    USE decomp_2d
     USE MPI
 
     implicit none
@@ -386,7 +379,6 @@ contains
   !********************************************************************
   subroutine init_sandbox (ux1,uy1,uz1,ep1,phi1,iresflg)
 
-    USE decomp_2d
     USE decomp_2d_io
     USE variables
     USE param
