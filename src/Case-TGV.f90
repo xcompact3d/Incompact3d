@@ -67,89 +67,30 @@ contains
              y=real((j+xstart(2)-1-1),mytype)*dy
              do i=1,xsize(1)
                 x=real(i-1,mytype)*dx
-
                 if(mhd_active) then
-
-                  ux1(i,j,k)= -2.d0*sin_prec(y)*cos_prec(z)
-                  uy1(i,j,k)=  2.d0*sin_prec(x)*cos_prec(z)
+                  ux1(i,j,k)= -two*sin_prec(y)*cos_prec(z)
+                  uy1(i,j,k)=  two*sin_prec(x)*cos_prec(z)
                   uz1(i,j,k)=zero
                   !
-                  Bm(i,j,k,1)=-2.d0*sin_prec(y)
-                  Bm(i,j,k,2)= 2.d0*sin_prec(2.d0*x)
+                  Bm(i,j,k,1)=-two*sin_prec(y)
+                  Bm(i,j,k,2)= two*sin_prec(two*x)
                   Bm(i,j,k,3)=zero
-
-                  ! Bm(i,j,k,1)=0.8d0*(-2.d0*sin_prec(2.d0*y) + sin_prec(z))
-                  ! Bm(i,j,k,2)=0.8d0*( 2.d0*sin_prec(x)      + sin_prec(z))
-                  ! Bm(i,j,k,3)=0.8d0*(      sin_prec(x)      + sin_prec(y))
-                  !
-                  ! Bm(i,j,k,1)=-2.d0*sin_prec(2.d0*y) + sin_prec(z)
-                  ! Bm(i,j,k,2)= 2.d0*sin_prec(x)      + sin_prec(z)
-                  ! Bm(i,j,k,3)=      sin_prec(x)      + sin_prec(y)
-                  !
-                  ! Bm(i,j,k,1)=sin_prec(x)*sin_prec(y)*cos_prec(z)
-                  ! Bm(i,j,k,2)=cos_prec(x)*cos_prec(y)*cos_prec(z)
-                  ! Bm(i,j,k,3)=zero
                   !
                   Bmean(i,j,k,1)=zero
                   Bmean(i,j,k,2)=zero
                   Bmean(i,j,k,3)=zero
-
                else
-
                  ux1(i,j,k)=+sin_prec(x)*cos_prec(y)*cos_prec(z)
                  uy1(i,j,k)=-cos_prec(x)*sin_prec(y)*cos_prec(z)
                  if (iscalar == 1) then
                     phi1(i,j,k,1:numscalar)=sin_prec(x)*sin_prec(y)*cos_prec(z)
                  endif
-
-                 !ux1(i,j,k)= -2.d0*sin_prec(y)*cos_prec(z)
-                 !uy1(i,j,k)=  2.d0*sin_prec(x)*cos_prec(z)
-
                  uz1(i,j,k)=zero
-                 
                endif
-
              enddo
           enddo
        enddo
-
-       call random_seed(size=isize)
-       allocate (seed(isize))
-       seed(:)=67
-       call random_seed(put=seed)
-       !     call random_number(ux1)
-       !     call random_number(uy1)
-       ! call random_number(uz1)
-
-       do k=1,xsize(3)
-          do j=1,xsize(2)
-             do i=1,xsize(1)
-                !              ux1(i,j,k)=noise*(ux1(i,j,k)-half)
-                !              uy1(i,j,k)=noise*(uy1(i,j,k)-half)
-                ! uz1(i,j,k)=0.05*(uz1(i,j,k)-half)
-             enddo
-          enddo
-       enddo
-
-       !     !modulation of the random noise
-       !     do k=1,xsize(3)
-       !        do j=1,xsize(2)
-       !           if (istret.eq.0) y=(j+xstart(2)-1-1)*dy-yly/two
-       !           if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/two
-       !           um=exp(-0.2*y*y)
-       !           do i=1,xsize(1)
-       !              ux1(i,j,k)=um*ux1(i,j,k)
-       !              uy1(i,j,k)=um*uy1(i,j,k)
-       !              uz1(i,j,k)=um*uz1(i,j,k)
-       !           enddo
-       !        enddo
-       !     enddo
-
     endif
-
-    !  bxx1(j,k)=zero
-    !  bxy1(j,k)=zero
-    !  bxz1(j,k)=zero
 
     !INIT FOR G AND U=MEAN FLOW + NOISE
     do k=1,xsize(3)
@@ -162,7 +103,6 @@ contains
        enddo
     enddo
 
-    ! if(mhd_active) call test_magnetic
 
 #ifdef DEBG
     if (nrank  ==  0) write(*,*) '# init end ok'

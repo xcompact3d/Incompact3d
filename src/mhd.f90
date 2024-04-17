@@ -7,12 +7,12 @@ module mhd
   use decomp_2d_constants, only : mytype, real_type
   use decomp_2d_mpi, only : nrank,nproc
   use decomp_2d, only : xsize
-  use mptool, only: mpistop,rankname,psum,pmax,cross_product
+  use mptool, only: psum,pmax,cross_product
   !
   implicit none
   !
-  !logical :: mhd_active,mhd_equation,sync_Bm_needed= .true.
-  logical :: mhd_active,mhd_equation,sync_Bm_needed= .false.
+  logical :: mhd_active
+  logical :: mhd_equation
   real(8) :: hartmann,stuart,rem
   !+------------+------------------------------------------------------+
   !|  mhd_active| the swith to activate the mhd module.                |
@@ -464,24 +464,6 @@ module mhd
     !
     return
     !
-    ! div3=divergence_scalar(Je,nlock)
-    ! !
-    ! call div_check(div3)
-    !
-    ! do k = ph1%zst(1),ph1%zen(1)
-    ! do j = ph1%zst(2),ph1%zen(2)
-    ! do i = 1,nzmsize
-    !   if(nrank==0) then
-    !     print*,i,j,k,div3(i,j,k)
-    !   endif
-    ! enddo
-    ! enddo
-    ! enddo
-    ! print*,xsize(1), xsize(2), xsize(3)
-    ! print*,ph1%zst(1),ph1%zen(1),ph1%zst(2),ph1%zen(2),nzmsize
-    ! !
-    ! call mpistop
-    !
   end function solve_mhd_potential_poisson
   !+-------------------------------------------------------------------+
   !| The end of the subroutine solve_mhd_potential_poisson.            |
@@ -883,170 +865,11 @@ module mhd
       Bm=Bm-dphib
     enddo
     !
-    sync_Bm_needed=.true.
-    !
   end subroutine solve_poisson_mhd
   !
-  subroutine  div_check(divec,divmax,divmean)
-    !
-    USE decomp_2d
-    !
-    real(mytype),intent(in) :: divec(:,:,:)
-    real(mytype),intent(out) :: divmax,divmean
-    !
-    integer :: i,j,k
-    real(mytype) :: tmax,tmoy
-    !
-    tmax=-1609._mytype
-    tmoy=0._mytype
-    do k = 1, size(divec,3)
-    do j = 1, size(divec,2)
-    do i = 1, size(divec,1)
-      if (divec(i,j,k).gt.tmax) tmax=divec(i,j,k)
-      tmoy=tmoy+abs(divec(i,j,k))
-    enddo
-    enddo
-    enddo
-    tmoy=tmoy/(size(divec,1)*size(divec,2)*size(divec,3))
-    !
-    ! call MPI_REDUCE(tmax,tmax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-    ! call MPI_REDUCE(tmoy,tmoy1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
-    tmax=pmax(tmax)
-    tmoy=psum(tmoy)
-    !
-    divmax=tmax
-    divmean=tmoy
-
-    ! if (nrank == 0) then
-    !    write(*,*) 'DIV max mean=',real(tmax,mytype),real(tmoy/real(nproc),mytype)
-    ! endif
-    !
-  end subroutine
-  !
-  subroutine  divergence_vmesh_check(vec,divec)
-    !
-    USE MPI
-    USE decomp_2d
-    !
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),3),intent(in) :: vec
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(out) :: divec
-    !
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),3) :: dvec1,dvec2,dvec3
-    real(mytype) :: div,tmax,tmoy,tmax1,tmoy1,code
-    !
-    integer :: i,j,k
-    !
-    dvec1=grad_vmesh(vec(:,:,:,1))
-    dvec2=grad_vmesh(vec(:,:,:,2))
-    dvec3=grad_vmesh(vec(:,:,:,3))
-    !
-    tmax=-1609._mytype
-    tmoy=0._mytype
-    do k = 1, xsize(3)
-    do j = 1, xsize(2)
-    do i = 1, xsize(1)
-      divec(i,j,k)=div
-      !
-      div=dvec1(i,j,k,1)+dvec2(i,j,k,2)+dvec3(i,j,k,3)
-      if (div.gt.tmax) tmax=div
-      tmoy=tmoy+abs(div)
-    enddo
-    enddo
-    enddo
-    tmoy=tmoy/(xsize(1)*xsize(2)*xsize(3))
-    !
-    ! call MPI_REDUCE(tmax,tmax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-    ! call MPI_REDUCE(tmoy,tmoy1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
-    tmax=pmax(tmax)
-    tmoy=psum(tmoy)
-    !
-    if (nrank == 0) then
-       write(*,*) 'DIV max mean=',real(tmax,mytype),real(tmoy/real(nproc),mytype)
-    endif
-    !
-  end subroutine  divergence_vmesh_check
-  !+-------------------------------------------------------------------+
-  !| The end of the subroutine divergence_vmesh_check.                 |
-  !+-------------------------------------------------------------------+
-  !
-  !+-------------------------------------------------------------------+
-  !| this subroutine is used to check the velocity at wall             |
-  !+-------------------------------------------------------------------+
-  !| change record                                                     |
-  !| -------------                                                     |
-  !| 27-Jan-2023  | Created by J. Fang STFC Daresbury Laboratory       |
-  !+-------------------------------------------------------------------+
-  subroutine boundary_velocity_check(ux,uy,uz,note)
-    !
-    USE decomp_2d
-    use var,     only : nx,ny,nz
-    !
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) ::   &
-                                                             ux,uy,uz
-    character(len=*),intent(in),optional :: note
-    !
-    real(8) :: ux_m,uy_m,uz_m,ux_f,uy_f,uz_f
-    integer :: i,j,k
-    !
-    ux_m=0._mytype; uy_m=0._mytype; uz_m=0._mytype
-    ux_f=0._mytype; uy_f=0._mytype; uz_f=0._mytype
-    !
-    if (xstart(2)==1) then
-      do k=1,xsize(3)
-      do i=1,xsize(1)
-        ux_m=ux_m+ux(i,1,k)
-        ux_f=ux_f+ux(i,1,k)**2
-        !
-        uy_m=uy_m+uy(i,1,k)
-        uy_f=uy_f+uy(i,1,k)**2
-        !
-        uz_m=uz_m+uz(i,1,k)
-        uz_f=uz_f+uz(i,1,k)**2
-      enddo
-      enddo
-    endif
-    !
-    if (xend(2)==ny) then
-      do k=1,xsize(3)
-      do i=1,xsize(1)
-        ux_m=ux_m+ux(i,xsize(2),k)
-        ux_f=ux_f+ux(i,xsize(2),k)**2
-        !
-        uy_m=uy_m+uy(i,xsize(2),k)
-        uy_f=uy_f+uy(i,xsize(2),k)**2
-        !
-        uz_m=uz_m+uz(i,xsize(2),k)
-        uz_f=uz_f+uz(i,xsize(2),k)**2
-      enddo
-      enddo
-    endif
-    !
-    ux_m=psum(ux_m)/real(nx*nz,mytype)
-    ux_f=psum(ux_f)/real(nx*nz,mytype)
-    uy_m=psum(uy_m)/real(nx*nz,mytype)
-    uy_f=psum(uy_f)/real(nx*nz,mytype)
-    uz_m=psum(uz_m)/real(nx*nz,mytype)
-    uz_f=psum(uz_f)/real(nx*nz,mytype)
-    !
-    if (nrank == 0) then
-      !
-      if(present(note)) then
-        write(*,*)' ** note ',note
-      endif
-      !
-      write(*,*)' ** u_m ', ux_m,uy_m,uz_m
-      write(*,*)' ** u_f ', ux_f,uy_f,uz_f
-    endif
-    !
-  end subroutine boundary_velocity_check
-  !+-------------------------------------------------------------------+
-  !| The end of the subroutine boundary_velocity_check.                |
-  !+-------------------------------------------------------------------+
-  !
-
   !!############################################################################
-  !subroutine DIVERGENCe
-  !Calculation of div u* for nlock=1 and of div u^{n+1} for nlock=2
+  !subroutine DIVERGENCE for a generic vector field
+  !Calculation of div 
   ! input :  vec (on velocity mesh)
   ! output : pp3 (on pressure mesh)
   !written by SL 2018
@@ -1144,6 +967,3 @@ module mhd
   end function divergence_scalar
   !
 end module mhd
-!+---------------------------------------------------------------------+
-! the end of the module mhd                                            |
-!+---------------------------------------------------------------------+

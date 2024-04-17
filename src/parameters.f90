@@ -605,7 +605,7 @@ subroutine parameter_defaults()
   use visu, only : output2D
   use forces, only : iforces, nvol
 
-  use mhd, only: mhd_active
+  use mhd, only: mhd_active, mhd_equation, rem, stuart, hartmann 
 
   implicit none
 
@@ -632,6 +632,10 @@ subroutine parameter_defaults()
   datapath = './data/'
 
   mhd_active=.false.
+  mhd_equation=.false.
+  rem = zero
+  stuart = zero
+  hartmann = zero
 
   !! LES stuff
   smagwalldamp=1

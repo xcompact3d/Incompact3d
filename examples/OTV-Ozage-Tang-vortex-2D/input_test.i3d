@@ -104,15 +104,6 @@ partirange = 0.01,0.01,0.001,1.999,0.01,3.99
 /End
 
 
-!====================
-&MHDParam
-!====================
-
-mhd_equation=.true.
-Stuart = 50.d0
-Rem    = 50.d0
-
-/End
 
 !#######################
 ! OPTIONAL PARAMETERS
@@ -125,6 +116,15 @@ jles=0
 smagcst=0.1
 walecst=0.5 
 iwall=0
+/End
+
+!====================
+&MHDParam
+!====================
+mhd_equation=.true.
+Stuart = 50.d0
+Rem    = 50.d0
+
 /End
 
 !=================

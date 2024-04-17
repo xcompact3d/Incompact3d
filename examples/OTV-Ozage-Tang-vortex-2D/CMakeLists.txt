@@ -1,4 +1,4 @@
-# TGV
+# OTV
 set(case "OTV")
 set(case_dir "${test_dir}/${case}")
 file(MAKE_DIRECTORY ${case_dir})
@@ -8,7 +8,7 @@ install(FILES ${input_file} DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/${case}
 if(ADIOS2_FOUND)
   install(FILES adios2_config.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/${case})
 endif()
-# If testing active add test for TGV case
+# If testing active add test for OTV case
 file(COPY ${input_file} DESTINATION ${case_dir})
 if(ADIOS2_FOUND)
   file(COPY adios2_config.xml DESTINATION ${case_dir})
