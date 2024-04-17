@@ -1036,7 +1036,7 @@ contains
       endif
        if ((nrank .eq. 0).and.(record_var.eq.1)) then
          ! write(*,*) 'TIME STEP = ', itime
-          write(38+(iv-1),*) t,dra1,dra2,dra3
+         write(38+(iv-1),*) t,dra1,dra2,dra3, sum(tdiffx), sum(tdiffx2), tp1, -mom1, -sum(tunstx(:)), -sum(tconvx(:)), -sum(tconvx2(:))
          !  write(*,*) 'written to file number', 38+(iv-1), t, dra1,dra2,dra3
           call flush(38+(iv-1))
        endif
