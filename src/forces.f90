@@ -1017,9 +1017,9 @@ contains
           xmom    = tunstx(k)+tconvx(k)+tconvx2(k)
           ymom    = tunsty(k)+tconvy(k)+tconvy2(k)
           zmom    = tunstz(k)+tconvz(k)+tconvz2(k)
-          xDrag(k) = two*(tdiffx(k)+tdiffx2(k)+tpresx(k)-xmom)
-          yLift(k) = two*(tdiffy(k)+tdiffy2(k)+tpresy(k)-ymom)
-          zLat(k)  = two*(tdiffz(k)+tdiffz2(k)+tpresz(k)-zmom)
+          xDrag(k) = (tdiffx(k)+tdiffx2(k)+tpresx(k)-xmom)
+          yLift(k) = (tdiffy(k)+tdiffy2(k)+tpresy(k)-ymom)
+          zLat(k)  = (tdiffz(k)+tdiffz2(k)+tpresz(k)-zmom)
 
        enddo
 
