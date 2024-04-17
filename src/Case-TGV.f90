@@ -28,7 +28,7 @@ contains
     use variables
     use param
     use MPI
-    use mhd, only: mhd_active,Bm,Bmean,test_magnetic
+    use mhd, only: mhd_active,Bm,Bmean
     use dbg_schemes, only: sin_prec, cos_prec
 
     implicit none
