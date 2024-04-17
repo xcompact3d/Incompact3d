@@ -113,7 +113,7 @@ subroutine init_xcompact3d()
 
   use variables, only : nx, ny, nz, nxm, nym, nzm
   use variables, only : p_row, p_col
-  use variables, only : nstat, nvisu, nprobe, ilist
+  use variables, only : nstat, nvisu, ilist
 
   use les, only: init_explicit_les
   use turbine, only: init_turbines
@@ -172,7 +172,6 @@ subroutine init_xcompact3d()
   call decomp_2d_io_init()
   call init_coarser_mesh_statS(nstat,nstat,nstat,.true.)    !start from 1 == true
   call init_coarser_mesh_statV(nvisu,nvisu,nvisu,.true.)    !start from 1 == true
-  call init_coarser_mesh_statP(nprobe,nprobe,nprobe,.true.) !start from 1 == true
   !div: nx ny nz --> nxm ny nz --> nxm nym nz --> nxm nym nzm
   call decomp_info_init(nxm, nym, nzm, ph1)
   call decomp_info_init(nxm, ny, nz, ph4)
