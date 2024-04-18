@@ -494,7 +494,7 @@ contains
     use variables, only : numscalar
     use param, only : ilmn, nrhotime, ntime
     use var, only : itimescheme, iibm
-    use mhd, only : mhd_active
+    use mhd, only : mhd_active, mhd_equation
     
     implicit none
 
