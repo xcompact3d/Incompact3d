@@ -291,12 +291,22 @@ contains
 
     use decomp_2d_io, only : decomp_2d_register_variable
     use visu, only : io_name, output2D
+    use mhd, only : mhd_active
     
     implicit none
 
     logical, intent(out) :: visu_initialised
 
     call decomp_2d_register_variable(io_name, "critq", 1, 0, output2D, mytype)
+
+    if (mhd_active) then
+       call decomp_2d_register_variable(io_name, "J_x", 1, 0, output2D, mytype)
+       call decomp_2d_register_variable(io_name, "J_y", 1, 0, output2D, mytype)
+       call decomp_2d_register_variable(io_name, "J_z", 1, 0, output2D, mytype)
+       call decomp_2d_register_variable(io_name, "B_x", 1, 0, output2D, mytype)
+       call decomp_2d_register_variable(io_name, "B_y", 1, 0, output2D, mytype)
+       call decomp_2d_register_variable(io_name, "B_z", 1, 0, output2D, mytype)
+    endif
 
     visu_initialised = .true.
     
@@ -374,14 +384,13 @@ contains
                  - th1(:,:,:) * tf1(:,:,:)
     call write_field(di1, ".", "critq", num, flush = .true.) ! Reusing temporary array, force flush
 
-    if(mhd_active) then
+    if (mhd_active) then
       call write_field(Je(:,:,:,1), ".", "J_x", num, flush = .true.)
       call write_field(Je(:,:,:,2), ".", "J_y", num, flush = .true.)
       call write_field(Je(:,:,:,3), ".", "J_z", num, flush = .true.)
       call write_field(Bm(:,:,:,1), ".", "B_x", num, flush = .true.)
       call write_field(Bm(:,:,:,2), ".", "B_y", num, flush = .true.)
       call write_field(Bm(:,:,:,3), ".", "B_z", num, flush = .true.)
-
     endif
     
   end subroutine visu_channel
