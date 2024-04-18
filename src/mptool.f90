@@ -3,6 +3,7 @@
 !SPDX-License-Identifier: BSD 3-Clause
 module mptool
   !
+  use mpi
   use decomp_2d_constants, only : mytype, real_type
   use decomp_2d_mpi, only: nrank, nproc
   !
@@ -27,8 +28,6 @@ module mptool
   !!
   function psum_mytype_ary(var) result(varsum)
     !
-    use mpi
-    !
     ! arguments
     real(mytype),intent(in) :: var(:)
     real(mytype),allocatable :: varsum(:)
@@ -48,8 +47,6 @@ module mptool
   end function psum_mytype_ary
   !
   function psum_integer(var,comm) result(varsum)
-    !
-    use mpi
     !
     ! arguments
     integer,intent(in) :: var
@@ -75,8 +72,6 @@ module mptool
   !
   function psum_mytype(var,comm) result(varsum)
     !
-    use mpi
-    !
     ! arguments
     real(mytype),intent(in) :: var
     integer,optional,intent(in) :: comm
@@ -101,8 +96,6 @@ module mptool
   !!
   integer function  pmax_int(var)
     !
-    use mpi
-    !
     ! arguments
     integer,intent(in) :: var
     !
@@ -115,8 +108,6 @@ module mptool
   end function pmax_int
   !
   real(mytype) function  pmax_mytype(var)
-    !
-    use mpi
     !
     ! arguments
     real(mytype),intent(in) :: var
