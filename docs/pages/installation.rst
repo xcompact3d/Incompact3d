@@ -5,6 +5,12 @@ Installation
 The latest version of Xcompact3d only supports `cmake` based builds. The only requirements is a Fortran 90-compatible compiler and a working `MPI` library.
 
 
+Minimum requirements
+====================
+**cmake version 3.20 and above**
+
+**a recent modern Fortran compiler (ie, gfortran 9 and above**
+
 Source Download and Compilation
 ===============================
 

@@ -43,5 +43,10 @@ it is possible to customise the coefficients of the second derivative schemes (u
 to add extra numerical dissipation in the simulation as a substitute of the missing dissipation 
 from the small turbulent scales that are not resolved. 
 
+Documentation
+=============
+
+[Readthedocs](https://xcompact3d.readthedocs.io/en/latest/)
+
 
 

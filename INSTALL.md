@@ -14,6 +14,12 @@ $ git config --global url."https://".insteadOf git@
 Be sure to also configure your system to use the appropriate proxy settings, 
 e.g. by setting the `https_proxy` and `http_proxy` variables.
 
+## Minimum requirements
+
+**cmake version 3.20 and above**
+
+**a recent modern Fortran compiler (ie, gfortran 9 and above**
+
 ### The compiling process
 
 The build system for Xcompact3d is based on CMake. 
@@ -125,8 +131,10 @@ $ export decomp2d_DIR=/path/to/2decomp/install/opt/lib/decomp2d
 ```
 Depending on the system *lib* can be *lib64*.
 
-***Note***
-Some of the alternative options for FFT and IO backends required additional input
+**Note**
+
+Some of the alternative options for FFT and IO backends required additional input.
+
 * For MKL FFT the location of the MKL libraires needs to be passed to the configure as 
 for the 2DECOMP&FFT installation with 
 ```
