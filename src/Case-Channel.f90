@@ -480,72 +480,72 @@ contains
     real(mytype)     :: volsemini, rrand, ddx, ddy, ddz, lsem, upr, vpr, wpr
     real(mytype), dimension(3) :: dim_min, dim_max
 
-    dim_min(1) = zero
-    dim_min(2) = zero
-    dim_min(3) = zero
-    dim_max(1) = xlx
-    dim_max(2) = yly
-    dim_max(3) = zlz
-    volsemini = xlx * yly * zlz
-    ! 3 int to get different random numbers
-    do jj = 1, nsemini
-       ! Vortex Position
-       do ii = 1, 3
-          call random_number(rrand)
-          posvor(ii,jj) = dim_min(ii)+(dim_max(ii)-dim_min(ii))*rrand
-       enddo
-       ! Eddy intensity
-       do ii = 1, 3
-          call random_number(rrand)
-          if (rrand <= zpfive) then
-             eddy(ii,jj) = -one
-          else
-             eddy(ii,jj) = +one
-          endif 
-       enddo
-    enddo
-    ! Loops to apply the fluctuations 
-    do k = 1, xsize(3)
-       z = real((k+xstart(3)-1-1),mytype)*dz
-       do j = 1, xsize(2)
-          if (istret==0) y=real(j+xstart(2)-2,mytype)*dy
-          if (istret/=0) y=yp(j+xstart(2)-1)
-          do i = 1, xsize(1)
-             x = real(i-1,mytype)*dx
-             lsem = 0.15_mytype ! For the moment we keep it constant
-             upr = zero
-             vpr = zero
-             wpr = zero
-             do jj = 1, nsemini
-                ddx = abs(x-posvor(1,jj))
-                ddy = abs(y-posvor(2,jj))
-                ddz = abs(z-posvor(3,jj))
-                if (ddx < lsem .and. ddy < lsem .and. ddz < lsem) then
-                   ! coefficients for the intensity of the fluctuation
-                   ftent = (one-ddx/lsem)*(one-ddy/lsem)*(one-ddz/lsem)
-                   ftent = ftent / (sqrt(two/three*lsem))**3
-                   upr = upr + eddy(1,jj) * ftent
-                   vpr = vpr + eddy(2,jj) * ftent
-                   wpr = wpr + eddy(3,jj) * ftent
-                endif
-             enddo
-             upr = upr * sqrt(volsemini/nsemini)
-             vpr = vpr * sqrt(volsemini/nsemini)
-             wpr = wpr * sqrt(volsemini/nsemini)
-             ! 
-             um  = one-(y-yly*half)**2 ! we can use a better arroximation 
-             if (idir_stream == 1) then
-                ux1(i,j,k)=upr*sqrt(two/three*init_noise*um) + um
-                uy1(i,j,k)=vpr*sqrt(two/three*init_noise*um)
-                uz1(i,j,k)=wpr*sqrt(two/three*init_noise*um)
-             else
-                uz1(i,j,k)=upr*sqrt(two/three*init_noise*um) + um
-                uy1(i,j,k)=vpr*sqrt(two/three*init_noise*um)
-                ux1(i,j,k)=wpr*sqrt(two/three*init_noise*um)
-             endif
-          enddo
-       enddo
-    enddo
+     dim_min(1) = zero
+     dim_min(2) = zero
+     dim_min(3) = zero
+     dim_max(1) = xlx
+     dim_max(2) = yly
+     dim_max(3) = zlz
+     volsemini = xlx * yly * zlz
+     ! 3 int to get different random numbers
+     do jj = 1, nsemini
+        ! Vortex Position
+        do ii = 1, 3
+           call random_number(rrand)
+           posvor(ii,jj) = dim_min(ii)+(dim_max(ii)-dim_min(ii))*rrand
+        enddo
+        ! Eddy intensity
+        do ii = 1, 3
+           call random_number(rrand)
+           if (rrand <= zpfive) then
+              eddy(ii,jj) = -one
+           else
+              eddy(ii,jj) = +one
+           endif 
+        enddo
+     enddo
+     ! Loops to apply the fluctuations 
+     do k = 1, xsize(3)
+        z = real((k+xstart(3)-1-1),mytype)*dz
+        do j = 1, xsize(2)
+           if (istret==0) y=real(j+xstart(2)-2,mytype)*dy
+           if (istret/=0) y=yp(j+xstart(2)-1)
+           do i = 1, xsize(1)
+              x = real(i-1,mytype)*dx
+              lsem = 0.15_mytype ! For the moment we keep it constant
+              upr = zero
+              vpr = zero
+              wpr = zero
+              do jj = 1, nsemini
+                 ddx = abs(x-posvor(1,jj))
+                 ddy = abs(y-posvor(2,jj))
+                 ddz = abs(z-posvor(3,jj))
+                 if (ddx < lsem .and. ddy < lsem .and. ddz < lsem) then
+                    ! coefficients for the intensity of the fluctuation
+                    ftent = (one-ddx/lsem)*(one-ddy/lsem)*(one-ddz/lsem)
+                    ftent = ftent / (sqrt(two/three*lsem))**3
+                    upr = upr + eddy(1,jj) * ftent
+                    vpr = vpr + eddy(2,jj) * ftent
+                    wpr = wpr + eddy(3,jj) * ftent
+                 endif
+              enddo
+              upr = upr * sqrt(volsemini/nsemini)
+              vpr = vpr * sqrt(volsemini/nsemini)
+              wpr = wpr * sqrt(volsemini/nsemini)
+              ! 
+              um  = one-(y-yly*half)**2 ! we can use a better arroximation 
+              if (idir_stream == 1) then
+                 ux1(i,j,k)=upr*sqrt(two/three*init_noise*um) + um
+                 uy1(i,j,k)=vpr*sqrt(two/three*init_noise*um)
+                 uz1(i,j,k)=wpr*sqrt(two/three*init_noise*um)
+              else
+                 uz1(i,j,k)=upr*sqrt(two/three*init_noise*um) + um
+                 uy1(i,j,k)=vpr*sqrt(two/three*init_noise*um)
+                 ux1(i,j,k)=wpr*sqrt(two/three*init_noise*um)
+              endif
+           enddo
+        enddo
+     enddo
 
   end subroutine sem_init_channel
   !############################################################################
