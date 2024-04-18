@@ -586,7 +586,7 @@ module mhd
     !SKEW SYMMETRIC FORM
 
     !WORK X-PENCILS
-    ta1(:,:,:) = ux1(:,:,:) * Bsum(:,:,:,1) - Bsum(:,:,:,1) * ux1(:,:,:) 
+    ta1(:,:,:) = ux1(:,:,:) * Bsum(:,:,:,1) - Bsum(:,:,:,1) * ux1(:,:,:) ! FIXME this is always zero
     tb1(:,:,:) = ux1(:,:,:) * Bsum(:,:,:,2) - Bsum(:,:,:,1) * uy1(:,:,:)
     tc1(:,:,:) = ux1(:,:,:) * Bsum(:,:,:,3) - Bsum(:,:,:,1) * uz1(:,:,:)
     
@@ -778,8 +778,6 @@ module mhd
     dB(:,:,:,1) = ta1(:,:,:) - half*tg1(:,:,:)  + td1(:,:,:)
     dB(:,:,:,2) = tb1(:,:,:) - half*th1(:,:,:)  + te1(:,:,:)
     dB(:,:,:,3) = tc1(:,:,:) - half*ti1(:,:,:)  + tf1(:,:,:)
-
-    return
 
   end subroutine mhd_rhs_eq
   !
