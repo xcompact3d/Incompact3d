@@ -428,6 +428,7 @@ contains
 
     use decomp_2d_io, only : decomp_2d_register_variable
     use visu, only : io_name, output2D
+    use mhd, only : mhd_active
     
     implicit none
 
@@ -435,6 +436,15 @@ contains
 
     call decomp_2d_register_variable(io_name, "vort", 1, 0, output2D, mytype)
     call decomp_2d_register_variable(io_name, "critq", 1, 0, output2D, mytype)
+
+    if (mhd_active) then
+       call decomp_2d_register_variable(io_name, "J_x", 1, 0, output2D, mytype)
+       call decomp_2d_register_variable(io_name, "J_y", 1, 0, output2D, mytype)
+       call decomp_2d_register_variable(io_name, "J_z", 1, 0, output2D, mytype)
+       call decomp_2d_register_variable(io_name, "B_x", 1, 0, output2D, mytype)
+       call decomp_2d_register_variable(io_name, "B_y", 1, 0, output2D, mytype)
+       call decomp_2d_register_variable(io_name, "B_z", 1, 0, output2D, mytype)
+    endif
 
     visu_initialised = .true.
     
