@@ -669,7 +669,6 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   endif
  
   !ta2: A.uhat
-  !td2:(A+xcstB).un
   !if isecondder=5, we need nona inversion
   !id isecondder is not 5, we need septa inversion
 

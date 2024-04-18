@@ -312,7 +312,7 @@ contains
     if (nrank .eq. 0) write(*,*)'## End  int_time'
 #endif
 
-  END SUBROUTINE int_time
+  ENDSUBROUTINE int_time
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!

@@ -345,7 +345,7 @@ module param
   real(mytype) :: cfl_diff_x,cfl_diff_y,cfl_diff_z,cfl_diff_sum
 
   !!
-  real(mytype) :: xcst, xcstB
+  real(mytype) :: xcst
   real(mytype), allocatable, dimension(:) :: xcst_sc
   real(mytype), allocatable, dimension(:,:) :: alpha_sc, beta_sc, g_sc
   real(mytype) :: g_bl_inf, f_bl_inf

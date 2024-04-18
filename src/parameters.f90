@@ -337,9 +337,6 @@ subroutine parameter(input_i3d)
      endif
      if (iscalar.eq.1) xcst_sc = xcst / sc
 
-
-     if (mhd_active) xcstB = xcst / rem * re 
-
   endif
 
   if (itype==itype_tbl.and.A_tr .gt. zero.and.nrank==0)  write(*,*)  "TBL tripping is active"
