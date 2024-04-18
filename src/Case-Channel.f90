@@ -206,13 +206,21 @@ contains
        endif
     endif
 
-    if( mhd_active .and. iimplicit==0 .and. mhd_equation ) then
-       Bm(:,1,:,2)  = zero
-       Bm(:,xsize(2),:,2) = zero
-       Bm(:,1,:,1)  = zero
-       Bm(:,xsize(2),:,1) = zero
-       Bm(:,1,:,3)  = zero
-       Bm(:,xsize(2),:,3) = zero
+    if( mhd_active .and. iimplicit<=0 .and. mhd_equation ) then
+       ! FIXME add a test
+       ! This is valid only when nclyB*1 = 2
+       if (xstart(2) == 1) then
+          Bm(:,1,:,1)  = zero
+          Bm(:,1,:,2)  = zero
+          Bm(:,1,:,3)  = zero
+       endif
+       ! FIXME add a test
+       ! This is valid only when nclyB*n = 2
+       if (xend(2) == ny) then
+          Bm(:,xsize(2),:,1) = zero
+          Bm(:,xsize(2),:,2) = zero
+          Bm(:,xsize(2),:,3) = zero
+       endif
     endif
 
   end subroutine boundary_conditions_channel
