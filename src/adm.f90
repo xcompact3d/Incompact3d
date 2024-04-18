@@ -146,7 +146,7 @@ contains
              do idisc=1,Nad
                  open(15,File='disc'//trim(int2str(idisc))//'.adm', position="append", status='old', action='read')
                  backspace(15)
-                 read(15,*) temp,temp,actuatordisc(idisc)%UF,actuatordisc(idisc)%Power,actuatordisc(idisc)%Thrust,actuatordisc(idisc)%Udisc_ave,actuatordisc(idisc)%Power_ave,actuatordisc(idisc)%Thrust_ave
+                 read(15,*) temp,temp,actuatordisc(idisc)%UF,actuatordisc(idisc)%Power,actuatordisc(idisc)%Thrust,actuatordisc(idisc)%Udisc_ave,actuatordisc(idisc)%Power_ave,actuatordisc(idisc)%Thrust_ave,temp,temp,temp
                  actuatordisc(idisc)%Udisc_ave=actuatordisc(idisc)%Udisc_ave*(itime-initstat+1)
                  actuatordisc(idisc)%Power_ave=actuatordisc(idisc)%Power_ave*(itime-initstat+1)
                  actuatordisc(idisc)%Thrust_ave=actuatordisc(idisc)%Thrust_ave*(itime-initstat+1)
@@ -256,7 +256,7 @@ contains
          do idisc=1, Nad
              if (dump_no==1) then
                  open(2020,File='disc'//trim(int2str(idisc))//'.adm')
-                 write(2020,*) 'i, Time, UF, Power, Thrust, Udisc_ave, Power_ave, Thrust_ave'
+                 write(2020,*) 'i, Time, UF, Power, Thrust, Udisc_ave, Power_ave, Thrust_ave, alpha, YawAng, TiltAng'
                  close(2020)
              endif
              open(2020,File='disc'//trim(int2str(idisc))//'.adm', position="append", status="old", action="write")
@@ -267,7 +267,10 @@ contains
                           actuatordisc(idisc)%Thrust,&
                           actuatordisc(idisc)%Udisc_ave/(itime-initstat+1),&
                           actuatordisc(idisc)%Power_ave/(itime-initstat+1),&
-                          actuatordisc(idisc)%Thrust_ave/(itime-initstat+1)
+                          actuatordisc(idisc)%Thrust_ave/(itime-initstat+1),&
+                          actuatordisc(idisc)%alpha,&
+                          actuatordisc(idisc)%YawAng,&
+                          actuatordisc(idisc)%TiltAng
              close(2020)
          enddo
       endif
