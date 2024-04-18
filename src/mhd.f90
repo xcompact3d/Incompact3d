@@ -253,30 +253,15 @@ module mhd
   !+-------------------------------------------------------------------+
   subroutine momentum_forcing_mhd(dux1,duy1,duz1,ux1,uy1,uz1)
     !
-    !USE decomp_2d
-    use mpi
-    use param,     only : dx,dz
-    use variables, only : ppy
-    use variables, only : yp,ny,nz
-    use decomp_2d, only : xstart
-    use constants, only : pi
-    use param, only : zero,two,three,dy,yly
-    !
     ! arguments
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) ::   &
                                                 ux1,uy1,uz1
     real(mytype),intent(inout),                                        &
                 dimension(xsize(1),xsize(2),xsize(3)) ::  dux1,duy1,duz1
-    !
-    real(mytype) :: eforce(3),Ebar(3)
-    real(mytype) :: ub,uball,coeff
+
     ! local data
-    integer :: i,j,k,jloc,code
-    real(mytype) :: elecur(3),var1(3),var2(3)
-    !
-    real(mytype) :: xx(xsize(1)),yy(xsize(2)),zz(xsize(3))
-    !
-    !
+    integer :: i,j,k
+    real(mytype) :: eforce(3), elecur(3),var1(3),var2(3)
     
     if(mhd_equation) then
       Je=del_cross_prod(Bm+Bmean)/Rem
@@ -354,32 +339,28 @@ module mhd
     use variables, only: ffxpS,fsxpS,fwxpS,ffypS,fsypS,fwypS,ffzpS,    &
                          fszpS,fwzpS,ppy,sx,sy,sz,derxs,derys,derzs
     use param, only: zero
-    use var, only : ta1,di1,ta2,di2,ta3,di3,td1,td2,td3,tg1
+    use var, only : ta1,di1,ta2,tb2,di2,ta3,tb3,di3
     !
     real(mytype) :: dphi(xsize(1),xsize(2),xsize(3),3)
     real(mytype),intent(in) :: phi(xsize(1),xsize(2),xsize(3))
     !
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: dpot1
-    real(mytype), dimension(ysize(1), ysize(2), ysize(3)) :: pot2, dpot2
-    real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: pot3, dpot3
+    call transpose_x_to_y(phi,ta2)
+    call transpose_y_to_z(ta2,ta3)
     !
-    call transpose_x_to_y(phi,pot2)
-    call transpose_y_to_z(pot2,pot3)
+    call derxS (ta1, phi, di1, sx, ffxpS, fsxpS, fwxpS,      xsize(1), xsize(2), xsize(3), 1, zero)
+    call deryS (tb2, ta2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
+    call derzS (tb3, ta3, di3, sz, ffzpS, fszpS, fwzpS,      zsize(1), zsize(2), zsize(3), 1, zero)
     !
-    call derxS (dpot1,  phi, di1, sx, ffxpS, fsxpS, fwxpS,      xsize(1), xsize(2), xsize(3), 1, zero)
-    call deryS (dpot2, pot2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
-    call derzS (dpot3, pot3, di3, sz, ffzpS, fszpS, fwzpS,      zsize(1), zsize(2), zsize(3), 1, zero)
+    dphi(:,:,:,1)=ta1
     !
-    dphi(:,:,:,1)=dpot1
+    call transpose_y_to_x(tb2,ta1)
     !
-    call transpose_y_to_x(dpot2,dpot1)
+    dphi(:,:,:,2)=ta1
     !
-    dphi(:,:,:,2)=dpot1
-    !
-    call transpose_z_to_y(dpot3,dpot2)
-    call transpose_y_to_x(dpot2,dpot1)
+    call transpose_z_to_y(tb3,ta2)
+    call transpose_y_to_x(ta2,ta1)
     
-    dphi(:,:,:,3)=dpot1
+    dphi(:,:,:,3)=ta1
     !
   end function grad_vmesh
   !+-------------------------------------------------------------------+
