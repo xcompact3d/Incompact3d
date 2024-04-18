@@ -22,6 +22,8 @@ module mhd
   !|            | of electromagnetic to inertial forces                |
   !+------------+------------------------------------------------------+
   !
+  integer, save :: mhd_iounit
+  !
   real(mytype),allocatable,dimension(:,:,:,:) :: Bmean
   real(mytype),allocatable,dimension(:,:,:,:) :: Bm,magelf,Je
   real(mytype),allocatable,dimension(:,:,:,:,:) :: dBm
@@ -80,6 +82,14 @@ module mhd
   !+-------------------------------------------------------------------+
   !| The end of the subroutine mhd_init.                               |
   !+-------------------------------------------------------------------+
+
+  subroutine mhd_fin()
+
+     implicit none
+
+     if (nrank==0) close(mhd_iounit)
+
+  end subroutine mhd_fin
   !
   subroutine int_time_magnet
     !
@@ -159,15 +169,14 @@ module mhd
     ! local data
     real(mytype) :: Ek,Em,Omegam,Jmax,var1,var2,disrat
     logical,save :: lfirstcal=.true.
-    integer,save :: iounit = 13
     integer,save :: nxc,nyc,nzc
     integer :: i,j,k
     !
     if(lfirstcal) then
       !
       if(nrank==0) then
-        open(newunit=iounit,file='mhd_stat.dat')
-        write(iounit,"(A7,1X,A13,5(1X,A20))")'itime','time',              &
+        open(newunit=mhd_iounit,file='mhd_stat.dat')
+        write(mhd_iounit,"(A7,1X,A13,5(1X,A20))")'itime','time',              &
                                 'Ek','Em','enstrophykm','dissipation','Jmax'
 
       endif
@@ -225,7 +234,7 @@ module mhd
     ! print*,nxc,nyc,nzc
     !
     if(nrank==0) then
-      write(iounit,"(I7,1X,E13.6E2,5(1X,E20.13E2))")itime,t,Ek,Em, &
+      write(mhd_iounit,"(I7,1X,E13.6E2,5(1X,E20.13E2))")itime,t,Ek,Em, &
                                             Omegam,disrat,Jmax
     endif
     !

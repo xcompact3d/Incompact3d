@@ -220,9 +220,7 @@ subroutine init_xcompact3d()
 
   !####################################################################
   ! initialise mhd
-  if(mhd_active) then
-    call mhd_init()
-  endif
+  if (mhd_active) call mhd_init()
 
   !####################################################################
   ! initialise visu
@@ -296,6 +294,7 @@ subroutine finalise_xcompact3d()
   use probes, only : finalize_probes
   use visu, only : visu_finalise
   use les, only: finalise_explicit_les
+  use mhd, only: mhd_active, mhd_fin
 
   implicit none
 
@@ -315,6 +314,7 @@ subroutine finalise_xcompact3d()
   call simu_stats(4)
   call finalize_probes()
   call visu_finalise()
+  if (mhd_active) call mhd_fin()
   if (ilesmod.ne.0) then
      if (jles.gt.0) call finalise_explicit_les()
   endif
