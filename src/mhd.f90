@@ -159,14 +159,15 @@ module mhd
     ! local data
     real(mytype) :: Ek,Em,Omegam,Jmax,var1,var2,disrat
     logical,save :: lfirstcal=.true.
+    integer,save :: iounit = 13
     integer,save :: nxc,nyc,nzc
     integer :: i,j,k
     !
     if(lfirstcal) then
       !
       if(nrank==0) then
-        open(13,file='mhd_stat.dat')
-        write(13,"(A7,1X,A13,5(1X,A20))")'itime','time',              &
+        open(newunit=iounit,file='mhd_stat.dat')
+        write(iounit,"(A7,1X,A13,5(1X,A20))")'itime','time',              &
                                 'Ek','Em','enstrophykm','dissipation','Jmax'
 
       endif
@@ -224,7 +225,7 @@ module mhd
     ! print*,nxc,nyc,nzc
     !
     if(nrank==0) then
-      write(13,"(I7,1X,E13.6E2,5(1X,E20.13E2))")itime,t,Ek,Em, &
+      write(iounit,"(I7,1X,E13.6E2,5(1X,E20.13E2))")itime,t,Ek,Em, &
                                             Omegam,disrat,Jmax
     endif
     !
