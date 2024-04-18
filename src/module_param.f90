@@ -132,10 +132,6 @@ module variables
   ! scalar, ncly1 = 2, nclyn = 1, npaire = 1
   real(mytype), allocatable, target, dimension(:,:) :: aam211t,bbm211t,ccm211t,ddm211t,eem211t,ggm211t,hhm211t,wwm211t,zzm211t
   real(mytype), allocatable, target, dimension(:,:) :: rrm211t,qqm211t,vvm211t,ssm211t
-  ! Bx, ncly1 = 2, nclyn = 2
-  real(mytype), allocatable, target, dimension(:,:) :: aamB,bbmB,ccmB,ddmB,eemB,ggmB,hhmB,wwmB,zzmB
-  real(mytype), allocatable, target, dimension(:,:) :: rrmB,qqmB,vvmB,ssmB
-  real(mytype), allocatable, target, dimension(:,:) :: sssmB, zzzmB, ttmB, uumB  !!Nona
 
   ABSTRACT INTERFACE
      SUBROUTINE DERIVATIVE_X(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
