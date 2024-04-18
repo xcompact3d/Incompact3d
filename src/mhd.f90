@@ -412,8 +412,6 @@ module mhd
     !! local data
     real(mytype),dimension(xsize(1), xsize(2), xsize(3), 3) :: ucB
     real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: rhs
-    
-    real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: div3
     !
     integer :: i,j,k,nlock
     real(mytype) :: var1(3),var2(3)
@@ -476,8 +474,7 @@ module mhd
     !
     use decomp_2d, only : zsize, ph1
     use var, only : nzmsize,itime,ilist,ifirst,ilast
-    use navier, only : divergence
-    use param, only : ntime,nrhotime
+    use param, only : ntime
 
     ! FIXME
     ! The arrays below are often taken in the module var
@@ -490,13 +487,9 @@ module mhd
     ! FIXME
 
     real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: div3
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ep1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: drho1
-    real(mytype), dimension(zsize(1), zsize(2), zsize(3))  :: divu3
 
     if ((mod(itime,ilist)==0 .or. itime == ifirst .or. itime == ilast)) then
-      call divergence(div3,rho1,Bm(:,:,:,1),Bm(:,:,:,2),Bm(:,:,:,3),ep1,drho1,divu3,2)
+      div3=divergence_scalar(Bm,2)
     endif
 
   end subroutine test_magnetic
@@ -588,7 +581,7 @@ module mhd
       firstcal=.false.
     endif
 
-    rrem=1._mytype/Rem
+    rrem=one/Rem
 
     Bsum=B+B0
 
@@ -807,12 +800,10 @@ module mhd
     !
     nlock=1 !! Corresponds to computing div(u*)
     !
-    do poissiter = 1, 1 ! FIXME remove the loop if there is only one iteration ?
-      phib=divergence_scalar(Bm,nlock) !todo: this will have incorrect BCs?
-      call poisson(phib)
-      CALL gradp(dphib(:,:,:,1),dphib(:,:,:,2),dphib(:,:,:,3),phib)
-      Bm=Bm-dphib
-    enddo
+    phib=divergence_scalar(Bm,nlock) !todo: this will have incorrect BCs?
+    call poisson(phib)
+    CALL gradp(dphib(:,:,:,1),dphib(:,:,:,2),dphib(:,:,:,3),phib)
+    Bm=Bm-dphib
     !
   end subroutine solve_poisson_mhd
   !
