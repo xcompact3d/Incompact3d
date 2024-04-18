@@ -716,83 +716,43 @@ module mhd
 
 
     !DIFFUSIVE TERMS IN Y
-    if (iimplicit.le.0) then
-       !-->for ux
-       call deryy (td2,cx2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,ubcx)
-       if (istret.ne.0) then
-          call dery (te2,bx2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
-          do k = 1,ysize(3)
-             do j = 1,ysize(2)
-                do i = 1,ysize(1)
-                   td2(i,j,k) = td2(i,j,k)*pp2y(j)-pp4y(j)*te2(i,j,k)
-                enddo
+    !-->for ux
+    call deryy (td2,cx2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,ubcx)
+    if (istret.ne.0) then
+       call dery (te2,bx2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+       do k = 1,ysize(3)
+          do j = 1,ysize(2)
+             do i = 1,ysize(1)
+                td2(i,j,k) = td2(i,j,k)*pp2y(j)-pp4y(j)*te2(i,j,k)
              enddo
           enddo
-       endif
+       enddo
+    endif
 
-       !-->for uy
-       call deryy (te2,cy2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0,ubcy)
-       if (istret.ne.0) then
-          call dery (tf2,by2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
-          do k = 1,ysize(3)
-             do j = 1,ysize(2)
-                do i = 1,ysize(1)
-                   te2(i,j,k) = te2(i,j,k)*pp2y(j)-pp4y(j)*tf2(i,j,k)
-                enddo
+    !-->for uy
+    call deryy (te2,cy2,di2,sy,sfy,ssy,swy,ysize(1),ysize(2),ysize(3),0,ubcy)
+    if (istret.ne.0) then
+       call dery (tf2,by2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+       do k = 1,ysize(3)
+          do j = 1,ysize(2)
+             do i = 1,ysize(1)
+                te2(i,j,k) = te2(i,j,k)*pp2y(j)-pp4y(j)*tf2(i,j,k)
              enddo
           enddo
-       endif
+       enddo
+    endif
 
-       !-->for uz
-       call deryy (tf2,cz2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,ubcz)
-       if (istret.ne.0) then
-          call dery (tj2,bz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
-          do k = 1,ysize(3)
-             do j = 1,ysize(2)
-                do i = 1,ysize(1)
-                   tf2(i,j,k) = tf2(i,j,k)*pp2y(j)-pp4y(j)*tj2(i,j,k)
-                enddo
+    !-->for uz
+    call deryy (tf2,cz2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,ubcz)
+    if (istret.ne.0) then
+       call dery (tj2,bz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
+       do k = 1,ysize(3)
+          do j = 1,ysize(2)
+             do i = 1,ysize(1)
+                tf2(i,j,k) = tf2(i,j,k)*pp2y(j)-pp4y(j)*tj2(i,j,k)
              enddo
           enddo
-       endif
-    else ! (semi)implicit Y diffusion
-       if (istret.ne.0) then
-
-          !-->for ux
-          call dery (te2,bx2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
-          do k=1,ysize(3)
-             do j=1,ysize(2)
-                do i=1,ysize(1)
-                   td2(i,j,k)=-pp4y(j)*te2(i,j,k)
-                enddo
-             enddo
-          enddo
-          !-->for uy
-          call dery (tf2,by2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
-          do k=1,ysize(3)
-             do j=1,ysize(2)
-                do i=1,ysize(1)
-                   te2(i,j,k)=-pp4y(j)*tf2(i,j,k)
-                enddo
-             enddo
-          enddo
-          !-->for uz
-          call dery (tj2,bz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
-          do k=1,ysize(3)
-             do j=1,ysize(2)
-                do i=1,ysize(1)
-                   tf2(i,j,k)=-pp4y(j)*tj2(i,j,k)
-                enddo
-             enddo
-          enddo
-
-       else
-       
-          td2(:,:,:) = zero
-          te2(:,:,:) = zero
-          tf2(:,:,:) = zero
-          
-       endif
+       enddo
     endif
 
     ! Add diffusive terms of y-pencil to convective and diffusive terms of y- and z-pencil
