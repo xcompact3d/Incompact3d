@@ -324,8 +324,6 @@ module mhd
     delphi(:,:,:,1)= delphi(:,:,:,1) + dphi(:,:,:,2)
     delphi(:,:,:,2)= delphi(:,:,:,2) - dphi(:,:,:,1)
     !
-    return
-    !
   end function del_cross_prod
   !+-------------------------------------------------------------------+
   !| The end of the function del_cross_prod.                           |
@@ -357,7 +355,7 @@ module mhd
     real(mytype), dimension(zsize(1), zsize(2), zsize(3)) :: pot3, dpot3
     !
     call transpose_x_to_y(phi,pot2)
-    call transpose_y_to_z(      pot2,pot3)
+    call transpose_y_to_z(pot2,pot3)
     !
     call derxS (dpot1,  phi, di1, sx, ffxpS, fsxpS, fwxpS,      xsize(1), xsize(2), xsize(3), 1, zero)
     call deryS (dpot2, pot2, di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
@@ -373,8 +371,6 @@ module mhd
     call transpose_y_to_x(dpot2,dpot1)
     
     dphi(:,:,:,3)=dpot1
-    !
-    return
     !
   end function grad_vmesh
   !+-------------------------------------------------------------------+
@@ -394,7 +390,7 @@ module mhd
     use decomp_2d, only : zsize, ph1
     use decomp_2d_mpi, only: nrank
     use decomp_2d_poisson, only : poisson
-    use var, only : nzmsize,dv3
+    use var, only : nzmsize
     use param, only : ntime, nrhotime, npress,ilmn, ivarcoeff, zero, one 
     use navier,only : gradp
 
@@ -453,8 +449,6 @@ module mhd
     enddo
     enddo
     !
-    return
-    !
   end function solve_mhd_potential_poisson
   !+-------------------------------------------------------------------+
   !| The end of the subroutine solve_mhd_potential_poisson.            |
@@ -472,33 +466,30 @@ module mhd
   subroutine test_magnetic
     !
     use decomp_2d, only : zsize, ph1
-    use decomp_2d_mpi, only : nrank
-    use var,       only : nzmsize,itime,ilist,ifirst,ilast,numscalar, dv3
+    use var, only : nzmsize,itime,ilist,ifirst,ilast
     use navier, only : divergence
     use param, only : ntime,nrhotime
+
+    ! FIXME
+    ! The arrays below are often taken in the module var
+    ! Here the names are similar but the arrays are local
+    ! This is mesleading and it probably makes the MHD module incompatible with other modules such as IBM and LMN
+    ! The compatibility of the MHD module with the other modules should be clarified
     !
+    ! The subroutine mhd_init should print a warning or an error in case of compatibility issue using decomp_2d_warning or decomp_2d_abort
+    !
+    ! FIXME
+
     real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: div3
-
-
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ep1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar)  :: phi1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: drho1
     real(mytype), dimension(zsize(1), zsize(2), zsize(3))  :: divu3
 
-    !
-    real(mytype) :: maxb,meanb
-    integer :: nlock
-    !
-    nlock=2
-    !
     if ((mod(itime,ilist)==0 .or. itime == ifirst .or. itime == ilast)) then
-      !
       call divergence(div3,rho1,Bm(:,:,:,1),Bm(:,:,:,2),Bm(:,:,:,3),ep1,drho1,divu3,2)
-      !
-      !
     endif
-    !
+
   end subroutine test_magnetic
   !
   subroutine mhd_rhs_eq(dB,B,B0,ux1,uy1,uz1)
@@ -837,7 +828,7 @@ module mhd
     use decomp_2d, only : zsize, ph1
     use decomp_2d_mpi, only : nrank
     use decomp_2d_poisson, only : poisson
-    use var, only : nzmsize,dv3
+    use var, only : nzmsize
     use param, only : ntime, nrhotime, npress,ilmn, ivarcoeff, zero, one 
     use navier,only : gradp
 
