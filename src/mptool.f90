@@ -23,28 +23,28 @@ module mptool
   contains
   !
   !+-------------------------------------------------------------------+
-  !| This subrotine is used to compute sum in parallel                 |
+  !| This subroutine is used to compute sum in MPI_COMM_WORLD
+  !|    It can not use a dedicated MPI communicator
   !+-------------------------------------------------------------------+
-  !!
+  !
   function psum_mytype_ary(var) result(varsum)
     !
     ! arguments
     real(mytype),intent(in) :: var(:)
-    real(mytype),allocatable :: varsum(:)
+    real(mytype) :: varsum(size(var))
     !
     ! local data
-    integer :: ierr,nsize
+    integer :: ierr
     !
-    nsize=size(var)
-    !
-    allocate(varsum(nsize))
-    !
-    call mpi_allreduce(var,varsum,nsize,real_type,mpi_sum,             &
+    call mpi_allreduce(var,varsum,size(var),real_type,mpi_sum,             &
                                                     mpi_comm_world,ierr)
-    !
-    return
-    !
+
   end function psum_mytype_ary
+  !
+  !+-------------------------------------------------------------------+
+  !| This subroutine is used to compute sum in parallel
+  !|    It can use a dedicated MPI communicator if provided
+  !+-------------------------------------------------------------------+
   !
   function psum_integer(var,comm) result(varsum)
     !
@@ -70,6 +70,11 @@ module mptool
     !
   end function psum_integer
   !
+  !+-------------------------------------------------------------------+
+  !| This subroutine is used to compute sum in parallel
+  !|    It can use a dedicated MPI communicator if provided
+  !+-------------------------------------------------------------------+
+  !
   function psum_mytype(var,comm) result(varsum)
     !
     ! arguments
@@ -90,10 +95,13 @@ module mptool
     call mpi_allreduce(var,varsum,1,real_type,mpi_sum,           &
                                                     comm2use,ierr)
     !
-    return
-    !
   end function psum_mytype
-  !!
+  !
+  !+-------------------------------------------------------------------+
+  !| This subroutine is used to compute the max in MPI_COMM_WORLD
+  !|    It can not use a dedicated MPI communicator
+  !+-------------------------------------------------------------------+
+  !
   integer function  pmax_int(var)
     !
     ! arguments
@@ -106,6 +114,11 @@ module mptool
                                                     mpi_comm_world,ierr)
     !
   end function pmax_int
+  !
+  !+-------------------------------------------------------------------+
+  !| This subroutine is used to compute the max in MPI_COMM_WORLD
+  !|    It can not use a dedicated MPI communicator
+  !+-------------------------------------------------------------------+
   !
   real(mytype) function  pmax_mytype(var)
     !
@@ -128,8 +141,6 @@ module mptool
     cross_product(1) = a(2) * b(3) - a(3) * b(2)
     cross_product(2) = a(3) * b(1) - a(1) * b(3)
     cross_product(3) = a(1) * b(2) - a(2) * b(1)
-    !
-    return
     !
   end function cross_product
   !
