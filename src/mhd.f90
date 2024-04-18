@@ -798,7 +798,7 @@ module mhd
     !
     nlock=1 !! Corresponds to computing div(u*)
     !
-    do poissiter = 1, 1
+    do poissiter = 1, 1 ! FIXME remove the loop if there is only one iteration ?
       phib=divergence_scalar(Bm,nlock) !todo: this will have incorrect BCs?
       call poisson(phib)
       CALL gradp(dphib(:,:,:,1),dphib(:,:,:,2),dphib(:,:,:,3),phib)
