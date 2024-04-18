@@ -253,30 +253,15 @@ module mhd
   !+-------------------------------------------------------------------+
   subroutine momentum_forcing_mhd(dux1,duy1,duz1,ux1,uy1,uz1)
     !
-    !USE decomp_2d
-    use mpi
-    use param,     only : dx,dz
-    use variables, only : ppy
-    use variables, only : yp,ny,nz
-    use decomp_2d, only : xstart
-    use constants, only : pi
-    use param, only : zero,two,three,dy,yly
-    !
     ! arguments
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) ::   &
                                                 ux1,uy1,uz1
     real(mytype),intent(inout),                                        &
                 dimension(xsize(1),xsize(2),xsize(3)) ::  dux1,duy1,duz1
-    !
-    real(mytype) :: eforce(3),Ebar(3)
-    real(mytype) :: ub,uball,coeff
+
     ! local data
-    integer :: i,j,k,jloc,code
-    real(mytype) :: elecur(3),var1(3),var2(3)
-    !
-    real(mytype) :: xx(xsize(1)),yy(xsize(2)),zz(xsize(3))
-    !
-    !
+    integer :: i,j,k
+    real(mytype) :: eforce(3), elecur(3),var1(3),var2(3)
     
     if(mhd_equation) then
       Je=del_cross_prod(Bm+Bmean)/Rem
