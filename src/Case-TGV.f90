@@ -90,7 +90,44 @@ contains
              enddo
           enddo
        enddo
+
+       call random_seed(size=isize)
+       allocate (seed(isize))
+       seed(:)=67
+       call random_seed(put=seed)
+       !     call random_number(ux1)
+       !     call random_number(uy1)
+       ! call random_number(uz1)
+
+       do k=1,xsize(3)
+          do j=1,xsize(2)
+             do i=1,xsize(1)
+                !              ux1(i,j,k)=noise*(ux1(i,j,k)-half)
+                !              uy1(i,j,k)=noise*(uy1(i,j,k)-half)
+                ! uz1(i,j,k)=0.05*(uz1(i,j,k)-half)
+             enddo
+          enddo
+       enddo
+
+       !     !modulation of the random noise
+       !     do k=1,xsize(3)
+       !        do j=1,xsize(2)
+       !           if (istret.eq.0) y=(j+xstart(2)-1-1)*dy-yly/two
+       !           if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/two
+       !           um=exp(-0.2*y*y)
+       !           do i=1,xsize(1)
+       !              ux1(i,j,k)=um*ux1(i,j,k)
+       !              uy1(i,j,k)=um*uy1(i,j,k)
+       !              uz1(i,j,k)=um*uz1(i,j,k)
+       !           enddo
+       !        enddo
+       !     enddo
+
     endif
+
+    !  bxx1(j,k)=zero
+    !  bxy1(j,k)=zero
+    !  bxz1(j,k)=zero
 
     !INIT FOR G AND U=MEAN FLOW + NOISE
     do k=1,xsize(3)
@@ -102,7 +139,6 @@ contains
           enddo
        enddo
     enddo
-
 
 #ifdef DEBG
     if (nrank  ==  0) write(*,*) '# init end ok'
