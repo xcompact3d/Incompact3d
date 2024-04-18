@@ -825,8 +825,6 @@ module mhd
 
     implicit none
 
-    !  TYPE(DECOMP_INFO) :: ph1,ph3,ph4
-
     !X PENCILS NX NY NZ  -->NXM NY NZ
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),3),intent(in) :: vec
     !
