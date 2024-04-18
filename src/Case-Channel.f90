@@ -148,13 +148,13 @@ contains
 
     if(mhd_active) then
 
-      Bmean(:,:,:,1)=0.d0
-      Bmean(:,:,:,2)=1.d0
-      Bmean(:,:,:,3)=0.d0
+      Bmean(:,:,:,1)=0._mytype
+      Bmean(:,:,:,2)=1._mytype
+      Bmean(:,:,:,3)=0._mytype
 
-      Bm(:,:,:,1)=0.d0
-      Bm(:,:,:,2)=0.d0
-      Bm(:,:,:,3)=0.d0
+      Bm(:,:,:,1)=0._mytype
+      Bm(:,:,:,2)=0._mytype
+      Bm(:,:,:,3)=0._mytype
       
       if(nrank==0) print*,'** magnetic field initialised'
 
