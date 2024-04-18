@@ -85,7 +85,7 @@ module mhd
     !
     USE param
     USE variables
-    !USE decomp_2d
+    USE decomp_2d_mpi, only : decomp_2d_abort
     use ydiff_implicit
 
     implicit none
@@ -93,9 +93,7 @@ module mhd
     integer :: k
 
     if( iimplicit == 1 ) then
-        call inttimp(Bm(:,:,:,1), dBm(:,:,:,1,:), 0, -1 )
-        call inttimp(Bm(:,:,:,2), dBm(:,:,:,2,:), 0, -1 )
-        call inttimp(Bm(:,:,:,3), dBm(:,:,:,3,:), 0, -1 )
+       call decomp_2d_abort(iimplicit, "MHD is not compatible with implicit diffusion")
     else
        if(itimescheme.eq.3) then
            !>>> Adams-Bashforth third order (AB3)
@@ -123,6 +121,8 @@ module mhd
            endif
            dBm(:,:,:,:,2)=dBm(:,:,:,:,1)
            !
+       else
+          call decomp_2d_abort(itimescheme, "MHD is not compatible with selected time scheme")
        endif
    endif
     !
@@ -130,22 +130,12 @@ module mhd
   !
   function vortcal(dux1,duy1,duz1) result(omega)
     !
-    !USE decomp_2d
-    USE variables
-    USE param
-    use var, only : ux2, uy2, uz2, ux3, uy3, uz3
-    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-    USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
-    use var, ONLY : nxmsize, nymsize, nzmsize
-    use ibm_param, only : ubcx,ubcy,ubcz
+    use param, only : ntime
     !
-    ! real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: omega
     !
     omega(:,:,:)=duy1(:,:,:,1)-dux1(:,:,:,2)
-    !
-    return
     !
   end function vortcal
   !
