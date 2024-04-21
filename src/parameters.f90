@@ -22,7 +22,6 @@ subroutine parameter(input_i3d)
   use decomp_2d
   use decomp_2d_mpi
   use ibm_param
-  use dbg_schemes, only: sin_prec, cos_prec
 
   use var, only : dphi1
 
@@ -341,8 +340,8 @@ subroutine parameter(input_i3d)
 
   if (itype==itype_tbl.and.A_tr .gt. zero.and.nrank==0)  write(*,*)  "TBL tripping is active"
 
-  anglex = sin_prec(pi*angle/onehundredeighty)
-  angley = cos_prec(pi*angle/onehundredeighty)
+  anglex = sin(pi*angle/onehundredeighty)
+  angley = cos(pi*angle/onehundredeighty)
   !###########################################################################
   ! Log-output
   !###########################################################################

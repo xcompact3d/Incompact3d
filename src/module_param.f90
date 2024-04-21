@@ -21,12 +21,11 @@ module variables
   !2-->every 2 mesh nodes
   !4-->every 4 mesh nodes
   !nvisu = size for visualization collection
-  !nprobe =  size for probe collection (energy spectra)
 
   !Possible n points: 3 5 7 9 11 13 17 19 21 25 31 33 37 41 49 51 55 61 65 73 81 91 97 101 109 121 129 145 151 161 163 181 193 201 217 241 251 257 271 289 301 321 325 361 385 401 433 451 481 487 501 513 541 577 601 641 649 721 751 769 801 811 865 901 961 973 1001 1025 1081 1153 1201 1251 1281 1297 1351 1441 1459 1501 1537 1601 1621 1729 1801 1921 1945 2001 2049 2161 2251 2305 2401 2431 2501 2561 2593 2701 2881 2917 3001 3073 3201 3241 3457 3601 3751 3841 3889 4001 4051 4097 4321 4375 4501 4609 4801 4861 5001 5121 5185 5401 5761 5833 6001 6145 6251 6401 6481 6751 6913 7201 7291 7501 7681 7777 8001 8101 8193 8641 8749 9001 9217 9601 9721 enough
 
   integer :: nx,ny,nz,numscalar,p_row,p_col,nxm,nym,nzm,spinup_time
-  integer :: nstat=1,nvisu=1,nprobe=1,nlength=1,ilist=25
+  integer :: nstat=1,nvisu=1,ilist=25
 
   real(mytype),allocatable,dimension(:) :: sc,uset,cp,ri,group
   real(mytype) :: nu0nu, cnu
@@ -648,180 +647,19 @@ module ibm_param
 end module ibm_param
 !############################################################################
 !############################################################################
-module dbg_schemes
+module constants
 
-  use decomp_2d
-  use variables
-  use param
+    use decomp_2d_constants, only: mytype
+    use param, only: onehundredeighty
 
-  implicit none
+    ! Mathematical constants
+    real(mytype), parameter :: pi = 3.14159265358979323846_mytype
+    real(mytype), parameter :: conrad = pi / onehundredeighty
+    real(mytype), parameter :: condeg = onehundredeighty / pi
 
-  private ! All functions/subroutines private by default
-!  public :: init_dbg, boundary_conditions_dbg, postprocess_dbg
-  public ::  sin_prec,  cos_prec,  tan_prec, &
-            asin_prec, acos_prec, atan_prec, &
-            sinh_prec, cosh_prec, tanh_prec, &
-             exp_prec,  log_prec,log10_prec, &
-            sqrt_prec,  abs_prec
+    ! Definition of maximum size of arrays
+    integer, parameter :: MaxNAirfoils = 80 ! Maximum number of airfoils to be read
+    integer, parameter :: MaxReVals = 10    ! Maximum number of tables (one per Reynolds number) that will be read
+    integer, parameter :: MaxAOAVals = 1000 ! Maximum number of angles of attack in each polar that will be read
 
-contains
-
-
-  !##################################################################
-  !********************************************************************
-  ! Math functions for Single/double precision
-  !-------------------------------------------
-  function sin_prec(x) result(y)
-    use decomp_2d_constants, only : mytype
-    real(mytype), intent(in) :: x
-    real(mytype) :: y
-#ifdef DOUBLE_PREC
-    y = dsin(x)
-#else
-    y = sin(x)
-#endif
-  end function sin_prec
-  !-------------------------------------------
-  function cos_prec(x) result(y)
-    use decomp_2d_constants, only : mytype
-    real(mytype), intent(in) :: x
-    real(mytype) :: y
-#ifdef DOUBLE_PREC
-    y = dcos(x)
-#else
-    y = cos(x)
-#endif
-  end function cos_prec
-  !-------------------------------------------
-  function tan_prec(x) result(y)
-    use decomp_2d_constants, only : mytype
-    real(mytype), intent(in) :: x
-    real(mytype) :: y
-#ifdef DOUBLE_PREC
-    y = dtan(x)
-#else
-    y = tan(x)
-#endif
-  end function tan_prec
-  !-------------------------------------------
-  function asin_prec(x) result(y)
-    use decomp_2d_constants, only : mytype
-    real(mytype), intent(in) :: x
-    real(mytype) :: y
-#ifdef DOUBLE_PREC
-    y = dasin(x)
-#else
-    y = asin(x)
-#endif
-  end function asin_prec
-  !-------------------------------------------
-  function acos_prec(x) result(y)
-    use decomp_2d_constants, only : mytype
-    real(mytype), intent(in) :: x
-    real(mytype) :: y
-#ifdef DOUBLE_PREC
-    y = dacos(x)
-#else
-    y = acos(x)
-#endif
-  end function acos_prec
-  !-------------------------------------------
-  function atan_prec(x) result(y)
-    use decomp_2d_constants, only : mytype
-    real(mytype), intent(in) :: x
-    real(mytype) :: y
-#ifdef DOUBLE_PREC
-    y = datan(x)
-#else
-    y = atan(x)
-#endif
-  end function atan_prec
-  !-------------------------------------------
-  function sinh_prec(x) result(y)
-    use decomp_2d_constants, only : mytype
-    real(mytype), intent(in) :: x
-    real(mytype) :: y
-#ifdef DOUBLE_PREC
-    y = dsinh(x)
-#else
-    y = sinh(x)
-#endif
-  end function sinh_prec
-  !-------------------------------------------
-  function cosh_prec(x) result(y)
-    use decomp_2d_constants, only : mytype
-    real(mytype), intent(in) :: x
-    real(mytype) :: y
-#ifdef DOUBLE_PREC
-    y = dcosh(x)
-#else
-    y = cosh(x)
-#endif
-  end function cosh_prec
-  !-------------------------------------------
-  function tanh_prec(x) result(y)
-    use decomp_2d_constants, only : mytype
-    real(mytype), intent(in) :: x
-    real(mytype) :: y
-#ifdef DOUBLE_PREC
-    y = dtanh(x)
-#else
-    y = tanh(x)
-#endif
-  end function tanh_prec
-  !-------------------------------------------
-  function exp_prec(x) result(y)
-    use decomp_2d_constants, only : mytype
-    real(mytype), intent(in) :: x
-    real(mytype) :: y
-#ifdef DOUBLE_PREC
-    y = dexp(x)
-#else
-    y = exp(x)
-#endif
-  end function exp_prec
-  !-------------------------------------------
-  function log_prec(x) result(y)
-    use decomp_2d_constants, only : mytype
-    real(mytype), intent(in) :: x
-    real(mytype) :: y
-#ifdef DOUBLE_PREC
-    y = dlog(x)
-#else
-    y = alog(x)
-#endif
-  end function log_prec
-  !-------------------------------------------
-  function log10_prec(x) result(y)
-    use decomp_2d_constants, only : mytype
-    real(mytype), intent(in) :: x
-    real(mytype) :: y
-#ifdef DOUBLE_PREC
-    y = dlog10(x)
-#else
-    y = alog10(x)
-#endif
-  end function log10_prec
-  !-------------------------------------------
-  function sqrt_prec(x) result(y)
-    use decomp_2d_constants, only : mytype
-    real(mytype), intent(in) :: x
-    real(mytype) :: y
-#ifdef DOUBLE_PREC
-    y = dsqrt(x)
-#else
-    y = sqrt(x)
-#endif
-  end function sqrt_prec
-  !-------------------------------------------
-  function abs_prec(x) result(y)
-    use decomp_2d_constants, only : mytype
-    real(mytype), intent(in) :: x
-    real(mytype) :: y
-#ifdef DOUBLE_PREC
-    y = dabs(x)
-#else
-    y = abs(x)
-#endif
-  end function abs_prec
-end module dbg_schemes
+end module constants

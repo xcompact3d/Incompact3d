@@ -2,148 +2,153 @@
 Installation
 ============
 
-Xcompact3d supports both traditional Makefile and `cmake` based builds.
-In both cases, the only requirements is a Fortran 90-compatible compiler and working `MPI`
-installation.
+The latest version of Xcompact3d only supports `cmake` based builds. The only requirements is a Fortran 90-compatible compiler and a working `MPI` library.
 
-Have a look at the following `video <https://www.youtube.com/watch?v=MPKlSnwIi_w>`_ to see how easy it is to compile the code with the Makefile or with cmake!
 
---------
-Makefile
---------
+Minimum requirements
+====================
+**cmake version 3.20 and above**
 
-After obtaining the Xcompact3d source `cd` into the project root directory and run `make` to build.
-By default this will use the `GNU` compiler toolchain, alternative compilers can be used by setting
-`CMP`, *e.g.*
-``
-make CMP=intel
-``
-permissible values for `CMP` can be found by inspecting the Makefile.
-On successful completion you will have an executable `xcompact3d`.
+**a recent modern Fortran compiler (ie, gfortran 9 and above**
 
-**N.B.** The Makefile currently does not support parallel builds *i.e.* `make -jN`.
+Source Download and Compilation
+===============================
 
-^^^^^^^^^^^^^^^^^^^^^^^^
-Building on different systems
-^^^^^^^^^^^^^^^^^^^^^^^^
+Xcompact3d sources can be acquired by cloning the git repository: 
 
-The Makefile supports building on different systems using different Fortran compilers. It has been tested with the GCC, Intel and NVIDIA Fortran compilers, and the CRAY compiler on the UK Supercomputing Facility ARCHER2.
+``git clone https://github.com/xcompact3d/Incompact3d``
 
------
-CMake
------
+If you are behind a firewall, you may need to use the `https` protocol instead of the `git` protocol:
 
-To use `cmake` the recommended approach is to create a `build/` directory and configure the build
-from there, for example creating `build/` in the Xcompact3d project root directory
-``
-mkdir build
-cd build
+``git config --global url."https://".insteadOf git@``
 
-cmake ../
-``
-After which further customisation of the build can be achieved by running `ccmake .` and setting
-variables to their desired values (be sure in particular to check the value of
-`CMAKE_INSTALL_PREFIX`).
+Be sure to also configure your system to use the appropriate proxy settings, 
+e.g. by setting the `https_proxy` and `http_proxy` variables.
 
-Once the build has been configured run `make` to compile, followed by `make install` which will
-install the `xcompact3d` executable to `${CMAKE_INSTALL_PREFIX/bin/}`, you can optionally run tests
-on the build by executing `make test`.
 
--------------------------------------
-Fast Fourier Transforms (FFT) engine
--------------------------------------
-By default you do not need to plug a external FFT library, as the code can use an internal generic FFT engine. Please feel free to modify the Makefile if you wish to use an external FFT engine like FFTW.
+The compiling process
+=====================
 
----------------
-Enabling ADIOS2
----------------
+The build system for Xcompact3d is based on CMake. It is good practice to directly point to the 
+MPI Fortran wrapper that you would like to use to guarantee consistency between Fortran compiler and MPI. 
+This can be done by setting the default Fortran environmental variable 
 
-An alternative I/O backend using ADIOS2 has been added to the 2DECOMP&FFT library distributed with
-Xcompact3d and can be selected at compile time, following the above build instructions will default
-to the original `MPI-IO` backend.
+``export FC=my_mpif90``
 
-^^^^^^^^^^^^
-Dependencies
-^^^^^^^^^^^^
+To generate the build system run 
 
-Enabling ADIOS2 requires the ADIOS2 library, optionally HDF5 files can be written through the ADIOS2
-interface (see runtime configuration).
-ADIOS2 (and HDF5) may be available through an HPC machine's module system, if not, and for local
-testing and development purposes, the installation process for both is summarised below.
+``cmake -S $path_to_sources -B $path_to_build_directory -DOPTION1 -DOPTION2 ... ``
 
-The HDF5 source can be obtained from https://github.com/HDFGroup/hdf5, Xcompact3d with ADIOS2 has
-been tested with v1.12.0:
-``
-git clone git@github.com:HDFGroup/hdf5.git
-cd hdf5
-git checkout hdf5-1_12_0
-``
-(release tarfiles are also available).
+for example 
 
-HDF5 is configured as
-``
-./configure --prefix=${HDF5_DIR} --enable-parallel --enable-shared --enable-fortran CC=mpicc CXX=mpicxx FC=mpif90
-``
-where `HDF5_DIR` is the desired install location.
-For production use it may be worth exploring the `--enable-build-mode=production` option and other
-suggestings in the readmes under `release_docs/`.
+``cmake -S . -B build``
 
-After configuring build and install with
-``
-make
-make install
-``
-this will build and install hdf5 to `${HDF5_DIR}` - check for the presence of `bin/`, `lib/`, etc.
-You might also want to add `${HDF5_DIR}` to your path, it contains useful utilities such as `h5dump`
-for inspecting hdf5 files.
+By defult the build system will also download the 2DECOMP&FFT library  and perform the build install using the
+Generic FFT backend. Version 2.0.3 of that library is the default for Xcompact3d building
+and all tests are performed against this specific version.
+If the directory does not exist it will be generated and it will contain the configuration files.
+The configuration can be further
+edited by using the `ccmake` utility as
 
-**N.B.** package manager installations (*e.g.* using `apt-get`) may not be build with
-`--enable-parallel` and are therefore unsuitable here.
+``ccmake $path_to_build_directory``
 
-ADIOS2 can similarly be obtained via git
-``
-git clone git@github.com:ornladios/ADIOS2.git
-cd ADIOS2
-git checkout v2.7.1
-``
-The recommendation is to build with `cmake`:
-``
-mkdir build
-cd build
-cmake ../
-``
-and use `ccmake .` to configure, in particular ensuring the Fortran bindings are enabled, you can
-also enable HDF5 and set the path to your HDF5 installation if it is in a non-standard location.
-After configuring build and install with
-``
-make
-make install
-``
-note that you can control the installation location by passing
-`-DCMAKE_INSTALL_PREFIX=${ADIOS2_DIR}` to `cmake` or by setting the variable when configuring with
-`ccmake`.
+To compile the sources 
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Building Xcompact3d with ADIOS2
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``cmake --build $path_to_build_directory -j <nproc>``
 
-To build Xcompact3d with ADIOS2 as the I/O backend either use `make`:
-``
-make clean
-make IO=adios2 ADIOS2DIR=${ADIOS2_DIR}
-``
-or with `cmake` (from the `build/` directory) use `ccmake .` to turn ADIOS2 `ON` and set `ADIOS2DIR`
-to `${ADIOS2_DIR}/lib/cmake/adios2` (note some installations use `lib64` in place of `lib`),
-followed by `make && make install` as above.
+for example, when in the build directory
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Running Xcompact3d with ADIOS2
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``cmake --build . -j 8`` will compile the code using 8 CPU cores.
 
-Running an ADIOS2-enabled build of Xcompact3d requires an `adios2_config.xml` file to provide the
-runtime configuration for ADIOS2, an example can be found in the `Taylor-Green-Vortex` example
-directory.
-With this it is possible to switch the "engine" for example to change from writing ADIOS2-native
-`.bp4` output to HDF5, and various other aspects of the I/O can be controlled at runtime - see the
-ADIOS2 documentation for possibilities.
+Appending `-v` will display additional information about the build, such as compiler flags.
+
+The executable file **xcompact3d** is located in the build/bin directory.
+
+
+
+Testing
+=======
+The testing suite for the **xcompact3d** solver is composed by 14 tests as follows 
+
+1. Atmospheric Boundary layer (ABL) in neutral conditions (new set-up)
+
+2. Atmospheric Boundary layer (ABL) in neutral conditions (old set-up)
+
+3. Atmospheric Boundary layer (ABL) in convective conditions (old set-up)
+
+4. Atmospheric Boundary layer (ABL) in stable conditions (old set-up)
+
+5. Differentially heated cavity
+
+6. Turbulent Channel Flow with X as streamwise direction
+
+7. Turbulent Channel Flow with Z as streamwise direction
+
+8. Flow around a circular cylinder
+
+9. Flow around a moving circular cylinder
+
+10. Lock exchange
+
+11. Mixing Layer
+
+12. Turbulent Boundary Layer (TBL)
+
+13. Wind Turbine
+
+14. Taylor Green Vortex (TGV)
+
+By default only the  Taylor Green Vortex case is activated, while the full 
+testing suite needs to be enable by using the `BUILD_TESTING_FULL` flag as 
+
+``cmake --build $path_to_build_directory -DBUILD_TESTING_FULL=ON``
+
+or by using `ccmake`.
+
+The tests are performed using `CTest` as  
+
+``ctest --test-dir $path_to_build_directory``
+
+Every test is performed in a dedicated working directory that is located under the following path 
+
+``/path/to/build/RunTests``
+
+All standard outputs from all test runs are collated under the file
+
+``/path/to/build/Testing/Temporary/LastTest.log``
+
+together with additional files detailing additional informations such as 
+the elapse time for the different tests and the eventual failed cases. 
+
+
+
+***Note***
+Some of the alternative options for FFT and IO backends required additional input
+* For MKL FFT the location of the MKL libraires needs to be passed to the configure as 
+for the 2DECOMP&FFT installation with 
+
+``export MKL_DIR=${MKLROOT}/lib/cmake/mkl``
+
+* For ADIOS the installation directory needs to be passes to the configure as
+
+``cmake -S . -B ./build -DIO_BACKEND=adios2 -Dadios2_DIR=/path/to/adios2/install/lib/cmake/adios2``
+
+Both steps are necessary for correct linking of the target **xcompact3d** with the libraries 
+
+Known issues
+===============
+Some issues with ADIOS2.
+
+The tests performed under `CTest` rely on the `CMake` ability to properly find the MPI executable *mpirun*. 
+
+The build system will try to enforce consistency between the MPI Fortran used and the MPI executable, 
+for the first iteration of the configure step. 
+
+In case no MPI executable is not found or correct please modify manually the `MPIEXEC_EXECUTABLE` by using 
+
+``cmake -S . -B build -DMPIEXEC_EXECUTABLE=/correct/path/to/mpirun``
+
+or by using 
+
+``ccmake $path_to_build_directory``
 

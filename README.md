@@ -43,26 +43,10 @@ it is possible to customise the coefficients of the second derivative schemes (u
 to add extra numerical dissipation in the simulation as a substitute of the missing dissipation 
 from the small turbulent scales that are not resolved. 
 
+Documentation
+=============
 
-### External Resources
-
-- [**Twitter**](https://twitter.com/incompact3d)
-
-## Source Download and Compilation
-
-The current V5 release of the code is using only `CMake` for building and installing. 
-Moreover, the 2DECOMP&FFT library is now distributed independently and can be downloaded from 
-[this repository](http2s://github.com/2decomp-fft/2decomp-fft). 
-Please have a look at [INSTALL.md](INSTALL.md) for the instructions on how to download, build and install 
-the code.
-If you want to keep using the previous version V4.1 of the code with Make for the buding system and V1.4 for 
-2DECOMP&FFT you can find the archived sources at this  [page](https://github.com/xcompact3d/Incompact3d/releases/tag/V4.1) or alternatevely
-```
-$ git clone --branch v4.1 git@github.com:xcompact3d/Incompact3d.git 
-```
+[Readthedocs](https://xcompact3d.readthedocs.io/en/latest/)
 
 
-### Releases
-
-Releases are available via git tags, also on the main Github, or via the [Zenodo DOI](https://zenodo.org/badge/latestdoi/127266756) (see top of README page on Github).
 

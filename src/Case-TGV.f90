@@ -29,7 +29,6 @@ contains
     use param
     use MPI
     use mhd, only: mhd_active,Bm,Bmean
-    use dbg_schemes, only: sin_prec, cos_prec
 
     implicit none
 
@@ -68,25 +67,25 @@ contains
              do i=1,xsize(1)
                 x=real(i-1,mytype)*dx
                 if(mhd_active) then
-                  ux1(i,j,k)= -two*sin_prec(y)*cos_prec(z)
-                  uy1(i,j,k)=  two*sin_prec(x)*cos_prec(z)
-                  uz1(i,j,k)=zero
-                  !
-                  Bm(i,j,k,1)=-two*sin_prec(y)
-                  Bm(i,j,k,2)= two*sin_prec(two*x)
-                  Bm(i,j,k,3)=zero
-                  !
-                  Bmean(i,j,k,1)=zero
-                  Bmean(i,j,k,2)=zero
-                  Bmean(i,j,k,3)=zero
-               else
-                 ux1(i,j,k)=+sin_prec(x)*cos_prec(y)*cos_prec(z)
-                 uy1(i,j,k)=-cos_prec(x)*sin_prec(y)*cos_prec(z)
-                 if (iscalar == 1) then
-                    phi1(i,j,k,1:numscalar)=sin_prec(x)*sin_prec(y)*cos_prec(z)
-                 endif
-                 uz1(i,j,k)=zero
-               endif
+                   ux1(i,j,k)= -two*sin(y)*cos(z)
+                   uy1(i,j,k)=  two*sin(x)*cos(z)
+                   uz1(i,j,k)=zero
+                   !
+                   Bm(i,j,k,1)=-two*sin(y)
+                   Bm(i,j,k,2)= two*sin(two*x)
+                   Bm(i,j,k,3)=zero
+                   !
+                   Bmean(i,j,k,1)=zero
+                   Bmean(i,j,k,2)=zero
+                   Bmean(i,j,k,3)=zero
+                else
+                   ux1(i,j,k)=+sin(x)*cos(y)*cos(z)
+                   uy1(i,j,k)=-cos(x)*sin(y)*cos(z)
+                   if (iscalar == 1) then
+                      phi1(i,j,k,1:numscalar)=sin(x)*sin(y)*cos(z)
+                   endif
+                   uz1(i,j,k)=zero
+                endif
              enddo
           enddo
        enddo
@@ -606,7 +605,6 @@ contains
     use MPI
     use param, only : one, two, xnu, ifirst, itime
     use variables, only : numscalar, sc
-    use dbg_schemes, only: sin_prec, cos_prec
 
     implicit none
 
@@ -641,8 +639,8 @@ contains
           do i = 1,xsize(1)
             x = real(i+xstart(1)-1-1,mytype)*dx
             ! Initial solution
-            solx0 = sin_prec(x) * cos_prec(y)
-            soly0 = - cos_prec(x) * sin_prec(y)
+            solx0 = sin(x) * cos(y)
+            soly0 = - cos(x) * sin(y)
             ! Analytical solution
             solxt = solx0 * xdamping(1)
             solyt = soly0 * ydamping(1)
@@ -670,7 +668,7 @@ contains
                 do i = 1,xsize(1)
                   x = real(i+xstart(1)-1-1,mytype)*dx
                   ! Initial solution
-                  sols0 = sin_prec(x) * sin_prec(y)
+                  sols0 = sin(x) * sin(y)
                   ! Analytical solution
                   solst = sols0 * sdamping(1,l)
                   ! Time discrete solution
@@ -767,7 +765,6 @@ contains
 
     use param, only : one, two, xnu, ifirst, itime, itimescheme, iimplicit
     use variables, only : numscalar, sc
-    use dbg_schemes, only: exp_prec
 
     implicit none
 
@@ -786,12 +783,12 @@ contains
     sdamping(:,:) = one
 
     ! Compute analytical damping
-    coef(1) = exp_prec(-two*dt*xnu)
+    coef(1) = exp(-two*dt*xnu)
     do it = ifirst, itime
        xdamping(1) = xdamping(1) * coef(1)
        ydamping(1) = ydamping(1) * coef(1)
        do l = 1, numscalar
-         sdamping(1,l) = sdamping(1,l) * exp_prec(-two*dt*xnu/sc(l))
+         sdamping(1,l) = sdamping(1,l) * exp(-two*dt*xnu/sc(l))
        enddo
     enddo
 
@@ -869,7 +866,6 @@ contains
 
     use param
     use derivx, only : alsaix, asix, bsix, csix, dsix
-    use dbg_schemes, only: cos_prec
 
     implicit none
 
@@ -882,11 +878,11 @@ contains
       endif
     endif
 
-    k2out = asix * two * (one - cos_prec(kin*dx)) &
-          + four * bsix * half * (one - cos_prec(two*kin*dx)) &
-          + nine * csix * (two / nine) * (one - cos_prec(three*kin*dx)) &
-          + sixteen * dsix * (one / eight) * (one - cos_prec(four*kin*dx))
-    k2out = k2out / (one + two * alsaix * cos_prec(kin*dx))
+    k2out = asix * two * (one - cos(kin*dx)) &
+          + four * bsix * half * (one - cos(two*kin*dx)) &
+          + nine * csix * (two / nine) * (one - cos(three*kin*dx)) &
+          + sixteen * dsix * (one / eight) * (one - cos(four*kin*dx))
+    k2out = k2out / (one + two * alsaix * cos(kin*dx))
 
   end subroutine compute_k2
 

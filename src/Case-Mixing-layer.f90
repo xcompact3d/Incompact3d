@@ -22,7 +22,6 @@ contains
     use param, only : u1, u2, dens1, dens2
     use param, only : half, one, two, four, eight, sixteen
     use param, only : ntime, nrhotime
-    use dbg_schemes, only: sin_prec, cos_prec, exp_prec, tanh_prec, sqrt_prec
     use MPI
 
     implicit none
@@ -57,8 +56,8 @@ contains
        rhomax = max(dens1, dens2)
        T1 = pressure0 / dens1
        T2 = pressure0 / dens2
-       u1 =  sqrt_prec(dens2 / dens1) / (sqrt_prec(dens2 / dens1) + one)
-       u2 = -sqrt_prec(dens1 / dens2) / (one + sqrt_prec(dens1 / dens2))
+       u1 =  sqrt(dens2 / dens1) / (sqrt(dens2 / dens1) + one)
+       u2 = -sqrt(dens1 / dens2) / (one + sqrt(dens1 / dens2))
        M = 0.2_mytype
        rspech = 1.4_mytype
        heatcap = (one / (T2 * (rspech - one))) * ((u1 - u2) / M)**2
@@ -71,7 +70,7 @@ contains
 
                 !! Set mean field
                 ux1(i, j, k) = ux1(i, j, k) + half * (u1 + u2) &
-                     + half * (u1 - u2) * tanh_prec(two * y)
+                     + half * (u1 - u2) * tanh(two * y)
                 uy1(i, j, k) = zero
                 uz1(i, j, k) = zero
 
@@ -84,14 +83,14 @@ contains
                 rho1(i, j, k, 1) = MIN(rho1(i, j, k, 1), rhomax)
 
                 ! Calculate disturbance field (as given in Fortune2004)
-                disturb_decay = 0.025_mytype * (u1 - u2) * exp_prec(-0.05_mytype * (y**2))
-                u_disturb = disturb_decay * (sin_prec(eight * PI * x / xlx) &
-                     + sin_prec(four * PI * x / xlx) / eight &
-                     + sin_prec(two * PI * x / xlx) / sixteen)
+                disturb_decay = 0.025_mytype * (u1 - u2) * exp(-0.05_mytype * (y**2))
+                u_disturb = disturb_decay * (sin(eight * PI * x / xlx) &
+                     + sin(four * PI * x / xlx) / eight &
+                     + sin(two * PI * x / xlx) / sixteen)
                 u_disturb = (0.05_mytype * y * xlx / PI) * u_disturb
-                v_disturb = disturb_decay * (cos_prec(eight * PI * x / xlx) &
-                     + cos_prec(four * PI * x / xlx) / eight &
-                     + cos_prec(two * PI * x / xlx) / sixteen)
+                v_disturb = disturb_decay * (cos(eight * PI * x / xlx) &
+                     + cos(four * PI * x / xlx) / eight &
+                     + cos(two * PI * x / xlx) / sixteen)
 
                 ux1(i, j, k) = ux1(i, j, k) + u_disturb
                 uy1(i, j, k) = uy1(i, j, k) + v_disturb

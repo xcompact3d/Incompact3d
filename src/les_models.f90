@@ -184,7 +184,6 @@ contains
     USE var, only : sxx2,syy2,szz2,sxy2,sxz2,syz2,srt_smag2,nut2
     USE var, only : sxx3,syy3,szz3,sxy3,sxz3,syz3
     USE ibm_param
-    use dbg_schemes, only: sqrt_prec
 
     implicit none
 
@@ -277,7 +276,7 @@ contains
                 length=smagcst*del(j)
              endif
              !Calculate eddy visc nu_t
-             nut2(i, j, k) = ((length)**two) * sqrt_prec(two * srt_smag2(i, j, k))
+             nut2(i, j, k) = ((length)**two) * sqrt(two * srt_smag2(i, j, k))
           enddo
        enddo
     enddo
@@ -350,7 +349,6 @@ contains
     use tools, only : mean_plane_z
     USE ibm_param
     USE param, only : zero
-    use dbg_schemes, only: sqrt_prec
     
     implicit none
 
