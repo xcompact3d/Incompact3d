@@ -6,7 +6,6 @@ module actuator_line_model_utils
 
     use decomp_2d_constants, only: mytype
     use param, only: zero, one, two
-    use dbg_schemes, only: sqrt_prec, cos_prec, exp_prec, sin_prec
     
     implicit none
     public QuatRot, cross, IsoKernel, AnIsoKernel, int2str
@@ -97,7 +96,7 @@ contains
       ! vR: Rotated vector
 
       ! Force normalize nR
-      RMag=sqrt_prec(Rx**2.0+Ry**2.0+Rz**2.0)
+      RMag=sqrt(Rx**2.0+Ry**2.0+Rz**2.0)
       nRx=Rx/RMag
       nRy=Ry/RMag
       nRz=Rz/RMag
@@ -109,7 +108,7 @@ contains
       p=reshape([zero,vOx,vOy,vOz],[4,1])
 
       ! Rotation quaternion and conjugate
-      q=(/cos_prec(Theta/2),nRx*sin_prec(Theta/2),nRy*sin_prec(Theta/2),nRz*sin_prec(Theta/2)/)
+      q=(/cos(Theta/2),nRx*sin(Theta/2),nRy*sin(Theta/2),nRz*sin(Theta/2)/)
       qbar=(/q(1),-q(2),-q(3),-q(4)/)
 
       QL=transpose(reshape((/q(1), -q(2), -q(3), -q(4), &
@@ -148,7 +147,7 @@ contains
 
       wsum=zero
       do i=1,Ncol
-         d(i)=sqrt_prec((Xcol(i)-Xmesh)**2+(Ycol(i)-Ymesh)**2+(Zcol(i)-Zmesh)**2)
+         d(i)=sqrt((Xcol(i)-Xmesh)**2+(Ycol(i)-Ymesh)**2+(Zcol(i)-Zmesh)**2)
          w(i)=one/d(i)**p
          wsum=wsum+w(i)
       enddo
@@ -184,9 +183,9 @@ contains
       real(mytype), intent(in) :: dr, epsilon_par
 
       if (dim==2) then
-         IsoKernel = one/(epsilon_par**2*pi)*exp_prec(-(dr/epsilon_par)**2.0)
+         IsoKernel = one/(epsilon_par**2*pi)*exp(-(dr/epsilon_par)**2.0)
       else if (dim==3) then
-         IsoKernel = one/(epsilon_par**3.0*pi**1.5)*exp_prec(-(dr/epsilon_par)**2.0)
+         IsoKernel = one/(epsilon_par**3.0*pi**1.5)*exp(-(dr/epsilon_par)**2.0)
       else
          write(*,*) "1D source not implemented"
          stop
@@ -211,7 +210,7 @@ contains
       s=dx*sx+dy*sy+dz*sz ! Spanwise projection
 
       if (abs(s)<=es) then
-         AnIsoKernel = exp_prec(-((n/et)**2.0+(t/ec)**2.0))/(ec*et*pi)
+         AnIsoKernel = exp(-((n/et)**2.0+(t/ec)**2.0))/(ec*et*pi)
       else
          AnIsoKernel = zero
       endif

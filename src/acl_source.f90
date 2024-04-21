@@ -8,7 +8,6 @@ module actuator_line_source
     use decomp_2d_constants, only: real_type
     use variables, only: ilist
     use param, only: itime, zero, half, one
-    use dbg_schemes, only: sin_prec, sqrt_prec
     use actuator_line_model_utils
     use actuator_line_model
 
@@ -320,7 +319,7 @@ contains
                   if (istret.ne.0) ymesh=yp(j)
                   do i=xstart(1),xend(1)
                      xmesh=real(i-1,mytype)*dx
-                     dist = sqrt_prec((Sx(isource)-xmesh)**2.+(Sy(isource)-ymesh)**2.+(Sz(isource)-zmesh)**2.)
+                     dist = sqrt((Sx(isource)-xmesh)**2.+(Sy(isource)-ymesh)**2.+(Sz(isource)-zmesh)**2.)
 
                      if (dist<min_dist) then
                         min_dist=dist
@@ -504,10 +503,10 @@ contains
             do i=1,xsize(1)
                xmesh=(i-1)*dx
                do isource=1,NSource
-                  dist = sqrt_prec((Sx(isource)-xmesh)**2+(Sy(isource)-ymesh)**2+(Sz(isource)-zmesh)**2)
+                  dist = sqrt((Sx(isource)-xmesh)**2+(Sy(isource)-ymesh)**2+(Sz(isource)-zmesh)**2)
                   epsilon=eps_factor*(dx*dy*dz)**(1.0/3.0)
                   if (dist<10.0*epsilon) then
-                     Kernel= one/(epsilon**3.0*pi**1.5)*exp_prec(-(dist/epsilon)**2.0)
+                     Kernel= one/(epsilon**3.0*pi**1.5)*exp(-(dist/epsilon)**2.0)
                   else
                      Kernel=zero
                   endif

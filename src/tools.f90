@@ -35,7 +35,6 @@ contains
     use param
     use var
     use mpi
-    use dbg_schemes, only: abs_prec
 
     implicit none
 
@@ -68,7 +67,7 @@ contains
 
         write(*,*) 'Phi'//char(48+is)//' min max=', real(phimin1,4), real(phimax1,4)
 
-        if (abs_prec(phimax1) > 100._mytype) then !if phi control turned off
+        if (abs(phimax1) > 100._mytype) then !if phi control turned off
            write(*,*) 'Scalar diverged! SIMULATION IS STOPPED!'
            call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
         endif
@@ -85,7 +84,6 @@ contains
     use param
     use var
     use mpi
-    use dbg_schemes, only: abs_prec
 
     implicit none
 
@@ -127,7 +125,7 @@ contains
        write(*,*) 'U,V,W max=',real(uxmax1,4),real(uymax1,4),real(uzmax1,4)
        !print *,'CFL=',real(abs(max(uxmax1,uymax1,uzmax1)*dt)/min(dx,dy,dz),4)
 
-       if((abs_prec(uxmax1)>=onehundred).or.(abs_prec(uymax1)>=onehundred).OR.(abs_prec(uzmax1)>=onehundred)) then
+       if((abs(uxmax1)>=onehundred).or.(abs(uymax1)>=onehundred).OR.(abs(uzmax1)>=onehundred)) then
          write(*,*) 'Velocity diverged! SIMULATION IS STOPPED!'
          call MPI_ABORT(MPI_COMM_WORLD,code,ierror)
          stop
@@ -1092,7 +1090,6 @@ subroutine cfl_compute(uxmax,uymax,uzmax)
   use param
   use variables
   use var
-  use dbg_schemes, only: sqrt_prec, abs_prec
 
   implicit none
 
@@ -1103,7 +1100,7 @@ subroutine cfl_compute(uxmax,uymax,uzmax)
   real(mytype) :: visc
 
   ! Set the constants (this is true for periodic boundaries)
-  sigma_conv=[zero, sqrt_prec(three), 2.85_mytype]
+  sigma_conv=[zero, sqrt(three), 2.85_mytype]
   sigma_diff=[two, 2.5_mytype, 2.9_mytype]
 
   if(jles==0) then
@@ -1114,13 +1111,13 @@ subroutine cfl_compute(uxmax,uymax,uzmax)
 
   ! This is considering 1D peridic boundaries
   ! Do x-direction
-  cfl_x_adv =abs_prec(uxmax) * dt / dx
+  cfl_x_adv =abs(uxmax) * dt / dx
   cfl_x_diff = visc * dt / dx**2
   ! Do y-direction
-  cfl_y_adv = abs_prec(uymax) * dt / dy
+  cfl_y_adv = abs(uymax) * dt / dy
   cfl_y_diff = visc * dt / dy**2
   ! Do z-direction
-  cfl_z_adv = abs_prec(uzmax) * dt / dz
+  cfl_z_adv = abs(uzmax) * dt / dz
   cfl_z_diff = visc * dt / dz**2
 
   ! So far we will focus on uniform grids
@@ -1132,7 +1129,7 @@ subroutine cfl_compute(uxmax,uymax,uzmax)
 1003 format('CFL y-direction (Adv and Diff) =',F9.4,',',F9.4)
      write(*,1004) cfl_z_adv, cfl_z_diff
 1004 format('CFL z-direction (Adv and Diff) =',F9.4,',',F9.4)
-     cfl_conv_lim = sigma_conv(itimescheme) / sqrt_prec(three)
+     cfl_conv_lim = sigma_conv(itimescheme) / sqrt(three)
      cfl_diff_lim = sigma_diff(itimescheme) / six
      write(*,1005) cfl_conv_lim, cfl_diff_lim
      write(*,*) ' '
@@ -1151,7 +1148,6 @@ subroutine stretching()
   use param
   use var
   use mpi
-  use dbg_schemes, only: abs_prec, sqrt_prec, sin_prec, cos_prec, tan_prec, atan_prec
 
   implicit none
 
@@ -1340,7 +1336,6 @@ subroutine inversion5_v1(aaa_in,eee,spI)
   use param
   use var
   use mpi
-  use dbg_schemes, only: abs_prec
 
   implicit none
 
@@ -1397,12 +1392,12 @@ subroutine inversion5_v1(aaa_in,eee,spI)
 
   do k = spI%yst(3), spI%yen(3)
      do j = spI%yst(1), spI%yen(1)
-        if (abs_prec(rl(aaa(j,ny/2-1,k,3))) > epsilon) then
+        if (abs(rl(aaa(j,ny/2-1,k,3))) > epsilon) then
            tmp1 = rl(aaa(j,ny/2,k,2)) / rl(aaa(j,ny/2-1,k,3))
         else
            tmp1 = zero
         endif
-        if (abs_prec(iy(aaa(j,ny/2-1,k,3))) > epsilon) then
+        if (abs(iy(aaa(j,ny/2-1,k,3))) > epsilon) then
            tmp2 = iy(aaa(j,ny/2,k,2)) / iy(aaa(j,ny/2-1,k,3))
         else
            tmp2 = zero
@@ -1411,14 +1406,14 @@ subroutine inversion5_v1(aaa_in,eee,spI)
         b1(j,k) = cx(rl(aaa(j,ny/2,k,3)) - tmp1 * rl(aaa(j,ny/2-1,k,4)),&
                      iy(aaa(j,ny/2,k,3)) - tmp2 * iy(aaa(j,ny/2-1,k,4)))
 
-        if (abs_prec(rl(b1(j,k))) > epsilon) then
+        if (abs(rl(b1(j,k))) > epsilon) then
            tmp1 = rl(sr(j,k)) / rl(b1(j,k))
            tmp3 = rl(eee(j,ny/2,k)) / rl(b1(j,k)) - tmp1 * rl(eee(j,ny/2-1,k))
         else
            tmp1 = zero
            tmp3 = zero
         endif
-        if (abs_prec(iy(b1(j,k))) > epsilon) then
+        if (abs(iy(b1(j,k))) > epsilon) then
            tmp2 = iy(sr(j,k)) / iy(b1(j,k))
            tmp4 = iy(eee(j,ny/2,k)) / iy(b1(j,k)) - tmp2 * iy(eee(j,ny/2-1,k))
         else
@@ -1428,12 +1423,12 @@ subroutine inversion5_v1(aaa_in,eee,spI)
         a1(j,k) = cx(tmp1,tmp2)
         eee(j,ny/2,k) = cx(tmp3,tmp4)
 
-        if (abs_prec(rl(aaa(j,ny/2-1,k,3))) > epsilon) then
+        if (abs(rl(aaa(j,ny/2-1,k,3))) > epsilon) then
            tmp1 = one / rl(aaa(j,ny/2-1,k,3))
         else
            tmp1 = zero
         endif
-        if (abs_prec(iy(aaa(j,ny/2-1,k,3))) > epsilon) then
+        if (abs(iy(aaa(j,ny/2-1,k,3))) > epsilon) then
            tmp2 = one / iy(aaa(j,ny/2-1,k,3))
         else
            tmp2 = zero
@@ -1449,12 +1444,12 @@ subroutine inversion5_v1(aaa_in,eee,spI)
   do i = ny/2 - 2, 1, -1
      do k = spI%yst(3), spI%yen(3)
         do j = spI%yst(1), spI%yen(1)
-           if (abs_prec(rl(aaa(j,i,k,3))) > epsilon) then
+           if (abs(rl(aaa(j,i,k,3))) > epsilon) then
               tmp1 = one / rl(aaa(j,i,k,3))
            else
               tmp1 = zero
            endif
-           if (abs_prec(iy(aaa(j,i,k,3))) > epsilon) then
+           if (abs(iy(aaa(j,i,k,3))) > epsilon) then
               tmp2 = one/iy(aaa(j,i,k,3))
            else
               tmp2 = zero
@@ -1484,7 +1479,6 @@ subroutine inversion5_v2(aaa,eee,spI)
   use param
   use var
   use MPI
-  use dbg_schemes, only: abs_prec
 
   implicit none
 
@@ -1538,12 +1532,12 @@ subroutine inversion5_v2(aaa,eee,spI)
   enddo
   do k = spI%yst(3), spI%yen(3)
      do j = spI%yst(1), spI%yen(1)
-        if (abs_prec(rl(aaa(j,nym-1,k,3))) > epsilon) then
+        if (abs(rl(aaa(j,nym-1,k,3))) > epsilon) then
            tmp1 = rl(aaa(j,nym,k,2)) / rl(aaa(j,nym-1,k,3))
         else
            tmp1 = zero
         endif
-        if (abs_prec(iy(aaa(j,nym-1,k,3))) > epsilon) then
+        if (abs(iy(aaa(j,nym-1,k,3))) > epsilon) then
            tmp2 = iy(aaa(j,nym,k,2)) / iy(aaa(j,nym-1,k,3))
         else
            tmp2 = zero
@@ -1551,14 +1545,14 @@ subroutine inversion5_v2(aaa,eee,spI)
         sr(j,k) = cx(tmp1,tmp2)
         b1(j,k) = cx(rl(aaa(j,nym,k,3)) - tmp1 * rl(aaa(j,nym-1,k,4)),&
                      iy(aaa(j,nym,k,3)) - tmp2 * iy(aaa(j,nym-1,k,4)))
-        if (abs_prec(rl(b1(j,k))) > epsilon) then
+        if (abs(rl(b1(j,k))) > epsilon) then
            tmp1 = rl(sr(j,k)) / rl(b1(j,k))
            tmp3 = rl(eee(j,nym,k)) / rl(b1(j,k)) - tmp1 * rl(eee(j,nym-1,k))
         else
            tmp1 = zero
            tmp3 = zero
         endif
-        if (abs_prec(iy(b1(j,k))) > epsilon) then
+        if (abs(iy(b1(j,k))) > epsilon) then
            tmp2 = iy(sr(j,k)) / iy(b1(j,k))
            tmp4 = iy(eee(j,nym,k)) / iy(b1(j,k)) - tmp2 * iy(eee(j,nym-1,k))
         else
@@ -1568,12 +1562,12 @@ subroutine inversion5_v2(aaa,eee,spI)
         a1(j,k) = cx(tmp1, tmp2)
         eee(j,nym,k) = cx(tmp3, tmp4)
 
-        if (abs_prec(rl(aaa(j,nym-1,k,3))) > epsilon) then
+        if (abs(rl(aaa(j,nym-1,k,3))) > epsilon) then
            tmp1 = one / rl(aaa(j,nym-1,k,3))
         else
            tmp1 = zero
         endif
-        if (abs_prec(iy(aaa(j,nym-1,k,3))) > epsilon) then
+        if (abs(iy(aaa(j,nym-1,k,3))) > epsilon) then
            tmp2 = one / iy(aaa(j,nym-1,k,3))
         else
            tmp2 = zero
@@ -1589,12 +1583,12 @@ subroutine inversion5_v2(aaa,eee,spI)
   do i = nym - 2, 1, -1
      do k = spI%yst(3), spI%yen(3)
         do j = spI%yst(1), spI%yen(1)
-           if (abs_prec(rl(aaa(j,i,k,3))) > epsilon) then
+           if (abs(rl(aaa(j,i,k,3))) > epsilon) then
               tmp1 = one / rl(aaa(j,i,k,3))
            else
               tmp1 = zero
            endif
-           if (abs_prec(iy(aaa(j,i,k,3))) > epsilon) then
+           if (abs(iy(aaa(j,i,k,3))) > epsilon) then
               tmp2 = one / iy(aaa(j,i,k,3))
            else
               tmp2 = zero
@@ -1623,7 +1617,6 @@ subroutine tripping(tb,ta)
   use decomp_2d_constants
   use decomp_2d_mpi
   use mpi
-  use dbg_schemes, only: sqrt_prec, sin_prec, exp_prec
 
   implicit none
 
@@ -1657,7 +1650,7 @@ subroutine tripping(tb,ta)
         call random_number(randx)
         h_coeff(j)=one*(randx-zpfive)
      enddo
-     h_coeff=h_coeff/sqrt_prec(real(z_modes,mytype))
+     h_coeff=h_coeff/sqrt(real(z_modes,mytype))
   endif
 
   !Initialization h_nxt  (always bounded by xsize(3)^2 operations)
@@ -1668,7 +1661,7 @@ subroutine tripping(tb,ta)
         h_nxt(k)=zero
         z_pos=-zlz*zpfive+(xstart(3)+(k-1)-1)*dz
         do j=1,z_modes
-           h_nxt(k)= h_nxt(k)+h_coeff(j)*sin_prec(two*pi*j*z_pos/zlz)
+           h_nxt(k)= h_nxt(k)+h_coeff(j)*sin(two*pi*j*z_pos/zlz)
         enddo
      enddo
   end if
@@ -1687,7 +1680,7 @@ subroutine tripping(tb,ta)
            call random_number(randx)
            h_coeff(j)=one*(randx-zpfive)
         enddo
-        h_coeff=h_coeff/sqrt_prec(real(z_modes,mytype)) !Non-dimensionalization
+        h_coeff=h_coeff/sqrt(real(z_modes,mytype)) !Non-dimensionalization
      end if
 
      call MPI_BCAST(h_coeff,z_modes,real_type,0,MPI_COMM_WORLD,code)
@@ -1698,7 +1691,7 @@ subroutine tripping(tb,ta)
         h_nxt(k)=zero
         z_pos=-zlz*zpfive+(xstart(3)+(k-1)-1)*dz
         do j=1,z_modes
-           h_nxt(k)= h_nxt(k)+h_coeff(j)*sin_prec(two*pi*j*z_pos/zlz)
+           h_nxt(k)= h_nxt(k)+h_coeff(j)*sin(two*pi*j*z_pos/zlz)
         enddo
      enddo
   endif
@@ -1716,8 +1709,8 @@ subroutine tripping(tb,ta)
         do k=1,xsize(3)
            !g(z)*EXP_F(X,Y)
            ta(i,j,k)=((one-b_tr)*h_i(k)+b_tr*h_nxt(k))
-           !ta(i,j,k)=A_tr*exp_prec(-((x_pos-x0_tr)/xs_tr)**2-(y_pos/ys_tr)**2)*ta(i,j,k)
-           ta(i,j,k)=A_tr*exp_prec(-((x_pos-x0_tr)/xs_tr)**2-((y_pos-zpfive)/ys_tr)**2)*ta(i,j,k)
+           !ta(i,j,k)=A_tr*exp(-((x_pos-x0_tr)/xs_tr)**2-(y_pos/ys_tr)**2)*ta(i,j,k)
+           ta(i,j,k)=A_tr*exp(-((x_pos-x0_tr)/xs_tr)**2-((y_pos-zpfive)/ys_tr)**2)*ta(i,j,k)
            tb(i,j,k)=tb(i,j,k)+ta(i,j,k)
 
            z_pos=-zlz*zpfive+(xstart(3)+(k-1)-1)*dz
@@ -1745,7 +1738,6 @@ subroutine tbl_tripping(tb,ta)
   use decomp_2d_constants
   use decomp_2d_mpi
   use mpi
-  use dbg_schemes, only: sqrt_prec, exp_prec, sin_prec
 
   implicit none
 
@@ -1782,11 +1774,11 @@ subroutine tbl_tripping(tb,ta)
      nxt_itr=1
      do j=1,z_modes
         call random_number(randx)
-        h_coeff1(j)=one*(randx-zpfive)/sqrt_prec(real(z_modes,mytype))
+        h_coeff1(j)=one*(randx-zpfive)/sqrt(real(z_modes,mytype))
         call random_number(randx)
         phase1(j) = two*pi*randx
         call random_number(randx)
-        h_coeff2(j)=one*(randx-zpfive)/sqrt_prec(real(z_modes,mytype))
+        h_coeff2(j)=one*(randx-zpfive)/sqrt(real(z_modes,mytype))
         call random_number(randx)
         phase2(j) = two*pi*randx
      enddo
@@ -1806,8 +1798,8 @@ subroutine tbl_tripping(tb,ta)
         h_2(k)=zero
         z_pos=-zlz*zpfive+real(xstart(3)+(k-1)-1,mytype)*dz
         do j=1,z_modes
-           h_1(k)= h_1(k)+h_coeff1(j)*sin_prec(two*pi*real(j,mytype)*z_pos/zlz+phase1(j))
-           h_2(k)= h_2(k)+h_coeff2(j)*sin_prec(two*pi*real(j,mytype)*z_pos/zlz+phase2(j))
+           h_1(k)= h_1(k)+h_coeff1(j)*sin(two*pi*real(j,mytype)*z_pos/zlz+phase1(j))
+           h_2(k)= h_2(k)+h_coeff2(j)*sin(two*pi*real(j,mytype)*z_pos/zlz+phase2(j))
         enddo
      enddo
   end if
@@ -1823,7 +1815,7 @@ subroutine tbl_tripping(tb,ta)
      if (nrank  ==  0) then
         do j=1,z_modes
            call random_number(randx)
-           h_coeff1(j)=one*(randx-zpfive)/sqrt_prec(real(z_modes,mytype))
+           h_coeff1(j)=one*(randx-zpfive)/sqrt(real(z_modes,mytype))
            call random_number(randx)
            phase1(j) = two*pi*randx
         enddo
@@ -1837,7 +1829,7 @@ subroutine tbl_tripping(tb,ta)
         h_1(k)=zero
         z_pos=-zlz*zpfive+real(xstart(3)+(k-1)-1,mytype)*dz
         do j=1,z_modes
-           h_1(k)= h_1(k)+h_coeff1(j)*sin_prec(two*pi*real(j,mytype)*z_pos/zlz+phase1(j))
+           h_1(k)= h_1(k)+h_coeff1(j)*sin(two*pi*real(j,mytype)*z_pos/zlz+phase1(j))
         enddo
      enddo
   endif
@@ -1853,7 +1845,7 @@ subroutine tbl_tripping(tb,ta)
         y_pos=yp(xstart(2)+(j-1))
         do k=1,xsize(3)
            ta(i,j,k)=((one-b_tr)*h_1(k)+b_tr*h_2(k))
-           ta(i,j,k)=A_tr*exp_prec(-((x_pos-x0_tr_tbl)/xs_tr_tbl)**2-((y_pos-0.05_mytype)/ys_tr_tbl)**2)*ta(i,j,k)
+           ta(i,j,k)=A_tr*exp(-((x_pos-x0_tr_tbl)/xs_tr_tbl)**2-((y_pos-0.05_mytype)/ys_tr_tbl)**2)*ta(i,j,k)
            tb(i,j,k)=tb(i,j,k)+ta(i,j,k)
 
            z_pos=-zlz*zpfive+real(xstart(3)+(k-1)-1,mytype)*dz

@@ -84,7 +84,6 @@ contains
 
       use decomp_2d_constants, only : mytype
       use param, only: one, two, thirty
-      use dbg_schemes, only: sin_prec
     
       implicit none
       real(mytype) :: AOA, AOA0, CLa
@@ -120,7 +119,7 @@ contains
          if (abs(aID)<aIDc) then
             CLID=IDS*CLaI*aID
          else
-            CLID=IDS*(CLaI*(aIDc-one/d1*sin_prec(d1*aIDc))+CLaI/d1*sin_prec(d1*aID))
+            CLID=IDS*(CLaI*(aIDc-one/d1*sin(d1*aIDc))+CLaI/d1*sin(d1*aID))
          endif
       endif
     
@@ -131,8 +130,7 @@ contains
     subroutine Force180(a)
     !
     !*******************************************************************************
-        
-      use dbg_schemes, only: exp_prec
+
       use param, only: two
     
       implicit none
@@ -155,7 +153,6 @@ contains
         
       use decomp_2d_constants, only : mytype
       use param, only: half, one, two, three, four, eleven
-      use dbg_schemes, only: exp_prec
 
       implicit none
       type(LB_Type), intent(inout) :: lb
@@ -273,8 +270,8 @@ contains
       endif
 
       ! Update states, first order lag equations, exponential recursion form (midpoint rule version)
-      lb%dp=lb%dp*exp_prec(-ds/Tp)+(lb%CLRef-lb%CLRef_Last)*exp_prec(-ds/(two*Tp))
-      lb%dF=lb%dF*exp_prec(-ds/Tf)+(lb%Fstat-lb%Fstat_Last)*exp_prec(-ds/(two*Tf))
+      lb%dp=lb%dp*exp(-ds/Tp)+(lb%CLRef-lb%CLRef_Last)*exp(-ds/(two*Tp))
+      lb%dF=lb%dF*exp(-ds/Tf)+(lb%Fstat-lb%Fstat_Last)*exp(-ds/(two*Tf))
       lb%dCNv=lb%dCNv*exp(-ds/Tv)+lb%dcv*exp(-ds/(two*Tv))
 
       ! Update lagged values
@@ -311,7 +308,6 @@ contains
 
       use decomp_2d_constants, only : mytype
       use param, only: zero, zpone, zptwofive, one, two, four, fifty
-      use dbg_schemes, only: abs_prec, sqrt_prec, sin_prec, cos_prec, exp_prec
 
       implicit none
       type(AirfoilType) :: airfoil       ! Airfoil structure
@@ -354,7 +350,7 @@ contains
       ! calc effective static TE separation point using effective LE AOA
       call EvalStaticCoeff(Re,AOARefLE*condeg,CLstatF,C,C1,airfoil)
       call LB_EvalIdealCL(AOARefLE,AOA0,CLa,0,CLIDF)
-      if (abs_prec(CLIDF)<0.001_mytype) then
+      if (abs(CLIDF)<0.001_mytype) then
          CLRatio=999_mytype
       else
          CLRatio=CLstatF/CLIDF;
@@ -401,13 +397,13 @@ contains
          ! Test logic
          lb%LB_LogicOutputs(3)=2
       endif
-      CLF=CLsep+CLID*zptwofive*(lb%F+two*sqrt_prec(lb%F))
+      CLF=CLsep+CLID*zptwofive*(lb%F+two*sqrt(lb%F))
       dCDF=KD*(CLstat-CLF)*sign(one,CLstat)
 
       ! LE vortex lift component, dCNv is a lagged change in the added normal force due
       ! to LE vortex shedding. Assumed to affect lift coeff as an added circulation...
-      dCLv=lb%dCNv*cos_prec(alpha5)
-      dCDv=lb%dCNv*sin_prec(alpha5)
+      dCLv=lb%dCNv*cos(alpha5)
+      dCDv=lb%dCNv*sin(alpha5)
       ! vortex feed is given by the rate at which lift (circulation) is being shed due to dynamic separation. Lift component due to separation is defined by the
       ! difference between the ideal lift and the lift including dynamic separation effects.
       lb%cv=CLID-CLF

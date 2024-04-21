@@ -149,7 +149,6 @@ contains
     !*******************************************************************************
 
       use param, only: zero, one
-      use dbg_schemes, only: cos_prec, sin_prec
 
       implicit none
       type(ActuatorLineType), intent(inout) :: actuatorline
@@ -181,8 +180,8 @@ contains
             actuatorline%pitch(istation)=pitch(istation)*conrad
          endif
  
-         actuatorline%tx(istation)= cos_prec(actuatorline%pitch(istation))
-         actuatorline%ty(istation)=-sin_prec(actuatorline%pitch(istation))
+         actuatorline%tx(istation)= cos(actuatorline%pitch(istation))
+         actuatorline%ty(istation)=-sin(actuatorline%pitch(istation))
          actuatorline%tz(istation)= zero
          actuatorline%C(istation)=ctoR(istation)*length
          actuatorline%thick(istation)=thick(istation)
@@ -233,7 +232,6 @@ contains
     !
     !*******************************************************************************
 
-      use dbg_schemes, only: sqrt_prec, sin_prec, cos_prec
       use param, only: zpone, zpfive, zero, one, two, four, eight
 
       implicit none
@@ -280,7 +278,7 @@ contains
          urdn=nxe*(u-ub)+nye*(v-vb)+nze*(w-wb) ! Normal
          urdc=txe*(u-ub)+tye*(v-vb)+tze*(w-wb) ! Tangential
     
-         ur=sqrt_prec(urdn**2.0+urdc**2.0)
+         ur=sqrt(urdn**2.0+urdc**2.0)
          act_line%EUr(ielem)=ur
     
          ! This is the dynamic angle of attack
@@ -329,8 +327,8 @@ contains
             CMAM=-CNAM/four-urdn*urdc/(eight*ur**2)
             CT=CT+CTAM
             CN=CN+CNAM
-            CL=CN*cos_prec(alpha)-CT*sin_prec(alpha)
-            CD=CN*sin_prec(alpha)+CT*cos_prec(alpha)
+            CL=CN*cos(alpha)-CT*sin(alpha)
+            CD=CN*sin(alpha)+CT*cos(alpha)
             CM25=CM25+CMAM
          endif
    
@@ -338,7 +336,7 @@ contains
          if (act_line%do_random_walk_forcing) then
             Strouhal=0.17_mytype
             freq=Strouhal*ur/max(ElemChord,0.0001_mytype)
-            CL=CL*(one+zpone*sin_prec(two*pi*freq*time)+0.05_mytype*(-one+two*rand(ielem)))
+            CL=CL*(one+zpone*sin(two*pi*freq*time)+0.05_mytype*(-one+two*rand(ielem)))
             CD=CD*(one+0.05_mytype*(-one+two*rand(ielem)))
          endif
 
@@ -349,8 +347,8 @@ contains
          endif
 
          ! Tangential and normal coeffs
-         CN=CL*cos_prec(alpha)+CD*sin_prec(alpha)
-         CT=-CL*sin_prec(alpha)+CD*cos_prec(alpha)
+         CN=CL*cos(alpha)+CD*sin(alpha)
+         CT=-CL*sin(alpha)+CD*cos(alpha)
 
          ! Apply coeffs to calculate tangential and normal Forces
          FN=zpfive*rho_air*CN*ElemArea*ur**2.0
@@ -402,7 +400,6 @@ contains
     !*******************************************************************************
 
       use param, only: zero, zpfive, one, two
-      use dbg_schemes, only: sin_prec, cos_prec
 
       implicit none
       type(ActuatorLineType), intent(inout) :: tower
@@ -449,13 +446,13 @@ contains
 
          ! Apply random walk on the lift and drag forces
          freq=Str*ur/max(Diameter,0.0001_mytype)
-         tower%ECL(ielem)=CL*sin_prec(two*freq*pi*time)
+         tower%ECL(ielem)=CL*sin(two*freq*pi*time)
          tower%ECL(ielem)=tower%ECL(ielem)*(one+0.05_mytype*(-one+two*rand(ielem)))
          tower%ECD(ielem)=CD
 
          ! Tangential and normal coeffs
-         CN=tower%ECL(ielem)*cos_prec(alpha)+tower%ECD(ielem)*sin_prec(alpha)
-         CT=-tower%ECL(ielem)*sin_prec(alpha)+tower%ECD(ielem)*cos_prec(alpha)
+         CN=tower%ECL(ielem)*cos(alpha)+tower%ECD(ielem)*sin(alpha)
+         CT=-tower%ECL(ielem)*sin(alpha)+tower%ECD(ielem)*cos(alpha)
 
          ! Apply Coeffs to calculate tangential and normal Forces
          FN=zpfive*rho_air*CN*ElemArea*ur**2.0
@@ -485,8 +482,6 @@ contains
     !
     !*******************************************************************************
 
-      use dbg_schemes, only: sqrt_prec
-
       implicit none
       type(ActuatorLineType), intent(inout) :: act_line
       real(mytype), intent(inout) :: pitch_angle ! Pitch in degrees
@@ -497,7 +492,7 @@ contains
       Nstation=act_line%Nelem+1
    
       ! Compute the blade-wise unit vector
-      S=sqrt_prec((act_line%QCX(NStation)-act_line%COR(1))**2. + &
+      S=sqrt((act_line%QCX(NStation)-act_line%COR(1))**2. + &
                   (act_line%QCY(NStation)-act_line%COR(2))**2. + &
                   (act_line%QCZ(NStation)-act_line%COR(3))**2.)
        
@@ -532,7 +527,6 @@ contains
     !*******************************************************************************
 
       use param, only: zero
-      use dbg_schemes, only: abs_prec
 
       implicit none
       integer, intent(in) :: NElem,NData
@@ -559,7 +553,7 @@ contains
     
          do idata=1,NData
             Thicks(idata)=AirfoilData(idata)%tc
-            diffthicks(idata)=abs_prec(AirfoilData(idata)%tc-ETtoC(ielem))
+            diffthicks(idata)=abs(AirfoilData(idata)%tc-ETtoC(ielem))
          enddo
          imin=minloc(Thicks,1)
          imax=maxloc(Thicks,1)
@@ -582,7 +576,6 @@ contains
     !
     !*******************************************************************************
 
-      use dbg_schemes, only: sqrt_prec
       use param, only : zero
 
       implicit none
@@ -619,7 +612,7 @@ contains
          tztmp=actuatorline%tz(ielem)
     
          call QuatRot(txtmp,tytmp,tztmp,theta,nrx,nry,nrz,zero,zero,zero,vrx,vry,vrz)
-         VMag=sqrt_prec(vrx**2+vry**2+vrz**2)
+         VMag=sqrt(vrx**2+vry**2+vrz**2)
          actuatorline%tx(ielem)=vrx/VMag
          actuatorline%ty(ielem)=vry/VMag
          actuatorline%tz(ielem)=vrz/VMag
@@ -673,7 +666,6 @@ contains
     !*******************************************************************************
 
       use param, only: two
-      use dbg_schemes, only: sqrt_prec
 
       implicit none
       type(ActuatorLineType), intent(inout) :: blade ! For simplity. In fact this is an actuator line.

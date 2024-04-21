@@ -175,7 +175,6 @@ contains
     use decomp_2d_io
     use MPI
     use param, only : zero, zptwo, zpeight, one, nine
-    use dbg_schemes, only: exp_prec, sqrt_prec
 
     implicit none
 
@@ -213,7 +212,7 @@ contains
                -17.018112827391400_mytype*eta_bl**4 +0.819582894357566_mytype*eta_bl**3  &
                -0.0601348202321954_mytype*eta_bl**2 +2.989739912704050_mytype*eta_bl**1
 
-          f_bl=f_bl+(1-exp_prec(-delta_eta/delta_int))*eps_eta
+          f_bl=f_bl+(1-exp(-delta_eta/delta_int))*eps_eta
 
 
 
@@ -232,14 +231,14 @@ contains
                +130.109496961069_mytype*eta_bl**4 -7.64507811014497000_mytype*eta_bl**3  &
                +6.94303207046209_mytype*eta_bl**2 -0.00209716712558639_mytype*eta_bl**1 ! &
 
-          g_bl=g_bl+(1-exp_prec(-delta_eta/delta_int))*eps_eta
+          g_bl=g_bl+(1-exp(-delta_eta/delta_int))*eps_eta
 
 
 
           x_bl=one/(4.91_mytype**2*xnu)
 
           bxx1(j,k)=f_bl/1.0002014996204402_mytype/1.0000000359138641_mytype !To assure 1.0 in infinity
-          bxy1(j,k)=g_bl*sqrt_prec(xnu/x_bl)/1.000546554_mytype
+          bxy1(j,k)=g_bl*sqrt(xnu/x_bl)/1.000546554_mytype
           bxz1(j,k)=zero
        enddo
     enddo
@@ -269,7 +268,7 @@ contains
             -0.0601348202321954_mytype*eta_bl**2 +2.989739912704050_mytype*eta_bl**1
 
 
-    f_bl_inf=f_bl_inf+(1-exp_prec(-delta_eta/delta_int))*eps_eta
+    f_bl_inf=f_bl_inf+(1-exp(-delta_eta/delta_int))*eps_eta
     f_bl_inf=f_bl_inf/1.0002014996204402_mytype/1.0000000359138641_mytype !To assure 1.0 in infinity
 
 #ifdef DEBG
@@ -292,7 +291,7 @@ contains
             +6.94303207046209_mytype*eta_bl**2 -0.00209716712558639_mytype*eta_bl**1
 
 
-    g_bl_inf=g_bl_inf+(1-exp_prec(-delta_eta/delta_int))*eps_eta
+    g_bl_inf=g_bl_inf+(1-exp(-delta_eta/delta_int))*eps_eta
     g_bl_inf=g_bl_inf/1.000546554_mytype
 #ifdef DEBG
     if (nrank == 0) write(*,*)'g_bl_inf ', g_bl_inf

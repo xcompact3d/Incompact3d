@@ -26,7 +26,6 @@ contains
 
     use param, only : one, two, ten
     use ibm_param
-    use dbg_schemes, only: sqrt_prec
 
     implicit none
 
@@ -69,7 +68,7 @@ contains
           ym=yp(j)
           do i=nxi,nxf
              xm=real(i-1,mytype)*dx
-             r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two)
+             r=sqrt((xm-cexx)**two+(ym-ceyy)**two)
              if (r-ra.gt.zeromach) then
                 cycle
              endif
@@ -209,7 +208,6 @@ contains
     USE variables
     USE param
     USE MPI
-    use dbg_schemes, only: exp_prec
 
     implicit none
 
@@ -252,7 +250,7 @@ contains
           do j=1,xsize(2)
              if (istret.eq.0) y=(j+xstart(2)-1-1)*dy-yly/2.
              if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/2.
-             um=exp_prec(-zptwo*y*y)
+             um=exp(-zptwo*y*y)
              do i=1,xsize(1)
                 ux1(i,j,k)=um*ux1(i,j,k)
                 uy1(i,j,k)=um*uy1(i,j,k)
@@ -290,7 +288,6 @@ contains
     USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
     USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
     USE ibm_param
-    use dbg_schemes, only: sqrt_prec
     
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
 

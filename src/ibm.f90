@@ -345,8 +345,7 @@ contains
   subroutine polint(xa,ya,n,x,y,dy)
     !
     use decomp_2d
-    use dbg_schemes, only: abs_prec
-    !
+
     implicit none
     !
     integer,parameter            :: nmax=30
@@ -355,7 +354,7 @@ contains
     real(mytype),dimension(nmax) :: c,d
     real(mytype),dimension(n)    :: xa,ya
     ns=1
-    dif=abs_prec(x-xa(1))
+    dif=abs(x-xa(1))
     do i=1,n
        dift=abs(x-xa(i))
        if(dift.lt.dif)then

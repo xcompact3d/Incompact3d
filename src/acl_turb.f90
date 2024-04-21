@@ -8,7 +8,6 @@ module actuator_line_turbine
     use decomp_2d_mpi, only: nrank
     use variables, only: ilist
     use param, only: itime, zero, zpone, half, one, two, onethousand
-    use dbg_schemes, only: cos_prec, sin_prec, abs_prec, exp_prec, acos_prec, sqrt_prec
     use constants
     use actuator_line_model_utils
     use Airfoils
@@ -104,15 +103,15 @@ contains
             turbine%blade(iblade)%QCy(istation)=rR(istation)*turbine%Rmax*Svec(2)!+turbine%blade(iblade)%COR(2)
             turbine%blade(iblade)%QCz(istation)=rR(istation)*turbine%Rmax*Svec(3)!+turbine%blade(iblade)%COR(3)
             if (turbine%IsCounterClockwise) then
-               turbine%blade(iblade)%tx(istation)=sin_prec(pitch(istation)*conrad)
-               turbine%blade(iblade)%ty(istation)=-cos_prec(pitch(istation)*conrad)
+               turbine%blade(iblade)%tx(istation)=sin(pitch(istation)*conrad)
+               turbine%blade(iblade)%ty(istation)=-cos(pitch(istation)*conrad)
                turbine%blade(iblade)%tz(istation)= zero
                turbine%blade(iblade)%C(istation)=ctoR(istation)*turbine%Rmax
                turbine%blade(iblade)%thick(istation)=thick(istation)
                turbine%blade(iblade)%pitch(istation)=pitch(istation)*conrad
             else if (turbine%IsClockwise) then
-               turbine%blade(iblade)%tx(istation)=sin_prec(pitch(istation)*conrad)
-               turbine%blade(iblade)%ty(istation)=cos_prec(pitch(istation)*conrad)
+               turbine%blade(iblade)%tx(istation)=sin(pitch(istation)*conrad)
+               turbine%blade(iblade)%ty(istation)=cos(pitch(istation)*conrad)
                turbine%blade(iblade)%tz(istation)= zero
                turbine%blade(iblade)%C(istation)=ctoR(istation)*turbine%Rmax
                turbine%blade(iblade)%thick(istation)=thick(istation)
@@ -362,13 +361,13 @@ contains
                if (turbine%EndEffectModel_is_Glauert) then
                   g1=one
                else if (turbine%EndEffectModel_is_Shen) then
-                  g1=exp_prec(-turbine%ShenCoeff_c1*(turbine%NBlades*turbine%TSR-turbine%ShenCoeff_c2))+zpone
+                  g1=exp(-turbine%ShenCoeff_c1*(turbine%NBlades*turbine%TSR-turbine%ShenCoeff_c2))+zpone
                else
                   write(*,*) 'Only Glauert and Shen et al. are available at the moment'
                   stop
                endif
-               Ftip=two/pi*acos_prec(exp_prec(-g1*turbine%Nblades*half*(one/rroot-one)/sin_prec(phi)))
-               if (abs_prec(exp_prec(-g1*turbine%Nblades*half*(one/rroot-one)/sin_prec(phi)))>one) then
+               Ftip=two/pi*acos(exp(-g1*turbine%Nblades*half*(one/rroot-one)/sin(phi)))
+               if (abs(exp(-g1*turbine%Nblades*half*(one/rroot-one)/sin(phi)))>one) then
                   if (nrank==0) write(*,*) 'Something went wrong with the tip correction model -- phi =', phi
                   Ftip=one
                endif
@@ -378,13 +377,13 @@ contains
                if (turbine%EndEffectModel_is_Glauert) then
                   g1=one
                else if (turbine%EndEffectModel_is_Shen) then
-                  g1=exp_prec(-turbine%ShenCoeff_c1*(turbine%NBlades*turbine%TSR-turbine%ShenCoeff_c2))+zpone
+                  g1=exp(-turbine%ShenCoeff_c1*(turbine%NBlades*turbine%TSR-turbine%ShenCoeff_c2))+zpone
                else
                   write(*,*) 'Only Glauert and Shen et al. are available at the moment'
                   stop
                endif
-               Froot=two/pi*acos_prec(exp_prec(-g1*turbine%Nblades*half*(one/rtip-one)/sin_prec(phi)))
-               if (abs_prec(exp_prec(-g1*turbine%Nblades*half*(one/rtip-one)/sin_prec(phi)))>one) then
+               Froot=two/pi*acos(exp(-g1*turbine%Nblades*half*(one/rtip-one)/sin(phi)))
+               if (abs(exp(-g1*turbine%Nblades*half*(one/rtip-one)/sin(phi)))>one) then
                   if (nrank==0) write(*,*) 'Something went wrong with the root correction model -- phi =', phi
                   Froot=one
                endif
@@ -647,7 +646,7 @@ contains
       Turbine%Ux_upstream=Ux
       Turbine%Uy_upstream=Uy
       Turbine%Uz_upstream=Uz
-      Turbine%Uref=sqrt_prec(Ux**2.0+Uy**2.0+Uz**2.0)
+      Turbine%Uref=sqrt(Ux**2.0+Uy**2.0+Uz**2.0)
 
       return
     
