@@ -383,7 +383,6 @@ contains
     use var, only: di1, di3
     use var, only: sxy1, syz1, heatflux, ta2, tb2, ta3, tb3
     use ibm_param, only : ubcx, ubcz
-    use dbg_schemes, only: log_prec, tanh_prec, sqrt_prec, abs_prec, atan_prec
    
     implicit none
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux,uy,uz, nut1
@@ -512,19 +511,19 @@ contains
         if (itherm==0) then
           Q_HAve = TempFlux
         else if (itherm==1) then
-          Q_HAve =-k_roughness**two*S_HAve*(Phi_HAve-(T_wall+TempRate*t))/((log_prec(delta/z_zero)-PsiM_HAve)*(log_prec(delta/z_zero)-PsiH_HAve))
+          Q_HAve =-k_roughness**two*S_HAve*(Phi_HAve-(T_wall+TempRate*t))/((log(delta/z_zero)-PsiM_HAve)*(log(delta/z_zero)-PsiH_HAve))
         endif
-        L_HAve=-(k_roughness*S_HAve/(log_prec(delta/z_zero)-PsiM_HAve))**three*Phi_HAve/(k_roughness*gravv*Q_HAve)
+        L_HAve=-(k_roughness*S_HAve/(log(delta/z_zero)-PsiM_HAve))**three*Phi_HAve/(k_roughness*gravv*Q_HAve)
         if (istrat==0) then
           PsiM_HAve=-4.8_mytype*delta/L_HAve
           PsiH_HAve=-7.8_mytype*delta/L_HAve
         else if (istrat==1) then
           zeta_HAve=(one-sixteen*delta/L_HAve)**zptwofive
-          PsiM_HAve=two*log_prec(half*(one+zeta_HAve))+log_prec(zpfive*(one+zeta_HAve**two))-two*atan_prec(zeta_HAve)+pi/two
-          PsiH_HAve=two*log_prec(half*(one+zeta_HAve**two))
+          PsiM_HAve=two*log(half*(one+zeta_HAve))+log(zpfive*(one+zeta_HAve**two))-two*atan(zeta_HAve)+pi/two
+          PsiH_HAve=two*log(half*(one+zeta_HAve**two))
         endif
         ii      = ii + 1
-        OL_diff = abs_prec((L_HAve - Lold)/Lold)
+        OL_diff = abs((L_HAve - Lold)/Lold)
         Lold    = L_HAve
         if (ii==50) exit
       enddo
@@ -548,30 +547,30 @@ contains
       do i=1,xsize(1)
          ! Horizontally-averaged formulation
          if(iwallmodel==1) then
-           tauwallxy(i,k)=-(k_roughness/(log_prec(delta/z_zero)-PsiM_HAve))**two*ux_HAve*S_HAve
-           tauwallzy(i,k)=-(k_roughness/(log_prec(delta/z_zero)-PsiM_HAve))**two*uz_HAve*S_HAve
+           tauwallxy(i,k)=-(k_roughness/(log(delta/z_zero)-PsiM_HAve))**two*ux_HAve*S_HAve
+           tauwallzy(i,k)=-(k_roughness/(log(delta/z_zero)-PsiM_HAve))**two*uz_HAve*S_HAve
          ! Local formulation
          else
            ux12=half*(uxf1(i,1,k)+uxf1(i,2,k))
            uz12=half*(uzf1(i,1,k)+uzf1(i,2,k))
-           S12=sqrt_prec(ux12**2.+uz12**2.)
+           S12=sqrt(ux12**2.+uz12**2.)
            if (iscalar==1) then
              Phi12= half*(phif1(i,1,k)+ phif1(i,2,k)) + Tstat12
              do ii=1,10
-                if (itherm==1) heatflux(i,k)=-k_roughness**two*S12*(Phi12-(T_wall+TempRate*t))/((log_prec(delta/z_zero)-PsiM(i,k))*(log_prec(delta/z_zero)-PsiH(i,k)))
-                Obukhov(i,k)=-(k_roughness*S12/(log_prec(delta/z_zero)-PsiM(i,k)))**three*Phi12/(k_roughness*gravv*heatflux(i,k))
+                if (itherm==1) heatflux(i,k)=-k_roughness**two*S12*(Phi12-(T_wall+TempRate*t))/((log(delta/z_zero)-PsiM(i,k))*(log(delta/z_zero)-PsiH(i,k)))
+                Obukhov(i,k)=-(k_roughness*S12/(log(delta/z_zero)-PsiM(i,k)))**three*Phi12/(k_roughness*gravv*heatflux(i,k))
                 if (istrat==0) then
                   PsiM(i,k)=-4.8_mytype*delta/Obukhov(i,k)
                   PsiH(i,k)=-7.8_mytype*delta/Obukhov(i,k)
                 else if (istrat==1) then
                   zeta(i,k)=(one-sixteen*delta/Obukhov(i,k))**zptwofive
-                  PsiM(i,k)=two*log_prec(half*(one+zeta(i,k)))+log_prec(zpfive*(one+zeta(i,k)**2.))-two*atan_prec(zeta(i,k))+pi/two
-                  PsiH(i,k)=two*log_prec(half*(one+zeta(i,k)**two))
+                  PsiM(i,k)=two*log(half*(one+zeta(i,k)))+log(zpfive*(one+zeta(i,k)**2.))-two*atan(zeta(i,k))+pi/two
+                  PsiH(i,k)=two*log(half*(one+zeta(i,k)**two))
                 endif
              enddo
            endif
-           tauwallxy(i,k)=-(k_roughness/(log_prec(delta/z_zero)-PsiM(i,k)))**two*ux12*S12
-           tauwallzy(i,k)=-(k_roughness/(log_prec(delta/z_zero)-PsiM(i,k)))**two*uz12*S12
+           tauwallxy(i,k)=-(k_roughness/(log(delta/z_zero)-PsiM(i,k)))**two*ux12*S12
+           tauwallzy(i,k)=-(k_roughness/(log(delta/z_zero)-PsiM(i,k)))**two*uz12*S12
          endif
          ! Apply second-order upwind scheme for the near wall
          ! Below should change for non-uniform grids, same for wall_sgs_slip_scalar
@@ -617,7 +616,7 @@ contains
     endif
     
     ! Compute friction velocity u_shear and boundary layer height
-    u_shear=k_roughness*S_HAve/(log_prec(delta/z_zero)-PsiM_HAve)
+    u_shear=k_roughness*S_HAve/(log(delta/z_zero)-PsiM_HAve)
     if (iheight==1) call boundary_height(ux,uy,uz,dBL)
     if (iscalar==1) zL=dBL/L_HAve
 
@@ -692,7 +691,6 @@ contains
     use variables
     use var, only: di1, di2, di3
     use var, only: sxy1, syz1, tb1, ta2, tb2
-    use dbg_schemes, only: log_prec, sqrt_prec
     use ibm_param, only : ubcx, ubcy, ubcz
    
     implicit none
@@ -738,9 +736,9 @@ contains
       y_sampling=delta-real(j0,mytype)*dy
       ux_delta=(1-y_sampling/dy)*ta2(i,j0+1,k)+(y_sampling/dy)*ta2(i,j0+2,k)
       uz_delta=(1-y_sampling/dy)*tb2(i,j0+1,k)+(y_sampling/dy)*tb2(i,j0+2,k)
-      S_delta=sqrt_prec(ux_delta**2.+uz_delta**2.)
-      tauwallxy2(i,k)=-(k_roughness/(log_prec(delta/z_zero)))**two*ux_delta*S_delta
-      tauwallzy2(i,k)=-(k_roughness/(log_prec(delta/z_zero)))**two*uz_delta*S_delta
+      S_delta=sqrt(ux_delta**2.+uz_delta**2.)
+      tauwallxy2(i,k)=-(k_roughness/(log(delta/z_zero)))**two*ux_delta*S_delta
+      tauwallzy2(i,k)=-(k_roughness/(log(delta/z_zero)))**two*uz_delta*S_delta
       txy2(i,2,k) = tauwallxy2(i,k)
       tyz2(i,2,k) = tauwallzy2(i,k)
     enddo
@@ -809,8 +807,8 @@ contains
     call MPI_ALLREDUCE(uz_HAve_local,uz_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     ux_HAve=ux_HAve/(nxc*nzc)
     uz_HAve=uz_HAve/(nxc*nzc)
-    S_HAve=sqrt_prec(ux_HAve**2.+uz_HAve**2.)
-    u_shear=k_roughness*S_HAve/log_prec(5*dy/z_zero)
+    S_HAve=sqrt(ux_HAve**2.+uz_HAve**2.)
+    u_shear=k_roughness*S_HAve/log(5*dy/z_zero)
     
     if (mod(itime,ilist)==0.and.nrank==0) then
        ! Write u_shear in file
@@ -835,7 +833,6 @@ contains
     use param
     use var
     use MPI
-    use dbg_schemes, only: log_prec
 
     implicit none
 
@@ -995,7 +992,6 @@ contains
 
     use param
     use var, only: yp
-    use dbg_schemes, only: sin_prec, cos_prec, log_prec
 
     implicit none
 
@@ -1022,7 +1018,7 @@ contains
           ! Damping for non-neutral ABL
           if (ibuoyancy==1) then
             if (y>=damp_lo) then
-              lambda=sin_prec(half*pi*(y-damp_lo)/(yly-damp_lo))**two
+              lambda=sin(half*pi*(y-damp_lo)/(yly-damp_lo))**two
             else
               lambda=zero
             endif
@@ -1034,13 +1030,13 @@ contains
             if (y>=(dBL+half*dheight)) then
               lambda=one
             elseif (y>=(dBL-half*dheight).and.y<(dBL+half*dheight)) then
-              lambda=half*(one-cos_prec(pi*(y-(dBL-half*dheight))/dheight))
+              lambda=half*(one-cos(pi*(y-(dBL-half*dheight))/dheight))
             else
              lambda=zero
             endif
             xloc=real(i-1,mytype)*dx
             if (iconcprec.eq.1.and.xloc.ge.pdl) lambda=0.
-            dux1(i,j,k,1)=dux1(i,j,k,1)-coeff*lambda*(ux1(i,j,k)-ustar/k_roughness*log_prec(dBL/z_zero))
+            dux1(i,j,k,1)=dux1(i,j,k,1)-coeff*lambda*(ux1(i,j,k)-ustar/k_roughness*log(dBL/z_zero))
             duy1(i,j,k,1)=duy1(i,j,k,1)-coeff*lambda*(uy1(i,j,k)-UG(2))
             duz1(i,j,k,1)=duz1(i,j,k,1)-coeff*lambda*(uz1(i,j,k)-UG(3))
           endif
@@ -1058,7 +1054,6 @@ contains
 
     use param
     use var, only: yp
-    use dbg_schemes, only: sin_prec
 
     implicit none
 
@@ -1077,7 +1072,7 @@ contains
           if (istret==0) y=real(j+xstart(2)-1-1,mytype)*dy
           if (istret/=0) y=yp(j+xstart(2)-1)
           if (y>=damp_lo) then
-            lambda=sin_prec(half*pi*(y-damp_lo)/(yly-damp_lo))**two
+            lambda=sin(half*pi*(y-damp_lo)/(yly-damp_lo))**two
           else
             lambda=zero
           endif

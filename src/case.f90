@@ -12,7 +12,6 @@ module case
   use tgv
   use cyl
   use hill
-  use dbg_schemes
   use channel
   use mixlayer
   use gravitycur

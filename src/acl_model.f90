@@ -471,7 +471,6 @@ contains
 
       use decomp_2d_constants, only : mytype
       use param, only: zpfive, two, sixty, onehundredeighty
-      use dbg_schemes, only: sin_prec
 
       implicit none
       real(mytype), intent(inout) :: current_time, dt
@@ -576,7 +575,7 @@ contains
                ! Do harmonic pitch control for all elements (stations) of the actuator line
                Nstation=ActuatorLine(i)%NElem+1
                do j=1,Nstation
-                  ActuatorLine(i)%pitch(j)=actuatorline(i)%pitchAmp*sin_prec(actuatorline(i)%angular_pitch_freq*(ctime-ActuatorLine(i)%pitch_start_time))
+                  ActuatorLine(i)%pitch(j)=actuatorline(i)%pitchAmp*sin(actuatorline(i)%angular_pitch_freq*(ctime-ActuatorLine(i)%pitch_start_time))
                enddo
                if (nrank==0.and.mod(itime,ilist)==0) then        
                   write(*,*) 'Harmonic pitch :'
