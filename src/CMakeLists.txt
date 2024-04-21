@@ -49,6 +49,7 @@ add_executable(xcompact3d
                     tools.f90
                     transeq.f90
                     turbine.f90
+		    utilities.f90
                     variables.f90
                     visu.f90
                     xcompact3d.f90)

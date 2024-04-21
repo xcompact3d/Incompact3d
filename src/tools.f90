@@ -7,6 +7,7 @@ module tools
   use decomp_2d_constants
   use decomp_2d_mpi
   use decomp_2d
+  use utilities
 
   implicit none
 
@@ -1336,6 +1337,7 @@ subroutine inversion5_v1(aaa_in,eee,spI)
   use param
   use var
   use mpi
+  use utilities
 
   implicit none
 
@@ -1356,10 +1358,6 @@ subroutine inversion5_v1(aaa_in,eee,spI)
   complex(mytype),dimension(spI%yst(1):spI%yen(1),spI%yst(3):spI%yen(3)) :: a1,b1
 
   real(mytype) :: tmp1,tmp2,tmp3,tmp4
-
-  complex(mytype) :: cx
-  real(mytype) :: rl, iy
-  external cx, rl, iy
 
   aaa = aaa_in
 
@@ -1479,6 +1477,7 @@ subroutine inversion5_v2(aaa,eee,spI)
   use param
   use var
   use MPI
+  use utilities
 
   implicit none
 
@@ -1499,10 +1498,6 @@ subroutine inversion5_v2(aaa,eee,spI)
   complex(mytype),dimension(spI%yst(1):spI%yen(1),spI%yst(3):spI%yen(3)) :: a1,b1
 
   real(mytype) :: tmp1,tmp2,tmp3,tmp4
-
-  complex(mytype) :: cx
-  real(mytype) :: rl, iy
-  external cx, rl, iy
 
   do i = 1, 2
      ja(i) = 4 - i
@@ -1859,48 +1854,6 @@ subroutine tbl_tripping(tb,ta)
 
   return
 end subroutine tbl_tripping
-!##################################################################
-!##################################################################
-function rl(complexnumber)
-
-  use param
-
-  implicit none
-
-  real(mytype) :: rl
-  complex(mytype) :: complexnumber
-
-  rl = real(complexnumber, kind=mytype)
-
-end function rl
-!##################################################################
-!##################################################################
-function iy(complexnumber)
-
-  use param
-
-  implicit none
-
-  real(mytype) :: iy
-  complex(mytype) :: complexnumber
-
-  iy = aimag(complexnumber)
-
-end function iy
-!##################################################################
-!##################################################################
-function cx(realpart,imaginarypart)
-
-  use param
-
-  implicit none
-
-  complex(mytype) :: cx
-  real(mytype) :: realpart, imaginarypart
-
-  cx = cmplx(realpart, imaginarypart, kind=mytype)
-
-end function cx
 !##################################################################
 !##################################################################
 subroutine calc_temp_eos(temp, rho, phi, mweight, xlen, ylen, zlen)

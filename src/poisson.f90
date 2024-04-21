@@ -10,6 +10,7 @@ module decomp_2d_poisson
   use decomp_2d_fft
 
   use param
+  use utilities
   use variables
 
   implicit none
@@ -73,9 +74,6 @@ contains
 
     integer :: nx, ny, nz, i
     
-    real(mytype) :: rl, iy
-    external  rl, iy
-
     if (nclx) then
        bcx=0
     else
@@ -318,10 +316,6 @@ contains
 
     integer :: nx,ny,nz, i,j,k
 
-    complex(mytype) :: cx
-    real(mytype) :: rl, iy
-    external cx, rl, iy
-
     nx = nx_global
     ny = ny_global
     nz = nz_global
@@ -426,10 +420,6 @@ contains
     real(mytype) :: xx1,xx2,xx3,xx4,xx5,xx6,xx7,xx8
 
     integer :: nx,ny,nz, i,j,k, itmp
-
-    complex(mytype) :: cx
-    real(mytype) :: rl, iy
-    external cx, rl, iy
 
 100 format(1x,a8,3I4,2F12.6)
 
@@ -682,10 +672,6 @@ contains
     real(mytype) :: xx1,xx2,xx3,xx4,xx5,xx6,xx7,xx8
 
     integer :: nx,ny,nz, i,j,k
-
-    complex(mytype) :: cx
-    real(mytype) :: rl, iy
-    external cx, rl, iy
 
 100 format(1x,a8,3I4,2F12.6)
 
@@ -1041,9 +1027,6 @@ contains
 
     integer :: nx,ny,nz, i,j,k
 
-    complex(mytype) :: cx
-    real(mytype) :: rl, iy
-    external cx, rl, iy
 #ifdef DEBG
     real(mytype) :: dep, dep1
     integer :: code
@@ -1571,10 +1554,6 @@ contains
     real(mytype) :: ytt_rl,xtt_rl,ztt_rl,yt1_rl,xt1_rl,zt1_rl
     real(mytype) :: xtt1_rl,ytt1_rl,ztt1_rl
 
-    complex(mytype) :: cx
-    real(mytype) :: rl, iy
-    external cx, rl, iy
-
     xkx = zero
     xk2 = zero
     yky = zero
@@ -1859,11 +1838,6 @@ contains
     complex(mytype) :: ytt,xtt,ztt,yt1,xt1,yt2,xt2
     complex(mytype) :: xtt1,ytt1,ztt1,zt1,zt2,tmp1,tmp2,tmp3
     
-
-    complex(mytype) :: cx
-    real(mytype) :: rl, iy
-    external cx, rl, iy
-
     real(mytype) :: xtt_rl, xtt1_rl, xt1_rl
     real(mytype) :: rlexs
 
