@@ -569,11 +569,11 @@ module mhd
     !SKEW SYMMETRIC FORM
 
     !WORK X-PENCILS
-    ta1(:,:,:) = zero !ux1(:,:,:) * Bsum(:,:,:,1) - Bsum(:,:,:,1) * ux1(:,:,:) ! FIXME this is always zero
+    ta1(:,:,:) = zero !ux1(:,:,:) * Bsum(:,:,:,1) - Bsum(:,:,:,1) * ux1(:,:,:) ! always zero
     tb1(:,:,:) = ux1(:,:,:) * Bsum(:,:,:,2) - Bsum(:,:,:,1) * uy1(:,:,:)
     tc1(:,:,:) = ux1(:,:,:) * Bsum(:,:,:,3) - Bsum(:,:,:,1) * uz1(:,:,:)
     
-    td1 = zero !call derx (td1,ta1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcx*ubcx)
+    td1 = zero !call derx (td1,ta1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcx*ubcx) ! always zero
     call derx (te1,tb1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx*ubcy)
     call derx (tf1,tc1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx*ubcz)
 
@@ -609,11 +609,11 @@ module mhd
 
     !WORK Y-PENCILS
     td2(:,:,:) =  uy2(:,:,:)*bx2(:,:,:) - by2(:,:,:)*ux2(:,:,:) 
-    te2(:,:,:) =  zero !uy2(:,:,:)*by2(:,:,:) - by2(:,:,:)*uy2(:,:,:) 
+    te2(:,:,:) =  zero !uy2(:,:,:)*by2(:,:,:) - by2(:,:,:)*uy2(:,:,:) ! always zero
     tf2(:,:,:) =  uy2(:,:,:)*bz2(:,:,:) - by2(:,:,:)*uz2(:,:,:) 
 
     call dery (tg2,td2,di2,sy,ffy,  fsy, fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcx*ubcy)
-    th2 = zero !call dery (th2,te2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcy*ubcy)
+    th2 = zero !call dery (th2,te2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcy*ubcy) ! always zero
     call dery (ti2,tf2,di2,sy,ffy,  fsy, fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcz*ubcy)
 
     call dery (td2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
@@ -647,12 +647,12 @@ module mhd
 
     td3(:,:,:) =  uz3(:,:,:)*bx3(:,:,:) - bz3(:,:,:)*ux3(:,:,:)
     te3(:,:,:) =  uz3(:,:,:)*by3(:,:,:) - bz3(:,:,:)*uy3(:,:,:)
-    tf3(:,:,:) =  zero !uz3(:,:,:)*bz3(:,:,:) - bz3(:,:,:)*uz3(:,:,:)
+    tf3(:,:,:) =  zero !uz3(:,:,:)*bz3(:,:,:) - bz3(:,:,:)*uz3(:,:,:) ! always zero
 
 
     call derz (tg3,td3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcx*ubcz)
     call derz (th3,te3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcy*ubcz)
-    ti3 = zero !call derz (ti3,tf3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcz*ubcz)
+    ti3 = zero !call derz (ti3,tf3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcz*ubcz) ! always zero
 
     call derz (td3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
     call derz (te3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
