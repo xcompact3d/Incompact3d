@@ -31,6 +31,8 @@ subroutine parameter(input_i3d)
   use visu, only : output2D
   use forces, only : iforces, nvol, xld, xrd, yld, yud!, zld, zrd
 
+  use mhd, only: mhd_active,mhd_equation,hartmann,stuart,rem
+
   implicit none
 
   character(len=80), intent(in) :: input_i3d
@@ -46,7 +48,7 @@ subroutine parameter(input_i3d)
        ivisu, ipost, &
        gravx, gravy, gravz, &
        cpg, idir_stream, &
-       ifilter, C_filter, iturbine
+       ifilter, C_filter, iturbine, mhd_active
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, iimplicit, &
        nu0nu, cnu, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu, ilist, iprocessing, &
@@ -71,6 +73,11 @@ subroutine parameter(input_i3d)
   NAMELIST /CASE/ pfront
   NAMELIST/ALMParam/iturboutput,NTurbines,TurbinesPath,NActuatorlines,ActuatorlinesPath,eps_factor,rho_air
   NAMELIST/ADMParam/Ndiscs,ADMcoords,iturboutput,rho_air,T_relax
+  NAMELIST/MHDParam/mhd_equation,hartmann,stuart,rem, &
+     nclxBx1, nclxBxn, nclyBx1, nclyBxn, nclzBx1, nclzBxn, &
+     nclxBy1, nclxByn, nclyBy1, nclyByn, nclzBy1, nclzByn, &
+     nclxBz1, nclxBzn, nclyBz1, nclyBzn, nclzBz1, nclzBzn
+
 
 #ifdef DEBG
   if (nrank == 0) write(*,*) '# parameter start'
@@ -196,6 +203,30 @@ subroutine parameter(input_i3d)
         nclzSn = 0
      endif
   endif
+
+ 
+  if(mhd_active) then
+    read(10, nml=MHDParam); rewind(10) !! read mhd
+    nclxB1(1) = nclxBx1
+    nclxB1(2) = nclxBy1
+    nclxB1(3) = nclxBz1
+    nclxBn(1) = nclxBxn
+    nclxBn(2) = nclxByn
+    nclxBn(3) = nclxBzn
+    nclyB1(1) = nclyBx1
+    nclyB1(2) = nclyBy1
+    nclyB1(3) = nclyBz1
+    nclyBn(1) = nclyBxn
+    nclyBn(2) = nclyByn
+    nclyBn(3) = nclyBzn
+    nclzB1(1) = nclzBx1
+    nclzB1(2) = nclzBy1
+    nclzB1(3) = nclzBz1
+    nclzBn(1) = nclzBxn
+    nclzBn(2) = nclzByn
+    nclzBn(3) = nclzBzn
+   endif
+
   ! !! These are the 'optional'/model parameters
   ! read(10, nml=ScalarParam)
   if(ilesmod==0) then
@@ -304,6 +335,7 @@ subroutine parameter(input_i3d)
         stop
      endif
      if (iscalar.eq.1) xcst_sc = xcst / sc
+
   endif
 
   if (itype==itype_tbl.and.A_tr .gt. zero.and.nrank==0)  write(*,*)  "TBL tripping is active"
@@ -569,6 +601,8 @@ subroutine parameter_defaults()
   use visu, only : output2D
   use forces, only : iforces, nvol
 
+  use mhd, only: mhd_active, mhd_equation, rem, stuart, hartmann 
+
   implicit none
 
   integer :: i
@@ -592,6 +626,12 @@ subroutine parameter_defaults()
   itime0 = 0
   t0 = zero
   datapath = './data/'
+
+  mhd_active=.false.
+  mhd_equation=.false.
+  rem = zero
+  stuart = zero
+  hartmann = zero
 
   !! LES stuff
   smagwalldamp=1

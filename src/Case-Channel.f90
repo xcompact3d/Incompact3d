@@ -29,6 +29,7 @@ contains
     use variables
     use param
     use MPI
+    use mhd, only : mhd_active, Bm,Bmean
 
     implicit none
 
@@ -145,6 +146,20 @@ contains
        enddo
     enddo
 
+    if(mhd_active) then
+
+      Bmean(:,:,:,1)=zero
+      Bmean(:,:,:,2)=one
+      Bmean(:,:,:,3)=zero
+
+      Bm(:,:,:,1)=zero
+      Bm(:,:,:,2)=zero
+      Bm(:,:,:,3)=zero
+      
+      if(nrank==0) print*,'** magnetic field initialised'
+
+    endif
+
     return
   end subroutine init_channel
   !############################################################################
@@ -154,6 +169,7 @@ contains
     use param
     use var, only : di2
     use variables
+    use mhd, only : Bm, mhd_active, mhd_equation 
 
     implicit none
 
@@ -187,6 +203,23 @@ contains
           !if (nclyS1.eq.2) g_sc(:,1) = one
           ! Top temperature if alpha_sc(:,2)=1 and beta_sc(:,2)=0 (default)
           !if (nclySn.eq.2) g_sc(:,2) = zero
+       endif
+    endif
+
+    if( mhd_active .and. iimplicit<=0 .and. mhd_equation ) then
+       ! FIXME add a test
+       ! This is valid only when nclyB*1 = 2
+       if (xstart(2) == 1) then
+          Bm(:,1,:,1)  = zero
+          Bm(:,1,:,2)  = zero
+          Bm(:,1,:,3)  = zero
+       endif
+       ! FIXME add a test
+       ! This is valid only when nclyB*n = 2
+       if (xend(2) == ny) then
+          Bm(:,xsize(2),:,1) = zero
+          Bm(:,xsize(2),:,2) = zero
+          Bm(:,xsize(2),:,3) = zero
        endif
     endif
 
@@ -258,12 +291,22 @@ contains
 
     use decomp_2d_io, only : decomp_2d_register_variable
     use visu, only : io_name, output2D
+    use mhd, only : mhd_active
     
     implicit none
 
     logical, intent(out) :: visu_initialised
 
     call decomp_2d_register_variable(io_name, "critq", 1, 0, output2D, mytype)
+
+    if (mhd_active) then
+       call decomp_2d_register_variable(io_name, "J_x", 1, 0, output2D, mytype)
+       call decomp_2d_register_variable(io_name, "J_y", 1, 0, output2D, mytype)
+       call decomp_2d_register_variable(io_name, "J_z", 1, 0, output2D, mytype)
+       call decomp_2d_register_variable(io_name, "B_x", 1, 0, output2D, mytype)
+       call decomp_2d_register_variable(io_name, "B_y", 1, 0, output2D, mytype)
+       call decomp_2d_register_variable(io_name, "B_z", 1, 0, output2D, mytype)
+    endif
 
     visu_initialised = .true.
     
@@ -282,6 +325,7 @@ contains
     use var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
     use var, ONLY : nzmsize
     use visu, only : write_field
+    use mhd, only : mhd_active,Je, Bm
     
     use ibm_param, only : ubcx,ubcy,ubcz
 
@@ -340,6 +384,15 @@ contains
                  - th1(:,:,:) * tf1(:,:,:)
     call write_field(di1, ".", "critq", num, flush = .true.) ! Reusing temporary array, force flush
 
+    if (mhd_active) then
+      call write_field(Je(:,:,:,1), ".", "J_x", num, flush = .true.)
+      call write_field(Je(:,:,:,2), ".", "J_y", num, flush = .true.)
+      call write_field(Je(:,:,:,3), ".", "J_z", num, flush = .true.)
+      call write_field(Bm(:,:,:,1), ".", "B_x", num, flush = .true.)
+      call write_field(Bm(:,:,:,2), ".", "B_y", num, flush = .true.)
+      call write_field(Bm(:,:,:,3), ".", "B_z", num, flush = .true.)
+    endif
+    
   end subroutine visu_channel
   !############################################################################
   !############################################################################

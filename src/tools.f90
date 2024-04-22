@@ -209,6 +209,7 @@ contains
     use param
     use MPI
     use navier, only : gradp
+    use mhd, only : mhd_active,mhd_equation,Bm,dBm
 
     implicit none
 
@@ -308,6 +309,20 @@ contains
              call decomp_2d_write_one(1,drho1(:,:,:,is),resfile,varname,0,io_restart,reduce_prec=.false.)
           enddo
           call decomp_2d_write_one(1,mu1(:,:,:),resfile,"mu",0,io_restart,reduce_prec=.false.)
+       endif
+
+       if (mhd_active .and. mhd_equation) then
+          call decomp_2d_write_one(1,Bm(:,:,:,1),resfile,'bx',0,io_restart,reduce_prec=.false.)
+          call decomp_2d_write_one(1,Bm(:,:,:,2),resfile,'by',0,io_restart,reduce_prec=.false.)
+          call decomp_2d_write_one(1,Bm(:,:,:,3),resfile,'bz',0,io_restart,reduce_prec=.false.)
+          if (itimescheme==3) then
+             call decomp_2d_write_one(1,dBm(:,:,:,1,2),resfile,'dbx-2',0,io_restart,reduce_prec=.false.)
+             call decomp_2d_write_one(1,dBm(:,:,:,2,2),resfile,'dby-2',0,io_restart,reduce_prec=.false.)
+             call decomp_2d_write_one(1,dBm(:,:,:,3,2),resfile,'dbz-2',0,io_restart,reduce_prec=.false.)
+             call decomp_2d_write_one(1,dBm(:,:,:,1,3),resfile,'dbx-3',0,io_restart,reduce_prec=.false.)
+             call decomp_2d_write_one(1,dBm(:,:,:,2,3),resfile,'dby-3',0,io_restart,reduce_prec=.false.)
+             call decomp_2d_write_one(1,dBm(:,:,:,3,3),resfile,'dbz-3',0,io_restart,reduce_prec=.false.)
+          endif
        endif
 
        call decomp_2d_end_io(io_restart, resfile)
@@ -423,6 +438,20 @@ contains
           call decomp_2d_read_one(1,mu1,resfile,"mu",io_restart,reduce_prec=.false.)
        end if
 
+       if(mhd_active .and. mhd_equation) then
+          call decomp_2d_read_one(1,Bm(:,:,:,1),resfile,'bx',io_restart,reduce_prec=.false.)
+          call decomp_2d_read_one(1,Bm(:,:,:,2),resfile,'by',io_restart,reduce_prec=.false.)
+          call decomp_2d_read_one(1,Bm(:,:,:,3),resfile,'bz',io_restart,reduce_prec=.false.)
+          if (itimescheme==3) then
+             call decomp_2d_read_one(1,dBm(:,:,:,1,2),resfile,'dbx-2',io_restart,reduce_prec=.false.)
+             call decomp_2d_read_one(1,dBm(:,:,:,2,2),resfile,'dby-2',io_restart,reduce_prec=.false.)
+             call decomp_2d_read_one(1,dBm(:,:,:,3,2),resfile,'dbz-2',io_restart,reduce_prec=.false.)
+             call decomp_2d_read_one(1,dBm(:,:,:,1,3),resfile,'dbx-3',io_restart,reduce_prec=.false.)
+             call decomp_2d_read_one(1,dBm(:,:,:,2,3),resfile,'dby-3',io_restart,reduce_prec=.false.)
+             call decomp_2d_read_one(1,dBm(:,:,:,3,3),resfile,'dbz-3',io_restart,reduce_prec=.false.)
+          endif
+       endif
+
        call decomp_2d_end_io(io_restart, resfile)
        call decomp_2d_close_io(io_restart, resfile)
 
@@ -480,6 +509,7 @@ contains
     use variables, only : numscalar
     use param, only : ilmn, nrhotime, ntime
     use var, only : itimescheme, iibm
+    use mhd, only : mhd_active, mhd_equation
     
     implicit none
 
@@ -537,7 +567,21 @@ contains
           call decomp_2d_register_variable(io_restart, varname, 1, 0, 0, mytype)
        end do
     end if
-    
+ 
+    if (mhd_active .and. mhd_equation) then
+       call decomp_2d_register_variable(io_restart, "bx", 1, 0, 0, mytype)
+       call decomp_2d_register_variable(io_restart, "by", 1, 0, 0, mytype)
+       call decomp_2d_register_variable(io_restart, "bz", 1, 0, 0, mytype)
+       if (itimescheme.eq.3) then
+          call decomp_2d_register_variable(io_restart, "dbx-2", 1, 0, 0, mytype)
+          call decomp_2d_register_variable(io_restart, "dby-2", 1, 0, 0, mytype)
+          call decomp_2d_register_variable(io_restart, "dbz-2", 1, 0, 0, mytype)
+          call decomp_2d_register_variable(io_restart, "dbx-3", 1, 0, 0, mytype)
+          call decomp_2d_register_variable(io_restart, "dby-3", 1, 0, 0, mytype)
+          call decomp_2d_register_variable(io_restart, "dbz-3", 1, 0, 0, mytype)
+       endif
+    end if
+
   end subroutine init_restart_adios2
   !############################################################################
   !!  SUBROUTINE: apply_spatial_filter
@@ -748,6 +792,7 @@ contains
      use param, only : xnu,dt,dx,dy,dz,istret
      use param, only : cfl_diff_sum, cfl_diff_x, cfl_diff_y, cfl_diff_z
      use variables, only : dyp
+     use mhd, only: mhd_active, mhd_equation,rem
 
      implicit none
 
@@ -771,6 +816,30 @@ contains
         write(*,"(' cfl_diff_sum           :        ',F13.8)") cfl_diff_sum
         write(*,*) '==========================================================='
      endif
+     
+     if( mhd_active.and.mhd_equation) then
+ 
+        cfl_diff_x = dt/ (dx**2) / rem
+        cfl_diff_z = dt/ (dz**2) / rem
+   
+        if (istret == 0) then
+           cfl_diff_y = dt / (dy**2) / rem
+        else
+           cfl_diff_y = dt / (minval(dyp)**2) / rem
+        end if
+   
+        cfl_diff_sum = cfl_diff_x + cfl_diff_y + cfl_diff_z
+   
+        if (nrank==0) then
+           write(*,*) '==========================================================='
+           write(*,*) 'Magnetic Diffusion number'
+           write(*,"(' B cfl_diff_x             :        ',F13.8)") cfl_diff_x
+           write(*,"(' B cfl_diff_y             :        ',F13.8)") cfl_diff_y
+           write(*,"(' B cfl_diff_z             :        ',F13.8)") cfl_diff_z
+           write(*,"(' B cfl_diff_sum           :        ',F13.8)") cfl_diff_sum
+           write(*,*) '==========================================================='
+        endif
+     endif  
 
      return
   end subroutine compute_cfldiff

@@ -16,6 +16,8 @@ program xcompact3d
   use ibm_param
   use ibm, only : body
   use genepsi, only : genepsi3d
+  use mhd,    only : Bm,mhd_active,mhd_equation,test_magnetic, &
+                     solve_poisson_mhd,mhd_sta
 
   implicit none
 
@@ -51,6 +53,7 @@ program xcompact3d
           endif
         endif
         call calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
+
 #ifdef DEBG
         call check_transients()
 #endif
@@ -67,6 +70,10 @@ program xcompact3d
         call solve_poisson(pp3,px1,py1,pz1,rho1,ux1,uy1,uz1,ep1,drho1,divu3)
         call cor_vel(ux1,uy1,uz1,px1,py1,pz1)
 
+        if(mhd_active .and. mhd_equation) then
+          call solve_poisson_mhd()
+        endif
+
         if (ilmn) then
            call momentum_to_velocity(rho1,ux1,uy1,uz1)
            !! XXX N.B. from this point, X-pencil velocity arrays contain velocity (LMN only).
@@ -75,8 +82,12 @@ program xcompact3d
         
         call test_flow(rho1,ux1,uy1,uz1,phi1,ep1,drho1,divu3)
 
+        if(mhd_active) call test_magnetic
+
      enddo !! End sub timesteps
 
+     if(mhd_active) call mhd_sta(ux1,uy1,uz1)
+     !
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,rho1,drho1,mu1,1)
 
      call simu_stats(3)
@@ -124,6 +135,8 @@ subroutine init_xcompact3d()
   use ibm, only : body
 
   use probes, only : init_probes
+
+  use mhd, only: mhd_active,mhd_init
 
   implicit none
 
@@ -205,6 +218,10 @@ subroutine init_xcompact3d()
   endif
 
   !####################################################################
+  ! initialise mhd
+  if (mhd_active) call mhd_init()
+
+  !####################################################################
   ! initialise visu
   if (ivisu.ne.0) then
      call visu_init()
@@ -279,6 +296,7 @@ subroutine finalise_xcompact3d()
   use probes, only : finalize_probes
   use visu, only : visu_finalise
   use les, only: finalise_explicit_les
+  use mhd, only: mhd_active, mhd_fin
 
   implicit none
 
@@ -298,6 +316,7 @@ subroutine finalise_xcompact3d()
   call simu_stats(4)
   call finalize_probes()
   call visu_finalise()
+  if (mhd_active) call mhd_fin()
   if (ilesmod.ne.0) then
      if (jles.gt.0) call finalise_explicit_les()
   endif

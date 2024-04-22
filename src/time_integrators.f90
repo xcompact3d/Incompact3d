@@ -205,6 +205,7 @@ contains
     use param, only : scalar_lbound, scalar_ubound
     use variables, only : numscalar,nu0nu
     use var, only : ta1, tb1
+    use mhd,     only : mhd_active,mhd_equation,int_time_magnet
     use MPI
 
 
@@ -302,6 +303,10 @@ contains
           call calc_rho_eos(rho1(:,:,:,1), ta1, phi1, tb1, xsize(1), xsize(2), xsize(3))
        ENDIF
     ENDIF
+
+    if(mhd_active .and. mhd_equation) then
+      call int_time_magnet
+    endif
 
 #ifdef DEBG
     if (nrank .eq. 0) write(*,*)'## End  int_time'

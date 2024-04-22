@@ -16,6 +16,7 @@ subroutine schemes()
   USE variables
   USE var
   USE ydiff_implicit, only : init_implicit, implicit_schemes
+  use mhd, only: mhd_active, mhd_equation
 
   implicit none
 
@@ -95,7 +96,7 @@ subroutine schemes()
        alsakz,askz,bskz,cskz,dskz,&
        sfz,ssz,swz,sfzp,sszp,swzp,dz2,nz,nclz1,nclzn)
 
-  if (iscalar.ne.0 .or. (ilmn)) then
+  if (iscalar.ne.0 .or. (ilmn) .or. mhd_active) then
      !Scalar
      ! First derivative
      if (nclxS1.eq.0.and.nclxSn.eq.0) derxS => derx_00
@@ -164,6 +165,209 @@ subroutine schemes()
           alsakz,askz,bskz,cskz,dskz,&
           sfzS,sszS,swzS,sfzpS,sszpS,swzpS,dz2,nz,nclzS1,nclzSn)
   endif
+
+  if( mhd_active .and. mhd_equation ) then
+     ! First derivative
+     if (nclxBx1.eq.0.and.nclxBxn.eq.0) derxBx => derx_00
+     if (nclxBx1.eq.1.and.nclxBxn.eq.1) derxBx => derx_11
+     if (nclxBx1.eq.1.and.nclxBxn.eq.2) derxBx => derx_12
+     if (nclxBx1.eq.2.and.nclxBxn.eq.1) derxBx => derx_21
+     if (nclxBx1.eq.2.and.nclxBxn.eq.2) derxBx => derx_22
+     !
+     if (nclyBx1.eq.0.and.nclyBxn.eq.0) deryBx => dery_00
+     if (nclyBx1.eq.1.and.nclyBxn.eq.1) deryBx => dery_11
+     if (nclyBx1.eq.1.and.nclyBxn.eq.2) deryBx => dery_12
+     if (nclyBx1.eq.2.and.nclyBxn.eq.1) deryBx => dery_21
+     if (nclyBx1.eq.2.and.nclyBxn.eq.2) deryBx => dery_22
+     !
+     if (nclzBx1.eq.0.and.nclzBxn.eq.0) derzBx => derz_00
+     if (nclzBx1.eq.1.and.nclzBxn.eq.1) derzBx => derz_11
+     if (nclzBx1.eq.1.and.nclzBxn.eq.2) derzBx => derz_12
+     if (nclzBx1.eq.2.and.nclzBxn.eq.1) derzBx => derz_21
+     if (nclzBx1.eq.2.and.nclzBxn.eq.2) derzBx => derz_22
+     ! SecondBxderivative
+     if (nclxBx1.eq.0.and.nclxBxn.eq.0) derxxBx => derxx_00
+     if (nclxBx1.eq.1.and.nclxBxn.eq.1) derxxBx => derxx_11
+     if (nclxBx1.eq.1.and.nclxBxn.eq.2) derxxBx => derxx_12
+     if (nclxBx1.eq.2.and.nclxBxn.eq.1) derxxBx => derxx_21
+     if (nclxBx1.eq.2.and.nclxBxn.eq.2) derxxBx => derxx_22
+     !y
+     if (nclyBx1.eq.0.and.nclyBxn.eq.0) deryyBx => deryy_00
+     if (nclyBx1.eq.1.and.nclyBxn.eq.1) deryyBx => deryy_11
+     if (nclyBx1.eq.1.and.nclyBxn.eq.2) deryyBx => deryy_12
+     if (nclyBx1.eq.2.and.nclyBxn.eq.1) deryyBx => deryy_21
+     if (nclyBx1.eq.2.and.nclyBxn.eq.2) deryyBx => deryy_22
+     !z
+     if (nclzBx1.eq.0.and.nclzBxn.eq.0) derzzBx => derzz_00
+     if (nclzBx1.eq.1.and.nclzBxn.eq.1) derzzBx => derzz_11
+     if (nclzBx1.eq.1.and.nclzBxn.eq.2) derzzBx => derzz_12
+     if (nclzBx1.eq.2.and.nclzBxn.eq.1) derzzBx => derzz_21
+     if (nclzBx1.eq.2.and.nclzBxn.eq.2) derzzBx => derzz_22
+     call first_derivative(alfa1x,af1x,bf1x,cf1x,df1x,alfa2x,af2x,alfanx,afnx,bfnx,&
+          cfnx,dfnx,alfamx,afmx,alfaix,afix,bfix,&
+          ffxB(:,1),fsxB(:,1),fwxB(:,1),ffxpB(:,1),fsxpB(:,1),fwxpB(:,1),dx,nx,nclxBx1,nclxBxn)
+     call first_derivative(alfa1y,af1y,bf1y,cf1y,df1y,alfa2y,af2y,alfany,afny,bfny,&
+          cfny,dfny,alfamy,afmy,alfajy,afjy,bfjy,&
+          ffyB(:,1),fsyB(:,1),fwyB(:,1),ffypB(:,1),fsypB(:,1),fwypB(:,1),dy,ny,nclyBx1,nclyBxn)
+     call first_derivative(alfa1z,af1z,bf1z,cf1z,df1z,alfa2z,af2z,alfanz,afnz,bfnz,&
+          cfnz,dfnz,alfamz,afmz,alfakz,afkz,bfkz,&
+          ffzB(:,1),fszB(:,1),fwzB(:,1),ffzpB(:,1),fszpB(:,1),fwzpB(:,1),dz,nz,nclzBx1,nclzBxn)
+     call second_derivative(alsa1x,as1x,bs1x,&
+          cs1x,ds1x,alsa2x,as2x,alsanx,asnx,bsnx,csnx,dsnx,alsamx,&
+          asmx,alsa3x,as3x,bs3x,alsatx,astx,bstx,&
+          alsa4x,as4x,bs4x,cs4x,&
+          alsattx,asttx,bsttx,csttx,&
+          alsaix,asix,bsix,csix,dsix,&
+          sfxB(:,1),ssxB(:,1),swxB(:,1),sfxpB(:,1),ssxpB(:,1),swxpB(:,1),dx2,nx,nclxBx1,nclxBxn)
+     call second_derivative(alsa1y,as1y,bs1y,&
+          cs1y,ds1y,alsa2y,as2y,alsany,asny,bsny,csny,dsny,alsamy,&
+          asmy,alsa3y,as3y,bs3y,alsaty,asty,bsty,&
+          alsa4y,as4y,bs4y,cs4y,&
+          alsatty,astty,bstty,cstty,&
+          alsajy,asjy,bsjy,csjy,dsjy,&
+          sfyB(:,1),ssyB(:,1),swyB(:,1),sfypB(:,1),ssypB(:,1),swypB(:,1),dy2,ny,nclyBx1,nclyBxn)
+     call second_derivative(alsa1z,as1z,bs1z,&
+          cs1z,ds1z,alsa2z,as2z,alsanz,asnz,bsnz,csnz,dsnz,alsamz,&
+          asmz,alsa3z,as3z,bs3z,alsatz,astz,bstz,&
+          alsa4z,as4z,bs4z,cs4z,&
+          alsattz,asttz,bsttz,csttz,&
+          alsakz,askz,bskz,cskz,dskz,&
+          sfzB(:,1),sszB(:,1),swzB(:,1),sfzpB(:,1),sszpB(:,1),swzpB(:,1),dz2,nz,nclzBx1,nclzBxn)
+  
+     ! First derivative
+     if (nclxBy1.eq.0.and.nclxByn.eq.0) derxBy => derx_00
+     if (nclxBy1.eq.1.and.nclxByn.eq.1) derxBy => derx_11
+     if (nclxBy1.eq.1.and.nclxByn.eq.2) derxBy => derx_12
+     if (nclxBy1.eq.2.and.nclxByn.eq.1) derxBy => derx_21
+     if (nclxBy1.eq.2.and.nclxByn.eq.2) derxBy => derx_22
+     !
+     if (nclyBy1.eq.0.and.nclyByn.eq.0) deryBy => dery_00
+     if (nclyBy1.eq.1.and.nclyByn.eq.1) deryBy => dery_11
+     if (nclyBy1.eq.1.and.nclyByn.eq.2) deryBy => dery_12
+     if (nclyBy1.eq.2.and.nclyByn.eq.1) deryBy => dery_21
+     if (nclyBy1.eq.2.and.nclyByn.eq.2) deryBy => dery_22
+     !
+     if (nclzBy1.eq.0.and.nclzByn.eq.0) derzBy => derz_00
+     if (nclzBy1.eq.1.and.nclzByn.eq.1) derzBy => derz_11
+     if (nclzBy1.eq.1.and.nclzByn.eq.2) derzBy => derz_12
+     if (nclzBy1.eq.2.and.nclzByn.eq.1) derzBy => derz_21
+     if (nclzBy1.eq.2.and.nclzByn.eq.2) derzBy => derz_22
+     ! SecondByderivative
+     if (nclxBy1.eq.0.and.nclxByn.eq.0) derxxBy => derxx_00
+     if (nclxBy1.eq.1.and.nclxByn.eq.1) derxxBy => derxx_11
+     if (nclxBy1.eq.1.and.nclxByn.eq.2) derxxBy => derxx_12
+     if (nclxBy1.eq.2.and.nclxByn.eq.1) derxxBy => derxx_21
+     if (nclxBy1.eq.2.and.nclxByn.eq.2) derxxBy => derxx_22
+     !y
+     if (nclyBy1.eq.0.and.nclyByn.eq.0) deryyBy => deryy_00
+     if (nclyBy1.eq.1.and.nclyByn.eq.1) deryyBy => deryy_11
+     if (nclyBy1.eq.1.and.nclyByn.eq.2) deryyBy => deryy_12
+     if (nclyBy1.eq.2.and.nclyByn.eq.1) deryyBy => deryy_21
+     if (nclyBy1.eq.2.and.nclyByn.eq.2) deryyBy => deryy_22
+     !z
+     if (nclzBy1.eq.0.and.nclzByn.eq.0) derzzBy => derzz_00
+     if (nclzBy1.eq.1.and.nclzByn.eq.1) derzzBy => derzz_11
+     if (nclzBy1.eq.1.and.nclzByn.eq.2) derzzBy => derzz_12
+     if (nclzBy1.eq.2.and.nclzByn.eq.1) derzzBy => derzz_21
+     if (nclzBy1.eq.2.and.nclzByn.eq.2) derzzBy => derzz_22
+     call first_derivative(alfa1x,af1x,bf1x,cf1x,df1x,alfa2x,af2x,alfanx,afnx,bfnx,&
+          cfnx,dfnx,alfamx,afmx,alfaix,afix,bfix,&
+          ffxB(:,2),fsxB(:,2),fwxB(:,2),ffxpB(:,2),fsxpB(:,2),fwxpB(:,2),dx,nx,nclxBy1,nclxByn)
+     call first_derivative(alfa1y,af1y,bf1y,cf1y,df1y,alfa2y,af2y,alfany,afny,bfny,&
+          cfny,dfny,alfamy,afmy,alfajy,afjy,bfjy,&
+          ffyB(:,2),fsyB(:,2),fwyB(:,2),ffypB(:,2),fsypB(:,2),fwypB(:,2),dy,ny,nclyBy1,nclyByn)
+     call first_derivative(alfa1z,af1z,bf1z,cf1z,df1z,alfa2z,af2z,alfanz,afnz,bfnz,&
+          cfnz,dfnz,alfamz,afmz,alfakz,afkz,bfkz,&
+          ffzB(:,2),fszB(:,2),fwzB(:,2),ffzpB(:,2),fszpB(:,2),fwzpB(:,2),dz,nz,nclzBy1,nclzByn)
+     call second_derivative(alsa1x,as1x,bs1x,&
+          cs1x,ds1x,alsa2x,as2x,alsanx,asnx,bsnx,csnx,dsnx,alsamx,&
+          asmx,alsa3x,as3x,bs3x,alsatx,astx,bstx,&
+          alsa4x,as4x,bs4x,cs4x,&
+          alsattx,asttx,bsttx,csttx,&
+          alsaix,asix,bsix,csix,dsix,&
+          sfxB(:,2),ssxB(:,2),swxB(:,2),sfxpB(:,2),ssxpB(:,2),swxpB(:,2),dx2,nx,nclxBy1,nclxByn)
+     call second_derivative(alsa1y,as1y,bs1y,&
+          cs1y,ds1y,alsa2y,as2y,alsany,asny,bsny,csny,dsny,alsamy,&
+          asmy,alsa3y,as3y,bs3y,alsaty,asty,bsty,&
+          alsa4y,as4y,bs4y,cs4y,&
+          alsatty,astty,bstty,cstty,&
+          alsajy,asjy,bsjy,csjy,dsjy,&
+          sfyB(:,2),ssyB(:,2),swyB(:,2),sfypB(:,2),ssypB(:,2),swypB(:,2),dy2,ny,nclyBy1,nclyByn)
+     call second_derivative(alsa1z,as1z,bs1z,&
+          cs1z,ds1z,alsa2z,as2z,alsanz,asnz,bsnz,csnz,dsnz,alsamz,&
+          asmz,alsa3z,as3z,bs3z,alsatz,astz,bstz,&
+          alsa4z,as4z,bs4z,cs4z,&
+          alsattz,asttz,bsttz,csttz,&
+          alsakz,askz,bskz,cskz,dskz,&
+          sfzB(:,2),sszB(:,2),swzB(:,2),sfzpB(:,2),sszpB(:,2),swzpB(:,2),dz2,nz,nclzBy1,nclzByn)
+     ! First derivative
+     if (nclxBz1.eq.0.and.nclxBzn.eq.0) derxBz => derx_00
+     if (nclxBz1.eq.1.and.nclxBzn.eq.1) derxBz => derx_11
+     if (nclxBz1.eq.1.and.nclxBzn.eq.2) derxBz => derx_12
+     if (nclxBz1.eq.2.and.nclxBzn.eq.1) derxBz => derx_21
+     if (nclxBz1.eq.2.and.nclxBzn.eq.2) derxBz => derx_22
+     !
+     if (nclyBz1.eq.0.and.nclyBzn.eq.0) deryBz => dery_00
+     if (nclyBz1.eq.1.and.nclyBzn.eq.1) deryBz => dery_11
+     if (nclyBz1.eq.1.and.nclyBzn.eq.2) deryBz => dery_12
+     if (nclyBz1.eq.2.and.nclyBzn.eq.1) deryBz => dery_21
+     if (nclyBz1.eq.2.and.nclyBzn.eq.2) deryBz => dery_22
+     !
+     if (nclzBz1.eq.0.and.nclzBzn.eq.0) derzBz => derz_00
+     if (nclzBz1.eq.1.and.nclzBzn.eq.1) derzBz => derz_11
+     if (nclzBz1.eq.1.and.nclzBzn.eq.2) derzBz => derz_12
+     if (nclzBz1.eq.2.and.nclzBzn.eq.1) derzBz => derz_21
+     if (nclzBz1.eq.2.and.nclzBzn.eq.2) derzBz => derz_22
+     ! SecondBzderivative
+     if (nclxBz1.eq.0.and.nclxBzn.eq.0) derxxBz => derxx_00
+     if (nclxBz1.eq.1.and.nclxBzn.eq.1) derxxBz => derxx_11
+     if (nclxBz1.eq.1.and.nclxBzn.eq.2) derxxBz => derxx_12
+     if (nclxBz1.eq.2.and.nclxBzn.eq.1) derxxBz => derxx_21
+     if (nclxBz1.eq.2.and.nclxBzn.eq.2) derxxBz => derxx_22
+     !y
+     if (nclyBz1.eq.0.and.nclyBzn.eq.0) deryyBz => deryy_00
+     if (nclyBz1.eq.1.and.nclyBzn.eq.1) deryyBz => deryy_11
+     if (nclyBz1.eq.1.and.nclyBzn.eq.2) deryyBz => deryy_12
+     if (nclyBz1.eq.2.and.nclyBzn.eq.1) deryyBz => deryy_21
+     if (nclyBz1.eq.2.and.nclyBzn.eq.2) deryyBz => deryy_22
+     !z
+     if (nclzBz1.eq.0.and.nclzBzn.eq.0) derzzBz => derzz_00
+     if (nclzBz1.eq.1.and.nclzBzn.eq.1) derzzBz => derzz_11
+     if (nclzBz1.eq.1.and.nclzBzn.eq.2) derzzBz => derzz_12
+     if (nclzBz1.eq.2.and.nclzBzn.eq.1) derzzBz => derzz_21
+     if (nclzBz1.eq.2.and.nclzBzn.eq.2) derzzBz => derzz_22
+     call first_derivative(alfa1x,af1x,bf1x,cf1x,df1x,alfa2x,af2x,alfanx,afnx,bfnx,&
+          cfnx,dfnx,alfamx,afmx,alfaix,afix,bfix,&
+          ffxB(:,3),fsxB(:,3),fwxB(:,3),ffxpB(:,3),fsxpB(:,3),fwxpB(:,3),dx,nx,nclxBz1,nclxBzn)
+     call first_derivative(alfa1y,af1y,bf1y,cf1y,df1y,alfa2y,af2y,alfany,afny,bfny,&
+          cfny,dfny,alfamy,afmy,alfajy,afjy,bfjy,&
+          ffyB(:,3),fsyB(:,3),fwyB(:,3),ffypB(:,3),fsypB(:,3),fwypB(:,3),dy,ny,nclyBz1,nclyBzn)
+     call first_derivative(alfa1z,af1z,bf1z,cf1z,df1z,alfa2z,af2z,alfanz,afnz,bfnz,&
+          cfnz,dfnz,alfamz,afmz,alfakz,afkz,bfkz,&
+          ffzB(:,3),fszB(:,3),fwzB(:,3),ffzpB(:,3),fszpB(:,3),fwzpB(:,3),dz,nz,nclzBz1,nclzBzn)
+     call second_derivative(alsa1x,as1x,bs1x,&
+          cs1x,ds1x,alsa2x,as2x,alsanx,asnx,bsnx,csnx,dsnx,alsamx,&
+          asmx,alsa3x,as3x,bs3x,alsatx,astx,bstx,&
+          alsa4x,as4x,bs4x,cs4x,&
+          alsattx,asttx,bsttx,csttx,&
+          alsaix,asix,bsix,csix,dsix,&
+          sfxB(:,3),ssxB(:,3),swxB(:,3),sfxpB(:,3),ssxpB(:,3),swxpB(:,3),dx2,nx,nclxBz1,nclxBzn)
+     call second_derivative(alsa1y,as1y,bs1y,&
+          cs1y,ds1y,alsa2y,as2y,alsany,asny,bsny,csny,dsny,alsamy,&
+          asmy,alsa3y,as3y,bs3y,alsaty,asty,bsty,&
+          alsa4y,as4y,bs4y,cs4y,&
+          alsatty,astty,bstty,cstty,&
+          alsajy,asjy,bsjy,csjy,dsjy,&
+          sfyB(:,3),ssyB(:,3),swyB(:,3),sfypB(:,3),ssypB(:,3),swypB(:,3),dy2,ny,nclyBz1,nclyBzn)
+     call second_derivative(alsa1z,as1z,bs1z,&
+          cs1z,ds1z,alsa2z,as2z,alsanz,asnz,bsnz,csnz,dsnz,alsamz,&
+          asmz,alsa3z,as3z,bs3z,alsatz,astz,bstz,&
+          alsa4z,as4z,bs4z,cs4z,&
+          alsattz,asttz,bsttz,csttz,&
+          alsakz,askz,bskz,cskz,dskz,&
+          sfzB(:,3),sszB(:,3),swzB(:,3),sfzpB(:,3),sszpB(:,3),swzpB(:,3),dz2,nz,nclzBz1,nclzBzn)
+  endif
+  
   call interpolation(dx,nxm,nx,nclx1,nclxn,&
        alcaix6,acix6,bcix6,&
        ailcaix6,aicix6,bicix6,cicix6,dicix6,&

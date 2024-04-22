@@ -669,7 +669,6 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   endif
  
   !ta2: A.uhat
-  !td2:(A+xcstB).un
   !if isecondder=5, we need nona inversion
   !id isecondder is not 5, we need septa inversion
 
@@ -760,7 +759,7 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
      endif
      nullify(gg,hh,ss,rr,vv,ww,zz)
   else if (isecondder.eq.5) then
-     tb2=0.;
+     tb2=zero;
      !TO BE DONE: Different types of BC
      if ((ncly1.eq.0).and.(nclyn.eq.0)) then
         !NOT READY
