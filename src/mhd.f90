@@ -87,7 +87,16 @@ module mhd
 
      implicit none
 
+     ! Close the IO unit opened in the subroutine mhd_sta
      if (nrank==0) close(mhd_iounit)
+
+     ! Release memory
+     if (allocated(Bmean)) deallocate(Bmean)
+     if (allocated(Bm)) deallocate(Bm)
+     if (allocated(magelf)) deallocate(magelf)
+     if (allocated(Je)) deallocate(Je)
+     if (allocated(dBm)) deallocate(dBm)
+     if (allocated(elcpot)) deallocate(elcpot)
 
   end subroutine mhd_fin
   !
