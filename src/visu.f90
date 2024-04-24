@@ -96,6 +96,7 @@ contains
     endif
     if (iscalar.ne.0) then
        do is = 1, numscalar
+          ! Solution below works only until 9
           call decomp_2d_register_variable(io_name, "phi"//char(48+is), 1, 0, output2D, mytype)
        enddo
     endif
@@ -262,7 +263,7 @@ contains
     ! Write scalars
     if (iscalar.ne.0) then
       do is = 1, numscalar
-        write(scname,"('phi',I2.2)") is
+        write(scname,"('phi',I0)") is
         call write_field(phi1(:,:,:,is), ".", trim(scname), num, .true.)
       enddo
     endif

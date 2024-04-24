@@ -76,9 +76,9 @@ cnu = 0.33               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 
 ! Basic I/O
 irestart = 0          ! Read initial flow field ?
-icheckpoint = 500     ! Frequency for writing backup file
+icheckpoint = 100     ! Frequency for writing backup file
 ioutput = 100         ! Frequency for visualization
-ilist = 25            ! Frequency for writing to screen        
+ilist = 10            ! Frequency for writing to screen        
 nvisu = 1             ! Size for visualisation collection
 
 /End

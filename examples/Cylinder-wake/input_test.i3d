@@ -72,9 +72,9 @@ itimescheme = 3       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4
 
 ! Basic I/O
 irestart = 0           ! Read initial flow field ?
-icheckpoint = 10000    ! Frequency for writing backup file
+icheckpoint = 100      ! Frequency for writing backup file
 ioutput = 100          ! Frequency for visualization
-ilist    = 25          ! Frequency for the output to screen
+ilist    = 10          ! Frequency for the output to screen
 nvisu = 1              ! Size for visualisation collection
 
 /End

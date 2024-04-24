@@ -64,6 +64,7 @@ endif (MPI_FOUND)
 
 if(ADIOS2_FOUND)
   #target_link_libraries(xcompact3d ${ADIOS_LIBRARIES})
+  add_definitions("-DADIOS2")
   target_link_libraries(xcompact3d PRIVATE adios2::fortran_mpi)
 endif()
 

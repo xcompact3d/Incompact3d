@@ -4,8 +4,6 @@ install(DIRECTORY DESTINATION ${CMAKE_INSTALL_PREFIX}/examples)
 set(test_dir "${PROJECT_BINARY_DIR}/RunTests")
 file(MAKE_DIRECTORY ${test_dir})
 
-# We need to find a way to check if 2DECOMP&FFT is build with ADIOS2
-option(USE_ADIOS2 "Build XCompact with ADIOS2 library" OFF)
 
 if (${BUILD_TESTING_FULL})
   add_subdirectory(ABL-Atmospheric-Boundary-Layer)
