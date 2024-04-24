@@ -428,11 +428,11 @@ contains
        endif
        if (ilmn) then
           do is = 1, nrhotime
-             write(varname, *) "rho-", is
+             write(varname, "(A4,I0)") "rho-", is
              call decomp_2d_read_one(1,rho1(:,:,:,is),resfile,trim(varname),io_restart,reduce_prec=.false.)
           enddo
           do is = 1, ntime
-             write(varname, *) "drho-", is
+             write(varname, "(A5,I0)") "drho-", is
              call decomp_2d_read_one(1,drho1(:,:,:,is),resfile,trim(varname),io_restart,reduce_prec=.false.)
           enddo
           call decomp_2d_read_one(1,mu1,resfile,"mu",io_restart,reduce_prec=.false.)
@@ -559,13 +559,14 @@ contains
 
     if (ilmn) then
        do is = 1, nrhotime
-          write(varname, *) "rho-", is
+          write(varname, "(A4,I0)") "rho-", is
           call decomp_2d_register_variable(io_restart, trim(varname), 1, 0, 0, mytype)
        end do
        do is = 1, ntime
-          write(varname, *) "drho-", is
+          write(varname, "(A5,I0)") "drho-", is
           call decomp_2d_register_variable(io_restart, trim(varname), 1, 0, 0, mytype)
        end do
+       call decomp_2d_register_variable(io_restart, "mu", 1, 0, 0, mytype)
     end if
  
     if (mhd_active .and. mhd_equation) then
