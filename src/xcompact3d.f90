@@ -121,6 +121,8 @@ subroutine init_xcompact3d()
 
   use param, only : ilesmod, jles,itype
   use param, only : irestart
+  use param, only : itype, itype_gravitycur
+
 
   use variables, only : nx, ny, nz, nxm, nym, nzm
   use variables, only : p_row, p_col
@@ -130,6 +132,8 @@ subroutine init_xcompact3d()
   use turbine, only: init_turbines
 
   use visu, only : visu_init, visu_ready
+  use gravitycur, only : visu_gravitycur_init, & 
+                         visu_gravitycur_ready
 
   use genepsi, only : genepsi3d, epsi_init
   use ibm, only : body
@@ -228,6 +232,10 @@ subroutine init_xcompact3d()
      call visu_case_init() !! XXX: If you get error about uninitialised IO, look here.
                            !! Ensures additional case-specific variables declared for IO
      call visu_ready()
+     if (itype == itype_gravitycur) then
+       call visu_gravitycur_ready()
+     endif
+
   end if
   ! compute diffusion number of simulation
   call compute_cfldiff()
@@ -292,9 +300,11 @@ subroutine finalise_xcompact3d()
   use decomp_2d_io, only : decomp_2d_io_finalise
 
   use tools, only : simu_stats
-  use param, only : itype, jles, ilesmod
+  use param, only : itype, jles, ilesmod, &
+                    itype_gravitycur
   use probes, only : finalize_probes
   use visu, only : visu_finalise
+  use gravitycur, only : visu_gravitycur_finalise
   use les, only: finalise_explicit_les
   use mhd, only: mhd_active, mhd_fin
 
@@ -315,6 +325,9 @@ subroutine finalise_xcompact3d()
   
   call simu_stats(4)
   call finalize_probes()
+  if (itype == itype_gravitycur) then
+    call visu_gravitycur_finalise()
+  endif
   call visu_finalise()
   if (mhd_active) call mhd_fin()
   if (ilesmod.ne.0) then

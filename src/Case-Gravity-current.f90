@@ -47,7 +47,9 @@ module gravitycur
             postprocess_gravitycur, &
             pfront, &
             set_fluid_properties_gravitycur, &
-            visu_gravitycur_init
+            visu_gravitycur_init,  & 
+            visu_gravitycur_ready, &
+            visu_gravitycur_finalise
 
 contains
 
@@ -249,11 +251,16 @@ contains
 
   subroutine visu_gravitycur_init(visu_initialised)
 
-    use decomp_2d_io, only : decomp_2d_register_variable
+    use decomp_2d_io, only : decomp_2d_init_io, &
+                             decomp_2d_register_variable
     
     implicit none
 
     logical, intent(out) :: visu_initialised
+
+    write(*,*) "REGISTER GRAV CUR"
+
+    call decomp_2d_init_io(io_bcle)
 
     call decomp_2d_register_variable(io_bcle, "dissm", 3, 0, 3, mytype)
     call decomp_2d_register_variable(io_bcle, "dep", 2, 0, 2, mytype)
@@ -261,6 +268,63 @@ contains
     visu_initialised = .true.
     
   end subroutine visu_gravitycur_init
+
+  subroutine visu_gravitycur_ready ()
+
+    use decomp_2d_io, only : decomp_2d_open_io, decomp_2d_append_mode, decomp_2d_write_mode, gen_iodir_name
+
+    use param, only : irestart
+    
+    implicit none
+
+    integer :: mode
+    
+#ifdef ADIOS2
+    logical, save :: outloc_init
+    logical :: dir_exists
+    
+    mode = decomp_2d_write_mode
+
+    ! XXX: A fix was applied to ADIOS2.7.1 series to prevent corrupting files when appended from Fortran
+    if (.not.outloc_init) then
+       if (irestart == 1) then
+          !! Restarting - is the output already available to write to?
+          inquire(file=gen_iodir_name(bcle_dir, io_bcle), exist=dir_exists)
+          if (dir_exists) then
+             outloc_init = .true.
+          end if
+       end if
+       
+       if (.not.outloc_init) then !! Yes, yes, but check the restart check above.
+          mode = decomp_2d_write_mode
+       else
+          mode = decomp_2d_append_mode
+       end if
+       outloc_init = .true.
+    else
+       mode = decomp_2d_append_mode
+    end if
+
+    call decomp_2d_open_io(io_bcle, bcle_dir, mode)
+#endif
+    
+  end subroutine visu_gravitycur_ready
+  
+  !
+  ! Finalise the visu module. When using the ADIOS2 backend this closes the IO which is held open
+  ! for the duration of the simulation, otherwise does nothing.
+  ! 
+  subroutine visu_gravitycur_finalise()
+
+    use decomp_2d_io, only : decomp_2d_close_io
+    
+    implicit none
+
+#ifdef ADIOS2
+    call decomp_2d_close_io(io_bcle, bcle_dir)
+#endif
+    
+  end subroutine visu_gravitycur_finalise
 
   subroutine postprocess_gravitycur(rho1,ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
@@ -584,7 +648,7 @@ contains
        !if (save_diss.eq.1) then
        uvisu=zero
        call fine_to_coarseV(1,diss1,uvisu)
-       write(filename,"('diss',I4.4)") itime/ioutput
+       write(filename,"('diss',I0)") itime/ioutput
        call decomp_2d_write_one(1,uvisu,bcle_dir,filename,2,io_bcle)
        !endif
 
@@ -592,7 +656,7 @@ contains
        call transpose_x_to_y (diss1,temp2)
        call transpose_y_to_z (temp2,temp3)
        call mean_plane_z(temp3,zsize(1),zsize(2),zsize(3),temp3(:,:,1))
-       write(filename,"('dissm',I4.4)") itime/ioutput
+       erite(filename,"('dissm',I0)") itime/ioutput
        call decomp_2d_write_plane(3,temp3,3,1,bcle_dir,filename,io_bcle)
        !endif
     endif
