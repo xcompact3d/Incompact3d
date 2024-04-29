@@ -999,13 +999,13 @@ contains
        tp2 = sum(tpresy(:))/dt
        tp3 = sum(tpresz(:))/dt
     
-       mom1 = sum(tunstx(:) + tconvx(:) + tconvx2(:))
-       mom2 = sum(tunsty(:) + tconvy(:) + tconvy2(:))
-       mom3 = sum(tunstz(:) + tconvz(:) + tconvz2(:))
+       mom1 = sum(tunstx(:) + tconvx(:) + (-2.0*tconv2_sign+1.0)*tconvx2(:)) !if tconv2sign == 1.0, multiply by -1
+       mom2 = sum(tunsty(:) + tconvy(:) + (-2.0*tconv2_sign+1.0)*tconvy2(:))
+       mom3 = sum(tunstz(:) + tconvz(:) + (-2.0*tconv2_sign+1.0)*tconvz2(:))
   
-       dra1 = 2.0*(sum(tdiffx) + sum(tdiffx2) + tp1 - mom1)
-       dra2 = 2.0*(sum(tdiffy) + sum(tdiffy2) + tp2 - mom2)
-       dra3 = 2.0*(sum(tdiffz) + sum(tdiffz2) + tp3 - mom3)
+       dra1 = (sum(tdiffx) + sum(tdiffx2) + tp1 - mom1)
+       dra2 = (sum(tdiffy) + sum(tdiffy2) + tp2 - mom2)
+       dra3 = (sum(tdiffz) + sum(tdiffz2) + tp3 - mom3)
        
        do k=1,zsize(3)
 
