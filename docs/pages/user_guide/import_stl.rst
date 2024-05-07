@@ -37,7 +37,7 @@ Generate the initial conditions including the epsilon function
 --------------------------------------------------------------
 .. code-block::
 
-	cd examples/case_sphere
+	cd examples/Sphere
 	python3 generate_initial_conditions.py
 	
 Run the simulation on 8 cores (~7minutes)
