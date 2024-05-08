@@ -1,12 +1,12 @@
 How to import an STL file and run a simulation with an immersed body
 ====================================================================
 
-**This tutorial is designed for an Ubuntu workstation for the simulation around a sphere**
+**This tutorial is designed for an Ubuntu workstation for the simulation around a sphere**.
 
 Install the xcompact3d toolbox
 ------------------------------
 
-First you need to make sure to have ``conda`` installed on your machine. See for instance `here <https://linuxconfig.org/installing-anaconda-on-ubuntu-24-04>`_ for an installation on Ubuntu.
+First you need to make sure to have ``conda`` installed on your machine. See for instance `here <https://linuxconfig.org/installing-anaconda-on-ubuntu-24-04>`_ for an installation on Ubuntu. We only tried to install the xcompact3d toolbox with Python 3.10 and Python 3.12.
 
 .. code-block::
 
