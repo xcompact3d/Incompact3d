@@ -29,7 +29,7 @@ subroutine parameter(input_i3d)
 
   use probes, only : nprobes, setup_probes, flag_all_digits, flag_extra_probes, xyzprobes
   use visu, only : output2D
-  use forces, only : iforces, nvol, xld, xrd, yld, yud!, zld, zrd
+  use forces, only : iforces, nvol, xld, xrd, yld, yud, zfr, zbk, i2dsim
 
   use mhd, only: mhd_active,mhd_equation,hartmann,stuart,rem
 
@@ -63,7 +63,7 @@ subroutine parameter(input_i3d)
   NAMELIST /LESModel/ jles, smagcst, smagwalldamp, nSmag, walecst, maxdsmagcst, iconserv
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
   NAMELIST /ibmstuff/ cex,cey,cez,ra,rai,rao,nobjmax,nraf,nvol,iforces, npif, izap, ianal, imove, thickness, chord, omega ,ubcx,ubcy,ubcz,rads, c_air
-  NAMELIST /ForceCVs/ xld, xrd, yld, yud!, zld, zrd
+  NAMELIST /ForceCVs/ xld, xrd, yld, yud, zfr, zbk, i2dsim
   NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, &
        massfrac, mol_weight, imultispecies, primary_species, &
        Fr, ibirman_eos
@@ -123,7 +123,7 @@ subroutine parameter(input_i3d)
      read(10, nml=ProbesParam); rewind(10)
   endif
   if (iforces.eq.1) then
-     allocate(xld(nvol), xrd(nvol), yld(nvol), yud(nvol))!, zld(nvol), zrd(nvol))
+     allocate(xld(nvol), xrd(nvol), yld(nvol), yud(nvol), zfr(nvol), zbk(nvol))
      read(10, nml=ForceCVs); rewind(10)
   endif
   
@@ -599,7 +599,7 @@ subroutine parameter_defaults()
 
   use probes, only : nprobes, flag_all_digits, flag_extra_probes
   use visu, only : output2D
-  use forces, only : iforces, nvol
+  use forces, only : iforces, nvol, i2dsim
 
   use mhd, only: mhd_active, mhd_equation, rem, stuart, hartmann 
 
@@ -646,6 +646,7 @@ subroutine parameter_defaults()
 
   nvol = 0
   iforces = 0
+  i2dsim = 1
   itrip = 0
   wrotation = zero
   irotation = 0
