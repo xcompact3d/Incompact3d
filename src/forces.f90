@@ -1362,9 +1362,13 @@ contains
                dwdymid = half*(tf1(i,j,k)+tf1(i+1,j,k))
                dvdzmid = half*(th1(i,j,k)+th1(i+1,j,k))
 
-               fdix    = fdix -(xnu*(dudymid+dvdxmid)*dx*dz)
-               fdiy    = fdiy -two*xnu*dvdymid*dx*dz
-               fdiz    = fdiz -(xnu*(dwdymid+dvdzmid)*dx*dz)
+               fdix = fdix - (xnu*(two*dvdymid)*radial(3)-xnu*(dwdymid+dvdzmid)*radial(2))*dx*dz
+               fdiy = fdiy - (xnu*(dwdymid+dvdzmid)*radial(1)-xnu*(dudymid+dvdxmid)*radial(3))*dx*dz
+               fdiz = fdiz - (xnu*(dudymid+dvdxmid)*radial(2)-xnu*(two*dvdymid)*radial(1))*dx*dz
+
+               ! fdix    = fdix -(xnu*(dudymid+dvdxmid)*dx*dz)
+               ! fdiy    = fdiy -two*xnu*dvdymid*dx*dz
+               ! fdiz    = fdiz -(xnu*(dwdymid+dvdzmid)*dx*dz)
 
 
             enddo
@@ -1422,9 +1426,13 @@ contains
                dwdymid = half*(tf1(i,j,k)+tf1(i+1,j,k))
                dvdzmid = half*(th1(i,j,k)+th1(i+1,j,k))
  
-               fdix = fdix + (xnu*(dudymid+dvdxmid)*dx*dz)
-               fdiy = fdiy + two*xnu*dvdymid*dx*dz
-               fdiz = fdiz + (xnu*(dwdymid+dvdzmid)*dx*dz)
+               fdix = fdix + (xnu*(two*dvdymid)*radial(3)-xnu*(dwdymid+dvdzmid)*radial(2))*dx*dz
+               fdiy = fdiy + (xnu*(dwdymid+dvdzmid)*radial(1)-xnu*(dudymid+dvdxmid)*radial(3))*dx*dz
+               fdiz = fdiz + (xnu*(dudymid+dvdxmid)*radial(2)-xnu*(two*dvdymid)*radial(1))*dx*dz
+
+               ! fdix = fdix + (xnu*(dudymid+dvdxmid)*dx*dz)
+               ! fdiy = fdiy + (xnu*(two*dvdymid)*dx*dz)
+               ! fdiz = fdiz + (xnu*(dwdymid+dvdzmid)*dx*dz)
 
             enddo
             tconvxl(kk)=tconvxl(kk)+fcvx
@@ -1483,9 +1491,14 @@ contains
                dwdxmid = half*(te2(i,j,k)+te2(i,j+1,k))
                dudzmid = half*(tg2(i,j,k)+tg2(i,j+1,k))
 
-               fdix = fdix -two*xnu*dudxmid*del_y(j)*dz
-               fdiy = fdiy -xnu*(dvdxmid+dudymid)*del_y(j)*dz
-               fdiz = fdiz -xnu*(dwdxmid+dudzmid)*del_y(j)*dz
+               fdix = fdix - (xnu*(dvdxmid+dudymid)*radial(3)-xnu*(dwdxmid+dudzmid)*radial(2))*del_y(j)*dz
+               fdiy = fdiy - (xnu*(dwdxmid+dudzmid)*radial(1)-xnu*(two*dudxmid)*radial(3))*del_y(j)*dz
+               fdiz = fdiz - (xnu*(two*dudxmid)*radial(2)-xnu*(dvdxmid+dudymid)*radial(1))*del_y(j)*dz
+
+
+               ! fdix = fdix -two*xnu*dudxmid*del_y(j)*dz
+               ! fdiy = fdiy -xnu*(dvdxmid+dudymid)*del_y(j)*dz
+               ! fdiz = fdiz -xnu*(dwdxmid+dudzmid)*del_y(j)*dz
             enddo
             tconvxl(kk)=tconvxl(kk)+fcvx
             tconvyl(kk)=tconvyl(kk)+fcvy
@@ -1544,9 +1557,14 @@ contains
                dwdxmid = half*(te2(i,j,k)+te2(i,j+1,k))
                dudzmid = half*(tg2(i,j,k)+tg2(i,j+1,k))
 
-               fdix = fdix + two*xnu*dudxmid*del_y(j)*dz
-               fdiy = fdiy + xnu*(dvdxmid+dudymid)*del_y(j)*dz
-               fdiz = fdiz + xnu*(dwdxmid+dudzmid)*del_y(j)*dz
+               fdix = fdix + (xnu*(dvdxmid+dudymid)*radial(3)-xnu*(dwdxmid+dudzmid)*radial(2))*del_y(j)*dz
+               fdiy = fdiy + (xnu*(dwdxmid+dudzmid)*radial(1)-xnu*(two*dudxmid)*radial(3))*del_y(j)*dz
+               fdiz = fdiz + (xnu*(two*dudxmid)*radial(2)-xnu*(dvdxmid+dudymid)*radial(1))*del_y(j)*dz
+
+
+               ! fdix = fdix + two*xnu*dudxmid*del_y(j)*dz
+               ! fdiy = fdiy + xnu*(dvdxmid+dudymid)*del_y(j)*dz
+               ! fdiz = fdiz + xnu*(dwdxmid+dudzmid)*del_y(j)*dz
 
             enddo
             tconvxl(kk)=tconvxl(kk)+fcvx
@@ -1607,10 +1625,15 @@ contains
               dvdzmid = half*(th1(i,j,k)+th1(i+1,j,k))
               dwdymid = half*(tf1(i,j,k)+tf1(i+1,j,k))
               dwdzmid = half*(ti1(i,j,k)+ti1(i+1,j,k))
-                                                                  
-              fdix = fdix +(xnu*(dudzmid+dwdxmid)*dx*dy)
-              fdiy = fdiy +(xnu*(dvdzmid+dwdymid)*dx*dy)
-              fdiz = fdiz +two*xnu*dwdzmid*dx*dy
+              
+              fdix = fdix + (xnu*(dvdzmid+dwdymid)*radial(3)-xnu*(two*dwdzmid)*radial(2))*dx*dy
+              fdiy = fdiy + (xnu*(two*dwdzmid)*radial(1)-xnu*(dudzmid+dwdxmid)*radial(3))*dx*dy
+              fdiz = fdiz + (xnu*(dudzmid+dwdxmid)*radial(2)-xnu*(dvdzmid+dwdymid)*radial(1))*dx*dy
+
+
+            !   fdix = fdix +(xnu*(dudzmid+dwdxmid)*dx*dy)
+            !   fdiy = fdiy +(xnu*(dvdzmid+dwdymid)*dx*dy)
+            !   fdiz = fdiz +(xnu*(two*dwdzmid)*dx*dy)
            enddo
         enddo
 !print*, kk
@@ -1671,10 +1694,14 @@ contains
               dvdzmid = half*(th1(i,j,k)+th1(i+1,j,k))
               dwdymid = half*(tf1(i,j,k)+tf1(i+1,j,k))
               dwdzmid = half*(ti1(i,j,k)+ti1(i+1,j,k))
-                                                  
-              fdix = fdix -(xnu*(dudzmid+dwdxmid)*dx*dy)
-              fdiy = fdiy -(xnu*(dvdzmid+dwdymid)*dx*dy)
-              fdiz = fdiz -two*xnu*dwdzmid*dx*dy
+                            
+              fdix = fdix + (xnu*(dvdzmid+dwdymid)*radial(3)-xnu*(two*dwdzmid)*radial(2))*dx*dy
+              fdiy = fdiy + (xnu*(two*dwdzmid)*radial(1)-xnu*(dudzmid+dwdxmid)*radial(3))*dx*dy
+              fdiz = fdiz + (xnu*(dudzmid+dwdxmid)*radial(2)-xnu*(dvdzmid+dwdymid)*radial(1))*dx*dy
+
+            !   fdix = fdix -(xnu*(dudzmid+dwdxmid)*dx*dy)
+            !   fdiy = fdiy -(xnu*(dvdzmid+dwdymid)*dx*dy)
+            !   fdiz = fdiz -two*xnu*dwdzmid*dx*dy
 
            enddo
         enddo
