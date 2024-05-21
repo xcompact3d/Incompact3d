@@ -1153,8 +1153,8 @@ contains
    if (itime.eq.1) then
      do iv=1,nvol
         if ((nrank .eq. 0).and.(record_var.eq.1)) then
-           write(filename,"('forces.dat',I1.1)") iv
-           open(38+(iv-1),file=filename,status='unknown',form='formatted')
+           write(filename,"('torques.dat',I1.1)") iv
+           open(45+(iv-1),file=filename,status='unknown',form='formatted')
            ! write(*,*) 'Opened file: ', filename, 'number = ', 38+(iv-1)
         endif
      enddo
@@ -1338,6 +1338,7 @@ contains
                ii=xstart(1)+i-1
                xm=real(ii,mytype)*dx
               !  write(*,*) 'Calculating force at upper y boundary', [xm,ym,zm]
+               radial = [xm,ym,zm]-position
 
                !momentum flux
                call crossProduct(angularVelocity,[xm,ym,zm]-position,rotationalComponent)
@@ -1345,14 +1346,14 @@ contains
                uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) - rotationalComponent(2)
                uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) - rotationalComponent(3)
 
-               fcvx  = fcvx -uxmid*uymid*dx*dz
-               fcvy  = fcvy -uymid*uymid*dx*dz
-               fcvz  = fcvz -uymid*uzmid*dx*dz
+               fcvx = fcvx -(uymid*radial(3)-uzmid*radial(2))*uymid*dx*dz
+               fcvy = fcvy -(uzmid*radial(1)-uxmid*radial(3))*uymid*dx*dz
+               fcvz = fcvz -(uxmid*radial(2)-uymid*radial(1))*uymid*dx*dz
 
 
                !pressure
                prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))
-               fpry  = fpry +prmid*dx*dz
+               fpry  = fpry +prmid*dx*dz*(radial(1)-radial(3))
 
                !viscous term
                dudymid = half*(tc1(i,j,k)+tc1(i+1,j,k))
@@ -1400,18 +1401,19 @@ contains
 
               !momentum flux
               call crossProduct(angularVelocity,[xm,ym,zm]-position,rotationalComponent)
+              radial = [xm,ym,zm]-position
               uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(1) - rotationalComponent(1)
               uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) - rotationalComponent(2)
               uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) - rotationalComponent(3)
 
-               fcvx = fcvx +uxmid*uymid*dx*dz
-               fcvy = fcvy +uymid*uymid*dx*dz
-               fcvz = fcvz +uymid*uzmid*dx*dz
+               fcvx = fcvx +(uymid*radial(3)-uzmid*radial(2))*uymid*dx*dz
+               fcvy = fcvy +(uzmid*radial(1)-uxmid*radial(3))*uymid*dx*dz
+               fcvz = fcvz +(uxmid*radial(2)-uymid*radial(1))*uymid*dx*dz
 
 
                !pressure
                prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))
-               fpry = fpry -prmid*dx*dz
+               fpry = fpry -prmid*dx*dz*(radial(1)-radial(3))
 
                !viscous term
                dudymid = half*(tc1(i,j,k)+tc1(i+1,j,k))
@@ -1458,20 +1460,21 @@ contains
                ym=real(jj,mytype)*dz
               !  write(*,*) 'Calculating force at left x boundary', [xm,ym,zm]
                !momentum flux
+               radial = [xm,ym,zm]-position
+
                call crossProduct(angularVelocity,[xm,ym,zm]-position,rotationalComponent)
                uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k)) - linearVelocity(1) - rotationalComponent(1)
                uymid = half*(uy2(i,j,k)+uy2(i,j+1,k)) - linearVelocity(2) - rotationalComponent(2)
                uzmid = half*(uz2(i,j,k)+uz2(i,j+1,k)) - linearVelocity(3) - rotationalComponent(3)
 
-
-               fcvx = fcvx -uxmid*uxmid*del_y(j)*dz
-               fcvy = fcvy -uxmid*uymid*del_y(j)*dz
-               fcvz = fcvz -uxmid*uzmid*del_y(j)*dz
+               fcvx = fcvx -(uymid*radial(3)-uzmid*radial(2))*uxmid*del_y(j)*dz
+               fcvy = fcvy -(uzmid*radial(1)-uxmid*radial(3))*uxmid*del_y(j)*dz
+               fcvz = fcvz -(uxmid*radial(2)-uymid*radial(1))*uxmid*del_y(j)*dz
 
 
                !pressure
                prmid = half*(ppi2(i,j,k)+ppi2(i,j+1,k))
-               fprx = fprx +prmid*del_y(j)*dz
+               fprx = fprx +prmid*del_y(j)*dz*(radial(3)-radial(2))
 
                !viscous term
                dudxmid = half*(ta2(i,j,k)+ta2(i,j+1,k))
@@ -1515,6 +1518,8 @@ contains
                ym=real(jj,mytype)*dy
               !  write(*,*) 'Calculating force at right x boundary', [xm,ym,zm]
 
+               radial = [xm,ym,zm]-position
+
                !momentum flux
                call crossProduct(angularVelocity,[xm,ym,zm]-position,rotationalComponent)
                uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k)) - linearVelocity(1) - rotationalComponent(1)
@@ -1522,14 +1527,15 @@ contains
                uzmid = half*(uz2(i,j,k)+uz2(i,j+1,k)) - linearVelocity(3) - rotationalComponent(3)
 
 
-               fcvx = fcvx + uxmid*uxmid*del_y(j)*dz
-               fcvy = fcvy + uxmid*uymid*del_y(j)*dz
-               fcvz = fcvz + uxmid*uzmid*del_y(j)*dz
+               fcvx = fcvx +(uymid*radial(3)-uzmid*radial(2))*uxmid*del_y(j)*dz
+               fcvy = fcvy +(uzmid*radial(1)-uxmid*radial(3))*uxmid*del_y(j)*dz
+               fcvz = fcvz +(uxmid*radial(2)-uymid*radial(1))*uxmid*del_y(j)*dz
+
 
 
                !pressure
                prmid = half*(ppi2(i,j,k)+ppi2(i,j+1,k))
-               fprx = fprx -prmid*del_y(j)*dz
+               fprx = fprx -prmid*del_y(j)*dz*(radial(3)-radial(2))
 
                !viscous term
                dudxmid = half*(ta2(i,j,k)+ta2(i,j+1,k))
@@ -1580,18 +1586,20 @@ contains
               ! write(*,*) 'Calculating force at left z boundary', [xm,ym,zm]
 
               !momentum flux
+              radial = [xm,ym,zm]-position
+
               call crossProduct(angularVelocity,[xm,ym,zm]-position,rotationalComponent)
               uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(1) - rotationalComponent(1)
               uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) - rotationalComponent(2)
               uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) - rotationalComponent(3)
 
-              fcvx= fcvx +uxmid*uzmid*dx*dy
-              fcvy= fcvy +uymid*uzmid*dx*dy
-              fcvz= fcvz +uzmid*uzmid*dx*dy
+              fcvx = fcvx +(uymid*radial(3)-uzmid*radial(2))*uzmid*dx*del_y(j)
+              fcvy = fcvy +(uzmid*radial(1)-uxmid*radial(3))*uzmid*dx*del_y(j)
+              fcvz = fcvz +(uxmid*radial(2)-uymid*radial(1))*uzmid*dx*del_y(j)
 
               !pressure
               prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))
-              fprz = fprz -prmid*dx*dy
+              fprz = fprz -prmid*dx*dy*(radial(2)-radial(1))
 
               !viscous term
               dudzmid = half*(tg1(i,j,k)+tg1(i+1,j,k))
@@ -1639,6 +1647,8 @@ contains
             ii=xstart(1)+i-1
             xm=real(ii,mytype)*dx
               !momentum flux
+            radial = [xm,ym,zm]-position
+
             call crossProduct(angularVelocity,[xm,ym,zm]-position,rotationalComponent)
            !  write(*,*) 'Calculating force at right z boundary', [xm,ym,zm]
 
@@ -1646,13 +1656,14 @@ contains
             uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) - rotationalComponent(2)
             uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) - rotationalComponent(3)
 
-              fcvx= fcvx -uxmid*uzmid*dx*dy
-              fcvy= fcvy -uymid*uzmid*dx*dy
-              fcvz= fcvz -uzmid*uzmid*dx*dy
+            fcvx = fcvx -(uymid*radial(3)-uzmid*radial(2))*uzmid*dx*del_y(j)
+            fcvy = fcvy -(uzmid*radial(1)-uxmid*radial(3))*uzmid*dx*del_y(j)
+            fcvz = fcvz -(uxmid*radial(2)-uymid*radial(1))*uzmid*dx*del_y(j)
+
 
               !pressure
               prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))
-              fprz = fprz +prmid*dx*dy
+              fprz = fprz +prmid*dx*dy*(radial(2)-radial(1))
 
               !viscous term
               dudzmid = half*(tg1(i,j,k)+tg1(i+1,j,k))
@@ -1737,9 +1748,9 @@ contains
      endif
       if ((nrank .eq. 0).and.(record_var.eq.1)) then
         ! write(*,*) 'TIME STEP = ', itime
-        write(38+(iv-1),*) t,dra1,dra2,dra3, sum(tdiffx), sum(tdiffx2), tp1, -mom1, -sum(tunstx(:)), -sum(tconvx(:)), -sum(tconvx2(:))
+        write(45+(iv-1),*) t,dra1,dra2,dra3, sum(tdiffx), sum(tdiffx2), tp1, -mom1, -sum(tunstx(:)), -sum(tconvx(:)), -sum(tconvx2(:))
         !  write(*,*) 'written to file number', 38+(iv-1), t, dra1,dra2,dra3
-         call flush(38+(iv-1))
+         call flush(45+(iv-1))
       endif
      !  if (mod(itime, ioutput).eq.0) then
      !     if (nrank .eq. 0) then
