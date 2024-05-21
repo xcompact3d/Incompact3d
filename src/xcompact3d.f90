@@ -17,9 +17,9 @@ program xcompact3d
   use ibm, only : body
   use genepsi, only : genepsi3d
   use ellipsoid_utils, only: lin_step, ang_step, QuaternionNorm
-  use forces, only : force, init_forces, iforces,update_forces, xld,xrd,yld,yud,zld,zrd
+  use forces, only : force, init_forces, iforces,update_forces, xld,xrd,yld,yud,zld,zrd,torque_calc
   implicit none
-  real(mytype)  :: dummy,drag,lift,lat,grav_effy,grav_effx,grav_effz
+  real(mytype)  :: dummy,drag,lift,lat,grav_effy,grav_effx,grav_effz,xtorq,ytorq,ztorq
   integer :: iounit,ierr,i
   real, dimension(100) :: x
 
@@ -139,8 +139,13 @@ program xcompact3d
          close(20)
         endif 
         
-        torque(:)=zero
-
+        
+        if (torques_flag.eq.1) then 
+         call torque_calc(ux1,uy1,uz1,ep1,xtorq,ytorq,ztorq,1)
+         torque = [xtorq,ytorq,ztorq]
+        else 
+         torque(:) = zero
+        endif
       !   if (nrank==0) then
 
       !   if (bodies_fixed==0) then 
