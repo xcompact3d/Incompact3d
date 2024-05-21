@@ -142,6 +142,8 @@ program xcompact3d
         
         if (torques_flag.eq.1) then 
          call torque_calc(ux1,uy1,uz1,ep1,xtorq,ytorq,ztorq,1)
+        endif 
+        if (orientations_free.eq.1) then 
          torque = [xtorq,ytorq,ztorq]
         else 
          torque(:) = zero
