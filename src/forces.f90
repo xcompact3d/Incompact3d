@@ -100,25 +100,45 @@ contains
     enddo
 
     if (nrank==0) then
-       write(*,*) '========================Forces============================='
-       write(*,*) '     (icvlf)      (icvrt)    (kcvbk)    (kcvfr)'
-       write(*,*) '  (jcvup) B____________C     B`_____________B'
-       write(*,*) '          \            \  |  \              \'
-       write(*,*) '          \     __     \  |  \     ____     \'
-       write(*,*) '          \    \__\    \  |  \     \___\    \'
-       write(*,*) '          \            \  |  \              \'
-       write(*,*) '          \       CV   \  |  \    (Front)   \'
-       write(*,*) '  (jcvlw) A____________D  |  A`_____________A'
-       do iv=1,nvol
-          write(*,"(' Control Volume     : #',I1)") iv
-          write(*,"('     xld, icvlf     : (',F6.2,',',I6,')')") xld(iv), icvlf(iv)
-          write(*,"('     xrd, icvrt     : (',F6.2,',',I6,')')") xrd(iv), icvrt(iv)
-          write(*,"('     yld, jcvlw     : (',F6.2,',',I6,')')") yld(iv), jcvlw(iv)
-          write(*,"('     yud, jcvup     : (',F6.2,',',I6,')')") yud(iv), jcvup(iv)
-          write(*,"('     zfr, kcvfr     : (',F6.2,',',I6,')')") zfr(iv), kcvfr(iv)
-          write(*,"('     zbk, kcvbk     : (',F6.2,',',I6,')')") zbk(iv), kcvbk(iv)
-         enddo
-       write(*,*) '==========================================================='
+       if (i2dsim==1) then
+         write(*,*) '========================Forces============================='
+         write(*,*) '     (icvlf)      (icvrt) '
+         write(*,*) '  (jcvup) B____________C  '
+         write(*,*) '          \            \  '
+         write(*,*) '          \     __     \  '
+         write(*,*) '          \    \__\    \  '
+         write(*,*) '          \            \  '
+         write(*,*) '          \       CV   \  '
+         write(*,*) '  (jcvlw) A____________D  '
+         do iv=1,nvol
+            write(*,"(' Control Volume     : #',I1)") iv
+            write(*,"('     xld, icvlf     : (',F6.2,',',I6,')')") xld(iv), icvlf(iv)
+            write(*,"('     xrd, icvrt     : (',F6.2,',',I6,')')") xrd(iv), icvrt(iv)
+            write(*,"('     yld, jcvlw     : (',F6.2,',',I6,')')") yld(iv), jcvlw(iv)
+            write(*,"('     yud, jcvup     : (',F6.2,',',I6,')')") yud(iv), jcvup(iv)
+            enddo
+         write(*,*) '==========================================================='
+       elseif (i2dsim==0) then
+         write(*,*) '========================Forces============================='
+         write(*,*) '     (icvlf)      (icvrt)    (kcvbk)    (kcvfr)'
+         write(*,*) '  (jcvup) B____________C     B`_____________B'
+         write(*,*) '          \            \  |  \              \'
+         write(*,*) '          \     __     \  |  \     ____     \'
+         write(*,*) '          \    \__\    \  |  \     \___\    \'
+         write(*,*) '          \            \  |  \              \'
+         write(*,*) '          \       CV   \  |  \    (Front)   \'
+         write(*,*) '  (jcvlw) A____________D  |  A`_____________A'
+         do iv=1,nvol
+            write(*,"(' Control Volume     : #',I1)") iv
+            write(*,"('     xld, icvlf     : (',F6.2,',',I6,')')") xld(iv), icvlf(iv)
+            write(*,"('     xrd, icvrt     : (',F6.2,',',I6,')')") xrd(iv), icvrt(iv)
+            write(*,"('     yld, jcvlw     : (',F6.2,',',I6,')')") yld(iv), jcvlw(iv)
+            write(*,"('     yud, jcvup     : (',F6.2,',',I6,')')") yud(iv), jcvup(iv)
+            write(*,"('     zfr, kcvfr     : (',F6.2,',',I6,')')") zfr(iv), kcvfr(iv)
+            write(*,"('     zbk, kcvbk     : (',F6.2,',',I6,')')") zbk(iv), kcvbk(iv)
+            enddo
+         write(*,*) '==========================================================='
+       endif
     endif
 
     call decomp_2d_init_io(io_restart_forces)
@@ -274,24 +294,28 @@ contains
 
     call transpose_x_to_y(ux1,ux2)
     call transpose_x_to_y(uy1,uy2)
-    call transpose_x_to_y(uz1, uz2)
     call transpose_x_to_y(ppi1,ppi2)
-    call transpose_y_to_z(ux2, ux3)
-    call transpose_y_to_z(uy2, uy3)
 
     call dery (td2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx) ! dudy
     call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)    ! dvdy
-    call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz) ! dwdy
     call transpose_y_to_x(td2,td1) ! dudy
     call transpose_y_to_x(te2,te1) ! dvdy
-    call transpose_y_to_x(tf2,tf1) ! dwdy
 
-    call derz (tg3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx) !dudz
-    call derz (th3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy) !dvdz
-    call transpose_z_to_y(tg3,tg2)
-    call transpose_y_to_x(tg2,tg1)
-    call transpose_z_to_y(th3,th2)
-    call transpose_y_to_x(th2,th1)
+    if (i2dsim==0) then
+      call transpose_y_to_z(ux2, ux3)
+      call transpose_y_to_z(uy2, uy3)
+
+      call transpose_x_to_y(uz1, uz2)
+      call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz) ! dwdy
+      call transpose_y_to_x(tf2,tf1) ! dwdy
+
+      call derz (tg3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx) !dudz
+      call derz (th3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy) !dvdz
+      call transpose_z_to_y(tg3,tg2)
+      call transpose_y_to_x(tg2,tg1)
+      call transpose_z_to_y(th3,th2)
+      call transpose_y_to_x(th2,th1)
+    endif
 
     !*****************************************************************
     !      Drag and Lift coefficients
@@ -511,33 +535,33 @@ contains
             enddo
          endif
          call MPI_ALLREDUCE(tconvxl,tconvx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-         if (ierror /= 0) then
-            call decomp_2d_abort(ierror, &
+         if (code /= 0) then
+            call decomp_2d_abort(code, &
                  "Error in MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(tconvyl,tconvy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-         if (ierror /= 0) then
-            call decomp_2d_abort(ierror, &
+         if (code /= 0) then
+            call decomp_2d_abort(code, &
                  "Error in MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(tpresxl,tpresx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-         if (ierror /= 0) then
-            call decomp_2d_abort(ierror, &
+         if (code /= 0) then
+            call decomp_2d_abort(code, &
                  "Error in MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(tpresyl,tpresy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-         if (ierror /= 0) then
-            call decomp_2d_abort(ierror, &
+         if (code /= 0) then
+            call decomp_2d_abort(code, &
                  "Error in MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(tdiffxl,tdiffx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-         if (ierror /= 0) then
-            call decomp_2d_abort(ierror, &
+         if (code /= 0) then
+            call decomp_2d_abort(code, &
                  "Error in MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(tdiffyl,tdiffy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-         if (ierror /= 0) then
-            call decomp_2d_abort(ierror, &
+         if (code /= 0) then
+            call decomp_2d_abort(code, &
                  "Error in MPI_ALLREDUCE!")
          end if
 
@@ -566,12 +590,6 @@ contains
          if (nrank .eq. 0) then
             write(38,*) t,xDrag_mean,yLift_mean
             flush(38)
-         endif
-         if (mod(itime, icheckpoint).eq.0) then
-            if (nrank .eq. 0) then
-               write(filename,"('forces.dat',I7.7)") itime
-               call execute_command_line ("cp forces.dat "//filename)
-            endif
          endif
       enddo
     elseif(i2dsim==0) then
@@ -609,13 +627,13 @@ contains
          enddo
  
          call MPI_ALLREDUCE(tsumx,xmom,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-         if (ierror /= 0) then
-            call decomp_2d_abort(ierror, &
+         if (code /= 0) then
+            call decomp_2d_abort(code, &
                  "Error in MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(tsumy,ymom,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-         if (ierror /= 0) then
-            call decomp_2d_abort(ierror, &
+         if (code /= 0) then
+            call decomp_2d_abort(code, &
                  "Error in MPI_ALLREDUCE!")
          end if
  
@@ -834,33 +852,33 @@ contains
          endif
  
          call MPI_ALLREDUCE(MPI_IN_PLACE, convx, 1, real_type, MPI_SUM, MPI_COMM_WORLD, code)
-         if (ierror /= 0) then
-            call decomp_2d_abort(ierror, &
+         if (code /= 0) then
+            call decomp_2d_abort(code, &
                  "Error in MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(MPI_IN_PLACE, convy, 1, real_type, MPI_SUM, MPI_COMM_WORLD, code)
-         if (ierror /= 0) then
-            call decomp_2d_abort(ierror, &
+         if (code /= 0) then
+            call decomp_2d_abort(code, &
                  "Error in MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(MPI_IN_PLACE, pressx, 1, real_type, MPI_SUM, MPI_COMM_WORLD, code)
-         if (ierror /= 0) then
-            call decomp_2d_abort(ierror, &
+         if (code /= 0) then
+            call decomp_2d_abort(code, &
                  "Error in MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(MPI_IN_PLACE, pressy, 1, real_type, MPI_SUM, MPI_COMM_WORLD, code)
-         if (ierror /= 0) then
-            call decomp_2d_abort(ierror, &
+         if (code /= 0) then
+            call decomp_2d_abort(code, &
                  "Error in MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(MPI_IN_PLACE, stressx, 1, real_type, MPI_SUM, MPI_COMM_WORLD, code)
-         if (ierror /= 0) then
-            call decomp_2d_abort(ierror, &
+         if (code /= 0) then
+            call decomp_2d_abort(code, &
                  "Error in MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(MPI_IN_PLACE, stressy, 1, real_type, MPI_SUM, MPI_COMM_WORLD, code)
-         if (ierror /= 0) then
-            call decomp_2d_abort(ierror, &
+         if (code /= 0) then
+            call decomp_2d_abort(code, &
                  "Error in MPI_ALLREDUCE!")
          end if
    
@@ -874,20 +892,21 @@ contains
              write(38,*) t,xDrag_mean,yLift_mean 
              call flush(38)
          endif
-         if (mod(itime, icheckpoint).eq.0) then
-             if (nrank .eq. 0) then
-               write(filename,"('forces.dat',I7.7)") itime
-               call execute_command_line("cp forces.dat " //filename)
-             endif
-         endif
        enddo
     else
        write(*,*) '==========================================================='
        write(*,*) 'Error: Invalid value for the parameter i2dsim'
        write(*,*) '==========================================================='
-       call MPI_ABORT(MPI_COMM_WORLD,code,ierror)
+       call decomp_2d_abort(code, "Invalid value for the parameter i2dsim!")
     endif
     
+    if (mod(itime, icheckpoint).eq.0) then
+      if (nrank .eq. 0) then
+        write(filename, '(A,I7.7,A)') 'forces', itime, '.dat'
+        call execute_command_line("cp forces.dat " //filename)
+      endif
+    endif
+
     do k = 1, xsize(3)
        do j = 1, xsize(2)
           do i = 1, xsize(1)
