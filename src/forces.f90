@@ -310,7 +310,6 @@ contains
 
     call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)    ! dudx
     call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy) ! dvdx
-    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz) ! dwdx
     call transpose_x_to_y(ta1,ta2) ! dudx
     call transpose_x_to_y(tb1,tb2) ! dvdx
 
@@ -324,6 +323,8 @@ contains
     call transpose_y_to_x(te2,te1) ! dvdy
 
     if (i2dsim==0) then
+      call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz) ! dwdx
+
       call transpose_y_to_z(ux2, ux3)
       call transpose_y_to_z(uy2, uy3)
 
