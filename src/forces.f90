@@ -262,12 +262,7 @@ contains
 
     real(mytype), dimension(ny-1) :: del_y
 
-    real(mytype), dimension(nz) :: tunstxl, tunstyl
-    real(mytype), dimension(nz) :: tconvxl,tconvyl
-    real(mytype), dimension(nz) :: tpresxl,tpresyl
-    real(mytype), dimension(nz) :: tdiffxl,tdiffyl
-
-    real(mytype), dimension(nz) :: tunstx, tunsty
+    real(mytype), dimension(nz) :: tunstx,tunsty
     real(mytype), dimension(nz) :: tconvx,tconvy
     real(mytype), dimension(nz) :: tpresx,tpresy
     real(mytype), dimension(nz) :: tdiffx,tdiffy
@@ -361,8 +356,8 @@ contains
          !         of the cell falls inside the body the cell is 
          !         excluded.
 
-         tunstxl=zero
-         tunstyl=zero
+         tunstx=zero
+         tunsty=zero
          do k=1,xsize(3)
             tsumx=zero
             tsumy=zero
@@ -383,14 +378,14 @@ contains
                   !sumy(k) = sumy(k)+dudt1*dx*dy
                enddo
             enddo
-            tunstxl(xstart(3)-1+k)=tsumx
-            tunstyl(xstart(3)-1+k)=tsumy
+            tunstx(xstart(3)-1+k)=tsumx
+            tunsty(xstart(3)-1+k)=tsumy
          enddo
-         call MPI_ALLREDUCE(tunstxl,tunstx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+         call MPI_ALLREDUCE(MPI_IN_PLACE,tunstx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
          if (code /= 0) then
             call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
          end if
-         call MPI_ALLREDUCE(tunstyl,tunsty,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+         call MPI_ALLREDUCE(MPI_IN_PLACE,tunsty,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
          if (code /= 0) then
             call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
          end if
@@ -408,12 +403,12 @@ contains
          !!$!        \       CV   \
          !!$!(jcvlw) A____________D      
 
-         tconvxl=zero
-         tconvyl=zero
-         tdiffxl=zero
-         tdiffyl=zero
-         tpresxl=zero
-         tpresyl=zero
+         tconvx=zero
+         tconvy=zero
+         tdiffx=zero
+         tdiffy=zero
+         tpresx=zero
+         tpresy=zero
          !BC and AD : x-pencils
          !AD
          if ((jcvlw(iv).ge.xstart(2)).and.(jcvlw(iv).le.xend(2))) then
@@ -445,11 +440,11 @@ contains
 
                enddo
 
-               tconvxl(kk)=tconvxl(kk)+fcvx
-               tconvyl(kk)=tconvyl(kk)+fcvy
-               tpresyl(kk)=tpresyl(kk)+fpry
-               tdiffxl(kk)=tdiffxl(kk)+fdix
-               tdiffyl(kk)=tdiffyl(kk)+fdiy
+               tconvx(kk)=tconvx(kk)+fcvx
+               tconvy(kk)=tconvy(kk)+fcvy
+               tpresy(kk)=tpresy(kk)+fpry
+               tdiffx(kk)=tdiffx(kk)+fdix
+               tdiffy(kk)=tdiffy(kk)+fdiy
             enddo
          endif
          !BC
@@ -481,11 +476,11 @@ contains
                   fdiy = fdiy +two*xnu*dvdymid*dx
 
                enddo
-               tconvxl(kk)=tconvxl(kk)+fcvx
-               tconvyl(kk)=tconvyl(kk)+fcvy
-               tpresyl(kk)=tpresyl(kk)+fpry
-               tdiffxl(kk)=tdiffxl(kk)+fdix
-               tdiffyl(kk)=tdiffyl(kk)+fdiy
+               tconvx(kk)=tconvx(kk)+fcvx
+               tconvy(kk)=tconvy(kk)+fcvy
+               tpresy(kk)=tpresy(kk)+fpry
+               tdiffx(kk)=tdiffx(kk)+fdix
+               tdiffy(kk)=tdiffy(kk)+fdiy
             enddo
          endif
          !AB and DC : y-pencils
@@ -517,11 +512,11 @@ contains
                   fdix = fdix -two*xnu*dudxmid*del_y(j)
                   fdiy = fdiy -xnu*(dvdxmid+dudymid)*del_y(j)
                enddo
-               tconvxl(kk)=tconvxl(kk)+fcvx
-               tconvyl(kk)=tconvyl(kk)+fcvy
-               tpresxl(kk)=tpresxl(kk)+fprx
-               tdiffxl(kk)=tdiffxl(kk)+fdix
-               tdiffyl(kk)=tdiffyl(kk)+fdiy
+               tconvx(kk)=tconvx(kk)+fcvx
+               tconvy(kk)=tconvy(kk)+fcvy
+               tpresx(kk)=tpresx(kk)+fprx
+               tdiffx(kk)=tdiffx(kk)+fdix
+               tdiffy(kk)=tdiffy(kk)+fdiy
             enddo
          endif
          !DC
@@ -552,34 +547,34 @@ contains
                   fdix = fdix +two*xnu*dudxmid*del_y(j)
                   fdiy = fdiy +xnu*(dvdxmid+dudymid)*del_y(j)
                enddo
-               tconvxl(kk)=tconvxl(kk)+fcvx
-               tconvyl(kk)=tconvyl(kk)+fcvy
-               tpresxl(kk)=tpresxl(kk)+fprx
-               tdiffxl(kk)=tdiffxl(kk)+fdix
-               tdiffyl(kk)=tdiffyl(kk)+fdiy
+               tconvx(kk)=tconvx(kk)+fcvx
+               tconvy(kk)=tconvy(kk)+fcvy
+               tpresx(kk)=tpresx(kk)+fprx
+               tdiffx(kk)=tdiffx(kk)+fdix
+               tdiffy(kk)=tdiffy(kk)+fdiy
             enddo
          endif
-         call MPI_ALLREDUCE(tconvxl,tconvx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+         call MPI_ALLREDUCE(MPI_IN_PLACE,tconvx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
          if (code /= 0) then
             call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE!")
          end if
-         call MPI_ALLREDUCE(tconvyl,tconvy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+         call MPI_ALLREDUCE(MPI_IN_PLACE,tconvy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
          if (code /= 0) then
             call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE!")
          end if
-         call MPI_ALLREDUCE(tpresxl,tpresx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+         call MPI_ALLREDUCE(MPI_IN_PLACE,tpresx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
          if (code /= 0) then
             call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE!")
          end if
-         call MPI_ALLREDUCE(tpresyl,tpresy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+         call MPI_ALLREDUCE(MPI_IN_PLACE,tpresy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
          if (code /= 0) then
             call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE!")
          end if
-         call MPI_ALLREDUCE(tdiffxl,tdiffx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+         call MPI_ALLREDUCE(MPI_IN_PLACE,tdiffx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
          if (code /= 0) then
             call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE!")
          end if
-         call MPI_ALLREDUCE(tdiffyl,tdiffy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+         call MPI_ALLREDUCE(MPI_IN_PLACE,tdiffy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
          if (code /= 0) then
             call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE!")
          end if
