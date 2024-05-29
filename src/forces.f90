@@ -116,7 +116,7 @@ contains
             write(*,"('     xrd, icvrt     : (',F6.2,',',I6,')')") xrd(iv), icvrt(iv)
             write(*,"('     yld, jcvlw     : (',F6.2,',',I6,')')") yld(iv), jcvlw(iv)
             write(*,"('     yud, jcvup     : (',F6.2,',',I6,')')") yud(iv), jcvup(iv)
-            enddo
+         enddo
          write(*,*) '==========================================================='
        elseif (i2dsim==0) then
          write(*,*) '========================Forces============================='
