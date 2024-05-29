@@ -165,89 +165,89 @@ module mhd
   !| -------------                                                     |
   !| 01-May-2023  | Created by J. Fang STFC Daresbury Laboratory       |
   !+-------------------------------------------------------------------+
-  subroutine mhd_sta(ux1,uy1,uz1)
-    !
-    !use decomp_2d
-    use param,     only : ntime,t,nclx1, ncly1, nclz1,re
-    use var,       only : itime
-    use variables, only : nx, ny, nz, nxm, nym, nzm
-    use mptool,    only : pmax,psum
-    !
-    real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
-    !
-    ! local data
-    real(mytype) :: Ek,Em,Omegam,Jmax,var1,var2,disrat
-    logical,save :: lfirstcal=.true.
-    integer,save :: nxc,nyc,nzc
-    integer :: i,j,k
-    !
-    if(lfirstcal) then
-      !
-      if(nrank==0) then
-        open(newunit=mhd_iounit,file='mhd_stat.dat')
-        write(mhd_iounit,"(A7,1X,A13,5(1X,A20))")'itime','time',              &
-                                'Ek','Em','enstrophykm','dissipation','Jmax'
+  ! subroutine mhd_sta(ux1,uy1,uz1)
+  !   !
+  !   !use decomp_2d
+  !   use param,     only : ntime,t,nclx1, ncly1, nclz1,re
+  !   use var,       only : itime
+  !   use variables, only : nx, ny, nz, nxm, nym, nzm
+  !   use mptool,    only : pmax,psum
+  !   !
+  !   real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
+  !   !
+  !   ! local data
+  !   real(mytype) :: Ek,Em,Omegam,Jmax,var1,var2,disrat
+  !   logical,save :: lfirstcal=.true.
+  !   integer,save :: nxc,nyc,nzc
+  !   integer :: i,j,k
+  !   !
+  !   if(lfirstcal) then
+  !     !
+  !     if(nrank==0) then
+  !       open(newunit=mhd_iounit,file='mhd_stat.dat')
+  !       write(mhd_iounit,"(A7,1X,A13,5(1X,A20))")'itime','time',              &
+  !                               'Ek','Em','enstrophykm','dissipation','Jmax'
 
-      endif
-      !
-      if (nclx1==1) then
-         nxc=nxm
-      else
-         nxc=nx
-      endif
-      if (ncly1==1) then
-         nyc=nym
-      else
-         nyc=ny
-      endif
-      if (nclz1==1) then
-         nzc=nzm
-      else
-         nzc=nz
-      endif
-      !
-      lfirstcal=.false.
-      !
-    endif
-    !
-    Ek=0._mytype
-    Em=0._mytype
-    Omegam=0._mytype
-    Jmax=0._mytype
-    do k=1,xsize(3)
-    do j=1,xsize(2)
-    do i=1,xsize(1)
+  !     endif
+  !     !
+  !     if (nclx1==1) then
+  !        nxc=nxm
+  !     else
+  !        nxc=nx
+  !     endif
+  !     if (ncly1==1) then
+  !        nyc=nym
+  !     else
+  !        nyc=ny
+  !     endif
+  !     if (nclz1==1) then
+  !        nzc=nzm
+  !     else
+  !        nzc=nz
+  !     endif
+  !     !
+  !     lfirstcal=.false.
+  !     !
+  !   endif
+  !   !
+  !   Ek=0._mytype
+  !   Em=0._mytype
+  !   Omegam=0._mytype
+  !   Jmax=0._mytype
+  !   do k=1,xsize(3)
+  !   do j=1,xsize(2)
+  !   do i=1,xsize(1)
       
-      var2=Je(i,j,k,1)**2+Je(i,j,k,2)**2+Je(i,j,k,3)**2
+  !     var2=Je(i,j,k,1)**2+Je(i,j,k,2)**2+Je(i,j,k,3)**2
 
-      Ek    =Ek    + ux1(i,j,k)**2+uy1(i,j,k)**2+uz1(i,j,k)**2
-      Em    =Em    + Bm(i,j,k,1)**2+Bm(i,j,k,2)**2+Bm(i,j,k,3)**2
-      Omegam=Omegam+ var2
-      Jmax  = max(Jmax,var2)
+  !     Ek    =Ek    + ux1(i,j,k)**2+uy1(i,j,k)**2+uz1(i,j,k)**2
+  !     Em    =Em    + Bm(i,j,k,1)**2+Bm(i,j,k,2)**2+Bm(i,j,k,3)**2
+  !     Omegam=Omegam+ var2
+  !     Jmax  = max(Jmax,var2)
 
-    enddo
-    enddo
-    enddo
-    !
-    Ek    =psum(Ek    )
-    Em    =psum(Em    )
-    Omegam=psum(Omegam)
-    Jmax  =pmax(Jmax)
-    !
-    Ek    =Ek    /real(nxc*nyc*nzc,mytype)/2._mytype
-    Em    =Em    /real(nxc*nyc*nzc,mytype)/2._mytype
-    Omegam=Omegam/real(nxc*nyc*nzc,mytype)/2._mytype*Rem*Rem
-    Jmax  =sqrt(Jmax)*Rem
-    !
-    disrat=Ek/re+Em/rem
-    ! print*,nxc,nyc,nzc
-    !
-    if(nrank==0) then
-      write(mhd_iounit,"(I7,1X,E13.6E2,5(1X,E20.13E2))")itime,t,Ek,Em, &
-                                            Omegam,disrat,Jmax
-    endif
-    !
-  end subroutine mhd_sta
+  !   enddo
+  !   enddo
+  !   enddo
+  !   !
+  !   Ek    =psum(Ek    )
+  !   Em    =psum(Em    )
+  !   Omegam=psum(Omegam)
+  !   Jmax  =pmax(Jmax)
+  !   !
+  !   Ek    =Ek    /real(nxc*nyc*nzc,mytype)/2._mytype
+  !   Em    =Em    /real(nxc*nyc*nzc,mytype)/2._mytype
+  !   Omegam=Omegam/real(nxc*nyc*nzc,mytype)/2._mytype*Rem*Rem
+  !   Jmax  =sqrt(Jmax)*Rem
+  !   !
+  !   disrat=Ek/re+Em/rem
+  !   ! print*,nxc,nyc,nzc
+  !   !
+  !   if(nrank==0) then
+  !     write(mhd_iounit,"(I7,1X,E13.6E2,5(1X,E20.13E2))")itime,t,Ek,Em, &
+  !                                           Omegam,disrat,Jmax
+  !   endif
+  !   !
+  ! end subroutine mhd_sta
   !+-------------------------------------------------------------------+
   !| The end of the subroutine mhd_sta.                                |
   !+-------------------------------------------------------------------+
@@ -883,8 +883,23 @@ module mhd
     if ((nrank == 0) .and. (nlock > 0).and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime==ilast)) then
        if (nlock == 2) then
           write(*,*) 'DIV B  max mean=',real(tmax1,mytype),real(tmoy1/real(nproc),mytype)
+          ! if(itime==6000) then
+          !   open(12,file='divb.dat',form='unformatted')
+          !   write(12)ph1%zen(1)-ph1%zst(1)+1,ph1%zen(2)-ph1%zst(2)+1,nzmsize
+          !   write(12)pp3(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),1:nzmsize)
+          !   close(12)
+          !   print*,' << divb.dat'
+          ! endif
+
        else
           write(*,*) 'DIV B* max mean=',real(tmax1,mytype),real(tmoy1/real(nproc),mytype)
+          ! if(itime==6000) then
+          !   open(12,file='divb_star.dat',form='unformatted')
+          !   write(12)ph1%zen(1)-ph1%zst(1)+1,ph1%zen(2)-ph1%zst(2)+1,nzmsize
+          !   write(12)pp3(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),1:nzmsize)
+          !   close(12)
+          !   print*,' << divb_star.dat'
+          ! endif
        endif
     endif
 

@@ -28,7 +28,8 @@ contains
     use variables
     use param
     use MPI
-    use mhd, only: mhd_active,Bm,Bmean
+    use mhd,  only: mhd_active,Bm,Bmean
+    use visu, only: write_snapshot, end_snapshot
 
     implicit none
 
@@ -67,13 +68,19 @@ contains
              do i=1,xsize(1)
                 x=real(i-1,mytype)*dx
                 if(mhd_active) then
-                   ux1(i,j,k)= -two*sin(y)*cos(z)
-                   uy1(i,j,k)=  two*sin(x)*cos(z)
+                   ux1(i,j,k)= -two*sin(y)
+                   uy1(i,j,k)=  two*sin(x)
                    uz1(i,j,k)=zero
                    !
+                   ! 2D OTV
                    Bm(i,j,k,1)=-two*sin(y)
                    Bm(i,j,k,2)= two*sin(two*x)
                    Bm(i,j,k,3)=zero
+                   
+                   ! 3D OTV
+                   ! Bm(i,j,k,1)= 0.8_mytype*(-two*sin(two*y) + sin(z))
+                   ! Bm(i,j,k,2)= 0.8_mytype*( two*sin(x)     + sin(z))
+                   ! Bm(i,j,k,3)= 0.8_mytype*(     sin(x)     + sin(y))
                    !
                    Bmean(i,j,k,1)=zero
                    Bmean(i,j,k,2)=zero
@@ -139,12 +146,44 @@ contains
        enddo
     enddo
 
+    call visu_init_tgv(ux1, uy1, uz1)
+
 #ifdef DEBG
     if (nrank  ==  0) write(*,*) '# init end ok'
 #endif
 
     return
   end subroutine init_tgv
+
+  !********************************************************************
+  ! this subroutine is to visu the inital flow field 
+  subroutine visu_init_tgv(ux1, uy1, uz1)
+
+    use decomp_2d, only : xsize, ph1
+    use visu, only  : write_snapshot, end_snapshot
+
+    use var, only : nzmsize
+    use var, only : itime
+    use var, only : numscalar, nrhotime, npress
+
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux1, uy1, uz1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
+    real(mytype),dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
+
+    integer :: num
+    logical :: linit
+
+    call visu_tgv_init(linit)
+
+    call write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime, num)
+
+    call visu_tgv(ux1, uy1, uz1, num)
+
+    call end_snapshot(itime, num)
+
+  end subroutine visu_init_tgv
   !********************************************************************
 
   subroutine boundary_conditions_tgv (ux,uy,uz,phi)
@@ -236,13 +275,15 @@ contains
     USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
     USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
     USE ibm_param
+    use mhd, only : mhd_active,Bm,Je,Rem
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1,ep1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype) :: mp(numscalar),mps(numscalar),vl,es,es1,ek,ek1,ds,ds1
     real(mytype) :: temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9
 
-    real(mytype) :: eek, enst, eps, eps2
+    real(mytype) :: eek, enst, eps, eps2, enst_max
+    real(mytype) :: eem,omegam,jmax
     integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
 
     integer :: i,j,k,is,code,nvect1
@@ -323,17 +364,21 @@ contains
 
        !SPATIALLY-AVERAGED ENSTROPHY
        temp1=zero
+       temp2=zero
        do k=1,xsize3
           do j=1,xsize2
              do i=1,xsize1
-                temp1=temp1+zpfive*((tf1(i,j,k)-th1(i,j,k))**2+&
-                                    (tg1(i,j,k)-tc1(i,j,k))**2+&
-                                    (tb1(i,j,k)-td1(i,j,k))**2)
+                temp3=zpfive*((tf1(i,j,k)-th1(i,j,k))**2+&
+                              (tg1(i,j,k)-tc1(i,j,k))**2+&
+                              (tb1(i,j,k)-td1(i,j,k))**2)
+                temp1=temp1+temp3
+                temp2=max(temp2,temp3)
              enddo
           enddo
        enddo
        call MPI_ALLREDUCE(temp1,enst,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        enst=enst/(nxc*nyc*nzc)
+       call MPI_ALLREDUCE(temp2,enst_max,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
        
        !SPATIALLY-AVERAGED ENERGY DISSIPATION
        temp1=zero
@@ -409,9 +454,40 @@ contains
        
        
        if (nrank==0) then
-          write(42,'(20e20.12)') (itime-1)*dt,eek,eps,eps2,enst
+          write(42,'(6(E20.12))') itime*dt,eek,eps,eps2,enst,enst_max
           flush(42)
        endif
+
+       if(mhd_active) then
+
+          !SPATIALLY-AVERAGING
+          temp1=zero
+          temp2=zero
+          temp3=zero
+          do k=1,xsize3
+             do j=1,xsize2
+                do i=1,xsize1
+                   temp1=temp1+zpfive*((Bm(i,j,k,1))**2+(Bm(i,j,k,2))**2+(Bm(i,j,k,3))**2)
+                   temp9=Je(i,j,k,1)**2+Je(i,j,k,2)**2+Je(i,j,k,3)**2
+                   temp2=temp2+zpfive*temp9
+                   temp3=max(temp3,temp9)
+                enddo
+             enddo
+          enddo
+          call MPI_ALLREDUCE(temp1,   eem,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+          call MPI_ALLREDUCE(temp2,omegam,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+          call MPI_ALLREDUCE(temp3,  jmax,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+          eem=eem/(nxc*nyc*nzc)
+          omegam=omegam/(nxc*nyc*nzc)*Rem*Rem
+          jmax=jmax*Rem
+
+          if (nrank==0) then
+             write(43,'(4(E20.12))')itime*dt,eem,omegam,jmax
+             flush(43)
+          endif
+
+       endif
+
     endif
 
   end subroutine postprocess_tgv
@@ -440,6 +516,7 @@ contains
        call decomp_2d_register_variable(io_name, "J_x", 1, 0, output2D, mytype)
        call decomp_2d_register_variable(io_name, "J_y", 1, 0, output2D, mytype)
        call decomp_2d_register_variable(io_name, "J_z", 1, 0, output2D, mytype)
+       !
        call decomp_2d_register_variable(io_name, "B_x", 1, 0, output2D, mytype)
        call decomp_2d_register_variable(io_name, "B_y", 1, 0, output2D, mytype)
        call decomp_2d_register_variable(io_name, "B_z", 1, 0, output2D, mytype)
@@ -455,22 +532,19 @@ contains
   !! DESCRIPTION: Performs TGV-specific visualization
   !!
   !############################################################################
-  subroutine visu_tgv(ux1, uy1, uz1, pp3, phi1, ep1, num)
+  subroutine visu_tgv(ux1, uy1, uz1, num)
 
     use var, only : ux2, uy2, uz2, ux3, uy3, uz3
     USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
     USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
     use var, ONLY : nxmsize, nymsize, nzmsize
     use visu, only : write_field
-    use mhd, only : mhd_active,Bm
+    use mhd, only : mhd_active,Bm,Je,del_cross_prod,rem
     use ibm_param, only : ubcx,ubcy,ubcz
 
     implicit none
 
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1
-    real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
-    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
     integer, intent(in) :: num
 
     ! Write vorticity as an example of post processing
@@ -530,6 +604,12 @@ contains
       call write_field(Bm(:,:,:,1), ".", "B_x", num, flush = .true.)
       call write_field(Bm(:,:,:,2), ".", "B_y", num, flush = .true.)
       call write_field(Bm(:,:,:,3), ".", "B_z", num, flush = .true.)
+
+      je=del_cross_prod(Bm)/Rem
+
+      call write_field(Je(:,:,:,1), ".", "J_x", num, flush = .true.)
+      call write_field(Je(:,:,:,2), ".", "J_y", num, flush = .true.)
+      call write_field(Je(:,:,:,3), ".", "J_z", num, flush = .true.)
     endif
 
   end subroutine visu_tgv

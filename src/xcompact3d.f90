@@ -17,7 +17,7 @@ program xcompact3d
   use ibm, only : body
   use genepsi, only : genepsi3d
   use mhd,    only : Bm,mhd_active,mhd_equation,test_magnetic, &
-                     solve_poisson_mhd,mhd_sta
+                     solve_poisson_mhd
 
   implicit none
 
@@ -27,6 +27,7 @@ program xcompact3d
   do itime=ifirst,ilast
      !t=itime*dt
      t=t0 + (itime0 + itime + 1 - ifirst)*dt
+     
      call simu_stats(2)
 
      if (iturbine.ne.0) call compute_turbines(ux1, uy1, uz1)
@@ -86,8 +87,6 @@ program xcompact3d
 
      enddo !! End sub timesteps
 
-     if(mhd_active) call mhd_sta(ux1,uy1,uz1)
-     !
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,rho1,drho1,mu1,1)
 
      call simu_stats(3)
@@ -270,8 +269,14 @@ subroutine init_xcompact3d()
   if (itype==2) then
      if(nrank.eq.0)then
         open(42,file='time_evol.dat',form='formatted')
+        write(42,'(6(A20))') 'time','kinetic_energy','dissipation_rate','dissipation_rate_2','enstrophy','enstrophy_max'
+        if(mhd_active) then
+           open(43,file='mhd_time_evol.dat',form='formatted')
+           write(43,'(4(A20))') 'time','magnetic_energy','magnetic_enstrophy','current_max'
+        endif
      endif
   endif
+
   if (itype==5) then
      if(nrank.eq.0)then
         open(38,file='forces.dat',form='formatted')

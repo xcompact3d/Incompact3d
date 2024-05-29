@@ -431,7 +431,7 @@ contains
        
     elseif (itype.eq.itype_tgv) then
 
-       call visu_tgv(ux1, uy1, uz1, pp3, phi1, ep1, num)
+       call visu_tgv(ux1, uy1, uz1, num)
        called_visu = .true.
 
     elseif (itype.eq.itype_channel) then
