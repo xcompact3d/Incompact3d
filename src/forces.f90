@@ -187,17 +187,14 @@ contains
 
     implicit none
 
-    integer :: ierror,code,itest1
-    integer :: ierror_o=0 !error to open sauve file during restart
-    character(len=30) :: filename, filestart
+    ! Argument
+    integer, intent(in) :: itest1
 
+    ! Exit if writing and invalid time step
+    if (itest1 == 1 .and. mod(itime, icheckpoint).ne.0) then
+       return
+    end if
 
-#ifndef ADIOS2
-    write(filename, "('restart-forces',I7.7)") itime
-    write(filestart,"('restart-forces',I7.7)") ifirst-1
-#else
-    write(filename, *) "restart-forces"
-#endif
     if (itest1 == 1) then
        call decomp_2d_open_io(io_restart_forces, resfile, decomp_2d_write_mode)
     else
@@ -207,10 +204,6 @@ contains
     
     if (itest1==1) then
        !write
-       if (mod(itime, icheckpoint).ne.0) then
-          return
-       endif
-
        call decomp_2d_write_one(1,ux01,resfile,"ux01",0,io_restart_forces)
        call decomp_2d_write_one(1,uy01,resfile,"uy01",0,io_restart_forces)
        call decomp_2d_write_one(1,ux11,resfile,"ux11",0,io_restart_forces)
@@ -226,15 +219,6 @@ contains
     call decomp_2d_end_io(io_restart_forces, resfile)
     call decomp_2d_close_io(io_restart_forces, resfile)
     
-    if (nrank.eq.0) then
-       if (ierror_o .ne. 0) then !Included by Felipe Schuch
-          write(*,*) '==========================================================='
-          write(*,*) 'Error: Impossible to read '//trim(filestart)
-          write(*,*) '==========================================================='
-          call MPI_ABORT(MPI_COMM_WORLD,code,ierror)
-       endif
-    endif
-
   end subroutine restart_forces
 
   subroutine force(ux1,uy1,uz1,ep1)
