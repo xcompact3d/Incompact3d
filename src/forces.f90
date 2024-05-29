@@ -149,6 +149,35 @@ contains
     
   end subroutine init_forces
 
+  !
+  ! Allocate 1D arrays and initialize variables before reading the forces namelist
+  !
+  subroutine setup_forces()
+
+    implicit none
+
+    ! Safety check
+    if (allocated(xld)) then
+       call decomp_2d_abort(1, "Error in setup_forces")
+    end if
+    if (nvol < 1) then
+       call decomp_2d_abort(nvol, "Invalid nvol in setup_forces")
+    end if
+
+    ! Allocate 1D arrays
+    allocate(xld(nvol), xrd(nvol), yld(nvol), yud(nvol), zfr(nvol), zbk(nvol))
+
+    ! Default values in the forces namelist
+    xld = 0._mytype
+    xrd = 0._mytype
+    yld = 0._mytype
+    yud = 0._mytype
+    zfr = 0._mytype
+    zbk = 0._mytype
+    i2dsim = 1
+
+  end subroutine setup_forces
+
   subroutine restart_forces(itest1)
 
     USE decomp_2d_io

@@ -29,7 +29,7 @@ subroutine parameter(input_i3d)
 
   use probes, only : nprobes, setup_probes, flag_all_digits, flag_extra_probes, xyzprobes
   use visu, only : output2D
-  use forces, only : iforces, nvol, xld, xrd, yld, yud, zfr, zbk, i2dsim
+  use forces, only : iforces, nvol, setup_forces, xld, xrd, yld, yud, zfr, zbk, i2dsim
 
   use mhd, only: mhd_active,mhd_equation,hartmann,stuart,rem
 
@@ -123,7 +123,7 @@ subroutine parameter(input_i3d)
      read(10, nml=ProbesParam); rewind(10)
   endif
   if (iforces.eq.1) then
-     allocate(xld(nvol), xrd(nvol), yld(nvol), yud(nvol), zfr(nvol), zbk(nvol))
+     call setup_forces()
      read(10, nml=ForceCVs); rewind(10)
   endif
   
@@ -599,7 +599,7 @@ subroutine parameter_defaults()
 
   use probes, only : nprobes, flag_all_digits, flag_extra_probes
   use visu, only : output2D
-  use forces, only : iforces, nvol, i2dsim
+  use forces, only : iforces, nvol
 
   use mhd, only: mhd_active, mhd_equation, rem, stuart, hartmann 
 
@@ -646,7 +646,6 @@ subroutine parameter_defaults()
 
   nvol = 0
   iforces = 0
-  i2dsim = 1
   itrip = 0
   wrotation = zero
   irotation = 0
