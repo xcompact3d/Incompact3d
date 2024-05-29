@@ -152,9 +152,14 @@ contains
   !
   ! Allocate 1D arrays and initialize variables before reading the forces namelist
   !
-  subroutine setup_forces()
+  subroutine setup_forces(iounit)
 
     implicit none
+
+    ! Argument
+    integer, intent(in) :: iounit
+
+    NAMELIST /ForceCVs/ xld, xrd, yld, yud, zfr, zbk, i2dsim
 
     ! Safety check
     if (allocated(xld)) then
@@ -175,6 +180,15 @@ contains
     zfr = 0._mytype
     zbk = 0._mytype
     i2dsim = 1
+
+    ! Read a part of the namelist and rewind
+    read(iounit, nml=ForceCVs)
+    rewind(iounit)
+
+    ! Safety check
+    if (i2dsim < 0 .or. i2dsim > 1) then
+       call decomp_2d_abort(i2dsim, "Invalid value for the parameter i2dsim")
+    end if
 
   end subroutine setup_forces
 
@@ -264,12 +278,6 @@ contains
     real(mytype) :: fcvx,fcvy,fprx,fpry,fdix,fdiy
     real(mytype) :: xmom,ymom
     real(mytype) :: convx,convy,pressx,pressy,stressx,stressy
-
-    ! Safety check
-    ! TODO check when reading the namelist
-    if (i2dsim < 0 .or. i2dsim > 1) then
-       call decomp_2d_abort(i2dsim, "Invalid value for the parameter i2dsim!")
-    end if
 
     nvect1=xsize(1)*xsize(2)*xsize(3)
     nvect2=ysize(1)*ysize(2)*ysize(3)

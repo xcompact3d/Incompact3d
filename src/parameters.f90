@@ -29,7 +29,7 @@ subroutine parameter(input_i3d)
 
   use probes, only : nprobes, setup_probes, flag_all_digits, flag_extra_probes, xyzprobes
   use visu, only : output2D
-  use forces, only : iforces, nvol, setup_forces, xld, xrd, yld, yud, zfr, zbk, i2dsim
+  use forces, only : iforces, nvol, setup_forces
 
   use mhd, only: mhd_active,mhd_equation,hartmann,stuart,rem
 
@@ -63,7 +63,6 @@ subroutine parameter(input_i3d)
   NAMELIST /LESModel/ jles, smagcst, smagwalldamp, nSmag, walecst, maxdsmagcst, iconserv
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
   NAMELIST /ibmstuff/ cex,cey,cez,ra,rai,rao,nobjmax,nraf,nvol,iforces, npif, izap, ianal, imove, thickness, chord, omega ,ubcx,ubcy,ubcz,rads, c_air
-  NAMELIST /ForceCVs/ xld, xrd, yld, yud, zfr, zbk, i2dsim
   NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, &
        massfrac, mol_weight, imultispecies, primary_species, &
        Fr, ibirman_eos
@@ -123,8 +122,7 @@ subroutine parameter(input_i3d)
      read(10, nml=ProbesParam); rewind(10)
   endif
   if (iforces.eq.1) then
-     call setup_forces()
-     read(10, nml=ForceCVs); rewind(10)
+     call setup_forces(10)
   endif
   
   !! Set Scalar BCs same as fluid (may be overridden) [DEFAULT]
