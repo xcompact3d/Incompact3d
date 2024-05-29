@@ -265,6 +265,12 @@ contains
     real(mytype) :: xmom,ymom
     real(mytype) :: convx,convy,pressx,pressy,stressx,stressy
 
+    ! Safety check
+    ! TODO check when reading the namelist
+    if (i2dsim < 0 .or. i2dsim > 1) then
+       call decomp_2d_abort(i2dsim, "Invalid value for the parameter i2dsim!")
+    end if
+
     nvect1=xsize(1)*xsize(2)*xsize(3)
     nvect2=ysize(1)*ysize(2)*ysize(3)
     nvect3=zsize(1)*zsize(2)*zsize(3)
@@ -373,14 +379,12 @@ contains
             tunstyl(xstart(3)-1+k)=tsumy
          enddo
          call MPI_ALLREDUCE(tunstxl,tunstx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-         if (ierror /= 0) then
-            call decomp_2d_abort(ierror, &
-                 "Error in MPI_ALLREDUCE!")
+         if (code /= 0) then
+            call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
          end if
          call MPI_ALLREDUCE(tunstyl,tunsty,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-         if (ierror /= 0) then
-            call decomp_2d_abort(ierror, &
-                 "Error in MPI_ALLREDUCE!")
+         if (code /= 0) then
+            call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
          end if
 
          !!$!*********************************************************************************
@@ -549,33 +553,27 @@ contains
          endif
          call MPI_ALLREDUCE(tconvxl,tconvx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
          if (code /= 0) then
-            call decomp_2d_abort(code, &
-                 "Error in MPI_ALLREDUCE!")
+            call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(tconvyl,tconvy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
          if (code /= 0) then
-            call decomp_2d_abort(code, &
-                 "Error in MPI_ALLREDUCE!")
+            call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(tpresxl,tpresx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
          if (code /= 0) then
-            call decomp_2d_abort(code, &
-                 "Error in MPI_ALLREDUCE!")
+            call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(tpresyl,tpresy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
          if (code /= 0) then
-            call decomp_2d_abort(code, &
-                 "Error in MPI_ALLREDUCE!")
+            call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(tdiffxl,tdiffx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
          if (code /= 0) then
-            call decomp_2d_abort(code, &
-                 "Error in MPI_ALLREDUCE!")
+            call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(tdiffyl,tdiffy,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
          if (code /= 0) then
-            call decomp_2d_abort(code, &
-                 "Error in MPI_ALLREDUCE!")
+            call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE!")
          end if
 
          do k=1,zsize(3)
@@ -641,13 +639,11 @@ contains
  
          call MPI_ALLREDUCE(tsumx,xmom,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
          if (code /= 0) then
-            call decomp_2d_abort(code, &
-                 "Error in MPI_ALLREDUCE!")
+            call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(tsumy,ymom,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
          if (code /= 0) then
-            call decomp_2d_abort(code, &
-                 "Error in MPI_ALLREDUCE!")
+            call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE!")
          end if
  
          convx=zero
@@ -866,33 +862,27 @@ contains
  
          call MPI_ALLREDUCE(MPI_IN_PLACE, convx, 1, real_type, MPI_SUM, MPI_COMM_WORLD, code)
          if (code /= 0) then
-            call decomp_2d_abort(code, &
-                 "Error in MPI_ALLREDUCE!")
+            call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(MPI_IN_PLACE, convy, 1, real_type, MPI_SUM, MPI_COMM_WORLD, code)
          if (code /= 0) then
-            call decomp_2d_abort(code, &
-                 "Error in MPI_ALLREDUCE!")
+            call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(MPI_IN_PLACE, pressx, 1, real_type, MPI_SUM, MPI_COMM_WORLD, code)
          if (code /= 0) then
-            call decomp_2d_abort(code, &
-                 "Error in MPI_ALLREDUCE!")
+            call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(MPI_IN_PLACE, pressy, 1, real_type, MPI_SUM, MPI_COMM_WORLD, code)
          if (code /= 0) then
-            call decomp_2d_abort(code, &
-                 "Error in MPI_ALLREDUCE!")
+            call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(MPI_IN_PLACE, stressx, 1, real_type, MPI_SUM, MPI_COMM_WORLD, code)
          if (code /= 0) then
-            call decomp_2d_abort(code, &
-                 "Error in MPI_ALLREDUCE!")
+            call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE!")
          end if
          call MPI_ALLREDUCE(MPI_IN_PLACE, stressy, 1, real_type, MPI_SUM, MPI_COMM_WORLD, code)
          if (code /= 0) then
-            call decomp_2d_abort(code, &
-                 "Error in MPI_ALLREDUCE!")
+            call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE!")
          end if
    
          pressx = pressx/dt
@@ -906,11 +896,6 @@ contains
              call flush(38)
          endif
        enddo
-    else
-       write(*,*) '==========================================================='
-       write(*,*) 'Error: Invalid value for the parameter i2dsim'
-       write(*,*) '==========================================================='
-       call decomp_2d_abort(code, "Invalid value for the parameter i2dsim!")
     endif
     
     if (mod(itime, icheckpoint).eq.0) then
@@ -934,4 +919,5 @@ contains
     return
 
   end subroutine force
+
 end module forces
