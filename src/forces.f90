@@ -20,13 +20,13 @@ module forces
 
   implicit none
 
-  integer :: nvol,iforces,i2dsim
+  integer,save :: nvol,iforces,i2dsim
   real(mytype),save,allocatable,dimension(:,:,:) :: ux01, uy01, ux11, uy11, ppi1
-  real(mytype),allocatable,dimension(:) :: xld,xrd,yld,yud,zfr,zbk
-  integer,allocatable,dimension(:) :: icvlf,icvrt,jcvlw,jcvup,kcvfr,kcvbk
-  integer,allocatable,dimension(:) :: icvlf_lx,icvrt_lx,icvlf_ly,icvrt_ly
-  integer,allocatable,dimension(:) :: jcvlw_lx,jcvup_lx,jcvlw_ly,jcvup_ly
-  integer,allocatable,dimension(:) :: kcvfr_lx,kcvbk_lx,kcvfr_ly,kcvbk_ly
+  real(mytype),save,allocatable,dimension(:) :: xld,xrd,yld,yud,zfr,zbk
+  integer,save,allocatable,dimension(:) :: icvlf,icvrt,jcvlw,jcvup,kcvfr,kcvbk
+  integer,save,allocatable,dimension(:) :: icvlf_lx,icvrt_lx,icvlf_ly,icvrt_ly
+  integer,save,allocatable,dimension(:) :: jcvlw_lx,jcvup_lx,jcvlw_ly,jcvup_ly
+  integer,save,allocatable,dimension(:) :: kcvfr_lx,kcvbk_lx,kcvfr_ly,kcvbk_ly
 
   character(len=*), parameter :: io_restart_forces = "restart-forces-io", &
        resfile = "restart-forces"
