@@ -423,6 +423,7 @@ contains
                fdiy=zero
                do i=icvlf_lx(iv),icvrt_lx(iv)-1
                   !momentum flux
+                  !FIXME avoid interpolation for the non-linear term
                   uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
                   uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
                   fcvx  = fcvx -uxmid*uymid*dx
@@ -460,6 +461,7 @@ contains
                fdiy=zero
                do i=icvlf_lx(iv),icvrt_lx(iv)-1
                   !momentum flux
+                  !FIXME avoid interpolation for the non-linear term
                   uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
                   uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
                   fcvx= fcvx +uxmid*uymid*dx
@@ -497,6 +499,7 @@ contains
                fdiy=zero
                do j=jcvlw_ly(iv),jcvup_ly(iv)-1
                   !momentum flux
+                  !FIXME avoid interpolation for the non-linear term
                   uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k))
                   uymid = half*(uy2(i,j,k)+uy2(i,j+1,k))
                   fcvx= fcvx -uxmid*uxmid*del_y(j)
@@ -532,6 +535,7 @@ contains
                fdiy=zero
                do j=jcvlw_ly(iv),jcvup_ly(iv)-1
                   !momentum flux
+                  !FIXME avoid interpolation for the non-linear term
                   uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k))
                   uymid = half*(uy2(i,j,k)+uy2(i,j+1,k))
                   fcvx= fcvx +uxmid*uxmid*del_y(j)
@@ -669,6 +673,7 @@ contains
              do k=kcvfr_ly(iv),kcvbk_ly(iv)
                do j=jcvlw_ly(iv),jcvup_ly(iv)-1
                    !momentum flux
+                   !FIXME avoid interpolation for the non-linear term
                    uxmid = half*(ux2(i,j,k) + ux2(i,j+1,k))
                    uymid = half*(uy2(i,j,k) + uy2(i,j+1,k))
                    fcvx = fcvx + uxmid*uxmid*del_y(j)*dz
@@ -704,6 +709,7 @@ contains
              do k=kcvfr_ly(iv),kcvbk_ly(iv)
                do j=jcvlw_ly(iv),jcvup_ly(iv)-1
                    !momentum flux
+                   !FIXME avoid interpolation for the non-linear term
                    uxmid = half*(ux2(i,j,k) + ux2(i,j+1,k))
                    uymid = half*(uy2(i,j,k) + uy2(i,j+1,k))
                    fcvx = fcvx - uxmid*uxmid*del_y(j)*dz
@@ -740,6 +746,7 @@ contains
              do k=kcvfr_lx(iv),kcvbk_lx(iv)
                do i=icvlf_lx(iv),icvrt_lx(iv)-1
                    !momentum flux
+                   !FIXME avoid interpolation for the non-linear term
                    uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
                    uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
                    fcvx= fcvx -uxmid*uymid*dx*dz
@@ -776,6 +783,7 @@ contains
              do k=kcvfr_lx(iv),kcvbk_lx(iv)
                do i=icvlf_lx(iv),icvrt_lx(iv)-1
                    !momentum flux
+                   !FIXME avoid interpolation for the non-linear term
                    uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
                    uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
                    fcvx= fcvx +uxmid*uymid*dx*dz
@@ -811,6 +819,7 @@ contains
              do j=jcvlw_lx(iv), jcvup_lx(iv)
                do i=icvlf_lx(iv), icvrt_lx(iv)-1
                    !momentum flux
+                   !FIXME avoid interpolation for the non-linear term
                    uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
                    uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
                    uzmid = half*(uy1(i,j,k)+uy1(i+1,j,k))
@@ -843,6 +852,7 @@ contains
              do j=jcvlw_lx(iv), jcvup_lx(iv)
                do i=icvlf_lx(iv), icvrt_lx(iv)-1
                    !momentum flux
+                   !FIXME avoid interpolation for the non-linear term
                    uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k))
                    uymid = half*(uy1(i,j,k)+uy1(i+1,j,k))
                    uzmid = half*(uy1(i,j,k)+uy1(i+1,j,k))
