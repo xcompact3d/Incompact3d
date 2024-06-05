@@ -1261,7 +1261,8 @@ contains
                !     of a "source".
                !         fac   = (1.5*ux1(i,j,k)-2.0*ux01(i,j,k)+0.5*ux11(i,j,k))*epcv1(i,j,k)
                call crossProduct(([fac1,fac2,fac3]),[xm,ym,zm]-position, angular_velocity_result)
-               tsumx = tsumx+angular_velocity_result(1)*dx*del_y(j+(xstart(2)-1))*dz/dt    !tsumx+fac*dx*dy/dt
+               tsumx = tsumx+angular_velocity_result(1)*dx*dy
+               yel_y(j+(xstart(2)-1))*dz/dt    !tsumx+fac*dx*dy/dt
                ! tsumx = tsumx+fac1*dx*del_y(j+xstart(2)-1)*dz/dt
                !sumx(k) = sumx(k)+dudt1*dx*dy
 
@@ -1333,7 +1334,9 @@ contains
             fcvx=zero
             fcvy=zero
             fcvz=zero
+            fprx=zero
             fpry=zero
+            fprz=zero
             fdix=zero
             fdiy=zero
             fdiz=zero
@@ -1357,7 +1360,9 @@ contains
 
                !pressure
                prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))
-               fpry  = fpry +prmid*dx*dz*(radial(1)-radial(3))
+               ! fpry  = fpry +prmid*dx*dz*(radial(1)-radial(3))
+               fprz = fprz +prmid*dx*dz*(radial(1))
+               fprx = fprx +prmid*dx*dz*(-radial(3))
 
                !viscous term
                dudymid = half*(tc1(i,j,k)+tc1(i+1,j,k))
@@ -1380,7 +1385,11 @@ contains
             tconvxl(kk)=tconvxl(kk)+fcvx
             tconvyl(kk)=tconvyl(kk)+fcvy
             tconvzl(kk)=tconvzl(kk)+fcvz
+
+            tpresxl(kk)=tpresxl(kk)+fprx
             tpresyl(kk)=tpresyl(kk)+fpry
+            tpreszl(kk)=tpreszl(kk)+fprz
+
             tdiffxl(kk)=tdiffxl(kk)+fdix
             tdiffyl(kk)=tdiffyl(kk)+fdiy
             tdiffzl(kk)=tdiffzl(kk)+fdiz
@@ -1397,7 +1406,9 @@ contains
             fcvx=zero
             fcvy=zero
             fcvz=zero
+            fprx=zero
             fpry=zero
+            fprz=zero
             fdix=zero
             fdiy=zero
             fdiz=zero
@@ -1421,7 +1432,9 @@ contains
 
                !pressure
                prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))
-               fpry = fpry -prmid*dx*dz*(radial(1)-radial(3))
+               ! fpry = fpry -prmid*dx*dz*(radial(1)-radial(3))
+               fprz = fprz -prmid*dx*dz*(radial(1))
+               fprx = fprx -prmid*dx*dz*(-radial(3))
 
                !viscous term
                dudymid = half*(tc1(i,j,k)+tc1(i+1,j,k))
@@ -1443,7 +1456,10 @@ contains
             tconvyl(kk)=tconvyl(kk)+fcvy
             tconvzl(kk)=tconvzl(kk)+fcvz
 
+            tpresxl(kk)=tpresxl(kk)+fprx
             tpresyl(kk)=tpresyl(kk)+fpry
+            tpreszl(kk)=tpreszl(kk)+fprz
+
             tdiffxl(kk)=tdiffxl(kk)+fdix
             tdiffyl(kk)=tdiffyl(kk)+fdiy
             tdiffzl(kk)=tdiffzl(kk)+fdiz
@@ -1463,6 +1479,8 @@ contains
             fcvy=zero
             fcvz=zero
             fprx=zero
+            fpry=zero
+            fprz=zero
             fdix=zero
             fdiy=zero
             fdiz=zero
@@ -1486,7 +1504,10 @@ contains
 
                !pressure
                prmid = half*(ppi2(i,j,k)+ppi2(i,j+1,k))
-               fprx = fprx +prmid*del_y(j)*dz*(radial(3)-radial(2))
+               ! fprx = fprx +prmid*del_y(j)*dz*(radial(3)-radial(2))
+
+               fpry = fpry + prmid*del_y(j)*dz*(radial(3))
+               fprz = fprz + prmid*del_y(j)*dz*(-radial(2))
 
                !viscous term
                dudxmid = half*(ta2(i,j,k)+ta2(i,j+1,k))
@@ -1509,6 +1530,9 @@ contains
             tconvzl(kk)=tconvzl(kk)+fcvz
 
             tpresxl(kk)=tpresxl(kk)+fprx
+            tpresyl(kk)=tpresyl(kk)+fpry
+            tpreszl(kk)=tpreszl(kk)+fprz
+
             tdiffxl(kk)=tdiffxl(kk)+fdix
             tdiffyl(kk)=tdiffyl(kk)+fdiy
             tdiffzl(kk)=tdiffzl(kk)+fdiz
@@ -1527,6 +1551,8 @@ contains
             fcvy=zero
             fcvz=zero
             fprx=zero
+            fpry=zero
+            fprz=zero
             fdix=zero
             fdiy=zero
             fdiz=zero
@@ -1552,7 +1578,10 @@ contains
 
                !pressure
                prmid = half*(ppi2(i,j,k)+ppi2(i,j+1,k))
-               fprx = fprx -prmid*del_y(j)*dz*(radial(3)-radial(2))
+               ! fprx = fprx -prmid*del_y(j)*dz*(radial(3)-radial(2))
+
+               fpry = fpry -prmid*del_y(j)*dz*(radial(3))
+               fprz = fprz -prmid*del_y(j)*dz*(-radial(2))  
 
                !viscous term
                dudxmid = half*(ta2(i,j,k)+ta2(i,j+1,k))
@@ -1576,6 +1605,9 @@ contains
             tconvzl(kk)=tconvzl(kk)+fcvz
 
             tpresxl(kk)=tpresxl(kk)+fprx
+            tpresyl(kk)=tpresyl(kk)+fpry
+            tpreszl(kk)=tpreszl(kk)+fprz
+
             tdiffxl(kk)=tdiffxl(kk)+fdix
             tdiffyl(kk)=tdiffyl(kk)+fdiy
             tdiffzl(kk)=tdiffzl(kk)+fdiz
@@ -1593,8 +1625,9 @@ contains
         fcvx=zero
         fcvy=zero
         fcvz=zero
+        fprx=zero
+        fpry=zero
         fprz=zero
-        fdix=zero
         fdiy=zero
         fdiz=zero
         do j=jcvlw_lx(iv),jcvup_lx(iv)
@@ -1621,7 +1654,9 @@ contains
 
               !pressure
               prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))
-              fprz = fprz -prmid*dx*dy*(radial(2)-radial(1))
+            !   fprz = fprz -prmid*dx*dy*(radial(2)-radial(1))
+              fprx = fprx -prmid*dx*dy*(radial(2))
+              fpry = fpry -prmid*dx*dy*(-radial(1))
 
               !viscous term
               dudzmid = half*(tg1(i,j,k)+tg1(i+1,j,k))
@@ -1661,6 +1696,8 @@ contains
         fcvx=zero
         fcvy=zero
         fcvz=zero
+        fprx=zero
+        fpry=zero
         fprz=zero
         fdix=zero
         fdiy=zero
@@ -1690,7 +1727,10 @@ contains
 
               !pressure
               prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))
-              fprz = fprz +prmid*dx*dy*(radial(2)-radial(1))
+            !   fprz = fprz +prmid*dx*dy*(radial(2)-radial(1))
+
+              fprx = fprx -prmid*dx*dy*(radial(2))
+              fpry = fpry -prmid*dx*dy*(-radial(1))
 
               !viscous term
               dudzmid = half*(tg1(i,j,k)+tg1(i+1,j,k))
@@ -1713,6 +1753,8 @@ contains
         tconvxl2(kk)=tconvxl2(kk)+fcvx
         tconvyl2(kk)=tconvyl2(kk)+fcvy
         tconvzl2(kk)=tconvzl2(kk)+fcvz
+        tpresxl(kk) =tpresxl(kk) +fcvx
+        tpresyl(kk) =tpresyl(kk) +fcvy
         tpreszl(kk) =tpreszl(kk) +fprz
         tdiffxl2(kk)=tdiffxl2(kk)+fdix
         tdiffyl2(kk)=tdiffyl2(kk)+fdiy
