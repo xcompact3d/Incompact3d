@@ -11,6 +11,7 @@ module ttbl
    implicit none
 
    real(mytype), save, allocatable, dimension(:, :) :: usxz, vsxz, wsxz, upupsxz, vpvpsxz, wpwpsxz, upvpsxz, tkesxz
+   real(mytype), save, allocatable, dimension(:, :) :: u_ins, v_ins, w_ins, p_ins
    real(mytype), save, allocatable, dimension(:, :) :: presxz, prep2sxz
    real(mytype), save, allocatable, dimension(:, :) :: dudysxz, dvdysxz, dwdysxz
    real(mytype), save, allocatable, dimension(:, :) :: oxpsxz, oypsxz, ozpsxz
@@ -183,9 +184,12 @@ contains
       real(mytype), dimension(ysize(2)) :: ux2m, ydudy2m, dudy2m, du2dy22m, duxuy2pm
       real(mytype) :: y, theta, delta, tau_wall, ufric
       integer :: i, j, k, code
+      real(mytype), save :: P_DpDX
 
       ! Allocate arrays and read data (if restart)
       if (itime == ifirst) then
+         if (APG .ne. 0) P_DpDX = APG_DpDX
+         write (6, "(' 1 Adverse Pressure Gradient ',F14.12)") ,P_DpDX
          if (jtheta_dot ==0) allocate (ttda(ysize(2)), ttdb(ysize(2)), ttdc(ysize(2))) 
          if (irestart == 1) then
             open (unit=67, file='checkpoint_ttbl', status='unknown', form='unformatted', action='read')
@@ -196,6 +200,12 @@ contains
                read (67) thetad, theta_a, theta_b, theta_c , ZTn
             end if 
             close (67)
+            if (APG .ne. 0) then 
+               open (unit=68, file='checkpoint_APG', status='unknown', form='unformatted', action='read')
+               read (68) P_DpDX
+               write (6, "(' Read : Adverse Pressure Gradient ',F14.12)") P_DpDX
+               close(68)
+            end if
          end if
       end if
 
@@ -230,6 +240,50 @@ contains
                write (67) thetad, theta_a, theta_b, theta_c, ZTn
          end if 
          close (67)
+         if (APG .ne. 0) then 
+            open (unit=68, file='checkpoint_APG', status='unknown', form='unformatted', action='write')
+            write (68) P_DpDX
+            close(68)
+         end if
+      end if
+
+ ! Write out values
+      if (mod(itime, ilist) == 0) then
+
+         ! Calculate quantities
+         theta = sum((ux2m * (one - ux2m)) * ypw)
+         delta = sum((one - ux2m) * ypw)
+         tau_wall = sum(ta2(:, 1, :))
+         call MPI_ALLREDUCE(MPI_IN_PLACE, tau_wall, 1, real_type, MPI_SUM, MPI_COMM_WORLD, code)
+         tau_wall = tau_wall / real(nx * nz, mytype)
+         ufric = sqrt(tau_wall * xnu)
+         
+         ! Saved for adverse pressure gradient
+         if (APG == 2) then 
+            P_DpDX = APG_Beta * (tau_wall/delta)
+            write (6, "(' 2 Adverse Pressure Gradient ',F14.12)") ,P_DpDX
+            write (6, "(F14.12,F14.12,F14.12)")APG_Beta,tau_wall,delta
+         end if
+
+         !Check the flow rate (what is coming in the domain is getting out)
+         if (mod(itime, ilist) == 0) call tbl_flrt_Check(ux1)
+
+         ! Write out
+         if (nrank == 0) then
+            write (6, "(' thetad = ',F14.12,'    theta = ',F14.12,'    delta = ',F14.12,'    H = ',F14.12)") thetad, theta, delta, delta / theta
+            write (6, "(' tau_wall = ',F16.12,'    u_tau = ',F16.12,'    cf = ',F16.12)") tau_wall, ufric, two * ufric**2
+            write (6, "(' Re_theta = ',F16.8,'    Re_delta = ',F16.8)") one*theta*re, one*delta*re !(xnu=one/re)
+            write (6, "(' dx+ = ',F12.8,'    dz+ = ',F12.8,'    dy+(min,max) = (',F12.8,',',F12.8,')')") dx * ufric * re, dz * ufric * re, dyp(1) * ufric * re, dyp(ny) * ufric * re
+            write (6, "(' Y_size1 = ',I8,' Y_size2 = ',I8,' Y_size3 = ',I8)") ysize(1), ysize(2), ysize(3)
+            if (APG == 2) then 
+               write (6, "(' Adverse Pressure Gradient ',F14.12)") P_DpDX
+            end if   
+            open (unit=67, file='out/ttbl.dat', status='unknown', form='formatted', action='write', position='append')
+            if (itime == ilist) write (67, "(12A20)") 't', 'thetad', 'theta', 'delta', 'tau_wall', 'u_tau', 'cf', 'dx+', 'dz+', 'dy+_min', 'dy+_max' 
+                write (67, "(12E20.12)") t, thetad, theta, delta, tau_wall, ufric, two * ufric**2, dx * ufric * re, dz * ufric * re, dyp(1) * ufric * re, dyp(ny) * ufric * re
+            close (67)
+         end if
+
       end if
 
       ! Apply forcing
@@ -242,6 +296,8 @@ contains
                   dux1(i, j, k, 1) = dux1(i, j, k, 1) + thetad * y * ta1(i, j, k)
                else if (APG == 1) then 
                   dux1(i, j, k, 1) = dux1(i, j, k, 1) + thetad * y * ta1(i, j, k) - APG_DpDX * (one - ux2m(j+xstart(2)-1) ) 
+               else if (APG == 2) then 
+                  dux1(i, j, k, 1) = dux1(i, j, k, 1) + thetad * y * ta1(i, j, k) - P_DpDX * (one - ux2m(j+xstart(2)-1) )                   
                end if
                duy1(i, j, k, 1) = duy1(i, j, k, 1) + thetad * y * tb1(i, j, k)
                if (iscalar == 1 .and. ri(1) /= 0) duy1(i, j, k, 1) = duy1(i, j, k, 1) + ri(1) * phi1(i, j, k, 1)
@@ -250,33 +306,6 @@ contains
          end do
       end do
 
-      ! Write out values
-      if (mod(itime, ilist) == 0) then
-
-         ! Calculate quantities
-         theta = sum((ux2m * (one - ux2m)) * ypw)
-         delta = sum((one - ux2m) * ypw)
-         tau_wall = sum(ta2(:, 1, :))
-         call MPI_ALLREDUCE(MPI_IN_PLACE, tau_wall, 1, real_type, MPI_SUM, MPI_COMM_WORLD, code)
-         tau_wall = tau_wall / real(nx * nz, mytype)
-         ufric = sqrt(tau_wall * xnu)
-         
-         !Check the flow rate (what is coming in the domain is getting out)
-         if (mod(itime, ilist) == 0) call tbl_flrt_Check(ux1)
-
-         ! Write out
-         if (nrank == 0) then
-            write (6, "(' thetad = ',F14.12,'    theta = ',F14.12,'    delta = ',F14.12,'    H = ',F14.12)") thetad, theta, delta, delta / theta
-            write (6, "(' tau_wall = ',F16.12,'    u_tau = ',F16.12,'    cf = ',F16.12)") tau_wall, ufric, two * ufric**2
-            write (6, "(' Re_theta = ',F16.8,'    Re_delta = ',F16.8)") one*theta*re, one*delta*re !(xnu=one/re)
-            write (6, "(' dx+ = ',F12.8,'    dz+ = ',F12.8,'    dy+(min,max) = (',F12.8,',',F12.8,')')") dx * ufric * re, dz * ufric * re, dyp(1) * ufric * re, dyp(ny) * ufric * re
-            write (6, "(' Y_size1 = ',I8,' Y_size2 = ',I8,' Y_size3 = ',I8)") ysize(1), ysize(2), ysize(3)
-            open (unit=67, file='out/ttbl.dat', status='unknown', form='formatted', action='write', position='append')
-            if (itime == ilist) write (67, "(12A20)") 't', 'thetad', 'theta', 'delta', 'tau_wall', 'u_tau', 'cf', 'dx+', 'dz+', 'dy+_min', 'dy+_max' 
-                write (67, "(12E20.12)") t, thetad, theta, delta, tau_wall, ufric, two * ufric**2, dx * ufric * re, dz * ufric * re, dyp(1) * ufric * re, dyp(ny) * ufric * re
-            close (67)
-         end if
-      end if
    end subroutine momentum_forcing_ttbl
    !############################################################################
    !############################################################################
@@ -338,6 +367,13 @@ contains
 
       ! Allocate arrays
       if (itime == ifirst) then
+         !for instantanous profiles
+         if (Pro_Spectra ==1) then
+            allocate (u_ins(ysize(2), ioutput / ilist))
+            allocate (v_ins(ysize(2), ioutput / ilist))
+            allocate (w_ins(ysize(2), ioutput / ilist))
+            allocate (p_ins(ysize(2), ioutput / ilist))
+         end if
          allocate (usxz(ysize(2), ioutput / ilist))
          allocate (vsxz(ysize(2), ioutput / ilist))
          allocate (wsxz(ysize(2), ioutput / ilist))
@@ -398,12 +434,18 @@ contains
          call transpose_x_to_y(ux1, ux2)
          call horizontal_avrge(ux2, usxz(:, b))
          call extract_fluctuat(ux2, usxz(:, b), ux2p)
+         if (Pro_Spectra ==1) call Gathering_Probe (ux2, u_ins(:, b))
+
          call transpose_x_to_y(uy1, uy2)
          call horizontal_avrge(uy2, vsxz(:, b))
          call extract_fluctuat(uy2, vsxz(:, b), uy2p)
+         if (Pro_Spectra ==1) call Gathering_Probe (uy2, v_ins(:, b))
+
          call transpose_x_to_y(uz1, uz2)
          call horizontal_avrge(uz2, wsxz(:, b))
          call extract_fluctuat(uz2, wsxz(:, b), uz2p)
+         if (Pro_Spectra ==1) call Gathering_Probe (uz2, w_ins(:, b))
+
          call horizontal_avrge(ux2p**2, upupsxz(:, b))
          call horizontal_avrge(uy2p**2, vpvpsxz(:, b))
          call horizontal_avrge(uz2p**2, wpwpsxz(:, b))
@@ -414,6 +456,7 @@ contains
          call horizontal_avrge(pre2, presxz(:, b))
          call extract_fluctuat(pre2, presxz(:, b), pre2p)
          call horizontal_avrge(pre2p**2, prep2sxz(:, b))
+         if (Pro_Spectra ==1) call Gathering_Probe (pre2, p_ins(:, b))
 
          ! Wall-normal derivatives of mean velocity
          call dery(dudysxz(:, b), usxz(:, b), di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
@@ -505,6 +548,12 @@ contains
          ! Write to disk
          if (nrank == 0 .and. mod(itime, ioutput) == 0) then
             tstart = MPI_WTIME()
+            if (Pro_Spectra ==1) then
+               call outp(u_ins, 'out/u_ins.dat')
+               call outp(v_ins, 'out/v_ins.dat')
+               call outp(w_ins, 'out/w_ins.dat')
+               call outp(p_ins, 'out/p_ins.dat')
+            end if
             call outp(usxz, 'out/u.dat')
             call outp(vsxz, 'out/v.dat')
             call outp(wsxz, 'out/w.dat')
@@ -564,6 +613,36 @@ contains
    end subroutine visu_ttbl_init
    !############################################################################
    !############################################################################
+   subroutine Gathering_Probe(field, profile)
+      implicit none
+      real(mytype), intent(in), dimension(ysize(1), ysize(2), ysize(3)) :: field
+      real(mytype), intent(out), dimension(ysize(2)) :: profile
+      real(mytype), dimension(ysize(2)) :: sxz
+      real(mytype) :: x,z
+      integer :: i, j, k, code
+
+         do i = 1, ysize(1)
+            x = (i + ystart(1) - 1 - 1) * dx
+            if ((x > X_Pro_Spectra - 0.6*dx) .and. (x < X_Pro_Spectra + 0.6*dx)) then
+               do k = 1, ysize(3)
+                  z = (k + ystart(3) - 1 - 1) * dz
+                  if ((z > Z_Pro_Spectra - 0.6*dz) .and. (z < Z_Pro_Spectra + 0.6*dz)) then
+                     do j = 1, ysize(2)
+                        !write (6, "(' Probe location is : ',F16.8,F16.8)") x,z
+                        !write (6, "(' Probe location is : ',I8,I8)") i,k
+                        sxz(j) = field(i, j, k)
+                     end do
+                  end if
+               end do
+            end if
+         end do
+         call MPI_ALLREDUCE(MPI_IN_PLACE, sxz, ny, real_type, MPI_SUM, MPI_COMM_WORLD, code)
+         profile = sxz 
+
+   end subroutine Gathering_Probe
+   !############################################################################
+   !############################################################################
+
    subroutine visu_ttbl(ux1, uy1, uz1, pp3, phi1, ep1, num)
 
      use var, only : ux2, uy2, uz2, ux3, uy3, uz3
@@ -1232,7 +1311,7 @@ contains
             if (mod(itime, ilist) == 0) then
                write (6, "(' F(t) =',F14.12,'  &   Total Force(y) =',F14.12)") thetad,Fy_Tot
                open (unit=67, file='out/Force.dat', status='unknown', form='formatted', action='write', position='append')
-               if (itime == ilist) write (67, "(2A20)") 'F(T)','Total Force(y)' 
+               if (itime == ilist) write (67, "(2A20)") 'F(T)','Total_Force(y)' 
                   write (67, "(2E20.12)") thetad,Fy_Tot
                close (67)
             end if

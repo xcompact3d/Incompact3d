@@ -10,9 +10,9 @@ p_row = 0               ! Row partition
 p_col = 0               ! Column partition
 
 ! Mesh
-nx = 60                 ! X-direction nodes
-ny = 81                 ! Y-direction nodes
-nz = 45                 ! Z-direction nodes
+nx = 96                 ! X-direction nodes
+ny = 129                ! Y-direction nodes
+nz = 64                 ! Z-direction nodes
 istret = 3              ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
 beta =  1.5             ! Refinement parameter (beta)
 
@@ -31,7 +31,7 @@ nclzn = 0
 FreeStream = 0          ! 0 FreeStream off 1 FreeStream on
 
 ! Flow parameters
-re = 1400               ! nu=1/re (Kinematic Viscosity)
+re = 1000               ! nu=1/re (Kinematic Viscosity)
 iin = 2                 ! Inflow conditions (1: classic, 2: turbinit)
 u1 = 1.0                ! u1 (max velocity) (for inflow condition)
 u2 = 1.0                ! u2 (min velocity) (for inflow condition)
@@ -39,8 +39,8 @@ init_noise = 0.02       ! Turbulence intensity (1=100%) !! Initial condition
 inflow_noise = 0.0      ! Turbulence intensity (1=100%) !! Inflow condition
 
 ! Time stepping
-dt = 0.05               ! Time step
-ifirst = 10001              ! First iteration
+dt = 0.001               ! Time step
+ifirst = 1              ! First iteration
 ilast = 20000           ! Last iteration
 
 ! Enable modelling tools
@@ -61,7 +61,7 @@ iimplicit = 2           ! Implicit scheme for y-diffusive term
 itimescheme = 3         ! Time integration scheme
 
 ! Dissipation control
-nu0nu = 8.42978         ! Ratio between hyperviscosity/viscosity at nu
+nu0nu = 6.02634         ! Ratio between hyperviscosity/viscosity at nu
 cnu = 0.22              ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 
 /End
@@ -70,10 +70,10 @@ cnu = 0.22              ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 &InOutParam
 !=================
 ! Basic I/O
-irestart = 1            ! Read initial flow field ?
-icheckpoint = 2000      ! Frequency for writing backup file
-ioutput = 2000          ! Frequency for visualization
-ilist = 100             ! Frequency for writing to screen
+irestart = 0            ! Read initial flow field ?
+icheckpoint = 10        ! Frequency for writing backup file
+ioutput = 10           ! Frequency for visualization
+ilist = 10              ! Frequency for writing to screen
 nvisu = 1               ! Size for visualisation collection
 
 /End
@@ -82,7 +82,7 @@ nvisu = 1               ! Size for visualisation collection
 &Statistics
 !=================
 nstat = 1               ! Size arrays for statistic collection
-initstat = 100000        ! Time steps after which statistics are collected
+initstat = 500          ! Time steps after which statistics are collected
 
 /End
 
@@ -130,8 +130,21 @@ Range_Smooth = 0.5          ! Adjust this value to control the smoothness of the
 !================
 &AdversePresGrad
 !================ 
-APG     = 1               ! Adverse Pressure Gradient (0: Off, 1: On)
-APG_DpDX   =2.e-3         ! Pressure gradient
+APG      = 0              ! Adverse Pressure Gradient (0: Off, 1: V1 (APG_DpDX), 2:V2 (Beta) (not working at the moment) )
+APG_DpDX = 2.e-3          ! Pressure gradient
+APG_Beta   = 0.01           ! Beta 
+
+/End
+
+!#############################
+! Probe for Spectra
+!#############################
+!================
+&ProbeSpectra
+!================
+Pro_Spectra   = 0         ! Probe (0: Off, 1: On)
+X_Pro_Spectra = 20        ! X Location
+Z_Pro_Spectra = 7.5       ! Z Location
 
 /End
 

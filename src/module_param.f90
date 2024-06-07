@@ -354,7 +354,11 @@ module param
 
   !Adverse Pressure Gradient
   integer :: APG
-  real(mytype) :: APG_DpDX
+  real(mytype) :: APG_DpDX,APG_Beta
+
+  !Probe for Spectra
+  integer :: Pro_Spectra
+  real(mytype) :: X_Pro_Spectra,Z_Pro_Spectra
 
   !! Gravity field (vector components)
   real(mytype) :: gravx, gravy, gravz

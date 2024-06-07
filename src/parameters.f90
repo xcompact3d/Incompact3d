@@ -60,7 +60,8 @@ subroutine parameter(input_i3d)
   NAMELIST /LESModel/ jles, smagcst, smagwalldamp, nSmag, walecst, maxdsmagcst, iconserv
   NAMELIST /ThetaDotModel/ jtheta_dot,jthickness,Method_FT,K_theta,H_12
   NAMELIST /BlowingModel/ Blowing,A_Blowing,Xst_Blowing,Xen_Blowing,Range_Smooth  
-  NAMELIST /AdversePresGrad/ APG,APG_DpDX
+  NAMELIST /AdversePresGrad/ APG,APG_DpDX,APG_Beta
+  NAMELIST /ProbeSpectra/ Pro_Spectra,X_Pro_Spectra,Z_Pro_Spectra
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
   NAMELIST /ibmstuff/ cex,cey,cez,ra,nobjmax,nraf,nvol,iforces, npif, izap, ianal, imove, thickness, chord, omega ,ubcx,ubcy,ubcz,rads, c_air
   NAMELIST /ForceCVs/ xld, xrd, yld, yud!, zld, zrd
@@ -215,6 +216,7 @@ subroutine parameter(input_i3d)
      read(10, nml=ThetaDotModel); rewind(10)
      read(10, nml=BlowingModel); rewind(10)
      read(10, nml=AdversePresGrad); rewind(10)
+     read(10, nml=ProbeSpectra); rewind(10)
   end if
 
   if (itype.eq.itype_tbl) then
@@ -480,8 +482,20 @@ subroutine parameter(input_i3d)
       elseif (APG==1) then
          write(*,"(' Adverse Pressure Gradient : ',A10)") "On"
          write(*,"(' Pressure Gradient         : ',F12.6)") APG_DpDX
-       endif
-     
+      elseif (APG==2) then
+         write(*,"(' Adverse Pressure Gradient : ',A10)") "On"
+         write(*,"(' Beta of Pressure Gradient : ',F12.6)") APG_Beta         
+      endif
+
+      write(*,*) '==========================================================='
+      if (Pro_Spectra==0) then 
+         write(*,"(' Probe for Spectra         : ',A10)") "Off"
+      elseif (Pro_Spectra==1) then
+         write(*,"(' Probe for Spectra         : ',A10)") "On"
+         write(*,"(' Probe Location (X)        : ',F12.6)") X_Pro_Spectra
+         write(*,"(' Probe Location (Z)        : ',F12.6)") Z_Pro_Spectra
+      endif
+
      write(*,*) '==========================================================='
      write(*,"(' ifirst                 : ',I17)") ifirst
      write(*,"(' ilast                  : ',I17)") ilast
