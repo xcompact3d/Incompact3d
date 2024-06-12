@@ -999,9 +999,9 @@ contains
        tp2 = sum(tpresy(:))/dt
        tp3 = sum(tpresz(:))/dt
     
-       mom1 = sum(tunstx(:) + tconvx(:) + (-2.0*tconv2_sign+1.0)*tconvx2(:)) !if tconv2sign == 1.0, multiply by -1
-       mom2 = sum(tunsty(:) + tconvy(:) + (-2.0*tconv2_sign+1.0)*tconvy2(:))
-       mom3 = sum(tunstz(:) + tconvz(:) + (-2.0*tconv2_sign+1.0)*tconvz2(:))
+       mom1 = sum(tunstx(:)) + sum(tconvx(:)) + (-2.0*tconv2_sign+1.0)*sum(tconvx2(:)) !if tconv2sign == 1.0, multiply by -1
+       mom2 = sum(tunsty(:)) + sum(tconvy(:)) + (-2.0*tconv2_sign+1.0)*sum(tconvy2(:))
+       mom3 = sum(tunstz(:)) + sum(tconvz(:)) + (-2.0*tconv2_sign+1.0)*sum(tconvz2(:))
   
        dra1 = (sum(tdiffx) + sum(tdiffx2) + tp1 - mom1)
        dra2 = (sum(tdiffy) + sum(tdiffy2) + tp2 - mom2)
