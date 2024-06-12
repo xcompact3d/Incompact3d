@@ -1261,8 +1261,7 @@ contains
                !     of a "source".
                !         fac   = (1.5*ux1(i,j,k)-2.0*ux01(i,j,k)+0.5*ux11(i,j,k))*epcv1(i,j,k)
                call crossProduct(([fac1,fac2,fac3]),[xm,ym,zm]-position, angular_velocity_result)
-               tsumx = tsumx+angular_velocity_result(1)*dx*dy
-               yel_y(j+(xstart(2)-1))*dz/dt    !tsumx+fac*dx*dy/dt
+               tsumx = tsumx+angular_velocity_result(1)*dx*del_y(j+(xstart(2)-1))*dz/dt    !tsumx+fac*dx*dy/dt
                ! tsumx = tsumx+fac1*dx*del_y(j+xstart(2)-1)*dz/dt
                !sumx(k) = sumx(k)+dudt1*dx*dy
 
@@ -1702,7 +1701,7 @@ contains
         fdix=zero
         fdiy=zero
         fdiz=zero
-!        do k=1,xsize(3)
+      !  do k=1,xsize(3)
         do j=jcvlw_lx(iv),jcvup_lx(iv)
         !  kk = xstart(2)-1+j 
          jj = xstart(2)-1+j
