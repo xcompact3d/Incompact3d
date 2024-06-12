@@ -251,7 +251,7 @@ contains
     real(mytype)             :: r
 
     call EllipsoidalRadius(point,centre,orientation,shape,r)
-
+    
     is_inside = ((r-ra).lt.zeromach)
 
   end subroutine is_inside_ellipsoid
