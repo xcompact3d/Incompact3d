@@ -141,8 +141,6 @@ xld(1) = 3.0 !X left for volume control
 xrd(1) = 7.0 !X right for volume control
 yld(1) = 2.0 !Y bottom for volume control
 yud(1) = 4.0 !Y top for volume control
-!zld(1) = 0.01
-!zrd(1) = 9.99
 
 /End
 
