@@ -19,7 +19,7 @@ program xcompact3d
   use ellipsoid_utils, only: lin_step, ang_step, QuaternionNorm
   use forces, only : force, init_forces, iforces,update_forces, xld,xrd,yld,yud,zld,zrd,torque_calc
   implicit none
-  real(mytype)  :: dummy,drag,lift,lat,grav_effy,grav_effx,grav_effz,xtorq,ytorq,ztorq
+  real(mytype)  :: dummy,drag,lift,lat,grav_effy,grav_effx,grav_effz,xtorq,ytorq,ztorq,maxrad
   integer :: iounit,ierr,i
   real, dimension(100) :: x
 
@@ -73,13 +73,14 @@ program xcompact3d
         if (imove.eq.1) then ! update epsi for moving objects
           if ((iibm.eq.2).or.(iibm.eq.3)) then
              call genepsi3d(ep1)
+             maxrad = max(shape(1),shape(2),shape(3))
              if (iforces.eq.1) then
-               xld(1) = position(1) - shape(1) * ra * cvl_scalar
-               xrd(1) = position(1) + shape(1) * ra * cvl_scalar
-               yld(1) = position(2) - shape(1) * ra * cvl_scalar
-               yud(1) = position(2) + shape(1) * ra * cvl_scalar
-               zld(1) = position(3) - shape(1) * ra * cvl_scalar
-               zrd(1) = position(3) + shape(1) * ra * cvl_scalar
+               xld(1) = position(1) - maxrad * ra * cvl_scalar
+               xrd(1) = position(1) + maxrad * ra * cvl_scalar
+               yld(1) = position(2) - maxrad * ra * cvl_scalar
+               yud(1) = position(2) + maxrad * ra * cvl_scalar
+               zld(1) = position(3) - maxrad * ra * cvl_scalar
+               zrd(1) = position(3) + maxrad * ra * cvl_scalar
                if (itime.eq.ifirst) then 
                   call init_forces()
                else 
