@@ -221,6 +221,8 @@ contains
       if (radius /= radius) then
         write(*,*) "Got an error in grid check!"
         write(*,*) "Radius = ", radius, "point = ", point
+        write(*,*) "Rotated point = ", rotated_point
+        write(*,*) "Scaled Point = ", scaled_point
       endif
 
    end subroutine    
