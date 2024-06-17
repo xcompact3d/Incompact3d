@@ -220,7 +220,7 @@ contains
 
       if (radius /= radius) then
         write(*,*) "Got an error in grid check!"
-        write(*,*) "point = ", point
+        write(*,*) "Radius = ", radius, "point = ", point
       endif
 
    end subroutine    
