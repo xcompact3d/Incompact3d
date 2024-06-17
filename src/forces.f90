@@ -1787,9 +1787,9 @@ contains
       mom2 = sum(tunsty(:)) + sum(tconvy(:)) + (-2.0*tconv2_sign+1.0)*sum(tconvy2(:))
       mom3 = sum(tunstz(:)) + sum(tconvz(:)) + (-2.0*tconv2_sign+1.0)*sum(tconvz2(:))
  
-      dra1 = (sum(tdiffx) + sum(tdiffx2) + tp1 - mom1)
-      dra2 = (sum(tdiffy) + sum(tdiffy2) + tp2 - mom2)
-      dra3 = (sum(tdiffz) + sum(tdiffz2) + tp3 - mom3)
+      dra1 = -(sum(tdiffx) + sum(tdiffx2) + tp1 - mom1)
+      dra2 = -(sum(tdiffy) + sum(tdiffy2) + tp2 - mom2)
+      dra3 = -(sum(tdiffz) + sum(tdiffz2) + tp3 - mom3)
       
       do k=1,zsize(3)
 
