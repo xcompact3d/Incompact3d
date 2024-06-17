@@ -216,7 +216,12 @@ contains
          scaled_point(i)=rotated_point(i)/shape(i)
       end do 
 
-      radius=sqrt_prec(scaled_point(1)**two+scaled_point(2)**two+scaled_point(3)**two)
+      radius=sqrt_prec(scaled_point(1)**2+scaled_point(2)**2+scaled_point(3)**2)
+
+      if (radius /= radius) then
+        write(*,*) "Got an error in grid check!"
+        write(*,*) "point = ", point
+      endif
 
    end subroutine    
 
