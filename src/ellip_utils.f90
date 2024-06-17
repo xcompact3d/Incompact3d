@@ -220,7 +220,9 @@ contains
 
       if (radius /= radius) then
         write(*,*) "Got an error in grid check!"
-        write(*,*) "Radius = ", radius, "point = ", point
+        write(*,*) "Radius = ", radius
+        write(*,*) "point = ", centre
+        write(*,*) "Body centre = ", position
         write(*,*) "Translated point = ", trans_point
         write(*,*) "Orientation = ", orientation
         write(*,*) "Rotated point = ", rotated_point
