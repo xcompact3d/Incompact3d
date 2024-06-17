@@ -167,7 +167,7 @@ program xcompact3d
             write(*,*) "Linear velocity =  ", linearVelocity
             write(*,*) "Angular velocity = ", angularVelocity
             write(*,*) "Linear Force = ", [drag,lift,lat]
-
+            write(*,*) "Torque = ", [xtorq,ytorq,ztorq]
          ! call QuaternionNorm(angularVelocity,dummy)
 
          ! write(*,*) 'Norm of angvel = ', dummy

@@ -130,7 +130,7 @@ subroutine inflow (phi)
 
     implicit none
 
-    integer  :: j,k,is
+    integer  :: i,j,k,is
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
     !call random_number(bxo)
@@ -143,6 +143,33 @@ subroutine inflow (phi)
         bxz1(j,k)=zero+bzo(j,k)*inflow_noise
         enddo
     enddo
+
+    if (shear_flow_ybc.eq.1) then 
+        do k=1,xsize(3)
+            do i=1,xsize(1)
+                byxn(i,k)=+shear_velocity
+            enddo
+        enddo
+        do k=1,xsize(3)
+            do i=1,xsize(1)
+                byx1(i,k)=-shear_velocity
+            enddo 
+        enddo 
+    endif   
+
+    if (shear_flow_zbc.eq.1) then
+        do j=1,xsize(2)
+            do i=1,xsize(1)
+                bzxn(i,j)=+shear_velocity
+            enddo
+        enddo
+        do j=1,xsize(2)
+            do i=1,xsize(1)
+                bzx1(i,j)=-shear_velocity
+            enddo 
+        enddo 
+    endif   
+
 
     if (iscalar.eq.1) then
         do is=1, numscalar
@@ -245,8 +272,8 @@ subroutine init_ellip (ux1,uy1,uz1,phi1)
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
-    real(mytype) :: y,um,eqr
-    integer :: k,j,i,ii,is,code
+    real(mytype) :: y,um,eqr,ym
+    integer :: k,j,i,ii,is,code,jj
 
     ! write(*,*) 'INSIDE INIT ELLIP'
 
@@ -276,8 +303,22 @@ subroutine init_ellip (ux1,uy1,uz1,phi1)
         phi1(:,:,:,:) = zero !change as much as you want
 
     endif
+    ! if (shear_flow_ybc.eq.1) then 
+    !     do i=1,xsize(1)
+    !         do j=1,xsize(2)
+    !             jj=j+xstart(2)-1
+    !             ym=real(jj)*dy
+    !             do k=1,xsize(3)
+    !                 ux1(i,j,k)=real((jj-(ny/2)))/(yly/2.0)*shear_velocity
+    !             enddo
+    !         enddo
+    !     enddo
+    ! else 
+        ux1=zero;
+    ! endif
 
-    ux1=zero; uy1=zero; uz1=zero
+    
+    uy1=zero; uz1=zero
 
     if (iin.ne.0) then
         call system_clock(count=code)
@@ -320,6 +361,12 @@ subroutine init_ellip (ux1,uy1,uz1,phi1)
         do i=1,xsize(1)
             ux1(i,j,k)=ux1(i,j,k)+u1
             uy1(i,j,k)=uy1(i,j,k)
+            if (shear_flow_ybc.eq.1) then 
+                ux1(i,j,k)=ux1(i,j,k)+((j+xstart(2)-1-1)*dy-yly/2.)/(yly/2.0)*shear_velocity
+            endif
+            if (shear_flow_zbc.eq.1) then
+                ux1(i,j,k)=ux1(i,j,k)+((k+xstart(3)-1-1)*dz-zlz/2.)/(zlz/2.0)*shear_velocity
+            endif
             uz1(i,j,k)=uz1(i,j,k)
         enddo
         enddo
