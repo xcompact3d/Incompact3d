@@ -75,7 +75,7 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
     zm=(real(k-1,mytype))*dz
     ! write(*,*) k, zm
         do j=nyi,nyf
-        ym=yp(j)
+        ym=(real(j-1,mytype))*dy
         do i=nxi,nxf
             xm=real(i-1,mytype)*dx
             point=[xm, ym, zm]
