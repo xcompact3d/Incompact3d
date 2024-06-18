@@ -130,6 +130,11 @@ contains
          call MPI_ABORT(MPI_COMM_WORLD,code,ierror)
          stop
        endif
+       if (uxmin1 /= uxmin1) then
+         write(*,*) 'NaN solutions for flow and body occurred!'
+         call MPI_ABORT(MPI_COMM_WORLD,code,ierror)
+         stop
+       endif
 
     endif
 
