@@ -218,16 +218,16 @@ contains
 
       radius=sqrt_prec(scaled_point(1)**2+scaled_point(2)**2+scaled_point(3)**2)
 
-      if (radius /= radius) then
-        write(*,*) "Got an error in grid check!"
-        write(*,*) "Radius = ", radius
-        write(*,*) "point = ", point
-        write(*,*) "Body centre = ", centre
-        write(*,*) "Translated point = ", trans_point
-        write(*,*) "Orientation = ", orientation
-        write(*,*) "Rotated point = ", rotated_point
-        write(*,*) "Scaled Point = ", scaled_point
-      endif
+      ! if (radius /= radius) then
+      !     write(*,*) "Got an error in grid check!"
+      !     write(*,*) "Radius = ", radius
+      !     write(*,*) "point = ", point
+      !     write(*,*) "Body centre = ", centre
+      !     write(*,*) "Translated point = ", trans_point
+      !     write(*,*) "Orientation = ", orientation
+      !     write(*,*) "Rotated point = ", rotated_point
+      !     write(*,*) "Scaled Point = ", scaled_point
+      ! endif
 
    end subroutine    
 

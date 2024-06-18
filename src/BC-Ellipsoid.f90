@@ -22,7 +22,7 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
     use param, only : one, two, ten
     use ibm_param
     use dbg_schemes, only: sqrt_prec
-    use ellipsoid_utils, only: NormalizeQuaternion, is_inside_ellipsoid
+    use ellipsoid_utils, only: NormalizeQuaternion, EllipsoidalRadius
 
     implicit none
 
@@ -81,7 +81,13 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
             point=[xm, ym, zm]
             ! call EllipsoidalRadius(point, position, orientation, shape, r)
             if (cube_flag.eq.0) then 
-                call is_inside_ellipsoid(point, position, orientation, shape, ra, zeromach, is_inside)
+                call EllipsoidalRadius(point,position,orientation,shape,r)
+                is_inside = (r-ra).lt.zeromach
+
+                if (ra /= ra) then
+                    write(*,*) "Nrank = ", nrank
+                    write(*,*) "Point = ", point
+                endif
             else if (cube_flag.eq.1) then
                 is_inside = (abs(xm-position(1)).lt.ra).and.(abs(ym-position(2)).lt.ra).and.(abs(zm-position(3)).lt.ra)
             endif
