@@ -139,6 +139,12 @@ subroutine inflow (phi)
     integer  :: i,j,k,is
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
+    if ((shear_flow_ybc.eq.1).or.(shear_flow_zbc.eq.1)) then 
+        u1 = 0.0_mytype
+        u2 = 0.0_mytype
+    endif
+
+
     !call random_number(bxo)
     !call random_number(byo)
     !call random_number(bzo)
