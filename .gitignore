@@ -36,3 +36,10 @@ checkpoint
 restart*
 forces.dat*
 data/
+yp.dat
+ypi.dat
+turb-data
+setting.json
+.vscode/*
+log
+

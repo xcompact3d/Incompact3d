@@ -15,6 +15,7 @@ add_executable(xcompact3d
                     acl_utils.f90 
                     adm.f90
                     airfoils.f90
+
                     Case-ABL.f90
                     Case-Cavity.f90
                     Case-Channel.f90
@@ -28,6 +29,22 @@ add_executable(xcompact3d
                     Case-TBL.f90
                     Case-TGV.f90
                     Case-Uniform.f90
+                    
+                    BC-ABL.f90
+                    BC-Cavity.f90
+                    BC-Channel-flow.f90
+                    BC-Cylinder.f90
+                    BC-dbg-schemes.f90
+                    BC-Lock-exchange.f90
+                    BC-Mixing-layer.f90
+                    BC-Periodic-hill.f90
+		                BC-Sandbox.f90
+                    BC-TBL.f90
+                    BC-TGV.f90
+                    BC-TTBL.f90
+                    BC-Uniform.f90
+                    BC-User.f90
+
                     case.f90
                     derive.f90
                     dynstall.f90
