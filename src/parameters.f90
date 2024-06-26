@@ -37,7 +37,7 @@ subroutine parameter(input_i3d)
 
   character(len=80), intent(in) :: input_i3d
   real(mytype) :: theta, cfl,cf2
-  integer :: longueur ,impi,j, is, total
+  integer :: longueur ,impi,j, is, total, ierr
 
   NAMELIST /BasicParam/ p_row, p_col, nx, ny, nz, istret, beta, xlx, yly, zlz, &
        itype, iin, re, u1, u2, init_noise, inflow_noise, &
@@ -48,7 +48,8 @@ subroutine parameter(input_i3d)
        ivisu, ipost, &
        gravx, gravy, gravz, &
        cpg, idir_stream, &
-       ifilter, C_filter, iturbine, mhd_active
+       ifilter, C_filter, iturbine, mhd_active,FreeStream
+
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, iimplicit, &
        nu0nu, cnu, ipinter
   NAMELIST /InOutParam/ irestart, icheckpoint, ioutput, nvisu, ilist, iprocessing, &
@@ -61,6 +62,10 @@ subroutine parameter(input_i3d)
        scalar_lbound, scalar_ubound, sc_even, sc_skew, &
        alpha_sc, beta_sc, g_sc, Tref
   NAMELIST /LESModel/ jles, smagcst, smagwalldamp, nSmag, walecst, maxdsmagcst, iconserv
+  NAMELIST /ThetaDotModel/ jtheta_dot,jthickness,Method_FT,K_theta,H_12
+  NAMELIST /BlowingModel/ Blowing,A_Blowing,Xst_Blowing,Xen_Blowing,Range_Smooth  
+  NAMELIST /AdversePresGrad/ APG,APG_DpDX,APG_Beta
+  NAMELIST /ProbeSpectra/ Pro_Spectra,X_Pro_Spectra,Z_Pro_Spectra
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
   NAMELIST /ibmstuff/ cex,cey,cez,ra,rai,rao,nobjmax,nraf,nvol,iforces, npif, izap, ianal, imove, thickness, chord, omega ,ubcx,ubcy,ubcz,rads, c_air
   NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, &
@@ -70,13 +75,13 @@ subroutine parameter(input_i3d)
        imassconserve, ibuoyancy, iPressureGradient, iCoriolis, CoriolisFreq, &
        istrat, idamping, iheight, TempRate, TempFlux, itherm, gravv, UG, T_wall, T_top, ishiftedper, iconcprec, pdl, dsampling 
   NAMELIST /CASE/ pfront
+
   NAMELIST/ALMParam/iturboutput,NTurbines,TurbinesPath,NActuatorlines,ActuatorlinesPath,eps_factor,rho_air
   NAMELIST/ADMParam/Ndiscs,ADMcoords,iturboutput,rho_air,T_relax
   NAMELIST/MHDParam/mhd_equation,hartmann,stuart,rem, &
      nclxBx1, nclxBxn, nclyBx1, nclyBxn, nclzBx1, nclzBxn, &
      nclxBy1, nclxByn, nclyBy1, nclyByn, nclzBy1, nclzByn, &
      nclxBz1, nclxBzn, nclyBz1, nclyBzn, nclzBz1, nclzBzn
-
 
 #ifdef DEBG
   if (nrank == 0) write(*,*) '# parameter start'
@@ -88,7 +93,7 @@ subroutine parameter(input_i3d)
      write(*,*) '===Copyright (c) 2018 Eric Lamballais and Sylvain Laizet==='
      write(*,*) '===Modified by Felipe Schuch and Ricardo Frantz============'
      write(*,*) '===Modified by Paul Bartholomew, Georgios Deskos and======='
-     write(*,*) '===Sylvain Laizet -- 2018- ================================'
+     write(*,*) '===Sylvain Laizet -- 2018- == && ==  Pasha -- 2023   ======'
      write(*,*) '==========================================================='
 #if defined(VERSION)
      write(*,*)'Git version        : ', VERSION
@@ -227,13 +232,25 @@ subroutine parameter(input_i3d)
 
   ! !! These are the 'optional'/model parameters
   ! read(10, nml=ScalarParam)
-  if(ilesmod==0) then
-     nu0nu=four
-     cnu=0.44_mytype
-  endif
+
+  ! Disable by Pasha
+  !if(ilesmod==0) then
+  !   nu0nu=four
+  !   cnu=0.44_mytype
+  !endif
+
   if(ilesmod.ne.0) then
      read(10, nml=LESModel); rewind(10)
   endif
+  
+  !!==> Pasha
+  if(itype .eq. 14) then
+     read(10, nml=ThetaDotModel); rewind(10)
+     read(10, nml=BlowingModel); rewind(10)
+     read(10, nml=AdversePresGrad); rewind(10)
+     read(10, nml=ProbeSpectra); rewind(10)
+  end if
+
   if (itype.eq.itype_tbl) then
      read(10, nml=Tripping); rewind(10)
   endif
@@ -247,6 +264,7 @@ subroutine parameter(input_i3d)
   endif
   ! read(10, nml=TurbulenceWallModel)
   read(10, nml=CASE); rewind(10) !! Read case-specific variables
+
   close(10)
 
   ! allocate(sc(numscalar),cp(numscalar),ri(numscalar),group(numscalar))
@@ -376,6 +394,8 @@ subroutine parameter(input_i3d)
         print *,'Sandbox'
      elseif (itype.eq.itype_cavity) then
         print *,'Cavity'  
+     elseif (itype.eq.itype_ttbl) then
+        print *,'Temporal turbulent boundary layer' 
      else
         print *,'Unknown itype: ', itype
         stop
@@ -429,26 +449,84 @@ subroutine parameter(input_i3d)
      !
      if (iimplicit.ne.0) then
        if (iimplicit.eq.1) then
-         write(*,"('                          ',A40)") "With backward Euler for Y diffusion"
+         write(*,"('                        : ',A40)") "With backward Euler for Y diffusion"
        else if (iimplicit.eq.2) then
-         write(*,"('                          ',A40)") "With CN for Y diffusion"
+         write(*,"('                        : ',A30)") "With CN for Y diffusion"
        endif
      endif
      !
-     if (ilesmod.ne.0) then
-       write(*,*) '                   : DNS'
+     write(*,*) '==========================================================='
+     if (ilesmod.eq.0) then
+      write(*,"(' Performing                : ',A10)") "DNS"
      else
        if (jles==1) then
-          write(*,*) '                   : Phys Smag'
+          write(*,"(' Performing LES            : ',A10)") "Phys Smag"
        else if (jles==2) then
-          write(*,*) '                   : Phys WALE'
+          write(*,"(' Performing LES            : ',A10)") "Phys WALE"
        else if (jles==3) then
-          write(*,*) '                   : Phys dyn. Smag'
-       else if (jles==4) then
-          write(*,*) '                   : iSVV'
+          write(*,"(' Performing LES            : ',A15)") "Phys dyn. Smag"
+       else if (jles==4) then 
+          write(*,"(' Performing LES            : ',A10)") "iSVV"
        else
        endif
      endif
+     write(*,*) '==========================================================='
+     if (FreeStream==0) then 
+         write(*,"(' FreeStream (BC)           : ',A10)") "Off"
+     else if (FreeStream==1) then
+         write(*,"(' FreeStream (BC)           : ',A10)") "On"
+     end if         
+     write(*,*) '==========================================================='
+      if (jtheta_dot==0) then 
+         write(*,"(' Theta dot Model           : ',A10)") "Biau"
+      else if (jtheta_dot==1) then
+         write(*,"(' Theta dot Model           : ',A10)") "Andy"
+         if (jthickness ==0) then 
+            write(*,"(' Model works based on      : ',A25)") "Momentum Thickness"
+         else
+            write(*,"(' Model works based on      : ',A25)") "Displacement Thickness"
+            write(*,"(' H_12 for scaling          : ',F12.6)") H_12 
+         end if
+         if (Method_FT ==0) then 
+            write(*,"(' Theta Model version       : ',A25)") " v1.0 "
+         elseif (Method_FT ==1) then 
+            write(*,"(' Theta Model version       : ',A25)") " v2.0 "
+         end if
+         write(*,"(' K coefficient => e(Th)    : ',F12.6)") K_theta 
+      endif
+
+      write(*,*) '==========================================================='
+      if (Blowing==0) then 
+         write(*,"(' Blowing                   : ',A10)") "Off"
+      elseif (Blowing==1) then
+         write(*,"(' Blowing                   : ',A10)") "On"
+         write(*,"(' Blowing Amplitude         : ',F12.6)") A_Blowing
+         write(*,"(' Blowing Region Start      : ',F12.6)") Xst_Blowing
+         write(*,"(' Blowing Region End        : ',F12.6)") Xen_Blowing
+         write(*,"(' Control Region Thickness  : ',F12.6)") Xen_Blowing-Xst_Blowing
+         write(*,"(' Smoothening Range         : ',F12.6)") Range_Smooth
+      endif
+
+      write(*,*) '==========================================================='
+      if (APG==0) then 
+         write(*,"(' Adverse Pressure Gradient : ',A10)") "Off"
+      elseif (APG==1) then
+         write(*,"(' Adverse Pressure Gradient : ',A10)") "On"
+         write(*,"(' Pressure Gradient         : ',F12.6)") APG_DpDX
+      elseif (APG==2) then
+         write(*,"(' Adverse Pressure Gradient : ',A10)") "On"
+         write(*,"(' Beta of Pressure Gradient : ',F12.6)") APG_Beta         
+      endif
+
+      write(*,*) '==========================================================='
+      if (Pro_Spectra==0) then 
+         write(*,"(' Probe for Spectra         : ',A10)") "Off"
+      elseif (Pro_Spectra==1) then
+         write(*,"(' Probe for Spectra         : ',A10)") "On"
+         write(*,"(' Probe Location (X)        : ',F12.6)") X_Pro_Spectra
+         write(*,"(' Probe Location (Z)        : ',F12.6)") Z_Pro_Spectra
+      endif
+
      write(*,*) '==========================================================='
      write(*,"(' ifirst                 : ',I17)") ifirst
      write(*,"(' ilast                  : ',I17)") ilast
@@ -524,6 +602,7 @@ subroutine parameter(input_i3d)
      write(*,"(' nclx1, nclxn           : ',I15,',',I1 )") nclx1,nclxn
      write(*,"(' ncly1, nclyn           : ',I15,',',I1 )") ncly1,nclyn
      write(*,"(' nclz1, nclzn           : ',I15,',',I1 )") nclz1,nclzn
+     write(*,"(' FreeStream             : ',I15 )") FreeStream
      write(*,*) '==========================================================='
      if ((iscalar==1).or.(ilmn)) then
        write(*,"(' Boundary condition scalar field: ')")
@@ -566,6 +645,15 @@ subroutine parameter(input_i3d)
      if (itype==itype_gravitycur) then
         write(*,*)  "Initial front location: ", pfront
      endif
+     ! Check output parameters are valid for TTBL
+     if (itype.eq.itype_ttbl) then
+        if (ioutput < ilist .or. mod(ioutput, ilist) /= 0) then
+           if (nrank == 0) write (*, *) 'ioutput must be exactly divisible by ilist'
+           call MPI_ABORT(MPI_COMM_WORLD, -1, ierr)
+        else
+           if (nrank == 0) write (*, *) 'Output buffer size for TTBL postprocessing = ', ioutput / ilist
+        end if
+     end if
      write(*,*) '==========================================================='
   endif
   
@@ -739,5 +827,5 @@ subroutine parameter_defaults()
   ys_tr_tbl=0.350508_mytype
   ts_tr_tbl=1.402033_mytype
   x0_tr_tbl=3.505082_mytype
-
-end subroutine parameter_defaults
+ 
+ end subroutine parameter_defaults
