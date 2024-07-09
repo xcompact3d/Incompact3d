@@ -311,7 +311,7 @@ contains
           call decomp_2d_write_one(1,mu1(:,:,:),resfile,"mu",0,io_restart,reduce_prec=.false.)
        endif
 
-       if (mhd_active .and. mhd_equation) then
+       if (mhd_active .and. mhd_equation == 'induction') then
           call decomp_2d_write_one(1,Bm(:,:,:,1),resfile,'bx',0,io_restart,reduce_prec=.false.)
           call decomp_2d_write_one(1,Bm(:,:,:,2),resfile,'by',0,io_restart,reduce_prec=.false.)
           call decomp_2d_write_one(1,Bm(:,:,:,3),resfile,'bz',0,io_restart,reduce_prec=.false.)
@@ -438,7 +438,7 @@ contains
           call decomp_2d_read_one(1,mu1,resfile,"mu",io_restart,reduce_prec=.false.)
        end if
 
-       if(mhd_active .and. mhd_equation) then
+       if(mhd_active .and. mhd_equation == 'induction') then
           call decomp_2d_read_one(1,Bm(:,:,:,1),resfile,'bx',io_restart,reduce_prec=.false.)
           call decomp_2d_read_one(1,Bm(:,:,:,2),resfile,'by',io_restart,reduce_prec=.false.)
           call decomp_2d_read_one(1,Bm(:,:,:,3),resfile,'bz',io_restart,reduce_prec=.false.)
@@ -568,7 +568,7 @@ contains
        end do
     end if
  
-    if (mhd_active .and. mhd_equation) then
+    if (mhd_active .and. mhd_equation == 'induction') then
        call decomp_2d_register_variable(io_restart, "bx", 1, 0, 0, mytype)
        call decomp_2d_register_variable(io_restart, "by", 1, 0, 0, mytype)
        call decomp_2d_register_variable(io_restart, "bz", 1, 0, 0, mytype)
@@ -817,7 +817,7 @@ contains
         write(*,*) '==========================================================='
      endif
      
-     if( mhd_active.and.mhd_equation) then
+     if( mhd_active .and. mhd_equation=='induction') then
  
         cfl_diff_x = dt/ (dx**2) / rem
         cfl_diff_z = dt/ (dz**2) / rem

@@ -71,7 +71,7 @@ program xcompact3d
         call solve_poisson(pp3,px1,py1,pz1,rho1,ux1,uy1,uz1,ep1,drho1,divu3)
         call cor_vel(ux1,uy1,uz1,px1,py1,pz1)
 
-        if(mhd_active .and. mhd_equation) then
+        if(mhd_active .and. mhd_equation == 'induction') then
           call solve_poisson_mhd()
         endif
 
@@ -272,11 +272,18 @@ subroutine init_xcompact3d()
         write(42,'(6(A20))') 'time','kinetic_energy','dissipation_rate','dissipation_rate_2','enstrophy','enstrophy_max'
         if(mhd_active) then
            open(43,file='mhd_time_evol.dat',form='formatted')
-           write(43,'(4(A20))') 'time','magnetic_energy','magnetic_enstrophy','current_max'
+           write(43,'(6(A20))') 'time','magnetic_energy','mhd_enstrophy_j','mhd_enstrophy_gradb','mhd_dissipation','Jmax'
         endif
      endif
   endif
 
+  if (itype==3) then
+    if(nrank.eq.0)then
+      open(52,file='chan_time_evol.dat',form='formatted')
+      write(52,'(3(A20))') 'time','friction_velocity','ux_max'
+    endif
+  endif
+  
   if (itype==5) then
      if(nrank.eq.0)then
         open(38,file='forces.dat',form='formatted')

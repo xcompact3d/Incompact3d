@@ -68,23 +68,24 @@ contains
              do i=1,xsize(1)
                 x=real(i-1,mytype)*dx
                 if(mhd_active) then
-                   ux1(i,j,k)= -two*sin(y)
-                   uy1(i,j,k)=  two*sin(x)
-                   uz1(i,j,k)=zero
                    !
-                   ! 2D OTV
-                   Bm(i,j,k,1)=-two*sin(y)
-                   Bm(i,j,k,2)= two*sin(two*x)
-                   Bm(i,j,k,3)=zero
-                   
-                   ! 3D OTV
-                   ! Bm(i,j,k,1)= 0.8_mytype*(-two*sin(two*y) + sin(z))
-                   ! Bm(i,j,k,2)= 0.8_mytype*( two*sin(x)     + sin(z))
-                   ! Bm(i,j,k,3)= 0.8_mytype*(     sin(x)     + sin(y))
+                   ! OTV
+                   ux1(i,j,k)=-two*sin(y)
+                   uy1(i,j,k)= two*sin(x)
+                   uz1(i,j,k)= zero
                    !
-                   Bmean(i,j,k,1)=zero
-                   Bmean(i,j,k,2)=zero
-                   Bmean(i,j,k,3)=zero
+                   if(nz<=2) then
+                     ! 2D OTV
+                     Bm(i,j,k,1)=-two*sin(y)
+                     Bm(i,j,k,2)= two*sin(two*x)
+                     Bm(i,j,k,3)= zero
+                   else
+                     ! 3D OTV
+                     Bm(i,j,k,1)= 0.8_mytype*(-two*sin(two*y) + sin(z))
+                     Bm(i,j,k,2)= 0.8_mytype*( two*sin(x)     + sin(z))
+                     Bm(i,j,k,3)= 0.8_mytype*(     sin(x)     + sin(y))
+                    endif
+                    !
                 else
                    ux1(i,j,k)=+sin(x)*cos(y)*cos(z)
                    uy1(i,j,k)=-cos(x)*sin(y)*cos(z)
@@ -282,8 +283,9 @@ contains
     real(mytype) :: mp(numscalar),mps(numscalar),vl,es,es1,ek,ek1,ds,ds1
     real(mytype) :: temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9
 
+    real(mytype), allocatable, dimension(:,:,:) :: bx2,by2,bz2,bx3,by3,bz3
     real(mytype) :: eek, enst, eps, eps2, enst_max
-    real(mytype) :: eem,omegam,jmax
+    real(mytype) :: eem,omegam,jmax,disb,omegab
     integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
 
     integer :: i,j,k,is,code,nvect1
@@ -481,8 +483,76 @@ contains
           omegam=omegam/(nxc*nyc*nzc)*Rem*Rem
           jmax=jmax*Rem
 
+          !
+          call alloc_y(bx2)
+          bx2=zero
+          call alloc_y(by2)
+          by2=zero
+          call alloc_y(bz2)
+          bz2=zero
+
+          call alloc_z(bx3)
+          bx3=zero
+          call alloc_z(by3)
+          by3=zero
+          call alloc_z(bz3)
+          bz3=zero
+          !
+
+          call transpose_x_to_y(Bm(:,:,:,1),bx2)
+          call transpose_x_to_y(Bm(:,:,:,2),by2)
+          call transpose_x_to_y(Bm(:,:,:,3),bz2)
+          call transpose_y_to_z(bx2,bx3)
+          call transpose_y_to_z(by2,by3)
+          call transpose_y_to_z(bz2,bz3)
+
+          !x-derivatives
+          call derx (ta1,Bm(:,:,:,1),di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+          call derx (tb1,Bm(:,:,:,2),di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+          call derx (tc1,Bm(:,:,:,3),di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
+          !y-derivatives
+          call dery (ta2,bx2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+          call dery (tb2,by2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+          call dery (tc2,bz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
+          !!z-derivatives
+          call derz (ta3,bx3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+          call derz (tb3,by3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+          call derz (tc3,bz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
+          !!all back to x-pencils
+          call transpose_z_to_y(ta3,td2)
+          call transpose_z_to_y(tb3,te2)
+          call transpose_z_to_y(tc3,tf2)
+          call transpose_y_to_x(td2,tg1)
+          call transpose_y_to_x(te2,th1)
+          call transpose_y_to_x(tf2,ti1)
+          call transpose_y_to_x(ta2,td1)
+          call transpose_y_to_x(tb2,te1)
+          call transpose_y_to_x(tc2,tf1)
+
+          !SPATIALLY-AVERAGED ENERGY DISSIPATION
+          temp1=zero
+          temp2=zero
+          do k=1,xsize3
+             do j=1,xsize2
+                do i=1,xsize1
+                   temp1=temp1+half/rem*((two*ta1(i,j,k))**two+(two*te1(i,j,k))**two+&
+                                         (two*ti1(i,j,k))**two+two*(td1(i,j,k)+tb1(i,j,k))**two+&
+                                                               two*(tg1(i,j,k)+tc1(i,j,k))**two+&
+                                                               two*(th1(i,j,k)+tf1(i,j,k))**two)
+                   temp2=temp2+zpfive*((tf1(i,j,k)-th1(i,j,k))**2+&
+                                       (tg1(i,j,k)-tc1(i,j,k))**2+&
+                                       (tb1(i,j,k)-td1(i,j,k))**2)
+                enddo
+             enddo
+          enddo
+          call MPI_ALLREDUCE(temp1,disb,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+          disb=disb/(nxc*nyc*nzc)
+
+          call MPI_ALLREDUCE(temp2,omegab,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+          omegab=omegab/(nxc*nyc*nzc)
+
           if (nrank==0) then
-             write(43,'(4(E20.12))')itime*dt,eem,omegam,jmax
+             write(43,'(6(E20.12))')itime*dt,eem,omegam,omegab,disb,jmax
              flush(43)
           endif
 

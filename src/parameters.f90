@@ -628,7 +628,7 @@ subroutine parameter_defaults()
   datapath = './data/'
 
   mhd_active=.false.
-  mhd_equation=.false.
+  mhd_equation='potential'
   rem = zero
   stuart = zero
   hartmann = zero

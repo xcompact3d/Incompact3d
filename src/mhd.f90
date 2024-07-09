@@ -6,13 +6,13 @@ module mhd
   !
   use decomp_2d_constants, only : mytype, real_type
   use decomp_2d_mpi, only : nrank,nproc
-  use decomp_2d, only : xsize
+  use decomp_2d, only : xsize,xstart
   use mptool, only: psum,pmax,cross_product
   !
   implicit none
   !
   logical :: mhd_active
-  logical :: mhd_equation
+  character(len=9) :: mhd_equation
   real(8) :: hartmann,stuart,rem
   !+------------+------------------------------------------------------+
   !|  mhd_active| the swith to activate the mhd module.                |
@@ -46,7 +46,10 @@ module mhd
   !+-------------------------------------------------------------------+
   subroutine mhd_init
     !
-    use param, only: re,ntime
+    use param, only: re,ntime,itype,itype_channel,itype_tgv,zlz,dz
+    !
+    real(mytype) :: z
+    integer :: i,j,k
     !
     ! stuart=hartmann**2/re
     !
@@ -77,6 +80,27 @@ module mhd
     allocate(Bmean(xsize(1),xsize(2),xsize(3),1:3))
     !
     if(nrank==0) print*,'** MHD fields allocated'
+    !
+    if(mhd_equation == 'induction') then
+      
+      if(itype.eq.itype_tgv) then
+        Bmean(:,:,:,1)=0.0
+        Bmean(:,:,:,2)=0.0 
+        Bmean(:,:,:,3)=0.0
+      endif
+    elseif(mhd_equation == 'potential') then
+      if(itype.eq.itype_channel) then
+        Bmean=0.d0
+        !
+        Bm(:,:,:,1)=0.d0
+        Bm(:,:,:,2)=1.d0
+        Bm(:,:,:,3)=0.d0
+      endif
+      !
+      if(nrank==0) print*,'** MHD fields initlised'
+    else
+      stop ' mhd_equation not induction or potential'
+    endif
     !
   end subroutine mhd_init
   !+-------------------------------------------------------------------+
@@ -272,10 +296,12 @@ module mhd
     integer :: i,j,k
     real(mytype) :: eforce(3), elecur(3),var1(3),var2(3)
     
-    if(mhd_equation) then
+    if(mhd_equation == 'induction') then
       Je=del_cross_prod(Bm+Bmean)/Rem
-    else
+    elseif(mhd_equation == 'potential') then
       Je=solve_mhd_potential_poisson(ux1,uy1,uz1)
+    else
+      stop ' mhd_equation error '
     endif
     !
     do k = 1, xsize(3)
