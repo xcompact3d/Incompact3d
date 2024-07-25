@@ -8,7 +8,7 @@ import math
 x3d.param["mytype"] = np.float64
 
 # Load parameters
-prm  = x3d.Parameters(loadfile='input.i3d')
+prm  = x3d.Parameters(loadfile='gen.i3d')
 epsi = x3d.init_epsi(prm, dask=True)
 
 # Read the STL file

@@ -131,18 +131,4 @@
         nobjmax = 1               ! Maximum number of objects in any direction
            npif = 2               ! Number of Points for the Reconstruction (npif=1-3) (Recommended: 2)
            nraf = 10              ! Level of refinement for iibm==2 to find the surface of the immersed object
-        iforces = 1
-           nvol = 1
-/End
-
-!==================
-&ForceCVs
-!==================
-i2dsim = 0 ! select 1 for 2D CV Force Calculation and 0 for 3D CV Force Calculation
-xld(1) = 1.5 !X left for volume control
-xrd(1) = 3.5 !X right for volume control
-yld(1) = 1.5 !Y bottom for volume control
-yud(1) = 3.5 !Y top for volume control
-zfr(1) = 1.5 !Z front for volume control
-zbk(1) = 3.5 !Z back for volume control
 /End
