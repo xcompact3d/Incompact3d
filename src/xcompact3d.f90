@@ -275,7 +275,7 @@ subroutine init_xcompact3d()
         open(42,file='time_evol.dat',form='formatted')
      endif
   endif
-  if (itype==5) then
+  if (iforces == 1) then
      if(nrank.eq.0)then
         open(38,file='forces.dat',form='formatted')
      endif
@@ -297,6 +297,7 @@ subroutine finalise_xcompact3d()
   use visu, only : visu_finalise
   use les, only: finalise_explicit_les
   use mhd, only: mhd_active, mhd_fin
+  use forces, only: iforces
 
   implicit none
 
@@ -307,7 +308,7 @@ subroutine finalise_xcompact3d()
         close(42)
      endif
   endif
-  if (itype==5) then
+  if (iforces == 1) then
      if(nrank.eq.0)then
         close(38)
      endif
