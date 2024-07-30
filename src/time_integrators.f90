@@ -340,9 +340,10 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1, duy1, duz1
 
     if (iimplicit.ge.1) then
-       call intt(ux1, dux1, npaire=1, isc=0, forcing1=px1)
-       call intt(uy1, duy1, npaire=0, isc=0, forcing1=py1)
-       call intt(uz1, duz1, npaire=1, isc=0, forcing1=pz1)
+       ! Support for streamwise periodic BCs - Ricardo Frantz
+       call intt(ux1, dux1, npaire=1, isc=-1, forcing1=px1)
+       call intt(uy1, duy1, npaire=0, isc=-2, forcing1=py1)
+       call intt(uz1, duz1, npaire=1, isc=-3, forcing1=pz1)
     else
        call intt(ux1, dux1)
        call intt(uy1, duy1)

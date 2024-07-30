@@ -21,6 +21,7 @@ module case
   use sandbox
   use cavity
   use pipe
+  use ttbl
 
   use var, only : nzmsize
 
@@ -111,6 +112,10 @@ contains
 
        call init_pipe(ux1, uy1, uz1, ep1, phi1)
 
+       elseif (itype.eq.itype_ttbl) then
+
+       call init_ttbl(ux1, uy1, uz1, phi1)
+
     else
   
          if (nrank.eq.0) then
@@ -194,6 +199,10 @@ contains
     elseif (itype.eq.itype_pipe) then
 
        call boundary_conditions_pipe (ux, uy, uz, phi)
+
+    elseif (itype.eq.itype_ttbl) then
+
+       call boundary_conditions_ttbl(ux, uy, uz, phi)
 
     endif
 
@@ -353,6 +362,10 @@ contains
 
        call postprocess_pipe(ux, uy, uz, pp, phi, ep)
 
+    elseif (itype.eq.itype_ttbl) then
+      
+       call postprocess_ttbl (ux, uy, uz, pp, phi, ep)
+
     endif
 
     if (iforces.eq.1) then
@@ -399,6 +412,10 @@ contains
     else if (itype .eq. itype_uniform) then
 
        call visu_uniform_init(case_visu_init)      
+
+    else if (itype .eq. itype_ttbl) then
+
+       call visu_ttbl_init(case_visu_init)
 
     end if
     
@@ -459,6 +476,11 @@ contains
        call visu_uniform(ux1, uy1, uz1, pp3, phi1, ep1, num)
        called_visu = .true.
 
+    elseif (itype.eq.itype_ttbl) then
+
+       call visu_ttbl(ux1, uy1, uz1, pp3, phi1, ep1, num)
+       called_visu = .true.
+
     endif
 
     if (called_visu .and. (.not. case_visu_init)) then
@@ -498,6 +520,10 @@ contains
 
        call momentum_forcing_abl(dux1, duy1, duz1, ux1, uy1, uz1, phi1)
 
+    elseif (itype.eq.itype_ttbl) then
+
+       call momentum_forcing_ttbl(dux1, duy1, duz1, ux1, uy1, uz1, phi1)
+
     endif
 
     if(mhd_active) then
@@ -525,6 +551,10 @@ contains
     if (itype.eq.itype_abl) then
 
        call scalar_forcing_abl(uy1, dphi1, phi1)
+
+    elseif (itype.eq.itype_ttbl) then
+
+       call scalar_forcing_ttbl(uy1, dphi1, phi1)
 
     endif
 
