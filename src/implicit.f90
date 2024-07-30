@@ -653,7 +653,7 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   ! Specific cases first
   ! This is the location for exotic / nonhomogeneous boundary conditions
   !
-  if (itype.eq.itype_ttbl .and. isc.le.0) then
+  if (itype.eq.itype_ptbl .and. isc.le.0) then
      if (isc.eq.-1) then ! ux    -> by*1 and n are defined in pencil x!!!
         bcbot(:,:) = byx1_2(:,:)
         bctop(:,:) = byxn_2(:,:)

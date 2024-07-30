@@ -28,6 +28,7 @@ add_executable(xcompact3d
                     Case-TBL.f90
                     Case-TGV.f90
                     Case-Uniform.f90
+		    Case-PTBL.f90
                     case.f90
                     derive.f90
                     dynstall.f90

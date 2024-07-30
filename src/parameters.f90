@@ -390,7 +390,7 @@ subroutine parameter(input_i3d)
         print *,'Sandbox'
      elseif (itype.eq.itype_cavity) then
         print *,'Cavity'  
-     elseif (itype.eq.itype_ttbl) then
+     elseif (itype.eq.itype_ptbl) then
         print *,'Temporal turbulent boundary layer' 
      else
         print *,'Unknown itype: ', itype
@@ -641,7 +641,7 @@ subroutine parameter(input_i3d)
         write(*,*)  "Initial front location: ", pfront
      endif
      ! Check output parameters are valid for TTBL
-     if (itype.eq.itype_ttbl) then
+     if (itype.eq.itype_ptbl) then
         if (ioutput < ilist .or. mod(ioutput, ilist) /= 0) then
            if (nrank == 0) write (*, *) 'ioutput must be exactly divisible by ilist'
            call MPI_ABORT(MPI_COMM_WORLD, -1, ierr)

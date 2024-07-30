@@ -21,7 +21,7 @@ module case
   use sandbox
   use cavity
   use pipe
-  use ttbl
+  use ptbl
 
   use var, only : nzmsize
 
@@ -112,9 +112,9 @@ contains
 
        call init_pipe(ux1, uy1, uz1, ep1, phi1)
 
-       elseif (itype.eq.itype_ttbl) then
+       elseif (itype.eq.itype_ptbl) then
 
-       call init_ttbl(ux1, uy1, uz1, phi1)
+       call init_ptbl(ux1, uy1, uz1, phi1)
 
     else
   
@@ -200,9 +200,9 @@ contains
 
        call boundary_conditions_pipe (ux, uy, uz, phi)
 
-    elseif (itype.eq.itype_ttbl) then
+    elseif (itype.eq.itype_ptbl) then
 
-       call boundary_conditions_ttbl(ux, uy, uz, phi)
+       call boundary_conditions_ptbl(ux, uy, uz, phi)
 
     endif
 
@@ -362,9 +362,9 @@ contains
 
        call postprocess_pipe(ux, uy, uz, pp, phi, ep)
 
-    elseif (itype.eq.itype_ttbl) then
+    elseif (itype.eq.itype_ptbl) then
       
-       call postprocess_ttbl (ux, uy, uz, pp, phi, ep)
+       call postprocess_ptbl (ux, uy, uz, pp, phi, ep)
 
     endif
 
@@ -413,9 +413,9 @@ contains
 
        call visu_uniform_init(case_visu_init)      
 
-    else if (itype .eq. itype_ttbl) then
+    else if (itype .eq. itype_ptbl) then
 
-       call visu_ttbl_init(case_visu_init)
+       call visu_ptbl_init(case_visu_init)
 
     end if
     
@@ -476,9 +476,9 @@ contains
        call visu_uniform(ux1, uy1, uz1, pp3, phi1, ep1, num)
        called_visu = .true.
 
-    elseif (itype.eq.itype_ttbl) then
+    elseif (itype.eq.itype_ptbl) then
 
-       call visu_ttbl(ux1, uy1, uz1, pp3, phi1, ep1, num)
+       call visu_ptbl(ux1, uy1, uz1, pp3, phi1, ep1, num)
        called_visu = .true.
 
     endif
@@ -520,9 +520,9 @@ contains
 
        call momentum_forcing_abl(dux1, duy1, duz1, ux1, uy1, uz1, phi1)
 
-    elseif (itype.eq.itype_ttbl) then
+    elseif (itype.eq.itype_ptbl) then
 
-       call momentum_forcing_ttbl(dux1, duy1, duz1, ux1, uy1, uz1, phi1)
+       call momentum_forcing_ptbl(dux1, duy1, duz1, ux1, uy1, uz1, phi1)
 
     endif
 
@@ -552,9 +552,9 @@ contains
 
        call scalar_forcing_abl(uy1, dphi1, phi1)
 
-    elseif (itype.eq.itype_ttbl) then
+    elseif (itype.eq.itype_ptbl) then
 
-       call scalar_forcing_ttbl(uy1, dphi1, phi1)
+       call scalar_forcing_ptbl(uy1, dphi1, phi1)
 
     endif
 

@@ -2,11 +2,12 @@
 !This file is part of Xcompact3d (xcompact3d.com)
 !SPDX-License-Identifier: BSD 3-Clause
 
-module ttbl
-   use decomp_2d
-   use variables
-   use param
-   use MPI
+module ptbl
+  use decomp_2d
+  use decomp_2d_mpi
+  use variables
+  use param
+  use MPI
 
    implicit none
 
@@ -24,12 +25,12 @@ module ttbl
    real(mytype), save :: theta_a, theta_b, theta_c, ZTn
    real(mytype), save :: thetad
 
-   public :: init_ttbl, boundary_conditions_ttbl, momentum_forcing_ttbl, scalar_forcing_ttbl, postprocess_ttbl, visu_ttbl_init, visu_ttbl
+   public :: init_ptbl, boundary_conditions_ptbl, momentum_forcing_ptbl, scalar_forcing_ptbl, postprocess_ptbl, visu_ptbl_init, visu_ptbl
 
 contains
    !############################################################################
    !############################################################################
-   subroutine init_ttbl(ux1, uy1, uz1, phi1)
+   subroutine init_ptbl(ux1, uy1, uz1, phi1)
       implicit none
       real(mytype), intent(inout), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
       real(mytype), intent(inout), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
@@ -70,7 +71,7 @@ contains
                end do
             end do
          else
-            if (nrank == 0) write (6, *) 'Invalid inflow conditions for TTBL'
+            if (nrank == 0) write (*, *) 'Invalid inflow conditions for PTBL'
             call MPI_ABORT(MPI_COMM_WORLD, -1, code)
          end if
       end if
@@ -80,10 +81,10 @@ contains
          uy1(:, 1, :) = zero
          uz1(:, 1, :) = zero
       end if
-   end subroutine init_ttbl
+   end subroutine init_ptbl
    !############################################################################
    !############################################################################
-   subroutine boundary_conditions_ttbl(ux, uy, uz, phi)
+   subroutine boundary_conditions_ptbl(ux, uy, uz, phi)
       implicit none
       real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux, uy, uz
       real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi
@@ -157,7 +158,7 @@ contains
          end if
          phi = zero
       !end if
-   end subroutine boundary_conditions_ttbl
+   end subroutine boundary_conditions_ptbl
    function smoothening_function(x, start_transition, end_transition, transition_width, constant_value) result(output)
       real(mytype), intent(in) :: x, start_transition, end_transition, transition_width, constant_value
       real :: output
@@ -173,7 +174,7 @@ contains
   end function smoothening_function
    !############################################################################
    !############################################################################
-   subroutine momentum_forcing_ttbl(dux1, duy1, duz1, ux1, uy1, uz1, phi1)
+   subroutine momentum_forcing_ptbl(dux1, duy1, duz1, ux1, uy1, uz1, phi1)
       use var, only: ta1, tb1, tc1, ux2, uy2, uz2, ta2, tb2, tc2, di2
 
       implicit none
@@ -183,28 +184,28 @@ contains
 
       real(mytype), dimension(ysize(2)) :: ux2m, ydudy2m, dudy2m, du2dy22m, duxuy2pm
       real(mytype) :: y, theta, delta, tau_wall, ufric
-      integer :: i, j, k, code
+      integer :: i, j, k, code, newunit
       real(mytype), save :: P_DpDX
 
       ! Allocate arrays and read data (if restart)
       if (itime == ifirst) then
          if (APG .ne. 0) P_DpDX = APG_DpDX
-         write (6, "(' 1 Adverse Pressure Gradient ',F14.12)") ,P_DpDX
+         write (*, "(' 1 Adverse Pressure Gradient ',F14.12)") P_DpDX
          if (jtheta_dot ==0) allocate (ttda(ysize(2)), ttdb(ysize(2)), ttdc(ysize(2))) 
          if (irestart == 1) then
-            open (unit=67, file='checkpoint_ttbl', status='unknown', form='unformatted', action='read')
+            open (unit=newunit, file='checkpoint_ptbl', status='unknown', form='unformatted', action='read')
             if (jtheta_dot ==0) then
-               read (67) thetad, ttda, ttdb, ttdc
+               read (newunit) thetad, ttda, ttdb, ttdc
             !==> Andy method
             else if (((jtheta_dot ==1) .and. (ilesmod /=0) ) .or. ((jtheta_dot ==1) .and. (Method_FT ==1) ) )then
-               read (67) thetad, theta_a, theta_b, theta_c , ZTn
+               read (newunit) thetad, theta_a, theta_b, theta_c , ZTn
             end if 
-            close (67)
+            close (newunit)
             if (APG .ne. 0) then 
-               open (unit=68, file='checkpoint_APG', status='unknown', form='unformatted', action='read')
-               read (68) P_DpDX
-               write (6, "(' Read : Adverse Pressure Gradient ',F14.12)") P_DpDX
-               close(68)
+               open (unit=newunit, file='checkpoint_APG', status='unknown', form='unformatted', action='read')
+               read (newunit) P_DpDX
+               write (*, "(' Read : Adverse Pressure Gradient ',F14.12)") P_DpDX
+               close(newunit)
             end if
          end if
       end if
@@ -230,7 +231,7 @@ contains
 
       ! Write data for restart
       if (nrank == 0 .and. mod(itime, icheckpoint) == 0) then
-         open (unit=67, file='checkpoint_ttbl', status='unknown', form='unformatted', action='write')
+         open (unit=67, file='checkpoint_ptbl', status='unknown', form='unformatted', action='write')
          !==> Biau method
          if (jtheta_dot ==0) then
             write (67) thetad, ttda, ttdb, ttdc
@@ -261,8 +262,8 @@ contains
          ! Saved for adverse pressure gradient
          if (APG == 2) then 
             P_DpDX = APG_Beta * (tau_wall/delta)
-            write (6, "(' 2 Adverse Pressure Gradient ',F14.12)") ,P_DpDX
-            write (6, "(F14.12,F14.12,F14.12)")APG_Beta,tau_wall,delta
+            write (*, "(' 2 Adverse Pressure Gradient ',F14.12)") P_DpDX
+            write (*, "(F14.12,F14.12,F14.12)")APG_Beta,tau_wall,delta
          end if
 
          !Check the flow rate (what is coming in the domain is getting out)
@@ -270,18 +271,18 @@ contains
 
          ! Write out
          if (nrank == 0) then
-            write (6, "(' thetad = ',F14.12,'    theta = ',F14.12,'    delta = ',F14.12,'    H = ',F14.12)") thetad, theta, delta, delta / theta
-            write (6, "(' tau_wall = ',F16.12,'    u_tau = ',F16.12,'    cf = ',F16.12)") tau_wall, ufric, two * ufric**2
-            write (6, "(' Re_theta = ',F16.8,'    Re_delta = ',F16.8)") one*theta*re, one*delta*re !(xnu=one/re)
-            write (6, "(' dx+ = ',F12.8,'    dz+ = ',F12.8,'    dy+(min,max) = (',F12.8,',',F12.8,')')") dx * ufric * re, dz * ufric * re, dyp(1) * ufric * re, dyp(ny) * ufric * re
-            write (6, "(' Y_size1 = ',I8,' Y_size2 = ',I8,' Y_size3 = ',I8)") ysize(1), ysize(2), ysize(3)
+            write (*, "(' thetad = ',F14.12,'    theta = ',F14.12,'    delta = ',F14.12,'    H = ',F14.12)") thetad, theta, delta, delta / theta
+            write (*, "(' tau_wall = ',F16.12,'    u_tau = ',F16.12,'    cf = ',F16.12)") tau_wall, ufric, two * ufric**2
+            write (*, "(' Re_theta = ',F16.8,'    Re_delta = ',F16.8)") one*theta*re, one*delta*re !(xnu=one/re)
+            write (*, "(' dx+ = ',F12.8,'    dz+ = ',F12.8,'    dy+(min,max) = (',F12.8,',',F12.8,')')") dx * ufric * re, dz * ufric * re, dyp(1) * ufric * re, dyp(ny) * ufric * re
+            write (*, "(' Y_size1 = ',I8,' Y_size2 = ',I8,' Y_size3 = ',I8)") ysize(1), ysize(2), ysize(3)
             if (APG == 2) then 
-               write (6, "(' Adverse Pressure Gradient ',F14.12)") P_DpDX
+               write (*, "(' Adverse Pressure Gradient ',F14.12)") P_DpDX
             end if   
-            open (unit=67, file='out/ttbl.dat', status='unknown', form='formatted', action='write', position='append')
-            if (itime == ilist) write (67, "(12A20)") 't', 'thetad', 'theta', 'delta', 'tau_wall', 'u_tau', 'cf', 'dx+', 'dz+', 'dy+_min', 'dy+_max' 
-                write (67, "(12E20.12)") t, thetad, theta, delta, tau_wall, ufric, two * ufric**2, dx * ufric * re, dz * ufric * re, dyp(1) * ufric * re, dyp(ny) * ufric * re
-            close (67)
+            open (unit=newunit, file='out/ptbl.dat', status='unknown', form='formatted', action='write', position='append')
+            if (itime == ilist) write (newunit, "(12A20)") 't', 'thetad', 'theta', 'delta', 'tau_wall', 'u_tau', 'cf', 'dx+', 'dz+', 'dy+_min', 'dy+_max' 
+                write (newunit, "(12E20.12)") t, thetad, theta, delta, tau_wall, ufric, two * ufric**2, dx * ufric * re, dz * ufric * re, dyp(1) * ufric * re, dyp(ny) * ufric * re
+            close (newunit)
          end if
 
       end if
@@ -306,10 +307,10 @@ contains
          end do
       end do
 
-   end subroutine momentum_forcing_ttbl
+   end subroutine momentum_forcing_ptbl
    !############################################################################
    !############################################################################
-   subroutine scalar_forcing_ttbl(uy1, dphi1, phi1)
+   subroutine scalar_forcing_ptbl(uy1, dphi1, phi1)
       use var, only: ta1, ta2, di2, phi2
 
       implicit none
@@ -343,10 +344,10 @@ contains
             end do
          end if
       end if
-   end subroutine scalar_forcing_ttbl
+   end subroutine scalar_forcing_ptbl
    !############################################################################
    !############################################################################
-   subroutine postprocess_ttbl(ux1, uy1, uz1, pp3, phi1, ep1)
+   subroutine postprocess_ptbl(ux1, uy1, uz1, pp3, phi1, ep1)
       use var, only: ux2, uy2, uz2
       use var, only: ux3, uy3, uz3
       use var, only: nzmsize
@@ -603,14 +604,14 @@ contains
             if (nrank == 0) write (*, "(' Time writing statistics = ',F18.12,'(s)')") MPI_WTIME() - tstart
          end if
       end if
-   end subroutine postprocess_ttbl
+   end subroutine postprocess_ptbl
    !############################################################################
    !############################################################################
-   subroutine visu_ttbl_init(visu_initialised)
+   subroutine visu_ptbl_init(visu_initialised)
       implicit none
       logical, intent(out) :: visu_initialised
       visu_initialised = .true.
-   end subroutine visu_ttbl_init
+   end subroutine visu_ptbl_init
    !############################################################################
    !############################################################################
    subroutine Gathering_Probe(field, profile)
@@ -643,7 +644,7 @@ contains
    !############################################################################
    !############################################################################
 
-   subroutine visu_ttbl(ux1, uy1, uz1, pp3, phi1, ep1, num)
+   subroutine visu_ptbl(ux1, uy1, uz1, pp3, phi1, ep1, num)
 
      use var, only : ux2, uy2, uz2, ux3, uy3, uz3
      USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
@@ -713,7 +714,7 @@ contains
     call write_field(di1, ".", "critq", num, flush = .true.) ! Reusing temporary array, force flush
 
       
-   end subroutine visu_ttbl
+   end subroutine visu_ptbl
    !############################################################################
    !############################################################################
    subroutine horizontal_avrge(field, profile)
@@ -1370,4 +1371,4 @@ contains
 
       end subroutine tbl_flrt_Check
 
-end module ttbl
+end module ptbl
