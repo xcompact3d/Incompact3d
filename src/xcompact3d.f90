@@ -279,14 +279,16 @@ subroutine init_xcompact3d()
   endif
 
   if (itype==3) then
-    if(nrank.eq.0)then
-      open(52,file='chan_time_evol.dat',form='formatted')
-    endif
+     if (nrank.eq.0)then
+        open(52,file='chan_time_evol.dat',form='formatted')
+     endif
   endif
   
   if (itype==5) then
-     if(nrank.eq.0)then
-        open(38,file='forces.dat',form='formatted')
+     if (iforces == 1) then
+        if(nrank.eq.0)then
+           open(38,file='forces.dat',form='formatted')
+        endif
      endif
   endif
   
@@ -313,6 +315,7 @@ subroutine finalise_xcompact3d()
   use les, only: finalise_explicit_les
   use mhd, only: mhd_active, mhd_fin
   use case, only: visu_case_finalise
+  use forces, only: iforces
 
   implicit none
 
@@ -334,8 +337,10 @@ subroutine finalise_xcompact3d()
   endif
 
   if (itype==5) then
-     if(nrank.eq.0)then
-        close(38)
+     if (iforces == 1) then
+        if(nrank.eq.0)then
+           close(38)
+        endif
      endif
   endif
 
