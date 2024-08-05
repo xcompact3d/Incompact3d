@@ -50,6 +50,7 @@ contains
     ! Local variables
     integer :: noutput, nsnapout
     real(mytype) :: memout
+    character(len=30) :: scname
 
     integer :: is
 
@@ -96,7 +97,9 @@ contains
     endif
     if (iscalar.ne.0) then
        do is = 1, numscalar
-          call decomp_2d_register_variable(io_name, "phi"//char(48+is), 1, 0, output2D, mytype)
+          write(scname,"('phi',I2.2)") is
+          !call decomp_2d_register_variable(io_name, "phi"//char(48+is), 1, 0, output2D, mytype)
+          call decomp_2d_register_variable(io_name, scname, 1, 0, output2D, mytype)
        enddo
     endif
     
@@ -161,7 +164,7 @@ contains
 #ifdef ADIOS2
     call decomp_2d_close_io(io_name, "data")
 #endif
-    
+ 
   end subroutine visu_finalise
 
   !

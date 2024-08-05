@@ -45,7 +45,7 @@ contains
     !! XXX Not yet LMN!!!
     call scalar(dphi1, rho1, ux1, uy1, uz1, phi1)
 
-    if(mhd_active .and. mhd_equation) then
+    if(mhd_active .and. mhd_equation == 'induction') then
       call calculate_mhd_transeq_rhs(ux1,uy1,uz1)
     endif
 

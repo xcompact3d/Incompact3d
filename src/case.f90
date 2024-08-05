@@ -31,7 +31,8 @@ module case
   private ! All functions/subroutines private by default
   public :: init, boundary_conditions, &
             momentum_forcing, scalar_forcing, set_fluid_properties, &
-            test_flow, preprocessing, postprocessing, visu_case, visu_case_init
+            test_flow, preprocessing, postprocessing, visu_case, & 
+            visu_case_init, visu_case_finalise 
 
 contains
   !##################################################################
@@ -403,6 +404,17 @@ contains
     end if
     
   end subroutine visu_case_init
+  !-----------------------------------------------------------------
+  subroutine visu_case_finalise
+
+    implicit none
+  
+    if (itype .eq. itype_gravitycur) then
+
+       call visu_gravitycur_finalise()
+    
+    end if
+  end subroutine visu_case_finalise
   !##################################################################
   !!
   !!  SUBROUTINE: visu_case
@@ -431,7 +443,7 @@ contains
        
     elseif (itype.eq.itype_tgv) then
 
-       call visu_tgv(ux1, uy1, uz1, pp3, phi1, ep1, num)
+       call visu_tgv(ux1, uy1, uz1, num)
        called_visu = .true.
 
     elseif (itype.eq.itype_channel) then

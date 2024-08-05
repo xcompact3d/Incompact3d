@@ -304,7 +304,7 @@ contains
        ENDIF
     ENDIF
 
-    if(mhd_active .and. mhd_equation) then
+    if(mhd_active .and. mhd_equation == 'induction') then
       call int_time_magnet
     endif
 

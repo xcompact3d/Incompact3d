@@ -120,20 +120,20 @@ contains
         endif
       enddo
 
-      ! Add random noise
-      do j=1,xsize(2)
-        if (istret==0) y=real(j + xstart(2)-1-1,mytype)*dy
-        if (istret/=0) y=yp(j+xstart(2)-1)
-        !if (y.lt.50) then 
-        !  do k=1,xsize(3)
-        !  do i=1,xsize(1)
-        !    call random_number(phinoise)
-        !    phinoise=0.1*(phinoise*2.-1.)
-        !    phi1(i,j,k,1)=phi1(i,j,k,1)+phinoise
-        !  enddo
-        !  enddo
-        !endif
-      enddo
+      !! Add random noise
+      !do j=1,xsize(2)
+      !  if (istret==0) y=real(j + xstart(2)-1-1,mytype)*dy
+      !  if (istret/=0) y=yp(j+xstart(2)-1)
+      !  !if (y.lt.50) then 
+      !  !  do k=1,xsize(3)
+      !  !  do i=1,xsize(1)
+      !  !    call random_number(phinoise)
+      !  !    phinoise=0.1*(phinoise*2.-1.)
+      !  !    phi1(i,j,k,1)=phi1(i,j,k,1)+phinoise
+      !  !  enddo
+      !  !  enddo
+      !  !endif
+      !enddo
     endif
 
     return
@@ -198,7 +198,7 @@ contains
     real(mytype) :: um
     integer :: i,j,k,itime_input
     
-    um=0.5*(u1+u2)
+    um=zpfive*(u1+u2)
     do k=1,xsize(3)
     do j=1,xsize(2)
       bxx1(j,k)=um
@@ -263,8 +263,8 @@ contains
 
     udx=one/dx; udy=one/dy; udz=one/dz; uddx=half/dx; uddy=half/dy; uddz=half/dz
 
-    uxmax=-1609.
-    uxmin=1609.
+    uxmax=-1609._mytype
+    uxmin=1609._mytype
     do k=1,xsize(3)
       do j=1,xsize(2)
         if (ux(nx-1,j,k).gt.uxmax) uxmax=ux(nx-1,j,k)
@@ -275,7 +275,7 @@ contains
     call MPI_ALLREDUCE(uxmax,uxmax1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
     call MPI_ALLREDUCE(uxmin,uxmin1,1,real_type,MPI_MIN,MPI_COMM_WORLD,code)
 
-    cx=0.5*(uxmax1+uxmin1)*gdt(itr)*udx
+    cx=zpfive*(uxmax1+uxmin1)*gdt(itr)*udx
     do k=1,xsize(3)
       do j=1,xsize(2)
         bxxn(j,k)=ux(nx,j,k)-cx*(ux(nx,j,k)-ux(nx-1,j,k))
