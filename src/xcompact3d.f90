@@ -272,10 +272,8 @@ subroutine init_xcompact3d()
   if (itype==2) then
      if(nrank.eq.0)then
         open(42,file='time_evol.dat',form='formatted')
-        write(42,'(6(A20))') 'time','kinetic_energy','dissipation_rate','dissipation_rate_2','enstrophy','enstrophy_max'
         if(mhd_active) then
            open(43,file='mhd_time_evol.dat',form='formatted')
-           write(43,'(6(A20))') 'time','magnetic_energy','mhd_enstrophy_j','mhd_enstrophy_gradb','mhd_dissipation','Jmax'
         endif
      endif
   endif
@@ -283,13 +281,18 @@ subroutine init_xcompact3d()
   if (itype==3) then
     if(nrank.eq.0)then
       open(52,file='chan_time_evol.dat',form='formatted')
-      write(52,'(3(A20))') 'time','friction_velocity','ux_max'
     endif
   endif
   
   if (itype==5) then
      if(nrank.eq.0)then
         open(38,file='forces.dat',form='formatted')
+     endif
+  endif
+  
+  if (itype==10) then
+     if(nrank.eq.0)then
+        open(42,file='shear.dat',form='formatted')
      endif
   endif
 
@@ -309,6 +312,7 @@ subroutine finalise_xcompact3d()
   use visu, only : visu_finalise
   use les, only: finalise_explicit_les
   use mhd, only: mhd_active, mhd_fin
+  use case, only: visu_case_finalise
 
   implicit none
 
@@ -317,16 +321,33 @@ subroutine finalise_xcompact3d()
   if (itype==2) then
      if(nrank.eq.0)then
         close(42)
+        if(mhd_active) then
+           close(43)
+        endif
      endif
   endif
+
+  if (itype==3) then
+     if(nrank.eq.0)then
+        close(52)
+     endif
+  endif
+
   if (itype==5) then
      if(nrank.eq.0)then
         close(38)
      endif
   endif
+
+  if (itype==10) then
+     if(nrank.eq.0)then
+        close(42)
+     endif
+  endif
   
   call simu_stats(4)
   call finalize_probes()
+  call visu_case_finalise()
   call visu_finalise()
   if (mhd_active) call mhd_fin()
   if (ilesmod.ne.0) then

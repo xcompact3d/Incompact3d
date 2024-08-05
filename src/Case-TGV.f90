@@ -97,57 +97,7 @@ contains
              enddo
           enddo
        enddo
-
-       call random_seed(size=isize)
-       allocate (seed(isize))
-       seed(:)=67
-       call random_seed(put=seed)
-       !     call random_number(ux1)
-       !     call random_number(uy1)
-       ! call random_number(uz1)
-
-       do k=1,xsize(3)
-          do j=1,xsize(2)
-             do i=1,xsize(1)
-                !              ux1(i,j,k)=noise*(ux1(i,j,k)-half)
-                !              uy1(i,j,k)=noise*(uy1(i,j,k)-half)
-                ! uz1(i,j,k)=0.05*(uz1(i,j,k)-half)
-             enddo
-          enddo
-       enddo
-
-       !     !modulation of the random noise
-       !     do k=1,xsize(3)
-       !        do j=1,xsize(2)
-       !           if (istret.eq.0) y=(j+xstart(2)-1-1)*dy-yly/two
-       !           if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/two
-       !           um=exp(-0.2*y*y)
-       !           do i=1,xsize(1)
-       !              ux1(i,j,k)=um*ux1(i,j,k)
-       !              uy1(i,j,k)=um*uy1(i,j,k)
-       !              uz1(i,j,k)=um*uz1(i,j,k)
-       !           enddo
-       !        enddo
-       !     enddo
-
     endif
-
-    !  bxx1(j,k)=zero
-    !  bxy1(j,k)=zero
-    !  bxz1(j,k)=zero
-
-    !INIT FOR G AND U=MEAN FLOW + NOISE
-    do k=1,xsize(3)
-       do j=1,xsize(2)
-          do i=1,xsize(1)
-             ux1(i,j,k)=ux1(i,j,k)!+bxx1(j,k)
-             uy1(i,j,k)=uy1(i,j,k)!+bxy1(j,k)
-             uz1(i,j,k)=uz1(i,j,k)!+bxz1(j,k)
-          enddo
-       enddo
-    enddo
-
-    call visu_init_tgv(ux1, uy1, uz1)
 
 #ifdef DEBG
     if (nrank  ==  0) write(*,*) '# init end ok'
@@ -155,36 +105,6 @@ contains
 
     return
   end subroutine init_tgv
-
-  !********************************************************************
-  ! this subroutine is to visu the inital flow field 
-  subroutine visu_init_tgv(ux1, uy1, uz1)
-
-    use decomp_2d, only : xsize, ph1
-    use visu, only  : write_snapshot, end_snapshot
-
-    use var, only : nzmsize
-    use var, only : itime
-    use var, only : numscalar, nrhotime, npress
-
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux1, uy1, uz1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
-    real(mytype),dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
-
-    integer :: num
-    logical :: linit
-
-    call visu_tgv_init(linit)
-
-    call write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime, num)
-
-    call visu_tgv(ux1, uy1, uz1, num)
-
-    call end_snapshot(itime, num)
-
-  end subroutine visu_init_tgv
   !********************************************************************
 
   subroutine boundary_conditions_tgv (ux,uy,uz,phi)
@@ -284,7 +204,7 @@ contains
     real(mytype) :: temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9
 
     real(mytype), allocatable, dimension(:,:,:) :: bx2,by2,bz2,bx3,by3,bz3
-    real(mytype) :: eek, enst, eps, eps2, enst_max
+    real(mytype) :: eek, enst, eps, eps2
     real(mytype) :: eem,omegam,jmax,disb,omegab
     integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
 
@@ -366,21 +286,17 @@ contains
 
        !SPATIALLY-AVERAGED ENSTROPHY
        temp1=zero
-       temp2=zero
        do k=1,xsize3
           do j=1,xsize2
              do i=1,xsize1
-                temp3=zpfive*((tf1(i,j,k)-th1(i,j,k))**2+&
-                              (tg1(i,j,k)-tc1(i,j,k))**2+&
-                              (tb1(i,j,k)-td1(i,j,k))**2)
-                temp1=temp1+temp3
-                temp2=max(temp2,temp3)
+                temp1=temp1+zpfive*((tf1(i,j,k)-th1(i,j,k))**2+&
+                                    (tg1(i,j,k)-tc1(i,j,k))**2+&
+                                    (tb1(i,j,k)-td1(i,j,k))**2)
              enddo
           enddo
        enddo
        call MPI_ALLREDUCE(temp1,enst,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        enst=enst/(nxc*nyc*nzc)
-       call MPI_ALLREDUCE(temp2,enst_max,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
        
        !SPATIALLY-AVERAGED ENERGY DISSIPATION
        temp1=zero
@@ -456,7 +372,7 @@ contains
        
        
        if (nrank==0) then
-          write(42,'(6(E20.12))') itime*dt,eek,eps,eps2,enst,enst_max
+          write(42,'(20e20.12)') (itime-1)*dt,eek,eps,eps2,enst
           flush(42)
        endif
 
@@ -470,18 +386,14 @@ contains
              do j=1,xsize2
                 do i=1,xsize1
                    temp1=temp1+zpfive*((Bm(i,j,k,1))**2+(Bm(i,j,k,2))**2+(Bm(i,j,k,3))**2)
-                   temp9=Je(i,j,k,1)**2+Je(i,j,k,2)**2+Je(i,j,k,3)**2
-                   temp2=temp2+zpfive*temp9
-                   temp3=max(temp3,temp9)
+                   temp2=temp2+zpfive*Je(i,j,k,1)**2+Je(i,j,k,2)**2+Je(i,j,k,3)**2
                 enddo
              enddo
           enddo
           call MPI_ALLREDUCE(temp1,   eem,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
           call MPI_ALLREDUCE(temp2,omegam,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-          call MPI_ALLREDUCE(temp3,  jmax,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
           eem=eem/(nxc*nyc*nzc)
           omegam=omegam/(nxc*nyc*nzc)*Rem*Rem
-          jmax=jmax*Rem
 
           !
           call alloc_y(bx2)
@@ -552,7 +464,7 @@ contains
           omegab=omegab/(nxc*nyc*nzc)
 
           if (nrank==0) then
-             write(43,'(6(E20.12))')itime*dt,eem,omegam,omegab,disb,jmax
+             write(43,'(20e20.12)')(itime-1)*dt,eem,omegam,omegab,disb
              flush(43)
           endif
 
@@ -664,7 +576,7 @@ contains
 
     !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
     di1 = zero
-    di1(:,:,: ) = - 0.5*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2) &
+    di1(:,:,: ) = - zpfive*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2) &
                   - td1(:,:,:)*tb1(:,:,:) &
                   - tg1(:,:,:)*tc1(:,:,:) &
                   - th1(:,:,:)*tf1(:,:,:)

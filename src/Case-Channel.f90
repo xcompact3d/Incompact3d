@@ -276,8 +276,7 @@ contains
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
 
-    real(mytype),allocatable,dimension(:,:,:),save :: ux1_save, uy1_save, uz1_save
-    real(mytype) :: ufriction,umax,resdux1,resduy1,resduz1,temp1,temp2,temp3,temp4,temp5
+    real(mytype) :: ufriction,umax,resdux1,resduy1,resduz1,temp1,temp2
     integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
     integer :: i,j,k
     integer :: code
@@ -351,39 +350,13 @@ contains
           enddo
        enddo
        
-       if(.not. allocated(ux1_save)) allocate( ux1_save(xsize(1),xsize(2),xsize(3)) )
-       if(.not. allocated(uy1_save)) allocate( uy1_save(xsize(1),xsize(2),xsize(3)) )
-       if(.not. allocated(uz1_save)) allocate( uz1_save(xsize(1),xsize(2),xsize(3)) )
-
-       temp3=zero
-       temp4=zero
-       temp5=zero
-       do k=1,xsize(3)
-          do j=1,xsize(2)
-             do i=1,xsize(1)
-              !
-              temp3 = max(temp3,abs(ux1(i,j,k)-ux1_save(i,j,k)))
-              temp4 = max(temp4,abs(uy1(i,j,k)-uy1_save(i,j,k)))
-              temp5 = max(temp5,abs(uz1(i,j,k)-uz1_save(i,j,k)))
-              !
-              ux1_save(i,j,k)=ux1(i,j,k)
-              uy1_save(i,j,k)=uy1(i,j,k)
-              uz1_save(i,j,k)=uz1(i,j,k)
-
-             enddo
-          enddo
-       enddo
-
        call MPI_ALLREDUCE(temp1,ufriction,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        call MPI_ALLREDUCE(temp2,     umax,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-       ! call MPI_ALLREDUCE(temp3,  resdux1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-       ! call MPI_ALLREDUCE(temp4,  resduy1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-       ! call MPI_ALLREDUCE(temp5,  resduz1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
 
        ufriction=xnu*1.5_mytype*ufriction/(nxc*nzc) ! ub=2/3
    
        if (nrank==0) then
-          write(52,'(3(E20.12))') itime*dt,ufriction,umax
+          write(52,'(3(E20.12))') (itime-1)*dt,ufriction,umax
           flush(52)
        endif
 

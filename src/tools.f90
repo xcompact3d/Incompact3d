@@ -566,6 +566,7 @@ contains
           write(varname, *) "drho-", is
           call decomp_2d_register_variable(io_restart, varname, 1, 0, 0, mytype)
        end do
+       call decomp_2d_register_variable(io_restart, "mu", 1, 0, 0, mytype)
     end if
  
     if (mhd_active .and. mhd_equation == 'induction') then

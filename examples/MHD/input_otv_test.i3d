@@ -8,8 +8,8 @@
 itype = 2
 
 ! Domain decomposition
-p_row=2                ! Row partition
-p_col=2                ! Column partition
+p_row=0                ! Row partition
+p_col=0                ! Column partition
 
 ! Mesh
 nx=128                 ! X-direction nodes
@@ -78,8 +78,8 @@ itimescheme = 5       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4
 
 ! Basic I/O
 irestart = 0          ! Read initial flow field ?
-icheckpoint = 5000    ! Frequency for writing backup file
-ioutput = 5000        ! Frequency for visualization
+icheckpoint = 200     ! Frequency for writing backup file
+ioutput = 100         ! Frequency for visualization
 ilist = 5             ! Frequency for the output
 nvisu = 1             ! Size for visualisation collection
 
