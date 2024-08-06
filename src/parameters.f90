@@ -641,6 +641,9 @@ subroutine parameter_defaults()
   !! IBM stuff
   nraf = 0
   nobjmax = 0
+  ubcx = zero
+  ubcy = zero
+  ubcz = zero
 
   nvol = 0
   iforces = 0
