@@ -63,7 +63,7 @@ subroutine parameter(input_i3d)
   NAMELIST /ibmstuff/ cex,cey,cez,shx,shy,shz,oriw,orii,orij,orik,lvx,lvy,lvz,avx,avy,avz,ra, &
       nobjmax,nraf,nvol,iforces, cvl_scalar, npif, izap, ianal, imove, thickness, chord, omega , &
       ubcx,ubcy,ubcz,rads,rho_s, c_air, grav_x,grav_y,grav_z, nozdrift, force_csv, bodies_fixed, cube_flag, tconv2_sign, &
-      torques_flag, orientations_free, shear_flow_ybc, shear_flow_zbc, shear_velocity
+      torques_flag, orientations_free, shear_flow_ybc, shear_flow_zbc, shear_velocity, torq_debug
   NAMELIST /ForceCVs/ xld, xrd, yld, yud, zld, zrd
   NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, &
        massfrac, mol_weight, imultispecies, primary_species, &
