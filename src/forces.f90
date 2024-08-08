@@ -1654,8 +1654,8 @@ contains
               !pressure
               prmid = half*(ppi1(i,j,k)+ppi1(i+1,j,k))
             !   fprz = fprz -prmid*dx*dy*(radial(2)-radial(1))
-              fprx = fprx -prmid*dx*dy*(radial(2))
-              fpry = fpry -prmid*dx*dy*(-radial(1))
+              fprx = fprx +prmid*dx*dy*(radial(2))
+              fpry = fpry +prmid*dx*dy*(-radial(1))
 
               !viscous term
               dudzmid = half*(tg1(i,j,k)+tg1(i+1,j,k))
