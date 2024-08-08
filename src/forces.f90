@@ -1160,6 +1160,15 @@ contains
            open(45+(iv-1),file=filename,status='unknown',form='formatted')
            ! write(*,*) 'Opened file: ', filename, 'number = ', 38+(iv-1)
         endif
+        if ((nrank.eq.0).and.(torq_debug.eq.1)) then
+            open(100,file="backside.dat",status='unknown',form='formatted')
+            open(101,file="frontside.dat",status='unknown',form='formatted')
+            open(102,file="lowerside.dat",status='unknown',form='formatted')
+            open(103,file="upperside.dat",status='unknown',form='formatted')
+            open(104,file="leftside.dat",status='unknown',form='formatted')
+            open(105,file="rightside.dat",status='unknown',form='formatted')
+        endif
+
      enddo
       do k = 1, xsize(3)
          do j = 1, xsize(2)
@@ -1381,18 +1390,19 @@ contains
 
             enddo
 
-            tconvxl(kk)=tconvxl(kk)+fcvx
-            tconvyl(kk)=tconvyl(kk)+fcvy
-            tconvzl(kk)=tconvzl(kk)+fcvz
+            tconvxl(1)=tconvxl(1)+fcvx
+            tconvyl(1)=tconvyl(1)+fcvy
+            tconvzl(1)=tconvzl(1)+fcvz
 
-            tpresxl(kk)=tpresxl(kk)+fprx
-            tpresyl(kk)=tpresyl(kk)+fpry
-            tpreszl(kk)=tpreszl(kk)+fprz
+            tpresxl(1)=tpresxl(1)+fprx
+            ! tpresyl(1)=tpresyl(1)+fpry
+            tpreszl(1)=tpreszl(1)+fprz
 
-            tdiffxl(kk)=tdiffxl(kk)+fdix
-            tdiffyl(kk)=tdiffyl(kk)+fdiy
-            tdiffzl(kk)=tdiffzl(kk)+fdiz
+            tdiffxl(1)=tdiffxl(1)+fdix
+            tdiffyl(1)=tdiffyl(1)+fdiy
+            tdiffzl(1)=tdiffzl(1)+fdiz
          enddo
+
       endif
       !BC
       if ((jcvup(iv).ge.xstart(2)).and.(jcvup(iv).le.xend(2))) then
@@ -1451,17 +1461,17 @@ contains
                ! fdiz = fdiz + (xnu*(dwdymid+dvdzmid)*dx*dz)
 
             enddo
-            tconvxl(kk)=tconvxl(kk)+fcvx
-            tconvyl(kk)=tconvyl(kk)+fcvy
-            tconvzl(kk)=tconvzl(kk)+fcvz
+            tconvxl(2)=tconvxl(2)+fcvx
+            tconvyl(2)=tconvyl(2)+fcvy
+            tconvzl(2)=tconvzl(2)+fcvz
 
-            tpresxl(kk)=tpresxl(kk)+fprx
-            tpresyl(kk)=tpresyl(kk)+fpry
-            tpreszl(kk)=tpreszl(kk)+fprz
+            tpresxl(2)=tpresxl(2)+fprx
+            ! tpresyl(2)=tpresyl(2)+fpry
+            tpreszl(2)=tpreszl(2)+fprz
 
-            tdiffxl(kk)=tdiffxl(kk)+fdix
-            tdiffyl(kk)=tdiffyl(kk)+fdiy
-            tdiffzl(kk)=tdiffzl(kk)+fdiz
+            tdiffxl(2)=tdiffxl(2)+fdix
+            tdiffyl(2)=tdiffyl(2)+fdiy
+            tdiffzl(2)=tdiffzl(2)+fdiz
 
          enddo
       endif
@@ -1524,17 +1534,17 @@ contains
                ! fdiy = fdiy -xnu*(dvdxmid+dudymid)*del_y(j)*dz
                ! fdiz = fdiz -xnu*(dwdxmid+dudzmid)*del_y(j)*dz
             enddo
-            tconvxl(kk)=tconvxl(kk)+fcvx
-            tconvyl(kk)=tconvyl(kk)+fcvy
-            tconvzl(kk)=tconvzl(kk)+fcvz
+            tconvxl(3)=tconvxl(3)+fcvx
+            tconvyl(3)=tconvyl(3)+fcvy
+            tconvzl(3)=tconvzl(3)+fcvz
 
-            tpresxl(kk)=tpresxl(kk)+fprx
-            tpresyl(kk)=tpresyl(kk)+fpry
-            tpreszl(kk)=tpreszl(kk)+fprz
+            ! tpresxl(3)=tpresxl(3)+fprx
+            tpresyl(3)=tpresyl(3)+fpry
+            tpreszl(3)=tpreszl(3)+fprz
 
-            tdiffxl(kk)=tdiffxl(kk)+fdix
-            tdiffyl(kk)=tdiffyl(kk)+fdiy
-            tdiffzl(kk)=tdiffzl(kk)+fdiz
+            tdiffxl(3)=tdiffxl(3)+fdix
+            tdiffyl(3)=tdiffyl(3)+fdiy
+            tdiffzl(3)=tdiffzl(3)+fdiz
 
          enddo
       endif
@@ -1599,17 +1609,17 @@ contains
                ! fdiz = fdiz + xnu*(dwdxmid+dudzmid)*del_y(j)*dz
 
             enddo
-            tconvxl(kk)=tconvxl(kk)+fcvx
-            tconvyl(kk)=tconvyl(kk)+fcvy
-            tconvzl(kk)=tconvzl(kk)+fcvz
+            tconvxl(4)=tconvxl(4)+fcvx
+            tconvyl(4)=tconvyl(4)+fcvy
+            tconvzl(4)=tconvzl(4)+fcvz
 
-            tpresxl(kk)=tpresxl(kk)+fprx
-            tpresyl(kk)=tpresyl(kk)+fpry
-            tpreszl(kk)=tpreszl(kk)+fprz
+            ! tpresxl(4)=tpresxl(4)+fprx
+            tpresyl(4)=tpresyl(4)+fpry
+            tpreszl(4)=tpreszl(4)+fprz
 
-            tdiffxl(kk)=tdiffxl(kk)+fdix
-            tdiffyl(kk)=tdiffyl(kk)+fdiy
-            tdiffzl(kk)=tdiffzl(kk)+fdiz
+            tdiffxl(4)=tdiffxl(4)+fdix
+            tdiffyl(4)=tdiffyl(4)+fdiy
+            tdiffzl(4)=tdiffzl(4)+fdiz
 
          enddo
       endif
@@ -1677,13 +1687,15 @@ contains
 !print*, kk
 !        drag3(kk)=drag3(kk)+fcvx   ! Should be size ny
 !        print*, drag3(kk)
-        tconvxl2(kk)=tconvxl2(kk)+fcvx
-        tconvyl2(kk)=tconvyl2(kk)+fcvy
-        tconvzl2(kk)=tconvzl2(kk)+fcvz
-        tpreszl(kk) =tpreszl(kk) +fprz
-        tdiffxl2(kk)=tdiffxl2(kk)+fdix
-        tdiffyl2(kk)=tdiffyl2(kk)+fdiy
-        tdiffzl2(kk)=tdiffzl2(kk)+fdiz        
+        tconvxl2(5)=tconvxl2(5)+fcvx
+        tconvyl2(5)=tconvyl2(5)+fcvy
+        tconvzl2(5)=tconvzl2(5)+fcvz
+        tpresxl(5) =tpresxl(5) +fprx
+        tpresyl(5) =tpresyl(5) +fpry
+      !   tpreszl(5) =tpreszl(5) +fprz
+        tdiffxl2(5)=tdiffxl2(5)+fdix
+        tdiffyl2(5)=tdiffyl2(5)+fdiy
+        tdiffzl2(5)=tdiffzl2(5)+fdiz        
      endif 
      !Right
      if ((zcvrt(iv).ge.xstart(3)).and.(zcvrt(iv).le.xend(3))) then
@@ -1749,15 +1761,17 @@ contains
            enddo
         enddo
 !        drag4(kk)=drag4(kk)+fcvx    ! Should be size ny
-        tconvxl2(kk)=tconvxl2(kk)+fcvx
-        tconvyl2(kk)=tconvyl2(kk)+fcvy
-        tconvzl2(kk)=tconvzl2(kk)+fcvz
-        tpresxl(kk) =tpresxl(kk) +fcvx
-        tpresyl(kk) =tpresyl(kk) +fcvy
-        tpreszl(kk) =tpreszl(kk) +fprz
-        tdiffxl2(kk)=tdiffxl2(kk)+fdix
-        tdiffyl2(kk)=tdiffyl2(kk)+fdiy
-        tdiffzl2(kk)=tdiffzl2(kk)+fdiz
+        tconvxl2(6)=tconvxl2(6)+fcvx
+        tconvyl2(6)=tconvyl2(6)+fcvy
+        tconvzl2(6)=tconvzl2(6)+fcvz
+        
+        tpresxl(6) =tpresxl(6) +fcvx
+        tpresyl(6) =tpresyl(6) +fcvy
+      !   tpreszl(6) =tpreszl(6) +fprz
+
+        tdiffxl2(6)=tdiffxl2(6)+fdix
+        tdiffyl2(6)=tdiffyl2(6)+fdiy
+        tdiffzl2(6)=tdiffzl2(6)+fdiz
      endif     
     
       call MPI_ALLREDUCE(tconvxl,tconvx,nz,real_type,MPI_SUM,MPI_COMM_WORLD,code)
