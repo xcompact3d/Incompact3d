@@ -1837,6 +1837,22 @@ contains
         write(45+(iv-1),*) t,dra1,dra2,dra3, sum(tdiffx), sum(tdiffx2), tp1, -mom1, -sum(tunstx(:)), -sum(tconvx(:)), -sum(tconvx2(:))
         !  write(*,*) 'written to file number', 38+(iv-1), t, dra1,dra2,dra3
          call flush(45+(iv-1))
+
+         if (torq_debug.eq.1) then 
+            write(100,*) t,dra1,dra2,dra3, tdiffx(1), tdiffx2(1), tpresx(1)/dt,  -tunstx(1), -tconvx(1), -tconvx2(1)
+            write(101,*) t,dra1,dra2,dra3, tdiffx(2), tdiffx2(2), tpresx(2)/dt,  -tunstx(2), -tconvx(2), -tconvx2(2)
+            write(102,*) t,dra1,dra2,dra3, tdiffx(3), tdiffx2(3), tpresx(3)/dt,  -tunstx(3), -tconvx(3), -tconvx2(3)
+            write(103,*) t,dra1,dra2,dra3, tdiffx(4), tdiffx2(4), tpresx(4)/dt,  -tunstx(4), -tconvx(4), -tconvx2(4)
+            write(104,*) t,dra1,dra2,dra3, tdiffx(5), tdiffx2(5), tpresx(5)/dt,  -tunstx(5), -tconvx(5), -tconvx2(5)
+            write(105,*) t,dra1,dra2,dra3, tdiffx(6), tdiffx2(6), tpresx(6)/dt,  -tunstx(6), -tconvx(6), -tconvx2(6)
+   
+            call flush(100)
+            call flush(101)
+            call flush(102)
+            call flush(103)
+            call flush(104)
+            call flush(105)
+            endif
       endif
      !  if (mod(itime, ioutput).eq.0) then
      !     if (nrank .eq. 0) then
