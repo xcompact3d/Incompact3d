@@ -529,6 +529,7 @@ module complex_geometry
   integer     ,allocatable,dimension(:,:)   :: nobjx,nobjy,nobjz
   integer     ,allocatable,dimension(:,:,:) :: nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif
   real(mytype),allocatable,dimension(:,:,:) :: xi,xf,yi,yf,zi,zf
+  real(mytype),allocatable,dimension(:,:,:) :: xepsi, yepsi, zepsi  
   integer :: nxraf,nyraf,nzraf,nraf,nobjmax
 end module complex_geometry
 !############################################################################

@@ -485,6 +485,7 @@ contains
     use var, only : ep1
     use var, only : zero, one
     use var, only : uvisu
+    use var, only : ta1
     use param, only : iibm
     use decomp_2d_io, only : decomp_2d_write_one, decomp_2d_write_plane
 
@@ -495,7 +496,7 @@ contains
     integer, intent(in) :: num
     logical, optional, intent(in) :: skip_ibm, flush
 
-    real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: local_array
+    !real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: local_array
     logical :: mpiio, force_flush
     
     integer :: ierr
@@ -558,23 +559,23 @@ contains
     endif
 
     if ((iibm == 2) .and. .not.present(skip_ibm)) then
-       local_array(:,:,:) = (one - ep1(:,:,:)) * f1(:,:,:)
+       ta1(:,:,:) = (one - ep1(:,:,:)) * f1(:,:,:)
     else
-       local_array(:,:,:) = f1(:,:,:)
+       ta1(:,:,:) = f1(:,:,:)
     endif
     if (output2D.eq.0) then
        if (mpiio .or. (iibm == 2) .or. force_flush) then
           !! XXX: This (re)uses a temporary array for data - need to force synchronous writes.
           uvisu = zero
           
-          call fine_to_coarseV(1,local_array,uvisu)
+          call fine_to_coarseV(1,ta1,uvisu)
           call decomp_2d_write_one(1,uvisu,"data",gen_filename(pathname, filename, num, 'bin'),2,io_name,&
                opt_deferred_writes=.false.)
        else
           call decomp_2d_write_one(1,f1,"data",gen_filename(pathname, filename, num, 'bin'),0,io_name)
        end if
     else
-       call decomp_2d_write_plane(1,local_array,output2D,-1,"data",gen_filename(pathname, filename, num, 'bin'),io_name)
+       call decomp_2d_write_plane(1,ta1,output2D,-1,"data",gen_filename(pathname, filename, num, 'bin'),io_name)
     endif
 
   end subroutine write_field

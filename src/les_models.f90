@@ -106,15 +106,16 @@ contains
     USE variables
     USE decomp_2d_io
     use var, only: nut1
-    USE abl, only: wall_sgs_slip, wall_sgs_noslip
+    !USE abl, only: wall_sgs_slip, wall_sgs_noslip
     implicit none
 
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, ep1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sgsx1, sgsy1, sgsz1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: wallfluxx1, wallfluxy1, wallfluxz1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: wallsgsx1, wallsgsy1, wallsgsz1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: ux1, uy1, uz1, ep1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar), intent(in) :: phi1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(out) :: sgsx1, sgsy1, sgsz1
+    !real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: w_fluxx1, w_fluxy1, w_fluxz1
+    !real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: w_sgsx1, w_sgsy1, w_gsz1
 
+    write(*,*) "START Compute_SGS"
     ! Calculate eddy-viscosity
     if(jles.eq.1) then ! Smagorinsky
        call smag(nut1,ux1,uy1,uz1)
@@ -127,34 +128,38 @@ contains
 
     endif
 
-    if(iconserv.eq.0) then ! Non-conservative form for calculating the divergence of the SGS stresses
-       call sgs_mom_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
+    !if(iconserv.eq.0) then ! Non-conservative form for calculating the divergence of the SGS stresses
+    !   call sgs_mom_nonconservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1,ep1)
 
-       ! SGS correction for ABL
-       if(itype.eq.itype_abl) then
-          ! No-slip wall
-          if (ncly1==2) then 
-             call wall_sgs_noslip(ux1,uy1,uz1,nut1,wallfluxx1,wallfluxy1,wallfluxz1)
-             if(xstart(2)==1) then
-               sgsx1(:,2,:) = -wallfluxx1(:,2,:)
-               sgsy1(:,2,:) = -wallfluxy1(:,2,:)
-               sgsz1(:,2,:) = -wallfluxz1(:,2,:)
-             endif
-          ! Slip wall
-          elseif (ncly1==1) then
-             call wall_sgs_slip(ux1,uy1,uz1,phi1,nut1,wallfluxx1,wallfluxy1,wallfluxz1)
-             if(xstart(2)==1) then
-                sgsx1(:,1,:) = wallfluxx1(:,1,:)
-                sgsy1(:,1,:) = wallfluxy1(:,1,:)
-                sgsz1(:,1,:) = wallfluxz1(:,1,:)
-             endif
-          endif
-       endif
+    !   ! SGS correction for ABL
+    !   if(itype.eq.itype_abl) then
+    !      ! No-slip wall
+    !      if (ncly1==2) then 
+    !         call wall_sgs_noslip(ux1,uy1,uz1,nut1,wallfluxx1,wallfluxy1,wallfluxz1)
+    !         if(xstart(2)==1) then
+    !           sgsx1(:,2,:) = -wallfluxx1(:,2,:)
+    !           sgsy1(:,2,:) = -wallfluxy1(:,2,:)
+    !           sgsz1(:,2,:) = -wallfluxz1(:,2,:)
+    !         endif
+    !      ! Slip wall
+    !      elseif (ncly1==1) then
+    !         call wall_sgs_slip(ux1,uy1,uz1,phi1,nut1,wallfluxx1,wallfluxy1,wallfluxz1)
+    !         if(xstart(2)==1) then
+    !            sgsx1(:,1,:) = wallfluxx1(:,1,:)
+    !            sgsy1(:,1,:) = wallfluxy1(:,1,:)
+    !            sgsz1(:,1,:) = wallfluxz1(:,1,:)
+    !         endif
+    !      endif
+    !   endif
 
-    elseif (iconserv.eq.1) then ! Conservative form for calculating the divergence of the SGS stresses (used with wall functions)
-       call sgs_mom_conservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1)
+    !elseif (iconserv.eq.1) then ! Conservative form for calculating the divergence of the SGS stresses (used with wall functions)
+    !   call sgs_mom_conservative(sgsx1,sgsy1,sgsz1,ux1,uy1,uz1,nut1)
 
-    endif
+    !endif
+    sgsx1 = zero
+    sgsy1 = zero
+    sgsz1 = zero
+    write(*,*) "END Compute_SGS"
 
     return
 

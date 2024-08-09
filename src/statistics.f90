@@ -416,6 +416,7 @@ contains
   subroutine update_variance_vector(uum, vvm, wwm, uvm, uwm, vwm, ux, uy, uz, ep)
 
     use decomp_2d, only : xsize, xstS, xenS
+    use var, only: ta1
 
     implicit none
 
@@ -423,12 +424,23 @@ contains
     real(mytype), dimension(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)), intent(inout) :: uum, vvm, wwm, uvm, uwm, vwm
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux, uy, uz, ep
 
-    call update_average_scalar(uum, ux*ux, ep)
-    call update_average_scalar(vvm, uy*uy, ep)
-    call update_average_scalar(wwm, uz*uz, ep)
-    call update_average_scalar(uvm, ux*uy, ep)
-    call update_average_scalar(uwm, ux*uz, ep)
-    call update_average_scalar(vwm, uy*uz, ep)
+    ta1(:,:,:) = ux(:,:,:)*ux(:,:,:) 
+    call update_average_scalar(uum, ta1, ep)
+    
+    ta1(:,:,:) = uy(:,:,:)*uy(:,:,:) 
+    call update_average_scalar(vvm, ta1, ep)
+    
+    ta1(:,:,:) = uz(:,:,:)*uz(:,:,:) 
+    call update_average_scalar(wwm, ta1, ep)
+    
+    ta1(:,:,:) = ux(:,:,:)*uy(:,:,:) 
+    call update_average_scalar(uvm, ta1, ep)
+    
+    ta1(:,:,:) = ux(:,:,:)*uz(:,:,:) 
+    call update_average_scalar(uwm, ta1, ep)
+    
+    ta1(:,:,:) = uy(:,:,:)*uz(:,:,:) 
+    call update_average_scalar(vwm, ta1, ep)
 
   end subroutine update_variance_vector
 
