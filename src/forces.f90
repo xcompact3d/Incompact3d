@@ -1765,8 +1765,8 @@ contains
         tconvyl2(6)=tconvyl2(6)+fcvy
         tconvzl2(6)=tconvzl2(6)+fcvz
         
-        tpresxl(6) =tpresxl(6) +fcvx
-        tpresyl(6) =tpresyl(6) +fcvy
+        tpresxl(6) =tpresxl(6) +fprx !!!!!!!!
+        tpresyl(6) =tpresyl(6) +fpry
       !   tpreszl(6) =tpreszl(6) +fprz
 
         tdiffxl2(6)=tdiffxl2(6)+fdix
