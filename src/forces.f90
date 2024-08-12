@@ -1805,21 +1805,21 @@ contains
       dra2 = -(sum(tdiffy) + sum(tdiffy2) + tp2 - mom2)
       dra3 = -(sum(tdiffz) + sum(tdiffz2) + tp3 - mom3)
       
-      do k=1,zsize(3)
+      ! do k=1,zsize(3)
 
-         tpresx(k)=tpresx(k)/dt
-         tpresy(k)=tpresy(k)/dt
-         tpresz(k)=tpresz(k)/dt
+      !    tpresx(k)=tpresx(k)/dt
+      !    tpresy(k)=tpresy(k)/dt
+      !    tpresz(k)=tpresz(k)/dt
 
 
-         xmom    = tunstx(k)+tconvx(k)+tconvx2(k)
-         ymom    = tunsty(k)+tconvy(k)+tconvy2(k)
-         zmom    = tunstz(k)+tconvz(k)+tconvz2(k)
-         xDrag(k) = (tdiffx(k)+tdiffx2(k)+tpresx(k)-xmom)
-         yLift(k) = (tdiffy(k)+tdiffy2(k)+tpresy(k)-ymom)
-         zLat(k)  = (tdiffz(k)+tdiffz2(k)+tpresz(k)-zmom)
+      !    xmom    = tunstx(k)+tconvx(k)+tconvx2(k)
+      !    ymom    = tunsty(k)+tconvy(k)+tconvy2(k)
+      !    zmom    = tunstz(k)+tconvz(k)+tconvz2(k)
+      !    xDrag(k) = (tdiffx(k)+tdiffx2(k)+tpresx(k)-xmom)
+      !    yLift(k) = (tdiffy(k)+tdiffy2(k)+tpresy(k)-ymom)
+      !    zLat(k)  = (tdiffz(k)+tdiffz2(k)+tpresz(k)-zmom)
 
-      enddo
+      ! enddo
 
       !Edited by F. Schuch
       xDrag_mean = sum(xDrag(:))/real(nz,mytype)
