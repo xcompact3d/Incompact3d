@@ -1167,6 +1167,8 @@ contains
             open(103,file="upperside.dat",status='unknown',form='formatted')
             open(104,file="leftside.dat",status='unknown',form='formatted')
             open(105,file="rightside.dat",status='unknown',form='formatted')
+            open(106,file="ytorque_decomposition",status='unknown',form='formatted')
+            open(107,file="ztorque_decomposition",status='unknown',form='formatted')
         endif
 
      enddo
@@ -1846,12 +1848,18 @@ contains
             write(104,*) t,dra1,dra2,dra3, tdiffx(5), tdiffx2(5), tpresx(5)/dt,  -tunstx(5), -tconvx(5), -tconvx2(5)
             write(105,*) t,dra1,dra2,dra3, tdiffx(6), tdiffx2(6), tpresx(6)/dt,  -tunstx(6), -tconvx(6), -tconvx2(6)
    
+            write(106,*) t,dra1,dra2,dra3, sum(tdiffy), sum(tdiffy2), tp2, -mom2, -sum(tunsty(:)), -sum(tconvy(:)), -sum(tconvy2(:))
+            write(107,*) t,dra1,dra2,dra3, sum(tdiffz), sum(tdiffz2), tp3, -mom3, -sum(tunstz(:)), -sum(tconvz(:)), -sum(tconvz2(:))
+            
             call flush(100)
             call flush(101)
             call flush(102)
             call flush(103)
             call flush(104)
             call flush(105)
+
+            call flush(106)
+            call flush(107)
             endif
       endif
      !  if (mod(itime, ioutput).eq.0) then
