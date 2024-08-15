@@ -451,6 +451,9 @@ contains
 
     if (itime.eq.1) then
       do iv=1,nvol
+         ! if (nrank.eq.0) then 
+         !    open(12,file="Body1.dat",status='unknown',form='formatted')
+         ! endif
          if ((nrank .eq. 0).and.(record_var.eq.1)) then
             write(filename,"('forces.dat',I1.1)") iv
             open(38+(iv-1),file=filename,status='unknown',form='formatted')
@@ -1039,6 +1042,8 @@ contains
          write(38+(iv-1),*) t,dra1,dra2,dra3, sum(tdiffx), sum(tdiffx2), tp1, -mom1, -sum(tunstx(:)), -sum(tconvx(:)), -sum(tconvx2(:))
          !  write(*,*) 'written to file number', 38+(iv-1), t, dra1,dra2,dra3
           call flush(38+(iv-1))
+
+         !  write(12 ,*) t, position(1), position(2), position(3), orientation(1), orientation(2), orientation(3), orientation(4), linearVelocity(1), linearVelocity(2), linearVelocity(3), angularVelocity(1), angularVelocity(2), angularVelocity(3), linearAcceleration(1), linearAcceleration(2), linearAcceleration(3)
        endif
       !  if (mod(itime, ioutput).eq.0) then
       !     if (nrank .eq. 0) then

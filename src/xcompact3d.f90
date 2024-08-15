@@ -29,14 +29,17 @@ program xcompact3d
   iounit = 135
   !Print forces out on ellip
   if ((nrank==0).and.(force_csv.eq.1)) then 
-   open(unit=20, file='force_out.dat', status='replace',action='write',iostat=ierr)
-   if (ierr /= 0) then
-      print *, 'Error opening file.'
-      stop
-   end if
-   write(*,*) 'Outputting forces'
-  end if 
+   open(unit=20, file='force_out.dat', status='unknown',form='formatted')
+   ! if (ierr /= 0) then
+   !    print *, 'Error opening file.'
+   !    stop
+   ! end if
+   write(*,*) 'Outputting forces' 
+  end if
 
+  if (nrank==0) then
+   open(unit=12, file='body.dat1', status='unknown', form='formatted')
+  endif
 !   do i = 1,100
 !    x(i) = i
 !   enddo
@@ -134,10 +137,10 @@ program xcompact3d
         endif
 
         if ((nrank==0).and.(force_csv.eq.1)) then
-         open(unit=20, file='force_out.dat', action='write')
-         write(20, *) linearForce(1), linearForce(2), linearForce(3), '\n'
+         ! open(unit=20, file='force_out.dat', action='write')
+         write(20, *) linearForce(1), linearForce(2), linearForce(3)
          write(*,*) 'Writing forces', linearForce(1), linearForce(2), linearForce(3)
-         close(20)
+         flush(20)
         endif 
         
         
@@ -160,6 +163,13 @@ program xcompact3d
 
          orientation = orientation_1
          angularVelocity = angularVelocity_1
+
+
+
+        if (nrank==0) then
+         write(12 ,*) t, position(1), position(2), position(3), orientation(1), orientation(2), orientation(3), orientation(4), linearVelocity(1), linearVelocity(2), linearVelocity(3), angularVelocity(2), angularVelocity(3), angularVelocity(4), drag, lift, lat, xtorq, ytorq, ztorq
+         flush(12)
+        endif
       !   endif 
 
          if ((nrank==0).and.(mod(itime,ilist)==0)) then 
