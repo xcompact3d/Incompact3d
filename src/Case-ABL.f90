@@ -690,21 +690,36 @@ contains
     use param
     use variables
     use var, only: di1, di2, di3
-    use var, only: sxy1, syz1, tb1, ta2, tb2
+    use var, only: sxy1, syz1 
+    use var, only: te1, th1, ti1
+    use var, only: ta2, tb2, tc2, td2, te2, th2, ti2
+    use var, only:                          th3, ti3
     use ibm_param, only : ubcx, ubcy, ubcz
    
     implicit none
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1,uy1,uz1,nut1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(out) :: wallsgsx1,wallsgsy1,wallsgsz1
+    
+    ! Local variables 
     real(mytype),dimension(ysize(1),ysize(3)) :: tauwallxy2, tauwallzy2
     integer :: i,j,k,code,j0
     integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
     real(mytype) :: delta
     real(mytype) :: ux_HAve_local, uz_HAve_local
     real(mytype) :: ux_HAve, uz_HAve, S_HAve, ux_delta, uz_delta, S_delta
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: txy1,tyz1,dtwxydx
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: txy2,tyz2,wallsgsx2,wallsgsz2
-    real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: tyz3,dtwyzdz
+    !real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: txy1,tyz1,dtwxydx
+    !real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: txy2,tyz2,wallsgsx2,wallsgsz2
+    !real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: tyz3,dtwyzdz
+
+    ! tc  -> ux
+    ! td  -> uz
+    ! txy -> te
+    ! tyz -> th
+    ! wallsgsx -> ta
+    ! wallsgsz -> tb
+    ! dtwxydx  -> ti1
+    ! dtwyzdz  -> ti3
+    ! tauwallxy2 -> sy
     
     real(mytype)               :: y_sampling
     
@@ -718,47 +733,47 @@ contains
     
     if(iconserv==0) then
       ! Construct Smag SGS stress tensor 
-      txy1 = -2.0*nut1*sxy1
-      tyz1 = -2.0*nut1*syz1
-      call transpose_x_to_y(txy1,txy2)
-      call transpose_x_to_y(tyz1,tyz2)
+      te1 = -2.0*nut1*sxy1
+      th1 = -2.0*nut1*syz1
+      call transpose_x_to_y(te1,te2)
+      call transpose_x_to_y(th1,th2)
     endif
 
     ! Work on Y-pencil
-    call transpose_x_to_y(ux1,ta2)
-    call transpose_x_to_y(uz1,tb2)
+    call transpose_x_to_y(ux1,tc2)
+    call transpose_x_to_y(uz1,td2)
  
     ! Apply BCs locally
     do k=1,ysize(3)
-    do i=1,ysize(1)
-      !sampling at dsampling*dy from wall
-      j0=floor(delta/dy)
-      y_sampling=delta-real(j0,mytype)*dy
-      ux_delta=(1-y_sampling/dy)*ta2(i,j0+1,k)+(y_sampling/dy)*ta2(i,j0+2,k)
-      uz_delta=(1-y_sampling/dy)*tb2(i,j0+1,k)+(y_sampling/dy)*tb2(i,j0+2,k)
-      S_delta=sqrt(ux_delta**2.+uz_delta**2.)
-      tauwallxy2(i,k)=-(k_roughness/(log(delta/z_zero)))**two*ux_delta*S_delta
-      tauwallzy2(i,k)=-(k_roughness/(log(delta/z_zero)))**two*uz_delta*S_delta
-      txy2(i,2,k) = tauwallxy2(i,k)
-      tyz2(i,2,k) = tauwallzy2(i,k)
-    enddo
+       do i=1,ysize(1)
+         !sampling at dsampling*dy from wall
+         j0=floor(delta/dy)
+         y_sampling=delta-real(j0,mytype)*dy
+         ux_delta=(1-y_sampling/dy)*tc2(i,j0+1,k)+(y_sampling/dy)*tc2(i,j0+2,k)
+         uz_delta=(1-y_sampling/dy)*td2(i,j0+1,k)+(y_sampling/dy)*td2(i,j0+2,k)
+         S_delta=sqrt(ux_delta**2.+uz_delta**2.)
+         tauwallxy2(i,k)=-(k_roughness/(log(delta/z_zero)))**two*ux_delta*S_delta
+         tauwallzy2(i,k)=-(k_roughness/(log(delta/z_zero)))**two*uz_delta*S_delta
+         te2(i,2,k) = tauwallxy2(i,k)
+         th2(i,2,k) = tauwallzy2(i,k)
+       enddo
     enddo
 
     if (iconserv==0) then
       ! Derivative of wallmodel-corrected SGS stress tensor
-      call dery_22(wallsgsx2,txy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),1,ubcy)
-      call dery_22(wallsgsz2,tyz2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),1,ubcy)
-      call transpose_y_to_x(wallsgsx2,wallsgsx1)
-      call transpose_y_to_x(wallsgsz2,wallsgsz1)
-      call derx(dtwxydx,txy1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
-      call transpose_y_to_z(tyz2,tyz3)
-      call derz(dtwyzdz,tyz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
-      call transpose_z_to_y(dtwyzdz,tb2)
-      call transpose_y_to_x(tb2,tb1)
-      wallsgsy1 = dtwxydx + tb1
+      call dery_22(ta2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),1,ubcy)
+      call dery_22(tb2,th2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),1,ubcy)
+      call transpose_y_to_x(ta2,wallsgsx1)
+      call transpose_y_to_x(tb2,wallsgsz1)
+      call derx(wallsgsy1,te1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+      call transpose_y_to_z(th2,th3)
+      call derz(ti1,th3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
+      call transpose_z_to_y(ti3,tb2)
+      call transpose_y_to_x(tb2,ti1)
+      wallsgsy1 = wallsgsy1 + ti1
     elseif (iconserv==1) then 
-      call transpose_y_to_x(txy2,wallsgsx1)
-      call transpose_y_to_x(tyz2,wallsgsz1)
+      call transpose_y_to_x(te2,wallsgsx1)
+      call transpose_y_to_x(th2,wallsgsz1)
     endif
     
 

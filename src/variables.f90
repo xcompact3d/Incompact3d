@@ -53,6 +53,7 @@ module var
   integer, save :: nxmsize, nymsize, nzmsize
 
   ! working arrays for LES
+  ! These are by far too many variables and we should be able to decrease them
   real(mytype), save, allocatable, dimension(:,:,:) :: sgsx1,sgsy1,sgsz1,nut1,sxx1,syy1,szz1,sxy1,sxz1,syz1
   real(mytype), save, allocatable, dimension(:,:,:) :: sgsx2,sgsy2,sgsz2,nut2,sxx2,syy2,szz2,sxy2,sxz2,syz2
   real(mytype), save, allocatable, dimension(:,:,:) :: sgsx3,sgsy3,sgsz3,nut3,sxx3,syy3,szz3,sxy3,sxz3,syz3
@@ -69,9 +70,12 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:) :: srt_smag, srt_smag2
   real(mytype), save, allocatable, dimension(:,:,:) :: srt_wale, srt_wale2, srt_wale3, srt_wale4
 
+
   ! working arrays for ABL
   real(mytype), save, allocatable, dimension(:,:) :: heatflux
   real(mytype), save, allocatable, dimension(:,:,:,:) :: abl_T
+  ! tmp fix for intel
+  real(mytype), save, allocatable, dimension(:,:,:) :: wallfluxx1, wallfluxy1, wallfluxz1  
 
   ! arrays for turbine modelling
   real(mytype), save, allocatable, dimension(:,:,:) :: FTx, FTy, FTz, Fdiscx, Fdiscy, Fdiscz
@@ -474,6 +478,12 @@ contains
        srt_smag=zero
        call alloc_x(srt_wale)
        srt_wale=zero
+       call alloc_x(wallfluxx1)
+       wallfluxx1=zero
+       call alloc_x(wallfluxy1)
+       wallfluxy1=zero
+       call alloc_x(wallfluxz1)
+       wallfluxz1=zero
        call alloc_y(sgsx2)
        sgsx2=zero
        call alloc_y(sgsy2)
