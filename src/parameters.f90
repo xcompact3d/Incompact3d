@@ -226,11 +226,6 @@ subroutine parameter(input_i3d)
    endif
 
   ! !! These are the 'optional'/model parameters
-  ! read(10, nml=ScalarParam)
-  if(ilesmod==0) then
-     nu0nu=four
-     cnu=0.44_mytype
-  endif
   if(ilesmod.ne.0) then
      read(10, nml=LESModel); rewind(10)
   endif
@@ -638,6 +633,11 @@ subroutine parameter_defaults()
   smagcst=0.15
   maxdsmagcst=0.3
 
+  
+  !! SVV stuff
+  nu0nu=four
+  cnu=0.44_mytype
+  
   !! IBM stuff
   nraf = 0
   nobjmax = 0
