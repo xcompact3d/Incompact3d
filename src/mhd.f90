@@ -47,12 +47,9 @@ module mhd
   subroutine mhd_init
     !
     use param, only: re,ntime,itype,itype_channel,itype_tgv,zlz,dz
-    !
-    real(mytype) :: z
-    integer :: i,j,k
+    use param, only: zero, one
     !
     ! stuart=hartmann**2/re
-    !
     if(stuart<=1.d-15) then
       stuart=hartmann**2/re
     endif
@@ -62,12 +59,14 @@ module mhd
     !
     if(nrank==0) then
       !
-      print*,'** MHD Module activated'
-      print*,'**    MHD equation: ',mhd_equation
-      print*,'** Hartmann number: ',hartmann
-      print*,'**   Stuart number: ',stuart
-      print*,'**              Re: ',re
-      print*,'**     Magnetic Re: ',rem
+      write(*,*) '==========================================================='
+      write(*,*) 'MHD Module activated'
+      write(*,"(' MHD equation           : ',A17)") mhd_equation
+      write(*,"(' Re                     : ',F17.3)") re
+      write(*,"(' Magnetic Re            : ',F17.3)") rem
+      write(*,"(' Hartmann number        : ',F17.3)") hartmann
+      write(*,"(' Stuart number          : ',F17.3)") stuart
+      write(*,*) '==========================================================='
       !
     endif
     !
@@ -84,17 +83,17 @@ module mhd
     if(mhd_equation == 'induction') then
       
       if(itype.eq.itype_tgv) then
-        Bmean(:,:,:,1)=0.0
-        Bmean(:,:,:,2)=0.0 
-        Bmean(:,:,:,3)=0.0
+        Bmean(:,:,:,1)=zero
+        Bmean(:,:,:,2)=zero
+        Bmean(:,:,:,3)=zero
       endif
     elseif(mhd_equation == 'potential') then
       if(itype.eq.itype_channel) then
-        Bmean=0.d0
+        Bmean=zero
         !
-        Bm(:,:,:,1)=0.d0
-        Bm(:,:,:,2)=1.d0
-        Bm(:,:,:,3)=0.d0
+        Bm(:,:,:,1)=zero
+        Bm(:,:,:,2)=one
+        Bm(:,:,:,3)=zero
       endif
       !
       if(nrank==0) print*,'** MHD fields initlised'
@@ -181,108 +180,6 @@ module mhd
     omega(:,:,:)=duy1(:,:,:,1)-dux1(:,:,:,2)
     !
   end function vortcal
-  !
-  !+-------------------------------------------------------------------+
-  !| this subroutine is calculate and output statistics of MHD flow.   |
-  !+-------------------------------------------------------------------+
-  !| change record                                                     |
-  !| -------------                                                     |
-  !| 01-May-2023  | Created by J. Fang STFC Daresbury Laboratory       |
-  !+-------------------------------------------------------------------+
-  ! subroutine mhd_sta(ux1,uy1,uz1)
-  !   !
-  !   !use decomp_2d
-  !   use param,     only : ntime,t,nclx1, ncly1, nclz1,re
-  !   use var,       only : itime
-  !   use variables, only : nx, ny, nz, nxm, nym, nzm
-  !   use mptool,    only : pmax,psum
-  !   !
-  !   real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
-  !   !
-  !   ! local data
-  !   real(mytype) :: Ek,Em,Omegam,Jmax,var1,var2,disrat
-  !   logical,save :: lfirstcal=.true.
-  !   integer,save :: nxc,nyc,nzc
-  !   integer :: i,j,k
-  !   !
-  !   if(lfirstcal) then
-  !     !
-  !     if(nrank==0) then
-  !       open(newunit=mhd_iounit,file='mhd_stat.dat')
-  !       write(mhd_iounit,"(A7,1X,A13,5(1X,A20))")'itime','time',              &
-  !                               'Ek','Em','enstrophykm','dissipation','Jmax'
-
-  !     endif
-  !     !
-  !     if (nclx1==1) then
-  !        nxc=nxm
-  !     else
-  !        nxc=nx
-  !     endif
-  !     if (ncly1==1) then
-  !        nyc=nym
-  !     else
-  !        nyc=ny
-  !     endif
-  !     if (nclz1==1) then
-  !        nzc=nzm
-  !     else
-  !        nzc=nz
-  !     endif
-  !     !
-  !     lfirstcal=.false.
-  !     !
-  !   endif
-  !   !
-  !   Ek=0._mytype
-  !   Em=0._mytype
-  !   Omegam=0._mytype
-  !   Jmax=0._mytype
-  !   do k=1,xsize(3)
-  !   do j=1,xsize(2)
-  !   do i=1,xsize(1)
-      
-  !     var2=Je(i,j,k,1)**2+Je(i,j,k,2)**2+Je(i,j,k,3)**2
-
-  !     Ek    =Ek    + ux1(i,j,k)**2+uy1(i,j,k)**2+uz1(i,j,k)**2
-  !     Em    =Em    + Bm(i,j,k,1)**2+Bm(i,j,k,2)**2+Bm(i,j,k,3)**2
-  !     Omegam=Omegam+ var2
-  !     Jmax  = max(Jmax,var2)
-
-  !   enddo
-  !   enddo
-  !   enddo
-  !   !
-  !   Ek    =psum(Ek    )
-  !   Em    =psum(Em    )
-  !   Omegam=psum(Omegam)
-  !   Jmax  =pmax(Jmax)
-  !   !
-  !   Ek    =Ek    /real(nxc*nyc*nzc,mytype)/2._mytype
-  !   Em    =Em    /real(nxc*nyc*nzc,mytype)/2._mytype
-  !   Omegam=Omegam/real(nxc*nyc*nzc,mytype)/2._mytype*Rem*Rem
-  !   Jmax  =sqrt(Jmax)*Rem
-  !   !
-  !   disrat=Ek/re+Em/rem
-  !   ! print*,nxc,nyc,nzc
-  !   !
-  !   if(nrank==0) then
-  !     write(mhd_iounit,"(I7,1X,E13.6E2,5(1X,E20.13E2))")itime,t,Ek,Em, &
-  !                                           Omegam,disrat,Jmax
-  !   endif
-  !   !
-  ! end subroutine mhd_sta
-  !+-------------------------------------------------------------------+
-  !| The end of the subroutine mhd_sta.                                |
-  !+-------------------------------------------------------------------+
-  !
-  !+-------------------------------------------------------------------+
-  !| this subroutine is used to add the electromagnetic force to the   |
-  !| momentum equation                                                 |
-  !+-------------------------------------------------------------------+
-  !| change record                                                     |
-  !| -------------                                                     |
-  !| 28-Oct-2022  | Created by J. Fang STFC Daresbury Laboratory       |
   !+-------------------------------------------------------------------+
   subroutine momentum_forcing_mhd(dux1,duy1,duz1,ux1,uy1,uz1)
     !
@@ -909,23 +806,8 @@ module mhd
     if ((nrank == 0) .and. (nlock > 0).and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime==ilast)) then
        if (nlock == 2) then
           write(*,*) 'DIV B  max mean=',real(tmax1,mytype),real(tmoy1/real(nproc),mytype)
-          ! if(itime==6000) then
-          !   open(12,file='divb.dat',form='unformatted')
-          !   write(12)ph1%zen(1)-ph1%zst(1)+1,ph1%zen(2)-ph1%zst(2)+1,nzmsize
-          !   write(12)pp3(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),1:nzmsize)
-          !   close(12)
-          !   print*,' << divb.dat'
-          ! endif
-
        else
           write(*,*) 'DIV B* max mean=',real(tmax1,mytype),real(tmoy1/real(nproc),mytype)
-          ! if(itime==6000) then
-          !   open(12,file='divb_star.dat',form='unformatted')
-          !   write(12)ph1%zen(1)-ph1%zst(1)+1,ph1%zen(2)-ph1%zst(2)+1,nzmsize
-          !   write(12)pp3(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),1:nzmsize)
-          !   close(12)
-          !   print*,' << divb_star.dat'
-          ! endif
        endif
     endif
 
