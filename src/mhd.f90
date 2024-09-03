@@ -48,6 +48,7 @@ module mhd
     use param, only: zero, one
     use decomp_2d_mpi, only : decomp_2d_abort
     !
+    ! TODO fix these if
     ! stuart=hartmann**2/re
     if(stuart<=1.d-15) then
       stuart=hartmann**2/re
