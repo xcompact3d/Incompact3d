@@ -228,6 +228,21 @@ contains
     byo=zero
     allocate(bzo(xsize(2),xsize(3)))
     bzo=zero
+
+    ! BC values in Y-pencil - Ricardo Frantz
+    allocate(byx1_2(ysize(1),ysize(3)))
+    byx1_2=zero
+    allocate(byxn_2(ysize(1),ysize(3)))
+    byxn_2=zero
+    allocate(byy1_2(ysize(1),ysize(3)))
+    byy1_2=zero
+    allocate(byyn_2(ysize(1),ysize(3)))
+    byyn_2=zero
+    allocate(byz1_2(ysize(1),ysize(3)))
+    byz1_2=zero
+    allocate(byzn_2(ysize(1),ysize(3)))
+    byzn_2=zero
+
     !inflow/outflow arrays (precursor simulations)
     if (iin.eq.3) then
        allocate(ux_inflow(ntimesteps,xsize(2),xsize(3)))
@@ -1276,6 +1291,19 @@ contains
     else
        call stretching()
 
+       ! compute integral weights for stretched mesh - Ricardo Frantz
+       !TODO: change for exact formula
+       allocate(ypw(ny))
+       ypw=zero
+       do j=1,ny
+          if    (j==1)then
+             ypw(j) = (yp(j+1)-yp(j))*half
+          elseif(j==ny)then
+             ypw(j) = (yp(j)-yp(j-1))*half
+          else
+             ypw(j) = (yp(j+1)-yp(j-1))*half
+          endif
+       enddo
        allocate(dyp(ny))
        ! compute dy for stretched mesh - Kay
        do j=2,ny-1
