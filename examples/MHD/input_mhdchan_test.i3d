@@ -12,7 +12,7 @@ p_row=0               ! Row partition
 p_col=0               ! Column partition
 
 ! Mesh
-nx=8                  ! X-direction nodes
+nx=16                  ! X-direction nodes
 ny=129                ! Y-direction nodes
 nz=1                  ! Z-direction nodes
 istret = 2            ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
@@ -121,8 +121,8 @@ nclzSn = 0
 &MHDParam
 !====================
 
-mhd_equation = 'potential'
-hartmann = 6.d0
+mhd_equation = 'potential' ! MHD type of equation (potential or induction)
+hartmann = 6.d0            ! Hartmann number (Ha) ratio of electromagnetic force to the viscous force (BLsqrt(sigma/nu)) 
 
 /End
 
