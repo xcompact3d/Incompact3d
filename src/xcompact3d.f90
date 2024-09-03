@@ -16,8 +16,9 @@ program xcompact3d
   use ibm_param
   use ibm, only : body
   use genepsi, only : genepsi3d
-  use mhd,    only : Bm,mhd_active,mhd_equation,test_magnetic, &
+  use mhd,    only : Bm,mhd_equation,test_magnetic, &
                      solve_poisson_mhd
+  use param, only : mhd_active
 
   implicit none
 
@@ -119,7 +120,7 @@ subroutine init_xcompact3d()
        init_inflow_outflow, read_inflow
 
   use param, only : ilesmod, jles,itype
-  use param, only : irestart
+  use param, only : irestart, mhd_active
 
   use variables, only : nx, ny, nz, nxm, nym, nzm
   use variables, only : p_row, p_col
@@ -135,7 +136,7 @@ subroutine init_xcompact3d()
 
   use probes, only : init_probes
 
-  use mhd, only: mhd_active,mhd_init
+  use mhd, only: mhd_init
 
   implicit none
 
@@ -278,17 +279,9 @@ subroutine init_xcompact3d()
      endif
   endif
 
-  if (itype==3) then
-     if (nrank.eq.0)then
-        open(52,file='chan_time_evol.dat',form='formatted')
-     endif
-  endif
-  
-  if (itype==5) then
-     if (iforces == 1) then
-        if(nrank.eq.0)then
-           open(38,file='forces.dat',form='formatted')
-        endif
+  if (iforces == 1) then
+     if(nrank.eq.0)then
+        open(38,file='forces.dat',form='formatted')
      endif
   endif
   
@@ -309,11 +302,11 @@ subroutine finalise_xcompact3d()
   use decomp_2d_io, only : decomp_2d_io_finalise
 
   use tools, only : simu_stats
-  use param, only : itype, jles, ilesmod
+  use param, only : itype, jles, ilesmod, mhd_active
   use probes, only : finalize_probes
   use visu, only : visu_finalise
   use les, only: finalise_explicit_les
-  use mhd, only: mhd_active, mhd_fin
+  use mhd, only: mhd_fin
   use case, only: visu_case_finalise
   use forces, only: iforces
 
@@ -330,17 +323,9 @@ subroutine finalise_xcompact3d()
      endif
   endif
 
-  if (itype==3) then
+  if (iforces == 1) then
      if(nrank.eq.0)then
-        close(52)
-     endif
-  endif
-
-  if (itype==5) then
-     if (iforces == 1) then
-        if(nrank.eq.0)then
-           close(38)
-        endif
+        close(38)
      endif
   endif
 

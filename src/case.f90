@@ -493,7 +493,7 @@ contains
   !##################################################################
   subroutine momentum_forcing(dux1, duy1, duz1, rho1, ux1, uy1, uz1, phi1)
 
-    use mhd, only: mhd_active,momentum_forcing_mhd
+    use mhd, only: momentum_forcing_mhd
 
     implicit none
 

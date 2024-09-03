@@ -203,9 +203,10 @@ contains
     use param, only : iimplicit, sc_even
     use param, only : primary_species, massfrac
     use param, only : scalar_lbound, scalar_ubound
+    use param, only : mhd_active
     use variables, only : numscalar,nu0nu
     use var, only : ta1, tb1
-    use mhd,     only : mhd_active,mhd_equation,int_time_magnet
+    use mhd,     only : mhd_equation,int_time_magnet
     use MPI
 
 

@@ -29,7 +29,7 @@ contains
     use variables
     use param
     use MPI
-    use mhd, only : mhd_active, mhd_equation,Bm,Bmean
+    use mhd, only : mhd_equation,Bm,Bmean
 
     implicit none
 
@@ -93,9 +93,9 @@ contains
                 if (idir_stream == 1) then
                    ux1(i,j,k)=one-y*y
                    uy1(i,j,k)=zero
-                   uz1(i,j,k)=zero !sin(real(i-1,mytype)*dx)+cos(real(k-1,mytype)*dz)
+                   uz1(i,j,k)=sin(real(i-1,mytype)*dx)+cos(real(k+xstart(3)-2,mytype)*dz)
                 else
-                        print *,'test'
+                   ! TODO: check if ux1 needs sin and cos 
                    uz1(i,j,k)=one-y*y
                    uy1(i,j,k)=zero
                    ux1(i,j,k)=zero
@@ -155,7 +155,7 @@ contains
     use param
     use var, only : di2
     use variables
-    use mhd, only : Bm, mhd_active, mhd_equation 
+    use mhd, only : Bm, mhd_equation 
 
     implicit none
 
@@ -276,100 +276,13 @@ contains
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
 
-    real(mytype) :: ufriction,umax,resdux1,resduy1,resduz1,temp1,temp2
-    integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
-    integer :: i,j,k
-    integer :: code
-
-    if (nclx1==1 .and. xend(1)==nx) then
-       xsize1=xsize(1)-1
-    else
-       xsize1=xsize(1)
-    endif
-    if (ncly1==1 .and. xend(2)==ny) then
-       xsize2=xsize(2)-1
-    else
-       xsize2=xsize(2)
-    endif
-    if (nclz1==1 .and. xend(3)==nz) then
-       xsize3=xsize(3)-1
-    else
-       xsize3=xsize(3)
-    endif
-    if (nclx1==1) then
-       nxc=nxm
-    else
-       nxc=nx
-    endif
-    if (ncly1==1) then
-       nyc=nym
-    else
-       nyc=ny
-    endif
-    if (nclz1==1) then
-       nzc=nzm
-    else
-       nzc=nz
-    endif
-
-    !we only collect statistics every 10 time steps to save computational time
-    if (mod(itime, 10) == 0) then
-
-       temp1=zero
-
-       if (ncly1==2 .and. xstart(2)==1) then
-
-         ! bottom wall, one node away from wall
-         j=2
-         do k=1,xsize(3)
-             do i=1,xsize(1)
-              temp1=temp1+ux1(i,j,k)*ppy(j-1)
-             enddo
-         enddo
-
-       endif
-       !
-       if (nclyn==2 .and. xend(2)==ny) then
-
-         ! upper wall, one node away from wall
-         j=xsize(2)-1
-         do k=1,xsize(3)
-             do i=1,xsize(1)
-              temp1=temp1-ux1(i,j,k)*ppy(j+1)
-             enddo
-         enddo
-
-       endif
-       !
-       temp2=zero
-       do k=1,xsize3
-          do j=1,xsize2
-             do i=1,xsize1
-              temp2=max(temp2,ux1(i,j,k))
-             enddo
-          enddo
-       enddo
-       
-       call MPI_ALLREDUCE(temp1,ufriction,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       call MPI_ALLREDUCE(temp2,     umax,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-
-       ufriction=xnu*1.5_mytype*ufriction/(nxc*nzc) ! ub=2/3
-   
-       if (nrank==0) then
-          write(52,'(3(E20.12))') (itime-1)*dt,ufriction,umax
-          flush(52)
-       endif
-
-    endif
-
-
   end subroutine postprocess_channel
 
   subroutine visu_channel_init(visu_initialised)
 
     use decomp_2d_io, only : decomp_2d_register_variable
     use visu, only : io_name, output2D
-    use mhd, only : mhd_active
+    use param, only : mhd_active
     
     implicit none
 
@@ -403,7 +316,8 @@ contains
     use var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
     use var, ONLY : nzmsize
     use visu, only : write_field
-    use mhd, only : mhd_active,mhd_equation,Je, Bm
+    use param, only : mhd_active
+    use mhd, only : mhd_equation,Je, Bm
     
     use ibm_param, only : ubcx,ubcy,ubcz
 
