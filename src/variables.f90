@@ -1292,6 +1292,7 @@ contains
        call stretching()
 
        ! compute integral weights for stretched mesh - Ricardo Frantz
+       !TODO: change for exact formula
        allocate(ypw(ny))
        ypw=zero
        do j=1,ny

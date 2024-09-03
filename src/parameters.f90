@@ -640,10 +640,10 @@ subroutine parameter(input_i3d)
      if (itype==itype_gravitycur) then
         write(*,*)  "Initial front location: ", pfront
      endif
-     ! Check output parameters are valid for TTBL
+     ! Check output parameters are valid for PTBL
      if (itype.eq.itype_ptbl) then
         if (ioutput < ilist .or. mod(ioutput, ilist) /= 0) then
-           if (nrank == 0) write (*, *) 'ioutput must be exactly divisible by ilist'
+           call decomp_2d_abort(__FILE__, __LINE__, ioutput, "ioutput must be exactly divisible by ilist")
            call MPI_ABORT(MPI_COMM_WORLD, -1, ierr)
         else
            if (nrank == 0) write (*, *) 'Output buffer size for TTBL postprocessing = ', ioutput / ilist
