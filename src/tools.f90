@@ -209,7 +209,7 @@ contains
     use param
     use MPI
     use navier, only : gradp
-    use mhd, only : mhd_active,mhd_equation,Bm,dBm
+    use mhd, only : mhd_equation,Bm,dBm
 
     implicit none
 
@@ -507,9 +507,9 @@ contains
 
     use decomp_2d_io, only : decomp_2d_register_variable, decomp_2d_init_io
     use variables, only : numscalar
-    use param, only : ilmn, nrhotime, ntime
+    use param, only : ilmn, nrhotime, ntime, mhd_active
     use var, only : itimescheme, iibm
-    use mhd, only : mhd_active, mhd_equation
+    use mhd, only : mhd_equation
     
     implicit none
 
@@ -793,8 +793,9 @@ contains
   subroutine compute_cfldiff()
      use param, only : xnu,dt,dx,dy,dz,istret
      use param, only : cfl_diff_sum, cfl_diff_x, cfl_diff_y, cfl_diff_z
+     use param, only : mhd_active
      use variables, only : dyp
-     use mhd, only: mhd_active, mhd_equation,rem
+     use mhd, only: mhd_equation,rem
 
      implicit none
 

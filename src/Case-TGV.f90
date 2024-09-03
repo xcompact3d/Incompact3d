@@ -28,7 +28,7 @@ contains
     use variables
     use param
     use MPI
-    use mhd,  only: mhd_active,Bm,Bmean
+    use mhd,  only: Bm,Bmean
     use visu, only: write_snapshot, end_snapshot
 
     implicit none
@@ -196,7 +196,7 @@ contains
     USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
     USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
     USE ibm_param
-    use mhd, only : mhd_active,Bm,Je,Rem
+    use mhd, only : Bm,Je,Rem
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1,ep1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
@@ -485,7 +485,6 @@ contains
 
     use decomp_2d_io, only : decomp_2d_register_variable
     use visu, only : io_name, output2D
-    use mhd, only : mhd_active
     
     implicit none
 
@@ -521,7 +520,7 @@ contains
     USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
     use var, ONLY : nxmsize, nymsize, nzmsize
     use visu, only : write_field
-    use mhd, only : mhd_active,Bm,Je,del_cross_prod,rem
+    use mhd, only : Bm,Je,del_cross_prod,rem
     use ibm_param, only : ubcx,ubcy,ubcz
 
     implicit none

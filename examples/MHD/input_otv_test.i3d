@@ -97,9 +97,9 @@ nstat = 1             ! Size arrays for statistic collection
 &MHDParam
 !====================
 
-mhd_equation = 'induction'
-Stuart = 50.d0
-Rem    = 50.d0
+mhd_equation = 'induction' ! MHD type of equation (potential or induction)
+Stuart = 50.0              ! Stuart number ratio of electromagnetic to inertial forces (Ha^2/Rem)
+Rem    = 50.0              ! Magnetic Reynolds number (UL/eta)
 
 /End
 

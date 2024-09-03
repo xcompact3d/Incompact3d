@@ -119,21 +119,6 @@ contains
           endif
         endif
       enddo
-
-      !! Add random noise
-      !do j=1,xsize(2)
-      !  if (istret==0) y=real(j + xstart(2)-1-1,mytype)*dy
-      !  if (istret/=0) y=yp(j+xstart(2)-1)
-      !  !if (y.lt.50) then 
-      !  !  do k=1,xsize(3)
-      !  !  do i=1,xsize(1)
-      !  !    call random_number(phinoise)
-      !  !    phinoise=0.1*(phinoise*2.-1.)
-      !  !    phi1(i,j,k,1)=phi1(i,j,k,1)+phinoise
-      !  !  enddo
-      !  !  enddo
-      !  !endif
-      !enddo
     endif
 
     return

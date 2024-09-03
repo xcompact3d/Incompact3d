@@ -121,8 +121,8 @@ nclzSn = 0
 &MHDParam
 !====================
 
-mhd_equation = 'potential'
-hartmann = 6.d0
+mhd_equation = 'potential' ! MHD type of equation (potential or induction)
+hartmann = 6.d0            ! Hartmann number (Ha) ratio of electromagnetic force to the viscous force (BLsqrt(sigma/nu)) 
 
 /End
 

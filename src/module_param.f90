@@ -327,6 +327,7 @@ module param
   real(mytype) :: C_filter
   character(len=512) :: inflowpath
   logical :: validation_restart
+  logical :: mhd_active
 
   ! Logical, true when synchronization is needed
   logical, save :: sync_vel_needed = .true.

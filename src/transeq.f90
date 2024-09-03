@@ -21,8 +21,8 @@ contains
 
     use decomp_2d, only : xsize, zsize
     use variables, only : numscalar
-    use param, only : ntime, ilmn, nrhotime, ilmn_solve_temp
-    use mhd,   only : mhd_active,mhd_equation,calculate_mhd_transeq_rhs
+    use param, only : ntime, ilmn, nrhotime, ilmn_solve_temp, mhd_active
+    use mhd,   only : mhd_equation,calculate_mhd_transeq_rhs
 
     implicit none
 

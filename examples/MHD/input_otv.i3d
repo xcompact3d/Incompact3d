@@ -8,8 +8,8 @@
 itype = 2
 
 ! Domain decomposition
-p_row=2                ! Row partition
-p_col=2                ! Column partition
+p_row=0                ! Row partition
+p_col=0                ! Column partition
  
 ! Mesh 
 nx=128                 ! X-direction nodes
@@ -97,9 +97,9 @@ nstat = 1             ! Size arrays for statistic collection
 &MHDParam
 !====================
 
-mhd_equation = 'induction'
-Stuart = 17.54386 
-Rem    = 17.54386
+mhd_equation = 'induction' ! MHD type of equation (potential or induction)
+Stuart = 17.54386          ! Stuart number ratio of electromagnetic to inertial forces (Ha^2/Rem)
+Rem    = 17.54386          ! Magnetic Reynolds number (UL/eta)
 
 /End
 

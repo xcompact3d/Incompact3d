@@ -31,7 +31,7 @@ subroutine parameter(input_i3d)
   use visu, only : output2D
   use forces, only : iforces, nvol, setup_forces
 
-  use mhd, only: mhd_active,mhd_equation,hartmann,stuart,rem
+  use mhd, only: mhd_equation,hartmann,stuart,rem
 
   implicit none
 
@@ -599,7 +599,7 @@ subroutine parameter_defaults()
   use visu, only : output2D
   use forces, only : iforces, nvol
 
-  use mhd, only: mhd_active, mhd_equation, rem, stuart, hartmann 
+  use mhd, only: mhd_equation, rem, stuart, hartmann 
 
   implicit none
 

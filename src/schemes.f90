@@ -16,7 +16,7 @@ subroutine schemes()
   USE variables
   USE var
   USE ydiff_implicit, only : init_implicit, implicit_schemes
-  use mhd, only: mhd_active, mhd_equation
+  use mhd, only: mhd_equation
 
   implicit none
 

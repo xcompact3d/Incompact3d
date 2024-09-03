@@ -11,11 +11,9 @@ module mhd
   !
   implicit none
   !
-  logical :: mhd_active
   character(len=9) :: mhd_equation
   real(8) :: hartmann,stuart,rem
   !+------------+------------------------------------------------------+
-  !|  mhd_active| the swith to activate the mhd module.                |
   !|    hartmann| hartmann number, the ratio of lorentz force to       |
   !|            | viscous force                                        |
   !|      stuart| Stuart number, magnetic interaction parameter, ratio |
@@ -48,7 +46,9 @@ module mhd
     !
     use param, only: re,ntime,itype,itype_channel,itype_tgv,zlz,dz
     use param, only: zero, one
+    use decomp_2d_mpi, only : decomp_2d_abort
     !
+    ! TODO fix these if
     ! stuart=hartmann**2/re
     if(stuart<=1.d-15) then
       stuart=hartmann**2/re
@@ -78,16 +78,15 @@ module mhd
     !
     allocate(Bmean(xsize(1),xsize(2),xsize(3),1:3))
     !
-    if(nrank==0) print*,'** MHD fields allocated'
-    !
     if(mhd_equation == 'induction') then
-      
+      ! TODO Check what is going to happen for other flow types  
       if(itype.eq.itype_tgv) then
         Bmean(:,:,:,1)=zero
         Bmean(:,:,:,2)=zero
         Bmean(:,:,:,3)=zero
       endif
     elseif(mhd_equation == 'potential') then
+      ! TODO Check what is going to happen for other flow types  
       if(itype.eq.itype_channel) then
         Bmean=zero
         !
@@ -95,10 +94,8 @@ module mhd
         Bm(:,:,:,2)=one
         Bm(:,:,:,3)=zero
       endif
-      !
-      if(nrank==0) print*,'** MHD fields initlised'
     else
-      stop ' mhd_equation not induction or potential'
+      call decomp_2d_abort(1, "Error in setup mhd equation induction or potential not selected")
     endif
     !
   end subroutine mhd_init
@@ -183,6 +180,10 @@ module mhd
   !+-------------------------------------------------------------------+
   subroutine momentum_forcing_mhd(dux1,duy1,duz1,ux1,uy1,uz1)
     !
+    USE decomp_2d_mpi, only : decomp_2d_abort
+    
+    implicit none
+    
     ! arguments
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) ::   &
                                                 ux1,uy1,uz1
@@ -198,7 +199,7 @@ module mhd
     elseif(mhd_equation == 'potential') then
       Je=solve_mhd_potential_poisson(ux1,uy1,uz1)
     else
-      stop ' mhd_equation error '
+      call decomp_2d_abort(1, "Error in setup mhd equation induction or potential not selected")
     endif
     !
     do k = 1, xsize(3)
@@ -431,7 +432,8 @@ module mhd
     integer :: i,j,k,is
     !
 
-    ! local 
+    ! local
+    ! TODO Need to check is all these local variable are necessary -> potential issue with INTEL  
     real(mytype) :: rrem
     real(mytype), save, allocatable, dimension(:,:,:) :: tx1,ty1,tz1,tx2,ty2,tz2, &
                                                          tx3,ty3,tz3,bx2,by2,bz2, &
@@ -696,6 +698,8 @@ module mhd
 
   end subroutine mhd_rhs_eq
   !
+  ! TODO Check if the normal divergence can be used  
+  ! TODO Check if already allocated arrays can be re-used
   subroutine solve_poisson_mhd
     !
     use decomp_2d, only : zsize, ph1
@@ -749,6 +753,7 @@ module mhd
 
     nvect3=(ph1%zen(1)-ph1%zst(1)+1)*(ph1%zen(2)-ph1%zst(2)+1)*nzmsize
 
+    ! TODO If we properly use tmp var this should not be used 
     ta1(:,:,:) = vec(:,:,:,1)
     tb1(:,:,:) = vec(:,:,:,2)
     tc1(:,:,:) = vec(:,:,:,3)
