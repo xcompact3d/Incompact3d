@@ -26,6 +26,7 @@ module gravitycur
   use param, only : ilmn, ibirman_eos
   use param, only : itime, ioutput, iprocessing
   use param, only : t
+  use visu, only : gen_filename, output2D
 
   implicit none
 
@@ -47,7 +48,8 @@ module gravitycur
             postprocess_gravitycur, &
             pfront, &
             set_fluid_properties_gravitycur, &
-            visu_gravitycur_init
+            visu_gravitycur_init, &
+            visu_gravitycur_finalise
 
 contains
 
@@ -246,27 +248,50 @@ contains
 
     return
   end subroutine init_gravitycur
-
+  !########################################################################
+  !########################################################################
   subroutine visu_gravitycur_init(visu_initialised)
 
-    use decomp_2d_io, only : decomp_2d_register_variable
+    use decomp_2d_io, only : decomp_2d_init_io, decomp_2d_register_variable, &
+                             decomp_2d_open_io, decomp_2d_write_mode
     
     implicit none
 
     logical, intent(out) :: visu_initialised
 
+    call decomp_2d_init_io(io_bcle)
+
+    call decomp_2d_register_variable(io_bcle, "diss", 1, 0, output2D, mytype)
     call decomp_2d_register_variable(io_bcle, "dissm", 3, 0, 3, mytype)
     call decomp_2d_register_variable(io_bcle, "dep", 2, 0, 2, mytype)
+#ifdef ADIOS2
+    call decomp_2d_open_io(io_bcle, bcle_dir, decomp_2d_write_mode)
+#endif
 
     visu_initialised = .true.
     
   end subroutine visu_gravitycur_init
+  !--------------------------------------------------------------------- 
+  subroutine visu_gravitycur_finalise()
+  
+    use decomp_2d_io, only : decomp_2d_close_io
+    implicit none
+    
+#ifdef ADIOS2
+    call decomp_2d_close_io(io_bcle, bcle_dir)
+#endif
+
+  end subroutine visu_gravitycur_finalise
+  !########################################################################
+  !########################################################################
 
   subroutine postprocess_gravitycur(rho1,ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
     use var, only : phi2, rho2
     use var, only : phi3, rho3
     use tools, only : mean_plane_z
+    use decomp_2d_io, only : decomp_2d_write_mode, decomp_2d_open_io, decomp_2d_close_io, &
+                             decomp_2d_start_io, decomp_2d_end_io
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
@@ -347,6 +372,10 @@ contains
        endif
     endif
 
+#ifdef ADIOS2
+    call decomp_2d_start_io(io_bcle, bcle_dir)
+#endif
+    
     call budget(rho1,ux1,uy1,uz1,phi1,vol1)
     call dep(phi1,dep2)
     call suspended(phi1,vol1,mp)
@@ -357,6 +386,10 @@ contains
     elseif (ilmn.and.ibirman_eos) then
        call front2d(rhom3(:,:),xf2d)
     endif
+
+#ifdef ADIOS2
+    call decomp_2d_end_io(io_bcle, bcle_dir)
+#endif
 
     if (nrank .eq. 0) then
        FS = 1+numscalar+numscalar+3+2 !Number of columns
@@ -584,16 +617,20 @@ contains
        !if (save_diss.eq.1) then
        uvisu=zero
        call fine_to_coarseV(1,diss1,uvisu)
-       write(filename,"('diss',I4.4)") itime/ioutput
-       call decomp_2d_write_one(1,uvisu,bcle_dir,filename,2,io_bcle)
+       !write(filename,"('diss',I4.4)") itime/ioutput
+       call decomp_2d_write_one(1,uvisu,bcle_dir,&
+               gen_filename(".", "diss", itime / ioutput, "bin"),&
+               2,io_bcle)
        !endif
 
        !if (save_dissm.eq.1) then
        call transpose_x_to_y (diss1,temp2)
        call transpose_y_to_z (temp2,temp3)
        call mean_plane_z(temp3,zsize(1),zsize(2),zsize(3),temp3(:,:,1))
-       write(filename,"('dissm',I4.4)") itime/ioutput
-       call decomp_2d_write_plane(3,temp3,3,1,bcle_dir,filename,io_bcle)
+       !write(filename,"('dissm',I4.4)") itime/ioutput
+       call decomp_2d_write_plane(3,temp3,3,1,bcle_dir,&
+               gen_filename(".", "dissm", itime / ioutput, "bin"),&
+               io_bcle)
        !endif
     endif
 
@@ -603,6 +640,7 @@ contains
 
     USE decomp_2d_io
     USE MPI
+    use visu, only : gen_filename
 
     use var, only : phi2
 
@@ -629,8 +667,10 @@ contains
           end do
        end do
 
-       write(filename,"('dep',I1.1,I4.4)") is,itime/iprocessing
-       call decomp_2d_write_plane(2,tempdep2(:,:,:,is),2,1,bcle_dir,filename,io_bcle)
+       write(filename,"('dep',I1.1)") is
+       call decomp_2d_write_plane(2,tempdep2(:,:,:,is),2,1,bcle_dir,&
+               gen_filename(".", trim(filename), itime / ioutput, "bin"),&
+               io_bcle)
     enddo
 
   end subroutine dep

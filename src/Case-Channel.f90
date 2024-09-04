@@ -29,7 +29,7 @@ contains
     use variables
     use param
     use MPI
-    use mhd, only : mhd_active, Bm,Bmean
+    use mhd, only : mhd_equation,Bm,Bmean
 
     implicit none
 
@@ -93,9 +93,9 @@ contains
                 if (idir_stream == 1) then
                    ux1(i,j,k)=one-y*y
                    uy1(i,j,k)=zero
-                   uz1(i,j,k)=sin(real(i-1,mytype)*dx)+cos(real(k-1,mytype)*dz)
+                   uz1(i,j,k)=sin(real(i-1,mytype)*dx)+cos(real(k+xstart(3)-2,mytype)*dz)
                 else
-                        print *,'test'
+                   ! TODO: check if ux1 needs sin and cos 
                    uz1(i,j,k)=one-y*y
                    uy1(i,j,k)=zero
                    ux1(i,j,k)=zero
@@ -142,25 +142,11 @@ contains
              ux1(i,j,k)=ux1(i,j,k)+bxx1(j,k)
              uy1(i,j,k)=uy1(i,j,k)+bxy1(j,k)
              uz1(i,j,k)=uz1(i,j,k)+bxz1(j,k)
-          enddo
+         enddo
        enddo
     enddo
-
-    if(mhd_active) then
-
-      Bmean(:,:,:,1)=zero
-      Bmean(:,:,:,2)=one
-      Bmean(:,:,:,3)=zero
-
-      Bm(:,:,:,1)=zero
-      Bm(:,:,:,2)=zero
-      Bm(:,:,:,3)=zero
-      
-      if(nrank==0) print*,'** magnetic field initialised'
-
-    endif
-
     return
+
   end subroutine init_channel
   !############################################################################
   !############################################################################
@@ -169,7 +155,7 @@ contains
     use param
     use var, only : di2
     use variables
-    use mhd, only : Bm, mhd_active, mhd_equation 
+    use mhd, only : Bm, mhd_equation 
 
     implicit none
 
@@ -206,7 +192,7 @@ contains
        endif
     endif
 
-    if( mhd_active .and. iimplicit<=0 .and. mhd_equation ) then
+    if( mhd_active .and. iimplicit<=0 .and. mhd_equation=='induction' ) then
        ! FIXME add a test
        ! This is valid only when nclyB*1 = 2
        if (xstart(2) == 1) then
@@ -274,11 +260,15 @@ contains
     enddo
 
   end subroutine channel_cfr
+
   !############################################################################
   !############################################################################
   subroutine postprocess_channel(ux1,uy1,uz1,pp3,phi1,ep1)
 
-    use var, ONLY : nzmsize
+    use var, ONLY : nzmsize,xnu
+    USE variables, only: nx,ny,nz
+
+    use MPI
 
     implicit none
 
@@ -287,11 +277,12 @@ contains
     real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
 
   end subroutine postprocess_channel
+
   subroutine visu_channel_init(visu_initialised)
 
     use decomp_2d_io, only : decomp_2d_register_variable
     use visu, only : io_name, output2D
-    use mhd, only : mhd_active
+    use param, only : mhd_active
     
     implicit none
 
@@ -325,7 +316,8 @@ contains
     use var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
     use var, ONLY : nzmsize
     use visu, only : write_field
-    use mhd, only : mhd_active,Je, Bm
+    use param, only : mhd_active
+    use mhd, only : mhd_equation,Je, Bm
     
     use ibm_param, only : ubcx,ubcy,ubcz
 
@@ -384,7 +376,7 @@ contains
                  - th1(:,:,:) * tf1(:,:,:)
     call write_field(di1, ".", "critq", num, flush = .true.) ! Reusing temporary array, force flush
 
-    if (mhd_active) then
+    if (mhd_active .and. mhd_equation=='induction') then
       call write_field(Je(:,:,:,1), ".", "J_x", num, flush = .true.)
       call write_field(Je(:,:,:,2), ".", "J_y", num, flush = .true.)
       call write_field(Je(:,:,:,3), ".", "J_z", num, flush = .true.)

@@ -12,25 +12,25 @@ p_row=0               ! Row partition
 p_col=0               ! Column partition
 
 ! Mesh
-nx=64                ! X-direction nodes
-ny=65                 ! Y-direction nodes
-nz=128                 ! Z-direction nodes
+nx=16                  ! X-direction nodes
+ny=129                ! Y-direction nodes
+nz=1                  ! Z-direction nodes
 istret = 2            ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
 beta = 0.259065151    ! Refinement parameter (beta)
 
 ! Domain
-xlx = 4.              ! Lx (Size of the box in x-direction)
-yly = 2.              ! Ly (Size of the box in y-direction)
-zlz = 8.              ! Lz (Size of the box in z-direction)
+xlx = 1.0             ! Lx (Size of the box in x-direction)
+yly = 2.0             ! Ly (Size of the box in y-direction)
+zlz = 0.1             ! Lz (Size of the box in z-direction)
 
 ! Flow parameters
-re  = 4200.           ! nu=1/re (Kinematic Viscosity)
+re  = 3457.5          ! nu=1/re (Kinematic Viscosity)
 cpg = F               ! if cpg=T, then re is friction Reynolds number
 
 ! Time stepping
 dt = 0.005            ! Time step
 ifirst = 1            ! First iteration
-ilast  = 100          ! Last iteration
+ilast  = 200          ! Last iteration
 
 ! Enable modelling tools
 ilesmod=0             ! if 0 then DNS
@@ -43,7 +43,7 @@ u1  = 1.              ! u1 (max velocity) (for inflow condition)
 u2  = 1.              ! u2 (min velocity) (for inflow condition)
 init_noise = 0.03     ! Turbulence intensity (1=100%) !! Initial condition
 inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
-idir_stream  = 3      ! Index of the streamwise direction (1=X, 3=Z, 2 not available)
+idir_stream  = 1      ! Index of the streamwise direction (1=X, 3=Z, 2 not available)
 
 nclx1 = 0
 nclxn = 0
@@ -52,6 +52,7 @@ nclyn = 2
 nclz1 = 0
 nclzn = 0
 
+mhd_active = .true.
 /End
 
 !====================
@@ -78,11 +79,11 @@ cnu = 0.44            ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 !=================
 
 ! Basic I/O
-irestart = 0          ! Read initial flow field ?
-icheckpoint =  100    ! Frequency for writing backup file
-ioutput = 50          ! Frequency for visualization
-ilist    = 25         ! Frequency for the output to screen
-nvisu = 1             ! Size for visualisation collection
+irestart = 0           ! Read initial flow field 
+icheckpoint = 200      ! Frequency for writing backup file
+ioutput = 100          ! Frequency for visualization
+ilist    = 20          ! Frequency for the output to screen
+nvisu = 1              ! Size for visualisation collection
 
 /End
 
@@ -90,10 +91,10 @@ nvisu = 1             ! Size for visualisation collection
 &Statistics
 !=================
 
-wrotation = 0.12      ! rotation speed to trigger turbulence
-spinup_time = 5000    ! number of time steps with a rotation to trigger turbulence
+wrotation = 0.d0      ! rotation speed to trigger turbulence
+spinup_time = 0       ! number of time steps with a rotation to trigger turbulence
 nstat = 1             ! Size arrays for statistic collection
-initstat = 50         ! Time steps after which statistics are collected
+initstat = 400000     ! Time steps after which statistics are collected
 
 /End
 
@@ -116,17 +117,35 @@ nclzSn = 0
 
 /End
 
+!====================
+&MHDParam
+!====================
+
+mhd_equation = 'potential' ! MHD type of equation (potential or induction)
+hartmann = 6.d0            ! Hartmann number (Ha) ratio of electromagnetic force to the viscous force (BLsqrt(sigma/nu)) 
+
+/End
+
 !================
 &LESModel
 !================
 
 iles = 0              ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Smag, 4: iSVV, 5: dyn SEV)
 smagcst = 0.14        ! Smagorinsky constant
-SmagWallDamp = 0      ! 1: Mason and Thomson Damping function, otherwise OFF
 walecst = 0.5         ! WALES Model Coefficient
-iconserv = 0          ! Formulation SGS divergence (0: non conservative, 1: conservative)
+iwall = 0             ! Enable wall modeling
+
+/End
+
+!================
+&WallModel
+!================
+
+SmagWallDamp = 0      ! Smagorinsky damping function for ABL if 1
 
 /End
 
 &CASE
 /End
+
+

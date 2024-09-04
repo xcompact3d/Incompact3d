@@ -16,7 +16,7 @@ subroutine schemes()
   USE variables
   USE var
   USE ydiff_implicit, only : init_implicit, implicit_schemes
-  use mhd, only: mhd_active, mhd_equation
+  use mhd, only: mhd_equation
 
   implicit none
 
@@ -166,7 +166,7 @@ subroutine schemes()
           sfzS,sszS,swzS,sfzpS,sszpS,swzpS,dz2,nz,nclzS1,nclzSn)
   endif
 
-  if( mhd_active .and. mhd_equation ) then
+  if( mhd_active .and. mhd_equation == 'induction' ) then
      ! First derivative
      if (nclxBx1.eq.0.and.nclxBxn.eq.0) derxBx => derx_00
      if (nclxBx1.eq.1.and.nclxBxn.eq.1) derxBx => derx_11

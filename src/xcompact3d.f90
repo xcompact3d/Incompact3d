@@ -16,8 +16,9 @@ program xcompact3d
   use ibm_param
   use ibm, only : body
   use genepsi, only : genepsi3d
-  use mhd,    only : Bm,mhd_active,mhd_equation,test_magnetic, &
-                     solve_poisson_mhd,mhd_sta
+  use mhd,    only : Bm,mhd_equation,test_magnetic, &
+                     solve_poisson_mhd
+  use param, only : mhd_active
 
   implicit none
 
@@ -27,6 +28,7 @@ program xcompact3d
   do itime=ifirst,ilast
      !t=itime*dt
      t=t0 + (itime0 + itime + 1 - ifirst)*dt
+     
      call simu_stats(2)
 
      if (iturbine.ne.0) call compute_turbines(ux1, uy1, uz1)
@@ -70,7 +72,7 @@ program xcompact3d
         call solve_poisson(pp3,px1,py1,pz1,rho1,ux1,uy1,uz1,ep1,drho1,divu3)
         call cor_vel(ux1,uy1,uz1,px1,py1,pz1)
 
-        if(mhd_active .and. mhd_equation) then
+        if(mhd_active .and. mhd_equation == 'induction') then
           call solve_poisson_mhd()
         endif
 
@@ -86,8 +88,6 @@ program xcompact3d
 
      enddo !! End sub timesteps
 
-     if(mhd_active) call mhd_sta(ux1,uy1,uz1)
-     !
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,rho1,drho1,mu1,1)
 
      call simu_stats(3)
@@ -120,7 +120,7 @@ subroutine init_xcompact3d()
        init_inflow_outflow, read_inflow
 
   use param, only : ilesmod, jles,itype
-  use param, only : irestart
+  use param, only : irestart, mhd_active
 
   use variables, only : nx, ny, nz, nxm, nym, nzm
   use variables, only : p_row, p_col
@@ -136,7 +136,7 @@ subroutine init_xcompact3d()
 
   use probes, only : init_probes
 
-  use mhd, only: mhd_active,mhd_init
+  use mhd, only: mhd_init
 
   implicit none
 
@@ -273,11 +273,21 @@ subroutine init_xcompact3d()
   if (itype==2) then
      if(nrank.eq.0)then
         open(42,file='time_evol.dat',form='formatted')
+        if(mhd_active) then
+           open(43,file='mhd_time_evol.dat',form='formatted')
+        endif
      endif
   endif
+
   if (iforces == 1) then
      if(nrank.eq.0)then
         open(38,file='forces.dat',form='formatted')
+     endif
+  endif
+  
+  if (itype==10) then
+     if(nrank.eq.0)then
+        open(42,file='shear.dat',form='formatted')
      endif
   endif
 
@@ -292,11 +302,12 @@ subroutine finalise_xcompact3d()
   use decomp_2d_io, only : decomp_2d_io_finalise
 
   use tools, only : simu_stats
-  use param, only : itype, jles, ilesmod
+  use param, only : itype, jles, ilesmod, mhd_active
   use probes, only : finalize_probes
   use visu, only : visu_finalise
   use les, only: finalise_explicit_les
-  use mhd, only: mhd_active, mhd_fin
+  use mhd, only: mhd_fin
+  use case, only: visu_case_finalise
   use forces, only: iforces
 
   implicit none
@@ -306,16 +317,27 @@ subroutine finalise_xcompact3d()
   if (itype==2) then
      if(nrank.eq.0)then
         close(42)
+        if(mhd_active) then
+           close(43)
+        endif
      endif
   endif
+
   if (iforces == 1) then
      if(nrank.eq.0)then
         close(38)
      endif
   endif
+
+  if (itype==10) then
+     if(nrank.eq.0)then
+        close(42)
+     endif
+  endif
   
   call simu_stats(4)
   call finalize_probes()
+  call visu_case_finalise()
   call visu_finalise()
   if (mhd_active) call mhd_fin()
   if (ilesmod.ne.0) then

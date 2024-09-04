@@ -209,7 +209,7 @@ contains
     use param
     use MPI
     use navier, only : gradp
-    use mhd, only : mhd_active,mhd_equation,Bm,dBm
+    use mhd, only : mhd_equation,Bm,dBm
 
     implicit none
 
@@ -311,7 +311,7 @@ contains
           call decomp_2d_write_one(1,mu1(:,:,:),resfile,"mu",0,io_restart,reduce_prec=.false.)
        endif
 
-       if (mhd_active .and. mhd_equation) then
+       if (mhd_active .and. mhd_equation == 'induction') then
           call decomp_2d_write_one(1,Bm(:,:,:,1),resfile,'bx',0,io_restart,reduce_prec=.false.)
           call decomp_2d_write_one(1,Bm(:,:,:,2),resfile,'by',0,io_restart,reduce_prec=.false.)
           call decomp_2d_write_one(1,Bm(:,:,:,3),resfile,'bz',0,io_restart,reduce_prec=.false.)
@@ -438,7 +438,7 @@ contains
           call decomp_2d_read_one(1,mu1,resfile,"mu",io_restart,reduce_prec=.false.)
        end if
 
-       if(mhd_active .and. mhd_equation) then
+       if(mhd_active .and. mhd_equation == 'induction') then
           call decomp_2d_read_one(1,Bm(:,:,:,1),resfile,'bx',io_restart,reduce_prec=.false.)
           call decomp_2d_read_one(1,Bm(:,:,:,2),resfile,'by',io_restart,reduce_prec=.false.)
           call decomp_2d_read_one(1,Bm(:,:,:,3),resfile,'bz',io_restart,reduce_prec=.false.)
@@ -507,9 +507,9 @@ contains
 
     use decomp_2d_io, only : decomp_2d_register_variable, decomp_2d_init_io
     use variables, only : numscalar
-    use param, only : ilmn, nrhotime, ntime
+    use param, only : ilmn, nrhotime, ntime, mhd_active
     use var, only : itimescheme, iibm
-    use mhd, only : mhd_active, mhd_equation
+    use mhd, only : mhd_equation
     
     implicit none
 
@@ -566,9 +566,10 @@ contains
           write(varname, *) "drho-", is
           call decomp_2d_register_variable(io_restart, varname, 1, 0, 0, mytype)
        end do
+       call decomp_2d_register_variable(io_restart, "mu", 1, 0, 0, mytype)
     end if
  
-    if (mhd_active .and. mhd_equation) then
+    if (mhd_active .and. mhd_equation == 'induction') then
        call decomp_2d_register_variable(io_restart, "bx", 1, 0, 0, mytype)
        call decomp_2d_register_variable(io_restart, "by", 1, 0, 0, mytype)
        call decomp_2d_register_variable(io_restart, "bz", 1, 0, 0, mytype)
@@ -791,8 +792,9 @@ contains
   subroutine compute_cfldiff()
      use param, only : xnu,dt,dx,dy,dz,istret
      use param, only : cfl_diff_sum, cfl_diff_x, cfl_diff_y, cfl_diff_z
+     use param, only : mhd_active
      use variables, only : dyp
-     use mhd, only: mhd_active, mhd_equation,rem
+     use mhd, only: mhd_equation,rem
 
      implicit none
 
@@ -817,7 +819,7 @@ contains
         write(*,*) '==========================================================='
      endif
      
-     if( mhd_active.and.mhd_equation) then
+     if( mhd_active .and. mhd_equation=='induction') then
  
         cfl_diff_x = dt/ (dx**2) / rem
         cfl_diff_z = dt/ (dz**2) / rem

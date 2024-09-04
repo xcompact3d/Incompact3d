@@ -122,11 +122,11 @@ contains
          write(*,*) '========================Forces============================='
          write(*,*) '     (icvlf)      (icvrt)    (kcvbk)    (kcvfr)'
          write(*,*) '  (jcvup) B____________C     B`_____________B'
-         write(*,*) '          \            \  |  \              \'
-         write(*,*) '          \     __     \  |  \     ____     \'
-         write(*,*) '          \    \__\    \  |  \     \___\    \'
-         write(*,*) '          \            \  |  \              \'
-         write(*,*) '          \       CV   \  |  \    (Front)   \'
+         write(*,*) '          |            |  |  |              |'
+         write(*,*) '          |     __     |  |  |     ____     |'
+         write(*,*) '          |    \__\    |  |  |     \___\    |'
+         write(*,*) '          |            |  |  |              |'
+         write(*,*) '          |       CV   |  |  |    (Front)   |'
          write(*,*) '  (jcvlw) A____________D  |  A`_____________A'
          do iv=1,nvol
             write(*,"(' Control Volume     : #',I1)") iv
