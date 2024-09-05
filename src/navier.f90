@@ -73,7 +73,7 @@ contains
        CALL momentum_to_velocity(rho1, ux1, uy1, uz1)
     ENDIF
 
-    CALL divergence(pp3(:,:,:,1),rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
+    call divergence(pp3(:,:,:,1),rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
     IF (ilmn.AND.ivarcoeff) THEN
        dv3(:,:,:) = pp3(:,:,:,1)
     ENDIF
@@ -275,11 +275,11 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime),intent(in) :: rho1
     !Z PENCILS NXM NYM NZ  -->NXM NYM NZM
     real(mytype),dimension(zsize(1),zsize(2),zsize(3)),intent(in) :: divu3
-    real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: pp3
+    real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize),intent(out) :: pp3
 
     integer :: nvect3,i,j,k,nlock
     integer :: code
-    real(mytype) :: tmax,tmoy,tmax1,tmoy1
+    real(mytype) :: tmax,tmoy,tmax1,tmoy1, pres_ref
 
     nvect3=(ph1%zen(1)-ph1%zst(1)+1)*(ph1%zen(2)-ph1%zst(2)+1)*nzmsize
 
@@ -340,7 +340,11 @@ contains
     pp3(:,:,:) = pp3(:,:,:) + po3(:,:,:)
 
     if (nlock==2) then
-       pp3(:,:,:)=pp3(:,:,:)-pp3(ph1%zst(1),ph1%zst(2),nzmsize)
+       ! Line below sometimes generates issues with Intel 
+       !pp3(:,:,:)=pp3(:,:,:)-pp3(ph1%zst(1),ph1%zst(2),nzmsize)
+       ! Using a tmp variable seems to sort the issue
+       pres_ref = pp3(ph1%zst(1),ph1%zst(2),nzmsize)
+       pp3(:,:,:)=pp3(:,:,:)-pres_ref
     endif
 
     tmax=-1609._mytype
@@ -1215,7 +1219,7 @@ contains
     tc1(:,:,:) = (one - rho0 / rho1(:,:,:,1)) * pz1(:,:,:)
 
     nlock = -1 !! Don't do any funny business with LMN
-    CALL divergence(pp3,rho1,ta1,tb1,tc1,ep1,drho1,divu3,nlock)
+    call divergence(pp3,rho1,ta1,tb1,tc1,ep1,drho1,divu3,nlock)
 
     !! lapl(p) = div((1 - rho0/rho) grad(p)) + rho0(div(u*) - div(u))
     !! dv3 contains div(u*) - div(u)

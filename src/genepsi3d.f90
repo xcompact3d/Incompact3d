@@ -19,7 +19,7 @@ contains
     USE variables, only : yp, ny
 
     implicit none
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(inout) :: ep1
     logical :: dir_exists
 
 #ifdef DEBG
@@ -59,7 +59,7 @@ contains
     IMPLICIT NONE
 
     INTEGER :: nxi,nxf,ny,nyi,nyf,nzi,nzf
-    REAL(mytype),DIMENSION(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
+    REAL(mytype),DIMENSION(nxi:nxf,nyi:nyf,nzi:nzf),intent(inout) :: epsi
     REAL(mytype)               :: dx,dz
     REAL(mytype),DIMENSION(ny) :: yp
     REAL(mytype)               :: remp
@@ -111,7 +111,7 @@ contains
     !*****************************************************************!
     !
     logical :: dir_exists
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(inout) :: ep1
     !
     if (nrank==0.and.mod(itime,ilist)==0) then
       write(*,*)'==========================================================='
@@ -155,29 +155,37 @@ contains
        xi,xf,yi,yf,zi,zf,nobjx,nobjy,nobjz,&
        nobjmax,yp,nraf)
     use param, only : zero,half, one, two
+    use var, only : ta2, ta3
     use decomp_2d
     use MPI
+    use complex_geometry, only: xepsi, yepsi, zepsi
     implicit none
     !
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1,smoofun,fbcx,fbcy,fbcz
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ep2
-    real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: ep3
-    integer                                            :: nx,ny,nz,nobjmax
-    real(mytype)                                       :: dx,dy,dz
-    real(mytype)                                       :: xlx,yly,zlz
-    logical                                            :: nclx,ncly,nclz
-    integer                                            :: nxraf,nyraf,nzraf
-    integer                                            :: nraf
-    integer,     dimension(xsize(2),xsize(3))          :: nobjx,nobjxraf
-    integer,     dimension(ysize(1),ysize(3))          :: nobjy,nobjyraf
-    integer,     dimension(zsize(1),zsize(2))          :: nobjz,nobjzraf
-    real(mytype),dimension(nobjmax,xsize(2),xsize(3))  :: xi,xf
-    real(mytype),dimension(nobjmax,ysize(1),ysize(3))  :: yi,yf
-    real(mytype),dimension(nobjmax,zsize(1),zsize(2))  :: zi,zf
-    real(mytype),dimension(nxraf,xsize(2),xsize(3))    :: xepsi
-    real(mytype),dimension(ysize(1),nyraf,ysize(3))    :: yepsi
-    real(mytype),dimension(zsize(1),zsize(2),nzraf)    :: zepsi
-    real(mytype),dimension(ny)                         :: yp
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(inout):: ep1
+    !!real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1,smoofun,fbcx,fbcy,fbcz
+    !!real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ep2
+    !!real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: ep3
+    integer, intent(in)                                  :: nx,ny,nz,nobjmax
+    real(mytype), intent(in)                             :: dx,dy,dz
+    real(mytype), intent(in)                             :: xlx,yly,zlz
+    logical, intent(in)                                  :: nclx,ncly,nclz
+    integer, intent(in)                                  :: nxraf,nyraf,nzraf
+    real(mytype),dimension(nobjmax,xsize(2),xsize(3)):: xi,xf
+    real(mytype),dimension(nobjmax,ysize(1),ysize(3)):: yi,yf
+    real(mytype),dimension(nobjmax,zsize(1),zsize(2)):: zi,zf
+    integer                                          :: nraf
+    integer,     dimension(xsize(2),xsize(3))        :: nobjx
+    integer,     dimension(ysize(1),ysize(3))        :: nobjy
+    integer,     dimension(zsize(1),zsize(2))        :: nobjz
+    real(mytype),dimension(ny)                       :: yp
+    
+    ! Local variables
+    integer,     dimension(xsize(2),xsize(3))          :: nobjxraf
+    integer,     dimension(ysize(1),ysize(3))          :: nobjyraf
+    integer,     dimension(zsize(1),zsize(2))          :: nobjzraf
+    !real(mytype),dimension(nxraf,xsize(2),xsize(3))    :: xepsi
+    !real(mytype),dimension(ysize(1),nyraf,ysize(3))    :: yepsi
+    !real(mytype),dimension(zsize(1),zsize(2),nzraf)    :: zepsi
     real(mytype),dimension(nyraf)                      :: ypraf
     real(mytype)                     :: dxraf,dyraf,dzraf
     integer                          :: i,j,k
@@ -189,7 +197,7 @@ contains
     integer                          :: iflu,jflu,kflu
     integer                          :: isol,jsol,ksol
     integer                          :: iraf,jraf,kraf
-    integer                          :: nobjxmax ,nobjymax ,nobjzmax
+    integer                          :: nobjxmax,nobjymax ,nobjzmax
     integer                          :: nobjxmaxraf,nobjymaxraf,nobjzmaxraf
     integer                          :: idebraf,jdebraf,kdebraf
     integer                          :: ifinraf,jfinraf,kfinraf
@@ -292,16 +300,16 @@ contains
     !y-pencil
     nobjy(:,:)=0
     nobjymax=0
-    call transpose_x_to_y(ep1,ep2)
+    call transpose_x_to_y(ep1,ta2)
     do k=1,ysize(3)
        do i=1,ysize(1)
           jnum=0
-          if(ep2(i,1,k) == one)then
+          if(ta2(i,1,k) == one)then
              jnum=1
              nobjy(i,k)=1
           endif
           do j=1,ny-1
-             if(ep2(i,j,k) == zero .and. ep2(i,j+1,k) == one)then
+             if(ta2(i,j,k) == zero .and. ta2(i,j+1,k) == one)then
                 jnum=jnum+1
                 nobjy(i,k)=nobjy(i,k)+1
              endif
@@ -348,16 +356,16 @@ contains
     !z-pencil
     nobjz(:,:)=0
     nobjzmax=0
-    call transpose_y_to_z(ep2,ep3)
+    call transpose_y_to_z(ta2,ta3)
     do j=1,zsize(2)
        do i=1,zsize(1)
           knum=0
-          if(ep3(i,j,1) == one)then
+          if(ta3(i,j,1) == one)then
              knum=1
              nobjz(i,j)=1
           endif
           do k=1,nz-1
-             if(ep3(i,j,k) == zero .and. ep3(i,j,k+1) == one)then
+             if(ta3(i,j,k) == zero .and. ta3(i,j,k+1) == one)then
                 knum=knum+1
                 nobjz(i,j)=nobjz(i,j)+1
              endif
@@ -496,11 +504,11 @@ contains
           do i=1,ysize(1)
              if(nobjy(i,k) /= nobjyraf(i,k))then
                 jobj=0
-                if(ep2(i,1,k) == one)jobj=jobj+1
+                if(ta2(i,1,k) == one)jobj=jobj+1
                 do j=1,ny-1
-                   if(ep2(i,j,k) == zero .and. ep2(i,j+1,k) ==  one)jobj=jobj+1
-                   if(ep2(i,j,k) == zero .and. ep2(i,j+1,k) == zero)jflu=1
-                   if(ep2(i,j,k) ==  one .and. ep2(i,j+1,k) ==  one)jsol=1
+                   if(ta2(i,j,k) == zero .and. ta2(i,j+1,k) ==  one)jobj=jobj+1
+                   if(ta2(i,j,k) == zero .and. ta2(i,j+1,k) == zero)jflu=1
+                   if(ta2(i,j,k) ==  one .and. ta2(i,j+1,k) ==  one)jsol=1
                    do jraf=1,nraf
                       if(yepsi(i,jraf+nraf*(j-1)  ,k) == zero .and.&
                          yepsi(i,jraf+nraf*(j-1)+1,k) ==  one)jdebraf=jraf+nraf*(j-1)+1
@@ -565,11 +573,11 @@ contains
           do i=1,zsize(1)
              if(nobjz(i,j) /= nobjzraf(i,j))then
                 kobj=0
-                if(ep3(i,j,1) == one)kobj=kobj+1
+                if(ta3(i,j,1) == one)kobj=kobj+1
                 do k=1,nz-1
-                   if(ep3(i,j,k) == zero .and. ep3(i,j,k+1) ==  one)kobj=kobj+1
-                   if(ep3(i,j,k) == zero .and. ep3(i,j,k+1) == zero)kflu=1
-                   if(ep3(i,j,k) ==  one .and. ep3(i,j,k+1) ==  one)ksol=1
+                   if(ta3(i,j,k) == zero .and. ta3(i,j,k+1) ==  one)kobj=kobj+1
+                   if(ta3(i,j,k) == zero .and. ta3(i,j,k+1) == zero)kflu=1
+                   if(ta3(i,j,k) ==  one .and. ta3(i,j,k+1) ==  one)ksol=1
                    do kraf=1,nraf
                       if(zepsi(i,j,kraf+nraf*(k-1)  ) == zero .and.&
                          zepsi(i,j,kraf+nraf*(k-1)+1) ==  one)kdebraf=kraf+nraf*(k-1)+1
@@ -614,14 +622,15 @@ contains
        nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif)
     use decomp_2d
     use param, only: zero, one
+    use var, only : ta2, ta3
     use MPI
 
     implicit none
     !
     integer                            :: nx,ny,nz,nobjmax
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
-    real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ep2
-    real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: ep3
+    !real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ep2
+    !real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: ep3
     integer,dimension(0:nobjmax,xsize(2),xsize(3)) :: nxipif,nxfpif
     integer,dimension(0:nobjmax,ysize(1),ysize(3)) :: nyipif,nyfpif
     integer,dimension(0:nobjmax,zsize(1),zsize(2)) :: nzipif,nzfpif
@@ -675,7 +684,7 @@ contains
     !if (nrank==0) write(*,*) '    step 11'
 
     !y-pencil
-    call transpose_x_to_y(ep1,ep2)
+    call transpose_x_to_y(ep1,ta2)
     nyipif(:,:,:)=npif
     nyfpif(:,:,:)=npif
     jsing=0
@@ -683,12 +692,12 @@ contains
        do i=1,ysize(1)
           jnum=0
           jflu=0
-          if(ep2(i,1,k) ==  one)jnum=jnum+1
-          if(ep2(i,1,k) == zero)jflu=jflu+1
+          if(ta2(i,1,k) ==  one)jnum=jnum+1
+          if(ta2(i,1,k) == zero)jflu=jflu+1
           do j=2,ny
-             if(ep2(i,j  ,k) == zero)jflu=jflu+1
-             if(ep2(i,j-1,k) == zero .and.&
-                ep2(i,j  ,k) ==  one)then
+             if(ta2(i,j  ,k) == zero)jflu=jflu+1
+             if(ta2(i,j-1,k) == zero .and.&
+                ta2(i,j  ,k) ==  one)then
                 jnum=jnum+1
                 if(jnum == 1)then
                    nyipif(jnum  ,i,k)=jflu-izap
@@ -704,9 +713,9 @@ contains
                    jflu=0
                 endif
              endif
-             if(ep2(i,j,k) == one)jflu=0
+             if(ta2(i,j,k) == one)jflu=0
           enddo
-          if(ep2(i,ny,k) == zero)then
+          if(ta2(i,ny,k) == zero)then
              nyfpif(jnum,i,k)=jflu-izap
              if(jflu-izap < npif)jsing=jsing+1
              if(jflu-izap < npif)nyfpif(jnum,i,k)=npif
@@ -719,7 +728,7 @@ contains
 
     !z-pencil
     if(nz > 1)then
-       call transpose_y_to_z(ep2,ep3)
+       call transpose_y_to_z(ta2,ta3)
        nzipif(:,:,:)=npif
        nzfpif(:,:,:)=npif
        ksing=0
@@ -727,12 +736,12 @@ contains
           do i=1,zsize(1)
              knum=0
              kflu=0
-             if(ep3(i,j,1) ==  one)knum=knum+1
-             if(ep3(i,j,1) == zero)kflu=kflu+1
+             if(ta3(i,j,1) ==  one)knum=knum+1
+             if(ta3(i,j,1) == zero)kflu=kflu+1
              do k=2,nz
-                if(ep3(i,j,k  ) == zero)kflu=kflu+1
-                if(ep3(i,j,k-1) == zero .and.&
-                   ep3(i,j,k  ) ==  one)then
+                if(ta3(i,j,k  ) == zero)kflu=kflu+1
+                if(ta3(i,j,k-1) == zero .and.&
+                   ta3(i,j,k  ) ==  one)then
                    knum=knum+1
                    if(knum == 1)then
                       nzipif(knum  ,i,j)=kflu-izap
@@ -748,9 +757,9 @@ contains
                       kflu=0
                    endif
                 endif
-                if(ep3(i,j,k) == one )kflu=0
+                if(ta3(i,j,k) == one )kflu=0
              enddo
-             if(ep3(i,j,nz) == zero)then
+             if(ta3(i,j,nz) == zero)then
                 nzfpif(knum,i,j)=kflu-izap
                 if(kflu-izap < npif)ksing=ksing+1
                 if(kflu-izap < npif)nzfpif(knum,i,j)=npif

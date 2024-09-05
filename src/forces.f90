@@ -121,13 +121,13 @@ contains
        elseif (i2dsim==0) then
          write(*,*) '========================Forces============================='
          write(*,*) '     (icvlf)      (icvrt)    (kcvbk)    (kcvfr)'
-         write(*,*) '  (jcvup) B____________C     B`_____________B'
-         write(*,*) '          |            |  |  |              |'
-         write(*,*) '          |     __     |  |  |     ____     |'
-         write(*,*) '          |    \__\    |  |  |     \___\    |'
-         write(*,*) '          |            |  |  |              |'
-         write(*,*) '          |       CV   |  |  |    (Front)   |'
-         write(*,*) '  (jcvlw) A____________D  |  A`_____________A'
+         write(*,*) '  (jcvup) B____________C     B`_____________B  '
+         write(*,*) '          \            \  |  \              \  '
+         write(*,*) '          \     __     \  |  \     ____     \  '
+         write(*,*) '          \    \__\    \  |  \     \___\    \  '
+         write(*,*) '          \            \  |  \              \  '
+         write(*,*) '          \       CV   \  |  \    (Front)   \  '
+         write(*,*) '  (jcvlw) A____________D  |  A`_____________A  '
          do iv=1,nvol
             write(*,"(' Control Volume     : #',I1)") iv
             write(*,"('     xld, icvlf     : (',F6.2,',',I6,')')") xld(iv), icvlf(iv)
@@ -244,6 +244,7 @@ contains
 
     use var, only : ta1, tb1, tc1, td1, te1, di1, tg1, tg2, tg3, th1, th2, th3, tf2, tf1
     use var, only : ux2, ux3, uy2, uy3, uz2, ta2, tb2, td2, te2, di2, di3
+    use var, only : tc2
 
     implicit none
     character(len=30) :: filename, filename2
@@ -255,7 +256,7 @@ contains
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1, uy1, uz1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ep1
 
-    real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: ppi2
+    !real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: ppi2 ! we'll use tc2
 
     real(mytype), dimension(nz) :: yLift,xDrag
     real(mytype) :: yLift_mean,xDrag_mean
@@ -315,7 +316,7 @@ contains
 
     call transpose_x_to_y(ux1,ux2)
     call transpose_x_to_y(uy1,uy2)
-    call transpose_x_to_y(ppi1,ppi2)
+    call transpose_x_to_y(ppi1,tc2)
 
     call dery (td2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx) ! dudy
     call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)    ! dvdy
@@ -506,7 +507,7 @@ contains
                   fcvy= fcvy -uxmid*uymid*del_y(j)
 
                   !pressure
-                  prmid=half*(ppi2(i,j,k)+ppi2(i,j+1,k))
+                  prmid=half*(tc2(i,j,k)+tc2(i,j+1,k))
                   fprx = fprx +prmid*del_y(j)
 
                   !viscous term
@@ -542,7 +543,7 @@ contains
                   fcvy= fcvy +uxmid*uymid*del_y(j)
 
                   !pressure
-                  prmid=half*(ppi2(i,j,k)+ppi2(i,j+1,k))
+                  prmid=half*(tc2(i,j,k)+tc2(i,j+1,k))
                   fprx = fprx -prmid*del_y(j)
 
                   !viscous term
@@ -680,7 +681,7 @@ contains
                    fcvy = fcvy + uxmid*uymid*del_y(j)*dz
  
                    !pressure
-                   prmid=half*(ppi2(i,j,k)+ppi2(i,j+1,k))
+                   prmid=half*(tc2(i,j,k)+tc2(i,j+1,k))
                    fprx = fprx -prmid*del_y(j)*dz
  
                    !viscous term
@@ -716,7 +717,7 @@ contains
                    fcvy = fcvy - uxmid*uymid*del_y(j)*dz
  
                    !pressure
-                   prmid=half*(ppi2(i,j,k)+ppi2(i,j+1,k))
+                   prmid=half*(tc2(i,j,k)+tc2(i,j+1,k))
                    fprx = fprx + prmid*del_y(j)*dz
  
                    !viscous term
