@@ -250,7 +250,7 @@ contains
   
     ! Compute the cross product of angular velocity and distance vector
     
-    call CrossProduct(angularVelocity, distance, crossed)
+    call CrossProduct(distance, angularVelocity, crossed)
   
     ! Calculate the velocity at the point
     pointVelocity = crossed + linearVelocity
