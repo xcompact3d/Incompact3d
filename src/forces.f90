@@ -1172,8 +1172,8 @@ contains
             open(103,file="upperside.dat",status='unknown',form='formatted')
             open(104,file="leftside.dat",status='unknown',form='formatted')
             open(105,file="rightside.dat",status='unknown',form='formatted')
-            open(106,file="ytorque_decomposition",status='unknown',form='formatted')
-            open(107,file="ztorque_decomposition",status='unknown',form='formatted')
+            open(106,file="ytorque_decomposition.dat",status='unknown',form='formatted')
+            open(107,file="ztorque_decomposition.dat",status='unknown',form='formatted')
         endif
 
      enddo
