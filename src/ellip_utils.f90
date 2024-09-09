@@ -241,7 +241,7 @@ contains
   end subroutine CrossProduct
   
   subroutine CalculatePointVelocity(point, center, angularVelocity, linearVelocity, pointVelocity)
-    real(mytype), intent(in) :: point(3), center(3), linearVelocity(3), angularVelocity(3)
+    real(mytype), intent(in) :: point(3), center(3), linearVelocity(3), angularVelocity(4)
     real(mytype), intent(out) :: pointVelocity(3)
     real(mytype) :: crossed(3)
     ! Compute the distance vector from the center to the point
@@ -250,7 +250,8 @@ contains
   
     ! Compute the cross product of angular velocity and distance vector
     
-    call CrossProduct(distance, angularVelocity, crossed)
+    call CrossProduct(distance, angularVelocity(2:4), crossed)
+
   
     ! Calculate the velocity at the point
     pointVelocity = crossed + linearVelocity
@@ -271,7 +272,7 @@ contains
   subroutine navierFieldGen(center, linearVelocity, angularVelocity, ep1, ep1_x, ep1_y, ep1_z)
     use param
     use decomp_2d
-    real(mytype), intent(in) :: center(3), linearVelocity(3), angularVelocity(3)
+    real(mytype), intent(in) :: center(3), linearVelocity(3), angularVelocity(4)
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(out) :: ep1_x, ep1_y, ep1_z
     real(mytype) :: xm, ym, zm, point(3), x_pv, y_pv, z_pv, pointVelocity(3)
