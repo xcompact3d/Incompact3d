@@ -45,6 +45,7 @@ jobs:
     - name: Build Xcompact3d
       run: |
         export PATH=$(pwd)/openmpi-4.1.4/installed/bin/:$PATH
+        pip install numpy
         export FC=mpif90
         cmake -S . -B build 
         cmake --build build -j 2
