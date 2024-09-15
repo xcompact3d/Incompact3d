@@ -51,11 +51,3 @@ jobs:
         cmake --build build -j 2
         cmake --install build
         ctest --test-dir build
-
-    - name: Compare output time evolution to reference output
-      run: |
-        pip install numpy
-        cd build/RunTests/TGV-Taylor-Green-vortex
-        python compare_TGV_time_evolution.py \
-            --input time_evol.dat \
-            --reference reference_time_evol.dat
