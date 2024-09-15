@@ -149,6 +149,9 @@ program xcompact3d
         endif 
         if (orientations_free.eq.1) then 
          torque = [xtorq,ytorq,ztorq]
+         if (ztorq_only.eq.1) then
+            torque = [0.0_mytype, 0.0_mytype, ztorq]
+         endif
         else 
          torque(:) = zero
         endif

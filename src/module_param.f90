@@ -622,6 +622,6 @@ module ibm_param
   real(mytype) :: position_1(3),linearVelocity_1(3),orientation_1(4),angularVelocity_1(4)
   real(mytype) :: chord,thickness,omega, tconv2_sign, shear_velocity
   integer :: inana ! Analytical BC as Input
-  integer :: imove, nozdrift, force_csv, bodies_fixed, cube_flag, torques_flag,orientations_free, shear_flow_ybc, shear_flow_zbc,torq_debug, torq_flip
+  integer :: imove, nozdrift, force_csv, bodies_fixed, cube_flag, torques_flag,orientations_free, shear_flow_ybc, shear_flow_zbc,torq_debug, torq_flip, ztorq_only
 end module ibm_param
 !############################################################################
