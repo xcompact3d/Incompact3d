@@ -20,6 +20,10 @@ module mptool
     module procedure pmax_mytype
   end interface
   !
+  interface pwrite
+    module procedure pwrite_1darray
+  end interface
+  !
   contains
   !
   !+-------------------------------------------------------------------+
@@ -143,5 +147,66 @@ module mptool
     cross_product(3) = a(1) * b(2) - a(2) * b(1)
     !
   end function cross_product
+
+  subroutine pwrite_1darray(filename,data2write)
+
+    ! arguments
+    character(len=*) :: filename
+    real(mytype),intent(in) :: data2write(:)
+
+    ! local data
+    integer :: local_size
+    integer :: ierr, fh, datatype, status(mpi_status_size)
+    integer(kind=mpi_offset_kind) :: offset
+
+
+    call mpi_file_open(mpi_comm_world, filename, mpi_mode_wronly + mpi_mode_create, mpi_info_null, fh, ierr)
+
+    local_size=size(data2write)
+
+    ! calculate the offset for each process
+    offset = prelay(local_size)*8_8
+
+    ! print*,nrank,'|',data2write(1)
+
+    ! if(nrank==0) print*,data2write
+
+    ! set the file view for each process
+    call mpi_file_set_view(fh, offset, real_type, real_type, 'native', mpi_info_null, ierr)
+
+    ! write the local array to the file
+    call mpi_file_write(fh, data2write, local_size, real_type, status, ierr)
+
+    ! close the file
+    call mpi_file_close(fh, ierr)
+
+    if(nrank==0) print*,'<< ',filename
+
+
+  end subroutine pwrite_1darray
+
+  ! this function return the number add from all processors before it
+  integer function prelay(number)
+
+    ! arguments
+    integer,intent(in) :: number
+
+    ! local data
+    integer :: table(nproc)
+    integer :: ierr,i
+
+    call mpi_allgather(number,1,mpi_integer,                              &
+                       table,1,mpi_integer,mpi_comm_world,ierr)
+
+    ! print*,nrank,'=',table
+    prelay=0
+    do i=1,nrank
+      prelay=prelay+table(i)
+    enddo
+    ! print*,prelay
+
+    return
+
+  end function prelay
   !
 end module mptool
