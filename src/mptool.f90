@@ -24,6 +24,10 @@ module mptool
     module procedure pwrite_1darray
   end interface
   !
+  interface pread
+    module procedure pread_1darray
+  end interface
+  !
   contains
   !
   !+-------------------------------------------------------------------+
@@ -151,7 +155,7 @@ module mptool
   subroutine pwrite_1darray(filename,data2write)
 
     ! arguments
-    character(len=*) :: filename
+    character(len=*),intent(in) :: filename
     real(mytype),intent(in) :: data2write(:)
 
     ! local data
@@ -159,17 +163,14 @@ module mptool
     integer :: ierr, fh, datatype, status(mpi_status_size)
     integer(kind=mpi_offset_kind) :: offset
 
-
-    call mpi_file_open(mpi_comm_world, filename, mpi_mode_wronly + mpi_mode_create, mpi_info_null, fh, ierr)
-
+    ! get the size of the array
     local_size=size(data2write)
 
     ! calculate the offset for each process
     offset = prelay(local_size)*8_8
 
-    ! print*,nrank,'|',data2write(1)
-
-    ! if(nrank==0) print*,data2write
+    ! Open the file in write mode with MPI-IO
+    call mpi_file_open(mpi_comm_world, filename, mpi_mode_wronly + mpi_mode_create, mpi_info_null, fh, ierr)
 
     ! set the file view for each process
     call mpi_file_set_view(fh, offset, real_type, real_type, 'native', mpi_info_null, ierr)
@@ -184,6 +185,41 @@ module mptool
 
 
   end subroutine pwrite_1darray
+
+
+  subroutine pread_1darray(filename,data2read,size_data2read)
+
+    ! arguments
+    character(len=*),intent(in) :: filename
+    real(mytype),intent(out),allocatable :: data2read(:)
+    integer,intent(in) :: size_data2read
+
+    ! local data
+    integer :: ierr, fh, datatype, status(mpi_status_size)
+    integer(kind=mpi_offset_kind) :: offset
+
+    ! allocate local array for each process
+    allocate(data2read(size_data2read))
+
+    ! calculate the offset for each process
+    offset = prelay(size_data2read)*8_8
+
+    ! Open the file in read mode using MPI-IO
+    call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, fh, ierr)
+  
+    ! Set the file view for each process
+    call MPI_FILE_SET_VIEW(fh, offset, real_type, real_type, 'native', MPI_INFO_NULL, ierr)
+  
+    ! Read the local portion of the array from the file
+    call MPI_FILE_READ(fh, data2read, size_data2read, real_type, status, ierr)
+  
+    ! Close the file
+    call MPI_FILE_CLOSE(fh, ierr)
+
+    if(nrank==0) print*,'>> ',filename
+
+
+  end subroutine pread_1darray
 
   ! this function return the number add from all processors before it
   integer function prelay(number)

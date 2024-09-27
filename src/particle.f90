@@ -228,7 +228,11 @@ module particle
       ! print*,nrank,'|',n,'-',x_p(n)
     enddo
     
-    call pwrite('particle_init.bin',x_p)
+    ! call pwrite('particle_init.bin',x_p)
+
+    call pread('particle_init.bin',x_p,num_particle)
+
+    print*,nrank,'|',x_p(1)
 
     ! if(irestart==0) then
     !   !
