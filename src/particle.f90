@@ -215,24 +215,34 @@ module particle
     ! real(mytype) :: dx,dy,dz
     ! !
     integer :: num_particle,n
-    real(mytype),allocatable,dimension(:) :: x_p
+    real(mytype),allocatable,dimension(:) :: x_p,y_p,z_p
 
     num_particle=100*(nrank+1)
 
-    allocate(x_p(num_particle))
+    if(nrank==0) num_particle=0
+
+    allocate(x_p(num_particle),y_p(num_particle),z_p(num_particle))
+
+    print*,nrank,'|',size(x_p)
 
     do n=1,num_particle
+
       call random_number(x_p(n))
-      x_p(n)=x_p(n)+nrank*100._mytype
+      call random_number(y_p(n))
+      call random_number(z_p(n))
+
+      x_p(n)=x_p(n)+nrank*10._mytype
+      y_p(n)=y_p(n)+nrank*100._mytype
+      z_p(n)=z_p(n)+nrank*1000._mytype
 
       ! print*,nrank,'|',n,'-',x_p(n)
     enddo
     
-    ! call pwrite('particle_init.bin',x_p)
+    call pwrite('particle_init.bin',x_p,y_p,z_p)
 
-    call pread('particle_init.bin',x_p,num_particle)
+    ! call pread('particle_init.bin',x_p,num_particle)
 
-    print*,nrank,'|',x_p(1)
+    print*,nrank,'|',x_p(1),y_p(1),z_p(1)
 
     ! if(irestart==0) then
     !   !

@@ -152,19 +152,20 @@ module mptool
     !
   end function cross_product
 
-  subroutine pwrite_1darray(filename,data2write)
+  subroutine pwrite_1darray(filename,data_1,data_2,data_3,data_4,data_5,data_6)
 
     ! arguments
     character(len=*),intent(in) :: filename
-    real(mytype),intent(in) :: data2write(:)
+    real(mytype),intent(in) :: data_1(:)
+    real(mytype),intent(in),optional :: data_2(:),data_3(:),data_4(:),data_5(:),data_6(:)
 
     ! local data
-    integer :: local_size
+    integer :: local_size,total_size
     integer :: ierr, fh, datatype, status(mpi_status_size)
     integer(kind=mpi_offset_kind) :: offset
 
     ! get the size of the array
-    local_size=size(data2write)
+    local_size=size(data_1)
 
     ! calculate the offset for each process
     offset = prelay(local_size)*8_8
@@ -176,13 +177,79 @@ module mptool
     call mpi_file_set_view(fh, offset, real_type, real_type, 'native', mpi_info_null, ierr)
 
     ! write the local array to the file
-    call mpi_file_write(fh, data2write, local_size, real_type, status, ierr)
+    call mpi_file_write(fh, data_1, local_size, real_type, status, ierr)
+
+    if(present(data_2)) then
+
+      ! Barrier to synchronize processes
+      call mpi_barrier(mpi_comm_world, ierr)
+
+      total_size=psum(local_size)*8_8
+
+      offset = offset + total_size
+
+      ! write the data_2 to the file
+      call mpi_file_set_view(fh, offset, real_type, real_type, 'native', mpi_info_null, ierr)
+      call mpi_file_write(fh, data_2, local_size, real_type, status, ierr)
+
+    endif
+
+    if(present(data_3)) then
+
+      ! Barrier to synchronize processes
+      call mpi_barrier(mpi_comm_world, ierr)
+
+      offset = offset + total_size
+
+      ! write the data_3 to the file
+      call mpi_file_set_view(fh, offset, real_type, real_type, 'native', mpi_info_null, ierr)
+      call mpi_file_write(fh, data_3, local_size, real_type, status, ierr)
+
+    endif
+
+    if(present(data_4)) then
+
+      ! Barrier to synchronize processes
+      call mpi_barrier(mpi_comm_world, ierr)
+
+      offset = offset + total_size
+
+      ! write the data_4 to the file
+      call mpi_file_set_view(fh, offset, real_type, real_type, 'native', mpi_info_null, ierr)
+      call mpi_file_write(fh, data_4, local_size, real_type, status, ierr)
+
+    endif
+
+    if(present(data_5)) then
+
+      ! Barrier to synchronize processes
+      call mpi_barrier(mpi_comm_world, ierr)
+
+      offset = offset + total_size
+
+      ! write the data_5 to the file
+      call mpi_file_set_view(fh, offset, real_type, real_type, 'native', mpi_info_null, ierr)
+      call mpi_file_write(fh, data_5, local_size, real_type, status, ierr)
+
+    endif
+
+    if(present(data_6)) then
+
+      ! Barrier to synchronize processes
+      call mpi_barrier(mpi_comm_world, ierr)
+
+      offset = offset + total_size
+
+      ! write the data_6 to the file
+      call mpi_file_set_view(fh, offset, real_type, real_type, 'native', mpi_info_null, ierr)
+      call mpi_file_write(fh, data_6, local_size, real_type, status, ierr)
+
+    endif
 
     ! close the file
     call mpi_file_close(fh, ierr)
 
     if(nrank==0) print*,'<< ',filename
-
 
   end subroutine pwrite_1darray
 
