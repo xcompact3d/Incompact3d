@@ -36,21 +36,23 @@ jobs:
         export PATH=$(pwd)/openmpi-4.1.4/installed/bin/:$PATH
         echo "mpif90 version: $(mpif90 --version | head -1)" >> metadata.txt
         echo "mpirun version: $(mpirun --version | head -1)" >> metadata.txt
-        mv metadata.txt test/data/Taylor-Green-Vortex/
+        mv metadata.txt tests/TGV-Taylor-Green-Vortex/
     - name: Build Incompact3d and run TGV reference test case
       run: |
         export PATH=$(pwd)/openmpi-4.1.4/installed/bin/:$PATH
-        make
-        cp test/data/Taylor-Green-Vortex/reference_input.i3d input.i3d
-        mpirun -np 2 xcompact3d
+        export FC=mpif90
+        cmake -S . -B build 
+        cmake --build build -j 2
+        cmake --install build
+        ctest --test-dir build
     - name: Store new reference output
       run: |
-        cp -v time_evol.dat test/data/Taylor-Green-Vortex/reference_time_evol.dat
+        cp -v build/RunTests/RunTests/TGV-Taylor-Green-vortex/time_evol.dat tests/TGV-Taylor-Green-Vortex/reference_time_evol.dat
     - name: Create new Pull Request updating the reference output
       uses: peter-evans/create-pull-request@v4
       with:
         title: Update reference output TGV data
         commit-message: Update reference TGV data and metadata
         add-paths: |
-          test/data/Taylor-Green-Vortex/reference_time_evol.dat
-          test/data/Taylor-Green-Vortex/metadata.txt
+          tests/TGV-Taylor-Green-Vortex/reference_time_evol.dat
+          tests/TGV-Taylor-Green-Vortex/metadata.txt

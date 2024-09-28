@@ -1,16 +1,8 @@
-# Lock Exchange
-set(case "Lock-exchange")
-set(case_dir "${test_dir}/${case}")
-file(MAKE_DIRECTORY ${case_dir})
-set(input_file "input_test.i3d")
-install(DIRECTORY DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/${case})
-install(FILES ${input_file} DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/${case})
-if(ADIOS2_FOUND)
-  install(FILES adios2_config.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/${case})
-endif()
-# If testing active add test for TGV case
-file(COPY ${input_file} DESTINATION ${case_dir})
-if(ADIOS2_FOUND)
-  file(COPY adios2_config.xml DESTINATION ${case_dir})
-endif()
-add_test(NAME ${case} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:xcompact3d> ${input_file} WORKING_DIRECTORY ${case_dir})
+# Gravity-current
+set(case "Gravity-current")
+set(example_files "")
+list(APPEND example_files "adios2_config.xml")
+list(APPEND example_files "input_gravitycurrent_3DRe2236_LR.i3d")
+AddExample("${examples_dir}" "${case}" "${example_files}")
+
+
