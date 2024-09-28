@@ -1,7 +1,6 @@
 macro(CreateMPITest test_dir
 		 case
 		 input_file)
-  message(STATUS "Add Test ${case}")
   set(case_dir "${test_dir}/${case}")
   file(MAKE_DIRECTORY ${case_dir})
   file(COPY ${input_file} DESTINATION ${case_dir})
@@ -18,7 +17,6 @@ macro(CreateMPIPythonTest
 		 PyScript
 		 ResuFile)
   # Test main param
-  message(STATUS "Add Test ${case}")
   set(case_dir "${test_dir}/${case}")
   file(MAKE_DIRECTORY ${case_dir})
   file(COPY ${input_file} DESTINATION ${case_dir})

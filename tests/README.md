@@ -1,66 +1,50 @@
-# Testing
+# Testing 
 
-## Semi-automated Taylor-Green vortex test case
+This folder contains all the necessary files to test Xcompact3d on most of the canonical test cases included into the code. 
+Generally the tests run for up to 500 time steps and they can be broadly divided into: 
 
-### Reference output data
+1. Functional tests to verify that a specific test case reach conclusion without diverging 
+1. Verification tests where the solution is compared to a reference dataset
 
-File `data/Taylor-Green-Vortex/reference_time_evol.dat` contains
-reference output values for the TGV test case. The values were
-generated base on input file `reference_input.3d` and running the `xcompact3d`
-executable as
+At current stage, all tests belong to category (1) with the exception of the Taylor-Green-Vortex (TGV), where the time evolution of 
+some averaged quatities is compared with reference values.
+More detials about the TGV comparison is given [here](TGV-Taylor-Green-vortex/README.md)
+In all cases the run of the tests, done via ``mpirun``, and the eventual comparison, performed via ``python3``, is instantiated within CTest.
+The full lists of the test performed is: 
 
+
+1. Atmospheric Boundary layer (ABL) in neutral conditions (new set-up)
+1. Differentially heated cavity
+1. Turbulent Channel Flow with X as streamwise direction
+1. Turbulent Channel Flow with Z as streamwise direction
+1. Flow around a circular cylinder
+1. Flow around a moving circular cylinder
+1. Lock exchange
+1. Mixing Layer
+1. Periodic hill
+1. Turbulent Boundary Layer (TBL)
+1. Wind Turbine
+1. Taylor Green Vortex (TGV)
+
+By default only the  TGV case is activated, while the full 
+testing suite needs to be enable by using the `BUILD_TESTING_FULL` flag as 
 ```
-mpirun -np 2 xcompact3d
+$ cmake --build $path_to_build_directory -DBUILD_TESTING_FULL=ON 
 ```
+or by using `ccmake`.
 
-See metadata.txt for the revision number the executable was compiled from, as well as
-`gfortran` and OpenMPI versions.
-
-#### Generating reference output data
-
-It is possible to update and push new test data manually. However, **for
-reliability and consistency reasons the recommended way is to generate
-output data through the dedicated GitHub action** *Generate reference
-test data*.
-
-On the "Actions" tab, select the *Generate reference test data* action
-on the left hand side panel:
-
-![](img/find_test_data_generation_workflow.png)
-
-Next, trigger the workflow on the `master` branch run by clicking on
-*Run workflow* as shown below.
-
-![](img/run_test_data_generation_workflow.png)
-
-Following successful completion, the workflow will open a new Pull
-Request titled /Update reference output TGV data/. 
-
-### Comparing output to reference data
-
+The tests are performed using `CTest` as  
 ```
-cp test/data/Taylor-Green-Vortex/reference_input.i3d input.i3d
-./xcompact3d # Generates time_evol.dat
-python test/compare_TGV_time_evolution.py \
-    --input time_evol.dat \
-	--reference test/data/Taylor-Green-Vortex/reference_time_evol.dat
+$ ctest --test-dir $path_to_build_directory
 ```
 
-### Automated test on Pull Request
-
-The above test will run automatically each time new commits are pushed
-to a remote branch for which a Pull Request is open for integration in
-the `master` branch.
-
-This workflow is based on GitHub actions and described in the
-[.github/workflows/Build.yml](https://github.com/xcompact3d/Incompact3d/blob/master/.github/workflows/Build.yml) configuration file. This workflow
-
-1. Builds and caches OpenMPI.
-2. Builds Incompact3d.
-3. Runs the `xcompact3d` executable on reference input file `reference_input.i3d`.
-4. Runs the `compare_TGV_time_evolution.py` script to compare
-   generated output to reference output.
-
-
-
-
+Every test is performed in a dedicated working directory that is located under the following path 
+```
+$ /path/to/build/RunTests
+```
+All standard outputs from all test runs are collated under the file
+```
+$ /path/to/build/Testing/Temporary/LastTest.log
+```
+together with additional files detailing additional informations such as 
+the elapse time for the different tests and the eventual failed cases. 
