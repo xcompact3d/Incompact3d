@@ -4,7 +4,8 @@
 
 module actuator_line_controller
 
-    use decomp_2d, only: mytype, nrank
+    use decomp_2d_constants, only: mytype
+    use decomp_2d_mpi, only: nrank
     use variables, only: ilist
     use param, only: itime
      

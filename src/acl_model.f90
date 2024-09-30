@@ -4,7 +4,8 @@
 
 module actuator_line_model
 
-    use decomp_2d, only: mytype, nrank
+    use decomp_2d_constants, only: mytype
+    use decomp_2d_mpi, only : nrank
     use variables, only : ilist
     use param, only: itime
     use actuator_line_model_utils
@@ -60,7 +61,7 @@ contains
       if (Ntur>0) then
          if (irestart==1) then
             ! Read the checkpoint information and rotate actuator lines accordingly
-            write(filename,"('restart',I7.7'.alm')") itime
+            write(filename,"('restart',I7.7,'.alm')") itime
             open(17,file=filename)
             read(17,*)
             do itur=1,Ntur
@@ -147,7 +148,7 @@ contains
     !
     !*******************************************************************************
 
-      use decomp_2d, only: mytype
+      use decomp_2d_constants, only : mytype
       use param, only: u1,u2
       use param, only: zero, zpthree, zptwoone, zpfive, one, twentyone
       use constants
@@ -468,9 +469,8 @@ contains
     !
     !*******************************************************************************
 
-      use decomp_2d, only: mytype
+      use decomp_2d_constants, only : mytype
       use param, only: zpfive, two, sixty, onehundredeighty
-      use dbg_schemes, only: sin_prec
 
       implicit none
       real(mytype), intent(inout) :: current_time, dt
@@ -575,7 +575,7 @@ contains
                ! Do harmonic pitch control for all elements (stations) of the actuator line
                Nstation=ActuatorLine(i)%NElem+1
                do j=1,Nstation
-                  ActuatorLine(i)%pitch(j)=actuatorline(i)%pitchAmp*sin_prec(actuatorline(i)%angular_pitch_freq*(ctime-ActuatorLine(i)%pitch_start_time))
+                  ActuatorLine(i)%pitch(j)=actuatorline(i)%pitchAmp*sin(actuatorline(i)%angular_pitch_freq*(ctime-ActuatorLine(i)%pitch_start_time))
                enddo
                if (nrank==0.and.mod(itime,ilist)==0) then        
                   write(*,*) 'Harmonic pitch :'
@@ -667,7 +667,7 @@ contains
       character(len=30) :: filename
 
       if (Ntur>0) then
-         write(filename,"('restart',I7.7'.alm')") itime
+         write(filename,"('restart',I7.7,'.alm')") itime
          open(2021,file=filename)
          write(2021,*) 'Azimuthal angle, Angular velocity, Collective blade pitch'
          do itur=1,Ntur

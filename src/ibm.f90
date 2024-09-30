@@ -4,6 +4,9 @@
 
 module ibm
 
+  use decomp_2d_constants
+  use decomp_2d_mpi, only : nrank
+
   public
 
 contains
@@ -48,7 +51,7 @@ contains
   !############################################################################
   subroutine body(ux1,uy1,uz1,ep1)
     use param, only : zero, one, dx, dz
-    use decomp_2d, only : xstart, xend, xsize, mytype, nrank
+    use decomp_2d, only : xstart, xend, xsize
     !use decomp_2d_io
     use variables, only : ny
     implicit none
@@ -342,8 +345,7 @@ contains
   subroutine polint(xa,ya,n,x,y,dy)
     !
     use decomp_2d
-    use dbg_schemes, only: abs_prec
-    !
+
     implicit none
     !
     integer,parameter            :: nmax=30
@@ -352,7 +354,7 @@ contains
     real(mytype),dimension(nmax) :: c,d
     real(mytype),dimension(n)    :: xa,ya
     ns=1
-    dif=abs_prec(x-xa(1))
+    dif=abs(x-xa(1))
     do i=1,n
        dift=abs(x-xa(i))
        if(dift.lt.dif)then
@@ -522,24 +524,24 @@ subroutine cubsplx(u,lind)
                   u(ipol,j,k)=bcimp                                   
               else
               ! Cubic Spline Reconstruction
-		  na=ia
-		  do ipol=ipoli,ipolf
-		     if ((inxf.eq.1).and.(inxi.eq.1)) then ! If the Body Extends from the Inlet to the Outlet (Special Case)
-                 u(ipol,j,k)=bcimp                            
-             else
-		         xpol=dx*(ipol-1)
-		         if (xpol.eq.ana_resi) then
-		            u(ipol,j,k)=bcimp
-		         elseif (xpol.eq.ana_resf) then
-		            u(ipol,j,k)=bcimp
-		         else   
-		            call cubic_spline(xa,ya,na,xpol,ypol)
-		            u(ipol,j,k)=ypol
-		         endif
-		     endif
-		  enddo
-		  ia=0
-	      endif    
+                 na=ia
+                 do ipol=ipoli,ipolf
+                    if ((inxf.eq.1).and.(inxi.eq.1)) then ! If the Body Extends from the Inlet to the Outlet (Special Case)
+                       u(ipol,j,k)=bcimp                            
+                    else
+                       xpol=dx*(ipol-1)
+                       if (xpol.eq.ana_resi) then
+                          u(ipol,j,k)=bcimp
+                       elseif (xpol.eq.ana_resf) then
+                          u(ipol,j,k)=bcimp
+                       else   
+                          call cubic_spline(xa,ya,na,xpol,ypol)
+                          u(ipol,j,k)=ypol
+                       endif
+                    endif
+                 enddo
+                 ia=0
+              endif
            enddo
         endif
      enddo
@@ -688,21 +690,21 @@ subroutine cubsply(u,lind)
               if (yi(j,i,k).eq.yf(j,i,k)) then
                   u(i,jpol,k)=bcimp                                   
               else
-		  !calcul du polynôme
-		   na=ia
-		   do jpol=jpoli,jpolf
-		         xpol=yp(jpol)
-		         if (xpol.eq.ana_resi) then
-		            u(i,jpol,k)=bcimp
-		         elseif (xpol.eq.ana_resf) then
-		            u(i,jpol,k)=bcimp
-		         else   
-		            call cubic_spline(xa,ya,na,xpol,ypol)
-		            u(i,jpol,k)=ypol
-		         endif
-		   enddo
-		   ia=0
-	      endif    
+                 !calcul du polynôme
+                 na=ia
+                 do jpol=jpoli,jpolf
+                    xpol=yp(jpol)
+                    if (xpol.eq.ana_resi) then
+                       u(i,jpol,k)=bcimp
+                    elseif (xpol.eq.ana_resf) then
+                       u(i,jpol,k)=bcimp
+                    else   
+                       call cubic_spline(xa,ya,na,xpol,ypol)
+                       u(i,jpol,k)=ypol
+                    endif
+                 enddo
+                 ia=0
+              endif
            enddo
         endif
      enddo
@@ -835,28 +837,28 @@ subroutine cubsplz(u,lind)
                     endif
                  enddo
               endif
-         !     ! Special Case
-         !     if (zi(k,i,j).eq.zf(k,i,j)) then
-         !         u(i,j,kpol)=bcimp                                   
-         !     else              
-    	      ! Cubic Spline Reconstruction
-	            na=ia
-	            do kpol=kpoli,kpolf 
-                          ! Special Case
-                          if (zi(k,i,j).eq.zf(k,i,j)) then
-                                u(i,j,kpol)=bcimp
-                          else
-	                    if ((inxf.eq.1).and.(inxi.eq.1)) then ! If the Body Extends from the Front to the Back (Special Case)
-	                          u(i,j,kpol)=bcimp                            
-	                     else              
-	                          xpol=dz*(kpol-1)
-	                          call cubic_spline(xa,ya,na,xpol,ypol)
-	                          u(i,j,kpol)=ypol
-	                     endif
-                           endif
-	            enddo
-	            ia=0
-         !     endif
+              !     ! Special Case
+              !     if (zi(k,i,j).eq.zf(k,i,j)) then
+              !         u(i,j,kpol)=bcimp                                   
+              !     else              
+              ! Cubic Spline Reconstruction
+              na=ia
+              do kpol=kpoli,kpolf 
+                 ! Special Case
+                 if (zi(k,i,j).eq.zf(k,i,j)) then
+                    u(i,j,kpol)=bcimp
+                 else
+                    if ((inxf.eq.1).and.(inxi.eq.1)) then ! If the Body Extends from the Front to the Back (Special Case)
+                       u(i,j,kpol)=bcimp                            
+                    else              
+                       xpol=dz*(kpol-1)
+                       call cubic_spline(xa,ya,na,xpol,ypol)
+                       u(i,j,kpol)=ypol
+                    endif
+                 endif
+              enddo
+              ia=0
+              !     endif
            enddo
         endif
      enddo
@@ -1026,7 +1028,7 @@ end subroutine ana_x_cyl
 SUBROUTINE analitic_x(j,x_pos,ana_res,k)
 
   USE param, ONLY : itype, itype_cyl
-  USE decomp_2d, ONLY : mytype
+  USE decomp_2d_constants, ONLY : mytype
 !  USE cyl, ONLY : geomcomplex_cyl
 
   IMPLICIT NONE
@@ -1046,7 +1048,7 @@ END SUBROUTINE analitic_x
 SUBROUTINE analitic_y(i,y_pos,ana_res,k)
 
   USE param, ONLY : itype, itype_cyl
-  USE decomp_2d, ONLY : mytype
+  USE decomp_2d_constants, ONLY : mytype
 !  USE cyl, ONLY : geomcomplex_cyl
 
   IMPLICIT NONE

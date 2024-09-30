@@ -4,7 +4,7 @@
 
 module ludecomp
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
 
   implicit none
 
@@ -36,7 +36,7 @@ contains
   subroutine ludecomp7_12(aam,bbm,ccm,ddm,eem,qqm,ggm,hhm,ssm,rrm,vvm,wwm,zzm,ny)
 !
 !*******************************************************************
-    use decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     USE param
     implicit none
     
@@ -83,7 +83,7 @@ contains
   subroutine ludecomp7_0(aam,bbm,ccm,ddm,eem,qqm,ggm,hhm,ssm,rrm,vvm,wwm,zzm,l1m,l2m,l3m,u1m,u2m,u3m,ny)
 !
 !*******************************************************************
-    use decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     USE param
     
     implicit none
@@ -207,7 +207,7 @@ contains
   subroutine ludecomp9_12(aam,bbm,ccm,ddm,eem,qqm,ggm,hhm,ssm,rrm,vvm,wwm,zzm,ttm,uum,sssm,zzzm,ny)
 !
 !*******************************************************************
-    use decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     use param
 
     implicit none
@@ -268,7 +268,7 @@ contains
   subroutine ludecomp9_0(aam,bbm,ccm,ddm,eem,qqm,ggm,hhm,ssm,rrm,vvm,wwm,zzm,l1m,l2m,l3m,u1m,u2m,u3m,ny)
 !
 !*******************************************************************
-    use decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     use param
     USE MPI
 
@@ -302,7 +302,7 @@ end module ludecomp
 !
 module matinv
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
 
   implicit none
 
@@ -332,7 +332,7 @@ contains
   subroutine septinv_12(xsol,bbb,ggm,hhm,ssm,rrm,vvm,wwm,zzm,nx,ny,nz)
     !
     !********************************************************************
-    use decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
 
     implicit none
 
@@ -390,7 +390,7 @@ contains
   subroutine septinv_0(xsol,bbb,ggm,hhm,ssm,rrm,vvm,wwm,zzm,l1m,l2m,l3m,u1m,u2m,u3m,nx,ny,nz)
 !    
 !********************************************************************
-    use decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
 
     implicit none
 
@@ -457,7 +457,7 @@ contains
   subroutine nonainv_12(xSol,bbb,ggm,hhm,ssm,sssm,ttm,zzzm,zzm,wwm,vvm,nx,ny,nz)
 !
 !********************************************************************
-    use decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
 
     implicit none
 
@@ -505,7 +505,7 @@ contains
   subroutine nonainv_0(xsol,bbb,ggm,hhm,ssm,rrm,vvm,wwm,zzm,l1m,l2m,l3m,u1m,u2m,u3m,nx,ny,nz)
     !
     !********************************************************************
-    use decomp_2d, only : mytype
+    use decomp_2d_constants, only : mytype
     USE MPI
     
     implicit none
@@ -519,6 +519,8 @@ contains
     real(mytype),dimension(ny), intent(in)    :: vvm,wwm,zzm
     real(mytype),dimension(ny), intent(in) :: l1m,l2m,l3m
     real(mytype),dimension(ny), intent(in) :: u1m,u2m,u3m
+
+    xsol = 0._mytype
 
     write(*,*) 'NOT READY YET! SIMULATION IS STOPPED!'
     call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
@@ -551,6 +553,7 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   USE variables
   USE var, ONLY: ta1, ta2, tb2, tc2, td2
   USE decomp_2d
+  use decomp_2d_mpi
   use derivY
   use matinv
 
@@ -650,14 +653,25 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   ! Specific cases first
   ! This is the location for exotic / nonhomogeneous boundary conditions
   !
-  if (itype.eq.itype_tbl .and. isc.eq.0) then
+  if (itype.eq.itype_ptbl .and. isc.le.0) then
+     if (isc.eq.-1) then ! ux    -> by*1 and n are defined in pencil x!!!
+        bcbot(:,:) = byx1_2(:,:)
+        bctop(:,:) = byxn_2(:,:)
+     else if (isc.eq.-2) then ! uy
+        bcbot(:,:) = byy1_2(:,:)
+        bctop(:,:) = byyn_2(:,:)
+     else if (isc.eq.-3) then ! uz (-3) ----> isc initialzed in int_time_momentum at iimplicit.f90
+        bcbot(:,:) = byz1_2(:,:)
+        bctop(:,:) = byzn_2(:,:)
+     endif
+  else if (itype.eq.itype_tbl .and. isc.le.0) then
      bcbot(:,:) = zero
      bctop(:,:) = tb2(:,ny-1,:)
      !in order to mimick a Neumann BC at the top of the domain for the TBL
   !
   ! Generic homogeneous cases after
   !
-  else if (isc.ne.0) then
+  else if (isc.gt.0) then
      bcbot(:,:) = g_sc(isc, 1)
      bctop(:,:) = g_sc(isc, 2)
   else
@@ -666,12 +680,11 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   endif
  
   !ta2: A.uhat
-  !td2:(A+xcstB).un
   !if isecondder=5, we need nona inversion
   !id isecondder is not 5, we need septa inversion
 
   if (isecondder.ne.5) then
-     if (isc.eq.0) then
+     if (isc.le.0) then
         call multmatrix7(td2,ta2,tb2,npaire,ncly1,nclyn,xcst)
      else
         call multmatrix7(td2,ta2,tb2,npaire,nclyS1,nclySn,xcst_sc(isc))
@@ -693,10 +706,10 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   !
   ! Apply boundary conditions
   !
-  if ((isc.eq.0.and.ncly1.eq.2).or.(isc.gt.0.and.nclyS1.eq.2)) then
+  if ((isc.le.0.and.ncly1.eq.2).or.(isc.gt.0.and.nclyS1.eq.2)) then
      ta2(:,1,:) = bcbot(:,:)
   endif
-  if ((isc.eq.0.and.nclyn.eq.2).or.(isc.gt.0.and.nclySn.eq.2)) then
+  if ((isc.le.0.and.nclyn.eq.2).or.(isc.gt.0.and.nclySn.eq.2)) then
      ta2(:,ny,:) = bctop(:,:)
   endif
  
@@ -705,37 +718,37 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   !if isecondder is not 5, we need septa inversion
 
   if (isecondder.ne.5) then
-     if ((isc.eq.0).and.(ncly1.eq.0).and.(nclyn.eq.0)) then
+     if ((isc.le.0).and.(ncly1.eq.0).and.(nclyn.eq.0)) then
         gg=>ggm0; hh=>hhm0; ss=>ssm0; rr=>rrm0; vv=>vvm0; ww=>wwm0; zz=>zzm0
         lo1=>l1m; lo2=>l2m; lo3=>l3m; up1=>u1m; up2=>u2m; up3=>u3m
      elseif ((isc.gt.0).and.(nclyS1.eq.0).and.(nclySn.eq.0)) then
         gg=>ggm0t(:,isc); hh=>hhm0t(:,isc); ss=>ssm0t(:,isc); rr=>rrm0t(:,isc); vv=>vvm0t(:,isc); ww=>wwm0t(:,isc); zz=>zzm0t(:,isc)
         lo1=>l1mt(:,isc); lo2=>l2mt(:,isc); lo3=>l3mt(:,isc); up1=>u1mt(:,isc); up2=>u2mt(:,isc); up3=>u3mt(:,isc)
-     elseif ((isc.eq.0).and.(ncly1.eq.1).and.(nclyn.eq.1).and.(npaire.eq.0)) then
+     elseif ((isc.le.0).and.(ncly1.eq.1).and.(nclyn.eq.1).and.(npaire.eq.0)) then
         gg=>ggm10; hh=>hhm10; ss=>ssm10; rr=>rrm10; vv=>vvm10; ww=>wwm10; zz=>zzm10
      elseif ((isc.gt.0).and.(nclyS1.eq.1).and.(nclySn.eq.1).and.(npaire.eq.0)) then
         gg=>ggm10t(:,isc); hh=>hhm10t(:,isc); ss=>ssm10t(:,isc); rr=>rrm10t(:,isc); vv=>vvm10t(:,isc); ww=>wwm10t(:,isc); zz=>zzm10t(:,isc)
-     elseif ((isc.eq.0).and.(ncly1.eq.1).and.(nclyn.eq.1).and.(npaire.eq.1)) then
+     elseif ((isc.le.0).and.(ncly1.eq.1).and.(nclyn.eq.1).and.(npaire.eq.1)) then
         gg=>ggm11; hh=>hhm11; ss=>ssm11; rr=>rrm11; vv=>vvm11; ww=>wwm11; zz=>zzm11
      elseif ((isc.gt.0).and.(nclyS1.eq.1).and.(nclySn.eq.1).and.(npaire.eq.1)) then
         gg=>ggm11t(:,isc); hh=>hhm11t(:,isc); ss=>ssm11t(:,isc); rr=>rrm11t(:,isc); vv=>vvm11t(:,isc); ww=>wwm11t(:,isc); zz=>zzm11t(:,isc)
-     elseif ((isc.eq.0).and.(ncly1.eq.2).and.(nclyn.eq.2)) then
+     elseif ((isc.le.0).and.(ncly1.eq.2).and.(nclyn.eq.2)) then
         gg=>ggm; hh=>hhm; ss=>ssm; rr=>rrm; vv=>vvm; ww=>wwm; zz=>zzm
      elseif ((isc.gt.0).and.(nclyS1.eq.2).and.(nclySn.eq.2)) then
         gg=>ggmt(:,isc); hh=>hhmt(:,isc); ss=>ssmt(:,isc); rr=>rrmt(:,isc); vv=>vvmt(:,isc); ww=>wwmt(:,isc); zz=>zzmt(:,isc)
-     elseif ((isc.eq.0).and.(ncly1.eq.1).and.(nclyn.eq.2).and.(npaire.eq.0)) then
+     elseif ((isc.le.0).and.(ncly1.eq.1).and.(nclyn.eq.2).and.(npaire.eq.0)) then
         gg=>ggm120; hh=>hhm120; ss=>ssm120; rr=>rrm120; vv=>vvm120; ww=>wwm120; zz=>zzm120
      elseif ((isc.gt.0).and.(nclyS1.eq.1).and.(nclySn.eq.2).and.(npaire.eq.0)) then
         gg=>ggm120t(:,isc); hh=>hhm120t(:,isc); ss=>ssm120t(:,isc); rr=>rrm120t(:,isc); vv=>vvm120t(:,isc); ww=>wwm120t(:,isc); zz=>zzm120t(:,isc)
-     elseif ((isc.eq.0).and.(ncly1.eq.1).and.(nclyn.eq.2).and.(npaire.eq.1)) then
+     elseif ((isc.le.0).and.(ncly1.eq.1).and.(nclyn.eq.2).and.(npaire.eq.1)) then
         gg=>ggm121; hh=>hhm121; ss=>ssm121; rr=>rrm121; vv=>vvm121; ww=>wwm121; zz=>zzm121
      elseif ((isc.gt.0).and.(nclyS1.eq.1).and.(nclySn.eq.2).and.(npaire.eq.1)) then
         gg=>ggm121t(:,isc); hh=>hhm121t(:,isc); ss=>ssm121t(:,isc); rr=>rrm121t(:,isc); vv=>vvm121t(:,isc); ww=>wwm121t(:,isc); zz=>zzm121t(:,isc)
-     elseif ((isc.eq.0).and.(ncly1.eq.2).and.(nclyn.eq.1).and.(npaire.eq.0)) then
+     elseif ((isc.le.0).and.(ncly1.eq.2).and.(nclyn.eq.1).and.(npaire.eq.0)) then
         gg=>ggm210; hh=>hhm210; ss=>ssm210; rr=>rrm210; vv=>vvm210; ww=>wwm210; zz=>zzm210
      elseif ((isc.gt.0).and.(nclyS1.eq.2).and.(nclySn.eq.1).and.(npaire.eq.0)) then
         gg=>ggm210t(:,isc); hh=>hhm210t(:,isc); ss=>ssm210t(:,isc); rr=>rrm210t(:,isc); vv=>vvm210t(:,isc); ww=>wwm210t(:,isc); zz=>zzm210t(:,isc)
-     elseif ((isc.eq.0).and.(ncly1.eq.2).and.(nclyn.eq.1).and.(npaire.eq.1)) then
+     elseif ((isc.le.0).and.(ncly1.eq.2).and.(nclyn.eq.1).and.(npaire.eq.1)) then
         gg=>ggm211; hh=>hhm211; ss=>ssm211; rr=>rrm211; vv=>vvm211; ww=>wwm211; zz=>zzm211
      elseif ((isc.gt.0).and.(nclyS1.eq.2).and.(nclySn.eq.1).and.(npaire.eq.1)) then
         gg=>ggm211t(:,isc); hh=>hhm211t(:,isc); ss=>ssm211t(:,isc); rr=>rrm211t(:,isc); vv=>vvm211t(:,isc); ww=>wwm211t(:,isc); zz=>zzm211t(:,isc)
@@ -743,13 +756,13 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
         ! We should not be here
         if (nrank == 0) then
            write(*,*)  "Error for time-implicit Y diffusion."
-           if (isc == 0) write(*,*)  "   Wrong combination for ncly1, nclyn and npaire", ncly1, nclyn, npaire
-           if (isc /= 0) write(*,*)  "   Wrong combination for nclyS1, nclySn and npaire", nclyS1, nclySn, npaire
+           if (isc .le. 0) write(*,*)  "   Wrong combination for ncly1, nclyn and npaire", ncly1, nclyn, npaire
+           if (isc .gt. 0) write(*,*)  "   Wrong combination for nclyS1, nclySn and npaire", nclyS1, nclySn, npaire
         endif
         call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
      endif
      tb2=0.;
-     if ((isc.eq.0.and.ncly1.eq.0.and.nclyn.eq.0).or.(isc.gt.0.and.nclyS1.eq.0.and.nclySn.eq.0)) then
+     if ((isc.le.0.and.ncly1.eq.0.and.nclyn.eq.0).or.(isc.gt.0.and.nclyS1.eq.0.and.nclySn.eq.0)) then
         call septinv(tb2,ta2,gg,hh,ss,rr,vv,ww,zz,lo1,lo2,lo3,up1,up2,up3,ysize(1),ysize(2),ysize(3))
         nullify(lo1,lo2,lo3,up1,up2,up3)
      else
@@ -757,7 +770,7 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
      endif
      nullify(gg,hh,ss,rr,vv,ww,zz)
   else if (isecondder.eq.5) then
-     tb2=0.;
+     tb2=zero;
      !TO BE DONE: Different types of BC
      if ((ncly1.eq.0).and.(nclyn.eq.0)) then
         !NOT READY
@@ -2224,7 +2237,7 @@ end subroutine init_implicit
 !
 subroutine init_implicit_coef(tab1d, tab2d)
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
   use variables, only : ny, numscalar
 
   implicit none

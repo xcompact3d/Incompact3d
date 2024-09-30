@@ -1,0 +1,9 @@
+please have a look at the Xcompact3d readthedocs website for how to import an STL file and run the simulation for the flow around a sphere.
+
+FIXME: This case will work when (https://github.com/fschuch/xcompact3d_toolbox/issues/63)[https://github.com/fschuch/xcompact3d_toolbox/issues/63] is fixed. To run the case, the current steps are :
+
+1. Remove the lines `iforces = 1` and `nvol = 1` in the ibmstuff section of the input file
+2. Remove the section ForceCVs of the input file
+3. Run the python script `generate_initial_conditions.py`
+4. Restore the input file (revert steps 1 and 2)
+5. Run the case

@@ -5,23 +5,23 @@
 module case
 
   use param
-  use decomp_2d
+  use decomp_2d_constants
   use variables
 
-  use user_sim
+  use case_generic
   use tgv
   use cyl
   use hill
-  use dbg_schemes
   use channel
   use mixlayer
-  use lockexch
+  use gravitycur
   use tbl
   use abl
   use uniform
   use sandbox
   use cavity
   use pipe
+  use ptbl
 
   use var, only : nzmsize
 
@@ -32,7 +32,8 @@ module case
   private ! All functions/subroutines private by default
   public :: init, boundary_conditions, &
             momentum_forcing, scalar_forcing, set_fluid_properties, &
-            test_flow, preprocessing, postprocessing, visu_case, visu_case_init
+            test_flow, preprocessing, postprocessing, visu_case, & 
+            visu_case_init, visu_case_finalise 
 
 contains
   !##################################################################
@@ -60,13 +61,13 @@ contains
     pressure0 = one
     rho1(:,:,:,:) = one
 
-    if (itype.eq.itype_user) then
+    if (itype.eq.itype_generic) then
 
-       call init_user (ux1, uy1, uz1, ep1, phi1)
+       call init_generic (ux1, uy1, uz1, ep1, phi1)
 
-    elseif (itype.eq.itype_lockexch) then
+    elseif (itype.eq.itype_gravitycur) then
 
-       call init_lockexch(rho1, ux1, uy1, uz1, ep1, phi1)
+       call init_gravitycur(rho1, ux1, uy1, uz1, ep1, phi1)
 
     elseif (itype.eq.itype_tgv) then
 
@@ -84,18 +85,10 @@ contains
 
        call init_cyl (ux1, uy1, uz1, phi1)
 
-    elseif (itype.eq.itype_dbg) then
-
-       call init_dbg (ux1, uy1, uz1, ep1, phi1)
-
     elseif (itype.eq.itype_mixlayer) then
 
        call init_mixlayer(rho1, ux1, uy1, uz1)
 
-!!!    elseif (itype.eq.itype_jet) then
-!!!
-!!!       call init_jet(rho1, ux1, uy1, uz1, ep1, phi1)
-!!!
     elseif (itype.eq.itype_tbl) then
 
        call init_tbl (ux1, uy1, uz1, ep1, phi1)
@@ -119,6 +112,10 @@ contains
     elseif (itype.eq.itype_pipe) then
 
        call init_pipe(ux1, uy1, uz1, ep1, phi1)
+
+       elseif (itype.eq.itype_ptbl) then
+
+       call init_ptbl(ux1, uy1, uz1, phi1)
 
     else
   
@@ -156,13 +153,13 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho
     
-    if (itype == itype_user) then
+    if (itype == itype_generic) then
 
-       call boundary_conditions_user (ux,uy,uz,phi,ep)
+       call boundary_conditions_generic (ux,uy,uz,phi,ep)
 
-    elseif (itype.eq.itype_lockexch) then
+    elseif (itype.eq.itype_gravitycur) then
 
-       call boundary_conditions_lockexch(rho, phi)
+       call boundary_conditions_gravitycur(rho, phi)
 
     elseif (itype.eq.itype_tgv) then
 
@@ -180,14 +177,6 @@ contains
 
        call boundary_conditions_cyl (ux, uy, uz, phi)
 
-    elseif (itype.eq.itype_dbg) then
-
-       call boundary_conditions_dbg (ux, uy, uz, phi)
-
-!!!    elseif (itype.eq.itype_jet) then
-!!!
-!!!       call boundary_conditions_jet (rho,ux,uy,uz,phi)
-!!!
     elseif (itype.eq.itype_tbl) then
 
        call boundary_conditions_tbl (ux, uy, uz, phi)
@@ -212,6 +201,10 @@ contains
 
        call boundary_conditions_pipe (ux, uy, uz, phi)
 
+    elseif (itype.eq.itype_ptbl) then
+
+       call boundary_conditions_ptbl(ux, uy, uz, phi)
+
     endif
 
   end subroutine boundary_conditions
@@ -219,7 +212,7 @@ contains
   !##################################################################
   subroutine preprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
 
-    use decomp_2d, only : mytype, xsize, ph1
+    use decomp_2d, only : xsize, ph1
     use visu, only  : write_snapshot
     use stats, only : overall_statistic
 
@@ -242,7 +235,7 @@ contains
   !##################################################################
   subroutine postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
 
-    use decomp_2d, only : mytype, xsize, ph1
+    use decomp_2d, only : xsize, ph1
     use var, only : nzmsize, numscalar, nrhotime, npress, abl_T
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux1, uy1, uz1
@@ -268,7 +261,7 @@ contains
   !##################################################################
   subroutine run_postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
 
-    use decomp_2d, only : mytype, xsize, ph1
+    use decomp_2d, only : xsize, ph1
     use visu, only  : write_snapshot, end_snapshot
     use stats, only : overall_statistic
 
@@ -322,13 +315,13 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep
     real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp
 
-    if (itype.eq.itype_user) then
+    if (itype.eq.itype_generic) then
 
-       call postprocess_user (ux, uy, uz, phi, ep)
+       call postprocess_generic (ux, uy, uz, phi, ep)
 
-    elseif (itype.eq.itype_lockexch) then
+    elseif (itype.eq.itype_gravitycur) then
 
-       call postprocess_lockexch(rho, ux, uy, uz, phi, ep)
+       call postprocess_gravitycur(rho, ux, uy, uz, phi, ep)
 
     elseif (itype.eq.itype_tgv) then
 
@@ -346,14 +339,6 @@ contains
 
        call postprocess_cyl (ux, uy, uz, ep)
 
-    elseif (itype.eq.itype_dbg) then
-
-       call postprocess_dbg (ux, uy, uz, phi, ep)
-
-!!!    elseif (itype.eq.itype_jet) then
-!!!
-!!!       call postprocess_jet (ux, uy, uz, phi, ep)
-!!!
     elseif (itype.eq.itype_tbl) then
 
        call postprocess_tbl (ux, uy, uz, ep)
@@ -378,10 +363,14 @@ contains
 
        call postprocess_pipe(ux, uy, uz, pp, phi, ep)
 
+    elseif (itype.eq.itype_ptbl) then
+      
+       call postprocess_ptbl (ux, uy, uz, pp, phi, ep)
+
     endif
 
     if (iforces.eq.1) then
-       call force(ux,uy,ep)
+       call force(ux,uy,uz,ep)
        call restart_forces(1)
     endif
 
@@ -417,17 +406,32 @@ contains
 
        call visu_tbl_init(case_visu_init)
 
-    else if (itype .eq. itype_lockexch) then
+    else if (itype .eq. itype_gravitycur) then
 
-       call visu_lockexch_init(case_visu_init)
+       call visu_gravitycur_init(case_visu_init)
 
     else if (itype .eq. itype_uniform) then
 
        call visu_uniform_init(case_visu_init)      
 
+    else if (itype .eq. itype_ptbl) then
+
+       call visu_ptbl_init(case_visu_init)
+
     end if
     
   end subroutine visu_case_init
+  !-----------------------------------------------------------------
+  subroutine visu_case_finalise
+
+    implicit none
+  
+    if (itype .eq. itype_gravitycur) then
+
+       call visu_gravitycur_finalise()
+    
+    end if
+  end subroutine visu_case_finalise
   !##################################################################
   !!
   !!  SUBROUTINE: visu_case
@@ -449,14 +453,14 @@ contains
 
     logical :: called_visu = .false.
     
-    if (itype.eq.itype_user) then
+    if (itype.eq.itype_generic) then
 
-       call visu_user(ux1, uy1, uz1, pp3, phi1, ep1, num)
+       call visu_generic(ux1, uy1, uz1, pp3, phi1, ep1, num)
        called_visu = .true.
        
     elseif (itype.eq.itype_tgv) then
 
-       call visu_tgv(ux1, uy1, uz1, pp3, phi1, ep1, num)
+       call visu_tgv(ux1, uy1, uz1, num)
        called_visu = .true.
 
     elseif (itype.eq.itype_channel) then
@@ -484,6 +488,11 @@ contains
        call visu_uniform(ux1, uy1, uz1, pp3, phi1, ep1, num)
        called_visu = .true.
 
+    elseif (itype.eq.itype_ptbl) then
+
+       call visu_ptbl(ux1, uy1, uz1, pp3, phi1, ep1, num)
+       called_visu = .true.
+
     endif
 
     if (called_visu .and. (.not. case_visu_init)) then
@@ -506,6 +515,8 @@ contains
   !##################################################################
   subroutine momentum_forcing(dux1, duy1, duz1, rho1, ux1, uy1, uz1, phi1)
 
+    use mhd, only: momentum_forcing_mhd
+
     implicit none
 
     real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
@@ -517,16 +528,20 @@ contains
 
        call momentum_forcing_channel(dux1, duy1, duz1, ux1, uy1, uz1)
 
-!!!    elseif (itype.eq.itype_jet) then
-!!!
-!!!       call momentum_forcing_jet(dux1, duy1, duz1, rho1, ux1, uy1, uz1)
-!!!
     elseif (itype.eq.itype_abl) then
 
        call momentum_forcing_abl(dux1, duy1, duz1, ux1, uy1, uz1, phi1)
 
+    elseif (itype.eq.itype_ptbl) then
+
+       call momentum_forcing_ptbl(dux1, duy1, duz1, ux1, uy1, uz1, phi1)
+
     endif
 
+    if(mhd_active) then
+      call momentum_forcing_mhd(dux1(:,:,:,1),duy1(:,:,:,1),duz1(:,:,:,1),ux1,uy1,uz1)
+    endif
+    
   end subroutine momentum_forcing
   !##################################################################
   !##################################################################
@@ -549,6 +564,10 @@ contains
 
        call scalar_forcing_abl(uy1, dphi1, phi1)
 
+    elseif (itype.eq.itype_ptbl) then
+
+       call scalar_forcing_ptbl(uy1, dphi1, phi1)
+
     endif
 
   end subroutine scalar_forcing
@@ -561,10 +580,10 @@ contains
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: rho1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: mu1
 
-    if (itype.eq.itype_lockexch) then
+    if (itype.eq.itype_gravitycur) then
 
        if (ilmn) then 
-          call set_fluid_properties_lockexch(rho1, mu1)
+          call set_fluid_properties_gravitycur(rho1, mu1)
        end if
        
     endif

@@ -16,6 +16,9 @@ program xcompact3d
   use ibm_param
   use ibm, only : body
   use genepsi, only : genepsi3d
+  use mhd,    only : Bm,mhd_equation,test_magnetic, &
+                     solve_poisson_mhd
+  use param, only : mhd_active
 
   implicit none
 
@@ -25,6 +28,7 @@ program xcompact3d
   do itime=ifirst,ilast
      !t=itime*dt
      t=t0 + (itime0 + itime + 1 - ifirst)*dt
+     
      call simu_stats(2)
 
      if (iturbine.ne.0) call compute_turbines(ux1, uy1, uz1)
@@ -51,6 +55,7 @@ program xcompact3d
           endif
         endif
         call calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
+
 #ifdef DEBG
         call check_transients()
 #endif
@@ -67,6 +72,10 @@ program xcompact3d
         call solve_poisson(pp3,px1,py1,pz1,rho1,ux1,uy1,uz1,ep1,drho1,divu3)
         call cor_vel(ux1,uy1,uz1,px1,py1,pz1)
 
+        if(mhd_active .and. mhd_equation == 'induction') then
+          call solve_poisson_mhd()
+        endif
+
         if (ilmn) then
            call momentum_to_velocity(rho1,ux1,uy1,uz1)
            !! XXX N.B. from this point, X-pencil velocity arrays contain velocity (LMN only).
@@ -74,6 +83,8 @@ program xcompact3d
         endif
         
         call test_flow(rho1,ux1,uy1,uz1,phi1,ep1,drho1,divu3)
+
+        if(mhd_active) call test_magnetic
 
      enddo !! End sub timesteps
 
@@ -106,14 +117,14 @@ subroutine init_xcompact3d()
   use tools, only : test_speed_min_max, test_scalar_min_max, &
        restart, &
        simu_stats, compute_cfldiff, &
-       init_inflow_outflow
+       init_inflow_outflow, read_inflow
 
   use param, only : ilesmod, jles,itype
-  use param, only : irestart
+  use param, only : irestart, mhd_active
 
   use variables, only : nx, ny, nz, nxm, nym, nzm
   use variables, only : p_row, p_col
-  use variables, only : nstat, nvisu, nprobe, ilist
+  use variables, only : nstat, nvisu, ilist
 
   use les, only: init_explicit_les
   use turbine, only: init_turbines
@@ -124,6 +135,8 @@ subroutine init_xcompact3d()
   use ibm, only : body
 
   use probes, only : init_probes
+
+  use mhd, only: mhd_init
 
   implicit none
 
@@ -172,7 +185,6 @@ subroutine init_xcompact3d()
   call decomp_2d_io_init()
   call init_coarser_mesh_statS(nstat,nstat,nstat,.true.)    !start from 1 == true
   call init_coarser_mesh_statV(nvisu,nvisu,nvisu,.true.)    !start from 1 == true
-  call init_coarser_mesh_statP(nprobe,nprobe,nprobe,.true.) !start from 1 == true
   !div: nx ny nz --> nxm ny nz --> nxm nym nz --> nxm nym nzm
   call decomp_info_init(nxm, nym, nzm, ph1)
   call decomp_info_init(nxm, ny, nz, ph4)
@@ -206,6 +218,10 @@ subroutine init_xcompact3d()
   endif
 
   !####################################################################
+  ! initialise mhd
+  if (mhd_active) call mhd_init()
+
+  !####################################################################
   ! initialise visu
   if (ivisu.ne.0) then
      call visu_init()
@@ -230,6 +246,9 @@ subroutine init_xcompact3d()
 
   if ((ioutflow.eq.1).or.(iin.eq.3)) then
      call init_inflow_outflow()
+     if ((irestart==1).and.(iin.eq.3)) then
+        call read_inflow(ux_inflow,uy_inflow,uz_inflow,itime/ntimesteps)
+     endif
   end if
 
   if ((iibm.eq.2).or.(iibm.eq.3)) then
@@ -254,11 +273,21 @@ subroutine init_xcompact3d()
   if (itype==2) then
      if(nrank.eq.0)then
         open(42,file='time_evol.dat',form='formatted')
+        if(mhd_active) then
+           open(43,file='mhd_time_evol.dat',form='formatted')
+        endif
      endif
   endif
-  if (itype==5) then
+
+  if (iforces == 1) then
      if(nrank.eq.0)then
         open(38,file='forces.dat',form='formatted')
+     endif
+  endif
+  
+  if (itype==10) then
+     if(nrank.eq.0)then
+        open(42,file='shear.dat',form='formatted')
      endif
   endif
 
@@ -268,14 +297,18 @@ endsubroutine init_xcompact3d
 subroutine finalise_xcompact3d()
 
   use MPI
+  use decomp_2d_mpi
   use decomp_2d
   use decomp_2d_io, only : decomp_2d_io_finalise
 
   use tools, only : simu_stats
-  use param, only : itype, jles, ilesmod
+  use param, only : itype, jles, ilesmod, mhd_active
   use probes, only : finalize_probes
   use visu, only : visu_finalise
   use les, only: finalise_explicit_les
+  use mhd, only: mhd_fin
+  use case, only: visu_case_finalise
+  use forces, only: iforces
 
   implicit none
 
@@ -284,17 +317,29 @@ subroutine finalise_xcompact3d()
   if (itype==2) then
      if(nrank.eq.0)then
         close(42)
+        if(mhd_active) then
+           close(43)
+        endif
      endif
   endif
-  if (itype==5) then
+
+  if (iforces == 1) then
      if(nrank.eq.0)then
         close(38)
+     endif
+  endif
+
+  if (itype==10) then
+     if(nrank.eq.0)then
+        close(42)
      endif
   endif
   
   call simu_stats(4)
   call finalize_probes()
+  call visu_case_finalise()
   call visu_finalise()
+  if (mhd_active) call mhd_fin()
   if (ilesmod.ne.0) then
      if (jles.gt.0) call finalise_explicit_les()
   endif
@@ -306,7 +351,7 @@ endsubroutine finalise_xcompact3d
 
 subroutine check_transients()
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
   use mpi
   use var
   

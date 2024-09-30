@@ -1,0 +1,157 @@
+! -*- mode: f90 -*-
+
+!===================
+&BasicParam
+!===================
+
+! Flow type (1=Lock-exchange, 2=TGV, 3=Channel, 4=Periodic hill, 5=Cylinder, 6=dbg-schemes, 9=Turbulent-Boundary-Layer)
+itype = 10
+
+! Domain decomposition
+p_row=0              ! Row partition
+p_col=0              ! Column partition
+
+! Mesh
+nx=64                ! X-direction nodes
+ny=65                ! Y-direction nodes
+nz=64                ! Z-direction nodes
+istret = 0           ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
+beta = 0.7           ! Refinement parameter (beta)
+
+! Domain
+xlx = 3140.          ! Lx (Size of the box in x-direction)
+yly = 1000.          ! Ly (Size of the box in y-direction)
+zlz = 3140.          ! Lz (Size of the box in z-direction)
+
+! Boundary conditions
+nclx1 = 0
+nclxn = 0
+ncly1 = 2
+nclyn = 1
+nclz1 = 0
+nclzn = 0
+
+! Flow parameters
+iin = 1               ! Inflow conditions (1: classic, 2: turbinit)
+re  = 66667.          ! nu=1/re (Kinematic Viscosity)
+u1  = 10.             ! u1 (max velocity) (for inflow condition)
+u2  = 10.             ! u2 (min velocity) (for inflow condition)
+init_noise = 0.5      ! Turbulence intensity (1=100%) !! Initial condition
+inflow_noise = 0.1    ! Turbulence intensity (1=100%) !! Inflow condition
+
+! Time stepping
+dt = 0.8              ! Time step
+ifirst = 1            ! First iteration
+ilast = 100           ! Last iteration
+
+! Enable modelling tools
+ilesmod=1             ! if 0 then DNS (=1 before)
+numscalar=0           ! How many scalars? (Set to zero to disable scalars)
+iibm=0                ! Flag for immersed boundary method
+iscalar=0 
+
+ifilter = 1
+C_filter = 0.49
+
+/End
+
+!====================
+&NumOptions
+!====================
+
+! Spatial derivatives
+ifirstder = 4         ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact)
+isecondder = 4        ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact, 5->hyperviscous 6th)
+ipinter = 1           ! interpolation scheme (1: classic, 2: optimized, 3: optimized agressive)
+
+! Time scheme
+itimescheme = 3       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4, 7->Semi-implicit)
+
+! Dissipation control
+nu0nu = 3.0           ! Ratio between hyperviscosity/viscosity at nu
+cnu = 0.44            ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
+
+/End
+
+!=================
+&InOutParam
+!=================
+
+! Basic I/O
+irestart = 0          ! Read initial flow field ?
+icheckpoint = 100     ! Frequency for writing backup file
+ioutput = 50          ! Frequency for visualization
+nvisu = 1             ! Size for visualisation collection
+ilist = 50            ! Frequency for writing on screen
+
+/End
+
+!=================
+&Statistics
+!=================
+
+wrotation = 0.12       ! rotation speed to trigger turbulence
+spinup_time = 0 !10000 ! number of time steps with a rotation to trigger turbulence
+nstat = 1              ! Size arrays for statistic collection
+initstat = 50          ! Time steps after which statistics are collected 
+
+/End
+
+!########################
+! OPTIONAL PARAMETERS
+!#######################
+
+!================
+&ScalarParam
+!================
+
+Sc(1) = 0.5           ! Schmidt number
+
+nclxS1 = 0
+nclxSn = 0
+nclyS1 = 1
+nclySn = 1
+nclzS1 = 0
+nclzSn = 0
+Tref   = 300.
+
+/End
+
+!================
+&LESModel
+!================
+
+jles = 1              ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Smag, 4: iSVV, 5: dyn SEV)
+smagcst = 0.14        ! Smagorinsky constant
+SmagWallDamp = 1      ! 1: Mason and Thomson Damping function, otherwise OFF
+nSmag = 3             ! Smag damping coeff (for use with M+T damping)
+walecst = 0.5         ! WALES Model Coefficient
+iconserv = 1          ! Formulation SGS divergence (0: non conservative, 1: conservative)
+
+/End
+
+!================
+&ABL
+!================
+
+z_zero=0.1            ! Roughness length
+k_roughness=0.4       ! von Karman constant (usually taken to be equal to 0.4)
+ustar=0.45            ! friction velocity
+dBL=1000              ! Boundary layer height
+iPressureGradient=1   ! 0: Geostrophic Vel 1: PG forcing
+imassconserve=0       ! Enforce mass conservation
+dsampling=3.0         ! Sampling velocity for the wall model at delta=dsampling*dy
+UG=0,0,0           
+ibuoyancy=0           ! Buoyancy effects 
+idamping=0            ! Damping zone
+istrat=1              ! 0: Stable BL 1: Convective BL
+itherm=0              ! 0: Surface flux 1: Surface temperature
+icoriolis=0           ! Coriolis forces
+coriolisfreq=1e-04 
+iheight=0             ! Compute BL height
+T_wall=300.           ! Initial wall temperature
+T_top=310.814         ! Temperature at domain top
+/End
+
+&CASE
+/End

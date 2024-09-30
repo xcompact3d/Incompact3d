@@ -1,0 +1,141 @@
+! -*- mode: f90 -*-
+
+!===================
+&BasicParam
+!===================
+
+! Flow type (1=Lock-exchange, 2=TGV, 3=Channel, 4=Periodic hill, 5=Cylinder, 6=dbg-schemes)
+itype = 5
+
+! Domain decomposition
+p_row=0              ! Row partition
+p_col=0               ! Column partition
+
+! Mesh
+nx=257               ! X-direction nodes
+ny=128                 ! Y-direction nodes
+nz=32                 ! Z-direction nodes
+istret = 0            ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
+beta = 0.259065151    ! Refinement parameter (beta)
+
+! Domain
+xlx = 20.      ! Lx (Size of the box in x-direction)
+yly = 12.            ! Ly (Size of the box in y-direction)
+zlz = 6.            ! Lz (Size of the box in z-direction)
+
+! Boundary conditions
+nclx1 = 2
+nclxn = 2
+ncly1 = 0
+nclyn = 0
+nclz1 = 0
+nclzn = 0
+
+
+! Flow parameters
+iin = 1               ! Inflow conditions (1: classic, 2: turbinit)
+re  = 300. ! nu=1/re (Kinematic Viscosity)
+u1  = 1.              ! u1 (max velocity) (for inflow condition)
+u2  = 1.              ! u2 (min velocity) (for inflow condition)
+init_noise  = 0.125   ! Turbulence intensity (1=100%) !! Initial condition
+inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
+
+! Time stepping
+dt = 0.0075              ! Time step
+ifirst = 1            ! First iteration
+ilast =  100     ! Last iteration
+
+! Enable modelling tools
+ilesmod=0             ! if 0 then DNS
+iscalar=0             ! If iscalar=0 (no scalar), if iscalar=1 (scalar)
+iibm=2                ! Flag for immersed boundary method
+
+/End
+
+!====================
+&NumOptions
+!====================
+
+! Spatial derivatives
+ifirstder = 4         ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact)
+isecondder = 5        ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact, 5->hyperviscous 6th)
+ipinter = 3           ! interpolation scheme (1: classic, 2: optimized, 3: optimized agressive)
+
+! Time scheme
+itimescheme = 3       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4)
+
+/End
+
+!=================
+&InOutParam
+!=================
+
+! Basic I/O
+irestart = 0           ! Read initial flow field ?
+icheckpoint = 100      ! Frequency for writing backup file
+ioutput = 50           ! Frequency for visualization
+ilist    = 25          ! Frequency for the output to screen
+nvisu = 1              ! Size for visualisation collection
+
+/End
+
+!=================
+&Statistics
+!=================
+
+nstat = 1              ! Size arrays for statistic collection
+initstat = 50          ! Time steps after which statistics are collected 
+
+/End
+
+!########################
+! OPTIONAL PARAMETERS
+!#######################
+
+!================
+&ScalarParam
+!================
+
+numscalar = 0          ! How many scalars?
+Sc = 0.2               ! Schmidt number
+
+/End
+
+!================
+&LESModel
+!================
+
+jles = 0              ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Smag, 4: iSVV, 5: dyn SEV)
+smagcst = 0.14        ! Smagorinsky constant
+SmagWallDamp = 1      ! 1: Mason and Thomson Damping function, otherwise OFF
+walecst = 0.5         ! WALES Model Coefficient
+iconserv = 0          ! Formulation SGS divergence (0: non conservative, 1: conservative)
+
+/End
+
+
+!================
+&ibmstuff
+!================
+
+cex=5.        !when simulating a cylinder x coordinate of the center
+cey=6.        !when simulating a cylinder y coordinate of the center
+ra=0.5        !when simulating a cylinder, radius
+nraf=10       !level of refinement for iibm==2 to find the surface of the immersed object
+nobjmax=2     !number of immersed objects (DO NOT USE ZERO OBJECTS)
+iforces=1
+nvol=1        !Number of volumes for computing force balance
+
+/End
+
+&ForceCVs
+
+xld(1) = 4.0 !X left for volume control
+xrd(1) = 6.0 !X right for volume control
+yld(1) = 5.0 !Y bottom for volume control
+yud(1) = 7.0 !Y top for volume control
+
+/End
+
+&CASE
+/End

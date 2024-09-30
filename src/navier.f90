@@ -4,6 +4,10 @@
 
 module navier
 
+  use decomp_2d_constants
+  use decomp_2d_mpi
+  use decomp_2d
+
   implicit none
 
   private
@@ -22,7 +26,6 @@ contains
   !############################################################################
   SUBROUTINE solve_poisson(pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
 
-    USE decomp_2d, ONLY : mytype, xsize, zsize, ph1, nrank, real_type
     USE decomp_2d_poisson, ONLY : poisson
     USE var, ONLY : nzmsize
     USE var, ONLY : dv3
@@ -70,7 +73,7 @@ contains
        CALL momentum_to_velocity(rho1, ux1, uy1, uz1)
     ENDIF
 
-    CALL divergence(pp3(:,:,:,1),rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
+    call divergence(pp3(:,:,:,1),rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
     IF (ilmn.AND.ivarcoeff) THEN
        dv3(:,:,:) = pp3(:,:,:,1)
     ENDIF
@@ -150,7 +153,6 @@ contains
   !############################################################################
   SUBROUTINE lmn_t_to_rho_trans(drho1, dtemp1, rho1, dphi1, phi1)
 
-    USE decomp_2d
     USE param, ONLY : zero
     USE param, ONLY : imultispecies, massfrac, mol_weight
     USE param, ONLY : ntime
@@ -204,7 +206,6 @@ contains
   !############################################################################
   subroutine cor_vel (ux,uy,uz,px,py,pz)
 
-    USE decomp_2d
     USE variables
     USE param
     USE mpi
@@ -257,7 +258,6 @@ contains
   subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
 
     USE param
-    USE decomp_2d
     USE variables
     USE var, ONLY: ta1, tb1, tc1, pp1, pgy1, pgz1, di1, &
          duxdxp2, uyp2, uzp2, duydypi2, upi2, ta2, dipp2, &
@@ -275,11 +275,11 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime),intent(in) :: rho1
     !Z PENCILS NXM NYM NZ  -->NXM NYM NZM
     real(mytype),dimension(zsize(1),zsize(2),zsize(3)),intent(in) :: divu3
-    real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: pp3
+    real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize),intent(out) :: pp3
 
     integer :: nvect3,i,j,k,nlock
     integer :: code
-    real(mytype) :: tmax,tmoy,tmax1,tmoy1
+    real(mytype) :: tmax,tmoy,tmax1,tmoy1, pres_ref
 
     nvect3=(ph1%zen(1)-ph1%zst(1)+1)*(ph1%zen(2)-ph1%zst(2)+1)*nzmsize
 
@@ -340,7 +340,11 @@ contains
     pp3(:,:,:) = pp3(:,:,:) + po3(:,:,:)
 
     if (nlock==2) then
-       pp3(:,:,:)=pp3(:,:,:)-pp3(ph1%zst(1),ph1%zst(2),nzmsize)
+       ! Line below sometimes generates issues with Intel 
+       !pp3(:,:,:)=pp3(:,:,:)-pp3(ph1%zst(1),ph1%zst(2),nzmsize)
+       ! Using a tmp variable seems to sort the issue
+       pres_ref = pp3(ph1%zst(1),ph1%zst(2),nzmsize)
+       pp3(:,:,:)=pp3(:,:,:)-pres_ref
     endif
 
     tmax=-1609._mytype
@@ -384,7 +388,6 @@ contains
   subroutine gradp(px1,py1,pz1,pp3)
 
     USE param
-    USE decomp_2d
     USE variables
     USE MPI
     USE var, only: pp1,pgy1,pgz1,di1,pp2,ppi2,pgy2,pgz2,pgzi2,dip2,&
@@ -500,7 +503,6 @@ contains
   !############################################################################
   subroutine pre_correc(ux,uy,uz,ep)
 
-    USE decomp_2d
     USE variables
     USE param
     USE var
@@ -621,13 +623,23 @@ contains
                 dpdzy1(i,k)=dpdzy1(i,k)*gdt(itr)
              enddo
           enddo
-          do k=1,xsize(3)
-             do i=1,xsize(1)
-                ux(i,1,k)=byx1(i,k)+dpdxy1(i,k)
-                uy(i,1,k)=byy1(i,k)
-                uz(i,1,k)=byz1(i,k)+dpdzy1(i,k)
+          if (mhd_active) then
+             do k=1,xsize(3)
+                do i=1,xsize(1)
+                   ux(i,1,k)=byx1(i,k) 
+                   uy(i,1,k)=byy1(i,k)
+                   uz(i,1,k)=byz1(i,k) 
+                enddo
              enddo
-          enddo
+          else
+             do k=1,xsize(3)
+                do i=1,xsize(1)
+                   ux(i,1,k)=byx1(i,k) + dpdxy1(i,k)
+                   uy(i,1,k)=byy1(i,k)
+                   uz(i,1,k)=byz1(i,k) + dpdzy1(i,k)
+                enddo
+             enddo
+          endif
        endif
     endif
 
@@ -641,21 +653,41 @@ contains
           enddo
        endif
        if (dims(1)==1) then
-          do k=1,xsize(3)
-             do i=1,xsize(1)
-                ux(i,xsize(2),k)=byxn(i,k)+dpdxyn(i,k)
-                uy(i,xsize(2),k)=byyn(i,k)
-                uz(i,xsize(2),k)=byzn(i,k)+dpdzyn(i,k)
+          if (mhd_active) then
+             do k=1,xsize(3)
+                do i=1,xsize(1)
+                   ux(i,xsize(2),k)=byxn(i,k) 
+                   uy(i,xsize(2),k)=byyn(i,k)
+                   uz(i,xsize(2),k)=byzn(i,k) 
+                enddo
              enddo
-          enddo
+          else
+             do k=1,xsize(3)
+                do i=1,xsize(1)
+                   ux(i,xsize(2),k)=byxn(i,k) + dpdxyn(i,k)
+                   uy(i,xsize(2),k)=byyn(i,k)
+                   uz(i,xsize(2),k)=byzn(i,k) + dpdzyn(i,k)
+                enddo
+             enddo
+          endif
        elseif (ny - (nym / dims(1)) == xstart(2)) then
-          do k=1,xsize(3)
-             do i=1,xsize(1)
-                ux(i,xsize(2),k)=byxn(i,k)+dpdxyn(i,k)
-                uy(i,xsize(2),k)=byyn(i,k)
-                uz(i,xsize(2),k)=byzn(i,k)+dpdzyn(i,k)
+          if (mhd_active) then
+             do k=1,xsize(3)
+                do i=1,xsize(1)
+                   ux(i,xsize(2),k)=byxn(i,k) 
+                   uy(i,xsize(2),k)=byyn(i,k)
+                   uz(i,xsize(2),k)=byzn(i,k) 
+                enddo
              enddo
-          enddo
+          else
+             do k=1,xsize(3)
+                do i=1,xsize(1)
+                   ux(i,xsize(2),k)=byxn(i,k) + dpdxyn(i,k)
+                   uy(i,xsize(2),k)=byyn(i,k)
+                   uz(i,xsize(2),k)=byzn(i,k) + dpdzyn(i,k)
+                enddo
+             enddo
+          endif
        endif
     endif
 
@@ -762,7 +794,6 @@ contains
   !! Convert to/from conserved/primary variables
   SUBROUTINE primary_to_conserved(rho1, var1)
 
-    USE decomp_2d, ONLY : mytype, xsize
     USE param, ONLY : nrhotime
 
     IMPLICIT NONE
@@ -777,7 +808,6 @@ contains
   !############################################################################
   SUBROUTINE velocity_to_momentum (rho1, ux1, uy1, uz1)
 
-    USE decomp_2d, ONLY : mytype, xsize
     USE param, ONLY : nrhotime
     USE var, ONLY : ilmn
 
@@ -799,7 +829,6 @@ contains
   !############################################################################
   SUBROUTINE conserved_to_primary(rho1, var1)
 
-    USE decomp_2d, ONLY : mytype, xsize
     USE param, ONLY : nrhotime
 
     IMPLICIT NONE
@@ -814,7 +843,6 @@ contains
   !############################################################################
   SUBROUTINE momentum_to_velocity (rho1, ux1, uy1, uz1)
 
-    USE decomp_2d, ONLY : mytype, xsize
     USE param, ONLY : nrhotime
     USE var, ONLY : ilmn
 
@@ -837,8 +865,6 @@ contains
   !! Calculate velocity-divergence constraint
   SUBROUTINE calc_divu_constraint(divu3, rho1, phi1)
 
-    USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
-    USE decomp_2d, ONLY : transpose_x_to_y, transpose_y_to_z
     USE param, ONLY : nrhotime, zero, ilmn, pressure0, imultispecies, massfrac, mol_weight
     USE param, ONLY : ibirman_eos
     USE param, ONLY : xnu, prandtl
@@ -1000,7 +1026,6 @@ contains
   ! Calculate extrapolation drhodt 
   SUBROUTINE extrapol_drhodt(drhodt1_next, rho1, drho1)
 
-    USE decomp_2d, ONLY : mytype, xsize, nrank
     USE param, ONLY : ntime, nrhotime, itime, itimescheme, itr, dt, gdt, irestart
     USE param, ONLY : half, three, four
     USE param, ONLY : ibirman_eos
@@ -1061,7 +1086,7 @@ contains
 
   SUBROUTINE birman_drhodt_corr(drhodt1_next, rho1)
 
-    USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
+    USE decomp_2d, ONLY : xsize, ysize, zsize
     USE decomp_2d, ONLY : transpose_x_to_y, transpose_y_to_z, transpose_z_to_y, transpose_y_to_x
     USE variables, ONLY : derxx, dery, deryy, derzz
     USE param, ONLY : nrhotime
@@ -1122,7 +1147,6 @@ contains
   SUBROUTINE test_varcoeff(converged, divup3norm, pp3, dv3, atol, rtol, poissiter)
 
     USE MPI
-    USE decomp_2d, ONLY: mytype, ph1, real_type, nrank
     USE var, ONLY : nzmsize
     USE param, ONLY : npress, itime
     USE variables, ONLY : nxm, nym, nzm, ilist
@@ -1194,8 +1218,6 @@ contains
 
     USE MPI
 
-    USE decomp_2d
-
     USE param, ONLY : nrhotime, ntime
     USE param, ONLY : one
 
@@ -1233,7 +1255,7 @@ contains
     tc1(:,:,:) = (one - rho0 / rho1(:,:,:,1)) * pz1(:,:,:)
 
     nlock = -1 !! Don't do any funny business with LMN
-    CALL divergence(pp3,rho1,ta1,tb1,tc1,ep1,drho1,divu3,nlock)
+    call divergence(pp3,rho1,ta1,tb1,tc1,ep1,drho1,divu3,nlock)
 
     !! lapl(p) = div((1 - rho0/rho) grad(p)) + rho0(div(u*) - div(u))
     !! dv3 contains div(u*) - div(u)
@@ -1247,7 +1269,6 @@ contains
   !
   !********************************************************************
 
-    USE decomp_2d
     USE decomp_2d_poisson
     USE variables
     USE param
@@ -1339,7 +1360,6 @@ contains
   !********************************************************************
 
     use param, only: one
-    use decomp_2d, only: mytype, xsize
     use variables, only: numscalar
     use var, only: ta1, phi1
 
@@ -1371,7 +1391,6 @@ contains
   !
   !********************************************************************
 
-    use decomp_2d
     use variables
     use param
     use var
@@ -1442,7 +1461,6 @@ contains
   !
   !********************************************************************
 
-    use decomp_2d
     use decomp_2d_poisson
     use variables
     use param
@@ -1529,7 +1547,6 @@ contains
 
     use param
     use variables
-    use decomp_2d
     use MPI
     use ibm_param, only: rai
 

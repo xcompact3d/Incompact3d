@@ -4,11 +4,10 @@
 
 module actuator_line_source
 
-    use decomp_2d, only: mytype
-    use decomp_2d, only: real_type
+    use decomp_2d_constants, only : mytype
+    use decomp_2d_constants, only: real_type
     use variables, only: ilist
     use param, only: itime, zero, half, one
-    use dbg_schemes, only: sin_prec, sqrt_prec
     use actuator_line_model_utils
     use actuator_line_model
 
@@ -257,7 +256,8 @@ contains
     !
     !*******************************************************************************
 
-      use decomp_2d, only: nproc, xstart, xend, xsize, update_halo
+      use decomp_2d_mpi, only: nproc
+      use decomp_2d, only: xstart, xend, xsize, update_halo
       use MPI
       use param, only: dx,dy,dz,eps_factor,xnu,istret,xlx,yly,zlz
       use var, only: ux1, uy1, uz1, FTx, FTy, FTz, yp
@@ -304,9 +304,9 @@ contains
       !write(*,*) 'Rank=', nrank, 'X index Limits=', xstart(1), xend(1), 'X lims=', (xstart(1)-1)*dx, (xend(1)-1)*dx
       !write(*,*) 'Rank=', nrank, 'Y index Limits=', xstart(2), xend(2), 'Y lims=', ymin, ymax
       !write(*,*) 'Rank=', nrank, 'Z index Limits=', xstart(3), xend(3), 'Z lims=', zmin, zmax
-      call update_halo(ux1,ux1_halo,1,opt_global=.true.)
-      call update_halo(uy1,uy1_halo,1,opt_global=.true.)
-      call update_halo(uz1,uz1_halo,1,opt_global=.true.)
+      call update_halo(ux1,ux1_halo,1,opt_global=.true.,opt_pencil=1)
+      call update_halo(uy1,uy1_halo,1,opt_global=.true.,opt_pencil=1)
+      call update_halo(uz1,uz1_halo,1,opt_global=.true.,opt_pencil=1)
 
       do isource=1,NSource
          min_dist=1e6_mytype
@@ -319,7 +319,7 @@ contains
                   if (istret.ne.0) ymesh=yp(j)
                   do i=xstart(1),xend(1)
                      xmesh=real(i-1,mytype)*dx
-                     dist = sqrt_prec((Sx(isource)-xmesh)**2.+(Sy(isource)-ymesh)**2.+(Sz(isource)-zmesh)**2.)
+                     dist = sqrt((Sx(isource)-xmesh)**2.+(Sy(isource)-ymesh)**2.+(Sz(isource)-zmesh)**2.)
 
                      if (dist<min_dist) then
                         min_dist=dist
@@ -503,10 +503,10 @@ contains
             do i=1,xsize(1)
                xmesh=(i-1)*dx
                do isource=1,NSource
-                  dist = sqrt_prec((Sx(isource)-xmesh)**2+(Sy(isource)-ymesh)**2+(Sz(isource)-zmesh)**2)
+                  dist = sqrt((Sx(isource)-xmesh)**2+(Sy(isource)-ymesh)**2+(Sz(isource)-zmesh)**2)
                   epsilon=eps_factor*(dx*dy*dz)**(1.0/3.0)
                   if (dist<10.0*epsilon) then
-                     Kernel= one/(epsilon**3.0*pi**1.5)*exp_prec(-(dist/epsilon)**2.0)
+                     Kernel= one/(epsilon**3.0*pi**1.5)*exp(-(dist/epsilon)**2.0)
                   else
                      Kernel=zero
                   endif

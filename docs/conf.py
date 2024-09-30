@@ -43,15 +43,26 @@ except Exception:
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "nbsphinx",
-    "sphinx_copybutton",
-    "sphinx.ext.intersphinx",
-    "sphinx.ext.mathjax",
-    "sphinx.ext.autosectionlabel",
+    'sphinx.ext.todo',
+    'sphinx.ext.coverage',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.mathjax',
+    'sphinx_rtd_theme'
+    #,
+#    'sphinx_click.ext'
+    #,
+#    'recommonmark',
+#    'nbsphinx',
+#    'sphinx_rtd_theme'
 ]
 
+source_suffix = [".rst", ".md"]
+
 intersphinx_mapping = {
-    "toolbox": ("https://xcompact3d-toolbox.readthedocs.io/en/stable/", None,),
+    "toolbox": ("https://xcompact3d.readthedocs.io/en/stable/", None,),
 }
 
 # Add any paths that contain templates here, relative to this directory.

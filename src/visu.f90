@@ -4,6 +4,10 @@
 
 module visu
   
+  use decomp_2d_constants
+  use decomp_2d_mpi
+  use decomp_2d
+
   implicit none
 
   ! True to activate the XDMF output
@@ -37,7 +41,6 @@ contains
     use param, only : ilmn, iscalar, ilast, ifirst, ioutput, istret
     use variables, only : numscalar, prec, nvisu
     use param, only : dx, dy, dz
-    use decomp_2d, only : nrank, mytype, xszV, yszV, zszV, xsize, ysize, zsize
     use decomp_2d_io, only : decomp_2d_init_io, decomp_2d_open_io, decomp_2d_append_mode
     use decomp_2d_io, only : decomp_2d_register_variable
 
@@ -47,6 +50,7 @@ contains
     ! Local variables
     integer :: noutput, nsnapout
     real(mytype) :: memout
+    character(len=30) :: scname
 
     integer :: is
 
@@ -93,7 +97,9 @@ contains
     endif
     if (iscalar.ne.0) then
        do is = 1, numscalar
-          call decomp_2d_register_variable(io_name, "phi"//char(48+is), 1, 0, output2D, mytype)
+          write(scname,"('phi',I2.2)") is
+          !call decomp_2d_register_variable(io_name, "phi"//char(48+is), 1, 0, output2D, mytype)
+          call decomp_2d_register_variable(io_name, scname, 1, 0, output2D, mytype)
        enddo
     endif
     
@@ -158,7 +164,7 @@ contains
 #ifdef ADIOS2
     call decomp_2d_close_io(io_name, "data")
 #endif
-    
+ 
   end subroutine visu_finalise
 
   !
@@ -166,9 +172,6 @@ contains
   !
   subroutine write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime, num)
 
-    use decomp_2d, only : transpose_z_to_y, transpose_y_to_x
-    use decomp_2d, only : mytype, xsize, ysize, zsize
-    use decomp_2d, only : nrank
     use decomp_2d_io, only : decomp_2d_start_io
 
     use param, only : nrhotime, ilmn, iscalar, ioutput, irestart
@@ -271,7 +274,6 @@ contains
 
   subroutine end_snapshot(itime, num)
 
-    use decomp_2d, only : nrank
     use decomp_2d_io, only : decomp_2d_end_io
     use param, only : istret, xlx, yly, zlz
     use variables, only : nx, ny, nz, beta
@@ -339,7 +341,6 @@ contains
 
     use variables, only : nvisu, yp
     use param, only : dx,dy,dz,istret
-    use decomp_2d, only : mytype, nrank, xszV, yszV, zszV, ystV
 
     implicit none
 
@@ -427,7 +428,6 @@ contains
 
   subroutine write_xdmf_topo()
 
-    use decomp_2d, only : xszV, yszV, zszV
     use param, only : istret
     
     implicit none
@@ -462,8 +462,6 @@ contains
   !
   subroutine write_xdmf_footer()
 
-    use decomp_2d, only : nrank
-
     implicit none
 
     if (nrank.eq.0) then
@@ -487,9 +485,8 @@ contains
     use var, only : ep1
     use var, only : zero, one
     use var, only : uvisu
+    use var, only : ta1
     use param, only : iibm
-    use decomp_2d, only : mytype, xsize, xszV, yszV, zszV
-    use decomp_2d, only : nrank, fine_to_coarseV
     use decomp_2d_io, only : decomp_2d_write_one, decomp_2d_write_plane
 
     implicit none
@@ -499,7 +496,7 @@ contains
     integer, intent(in) :: num
     logical, optional, intent(in) :: skip_ibm, flush
 
-    real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: local_array
+    !real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: local_array
     logical :: mpiio, force_flush
     
     integer :: ierr
@@ -562,23 +559,23 @@ contains
     endif
 
     if ((iibm == 2) .and. .not.present(skip_ibm)) then
-       local_array(:,:,:) = (one - ep1(:,:,:)) * f1(:,:,:)
+       ta1(:,:,:) = (one - ep1(:,:,:)) * f1(:,:,:)
     else
-       local_array(:,:,:) = f1(:,:,:)
+       ta1(:,:,:) = f1(:,:,:)
     endif
     if (output2D.eq.0) then
        if (mpiio .or. (iibm == 2) .or. force_flush) then
           !! XXX: This (re)uses a temporary array for data - need to force synchronous writes.
           uvisu = zero
           
-          call fine_to_coarseV(1,local_array,uvisu)
+          call fine_to_coarseV(1,ta1,uvisu)
           call decomp_2d_write_one(1,uvisu,"data",gen_filename(pathname, filename, num, 'bin'),2,io_name,&
                opt_deferred_writes=.false.)
        else
           call decomp_2d_write_one(1,f1,"data",gen_filename(pathname, filename, num, 'bin'),0,io_name)
        end if
     else
-       call decomp_2d_write_plane(1,local_array,output2D,-1,"data",gen_filename(pathname, filename, num, 'bin'),io_name)
+       call decomp_2d_write_plane(1,ta1,output2D,-1,"data",gen_filename(pathname, filename, num, 'bin'),io_name)
     endif
 
   end subroutine write_field

@@ -5,7 +5,7 @@
 module variables
   !USE param
   !USE var
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
 
   ! Boundary conditions : ncl = 2 --> Dirichlet
   ! Boundary conditions : ncl = 1 --> Free-slip
@@ -21,12 +21,11 @@ module variables
   !2-->every 2 mesh nodes
   !4-->every 4 mesh nodes
   !nvisu = size for visualization collection
-  !nprobe =  size for probe collection (energy spectra)
 
   !Possible n points: 3 5 7 9 11 13 17 19 21 25 31 33 37 41 49 51 55 61 65 73 81 91 97 101 109 121 129 145 151 161 163 181 193 201 217 241 251 257 271 289 301 321 325 361 385 401 433 451 481 487 501 513 541 577 601 641 649 721 751 769 801 811 865 901 961 973 1001 1025 1081 1153 1201 1251 1281 1297 1351 1441 1459 1501 1537 1601 1621 1729 1801 1921 1945 2001 2049 2161 2251 2305 2401 2431 2501 2561 2593 2701 2881 2917 3001 3073 3201 3241 3457 3601 3751 3841 3889 4001 4051 4097 4321 4375 4501 4609 4801 4861 5001 5121 5185 5401 5761 5833 6001 6145 6251 6401 6481 6751 6913 7201 7291 7501 7681 7777 8001 8101 8193 8641 8749 9001 9217 9601 9721 enough
 
   integer :: nx,ny,nz,numscalar,p_row,p_col,nxm,nym,nzm,spinup_time
-  integer :: nstat=1,nvisu=1,nprobe=1,nlength=1,ilist=25
+  integer :: nstat=1,nvisu=1,ilist=25
 
   real(mytype),allocatable,dimension(:) :: sc,uset,cp,ri,group
   real(mytype) :: nu0nu, cnu
@@ -67,6 +66,13 @@ module variables
   real(mytype),allocatable,dimension(:) :: ffypS,sfypS,fsypS,fwypS,ssypS,swypS
   real(mytype),allocatable,dimension(:) :: ffzS,sfzS,fszS,fwzS,sszS,swzS
   real(mytype),allocatable,dimension(:) :: ffzpS,sfzpS,fszpS,fwzpS,sszpS,swzpS
+
+  real(mytype),allocatable,dimension(:,:) :: ffxB,sfxB,fsxB,fwxB,ssxB,swxB
+  real(mytype),allocatable,dimension(:,:) :: ffxpB,sfxpB,fsxpB,fwxpB,ssxpB,swxpB
+  real(mytype),allocatable,dimension(:,:) :: ffyB,sfyB,fsyB,fwyB,ssyB,swyB
+  real(mytype),allocatable,dimension(:,:) :: ffypB,sfypB,fsypB,fwypB,ssypB,swypB
+  real(mytype),allocatable,dimension(:,:) :: ffzB,sfzB,fszB,fwzB,sszB,swzB
+  real(mytype),allocatable,dimension(:,:) :: ffzpB,sfzpB,fszpB,fwzpB,sszpB,swzpB
 
   real(mytype), save, allocatable, dimension(:,:) :: sx,vx
   real(mytype), save, allocatable, dimension(:,:) :: sy,vy
@@ -126,10 +132,9 @@ module variables
   real(mytype), allocatable, target, dimension(:,:) :: aam211t,bbm211t,ccm211t,ddm211t,eem211t,ggm211t,hhm211t,wwm211t,zzm211t
   real(mytype), allocatable, target, dimension(:,:) :: rrm211t,qqm211t,vvm211t,ssm211t
 
-
   ABSTRACT INTERFACE
      SUBROUTINE DERIVATIVE_X(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
-       use decomp_2d, only : mytype
+       use decomp_2d_constants, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(ny,nz):: s
@@ -137,7 +142,7 @@ module variables
        real(mytype) :: lind
      END SUBROUTINE DERIVATIVE_X
      SUBROUTINE DERIVATIVE_Y(t,u,r,s,ff,fs,fw,pp,nx,ny,nz,npaire,lind)
-       use decomp_2d, only : mytype
+       use decomp_2d_constants, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,nz):: s
@@ -145,7 +150,7 @@ module variables
        real(mytype) :: lind
      END SUBROUTINE DERIVATIVE_Y
      SUBROUTINE DERIVATIVE_YY(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
-       use decomp_2d, only : mytype
+       use decomp_2d_constants, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,nz):: s
@@ -153,7 +158,7 @@ module variables
        real(mytype) :: lind
      END SUBROUTINE DERIVATIVE_YY
      SUBROUTINE DERIVATIVE_Z(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
-       use decomp_2d, only : mytype
+       use decomp_2d_constants, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,ny):: s
@@ -174,6 +179,21 @@ module variables
        derzz_00,derzz_11,derzz_12,derzz_21,derzz_22
   PROCEDURE (DERIVATIVE_Z), POINTER :: derz,derzz,derzS,derzzS
 
+  procedure (DERIVATIVE_X), pointer :: derxBx, derxxBx
+  procedure (DERIVATIVE_Y), pointer :: deryBx
+  procedure (DERIVATIVE_YY), pointer :: deryyBx
+  procedure (DERIVATIVE_Z), pointer :: derzBx, derzzBx
+
+  procedure (DERIVATIVE_X), pointer :: derxBy, derxxBy
+  procedure (DERIVATIVE_Y), pointer :: deryBy
+  procedure (DERIVATIVE_YY), pointer :: deryyBy
+  procedure (DERIVATIVE_Z), pointer :: derzBy, derzzBy
+
+  procedure (DERIVATIVE_X), pointer :: derxBz, derxxBz
+  procedure (DERIVATIVE_Y), pointer :: deryBz
+  procedure (DERIVATIVE_YY), pointer :: deryyBz
+  procedure (DERIVATIVE_Z), pointer :: derzBz, derzzBz
+  
   !O6SVV
   real(mytype),allocatable,dimension(:) :: newsm,newtm,newsmt,newtmt
   !real(mytype),allocatable,dimension(:) :: newrm,ttm,newrmt,ttmt
@@ -181,7 +201,7 @@ module variables
 
   ABSTRACT INTERFACE
      SUBROUTINE FILTER_X(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
-       use decomp_2d, only : mytype
+       use decomp_2d_constants, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(ny,nz):: s
@@ -189,7 +209,7 @@ module variables
        real(mytype) :: lind
      END SUBROUTINE FILTER_X
      SUBROUTINE FILTER_Y(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
-       use decomp_2d, only : mytype
+       use decomp_2d_constants, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,nz):: s
@@ -197,7 +217,7 @@ module variables
        real(mytype) :: lind
      END SUBROUTINE FILTER_Y
      SUBROUTINE FILTER_Z(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
-       use decomp_2d, only : mytype
+       use decomp_2d_constants, only : mytype
        integer :: nx,ny,nz,npaire
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,ny):: s
@@ -222,6 +242,10 @@ module variables
   real(mytype), save, allocatable, dimension(:,:) :: bxx1,bxy1,bxz1,bxxn,bxyn,bxzn,bxo,byo,bzo
   real(mytype), save, allocatable, dimension(:,:) :: byx1,byy1,byz1,byxn,byyn,byzn
   real(mytype), save, allocatable, dimension(:,:) :: bzx1,bzy1,bzz1,bzxn,bzyn,bzzn
+
+  real(mytype), save, allocatable, dimension(:,:) :: byx1_2,byxn_2
+  real(mytype), save, allocatable, dimension(:,:) :: byy1_2,byyn_2
+  real(mytype), save, allocatable, dimension(:,:) :: byz1_2,byzn_2
 
   !module derpres
   real(mytype),allocatable,dimension(:) :: cfx6,ccx6,cbx6,cfxp6,ciwxp6,csxp6,&
@@ -251,7 +275,7 @@ module variables
   !module mesh
   real(mytype),allocatable,dimension(:) :: ppy,pp2y,pp4y
   real(mytype),allocatable,dimension(:) :: ppyi,pp2yi,pp4yi
-  real(mytype),allocatable,dimension(:) :: xp,xpi,yp,ypi,dyp,zp,zpi,del
+  real(mytype),allocatable,dimension(:) :: xp,xpi,yp,ypi,dyp,zp,zpi,del,ypw
   real(mytype),allocatable,dimension(:) :: yeta,yetai
   real(mytype) :: alpha,beta
 
@@ -260,10 +284,14 @@ end module variables
 !############################################################################
 module param
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
 
-  integer :: nclx1,nclxn,ncly1,nclyn,nclz1,nclzn
+  integer :: nclx1,nclxn,ncly1,nclyn,nclz1,nclzn,FreeStream
   integer :: nclxS1,nclxSn,nclyS1,nclySn,nclzS1,nclzSn
+  integer :: nclxBx1,nclxBxn,nclyBx1,nclyBxn,nclzBx1,nclzBxn
+  integer :: nclxBy1,nclxByn,nclyBy1,nclyByn,nclzBy1,nclzByn
+  integer :: nclxBz1,nclxBzn,nclyBz1,nclyBzn,nclzBz1,nclzBzn
+  integer, dimension(3) :: nclxB1,nclxBn,nclyB1,nclyBn,nclzB1,nclzBn
 
   !logical variable for boundary condition that is true in periodic case
   !and false otherwise
@@ -271,21 +299,20 @@ module param
 
   integer :: itype
   integer, parameter :: &
-       itype_user = 0, &
-       itype_lockexch = 1, &
+       itype_generic = 0, &
+       itype_gravitycur = 1, &
        itype_tgv = 2, &
        itype_channel = 3, &
        itype_hill = 4, &
        itype_cyl = 5, &
-       itype_dbg = 6, &
        itype_mixlayer = 7, &
-       itype_jet = 8, &
        itype_tbl = 9, &
        itype_abl = 10, &
        itype_uniform = 11, &
        itype_sandbox = 12, &
        itype_cavity = 13, &
-       itype_pipe = 14
+       itype_pipe = 14, &
+       itype_ptbl = 15
 
   integer :: cont_phi,itr,itime,itest,iprocessing
   integer :: ifft,istret,iforc_entree,iturb
@@ -305,6 +332,7 @@ module param
   real(mytype) :: C_filter
   character(len=512) :: inflowpath
   logical :: validation_restart
+  logical :: mhd_active
 
   ! Logical, true when synchronization is needed
   logical, save :: sync_vel_needed = .true.
@@ -340,6 +368,22 @@ module param
   integer :: jles
   integer :: smagwalldamp
   real(mytype) :: smagcst,nSmag,walecst,FSGS,pr_t,maxdsmagcst
+
+  !Theta Dot Model
+  integer :: jtheta_dot,jthickness,Method_FT
+  real(mytype) :: K_theta, H_12
+
+  !Blowing Model
+  integer :: Blowing
+  real(mytype) :: A_Blowing,Xst_Blowing,Xen_Blowing,Range_Smooth
+
+  !Adverse Pressure Gradient
+  integer :: APG
+  real(mytype) :: APG_DpDX,APG_Beta
+
+  !Probe for Spectra
+  integer :: Pro_Spectra
+  real(mytype) :: X_Pro_Spectra,Z_Pro_Spectra
 
   !! Gravity field (vector components)
   real(mytype) :: gravx, gravy, gravz
@@ -501,19 +545,20 @@ end module param
 !############################################################################
 module complex_geometry
 
-  use decomp_2d,only : mytype
+  use decomp_2d_constants,only : mytype
   use variables,only : nx,ny,nz,nxm,nym,nzm
 
   integer     ,allocatable,dimension(:,:)   :: nobjx,nobjy,nobjz
   integer     ,allocatable,dimension(:,:,:) :: nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif
   real(mytype),allocatable,dimension(:,:,:) :: xi,xf,yi,yf,zi,zf
+  real(mytype),allocatable,dimension(:,:,:) :: xepsi, yepsi, zepsi  
   integer :: nxraf,nyraf,nzraf,nraf,nobjmax
 end module complex_geometry
 !############################################################################
 !############################################################################
 module derivX
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
 
   real(mytype) :: alcaix6,acix6,bcix6
   real(mytype) :: ailcaix6,aicix6,bicix6,cicix6,dicix6
@@ -533,7 +578,7 @@ end module derivX
 !############################################################################
 module derivY
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
 
   real(mytype) :: alcaiy6,aciy6,bciy6
   real(mytype) :: ailcaiy6,aiciy6,biciy6,ciciy6,diciy6
@@ -553,7 +598,7 @@ end module derivY
 !############################################################################
 module derivZ
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
 
   real(mytype) :: alcaiz6,aciz6,bciz6
   real(mytype) :: ailcaiz6,aiciz6,biciz6,ciciz6,diciz6
@@ -574,7 +619,7 @@ end module derivZ
 !############################################################################
 ! Describes the parameters for the discrete filters in X-Pencil
 module parfiX
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
   real(mytype) :: fial1x, fia1x, fib1x, fic1x, fid1x, fie1x, fif1x  ! Coefficients for filter at boundary point 1
   real(mytype) :: fial2x, fia2x, fib2x, fic2x, fid2x, fie2x, fif2x  ! Coefficients for filter at boundary point 2
   real(mytype) :: fial3x, fia3x, fib3x, fic3x, fid3x, fie3x, fif3x  ! Coefficients for filter at boundary point 3
@@ -587,7 +632,7 @@ end module parfiX
 !############################################################################
 module parfiY
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
   real(mytype) :: fial1y, fia1y, fib1y, fic1y, fid1y, fie1y, fif1y ! Coefficients for filter at boundary point 1
   real(mytype) :: fial2y, fia2y, fib2y, fic2y, fid2y, fie2y, fif2y ! Coefficients for filter at boundary point 2
   real(mytype) :: fial3y, fia3y, fib3y, fic3y, fid3y, fie3y, fif3y ! Coefficients for filter at boundary point 3
@@ -600,7 +645,7 @@ end module parfiY
 !############################################################################
 module parfiZ
 
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
   real(mytype) :: fial1z, fia1z, fib1z, fic1z, fid1z, fie1z, fif1z ! Coefficients for filter at boundary point 1
   real(mytype) :: fial2z, fia2z, fib2z, fic2z, fid2z, fie2z, fif2z ! Coefficients for filter at boundary point 2
   real(mytype) :: fial3z, fia3z, fib3z, fic3z, fid3z, fie3z, fif3z ! Coefficients for filter at boundary point 3
@@ -617,10 +662,27 @@ end module simulation_stats
 !############################################################################
 !############################################################################
 module ibm_param
-  use decomp_2d, only : mytype
+  use decomp_2d_constants, only : mytype
   real(mytype) :: cex,cey,cez,ra,rai,rao,ubcx,ubcy,ubcz,rads, c_air
   real(mytype) :: chord,thickness,omega
   integer :: inana ! Analytical BC as Input
   integer :: imove
 end module ibm_param
 !############################################################################
+!############################################################################
+module constants
+
+    use decomp_2d_constants, only: mytype
+    use param, only: onehundredeighty
+
+    ! Mathematical constants
+    real(mytype), parameter :: pi = 3.14159265358979323846_mytype
+    real(mytype), parameter :: conrad = pi / onehundredeighty
+    real(mytype), parameter :: condeg = onehundredeighty / pi
+
+    ! Definition of maximum size of arrays
+    integer, parameter :: MaxNAirfoils = 80 ! Maximum number of airfoils to be read
+    integer, parameter :: MaxReVals = 10    ! Maximum number of tables (one per Reynolds number) that will be read
+    integer, parameter :: MaxAOAVals = 1000 ! Maximum number of angles of attack in each polar that will be read
+
+end module constants

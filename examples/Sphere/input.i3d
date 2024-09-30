@@ -1,0 +1,148 @@
+! -*- mode: f90 -*-
+
+!===================
+&BasicParam
+!===================
+
+       C_filter = 0.49            ! 
+           beta = 1.0             ! Refinement parameter
+             dt = 2.0e-3          ! Time step
+          gravx = 0.0             ! Gravity unitary vector in x-direction
+          gravy = 0.0             ! Gravity unitary vector in y-direction
+          gravz = 0.0             ! Gravity unitary vector in z-direction
+        ifilter = 0               ! 
+         ifirst = 1               ! The number for the first iteration
+           iibm = 2               ! Flag for immersed boundary method (0: No, 1: Yes)
+            iin = 1               ! Defines perturbation at initial condition
+          ilast = 10000           ! The number for the last iteration
+        ilesmod = 0               ! Enables Large-Eddy methodologies (0: No, 1: Yes)
+           ilmn = .false.          ! 
+   inflow_noise = 0.0             ! Turbulence intensity (1=100%) !! Inflow condition
+     init_noise = 0.0             ! Turbulence intensity (1=100%) !! Initial condition
+          ipost = 0               ! Enables online postprocessing at a frequency iprocessing (0: No, 1: Yes)
+        iscalar = 0               ! 
+         istret = 0               ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
+       iturbine = 0               ! 
+          itype = 12              ! Flow configuration (1:Lock-exchange, 2:TGV, 3:Channel, and others)
+          ivisu = 1               ! Enable store snapshots at a frequency ioutput (0: No, 1: Yes)
+          nclx1 = 2               ! Velocity boundary condition where x=0
+          nclxn = 2               ! Velocity boundary condition where x=xlx
+          ncly1 = 0               ! Velocity boundary condition where y=0
+          nclyn = 0               ! Velocity boundary condition where y=yly
+          nclz1 = 0               ! Velocity boundary condition where z=0
+          nclzn = 0               ! Velocity boundary condition where z=zlz
+      numscalar = 0               ! Number of scalar fractions
+             nx = 129             ! X-direction nodes
+             ny = 64             ! Y-direction nodes
+             nz = 64             ! Z-direction nodes
+          p_col = 0               ! Column partition for domain decomposition and parallel computation
+          p_row = 0               ! Row partition for domain decomposition and parallel computation
+             re = 1000.0           ! Reynolds number
+             u1 = 1.0             ! 
+             u2 = 1.0             ! 
+            xlx = 10.0             ! Size of the box in x-direction
+            yly = 5.0             ! Size of the box in y-direction
+            zlz = 5.0             ! Size of the box in z-direction
+
+/End
+
+!===================
+&NumOptions
+!===================
+
+            cnu = 0.44            ! Ratio between hyperviscosity at km=2/3π and kc=π (dissipation factor range)
+      ifirstder = 4               ! 
+      iimplicit = 0               ! 
+     isecondder = 4               ! Scheme for second order derivative
+    itimescheme = 3               ! Time integration scheme (1: Euler, 2: AB2, 3: AB3, 5: RK3)
+          nu0nu = 0.0             ! Ratio between hyperviscosity/viscosity at nu (dissipation factor intensity)
+        ipinter = 2               ! interpolation scheme (1: classic, 2: optimized, 3: optimized agressive)
+
+
+/End
+
+!===================
+&InOutParam
+!===================
+
+    icheckpoint = 100            ! Frequency for writing backup file
+       ioutflow = 0               ! 
+        ioutput = 100             ! Frequency for visualization file
+          !ilist = 1
+    iprocessing = 100            ! Frequency for online postprocessing
+       irestart = 0               ! Read initial flow field (0: No, 1: Yes)
+       ninflows = 1               ! 
+        nprobes = 0               ! 
+     ntimesteps = 1               ! 
+          nvisu = 1               ! Size for visualization collection
+       output2D = 0               ! 
+
+/End
+
+!===================
+&Statistics
+!===================
+
+
+/End
+
+!===================
+&CASE
+!===================
+
+
+/End
+
+!===================
+&ScalarParam
+!===================
+
+           Tref = 0.0             ! 
+          cp(1) = 1.0             ! Initial concentration(s)
+         nclxS1 = 2               ! Scalar boundary condition where x=0
+         nclxSn = 2               ! Scalar boundary condition where x=xlx
+         nclyS1 = 0               ! Scalar boundary condition where y=0
+         nclySn = 0               ! Scalar boundary condition where y=yly
+         nclzS1 = 0               ! Scalar boundary condition where z=0
+         nclzSn = 0               ! Scalar boundary condition where z=zlz
+          ri(1) = 0.0             ! Richardson number(s)
+          sc(1) = 1.0             ! Schmidt number(s)
+        uset(1) = 1.0             ! Settling velocity(ies)
+
+/End
+
+!===================
+&LESModel
+!===================
+
+           jles = 1               ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Smag, 4: iSVV)
+        smagcst = 0.14            ! Smag damping coeff (for use with M+T damping               
+   smagwalldamp = 0               ! 0: non conservative form SGS divergence                    
+          nSmag = 0               ! WALES Model Coefficient                                    
+        walecst = 0.5             ! iconserv = 0
+
+/End
+
+!===================
+&ibmstuff
+!===================
+
+           izap = 1               ! How many points to skip for reconstruction (Range: 0-3) (Recommended: 1)
+        nobjmax = 1               ! Maximum number of objects in any direction
+           npif = 2               ! Number of Points for the Reconstruction (npif=1-3) (Recommended: 2)
+           nraf = 10              ! Level of refinement for iibm==2 to find the surface of the immersed object
+        iforces = 1
+           nvol = 1
+/End
+
+!==================
+&ForceCVs
+!==================
+i2dsim = 0 ! select 1 for 2D CV Force Calculation and 0 for 3D CV Force Calculation
+xld(1) = 1.5 !X left for volume control
+xrd(1) = 3.5 !X right for volume control
+yld(1) = 1.5 !Y bottom for volume control
+yud(1) = 3.5 !Y top for volume control
+zfr(1) = 1.5 !Z front for volume control
+zbk(1) = 3.5 !Z back for volume control
+/End

@@ -4,6 +4,10 @@
 
 module stats
 
+  use decomp_2d_constants
+  use decomp_2d_mpi
+  use decomp_2d
+
   implicit none
 
   character(len=*), parameter :: io_statistics = "statistics-io", &
@@ -18,7 +22,6 @@ contains
 
   subroutine init_statistic_adios2
 
-    use decomp_2d, only : mytype
     use decomp_2d_io, only : decomp_2d_register_variable, decomp_2d_init_io
 
     use var, only : numscalar
@@ -147,7 +150,6 @@ contains
 
     use param, only : iscalar, itime
     use variables, only : numscalar
-    use decomp_2d, only : nrank
     use decomp_2d_io, only : decomp_2d_write_mode, decomp_2d_read_mode, &
          decomp_2d_open_io, decomp_2d_close_io, decomp_2d_start_io, decomp_2d_end_io
     use var, only : pmean
@@ -240,7 +242,7 @@ contains
   !
   subroutine read_or_write_one_stat(flag_read, filename, array)
 
-    use decomp_2d, only : mytype, xstS, xenS
+    use decomp_2d, only : xstS, xenS
     use decomp_2d_io, only : decomp_2d_read_one, decomp_2d_write_one
 
     implicit none
@@ -267,7 +269,6 @@ contains
 
     use param
     use variables
-    use decomp_2d
     use decomp_2d_io
     use tools, only : rescale_pressure
 
@@ -352,7 +353,6 @@ contains
   !
   elemental real(mytype) function one_minus_ep1(var, ep1)
 
-    use decomp_2d, only : mytype
     use param, only : iibm, one
 
     implicit none
@@ -373,7 +373,7 @@ contains
   !
   subroutine update_average_scalar(um, ux, ep)
 
-    use decomp_2d, only : mytype, xsize, xstS, xenS, fine_to_coarseS
+    use decomp_2d, only : xsize, xstS, xenS, fine_to_coarseS
     use param, only : itime, initstat,istatfreq
     use var, only : di1, tmean
 
@@ -396,7 +396,7 @@ contains
   !
   subroutine update_average_vector(um, vm, wm, ux, uy, uz, ep)
 
-    use decomp_2d, only : mytype, xsize, xstS, xenS
+    use decomp_2d, only : xsize, xstS, xenS
 
     implicit none
 
@@ -415,7 +415,8 @@ contains
   !
   subroutine update_variance_vector(uum, vvm, wwm, uvm, uwm, vwm, ux, uy, uz, ep)
 
-    use decomp_2d, only : mytype, xsize, xstS, xenS
+    use decomp_2d, only : xsize, xstS, xenS
+    use var, only: ta1
 
     implicit none
 
@@ -423,12 +424,23 @@ contains
     real(mytype), dimension(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)), intent(inout) :: uum, vvm, wwm, uvm, uwm, vwm
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux, uy, uz, ep
 
-    call update_average_scalar(uum, ux*ux, ep)
-    call update_average_scalar(vvm, uy*uy, ep)
-    call update_average_scalar(wwm, uz*uz, ep)
-    call update_average_scalar(uvm, ux*uy, ep)
-    call update_average_scalar(uwm, ux*uz, ep)
-    call update_average_scalar(vwm, uy*uz, ep)
+    ta1(:,:,:) = ux(:,:,:)*ux(:,:,:) 
+    call update_average_scalar(uum, ta1, ep)
+    
+    ta1(:,:,:) = uy(:,:,:)*uy(:,:,:) 
+    call update_average_scalar(vvm, ta1, ep)
+    
+    ta1(:,:,:) = uz(:,:,:)*uz(:,:,:) 
+    call update_average_scalar(wwm, ta1, ep)
+    
+    ta1(:,:,:) = ux(:,:,:)*uy(:,:,:) 
+    call update_average_scalar(uvm, ta1, ep)
+    
+    ta1(:,:,:) = ux(:,:,:)*uz(:,:,:) 
+    call update_average_scalar(uwm, ta1, ep)
+    
+    ta1(:,:,:) = uy(:,:,:)*uz(:,:,:) 
+    call update_average_scalar(vwm, ta1, ep)
 
   end subroutine update_variance_vector
 
