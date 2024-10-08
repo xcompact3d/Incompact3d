@@ -208,8 +208,9 @@ contains
     use variables
     use param
     use MPI
-    use navier, only : gradp
-    use mhd, only : mhd_equation,Bm,dBm
+    use navier,   only : gradp
+    use mhd,      only : mhd_equation,Bm,dBm
+    use particle, only : particle_checkpoint,n_particle
 
     implicit none
 
@@ -234,6 +235,7 @@ contains
     character(len=80) :: varname
     NAMELIST /Time/ tfield, itime
     NAMELIST /NumParam/ nx, ny, nz, istret, beta, dt, itimescheme
+    NAMELIST /ParTrack/ n_particle
 
     logical, save :: first_restart = .true.
     
@@ -328,6 +330,10 @@ contains
        call decomp_2d_end_io(io_restart, resfile)
        call decomp_2d_close_io(io_restart, resfile)
 
+       if(pt_active) then
+          call particle_checkpoint(mode='write')
+       endif
+
        ! Validate restart file then remove old file and update restart.info
        if (validation_restart) then
           if (validate_restart(resfile_old, resfile)) then
@@ -365,9 +371,17 @@ contains
           write(111,fmt2) 'iscalar=  ',iscalar
           write(111,fmt2) 'numscalar=',numscalar
           write(111,'(A,I14)') 'itimescheme=',itimescheme
-          write(111,fmt2) 'iimplicit=',iimplicit
+          write(111,'(A,I16)') 'iimplicit=',iimplicit
           write(111,'(A)')'/End'
           write(111,'(A)')'!========================='
+
+          if(pt_active) then
+            write(111,'(A)')'&ParTrack'
+            write(111,'(A)')'!========================='
+            write(111,'(A,I13)') 'n_particle=  ',n_particle
+            write(111,'(A)')'/End'
+            write(111,'(A)')'!========================='
+          endif
 
           close(111)
        end if
@@ -463,13 +477,22 @@ contains
        if (fexists) then
          open(111, file=filename)
          read(111, nml=Time)
+         
+         if(pt_active) then
+          read(111, nml=ParTrack)
+         endif
+
          close(111)
+
          t0 = tfield
          itime0 = 0
+
        else
          t0 = zero
          itime0 = 0
        end if
+
+       call particle_checkpoint(mode='read')
        
     endif
 

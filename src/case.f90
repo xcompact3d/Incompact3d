@@ -443,6 +443,7 @@ contains
 
     use var, only : nzmsize
     use param, only : npress
+    use particle, only : visu_particle
 
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
@@ -502,6 +503,8 @@ contains
        STOP
        
     endif
+
+    if(pt_active) call visu_particle(itime)
 
   end subroutine visu_case
   !##################################################################

@@ -30,11 +30,17 @@ contains
     use MPI
     use mhd,  only: Bm,Bmean
     use visu, only: write_snapshot, end_snapshot
+    use decomp_2d, only : ph1
+    use var, only : nzmsize, numscalar, nrhotime, npress
+    use particle, only : particle_init,visu_particle
 
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
+    real(mytype),dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
 
     real(mytype) :: y,r,um,r3,x,z,h,ct
     real(mytype) :: cx0,cy0,cz0,hg,lg
@@ -102,8 +108,14 @@ contains
 #ifdef DEBG
     if (nrank  ==  0) write(*,*) '# init end ok'
 #endif
+    if(pt_active) call particle_init()
+
+    call visu_tgv0(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
+
+    call visu_particle(itime)
 
     return
+
   end subroutine init_tgv
   !********************************************************************
 
@@ -594,6 +606,38 @@ contains
     endif
 
   end subroutine visu_tgv
+
+  subroutine visu_tgv0(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
+
+    use decomp_2d, only : xsize, ph1
+    use visu,      only : write_snapshot, end_snapshot
+    use stats,     only : overall_statistic
+
+    use var,       only : nzmsize,itime,numscalar, nrhotime, npress
+
+    use turbine,   only : turbine_output
+    use probes,    only : write_probes
+    use particle,  only : visu_particle
+
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ux1, uy1, uz1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(in) :: phi1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime), intent(in) :: rho1
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ep1
+    real(mytype),dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
+
+    integer :: num
+
+    call write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime, num)
+    ! XXX: Ultimate goal for ADIOS2 is to pass do all postproc online - do we need this?
+    !      Currently, needs some way to "register" variables for IO
+    call visu_tgv(ux1, uy1, uz1, num)
+
+    call end_snapshot(itime, num)
+
+    call visu_particle(itime)
+
+  end subroutine visu_tgv0
+
   !############################################################################
   subroutine suspended(phi1,vol1,mp1)
 

@@ -121,14 +121,14 @@ subroutine init_xcompact3d()
   use variables, only : nx, ny, nz, nxm, nym, nzm
   use variables, only : p_row, p_col
   use variables, only : nstat, nvisu, ilist
-  use les,       only: init_explicit_les
-  use turbine,   only: init_turbines
+  use les,       only : init_explicit_les
+  use turbine,   only : init_turbines
   use visu,      only : visu_init, visu_ready
   use genepsi,   only : genepsi3d, epsi_init
   use ibm,       only : body
   use probes,    only : init_probes
-  use mhd,       only: mhd_init
-  use particle,  only : particle_init
+  use mhd,       only : mhd_init
+  use particle,  only : local_domain_size
 
   implicit none
 
@@ -214,8 +214,10 @@ subroutine init_xcompact3d()
   if (mhd_active) call mhd_init()
 
   !####################################################################
-  ! initialise mhd
-  if (pt_active) call particle_init()
+  ! initialise particles
+  if (pt_active) then
+    call local_domain_size
+  endif
 
   !####################################################################
   ! initialise visu

@@ -22,10 +22,12 @@ module mptool
   !
   interface pwrite
     module procedure pwrite_1darray
+    module procedure pwrite_2darray
   end interface
   !
   interface pread
     module procedure pread_1darray
+    module procedure pread_2darray
   end interface
   !
   contains
@@ -253,23 +255,123 @@ module mptool
 
   end subroutine pwrite_1darray
 
-
-  subroutine pread_1darray(filename,data2read,size_data2read)
+  subroutine pwrite_2darray(filename,data_1,data_2,data_3,data_4,data_5,data_6)
 
     ! arguments
     character(len=*),intent(in) :: filename
-    real(mytype),intent(out),allocatable :: data2read(:)
-    integer,intent(in) :: size_data2read
+    real(mytype),intent(in) :: data_1(:,:)
+    real(mytype),intent(in),optional :: data_2(:,:),data_3(:,:),data_4(:,:), &
+                                        data_5(:,:),data_6(:,:)
 
     ! local data
+    integer :: local_size,total_size
     integer :: ierr, fh, datatype, status(mpi_status_size)
     integer(kind=mpi_offset_kind) :: offset
 
-    ! allocate local array for each process
-    allocate(data2read(size_data2read))
+    ! get the size of the array
+    local_size=size(data_1)
 
     ! calculate the offset for each process
-    offset = prelay(size_data2read)*8_8
+    offset = prelay(local_size)*8_8
+
+    ! Open the file in write mode with MPI-IO
+    call mpi_file_open(mpi_comm_world, filename, mpi_mode_wronly + mpi_mode_create, mpi_info_null, fh, ierr)
+
+    ! set the file view for each process
+    call mpi_file_set_view(fh, offset, real_type, real_type, 'native', mpi_info_null, ierr)
+
+    ! write the local array to the file
+    call mpi_file_write(fh, data_1, local_size, real_type, status, ierr)
+
+    if(present(data_2)) then
+
+      ! Barrier to synchronize processes
+      call mpi_barrier(mpi_comm_world, ierr)
+
+      total_size=psum(local_size)*8_8
+
+      offset = offset + total_size
+
+      ! write the data_2 to the file
+      call mpi_file_set_view(fh, offset, real_type, real_type, 'native', mpi_info_null, ierr)
+      call mpi_file_write(fh, data_2, local_size, real_type, status, ierr)
+
+    endif
+
+    if(present(data_3)) then
+
+      ! Barrier to synchronize processes
+      call mpi_barrier(mpi_comm_world, ierr)
+
+      offset = offset + total_size
+
+      ! write the data_3 to the file
+      call mpi_file_set_view(fh, offset, real_type, real_type, 'native', mpi_info_null, ierr)
+      call mpi_file_write(fh, data_3, local_size, real_type, status, ierr)
+
+    endif
+
+    if(present(data_4)) then
+
+      ! Barrier to synchronize processes
+      call mpi_barrier(mpi_comm_world, ierr)
+
+      offset = offset + total_size
+
+      ! write the data_4 to the file
+      call mpi_file_set_view(fh, offset, real_type, real_type, 'native', mpi_info_null, ierr)
+      call mpi_file_write(fh, data_4, local_size, real_type, status, ierr)
+
+    endif
+
+    if(present(data_5)) then
+
+      ! Barrier to synchronize processes
+      call mpi_barrier(mpi_comm_world, ierr)
+
+      offset = offset + total_size
+
+      ! write the data_5 to the file
+      call mpi_file_set_view(fh, offset, real_type, real_type, 'native', mpi_info_null, ierr)
+      call mpi_file_write(fh, data_5, local_size, real_type, status, ierr)
+
+    endif
+
+    if(present(data_6)) then
+
+      ! Barrier to synchronize processes
+      call mpi_barrier(mpi_comm_world, ierr)
+
+      offset = offset + total_size
+
+      ! write the data_6 to the file
+      call mpi_file_set_view(fh, offset, real_type, real_type, 'native', mpi_info_null, ierr)
+      call mpi_file_write(fh, data_6, local_size, real_type, status, ierr)
+
+    endif
+
+    ! close the file
+    call mpi_file_close(fh, ierr)
+
+    if(nrank==0) print*,'<< ',filename
+
+  end subroutine pwrite_2darray
+
+  subroutine pread_1darray(filename,data2read)
+
+    ! arguments
+    character(len=*),intent(in) :: filename
+    real(mytype),intent(inout),allocatable :: data2read(:)
+
+    ! local data
+    integer :: local_size, ierr, fh, datatype, status(mpi_status_size)
+    integer(kind=mpi_offset_kind) :: offset
+
+    ! calcualte local size
+    local_size=size(data2read)
+
+    ! calculate the offset for each process
+    offset = prelay(local_size)*8_8
 
     ! Open the file in read mode using MPI-IO
     call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, fh, ierr)
@@ -278,7 +380,7 @@ module mptool
     call MPI_FILE_SET_VIEW(fh, offset, real_type, real_type, 'native', MPI_INFO_NULL, ierr)
   
     ! Read the local portion of the array from the file
-    call MPI_FILE_READ(fh, data2read, size_data2read, real_type, status, ierr)
+    call MPI_FILE_READ(fh, data2read, local_size, real_type, status, ierr)
   
     ! Close the file
     call MPI_FILE_CLOSE(fh, ierr)
@@ -287,6 +389,41 @@ module mptool
 
 
   end subroutine pread_1darray
+
+
+  subroutine pread_2darray(filename,data2read)
+
+    ! arguments
+    character(len=*),intent(in) :: filename
+    real(mytype),intent(inout),allocatable :: data2read(:,:)
+
+    ! local data
+    integer :: local_size, ierr, fh, datatype, status(mpi_status_size)
+    integer(kind=mpi_offset_kind) :: offset
+
+
+    ! calcualte local size
+    local_size=size(data2read)
+
+    ! calculate the offset for each process
+    offset = prelay(local_size)*8_8
+
+    ! Open the file in read mode using MPI-IO
+    call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, fh, ierr)
+  
+    ! Set the file view for each process
+    call MPI_FILE_SET_VIEW(fh, offset, real_type, real_type, 'native', MPI_INFO_NULL, ierr)
+  
+    ! Read the local portion of the array from the file
+    call MPI_FILE_READ(fh, data2read, local_size, real_type, status, ierr)
+  
+    ! Close the file
+    call MPI_FILE_CLOSE(fh, ierr)
+
+    if(nrank==0) print*,'>> ',filename
+
+
+  end subroutine pread_2darray
 
   ! this function return the number add from all processors before it
   integer function prelay(number)
