@@ -186,7 +186,7 @@ contains
     use var, only : ppi3, dip3, ph3, nzmsize
     use var, only : npress
 
-    use tools, only : rescale_pressure
+    ! use tools, only : rescale_pressure
 
     implicit none
 
@@ -253,8 +253,8 @@ contains
             nxmsize,xsize(1),xsize(2),xsize(3),1)
 
 
-    ! Rescale pressure
-    call rescale_pressure(ta1)
+    ! ! Rescale pressure
+    ! call rescale_pressure(ta1)
 
     ! Write pressure
     call write_field(ta1, ".", "pp", num, .true., flush=.true.)

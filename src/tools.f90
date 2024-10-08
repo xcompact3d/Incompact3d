@@ -330,7 +330,7 @@ contains
        call decomp_2d_end_io(io_restart, resfile)
        call decomp_2d_close_io(io_restart, resfile)
 
-       if(pt_active) then
+       if(particle_active) then
           call particle_checkpoint(mode='write')
        endif
 
@@ -375,7 +375,7 @@ contains
           write(111,'(A)')'/End'
           write(111,'(A)')'!========================='
 
-          if(pt_active) then
+          if(particle_active) then
             write(111,'(A)')'&ParTrack'
             write(111,'(A)')'!========================='
             write(111,'(A,I13)') 'n_particle=  ',n_particle
@@ -478,7 +478,7 @@ contains
          open(111, file=filename)
          read(111, nml=Time)
          
-         if(pt_active) then
+         if(particle_active) then
           read(111, nml=ParTrack)
          endif
 

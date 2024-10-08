@@ -504,7 +504,7 @@ contains
        
     endif
 
-    if(pt_active) call visu_particle(itime)
+    if(particle_active) call visu_particle(itime)
 
   end subroutine visu_case
   !##################################################################

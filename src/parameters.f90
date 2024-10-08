@@ -48,7 +48,7 @@ subroutine parameter(input_i3d)
        ivisu, ipost, &
        gravx, gravy, gravz, &
        cpg, idir_stream, &
-       ifilter, C_filter, iturbine, mhd_active, pt_active, FreeStream
+       ifilter, C_filter, iturbine, mhd_active, particle_active, FreeStream
 
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, iimplicit, &
        nu0nu, cnu, ipinter
@@ -710,7 +710,7 @@ subroutine parameter_defaults()
   hartmann = zero
 
   ! particle tracking
-  pt_active=.false.
+  particle_active=.false.
 
   !! LES stuff
   smagwalldamp=1

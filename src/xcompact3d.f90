@@ -18,6 +18,7 @@ program xcompact3d
   use genepsi,          only : genepsi3d
   use mhd,              only : Bm,mhd_equation,test_magnetic,solve_poisson_mhd
   use param,            only : mhd_active
+  use particle,         only : intt_particel
 
   implicit none
 
@@ -84,6 +85,8 @@ program xcompact3d
         call test_flow(rho1,ux1,uy1,uz1,phi1,ep1,drho1,divu3)
 
         if(mhd_active) call test_magnetic
+
+        if(particle_active) call intt_particel(ux1,uy1,uz1,t)
 
      enddo !! End sub timesteps
 
@@ -215,7 +218,7 @@ subroutine init_xcompact3d()
 
   !####################################################################
   ! initialise particles
-  if (pt_active) then
+  if (particle_active) then
     call local_domain_size
   endif
 
