@@ -31,7 +31,7 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
     real(mytype),dimension(ny) :: yp
     real(mytype)               :: dx,dz
     real(mytype)               :: remp
-    integer                    :: i,j,k
+    integer                    :: i,j,k, i_body
     real(mytype)               :: xm,ym,zm,r,rads2,kcon
     real(mytype)               :: zeromach
     real(mytype)               :: cexx,ceyy,cezz,dist_axi
@@ -81,27 +81,30 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
             xm=real(i-1,mytype)*dx
             point=[xm, ym, zm]
             ! call EllipsoidalRadius(point, position, orientation, shape, r)
-            if (cube_flag.eq.0) then 
-                call EllipsoidalRadius(point,position,orientation,shape,r)
-                is_inside = (r-ra).lt.zeromach
+            do i_body = 1,nbody
+                if (cube_flag.eq.0) then 
+                    call EllipsoidalRadius(point,position(i_body,:),orientation(i_body,:),shape(i_body,:),r)
+                    is_inside = (r-ra(i_body)).lt.zeromach
 
-                if (ra /= ra) then
-                    write(*,*) "Nrank = ", nrank
-                    write(*,*) "Point = ", point
+                    if (ra(i_body) /= ra(i_body)) then
+                        write(*,*) "Nrank = ", nrank
+                        write(*,*) "Point = ", point
+                    endif
+                else if (cube_flag.eq.1) then
+                    is_inside = (abs(xm-position(i_body,1)).lt.ra(i_body)).and.(abs(ym-position(i_body,2)).lt.ra(i_body)).and.(abs(zm-position(i_body,3)).lt.ra(i_body))
                 endif
-            else if (cube_flag.eq.1) then
-                is_inside = (abs(xm-position(1)).lt.ra).and.(abs(ym-position(2)).lt.ra).and.(abs(zm-position(3)).lt.ra)
-            endif
-            !  r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two+(zm-cezz)**two)
-            !  r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two)
-            if (.not.is_inside) then
-                !  write(*,*) i, j, k
-                cycle
-            endif
+                !  r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two+(zm-cezz)**two)
+                !  r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two)
+                if (is_inside) then
+                    !  write(*,*) i, j, k
+                    epsi(i,j,k)=remp
+                    cycle
+                endif
+            enddo 
             ! write(*,*) is_inside
 
             !  write(*,*) i, j, k, zm
-            epsi(i,j,k)=remp
+            ! epsi(i,j,k)=remp
             !  write(*,*) remp
         enddo
         enddo
@@ -290,26 +293,26 @@ subroutine init_ellip (ux1,uy1,uz1,phi1)
 
     ! write(*,*) 'INSIDE INIT ELLIP'
 
-    eqr=(shx*shy*shz)**(1.0/3.0)
-    shape=[shx/eqr,shy/eqr,shz/eqr]
+    ! eqr=(sh(1)*sh(2)*sh(3))**(1.0/3.0)
+    ! shape=sh(:)/eqr
 
-    orientation=[oriw,orii,orij,orik]
-    call NormalizeQuaternion(orientation)
-    position=[cex,cey,cez]
-    linearVelocity=[lvx,lvy,lvz]
-    angularVelocity=[zero,avx,avy,avz]
-    call ellipInertiaCalculate(shape,rho_s,inertia)
-    call ellipMassCalculate(shape,rho_s,ellip_m)
+    ! orientation=ori
+    ! call NormalizeQuaternion(orientation)
+    ! position=ce
+    ! linearVelocity=lv
+    ! angularVelocity=[zero, av(1), av(2), av(3)]
+    ! call ellipInertiaCalculate(shape,rho_s,inertia)
+    ! call ellipMassCalculate(shape,rho_s,ellip_m)
     
-    if (nrank==0) then 
-        write(*,*) 'set shape             = ', shape
-        write(*,*) 'set orientation       = ', orientation
-        write(*,*) 'set position          = ', position
-        write(*,*) 'set linear velocity   = ', linearVelocity
-        write(*,*) 'set angular velocity  = ', angularVelocity
-        write(*,*) 'set moment of inertia = ', inertia
-        write(*,*) 'density of solid      = ', rho_s
-    end if
+    ! if (nrank==0) then 
+    !     write(*,*) 'set shape             = ', shape
+    !     write(*,*) 'set orientation       = ', orientation
+    !     write(*,*) 'set position          = ', position
+    !     write(*,*) 'set linear velocity   = ', linearVelocity
+    !     write(*,*) 'set angular velocity  = ', angularVelocity
+    !     write(*,*) 'set moment of inertia = ', inertia
+    !     write(*,*) 'density of solid      = ', rho_s
+    ! end if
 
     if (iscalar==1) then
 

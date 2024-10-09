@@ -7,6 +7,7 @@ module ellipsoid_utils
     use decomp_2d, only: mytype
     use param, only: zero, one, two
     use dbg_schemes, only: sqrt_prec, cos_prec, exp_prec, sin_prec
+    use ibm_param
     
     implicit none
     ! public QuatRot, cross, IsoKernel, AnIsoKernel, int2str
@@ -256,6 +257,22 @@ contains
     ! Calculate the velocity at the point
     pointVelocity = crossed + linearVelocity
   end subroutine CalculatePointVelocity
+
+  subroutine CalculatePointVelocity_Multi(point, pointVelocity)
+    real(mytype), intent(in) :: point(3)
+    real(mytype), intent(out):: pointVelocity(3)
+    real(mytype)             :: radii(10),r
+    integer                  :: i,i_closest
+ 
+    radii(:) = 10000000.
+    do i = 1,nbody
+      call EllipsoidalRadius(point, position(i,:), orientation(i,:), shape(i,:), r)
+      radii(i) = r
+    enddo
+    i_closest = minloc(radii)
+
+    call CalculatePointVelocity(point, position(i_closest,:), angularVelocity(i_closest,:), linearVelocity(i_closest, :), pointVelocity)
+    end subroutine
 
   subroutine is_inside_ellipsoid(point, centre, orientation, shape, ra, zeromach, is_inside)
     real(mytype), intent(in) :: point(3), centre(3), orientation(4), shape(3), ra, zeromach

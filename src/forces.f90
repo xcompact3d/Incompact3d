@@ -388,7 +388,7 @@ contains
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1, uy1, uz1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ep1
     integer, intent(in) ::record_var
-    real(mytype), intent(out)                                       :: dra1,dra2,dra3
+    real(mytype), intent(out)                                       :: dra1(10),dra2(10),dra3(10)
 
     real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: ppi2
     real(mytype), dimension(zsize(1),zsize(2),zsize(3)) :: ppi3
@@ -552,8 +552,8 @@ contains
                fac2   = (onepfive*uy1(i,j,k)-two*uy01(i,j,k)+half*uy11(i,j,k))*(one-ep1(i,j,k))
                fac3   = (onepfive*uz1(i,j,k)-two*uz01(i,j,k)+half*uz11(i,j,k))*(one-ep1(i,j,k))
 
-                call coriolis_force(angularVelocity(2:4),[fac1,fac2,fac3],coriolis)
-                call centrifugal_force(angularVelocity(2:4), [xm,ym,zm]-position,centrifugal)
+                call coriolis_force(angularVelocity(iv,2:4),[fac1,fac2,fac3],coriolis)
+                call centrifugal_force(angularVelocity(iv,2:4), [xm,ym,zm]-position(iv,:),centrifugal)
                 !     The velocity time rate has to be relative to the cell center, 
                 !     and not to the nodes, because, here, we have an integral 
                 !     relative to the volume, and, therefore, this has a sense 
@@ -642,10 +642,10 @@ contains
                !  write(*,*) 'Calculating force at upper y boundary', [xm,ym,zm]
 
                 !momentum flux
-                call crossProduct(angularVelocity(2:4),[xm,ym,zm]-position,rotationalComponent)
-                uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(1) + rotationalComponent(1)
-                uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) + rotationalComponent(2)
-                uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) + rotationalComponent(3)
+                call crossProduct(angularVelocity(iv,2:4),[xm,ym,zm]-position(iv,:),rotationalComponent)
+                uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(iv,1) + rotationalComponent(1)
+                uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(iv,2) + rotationalComponent(2)
+                uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(iv,3) + rotationalComponent(3)
 
                 fcvx  = fcvx -uxmid*uymid*dx*dz
                 fcvy  = fcvy -uymid*uymid*dx*dz
@@ -701,10 +701,10 @@ contains
                ! write(*,*) 'Calculating force at lower y boundary', [xm,ym,zm]
 
                !momentum flux
-               call crossProduct(angularVelocity(2:4),[xm,ym,zm]-position,rotationalComponent)
-               uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(1) + rotationalComponent(1)
-               uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) + rotationalComponent(2)
-               uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) + rotationalComponent(3)
+               call crossProduct(angularVelocity(iv,2:4),[xm,ym,zm]-position(iv,:),rotationalComponent)
+               uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(iv,1) + rotationalComponent(1)
+               uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(iv,2) + rotationalComponent(2)
+               uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(iv,3) + rotationalComponent(3)
 
                 fcvx = fcvx +uxmid*uymid*dx*dz
                 fcvy = fcvy +uymid*uymid*dx*dz
@@ -760,10 +760,10 @@ contains
                 ym=real(jj,mytype)*dz
                !  write(*,*) 'Calculating force at left x boundary', [xm,ym,zm]
                 !momentum flux
-                call crossProduct(angularVelocity(2:4),[xm,ym,zm]-position,rotationalComponent)
-                uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k)) - linearVelocity(1) + rotationalComponent(1)
-                uymid = half*(uy2(i,j,k)+uy2(i,j+1,k)) - linearVelocity(2) + rotationalComponent(2)
-                uzmid = half*(uz2(i,j,k)+uz2(i,j+1,k)) - linearVelocity(3) + rotationalComponent(3)
+                call crossProduct(angularVelocity(iv,2:4),[xm,ym,zm]-position(iv,:),rotationalComponent)
+                uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k)) - linearVelocity(iv,1) + rotationalComponent(1)
+                uymid = half*(uy2(i,j,k)+uy2(i,j+1,k)) - linearVelocity(iv,2) + rotationalComponent(2)
+                uzmid = half*(uz2(i,j,k)+uz2(i,j+1,k)) - linearVelocity(iv,3) + rotationalComponent(3)
 
 
                 fcvx = fcvx -uxmid*uxmid*del_y(j)*dz
@@ -818,10 +818,10 @@ contains
                !  write(*,*) 'Calculating force at right x boundary', [xm,ym,zm]
 
                 !momentum flux
-                call crossProduct(angularVelocity(2:4),[xm,ym,zm]-position,rotationalComponent)
-                uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k)) - linearVelocity(1) + rotationalComponent(1)
-                uymid = half*(uy2(i,j,k)+uy2(i,j+1,k)) - linearVelocity(2) + rotationalComponent(2)
-                uzmid = half*(uz2(i,j,k)+uz2(i,j+1,k)) - linearVelocity(3) + rotationalComponent(3)
+                call crossProduct(angularVelocity(iv,2:4),[xm,ym,zm]-position(iv,:),rotationalComponent)
+                uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k)) - linearVelocity(iv,1) + rotationalComponent(1)
+                uymid = half*(uy2(i,j,k)+uy2(i,j+1,k)) - linearVelocity(iv,2) + rotationalComponent(2)
+                uzmid = half*(uz2(i,j,k)+uz2(i,j+1,k)) - linearVelocity(iv,3) + rotationalComponent(3)
 
 
                 fcvx = fcvx + uxmid*uxmid*del_y(j)*dz
@@ -882,10 +882,10 @@ contains
                ! write(*,*) 'Calculating force at left z boundary', [xm,ym,zm]
 
                !momentum flux
-               call crossProduct(angularVelocity(2:4),[xm,ym,zm]-position,rotationalComponent)
-               uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(1) + rotationalComponent(1)
-               uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) + rotationalComponent(2)
-               uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) + rotationalComponent(3)
+               call crossProduct(angularVelocity(iv,2:4),[xm,ym,zm]-position(iv,:),rotationalComponent)
+               uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(iv,1) + rotationalComponent(1)
+               uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(iv,2) + rotationalComponent(2)
+               uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(iv,3) + rotationalComponent(3)
  
                fcvx= fcvx +uxmid*uzmid*dx*dy
                fcvy= fcvy +uymid*uzmid*dx*dy
@@ -941,12 +941,12 @@ contains
              ii=xstart(1)+i-1
              xm=real(ii,mytype)*dx
                !momentum flux
-             call crossProduct(angularVelocity(2:4),[xm,ym,zm]-position,rotationalComponent)
+             call crossProduct(angularVelocity(iv,2:4),[xm,ym,zm]-position(iv,:),rotationalComponent)
             !  write(*,*) 'Calculating force at right z boundary', [xm,ym,zm]
 
-             uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(1) + rotationalComponent(1)
-             uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) + rotationalComponent(2)
-             uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) + rotationalComponent(3)
+             uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(iv,1) + rotationalComponent(1)
+             uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(iv,2) + rotationalComponent(2)
+             uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(iv,3) + rotationalComponent(3)
  
                fcvx= fcvx -uxmid*uzmid*dx*dy
                fcvy= fcvy -uymid*uzmid*dx*dy
@@ -1006,9 +1006,9 @@ contains
        mom2 = sum(tunsty(:)) + sum(tconvy(:)) + (-2.0*tconv2_sign+1.0)*sum(tconvy2(:))
        mom3 = sum(tunstz(:)) + sum(tconvz(:)) + (-2.0*tconv2_sign+1.0)*sum(tconvz2(:))
   
-       dra1 = (sum(tdiffx) + sum(tdiffx2) + tp1 - mom1)
-       dra2 = (sum(tdiffy) + sum(tdiffy2) + tp2 - mom2)
-       dra3 = (sum(tdiffz) + sum(tdiffz2) + tp3 - mom3)
+       dra1(iv) = (sum(tdiffx) + sum(tdiffx2) + tp1 - mom1)
+       dra2(iv) = (sum(tdiffy) + sum(tdiffy2) + tp2 - mom2)
+       dra3(iv) = (sum(tdiffz) + sum(tdiffz2) + tp3 - mom3)
        
        do k=1,zsize(3)
 
@@ -1096,7 +1096,7 @@ contains
    real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1, uy1, uz1
    real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ep1
    integer, intent(in) ::record_var
-   real(mytype), intent(out)                                       :: dra1,dra2,dra3
+   real(mytype), intent(out)                                       :: dra1(10),dra2(10),dra3(10)
 
    real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: ppi2
    real(mytype), dimension(zsize(1),zsize(2),zsize(3)) :: ppi3
@@ -1165,7 +1165,7 @@ contains
            open(45+(iv-1),file=filename,status='unknown',form='formatted')
            ! write(*,*) 'Opened file: ', filename, 'number = ', 38+(iv-1)
         endif
-        if ((nrank.eq.0).and.(torq_debug.eq.1)) then
+        if ((nrank.eq.0).and.(torq_debug.eq.1).and.(iv.eq.1)) then
             open(100,file="backside.dat",status='unknown',form='formatted')
             open(101,file="frontside.dat",status='unknown',form='formatted')
             open(102,file="lowerside.dat",status='unknown',form='formatted')
@@ -1276,7 +1276,7 @@ contains
                !     relative to the volume, and, therefore, this has a sense 
                !     of a "source".
                !         fac   = (1.5*ux1(i,j,k)-2.0*ux01(i,j,k)+0.5*ux11(i,j,k))*epcv1(i,j,k)
-               call crossProduct(([fac1,fac2,fac3]),[xm,ym,zm]-position, angular_velocity_result)
+               call crossProduct(([fac1,fac2,fac3]),[xm,ym,zm]-position(iv,:), angular_velocity_result)
                tsumx = tsumx+angular_velocity_result(1)*dx*del_y(j+(xstart(2)-1))*dz/dt    !tsumx+fac*dx*dy/dt
                ! tsumx = tsumx+fac1*dx*del_y(j+xstart(2)-1)*dz/dt
                !sumx(k) = sumx(k)+dudt1*dx*dy
@@ -1360,13 +1360,13 @@ contains
                ii=xstart(1)+i-1
                xm=real(ii,mytype)*dx
               !  write(*,*) 'Calculating force at upper y boundary', [xm,ym,zm]
-               radial = [xm,ym,zm]-position
+               radial = [xm,ym,zm]-position(iv,:)
 
                !momentum flux
-               call crossProduct(angularVelocity(2:4),[xm,ym,zm]-position,rotationalComponent)
-               uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(1) + rotationalComponent(1)
-               uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) + rotationalComponent(2)
-               uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) + rotationalComponent(3)
+               call crossProduct(angularVelocity(iv,2:4),[xm,ym,zm]-position(iv,:),rotationalComponent)
+               uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(iv,1) + rotationalComponent(1)
+               uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(iv,2) + rotationalComponent(2)
+               uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(iv,3) + rotationalComponent(3)
 
                fcvx = fcvx -(uymid*radial(3)-uzmid*radial(2))*uymid*dx*dz
                fcvy = fcvy -(uzmid*radial(1)-uxmid*radial(3))*uymid*dx*dz
@@ -1435,11 +1435,11 @@ contains
               ! write(*,*) 'Calculating force at lower y boundary', [xm,ym,zm]
 
               !momentum flux
-              call crossProduct(angularVelocity(2:4),[xm,ym,zm]-position,rotationalComponent)
-              radial = [xm,ym,zm]-position
-              uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(1) + rotationalComponent(1)
-              uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) + rotationalComponent(2)
-              uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) + rotationalComponent(3)
+              call crossProduct(angularVelocity(iv,2:4),[xm,ym,zm]-position(iv,:),rotationalComponent)
+              radial = [xm,ym,zm]-position(iv,:)
+              uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(iv,1) + rotationalComponent(1)
+              uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(iv,2) + rotationalComponent(2)
+              uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(iv,3) + rotationalComponent(3)
 
                fcvx = fcvx +(uymid*radial(3)-uzmid*radial(2))*uymid*dx*dz
                fcvy = fcvy +(uzmid*radial(1)-uxmid*radial(3))*uymid*dx*dz
@@ -1506,12 +1506,12 @@ contains
                ym=real(jj,mytype)*dz
               !  write(*,*) 'Calculating force at left x boundary', [xm,ym,zm]
                !momentum flux
-               radial = [xm,ym,zm]-position
+               radial = [xm,ym,zm]-position(iv,:)
 
-               call crossProduct(angularVelocity(2:4),[xm,ym,zm]-position,rotationalComponent)
-               uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k)) - linearVelocity(1) + rotationalComponent(1)
-               uymid = half*(uy2(i,j,k)+uy2(i,j+1,k)) - linearVelocity(2) + rotationalComponent(2)
-               uzmid = half*(uz2(i,j,k)+uz2(i,j+1,k)) - linearVelocity(3) + rotationalComponent(3)
+               call crossProduct(angularVelocity(iv,2:4),[xm,ym,zm]-position(iv,:),rotationalComponent)
+               uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k)) - linearVelocity(iv,1) + rotationalComponent(1)
+               uymid = half*(uy2(i,j,k)+uy2(i,j+1,k)) - linearVelocity(iv,2) + rotationalComponent(2)
+               uzmid = half*(uz2(i,j,k)+uz2(i,j+1,k)) - linearVelocity(iv,3) + rotationalComponent(3)
 
                fcvx = fcvx -(uymid*radial(3)-uzmid*radial(2))*uxmid*del_y(j)*dz
                fcvy = fcvy -(uzmid*radial(1)-uxmid*radial(3))*uxmid*del_y(j)*dz
@@ -1577,13 +1577,13 @@ contains
                ym=real(jj,mytype)*dy
               !  write(*,*) 'Calculating force at right x boundary', [xm,ym,zm]
 
-               radial = [xm,ym,zm]-position
+               radial = [xm,ym,zm]-position(iv,:)
 
                !momentum flux
-               call crossProduct(angularVelocity(2:4),[xm,ym,zm]-position,rotationalComponent)
-               uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k)) - linearVelocity(1) + rotationalComponent(1)
-               uymid = half*(uy2(i,j,k)+uy2(i,j+1,k)) - linearVelocity(2) + rotationalComponent(2)
-               uzmid = half*(uz2(i,j,k)+uz2(i,j+1,k)) - linearVelocity(3) + rotationalComponent(3)
+               call crossProduct(angularVelocity(iv,2:4),[xm,ym,zm]-position(iv,:),rotationalComponent)
+               uxmid = half*(ux2(i,j,k)+ux2(i,j+1,k)) - linearVelocity(iv,1) + rotationalComponent(1)
+               uymid = half*(uy2(i,j,k)+uy2(i,j+1,k)) - linearVelocity(iv,2) + rotationalComponent(2)
+               uzmid = half*(uz2(i,j,k)+uz2(i,j+1,k)) - linearVelocity(iv,3) + rotationalComponent(3)
 
 
                fcvx = fcvx +(uymid*radial(3)-uzmid*radial(2))*uxmid*del_y(j)*dz
@@ -1657,12 +1657,12 @@ contains
               ! write(*,*) 'Calculating force at left z boundary', [xm,ym,zm]
 
               !momentum flux
-              radial = [xm,ym,zm]-position
+              radial = [xm,ym,zm]-position(iv,:)
 
-              call crossProduct(angularVelocity(2:4),[xm,ym,zm]-position,rotationalComponent)
-              uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(1) + rotationalComponent(1)
-              uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) + rotationalComponent(2)
-              uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) + rotationalComponent(3)
+              call crossProduct(angularVelocity(iv,2:4),[xm,ym,zm]-position(iv,:),rotationalComponent)
+              uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(iv,1) + rotationalComponent(1)
+              uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(iv,2) + rotationalComponent(2)
+              uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(iv,3) + rotationalComponent(3)
 
               fcvx = fcvx -(uymid*radial(3)-uzmid*radial(2))*uzmid*dx*del_y(j) !!!CHANGE
               fcvy = fcvy -(uzmid*radial(1)-uxmid*radial(3))*uzmid*dx*del_y(j)
@@ -1729,14 +1729,14 @@ contains
             ii=xstart(1)+i-1
             xm=real(ii,mytype)*dx
               !momentum flux
-            radial = [xm,ym,zm]-position
+            radial = [xm,ym,zm]-position(iv,:)
 
-            call crossProduct(angularVelocity(2:4),[xm,ym,zm]-position,rotationalComponent)
+            call crossProduct(angularVelocity(iv,2:4),[xm,ym,zm]-position(iv,:),rotationalComponent)
            !  write(*,*) 'Calculating force at right z boundary', [xm,ym,zm]
 
-            uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(1) + rotationalComponent(1)
-            uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(2) + rotationalComponent(2)
-            uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(3) + rotationalComponent(3)
+            uxmid = half*(ux1(i,j,k)+ux1(i+1,j,k)) - linearVelocity(iv,1) + rotationalComponent(1)
+            uymid = half*(uy1(i,j,k)+uy1(i+1,j,k)) - linearVelocity(iv,2) + rotationalComponent(2)
+            uzmid = half*(uz1(i,j,k)+uz1(i+1,j,k)) - linearVelocity(iv,3) + rotationalComponent(3)
 
             fcvx = fcvx +(uymid*radial(3)-uzmid*radial(2))*uzmid*dx*del_y(j)
             fcvy = fcvy +(uzmid*radial(1)-uxmid*radial(3))*uzmid*dx*del_y(j)
@@ -1808,9 +1808,9 @@ contains
       mom2 = sum(tunsty(:)) + sum(tconvy(:)) + (-2.0*tconv2_sign+1.0)*sum(tconvy2(:))
       mom3 = sum(tunstz(:)) + sum(tconvz(:)) + (-2.0*tconv2_sign+1.0)*sum(tconvz2(:))
  
-      dra1 = -(sum(tdiffx) + sum(tdiffx2) + tp1 - mom1)*(1.0-2.0*torq_flip)
-      dra2 = -(sum(tdiffy) + sum(tdiffy2) + tp2 - mom2)*(1.0-2.0*torq_flip)
-      dra3 = -(sum(tdiffz) + sum(tdiffz2) + tp3 - mom3)*(1.0-2.0*torq_flip)
+      dra1(iv) = -(sum(tdiffx) + sum(tdiffx2) + tp1 - mom1)*(1.0-2.0*torq_flip)
+      dra2(iv) = -(sum(tdiffy) + sum(tdiffy2) + tp2 - mom2)*(1.0-2.0*torq_flip)
+      dra3(iv) = -(sum(tdiffz) + sum(tdiffz2) + tp3 - mom3)*(1.0-2.0*torq_flip)
       
       ! do k=1,zsize(3)
 

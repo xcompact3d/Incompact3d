@@ -17,9 +17,9 @@ program xcompact3d
   use ibm, only : body
   use genepsi, only : genepsi3d
   use ellipsoid_utils, only: lin_step, ang_step, QuaternionNorm
-  use forces, only : force, init_forces, iforces,update_forces, xld,xrd,yld,yud,zld,zrd,torque_calc
+  use forces, only : force, init_forces, iforces,update_forces, xld,xrd,yld,yud,zld,zrd,torque_calc,nvol
   implicit none
-  real(mytype)  :: dummy,drag,lift,lat,grav_effy,grav_effx,grav_effz,xtorq,ytorq,ztorq,maxrad
+  real(mytype)  :: dummy,drag(10),lift(10),lat(10),grav_effy(10),grav_effx(10),grav_effz(10),xtorq(10),ytorq(10),ztorq(10),maxrad
   integer :: iounit,ierr,i
   real, dimension(100) :: x
 
@@ -76,20 +76,24 @@ program xcompact3d
         if (imove.eq.1) then ! update epsi for moving objects
           if ((iibm.eq.2).or.(iibm.eq.3)) then
              call genepsi3d(ep1)
-             maxrad = max(shape(1),shape(2),shape(3))
-             if (iforces.eq.1) then
-               xld(1) = position(1) - maxrad * ra * cvl_scalar
-               xrd(1) = position(1) + maxrad * ra * cvl_scalar
-               yld(1) = position(2) - maxrad * ra * cvl_scalar
-               yud(1) = position(2) + maxrad * ra * cvl_scalar
-               zld(1) = position(3) - maxrad * ra * cvl_scalar
-               zrd(1) = position(3) + maxrad * ra * cvl_scalar
-               if (itime.eq.ifirst) then 
-                  call init_forces()
-               else 
-                  call update_forces()
+             do i = 1,nobjmax 
+               maxrad = max(shape(i,1),shape(i,2),shape(i,3))
+               if (iforces.eq.1) then
+                  xld(i) = position(i,1) - maxrad * ra(i) * cvl_scalar
+                  xrd(i) = position(i,1) + maxrad * ra(i) * cvl_scalar
+                  yld(i) = position(i,2) - maxrad * ra(i) * cvl_scalar
+                  yud(i) = position(i,2) + maxrad * ra(i) * cvl_scalar
+                  zld(i) = position(i,3) - maxrad * ra(i) * cvl_scalar
+                  zrd(i) = position(i,3) + maxrad * ra(i) * cvl_scalar
+                  ! write(*,*) "CV bounds = ", xld(i), xrd(i), yld(i), yud(i), zld(i), zrd(i)
+                  
                endif
-             endif
+            enddo
+            if (itime.eq.ifirst) then 
+               call init_forces()
+            else 
+               call update_forces()
+            endif
           else if (iibm.eq.1) then
              call body(ux1,uy1,uz1,ep1)
           endif
@@ -127,19 +131,21 @@ program xcompact3d
         grav_effx = grav_x*(rho_s-1.0)
         grav_effy = grav_y*(rho_s-1.0)
         grav_effz = grav_z*(rho_s-1.0)
-        linearForce=[drag-grav_effx,lift-grav_effy,lat-grav_effz]
+        do i = 1,nbody
+         linearForce(i,:) = [drag(i)-grav_effx(i), lift(i)-grav_effy(i), lat(i)-grav_effz(i)]
+        enddo
         if (nozdrift==1) then
-            linearForce(3)=zero
+            linearForce(:,3)=zero
         endif
 
         if (bodies_fixed==1) then
-            linearForce(:)=zero
+            linearForce(:,:)=zero
         endif
 
         if ((nrank==0).and.(force_csv.eq.1)) then
          ! open(unit=20, file='force_out.dat', action='write')
-         write(20, *) linearForce(1), linearForce(2), linearForce(3)
-         write(*,*) 'Writing forces', linearForce(1), linearForce(2), linearForce(3)
+         write(20, *) linearForce(1,1), linearForce(1,2), linearForce(1,3)
+         write(*,*) 'Writing forces', linearForce(1,1), linearForce(1,2), linearForce(1,3)
          flush(20)
         endif 
         
@@ -148,12 +154,15 @@ program xcompact3d
          call torque_calc(ux1,uy1,uz1,ep1,xtorq,ytorq,ztorq,1)
         endif 
         if (orientations_free.eq.1) then 
-         torque = [xtorq,ytorq,ztorq]
+         do i = 1,nvol 
+            torque(i,:) = [xtorq(i), ytorq(i), ztorq(i)]
+         enddo
          if (ztorq_only.eq.1) then
-            torque = [0.0_mytype, 0.0_mytype, ztorq]
+            torque(:,1) = zero
+            torque(:,2) = zero
          endif
         else 
-         torque(:) = zero
+         torque(:,:) = zero
         endif
       !   if (nrank==0) then
 
@@ -169,10 +178,10 @@ program xcompact3d
 
 
 
-        if (nrank==0) then
-         write(12 ,*) t, position(1), position(2), position(3), orientation(1), orientation(2), orientation(3), orientation(4), linearVelocity(1), linearVelocity(2), linearVelocity(3), angularVelocity(2), angularVelocity(3), angularVelocity(4), drag, lift, lat, xtorq, ytorq, ztorq
-         flush(12)
-        endif
+      !   if (nrank==0) then
+      !    write(12 ,*) t, position(1), position(2), position(3), orientation(1), orientation(2), orientation(3), orientation(4), linearVelocity(1), linearVelocity(2), linearVelocity(3), angularVelocity(2), angularVelocity(3), angularVelocity(4), drag, lift, lat, xtorq, ytorq, ztorq
+      !    flush(12)
+      !   endif
       !   endif 
 
          if ((nrank==0).and.(mod(itime,ilist)==0)) then 

@@ -617,11 +617,12 @@ end module simulation_stats
 !############################################################################
 module ibm_param
   use decomp_2d, only : mytype
-  real(mytype) :: cex,cey,cez,shx,shy,shz,oriw,orii,orij,orik,lvx,lvy,lvz,avx,avy,avz,ra,ubcx,ubcy,ubcz,rads,rho_s,ellip_m,c_air,cvl_scalar,grav_y,grav_x,grav_z
-  real(mytype) :: position(3),orientation(4),linearVelocity(3),angularVelocity(4),linearAcceleration(3),linearForce(3),torque(3),shape(3),inertia(3,3)
-  real(mytype) :: position_1(3),linearVelocity_1(3),orientation_1(4),angularVelocity_1(4)
+  real(mytype) :: cex,cey,cez,shx,shy,shz,oriw,orii,orij,orik,lvx,lvy,lvz,avx,avy,avz,ubcx,ubcy,ubcz,rads,ellip_m,c_air,cvl_scalar,grav_y,grav_x,grav_z
+  real(mytype) :: position(10,3),orientation(10,4),linearVelocity(10,3),angularVelocity(10,4),linearAcceleration(3),linearForce(10,3),torque(10,3),shape(10,3),inertia(3,3)
+  real(mytype) :: position_1(10,3),linearVelocity_1(10,3),orientation_1(10,4),angularVelocity_1(10,4),ra(10),rho_s(10)
   real(mytype) :: chord,thickness,omega, tconv2_sign, shear_velocity
+  real(mytype) :: ce(30),sh(30),ori(40), lv(30), av(30)
   integer :: inana ! Analytical BC as Input
-  integer :: imove, nozdrift, force_csv, bodies_fixed, cube_flag, torques_flag,orientations_free, shear_flow_ybc, shear_flow_zbc,torq_debug, torq_flip, ztorq_only
+  integer :: imove, nozdrift, force_csv, bodies_fixed, cube_flag, torques_flag,orientations_free, shear_flow_ybc, shear_flow_zbc,torq_debug, torq_flip, ztorq_only, nbody
 end module ibm_param
 !############################################################################
