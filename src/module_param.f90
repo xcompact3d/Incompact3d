@@ -321,7 +321,7 @@ module param
   integer :: icheckpoint,irestart,idebmod,ioutput,imodulo2,idemarre,icommence,irecord
   integer :: ioutflow, ninflows, ntimesteps
   integer :: itime0
-  integer :: iscalar,nxboite,istat,iread,iadvance_time,irotation,iibm
+  integer :: iscalar,nxboite,istat,iread,iadvance_time,irotation,iibm,ifpm
   integer :: npif,izap,ianal
   integer :: ivisu, ipost, initstat, istatfreq
   integer :: ifilter

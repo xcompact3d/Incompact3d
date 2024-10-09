@@ -9,6 +9,7 @@ program xcompact3d
 
   use transeq, only : calculate_transeq_rhs
   use time_integrators, only : int_time
+  use fast_projection_method, only : solve_pressure_fast_projection
   use navier, only : velocity_to_momentum, momentum_to_velocity, pre_correc, &
        calc_divu_constraint, solve_poisson, cor_vel
   use tools, only : restart, simu_stats, apply_spatial_filter, read_inflow
@@ -69,7 +70,13 @@ program xcompact3d
         call pre_correc(ux1,uy1,uz1,ep1)
 
         call calc_divu_constraint(divu3,rho1,phi1)
-        call solve_poisson(pp3,px1,py1,pz1,rho1,ux1,uy1,uz1,ep1,drho1,divu3)
+
+        if (ifpm.eq.one) then 
+           call solve_pressure_fast_projection(pp3,px1,py1,pz1,rho1,ux1,uy1,uz1,ep1,drho1,divu3)
+        else 
+           call solve_poisson(pp3,px1,py1,pz1,rho1,ux1,uy1,uz1,ep1,drho1,divu3)
+        end if 
+
         call cor_vel(ux1,uy1,uz1,px1,py1,pz1)
 
         if(mhd_active .and. mhd_equation == 'induction') then

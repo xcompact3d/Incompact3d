@@ -42,7 +42,7 @@ subroutine parameter(input_i3d)
   NAMELIST /BasicParam/ p_row, p_col, nx, ny, nz, istret, beta, xlx, yly, zlz, &
        itype, iin, re, u1, u2, init_noise, inflow_noise, &
        dt, ifirst, ilast, &
-       numscalar, iibm, ilmn, &
+       numscalar, iibm, ilmn, ifpm, &
        ilesmod, iscalar, &
        nclx1, nclxn, ncly1, nclyn, nclz1, nclzn, &
        ivisu, ipost, &
@@ -118,6 +118,13 @@ subroutine parameter(input_i3d)
   endif
   read(10, nml=NumOptions); rewind(10)
   read(10, nml=InOutParam); rewind(10)
+
+  !! Fast-projection method for time-integration
+  if (ifpm.eq.one) then 
+    itimescheme=5 !! Switch time scheme to RK3
+    npress = 2    !! Need current and previous pressure field
+  end if 
+
   read(10, nml=Statistics); rewind(10)
   if (iibm.ne.0) then
      read(10, nml=ibmstuff); rewind(10)
@@ -411,31 +418,41 @@ subroutine parameter(input_i3d)
      write(*,*) '==========================================================='
      write(*,"(' Time step dt           : ',F17.8)") dt
      !
-     if (itimescheme.eq.1) then
-       !print *,'Temporal scheme        : Forwards Euler'
-       write(*,"(' Temporal scheme        : ',A20)") "Forwards Euler"
-     elseif (itimescheme.eq.2) then
-       !print *,'Temporal scheme        : Adams-bashforth 2'
-       write(*,"(' Temporal scheme        : ',A20)") "Adams-bashforth 2"
-     elseif (itimescheme.eq.3) then
-       !print *,'Temporal scheme        : Adams-bashforth 3'
-       write(*,"(' Temporal scheme        : ',A20)") "Adams-bashforth 3"
-     elseif (itimescheme.eq.4) then
-       !print *,'Temporal scheme        : Adams-bashforth 4'
-       write(*,"(' Temporal scheme        : ',A20)") "Adams-bashforth 4"
-       print *,'Error: Adams-bashforth 4 not implemented!'
-       stop
-     elseif (itimescheme.eq.5) then
-       !print *,'Temporal scheme        : Runge-kutta 3'
-       write(*,"(' Temporal scheme        : ',A20)") "Runge-kutta 3"
-     elseif (itimescheme.eq.6) then
-       !print *,'Temporal scheme        : Runge-kutta 4'
-       write(*,"(' Temporal scheme        : ',A20)") "Runge-kutta 4"
-       print *,'Error: Runge-kutta 4 not implemented!'
-       stop
-     else
-       print *,'Error: itimescheme must be specified as 1-6'
-       stop
+     if (ifpm.eq.one) then 
+       if (itimescheme.eq.5) then
+         write(*,"(' Temporal scheme        : ',A22)") "Fast-projection method"
+         write(*,"('                        : ',A18)") "with Runge-kutta 3"
+       else
+         print *,'Error: for ifpm=1 itimescheme must be specified as 5'
+         stop
+       end if 
+     else 
+       if (itimescheme.eq.1) then
+         !print *,'Temporal scheme        : Forwards Euler'
+         write(*,"(' Temporal scheme        : ',A20)") "Forwards Euler"
+       elseif (itimescheme.eq.2) then
+         !print *,'Temporal scheme        : Adams-bashforth 2'
+         write(*,"(' Temporal scheme        : ',A20)") "Adams-bashforth 2"
+       elseif (itimescheme.eq.3) then
+         !print *,'Temporal scheme        : Adams-bashforth 3'
+         write(*,"(' Temporal scheme        : ',A20)") "Adams-bashforth 3"
+       elseif (itimescheme.eq.4) then
+         !print *,'Temporal scheme        : Adams-bashforth 4'
+         write(*,"(' Temporal scheme        : ',A20)") "Adams-bashforth 4"
+         print *,'Error: Adams-bashforth 4 not implemented!'
+         stop
+       elseif (itimescheme.eq.5) then
+         !print *,'Temporal scheme        : Runge-kutta 3'
+         write(*,"(' Temporal scheme        : ',A20)") "Runge-kutta 3"
+       elseif (itimescheme.eq.6) then
+         !print *,'Temporal scheme        : Runge-kutta 4'
+         write(*,"(' Temporal scheme        : ',A20)") "Runge-kutta 4"
+         print *,'Error: Runge-kutta 4 not implemented!'
+         stop
+       else
+         print *,'Error: itimescheme must be specified as 1-7'
+         stop
+       endif
      endif
      !
      if (iimplicit.ne.0) then
@@ -715,7 +732,9 @@ subroutine parameter_defaults()
   iconserv=0
   smagcst=0.15
   maxdsmagcst=0.3
-
+  
+  !! Fast-projection method
+  ifpm=zero
   
   !! SVV stuff
   nu0nu=four
