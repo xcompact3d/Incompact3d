@@ -76,7 +76,7 @@ contains
           do i=nxi,nxf
              xm=real(i-1,mytype)*dx
              r=sqrt_prec((xm-cexx)**two+(ym-ceyy)**two)
-             if (r-ra.gt.zeromach) then
+             if (r-ra(1).gt.zeromach) then
                 cycle
              endif
              epsi(i,j,k)=remp

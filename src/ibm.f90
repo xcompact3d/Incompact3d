@@ -402,7 +402,7 @@ subroutine cubsplx(u,lind)
   USE decomp_2d
   USE variables
   USE ibm_param
-  USE ellipsoid_utils, ONLY: CalculatePointVelocity, EllipsoidalRadius
+  USE ellipsoid_utils, ONLY: CalculatePointVelocity_Multi, ibm_bcimp_calc
     !
   implicit none
   !
@@ -420,7 +420,7 @@ subroutine cubsplx(u,lind)
   integer                                            :: inxi,inxf
   real(mytype)                                       :: ana_resi,ana_resf         ! Position of Boundary (Analytically)
   real(mytype)                                       :: point(3),pointVelocity(3)
-  real(mytype)                                       :: xm,ym,zm,x_pv,y_pv,z_pv, dummy
+  real(mytype)                                       :: xm,ym,zm
   !
   ! Initialise Arrays
   xa(:)=0.
@@ -430,7 +430,6 @@ subroutine cubsplx(u,lind)
 !   bcimp=lind  
 !   write(*,*) lind
   !
-  dummy=0.0
   do k=1,xsize(3)
    zm=real(xstart(3)+k-1,mytype)*dz
      do j=1,xsize(2)
@@ -452,7 +451,7 @@ subroutine cubsplx(u,lind)
                  xa(ia)=ana_resi
               endif
               point=[xm,ym,zm]
-              call CalculatePointVelocity(point, position, angularVelocity, linearVelocity, pointVelocity)
+              call CalculatePointVelocity_Multi(point, pointVelocity)
             !   write(*,*) "Called CPV at ", point, "returned", pointVelocity
             !   call EllipsoidalRadius(point, position, orientation, shape, dummy)
             !   dummy = maxval(abs((point(2:3)-position(2:3))))
@@ -461,31 +460,8 @@ subroutine cubsplx(u,lind)
             !   endif
             !   write(*,*) "Radius = ", dummy
                ! write(*,*) "radius = ", dummy, "At point", point
-              x_pv=pointVelocity(1)
-              y_pv=pointVelocity(2)
-              z_pv=pointVelocity(3)
-              if (lind.eq.0) then
-               bcimp=zero
-              elseif (lind.eq.1) then
-               bcimp=x_pv
-               ! write(*,*) bcimp
-              elseif (lind.eq.2) then
-               bcimp=y_pv
-              elseif (lind.eq.3) then
-               bcimp=z_pv
-              elseif (lind.eq.4) then 
-               bcimp=x_pv*x_pv
-              elseif (lind.eq.5) then
-               bcimp=y_pv*y_pv
-              elseif (lind.eq.6) then 
-               bcimp=z_pv*z_pv
-              elseif (lind.eq.7) then
-               bcimp=x_pv*y_pv 
-              elseif (lind.eq.8) then 
-               bcimp=x_pv*z_pv
-              elseif (lind.eq.9) then
-               bcimp=y_pv*z_pv
-              endif
+              call ibm_bcimp_calc(pointVelocity, lind, bcimp)
+
               ya(ia)=bcimp
               if(xi(i,j,k).gt.0.)then ! Immersed Object
                  inxi=0
@@ -532,7 +508,7 @@ subroutine cubsplx(u,lind)
               endif              
               xm = xf(i,j,k)
               point=[xm,ym,zm]
-              call CalculatePointVelocity(point, position, angularVelocity, linearVelocity, pointVelocity)
+              call CalculatePointVelocity_Multi(point, pointVelocity)
             !   write(*,*) "Called CPV at ", point, "returned", pointVelocity
             !   call EllipsoidalRadius(point, position, orientation, shape, dummy)
             !   dummy = maxval(abs(point-position))
@@ -541,31 +517,8 @@ subroutine cubsplx(u,lind)
             !   if ((dummy.gt.(1.01)).or.(dummy.lt.0.99)) then
             !    write(*,*) "At ", point, "r = ", dummy
             !   endif
-              x_pv=pointVelocity(1)
-              y_pv=pointVelocity(2)
-              z_pv=pointVelocity(3)
-              if (lind.eq.0) then
-               bcimp=zero
-              elseif (lind.eq.1) then
-               bcimp=x_pv
-               ! write(*,*) bcimp
-              elseif (lind.eq.2) then
-               bcimp=y_pv
-              elseif (lind.eq.3) then
-               bcimp=z_pv
-              elseif (lind.eq.4) then 
-               bcimp=x_pv*x_pv
-              elseif (lind.eq.5) then
-               bcimp=y_pv*y_pv
-              elseif (lind.eq.6) then 
-               bcimp=z_pv*z_pv
-              elseif (lind.eq.7) then
-               bcimp=x_pv*y_pv 
-              elseif (lind.eq.8) then 
-               bcimp=x_pv*z_pv
-              elseif (lind.eq.9) then
-               bcimp=y_pv*z_pv
-              endif
+              call ibm_bcimp_calc(pointVelocity, lind, bcimp)  !take correct part of pointVelocity for equation type.
+
               ya(ia)=bcimp              
               if(xf(i,j,k).lt.xlx)then ! Immersed Object
                  inxf=0
@@ -641,7 +594,7 @@ subroutine cubsply(u,lind)
   USE decomp_2d
   USE variables
   USE ibm_param
-  USE ellipsoid_utils, ONLY: CalculatePointVelocity
+  USE ellipsoid_utils, ONLY: CalculatePointVelocity_Multi, ibm_bcimp_calc
   !
   implicit none
   !
@@ -659,7 +612,7 @@ subroutine cubsply(u,lind)
   integer                                            :: inxi,inxf  
   real(mytype)                                       :: ana_resi,ana_resf
   real(mytype)                                       :: point(3),pointVelocity(3)
-  real(mytype)                                       :: xm,ym,zm,x_pv,y_pv,z_pv
+  real(mytype)                                       :: xm,ym,zm
   !
   ! Initialise Arrays
   xa(:)=0.
@@ -690,31 +643,10 @@ subroutine cubsply(u,lind)
               endif  
               ym = yi(j,i,k)
               point=[xm,ym,zm]
-              call CalculatePointVelocity(point, position, angularVelocity, linearVelocity, pointVelocity)
-              x_pv=pointVelocity(1)
-              y_pv=pointVelocity(2)
-              z_pv=pointVelocity(3)
-              if (lind.eq.0) then
-               bcimp=zero
-              elseif (lind.eq.1) then
-               bcimp=x_pv
-              elseif (lind.eq.2) then
-               bcimp=y_pv
-              elseif (lind.eq.3) then
-               bcimp=z_pv
-              elseif (lind.eq.4) then 
-               bcimp=x_pv*x_pv
-              elseif (lind.eq.5) then
-               bcimp=y_pv*y_pv
-              elseif (lind.eq.6) then 
-               bcimp=z_pv*z_pv
-              elseif (lind.eq.7) then
-               bcimp=x_pv*y_pv 
-              elseif (lind.eq.8) then 
-               bcimp=x_pv*z_pv
-              elseif (lind.eq.9) then
-               bcimp=y_pv*z_pv
-              endif
+              call CalculatePointVelocity_Multi(point, pointVelocity)
+              
+              call ibm_bcimp_calc(pointVelocity, lind, bcimp)  !take correct part of pointVelocity for equation type.
+
               ya(ia)=bcimp
               if(yi(j,i,k).gt.0.)then ! Immersed Object
                  jy=1
@@ -766,31 +698,10 @@ subroutine cubsply(u,lind)
               endif  
               ym = yf(j,i,k)
               point=[xm,ym,zm]
-              call CalculatePointVelocity(point, position, angularVelocity, linearVelocity, pointVelocity)
-              x_pv=pointVelocity(1)
-              y_pv=pointVelocity(2)
-              z_pv=pointVelocity(3)
-              if (lind.eq.0) then
-               bcimp=zero
-              elseif (lind.eq.1) then
-               bcimp=x_pv
-              elseif (lind.eq.2) then
-               bcimp=y_pv
-              elseif (lind.eq.3) then
-               bcimp=z_pv
-              elseif (lind.eq.4) then 
-               bcimp=x_pv*x_pv
-              elseif (lind.eq.5) then
-               bcimp=y_pv*y_pv
-              elseif (lind.eq.6) then 
-               bcimp=z_pv*z_pv
-              elseif (lind.eq.7) then
-               bcimp=x_pv*y_pv 
-              elseif (lind.eq.8) then 
-               bcimp=x_pv*z_pv
-              elseif (lind.eq.9) then
-               bcimp=y_pv*z_pv
-              endif
+              call CalculatePointVelocity_Multi(point, pointVelocity)
+              
+              call ibm_bcimp_calc(pointVelocity, lind, bcimp)  !take correct part of pointVelocity for equation type.
+
               ya(ia)=bcimp
               if(yf(j,i,k).lt.yly)then ! Immersed Object
                  jy=1
@@ -866,7 +777,7 @@ subroutine cubsplz(u,lind)
   USE decomp_2d
   USE variables
   USE ibm_param
-  USE ellipsoid_utils, ONLY: CalculatePointVelocity
+  USE ellipsoid_utils, ONLY: CalculatePointVelocity_Multi, ibm_bcimp_calc
   !
   implicit none
   !
@@ -884,7 +795,7 @@ subroutine cubsplz(u,lind)
   integer                                            :: inxi,inxf  
   real(mytype)                                       :: ana_resi,ana_resf
   real(mytype)                                       :: point(3),pointVelocity(3)
-  real(mytype)                                       :: xm,ym,zm,x_pv,y_pv,z_pv
+  real(mytype)                                       :: xm,ym,zm
 
   !
   ! Initialise Arrays
@@ -916,31 +827,10 @@ subroutine cubsplz(u,lind)
               endif  
               zm = zi(k,i,j)
               point=[xm,ym,zm]
-              call CalculatePointVelocity(point, position, angularVelocity, linearVelocity, pointVelocity)
-              x_pv=pointVelocity(1)
-              y_pv=pointVelocity(2)
-              z_pv=pointVelocity(3)
-              if (lind.eq.0) then
-               bcimp=zero
-              elseif (lind.eq.1) then
-               bcimp=x_pv
-              elseif (lind.eq.2) then
-               bcimp=y_pv
-              elseif (lind.eq.3) then
-               bcimp=z_pv
-              elseif (lind.eq.4) then 
-               bcimp=x_pv*x_pv
-              elseif (lind.eq.5) then
-               bcimp=y_pv*y_pv
-              elseif (lind.eq.6) then 
-               bcimp=z_pv*z_pv
-              elseif (lind.eq.7) then
-               bcimp=x_pv*y_pv 
-              elseif (lind.eq.8) then 
-               bcimp=x_pv*z_pv
-              elseif (lind.eq.9) then
-               bcimp=y_pv*z_pv
-              endif
+              call CalculatePointVelocity_Multi(point, pointVelocity)
+              
+              call ibm_bcimp_calc(pointVelocity, lind, bcimp)  !take correct part of pointVelocity for equation type.
+
               ya(ia)=bcimp
               if(zi(k,i,j).gt.0.)then ! Immersed Object
                  inxi=0
@@ -985,31 +875,10 @@ subroutine cubsplz(u,lind)
               endif
               zm = zi(k,i,j)
               point=[xm,ym,zm]
-              call CalculatePointVelocity(point, position, angularVelocity, linearVelocity, pointVelocity)
-              x_pv=pointVelocity(1)
-              y_pv=pointVelocity(2)
-              z_pv=pointVelocity(3)
-              if (lind.eq.0) then
-               bcimp=zero
-              elseif (lind.eq.1) then
-               bcimp=x_pv
-              elseif (lind.eq.2) then
-               bcimp=y_pv
-              elseif (lind.eq.3) then
-               bcimp=z_pv
-              elseif (lind.eq.4) then 
-               bcimp=x_pv*x_pv
-              elseif (lind.eq.5) then
-               bcimp=y_pv*y_pv
-              elseif (lind.eq.6) then 
-               bcimp=z_pv*z_pv
-              elseif (lind.eq.7) then
-               bcimp=x_pv*y_pv 
-              elseif (lind.eq.8) then 
-               bcimp=x_pv*z_pv
-              elseif (lind.eq.9) then
-               bcimp=y_pv*z_pv
-              endif
+              call CalculatePointVelocity_Multi(point, pointVelocity)
+              
+              call ibm_bcimp_calc(pointVelocity, lind, bcimp)  !take correct part of pointVelocity for equation type.
+
               ya(ia)=bcimp
               if(zf(k,i,j).lt.zlz)then  ! Immersed Object
                  inxf=0
@@ -1197,9 +1066,9 @@ subroutine ana_y_cyl(i,y_pos,ana_res)
      ceyy = cey
   endif
   if (y_pos.gt.ceyy) then     ! Impose analytical BC
-      ana_res=ceyy + sqrt(ra**2.0-((i+ystart(1)-1-1)*dx-cexx)**2.0)
+      ana_res=ceyy + sqrt(ra(1)**2.0-((i+ystart(1)-1-1)*dx-cexx)**2.0)
   else
-      ana_res=ceyy - sqrt(ra**2.0-((i+ystart(1)-1-1)*dx-cexx)**2.0)
+      ana_res=ceyy - sqrt(ra(1)**2.0-((i+ystart(1)-1-1)*dx-cexx)**2.0)
   endif     
   !
   return
@@ -1228,9 +1097,9 @@ subroutine ana_x_cyl(j,x_pos,ana_res)
      ceyy = cey
   endif
   if (x_pos.gt.cexx) then     ! Impose analytical BC
-      ana_res = cexx + sqrt(ra**2.0-(yp(j+xstart(2)-1)-ceyy)**2.0)
+      ana_res = cexx + sqrt(ra(1)**2.0-(yp(j+xstart(2)-1)-ceyy)**2.0)
   else
-      ana_res = cexx - sqrt(ra**2.0-(yp(j+xstart(2)-1)-ceyy)**2.0)
+      ana_res = cexx - sqrt(ra(1)**2.0-(yp(j+xstart(2)-1)-ceyy)**2.0)
   endif     
   !
   return

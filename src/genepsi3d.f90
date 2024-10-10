@@ -91,7 +91,7 @@ contains
    use ibm_param
    use ellipsoid_utils, only: NormalizeQuaternion,ellipInertiaCalculate,ellipMassCalculate
    use param
-   real(mytype) :: eqr, ori_dummy(4)
+   real(mytype) :: eqr, ori_dummy(4), ellip_m_dummy, inertia_dummy(3,3)
    integer :: i,ii,j
 
    do i =1,nbody 
@@ -105,8 +105,6 @@ contains
       do j = 1,3
          shape(i,j) = sh(ii+j)/eqr
       enddo
-   enddo
-   do i = 1,nbody 
       write(*,*) i, "'s shape = ", shape(i,:)
    enddo
 
@@ -150,9 +148,21 @@ contains
       enddo
       write(*,*) "Nbody", i, "angvel = ", angularVelocity(i, :)
    enddo
-   write(*,*) "Ra = ", ra
-   call ellipInertiaCalculate(shape,rho_s,inertia)
-   call ellipMassCalculate(shape,rho_s,ellip_m)
+   ! write(*,*) "Ra = ", ra
+
+   do i = 1,nbody
+      write(*,*) "Nbody = ", i, "Radius = ", ra(i)
+   enddo
+   do i = 1,nbody
+      call ellipInertiaCalculate(shape(i,:),rho_s(i),inertia_dummy)
+      inertia(i,:,:) = inertia_dummy
+      write(*,*) "Nbody", i, "InertiaM = ", inertia(i,:,:)
+   enddo
+   do i = 1,nbody
+      call ellipMassCalculate(shape(i,:), rho_s(i), ellip_m_dummy)
+      ellip_m(i) = ellip_m_dummy
+      write(*,*) "Nbody", i, "ellip_m = ", ellip_m(i)
+   enddo
 
   end subroutine param_assign
 !############################################################################

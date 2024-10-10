@@ -167,15 +167,17 @@ program xcompact3d
       !   if (nrank==0) then
 
       !   if (bodies_fixed==0) then 
-         call lin_step(position,linearVelocity,linearForce,dt,position_1,linearVelocity_1)
-         call ang_step(orientation,angularVelocity,torque,dt,orientation_1,angularVelocity_1)
+        do i = 1,nvol
 
-         position = position_1
-         linearVelocity = linearVelocity_1
+         call lin_step(position(i,:),linearVelocity(i,:),linearForce(i,:),ellip_m(i),dt,position_1,linearVelocity_1)
+         call ang_step(orientation(i,:),angularVelocity(i,:),torque(i,:),inertia(i,:,:),dt,orientation_1,angularVelocity_1)
+        
+         position(i,:) = position_1
+         linearVelocity(i,:) = linearVelocity_1
 
-         orientation = orientation_1
-         angularVelocity = angularVelocity_1
-
+         orientation(i,:) = orientation_1
+         angularVelocity(i,:) = angularVelocity_1
+        enddo
 
 
       !   if (nrank==0) then
@@ -185,12 +187,15 @@ program xcompact3d
       !   endif 
 
          if ((nrank==0).and.(mod(itime,ilist)==0)) then 
-            write(*,*) "Position =         ", position_1
-            write(*,*) "Orientation =      ", orientation_1
-            write(*,*) "Linear velocity =  ", linearVelocity
-            write(*,*) "Angular velocity = ", angularVelocity
-            write(*,*) "Linear Force = ", [drag,lift,lat]
-            write(*,*) "Torque = ", [xtorq,ytorq,ztorq]
+            do i = 1,nbody
+               write(*,*) "Body", i
+               write(*,*) "Position =         ", position(i,:)
+               write(*,*) "Orientation =      ", orientation(i,:)
+               write(*,*) "Linear velocity =  ", linearVelocity(i,:)
+               write(*,*) "Angular velocity = ", angularVelocity(i,:)
+               write(*,*) "Linear Force = ", linearForce(i,:)
+               write(*,*) "Torque = ", torque(i,:)
+            enddo
          ! call QuaternionNorm(angularVelocity,dummy)
 
          ! write(*,*) 'Norm of angvel = ', dummy

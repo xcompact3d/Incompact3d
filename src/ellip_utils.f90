@@ -232,6 +232,50 @@ contains
 
    end subroutine    
 
+   subroutine EllipsoidalRadius_debug(point, centre, orientation, shape, radius)
+    real(mytype), intent(in) :: point(3), centre(3), orientation(4), shape(3)
+    real(mytype), intent(out) :: radius
+    real(mytype) :: trans_point(3),rotated_point(3),scaled_point(3), orientation_c(4)
+    integer :: i
+
+    !translate point to body frame
+    trans_point = point-centre
+
+    write(*,*) "Translated point = ", trans_point
+
+    write(*,*) "Orientation = ", orientation
+
+    call QuaternionConjugate(orientation, orientation_c)
+
+    write(*,*) "Orientation inverse = ", orientation_c
+
+    !rotate point into body frame (using inverse(conjugate) of orientation)
+    call RotatePoint(trans_point, orientation, rotated_point)
+
+    write(*,*) "Rotated point = ", rotated_point
+    do i = 1,3
+       scaled_point(i)=rotated_point(i)/shape(i)
+    end do 
+
+    write(*,*) "Scaled point  = ", scaled_point
+
+    radius=sqrt_prec(scaled_point(1)**2+scaled_point(2)**2+scaled_point(3)**2)
+
+    write(*,*) "Radius = ", radius
+
+    ! if (radius /= radius) then
+    !     write(*,*) "Got an error in grid check!"
+    !     write(*,*) "Radius = ", radius
+    !     write(*,*) "point = ", point
+    !     write(*,*) "Body centre = ", centre
+    !     write(*,*) "Translated point = ", trans_point
+    !     write(*,*) "Orientation = ", orientation
+    !     write(*,*) "Rotated point = ", rotated_point
+    !     write(*,*) "Scaled Point = ", scaled_point
+    ! endif
+
+ end subroutine    
+
   subroutine CrossProduct(a, b, result)
     real(mytype), intent(in) :: a(3), b(3)
     real(mytype), intent(inout) :: result(3)
@@ -269,7 +313,14 @@ contains
       call EllipsoidalRadius(point, position(i,:), orientation(i,:), shape(i,:), r)
       radii(i) = r
     enddo
-    i_closest = minloc(radii)
+    i_closest=1
+    if (nbody.gt.1) then 
+      do i = 2,nbody
+        if (radii(i) < radii(i_closest)) then 
+          i_closest=i
+        endif
+      enddo
+    endif
 
     call CalculatePointVelocity(point, position(i_closest,:), angularVelocity(i_closest,:), linearVelocity(i_closest, :), pointVelocity)
     end subroutine
@@ -286,10 +337,9 @@ contains
   end subroutine is_inside_ellipsoid
 
 
-  subroutine navierFieldGen(center, linearVelocity, angularVelocity, ep1, ep1_x, ep1_y, ep1_z)
+  subroutine navierFieldGen(ep1, ep1_x, ep1_y, ep1_z)
     use param
     use decomp_2d
-    real(mytype), intent(in) :: center(3), linearVelocity(3), angularVelocity(4)
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(out) :: ep1_x, ep1_y, ep1_z
     real(mytype) :: xm, ym, zm, point(3), x_pv, y_pv, z_pv, pointVelocity(3)
@@ -303,7 +353,7 @@ contains
           xm=real(i+xstart(1)-2, mytype)*dx
           point=[xm,ym,zm]
           if (ep1(i,j,k).eq.1) then 
-            call CalculatePointVelocity(point, center, angularVelocity, linearVelocity, pointVelocity)
+            call CalculatePointVelocity_Multi(point, pointVelocity)
             x_pv=pointVelocity(1)
             y_pv=pointVelocity(2)
             z_pv=pointVelocity(3)
@@ -572,10 +622,10 @@ contains
 
     end subroutine ang_full_step
 
-    subroutine ang_step(q,omega_q,torque_vec,time_step,q1,omega1)
+    subroutine ang_step(q,omega_q,torque_vec,inertia,time_step,q1,omega1)
       use param
-      use ibm_param, only: inertia
-      real(mytype),intent(in) :: q(4),omega_q(4),torque_vec(3),time_step
+      ! use ibm_param, only: inertia
+      real(mytype),intent(in) :: q(4),omega_q(4),torque_vec(3),inertia(3,3),time_step
       real(mytype),intent(out):: q1(4),omega1(4)
       real(mytype)            :: torque_q(4),omega_b(4),torque_b(4),omega_half_b(4),omega1_b(4)
       real(mytype)            :: ang_accel_b(4), omega_half(4)
@@ -607,9 +657,9 @@ contains
     end subroutine ang_step
 
 
-    subroutine lin_step(position,linearVelocity,linearForce,time_step,position_1,linearVelocity_1)
-      use ibm_param, only: ellip_m
-      real(mytype),intent(in)   :: position(3),linearVelocity(3),linearForce(3),time_step
+    subroutine lin_step(position,linearVelocity,linearForce,ellip_m,time_step,position_1,linearVelocity_1)
+      ! use ibm_param, only: ellip_m
+      real(mytype),intent(in)   :: position(3),linearVelocity(3),linearForce(3),ellip_m,time_step
       real(mytype),intent(out)  :: position_1(3),linearVelocity_1(3)
       real(mytype)              :: linearAcceleration(3)
 
@@ -654,5 +704,38 @@ contains
       inertia(3,3)=i3
 
     end subroutine ellipInertiaCalculate
+
+    subroutine ibm_bcimp_calc(pointVelocity, lind, bcimp)
+      real(mytype), intent(in)  :: pointVelocity(3)
+      integer, intent(in)       :: lind
+      real(mytype), intent(out) :: bcimp
+      real(mytype)              :: x_pv, y_pv, z_pv
+
+      x_pv=pointVelocity(1)
+      y_pv=pointVelocity(2)
+      z_pv=pointVelocity(3)
+      if (lind.eq.0) then
+        bcimp=zero
+      elseif (lind.eq.1) then
+        bcimp=x_pv
+        ! write(*,*) bcimp
+      elseif (lind.eq.2) then
+        bcimp=y_pv
+      elseif (lind.eq.3) then
+        bcimp=z_pv
+      elseif (lind.eq.4) then 
+        bcimp=x_pv*x_pv
+      elseif (lind.eq.5) then
+        bcimp=y_pv*y_pv
+      elseif (lind.eq.6) then 
+        bcimp=z_pv*z_pv
+      elseif (lind.eq.7) then
+        bcimp=x_pv*y_pv 
+      elseif (lind.eq.8) then 
+        bcimp=x_pv*z_pv
+      elseif (lind.eq.9) then
+        bcimp=y_pv*z_pv
+      endif
+    end subroutine
       
 end module ellipsoid_utils

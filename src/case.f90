@@ -369,7 +369,7 @@ contains
 
     if (iforces.eq.1) then
       !  write(*,*) "Calling force from case"
-       call force(ux,uy,uz,ep,dummy1,dummy2,dummy3,0)
+      !  call force(ux,uy,uz,ep,dummy1,dummy2,dummy3,0)
        call restart_forces(1)
     endif
 
