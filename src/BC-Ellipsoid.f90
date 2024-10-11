@@ -45,7 +45,9 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
     zeromach = ten*zeromach
     is_inside=.false.
     !  orientation=[oriw, orii, orij, orik]
-    call NormalizeQuaternion(orientation)
+    do i = 1,nbody 
+        call NormalizeQuaternion(orientation(i,:))
+    enddo
     !  shape=[shx, shy, shz]
     !  write(*,*) shape, 'SHAPE'
 
