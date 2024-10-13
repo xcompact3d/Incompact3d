@@ -255,7 +255,11 @@ subroutine parameter(input_i3d)
   dy2 = dy * dy
   dz2 = dz * dz
 
-  xnu=one/re
+  if (re.gt.0.001) then 
+   xnu=one/re
+  else 
+   xnu=zero
+  endif
   !! Constant pressure gradient, re = Re_tau -> use to compute Re_centerline
   if (cpg) then
     re_cent = (re/0.116_mytype)**(1.0_mytype/0.88_mytype)
