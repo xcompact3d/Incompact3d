@@ -457,6 +457,8 @@ contains
          if ((nrank .eq. 0).and.(record_var.eq.1)) then
             write(filename,"('forces.dat',I1.1)") iv
             open(38+(iv-1),file=filename,status='unknown',form='formatted')
+            write(38+(iv-1),*) t, zero, zero, zero, zero, zero, zero, zero, zero, zero, zero, zero
+            call flush(38+(iv-1))
             ! write(*,*) 'Opened file: ', filename, 'number = ', 38+(iv-1)
          endif
       enddo
@@ -471,6 +473,12 @@ contains
        enddo
        return
     elseif (itime.eq.2) then
+      if ((nrank .eq. 0).and.(record_var.eq.1)) then
+         do i = 1,nvol
+            write(38+(iv-1),*) t, zero, zero, zero, zero, zero, zero, zero, zero, zero, zero, zero
+            call flush(38+(iv-1))
+         enddo
+      endif
        do k = 1, xsize(3)
           do j = 1, xsize(2)
              do i = 1, xsize(1)
@@ -1163,6 +1171,8 @@ contains
         if ((nrank .eq. 0).and.(record_var.eq.1)) then
            write(filename,"('torques.dat',I1.1)") iv
            open(45+(iv-1),file=filename,status='unknown',form='formatted')
+           write(45+(iv-1),*) t, zero, zero, zero, zero, zero, zero, zero, zero, zero, zero, zero
+           call flush(45+(iv-1))
            ! write(*,*) 'Opened file: ', filename, 'number = ', 38+(iv-1)
         endif
         if ((nrank.eq.0).and.(torq_debug.eq.1).and.(iv.eq.1)) then
@@ -1188,6 +1198,13 @@ contains
       enddo
       return
    elseif (itime.eq.2) then
+      if ((nrank .eq. 0).and.(record_var.eq.1)) then
+         do i = 1,nvol 
+            ! write(*,*) "TRYING TO WRITE AT ITIME=2, t = ", t
+            write(45+(iv-1),*) t, zero, zero, zero, zero, zero, zero, zero, zero, zero, zero, zero
+            call flush(45+(iv-1))
+         enddo
+      endif
       do k = 1, xsize(3)
          do j = 1, xsize(2)
             do i = 1, xsize(1)
