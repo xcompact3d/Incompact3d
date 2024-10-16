@@ -91,78 +91,96 @@ contains
    use ibm_param
    use ellipsoid_utils, only: NormalizeQuaternion,ellipInertiaCalculate,ellipMassCalculate
    use param
+   use var, only: nrank
    real(mytype) :: eqr, ori_dummy(4), ellip_m_dummy, inertia_dummy(3,3)
    integer :: i,ii,j
 
    do i =1,nbody 
-      ii = (i-1)*3
-      write(*,*) sh(ii+1), sh(ii+2), sh(ii+3)
-      eqr=(sh(ii+1)*sh(ii+2)*sh(ii+3))**(1.0/3.0)
-      if (eqr.lt.0.001) then
-         eqr=1.0
-      endif
-      write(*,*) "Body ", i, ", eqr = ", eqr
-      do j = 1,3
-         shape(i,j) = sh(ii+j)/eqr
+         ii = (i-1)*3
+         ! write(*,*) sh(ii+1), sh(ii+2), sh(ii+3)
+         eqr=(sh(ii+1)*sh(ii+2)*sh(ii+3))**(1.0/3.0)
+         if (eqr.lt.0.001) then
+            eqr=1.0
+         endif
+         do j = 1,3
+            shape(i,j) = sh(ii+j)/eqr
+         enddo
+         if (nrank==0) then 
+            write(*,*) "Body ", i, ", eqr = ", eqr
+         
+            write(*,*) i, "'s shape = ", shape(i,:)
+         endif
       enddo
-      write(*,*) i, "'s shape = ", shape(i,:)
-   enddo
 
 
-   do i = 1,nbody
-      ii = (i-1)*4
-      do j = 1,4 
-         ori_dummy(j) = ori(ii+j)
-      enddo
-      
-      ! write(*,*) "Body, ", i, "orientation = ", ori_dummy
-      call NormalizeQuaternion(ori_dummy)
-      write(*,*) "Body, ", i, "orientation = ", ori_dummy
+      do i = 1,nbody
+         ii = (i-1)*4
+         do j = 1,4 
+            ori_dummy(j) = ori(ii+j)
+         enddo
+         
+         ! write(*,*) "Body, ", i, "orientation = ", ori_dummy
+         call NormalizeQuaternion(ori_dummy)
 
-      orientation(i,:) = ori_dummy
-   enddo
-   ! call NormalizeQuaternion(orientation)
-   do i = 1,nbody
-      ii = (i-1)*3
-      do j = 1,3
-         position(i,j) = ce(ii+j)
-         ! write(*,*) ce(i,j), position(j,i)
+         if (nrank==0) then 
+            write(*,*) "Body, ", i, "orientation = ", ori_dummy
+         endif
+         orientation(i,:) = ori_dummy
       enddo
-      write(*,*) "Nbody", i, "position = ", position(i, :)
-   enddo
-   ! write(*,*) "CE =       ", ce
-   ! write(*,*) "Position = ", position
-   ! position=ce
-   do i = 1,nbody
-      ii = (i-1)*3
-      do j = 1,3
-         linearVelocity(i,j) = lv(ii+j)
+      ! call NormalizeQuaternion(orientation)
+      do i = 1,nbody
+         ii = (i-1)*3
+         do j = 1,3
+            position(i,j) = ce(ii+j)
+            ! write(*,*) ce(i,j), position(j,i)
+         enddo
+         if (nrank==0) then
+         write(*,*) "Nbody", i, "position = ", position(i, :)
+         endif
       enddo
-   enddo
+      ! write(*,*) "CE =       ", ce
+      ! write(*,*) "Position = ", position
+      ! position=ce
+      do i = 1,nbody
+         ii = (i-1)*3
+         do j = 1,3
+            linearVelocity(i,j) = lv(ii+j)
+         enddo
+      enddo
 
-   do i = 1,nbody
-      ii = (i-1)*3
-      angularVelocity(i,1)=zero
-      do j = 1,3
-         angularVelocity(i,j+1)=av(ii+j)
+      do i = 1,nbody
+         ii = (i-1)*3
+         angularVelocity(i,1)=zero
+         do j = 1,3
+            angularVelocity(i,j+1)=av(ii+j)
+         enddo
+         if (nrank==0) then 
+            write(*,*) "Nbody", i, "angvel = ", angularVelocity(i, :)
+         endif
       enddo
-      write(*,*) "Nbody", i, "angvel = ", angularVelocity(i, :)
-   enddo
-   ! write(*,*) "Ra = ", ra
+      ! write(*,*) "Ra = ", ra
 
-   do i = 1,nbody
-      write(*,*) "Nbody = ", i, "Radius = ", ra(i)
-   enddo
-   do i = 1,nbody
-      call ellipInertiaCalculate(shape(i,:),rho_s(i),inertia_dummy)
-      inertia(i,:,:) = inertia_dummy
-      write(*,*) "Nbody", i, "InertiaM = ", inertia(i,:,:)
-   enddo
-   do i = 1,nbody
-      call ellipMassCalculate(shape(i,:), rho_s(i), ellip_m_dummy)
-      ellip_m(i) = ellip_m_dummy
-      write(*,*) "Nbody", i, "ellip_m = ", ellip_m(i)
-   enddo
+      do i = 1,nbody
+         if (nrank==0) then 
+         write(*,*) "Nbody = ", i, "Radius = ", ra(i)
+         endif
+      enddo
+      do i = 1,nbody
+         call ellipInertiaCalculate(shape(i,:),rho_s(i),inertia_dummy)
+         inertia(i,:,:) = inertia_dummy
+         if (nrank==0) then 
+
+            write(*,*) "Nbody", i, "InertiaM = ", inertia(i,:,:)
+         endif
+      enddo
+      do i = 1,nbody
+         call ellipMassCalculate(shape(i,:), rho_s(i), ellip_m_dummy)
+         ellip_m(i) = ellip_m_dummy
+         if (nrank==0) then 
+
+            write(*,*) "Nbody", i, "ellip_m = ", ellip_m(i)
+         endif
+      enddo
 
   end subroutine param_assign
 !############################################################################
