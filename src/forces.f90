@@ -1204,13 +1204,13 @@ contains
       enddo
       return
    elseif (itime.eq.2) then
-      if ((nrank .eq. 0).and.(record_var.eq.1)) then
-         do i = 1,nvol 
-            ! write(*,*) "TRYING TO WRITE AT ITIME=2, t = ", t
-            write(45+(iv-1),*) t, zero, zero, zero, zero, zero, zero, zero, zero, zero, zero, zero
-            call flush(45+(iv-1))
-         enddo
-      endif
+      ! if ((nrank .eq. 0).and.(record_var.eq.1)) then
+      !    do i = 1,nvol 
+      !       ! write(*,*) "TRYING TO WRITE AT ITIME=2, t = ", t
+      !       write(45+(iv-1),*) t, zero, zero, zero, zero, zero, zero, zero, zero, zero, zero, zero
+      !       call flush(45+(iv-1))
+      !    enddo
+      ! endif
       do k = 1, xsize(3)
          do j = 1, xsize(2)
             do i = 1, xsize(1)
