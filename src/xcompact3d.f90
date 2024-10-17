@@ -7,18 +7,18 @@ program xcompact3d
   use var
   use case
 
-  use transeq, only : calculate_transeq_rhs
+  use transeq,          only : calculate_transeq_rhs
   use time_integrators, only : int_time
-  use navier, only : velocity_to_momentum, momentum_to_velocity, pre_correc, &
-       calc_divu_constraint, solve_poisson, cor_vel
-  use tools, only : restart, simu_stats, apply_spatial_filter, read_inflow
-  use turbine, only : compute_turbines
+  use navier,           only : velocity_to_momentum, momentum_to_velocity, pre_correc, &
+                               calc_divu_constraint, solve_poisson, cor_vel
+  use tools,            only : restart, simu_stats, apply_spatial_filter, read_inflow
+  use turbine,          only : compute_turbines
   use ibm_param
-  use ibm, only : body
-  use genepsi, only : genepsi3d
-  use mhd,    only : Bm,mhd_equation,test_magnetic, &
-                     solve_poisson_mhd
-  use param, only : mhd_active
+  use ibm,              only : body
+  use genepsi,          only : genepsi3d
+  use mhd,              only : Bm,mhd_equation,test_magnetic,solve_poisson_mhd
+  use param,            only : mhd_active
+  use particle,         only : intt_particel
 
   implicit none
 
@@ -86,6 +86,8 @@ program xcompact3d
 
         if(mhd_active) call test_magnetic
 
+        if(particle_active) call intt_particel(ux1,uy1,uz1,t)
+
      enddo !! End sub timesteps
 
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,rho1,drho1,mu1,1)
@@ -113,30 +115,23 @@ subroutine init_xcompact3d()
 
   use var
 
-  use navier, only : calc_divu_constraint
-  use tools, only : test_speed_min_max, test_scalar_min_max, &
-       restart, &
-       simu_stats, compute_cfldiff, &
-       init_inflow_outflow, read_inflow
-
-  use param, only : ilesmod, jles,itype
-  use param, only : irestart, mhd_active
-
+  use navier,    only : calc_divu_constraint
+  use tools,     only : test_speed_min_max, test_scalar_min_max, &
+                        restart,simu_stats, compute_cfldiff,     &
+                        init_inflow_outflow, read_inflow
+  use param,     only : ilesmod, jles,itype
+  use param,     only : irestart, mhd_active
   use variables, only : nx, ny, nz, nxm, nym, nzm
   use variables, only : p_row, p_col
   use variables, only : nstat, nvisu, ilist
-
-  use les, only: init_explicit_les
-  use turbine, only: init_turbines
-
-  use visu, only : visu_init, visu_ready
-
-  use genepsi, only : genepsi3d, epsi_init
-  use ibm, only : body
-
-  use probes, only : init_probes
-
-  use mhd, only: mhd_init
+  use les,       only : init_explicit_les
+  use turbine,   only : init_turbines
+  use visu,      only : visu_init, visu_ready
+  use genepsi,   only : genepsi3d, epsi_init
+  use ibm,       only : body
+  use probes,    only : init_probes
+  use mhd,       only : mhd_init
+  use particle,  only : partcle_report,local_domain_size
 
   implicit none
 
@@ -220,6 +215,14 @@ subroutine init_xcompact3d()
   !####################################################################
   ! initialise mhd
   if (mhd_active) call mhd_init()
+
+  !####################################################################
+  ! initialise particles
+  if (particle_active) then
+    call partcle_report('input')
+
+    call local_domain_size
+  endif
 
   !####################################################################
   ! initialise visu
