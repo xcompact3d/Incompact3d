@@ -436,6 +436,9 @@ contains
    !  write(*,*) 'Inside FORCE'
 
   
+    dra1(:) = zero
+    dra2(:) = zero
+    dra3(:) = zero
 
     nvect1=xsize(1)*xsize(2)*xsize(3)
     nvect2=ysize(1)*ysize(2)*ysize(3)
@@ -1152,6 +1155,9 @@ contains
 
   !  write(*,*) 'Inside FORCE'
 
+   dra1(:) = zero
+   dra2(:) = zero
+   dra3(:) = zero
  
 
    nvect1=xsize(1)*xsize(2)*xsize(3)
