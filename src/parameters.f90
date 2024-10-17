@@ -29,7 +29,7 @@ subroutine parameter(input_i3d)
   use visu,       only : output2D
   use forces,     only : iforces, nvol, setup_forces
   use mhd,        only : mhd_equation,hartmann,stuart,rem
-  use particle,   only : initype_particle,n_particle,bc_particle
+  use particle,   only : initype_particle,n_particle,bc_particle,particle_inject_period
 
   implicit none
 
@@ -79,7 +79,7 @@ subroutine parameter(input_i3d)
      nclxBx1, nclxBxn, nclyBx1, nclyBxn, nclzBx1, nclzBxn, &
      nclxBy1, nclxByn, nclyBy1, nclyByn, nclzBy1, nclzByn, &
      nclxBz1, nclxBzn, nclyBz1, nclyBzn, nclzBz1, nclzBzn
-  NAMELIST/ParTrack/initype_particle,n_particle,bc_particle
+  NAMELIST/ParTrack/initype_particle,n_particle,bc_particle,particle_inject_period
 
 
 #ifdef DEBG

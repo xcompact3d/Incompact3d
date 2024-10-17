@@ -76,8 +76,8 @@ module particle
   integer :: numparticle,n_particle
   character(len=32) :: initype_particle
   character(len=4) :: bc_particle(6)
-  real(mytype) :: particletime,sub_time_step
-  type(partype),allocatable,target :: partpack(:)
+  real(mytype) :: particletime,sub_time_step,particle_inject_period
+  type(partype),allocatable,target :: partpack(:),initial_particles(:)
   real(mytype),allocatable,dimension(:) :: lxmin,lxmax,lymin,lymax,lzmin,lzmax
   !+------------------+-----------------------------------------------+
   !|      numparticle | number of particles in the domain             |
@@ -100,7 +100,8 @@ module particle
 
   public :: local_domain_size,particle_init,intt_particel,            &
             partcle_report,visu_particle,particle_checkpoint,         &
-            n_particle,initype_particle,bc_particle
+            n_particle,initype_particle,bc_particle,                  &
+            particle_inject_period
 
   contains
 
@@ -259,7 +260,12 @@ module particle
             stop ' !!initype_particle error @ partcle_report '//trim(initype_particle)
         endif
 
+        if(particle_inject_period>0.0_mytype) then
+            print*,'** particles are reguarly injected every t=',particle_inject_period
+        endif
+
     endif
+
 
     !
   end subroutine partcle_report
@@ -281,10 +287,9 @@ module particle
 
     real(mytype),intent(in),optional :: pxmin,pxmax,pymin,pymax,pzmin,pzmax
     ! pxmin,pxmax,pymin,pymax,pzmin,pzmax: range of initial particles
-    real(mytype) :: partical_range(6)
     !
     ! local data
-    ! integer :: i,j,k,p
+    real(mytype) :: partical_range(6)
     ! real(mytype) :: dx,dy,dz
     !
     partical_range(1) = 0.0_mytype
@@ -303,14 +308,18 @@ module particle
 
     ! generate random particles within the local domain
     if(trim(initype_particle)=='random') then 
-        call particle_gen_random(partpack,numparticle,partical_range)
+        call particle_gen_random(initial_particles,numparticle,partical_range)
     elseif(trim(initype_particle)=='uniform') then 
-        call particle_gen_uniform(partpack,numparticle,partical_range)
+        call particle_gen_uniform(initial_particles,numparticle,partical_range)
     else
         stop ' !! initype_particle error @ particle_init!!'
     endif
 
-    call partical_domain_check(partpack)
+    call partical_domain_check(initial_particles)
+
+    call partical_swap
+
+    call particle_add(partpack,initial_particles)
 
     n_particle=psum(msize(partpack))
 
@@ -319,6 +328,33 @@ module particle
   end subroutine particle_init
   !+-------------------------------------------------------------------+
   ! The end of the subroutine particle_init                            |
+  !+-------------------------------------------------------------------+
+
+  !+-------------------------------------------------------------------+
+  !| This subroutine is to add more particles to the domain.           |
+  !+-------------------------------------------------------------------+
+  !| CHANGE RECORD                                                     |
+  !| -------------                                                     |
+  !| 17-11-2021  | Created by J. Fang                                  |
+  !+-------------------------------------------------------------------+
+  subroutine partile_inject
+    !
+    ! local data
+    type(partype),allocatable :: particle_new(:)
+    integer :: num_new_particle,n
+    !
+    call particle_add(partpack,initial_particles,n)
+    !
+    numparticle=numparticle+n
+    !
+    ! call partical_domain_check('out_disappear')
+    call partical_domain_check(partpack)
+    !
+    call partical_swap
+    !
+  end subroutine partile_inject
+  !+-------------------------------------------------------------------+
+  ! The end of the subroutine partile_inject                           |
   !+-------------------------------------------------------------------+
 
   !+-------------------------------------------------------------------+
@@ -349,8 +385,9 @@ module particle
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: uxp,uyp,uzp
     real(mytype),allocatable,dimension(:,:,:),save :: ux0,uy0,uz0
     real(mytype),allocatable :: xcor(:,:),dxco(:,:,:),vcor(:,:),dvco(:,:,:)
+    real(mytype),save :: next_particle_inject_time
     !
-    logical,save :: firstcal=.true.
+    logical,save :: firstcal=.true.,particle_inject=.false.
     !
     if(firstcal) then
       !
@@ -370,6 +407,11 @@ module particle
       !
       tsro=sub_time_step/dt
       !
+      if(particle_inject_period>0.0_mytype) then
+        particle_inject=.true.
+        next_particle_inject_time=time1+particle_inject_period
+      endif
+      !
       firstcal=.false.
       !
       return
@@ -379,6 +421,14 @@ module particle
     do while(particletime<time1)
       !
       particletime=particletime+sub_time_step
+      
+      if(particle_inject .and. particletime>=next_particle_inject_time) then
+
+        call partile_inject()
+
+        next_particle_inject_time=next_particle_inject_time+particle_inject_period
+
+      endif
       !
       uxp=linintp(time0,time1,ux0,ux1,particletime)
       uyp=linintp(time0,time1,uy0,uy1,particletime)
@@ -1042,7 +1092,7 @@ module particle
     ! arguments
     type(partype),intent(inout),allocatable,target :: particle_cur(:)
     type(partype),intent(in),allocatable :: particle_new(:)
-    integer,intent(out) :: num_part_incr
+    integer,intent(out),optional :: num_part_incr
     !
     ! local data
     integer :: psize,newsize,n,jpart
@@ -1082,7 +1132,10 @@ module particle
     enddo
     !
     ! print*,nrank,'|',n,newsize
-    num_part_incr=n
+    if(present(num_part_incr)) num_part_incr=n
+
+    return
+
     !
   end subroutine particle_add
   !+-------------------------------------------------------------------+
@@ -1264,7 +1317,7 @@ module particle
     integer,intent(out) ::  npx,npy,npz
 
     ! local data
-    integer :: n1
+    real(mytype) :: n1
 
 
     if(abs(plx)<1.d-16 .and. abs(ply)<1.d-16 .and. abs(plz)<1.d-16) then
