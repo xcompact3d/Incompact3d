@@ -108,6 +108,7 @@ contains
 #ifdef DEBG
     if (nrank  ==  0) write(*,*) '# init end ok'
 #endif
+    
     if(particle_active) call particle_init()
 
     call visu_tgv0(rho1, ux1, uy1, uz1, pp3, phi1, ep1)

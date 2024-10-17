@@ -564,4 +564,22 @@ module mptool
     !
   end function linintp
 
+  ! this function distritbuion evently in processors (as much as possible..)
+  pure function numdist(number)
+    
+    integer,intent(in) :: number
+    integer :: numdist,remainder
+
+    numdist = number/nproc
+
+    remainder=mod(number,nproc)
+
+    if(nrank<remainder) then
+        numdist=numdist+1
+    endif
+
+    return
+
+  end function numdist
+
 end module mptool

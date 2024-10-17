@@ -23,15 +23,13 @@ subroutine parameter(input_i3d)
   use decomp_2d_mpi
   use ibm_param
 
-  use var, only : dphi1
-
+  use var,        only : dphi1
   use gravitycur, only : pfront
-
-  use probes, only : nprobes, setup_probes, flag_all_digits, flag_extra_probes, xyzprobes
-  use visu, only : output2D
-  use forces, only : iforces, nvol, setup_forces
-
-  use mhd, only: mhd_equation,hartmann,stuart,rem
+  use probes,     only : nprobes, setup_probes, flag_all_digits, flag_extra_probes, xyzprobes
+  use visu,       only : output2D
+  use forces,     only : iforces, nvol, setup_forces
+  use mhd,        only : mhd_equation,hartmann,stuart,rem
+  use particle,   only : initype_particle,n_particle,bc_particle
 
   implicit none
 
@@ -81,6 +79,7 @@ subroutine parameter(input_i3d)
      nclxBx1, nclxBxn, nclyBx1, nclyBxn, nclzBx1, nclzBxn, &
      nclxBy1, nclxByn, nclyBy1, nclyByn, nclzBy1, nclzByn, &
      nclxBz1, nclxBzn, nclyBz1, nclyBzn, nclzBz1, nclzBzn
+  NAMELIST/ParTrack/initype_particle,n_particle,bc_particle
 
 
 #ifdef DEBG
@@ -228,6 +227,10 @@ subroutine parameter(input_i3d)
     nclzBn(1) = nclzBxn
     nclzBn(2) = nclzByn
     nclzBn(3) = nclzBzn
+   endif
+
+   if(particle_active) then
+    read(10, nml=ParTrack); rewind(10) 
    endif
 
   ! !! These are the 'optional'/model parameters

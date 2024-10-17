@@ -131,7 +131,7 @@ subroutine init_xcompact3d()
   use ibm,       only : body
   use probes,    only : init_probes
   use mhd,       only : mhd_init
-  use particle,  only : local_domain_size
+  use particle,  only : partcle_report,local_domain_size
 
   implicit none
 
@@ -219,6 +219,8 @@ subroutine init_xcompact3d()
   !####################################################################
   ! initialise particles
   if (particle_active) then
+    call partcle_report('input')
+
     call local_domain_size
   endif
 

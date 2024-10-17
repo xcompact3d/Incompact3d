@@ -74,12 +74,16 @@ module particle
   end type partype
 
   integer :: numparticle,n_particle
+  character(len=32) :: initype_particle
+  character(len=4) :: bc_particle(6)
   real(mytype) :: particletime,sub_time_step
   type(partype),allocatable,target :: partpack(:)
   real(mytype),allocatable,dimension(:) :: lxmin,lxmax,lymin,lymax,lzmin,lzmax
   !+------------------+-----------------------------------------------+
   !|      numparticle | number of particles in the domain             |
   !|       n_particle | total number of particles.                    |
+  !| initype_particle | initilisation option for particle.            |
+  !|      bc_particle | boundary condtion for particles.              |
   !|     particletime | current particle time .                       |
   !|    sub_time_step | particle advancing time step.                 |
   !|         partpack | pack of particles.                            |
@@ -95,7 +99,8 @@ module particle
   private
 
   public :: local_domain_size,particle_init,intt_particel,            &
-            visu_particle,particle_checkpoint,n_particle
+            partcle_report,visu_particle,particle_checkpoint,         &
+            n_particle,initype_particle,bc_particle
 
   contains
 
@@ -201,7 +206,7 @@ module particle
     !
     real(mytype) :: varc
     ! 
-    varc=18.d0/(pa%rho*pa%dimeter**2*re)*(1.d0+0.15d0*pa%re**0.687d0)
+    varc=18._mytype/(pa%rho*pa%dimeter**2*re)*(1._mytype+0.15_mytype*pa%re**0.687_mytype)
     !
     pa%f(:) = varc*(pa%vf(:)-pa%v(:))
     !
@@ -217,26 +222,45 @@ module particle
   !| -------------                                                     |
   !| 18-06-2022  | Created by J. Fang                                  |
   !+-------------------------------------------------------------------+
-  subroutine partcle_report
-    !
-    integer :: ttal_particle
-    !
-    ! ttal_particle=psum(numparticle)
-    !
-    if(nrank==0) then
-      ! write(*,*) 'Total number of particles:',ttal_particle
-      ! write(*,*) 'Total time for particles :',real(part_time,4)
-      ! write(*,*) '      time particles vel :',real(part_vel_time,4)
-      ! write(*,*) '      time domain search :',real(part_dmck_time,4)
-      ! write(*,*) '      time partical_swap :',real(part_comm_time,4)
-      ! write(*,*) '           alltoall comm :',real(a2a_time,4)
-      ! write(*,*) '           counting time :',real(count_time,4)
-      ! write(*,*) '           table shareing:',real(table_share_time,4)
-      ! write(*,*) '           data packing  :',real(data_pack_time,4)
-      ! write(*,*) '           MPI Alltoall  :',real(mpi_comm_time,4)
-      ! write(*,*) '           data unpacking:',real(data_unpack_time,4)
-      ! write(*,*) '                  hdf5 io:',real(h5io_time,4)
+  subroutine partcle_report(reptyp)
+    
+    character(len=*),intent(in) :: reptyp
+
+    integer :: ibc
+    character(len=4) :: bcname(6)
+
+    if(nrank .ne. 0) return
+
+    bcname(1) = 'xmin'
+    bcname(2) = 'xmax'
+    bcname(3) = 'ymin'
+    bcname(4) = 'ymax'
+    bcname(5) = 'zmin'
+    bcname(6) = 'zmax'
+
+    if(reptyp=='input') then
+
+        do ibc=1,6
+            if(bc_particle(ibc) == 'peri') then
+                print*,'** particles b.c. at ',bcname(ibc),': periodic'
+            else
+                print*,'!! bc_particle:',bc_particle 
+                stop '!! bc_particle not defined'
+            endif
+        enddo
+
+        if(trim(initype_particle)=='random') then
+            write(*,'(A,I0,A)')' ** particle initilisation: generate ', &
+                        n_particle,' random particles '
+        elseif(trim(initype_particle)=='uniform') then
+            write(*,'(A,I0,A)')' ** particle initilisation: generate ', &
+                        n_particle,' uniformly distributed particles '
+        else
+            stop ' !!initype_particle error @ partcle_report '//trim(initype_particle)
+        endif
+
     endif
+
     !
   end subroutine partcle_report
   !+-------------------------------------------------------------------+
@@ -250,22 +274,47 @@ module particle
   !| -------------                                                     |
   !| 17-11-2021  | Created by J. Fang                                  |
   !+-------------------------------------------------------------------+
-  subroutine particle_init
+  subroutine particle_init(pxmin,pxmax,pymin,pymax,pzmin,pzmax)
     !
-    use param,     only : xlx,yly,zlz,irestart,t,dt
+    use param,     only : xlx,yly,zlz
     use var,       only : itime
+
+    real(mytype),intent(in),optional :: pxmin,pxmax,pymin,pymax,pzmin,pzmax
+    ! pxmin,pxmax,pymin,pymax,pzmin,pzmax: range of initial particles
+    real(mytype) :: partical_range(6)
     !
     ! local data
     ! integer :: i,j,k,p
     ! real(mytype) :: dx,dy,dz
     !
+    partical_range(1) = 0.0_mytype
+    partical_range(2) = xlx
+    partical_range(3) = 0.0_mytype
+    partical_range(4) = yly
+    partical_range(5) = 0.0_mytype
+    partical_range(6) = zlz
+
+    if(present(pxmin)) partical_range(1) = pxmin
+    if(present(pxmax)) partical_range(2) = pxmax
+    if(present(pymin)) partical_range(3) = pymin
+    if(present(pymax)) partical_range(4) = pymax
+    if(present(pzmin)) partical_range(5) = pzmin
+    if(present(pzmax)) partical_range(6) = pzmax
+
     ! generate random particles within the local domain
-    call particle_gen_random(partpack,numparticle)
+    if(trim(initype_particle)=='random') then 
+        call particle_gen_random(partpack,numparticle,partical_range)
+    elseif(trim(initype_particle)=='uniform') then 
+        call particle_gen_uniform(partpack,numparticle,partical_range)
+    else
+        stop ' !! initype_particle error @ particle_init!!'
+    endif
 
-    call partical_domain_check('bc_tgv',partpack)
+    call partical_domain_check(partpack)
 
-    particletime=t
-    sub_time_step=dt
+    n_particle=psum(msize(partpack))
+
+    if(nrank==0) print*,'** ',n_particle,'particles are generated'
 
   end subroutine particle_init
   !+-------------------------------------------------------------------+
@@ -312,7 +361,11 @@ module particle
       ux0=ux1
       uy0=uy1
       uz0=uz1
-      !
+      
+      particletime=t
+
+      sub_time_step=dt
+
       time0=time1
       !
       tsro=sub_time_step/dt
@@ -326,8 +379,6 @@ module particle
     do while(particletime<time1)
       !
       particletime=particletime+sub_time_step
-      !
-      ! print*,'time0=',time0,'time1=',time1,'particletime=',particletime
       !
       uxp=linintp(time0,time1,ux0,ux1,particletime)
       uyp=linintp(time0,time1,uy0,uy1,particletime)
@@ -444,7 +495,7 @@ module particle
         !
         pa%v(:)=vcor(:,npart)
         pa%x(:)=xcor(:,npart)
-        ! pa%x(3)=0.d0 ! 2d x-y computation
+        ! pa%x(3)=0._mytype ! 2d x-y computation
         !
         pa%dv(:,2:ntime)=dvco(:,npart,2:ntime)
         pa%dx(:,2:ntime)=dxco(:,npart,2:ntime)
@@ -455,8 +506,7 @@ module particle
       !
       deallocate(xcor,dxco,vcor,dvco)
       !
-      ! call partical_domain_check('bc_tgv')
-      call partical_domain_check('bc_tgv',partpack)
+      call partical_domain_check(partpack)
       !
       call partical_swap
       !
@@ -577,7 +627,7 @@ module particle
 
     real(mytype),allocatable,dimension(:,:) :: xp
 
-    integer :: j,remainder
+    integer :: j
 
     resfile = "checkpoint-particles"
 
@@ -596,13 +646,7 @@ module particle
     elseif(mode=='read') then
 
 
-      numparticle=n_particle/nproc
-
-      remainder=mod(n_particle,nproc)
-
-      if(nrank<remainder) then
-        numparticle=numparticle+1
-      endif
+      numparticle=numdist(n_particle)
 
       allocate(xp(1:3,numparticle))
 
@@ -616,15 +660,17 @@ module particle
         !
         partpack(j)%x(1:3)=xp(1:3,j)
         !
-        partpack(j)%v(1) = 0.d0
-        partpack(j)%v(2) = 0.d0
-        partpack(j)%v(3) = 0.d0
+        partpack(j)%v(1) = 0._mytype
+        partpack(j)%v(2) = 0._mytype
+        partpack(j)%v(3) = 0._mytype
         !
         partpack(j)%new  = .false.
         !
       enddo
 
-      deallocate(xp)      
+      deallocate(xp)
+
+      call partical_domain_check(partpack)
 
     endif
 
@@ -674,9 +720,9 @@ module particle
       do j=0,xsize(2)+1
         !
         if(j+xstart(2)-1>ny) then
-          yy(j)=2.d0*yp(ny)-yp(ny-1)
+          yy(j)=2._mytype*yp(ny)-yp(ny-1)
         elseif(j+xstart(2)-1<1) then
-          yy(j)=2.d0*yp(1)-yp(2)
+          yy(j)=2._mytype*yp(1)-yp(2)
         else
           yy(j)=yp(j+xstart(2)-1)
         endif
@@ -684,7 +730,7 @@ module particle
       enddo
       !
       if(xsize(3)==1) then
-        zz(:)=0.d0
+        zz(:)=0._mytype
       else
         do k=0,xsize(3)+1
           zz(k)=real((k+xstart(3)-2),mytype)*dz
@@ -1051,22 +1097,33 @@ module particle
   !| -------------                                                     |
   !| 03-10-2024  | Created by J. Fang                                  |
   !+-------------------------------------------------------------------+
-  subroutine particle_gen_random(particle_new,particle_size)
+  subroutine particle_gen_random(particle_new,particle_size,particle_range)
     !
     ! arguments
     type(partype),intent(out),allocatable :: particle_new(:)
     integer,intent(out) :: particle_size
+    real(mytype),intent(in) :: particle_range(6)
     !
     ! local data
-    integer :: p,j,local_size,total_particles
-    real(mytype) :: dx,dy,dz,x,y,z,ran1,ran2,ran3
-    !
-    total_particles=512
+    integer :: p,j,local_size,code,n,i
+    integer,allocatable :: seed(:)
+    real(mytype) :: dx,dy,dz,x,y,z,ran1,ran2,ran3,plx,ply,plz
+    
 
-    local_size=total_particles/nproc
+    plx=particle_range(2)-particle_range(1)
+    ply=particle_range(4)-particle_range(3)
+    plz=particle_range(6)-particle_range(5)
+
+    local_size=numdist(n_particle)
     !
     allocate(particle_new(1:local_size))
     !
+    call system_clock(count=code)
+    call random_seed(size = n)
+    allocate(seed(n))
+    seed=code+63946*(nrank+1)
+    call random_seed(put = seed)
+
     p=0
     do j=1,local_size
       !
@@ -1074,9 +1131,9 @@ module particle
       call random_number(ran2)
       call random_number(ran3)
       !
-      x=(lxmax(nrank)-lxmin(nrank))*ran1+lxmin(nrank)
-      y=(lymax(nrank)-lymin(nrank))*ran2+lymin(nrank)
-      z=(lzmax(nrank)-lzmin(nrank))*ran3+lzmin(nrank)
+      x=plx*ran1+particle_range(1)
+      y=ply*ran2+particle_range(3)
+      z=plz*ran3+particle_range(5)
       !
       ! print*,x,y,z
       ! print*,(y>=lymin(nrank) .and. y<=lymax(nrank))
@@ -1093,9 +1150,9 @@ module particle
         particle_new(p)%x(2)=y
         particle_new(p)%x(3)=z
         !
-        particle_new(p)%v(1)   =0.d0
-        particle_new(p)%v(2)   =0.d0
-        particle_new(p)%v(3)   =0.d0
+        particle_new(p)%v(1)   =0._mytype
+        particle_new(p)%v(2)   =0._mytype
+        particle_new(p)%v(3)   =0._mytype
         !
         particle_new(p)%new=.false.
         !
@@ -1107,13 +1164,167 @@ module particle
     !
     particle_size=p
 
-    n_particle=psum(particle_size)
-
-    if(nrank==0) print*,'** random particles are generated'
+    deallocate(seed)
     !
   end subroutine particle_gen_random
+
+  subroutine particle_gen_uniform(particle_new,particle_size,particle_range)
+    
+    use param,     only : nclx,ncly,nclz,xlx,yly,zlz
+
+    ! arguments
+    type(partype),intent(out),allocatable :: particle_new(:)
+    integer,intent(out) :: particle_size
+    real(mytype),intent(in) :: particle_range(6)
+    !
+    ! local data
+    integer :: p,i,j,k,n,local_size,code,npx,npy,npz
+    integer :: big_number
+    integer,allocatable :: seed(:)
+    real(mytype) :: x,y,z,detalx,detaly,detalz
+    real(mytype) :: plx,ply,plz
+    !
+
+    plx=particle_range(2)-particle_range(1)
+    ply=particle_range(4)-particle_range(3)
+    plz=particle_range(6)-particle_range(5)
+
+    call particle_dis_xyz(n_particle,plx,ply,plz,npx,npy,npz)
+    !
+    if(nrank==0) then
+        print*,'** actual number of particle in 3 direction',npx,npy,npz,'=',npx*npy*npz
+    endif
+
+    detalx = (particle_range(2)-particle_range(1))/real(npx,mytype)
+    detaly = (particle_range(4)-particle_range(3))/real(npy,mytype)
+    detalz = (particle_range(6)-particle_range(5))/real(npz,mytype)
+    !
+    big_number=npx*npy*npz
+
+    allocate(particle_new(1:big_number))
+    !
+    p=0
+    do k=1,npz
+    do j=1,npy
+    do i=1,npx
+      !
+      x=particle_range(1)+0.5_mytype*detalx+detalx*real(i-1,mytype)
+      y=particle_range(3)+0.5_mytype*detaly+detaly*real(j-1,mytype)
+      z=particle_range(5)+0.5_mytype*detalz+detalz*real(k-1,mytype)
+      !
+      ! print*,x,y,z
+      ! print*,(y>=lymin(nrank) .and. y<=lymax(nrank))
+      !
+      if( x>=lxmin(nrank) .and. x<=lxmax(nrank) .and. &
+          y>=lymin(nrank) .and. y<=lymax(nrank) .and. &
+          z>=lzmin(nrank) .and. z<=lzmax(nrank) ) then
+        !
+        p=p+1
+        !
+        call particle_new(p)%init()
+        !
+        particle_new(p)%x(1) = x
+        particle_new(p)%x(2) = y
+        particle_new(p)%x(3) = z
+        !
+        particle_new(p)%v(1) = 0._mytype
+        particle_new(p)%v(2) = 0._mytype
+        particle_new(p)%v(3) = 0._mytype
+        !
+        particle_new(p)%new=.false.
+        !
+      endif
+      !
+    enddo
+    enddo
+    enddo
+    !
+    call mclean(particle_new,p)
+    !
+    particle_size=p
+    !
+  end subroutine particle_gen_uniform
   !+-------------------------------------------------------------------+
-  !| The end of the subroutine particle_gen_random.                    |
+  !| The end of the subroutine particle_gen.                           |
+  !+-------------------------------------------------------------------+
+
+
+  !+-------------------------------------------------------------------+
+  !| This subroutine is to distribute particles evenly in 3 directions |
+  !+-------------------------------------------------------------------+
+  !| CHANGE RECORD                                                     |
+  !| -------------                                                     |
+  !| 17-10-2024  | Created by J. Fang                                  |
+  !+-------------------------------------------------------------------+
+  subroutine particle_dis_xyz(nptotal,plx,ply,plz,npx,npy,npz)
+
+    ! arguments
+    integer,intent(in) ::  nptotal
+    real(mytype),intent(in) :: plx,ply,plz
+    integer,intent(out) ::  npx,npy,npz
+
+    ! local data
+    integer :: n1
+
+
+    if(abs(plx)<1.d-16 .and. abs(ply)<1.d-16 .and. abs(plz)<1.d-16) then
+
+        npx=1; npy=1; npz=1
+
+    elseif(abs(plx)<1.d-16 .and. abs(ply)<1.d-16) then
+
+        npx=1
+        npy=1
+        npz=nptotal
+
+    elseif(abs(plx)<1.d-16 .and. abs(plz)<1.d-16) then
+
+        npx=1
+        npy=nptotal
+        npz=1
+
+    elseif(abs(ply)<1.d-16 .and. abs(plz)<1.d-16) then
+
+        npx=nptotal
+        npy=1
+        npz=1
+
+    elseif(abs(plx)<1.d-16) then
+
+        n1=sqrt(real(nptotal,mytype)/(ply*plz))
+        
+        npx=1 
+        npy=int(n1*ply)
+        npz=int(n1*plz)
+
+    elseif(abs(ply)<1.d-16) then
+
+        n1=sqrt(real(nptotal,mytype)/(plx*plz))
+        
+        npx=int(n1*plx)
+        npy=1
+        npz=int(n1*plz)
+
+    elseif(abs(plz)<1.d-16) then
+
+        n1=sqrt(real(nptotal,mytype)/(plx*ply))
+        
+        npx=int(n1*plx)
+        npy=int(n1*ply)
+        npz=1
+
+    else
+
+        n1=(real(nptotal,mytype)/(plx*ply*plz))**(1.0/3.0)
+        npx=int(n1*plx)
+        npy=int(n1*ply)
+        npz=int(n1*plz)
+
+    endif
+
+  end subroutine particle_dis_xyz
+  !+-------------------------------------------------------------------+
+  !| The end of the subroutine particle_dis_xyz.                       |
   !+-------------------------------------------------------------------+
 
   !+-------------------------------------------------------------------+
@@ -1136,9 +1347,9 @@ module particle
               lymin(0:nproc-1),lymax(0:nproc-1),  &
               lzmin(0:nproc-1),lzmax(0:nproc-1)   )
     !
-    lxmin=0.d0; lxmax=0.d0
-    lymin=0.d0; lymax=0.d0
-    lzmin=0.d0; lzmax=0.d0
+    lxmin=0._mytype; lxmax=0._mytype
+    lymin=0._mytype; lymax=0._mytype
+    lzmin=0._mytype; lzmax=0._mytype
     !
     lxmin(nrank)=real(0,mytype)*dx
     lxmax(nrank)=real(xend(1),mytype)*dx
@@ -1180,12 +1391,11 @@ module particle
   !| -------------                                                     |
   !| 16-06-2022  | Created by J. Fang                                  |
   !+-------------------------------------------------------------------+
-  subroutine partical_domain_check(mode,particle)
+  subroutine partical_domain_check(particle)
     !
     use param,     only : nclx,ncly,nclz,xlx,yly,zlz
 
     !
-    character(len=*),intent(in) :: mode
     type(partype),intent(in),allocatable,target :: particle(:)
     !
     ! local data 
@@ -1194,127 +1404,46 @@ module particle
 
     psize=msize(particle)
 
-    if(mode=='out_disappear') then
-      !
-      npart=0
-      npcanc=0
-      do jpart=1,psize
-        !
-        pa=>particle(jpart)
-        !
-        if(pa%new) cycle
-        !
-        npart=npart+1
-        if(npart>numparticle) exit
-        ! if the particle is out of domain, mark it and subscribe the 
-        ! total number of particles
-        !
-        if(nclx .and. (pa%x(1)>xlx .or. pa%x(1)<0)) then
-          call pa%reset()
-          npcanc=npcanc+1
-          cycle
+    npart=0
+    npcanc=0
+    do jpart=1,psize
+
+      pa=>particle(jpart)
+
+      if(pa%new) cycle
+
+      npart=npart+1
+      if(npart>numparticle) exit
+
+      ! b.c. for particles at x-direction
+      if(bc_particle(1)=='peri' .and. bc_particle(2)=='peri') then
+
+        if(pa%x(1)>xlx) then
+          pa%x(1)=pa%x(1)-xlx
         endif
-        !
-        if(ncly .and. (pa%x(2)>yly .or. pa%x(2)<0)) then
-          call pa%reset()
-          npcanc=npcanc+1
-          cycle
+
+        if(pa%x(1)<0) then
+          pa%x(1)=pa%x(1)+xlx
         endif
-        !
-        if(nclz .and. (pa%x(3)>zlz .or. pa%x(3)<0)) then
-          call pa%reset()
-          npcanc=npcanc+1
-          cycle
-        endif
-        !
-        if( pa%x(1)>=lxmin(nrank) .and. pa%x(1)<lxmax(nrank) .and. &
-            pa%x(2)>=lymin(nrank) .and. pa%x(2)<lymax(nrank) .and. &
-            pa%x(3)>=lzmin(nrank) .and. pa%x(3)<lzmax(nrank) ) then
-          continue
-        else
-          !
-          pa%swap=.true.
-          !
-          do jrank=0,nproc-1
-            !
-            ! to find which rank the particle are moving to and 
-            ! mark
-            if(jrank==nrank) cycle
-            !
-            if( pa%x(1)>=lxmin(jrank) .and. pa%x(1)<lxmax(jrank) .and. &
-                pa%x(2)>=lymin(jrank) .and. pa%x(2)<lymax(jrank) .and. &
-                pa%x(3)>=lzmin(jrank) .and. pa%x(3)<lzmax(jrank) ) then
-              !
-              pa%rank2go=jrank
-              !
-              exit
-              !
-            endif
-            !
-          enddo
-          !
-        endif
-        !
-      enddo
-      !
-      numparticle=numparticle-npcanc
-      !
-      npcanc_totl=psum(npcanc)
-      if(nrank==0 .and. npcanc_totl>0) print*,' ** ',npcanc_totl,        &
-                                     ' particles are moving out of domain'
-      !
-    elseif(mode=='bc_channel') then
-      !
-      npart=0
-      npcanc=0
-      do jpart=1,psize
-        !
-        pa=>particle(jpart)
-        !
-        if(pa%new) cycle
-        !
-        npart=npart+1
-        !
-        if(npart>numparticle) exit
-        ! if the particle is out of domain, mark it and subscribe the 
-        ! total number of particles
-        !
-        if(nclx) then
-          !
-          if(pa%x(1)>xlx) then
-            pa%x(1)=pa%x(1)-xlx
-          endif
-          !
-          if(pa%x(1)<0) then
-            pa%x(1)=pa%x(1)+xlx
-          endif
-          !
-        endif
-        !
-        if(ncly) then
-          !
-          if(pa%x(2)>yly) then
-            pa%x(2)=pa%x(2)-yly
-          endif 
-          !
-          if(pa%x(2)<0) then
-            pa%x(2)=pa%x(2)+yly
-          endif
-          !
-        else
-          !
-          ! reflect particles back in the domain.
-          if(pa%x(2)>yly) then
-            pa%x(2)=2.d0*yly-pa%x(2)
-          endif
-          if(pa%x(2)<0) then
-            pa%x(2)=-pa%x(2)
-          endif
-          !
-        endif
-        !
-        if(nclz) then
-          !
+
+      endif
+
+      ! b.c. for particles at y-direction
+      if(bc_particle(3)=='peri' .and. bc_particle(4)=='peri') then
+
+       if(pa%x(2)>yly) then
+         pa%x(2)=pa%x(2)-yly
+       endif 
+
+       if(pa%x(2)<0) then
+         pa%x(2)=pa%x(2)+yly
+       endif
+
+      endif
+
+      ! b.c. for particles at z-direction
+      if(bc_particle(5)=='peri' .and. bc_particle(6)=='peri') then
+
           if(pa%x(3)>zlz) then
             pa%x(3)=pa%x(3)-zlz
           endif 
@@ -1322,149 +1451,39 @@ module particle
           if(pa%x(3)<0) then
             pa%x(3)=pa%x(3)+zlz
           endif
-          !
-        endif
-        !
-        if(pa%x(1)>xlx .or. pa%x(1)<0 .or. &
-           pa%x(2)>yly .or. pa%x(2)<0 .or. &
-           pa%x(3)>zlz .or. pa%x(3)<0 ) then
-            print*,' !! waring, the particle still moves out of domain 1'
-            print*,nrank,jpart,'x:',pa%x(:),'v:',pa%v(:),'vf:',pa%vf(:),'f:',pa%f(:)
-            stop
-        endif
-        !
-        if( pa%x(1)>=lxmin(nrank) .and. pa%x(1)<lxmax(nrank) .and. &
-            pa%x(2)>=lymin(nrank) .and. pa%x(2)<lymax(nrank) .and. &
-            pa%x(3)>=lzmin(nrank) .and. pa%x(3)<lzmax(nrank) ) then
+
+      endif
+
+      ! checking local domain boundary 
+      if( pa%x(1)>=lxmin(nrank) .and. pa%x(1)<lxmax(nrank) .and. &
+          pa%x(2)>=lymin(nrank) .and. pa%x(2)<lymax(nrank) .and. &
+          pa%x(3)>=lzmin(nrank) .and. pa%x(3)<lzmax(nrank) ) then
           continue
-        else
+      else
+        !
+        pa%swap=.true.
+        !
+        do jrank=0,nproc-1
           !
-          pa%swap=.true.
+          ! to find which rank the particle are moving to and 
+          ! mark
+          if(jrank==nrank) cycle
           !
-          do jrank=0,nproc-1
+          if( pa%x(1)>=lxmin(jrank) .and. pa%x(1)<lxmax(jrank) .and. &
+              pa%x(2)>=lymin(jrank) .and. pa%x(2)<lymax(jrank) .and. &
+              pa%x(3)>=lzmin(jrank) .and. pa%x(3)<lzmax(jrank) ) then
             !
-            ! to find which rank the particle are moving to and 
-            ! mark
-            if(jrank==nrank) cycle
+            pa%rank2go=jrank
             !
-            if( pa%x(1)>=lxmin(jrank) .and. pa%x(1)<lxmax(jrank) .and. &
-                pa%x(2)>=lymin(jrank) .and. pa%x(2)<lymax(jrank) .and. &
-                pa%x(3)>=lzmin(jrank) .and. pa%x(3)<lzmax(jrank) ) then
-              !
-              pa%rank2go=jrank
-              !
-              exit
-              !
-            endif
+            exit
             !
-          enddo
-          !
-        endif
-        !
-      enddo
-      !
-    elseif(mode=='bc_tgv') then
-      !
-      npart=0
-      npcanc=0
-      do jpart=1,psize
-        !
-        pa=>particle(jpart)
-        !
-        if(pa%new) cycle
-        !
-        npart=npart+1
-        !
-        if(npart>numparticle) exit
-        ! if the particle is out of domain, mark it and subscribe the 
-        ! total number of particles
-        !
-        if(nclx) then
-          !
-          if(pa%x(1)>xlx) then
-            pa%x(1)=pa%x(1)-xlx
           endif
           !
-          if(pa%x(1)<0) then
-            pa%x(1)=pa%x(1)+xlx
-          endif
-          !
-        else
-          stop ' 1 @ partical_domain_check'
-        endif
+        enddo
         !
-        if(ncly) then
-          !
-          if(pa%x(2)>yly) then
-            pa%x(2)=pa%x(2)-yly
-          endif 
-          !
-          if(pa%x(2)<0) then
-            pa%x(2)=pa%x(2)+yly
-          endif
-          !
-        else
-          print*,' ** particles x: ',pa%x(:)
-          stop ' 2 @ partical_domain_check'
-        endif
-        !
-        if(nclz) then
-          !
-          if(pa%x(3)>zlz) then
-            pa%x(3)=pa%x(3)-zlz
-          endif 
-          !
-          if(pa%x(3)<0) then
-            pa%x(3)=pa%x(3)+zlz
-          endif
-          !
-        else
-          stop ' 3 @ partical_domain_check'
-        endif
-        !
-        if(pa%x(1)>xlx .or. pa%x(1)<0 .or. &
-           pa%x(2)>yly .or. pa%x(2)<0 .or. &
-           pa%x(3)>zlz .or. pa%x(3)<0 ) then
-            print*,' !! waring, the particle still moving out of domain 2'
-            print*,nrank,jpart,'x:',pa%x(:),'v:',pa%v(:),'vf:',pa%vf(:),'f:',pa%f(:)
-            stop
-        endif
-        !
-        if( pa%x(1)>=lxmin(nrank) .and. pa%x(1)<lxmax(nrank) .and. &
-            pa%x(2)>=lymin(nrank) .and. pa%x(2)<lymax(nrank) .and. &
-            pa%x(3)>=lzmin(nrank) .and. pa%x(3)<lzmax(nrank) ) then
-          continue
-        else
-          !
-          pa%swap=.true.
-          !
-          do jrank=0,nproc-1
-            !
-            ! to find which rank the particle are moving to and 
-            ! mark
-            if(jrank==nrank) cycle
-            !
-            if( pa%x(1)>=lxmin(jrank) .and. pa%x(1)<lxmax(jrank) .and. &
-                pa%x(2)>=lymin(jrank) .and. pa%x(2)<lymax(jrank) .and. &
-                pa%x(3)>=lzmin(jrank) .and. pa%x(3)<lzmax(jrank) ) then
-              !
-              pa%rank2go=jrank
-              !
-              exit
-              !
-            endif
-            !
-          enddo
-          !
-        endif
-        !
-      enddo
-      !
-    else
-      !
-      stop ' !! mode not defined @ partical_domain_check!!'
-      !
-    endif
+      endif
+
+    enddo
     !
   end subroutine partical_domain_check
   !+-------------------------------------------------------------------+
@@ -1528,8 +1547,8 @@ module particle
     !
     npart=0
     !
-    maxforce=0.d0
-    maxvdiff=0.d0
+    maxforce=0._mytype
+    maxvdiff=0._mytype
     !
     call field_var(ux1,uy1,uz1)
     ! print*,nrank,'|',numparticle
@@ -1541,7 +1560,7 @@ module particle
       if(pa%new) cycle
       !
       pa%v(:) = pa%vf(:)
-      pa%f(:) = 0.d0
+      pa%f(:) = 0._mytype
       !
     enddo
     !
@@ -1748,7 +1767,7 @@ module particle
     allocate(r8send(6,nindsize))
     allocate(r8resv(6,recvsize))
     !
-    r8resv=0.d0
+    r8resv=0._mytype
     !
     do jpart=1,nindsize
       r8send(1,jpart)=datasend(jpart)%x(1)
