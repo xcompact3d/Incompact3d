@@ -343,12 +343,18 @@ contains
        call decomp_2d_write_one(1,uy01,resfile,"uy01",0,io_restart_forces)
        call decomp_2d_write_one(1,ux11,resfile,"ux11",0,io_restart_forces)
        call decomp_2d_write_one(1,uy11,resfile,"uy11",0,io_restart_forces)
+       call decomp_2d_write_one(1,uz01,resfile,"uz01",0,io_restart_forces)
+       call decomp_2d_write_one(1,uz11,resfile,"uz11",0,io_restart_forces)
+
     else
        !read
        call decomp_2d_read_one(1,ux01,resfile,"ux01",io_restart_forces)
        call decomp_2d_read_one(1,uy01,resfile,"uy01",io_restart_forces)
        call decomp_2d_read_one(1,ux11,resfile,"ux11",io_restart_forces)
        call decomp_2d_read_one(1,uy11,resfile,"uy11",io_restart_forces)
+       call decomp_2d_read_one(1,uz01,resfile,"uz01",io_restart_forces)
+       call decomp_2d_read_one(1,uz11,resfile,"uz11",io_restart_forces)
+
     endif
 
     call decomp_2d_end_io(io_restart_forces, resfile)
