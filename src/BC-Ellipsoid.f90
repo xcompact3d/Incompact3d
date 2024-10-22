@@ -85,11 +85,18 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
             ! call EllipsoidalRadius(point, position, orientation, shape, r)
             do i_body = 1,nbody
                 if (cube_flag.eq.0) then 
-                    if ((nrank.eq.0).and.(torq_debug.eq.1)) then 
+                    ! if ((nrank.eq.0).and.(torq_debug.eq.1)) then 
+                    !     write(*,*) "Point, position, orientation, shape for body", i_body, " = "
+                    !     write(*,*) point,position(i_body,:),orientation(i_body,:),shape(i_body,:)
+                    ! endif
+                    call EllipsoidalRadius(point,position(i_body,:),orientation(i_body,:),shape(i_body,:),r)
+                    if (r /= r) then 
                         write(*,*) "Point, position, orientation, shape for body", i_body, " = "
                         write(*,*) point,position(i_body,:),orientation(i_body,:),shape(i_body,:)
+                        write(*,*) "R calculated = ", r
+                        write(*,*) "Timestep = ", itime
                     endif
-                    call EllipsoidalRadius(point,position(i_body,:),orientation(i_body,:),shape(i_body,:),r)
+
                     is_inside = (r-ra(i_body)).lt.zeromach
                     ! if (is_inside) then 
                     !     call EllipsoidalRadius_debug(point,position(i_body,:),orientation(i_body,:),shape(i_body,:),r)
