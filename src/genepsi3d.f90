@@ -317,6 +317,7 @@ contains
     do j=1,ny-1
        do jraf=1,nraf
           ypraf(jraf+nraf*(j-1))=yp(j)+real(jraf-1, mytype)*(yp(j+1)-yp(j))/real(nraf, mytype)
+          write(*,*) "At j = ", j, ", jraf = ", jraf, "ypraf = ", yp(j)+real(jraf-1, mytype)*(yp(j+1)-yp(j))/real(nraf, mytype)
        enddo
     enddo
     if(.not.ncly)ypraf(nyraf)=yp(ny)
