@@ -55,6 +55,7 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
     ! Intitialise epsi
     epsi(:,:,:)=zero
 
+    
 
     ! Update center of moving ellipsoid
     ! if (t.ne.0.) then
@@ -79,6 +80,10 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
         do j=nyi,nyf
         ! ym=(real(j-1,mytype))*dy
         ym=yp(j)
+        if (ym /= ym) then
+            write(*,*) "ym = ", ym, " should be ", ((real(j-1,mytype))*dy), ", as j = ", jj
+        endif
+
         do i=nxi,nxf
             xm=real(i-1,mytype)*dx
             point=[xm, ym, zm]
