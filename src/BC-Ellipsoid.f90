@@ -23,7 +23,7 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
     use ibm_param
     use dbg_schemes, only: sqrt_prec
     use ellipsoid_utils, only: NormalizeQuaternion, EllipsoidalRadius, EllipsoidalRadius_debug
-    use complex_geometry, only: nraf
+    use complex_geometry, only: nraf,nyraf
 
     implicit none
 
@@ -83,7 +83,9 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
         ym=yp(j)
         if (ym /= ym) then
             write(*,*) "ym = ", ym, " should be ", ((real(j-1,mytype))*dy), ", as j = ", j,  " (or maybe it should be ", ((real(j-1,mytype))*dy)/real(nraf,mytype), ")"
-            write(*,*) "yp = ", yp
+            if (j.lt.(nyraf)) then 
+                write(*,*) "yp(j-1) = ", yp(j-1), " yp(j+1) = ", yp(j+1)
+            endif
         endif
 
         do i=nxi,nxf
