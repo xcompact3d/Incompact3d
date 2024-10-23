@@ -210,7 +210,7 @@ contains
     use MPI
     use navier,   only : gradp
     use mhd,      only : mhd_equation,Bm,dBm
-    use particle, only : particle_checkpoint,n_particle
+    use particle, only : particle_checkpoint,n_particles
 
     implicit none
 
@@ -232,10 +232,10 @@ contains
     character(len=30) :: filename, filestart
     character(len=32) :: fmt2,fmt3,fmt4
     character(len=7) :: fmt1
-    character(len=80) :: varname
+    character(len=80) :: varname,particle_res_file
     NAMELIST /Time/ tfield, itime
     NAMELIST /NumParam/ nx, ny, nz, istret, beta, dt, itimescheme
-    NAMELIST /ParTrack/ n_particle
+    NAMELIST /ParTrack/ n_particles,particle_res_file
 
     logical, save :: first_restart = .true.
     
@@ -331,7 +331,7 @@ contains
        call decomp_2d_close_io(io_restart, resfile)
 
        if(particle_active) then
-          call particle_checkpoint(mode='write')
+          call particle_checkpoint(mode='write',filename='checkpoint-particles')
        endif
 
        ! Validate restart file then remove old file and update restart.info
@@ -378,7 +378,8 @@ contains
           if(particle_active) then
             write(111,'(A)')'&ParTrack'
             write(111,'(A)')'!========================='
-            write(111,'(A,I13)') 'n_particle=  ',n_particle
+            write(111,'(A,I13)') 'n_particles=  ',n_particles
+            write(111,'(A)')     'particle_res_file=  "checkpoint-particles"'
             write(111,'(A)')'/End'
             write(111,'(A)')'!========================='
           endif
@@ -492,7 +493,7 @@ contains
          itime0 = 0
        end if
 
-       call particle_checkpoint(mode='read')
+       call particle_checkpoint(mode='read',filename=trim(particle_res_file))
        
     endif
 

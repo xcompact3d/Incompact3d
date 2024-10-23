@@ -12,7 +12,7 @@ module particle
 
   interface mclean
     module procedure mclean_mytype
-    module procedure mclean_particle
+    module procedure mclean_particles
   end interface mclean 
   !
   interface msize
@@ -73,15 +73,15 @@ module particle
     !
   end type partype
 
-  integer :: numparticle,n_particle
+  integer :: n_local_particles,n_particles
   character(len=32) :: initype_particle
   character(len=4) :: bc_particle(6)
   real(mytype) :: particletime,sub_time_step,particle_inject_period
-  type(partype),allocatable,target :: partpack(:),initial_particles(:)
+  type(partype),allocatable,target :: partpack(:),particles_inject(:)
   real(mytype),allocatable,dimension(:) :: lxmin,lxmax,lymin,lymax,lzmin,lzmax
   !+------------------+-----------------------------------------------+
-  !|      numparticle | number of particles in the domain             |
-  !|       n_particle | total number of particles.                    |
+  !|n_local_particles | number of particles in the domain             |
+  !|      n_particles | total number of particles.                    |
   !| initype_particle | initilisation option for particle.            |
   !|      bc_particle | boundary condtion for particles.              |
   !|     particletime | current particle time .                       |
@@ -100,7 +100,7 @@ module particle
 
   public :: local_domain_size,particle_init,intt_particel,            &
             partcle_report,visu_particle,particle_checkpoint,         &
-            n_particle,initype_particle,bc_particle,                  &
+            n_particles,initype_particle,bc_particle,                  &
             particle_inject_period
 
   contains
@@ -229,6 +229,8 @@ module particle
 
     integer :: ibc
     character(len=4) :: bcname(6)
+    logical :: file_exists
+    integer :: file_size
 
     if(nrank .ne. 0) return
 
@@ -244,6 +246,8 @@ module particle
         do ibc=1,6
             if(bc_particle(ibc) == 'peri') then
                 print*,'** particles b.c. at ',bcname(ibc),': periodic'
+            elseif(bc_particle(ibc) == 'refl') then
+                print*,'** particles b.c. at ',bcname(ibc),': reflective'
             else
                 print*,'!! bc_particle:',bc_particle 
                 stop '!! bc_particle not defined'
@@ -252,12 +256,19 @@ module particle
 
         if(trim(initype_particle)=='random') then
             write(*,'(A,I0,A)')' ** particle initilisation: generate ', &
-                        n_particle,' random particles '
+                        n_particles,' random particles '
         elseif(trim(initype_particle)=='uniform') then
             write(*,'(A,I0,A)')' ** particle initilisation: generate ', &
-                        n_particle,' uniformly distributed particles '
+                        n_particles,' uniformly distributed particles '
         else
-            stop ' !!initype_particle error @ partcle_report '//trim(initype_particle)
+
+            inquire(file=trim(initype_particle), exist=file_exists, size=file_size)
+            if(file_exists) then
+                write(*,*)'** read particles from file: ',trim(initype_particle)
+            else
+                stop ' !!initype_particle error @ partcle_report: '//trim(initype_particle)
+            endif
+            
         endif
 
         if(particle_inject_period>0.0_mytype) then
@@ -265,7 +276,6 @@ module particle
         endif
 
     endif
-
 
     !
   end subroutine partcle_report
@@ -290,6 +300,8 @@ module particle
     !
     ! local data
     real(mytype) :: partical_range(6)
+    logical :: file_exists
+    integer :: psize
     ! real(mytype) :: dx,dy,dz
     !
     partical_range(1) = 0.0_mytype
@@ -308,22 +320,28 @@ module particle
 
     ! generate random particles within the local domain
     if(trim(initype_particle)=='random') then 
-        call particle_gen_random(initial_particles,numparticle,partical_range)
+        call particle_gen_random(partpack,psize,partical_range)
     elseif(trim(initype_particle)=='uniform') then 
-        call particle_gen_uniform(initial_particles,numparticle,partical_range)
+        call particle_gen_uniform(partpack,psize,partical_range)
     else
-        stop ' !! initype_particle error @ particle_init!!'
+        inquire(file=trim(initype_particle), exist=file_exists)
+        if(file_exists) then
+            call particle_read_bin(partpack,trim(initype_particle),psize)
+        else
+            stop ' !! initype_particle error @ particle_init!!'
+        endif
     endif
 
-    call partical_domain_check(initial_particles)
+    n_local_particles=psize
 
-    call partical_swap
+    n_particles=psum(n_local_particles)
 
-    call particle_add(partpack,initial_particles)
+    if(nrank==0) print*,'** ',n_particles,'particles are generated'
 
-    n_particle=psum(msize(partpack))
-
-    if(nrank==0) print*,'** ',n_particle,'particles are generated'
+    if(particle_inject_period>0.0_mytype) then
+        if(n_local_particles>0) particles_inject=partpack
+        call particle_checkpoint(mode='write',filename='particle_inject.bin')
+    endif
 
   end subroutine particle_init
   !+-------------------------------------------------------------------+
@@ -343,14 +361,13 @@ module particle
     type(partype),allocatable :: particle_new(:)
     integer :: num_new_particle,n
     !
-    call particle_add(partpack,initial_particles,n)
+    call particle_add(partpack,particles_inject,n_local_particles,n)
     !
-    numparticle=numparticle+n
-    !
-    ! call partical_domain_check('out_disappear')
-    call partical_domain_check(partpack)
-    !
-    call partical_swap
+    n_local_particles=n_local_particles+n
+
+    ! call partical_domain_check(partpack)
+    ! !
+    ! call partical_swap(partpack)
     !
   end subroutine partile_inject
   !+-------------------------------------------------------------------+
@@ -377,7 +394,7 @@ module particle
     real(mytype),intent(in) :: time1
     !
     ! local data 
-    integer :: p,psize,jpart,npart,total_num_part
+    integer :: p,psize,jpart,npart
     integer,save :: old_num_part=0
     type(partype),pointer :: pa
     real(mytype),save :: time0,tsro
@@ -411,6 +428,9 @@ module particle
         particle_inject=.true.
         next_particle_inject_time=time1+particle_inject_period
       endif
+
+      old_num_part=n_particles
+
       !
       firstcal=.false.
       !
@@ -436,20 +456,22 @@ module particle
       !
       call particle_force(uxp,uyp,uzp)
       !
-      allocate(xcor(3,numparticle),dxco(3,numparticle,ntime))
-      allocate(vcor(3,numparticle),dvco(3,numparticle,ntime))
-      !
       psize=msize(partpack)
+
+      allocate(xcor(3,psize),dxco(3,psize,ntime))
+      allocate(vcor(3,psize),dvco(3,psize,ntime))
       !
       npart=0
       do jpart=1,psize
-        !
+
         pa=>partpack(jpart)
-        !
+
         if(pa%new) cycle
-        !
+
         npart=npart+1
-        !
+
+        if(npart>n_local_particles) exit
+
         xcor(:,npart)=pa%x(:)
 
         dxco(:,npart,1)=pa%v(:)
@@ -457,12 +479,10 @@ module particle
         dxco(:,npart,2:ntime)=pa%dx(:,2:ntime)
 
         vcor(:,npart)=pa%v(:)
-        !
+
         dvco(:,npart,1)=pa%f(:)
         dvco(:,npart,2:ntime)=pa%dv(:,2:ntime)
-        !
-        if(npart==numparticle) exit
-        !
+
       enddo
       !
       if (itimescheme.eq.1) then
@@ -536,10 +556,12 @@ module particle
         if(pa%new) cycle
         !
         npart=npart+1
+
+        if(npart>n_local_particles) exit
         !
         if(isnan(vcor(1,npart)) .or. isnan(vcor(2,npart)) .or. isnan(vcor(3,npart))) then
           print*, '!! particle velocity NaN @ intt_particel'
-          print*, pa%v(:),pa%f(:)
+          print*, npart,pa%x(:),pa%v(:)
           stop
         endif
         !
@@ -550,23 +572,23 @@ module particle
         pa%dv(:,2:ntime)=dvco(:,npart,2:ntime)
         pa%dx(:,2:ntime)=dxco(:,npart,2:ntime)
         !
-        if(npart==numparticle) exit
-        !
       enddo
       !
       deallocate(xcor,dxco,vcor,dvco)
-      !
-      call partical_domain_check(partpack)
-      !
-      call partical_swap
-      !
-      total_num_part=psum(numparticle)
-      !
+      
+      call partical_domain_check(partpack,n_local_particles)
+      
+      call partical_swap(partpack,n_local_particles)
+      
+      n_particles=psum(n_local_particles)
+
       if(nrank==0) then
-        if(total_num_part.ne.old_num_part) then
-          print*,' ** number of particles changes from ',old_num_part,'->',total_num_part
+
+        if(n_particles.ne.old_num_part) then
+          write(*,'(3(A,I0))')'** number of particles changes from ',old_num_part, &
+                                      ' -> ',n_particles,' : ',n_particles-old_num_part
         endif
-        old_num_part=total_num_part
+        old_num_part=n_particles
       endif
       !
     enddo
@@ -597,7 +619,7 @@ module particle
 
     integer, intent(in) :: itime
 
-    integer :: num,j,iovp,psize,total_num_part,p
+    integer :: num,j,iovp,psize,p
     character(len=64) :: file2write
 
     real(mytype),allocatable :: xyz(:,:)
@@ -605,27 +627,23 @@ module particle
     ! Snapshot number
     num = itime/ioutput 
 
-    if(numparticle>0) then
-      !
-      allocate(xyz(3,numparticle))
-      !
-      psize=msize(partpack)
-
-      j=0
-      do p=1,psize
-        !
-        if(partpack(p)%new) cycle
-        !
-        j=j+1
-
-        xyz(1:3,j)  =partpack(p)%x(1:3)
-
-      enddo
-
-    endif
-
-    total_num_part=psum(numparticle)
+    psize=msize(partpack)
     !
+    allocate(xyz(3,n_local_particles))
+    !
+    j=0
+    do p=1,psize
+      !
+      if(partpack(p)%new) cycle
+      !
+      j=j+1
+
+      xyz(1:3,j)  =partpack(p)%x(1:3)
+
+      if(j==n_local_particles) exit
+
+    enddo
+
     file2write='particle_coordinates_'//int_to_str(num)//'.bin'
 
     call pwrite('./data/'//trim(file2write),xyz)
@@ -640,9 +658,9 @@ module particle
       write(iovp,'(A)')'    <Grid GridType="Collection" CollectionType="Temporal">'
 
       write(iovp,'(A)')'      <Grid Name="ParticleData_t0" GridType="Uniform">'
-      write(iovp,'(A,I0,A)')'        <Topology TopologyType="Polyvertex" NodesPerElement="',total_num_part,'"/>'
+      write(iovp,'(A,I0,A)')'        <Topology TopologyType="Polyvertex" NodesPerElement="',n_particles,'"/>'
       write(iovp,'(A)')'        <Geometry GeometryType="XYZ">'
-      write(iovp,'(A,I0,A)')'          <DataItem Format="binary" Dimensions="',total_num_part,' 3 " NumberType="Float" Precision="8">'
+      write(iovp,'(A,I0,A)')'          <DataItem Format="binary" Dimensions="',n_particles,' 3 " NumberType="Float" Precision="8">'
       write(iovp,'(A,A,A)')'            ',trim(file2write),' </DataItem>'
       write(iovp,'(A)')'        </Geometry>'
       write(iovp,'(A)')'      </Grid>'
@@ -669,58 +687,125 @@ module particle
   !| -------------                                                     |
   !| 08-Oct-2024  | Created by J. Fang STFC Daresbury Laboratory       |
   !+-------------------------------------------------------------------+
-  subroutine particle_checkpoint(mode)
+  subroutine particle_checkpoint(mode,filename)
 
-    character(len=*),intent(in) :: mode
-    
-    character(len=20) :: resfile
+    character(len=*),intent(in) :: mode,filename
 
     real(mytype),allocatable,dimension(:,:) :: xp
 
-    integer :: j
-
-    resfile = "checkpoint-particles"
+    integer :: j,p,file_size,data_size,ninject,psize
+    logical :: file_exists
+    real(mytype) :: xpmin(3),xpmax(3)
 
     if(mode=='write') then
 
-      allocate(xp(1:3,numparticle))
+      psize=msize(partpack)
+
+      n_particles=psum(n_local_particles)
+
+      allocate(xp(1:3,n_local_particles))
   
-      do j=1,numparticle
-        xp(1:3,j)=partpack(j)%x(1:3)
+      j=0
+      do p=1,psize
+        !
+        if(partpack(p)%new) cycle
+        !
+        j=j+1
+
+        xp(1:3,j)  =partpack(p)%x(1:3)
+
+        if(j==n_local_particles) exit
+
       enddo
+
+      inquire(file=filename, exist=file_exists,size=file_size)
+
+      if(file_exists) then
+        call rename(filename,filename//'-bak')
+      endif
   
-      call pwrite(resfile,xp)
+      call pwrite(filename,xp)
   
       deallocate(xp)
 
     elseif(mode=='read') then
 
+      inquire(file=filename, exist=file_exists,size=file_size)
 
-      numparticle=numdist(n_particle)
 
-      allocate(xp(1:3,numparticle))
+      if(file_exists) then
 
-      call pread(resfile,xp)
+        data_size=file_size/8_8/3
 
-      allocate(partpack(1:numparticle))
+        if(data_size .ne. n_particles) then
+            if(nrank==0) then
+                print*,' !! warning !!, the datasize of file:',filename,data_size, &
+                          ' not consistent with n_particles',n_particles
+            endif
+        endif
 
-      do j=1,numparticle
-        !
-        call partpack(j)%init()
-        !
-        partpack(j)%x(1:3)=xp(1:3,j)
-        !
-        partpack(j)%v(1) = 0._mytype
-        partpack(j)%v(2) = 0._mytype
-        partpack(j)%v(3) = 0._mytype
-        !
-        partpack(j)%new  = .false.
-        !
-      enddo
+        psize=numdist(n_particles)
 
-      deallocate(xp)
 
-      call partical_domain_check(partpack)
+        allocate(xp(1:3,psize))
+
+        call pread(filename,xp)
+
+        allocate(partpack(1:psize))
+
+        xpmin=1.e10_mytype
+        xpmax=0.0_mytype
+
+        do j=1,psize
+          !
+          call partpack(j)%init()
+          !
+          partpack(j)%x(1:3)=xp(1:3,j)
+          !
+          partpack(j)%v(1) = 0._mytype
+          partpack(j)%v(2) = 0._mytype
+          partpack(j)%v(3) = 0._mytype
+          !
+          partpack(j)%new  = .false.
+          !
+          xpmin(1)=min(xpmin(1),partpack(j)%x(1))
+          xpmin(2)=min(xpmin(2),partpack(j)%x(2))
+          xpmin(3)=min(xpmin(3),partpack(j)%x(3))
+          xpmax(1)=max(xpmax(1),partpack(j)%x(1))
+          xpmax(2)=max(xpmax(2),partpack(j)%x(2))
+          xpmax(3)=max(xpmax(3),partpack(j)%x(3))
+        enddo
+
+        deallocate(xp)
+
+        n_local_particles=psize
+
+        call partical_domain_check(partpack,n_local_particles)
+
+        call partical_swap(partpack,n_local_particles)
+
+        xpmin(1)=pmin(xpmin(1))
+        xpmin(2)=pmin(xpmin(2))
+        xpmin(3)=pmin(xpmin(3))
+        xpmax(1)=pmax(xpmax(1))
+        xpmax(2)=pmax(xpmax(2))
+        xpmax(3)=pmax(xpmax(3))
+
+        if(nrank==0) then
+            print*,' ** min particle coordinates: ',xpmin
+            print*,' ** max particle coordinates: ',xpmax
+        endif
+
+        if(particle_inject_period>0.0_mytype) then
+
+            call particle_read_bin(particles=particles_inject,filename='particle_inject.bin',nump_read=ninject)
+
+        endif
+
+       else
+         ! for the checkpoint file doesnot exist, re-intilise particles
+         stop ' check point missing for particles, looking for:'//filename
+       endif
 
     endif
 
@@ -728,6 +813,53 @@ module particle
   !+-------------------------------------------------------------------+
   ! The end of the subroutine particle_checkpoint                      |
   !+-------------------------------------------------------------------+
+
+  subroutine particle_read_bin(particles,filename,nump_read)
+
+    ! arguments
+    type(partype),intent(out),allocatable :: particles(:)
+    character(len=*),intent(in) :: filename
+    integer,intent(out) :: nump_read
+
+    ! local data
+    real(mytype),allocatable,dimension(:,:) :: xp
+    integer :: j,file_size,data_size
+
+    inquire(file=filename, size=file_size)
+
+    data_size=file_size/8_8/3
+
+    nump_read=numdist(data_size)
+
+    allocate(xp(1:3,nump_read))
+
+    call pread(filename,xp)
+
+    allocate(particles(1:nump_read))
+
+    do j=1,nump_read
+      !
+      call particles(j)%init()
+      !
+      particles(j)%x(1:3)=xp(1:3,j)
+      !
+      particles(j)%v(1) = 0._mytype
+      particles(j)%v(2) = 0._mytype
+      particles(j)%v(3) = 0._mytype
+      !
+      particles(j)%new  = .false.
+      !
+    enddo
+
+    deallocate(xp)
+
+    call partical_domain_check(particles)
+
+    call partical_swap(particles)
+
+    call particle_array_clear(particles)
+
+  end subroutine particle_read_bin
 
   !+-------------------------------------------------------------------+
   !| This subroutine is to get the fluids velocity on particles.       |
@@ -964,8 +1096,8 @@ module particle
       !
       npart=npart+1
       !
-      if(npart==numparticle) exit
-      !
+      if(npart==n_local_particles) exit
+
     enddo
     !
   end subroutine field_var
@@ -982,33 +1114,41 @@ module particle
   !| -------------                                                     |
   !| 16-06-2022  | Created by J. Fang                                  |
   !+-------------------------------------------------------------------+
-  subroutine partical_swap
+  subroutine partical_swap(particles,num_active_particles)
     !
-    use param,     only : nclx,ncly,nclz,xlx,yly,zlz
-    !
+    ! arguments
+    type(partype),intent(inout),allocatable,target :: particles(:)
+    integer,intent(inout),optional :: num_active_particles
+
     ! local data 
-    integer :: p,psize,jrank,jpart,npart,n,newsize
+    integer :: p,psize,jrank,jpart,npart,n,newsize,npexit
     type(partype),pointer :: pa
     integer :: nsend(0:nproc-1),nrecv(0:nproc-1),nsend_total
     !+------------+--------------------------------+
     !| nsendtable | the table to record how much   |
     !|            | particle to send to a rank     |
     !+------------+--------------------------------+
-    integer :: pr(0:nproc-1,1:numparticle)
+    integer :: pr(0:nproc-1,1:msize(particles))
     type(partype),allocatable :: pa2send(:),pa2recv(:)
     real(mytype) :: timebeg,tvar1,tvar11,tvar2,tvar3,tvar4
     !
-    psize=msize(partpack)
+    psize=msize(particles)
     !
     nsend=0
     !
     n=0
     pr=0
     npart=0
+
+    if(present(num_active_particles)) then
+        npexit=num_active_particles
+    else
+        npexit=psize
+    endif
     !
     do jpart=1,psize
       !
-      pa=>partpack(jpart)
+      pa=>particles(jpart)
       !
       if(pa%new) cycle
       !
@@ -1025,15 +1165,14 @@ module particle
       !
       npart=npart+1
       !
-      if(npart==numparticle) exit
-      !
+      if(npart==npexit) exit
+
     enddo
     !
     nsend_total=n
     !
     ! synchronize recv table according to send table
     nrecv=ptabupd(nsend)
-    !
     !
     ! to establish the buffer of storing particels about to send
     if(nsend_total>0) then
@@ -1049,18 +1188,19 @@ module particle
           !
           p=pr(jrank,jpart)
           !
-          pa2send(n)=partpack(p)
+          pa2send(n)=particles(p)
           !
-          call partpack(p)%reset()
-          !
-          numparticle=numparticle-1
-          !
+          call particles(p)%reset()
+
+          if(present(num_active_particles)) num_active_particles=num_active_particles-1
+
         enddo
         !
       enddo
       !
     endif 
     !
+    
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! swap particle among ranks
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1069,9 +1209,12 @@ module particle
     ! end of swap particle among ranks
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !
-    call particle_add(partpack,pa2recv,n)
-    !
-    numparticle=numparticle+n
+    if(present(num_active_particles)) then
+        call particle_add(particles,pa2recv,num_active_particles,n)
+        num_active_particles=num_active_particles+n
+    else
+        call particle_add(particles,pa2recv)
+    endif
     !
   end subroutine partical_swap
   !+-------------------------------------------------------------------+
@@ -1079,37 +1222,95 @@ module particle
   !+-------------------------------------------------------------------+
   !
   !+-------------------------------------------------------------------+
-  !| This subroutine is to add particles to the current particle arrary|
+  !| This subroutine is to remove all new particles from an array.     |
   !+-------------------------------------------------------------------+
-  !| tecplot format for now                                            |
+  !| CHANGE RECORD                                                     |
+  !| -------------                                                     |
+  !| 22-10-2024  | Created by J. Fang                                  |
+  !+-------------------------------------------------------------------+
+  subroutine particle_array_clear(particles)
+    !
+    use param,     only : nclx,ncly,nclz,xlx,yly,zlz
+    !
+    ! arguments
+    type(partype),intent(inout),allocatable,target :: particles(:)
+
+    ! local data
+    type(partype),allocatable :: buffer(:)
+    integer :: n,j
+
+    allocate(buffer(1:msize(particles)))
+
+    n=0
+    do j=1,msize(particles)
+
+        if(particles(j)%new) cycle
+
+        n=n+1
+
+        buffer(n)=particles(j)
+
+    enddo
+
+    call mclean(buffer,n)
+
+    deallocate(particles)
+
+    call move_alloc(buffer,particles)
+
+    return
+
+  end subroutine particle_array_clear
+  !+-------------------------------------------------------------------+
+  ! The end of the subroutine particle_array_clear                     |
+  !+-------------------------------------------------------------------+
+  !
+  !+-------------------------------------------------------------------+
+  !| This subroutine is to add particles to the current particle arrary|
   !+-------------------------------------------------------------------+
   !| CHANGE RECORD                                                     |
   !| -------------                                                     |
   !| 28-06-2022  | Created by J. Fang                                  |
   !+-------------------------------------------------------------------+
-  subroutine particle_add(particle_cur,particle_new,num_part_incr)
+  subroutine particle_add(particle_cur,particle_new,num_active_particles,num_part_incr)
     !
     ! arguments
     type(partype),intent(inout),allocatable,target :: particle_cur(:)
     type(partype),intent(in),allocatable :: particle_new(:)
+    integer,intent(in),optional :: num_active_particles
     integer,intent(out),optional :: num_part_incr
     !
     ! local data
     integer :: psize,newsize,n,jpart
     type(partype),pointer :: pa
     !
+    if(msize(particle_new)<=0) then
+        if(present(num_part_incr)) num_part_incr=0
+        return
+    endif
+
     psize=msize(particle_cur)
     !
-    ! now add the received particle in to the array, dynamically
-    if(numparticle+msize(particle_new)>psize) then
-      !
-      ! expand the particle array
-      newsize=max(numparticle+msize(particle_new),numparticle+100)
-      !
-      call mextend(particle_cur,newsize)
-      !
-      psize=newsize
+    if(present(num_active_particles)) then
+
+      ! now add the received particle in to the array, dynamically
+      if(num_active_particles+msize(particle_new)>psize) then
+        !
+        ! expand the particle array
+        newsize=max(num_active_particles+msize(particle_new),num_active_particles+100)
+      else
+        newsize=psize
+      endif
+
+    else
+
+        newsize=psize+msize(particle_new)
+
     endif
+
+    call mextend(particle_cur,newsize)
+    !
+    psize=newsize
     !
     n=0
     do jpart=1,psize
@@ -1133,9 +1334,6 @@ module particle
     !
     ! print*,nrank,'|',n,newsize
     if(present(num_part_incr)) num_part_incr=n
-
-    return
-
     !
   end subroutine particle_add
   !+-------------------------------------------------------------------+
@@ -1167,7 +1365,7 @@ module particle
     ply=particle_range(4)-particle_range(3)
     plz=particle_range(6)-particle_range(5)
 
-    local_size=numdist(n_particle)
+    local_size=numdist(n_particles)
     !
     allocate(particle_new(1:local_size))
     !
@@ -1191,9 +1389,9 @@ module particle
       ! print*,x,y,z
       ! print*,(y>=lymin(nrank) .and. y<=lymax(nrank))
       !
-      if( x>=lxmin(nrank) .and. x<=lxmax(nrank) .and. &
-          y>=lymin(nrank) .and. y<=lymax(nrank) .and. &
-          z>=lzmin(nrank) .and. z<=lzmax(nrank) ) then
+      if( x>=lxmin(nrank) .and. x<lxmax(nrank) .and. &
+          y>=lymin(nrank) .and. y<lymax(nrank) .and. &
+          z>=lzmin(nrank) .and. z<lzmax(nrank) ) then
         !
         p=p+1
         !
@@ -1242,7 +1440,7 @@ module particle
     ply=particle_range(4)-particle_range(3)
     plz=particle_range(6)-particle_range(5)
 
-    call particle_dis_xyz(n_particle,plx,ply,plz,npx,npy,npz)
+    call particle_dis_xyz(n_particles,plx,ply,plz,npx,npy,npz)
     !
     if(nrank==0) then
         print*,'** actual number of particle in 3 direction',npx,npy,npz,'=',npx*npy*npz
@@ -1268,9 +1466,9 @@ module particle
       ! print*,x,y,z
       ! print*,(y>=lymin(nrank) .and. y<=lymax(nrank))
       !
-      if( x>=lxmin(nrank) .and. x<=lxmax(nrank) .and. &
-          y>=lymin(nrank) .and. y<=lymax(nrank) .and. &
-          z>=lzmin(nrank) .and. z<=lzmax(nrank) ) then
+      if( x>=lxmin(nrank) .and. x<lxmax(nrank) .and. &
+          y>=lymin(nrank) .and. y<lymax(nrank) .and. &
+          z>=lzmin(nrank) .and. z<lzmax(nrank) ) then
         !
         p=p+1
         !
@@ -1295,7 +1493,7 @@ module particle
     call mclean(particle_new,p)
     !
     particle_size=p
-    !
+
   end subroutine particle_gen_uniform
   !+-------------------------------------------------------------------+
   !| The end of the subroutine particle_gen.                           |
@@ -1444,18 +1642,25 @@ module particle
   !| -------------                                                     |
   !| 16-06-2022  | Created by J. Fang                                  |
   !+-------------------------------------------------------------------+
-  subroutine partical_domain_check(particle)
+  subroutine partical_domain_check(particle,num_active_particles)
     !
-    use param,     only : nclx,ncly,nclz,xlx,yly,zlz
+    use param,     only : xlx,yly,zlz
 
     !
     type(partype),intent(in),allocatable,target :: particle(:)
+    integer,intent(inout),optional :: num_active_particles
     !
     ! local data 
-    integer :: jpart,npart,psize,jrank,npcanc,npcanc_totl
+    integer :: jpart,npart,psize,jrank,npcanc,npcanc_totl,nbc,npexit
     type(partype),pointer :: pa
 
     psize=msize(particle)
+
+    if(present(num_active_particles)) then
+        npexit=num_active_particles
+    else
+        npexit=psize
+    endif
 
     npart=0
     npcanc=0
@@ -1466,46 +1671,45 @@ module particle
       if(pa%new) cycle
 
       npart=npart+1
-      if(npart>numparticle) exit
 
-      ! b.c. for particles at x-direction
-      if(bc_particle(1)=='peri' .and. bc_particle(2)=='peri') then
+      if(npart>npexit) exit
 
-        if(pa%x(1)>xlx) then
-          pa%x(1)=pa%x(1)-xlx
-        endif
+      if(pa%x(1)<0) then
 
-        if(pa%x(1)<0) then
-          pa%x(1)=pa%x(1)+xlx
-        endif
+        ! xmin face
+        call particle_bc(face=1,bctype=bc_particle(1),particle=pa)
 
+      elseif(pa%x(1)>xlx) then
+
+        ! xmax face
+        call particle_bc(face=2,bctype=bc_particle(2),particle=pa)
+      
       endif
 
-      ! b.c. for particles at y-direction
-      if(bc_particle(3)=='peri' .and. bc_particle(4)=='peri') then
+      if(pa%x(2)<0) then
 
-       if(pa%x(2)>yly) then
-         pa%x(2)=pa%x(2)-yly
-       endif 
+        ! ymin face
+        call particle_bc(face=3,bctype=bc_particle(3),particle=pa)
 
-       if(pa%x(2)<0) then
-         pa%x(2)=pa%x(2)+yly
-       endif
+      elseif(pa%x(2)>yly) then
 
+        ! ymax face
+        call particle_bc(face=4,bctype=bc_particle(4),particle=pa)
+      
       endif
 
-      ! b.c. for particles at z-direction
-      if(bc_particle(5)=='peri' .and. bc_particle(6)=='peri') then
+      if(pa%x(3)<0) then
 
-          if(pa%x(3)>zlz) then
-            pa%x(3)=pa%x(3)-zlz
-          endif 
-          !
-          if(pa%x(3)<0) then
-            pa%x(3)=pa%x(3)+zlz
-          endif
+        ! zmin face
+        call particle_bc(face=5,bctype=bc_particle(5),particle=pa)
 
+      elseif(pa%x(3)>zlz) then
+
+        ! zmax face
+        call particle_bc(face=6,bctype=bc_particle(6),particle=pa)
+      
       endif
+
 
       ! checking local domain boundary 
       if( pa%x(1)>=lxmin(nrank) .and. pa%x(1)<lxmax(nrank) .and. &
@@ -1541,6 +1745,66 @@ module particle
   end subroutine partical_domain_check
   !+-------------------------------------------------------------------+
   ! The end of the subroutine partical_domain_check                    |
+  !+-------------------------------------------------------------------+
+
+  !+-------------------------------------------------------------------+
+  !| This subroutine is to apply b.c. to particles.                    |
+  !+-------------------------------------------------------------------+
+  !| CHANGE RECORD                                                     |
+  !| -------------                                                     |
+  !| 03-10-2024  | Created by J. Fang                                  |
+  !+-------------------------------------------------------------------+
+  subroutine particle_bc(face,bctype,particle)
+
+    use param,     only : xlx,yly,zlz
+
+    ! arguments
+    integer,intent(in) :: face
+    character(len=4),intent(in) :: bctype
+    type(partype),intent(inout) :: particle
+
+    ! local data
+    real(mytype) :: iface
+    real(mytype),save :: bcord(6)
+    logical,save :: firstcal=.true.
+    integer :: idir
+    !
+    if(firstcal) then
+
+        bcord(1)=0.0_mytype
+        bcord(2)=xlx
+        bcord(3)=0.0_mytype
+        bcord(4)=yly
+        bcord(5)=0.0_mytype
+        bcord(6)=zlz
+
+        firstcal=.false.
+    endif
+
+    idir=(face+1)/2
+
+    if(idir>3) then
+        print*,idir,face
+        stop '!! idir error @ particle_bc'
+    endif
+
+    if(mod(face,2)==0) then
+        iface=-1.d0
+    else
+        iface= 1.d0
+    endif
+
+    if(bctype=='peri') then
+        particle%x(idir)=particle%x(idir)+bcord(face)*iface
+    elseif(bctype=='refl') then
+        particle%x(idir)=-particle%x(idir)+2.0_mytype*bcord(face)
+    else
+        stop '!! bc not defined @ particle_bc'
+    endif
+
+  end subroutine particle_bc
+  !+-------------------------------------------------------------------+
+  ! The end of the subroutine particle_bc                              |
   !+-------------------------------------------------------------------+
 
   !+-------------------------------------------------------------------+
@@ -1699,7 +1963,7 @@ module particle
     !
   end subroutine mclean_mytype
   !!
-  subroutine mclean_particle(var,n)
+  subroutine mclean_particles(var,n)
     !
     ! arguments
     type(partype),allocatable,intent(inout) :: var(:)
@@ -1726,7 +1990,7 @@ module particle
     !
     call move_alloc(buffer,var)
     !
-  end subroutine mclean_particle
+  end subroutine mclean_particles
   !+-------------------------------------------------------------------+
   !| The end of the subroutine mclean.                                 |
   !+-------------------------------------------------------------------+
@@ -1754,6 +2018,8 @@ module particle
     else
       !
       m=size(var)
+
+      if(m==n) return
       !
       call move_alloc(var, buffer)
       !
@@ -1771,9 +2037,39 @@ module particle
     !
   end subroutine extend_particle
   !+-------------------------------------------------------------------+
-  !| The end of the subroutine pa2a_particle.                          |
+  !| The end of the subroutine extend_particle.                        |
   !+-------------------------------------------------------------------+
   !
+  !+-------------------------------------------------------------------+
+  !| this subroutine is to copy particle array.                        |
+  !+-------------------------------------------------------------------+
+  !| CHANGE RECORD                                                     |
+  !| -------------                                                     |
+  !| 18-Oct-2024  | Created by J. Fang STFC Daresbury Laboratory       |
+  !+-------------------------------------------------------------------+
+  function particle_copy(vin) result(vout)
+
+    ! arguments
+    type(partype),allocatable,intent(in) :: vin(:)
+    type(partype),allocatable :: vout(:)
+    !
+    ! local data
+    integer :: psize,big_number
+
+    psize=msize(vin)
+
+    if(psize>0) then
+        allocate(vout(psize))
+        vout=vin
+    else
+        allocate(vout(1))
+        deallocate(vout)
+    endif
+
+    return
+
+  end function particle_copy
+
   !+-------------------------------------------------------------------+
   !| this subroutine is to swap particles via alltoall.                |
   !+-------------------------------------------------------------------+

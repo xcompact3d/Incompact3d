@@ -131,7 +131,7 @@ subroutine init_xcompact3d()
   use ibm,       only : body
   use probes,    only : init_probes
   use mhd,       only : mhd_init
-  use particle,  only : partcle_report,local_domain_size
+  use particle,  only : partcle_report,local_domain_size,n_particles
 
   implicit none
 
@@ -223,6 +223,7 @@ subroutine init_xcompact3d()
 
     call local_domain_size
   endif
+
 
   !####################################################################
   ! initialise visu

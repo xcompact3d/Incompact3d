@@ -8,15 +8,15 @@
 itype = 2
 
 ! Domain decomposition
-p_row=0                ! Row partition
-p_col=0                ! Column partition
- 
-! Mesh 
-nx=128                 ! X-direction nodes
-ny=128                 ! Y-direction nodes
-nz=128                 ! Z-direction nodes
-istret = 0             ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
-beta = 0.259065151     ! Refinement parameter (beta)
+p_row=0               ! Row partition
+p_col=0               ! Column partition
+
+! Mesh
+nx=32                ! X-direction nodes
+ny=32                ! Y-direction nodes
+nz=32                ! Z-direction nodes
+istret = 0            ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
+beta = 0.259065151    ! Refinement parameter (beta)
 
 ! Domain
 xlx = 6.28318530717958 ! Lx (Size of the box in x-direction)
@@ -33,16 +33,16 @@ nclzn = 0
 
 ! Flow parameters
 iin = 1               ! Inflow conditions (1: classic, 2: turbinit)
-re = 17.54386         ! nu=1/re (Kinematic Viscosity)
+re = 1600.             ! nu=1/re (Kinematic Viscosity)
 u1 = 8.               ! u1 (max velocity) (for inflow condition)
 u2 = 8.               ! u2 (min velocity) (for inflow condition)
 init_noise  = 0.0     ! Turbulence intensity (1=100%) !! Initial condition
 inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
 
 ! Time stepping
-dt = 0.0001           ! Time step
-ifirst = 1            ! First iteration
-ilast  = 20000        ! Last iteration
+dt = 0.001            ! Time step
+ifirst= 1            ! First iteration
+ilast = 200         ! Last iteration
 
 ! Enable modelling tools
 ilesmod=0             ! if 0 then DNS
@@ -56,7 +56,7 @@ ipost=1               ! Do online postprocessing
 ifilter=0
 C_filter=0.49
 
-mhd_active = .true.
+particle_active=.true.
 /End
 
 !====================
@@ -78,9 +78,9 @@ itimescheme = 5       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4
 
 ! Basic I/O
 irestart = 0          ! Read initial flow field ?
-icheckpoint = 2000    ! Frequency for writing backup file
-ioutput = 2000        ! Frequency for visualization
-ilist = 200           ! Frequency for the output
+icheckpoint = 1000     ! Frequency for writing backup file
+ioutput = 100         ! Frequency for visualization
+ilist = 5             ! Frequency for the output
 nvisu = 1             ! Size for visualisation collection
 
 /End
@@ -97,9 +97,21 @@ nstat = 1             ! Size arrays for statistic collection
 &MHDParam
 !====================
 
-mhd_equation = 'induction' ! MHD type of equation (potential or induction)
-Stuart = 17.54386          ! Stuart number ratio of electromagnetic to inertial forces (Ha^2/Rem)
-Rem    = 17.54386          ! Magnetic Reynolds number (UL/eta)
+mhd_active = .false.
+mhd_equation=.true.
+Stuart = 100.d0
+Rem    = 100.d0
+
+/End
+
+!====================
+&ParTrack
+!====================
+
+bc_particle = 'peri','peri','peri','peri','peri','peri' 
+initype_particle = 'uniform'
+n_particles = 512
+particle_inject_period = 0.0
 
 /End
 

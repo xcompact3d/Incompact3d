@@ -18,6 +18,11 @@ module mptool
   interface pmax
     module procedure pmax_int
     module procedure pmax_mytype
+    module procedure pmax_mytype_array
+  end interface
+  interface pmin
+    module procedure pmin_mytype
+    module procedure pmin_mytype_array
   end interface
   !
   interface ptabupd
@@ -147,6 +152,44 @@ module mptool
                                                     mpi_comm_world,ierr)
     !
   end function pmax_mytype
+
+  real(mytype) function  pmax_mytype_array(var)
+    !
+    ! arguments
+    real(mytype),intent(in) :: var(:)
+    !
+    ! local data
+    integer :: ierr
+    !
+    call mpi_allreduce(var,pmax_mytype_array,size(var),real_type,mpi_max,    &
+                                                    mpi_comm_world,ierr)
+    !
+  end function pmax_mytype_array
+
+  real(mytype) function  pmin_mytype_array(var)
+    !
+    ! arguments
+    real(mytype),intent(in) :: var(:)
+    !
+    ! local data
+    integer :: ierr
+    !
+    call mpi_allreduce(var,pmin_mytype_array,size(var),real_type,mpi_min,    &
+                                                    mpi_comm_world,ierr)
+    !
+  end function pmin_mytype_array
+  real(mytype) function  pmin_mytype(var)
+    !
+    ! arguments
+    real(mytype),intent(in) :: var
+    !
+    ! local data
+    integer :: ierr
+    !
+    call mpi_allreduce(var,pmin_mytype,1,real_type,mpi_min,    &
+                                                    mpi_comm_world,ierr)
+    !
+  end function pmin_mytype
   !
   !+-------------------------------------------------------------------+
   !| this function is to update table based on alltoall mpi            |
@@ -458,7 +501,7 @@ module mptool
     real(mytype),intent(inout),allocatable :: data2read(:)
 
     ! local data
-    integer :: local_size, ierr, fh, datatype, status(mpi_status_size)
+    integer :: local_size, ierr, fh, datatype, status(mpi_status_size),datasize
     integer(kind=mpi_offset_kind) :: offset
 
     ! calcualte local size
@@ -479,7 +522,9 @@ module mptool
     ! Close the file
     call MPI_FILE_CLOSE(fh, ierr)
 
-    if(nrank==0) print*,'>> ',filename
+    datasize=psum(local_size)
+
+    if(nrank==0) print*,'>> ',filename,' data size:',datasize
 
 
   end subroutine pread_1darray
@@ -492,7 +537,7 @@ module mptool
     real(mytype),intent(inout),allocatable :: data2read(:,:)
 
     ! local data
-    integer :: local_size, ierr, fh, datatype, status(mpi_status_size)
+    integer :: local_size, ierr, fh, datatype, status(mpi_status_size),datasize
     integer(kind=mpi_offset_kind) :: offset
 
 
@@ -514,7 +559,11 @@ module mptool
     ! Close the file
     call MPI_FILE_CLOSE(fh, ierr)
 
-    if(nrank==0) print*,'>> ',filename
+    local_size=size(data2read,2)
+
+    datasize=psum(local_size)
+
+    if(nrank==0) print*,'>> ',filename,' data size:',datasize
 
 
   end subroutine pread_2darray
