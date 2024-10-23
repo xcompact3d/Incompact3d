@@ -304,9 +304,9 @@ contains
       !write(*,*) 'Rank=', nrank, 'X index Limits=', xstart(1), xend(1), 'X lims=', (xstart(1)-1)*dx, (xend(1)-1)*dx
       !write(*,*) 'Rank=', nrank, 'Y index Limits=', xstart(2), xend(2), 'Y lims=', ymin, ymax
       !write(*,*) 'Rank=', nrank, 'Z index Limits=', xstart(3), xend(3), 'Z lims=', zmin, zmax
-      call update_halo(ux1,ux1_halo,1,opt_global=.true.)
-      call update_halo(uy1,uy1_halo,1,opt_global=.true.)
-      call update_halo(uz1,uz1_halo,1,opt_global=.true.)
+      call update_halo(ux1,ux1_halo,1,opt_global=.true.,opt_pencil=1)
+      call update_halo(uy1,uy1_halo,1,opt_global=.true.,opt_pencil=1)
+      call update_halo(uz1,uz1_halo,1,opt_global=.true.,opt_pencil=1)
 
       do isource=1,NSource
          min_dist=1e6_mytype

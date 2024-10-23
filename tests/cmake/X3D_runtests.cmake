@@ -1,0 +1,13 @@
+macro(RunTest CMD PYSCRIPT RESUFILE REFFILE)
+  separate_arguments(cmds NATIVE_COMMAND ${CMD})
+  execute_process(COMMAND ${cmds} OUTPUT_FILE listing)
+  execute_process(COMMAND tail -n 15 listing)
+  execute_process(COMMAND python3 ${PYSCRIPT} --input ${RESUFILE} --reference ${REFFILE} OUTPUT_FILE verification.out)
+  execute_process(COMMAND tail -n 10 verification.out)
+  execute_process(COMMAND grep "SUCCESS" verification.out RESULT_VARIABLE RES) 
+  if(RES)
+    message(FATAL_ERROR "Error running ${CMD}")
+  endif()
+endmacro()
+
+RunTest(${CMD} ${PYSCRIPT} ${RESUFILE} ${REFFILE})

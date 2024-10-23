@@ -62,7 +62,7 @@ option(BUILD_TESTING_FULL "Build all tests" OFF)
 if (${BUILD_TESTING})
   include(CTest)
   add_subdirectory(examples)
-  add_subdirectory(test) 
+  add_subdirectory(tests) 
 endif (${BUILD_TESTING})
 
 # Add a prettify target

@@ -45,16 +45,9 @@ jobs:
     - name: Build Xcompact3d
       run: |
         export PATH=$(pwd)/openmpi-4.1.4/installed/bin/:$PATH
+        pip install numpy
         export FC=mpif90
         cmake -S . -B build 
         cmake --build build -j 2
         cmake --install build
         ctest --test-dir build
-
-    - name: Compare output time evolution to reference output
-      run: |
-        pip install numpy
-        cd build/RunTests/TGV-Taylor-Green-vortex
-        python compare_TGV_time_evolution.py \
-            --input time_evol.dat \
-            --reference reference_time_evol.dat
