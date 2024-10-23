@@ -84,7 +84,7 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
         if (ym /= ym) then
             write(*,*) "ym = ", ym, " should be ", ((real(j-1,mytype))*dy), ", as j = ", j,  " (or maybe it should be ", ((real(j-1,mytype))*dy)/real(nraf,mytype), ")"
             if (j.lt.(nyraf)) then 
-                write(*,*) "yp(j-1) = ", yp(j-1), " yp(j+1) = ", yp(j+1)
+                write(*,*) "yp(j-1) = ", yp(j-1), " yp(j+1,..) = ", yp(j+1:)
             endif
         endif
 
@@ -99,12 +99,12 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
                     !     write(*,*) point,position(i_body,:),orientation(i_body,:),shape(i_body,:)
                     ! endif
                     call EllipsoidalRadius(point,position(i_body,:),orientation(i_body,:),shape(i_body,:),r)
-                    if (r /= r) then 
-                        write(*,*) "Point, position, orientation, shape for body", i_body, " = "
-                        write(*,*) point,position(i_body,:),orientation(i_body,:),shape(i_body,:)
-                        write(*,*) "R calculated = ", r
-                        write(*,*) "Timestep = ", itime
-                    endif
+                    ! if (r /= r) then 
+                    !     write(*,*) "Point, position, orientation, shape for body", i_body, " = "
+                    !     write(*,*) point,position(i_body,:),orientation(i_body,:),shape(i_body,:)
+                    !     write(*,*) "R calculated = ", r
+                    !     write(*,*) "Timestep = ", itime
+                    ! endif
 
                     is_inside = (r-ra(i_body)).lt.zeromach
                     ! if (is_inside) then 

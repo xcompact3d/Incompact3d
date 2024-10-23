@@ -276,7 +276,7 @@ contains
     real(mytype),dimension(ysize(1),nyraf,ysize(3))    :: yepsi
     real(mytype),dimension(zsize(1),zsize(2),nzraf)    :: zepsi
     real(mytype),dimension(ny)                         :: yp
-    real(mytype),dimension(nyraf)                      :: ypraf
+    real(mytype),dimension(nyraf+20)                      :: ypraf
     real(mytype)                     :: dxraf,dyraf,dzraf
     integer                          :: i,j,k
     integer                          :: ii,jj,kk
