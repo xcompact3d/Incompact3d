@@ -84,7 +84,7 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
         if (ym /= ym) then
             write(*,*) "ym = ", ym, " should be ", ((real(j-1,mytype))*dy), ", as j = ", j,  " (or maybe it should be ", ((real(j-1,mytype))*dy)/real(nraf,mytype), ")"
             if (j.lt.(nyraf)) then 
-                write(*,*) "yp(j-1) = ", yp(j-1), " yp(j+1,..) = ", yp(j+1:)
+                write(*,*) "yp(j-1) = ", yp(j-1), " yp(j+1) = ", yp(j+1)
             endif
         endif
 

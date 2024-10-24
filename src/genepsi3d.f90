@@ -55,11 +55,11 @@ contains
 
     IMPLICIT NONE
 
-    INTEGER :: nxi,nxf,ny,nyi,nyf,nzi,nzf
+    INTEGER, intent(in) :: nxi,nxf,ny,nyi,nyf,nzi,nzf
     REAL(mytype),DIMENSION(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
-    REAL(mytype)               :: dx,dz
-    REAL(mytype),DIMENSION(ny) :: yp
-    REAL(mytype)               :: remp
+    REAL(mytype), intent(in)               :: dx,dz
+    REAL(mytype),DIMENSION(ny), intent(in) :: yp
+    REAL(mytype), intent(in)               :: remp
 
     IF (itype.EQ.itype_cyl) THEN
 
@@ -276,7 +276,7 @@ contains
     real(mytype),dimension(ysize(1),nyraf,ysize(3))    :: yepsi
     real(mytype),dimension(zsize(1),zsize(2),nzraf)    :: zepsi
     real(mytype),dimension(ny)                         :: yp
-    real(mytype),dimension(nyraf+20)                      :: ypraf
+    real(mytype),dimension(nyraf)                      :: ypraf
     real(mytype)                     :: dxraf,dyraf,dzraf
     integer                          :: i,j,k
     integer                          :: ii,jj,kk
@@ -314,16 +314,25 @@ contains
     else
        dyraf =yly/real(nyraf-1, mytype)
     endif
+    write(*,*) ny, size(yp), size(ypraf), nraf
     do j=1,ny-1
        do jraf=1,nraf
           ypraf(jraf+nraf*(j-1))=yp(j)+real(jraf-1, mytype)*(yp(j+1)-yp(j))/real(nraf, mytype)
-          if (ypraf(jraf+nraf*(j-1)) /= ypraf(jraf+nraf*(j-1))) then 
-            write(*,*) "At j = ", j, ", jraf = ", jraf, "ypraf = ", yp(j)+real(jraf-1, mytype)*(yp(j+1)-yp(j))/real(nraf, mytype)
-          endif
+         !  if (ypraf(jraf+nraf*(j-1)) /= ypraf(jraf+nraf*(j-1))) then 
+         !    write(*,*) "At j = ", j, ", jraf = ", jraf, "ypraf = ", yp(j)+real(jraf-1, mytype)*(yp(j+1)-yp(j))/real(nraf, mytype)
+         !  endif
        enddo
     enddo
+    if (ncly) then 
+      do jraf = 1,nraf
+         ypraf(jraf+nraf*(ny-1))=yp(ny)+real(jraf-1,mytype)*(yly-yp(ny))/real(nraf,mytype)
+      enddo
+    endif
+   !  write(*,*) yp
     if(.not.ncly)ypraf(nyraf)=yp(ny)
-    if(.not.ncly)write(*,*) "Changed ypraf (", nyraf, "). To ", yp(ny)
+   !  if(.not.ncly)write(*,*) "Changed ypraf (", nyraf, "). To ", yp(ny)
+   !  write(*,*) ypraf
+
     yepsi=zero
     call geomcomplex(yepsi,ystart(1),yend(1),nyraf,1,nyraf,ystart(3),yend(3),dx,ypraf,dz,one)
     ! if (nrank==0) print*,'    step 3'

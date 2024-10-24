@@ -591,7 +591,7 @@ contains
        !complex_geometry
        nxraf=(nxm)*nraf
        if (.not.nclx) nxraf=nxraf+1
-       nyraf=(nym)*nraf+20
+       nyraf=(nym)*nraf
        if (.not.ncly) nyraf=nyraf+1
        nzraf=(nzm)*nraf
        if (.not.nclz) nzraf=nzraf+1
