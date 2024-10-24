@@ -314,7 +314,7 @@ contains
     else
        dyraf =yly/real(nyraf-1, mytype)
     endif
-    write(*,*) ny, size(yp), size(ypraf), nraf
+   !  write(*,*) ny, size(yp), size(ypraf), nraf
     do j=1,ny-1
        do jraf=1,nraf
           ypraf(jraf+nraf*(j-1))=yp(j)+real(jraf-1, mytype)*(yp(j+1)-yp(j))/real(nraf, mytype)
