@@ -99,8 +99,8 @@ module particle
   private
 
   public :: local_domain_size,particle_init,intt_particel,            &
-            particle_report,visu_particle,particle_checkpoint,         &
-            n_particles,initype_particle,bc_particle,                  &
+            particle_report,visu_particle,particle_checkpoint,        &
+            n_particles,initype_particle,bc_particle,                 &
             particle_inject_period
 
   contains
@@ -1800,7 +1800,7 @@ module particle
   !+-------------------------------------------------------------------+
   ! The end of the subroutine particle_bc                              |
   !+-------------------------------------------------------------------+
-  
+
   !+-------------------------------------------------------------------+
   !| This subroutine is to calculate the force on particles.           |
   !+-------------------------------------------------------------------+

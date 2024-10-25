@@ -23,12 +23,15 @@ subroutine parameter(input_i3d)
   use decomp_2d_mpi
   use ibm_param
 
-  use var,        only : dphi1
+  use var, only : dphi1
+
   use gravitycur, only : pfront
-  use probes,     only : nprobes, setup_probes, flag_all_digits, flag_extra_probes, xyzprobes
-  use visu,       only : output2D
-  use forces,     only : iforces, nvol, setup_forces
-  use mhd,        only : mhd_equation,hartmann,stuart,rem
+
+  use probes, only : nprobes, setup_probes, flag_all_digits, flag_extra_probes, xyzprobes
+  use visu, only : output2D
+  use forces, only : iforces, nvol, setup_forces
+
+  use mhd, only: mhd_equation,hartmann,stuart,rem
   use particle,   only : initype_particle,n_particles,bc_particle,particle_inject_period
 
   implicit none
