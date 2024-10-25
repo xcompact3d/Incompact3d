@@ -371,7 +371,7 @@ contains
           write(111,fmt2) 'iscalar=  ',iscalar
           write(111,fmt2) 'numscalar=',numscalar
           write(111,'(A,I14)') 'itimescheme=',itimescheme
-          write(111,'(A,I16)') 'iimplicit=',iimplicit
+          write(111,fmt2) 'iimplicit=',iimplicit
           write(111,'(A)')'/End'
           write(111,'(A)')'!========================='
 

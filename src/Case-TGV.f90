@@ -30,16 +30,11 @@ contains
     use MPI
     use mhd,  only: Bm,Bmean
     use visu, only: write_snapshot, end_snapshot
-    use decomp_2d, only : ph1
-    use var, only : nzmsize, numscalar, nrhotime, npress
 
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
-    real(mytype),dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
 
     real(mytype) :: y,r,um,r3,x,z,h,ct
     real(mytype) :: cx0,cy0,cz0,hg,lg
@@ -109,7 +104,6 @@ contains
 #endif
 
     return
-
   end subroutine init_tgv
   !********************************************************************
 
@@ -600,7 +594,6 @@ contains
     endif
 
   end subroutine visu_tgv
-
   !############################################################################
   subroutine suspended(phi1,vol1,mp1)
 

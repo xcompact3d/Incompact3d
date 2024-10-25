@@ -25,7 +25,7 @@ module particle
   end interface pa2a
   !
   interface mextend
-     module procedure extend_particle
+     module procedure extend_particles
   end interface mextend
   !
   ! particles
@@ -99,7 +99,7 @@ module particle
   private
 
   public :: local_domain_size,particle_init,intt_particel,            &
-            partcle_report,visu_particle,particle_checkpoint,         &
+            particle_report,visu_particle,particle_checkpoint,         &
             n_particles,initype_particle,bc_particle,                  &
             particle_inject_period
 
@@ -223,7 +223,7 @@ module particle
   !| -------------                                                     |
   !| 18-06-2022  | Created by J. Fang                                  |
   !+-------------------------------------------------------------------+
-  subroutine partcle_report(reptyp)
+  subroutine particle_report(reptyp)
     
     character(len=*),intent(in) :: reptyp
 
@@ -266,7 +266,7 @@ module particle
             if(file_exists) then
                 write(*,*)'** read particles from file: ',trim(initype_particle)
             else
-                stop ' !!initype_particle error @ partcle_report: '//trim(initype_particle)
+                stop ' !!initype_particle error @ particle_report: '//trim(initype_particle)
             endif
             
         endif
@@ -278,9 +278,9 @@ module particle
     endif
 
     !
-  end subroutine partcle_report
+  end subroutine particle_report
   !+-------------------------------------------------------------------+
-  !| The end of the subroutine partcle_report.                         |
+  !| The end of the subroutine particle_report.                         |
   !+-------------------------------------------------------------------+
 
   !+-------------------------------------------------------------------+
@@ -365,7 +365,7 @@ module particle
     !
     n_local_particles=n_local_particles+n
 
-    ! call partical_domain_check(partpack)
+    ! call particle_domain_check(partpack)
     ! !
     ! call partical_swap(partpack)
     !
@@ -576,7 +576,7 @@ module particle
       !
       deallocate(xcor,dxco,vcor,dvco)
       
-      call partical_domain_check(partpack,n_local_particles)
+      call particle_domain_check(partpack,n_local_particles)
       
       call partical_swap(partpack,n_local_particles)
       
@@ -780,7 +780,7 @@ module particle
 
         n_local_particles=psize
 
-        call partical_domain_check(partpack,n_local_particles)
+        call particle_domain_check(partpack,n_local_particles)
 
         call partical_swap(partpack,n_local_particles)
 
@@ -853,7 +853,7 @@ module particle
 
     deallocate(xp)
 
-    call partical_domain_check(particles)
+    call particle_domain_check(particles)
 
     call partical_swap(particles)
 
@@ -1622,12 +1622,6 @@ module particle
     lymin=psum(lymin); lymax=psum(lymax)
     lzmin=psum(lzmin); lzmax=psum(lzmax)
     !
-     ! do jrank=0,nproc-1
-     !   print*,nrank,jrank,lxmin(jrank),lxmax(jrank),lymin(jrank),lymax(jrank),lzmin(jrank),lzmax(jrank)
-     ! enddo
-    !
-    ! call mpistop
-    !
   end subroutine local_domain_size
   !+-------------------------------------------------------------------+
   ! The end of the subroutine local_domain_size                        |
@@ -1642,7 +1636,7 @@ module particle
   !| -------------                                                     |
   !| 16-06-2022  | Created by J. Fang                                  |
   !+-------------------------------------------------------------------+
-  subroutine partical_domain_check(particle,num_active_particles)
+  subroutine particle_domain_check(particle,num_active_particles)
     !
     use param,     only : xlx,yly,zlz
 
@@ -1742,9 +1736,9 @@ module particle
 
     enddo
     !
-  end subroutine partical_domain_check
+  end subroutine particle_domain_check
   !+-------------------------------------------------------------------+
-  ! The end of the subroutine partical_domain_check                    |
+  ! The end of the subroutine particle_domain_check                    |
   !+-------------------------------------------------------------------+
 
   !+-------------------------------------------------------------------+
@@ -1806,33 +1800,7 @@ module particle
   !+-------------------------------------------------------------------+
   ! The end of the subroutine particle_bc                              |
   !+-------------------------------------------------------------------+
-
-  !+-------------------------------------------------------------------+
-  !| This subroutine is to write particles using mpi-io.               |
-  !+-------------------------------------------------------------------+
-  !| CHANGE RECORD                                                     |
-  !| -------------                                                     |
-  !| 03-10-2024  | Created by J. Fang                                  |
-  !+-------------------------------------------------------------------+
-  subroutine dump_particle(particles)
-
-    ! arguments
-    type(partype),allocatable,intent(in) :: particles(:)
-
-    ! local data
-    character(len=5) :: num
-    integer :: psize,total_num_part,p,j,k
-    integer :: rank2coll
-    character(len=64) :: file2write
-    logical :: fexists
-    real(mytype),allocatable :: xyz(:,:)
-
-
-  end subroutine dump_particle
-  !+-------------------------------------------------------------------+
-  ! The end of the subroutine dump_particle                            |
-  !+-------------------------------------------------------------------+
-
+  
   !+-------------------------------------------------------------------+
   !| This subroutine is to calculate the force on particles.           |
   !+-------------------------------------------------------------------+
@@ -2002,7 +1970,7 @@ module particle
   !| -------------                                                     |
   !| 17-Jun-2022  | Created by J. Fang STFC Daresbury Laboratory       |
   !+-------------------------------------------------------------------+
-  subroutine extend_particle(var,n)
+  subroutine extend_particles(var,n)
     !
     ! arguments
     type(partype),allocatable,intent(inout) :: var(:)
@@ -2035,9 +2003,9 @@ module particle
     !
     return
     !
-  end subroutine extend_particle
+  end subroutine extend_particles
   !+-------------------------------------------------------------------+
-  !| The end of the subroutine extend_particle.                        |
+  !| The end of the subroutine extend_particles.                        |
   !+-------------------------------------------------------------------+
   !
   !+-------------------------------------------------------------------+
