@@ -684,6 +684,7 @@ subroutine parameter_defaults()
   use forces, only : iforces, nvol
 
   use mhd, only: mhd_equation, rem, stuart, hartmann 
+  use particle, only : n_particles,bc_particle,particle_inject_period
 
   implicit none
 
@@ -717,6 +718,9 @@ subroutine parameter_defaults()
 
   ! particle tracking
   particle_active=.false.
+  n_particles = 0
+  bc_particle = (/"none","none","none","none","none","none"/)
+  particle_inject_period=0.0
 
   !! LES stuff
   smagwalldamp=1

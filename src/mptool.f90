@@ -307,7 +307,7 @@ module mptool
     local_size=size(data_1)
 
     ! calculate the offset for each process
-    offset = prelay(local_size)*8_8
+    offset = prelay(local_size)*mytype
 
     ! Open the file in write mode with MPI-IO
     call mpi_file_open(mpi_comm_world, filename, mpi_mode_wronly + mpi_mode_create, mpi_info_null, fh, ierr)
@@ -323,7 +323,7 @@ module mptool
       ! Barrier to synchronize processes
       call mpi_barrier(mpi_comm_world, ierr)
 
-      total_size=psum(local_size)*8_8
+      total_size=psum(local_size)*mytype
 
       offset = offset + total_size
 
@@ -409,7 +409,7 @@ module mptool
     local_size=size(data_1)
 
     ! calculate the offset for each process
-    offset = prelay(local_size)*8_8
+    offset = prelay(local_size)*mytype
 
     ! Open the file in write mode with MPI-IO
     call mpi_file_open(mpi_comm_world, filename, mpi_mode_wronly + mpi_mode_create, mpi_info_null, fh, ierr)
@@ -425,7 +425,7 @@ module mptool
       ! Barrier to synchronize processes
       call mpi_barrier(mpi_comm_world, ierr)
 
-      total_size=psum(local_size)*8_8
+      total_size=psum(local_size)*mytype
 
       offset = offset + total_size
 
@@ -508,7 +508,7 @@ module mptool
     local_size=size(data2read)
 
     ! calculate the offset for each process
-    offset = prelay(local_size)*8_8
+    offset = prelay(local_size)*mytype
 
     ! Open the file in read mode using MPI-IO
     call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, fh, ierr)
@@ -545,7 +545,7 @@ module mptool
     local_size=size(data2read)
 
     ! calculate the offset for each process
-    offset = prelay(local_size)*8_8
+    offset = prelay(local_size)*mytype
 
     ! Open the file in read mode using MPI-IO
     call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, fh, ierr)
@@ -581,28 +581,26 @@ module mptool
     call mpi_allgather(number,1,mpi_integer,                              &
                        table,1,mpi_integer,mpi_comm_world,ierr)
 
-    ! print*,nrank,'=',table
     prelay=0
     do i=1,nrank
       prelay=prelay+table(i)
     enddo
-    ! print*,prelay
-
+    
     return
 
   end function prelay
   !
   function linintp(xx1,xx2,yy1,yy2,xx) result(yy)
     !
-    real(8),intent(in) :: xx1,xx2,xx
-    real(8),intent(in) ::  yy1(:,:,:),yy2(:,:,:)
-    real(8) :: yy(1:size(yy1,1),1:size(yy1,2),1:size(yy1,3))
+    real(mytype),intent(in) :: xx1,xx2,xx
+    real(mytype),intent(in) ::  yy1(:,:,:),yy2(:,:,:)
+    real(mytype) :: yy(1:size(yy1,1),1:size(yy1,2),1:size(yy1,3))
     !
-    real(8) :: var1
+    real(mytype) :: var1
     !
-    if(abs(xx-xx1)<1.d-16) then
+    if(abs(xx-xx1)<1.e-16_mytype) then
       yy=yy1
-    elseif(abs(xx-xx2)<1.d-16) then
+    elseif(abs(xx-xx2)<1.e-16_mytype) then
       yy=yy2
     else
       var1=(xx-xx1)/(xx2-xx1)

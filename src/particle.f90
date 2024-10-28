@@ -4,7 +4,7 @@
 module particle
 
   use decomp_2d_constants, only : mytype
-  use decomp_2d_mpi, only : nrank,nproc
+  use decomp_2d_mpi, only : nrank,nproc,decomp_2d_abort
   use mptool
   use constants, only : pi
 
@@ -75,9 +75,9 @@ module particle
 
   integer :: n_local_particles,n_particles
   character(len=32) :: initype_particle
-  character(len=4) :: bc_particle(6)
-  real(mytype) :: particletime,sub_time_step,particle_inject_period
-  type(partype),allocatable,target :: partpack(:),particles_inject(:)
+  character(len=16) :: bc_particle(6)
+  real(mytype) :: particletime,sub_time_step,particle_inject_period,next_particle_inject_time
+  type(partype),allocatable,target :: partpack(:),particles2inject(:)
   real(mytype),allocatable,dimension(:) :: lxmin,lxmax,lymin,lymax,lzmin,lzmax
   !+------------------+-----------------------------------------------+
   !|n_local_particles | number of particles in the domain             |
@@ -244,13 +244,15 @@ module particle
     if(reptyp=='input') then
 
         do ibc=1,6
-            if(bc_particle(ibc) == 'peri') then
+            if(trim(bc_particle(ibc)) == 'periodic') then
                 print*,'** particles b.c. at ',bcname(ibc),': periodic'
-            elseif(bc_particle(ibc) == 'refl') then
+            elseif(trim(bc_particle(ibc)) == 'reflective') then
                 print*,'** particles b.c. at ',bcname(ibc),': reflective'
+            elseif(trim(bc_particle(ibc)) == 'outflow') then
+                print*,'** particles b.c. at ',bcname(ibc),': outflow'
             else
-                print*,'!! bc_particle:',bc_particle 
-                stop '!! bc_particle not defined'
+                print*,'!! bc_particle:',bc_particle
+                call decomp_2d_abort(1, "bc_particle not defined")
             endif
         enddo
 
@@ -266,7 +268,7 @@ module particle
             if(file_exists) then
                 write(*,*)'** read particles from file: ',trim(initype_particle)
             else
-                stop ' !!initype_particle error @ particle_report: '//trim(initype_particle)
+                call decomp_2d_abort(1, "initype_particle error @ particle_report:"//trim(initype_particle))
             endif
             
         endif
@@ -328,7 +330,7 @@ module particle
         if(file_exists) then
             call particle_read_bin(partpack,trim(initype_particle),psize)
         else
-            stop ' !! initype_particle error @ particle_init!!'
+            call decomp_2d_abort(1,"initype_particle error @ particle_init")
         endif
     endif
 
@@ -339,9 +341,11 @@ module particle
     if(nrank==0) print*,'** ',n_particles,'particles are generated'
 
     if(particle_inject_period>0.0_mytype) then
-        if(n_local_particles>0) particles_inject=partpack
+        if(n_local_particles>0) particles2inject=partpack
         call particle_checkpoint(mode='write',filename='particle_inject.bin')
     endif
+
+    next_particle_inject_time=0.0_mytype + particle_inject_period
 
   end subroutine particle_init
   !+-------------------------------------------------------------------+
@@ -355,13 +359,13 @@ module particle
   !| -------------                                                     |
   !| 17-11-2021  | Created by J. Fang                                  |
   !+-------------------------------------------------------------------+
-  subroutine partile_inject
+  subroutine inject_particles(particles)
     !
     ! local data
-    type(partype),allocatable :: particle_new(:)
+    type(partype),intent(in),allocatable :: particles(:)
     integer :: num_new_particle,n
     !
-    call particle_add(partpack,particles_inject,n_local_particles,n)
+    call particle_add(partpack,particles,n_local_particles,n)
     !
     n_local_particles=n_local_particles+n
 
@@ -369,9 +373,9 @@ module particle
     ! !
     ! call partical_swap(partpack)
     !
-  end subroutine partile_inject
+  end subroutine inject_particles
   !+-------------------------------------------------------------------+
-  ! The end of the subroutine partile_inject                           |
+  ! The end of the subroutine inject_particles                         |
   !+-------------------------------------------------------------------+
 
   !+-------------------------------------------------------------------+
@@ -402,7 +406,6 @@ module particle
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: uxp,uyp,uzp
     real(mytype),allocatable,dimension(:,:,:),save :: ux0,uy0,uz0
     real(mytype),allocatable :: xcor(:,:),dxco(:,:,:),vcor(:,:),dvco(:,:,:)
-    real(mytype),save :: next_particle_inject_time
     !
     logical,save :: firstcal=.true.,particle_inject=.false.
     !
@@ -426,7 +429,6 @@ module particle
       !
       if(particle_inject_period>0.0_mytype) then
         particle_inject=.true.
-        next_particle_inject_time=time1+particle_inject_period
       endif
 
       old_num_part=n_particles
@@ -444,7 +446,7 @@ module particle
       
       if(particle_inject .and. particletime>=next_particle_inject_time) then
 
-        call partile_inject()
+        call inject_particles(particles2inject)
 
         next_particle_inject_time=next_particle_inject_time+particle_inject_period
 
@@ -560,9 +562,8 @@ module particle
         if(npart>n_local_particles) exit
         !
         if(isnan(vcor(1,npart)) .or. isnan(vcor(2,npart)) .or. isnan(vcor(3,npart))) then
-          print*, '!! particle velocity NaN @ intt_particel'
           print*, npart,pa%x(:),pa%v(:)
-          stop
+          call decomp_2d_abort(1,"particle velocity NaN @ intt_particel")
         endif
         !
         pa%v(:)=vcor(:,npart)
@@ -615,12 +616,12 @@ module particle
   subroutine visu_particle(itime)
 
     use param, only : ioutput
-    use visu,  only : gen_snapshotname,int_to_str
+    use visu, only : gen_snapshotname,int_to_str
 
     integer, intent(in) :: itime
 
     integer :: num,j,iovp,psize,p
-    character(len=64) :: file2write
+    character(len=64) :: file2write,fname
 
     real(mytype),allocatable :: xyz(:,:)
 
@@ -650,7 +651,9 @@ module particle
 
     if(nrank==0) then
 
-      OPEN(newunit=iovp,file=gen_snapshotname('./data/', 'snapshot_particle', num, "xdmf"))
+      fname = gen_snapshotname('./data', 'snapshot_particle', num, "xdmf")
+
+      OPEN(newunit=iovp,file=trim(fname))
 
       write(iovp,'(A)')'<?xml version="1.0" ?>'
       write(iovp,'(A)')'<Xdmf Version="3.0" xmlns:xi="http://www.w3.org/2001/XInclude">'
@@ -660,7 +663,7 @@ module particle
       write(iovp,'(A)')'      <Grid Name="ParticleData_t0" GridType="Uniform">'
       write(iovp,'(A,I0,A)')'        <Topology TopologyType="Polyvertex" NodesPerElement="',n_particles,'"/>'
       write(iovp,'(A)')'        <Geometry GeometryType="XYZ">'
-      write(iovp,'(A,I0,A)')'          <DataItem Format="binary" Dimensions="',n_particles,' 3 " NumberType="Float" Precision="8">'
+      write(iovp,'(2(A,I0),A)')'          <DataItem Format="binary" Dimensions="',n_particles,' 3 " NumberType="Float" Precision="',mytype,'">'
       write(iovp,'(A,A,A)')'            ',trim(file2write),' </DataItem>'
       write(iovp,'(A)')'        </Geometry>'
       write(iovp,'(A)')'      </Grid>'
@@ -671,9 +674,10 @@ module particle
 
       close(iovp)
 
-      print*,'<< ./data/visu_particle.xdmf'
+      print*,'<< ',trim(fname)
 
     endif
+
 
   end subroutine visu_particle
   !+-------------------------------------------------------------------+
@@ -689,13 +693,17 @@ module particle
   !+-------------------------------------------------------------------+
   subroutine particle_checkpoint(mode,filename)
 
-    character(len=*),intent(in) :: mode,filename
+    character(len=*),intent(in) :: mode
+    character(len=*),intent(in),optional :: filename
 
     real(mytype),allocatable,dimension(:,:) :: xp
 
     integer :: j,p,file_size,data_size,ninject,psize
     logical :: file_exists
     real(mytype) :: xpmin(3),xpmax(3)
+    character(len=80) :: particle_res_file
+
+    NAMELIST /ParTrack/ n_particles,particle_res_file,next_particle_inject_time
 
     if(mode=='write') then
 
@@ -728,18 +736,35 @@ module particle
   
       deallocate(xp)
 
+      if(nrank == 0) then
+        open (111,file='restart.info',action='write',access='append')
+        write(111,'(A)')'&ParTrack'
+        write(111,'(A)')'!========================='
+        write(111,'(A,I13)') 'n_particles=  ',n_particles
+        write(111,'(A)')     'particle_res_file=  "'//filename//'"'
+        write(111,'(A,E20.13E2)') 'next_particle_inject_time=  ',next_particle_inject_time
+        write(111,'(A)')'/End'
+        write(111,'(A)')'!========================='
+        close(111)
+        print*,'<< restart.info'
+      endif
+
     elseif(mode=='read') then
 
-      inquire(file=filename, exist=file_exists,size=file_size)
+      open (111,file='restart.info',action='read')
+      read(111, nml=ParTrack)
+      close(111)
+      print*,'>> restart.info'
 
+      inquire(file=trim(particle_res_file), exist=file_exists,size=file_size)
 
       if(file_exists) then
 
-        data_size=file_size/8_8/3
+        data_size=file_size/mytype/3
 
         if(data_size .ne. n_particles) then
             if(nrank==0) then
-                print*,' !! warning !!, the datasize of file:',filename,data_size, &
+                print*,' !! warning !!, the datasize of file:',trim(particle_res_file),data_size, &
                           ' not consistent with n_particles',n_particles
             endif
         endif
@@ -749,7 +774,7 @@ module particle
 
         allocate(xp(1:3,psize))
 
-        call pread(filename,xp)
+        call pread(trim(particle_res_file),xp)
 
         allocate(partpack(1:psize))
 
@@ -798,13 +823,14 @@ module particle
 
         if(particle_inject_period>0.0_mytype) then
 
-            call particle_read_bin(particles=particles_inject,filename='particle_inject.bin',nump_read=ninject)
+            call particle_read_bin(particles=particles2inject,filename='particle_inject.bin',nump_read=ninject)
 
         endif
 
        else
          ! for the checkpoint file doesnot exist, re-intilise particles
-         stop ' check point missing for particles, looking for:'//filename
+         call decomp_2d_abort(1,"check point missing for particles, looking for: "//trim(particle_res_file))
+
        endif
 
     endif
@@ -827,7 +853,7 @@ module particle
 
     inquire(file=filename, size=file_size)
 
-    data_size=file_size/8_8/3
+    data_size=file_size/mytype/3
 
     nump_read=numdist(data_size)
 
@@ -868,7 +894,7 @@ module particle
   !| -------------                                                     |
   !| 15-11-2021  | Created by J. Fang                                  |
   !+-------------------------------------------------------------------+
-  subroutine field_var(ux1,uy1,uz1,B)
+  subroutine field_var(ux1,uy1,uz1,bx,by,bz)
     !
     use MPI
     use param,     only : dx,dy,dz,istret,nclx,ncly,nclz,xlx,yly,zlz
@@ -877,7 +903,7 @@ module particle
     use actuator_line_model_utils
     !
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1,uy1,uz1
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3),1:3),intent(in),optional :: B
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in),optional :: bx,by,bz
     !
     ! local data
     integer :: jpart,npart,i,j,k,psize
@@ -885,9 +911,8 @@ module particle
     real(mytype) :: x1,y1,z1,x2,y2,z2
     real(mytype) :: test(xsize(1),xsize(2),xsize(3))
     real(mytype),allocatable,dimension(:,:,:) :: ux1_halo,uy1_halo,    &
-                                                 uz1_halo,ux1_hal2,    &
-                                                 uy1_hal2,uz1_hal2
-    real(mytype),allocatable :: b_halo(:,:,:,:)
+                                                 uz1_halo
+    real(mytype),allocatable,dimension(:,:,:) :: bx_halo,by_halo,bz_halo
     !
     real(mytype),allocatable,save :: xx(:),yy(:),zz(:)
     logical,save :: firstcal=.true.
@@ -926,18 +951,20 @@ module particle
     allocate( ux1_halo(1:xsize(1)+1,0:xsize(2)+1,0:xsize(3)+1),        &
               uy1_halo(1:xsize(1)+1,0:xsize(2)+1,0:xsize(3)+1),        &
               uz1_halo(1:xsize(1)+1,0:xsize(2)+1,0:xsize(3)+1) )
-    ! 
+    
     call pswap_yz(ux1,ux1_halo)
     call pswap_yz(uy1,uy1_halo)
     call pswap_yz(uz1,uz1_halo)
-    !
-    if(present(B)) then
+
+    if(present(bx) .and. present(by) .and. present(bz)) then
       !
-      allocate( b_halo(1:xsize(1)+1,0:xsize(2)+1,0:xsize(3)+1,1:3) )
+    allocate( bx_halo(1:xsize(1)+1,0:xsize(2)+1,0:xsize(3)+1),        &
+              by_halo(1:xsize(1)+1,0:xsize(2)+1,0:xsize(3)+1),        &
+              bz_halo(1:xsize(1)+1,0:xsize(2)+1,0:xsize(3)+1) )
       !
-      call pswap_yz(b(:,:,:,1),b_halo(:,:,:,1))
-      call pswap_yz(b(:,:,:,2),b_halo(:,:,:,2))
-      call pswap_yz(b(:,:,:,3),b_halo(:,:,:,3))
+      call pswap_yz(bx,bx_halo)
+      call pswap_yz(by,by_halo)
+      call pswap_yz(bz,bz_halo)
       !
     endif
     !
@@ -968,7 +995,6 @@ module particle
                 pa%x(3)>=z1 .and. pa%x(3)<=z2 ) then
               !
               ! locate the particle, do the interpolation
-              ! print*,x1,x2,y1,y2,z1,z2
               pa%vf(1)=trilinear_interpolation( x1,y1,z1,            &
                                                 x2,y2,z2,            &
                                             pa%x(1),pa%x(2),pa%x(3), &
@@ -982,13 +1008,12 @@ module particle
                                             ux1_halo(i+1,j+1,k+1))
               !
               if(isnan(pa%vf(1))) then
-                print*,' !! error in calculating vf x'
                 print*,'        x1:',x1,y1,z1
                 print*,'        x2:',x2,y2,z2
                 print*,'      pa%x:',pa%x
                 print*,'      rank:',nrank,'i,j,k',i,j,k
                 print*,'  ux1_halo:',ux1_halo(i:i+1,j:j+1,k:k+1)
-                stop
+                call decomp_2d_abort(1,"error in calculating vf x")
               endif
               !
               pa%vf(2)=trilinear_interpolation( x1,y1,z1,           &
@@ -1004,13 +1029,12 @@ module particle
                                             uy1_halo(i+1,j+1,k+1)) 
               !
               if(isnan(pa%vf(2))) then
-                print*,' !! error in calculating vf y'
                 print*,'        x1:',x1,y1,z1
                 print*,'        x2:',x2,y2,z2
                 print*,'      pa%x:',pa%x
                 print*,'      rank:',nrank,'i,j,k',i,j,k
                 print*,'  uy1_halo:',uy1_halo(i:i+1,j:j+1,k:k+1)
-                stop
+                call decomp_2d_abort(1,"error in calculating vf y")
               endif
               !
               pa%vf(3)=trilinear_interpolation( x1,y1,z1,            &
@@ -1026,61 +1050,59 @@ module particle
                                             uz1_halo(i+1,j+1,k+1)) 
               !
               if(isnan(pa%vf(3))) then
-                print*,' !! error in calculating vf z'
                 print*,'        x1:',x1,y1,z1
                 print*,'        x2:',x2,y2,z2
                 print*,'      pa%x:',pa%x
                 print*,'      rank:',nrank,'i,j,k',i,j,k
                 print*,'  uz1_halo:',uz1_halo(i:i+1,j:j+1,k:k+1)
-                stop
+                call decomp_2d_abort(1,"error in calculating vf z")
               endif
               !
               !
-              if(present(B)) then
+              if(present(bx) .and. present(by) .and. present(bz)) then
                 !
                 pa%b(1)=trilinear_interpolation( x1,y1,z1,            &
-                                                  x2,y2,z2,            &
+                                                 x2,y2,z2,            &
                                               pa%x(1),pa%x(2),pa%x(3), &
-                                              b_halo(i,j,k,1),     &
-                                              b_halo(i+1,j,k,1),   &
-                                              b_halo(i,j,k+1,1),   &
-                                              b_halo(i+1,j,k+1,1), &
-                                              b_halo(i,j+1,k,1),   &
-                                              b_halo(i+1,j+1,k,1), &
-                                              b_halo(i,j+1,k+1,1), &
-                                              b_halo(i+1,j+1,k+1,1))
+                                              bx_halo(i,j,k),     &
+                                              bx_halo(i+1,j,k),   &
+                                              bx_halo(i,j,k+1),   &
+                                              bx_halo(i+1,j,k+1), &
+                                              bx_halo(i,j+1,k),   &
+                                              bx_halo(i+1,j+1,k), &
+                                              bx_halo(i,j+1,k+1), &
+                                              bx_halo(i+1,j+1,k+1))
                 pa%b(2)=trilinear_interpolation( x1,y1,z1,            &
                                                  x2,y2,z2,            &
                                               pa%x(1),pa%x(2),pa%x(3),&
-                                              b_halo(i,j,k,2),        &
-                                              b_halo(i+1,j,k,2),   &
-                                              b_halo(i,j,k+1,2),   &
-                                              b_halo(i+1,j,k+1,2), &
-                                              b_halo(i,j+1,k,2),   &
-                                              b_halo(i+1,j+1,k,2), &
-                                              b_halo(i,j+1,k+1,2), &
-                                              b_halo(i+1,j+1,k+1,2) )
+                                              by_halo(i,j,k),        &
+                                              by_halo(i+1,j,k),   &
+                                              by_halo(i,j,k+1),   &
+                                              by_halo(i+1,j,k+1), &
+                                              by_halo(i,j+1,k),   &
+                                              by_halo(i+1,j+1,k), &
+                                              by_halo(i,j+1,k+1), &
+                                              by_halo(i+1,j+1,k+1) )
                 pa%b(3)=trilinear_interpolation( x1,y1,z1,            &
                                                   x2,y2,z2,            &
                                               pa%x(1),pa%x(2),pa%x(3), &
-                                              b_halo(i,j,k,3),     &
-                                              b_halo(i+1,j,k,3),   &
-                                              b_halo(i,j,k+1,3),   &
-                                              b_halo(i+1,j,k+1,3), &
-                                              b_halo(i,j+1,k,3),   &
-                                              b_halo(i+1,j+1,k,3), &
-                                              b_halo(i,j+1,k+1,3), &
-                                              b_halo(i+1,j+1,k+1,3)) 
+                                              bz_halo(i,j,k),     &
+                                              bz_halo(i+1,j,k),   &
+                                              bz_halo(i,j,k+1),   &
+                                              bz_halo(i+1,j,k+1), &
+                                              bz_halo(i,j+1,k),   &
+                                              bz_halo(i+1,j+1,k), &
+                                              bz_halo(i,j+1,k+1), &
+                                              bz_halo(i+1,j+1,k+1)) 
               if(isnan(pa%b(1)) .or. isnan(pa%b(2)) .or. isnan(pa%b(3))) then
-                print*,' !! error in calculating b'
                 print*,'        x1:',x1,y1,z1
                 print*,'        x2:',x2,y2,z2
                 print*,'      pa%x:',pa%x
                 print*,'      rank:',nrank,'i,j,k',i,j,k
-                print*,'  b_halo_x:',b_halo(i:i+1,j:j+1,k:k+1,1)
-                print*,'  b_halo_y:',b_halo(i:i+1,j:j+1,k:k+1,2)
-                print*,'  b_halo_z:',b_halo(i:i+1,j:j+1,k:k+1,3)
-                stop
+                print*,'   bx_halo:',bx_halo(i:i+1,j:j+1,k:k+1)
+                print*,'   by_halo:',by_halo(i:i+1,j:j+1,k:k+1)
+                print*,'   bz_halo:',bz_halo(i:i+1,j:j+1,k:k+1)
+                call decomp_2d_abort(1,"error in calculating b")
               endif
               !
               !
@@ -1315,7 +1337,6 @@ module particle
     n=0
     do jpart=1,psize
       !
-      ! print*,nrank,'|',jpart
       pa=>particle_cur(jpart)
       !
       ! the particle is free for re-assigning
@@ -1332,7 +1353,6 @@ module particle
       !
     enddo
     !
-    ! print*,nrank,'|',n,newsize
     if(present(num_part_incr)) num_part_incr=n
     !
   end subroutine particle_add
@@ -1385,9 +1405,6 @@ module particle
       x=plx*ran1+particle_range(1)
       y=ply*ran2+particle_range(3)
       z=plz*ran3+particle_range(5)
-      !
-      ! print*,x,y,z
-      ! print*,(y>=lymin(nrank) .and. y<=lymax(nrank))
       !
       if( x>=lxmin(nrank) .and. x<lxmax(nrank) .and. &
           y>=lymin(nrank) .and. y<lymax(nrank) .and. &
@@ -1462,9 +1479,6 @@ module particle
       x=particle_range(1)+0.5_mytype*detalx+detalx*real(i-1,mytype)
       y=particle_range(3)+0.5_mytype*detaly+detaly*real(j-1,mytype)
       z=particle_range(5)+0.5_mytype*detalz+detalz*real(k-1,mytype)
-      !
-      ! print*,x,y,z
-      ! print*,(y>=lymin(nrank) .and. y<=lymax(nrank))
       !
       if( x>=lxmin(nrank) .and. x<lxmax(nrank) .and. &
           y>=lymin(nrank) .and. y<lymax(nrank) .and. &
@@ -1645,7 +1659,7 @@ module particle
     integer,intent(inout),optional :: num_active_particles
     !
     ! local data 
-    integer :: jpart,npart,psize,jrank,npcanc,npcanc_totl,nbc,npexit
+    integer :: jpart,npart,psize,jrank,counter,npcanc_totl,nbc,npexit
     type(partype),pointer :: pa
 
     psize=msize(particle)
@@ -1657,7 +1671,7 @@ module particle
     endif
 
     npart=0
-    npcanc=0
+    counter=0
     do jpart=1,psize
 
       pa=>particle(jpart)
@@ -1671,39 +1685,41 @@ module particle
       if(pa%x(1)<0) then
 
         ! xmin face
-        call particle_bc(face=1,bctype=bc_particle(1),particle=pa)
+        call particle_bc(face=1,bctype=bc_particle(1),particle=pa,particle_deduce=counter)
 
       elseif(pa%x(1)>xlx) then
 
         ! xmax face
-        call particle_bc(face=2,bctype=bc_particle(2),particle=pa)
+        call particle_bc(face=2,bctype=bc_particle(2),particle=pa,particle_deduce=counter)
       
       endif
 
       if(pa%x(2)<0) then
 
         ! ymin face
-        call particle_bc(face=3,bctype=bc_particle(3),particle=pa)
+        call particle_bc(face=3,bctype=bc_particle(3),particle=pa,particle_deduce=counter)
 
       elseif(pa%x(2)>yly) then
 
         ! ymax face
-        call particle_bc(face=4,bctype=bc_particle(4),particle=pa)
+        call particle_bc(face=4,bctype=bc_particle(4),particle=pa,particle_deduce=counter)
       
       endif
 
       if(pa%x(3)<0) then
 
         ! zmin face
-        call particle_bc(face=5,bctype=bc_particle(5),particle=pa)
+        call particle_bc(face=5,bctype=bc_particle(5),particle=pa,particle_deduce=counter)
 
       elseif(pa%x(3)>zlz) then
 
         ! zmax face
-        call particle_bc(face=6,bctype=bc_particle(6),particle=pa)
+        call particle_bc(face=6,bctype=bc_particle(6),particle=pa,particle_deduce=counter)
       
       endif
 
+      if(pa%new) cycle 
+      ! if the particle being reset
 
       ! checking local domain boundary 
       if( pa%x(1)>=lxmin(nrank) .and. pa%x(1)<lxmax(nrank) .and. &
@@ -1735,6 +1751,10 @@ module particle
       endif
 
     enddo
+
+    if(present(num_active_particles)) then
+      num_active_particles=num_active_particles-counter
+    endif
     !
   end subroutine particle_domain_check
   !+-------------------------------------------------------------------+
@@ -1748,14 +1768,15 @@ module particle
   !| -------------                                                     |
   !| 03-10-2024  | Created by J. Fang                                  |
   !+-------------------------------------------------------------------+
-  subroutine particle_bc(face,bctype,particle)
+  subroutine particle_bc(face,bctype,particle,particle_deduce)
 
     use param,     only : xlx,yly,zlz
 
     ! arguments
     integer,intent(in) :: face
-    character(len=4),intent(in) :: bctype
+    character(len=*),intent(in) :: bctype
     type(partype),intent(inout) :: particle
+    integer,intent(inout) :: particle_deduce
 
     ! local data
     real(mytype) :: iface
@@ -1779,7 +1800,7 @@ module particle
 
     if(idir>3) then
         print*,idir,face
-        stop '!! idir error @ particle_bc'
+        call decomp_2d_abort(1,"idir error @ particle_bc")
     endif
 
     if(mod(face,2)==0) then
@@ -1788,12 +1809,15 @@ module particle
         iface= 1.d0
     endif
 
-    if(bctype=='peri') then
+    if(bctype=='periodic') then
         particle%x(idir)=particle%x(idir)+bcord(face)*iface
-    elseif(bctype=='refl') then
+    elseif(bctype=='reflective') then
         particle%x(idir)=-particle%x(idir)+2.0_mytype*bcord(face)
+    elseif(bctype=='outflow') then
+        call particle%reset()
+        particle_deduce=particle_deduce+1
     else
-        stop '!! bc not defined @ particle_bc'
+        call decomp_2d_abort(1, "!! bc not defined @ particle_bc")
     endif
 
   end subroutine particle_bc
@@ -1828,16 +1852,14 @@ module particle
     !
     psize=msize(partpack)
     !
-    ! print*,nrank,'-',numparticle,'-',psize
-    !
     npart=0
     !
     maxforce=0._mytype
     maxvdiff=0._mytype
     !
     call field_var(ux1,uy1,uz1)
-    ! print*,nrank,'|',numparticle
-    !
+    
+
     do jpart=1,psize
       !
       pa=>partpack(jpart)
@@ -2064,7 +2086,7 @@ module particle
     logical,save :: firstcal=.true.
     !
     if(firstcal) then
-      call mpi_type_contiguous(6,mpi_real8,newtype,ierr)
+      call mpi_type_contiguous(6,real_type,newtype,ierr)
       call mpi_type_commit(newtype,ierr)
       firstcal=.false.
     endif
@@ -2116,8 +2138,6 @@ module particle
         datarecv(jc)%v(2)=r8resv(5,jc)
         datarecv(jc)%v(3)=r8resv(6,jc)
         !
-        ! print*,nrank,'|',datarecv(jc)%x(1),datarecv(jc)%x(2),datarecv(jc)%x(3)
-        !
       enddo
     enddo
     !
@@ -2131,181 +2151,25 @@ module particle
   !+-------------------------------------------------------------------+
   subroutine pswap_yz(varin,varout)
     !
-    use variables, only : p_row, p_col
-    use decomp_2d, only : xsize
+    use decomp_2d, only : xsize,update_halo
     use param,     only : nclx,ncly,nclz
-    use mpi
     !
     ! arguments
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: varin
     real(mytype),intent(out) :: varout(1:xsize(1)+1,0:xsize(2)+1,0:xsize(3)+1)
     !
     ! local data
-    integer :: i,j,k,n,jrk,krk,ncou,mpitag,ierr
-    integer :: status(mpi_status_size) 
-    integer,allocatable,save :: mrank(:,:)
-    integer,save :: upper,lower,front,bback
-    logical,save :: init=.true.
-    real(mytype),dimension(:,:),allocatable :: sbuf1,sbuf2,rbuf1,rbuf2
-    !
-    if(init) then
-      !
-      allocate(mrank(p_row,p_col))
-      !
-      n=-1
-      do j=1,p_row
-      do k=1,p_col
-        !
-        n=n+1
-        mrank(j,k)=n
-        !
-        if(nrank==n) then
-          jrk=j
-          krk=k
-        endif
-        !
-      enddo
-      enddo
-      !
-      if(jrk==1) then
-        upper=mrank(jrk+1,krk)
-        !
-        if(ncly) then
-          lower=mrank(p_row,krk)
-        else
-          lower=mpi_proc_null
-        endif
-        !
-      elseif(jrk==p_row) then
-        !
-        if(ncly) then
-          upper=mrank(1,krk)
-        else
-          upper=mpi_proc_null
-        endif
-        !
-        lower=mrank(jrk-1,krk)
-      else
-        upper=mrank(jrk+1,krk)
-        lower=mrank(jrk-1,krk)
-      endif
-      !
-      if(p_col==1) then
-        front=mpi_proc_null
-        bback=mpi_proc_null
-      else
-        !
-        if(krk==1) then
-          front=mrank(jrk,krk+1)
-          !
-          if(nclz) then
-            bback=mrank(jrk,p_col)
-          else
-            bback=mpi_proc_null
-          endif
-          !
-        elseif(krk==p_col) then
-          if(nclz) then
-            front=mrank(jrk,1)
-          else
-            front=mpi_proc_null
-          endif
-          !
-          bback=mrank(jrk,krk-1)
-        else
-          front=mrank(jrk,krk+1)
-          bback=mrank(jrk,krk-1)
-        endif
-      endif
-      !
-      init=.false.
-      !
-    endif
-    !
-    varout(1:xsize(1),1:xsize(2),1:xsize(3))=varin(1:xsize(1),1:xsize(2),1:xsize(3))
-    !
-    mpitag=1000
-    !
-    ! send & recv in the z direction
-    !
-    if(xsize(3)==1) then
-      varout(1:xsize(1),1:xsize(2),0)=varout(1:xsize(1),1:xsize(2),1)
-      varout(1:xsize(1),1:xsize(2),2)=varout(1:xsize(1),1:xsize(2),1)
-    else
-      !
-      allocate(sbuf1(1:xsize(1),1:xsize(2)),sbuf2(1:xsize(1),1:xsize(2)),&
-               rbuf1(1:xsize(1),1:xsize(2)),rbuf2(1:xsize(1),1:xsize(2)))
-      !
-      if(front .ne. mpi_proc_null) then
-        sbuf1(1:xsize(1),1:xsize(2))=varout(1:xsize(1),1:xsize(2),xsize(3))
-      endif
-      if(bback .ne. mpi_proc_null) then
-        sbuf2(1:xsize(1),1:xsize(2))=varout(1:xsize(1),1:xsize(2),1)
-      endif
-      !
-      ncou=xsize(1)*xsize(2)
-      !
-      ! Message passing
-      call mpi_sendrecv(sbuf1,ncou,mpi_real8,front, mpitag,             &
-                        rbuf1,ncou,mpi_real8,bback, mpitag,             &
-                                               mpi_comm_world,status,ierr)
-      mpitag=mpitag+1
-      call mpi_sendrecv(sbuf2,ncou,mpi_real8,bback, mpitag,            &
-                        rbuf2,ncou,mpi_real8,front, mpitag,            &
-                                               mpi_comm_world,status,ierr)
-      !
-      if(bback .ne. mpi_proc_null) then
-        varout(1:xsize(1),1:xsize(2),0)=rbuf1(1:xsize(1),1:xsize(2))
-      endif
-      if(front .ne. mpi_proc_null) then
-        varout(1:xsize(1),1:xsize(2),xsize(3)+1)=rbuf2(1:xsize(1),1:xsize(2))
-      endif
-      !
-      deallocate(sbuf1,sbuf2,rbuf1,rbuf2)
-      !
-    endif
-    !
-    ! end of Message passing in the z direction
-    !
-    ! 
-    ! send & recv in the y direction
-    allocate( sbuf1(1:xsize(1),0:xsize(3)+1),                          &
-              sbuf2(1:xsize(1),0:xsize(3)+1),                          &
-              rbuf1(1:xsize(1),0:xsize(3)+1),                          &
-              rbuf2(1:xsize(1),0:xsize(3)+1) )
+    real(mytype),allocatable,dimension(:,:,:) :: var_halo
 
-    if(upper .ne. mpi_proc_null) then
-      sbuf1(1:xsize(1),0:xsize(3)+1)=varout(1:xsize(1),xsize(2),0:xsize(3)+1)
-    endif
-    if(lower .ne. mpi_proc_null) then
-      sbuf2(1:xsize(1),0:xsize(3)+1)=varout(1:xsize(1),1,0:xsize(3)+1)
-    endif
-    !
-    ncou=xsize(1)*(xsize(3)+2)
-    !
-    ! Message passing
-    call mpi_sendrecv(sbuf1,ncou,mpi_real8,upper, mpitag,             &
-                      rbuf1,ncou,mpi_real8,lower, mpitag,             &
-                                             mpi_comm_world,status,ierr)
-    mpitag=mpitag+1
-    call mpi_sendrecv(sbuf2,ncou,mpi_real8,lower, mpitag,            &
-                      rbuf2,ncou,mpi_real8,upper, mpitag,            &
-                                             mpi_comm_world,status,ierr)
-    !
-    if(upper .ne. mpi_proc_null) then
-      varout(1:xsize(1),xsize(2)+1,0:xsize(3)+1)=rbuf2(1:xsize(1),0:xsize(3)+1)
-    endif
-    if(lower .ne. mpi_proc_null) then
-      varout(1:xsize(1),0,0:xsize(3)+1)=rbuf1(1:xsize(1),0:xsize(3)+1)
-    endif
-    !
-    deallocate(sbuf1,sbuf2,rbuf1,rbuf2)
-    ! send & recv in the y direction
-    !
+    call update_halo(varin,var_halo,1,opt_global=.true.,opt_pencil=1)
+
+    
+    varout(1:xsize(1),0:xsize(2)+1,0:xsize(3)+1)=var_halo(:,:,:)
+
     if(nclx) then
-      varout(xsize(1)+1,:,:)=varout(1,:,:)
+      varout(xsize(1)+1,:,:)=var_halo(1,:,:)
     endif
-    !
+
     return
     !
   end subroutine pswap_yz
