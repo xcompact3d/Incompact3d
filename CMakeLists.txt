@@ -58,6 +58,7 @@ add_subdirectory(src)
 
 # Add tests
 option(BUILD_TESTING "Build with test and use only TGV case" ON)
+option(BUILD_TESTING_PARTICLE "Build with test and use only two cases with particle tracking" ON)
 option(BUILD_TESTING_FULL "Build all tests" OFF)
 if (${BUILD_TESTING})
   include(CTest)
@@ -68,5 +69,3 @@ endif (${BUILD_TESTING})
 # Add a prettify target
 #add_custom_target(format sh ${CMAKE_SOURCE_DIR}/scripts/format.sh
 #  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-
-

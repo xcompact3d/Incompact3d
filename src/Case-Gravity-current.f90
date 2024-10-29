@@ -26,7 +26,8 @@ module gravitycur
   use param, only : ilmn, ibirman_eos
   use param, only : itime, ioutput, iprocessing
   use param, only : t
-  use visu, only : gen_filename, output2D
+  use visu, only :  output2D
+  use utilities, only : gen_filename 
 
   implicit none
 
@@ -640,7 +641,7 @@ contains
 
     USE decomp_2d_io
     USE MPI
-    use visu, only : gen_filename
+    use utilities, only : gen_filename
 
     use var, only : phi2
 

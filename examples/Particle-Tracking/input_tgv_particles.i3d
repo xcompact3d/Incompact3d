@@ -108,7 +108,7 @@ Rem    = 100.d0
 &ParTrack
 !====================
 
-bc_particle = 'peri','peri','peri','peri','peri','peri' 
+bc_particle = 'periodic','periodic','periodic','periodic','periodic','periodic' 
 initype_particle = 'uniform'
 n_particles = 512
 particle_inject_period = 0.0

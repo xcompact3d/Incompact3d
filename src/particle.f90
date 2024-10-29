@@ -343,9 +343,9 @@ module particle
     if(particle_inject_period>0.0_mytype) then
         if(n_local_particles>0) particles2inject=partpack
         call particle_checkpoint(mode='write',filename='particle_inject.bin')
-    endif
 
-    next_particle_inject_time=0.0_mytype + particle_inject_period
+        next_particle_inject_time = 0.0_mytype + particle_inject_period
+    endif
 
   end subroutine particle_init
   !+-------------------------------------------------------------------+
@@ -616,7 +616,7 @@ module particle
   subroutine visu_particle(itime)
 
     use param, only : ioutput
-    use visu, only : gen_snapshotname,int_to_str
+    use utilities, only : gen_snapshotname,int_to_str
 
     integer, intent(in) :: itime
 

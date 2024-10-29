@@ -7,7 +7,8 @@ module les
   use decomp_2d_constants
   use decomp_2d_mpi
   use decomp_2d
-  use visu, only : gen_filename, output2D
+  use visu, only :  output2D
+  use utilities, only : gen_filename
 
   character(len=*), parameter :: io_turb = "turb-io", &
        turb_dir = "turb-data"
