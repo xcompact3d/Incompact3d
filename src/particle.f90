@@ -754,7 +754,7 @@ module particle
       open (111,file='restart.info',action='read')
       read(111, nml=ParTrack)
       close(111)
-      print*,'>> restart.info'
+      if(nrank==0) print*,'>> restart.info'
 
       inquire(file=trim(particle_res_file), exist=file_exists,size=file_size)
 
