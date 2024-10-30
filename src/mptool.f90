@@ -153,22 +153,18 @@ module mptool
     !
   end function pmax_mytype
 
-  real(mytype) function  pmax_mytype_array(var,var_size)
+  function pmax_mytype_array(var) result(var_out)
     !
     ! arguments
     real(mytype),intent(in) :: var(:)
-    integer,intent(in),optional :: var_size
+    real(mytype) :: var_out(size(var))
     !
     ! local data
     integer :: ierr,nsize
     !
-    if(present(var_size)) then
-      nsize=var_size
-    else
-      nsize=size(var)
-    endif
+    nsize=size(var)
 
-    call mpi_allreduce(var(1:nsize),pmax_mytype_array,nsize,real_type,mpi_max, &
+    call mpi_allreduce(var,var_out,nsize,real_type,mpi_max, &
                                                     mpi_comm_world,ierr)
     !
   end function pmax_mytype_array
