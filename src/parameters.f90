@@ -31,8 +31,8 @@ subroutine parameter(input_i3d)
   use visu, only : output2D
   use forces, only : iforces, nvol, setup_forces
 
-  use mhd, only: mhd_equation,hartmann,stuart,rem
-  use particle,   only : initype_particle,n_particles,bc_particle,particle_inject_period
+  use mhd, only : mhd_equation,hartmann,stuart,rem
+  use particle, only : initype_particle,n_particles,bc_particle,particle_inject_period
 
   implicit none
 
@@ -717,10 +717,11 @@ subroutine parameter_defaults()
   hartmann = zero
 
   ! particle tracking
-  particle_active=.false.
+  particle_active =.false.
+  initype_particle = 'uniform'
   n_particles = 0
-  bc_particle = (/"none","none","none","none","none","none"/)
-  particle_inject_period=0.0
+  bc_particle = (/"periodic","periodic","periodic","periodic","periodic","periodic"/)
+  particle_inject_period = 0.0
 
   !! LES stuff
   smagwalldamp=1

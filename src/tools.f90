@@ -208,8 +208,8 @@ contains
     use variables
     use param
     use MPI
-    use navier,   only : gradp
-    use mhd,      only : mhd_equation,Bm,dBm
+    use navier, only : gradp
+    use mhd, only : mhd_equation,Bm,dBm
     use particle, only : particle_checkpoint
 
     implicit none

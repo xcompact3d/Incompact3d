@@ -590,6 +590,8 @@ module mptool
 
   end function prelay
   !
+  ! this function does a linear interpolation, the input array yy1 and yy2 must have the same size.
+  ! used by module particle to interpolation fields in time.
   function linintp(xx1,xx2,yy1,yy2,xx) result(yy)
     !
     real(mytype),intent(in) :: xx1,xx2,xx
@@ -597,10 +599,11 @@ module mptool
     real(mytype) :: yy(1:size(yy1,1),1:size(yy1,2),1:size(yy1,3))
     !
     real(mytype) :: var1
+    real(mytype) :: epsilon = 1.e-16_mytype
     !
-    if(abs(xx-xx1)<1.e-16_mytype) then
+    if(abs(xx-xx1)<epsilon) then
       yy=yy1
-    elseif(abs(xx-xx2)<1.e-16_mytype) then
+    elseif(abs(xx-xx2)<epsilon) then
       yy=yy2
     else
       var1=(xx-xx1)/(xx2-xx1)
