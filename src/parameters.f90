@@ -684,7 +684,7 @@ subroutine parameter_defaults()
   use forces, only : iforces, nvol
 
   use mhd, only: mhd_equation, rem, stuart, hartmann 
-  use particle, only : n_particles,bc_particle,particle_inject_period
+  use particle, only : initype_particle,n_particles,bc_particle,particle_inject_period
 
   implicit none
 
