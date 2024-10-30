@@ -19,7 +19,7 @@ program xcompact3d
   use mhd,    only : Bm,mhd_equation,test_magnetic, &
                      solve_poisson_mhd
   use param, only : mhd_active
-  use particle, only : intt_particel
+  use particle, only : intt_particles
 
   implicit none
 
@@ -87,9 +87,11 @@ program xcompact3d
 
         if(mhd_active) call test_magnetic
 
-        if(particle_active) call intt_particel(ux1,uy1,uz1,t)
-
      enddo !! End sub timesteps
+
+     if(particle_active) then
+       call intt_particles(ux1,uy1,uz1,t)
+     endif
 
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,rho1,drho1,mu1,1)
 
@@ -140,7 +142,7 @@ subroutine init_xcompact3d()
   use probes, only : init_probes
 
   use mhd, only: mhd_init
-  use particle,  only : particle_report,local_domain_size,n_particles
+  use particle,  only : particle_report,local_domain_size
 
   implicit none
 

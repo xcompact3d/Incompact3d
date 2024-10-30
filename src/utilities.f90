@@ -49,7 +49,6 @@ function cx(realpart,imaginarypart)
   cx = cmplx(realpart, imaginarypart, kind=mytype)
 
 end function cx
-
 !##################################################################
  function gen_snapshotname(pathname, varname, num, ext)
     character(len=*), intent(in) :: pathname, varname, ext

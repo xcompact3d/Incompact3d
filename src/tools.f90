@@ -329,7 +329,6 @@ contains
        call decomp_2d_end_io(io_restart, resfile)
        call decomp_2d_close_io(io_restart, resfile)
 
-
        ! Validate restart file then remove old file and update restart.info
        if (validation_restart) then
           if (validate_restart(resfile_old, resfile)) then
@@ -479,7 +478,7 @@ contains
          itime0 = 0
        end if
 
-       call particle_checkpoint(mode='read')
+       if(particle_active) call particle_checkpoint(mode='read')
        
     endif
 

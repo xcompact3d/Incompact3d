@@ -98,7 +98,7 @@ module particle
 
   private
 
-  public :: local_domain_size,particle_init,intt_particel,            &
+  public :: local_domain_size,particle_init,intt_particles,            &
             particle_report,visu_particle,particle_checkpoint,        &
             n_particles,initype_particle,bc_particle,                 &
             particle_inject_period
@@ -387,7 +387,7 @@ module particle
   !| -------------                                                     |
   !| 16-11-2021  | Created by J. Fang                                  |
   !+-------------------------------------------------------------------+
-  subroutine intt_particel(ux1,uy1,uz1,time1)
+  subroutine intt_particles(ux1,uy1,uz1,time1)
     !
     use variables 
     use param
@@ -398,7 +398,7 @@ module particle
     real(mytype),intent(in) :: time1
     !
     ! local data 
-    integer :: p,psize,jpart,npart
+    integer :: p,psize,jpart,npart,iptr
     integer,save :: old_num_part=0
     type(partype),pointer :: pa
     real(mytype),save :: time0,tsro
@@ -410,11 +410,11 @@ module particle
     logical,save :: firstcal=.true.,particle_inject=.false.
     !
     if(firstcal) then
-      !
+
       allocate( ux0(xsize(1),xsize(2),xsize(3)), &
                 uy0(xsize(1),xsize(2),xsize(3)), &
                 uz0(xsize(1),xsize(2),xsize(3)) )
-      !
+
       ux0=ux1
       uy0=uy1
       uz0=uz1
@@ -424,20 +424,17 @@ module particle
       sub_time_step=dt
 
       time0=time1
-      !
+
       tsro=sub_time_step/dt
-      !
+
       if(particle_inject_period>0.0_mytype) then
         particle_inject=.true.
       endif
 
       old_num_part=n_particles
 
-      !
       firstcal=.false.
-      !
-      return
-      !
+
     endif
     !
     do while(particletime<time1)
@@ -455,143 +452,147 @@ module particle
       uxp=linintp(time0,time1,ux0,ux1,particletime)
       uyp=linintp(time0,time1,uy0,uy1,particletime)
       uzp=linintp(time0,time1,uz0,uz1,particletime)
-      !
-      call particle_force(uxp,uyp,uzp)
-      !
-      psize=msize(partpack)
 
-      allocate(xcor(3,psize),dxco(3,psize,ntime))
-      allocate(vcor(3,psize),dvco(3,psize,ntime))
-      !
-      npart=0
-      do jpart=1,psize
+      do iptr=1,iadvance_time
 
-        pa=>partpack(jpart)
+        call particle_force(uxp,uyp,uzp)
 
-        if(pa%new) cycle
+        psize=msize(partpack)
+        allocate(xcor(3,psize),dxco(3,psize,ntime))
+        allocate(vcor(3,psize),dvco(3,psize,ntime))
 
-        npart=npart+1
+        npart=0
 
-        if(npart>n_local_particles) exit
-
-        xcor(:,npart)=pa%x(:)
-
-        dxco(:,npart,1)=pa%v(:)
-
-        dxco(:,npart,2:ntime)=pa%dx(:,2:ntime)
-
-        vcor(:,npart)=pa%v(:)
-
-        dvco(:,npart,1)=pa%f(:)
-        dvco(:,npart,2:ntime)=pa%dv(:,2:ntime)
-
-      enddo
-      !
-      if (itimescheme.eq.1) then
-         !>>> Euler
-         vcor=gdt(itr)*tsro*dvco(:,:,1)+vcor
-         !
-         xcor=gdt(itr)*tsro*dxco(:,:,1)+xcor
-         !
-      elseif(itimescheme.eq.2) then
-         !>>> Adam-Bashforth second order (AB2)
-         !
-         if(itime.eq.1 .and. irestart.eq.0) then
+        do jpart=1,psize
+  
+          pa=>partpack(jpart)
+  
+          if(pa%new) cycle
+  
+          npart=npart+1
+  
+          if(npart>n_local_particles) exit
+  
+          xcor(:,npart)=pa%x(:)
+  
+          dxco(:,npart,1)=pa%v(:)
+  
+          dxco(:,npart,2:ntime)=pa%dx(:,2:ntime)
+  
+          vcor(:,npart)=pa%v(:)
+  
+          dvco(:,npart,1)=pa%f(:)
+          dvco(:,npart,2:ntime)=pa%dv(:,2:ntime)
+  
+        enddo
+        !
+        if (itimescheme.eq.1) then
+           !>>> Euler
+           vcor=gdt(iptr)*tsro*dvco(:,:,1)+vcor
+           !
+           xcor=gdt(iptr)*tsro*dxco(:,:,1)+xcor
+           !
+        elseif(itimescheme.eq.2) then
+           !>>> Adam-Bashforth second order (AB2)
+           !
+           if(itime.eq.1 .and. irestart.eq.0) then
+             ! Do first time step with Euler
+             vcor=gdt(iptr)*tsro*dvco(:,:,1)+vcor
+             !
+             xcor=gdt(iptr)*tsro*dxco(:,:,1)+xcor
+           else
+             vcor=adt(iptr)*dvco(:,:,1)+bdt(iptr)*dvco(:,:,2)+vcor
+             !
+             xcor=adt(iptr)*dxco(:,:,1)+bdt(iptr)*dxco(:,:,2)+xcor
+           endif
+           dvco(:,:,2)=dvco(:,:,1)
+           dxco(:,:,2)=dxco(:,:,1)
+           !
+        elseif(itimescheme.eq.3) then
+           !>>> Adams-Bashforth third order (AB3)
+           !
            ! Do first time step with Euler
-           vcor=gdt(itr)*tsro*dvco(:,:,1)+vcor
+           if(itime.eq.1.and.irestart.eq.0) then
+              vcor=dt*tsro*dvco(:,:,1)+vcor
+              !
+              xcor=dt*tsro*dxco(:,:,1)+xcor
+           elseif(itime.eq.2.and.irestart.eq.0) then
+              ! Do second time step with AB2
+              vcor=onepfive*dt*tsro*dvco(:,:,1)-half*dt*tsro*dvco(:,:,2)+vcor
+              dvco(:,:,3)=dvco(:,:,2)
+              !
+              xcor=onepfive*dt*tsro*dxco(:,:,1)-half*dt*tsro*dxco(:,:,2)+xcor
+              dxco(:,:,3)=dxco(:,:,2)
+           else
+              ! Finally using AB3
+              vcor=adt(iptr)*tsro*dvco(:,:,1)+bdt(iptr)*tsro*dvco(:,:,2)+cdt(iptr)*tsro*dvco(:,:,3)+vcor
+              dvco(:,:,3)=dvco(:,:,2)
+              !
+              xcor=adt(iptr)*tsro*dxco(:,:,1)+bdt(iptr)*tsro*dxco(:,:,2)+cdt(iptr)*tsro*dxco(:,:,3)+xcor
+              dxco(:,:,3)=dxco(:,:,2)
+           endif
+           dvco(:,:,2)=dvco(:,:,1)
+           dxco(:,:,2)=dxco(:,:,1)
            !
-           xcor=gdt(itr)*tsro*dxco(:,:,1)+xcor
-         else
-           vcor=adt(itr)*dvco(:,:,1)+bdt(itr)*dvco(:,:,2)+vcor
-           !
-           xcor=adt(itr)*dxco(:,:,1)+bdt(itr)*dxco(:,:,2)+xcor
-         endif
-         dvco(:,:,2)=dvco(:,:,1)
-         dxco(:,:,2)=dxco(:,:,1)
-         !
-      elseif(itimescheme.eq.3) then
-         !>>> Adams-Bashforth third order (AB3)
-         !
-         ! Do first time step with Euler
-         if(itime.eq.1.and.irestart.eq.0) then
-            vcor=dt*tsro*dvco(:,:,1)+vcor
-            !
-            xcor=dt*tsro*dxco(:,:,1)+xcor
-         elseif(itime.eq.2.and.irestart.eq.0) then
-            ! Do second time step with AB2
-            vcor=onepfive*dt*tsro*dvco(:,:,1)-half*dt*tsro*dvco(:,:,2)+vcor
-            dvco(:,:,3)=dvco(:,:,2)
-            !
-            xcor=onepfive*dt*tsro*dxco(:,:,1)-half*dt*tsro*dxco(:,:,2)+xcor
-            dxco(:,:,3)=dxco(:,:,2)
-         else
-            ! Finally using AB3
-            vcor=adt(itr)*tsro*dvco(:,:,1)+bdt(itr)*tsro*dvco(:,:,2)+cdt(itr)*tsro*dvco(:,:,3)+vcor
-            dvco(:,:,3)=dvco(:,:,2)
-            !
-            xcor=adt(itr)*tsro*dxco(:,:,1)+bdt(itr)*tsro*dxco(:,:,2)+cdt(itr)*tsro*dxco(:,:,3)+xcor
-            dxco(:,:,3)=dxco(:,:,2)
-         endif
-         dvco(:,:,2)=dvco(:,:,1)
-         dxco(:,:,2)=dxco(:,:,1)
-         !
-      elseif(itimescheme.eq.5) then
-         !>>> Runge-Kutta (low storage) RK3
-         if(itr.eq.1) then
-            vcor=gdt(itr)*tsro*dvco(:,:,1)+vcor
-            xcor=gdt(itr)*tsro*dxco(:,:,1)+xcor
-         else
-            vcor=adt(itr)*tsro*dvco(:,:,1)+bdt(itr)*tsro*dvco(:,:,2)+vcor
-            xcor=adt(itr)*tsro*dxco(:,:,1)+bdt(itr)*tsro*dxco(:,:,2)+xcor
-         endif
-         dvco(:,:,2)=dvco(:,:,1)
-         dxco(:,:,2)=dxco(:,:,1)
-         !
-      endif
-      ! !
-      ! put back from local array to particle array
-      npart=0
-      do jpart=1,psize
-        !
-        pa=>partpack(jpart)
-        !
-        if(pa%new) cycle
-        !
-        npart=npart+1
-
-        if(npart>n_local_particles) exit
-        !
-        if(isnan(vcor(1,npart)) .or. isnan(vcor(2,npart)) .or. isnan(vcor(3,npart))) then
-          print*, npart,pa%x(:),pa%v(:)
-          call decomp_2d_abort(1,"particle velocity NaN @ intt_particel")
+        elseif(itimescheme.eq.5) then
+           !>>> Runge-Kutta (low storage) RK3
+           if(iptr.eq.1) then
+              vcor=gdt(iptr)*tsro*dvco(:,:,1)+vcor
+              xcor=gdt(iptr)*tsro*dxco(:,:,1)+xcor
+           else
+              vcor=adt(iptr)*tsro*dvco(:,:,1)+bdt(iptr)*tsro*dvco(:,:,2)+vcor
+              xcor=adt(iptr)*tsro*dxco(:,:,1)+bdt(iptr)*tsro*dxco(:,:,2)+xcor
+           endif
+           dvco(:,:,2)=dvco(:,:,1)
+           dxco(:,:,2)=dxco(:,:,1)
+  
         endif
-        !
-        pa%v(:)=vcor(:,npart)
-        pa%x(:)=xcor(:,npart)
-        ! pa%x(3)=0._mytype ! 2d x-y computation
-        !
-        pa%dv(:,2:ntime)=dvco(:,npart,2:ntime)
-        pa%dx(:,2:ntime)=dxco(:,npart,2:ntime)
-        !
+        ! !
+        ! put back from local array to particle array
+        npart=0
+        do jpart=1,psize
+          !
+          pa=>partpack(jpart)
+          !
+          if(pa%new) cycle
+          !
+          npart=npart+1
+  
+          if(npart>n_local_particles) exit
+          !
+          if(isnan(vcor(1,npart)) .or. isnan(vcor(2,npart)) .or. isnan(vcor(3,npart))) then
+            print*, npart,pa%x(:),pa%v(:)
+            call decomp_2d_abort(1,"particle velocity NaN @ intt_particles")
+          endif
+          !
+          pa%v(:)=vcor(:,npart)
+          pa%x(:)=xcor(:,npart)
+          
+          pa%dv(:,2:ntime)=dvco(:,npart,2:ntime)
+          pa%dx(:,2:ntime)=dxco(:,npart,2:ntime)
+
+        enddo
+
+        deallocate(xcor,dxco,vcor,dvco)
+        
+        call particle_domain_check(partpack,n_local_particles)
+        
+        call partical_swap(partpack,n_local_particles)
+      
       enddo
-      !
-      deallocate(xcor,dxco,vcor,dvco)
-      
-      call particle_domain_check(partpack,n_local_particles)
-      
-      call partical_swap(partpack,n_local_particles)
-      
+
       n_particles=psum(n_local_particles)
-
+  
       if(nrank==0) then
-
+  
         if(n_particles.ne.old_num_part) then
-          write(*,'(3(A,I0))')'** number of particles changes from ',old_num_part, &
+          write(*,'(3(A,I0))')' ** number of particles changes from ',old_num_part, &
                                       ' -> ',n_particles,' : ',n_particles-old_num_part
+          old_num_part=n_particles
         endif
-        old_num_part=n_particles
+        
       endif
-      !
+
     enddo
     !
     ux0=ux1
@@ -599,11 +600,10 @@ module particle
     uz0=uz1
     !
     time0=time1
-
     !
-  end subroutine intt_particel
+  end subroutine intt_particles
   !+-------------------------------------------------------------------+
-  ! The end of the subroutine intt_particel                            |
+  ! The end of the subroutine intt_particles                           |
   !+-------------------------------------------------------------------+
 
   !+-------------------------------------------------------------------+
@@ -1586,6 +1586,10 @@ module particle
         npz=int(n1*plz)
 
     endif
+
+    npx = max(npx,1)
+    npy = max(npy,1)
+    npz = max(npz,1)
 
   end subroutine particle_dis_xyz
   !+-------------------------------------------------------------------+
