@@ -169,18 +169,22 @@ module mptool
     !
   end function pmax_mytype_array
 
-  real(mytype) function  pmin_mytype_array(var)
+  function  pmin_mytype_array(var) result(var_out)
     !
     ! arguments
     real(mytype),intent(in) :: var(:)
+    real(mytype) :: var_out(size(var))
     !
     ! local data
-    integer :: ierr
+    integer :: ierr,nsize
     !
-    call mpi_allreduce(var,pmin_mytype_array,size(var),real_type,mpi_min,    &
+    nsize=size(var)
+
+    call mpi_allreduce(var,var_out,nsize,real_type,mpi_min, &
                                                     mpi_comm_world,ierr)
     !
   end function pmin_mytype_array
+
   real(mytype) function  pmin_mytype(var)
     !
     ! arguments
@@ -289,12 +293,11 @@ module mptool
     !
   end function cross_product
 
-  subroutine pwrite_1darray(filename,data_1,data_2,data_3,data_4,data_5,data_6)
+  subroutine pwrite_1darray(filename,data_1)
 
     ! arguments
     character(len=*),intent(in) :: filename
     real(mytype),intent(in) :: data_1(:)
-    real(mytype),intent(in),optional :: data_2(:),data_3(:),data_4(:),data_5(:),data_6(:)
 
     ! local data
     integer :: local_size
@@ -302,19 +305,17 @@ module mptool
     ! get the size of the array
     local_size=size(data_1)
 
-    call pwrite_data(filename,data_1,local_size,data_2,data_3,data_4,data_5,data_6)
+    call pwrite_data(filename,data_1,local_size)
 
     if(nrank==0) print*,'<< ',filename
 
   end subroutine pwrite_1darray
 
-  subroutine pwrite_2darray(filename,data_1,data_2,data_3,data_4,data_5,data_6)
+  subroutine pwrite_2darray(filename,data_1)
 
     ! arguments
     character(len=*),intent(in) :: filename
     real(mytype),intent(in) :: data_1(:,:)
-    real(mytype),intent(in),optional :: data_2(:,:),data_3(:,:),data_4(:,:), &
-                                        data_5(:,:),data_6(:,:)
 
     ! local data
     integer :: local_size
@@ -322,18 +323,17 @@ module mptool
     ! get the size of the array
     local_size=size(data_1)
 
-    call pwrite_data(filename,data_1,local_size,data_2,data_3,data_4,data_5,data_6)
+    call pwrite_data(filename,data_1,local_size)
 
     if(nrank==0) print*,'<< ',filename
 
   end subroutine pwrite_2darray
 
-  subroutine pwrite_data(filename,data_1,data_size,data_2,data_3,data_4,data_5,data_6)
+  subroutine pwrite_data(filename,data_1,data_size)
 
     character(len=*),intent(in) :: filename
     real(mytype),intent(in) :: data_1(*)
     integer,intent(in) :: data_size
-    real(mytype),intent(in),optional :: data_2(*),data_3(*),data_4(*),data_5(*),data_6(*)
 
     ! local data
     integer :: total_size
@@ -351,73 +351,6 @@ module mptool
 
     ! write the local array to the file
     call mpi_file_write(fh, data_1, data_size, real_type, status, ierr)
-
-    if(present(data_2)) then
-
-      ! Barrier to synchronize processes
-      call mpi_barrier(mpi_comm_world, ierr)
-
-      total_size=psum(data_size)*mytype_bytes
-
-      offset = offset + total_size
-
-      ! write the data_2 to the file
-      call mpi_file_set_view(fh, offset, real_type, real_type, 'native', mpi_info_null, ierr)
-      call mpi_file_write(fh, data_2, data_size, real_type, status, ierr)
-
-    endif
-
-    if(present(data_3)) then
-
-      ! Barrier to synchronize processes
-      call mpi_barrier(mpi_comm_world, ierr)
-
-      offset = offset + total_size
-
-      ! write the data_3 to the file
-      call mpi_file_set_view(fh, offset, real_type, real_type, 'native', mpi_info_null, ierr)
-      call mpi_file_write(fh, data_3, data_size, real_type, status, ierr)
-
-    endif
-
-    if(present(data_4)) then
-
-      ! Barrier to synchronize processes
-      call mpi_barrier(mpi_comm_world, ierr)
-
-      offset = offset + total_size
-
-      ! write the data_4 to the file
-      call mpi_file_set_view(fh, offset, real_type, real_type, 'native', mpi_info_null, ierr)
-      call mpi_file_write(fh, data_4, data_size, real_type, status, ierr)
-
-    endif
-
-    if(present(data_5)) then
-
-      ! Barrier to synchronize processes
-      call mpi_barrier(mpi_comm_world, ierr)
-
-      offset = offset + total_size
-
-      ! write the data_5 to the file
-      call mpi_file_set_view(fh, offset, real_type, real_type, 'native', mpi_info_null, ierr)
-      call mpi_file_write(fh, data_5, data_size, real_type, status, ierr)
-
-    endif
-
-    if(present(data_6)) then
-
-      ! Barrier to synchronize processes
-      call mpi_barrier(mpi_comm_world, ierr)
-
-      offset = offset + total_size
-
-      ! write the data_6 to the file
-      call mpi_file_set_view(fh, offset, real_type, real_type, 'native', mpi_info_null, ierr)
-      call mpi_file_write(fh, data_6, data_size, real_type, status, ierr)
-
-    endif
 
     ! close the file
     call mpi_file_close(fh, ierr)
@@ -528,11 +461,10 @@ module mptool
     real(mytype) :: yy(1:size(yy1,1),1:size(yy1,2),1:size(yy1,3))
     !
     real(mytype) :: var1
-    real(mytype) :: epsilon = 1.e-16_mytype
     !
-    if(abs(xx-xx1)<epsilon) then
+    if(abs(xx-xx1)<epsilon(1._mytype)) then
       yy=yy1
-    elseif(abs(xx-xx2)<epsilon) then
+    elseif(abs(xx-xx2)<epsilon(1._mytype)) then
       yy=yy2
     else
       var1=(xx-xx1)/(xx2-xx1)
