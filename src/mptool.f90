@@ -426,7 +426,7 @@ module mptool
     local_size1=psum(local_size1)
     local_size2=psum(local_size2)
 
-    if(nrank==0) write(*,'(3(A,I0))')'>> ',filename,' data size: ',local_size1,'x',local_size2
+    if(nrank==0) write(*,'(2(A,I0))')'>> '//filename//' data size: ',local_size1,'x',local_size2
 
   end subroutine pread_2darray
 
