@@ -22,6 +22,8 @@ program xcompact3d
   real(mytype)  :: dummy,drag(10),lift(10),lat(10),grav_effy(10),grav_effx(10),grav_effz(10),xtorq(10),ytorq(10),ztorq(10),maxrad
   integer :: iounit,ierr,i
   real, dimension(100) :: x
+  character(len=30) :: filename!, filename2
+
 
 
   call init_xcompact3d()
@@ -38,7 +40,10 @@ program xcompact3d
   end if
 
   if (nrank==0) then
-   open(unit=12, file='body.dat1', status='unknown', form='formatted')
+   do i = 1,nbody
+      write(filename,"('body.dat',I1.1)") i
+      open(unit=11+i, file=filename, status='unknown', form='formatted')
+   enddo
   endif
 !   do i = 1,100
 !    x(i) = i
@@ -180,11 +185,12 @@ program xcompact3d
         enddo
 
 
-      !   if (nrank==0) then
-      !    write(12 ,*) t, position(1), position(2), position(3), orientation(1), orientation(2), orientation(3), orientation(4), linearVelocity(1), linearVelocity(2), linearVelocity(3), angularVelocity(2), angularVelocity(3), angularVelocity(4), drag, lift, lat, xtorq, ytorq, ztorq
-      !    flush(12)
-      !   endif
-      !   endif 
+      if (nrank==0) then
+         do i = 1,nbody
+            write(11+i ,*) t, position(i,1), position(i,2), position(i,3), orientation(i,1), orientation(i,2), orientation(i,3), orientation(i,4), linearVelocity(i,1), linearVelocity(i,2), linearVelocity(i,3), angularVelocity(i,2), angularVelocity(i,3), angularVelocity(i,4), linearForce(i,1), linearForce(i,2), linearForce(i,3), torque(i,1), torque(i,2), torque(i,3)
+            flush(11+i)
+         enddo
+      endif
 
          if ((nrank==0).and.(mod(itime,ilist)==0)) then 
             do i = 1,nbody

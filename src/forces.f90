@@ -1054,7 +1054,7 @@ contains
       if ((itime==ifirst).or.(itime==0)) then
          
       endif
-       if ((nrank .eq. 0).and.(record_var.eq.1)) then
+       if ((nrank .eq. 0).and.(record_var.eq.1).and.(mod(itime,ilist)==0)) then
          ! write(*,*) 'TIME STEP = ', itime
          write(38+(iv-1),*) t,dra1,dra2,dra3, sum(tdiffx), sum(tdiffx2), tp1, -mom1, -sum(tunstx(:)), -sum(tconvx(:)), -sum(tconvx2(:))
          !  write(*,*) 'written to file number', 38+(iv-1), t, dra1,dra2,dra3
@@ -1868,7 +1868,7 @@ contains
      if ((itime==ifirst).or.(itime==0)) then
         
      endif
-      if ((nrank .eq. 0).and.(record_var.eq.1)) then
+      if ((nrank .eq. 0).and.(record_var.eq.1).and.(mod(itime,ilist)==0)) then
         ! write(*,*) 'TIME STEP = ', itime
         write(45+(iv-1),*) t,dra1,dra2,dra3, sum(tdiffx), sum(tdiffx2), tp1, -mom1, -sum(tunstx(:)), -sum(tconvx(:)), -sum(tconvx2(:))
         !  write(*,*) 'written to file number', 38+(iv-1), t, dra1,dra2,dra3
