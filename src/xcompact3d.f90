@@ -185,7 +185,7 @@ program xcompact3d
         enddo
 
 
-      if (nrank==0) then
+      if ((nrank==0).and.(mod(itime,ilist)==0)) then
          do i = 1,nbody
             write(11+i ,*) t, position(i,1), position(i,2), position(i,3), orientation(i,1), orientation(i,2), orientation(i,3), orientation(i,4), linearVelocity(i,1), linearVelocity(i,2), linearVelocity(i,3), angularVelocity(i,2), angularVelocity(i,3), angularVelocity(i,4), linearForce(i,1), linearForce(i,2), linearForce(i,3), torque(i,1), torque(i,2), torque(i,3)
             flush(11+i)
