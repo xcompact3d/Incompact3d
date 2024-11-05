@@ -2,19 +2,19 @@
 !This file is part of Xcompact3d (xcompact3d.com)
 !SPDX-License-Identifier: BSD 3-Clause
 module mptool
-  !
+    
   use mpi
   use decomp_2d_constants, only : mytype, real_type
   use decomp_2d_mpi, only: nrank, nproc, mytype_bytes
-  !
+    
   implicit none
-  !
+    
   interface psum
     module procedure psum_mytype_ary
     module procedure psum_integer
     module procedure psum_mytype
   end interface
-  !
+    
   interface pmax
     module procedure pmax_int
     module procedure pmax_mytype
@@ -24,180 +24,180 @@ module mptool
     module procedure pmin_mytype
     module procedure pmin_mytype_array
   end interface
-  !
+    
   interface ptabupd
     module procedure ptable_update_int_arr
     module procedure ptable_update_int
   end interface ptabupd
-  !
+    
   interface pwrite
     module procedure pwrite_1darray
     module procedure pwrite_2darray
   end interface
-  !
+    
   interface pread
     module procedure pread_1darray
     module procedure pread_2darray
   end interface
-  !
+    
   contains
-  !
+    
   !+-------------------------------------------------------------------+
   !| This subroutine is used to compute sum in MPI_COMM_WORLD
   !|    It can not use a dedicated MPI communicator
   !+-------------------------------------------------------------------+
-  !
+    
   function psum_mytype_ary(var) result(varsum)
-    !
+    
     ! arguments
     real(mytype),intent(in) :: var(:)
     real(mytype) :: varsum(size(var))
-    !
+    
     ! local data
     integer :: ierr
-    !
+    
     call mpi_allreduce(var,varsum,size(var),real_type,mpi_sum,             &
                                                     mpi_comm_world,ierr)
 
   end function psum_mytype_ary
-  !
+    
   !+-------------------------------------------------------------------+
   !| This subroutine is used to compute sum in parallel
   !|    It can use a dedicated MPI communicator if provided
   !+-------------------------------------------------------------------+
-  !
+    
   function psum_integer(var,comm) result(varsum)
-    !
+    
     ! arguments
     integer,intent(in) :: var
     integer,optional,intent(in) :: comm
     integer :: varsum
-    !
+    
     ! local data
     integer :: ierr,comm2use
-    !
+    
     if(present(comm)) then
         comm2use=comm
     else
         comm2use=mpi_comm_world
     endif
-    !
-    !
+    
+    
     call mpi_allreduce(var,varsum,1,mpi_integer,mpi_sum,           &
                                                     comm2use,ierr)
-    !
+    
     return
-    !
+    
   end function psum_integer
-  !
+    
   !+-------------------------------------------------------------------+
   !| This subroutine is used to compute sum in parallel
   !|    It can use a dedicated MPI communicator if provided
   !+-------------------------------------------------------------------+
-  !
+    
   function psum_mytype(var,comm) result(varsum)
-    !
+    
     ! arguments
     real(mytype),intent(in) :: var
     integer,optional,intent(in) :: comm
     real(mytype) :: varsum
-    !
+    
     ! local data
     integer :: ierr,comm2use
-    !
+    
     if(present(comm)) then
         comm2use=comm
     else
         comm2use=mpi_comm_world
     endif
-    !
-    !
+    
+    
     call mpi_allreduce(var,varsum,1,real_type,mpi_sum,           &
                                                     comm2use,ierr)
-    !
+    
   end function psum_mytype
-  !
+    
   !+-------------------------------------------------------------------+
   !| This subroutine is used to compute the max in MPI_COMM_WORLD
   !|    It can not use a dedicated MPI communicator
   !+-------------------------------------------------------------------+
-  !
+    
   integer function  pmax_int(var)
-    !
+    
     ! arguments
     integer,intent(in) :: var
-    !
+    
     ! local data
     integer :: ierr
-    !
+    
     call mpi_allreduce(var,pmax_int,1,mpi_integer,mpi_max,             &
                                                     mpi_comm_world,ierr)
-    !
+    
   end function pmax_int
-  !
+    
   !+-------------------------------------------------------------------+
   !| This subroutine is used to compute the max in MPI_COMM_WORLD
   !|    It can not use a dedicated MPI communicator
   !+-------------------------------------------------------------------+
-  !
+    
   real(mytype) function  pmax_mytype(var)
-    !
+    
     ! arguments
     real(mytype),intent(in) :: var
-    !
+    
     ! local data
     integer :: ierr
-    !
+    
     call mpi_allreduce(var,pmax_mytype,1,real_type,mpi_max,             &
                                                     mpi_comm_world,ierr)
-    !
+    
   end function pmax_mytype
 
   function pmax_mytype_array(var) result(var_out)
-    !
+    
     ! arguments
     real(mytype),intent(in) :: var(:)
     real(mytype) :: var_out(size(var))
-    !
+    
     ! local data
     integer :: ierr,nsize
-    !
+    
     nsize=size(var)
 
     call mpi_allreduce(var,var_out,nsize,real_type,mpi_max, &
                                                     mpi_comm_world,ierr)
-    !
+    
   end function pmax_mytype_array
 
   function  pmin_mytype_array(var) result(var_out)
-    !
+    
     ! arguments
     real(mytype),intent(in) :: var(:)
     real(mytype) :: var_out(size(var))
-    !
+    
     ! local data
     integer :: ierr,nsize
-    !
+    
     nsize=size(var)
 
     call mpi_allreduce(var,var_out,nsize,real_type,mpi_min, &
                                                     mpi_comm_world,ierr)
-    !
+    
   end function pmin_mytype_array
 
   real(mytype) function  pmin_mytype(var)
-    !
+    
     ! arguments
     real(mytype),intent(in) :: var
-    !
+    
     ! local data
     integer :: ierr
-    !
+    
     call mpi_allreduce(var,pmin_mytype,1,real_type,mpi_min,    &
                                                     mpi_comm_world,ierr)
-    !
+    
   end function pmin_mytype
-  !
+    
   !+-------------------------------------------------------------------+
   !| this function is to update table based on alltoall mpi            |
   !+-------------------------------------------------------------------+
@@ -206,61 +206,63 @@ module mptool
   !| 17-Jun-2022  | Created by J. Fang STFC Daresbury Laboratory       |
   !+-------------------------------------------------------------------+
   function ptable_update_int_arr(vain) result(vout)
-    !
+    
     use mpi
-    !
+    
     integer,intent(in) :: vain(:)
     integer :: vout(size(vain))
-    !
+    
     ! local variables
     integer :: ierr
-    !
+    
     call mpi_alltoall(vain,1,mpi_integer,                   &
                       vout,1,mpi_integer,mpi_comm_world,ierr)
-    !
+    
     return
-    !
+    
   end function ptable_update_int_arr
-  !
+
+  ! the same purposed with above, with only for a single varaible with more options in communicator
+    
   function ptable_update_int(var,offset,debug,comm,comm_size) result(table)
-    !
+    
     use mpi
-    !
+    
     ! arguments
     integer,allocatable :: table(:)
     integer,intent(in) :: var
     integer,optional,intent(out) :: offset
     logical,intent(in),optional :: debug
     integer,intent(in),optional :: comm,comm_size
-    !
+    
     ! local data
     integer :: comm2use,comm2size
     integer :: ierr,i
     logical :: ldebug
-    !
+    
     if(present(debug)) then
       ldebug=debug
     else
       ldebug=.false.
     endif
-    !
+    
     if(present(comm)) then
         comm2use=comm
     else
         comm2use=mpi_comm_world
     endif
-    !
+    
     if(present(comm_size)) then
         comm2size=comm_size
     else
         comm2size=nproc
     endif
-    !
+    
     allocate(table(0:comm2size-1))
-    !
+    
     call mpi_allgather(var,  1,mpi_integer,                          &
                        table,1,mpi_integer,comm2use,ierr)
-    !
+    
     if(present(offset)) then
       !
       if(nrank==0) then
@@ -275,22 +277,22 @@ module mptool
       endif
       !
     endif
-    !
+    
   end function ptable_update_int
-  !
+    
   !+-------------------------------------------------------------------+
   !| The end of the subroutine ptabupd.                                |
   !+-------------------------------------------------------------------+
 
   pure function cross_product(a,b)
-    !
+    
     real(mytype) :: cross_product(3)
     real(mytype),dimension(3),intent(in) :: a(3), b(3)
   
     cross_product(1) = a(2) * b(3) - a(3) * b(2)
     cross_product(2) = a(3) * b(1) - a(1) * b(3)
     cross_product(3) = a(1) * b(2) - a(2) * b(1)
-    !
+    
   end function cross_product
 
   subroutine pwrite_1darray(filename,data_1)
@@ -451,17 +453,17 @@ module mptool
     return
 
   end function prelay
-  !
+    
   ! this function does a linear interpolation, the input array yy1 and yy2 must have the same size.
   ! used by module particle to interpolation fields in time.
   function linintp(xx1,xx2,yy1,yy2,xx) result(yy)
-    !
+    
     real(mytype),intent(in) :: xx1,xx2,xx
     real(mytype),intent(in) ::  yy1(:,:,:),yy2(:,:,:)
     real(mytype) :: yy(1:size(yy1,1),1:size(yy1,2),1:size(yy1,3))
-    !
+    
     real(mytype) :: var1
-    !
+    
     if(abs(xx-xx1)<epsilon(1._mytype)) then
       yy=yy1
     elseif(abs(xx-xx2)<epsilon(1._mytype)) then
@@ -470,12 +472,12 @@ module mptool
       var1=(xx-xx1)/(xx2-xx1)
       yy=(yy2-yy1)*var1+yy1
     endif
-    !
+    
     return
-    !
+    
   end function linintp
 
-  ! this function distritbuion evently in processors (as much as possible..)
+  ! this function distritbuion a number evently among processors (as much as possible..)
   pure function numdist(number)
     
     integer,intent(in) :: number
