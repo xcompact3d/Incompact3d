@@ -6,19 +6,26 @@ module actuator_line_model_utils
 
     use decomp_2d_constants, only: mytype
     use param, only: zero, one, two
+    use decomp_2d_mpi, only : decomp_2d_abort
     
     implicit none
-    public QuatRot, cross, IsoKernel, AnIsoKernel, int2str
+
+    interface trilinear_interpolation
+      module procedure trilinear_interpolation_scalar
+      module procedure trilinear_interpolation_vec3
+    end interface trilinear_interpolation 
+
+    public QuatRot, cross, IsoKernel, AnIsoKernel, int2str, trilinear_interpolation
 
 contains
 
     !*******************************************************************************
     !
-    real(mytype) function trilinear_interpolation(x0,y0,z0, &
-                                                  x1,y1,z1, &
-                                                  x,y,z, &
-                                                  u000,u100,u001,u101, &
-                                                  u010,u110,u011,u111)
+    real(mytype) function trilinear_interpolation_scalar(x0,y0,z0, &
+                                                         x1,y1,z1, &
+                                                         x,y,z,     &
+                                                         u000,u100,u001,u101, &
+                                                         u010,u110,u011,u111)
     !
     !*******************************************************************************
 
@@ -55,11 +62,77 @@ contains
       c1 = c01*(one-yd)+c11*yd
 
       ! Interpolate along Z
-      trilinear_interpolation=c0*(one-zd)+c1*zd
+      trilinear_interpolation_scalar=c0*(one-zd)+c1*zd
+
+      if(isnan(trilinear_interpolation_scalar)) then
+        print*,'        x0:',x0,y0,z0
+        print*,'        x1:',x1,y1,z1
+        print*,'         x:',x,y,z
+        print*,'         u:',u000,u100,u001,u101,u010,u110,u011,u111
+
+        call decomp_2d_abort(1,"error in  .or. isnan(u(2)) .or. isnan(u(3))")
+
+      endif
 
       return
 
-    end function trilinear_interpolation
+    end function trilinear_interpolation_scalar
+
+    function trilinear_interpolation_vec3(x0,y0,z0,x1,y1,z1,x,y,z, &
+                                          u000,u100,u001,u101,u010,u110,u011,u111) result(u)
+    !
+    !*******************************************************************************
+
+      implicit none
+      real(mytype),intent(in) :: x0,y0,z0,x1,y1,z1,x,y,z
+      real(mytype),intent(in) :: u000(3),u100(3),u001(3),u101(3),u010(3),u110(3),u011(3),u111(3)
+      real(mytype) :: u(3)
+      real(mytype) :: c00(3),c01(3),c10(3),c11(3),c0(3),c1(3),xd,yd,zd
+
+      if (x1 .ne. x0) then
+         xd=(x-x0)/(x1-x0)
+      else
+         xd=0._mytype
+      endif
+
+      if (y1 .ne. y0) then
+         yd=(y-y0)/(y1-y0)
+      else
+         yd=0._mytype
+      endif
+
+      if (z1 .ne. z0) then
+         zd=(z-z0)/(z1-z0)
+      else
+         zd=0._mytype
+      endif
+
+      ! Interpolate along X
+      c00=u000*(1._mytype-xd)+u100*xd
+      c01=u001*(1._mytype-xd)+u101*xd
+      c10=u010*(1._mytype-xd)+u110*xd
+      c11=u011*(1._mytype-xd)+u111*xd
+
+      ! Interpolate along Y
+      c0 = c00*(1._mytype-yd)+c10*yd
+      c1 = c01*(1._mytype-yd)+c11*yd
+
+      ! Interpolate along Z
+      u=c0*(1._mytype-zd)+c1*zd
+
+      if(isnan(u(1)) .or. isnan(u(2)) .or. isnan(u(3))) then
+        print*,'        x0:',x0,y0,z0
+        print*,'        x1:',x1,y1,z1
+        print*,'         x:',x,y,z
+        print*,'         u:',u000,u100,u001,u101,u010,u110,u011,u111
+
+        call decomp_2d_abort(1,"error in trilinear_interpolation_vec3")
+
+      endif
+
+      return
+
+    end function trilinear_interpolation_vec3
 
     !*******************************************************************************
     !

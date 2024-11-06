@@ -37,7 +37,7 @@ module particle
     real(mytype) :: x(3),v(3),vf(3),f(3),b(3)
     real(mytype),allocatable,dimension(:,:) :: dx,dv
     integer :: id,rankinn,rank2go
-    logical :: swap,new
+    logical :: swap,inactive
     !+------------------+------------------------------------------+
     !|              rho | density                                  |
     !|              mas | mass                                     |
@@ -59,7 +59,7 @@ module particle
     !|          rankinn | the mpi rank which the particle is in    |
     !|          rank2go | the mpi rank which the particle will be  |
     !|             swap | a indicator to exchange particle         |
-    !|              new | a indicator to a new particle            |
+    !|         inactive | a indicator to an inactive particle      |
     !+------------------+------------------------------------------+
     
     contains
@@ -116,10 +116,10 @@ module particle
 
     use param, only : ntime
 
-    class(partype),target :: pa
+    class(partype) :: pa
     
     pa%swap=.false.
-    pa%new =.true.
+    pa%inactive =.true.
 
     pa%rankinn=nrank
     pa%rank2go=nrank
@@ -131,10 +131,10 @@ module particle
     pa%dx=0.0
     pa%dv=0.0
 
-    pa%dimeter=1.d-1
+    pa%dimeter=0.1_mytype
     pa%rho=10._mytype
 
-    pa%qe=1.d-5
+    pa%qe=1.e-5_mytype
 
   end subroutine init_one_particle
   !+-------------------------------------------------------------------+
@@ -153,7 +153,7 @@ module particle
     class(partype),target :: pa
     
     pa%swap=.false.
-    pa%new =.true.
+    pa%inactive =.true.
     
     pa%rankinn=nrank
     pa%rank2go=nrank
@@ -301,29 +301,29 @@ module particle
     ! range of initial particles
     
     ! local data
-    real(mytype) :: partical_range(6)
+    real(mytype) :: particle_range(6)
     logical :: file_exists
     integer :: psize
 
-    partical_range(1) = 0.0_mytype
-    partical_range(2) = xlx
-    partical_range(3) = 0.0_mytype
-    partical_range(4) = yly
-    partical_range(5) = 0.0_mytype
-    partical_range(6) = zlz
+    particle_range(1) = 0.0_mytype
+    particle_range(2) = xlx
+    particle_range(3) = 0.0_mytype
+    particle_range(4) = yly
+    particle_range(5) = 0.0_mytype
+    particle_range(6) = zlz
 
-    if(present(pxmin)) partical_range(1) = pxmin
-    if(present(pxmax)) partical_range(2) = pxmax
-    if(present(pymin)) partical_range(3) = pymin
-    if(present(pymax)) partical_range(4) = pymax
-    if(present(pzmin)) partical_range(5) = pzmin
-    if(present(pzmax)) partical_range(6) = pzmax
+    if(present(pxmin)) particle_range(1) = pxmin
+    if(present(pxmax)) particle_range(2) = pxmax
+    if(present(pymin)) particle_range(3) = pymin
+    if(present(pymax)) particle_range(4) = pymax
+    if(present(pzmin)) particle_range(5) = pzmin
+    if(present(pzmax)) particle_range(6) = pzmax
 
     ! generate random particles within the local domain
     if(trim(initype_particle)=='random') then 
-        call particle_gen_random(partpack,psize,partical_range)
+        call particle_gen_random(partpack,psize,particle_range)
     elseif(trim(initype_particle)=='uniform') then 
-        call particle_gen_uniform(partpack,psize,partical_range)
+        call particle_gen_uniform(partpack,psize,particle_range)
     else
         inquire(file=trim(initype_particle), exist=file_exists)
         if(file_exists) then
@@ -462,7 +462,7 @@ module particle
   
           pa=>partpack(jpart)
   
-          if(pa%new) cycle
+          if(pa%inactive) cycle
   
           npart=npart+1
   
@@ -549,7 +549,7 @@ module particle
     
           pa=>partpack(jpart)
     
-          if(pa%new) cycle
+          if(pa%inactive) cycle
     
           npart=npart+1
   
@@ -572,7 +572,7 @@ module particle
         
         call particle_domain_check(partpack,n_local_particles)
         
-        call partical_swap(partpack,n_local_particles)
+        call particle_swap(partpack,n_local_particles)
       
       enddo
 
@@ -630,7 +630,7 @@ module particle
     j=0
     do p=1,psize
     
-      if(partpack(p)%new) cycle
+      if(partpack(p)%inactive) cycle
     
       j=j+1
 
@@ -711,7 +711,7 @@ module particle
       j=0
       do p=1,psize
     
-        if(partpack(p)%new) cycle
+        if(partpack(p)%inactive) cycle
     
         j=j+1
 
@@ -786,7 +786,7 @@ module particle
           partpack(j)%v(2) = 0._mytype
           partpack(j)%v(3) = 0._mytype
     
-          partpack(j)%new  = .false.
+          partpack(j)%inactive  = .false.
     
           xpmin(1)=min(xpmin(1),partpack(j)%x(1))
           xpmin(2)=min(xpmin(2),partpack(j)%x(2))
@@ -802,7 +802,7 @@ module particle
 
         call particle_domain_check(partpack,n_local_particles)
 
-        call partical_swap(partpack,n_local_particles)
+        call particle_swap(partpack,n_local_particles)
 
         xpmin(1)=pmin(xpmin(1))
         xpmin(2)=pmin(xpmin(2))
@@ -818,6 +818,7 @@ module particle
 
         if(particle_inject_period>0.0_mytype) then
 
+            ! for case with injected particles, read the particle_inject.bin
             call particle_read_bin(particles=particles2inject,filename='particle_inject.bin',nump_read=ninject)
 
         endif
@@ -868,7 +869,7 @@ module particle
       particles(j)%v(2) = 0._mytype
       particles(j)%v(3) = 0._mytype
     
-      particles(j)%new  = .false.
+      particles(j)%inactive  = .false.
     
     enddo
 
@@ -876,7 +877,7 @@ module particle
 
     call particle_domain_check(particles)
 
-    call partical_swap(particles)
+    call particle_swap(particles)
 
     call particle_array_clear(particles)
 
@@ -895,7 +896,7 @@ module particle
     use param,     only : dx,dy,dz,istret,nclx,ncly,nclz,xlx,yly,zlz
     use variables, only : yp,ny,nz
     use decomp_2d, only : xsize,xstart,xend,update_halo
-    use actuator_line_model_utils
+    use actuator_line_model_utils, only: trilinear_interpolation
     
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1,uy1,uz1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in),optional :: bx,by,bz
@@ -910,6 +911,8 @@ module particle
     real(mytype),allocatable,dimension(:,:,:) :: bx_halo,by_halo,bz_halo
     
     real(mytype),allocatable,save :: xx(:),yy(:),zz(:)
+    real(mytype) :: vec000(3),vec100(3),vec001(3),vec101(3), &
+                    vec010(3),vec110(3),vec011(3),vec111(3)
     logical,save :: firstcal=.true.
     
     if(firstcal) then
@@ -971,7 +974,7 @@ module particle
     
       pa=>partpack(jpart)
     
-      if(pa%new) cycle
+      if(pa%inactive) cycle
     
       loopk: do k=1,xsize(3)
     
@@ -988,120 +991,43 @@ module particle
             if( pa%x(1)>=x1 .and. pa%x(1)<=x2 .and. &
                 pa%x(2)>=y1 .and. pa%x(2)<=y2 .and. &
                 pa%x(3)>=z1 .and. pa%x(3)<=z2 ) then
+
+              vec000(1)=ux1_halo(i,  j,  k);   vec000(2)=uy1_halo(i,  j,  k);   vec000(3)=uz1_halo(i,  j,  k)
+              vec100(1)=ux1_halo(i+1,j,  k);   vec100(2)=uy1_halo(i+1,j,  k);   vec100(3)=uz1_halo(i+1,j,  k)
+              vec010(1)=ux1_halo(i,  j+1,k);   vec010(2)=uy1_halo(i,  j+1,k);   vec010(3)=uz1_halo(i,  j+1,k)
+              vec110(1)=ux1_halo(i+1,j+1,k);   vec110(2)=uy1_halo(i+1,j+1,k);   vec110(3)=uz1_halo(i+1,j+1,k)
+              vec001(1)=ux1_halo(i,  j,  k+1); vec001(2)=uy1_halo(i,  j,  k+1); vec001(3)=uz1_halo(i,  j,  k+1)
+              vec101(1)=ux1_halo(i+1,j,  k+1); vec101(2)=uy1_halo(i+1,j,  k+1); vec101(3)=uz1_halo(i+1,j,  k+1)
+              vec011(1)=ux1_halo(i,  j+1,k+1); vec011(2)=uy1_halo(i,  j+1,k+1); vec011(3)=uz1_halo(i,  j+1,k+1)
+              vec111(1)=ux1_halo(i+1,j+1,k+1); vec111(2)=uy1_halo(i+1,j+1,k+1); vec111(3)=uz1_halo(i+1,j+1,k+1)
     
               ! locate the particle, do the interpolation
-              pa%vf(1)=trilinear_interpolation( x1,y1,z1,            &
-                                                x2,y2,z2,            &
-                                            pa%x(1),pa%x(2),pa%x(3), &
-                                            ux1_halo(i,j,k),     &
-                                            ux1_halo(i+1,j,k),   &
-                                            ux1_halo(i,j,k+1),   &
-                                            ux1_halo(i+1,j,k+1), &
-                                            ux1_halo(i,j+1,k),   &
-                                            ux1_halo(i+1,j+1,k), &
-                                            ux1_halo(i,j+1,k+1), &
-                                            ux1_halo(i+1,j+1,k+1))
-    
-              if(isnan(pa%vf(1))) then
-                print*,'        x1:',x1,y1,z1
-                print*,'        x2:',x2,y2,z2
-                print*,'      pa%x:',pa%x
-                print*,'      rank:',nrank,'i,j,k',i,j,k
-                print*,'  ux1_halo:',ux1_halo(i:i+1,j:j+1,k:k+1)
-                call decomp_2d_abort(1,"error in calculating vf x")
-              endif
-    
-              pa%vf(2)=trilinear_interpolation( x1,y1,z1,           &
-                                               x2,y2,z2,            &
-                                            pa%x(1),pa%x(2),pa%x(3),&
-                                            uy1_halo(i,j,k),     &
-                                            uy1_halo(i+1,j,k),   &
-                                            uy1_halo(i,j,k+1),   &
-                                            uy1_halo(i+1,j,k+1), &
-                                            uy1_halo(i,j+1,k),   &
-                                            uy1_halo(i+1,j+1,k), &
-                                            uy1_halo(i,j+1,k+1), &
-                                            uy1_halo(i+1,j+1,k+1)) 
-    
-              if(isnan(pa%vf(2))) then
-                print*,'        x1:',x1,y1,z1
-                print*,'        x2:',x2,y2,z2
-                print*,'      pa%x:',pa%x
-                print*,'      rank:',nrank,'i,j,k',i,j,k
-                print*,'  uy1_halo:',uy1_halo(i:i+1,j:j+1,k:k+1)
-                call decomp_2d_abort(1,"error in calculating vf y")
-              endif
-    
-              pa%vf(3)=trilinear_interpolation( x1,y1,z1,            &
-                                                x2,y2,z2,            &
-                                            pa%x(1),pa%x(2),pa%x(3), &
-                                            uz1_halo(i,j,k),     &
-                                            uz1_halo(i+1,j,k),   &
-                                            uz1_halo(i,j,k+1),   &
-                                            uz1_halo(i+1,j,k+1), &
-                                            uz1_halo(i,j+1,k),   &
-                                            uz1_halo(i+1,j+1,k), &
-                                            uz1_halo(i,j+1,k+1), &
-                                            uz1_halo(i+1,j+1,k+1)) 
-    
-              if(isnan(pa%vf(3))) then
-                print*,'        x1:',x1,y1,z1
-                print*,'        x2:',x2,y2,z2
-                print*,'      pa%x:',pa%x
-                print*,'      rank:',nrank,'i,j,k',i,j,k
-                print*,'  uz1_halo:',uz1_halo(i:i+1,j:j+1,k:k+1)
-                call decomp_2d_abort(1,"error in calculating vf z")
-              endif
+              pa%vf=trilinear_interpolation( x1,y1,z1,x2,y2,z2,          &
+                                            pa%x(1),pa%x(2),pa%x(3),     &
+                                            vec000,vec100,vec001,vec101, &
+                                            vec010,vec110,vec011,vec111)
+  
     
               if(present(bx) .and. present(by) .and. present(bz)) then
                 !
-                pa%b(1)=trilinear_interpolation( x1,y1,z1,            &
-                                                 x2,y2,z2,            &
-                                              pa%x(1),pa%x(2),pa%x(3), &
-                                              bx_halo(i,j,k),     &
-                                              bx_halo(i+1,j,k),   &
-                                              bx_halo(i,j,k+1),   &
-                                              bx_halo(i+1,j,k+1), &
-                                              bx_halo(i,j+1,k),   &
-                                              bx_halo(i+1,j+1,k), &
-                                              bx_halo(i,j+1,k+1), &
-                                              bx_halo(i+1,j+1,k+1))
-                pa%b(2)=trilinear_interpolation( x1,y1,z1,            &
-                                                 x2,y2,z2,            &
-                                              pa%x(1),pa%x(2),pa%x(3),&
-                                              by_halo(i,j,k),        &
-                                              by_halo(i+1,j,k),   &
-                                              by_halo(i,j,k+1),   &
-                                              by_halo(i+1,j,k+1), &
-                                              by_halo(i,j+1,k),   &
-                                              by_halo(i+1,j+1,k), &
-                                              by_halo(i,j+1,k+1), &
-                                              by_halo(i+1,j+1,k+1) )
-                pa%b(3)=trilinear_interpolation( x1,y1,z1,            &
-                                                  x2,y2,z2,            &
-                                              pa%x(1),pa%x(2),pa%x(3), &
-                                              bz_halo(i,j,k),     &
-                                              bz_halo(i+1,j,k),   &
-                                              bz_halo(i,j,k+1),   &
-                                              bz_halo(i+1,j,k+1), &
-                                              bz_halo(i,j+1,k),   &
-                                              bz_halo(i+1,j+1,k), &
-                                              bz_halo(i,j+1,k+1), &
-                                              bz_halo(i+1,j+1,k+1)) 
-              if(isnan(pa%b(1)) .or. isnan(pa%b(2)) .or. isnan(pa%b(3))) then
-                print*,'        x1:',x1,y1,z1
-                print*,'        x2:',x2,y2,z2
-                print*,'      pa%x:',pa%x
-                print*,'      rank:',nrank,'i,j,k',i,j,k
-                print*,'   bx_halo:',bx_halo(i:i+1,j:j+1,k:k+1)
-                print*,'   by_halo:',by_halo(i:i+1,j:j+1,k:k+1)
-                print*,'   bz_halo:',bz_halo(i:i+1,j:j+1,k:k+1)
-                call decomp_2d_abort(1,"error in calculating b")
-              endif
+                vec000(1)=bx_halo(i,  j,  k);   vec000(2)=by_halo(i,  j,  k);   vec000(3)=bz_halo(i,  j,  k)
+                vec100(1)=bx_halo(i+1,j,  k);   vec100(2)=by_halo(i+1,j,  k);   vec100(3)=bz_halo(i+1,j,  k)
+                vec010(1)=bx_halo(i,  j+1,k);   vec010(2)=by_halo(i,  j+1,k);   vec010(3)=bz_halo(i,  j+1,k)
+                vec110(1)=bx_halo(i+1,j+1,k);   vec110(2)=by_halo(i+1,j+1,k);   vec110(3)=bz_halo(i+1,j+1,k)
+                vec001(1)=bx_halo(i,  j,  k+1); vec001(2)=by_halo(i,  j,  k+1); vec001(3)=bz_halo(i,  j,  k+1)
+                vec101(1)=bx_halo(i+1,j,  k+1); vec101(2)=by_halo(i+1,j,  k+1); vec101(3)=bz_halo(i+1,j,  k+1)
+                vec011(1)=bx_halo(i,  j+1,k+1); vec011(2)=by_halo(i,  j+1,k+1); vec011(3)=bz_halo(i,  j+1,k+1)
+                vec111(1)=bx_halo(i+1,j+1,k+1); vec111(2)=by_halo(i+1,j+1,k+1); vec111(3)=bz_halo(i+1,j+1,k+1)
+
+                pa%b=trilinear_interpolation( x1,y1,z1,x2,y2,z2,                 &
+                                                   pa%x(1),pa%x(2),pa%x(3),      &
+                                                   vec000,vec100,vec001,vec101,  &
+                                                   vec010,vec110,vec011,vec111)
     
               endif
     
               exit loopk
+
             endif
     
           enddo
@@ -1128,7 +1054,7 @@ module particle
   !| -------------                                                     |
   !| 16-06-2022  | Created by J. Fang                                  |
   !+-------------------------------------------------------------------+
-  subroutine partical_swap(particles,num_active_particles)
+  subroutine particle_swap(particles,num_active_particles)
     
     ! arguments
     type(partype),intent(inout),allocatable,target :: particles(:)
@@ -1164,7 +1090,7 @@ module particle
     
       pa=>particles(jpart)
     
-      if(pa%new) cycle
+      if(pa%inactive) cycle
     
       ! to find out how many particle to send to which ranks
       if(pa%swap) then
@@ -1230,9 +1156,9 @@ module particle
         call particle_add(particles,pa2recv)
     endif
     
-  end subroutine partical_swap
+  end subroutine particle_swap
   !+-------------------------------------------------------------------+
-  ! The end of the subroutine partical_swap                            |
+  ! The end of the subroutine particle_swap                            |
   !+-------------------------------------------------------------------+
   !
   !+-------------------------------------------------------------------+
@@ -1258,7 +1184,7 @@ module particle
     n=0
     do j=1,msize(particles)
 
-        if(particles(j)%new) cycle
+        if(particles(j)%inactive) cycle
 
         n=n+1
 
@@ -1332,14 +1258,14 @@ module particle
       pa=>particle_cur(jpart)
     
       ! the particle is free for re-assigning
-      if(pa%new) then
+      if(pa%inactive) then
     
         if(n>=msize(particle_new)) exit
     
         n=n+1
     
         pa=particle_new(n)
-        pa%new=.false.
+        pa%inactive=.false.
     
       endif
     
@@ -1414,7 +1340,7 @@ module particle
         particle_new(p)%v(2)   =0._mytype
         particle_new(p)%v(3)   =0._mytype
     
-        particle_new(p)%new=.false.
+        particle_new(p)%inactive=.false.
     
       endif
     
@@ -1439,7 +1365,7 @@ module particle
     
     ! local data
     integer :: p,i,j,k,n,local_size,code,npx,npy,npz
-    integer :: big_number
+    integer :: max_n_particles
     integer,allocatable :: seed(:)
     real(mytype) :: x,y,z,detalx,detaly,detalz
     real(mytype) :: plx,ply,plz
@@ -1459,9 +1385,9 @@ module particle
     detaly = (particle_range(4)-particle_range(3))/real(npy,mytype)
     detalz = (particle_range(6)-particle_range(5))/real(npz,mytype)
     
-    big_number=npx*npy*npz
+    max_n_particles=npx*npy*npz
 
-    allocate(particle_new(1:big_number))
+    allocate(particle_new(max_n_particles))
     
     p=0
     do k=1,npz
@@ -1488,7 +1414,7 @@ module particle
         particle_new(p)%v(2) = 0._mytype
         particle_new(p)%v(3) = 0._mytype
     
-        particle_new(p)%new=.false.
+        particle_new(p)%inactive=.false.
     
       endif
     
@@ -1524,29 +1450,29 @@ module particle
     real(mytype) :: n1
 
 
-    if(abs(plx)<1.d-16 .and. abs(ply)<1.d-16 .and. abs(plz)<1.d-16) then
+    if(abs(plx)<epsilon(1.0_mytype) .and. abs(ply)<epsilon(1.0_mytype) .and. abs(plz)<epsilon(1.0_mytype)) then
 
         npx=1; npy=1; npz=1
 
-    elseif(abs(plx)<1.d-16 .and. abs(ply)<1.d-16) then
+    elseif(abs(plx)<epsilon(1.0_mytype) .and. abs(ply)<epsilon(1.0_mytype)) then
 
         npx=1
         npy=1
         npz=nptotal
 
-    elseif(abs(plx)<1.d-16 .and. abs(plz)<1.d-16) then
+    elseif(abs(plx)<epsilon(1.0_mytype) .and. abs(plz)<epsilon(1.0_mytype)) then
 
         npx=1
         npy=nptotal
         npz=1
 
-    elseif(abs(ply)<1.d-16 .and. abs(plz)<1.d-16) then
+    elseif(abs(ply)<epsilon(1.0_mytype) .and. abs(plz)<epsilon(1.0_mytype)) then
 
         npx=nptotal
         npy=1
         npz=1
 
-    elseif(abs(plx)<1.d-16) then
+    elseif(abs(plx)<epsilon(1.0_mytype)) then
 
         n1=sqrt(real(nptotal,mytype)/(ply*plz))
         
@@ -1554,7 +1480,7 @@ module particle
         npy=int(n1*ply)
         npz=int(n1*plz)
 
-    elseif(abs(ply)<1.d-16) then
+    elseif(abs(ply)<epsilon(1.0_mytype)) then
 
         n1=sqrt(real(nptotal,mytype)/(plx*plz))
         
@@ -1562,7 +1488,7 @@ module particle
         npy=1
         npz=int(n1*plz)
 
-    elseif(abs(plz)<1.d-16) then
+    elseif(abs(plz)<epsilon(1.0_mytype)) then
 
         n1=sqrt(real(nptotal,mytype)/(plx*ply))
         
@@ -1672,7 +1598,7 @@ module particle
 
       pa=>particle(jpart)
 
-      if(pa%new) cycle
+      if(pa%inactive) cycle
 
       npart=npart+1
 
@@ -1714,8 +1640,8 @@ module particle
       
       endif
 
-      if(pa%new) cycle 
-      ! if the particle being reset
+      if(pa%inactive) cycle 
+      ! if the particle is inactive due the implementation of boundary condtion.
 
       ! checking local domain boundary 
       if( pa%x(1)>=lxmin(nrank) .and. pa%x(1)<lxmax(nrank) .and. &
@@ -1800,9 +1726,9 @@ module particle
     endif
 
     if(mod(face,2)==0) then
-        iface=-1.d0
+        iface=-1._mytype
     else
-        iface= 1.d0
+        iface= 1._mytype
     endif
 
     if(bctype=='periodic') then
@@ -1860,7 +1786,7 @@ module particle
     
       pa=>partpack(jpart)
     
-      if(pa%new) cycle
+      if(pa%inactive) cycle
     
       pa%v(:) = pa%vf(:)
       pa%f(:) = 0._mytype
