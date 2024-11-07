@@ -430,7 +430,8 @@ module mptool
 
   end subroutine pread_2darray
 
-  ! this function return the number add from all processors before it
+  ! this function return the number add from the processors before it
+  ! e.g., for the rank n, it is to add data from rank 0 to n-1.
   integer function prelay(number)
 
     ! arguments
