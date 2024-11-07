@@ -1,37 +1,17 @@
 !Copyright (c) 2012-2022, Xcompact3d
 !This file is part of Xcompact3d (xcompact3d.com)
 !SPDX-License-Identifier: BSD 3-Clause
-module particle
 
+! the module defines the particle type
+module particle_type
+  
   use decomp_2d_constants, only : mytype
-  use decomp_2d_mpi, only : nrank,nproc,decomp_2d_abort
-  use mptool
-  use constants, only : pi
+  use decomp_2d_mpi, only : nrank
 
   implicit none
 
-  interface mclean
-    module procedure mclean_mytype
-    module procedure mclean_particles
-  end interface mclean 
-
-  interface msize
-    module procedure size_particle
-    module procedure size_integer
-  end interface msize
-
-  interface pa2a
-    module procedure pa2a_particle
-  end interface pa2a
-
-  interface mextend
-     module procedure extend_particles
-  end interface mextend
-
-  ! particles
+  ! type of particle
   type partype
-
-    private
 
     real(mytype) :: rho,mas,dimeter,re,vdiff,qe
     real(mytype) :: x(3),v(3),vf(3),f(3),b(3)
@@ -64,44 +44,12 @@ module particle
     
     contains
 
-    private
-
     procedure :: init  => init_one_particle
     procedure :: reset => reset_one_particle
     procedure :: rep   => particle_reynolds_cal
     procedure :: force => particle_force_cal
 
   end type partype
-
-  integer :: n_local_particles,n_particles
-  character(len=32) :: initype_particle
-  character(len=16) :: bc_particle(6)
-  real(mytype) :: particletime,sub_time_step,particle_inject_period,next_particle_inject_time
-  type(partype),allocatable,target :: partpack(:),particles2inject(:)
-  real(mytype),allocatable,dimension(:) :: lxmin,lxmax,lymin,lymax,lzmin,lzmax
-  !+------------------+-----------------------------------------------+
-  !|n_local_particles | number of particles in the domain             |
-  !|      n_particles | total number of particles.                    |
-  !| initype_particle | initilisation option for particle.            |
-  !|      bc_particle | boundary condtion for particles.              |
-  !|     particletime | current particle time .                       |
-  !|    sub_time_step | particle advancing time step.                 |
-  !|         partpack | pack of particles.                            |
-  !|            lxmin |                                               |
-  !|            lxmax |                                               |
-  !|            lymin |                                               |
-  !|            lymax |                                               |
-  !|            lzmin |                                               |
-  !|            lzmax | range of local domain.                        |
-  !|                  |                                               |
-  !+------------------+-----------------------------------------------+
-
-  private
-
-  public :: local_domain_size,particle_init,intt_particles,           &
-            particle_report,visu_particle,particle_checkpoint,        &
-            n_particles,initype_particle,bc_particle,                 &
-            particle_inject_period
 
   contains
 
@@ -215,6 +163,621 @@ module particle
   !+-------------------------------------------------------------------+
   !| The end of the subroutine particle_reynolds_cal.                  |
   !+-------------------------------------------------------------------+
+
+end module particle_type
+
+! this module contains some utility functions used for particle tracking 
+module particle_utilities
+  
+  use decomp_2d_constants, only : mytype
+  use decomp_2d_mpi, only : nproc
+  use particle_type
+  
+  implicit none
+
+  interface mclean
+    module procedure mclean_mytype
+    module procedure mclean_particles
+  end interface mclean 
+
+  interface msize
+    module procedure size_particle
+    module procedure size_integer
+  end interface msize
+
+  interface pa2a
+    module procedure pa2a_particle
+  end interface pa2a
+
+  interface mextend
+     module procedure extend_particles
+  end interface mextend
+
+  contains
+
+  !+-------------------------------------------------------------------+
+  !| this function is to retune the size of a array                    |
+  !+-------------------------------------------------------------------+
+  !| CHANGE RECORD                                                     |
+  !| -------------                                                     |
+  !| 16-Jun-2022  | Created by J. Fang STFC Daresbury Laboratory       |
+  !+-------------------------------------------------------------------+
+  pure function size_particle(var) result(nsize)
+    
+    type(partype),allocatable,intent(in) :: var(:)
+    integer :: nsize
+    
+    if(allocated(var)) then
+      nsize=size(var)
+    else
+      nsize=0
+    endif
+    
+    return
+    
+  end function size_particle
+  !
+  pure function size_integer(var) result(nsize)
+    
+    integer,allocatable,intent(in) :: var(:)
+    integer :: nsize
+    
+    if(allocated(var)) then
+      nsize=size(var)
+    else
+      nsize=0
+    endif
+    
+    return
+    
+  end function size_integer
+  !+-------------------------------------------------------------------+
+  !| The end of the subroutine size_particle.                          |
+  !+-------------------------------------------------------------------+
+
+  !+-------------------------------------------------------------------+
+  !| this subroutine clean superfluous elements in a array             |
+  !+-------------------------------------------------------------------+
+  !| CHANGE RECORD                                                     |
+  !| -------------                                                     |
+  !| 07-Nov-2018  | Created by J. Fang STFC Daresbury Laboratory       |
+  !+-------------------------------------------------------------------+
+  subroutine mclean_mytype(var,n)
+    
+    ! arguments
+    real(mytype),allocatable,intent(inout) :: var(:)
+    integer,intent(in) :: n
+    
+    ! local data
+    real(mytype),allocatable :: buffer(:)
+    integer :: m
+    logical :: lefc
+    
+    if(.not.allocated(var)) return
+    
+    if(n<=0) then
+      deallocate(var)
+      return
+    endif
+    
+    ! clean
+    allocate(buffer(n))
+    
+    buffer(1:n)=var(1:n)
+    
+    deallocate(var)
+    
+    call move_alloc(buffer,var)
+    
+  end subroutine mclean_mytype
+
+  subroutine mclean_particles(var,n)
+    
+    ! arguments
+    type(partype),allocatable,intent(inout) :: var(:)
+    integer,intent(in) :: n
+    
+    ! local data
+    type(partype),allocatable :: buffer(:)
+    integer :: m
+    logical :: lefc
+    
+    if(.not.allocated(var)) return
+    
+    if(n<=0) then
+      deallocate(var)
+      return
+    endif
+    
+    ! clean
+    allocate(buffer(n))
+    
+    buffer(1:n)=var(1:n)
+    
+    deallocate(var)
+    
+    call move_alloc(buffer,var)
+    
+  end subroutine mclean_particles
+  !+-------------------------------------------------------------------+
+  !| The end of the subroutine mclean.                                 |
+  !+-------------------------------------------------------------------+
+
+  !+-------------------------------------------------------------------+
+  !| this subroutine is to expand an array.                            |
+  !+-------------------------------------------------------------------+
+  !| CHANGE RECORD                                                     |
+  !| -------------                                                     |
+  !| 17-Jun-2022  | Created by J. Fang STFC Daresbury Laboratory       |
+  !+-------------------------------------------------------------------+
+  subroutine extend_particles(var,n)
+    
+    ! arguments
+    type(partype),allocatable,intent(inout) :: var(:)
+    integer,intent(in) :: n
+    
+    ! local data
+    type(partype),allocatable :: buffer(:)
+    integer :: m,jpart
+    
+    if(.not. allocated(var)) then
+      allocate(var(n))
+      m=0
+    else
+    
+      m=size(var)
+
+      if(m==n) return
+    
+      call move_alloc(var, buffer)
+    
+      allocate(var(n))
+      var(1:m)=buffer(1:m)
+    
+    endif
+    
+    ! initilise newly allocated particles
+    do jpart=m+1,n
+      call var(jpart)%init()
+    enddo
+    
+    return
+    
+  end subroutine extend_particles
+  !+-------------------------------------------------------------------+
+  !| The end of the subroutine extend_particles.                       |
+  !+-------------------------------------------------------------------+
+  !
+  !+-------------------------------------------------------------------+
+  !| this subroutine is to copy particle array.                        |
+  !+-------------------------------------------------------------------+
+  !| CHANGE RECORD                                                     |
+  !| -------------                                                     |
+  !| 18-Oct-2024  | Created by J. Fang STFC Daresbury Laboratory       |
+  !+-------------------------------------------------------------------+
+  function particle_copy(vin) result(vout)
+
+    ! arguments
+    type(partype),allocatable,intent(in) :: vin(:)
+    type(partype),allocatable :: vout(:)
+    
+    ! local data
+    integer :: psize,big_number
+
+    psize=msize(vin)
+
+    if(psize>0) then
+        allocate(vout(psize))
+        vout=vin
+    else
+        allocate(vout(1))
+        deallocate(vout)
+    endif
+
+    return
+
+  end function particle_copy
+  !+-------------------------------------------------------------------+
+  !| The end of the subroutine particle_copy.                          |
+  !+-------------------------------------------------------------------+
+
+  !+-------------------------------------------------------------------+
+  !| this subroutine is to swap particles via alltoall.                |
+  !+-------------------------------------------------------------------+
+  !| CHANGE RECORD                                                     |
+  !| -------------                                                     |
+  !| 17-Jun-2022  | Created by J. Fang STFC Daresbury Laboratory       |
+  !+-------------------------------------------------------------------+
+  subroutine pa2a_particle(datasend,datarecv,sendtabl,recvtabl)
+    
+    use mpi
+    use decomp_2d_constants, only : real_type
+    
+    ! arguments
+    type(partype),allocatable,intent(in) ::  datasend(:)
+    type(partype),allocatable,intent(out) :: datarecv(:)
+    integer,intent(in) :: sendtabl(0:),recvtabl(0:)
+    
+    ! local data
+    integer :: ierr,recvsize,jrank,jpart,jc,nindsize
+    integer,allocatable :: senddispls(:),recvdispls(:)
+    real(mytype),allocatable :: r8send(:,:),r8resv(:,:)
+    
+    integer,save :: newtype
+    
+    logical,save :: firstcal=.true.
+    
+    if(firstcal) then
+      call mpi_type_contiguous(6,real_type,newtype,ierr)
+      call mpi_type_commit(newtype,ierr)
+      firstcal=.false.
+    endif
+    
+    allocate(senddispls(0:nproc-1),recvdispls(0:nproc-1))
+    
+    senddispls=0
+    recvdispls=0
+    do jrank=1,nproc-1
+      senddispls(jrank)=senddispls(jrank-1)+sendtabl(jrank-1)
+      recvdispls(jrank)=recvdispls(jrank-1)+recvtabl(jrank-1)
+    enddo
+    recvsize=recvdispls(nproc-1)+recvtabl(nproc-1)
+    
+    nindsize=msize(datasend)
+    
+    allocate(r8send(6,nindsize))
+    allocate(r8resv(6,recvsize))
+    
+    r8resv=0._mytype
+    
+    do jpart=1,nindsize
+      r8send(1,jpart)=datasend(jpart)%x(1)
+      r8send(2,jpart)=datasend(jpart)%x(2)
+      r8send(3,jpart)=datasend(jpart)%x(3)
+      r8send(4,jpart)=datasend(jpart)%v(1)
+      r8send(5,jpart)=datasend(jpart)%v(2)
+      r8send(6,jpart)=datasend(jpart)%v(3)
+    enddo
+    
+    call mpi_alltoallv(r8send, sendtabl, senddispls, newtype, &
+                       r8resv, recvtabl, recvdispls, newtype, &
+                       mpi_comm_world, ierr)
+    
+    allocate(datarecv(recvsize))
+    
+    jc=0
+    do jrank=0,nproc-1
+      do jpart=1,recvtabl(jrank)
+    
+        jc=jc+1
+    
+        call datarecv(jc)%init()
+    
+        datarecv(jc)%x(1)=r8resv(1,jc)
+        datarecv(jc)%x(2)=r8resv(2,jc)
+        datarecv(jc)%x(3)=r8resv(3,jc)
+        datarecv(jc)%v(1)=r8resv(4,jc)
+        datarecv(jc)%v(2)=r8resv(5,jc)
+        datarecv(jc)%v(3)=r8resv(6,jc)
+    
+      enddo
+    enddo
+    
+  end subroutine pa2a_particle
+  !+-------------------------------------------------------------------+
+  !| The end of the subroutine pa2a_particle.                          |
+  !+-------------------------------------------------------------------+
+  
+  !+-------------------------------------------------------------------+
+  !| this subroutine is to swap data in the y-z direction.             |
+  !+-------------------------------------------------------------------+
+  subroutine pswap_yz(varin,varout)
+    
+    use decomp_2d, only : xsize,update_halo
+    use param,     only : nclx,ncly,nclz
+    
+    ! arguments
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: varin
+    real(mytype),intent(out) :: varout(1:xsize(1)+1,0:xsize(2)+1,0:xsize(3)+1)
+    
+    ! local data
+    real(mytype),allocatable,dimension(:,:,:) :: var_halo
+
+    call update_halo(varin,var_halo,1,opt_global=.true.,opt_pencil=1)
+
+    
+    varout(1:xsize(1),0:xsize(2)+1,0:xsize(3)+1)=var_halo(:,:,:)
+
+    if(nclx) then
+      varout(xsize(1)+1,:,:)=var_halo(1,:,:)
+    endif
+
+    return
+    
+  end subroutine pswap_yz
+  !+-------------------------------------------------------------------+
+  !| The end of the subroutine pswap_yz.                               |
+  !+-------------------------------------------------------------------+
+
+  !+-------------------------------------------------------------------+
+  !| This subroutine is to swap particle infomation between ranks      |
+  !+-------------------------------------------------------------------+
+  !| tecplot format for now                                            |
+  !+-------------------------------------------------------------------+
+  !| CHANGE RECORD                                                     |
+  !| -------------                                                     |
+  !| 16-06-2022  | Created by J. Fang                                  |
+  !+-------------------------------------------------------------------+
+  subroutine particle_swap(particles,num_active_particles)
+
+    use mptool, only : ptabupd
+    
+    ! arguments
+    type(partype),intent(inout),allocatable,target :: particles(:)
+    integer,intent(inout),optional :: num_active_particles
+
+    ! local data 
+    integer :: p,psize,jrank,jpart,npart,n,newsize,npexit
+    type(partype),pointer :: pa
+    integer :: nsend(0:nproc-1),nrecv(0:nproc-1),nsend_total
+    !+------------+--------------------------------+
+    !| nsendtable | the table to record how much   |
+    !|            | particle to send to a rank     |
+    !+------------+--------------------------------+
+    integer :: pr(0:nproc-1,1:msize(particles))
+    type(partype),allocatable :: pa2send(:),pa2recv(:)
+    real(mytype) :: timebeg,tvar1,tvar11,tvar2,tvar3,tvar4
+    
+    psize=msize(particles)
+    
+    nsend=0
+    
+    n=0
+    pr=0
+    npart=0
+
+    if(present(num_active_particles)) then
+        npexit=num_active_particles
+    else
+        npexit=psize
+    endif
+    
+    do jpart=1,psize
+    
+      pa=>particles(jpart)
+    
+      if(pa%inactive) cycle
+    
+      ! to find out how many particle to send to which ranks
+      if(pa%swap) then
+    
+        n=n+1
+    
+        nsend(pa%rank2go)=nsend(pa%rank2go)+1
+    
+        pr(pa%rank2go,nsend(pa%rank2go))=jpart
+    
+      endif
+    
+      npart=npart+1
+    
+      if(npart==npexit) exit
+
+    enddo
+    
+    nsend_total=n
+    
+    ! synchronize recv table according to send table
+    nrecv=ptabupd(nsend)
+    
+    ! to establish the buffer of storing particels about to send
+    if(nsend_total>0) then
+    
+      allocate(pa2send(1:nsend_total))
+    
+      n=0
+      do jrank=0,nproc-1
+    
+        do jpart=1,nsend(jrank)
+    
+          n=n+1
+    
+          p=pr(jrank,jpart)
+    
+          pa2send(n)=particles(p)
+    
+          call particles(p)%reset()
+
+          if(present(num_active_particles)) num_active_particles=num_active_particles-1
+
+        enddo
+    
+      enddo
+    
+    endif 
+    
+    
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! swap particle among ranks
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    call pa2a(pa2send,pa2recv,nsend,nrecv)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! end of swap particle among ranks
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    
+    if(present(num_active_particles)) then
+        call particle_add(particles,pa2recv,num_active_particles,n)
+        num_active_particles=num_active_particles+n
+    else
+        call particle_add(particles,pa2recv)
+    endif
+    
+  end subroutine particle_swap
+  !+-------------------------------------------------------------------+
+  ! The end of the subroutine particle_swap                            |
+  !+-------------------------------------------------------------------+
+  !
+  !+-------------------------------------------------------------------+
+  !| This subroutine is to remove all new particles from an array.     |
+  !+-------------------------------------------------------------------+
+  !| CHANGE RECORD                                                     |
+  !| -------------                                                     |
+  !| 22-10-2024  | Created by J. Fang                                  |
+  !+-------------------------------------------------------------------+
+  subroutine particle_array_clear(particles)
+    
+    use param,     only : nclx,ncly,nclz,xlx,yly,zlz
+    
+    ! arguments
+    type(partype),intent(inout),allocatable,target :: particles(:)
+
+    ! local data
+    type(partype),allocatable :: buffer(:)
+    integer :: n,j
+
+    allocate(buffer(1:msize(particles)))
+
+    n=0
+    do j=1,msize(particles)
+
+        if(particles(j)%inactive) cycle
+
+        n=n+1
+
+        buffer(n)=particles(j)
+
+    enddo
+
+    call mclean(buffer,n)
+
+    deallocate(particles)
+
+    call move_alloc(buffer,particles)
+
+    return
+
+  end subroutine particle_array_clear
+  !+-------------------------------------------------------------------+
+  ! The end of the subroutine particle_array_clear                     |
+  !+-------------------------------------------------------------------+
+  !
+  !+-------------------------------------------------------------------+
+  !| This subroutine is to add particles to the current particle arrary|
+  !+-------------------------------------------------------------------+
+  !| CHANGE RECORD                                                     |
+  !| -------------                                                     |
+  !| 28-06-2022  | Created by J. Fang                                  |
+  !+-------------------------------------------------------------------+
+  subroutine particle_add(particle_cur,particle_new,num_active_particles,num_part_incr)
+    
+    ! arguments
+    type(partype),intent(inout),allocatable,target :: particle_cur(:)
+    type(partype),intent(in),allocatable :: particle_new(:)
+    integer,intent(in),optional :: num_active_particles
+    integer,intent(out),optional :: num_part_incr
+    
+    ! local data
+    integer :: psize,newsize,n,jpart
+    type(partype),pointer :: pa
+    
+    if(msize(particle_new)<=0) then
+        if(present(num_part_incr)) num_part_incr=0
+        return
+    endif
+
+    psize=msize(particle_cur)
+    
+    if(present(num_active_particles)) then
+
+      ! now add the received particle in to the array, dynamically
+      if(num_active_particles+msize(particle_new)>psize) then
+    
+        ! expand the particle array
+        newsize=max(num_active_particles+msize(particle_new),num_active_particles+100)
+      else
+        newsize=psize
+      endif
+
+    else
+
+        newsize=psize+msize(particle_new)
+
+    endif
+
+    call mextend(particle_cur,newsize)
+    
+    psize=newsize
+    
+    n=0
+    do jpart=1,psize
+    
+      pa=>particle_cur(jpart)
+    
+      ! the particle is free for re-assigning
+      if(pa%inactive) then
+    
+        if(n>=msize(particle_new)) exit
+    
+        n=n+1
+    
+        pa=particle_new(n)
+        pa%inactive=.false.
+    
+      endif
+    
+    enddo
+    
+    if(present(num_part_incr)) num_part_incr=n
+    
+  end subroutine particle_add
+  !+-------------------------------------------------------------------+
+  ! The end of the subroutine particle_add                             |
+  !+-------------------------------------------------------------------+
+  
+end module particle_utilities
+
+module particle
+
+  use decomp_2d_constants, only : mytype
+  use decomp_2d_mpi, only : nrank,nproc,decomp_2d_abort
+  use mptool
+  use particle_type
+  use particle_utilities
+  use constants, only : pi
+
+  implicit none
+
+  integer :: n_local_particles,n_particles
+  character(len=32) :: initype_particle
+  character(len=16) :: bc_particle(6)
+  real(mytype) :: particletime,sub_time_step,particle_inject_period,next_particle_inject_time
+  type(partype),allocatable,target :: partpack(:),particles2inject(:)
+  real(mytype),allocatable,dimension(:) :: lxmin,lxmax,lymin,lymax,lzmin,lzmax
+  !+------------------+-----------------------------------------------+
+  !|n_local_particles | number of particles in the domain             |
+  !|      n_particles | total number of particles.                    |
+  !| initype_particle | initilisation option for particle.            |
+  !|      bc_particle | boundary condtion for particles.              |
+  !|     particletime | current particle time .                       |
+  !|    sub_time_step | particle advancing time step.                 |
+  !|         partpack | pack of particles.                            |
+  !|            lxmin |                                               |
+  !|            lxmax |                                               |
+  !|            lymin |                                               |
+  !|            lymax |                                               |
+  !|            lzmin |                                               |
+  !|            lzmax | range of local domain.                        |
+  !|                  |                                               |
+  !+------------------+-----------------------------------------------+
+
+  private
+
+  public :: local_domain_size,particle_init,intt_particles,           &
+            particle_report,visu_particle,particle_checkpoint,        &
+            n_particles,initype_particle,bc_particle,                 &
+            particle_inject_period
+
+  contains
 
   !+-------------------------------------------------------------------+
   !| This subroutine is to report time cost for particles.             |
@@ -673,7 +1236,6 @@ module particle
 
     endif
 
-
   end subroutine visu_particle
   !+-------------------------------------------------------------------+
   ! The end of the subroutine visu_particle                            |
@@ -1002,10 +1564,10 @@ module particle
               vec111(1)=ux1_halo(i+1,j+1,k+1); vec111(2)=uy1_halo(i+1,j+1,k+1); vec111(3)=uz1_halo(i+1,j+1,k+1)
     
               ! locate the particle, do the interpolation
-              pa%vf=trilinear_interpolation( x1,y1,z1,x2,y2,z2,          &
-                                            pa%x(1),pa%x(2),pa%x(3),     &
-                                            vec000,vec100,vec001,vec101, &
-                                            vec010,vec110,vec011,vec111)
+              pa%vf=trilinear_interpolation( x1,y1,z1,x2,y2,z2,           &
+                                             pa%x(1),pa%x(2),pa%x(3),     &
+                                             vec000,vec100,vec001,vec101, &
+                                             vec010,vec110,vec011,vec111)
   
     
               if(present(bx) .and. present(by) .and. present(bz)) then
@@ -1019,10 +1581,10 @@ module particle
                 vec011(1)=bx_halo(i,  j+1,k+1); vec011(2)=by_halo(i,  j+1,k+1); vec011(3)=bz_halo(i,  j+1,k+1)
                 vec111(1)=bx_halo(i+1,j+1,k+1); vec111(2)=by_halo(i+1,j+1,k+1); vec111(3)=bz_halo(i+1,j+1,k+1)
 
-                pa%b=trilinear_interpolation( x1,y1,z1,x2,y2,z2,                 &
-                                                   pa%x(1),pa%x(2),pa%x(3),      &
-                                                   vec000,vec100,vec001,vec101,  &
-                                                   vec010,vec110,vec011,vec111)
+                pa%b=trilinear_interpolation( x1,y1,z1,x2,y2,z2,            &
+                                              pa%x(1),pa%x(2),pa%x(3),      &
+                                              vec000,vec100,vec001,vec101,  &
+                                              vec010,vec110,vec011,vec111)
     
               endif
     
@@ -1043,239 +1605,6 @@ module particle
   end subroutine field_var
   !+-------------------------------------------------------------------+
   ! The end of the subroutine field_var                                |
-  !+-------------------------------------------------------------------+
-  !
-  !+-------------------------------------------------------------------+
-  !| This subroutine is to swap particle infomation between ranks      |
-  !+-------------------------------------------------------------------+
-  !| tecplot format for now                                            |
-  !+-------------------------------------------------------------------+
-  !| CHANGE RECORD                                                     |
-  !| -------------                                                     |
-  !| 16-06-2022  | Created by J. Fang                                  |
-  !+-------------------------------------------------------------------+
-  subroutine particle_swap(particles,num_active_particles)
-    
-    ! arguments
-    type(partype),intent(inout),allocatable,target :: particles(:)
-    integer,intent(inout),optional :: num_active_particles
-
-    ! local data 
-    integer :: p,psize,jrank,jpart,npart,n,newsize,npexit
-    type(partype),pointer :: pa
-    integer :: nsend(0:nproc-1),nrecv(0:nproc-1),nsend_total
-    !+------------+--------------------------------+
-    !| nsendtable | the table to record how much   |
-    !|            | particle to send to a rank     |
-    !+------------+--------------------------------+
-    integer :: pr(0:nproc-1,1:msize(particles))
-    type(partype),allocatable :: pa2send(:),pa2recv(:)
-    real(mytype) :: timebeg,tvar1,tvar11,tvar2,tvar3,tvar4
-    
-    psize=msize(particles)
-    
-    nsend=0
-    
-    n=0
-    pr=0
-    npart=0
-
-    if(present(num_active_particles)) then
-        npexit=num_active_particles
-    else
-        npexit=psize
-    endif
-    
-    do jpart=1,psize
-    
-      pa=>particles(jpart)
-    
-      if(pa%inactive) cycle
-    
-      ! to find out how many particle to send to which ranks
-      if(pa%swap) then
-    
-        n=n+1
-    
-        nsend(pa%rank2go)=nsend(pa%rank2go)+1
-    
-        pr(pa%rank2go,nsend(pa%rank2go))=jpart
-    
-      endif
-    
-      npart=npart+1
-    
-      if(npart==npexit) exit
-
-    enddo
-    
-    nsend_total=n
-    
-    ! synchronize recv table according to send table
-    nrecv=ptabupd(nsend)
-    
-    ! to establish the buffer of storing particels about to send
-    if(nsend_total>0) then
-    
-      allocate(pa2send(1:nsend_total))
-    
-      n=0
-      do jrank=0,nproc-1
-    
-        do jpart=1,nsend(jrank)
-    
-          n=n+1
-    
-          p=pr(jrank,jpart)
-    
-          pa2send(n)=particles(p)
-    
-          call particles(p)%reset()
-
-          if(present(num_active_particles)) num_active_particles=num_active_particles-1
-
-        enddo
-    
-      enddo
-    
-    endif 
-    
-    
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ! swap particle among ranks
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    call pa2a(pa2send,pa2recv,nsend,nrecv)
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ! end of swap particle among ranks
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    
-    if(present(num_active_particles)) then
-        call particle_add(particles,pa2recv,num_active_particles,n)
-        num_active_particles=num_active_particles+n
-    else
-        call particle_add(particles,pa2recv)
-    endif
-    
-  end subroutine particle_swap
-  !+-------------------------------------------------------------------+
-  ! The end of the subroutine particle_swap                            |
-  !+-------------------------------------------------------------------+
-  !
-  !+-------------------------------------------------------------------+
-  !| This subroutine is to remove all new particles from an array.     |
-  !+-------------------------------------------------------------------+
-  !| CHANGE RECORD                                                     |
-  !| -------------                                                     |
-  !| 22-10-2024  | Created by J. Fang                                  |
-  !+-------------------------------------------------------------------+
-  subroutine particle_array_clear(particles)
-    
-    use param,     only : nclx,ncly,nclz,xlx,yly,zlz
-    
-    ! arguments
-    type(partype),intent(inout),allocatable,target :: particles(:)
-
-    ! local data
-    type(partype),allocatable :: buffer(:)
-    integer :: n,j
-
-    allocate(buffer(1:msize(particles)))
-
-    n=0
-    do j=1,msize(particles)
-
-        if(particles(j)%inactive) cycle
-
-        n=n+1
-
-        buffer(n)=particles(j)
-
-    enddo
-
-    call mclean(buffer,n)
-
-    deallocate(particles)
-
-    call move_alloc(buffer,particles)
-
-    return
-
-  end subroutine particle_array_clear
-  !+-------------------------------------------------------------------+
-  ! The end of the subroutine particle_array_clear                     |
-  !+-------------------------------------------------------------------+
-  !
-  !+-------------------------------------------------------------------+
-  !| This subroutine is to add particles to the current particle arrary|
-  !+-------------------------------------------------------------------+
-  !| CHANGE RECORD                                                     |
-  !| -------------                                                     |
-  !| 28-06-2022  | Created by J. Fang                                  |
-  !+-------------------------------------------------------------------+
-  subroutine particle_add(particle_cur,particle_new,num_active_particles,num_part_incr)
-    
-    ! arguments
-    type(partype),intent(inout),allocatable,target :: particle_cur(:)
-    type(partype),intent(in),allocatable :: particle_new(:)
-    integer,intent(in),optional :: num_active_particles
-    integer,intent(out),optional :: num_part_incr
-    
-    ! local data
-    integer :: psize,newsize,n,jpart
-    type(partype),pointer :: pa
-    
-    if(msize(particle_new)<=0) then
-        if(present(num_part_incr)) num_part_incr=0
-        return
-    endif
-
-    psize=msize(particle_cur)
-    
-    if(present(num_active_particles)) then
-
-      ! now add the received particle in to the array, dynamically
-      if(num_active_particles+msize(particle_new)>psize) then
-    
-        ! expand the particle array
-        newsize=max(num_active_particles+msize(particle_new),num_active_particles+100)
-      else
-        newsize=psize
-      endif
-
-    else
-
-        newsize=psize+msize(particle_new)
-
-    endif
-
-    call mextend(particle_cur,newsize)
-    
-    psize=newsize
-    
-    n=0
-    do jpart=1,psize
-    
-      pa=>particle_cur(jpart)
-    
-      ! the particle is free for re-assigning
-      if(pa%inactive) then
-    
-        if(n>=msize(particle_new)) exit
-    
-        n=n+1
-    
-        pa=particle_new(n)
-        pa%inactive=.false.
-    
-      endif
-    
-    enddo
-    
-    if(present(num_part_incr)) num_part_incr=n
-    
-  end subroutine particle_add
-  !+-------------------------------------------------------------------+
-  ! The end of the subroutine particle_add                             |
   !+-------------------------------------------------------------------+
   !
   !+-------------------------------------------------------------------+
@@ -1430,7 +1759,6 @@ module particle
   !+-------------------------------------------------------------------+
   !| The end of the subroutine particle_gen.                           |
   !+-------------------------------------------------------------------+
-
 
   !+-------------------------------------------------------------------+
   !| This subroutine is to distribute particles evenly in 3 directions |
@@ -1797,306 +2125,6 @@ module particle
   end subroutine particle_force
   !+-------------------------------------------------------------------+
   ! The end of the subroutine particle_force                           |
-  !+-------------------------------------------------------------------+
-
-  !+-------------------------------------------------------------------+
-  !| this function is to retune the size of a array                    |
-  !+-------------------------------------------------------------------+
-  !| CHANGE RECORD                                                     |
-  !| -------------                                                     |
-  !| 16-Jun-2022  | Created by J. Fang STFC Daresbury Laboratory       |
-  !+-------------------------------------------------------------------+
-  pure function size_particle(var) result(nsize)
-    
-    type(partype),allocatable,intent(in) :: var(:)
-    integer :: nsize
-    
-    if(allocated(var)) then
-      nsize=size(var)
-    else
-      nsize=0
-    endif
-    
-    return
-    
-  end function size_particle
-  !
-  pure function size_integer(var) result(nsize)
-    
-    integer,allocatable,intent(in) :: var(:)
-    integer :: nsize
-    
-    if(allocated(var)) then
-      nsize=size(var)
-    else
-      nsize=0
-    endif
-    
-    return
-    
-  end function size_integer
-  !+-------------------------------------------------------------------+
-  !| The end of the subroutine size_particle.                          |
-  !+-------------------------------------------------------------------+
-
-  !+-------------------------------------------------------------------+
-  !| this subroutine clean superfluous elements in a array             |
-  !+-------------------------------------------------------------------+
-  !| CHANGE RECORD                                                     |
-  !| -------------                                                     |
-  !| 07-Nov-2018  | Created by J. Fang STFC Daresbury Laboratory       |
-  !+-------------------------------------------------------------------+
-  subroutine mclean_mytype(var,n)
-    
-    ! arguments
-    real(mytype),allocatable,intent(inout) :: var(:)
-    integer,intent(in) :: n
-    
-    ! local data
-    real(mytype),allocatable :: buffer(:)
-    integer :: m
-    logical :: lefc
-    
-    if(.not.allocated(var)) return
-    
-    if(n<=0) then
-      deallocate(var)
-      return
-    endif
-    
-    ! clean
-    allocate(buffer(n))
-    
-    buffer(1:n)=var(1:n)
-    
-    deallocate(var)
-    
-    call move_alloc(buffer,var)
-    
-  end subroutine mclean_mytype
-
-  subroutine mclean_particles(var,n)
-    
-    ! arguments
-    type(partype),allocatable,intent(inout) :: var(:)
-    integer,intent(in) :: n
-    
-    ! local data
-    type(partype),allocatable :: buffer(:)
-    integer :: m
-    logical :: lefc
-    
-    if(.not.allocated(var)) return
-    
-    if(n<=0) then
-      deallocate(var)
-      return
-    endif
-    
-    ! clean
-    allocate(buffer(n))
-    
-    buffer(1:n)=var(1:n)
-    
-    deallocate(var)
-    
-    call move_alloc(buffer,var)
-    
-  end subroutine mclean_particles
-  !+-------------------------------------------------------------------+
-  !| The end of the subroutine mclean.                                 |
-  !+-------------------------------------------------------------------+
-
-  !+-------------------------------------------------------------------+
-  !| this subroutine is to expand an array.                            |
-  !+-------------------------------------------------------------------+
-  !| CHANGE RECORD                                                     |
-  !| -------------                                                     |
-  !| 17-Jun-2022  | Created by J. Fang STFC Daresbury Laboratory       |
-  !+-------------------------------------------------------------------+
-  subroutine extend_particles(var,n)
-    
-    ! arguments
-    type(partype),allocatable,intent(inout) :: var(:)
-    integer,intent(in) :: n
-    
-    ! local data
-    type(partype),allocatable :: buffer(:)
-    integer :: m,jpart
-    
-    if(.not. allocated(var)) then
-      allocate(var(n))
-      m=0
-    else
-    
-      m=size(var)
-
-      if(m==n) return
-    
-      call move_alloc(var, buffer)
-    
-      allocate(var(n))
-      var(1:m)=buffer(1:m)
-    
-    endif
-    
-    ! initilise newly allocated particles
-    do jpart=m+1,n
-      call var(jpart)%init()
-    enddo
-    
-    return
-    
-  end subroutine extend_particles
-  !+-------------------------------------------------------------------+
-  !| The end of the subroutine extend_particles.                        |
-  !+-------------------------------------------------------------------+
-  !
-  !+-------------------------------------------------------------------+
-  !| this subroutine is to copy particle array.                        |
-  !+-------------------------------------------------------------------+
-  !| CHANGE RECORD                                                     |
-  !| -------------                                                     |
-  !| 18-Oct-2024  | Created by J. Fang STFC Daresbury Laboratory       |
-  !+-------------------------------------------------------------------+
-  function particle_copy(vin) result(vout)
-
-    ! arguments
-    type(partype),allocatable,intent(in) :: vin(:)
-    type(partype),allocatable :: vout(:)
-    
-    ! local data
-    integer :: psize,big_number
-
-    psize=msize(vin)
-
-    if(psize>0) then
-        allocate(vout(psize))
-        vout=vin
-    else
-        allocate(vout(1))
-        deallocate(vout)
-    endif
-
-    return
-
-  end function particle_copy
-
-  !+-------------------------------------------------------------------+
-  !| this subroutine is to swap particles via alltoall.                |
-  !+-------------------------------------------------------------------+
-  !| CHANGE RECORD                                                     |
-  !| -------------                                                     |
-  !| 17-Jun-2022  | Created by J. Fang STFC Daresbury Laboratory       |
-  !+-------------------------------------------------------------------+
-  subroutine pa2a_particle(datasend,datarecv,sendtabl,recvtabl)
-    
-    use mpi
-    
-    ! arguments
-    type(partype),allocatable,intent(in) ::  datasend(:)
-    type(partype),allocatable,intent(out) :: datarecv(:)
-    integer,intent(in) :: sendtabl(0:),recvtabl(0:)
-    
-    ! local data
-    integer :: ierr,recvsize,jrank,jpart,jc,nindsize
-    integer,allocatable :: senddispls(:),recvdispls(:)
-    real(mytype),allocatable :: r8send(:,:),r8resv(:,:)
-    
-    integer,save :: newtype
-    
-    logical,save :: firstcal=.true.
-    
-    if(firstcal) then
-      call mpi_type_contiguous(6,real_type,newtype,ierr)
-      call mpi_type_commit(newtype,ierr)
-      firstcal=.false.
-    endif
-    
-    allocate(senddispls(0:nproc-1),recvdispls(0:nproc-1))
-    
-    senddispls=0
-    recvdispls=0
-    do jrank=1,nproc-1
-      senddispls(jrank)=senddispls(jrank-1)+sendtabl(jrank-1)
-      recvdispls(jrank)=recvdispls(jrank-1)+recvtabl(jrank-1)
-    enddo
-    recvsize=recvdispls(nproc-1)+recvtabl(nproc-1)
-    
-    nindsize=msize(datasend)
-    
-    allocate(r8send(6,nindsize))
-    allocate(r8resv(6,recvsize))
-    
-    r8resv=0._mytype
-    
-    do jpart=1,nindsize
-      r8send(1,jpart)=datasend(jpart)%x(1)
-      r8send(2,jpart)=datasend(jpart)%x(2)
-      r8send(3,jpart)=datasend(jpart)%x(3)
-      r8send(4,jpart)=datasend(jpart)%v(1)
-      r8send(5,jpart)=datasend(jpart)%v(2)
-      r8send(6,jpart)=datasend(jpart)%v(3)
-    enddo
-    
-    call mpi_alltoallv(r8send, sendtabl, senddispls, newtype, &
-                       r8resv, recvtabl, recvdispls, newtype, &
-                       mpi_comm_world, ierr)
-    
-    allocate(datarecv(recvsize))
-    
-    jc=0
-    do jrank=0,nproc-1
-      do jpart=1,recvtabl(jrank)
-    
-        jc=jc+1
-    
-        call datarecv(jc)%init()
-    
-        datarecv(jc)%x(1)=r8resv(1,jc)
-        datarecv(jc)%x(2)=r8resv(2,jc)
-        datarecv(jc)%x(3)=r8resv(3,jc)
-        datarecv(jc)%v(1)=r8resv(4,jc)
-        datarecv(jc)%v(2)=r8resv(5,jc)
-        datarecv(jc)%v(3)=r8resv(6,jc)
-    
-      enddo
-    enddo
-    
-  end subroutine pa2a_particle
-  !+-------------------------------------------------------------------+
-  !| The end of the subroutine pa2a_particle.                          |
-  !+-------------------------------------------------------------------+
-  !
-  !+-------------------------------------------------------------------+
-  !| this subroutine is to swap data in the y-z direction.             |
-  !+-------------------------------------------------------------------+
-  subroutine pswap_yz(varin,varout)
-    
-    use decomp_2d, only : xsize,update_halo
-    use param,     only : nclx,ncly,nclz
-    
-    ! arguments
-    real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: varin
-    real(mytype),intent(out) :: varout(1:xsize(1)+1,0:xsize(2)+1,0:xsize(3)+1)
-    
-    ! local data
-    real(mytype),allocatable,dimension(:,:,:) :: var_halo
-
-    call update_halo(varin,var_halo,1,opt_global=.true.,opt_pencil=1)
-
-    
-    varout(1:xsize(1),0:xsize(2)+1,0:xsize(3)+1)=var_halo(:,:,:)
-
-    if(nclx) then
-      varout(xsize(1)+1,:,:)=var_halo(1,:,:)
-    endif
-
-    return
-    
-  end subroutine pswap_yz
-  !+-------------------------------------------------------------------+
-  !| The end of the subroutine pswap_yz.                               |
   !+-------------------------------------------------------------------+
 
 end module particle
