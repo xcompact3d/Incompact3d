@@ -23,7 +23,7 @@ contains
     !
     real(mytype) function trilinear_interpolation_scalar(x0,y0,z0, &
                                                          x1,y1,z1, &
-                                                         x,y,z,     &
+                                                         x,y,z,    &
                                                          u000,u100,u001,u101, &
                                                          u010,u110,u011,u111)
     !
@@ -70,7 +70,7 @@ contains
         print*,'         x:',x,y,z
         print*,'         u:',u000,u100,u001,u101,u010,u110,u011,u111
 
-        call decomp_2d_abort(1,"error in  .or. isnan(u(2)) .or. isnan(u(3))")
+        call decomp_2d_abort(1,"error in trilinear_interpolation_scalar")
 
       endif
 
