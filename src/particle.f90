@@ -202,6 +202,25 @@ module particle_utilities
   !| -------------                                                     |
   !| 16-Jun-2022  | Created by J. Fang STFC Daresbury Laboratory       |
   !+-------------------------------------------------------------------+
+  ! The implementation of the functions is based on the PAMR code
+  ! https://gitlab.com/fangjian/pamr/-/blob/master/src/memange.F90
+  ! The original code is distributed under the APACHE-2.0 license reproduced below
+  !
+  ! Copyright 2018-2024 Jian Fang, STFC Daresbury Laboratory
+  ! All Rights Reserved.
+  !
+  ! Licensed under the Apache License, Version 2.0 (the "License");
+  ! you may not use this file except in compliance with the License.
+  ! You may obtain a copy of the License at
+  !
+  ! https://github.com/fangjian19/astr?tab=License-1-ov-file
+  !
+  ! Unless required by applicable law or agreed to in writing, software
+  ! distributed under the License is distributed on an
+  ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  ! either express or implied. See the License for the specific
+  ! language governing permissions and limitations under the License.
+  !+-------------------------------------------------------------------+
   pure function size_particle(var) result(nsize)
     
     type(partype),allocatable,intent(in) :: var(:)
@@ -240,7 +259,26 @@ module particle_utilities
   !+-------------------------------------------------------------------+
   !| CHANGE RECORD                                                     |
   !| -------------                                                     |
-  !| 07-Nov-2018  | Created by J. Fang STFC Daresbury Laboratory       |
+  !| Created by J. Fang STFC Daresbury Laboratory                      |
+  !+-------------------------------------------------------------------+
+  ! The implementation of the functions is based on the PAMR code
+  ! https://gitlab.com/fangjian/pamr/-/blob/master/src/memange.F90
+  ! The original code is distributed under the APACHE-2.0 license reproduced below
+  !
+  ! Copyright 2018-2024 Jian Fang, STFC Daresbury Laboratory
+  ! All Rights Reserved.
+  !
+  ! Licensed under the Apache License, Version 2.0 (the "License");
+  ! you may not use this file except in compliance with the License.
+  ! You may obtain a copy of the License at
+  !
+  ! https://github.com/fangjian19/astr?tab=License-1-ov-file
+  !
+  ! Unless required by applicable law or agreed to in writing, software
+  ! distributed under the License is distributed on an
+  ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  ! either express or implied. See the License for the specific
+  ! language governing permissions and limitations under the License.
   !+-------------------------------------------------------------------+
   subroutine mclean_mytype(var,n)
     
@@ -309,6 +347,25 @@ module particle_utilities
   !| CHANGE RECORD                                                     |
   !| -------------                                                     |
   !| 17-Jun-2022  | Created by J. Fang STFC Daresbury Laboratory       |
+  !+-------------------------------------------------------------------+
+  ! The implementation of the functions is based on the PAMR code
+  ! https://gitlab.com/fangjian/pamr/-/blob/master/src/memange.F90
+  ! The original code is distributed under the APACHE-2.0 license reproduced below
+  !
+  ! Copyright 2018-2024 Jian Fang, STFC Daresbury Laboratory
+  ! All Rights Reserved.
+  !
+  ! Licensed under the Apache License, Version 2.0 (the "License");
+  ! you may not use this file except in compliance with the License.
+  ! You may obtain a copy of the License at
+  !
+  ! https://github.com/fangjian19/astr?tab=License-1-ov-file
+  !
+  ! Unless required by applicable law or agreed to in writing, software
+  ! distributed under the License is distributed on an
+  ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  ! either express or implied. See the License for the specific
+  ! language governing permissions and limitations under the License.
   !+-------------------------------------------------------------------+
   subroutine extend_particles(var,n)
     

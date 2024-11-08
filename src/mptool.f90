@@ -46,6 +46,25 @@ module mptool
   !| This subroutine is used to compute sum in MPI_COMM_WORLD
   !|    It can not use a dedicated MPI communicator
   !+-------------------------------------------------------------------+
+  ! The implementation of the functions is based on the ASTR code
+  ! https://github.com/astr-code/astr/blob/main/src/parallel.F90
+  ! The original code is distributed under the APACHE-2.0 license reproduced below
+  !
+  ! Copyright 2020-2024 Jian Fang, STFC Daresbury Laboratory
+  ! All Rights Reserved.
+  !
+  ! Licensed under the Apache License, Version 2.0 (the "License");
+  ! you may not use this file except in compliance with the License.
+  ! You may obtain a copy of the License at
+  !
+  ! https://github.com/fangjian19/astr?tab=License-1-ov-file
+  !
+  ! Unless required by applicable law or agreed to in writing, software
+  ! distributed under the License is distributed on an
+  ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  ! either express or implied. See the License for the specific
+  ! language governing permissions and limitations under the License.
+  !+-------------------------------------------------------------------+
     
   function psum_mytype_ary(var) result(varsum)
     
@@ -64,6 +83,25 @@ module mptool
   !+-------------------------------------------------------------------+
   !| This subroutine is used to compute sum in parallel
   !|    It can use a dedicated MPI communicator if provided
+  !+-------------------------------------------------------------------+
+  ! The implementation of the functions is based on the ASTR code
+  ! https://github.com/astr-code/astr/blob/main/src/parallel.F90
+  ! The original code is distributed under the APACHE-2.0 license reproduced below
+  !
+  ! Copyright 2020-2024 Jian Fang, STFC Daresbury Laboratory
+  ! All Rights Reserved.
+  !
+  ! Licensed under the Apache License, Version 2.0 (the "License");
+  ! you may not use this file except in compliance with the License.
+  ! You may obtain a copy of the License at
+  !
+  ! https://github.com/fangjian19/astr?tab=License-1-ov-file
+  !
+  ! Unless required by applicable law or agreed to in writing, software
+  ! distributed under the License is distributed on an
+  ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  ! either express or implied. See the License for the specific
+  ! language governing permissions and limitations under the License.
   !+-------------------------------------------------------------------+
     
   function psum_integer(var,comm) result(varsum)
@@ -94,6 +132,25 @@ module mptool
   !| This subroutine is used to compute sum in parallel
   !|    It can use a dedicated MPI communicator if provided
   !+-------------------------------------------------------------------+
+  ! The implementation of the functions is based on the ASTR code
+  ! https://github.com/astr-code/astr/blob/main/src/parallel.F90
+  ! The original code is distributed under the APACHE-2.0 license reproduced below
+  !
+  ! Copyright 2020-2024 Jian Fang, STFC Daresbury Laboratory
+  ! All Rights Reserved.
+  !
+  ! Licensed under the Apache License, Version 2.0 (the "License");
+  ! you may not use this file except in compliance with the License.
+  ! You may obtain a copy of the License at
+  !
+  ! https://github.com/fangjian19/astr?tab=License-1-ov-file
+  !
+  ! Unless required by applicable law or agreed to in writing, software
+  ! distributed under the License is distributed on an
+  ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  ! either express or implied. See the License for the specific
+  ! language governing permissions and limitations under the License.
+  !+-------------------------------------------------------------------+
     
   function psum_mytype(var,comm) result(varsum)
     
@@ -121,6 +178,25 @@ module mptool
   !| This subroutine is used to compute the max in MPI_COMM_WORLD
   !|    It can not use a dedicated MPI communicator
   !+-------------------------------------------------------------------+
+  ! The implementation of the functions is based on the ASTR code
+  ! https://github.com/astr-code/astr/blob/main/src/parallel.F90
+  ! The original code is distributed under the APACHE-2.0 license reproduced below
+  !
+  ! Copyright 2020-2024 Jian Fang, STFC Daresbury Laboratory
+  ! All Rights Reserved.
+  !
+  ! Licensed under the Apache License, Version 2.0 (the "License");
+  ! you may not use this file except in compliance with the License.
+  ! You may obtain a copy of the License at
+  !
+  ! https://github.com/fangjian19/astr?tab=License-1-ov-file
+  !
+  ! Unless required by applicable law or agreed to in writing, software
+  ! distributed under the License is distributed on an
+  ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  ! either express or implied. See the License for the specific
+  ! language governing permissions and limitations under the License.
+  !+-------------------------------------------------------------------+
     
   integer function  pmax_int(var)
     
@@ -138,6 +214,25 @@ module mptool
   !+-------------------------------------------------------------------+
   !| This subroutine is used to compute the max in MPI_COMM_WORLD
   !|    It can not use a dedicated MPI communicator
+  !+-------------------------------------------------------------------+
+  ! The implementation of the functions is based on the ASTR code
+  ! https://github.com/astr-code/astr/blob/main/src/parallel.F90
+  ! The original code is distributed under the APACHE-2.0 license reproduced below
+  !
+  ! Copyright 2020-2024 Jian Fang, STFC Daresbury Laboratory
+  ! All Rights Reserved.
+  !
+  ! Licensed under the Apache License, Version 2.0 (the "License");
+  ! you may not use this file except in compliance with the License.
+  ! You may obtain a copy of the License at
+  !
+  ! https://github.com/fangjian19/astr?tab=License-1-ov-file
+  !
+  ! Unless required by applicable law or agreed to in writing, software
+  ! distributed under the License is distributed on an
+  ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  ! either express or implied. See the License for the specific
+  ! language governing permissions and limitations under the License.
   !+-------------------------------------------------------------------+
     
   real(mytype) function  pmax_mytype(var)
@@ -169,6 +264,29 @@ module mptool
     
   end function pmax_mytype_array
 
+  !+-------------------------------------------------------------------+
+  !| This subroutine is used to compute the min in MPI_COMM_WORLD
+  !|    It can not use a dedicated MPI communicator
+  !+-------------------------------------------------------------------+
+  ! The implementation of the functions is based on the ASTR code
+  ! https://github.com/astr-code/astr/blob/main/src/parallel.F90
+  ! The original code is distributed under the APACHE-2.0 license reproduced below
+  !
+  ! Copyright 2020-2024 Jian Fang, STFC Daresbury Laboratory
+  ! All Rights Reserved.
+  !
+  ! Licensed under the Apache License, Version 2.0 (the "License");
+  ! you may not use this file except in compliance with the License.
+  ! You may obtain a copy of the License at
+  !
+  ! https://github.com/fangjian19/astr?tab=License-1-ov-file
+  !
+  ! Unless required by applicable law or agreed to in writing, software
+  ! distributed under the License is distributed on an
+  ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  ! either express or implied. See the License for the specific
+  ! language governing permissions and limitations under the License.
+  !+-------------------------------------------------------------------+
   function  pmin_mytype_array(var) result(var_out)
     
     ! arguments
@@ -205,6 +323,25 @@ module mptool
   !| -------------                                                     |
   !| 17-Jun-2022  | Created by J. Fang STFC Daresbury Laboratory       |
   !+-------------------------------------------------------------------+
+  ! The implementation of the functions is based on the ASTR code
+  ! https://github.com/astr-code/astr/blob/main/src/parallel.F90
+  ! The original code is distributed under the APACHE-2.0 license reproduced below
+  !
+  ! Copyright 2020-2024 Jian Fang, STFC Daresbury Laboratory
+  ! All Rights Reserved.
+  !
+  ! Licensed under the Apache License, Version 2.0 (the "License");
+  ! you may not use this file except in compliance with the License.
+  ! You may obtain a copy of the License at
+  !
+  ! https://github.com/fangjian19/astr?tab=License-1-ov-file
+  !
+  ! Unless required by applicable law or agreed to in writing, software
+  ! distributed under the License is distributed on an
+  ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  ! either express or implied. See the License for the specific
+  ! language governing permissions and limitations under the License.
+  !+-------------------------------------------------------------------+
   function ptable_update_int_arr(vain) result(vout)
     
     use mpi
@@ -223,6 +360,26 @@ module mptool
   end function ptable_update_int_arr
 
   ! the same purposed with above, with only for a single varaible with more options in communicator
+  !+-------------------------------------------------------------------+
+  ! The implementation of the functions is based on the ASTR code
+  ! https://github.com/astr-code/astr/blob/main/src/parallel.F90
+  ! The original code is distributed under the APACHE-2.0 license reproduced below
+  !
+  ! Copyright 2020-2024 Jian Fang, STFC Daresbury Laboratory
+  ! All Rights Reserved.
+  !
+  ! Licensed under the Apache License, Version 2.0 (the "License");
+  ! you may not use this file except in compliance with the License.
+  ! You may obtain a copy of the License at
+  !
+  ! https://github.com/fangjian19/astr?tab=License-1-ov-file
+  !
+  ! Unless required by applicable law or agreed to in writing, software
+  ! distributed under the License is distributed on an
+  ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  ! either express or implied. See the License for the specific
+  ! language governing permissions and limitations under the License.
+  !+-------------------------------------------------------------------+
     
   function ptable_update_int(var,offset,debug,comm,comm_size) result(table)
     
@@ -457,6 +614,26 @@ module mptool
     
   ! this function does a linear interpolation, the input array yy1 and yy2 must have the same size.
   ! used by module particle to interpolation fields in time.
+  !+-------------------------------------------------------------------+
+  ! The implementation of the functions is based on the ASTR code
+  ! https://github.com/fangjian19/astr/blob/main/src/interp.F90
+  ! The original code is distributed under the APACHE-2.0 license reproduced below
+  !
+  ! Copyright 2020-2024 Jian Fang, STFC Daresbury Laboratory
+  ! All Rights Reserved.
+  !
+  ! Licensed under the Apache License, Version 2.0 (the "License");
+  ! you may not use this file except in compliance with the License.
+  ! You may obtain a copy of the License at
+  !
+  ! https://github.com/fangjian19/astr?tab=License-1-ov-file
+  !
+  ! Unless required by applicable law or agreed to in writing, software
+  ! distributed under the License is distributed on an
+  ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  ! either express or implied. See the License for the specific
+  ! language governing permissions and limitations under the License.
+  !+-------------------------------------------------------------------+
   function linintp(xx1,xx2,yy1,yy2,xx) result(yy)
     
     real(mytype),intent(in) :: xx1,xx2,xx
