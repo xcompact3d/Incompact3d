@@ -377,7 +377,7 @@ module mptool
   ! language governing permissions and limitations under the License.
   !+-------------------------------------------------------------------+
     
-  function ptable_update_int(var,offset,debug,comm,comm_size) result(table)
+  function ptable_update_int(var,offset,comm,comm_size) result(table)
     
     use mpi
     
@@ -391,13 +391,6 @@ module mptool
     ! local data
     integer :: comm2use,comm2size
     integer :: ierr,i
-    logical :: ldebug
-    
-    if(present(debug)) then
-      ldebug=debug
-    else
-      ldebug=.false.
-    endif
     
     if(present(comm)) then
         comm2use=comm
