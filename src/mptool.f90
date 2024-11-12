@@ -385,7 +385,6 @@ module mptool
     integer,allocatable :: table(:)
     integer,intent(in) :: var
     integer,optional,intent(out) :: offset
-    logical,intent(in),optional :: debug
     integer,intent(in),optional :: comm,comm_size
     
     ! local data
