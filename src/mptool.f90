@@ -124,8 +124,6 @@ module mptool
     call mpi_allreduce(var,varsum,1,mpi_integer,mpi_sum,           &
                                                     comm2use,ierr)
     
-    return
-    
   end function psum_integer
     
   !+-------------------------------------------------------------------+
@@ -354,8 +352,6 @@ module mptool
     
     call mpi_alltoall(vain,1,mpi_integer,                   &
                       vout,1,mpi_integer,mpi_comm_world,ierr)
-    
-    return
     
   end function ptable_update_int_arr
 
