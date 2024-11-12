@@ -27,7 +27,7 @@ contains
       do ielem=1,act_line%NElem
           inquire (File='loads/'//trim(act_line%name)//'_element_'//trim(int2str(ielem))//'.load', exist=exists)
           if (.not. exists) then
-            call system('mkdir -p loads 2> /dev/null')
+            call execute_command_line('mkdir -p loads 2> /dev/null')
             open(2017,File='loads/'//trim(act_line%name)//'_element_'//trim(int2str(ielem))//'.load')
             write(2017,*) 'iteration,time,X,Y,Z,rdist/R,AOA,adot,RE,ur,CL,CD,CM25,Cn,Ct,Fn,Ft,F1'
             write(2017,*) '[-],[s],[m],[m],[m],[-],[deg],[deg/s],[-],[m/s],[-],[-],[-],[-],[-],[N],[N],[-]'
@@ -58,7 +58,7 @@ contains
       do ielem=1,act_line%NElem
           inquire (File='loads/'//trim(act_line%name)//'_element_'//trim(int2str(ielem))//'.dynstall', exist=exists)
           if (.not. exists) then
-              call system('mkdir -p loads 2> /dev/null')
+              call execute_command_line('mkdir -p loads 2> /dev/null')
               open(2018,File='loads/'//trim(act_line%name)//'_element_'//trim(int2str(ielem))//'.dynstall')
               write(2018,*) 'iteration,time,rdist/R,pitch,AOA,f'
               close(2018)

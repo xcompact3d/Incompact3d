@@ -31,7 +31,8 @@ subroutine parameter(input_i3d)
   use visu, only : output2D
   use forces, only : iforces, nvol, setup_forces
 
-  use mhd, only: mhd_equation,hartmann,stuart,rem
+  use mhd, only : mhd_equation,hartmann,stuart,rem
+  use particle, only : initype_particle,n_particles,bc_particle,particle_inject_period
 
   implicit none
 
@@ -48,7 +49,7 @@ subroutine parameter(input_i3d)
        ivisu, ipost, &
        gravx, gravy, gravz, &
        cpg, idir_stream, &
-       ifilter, C_filter, iturbine, mhd_active, FreeStream
+       ifilter, C_filter, iturbine, mhd_active, particle_active, FreeStream
 
   NAMELIST /NumOptions/ ifirstder, isecondder, itimescheme, iimplicit, &
        nu0nu, cnu, ipinter
@@ -81,6 +82,7 @@ subroutine parameter(input_i3d)
      nclxBx1, nclxBxn, nclyBx1, nclyBxn, nclzBx1, nclzBxn, &
      nclxBy1, nclxByn, nclyBy1, nclyByn, nclzBy1, nclzByn, &
      nclxBz1, nclxBzn, nclyBz1, nclyBzn, nclzBz1, nclzBzn
+  NAMELIST/ParTrack/initype_particle,n_particles,bc_particle,particle_inject_period
 
 
 #ifdef DEBG
@@ -228,6 +230,10 @@ subroutine parameter(input_i3d)
     nclzBn(1) = nclzBxn
     nclzBn(2) = nclzByn
     nclzBn(3) = nclzBzn
+   endif
+
+   if(particle_active) then
+    read(10, nml=ParTrack); rewind(10) 
    endif
 
   ! !! These are the 'optional'/model parameters
@@ -678,6 +684,7 @@ subroutine parameter_defaults()
   use forces, only : iforces, nvol
 
   use mhd, only: mhd_equation, rem, stuart, hartmann 
+  use particle, only : initype_particle,n_particles,bc_particle,particle_inject_period
 
   implicit none
 
@@ -708,6 +715,13 @@ subroutine parameter_defaults()
   rem = zero
   stuart = zero
   hartmann = zero
+
+  ! particle tracking
+  particle_active =.false.
+  initype_particle = 'uniform'
+  n_particles = 0
+  bc_particle = (/"periodic","periodic","periodic","periodic","periodic","periodic"/)
+  particle_inject_period = 0.0
 
   !! LES stuff
   smagwalldamp=1

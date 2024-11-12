@@ -908,7 +908,7 @@ contains
          
          if (nrank .eq. 0) then
              write(38,*) t,xDrag_mean,yLift_mean 
-             call flush(38)
+             flush(38)
          endif
        enddo
     endif
