@@ -20,3 +20,7 @@ if (${BUILD_TESTING_FULL})
   add_subdirectory(TBL-Turbulent-Boundary-Layer)
   add_subdirectory(Wind-Turbine/NREL-5MW_ALM)
 endif (${BUILD_TESTING_FULL})
+
+if (${BUILD_TESTING_PARTICLE})
+  add_subdirectory(Particle-Tracking)
+endif (${BUILD_TESTING_PARTICLE})

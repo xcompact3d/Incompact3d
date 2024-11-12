@@ -210,6 +210,7 @@ contains
     use MPI
     use navier, only : gradp
     use mhd, only : mhd_equation,Bm,dBm
+    use particle, only : particle_checkpoint
 
     implicit none
 
@@ -368,9 +369,13 @@ contains
           write(111,fmt2) 'iimplicit=',iimplicit
           write(111,'(A)')'/End'
           write(111,'(A)')'!========================='
-
           close(111)
        end if
+
+       if(particle_active) then
+          call particle_checkpoint(mode='write',filename='checkpoint-particles')
+       endif
+
     else
        if (nrank==0) then
          write(*,*)'==========================================================='
@@ -464,12 +469,16 @@ contains
          open(111, file=filename)
          read(111, nml=Time)
          close(111)
+
          t0 = tfield
          itime0 = 0
+
        else
          t0 = zero
          itime0 = 0
        end if
+
+       if(particle_active) call particle_checkpoint(mode='read')
        
     endif
 

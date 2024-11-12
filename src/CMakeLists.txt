@@ -28,7 +28,7 @@ add_executable(xcompact3d
                     Case-TBL.f90
                     Case-TGV.f90
                     Case-Uniform.f90
-		    Case-PTBL.f90
+                    Case-PTBL.f90
                     case.f90
                     derive.f90
                     dynstall.f90
@@ -44,6 +44,7 @@ add_executable(xcompact3d
                     mptool.f90
                     navier.f90
                     parameters.f90
+                    particle.f90
                     poisson.f90
                     probes.f90
                     schemes.f90
@@ -52,7 +53,7 @@ add_executable(xcompact3d
                     tools.f90
                     transeq.f90
                     turbine.f90
-		    utilities.f90
+                    utilities.f90
                     variables.f90
                     visu.f90
                     xcompact3d.f90)

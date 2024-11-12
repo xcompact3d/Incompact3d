@@ -40,6 +40,8 @@ contains
   subroutine init (rho1, ux1, uy1, uz1, ep1, phi1, drho1, dux1, duy1, duz1, dphi1, &
        pp3, px1, py1, pz1)
 
+    use particle, only : particle_init
+
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
@@ -143,6 +145,23 @@ contains
           dphi1(:,:,:,it,is) = phi1(:,:,:,is)
        enddo
     enddo
+
+    if(particle_active) then
+
+      select case(itype)
+
+      case(itype_channel)
+
+        call particle_init(pxmin=0.1_mytype,pxmax=0.1_mytype, &
+                           pzmin=1.5_mytype,pzmax=1.5_mytype)
+
+      case default
+
+        call particle_init()
+
+      end select
+
+    endif
 
   end subroutine init
   !##################################################################
@@ -443,6 +462,7 @@ contains
 
     use var, only : nzmsize
     use param, only : npress
+    use particle, only : visu_particle
 
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
@@ -502,6 +522,8 @@ contains
        STOP
        
     endif
+
+    if(particle_active) call visu_particle(itime)
 
   end subroutine visu_case
   !##################################################################
