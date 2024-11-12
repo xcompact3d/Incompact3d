@@ -1,6 +1,6 @@
 # Automated Taylor-Green vortex test case
 The CTest case for the Taylor-Green-Vortex run and compare with a reference solution. 
-Assuming a defualt build as described in the [installation description](../../INSTALL.md), 
+Assuming a default build as described in the [installation description](../../INSTALL.md), 
 this is equivalent to perfrom the following steps: 
 
 ```

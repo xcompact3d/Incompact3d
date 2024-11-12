@@ -25,7 +25,7 @@ if (${BUILD_TESTING_FULL})
   add_subdirectory(MHD)
   add_subdirectory(Mixing-layer)
   add_subdirectory(Periodic-hill)
-  #add_subdirectory(TBL-Turbulent-Boundary-Layer)
+  add_subdirectory(TBL-Turbulent-Boundary-Layer)
   #add_subdirectory(Wind-Turbine/NREL-5MW_ALM)
 endif (${BUILD_TESTING_FULL})
 

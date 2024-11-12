@@ -1,4 +1,4 @@
-# ABL
+# Wind-Turbine
 set(case "Wind-Turbine")
 set(example_files "")
 list(APPEND example_files "NREL-5MW_ALM")
