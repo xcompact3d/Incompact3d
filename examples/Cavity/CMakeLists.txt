@@ -1,4 +1,4 @@
-# ABL
+# Cavity
 set(case "Cavity")
 set(example_files "")
 list(APPEND example_files "adios2_config.xml")
