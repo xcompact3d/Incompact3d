@@ -1,8 +1,3 @@
 # Wind-Turbine
-set(case "Wind-Turbine")
-set(example_files "")
-list(APPEND example_files "NREL-5MW_ALM")
-list(APPEND example_files "precursor-succesor-ADM")
-AddExample("${examples_dir}" "${case}" "${example_files}")
-
+add_subdirectory(NREL-5MW_ALM)
 
