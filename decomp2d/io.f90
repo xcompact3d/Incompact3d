@@ -1176,8 +1176,13 @@ contains
             subsizes(1)*subsizes(2)*subsizes(3), &
             real_type, MPI_STATUS_IGNORE, ierror)
     end if
+
+!    write(*,*) 'Sizes(1) = ', sizes(1)
+!    write(*,*) 'Sizes(2) = ', sizes(2)
+!    write(*,*) 'Sizes(3) = ', sizes(3)
+!    write(*,*) 'MPI_OFFSET_KIND = ', MPI_OFFSET_KIND
     
-    fh_disp(idx) = fh_disp(idx) + sizes(1) * sizes(2) * sizes(3) * disp_bytes
+    fh_disp(idx) = fh_disp(idx) + int(sizes(1),MPI_OFFSET_KIND) * int(sizes(2),MPI_OFFSET_KIND) * int(sizes(3),MPI_OFFSET_KIND) * int(disp_bytes,MPI_OFFSET_KIND)
     
     if (opened_new) then
        call decomp_2d_close_io(io_name, full_io_name)
