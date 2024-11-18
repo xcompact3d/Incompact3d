@@ -6,15 +6,17 @@ module mod_stret
 
   use decomp_2d_mpi, only : nrank
   use decomp_2d_constants, only : mytype
-  use variables, only : alpha, beta
   use param, only : ncly1, nclyn, yly, istret, &
                     zero, half, one, two, pi
 
   implicit none
-  
+
+  real(mytype) :: alpha, beta
+
   private
 
-  public :: stretching
+  public :: alpha, beta, &
+            stretching
 
   interface stretching
     module subroutine stretching_short(ny, yp, opt_write)

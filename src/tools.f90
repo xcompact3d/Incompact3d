@@ -208,6 +208,7 @@ contains
     use variables
     use param
     use MPI
+    use mod_stret, only : beta
     use navier, only : gradp
     use mhd, only : mhd_equation,Bm,dBm
     use particle, only : particle_checkpoint

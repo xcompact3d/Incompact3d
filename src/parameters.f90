@@ -27,6 +27,7 @@ subroutine parameter(input_i3d)
 
   use gravitycur, only : pfront
 
+  use mod_stret, only : beta
   use probes, only : nprobes, setup_probes, flag_all_digits, flag_extra_probes, xyzprobes
   use visu, only : output2D
   use forces, only : iforces, nvol, setup_forces
@@ -679,6 +680,7 @@ subroutine parameter_defaults()
   use complex_geometry
   use ibm_param
 
+  use mod_stret, only : beta
   use probes, only : nprobes, flag_all_digits, flag_extra_probes
   use visu, only : output2D
   use forces, only : iforces, nvol
