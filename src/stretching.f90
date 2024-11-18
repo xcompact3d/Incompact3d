@@ -30,8 +30,9 @@ module mod_stret
       use decomp_2d_constants, only : mytype
       implicit none
       integer, intent(in) :: ny
-      real(mytype), intent(out) :: yp(ny), ypi(ny)
-      real(mytype), intent(out) :: ppy(ny), pp2y(ny), pp4y(ny), ppyi(ny), pp2yi(ny), pp4yi(ny)
+      real(mytype), intent(out) :: yp(ny), ypi(ny), &
+                                   ppy(ny), pp2y(ny), pp4y(ny), &
+                                   ppyi(ny), pp2yi(ny), pp4yi(ny)
       logical, intent(in), optional :: opt_write
     end subroutine stretching_full
   end interface stretching
