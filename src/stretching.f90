@@ -88,21 +88,24 @@ module subroutine stretching_short(ny, yp, opt_write)
 end subroutine stretching_short
 !##################################################################
 !##################################################################
-module subroutine stretching_full(ny, yp, ypi, &
-                           ppy, &
-                           pp2y, &
-                           pp4y, &
-                           ppyi, &
-                           pp2yi, &
-                           pp4yi, &
-                           opt_write)
+module subroutine stretching_full(ny, &
+                                  yp, &
+                                  ypi, &
+                                  ppy, &
+                                  pp2y, &
+                                  pp4y, &
+                                  ppyi, &
+                                  pp2yi, &
+                                  pp4yi, &
+                                  opt_write)
 
   implicit none
 
   ! Arguments
   integer, intent(in) :: ny
-  real(mytype), intent(out) :: yp(ny), ypi(ny)
-  real(mytype), intent(out) :: ppy(ny), &
+  real(mytype), intent(out) :: yp(ny), &
+                               ypi(ny), &
+                               ppy(ny), &
                                pp2y(ny), &
                                pp4y(ny), &
                                ppyi(ny), &
