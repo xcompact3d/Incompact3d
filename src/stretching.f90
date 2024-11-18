@@ -11,7 +11,7 @@ module mod_stret
 
   implicit none
 
-  real(mytype) :: alpha, beta
+  real(mytype), save :: alpha, beta
 
   private
 
