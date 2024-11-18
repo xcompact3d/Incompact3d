@@ -276,7 +276,6 @@ module variables
   real(mytype),allocatable,dimension(:) :: ppy,pp2y,pp4y
   real(mytype),allocatable,dimension(:) :: ppyi,pp2yi,pp4yi
   real(mytype),allocatable,dimension(:) :: xp,xpi,yp,ypi,dyp,zp,zpi,del,ypw
-  real(mytype),allocatable,dimension(:) :: yeta,yetai
   real(mytype) :: alpha,beta
 
 end module variables
