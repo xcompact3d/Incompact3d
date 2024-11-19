@@ -10,6 +10,7 @@ module var
   USE variables
   USE param
   USE complex_geometry
+  USE mod_stret, only : stretching
 
   implicit none
   
@@ -1284,11 +1285,6 @@ contains
     allocate(zpi(nz))
     zpi=zero
 
-    allocate(yeta(ny))
-    yeta=zero
-    allocate(yetai(ny))
-    yetai=zero
-
     ! x-position
     do i=1,nx
       xp(i)=real(i-1,mytype)*dx
@@ -1308,7 +1304,11 @@ contains
           ppy(ny) = two
        endif
     else
-       call stretching()
+       call stretching(ny, &
+                       yp, ypi, &
+                       ppy, pp2y, pp4y, &
+                       ppyi, pp2yi, pp4yi, &
+                       opt_write = .true.)
 
        ! compute integral weights for stretched mesh - Ricardo Frantz
        !TODO: change for exact formula

@@ -9,6 +9,7 @@ module decomp_2d_poisson
   use decomp_2d
   use decomp_2d_fft
 
+  use mod_stret, only : alpha, beta
   use param
   use utilities
   use variables
