@@ -229,7 +229,7 @@ contains
     integer :: j,k,code
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
-    real(mytype) :: udx,udy,udz,uddx,uddy,uddz,cx,uxmin,uxmax,uxmin1,uxmax1
+    real(mytype) :: udx,udy,udz,uddx,uddy,uddz,cx,uxmin,uxmax
 
     udx=one/dx; udy=one/dy; udz=one/dz; uddx=half/dx; uddy=half/dy; uddz=half/dz
 
@@ -242,13 +242,13 @@ contains
       enddo
     enddo
 
-    call MPI_ALLREDUCE(uxmax,uxmax1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-    call MPI_ALLREDUCE(uxmin,uxmin1,1,real_type,MPI_MIN,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,uxmax,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,uxmin,1,real_type,MPI_MIN,MPI_COMM_WORLD,code)
 
     if (u1.eq.zero) then
-      cx=(half*(uxmax1+uxmin1))*gdt(itr)*udx
+      cx=(half*(uxmax+uxmin))*gdt(itr)*udx
     elseif (u1.eq.one) then
-      cx=uxmax1*gdt(itr)*udx
+      cx=uxmax*gdt(itr)*udx
     elseif (u1.eq.two) then
       cx=u2*gdt(itr)*udx    !works better
     else
@@ -265,9 +265,9 @@ contains
 
     if (iscalar==1) then
       if (u2.eq.zero) then
-        cx=(half*(uxmax1+uxmin1))*gdt(itr)*udx
+        cx=(half*(uxmax+uxmin))*gdt(itr)*udx
       elseif (u2.eq.one) then
-        cx=uxmax1*gdt(itr)*udx
+        cx=uxmax*gdt(itr)*udx
       elseif (u2.eq.two) then
         cx=u2*gdt(itr)*udx    !works better
       else
@@ -281,7 +281,7 @@ contains
       enddo
     endif
 
-    if (nrank==0) write(*,*) "Outflow velocity ux nx=n min max=",real(uxmin1,4),real(uxmax1,4)
+    if (nrank==0) write(*,*) "Outflow velocity ux nx=n min max=",real(uxmin,4),real(uxmax,4)
 
     return
   end subroutine outflow
@@ -302,19 +302,19 @@ contains
 
     integer  :: i,j,k,code
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)):: ux, tmp
-    real(mytype) :: int, int1
+    real(mytype) :: int
 
-    int = zero; int1 = zero
+    int = zero
 
     tmp(:,:,:) = vol1_frc(:,:,:) * ux(:,:,:)
 
     int = sum(tmp)
 
-    call MPI_ALLREDUCE(int,int1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,int,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
-    if (nrank==0) write(*,*) "Integration at frc : ",int1
+    if (nrank==0) write(*,*) "Integration at frc : ",int
 
-    ux = ux / int1
+    ux = ux / int
 
     return
   end subroutine flow_rate_control
@@ -336,21 +336,21 @@ contains
 
     integer  :: i,j,k,code
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)):: ux, uy, uz, tmp
-    real(mytype) :: int, int1
+    real(mytype) :: int
 
-    int = zero; int1 = zero
+    int = zero
 
     tmp(:,:,:) = vol1_frc(:,:,:) * ux(:,:,:)
 
     int = sum(tmp)
 
-    call MPI_ALLREDUCE(int,int1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,int,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
-    if (nrank==0) write(*,*) "Integration at frc SZA : ",int1
+    if (nrank==0) write(*,*) "Integration at frc SZA : ",int
 
     !Flow rate control
     do i=1, sz_a_i
-      ux(i,:,:) = ux(i,:,:) / int1
+      ux(i,:,:) = ux(i,:,:) / int
     enddo
 
     !Recycling four points just to avoid the diferenciation schemes near boundary

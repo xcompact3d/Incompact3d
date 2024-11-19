@@ -201,7 +201,6 @@ contains
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1,ep1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype) :: mp(numscalar),mps(numscalar),vl,es,es1,ek,ek1,ds,ds1
-    real(mytype) :: temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9
 
     real(mytype), allocatable, dimension(:,:,:) :: bx2,by2,bz2,bx3,by3,bz3
     real(mytype) :: eek, enst, eps, eps2
@@ -285,47 +284,47 @@ contains
        !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
 
        !SPATIALLY-AVERAGED ENSTROPHY
-       temp1=zero
+       enst=zero
        do k=1,xsize3
           do j=1,xsize2
              do i=1,xsize1
-                temp1=temp1+zpfive*((tf1(i,j,k)-th1(i,j,k))**2+&
+                enst=enst+zpfive*((tf1(i,j,k)-th1(i,j,k))**2+&
                                     (tg1(i,j,k)-tc1(i,j,k))**2+&
                                     (tb1(i,j,k)-td1(i,j,k))**2)
              enddo
           enddo
        enddo
-       call MPI_ALLREDUCE(temp1,enst,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(MPI_IN_PLACE,enst,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        enst=enst/(nxc*nyc*nzc)
        
        !SPATIALLY-AVERAGED ENERGY DISSIPATION
-       temp1=zero
+       eps=zero
        do k=1,xsize3
           do j=1,xsize2
              do i=1,xsize1
-                temp1=temp1+half*xnu*((two*ta1(i,j,k))**two+(two*te1(i,j,k))**two+&
+                eps=eps+half*xnu*((two*ta1(i,j,k))**two+(two*te1(i,j,k))**two+&
                                       (two*ti1(i,j,k))**two+two*(td1(i,j,k)+tb1(i,j,k))**two+&
                                                             two*(tg1(i,j,k)+tc1(i,j,k))**two+&
                                                             two*(th1(i,j,k)+tf1(i,j,k))**two)
                 if (ilesmod /= 0 .and. jles <= 3) then
-                   temp1=temp1+two*nut1(i,j,k)*srt_smag(i,j,k)
+                   eps=eps+two*nut1(i,j,k)*srt_smag(i,j,k)
                 endif
              enddo
           enddo
        enddo
-       call MPI_ALLREDUCE(temp1,eps,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(MPI_IN_PLACE,eps,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        eps=eps/(nxc*nyc*nzc)
 
        !SPATIALLY-AVERAGED TKE of velocity fields
-       temp1=zero
+       eek=zero
        do k=1,xsize3
           do j=1,xsize2
              do i=1,xsize1
-                temp1=temp1+zpfive*((ux1(i,j,k))**2+(uy1(i,j,k))**2+(uz1(i,j,k))**2)
+                eek=eek+zpfive*((ux1(i,j,k))**2+(uy1(i,j,k))**2+(uz1(i,j,k))**2)
              enddo
           enddo
        enddo
-       call MPI_ALLREDUCE(temp1,eek,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(MPI_IN_PLACE,eek,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        eek=eek/(nxc*nyc*nzc)
 
        !SECOND DERIVATIVES
@@ -355,7 +354,7 @@ contains
        !d2v/dx2=tb1 d2v/dy2=te1 and d2v/dz2=th1
        !d2w/dx2=tc1 d2w/dy2=tf1 and d2w/dz2=ti1
        !SPATIALLY-AVERAGED ENERGY DISSIPATION WITH SECOND DERIVATIVES
-       temp1=zero
+       eps2=zero
        di1  =zero
        do k=1,xsize3
           do j=1,xsize2
@@ -363,11 +362,11 @@ contains
                 di1(i,j,k)=(-xnu)*( ux1(i,j,k)*(ta1(i,j,k)+td1(i,j,k)+tg1(i,j,k))+ &
                                     uy1(i,j,k)*(tb1(i,j,k)+te1(i,j,k)+th1(i,j,k))+ &
                                     uz1(i,j,k)*(tc1(i,j,k)+tf1(i,j,k)+ti1(i,j,k)) )
-                temp1=temp1+di1(i,j,k)
+                eps2=eps2+di1(i,j,k)
              enddo
           enddo
        enddo
-       call MPI_ALLREDUCE(temp1,eps2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(MPI_IN_PLACE,eps2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        eps2=eps2/(nxc*nyc*nzc)
        
        
@@ -379,19 +378,18 @@ contains
        if(mhd_active) then
 
           !SPATIALLY-AVERAGING
-          temp1=zero
-          temp2=zero
-          temp3=zero
+          eem=zero
+          omegam=zero
           do k=1,xsize3
              do j=1,xsize2
                 do i=1,xsize1
-                   temp1=temp1+zpfive*((Bm(i,j,k,1))**2+(Bm(i,j,k,2))**2+(Bm(i,j,k,3))**2)
-                   temp2=temp2+zpfive*Je(i,j,k,1)**2+Je(i,j,k,2)**2+Je(i,j,k,3)**2
+                   eem=eem+zpfive*((Bm(i,j,k,1))**2+(Bm(i,j,k,2))**2+(Bm(i,j,k,3))**2)
+                   omegam=omegam+zpfive*Je(i,j,k,1)**2+Je(i,j,k,2)**2+Je(i,j,k,3)**2
                 enddo
              enddo
           enddo
-          call MPI_ALLREDUCE(temp1,   eem,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-          call MPI_ALLREDUCE(temp2,omegam,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+          call MPI_ALLREDUCE(MPI_IN_PLACE,eem,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+          call MPI_ALLREDUCE(MPI_IN_PLACE,omegam,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
           eem=eem/(nxc*nyc*nzc)
           omegam=omegam/(nxc*nyc*nzc)*Rem*Rem
 
@@ -442,25 +440,25 @@ contains
           call transpose_y_to_x(tc2,tf1)
 
           !SPATIALLY-AVERAGED ENERGY DISSIPATION
-          temp1=zero
-          temp2=zero
+          disb=zero
+          omegab=zero
           do k=1,xsize3
              do j=1,xsize2
                 do i=1,xsize1
-                   temp1=temp1+half/rem*((two*ta1(i,j,k))**two+(two*te1(i,j,k))**two+&
+                   disb=disb+half/rem*((two*ta1(i,j,k))**two+(two*te1(i,j,k))**two+&
                                          (two*ti1(i,j,k))**two+two*(td1(i,j,k)+tb1(i,j,k))**two+&
                                                                two*(tg1(i,j,k)+tc1(i,j,k))**two+&
                                                                two*(th1(i,j,k)+tf1(i,j,k))**two)
-                   temp2=temp2+zpfive*((tf1(i,j,k)-th1(i,j,k))**2+&
+                   omegab=omegab+zpfive*((tf1(i,j,k)-th1(i,j,k))**2+&
                                        (tg1(i,j,k)-tc1(i,j,k))**2+&
                                        (tb1(i,j,k)-td1(i,j,k))**2)
                 enddo
              enddo
           enddo
-          call MPI_ALLREDUCE(temp1,disb,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+          call MPI_ALLREDUCE(MPI_IN_PLACE,disb,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
           disb=disb/(nxc*nyc*nzc)
 
-          call MPI_ALLREDUCE(temp2,omegab,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+          call MPI_ALLREDUCE(MPI_IN_PLACE,omegab,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
           omegab=omegab/(nxc*nyc*nzc)
 
           if (nrank==0) then
@@ -948,21 +946,21 @@ contains
   end subroutine compute_k2
 
   ! Compute L1, L2 and Linf norm of given 3D array
-  subroutine error_L1_L2_Linf(err, l1, l2, linf)
+  subroutine error_L1_L2_Linf(err, ll1, ll2, linf)
 
     USE MPI
     
     implicit none
       
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: err
-    real(mytype),intent(out) :: l1, l2, linf
+    real(mytype) :: ll1, ll2, linf
 
     integer :: i,j,k,code
-    real(mytype) :: ll1, ll2, llinf, ntot
+    real(mytype) :: ntot
 
     ll1 = zero
     ll2 = zero
-    llinf = zero
+    linf = zero
     ntot = nx*ny*nz
 
     do k = 1,xsize(3)
@@ -970,19 +968,19 @@ contains
         do i = 1,xsize(1)
           ll1 = ll1 + abs(err(i,j,k))
           ll2 = ll2 + err(i,j,k)*err(i,j,k)
-          llinf = max(llinf, abs(err(i,j,k)))
+          linf = max(linf, abs(err(i,j,k)))
         enddo
       enddo
     enddo
 
     ! Parallel
-    call MPI_ALLREDUCE(ll1,l1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    call MPI_ALLREDUCE(ll2,l2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    call MPI_ALLREDUCE(llinf,linf,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,ll1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,ll2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,linf,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
 
     ! Rescaling
-    l1 = l1 / ntot
-    l2 = sqrt(l2 / ntot)
+    ll1 = ll1 / ntot
+    ll2 = sqrt(ll2 / ntot)
 
   end subroutine error_L1_L2_Linf
 

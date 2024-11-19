@@ -194,8 +194,8 @@ contains
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1
     real(mytype) :: smag_constant, y, length
-    real(mytype) :: nutmin_loc, nutmax_loc, nutmin, nutmax
-    real(mytype) :: srtmin_loc, srtmax_loc, srtmin, srtmax
+    real(mytype) :: nutmin, nutmax
+    real(mytype) :: srtmin, srtmax
 
     integer :: i, j, k, ierr
     character(len = 30) :: filename
@@ -288,19 +288,19 @@ contains
 
 
     if (mod(itime,ilist)==0) then 
-      srtmin_loc = minval(srt_smag)
-      srtmax_loc = maxval(srt_smag)
-      nutmin_loc = minval(nut1)
-      nutmax_loc = maxval(nut1)
+      srtmin = minval(srt_smag)
+      srtmax = maxval(srt_smag)
+      nutmin = minval(nut1)
+      nutmax = maxval(nut1)
       srtmin = zero
       srtmax = zero
       nutmin = zero
       nutmax = zero
 
-      call MPI_ALLREDUCE(srtmin_loc,srtmin,1,real_type,MPI_MIN,MPI_COMM_WORLD,ierr)
-      call MPI_ALLREDUCE(nutmin_loc,nutmin,1,real_type,MPI_MIN,MPI_COMM_WORLD,ierr)
-      call MPI_ALLREDUCE(srtmax_loc,srtmax,1,real_type,MPI_MAX,MPI_COMM_WORLD,ierr)
-      call MPI_ALLREDUCE(nutmax_loc,nutmax,1,real_type,MPI_MAX,MPI_COMM_WORLD,ierr)
+      call MPI_ALLREDUCE(MPI_IN_PLACE,srtmin,1,real_type,MPI_MIN,MPI_COMM_WORLD,ierr)
+      call MPI_ALLREDUCE(MPI_IN_PLACE,nutmin,1,real_type,MPI_MIN,MPI_COMM_WORLD,ierr)
+      call MPI_ALLREDUCE(MPI_IN_PLACE,srtmax,1,real_type,MPI_MAX,MPI_COMM_WORLD,ierr)
+      call MPI_ALLREDUCE(MPI_IN_PLACE,nutmax,1,real_type,MPI_MAX,MPI_COMM_WORLD,ierr)
 
       if (mod(itime, ilist) == 0) then
          if (nrank==0) then 

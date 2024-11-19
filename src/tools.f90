@@ -1848,7 +1848,7 @@ subroutine test_min_max(name,text,array_tmp,i_size_array_tmp)
   implicit none
 
   integer :: ierror, i, i_size_array_tmp
-  real(mytype) :: max_tmp, min_tmp, tot_tmp, max_tot, min_tot, tot_tot
+  real(mytype) :: max_tmp, min_tmp, tot_tmp
   real(mytype), dimension(i_size_array_tmp) :: array_tmp
   character(len=5) :: name
   character(len=15) :: text
@@ -1861,14 +1861,14 @@ subroutine test_min_max(name,text,array_tmp,i_size_array_tmp)
     tot_tmp=tot_tmp + array_tmp(i)
     min_tmp=min(min_tmp,array_tmp(i))
   enddo
-  call MPI_ALLREDUCE(max_tmp,max_tot,1,real_type,MPI_MAX,MPI_COMM_WORLD,ierror)
-  call MPI_ALLREDUCE(min_tmp,min_tot,1,real_type,MPI_MIN,MPI_COMM_WORLD,ierror)
-  call MPI_ALLREDUCE(tot_tmp,tot_tot,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierror)
+  call MPI_ALLREDUCE(MPI_IN_PLACE,max_tmp,1,real_type,MPI_MAX,MPI_COMM_WORLD,ierror)
+  call MPI_ALLREDUCE(MPI_IN_PLACE,min_tmp,1,real_type,MPI_MIN,MPI_COMM_WORLD,ierror)
+  call MPI_ALLREDUCE(MPI_IN_PLACE,tot_tmp,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierror)
   if (nrank == 0) then
      write(*,*) " "
-     write(*,*) trim(text)//' Max ',name,max_tot
-     write(*,*) trim(text)//' Tot ',name,tot_tot
-     write(*,*) trim(text)//' Min ',name,min_tot
+     write(*,*) trim(text)//' Max ',name,max_tmp
+     write(*,*) trim(text)//' Tot ',name,tot_tmp
+     write(*,*) trim(text)//' Min ',name,min_tmp
      write(*,*) " "
      flush(6)
   endif
