@@ -8,6 +8,7 @@ module decomp_2d_poisson
   use decomp_2d_constants
   use decomp_2d
   use decomp_2d_fft
+  use decomp_2d_mpi, only: nrank
 
   use mod_stret, only : alpha, beta
   use param
