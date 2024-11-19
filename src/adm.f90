@@ -1,3 +1,4 @@
+
 !Copyright (c) 2012-2022, Xcompact3d
 !This file is part of Xcompact3d (xcompact3d.com)
 !SPDX-License-Identifier: BSD 3-Clause
@@ -51,7 +52,7 @@ contains
       integer, intent(in) :: Ndiscs
       character(len=100), intent(in) :: admCoords
       character(1000) :: ReadLine
-      real(mytype) :: GammaDisc_tot,GammaDisc_partial
+      real(mytype) :: GammaDisc_tot
       integer :: idisc,i,j,k,ierr,code
       real :: temp
       real(mytype) :: xmesh,ymesh,zmesh,deltax,deltay,deltaz,deltan,deltar,disc_thick,hgrid,projected_x,projected_y,projected_z
@@ -93,7 +94,6 @@ contains
          ! Compute Gamma
          GammaDisc=0.0
          do idisc=1,Nad
-            GammaDisc_partial=0.0
             GammaDisc_tot=0.0
             ! Define the disc thickness 
             hgrid=sqrt((dx*actuatordisc(idisc)%RotN(1))**2+&
@@ -128,12 +128,12 @@ contains
                     
                      ! Compute Gamma [smearing using super-Gaussian functions, see also King et al. (2017) Wind Energ. Sci., 2, 115-131]
                      GammaDisc(i,j,k,idisc)=exp( -(deltan/(disc_thick/2.0))**2.0 -(deltar/(actuatordisc(idisc)%D/2.0))**8.0 )
-                     GammaDisc_partial=GammaDisc_partial + GammaDisc(i,j,k,idisc) 
+                     GammaDisc_tot=GammaDisc_tot + GammaDisc(i,j,k,idisc) 
                   enddo
                enddo
             enddo
          
-            call MPI_ALLREDUCE(GammaDisc_partial,GammaDisc_tot,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
+            call MPI_ALLREDUCE(MPI_IN_PLACE,GammaDisc_tot,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
             GammaDisc(:,:,:,idisc)=GammaDisc(:,:,:,idisc)/GammaDisc_tot
             !if (nrank==0) then
             !   write(*,*) 'Disc thickness :', disc_thick

@@ -1,3 +1,4 @@
+
 # Compilers CMakeLists
 
 set(Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER_ID} )
@@ -5,7 +6,35 @@ message(STATUS "COMP ID ${Fortran_COMPILER_NAME}")
 message(STATUS "Fortran compiler name ${Fortran_COMPILER_NAME}")
 message(STATUS "Fortran compiler version ${CMAKE_Fortran_COMPILER_VERSION}")
 
+set(CMAKE_Fortran_PREPROCESS ON)
+if (CMAKE_BUILD_TYPE MATCHES "DEBUG")
+  add_definitions("-DDEBUG -DDEBG")
+endif (CMAKE_BUILD_TYPE MATCHES "DEBUG")
 
+if (CMAKE_BUILD_TYPE MATCHES "DEV")
+  message(FATAL_ERROR "The code is not ready for DEV builds")
+endif (CMAKE_BUILD_TYPE MATCHES "DEV")
+
+if (ENABLE_INPLACE)
+  add_definitions("-DOVERWRITE")
+endif ()
+
+execute_process(
+  COMMAND git describe --tag --long --always
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_VERSION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+add_definitions("-DVERSION=\"${GIT_VERSION}\"")
+option(DOUBLE_PRECISION "Build Xcompact with double precision" ON)
+if (DOUBLE_PRECISION)
+  add_definitions("-DDOUBLE_PREC")
+endif()
+
+option(SINGLE_PRECISION_OUTPUT "Build XCompact with output in single precision" OFF)
+if (SINGLE_PRECISION_OUTPUT)
+  add_definitions("-DSAVE_SINGLE")
+endif()
 
 if (Fortran_COMPILER_NAME MATCHES "GNU")
   # gfortran
@@ -43,36 +72,6 @@ if (NOT FLAGS_SET)
   	"Additional FFLAGS for Dev build" FORCE)
   set(FLAGS_SET 1 CACHE INTERNAL "Flags are set")
 endif()
-
-if (CMAKE_BUILD_TYPE MATCHES "DEBUG")
-	add_definitions("-DDEBUG -DDEBG")
-endif (CMAKE_BUILD_TYPE MATCHES "DEBUG")
-
-if (CMAKE_BUILD_TYPE MATCHES "DEV")
-  message(FATAL_ERROR "The code is not ready for DEV builds")
-endif (CMAKE_BUILD_TYPE MATCHES "DEV")
-
-if (ENABLE_INPLACE)
-  add_definitions("-DOVERWRITE")
-endif ()
-
-execute_process(
-  COMMAND git describe --tag --long --always
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  OUTPUT_VARIABLE GIT_VERSION
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-add_definitions("-DVERSION=\"${GIT_VERSION}\"")
-option(DOUBLE_PRECISION "Build Xcompact with double precision" ON)
-if (DOUBLE_PRECISION)
-  add_definitions("-DDOUBLE_PREC")
-endif()
-
-option(SINGLE_PRECISION_OUTPUT "Build XCompact with output in single precision" OFF)
-if (SINGLE_PRECISION_OUTPUT)
-  add_definitions("-DSAVE_SINGLE")
-endif()
-
 
 if (IO_BACKEND MATCHES "mpi")
   message(STATUS "Using mpi (default) IO backend")

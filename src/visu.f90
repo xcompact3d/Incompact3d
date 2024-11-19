@@ -276,7 +276,8 @@ contains
 
     use decomp_2d_io, only : decomp_2d_end_io
     use param, only : istret, xlx, yly, zlz
-    use variables, only : nx, ny, nz, beta
+    use variables, only : nx, ny, nz
+    use mod_stret, only : beta
     use var, only :  dt,t
     use utilities, only : int_to_str
 
