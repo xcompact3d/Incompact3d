@@ -45,7 +45,7 @@ if (NOT FLAGS_SET)
 endif()
 
 if (CMAKE_BUILD_TYPE MATCHES "DEBUG")
-  add_definitions("-DDEBUG")
+	add_definitions("-DDEBUG -DDEBG")
 endif (CMAKE_BUILD_TYPE MATCHES "DEBUG")
 
 if (CMAKE_BUILD_TYPE MATCHES "DEV")

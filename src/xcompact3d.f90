@@ -372,19 +372,19 @@ subroutine check_transients()
   
   implicit none
 
-  real(mytype) :: dep, dep1
+  real(mytype) :: dep
   integer :: code
    
   dep=maxval(abs(dux1))
-  call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-  if (nrank == 0) write(*,*)'## MAX dux1 ', dep1
+  call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+  if (nrank == 0) write(*,*)'## MAX dux1 ', dep
  
   dep=maxval(abs(duy1))
-  call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-  if (nrank == 0) write(*,*)'## MAX duy1 ', dep1
+  call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+  if (nrank == 0) write(*,*)'## MAX duy1 ', dep
  
   dep=maxval(abs(duz1))
-  call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-  if (nrank == 0) write(*,*)'## MAX duz1 ', dep1
+  call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+  if (nrank == 0) write(*,*)'## MAX duz1 ', dep
   
 end subroutine check_transients

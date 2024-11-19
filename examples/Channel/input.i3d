@@ -64,12 +64,12 @@ isecondder = 5        ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th
 ipinter = 3           ! interpolation scheme (1: classic, 2: optimized, 3: optimized agressive)
 
 ! Time scheme
-iimplicit = 2
-itimescheme = 3       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4, 7-->CN2+AB3)
+iimplicit = 0
+itimescheme = 5       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4,5->RK3,6->RK4, 7-->CN2+AB3)
 
 ! Dissipation control
-nu0nu = 4.0             ! Ratio between hyperviscosity/viscosity at nu
-cnu = 0.44               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
+nu0nu = 4.0           ! Ratio between hyperviscosity/viscosity at nu
+cnu = 0.44            ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 
 /End
 
@@ -81,9 +81,8 @@ cnu = 0.44               ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 irestart = 0          ! Read initial flow field ?
 icheckpoint = 5000    ! Frequency for writing backup file
 ioutput = 10000       ! Frequency for visualization
-ilist = 25            ! Frequency for writing to screen        
+ilist    = 25         ! Frequency for the output to screen
 nvisu = 1             ! Size for visualisation collection
-nprobes = 4           ! Number of probes
 
 /End
 
@@ -95,27 +94,6 @@ wrotation = 0.12      ! rotation speed to trigger turbulence
 spinup_time = 5000    ! number of time steps with a rotation to trigger turbulence
 nstat = 1             ! Size arrays for statistic collection
 initstat = 40000      ! Time steps after which statistics are collected
-
-/End
-
-!=================
-&ProbesParam
-!=================
-
-flag_all_digits = T     ! By default, only 6 digits, 16 when True
-flag_extra_probes = T   ! By default, gradients are not monitored
-xyzprobes(1,1) = 0.1    ! X position of probe 1
-xyzprobes(2,1) = 0.1    ! Y position of probe 1
-xyzprobes(3,1) = 0.1    ! Z position of probe 1
-xyzprobes(1,2) = 0.1    ! X position of probe 2
-xyzprobes(2,2) = 0.2    ! Y position of probe 2
-xyzprobes(3,2) = 0.1    ! Z position of probe 2
-xyzprobes(1,3) = 0.1    ! X position of probe 3
-xyzprobes(2,3) = 0.3    ! Y position of probe 3
-xyzprobes(3,3) = 0.1    ! Z position of probe 3
-xyzprobes(1,4) = 0.1    ! X position of probe 4
-xyzprobes(2,4) = 0.4    ! Y position of probe 4
-xyzprobes(3,4) = 0.1    ! Z position of probe 4
 
 /End
 
@@ -142,7 +120,7 @@ nclzSn = 0
 &LESModel
 !================
 
-iles = 0             ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Smag, 4: iSVV, 5: dyn SEV)
+iles = 0              ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Smag, 4: iSVV, 5: dyn SEV)
 smagcst = 0.14        ! Smagorinsky constant
 SmagWallDamp = 0      ! 1: Mason and Thomson Damping function, otherwise OFF
 walecst = 0.5         ! WALES Model Coefficient
