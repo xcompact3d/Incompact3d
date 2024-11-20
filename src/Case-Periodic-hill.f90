@@ -236,7 +236,7 @@ contains
     real(mytype) :: constant
 
     integer :: j,i,k,code
-    real(mytype) :: can,ut3,ut,ut4
+    real(mytype) :: can,ut3,ut
 
     ut3=zero
     do k=1,ysize(3)
@@ -255,9 +255,9 @@ contains
     enddo
     ut3=ut3/(real(nx*nz,mytype))
 
-    call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,ut3,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     
-    can=-(constant-ut4)
+    can=-(constant-ut3)
 
     do k=1,ysize(3)
        do i=1,ysize(1)

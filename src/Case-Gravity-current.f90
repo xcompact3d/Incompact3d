@@ -118,7 +118,7 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
-    real(mytype) :: um,x,y,ek,ep,ekg,epg
+    real(mytype) :: um,x,y,ek,ep
     integer :: k,j,i,ii,is,it,code
 
     do k=1,xsize(3)
@@ -214,11 +214,11 @@ contains
           enddo
        endif
 
-       call MPI_ALLREDUCE(ek,ekg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       call MPI_ALLREDUCE(ep,epg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(MPI_IN_PLACE,ek,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(MPI_IN_PLACE,ep,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
-       if ((epg.ne.zero).and.(ekg.ne.zero)) then
-          um = ekg / epg
+       if ((ep.ne.zero).and.(ek.ne.zero)) then
+          um = ek / ep
           um = init_noise / um
           um = sqrt(um)
 
@@ -235,10 +235,10 @@ contains
                 enddo
              enddo
           enddo
-          call MPI_ALLREDUCE(ek,ekg,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+          call MPI_ALLREDUCE(MPI_IN_PLACE,ek,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
           if (nrank == 0) then
-             write(*,*)  "Ek / Ep: ", ekg / epg, ekg, epg
+             write(*,*)  "Ek / Ep: ", ek / ep, ek, ep
           endif
        endif
     endif

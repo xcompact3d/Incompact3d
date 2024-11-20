@@ -51,7 +51,7 @@ contains
     LOGICAL :: converged
     REAL(mytype) :: atol, rtol, rho0, divup3norm
 #ifdef DEBG
-    real(mytype) :: dep, dep1
+    real(mytype) :: dep
     integer :: code
 #endif
 
@@ -93,31 +93,31 @@ contains
        IF (.NOT.converged) THEN
 #ifdef DEBG
           dep=maxval(abs(pp3(:,:,:,1)))
-          call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-          if (nrank == 0) write(*,*)'## Solve Poisson before1 pp3', dep1
+          call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+          if (nrank == 0) write(*,*)'## Solve Poisson before1 pp3', dep
 #endif
           CALL poisson(pp3(:,:,:,1))
 #ifdef DEBG
           dep=maxval(abs(pp3(:,:,:,1)))
-          call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-          if (nrank == 0) write(*,*)'## Solve Poisson after call  pp3', dep1
+          call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+          if (nrank == 0) write(*,*)'## Solve Poisson after call  pp3', dep
 #endif
 
           !! Need to update pressure gradient here for varcoeff
           CALL gradp(px1,py1,pz1,pp3(:,:,:,1))
 #ifdef DEBG
           dep=maxval(abs(pp3(:,:,:,1)))
-          call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-          if (nrank == 0) write(*,*)'## Solve Poisson pp3', dep1
+          call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+          if (nrank == 0) write(*,*)'## Solve Poisson pp3', dep
           dep=maxval(abs(px1))
-          call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-          if (nrank == 0) write(*,*)'## Solve Poisson px', dep1
+          call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+          if (nrank == 0) write(*,*)'## Solve Poisson px', dep
           dep=maxval(abs(py1))
-          call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-          if (nrank == 0) write(*,*)'## Solve Poisson py', dep1
+          call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+          if (nrank == 0) write(*,*)'## Solve Poisson py', dep
           dep=maxval(abs(pz1))
-          call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-          if (nrank == 0) write(*,*)'## Solve Poisson pz', dep1
+          call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+          if (nrank == 0) write(*,*)'## Solve Poisson pz', dep
 #endif
          
 
@@ -214,29 +214,29 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: px,py,pz
 #ifdef DEBG
-    real(mytype) :: dep, dep1
+    real(mytype) :: dep
     integer :: code
 #endif
 
 #ifdef DEBG
         dep=maxval(abs(ux))
-    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-    if (nrank == 0) write(*,*)'## Cor Vel ux', dep1
+    call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Cor Vel ux', dep
         dep=maxval(abs(uy))
-    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-    if (nrank == 0) write(*,*)'## Cor Vel uy', dep1
+    call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Cor Vel uy', dep
         dep=maxval(abs(uz))
-    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-    if (nrank == 0) write(*,*)'## Cor Vel uz', dep1
+    call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Cor Vel uz', dep
         dep=maxval(abs(px))
-    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-    if (nrank == 0) write(*,*)'## Cor Vel px', dep1
+    call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Cor Vel px', dep
         dep=maxval(abs(py))
-    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-    if (nrank == 0) write(*,*)'## Cor Vel py', dep1
+    call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Cor Vel py', dep
         dep=maxval(abs(pz))
-    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-    if (nrank == 0) write(*,*)'## Cor Vel pz', dep1
+    call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Cor Vel pz', dep
 #endif
 
     ux(:,:,:)=ux(:,:,:)-px(:,:,:)
@@ -278,7 +278,7 @@ contains
 
     integer :: nvect3,i,j,k,nlock
     integer :: code
-    real(mytype) :: tmax,tmoy,tmax1,tmoy1, pres_ref
+    real(mytype) :: tmax,tmoy,pres_ref
 
     nvect3=(ph1%zen(1)-ph1%zst(1)+1)*(ph1%zen(2)-ph1%zst(2)+1)*nzmsize
 
@@ -356,16 +356,15 @@ contains
           enddo
        enddo
     enddo
-    tmoy=tmoy/nvect3
-
-    call MPI_REDUCE(tmax,tmax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-    call MPI_REDUCE(tmoy,tmoy1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
+    tmoy=tmoy/real(nvect3,mytype)
+    call MPI_ALLREDUCE(MPI_IN_PLACE, tmoy, 1, real_type, MPI_SUM, MPI_COMM_WORLD, code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE, tmax, 1, real_type, MPI_MAX, MPI_COMM_WORLD, code)
 
     if ((nrank == 0) .and. (nlock > 0).and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime==ilast)) then
        if (nlock == 2) then
-          write(*,*) 'DIV U  max mean=',real(tmax1,mytype),real(tmoy1/real(nproc),mytype)
+          write(*,*) 'DIV U  max mean=',real(tmax,mytype),real(tmoy/real(nproc),mytype)
        else
-          write(*,*) 'DIV U* max mean=',real(tmax1,mytype),real(tmoy1/real(nproc),mytype)
+          write(*,*) 'DIV U* max mean=',real(tmax,mytype),real(tmoy/real(nproc),mytype)
        endif
     endif
 
@@ -512,13 +511,13 @@ contains
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,ep
     integer :: i,j,k,is
-    real(mytype) :: ut,ut1,utt,ut11
+    real(mytype) :: ut,ut1
 
     integer :: code
     integer, dimension(2) :: dims, dummy_coords
     logical, dimension(2) :: dummy_periods
 #ifdef DEBG
-    real(mytype) dep, dep1
+    real(mytype) dep
 #endif
 
     call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, dims, dummy_periods, dummy_coords, code)
@@ -543,21 +542,21 @@ contains
              ut1=ut1+bxx1(j,k)
           enddo
        enddo
-       call MPI_ALLREDUCE(ut1,ut11,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       ut11=ut11/(real(ny*nz,mytype))
+       call MPI_ALLREDUCE(MPI_IN_PLACE,ut1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       ut1=ut1/(real(ny*nz,mytype))
        ut=zero
        do k=1,xsize(3)
           do j=1,xsize(2)
              ut=ut+bxxn(j,k)
           enddo
        enddo
-       call MPI_ALLREDUCE(ut,utt,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       utt=utt/(real(ny*nz,mytype))
+       call MPI_ALLREDUCE(MPI_IN_PLACE,ut,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       ut=ut/(real(ny*nz,mytype))
        if ((nrank==0).and.(mod(itime,ilist)==0)) &
-          write(*,*) 'Flow rate x I/O/O-I',real(ut11,4),real(utt,4),real(utt-ut11,4)
+          write(*,*) 'Flow rate x I/O/O-I',real(ut1,4),real(ut,4),real(ut-ut1,4)
        do k=1,xsize(3)
           do j=1,xsize(2)
-             bxxn(j,k)=bxxn(j,k)-utt+ut11
+             bxxn(j,k)=bxxn(j,k)-ut+ut1
           enddo
        enddo
 
@@ -770,14 +769,14 @@ contains
     endif
 #ifdef DEBG
     dep=maxval(abs(ux))
-    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-    if (nrank == 0) write(*,*)'## Pres corr ux ', dep1
+    call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Pres corr ux ', dep
     dep=maxval(abs(uy))
-    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-    if (nrank == 0) write(*,*)'## Pres corr uy ', dep1
+    call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Pres corr uy ', dep
     dep=maxval(abs(uz))
-    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-    if (nrank == 0) write(*,*)'## Pres corr uz ', dep1
+    call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Pres corr uz ', dep
 #endif
 
     if (iibm==1) then !solid body old school
@@ -1128,11 +1127,11 @@ contains
 
     !! LOCALS
     INTEGER :: ierr
-    REAL(mytype) :: errloc, errglob
+    REAL(mytype) :: errglob
 
     IF (poissiter.EQ.0) THEN
-       errloc = SUM(dv3**2)
-       CALL MPI_ALLREDUCE(errloc,divup3norm,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
+       divup3norm = SUM(dv3**2)
+       CALL MPI_ALLREDUCE(MPI_IN_PLACE,divup3norm,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
        divup3norm = SQRT(divup3norm / nxm / nym / nzm)
 
        if (nrank.eq.0.and.mod(itime, ilist) == 0) then
@@ -1141,8 +1140,8 @@ contains
        endif
     else
        !! Compute RMS change
-       errloc = SUM((pp3(:,:,:,1) - pp3(:,:,:,2))**2)
-       CALL MPI_ALLREDUCE(errloc,errglob,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
+       errglob = SUM((pp3(:,:,:,1) - pp3(:,:,:,2))**2)
+       CALL MPI_ALLREDUCE(MPI_IN_PLACE,errglob,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
        errglob = SQRT(errglob / nxm / nym / nzm)
 
        if (nrank.eq.0.and.mod(itime, ilist) == 0) then
@@ -1240,7 +1239,7 @@ contains
     nlock = -1 !! Don't do any funny business with LMN
     call divergence(pp3,rho1,ta1,tb1,tc1,ep1,drho1,divu3,nlock)
 
-    !! lapl(p) = div((1 - rho0/rho) grad(p)) + rho0(div(u*) - div(u))
+    !! lapl(p) = div((1 - rhomin/rho) grad(p)) + rhomin(div(u*) - div(u))
     !! dv3 contains div(u*) - div(u)
     pp3(:,:,:) = pp3(:,:,:) + rho0 * dv3(:,:,:)
 
@@ -1262,7 +1261,7 @@ contains
     real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux2,uy2,uz2
 
     integer :: j,i,k,code
-    real(mytype) :: can,ut1,ut2,ut3,ut4,utt1,utt2,utt3,utt4,udif
+    real(mytype) :: can,ut1,ut2,ut3,ut4,udif
 
     ux1(1,:,:)=bxx1(:,:)
     ux1(nx,:,:)=bxxn(:,:)
@@ -1270,7 +1269,7 @@ contains
     call transpose_x_to_y(ux1,ux2)
     call transpose_x_to_y(uy1,uy2)
     ! Flow rate at the inlet
-    ut1=zero;utt1=zero
+    ut1=zero
     if (ystart(1)==1) then !! CPUs at the inlet
       do k=1,ysize(3)
         do j=1,ysize(2)-1
@@ -1279,10 +1278,10 @@ contains
       enddo
       ! ut1=ut1/real(ysize(3),mytype)
     endif
-    call MPI_ALLREDUCE(ut1,utt1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    utt1=utt1/real(nz,mytype) !! Volume flow rate per unit spanwise dist
+    call MPI_ALLREDUCE(MPI_IN_PLACE,ut1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    ut1=ut1/real(nz,mytype) !! Volume flow rate per unit spanwise dist
     ! Flow rate at the outlet
-    ut2=zero;utt2=zero
+    ut2=zero
     if (yend(1)==nx) then !! CPUs at the outlet
       do k=1,ysize(3)
         do j=1,ysize(2)-1
@@ -1292,8 +1291,8 @@ contains
       ! ut2=ut2/real(ysize(3),mytype)
     endif
 
-    call MPI_ALLREDUCE(ut2,utt2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    utt2=utt2/real(nz,mytype) !! Volume flow rate per unit spanwise dist
+    call MPI_ALLREDUCE(MPI_IN_PLACE,ut2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    ut2=ut2/real(nz,mytype) !! Volume flow rate per unit spanwise dist
 
     ! Flow rate at the top and bottom
     ut3=zero
@@ -1304,16 +1303,16 @@ contains
         ut4=ut4+uy2(i,ny,k)
       enddo
     enddo
-    call MPI_ALLREDUCE(ut3,utt3,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    call MPI_ALLREDUCE(ut4,utt4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    utt3=utt3/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
-    utt4=utt4/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
+    call MPI_ALLREDUCE(MPI_IN_PLACE,ut3,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    ut3=ut3/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
+    ut4=ut4/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
 
     !! velocity correction
-    udif=(utt1-utt2+utt3-utt4)/yly
+    udif=(ut1-ut2+ut3-ut4)/yly
     if ((nrank==0).and.(mod(itime,ilist)==0)) then
-      write(*,"(' Mass balance: L-BC, R-BC,',2f12.6)") utt1,utt2
-      write(*,"(' Mass balance: B-BC, T-BC, Crr-Vel',3f11.5)") utt3,utt4,udif
+      write(*,"(' Mass balance: L-BC, R-BC,',2f12.6)") ut1,ut2
+      write(*,"(' Mass balance: B-BC, T-BC, Crr-Vel',3f11.5)") ut3,ut4,udif
     endif
     ! do k=1,xsize(3)
     !   do j=1,xsize(2)

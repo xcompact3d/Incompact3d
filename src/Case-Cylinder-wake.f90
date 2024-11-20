@@ -144,7 +144,7 @@ contains
     integer :: j,k,code
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
-    real(mytype) :: udx,udy,udz,uddx,uddy,uddz,cx,uxmin,uxmax,uxmin1,uxmax1
+    real(mytype) :: udx,udy,udz,uddx,uddy,uddz,cx,uxmin,uxmax
 
     udx=one/dx; udy=one/dy; udz=one/dz; uddx=half/dx; uddy=half/dy; uddz=half/dz
 
@@ -157,13 +157,13 @@ contains
        enddo
     enddo
 
-    call MPI_ALLREDUCE(uxmax,uxmax1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-    call MPI_ALLREDUCE(uxmin,uxmin1,1,real_type,MPI_MIN,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,uxmax,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,uxmin,1,real_type,MPI_MIN,MPI_COMM_WORLD,code)
 
     if (u1 == zero) then
-       cx=(half*(uxmax1+uxmin1))*gdt(itr)*udx
+       cx=(half*(uxmax+uxmin))*gdt(itr)*udx
     elseif (u1 == one) then
-       cx=uxmax1*gdt(itr)*udx
+       cx=uxmax*gdt(itr)*udx
     elseif (u1 == two) then
        cx=u2*gdt(itr)*udx    !works better
     else
@@ -180,9 +180,9 @@ contains
 
     if (iscalar==1) then
        if (u2==zero) then
-          cx=(half*(uxmax1+uxmin1))*gdt(itr)*udx
+          cx=(half*(uxmax+uxmin))*gdt(itr)*udx
        elseif (u2==one) then
-          cx=uxmax1*gdt(itr)*udx
+          cx=uxmax*gdt(itr)*udx
        elseif (u2==two) then
           cx=u2*gdt(itr)*udx    !works better
        else
@@ -197,7 +197,7 @@ contains
     endif
 
     if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) &
-       write(*,*) "Outflow velocity ux nx=n min max=",real(uxmin1,4),real(uxmax1,4)
+       write(*,*) "Outflow velocity ux nx=n min max=",real(uxmin,4),real(uxmax,4)
 
     return
   end subroutine outflow

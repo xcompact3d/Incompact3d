@@ -28,7 +28,8 @@ contains
                                                          u010,u110,u011,u111)
     !
     !*******************************************************************************
-
+      use, intrinsic :: ieee_arithmetic
+      
       implicit none
       real(mytype),intent(in) :: x0,y0,z0,x1,y1,z1,x,y,z,u000,u100,u001,u101,u010,u110,u011,u111
       real(mytype) :: c00,c01,c10,c11,c0,c1,xd,yd,zd
@@ -64,7 +65,7 @@ contains
       ! Interpolate along Z
       trilinear_interpolation_scalar=c0*(one-zd)+c1*zd
 
-      if(isnan(trilinear_interpolation_scalar)) then
+      if(ieee_is_nan(trilinear_interpolation_scalar)) then
         print*,'        x0:',x0,y0,z0
         print*,'        x1:',x1,y1,z1
         print*,'         x:',x,y,z
@@ -82,7 +83,8 @@ contains
                                           u000,u100,u001,u101,u010,u110,u011,u111) result(u)
     !
     !*******************************************************************************
-
+      use, intrinsic :: ieee_arithmetic
+      
       implicit none
       real(mytype),intent(in) :: x0,y0,z0,x1,y1,z1,x,y,z
       real(mytype),intent(in) :: u000(3),u100(3),u001(3),u101(3),u010(3),u110(3),u011(3),u111(3)
@@ -120,7 +122,7 @@ contains
       ! Interpolate along Z
       u=c0*(1._mytype-zd)+c1*zd
 
-      if(isnan(u(1)) .or. isnan(u(2)) .or. isnan(u(3))) then
+      if(ieee_is_nan(u(1)) .or. ieee_is_nan(u(2)) .or. ieee_is_nan(u(3))) then
         print*,'        x0:',x0,y0,z0
         print*,'        x1:',x1,y1,z1
         print*,'         x:',x,y,z
