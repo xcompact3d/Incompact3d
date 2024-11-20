@@ -581,7 +581,7 @@ contains
       integer :: iblade, ielem,Nelem
       real(mytype) :: Rupstream(3)
       real(mytype) :: Ux,Uy,Uz,Phixy,Phixz
-      real(mytype) :: Ux_part, Uy_part, Uz_part, Phixy_part, Phixz_part
+      real(mytype) :: Phixy_part, Phixz_part
       real(mytype) :: ymin,ymax,zmin,zmax
       real(mytype) :: xmesh,ymesh,zmesh
       real(mytype) :: dist, min_dist 
@@ -625,23 +625,23 @@ contains
                enddo
             enddo
          enddo
-         Ux_part=ux1(min_i,min_j,min_k)
-         Uy_part=uy1(min_i,min_j,min_k)
-         Uz_part=uz1(min_i,min_j,min_k)
+         Ux=ux1(min_i,min_j,min_k)
+         Uy=uy1(min_i,min_j,min_k)
+         Uz=uz1(min_i,min_j,min_k)
          Phixy_part=zero
          Phixz_part=zero
       else
-         Ux_part=zero
-         Uy_part=zero
-         Uz_part=zero
+         Ux=zero
+         Uy=zero
+         Uz=zero
          Phixy_part=zero
          Phixz_part=zero
          !write(*,*) 'Warning: I do not own this node' 
       endif
            
-      call MPI_ALLREDUCE(Ux_part,Ux,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
-      call MPI_ALLREDUCE(Uy_part,Uy,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
-      call MPI_ALLREDUCE(Uz_part,Uz,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
+      call MPI_ALLREDUCE(MPI_IN_PLACE,Ux,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
+      call MPI_ALLREDUCE(MPI_IN_PLACE,Uy,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
+      call MPI_ALLREDUCE(MPI_IN_PLACE,Uz,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
         
       Turbine%Ux_upstream=Ux
       Turbine%Uy_upstream=Uy
