@@ -1007,6 +1007,7 @@ module particle
     use variables 
     use param
     use decomp_2d, only : xsize
+    use, intrinsic :: ieee_arithmetic
     
     ! arguments
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1,uy1,uz1
@@ -1175,7 +1176,7 @@ module particle
   
           if(npart>n_local_particles) exit
     
-          if(isnan(vcor(1,npart)) .or. isnan(vcor(2,npart)) .or. isnan(vcor(3,npart))) then
+          if(ieee_is_nan(vcor(1,npart)) .or. ieee_is_nan(vcor(2,npart)) .or. ieee_is_nan(vcor(3,npart))) then
             print*, npart,pa%x(:),pa%v(:)
             call decomp_2d_abort(1,"particle velocity NaN @ intt_particles")
           endif
