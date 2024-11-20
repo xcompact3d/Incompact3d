@@ -58,7 +58,7 @@ contains
     nlock = 1 !! Corresponds to computing div(u*)
     converged = .FALSE.
     poissiter = 0
-    rho0 = one
+    call calc_rho0(rho1(:,:,:,1), rho0)
 #ifdef DOUBLE_PREC
     atol = 1.0e-14_mytype !! Absolute tolerance for Poisson solver
     rtol = 1.0e-14_mytype !! Relative tolerance for Poisson solver
@@ -85,8 +85,7 @@ contains
 
           IF (.NOT.converged) THEN
              !! Evaluate additional RHS terms
-             CALL calc_varcoeff_rhs(pp3(:,:,:,1), rho1, px1, py1, pz1, dv3, drho1, ep1, divu3, rho0, &
-                  poissiter)
+             CALL calc_varcoeff_rhs(pp3(:,:,:,1), rho1, px1, py1, pz1, dv3, drho1, ep1, divu3, rho0)
           ENDIF
 
        ENDIF
@@ -1173,12 +1172,41 @@ contains
   ENDSUBROUTINE test_varcoeff
   !############################################################################
   !!
+  !! SUBROUTINE: calc_rho0
+  !! DESCRIPTION: Computes the density used to normalise the variable-coefficient Poisson equation.
+  subroutine calc_rho0(rho1, rho0)
+
+    use mpi
+
+    use param, only: ilmn, ivarcoeff
+
+    implicit none
+
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: rho1 ! The density field
+    real(mytype), intent(out) :: rho0                                         ! The normalising density (globally constant)
+
+    integer :: ierr
+
+    if (ilmn .and. ivarcoeff) then
+       !! Compute rho0
+       rho0 = minval(rho1(:,:,:))
+
+       call mpi_allreduce(MPI_IN_PLACE,rho0,1,real_type,mpi_min,mpi_comm_world,ierr)
+    else
+       ! Ensure a default value
+       rho0 = 1.0_mytype
+    end if
+    
+  end subroutine calc_rho0
+  !############################################################################
+  !############################################################################
+  !!
   !!  SUBROUTINE: calc_varcoeff_rhs
   !!      AUTHOR: Paul Bartholomew
   !! DESCRIPTION: Computes RHS of the variable-coefficient Poisson solver
   !!
   !############################################################################
-  SUBROUTINE calc_varcoeff_rhs(pp3, rho1, px1, py1, pz1, dv3, drho1, ep1, divu3, rho0, poissiter)
+  SUBROUTINE calc_varcoeff_rhs(pp3, rho1, px1, py1, pz1, dv3, drho1, ep1, divu3, rho0)
 
     USE MPI
 
@@ -1191,28 +1219,19 @@ contains
     IMPLICIT NONE
 
     !! INPUTS
-    INTEGER, INTENT(IN) :: poissiter
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: px1, py1, pz1
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), ntime) :: drho1
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ep1
     REAL(mytype), INTENT(IN), DIMENSION(zsize(1), zsize(2), zsize(3)) :: divu3
     REAL(mytype), INTENT(IN), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: dv3
-    real(mytype) :: rho0
+    real(mytype), intent(in) :: rho0
 
     !! OUTPUTS
     REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: pp3
 
     !! LOCALS
     INTEGER :: nlock, ierr
-    REAL(mytype) :: rhomin
-
-    IF (poissiter.EQ.0) THEN
-       !! Compute rho0
-       rhomin = MINVAL(rho1(:,:,:,1))
-
-       CALL MPI_ALLREDUCE(rhomin,rho0,1,real_type,MPI_MIN,MPI_COMM_WORLD,ierr)
-    ENDIF
 
     ta1(:,:,:) = (one - rho0 / rho1(:,:,:,1)) * px1(:,:,:)
     tb1(:,:,:) = (one - rho0 / rho1(:,:,:,1)) * py1(:,:,:)
