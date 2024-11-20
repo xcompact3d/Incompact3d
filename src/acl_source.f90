@@ -519,7 +519,7 @@ contains
       enddo
 
       alm_proj_time=MPI_WTIME()-t1
-      call MPI_ALLREDUCE(MPI_IN_PLACE,alm_proj_time,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
+      call MPI_ALLREDUCE(alm_proj_time,t1,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
 
       if (nrank==0.and.mod(itime,ilist)==0) then
          alm_proj_time=alm_proj_time/float(nproc)
