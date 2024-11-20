@@ -1177,7 +1177,7 @@ contains
   !! DESCRIPTION: Computes RHS of the variable-coefficient Poisson solver
   !!
   !############################################################################
-  SUBROUTINE calc_varcoeff_rhs(pp3, rho1, px1, py1, pz1, dv3, drho1, ep1, divu3, rho0, poissiter)
+  SUBROUTINE calc_varcoeff_rhs(pp3, rho1, px1, py1, pz1, dv3, drho1, ep1, divu3, rhomin, poissiter)
 
     USE MPI
 
@@ -1197,17 +1197,17 @@ contains
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3)) :: ep1
     REAL(mytype), INTENT(IN), DIMENSION(zsize(1), zsize(2), zsize(3)) :: divu3
     REAL(mytype), INTENT(IN), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: dv3
-    real(mytype) :: rho0
-
+    REAL(mytype) :: rhomin
+    
     !! OUTPUTS
     REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: pp3
 
     !! LOCALS
     INTEGER :: nlock, ierr
-    REAL(mytype) :: rhomin
+    
 
     IF (poissiter.EQ.0) THEN
-       !! Compute rho0
+       !! Compute rhomin
        rhomin = MINVAL(rho1(:,:,:,1))
 
        CALL MPI_ALLREDUCE(MPI_IN_PLACE,rhomin,1,real_type,MPI_MIN,MPI_COMM_WORLD,ierr)
@@ -1220,9 +1220,9 @@ contains
     nlock = -1 !! Don't do any funny business with LMN
     call divergence(pp3,rho1,ta1,tb1,tc1,ep1,drho1,divu3,nlock)
 
-    !! lapl(p) = div((1 - rho0/rho) grad(p)) + rho0(div(u*) - div(u))
+    !! lapl(p) = div((1 - rhomin/rho) grad(p)) + rhomin(div(u*) - div(u))
     !! dv3 contains div(u*) - div(u)
-    pp3(:,:,:) = pp3(:,:,:) + rho0 * dv3(:,:,:)
+    pp3(:,:,:) = pp3(:,:,:) + rhomin * dv3(:,:,:)
 
   ENDSUBROUTINE calc_varcoeff_rhs
   !############################################################################
