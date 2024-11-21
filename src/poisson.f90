@@ -8,7 +8,9 @@ module decomp_2d_poisson
   use decomp_2d_constants
   use decomp_2d
   use decomp_2d_fft
+  use decomp_2d_mpi, only: nrank
 
+  use mod_stret, only : alpha, beta
   use param
   use utilities
   use variables
@@ -249,7 +251,6 @@ contains
 #ifdef DEBG 
     if (nrank .eq. 0) write(*,*)'# decomp_2d_poisson_init end'
 #endif
-
     return
   end subroutine decomp_2d_poisson_init
 
@@ -1016,7 +1017,7 @@ contains
   ! Solving 3D Poisson equation: Neumann in X, Y; Neumann/periodic in Z
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine poisson_11x(rhs)
-
+    
     implicit none
 
     real(mytype), dimension(:,:,:), intent(INOUT) :: rhs
@@ -1028,7 +1029,7 @@ contains
     integer :: nx,ny,nz, i,j,k
 
 #ifdef DEBG
-    real(mytype) :: dep, dep1
+    real(mytype) :: dep
     integer :: code
 #endif
 
@@ -1072,8 +1073,8 @@ contains
     end do
 #ifdef DEBG
     dep=maxval(abs(rw2b))
-    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (nrank == 0) write(*,*)'## Poisson11X Start rw2 ', dep1
+    call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Start rw2 ', dep
 #endif
 
     ! the global operations in X
@@ -1091,8 +1092,8 @@ contains
     end do
 #ifdef DEBG
     dep=maxval(abs(rw1b))
-    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (nrank == 0) write(*,*)'## Poisson11X Start rw1 ', dep1
+    call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Start rw1 ', dep
 #endif
 
     ! back to Z-pencil
@@ -1127,8 +1128,8 @@ contains
     end do
 #ifdef DEBG
     dep=maxval(abs(cw1))
-    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (nrank == 0) write(*,*)'## Poisson11X Post in Z cw1 ', dep1
+    call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Post in Z cw1 ', dep
 #endif
 
     ! POST PROCESSING IN Y
@@ -1157,16 +1158,16 @@ contains
     end do
 #ifdef DEBG
     dep=maxval(abs(cw2))
-    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (nrank == 0) write(*,*)'## Poisson11X Post in Y cw2 ', dep1
+    call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Post in Y cw2 ', dep
 #endif
 
     ! back to X-pencil
     call transpose_y_to_x(cw2b,cw1,sp)
 #ifdef DEBG
     dep=maxval(abs(cw1))
-    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (nrank == 0) write(*,*)'## Poisson11X Back to X cw1 ', dep1
+    call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Back to X cw1 ', dep
 #endif
 
     ! POST PROCESSING IN X
@@ -1193,8 +1194,8 @@ contains
     end do
 #ifdef DEBG
     dep=maxval(abs(cw1b))
-    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (nrank == 0) write(*,*)'## Poisson11X Back to X cw1b ', cw1b
+    call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Back to X cw1b ', dep
 #endif
 
     if (istret == 0) then
@@ -1223,8 +1224,8 @@ contains
        end do
 #ifdef DEBG
        dep=maxval(abs(cw1b))
-       call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (nrank == 0) write(*,*)'## Poisson11X Solve Pois istret 0 ', dep1
+       call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       if (nrank == 0) write(*,*)'## Poisson11X Solve Pois istret 0 ', dep
 #endif
 
     else
@@ -1294,8 +1295,8 @@ contains
           enddo
 #ifdef DEBG
           dep=maxval(abs(cw2b))
-          call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-          if (nrank == 0) write(*,*)'## Poisson11X Solve Pois istret < 3 ', dep1
+          call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+          if (nrank == 0) write(*,*)'## Poisson11X Solve Pois istret < 3 ', dep
 #endif
        else
           cw2 = zero
@@ -1319,8 +1320,8 @@ contains
        endif
 #ifdef DEBG
        dep=maxval(abs(cw2b))
-       call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (nrank == 0) write(*,*)'## Poisson11X Solve Pois istret = 3 ', dep1
+       call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       if (nrank == 0) write(*,*)'## Poisson11X Solve Pois istret = 3 ', dep
 #endif
        !we have to go back in X pencils
        call transpose_y_to_x(cw2b,cw1b,sp)
@@ -1328,8 +1329,8 @@ contains
 
 #ifdef DEBG
     dep=maxval(abs(cw1b))
-    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois AFTER ', dep1
+    call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois AFTER ', dep
 #endif
     !stop
     ! post-processing backward
@@ -1357,8 +1358,8 @@ contains
     end do
 #ifdef DEBG
     dep=maxval(abs(cw1))
-    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois POSTPR X ', dep1
+    call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois POSTPR X ', dep
 #endif
 
     ! POST PROCESSING IN Y
@@ -1387,8 +1388,8 @@ contains
     end do
 #ifdef DEBG
     dep=maxval(abs(cw2b))
-    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois POSTPR Y ', dep1
+    call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois POSTPR Y ', dep
 #endif
     ! back to X-pencil
     call transpose_y_to_x(cw2b,cw1,sp)
@@ -1406,16 +1407,16 @@ contains
     end do
 #ifdef DEBG
     dep=maxval(abs(cw1))
-    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois POSTPR Z ', dep1
+    call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois POSTPR Z ', dep
 #endif
 
     ! compute c2r transform, back to physical space
     call decomp_2d_fft_3d(cw1,rhs)
 #ifdef DEBG
     dep=maxval(abs(rhs))
-    call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois Back Phy RHS ', dep1
+    call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (nrank == 0) write(*,*)'## Poisson11X Solve Pois Back Phy RHS ', dep
 #endif
 
     if (bcz == 1) then 

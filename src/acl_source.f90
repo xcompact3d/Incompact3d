@@ -66,7 +66,6 @@ contains
 
       NSource=counter
       allocate(Sx(NSource),Sy(NSource),Sz(NSource),Sc(Nsource),Su(NSource),Sv(NSource),Sw(NSource),Se(NSource),Sh(NSource),Sfx(NSource),Sfy(NSource),Sfz(NSource))
-      allocate(Su_part(NSource),Sv_part(NSource),Sw_part(NSource))
       allocate(Snx(NSource),Sny(NSource),Snz(NSource),Stx(Nsource),Sty(NSource),Stz(NSource),Ssx(NSource),Ssy(NSource),Ssz(NSource),Ssegm(NSource))
       allocate(A(NSource,NSource))
       allocate(inside_the_domain(NSource))
@@ -426,7 +425,7 @@ contains
             !endif
 
             ! Apply interpolation kernels from 8 neighboring nodes
-            Su_part(isource)=trilinear_interpolation(x0,y0,z0, &
+            Su(isource)=trilinear_interpolation(x0,y0,z0, &
                                                   x1,y1,z1, &
                                                   x,y,z, &
                                                   ux1_halo(i_lower,j_lower,k_lower), &
@@ -438,7 +437,7 @@ contains
                                                   ux1_halo(i_lower,j_upper,k_upper), &
                                                   ux1_halo(i_upper,j_upper,k_upper))
 
-             Sv_part(isource)=trilinear_interpolation(x0,y0,z0, &
+             Sv(isource)=trilinear_interpolation(x0,y0,z0, &
                                                   x1,y1,z1, &
                                                   x,y,z, &
                                                   uy1_halo(i_lower,j_lower,k_lower), &
@@ -450,7 +449,7 @@ contains
                                                   uy1_halo(i_lower,j_upper,k_upper), &
                                                   uy1_halo(i_upper,j_upper,k_upper))
 
-            Sw_part(isource)=trilinear_interpolation(x0,y0,z0, &
+            Sw(isource)=trilinear_interpolation(x0,y0,z0, &
                                                   x1,y1,z1, &
                                                   x,y,z, &
                                                   uz1_halo(i_lower,j_lower,k_lower), &
@@ -463,16 +462,16 @@ contains
                                                   uz1_halo(i_upper,j_upper,k_upper))
 
          else
-            Su_part(isource)=zero
-            Sv_part(isource)=zero
-            Sw_part(isource)=zero
+            Su(isource)=zero
+            Sv(isource)=zero
+            Sw(isource)=zero
             !write(*,*) 'Warning: I do not own this node'
          endif
       enddo
 
-      call MPI_ALLREDUCE(Su_part,Su,Nsource,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
-      call MPI_ALLREDUCE(Sv_part,Sv,Nsource,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
-      call MPI_ALLREDUCE(Sw_part,Sw,Nsource,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
+      call MPI_ALLREDUCE(MPI_IN_PLACE,Su,Nsource,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
+      call MPI_ALLREDUCE(MPI_IN_PLACE,Sv,Nsource,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
+      call MPI_ALLREDUCE(MPI_IN_PLACE,Sw,Nsource,real_type,MPI_SUM,MPI_COMM_WORLD,ierr)
 
       ! Zero the Source term at each time step
       FTx(:,:,:)=zero

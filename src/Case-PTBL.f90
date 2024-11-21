@@ -1339,11 +1339,11 @@ contains
         real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux2
     
         integer :: j,i,k,code
-        real(mytype) :: can,ut1,ut2,utt1,utt2
+        real(mytype) :: can,ut1,ut2
     
         call transpose_x_to_y(ux1,ux2)
         ! Flow rate at the inlet
-        ut1=zero;utt1=zero
+        ut1=zero
         if (ystart(1)==1) then !! CPUs at the inlet
           do k=1,ysize(3)
             do j=1,ysize(2)-1
@@ -1351,10 +1351,10 @@ contains
             enddo
           enddo
         endif
-        call MPI_ALLREDUCE(ut1,utt1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-        utt1=utt1/real(nz,mytype) !! Volume flow rate per unit spanwise dist
+        call MPI_ALLREDUCE(MPI_IN_PLACE,ut1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        ut1=ut1/real(nz,mytype) !! Volume flow rate per unit spanwise dist
         ! Flow rate at the outlet
-        ut2=zero;utt2=zero
+        ut2=zero
         if (yend(1)==nx) then !! CPUs at the outlet
           do k=1,ysize(3)
             do j=1,ysize(2)-1
@@ -1363,10 +1363,10 @@ contains
           enddo
         endif
     
-        call MPI_ALLREDUCE(ut2,utt2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-        utt2=utt2/real(nz,mytype) !! Volume flow rate per unit spanwise dist
+        call MPI_ALLREDUCE(MPI_IN_PLACE,ut2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+        ut2=ut2/real(nz,mytype) !! Volume flow rate per unit spanwise dist
         if ((nrank==0).and.(mod(itime,ilist)==0)) then
-          write(*,"(' Mass balance: L-BC, R-BC, diff :',2f12.6,f12.9)") utt1,utt2,abs(utt2-utt1)
+          write(*,"(' Mass balance: L-BC, R-BC, diff :',2f12.6,f12.9)") ut1,ut2,abs(ut2-ut1)
         endif
 
       end subroutine tbl_flrt_Check

@@ -227,10 +227,9 @@ contains
     real(mytype), intent(in) :: constant
 
     integer :: code, i, j, k, jloc
-    real(mytype) :: can, ub, uball, coeff
+    real(mytype) :: can, ub, coeff
 
     ub = zero
-    uball = zero
     coeff = dy / (yly * real(xsize(1) * zsize(3), kind=mytype))
 
     do k = 1, xsize(3)
@@ -244,12 +243,12 @@ contains
 
     ub = ub * coeff
 
-    call MPI_ALLREDUCE(ub,uball,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,ub,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
-    can = - (constant - uball)
+    can = - (constant - ub)
 
     if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) &
-       write(*,*) 'UT', uball, can
+       write(*,*) 'UT', ub, can
 
     do k=1,xsize(3)
       do j=1,xsize(2)
