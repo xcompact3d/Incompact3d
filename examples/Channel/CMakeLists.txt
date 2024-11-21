@@ -1,4 +1,4 @@
-# ABL
+# Channel
 set(case "Channel")
 set(example_files "")
 list(APPEND example_files "adios2_config.xml")
