@@ -26,7 +26,6 @@ lint.txt
 *.log
 docs/_build/
 build*
-Test*
 .cproject
 .project
 .settings
