@@ -1,4 +1,4 @@
-# ABL
+# Cylinder
 set(case "Cylinder-wake")
 set(example_files "")
 list(APPEND example_files "adios2_config.xml")
