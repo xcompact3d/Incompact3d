@@ -1,4 +1,4 @@
-# Channel
+# Cylinder
 set(case "Cylinder-wake")
 set(input_file "input_test.i3d")
 set(additional_inputs "")

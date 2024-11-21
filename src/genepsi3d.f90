@@ -6,6 +6,7 @@ module genepsi
 
   use decomp_2d_constants
   use decomp_2d_mpi
+  use mod_stret, only : stretching
 
   public
 
@@ -154,7 +155,7 @@ contains
        nclx,ncly,nclz,nxraf,nyraf,nzraf   ,&
        xi,xf,yi,yf,zi,zf,nobjx,nobjy,nobjz,&
        nobjmax,yp,nraf)
-    use param, only : zero,half, one, two
+    use param, only : istret, zero, half, one, two
     use var, only : ta2, ta3
     use decomp_2d
     use MPI
@@ -223,12 +224,16 @@ contains
     else
        dyraf =yly/real(nyraf-1, mytype)
     endif
-    do j=1,ny-1
-       do jraf=1,nraf
-          ypraf(jraf+nraf*(j-1))=yp(j)+real(jraf-1, mytype)*(yp(j+1)-yp(j))/real(nraf, mytype)
-       enddo
-    enddo
-    if(.not.ncly)ypraf(nyraf)=yp(ny)
+
+    ! Compute ypraf
+    if (istret.eq.0) then
+       do j = 1, nyraf
+          ypraf(j) = (j-1) * dyraf
+       end do
+    else
+       call stretching(nyraf, ypraf, opt_write = .false.)
+    end if
+
     yepsi=zero
     call geomcomplex(yepsi,ystart(1),yend(1),nyraf,1,nyraf,ystart(3),yend(3),dx,ypraf,dz,one)
     ! if (nrank==0) print*,'    step 3'

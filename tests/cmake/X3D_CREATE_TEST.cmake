@@ -25,7 +25,7 @@ macro(CreateMPIPythonTest
 		 PyScript
 		 ResuFile)
   # Test main param
-  message(STATUS "Add Velidation Test (MPI run + Python verification) ${case}")
+  message(STATUS "Add Validation Test (MPI run + Python verification) ${case}")
   set(case_dir "${test_dir}/${case}")
   file(MAKE_DIRECTORY ${case_dir})
   file(COPY ${input_file} DESTINATION ${case_dir})

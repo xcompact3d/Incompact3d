@@ -244,7 +244,7 @@ contains
     integer :: j,k,code
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
-    real(mytype) :: udx,udy,udz,uddx,uddy,uddz,cx,uxmin,uxmax,uxmin1,uxmax1
+    real(mytype) :: udx,udy,udz,uddx,uddy,uddz,cx,uxmin,uxmax
 
     udx=one/dx; udy=one/dy; udz=one/dz; uddx=half/dx; uddy=half/dy; uddz=half/dz
 
@@ -257,10 +257,10 @@ contains
       enddo
     enddo
 
-    call MPI_ALLREDUCE(uxmax,uxmax1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-    call MPI_ALLREDUCE(uxmin,uxmin1,1,real_type,MPI_MIN,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,uxmax,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,uxmin,1,real_type,MPI_MIN,MPI_COMM_WORLD,code)
 
-    cx=zpfive*(uxmax1+uxmin1)*gdt(itr)*udx
+    cx=zpfive*(uxmax+uxmin)*gdt(itr)*udx
     do k=1,xsize(3)
       do j=1,xsize(2)
         bxxn(j,k)=ux(nx,j,k)-cx*(ux(nx,j,k)-ux(nx-1,j,k))
@@ -379,9 +379,9 @@ contains
     integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
     real(mytype) :: delta
     real(mytype) :: ux_HAve_local, uz_HAve_local, Phi_HAve_local
-    real(mytype) :: ux_HAve, uz_HAve,S_HAve,Phi_HAve,ux12,uz12,S12,Phi12,Tstat12
-    real(mytype) :: PsiM_HAve_local, PsiM_HAve, PsiH_HAve_local, PsiH_HAve
-    real(mytype) :: L_HAve_local, L_HAve, Q_HAve_local, Q_HAve, zL, zeta_HAve
+    real(mytype) :: ux12,uz12,S12,Phi12,Tstat12
+    real(mytype) :: PsiM_HAve_local, PsiH_HAve_local, S_HAve_local
+    real(mytype) :: L_HAve_local, Q_HAve_local, zL, zeta_HAve_local
     real(mytype) :: Lold, OL_diff
 
     ! Filter the velocity with twice the grid scale according to Bou-Zeid et al. (2005)
@@ -463,21 +463,21 @@ contains
       Phi_HAve_local=Phi_HAve_local
     endif
 
-    call MPI_ALLREDUCE(ux_HAve_local,ux_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    call MPI_ALLREDUCE(uz_HAve_local,uz_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (iscalar==1) call MPI_ALLREDUCE(Phi_HAve_local,Phi_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,ux_HAve_local,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,uz_HAve_local,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (iscalar==1) call MPI_ALLREDUCE(MPI_IN_PLACE,Phi_HAve_local,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
-    ux_HAve=ux_HAve/(nxc*nzc)
-    uz_HAve=uz_HAve/(nxc*nzc)
-    S_HAve=sqrt(ux_HAve**2.+uz_HAve**2.)
+    ux_HAve_local=ux_HAve_local/(nxc*nzc)
+    uz_HAve_local=uz_HAve_local/(nxc*nzc)
+    S_HAve_local=sqrt(ux_HAve_local**2.+uz_HAve_local**2.)
     if (iscalar==1) then 
-      Phi_HAve=Phi_HAve/(nxc*nzc)
+      Phi_HAve_local=Phi_HAve_local/(nxc*nzc)
       if (ibuoyancy==1) then 
         Tstat12 =T_wall + (T_top-T_wall)*delta/yly
       else 
         Tstat12 =zero
       endif
-      Phi_HAve=Phi_HAve + Tstat12
+      Phi_HAve_local=Phi_HAve_local + Tstat12
     endif
 
     ! Reset wall flux values
@@ -487,43 +487,43 @@ contains
 
     ! Initialize stratification variables
     if (iscalar==1.and.ibuoyancy == 1.and.xstart(2)==1) then 
-      PsiM_HAve= zero
-      PsiH_HAve= zero
+      PsiM_HAve_local= zero
+      PsiH_HAve_local= zero
       ii       = 0
       OL_diff  = one
       Lold     = one
       do while (OL_diff > 1.0e-14_mytype)
         if (itherm==0) then
-          Q_HAve = TempFlux
+          Q_HAve_local = TempFlux
         else if (itherm==1) then
-          Q_HAve =-k_roughness**two*S_HAve*(Phi_HAve-(T_wall+TempRate*t))/((log(delta/z_zero)-PsiM_HAve)*(log(delta/z_zero)-PsiH_HAve))
+          Q_HAve_local =-k_roughness**two*S_HAve_local*(Phi_HAve_local-(T_wall+TempRate*t))/((log(delta/z_zero)-PsiM_HAve_local)*(log(delta/z_zero)-PsiH_HAve_local))
         endif
-        L_HAve=-(k_roughness*S_HAve/(log(delta/z_zero)-PsiM_HAve))**three*Phi_HAve/(k_roughness*gravv*Q_HAve)
+        L_HAve_local=-(k_roughness*S_HAve_local/(log(delta/z_zero)-PsiM_HAve_local))**three*Phi_HAve_local/(k_roughness*gravv*Q_HAve_local)
         if (istrat==0) then
-          PsiM_HAve=-4.8_mytype*delta/L_HAve
-          PsiH_HAve=-7.8_mytype*delta/L_HAve
+          PsiM_HAve_local=-4.8_mytype*delta/L_HAve_local
+          PsiH_HAve_local=-7.8_mytype*delta/L_HAve_local
         else if (istrat==1) then
-          zeta_HAve=(one-sixteen*delta/L_HAve)**zptwofive
-          PsiM_HAve=two*log(half*(one+zeta_HAve))+log(zpfive*(one+zeta_HAve**two))-two*atan(zeta_HAve)+pi/two
-          PsiH_HAve=two*log(half*(one+zeta_HAve**two))
+          zeta_HAve_local=(one-sixteen*delta/L_HAve_local)**zptwofive
+          PsiM_HAve_local=two*log(half*(one+zeta_HAve_local))+log(zpfive*(one+zeta_HAve_local**two))-two*atan(zeta_HAve_local)+pi/two
+          PsiH_HAve_local=two*log(half*(one+zeta_HAve_local**two))
         endif
         ii      = ii + 1
-        OL_diff = abs((L_HAve - Lold)/Lold)
-        Lold    = L_HAve
+        OL_diff = abs((L_HAve_local - Lold)/Lold)
+        Lold    = L_HAve_local
         if (ii==50) exit
       enddo
-      heatflux=Q_Have
-      Obukhov=L_HAve
-      PsiM=PsiM_HAve
-      PsiH=PsiH_HAve
-      if (istrat==1) zeta=zeta_HAve
+      heatflux=Q_Have_local
+      Obukhov=L_HAve_local
+      PsiM=PsiM_HAve_local
+      PsiH=PsiH_HAve_local
+      if (istrat==1) zeta=zeta_HAve_local
     else   
       heatflux =zero
       Obukhov  =zero
       PsiM     =zero
       PsiH     =zero
-      PsiM_HAve=zero
-      PsiH_HAve=zero
+      PsiM_HAve_local=zero
+      PsiH_HAve_local=zero
     endif
 
     ! Apply BCs locally
@@ -532,8 +532,8 @@ contains
       do i=1,xsize(1)
          ! Horizontally-averaged formulation
          if(iwallmodel==1) then
-           tauwallxy(i,k)=-(k_roughness/(log(delta/z_zero)-PsiM_HAve))**two*ux_HAve*S_HAve
-           tauwallzy(i,k)=-(k_roughness/(log(delta/z_zero)-PsiM_HAve))**two*uz_HAve*S_HAve
+           tauwallxy(i,k)=-(k_roughness/(log(delta/z_zero)-PsiM_HAve_local))**two*ux_HAve_local*S_HAve_local
+           tauwallzy(i,k)=-(k_roughness/(log(delta/z_zero)-PsiM_HAve_local))**two*uz_HAve_local*S_HAve_local
          ! Local formulation
          else
            ux12=half*(uxf1(i,1,k)+uxf1(i,2,k))
@@ -589,35 +589,35 @@ contains
        L_HAve_local=L_HAve_local
        Q_HAve_local=Q_HAve_local
 
-       call MPI_ALLREDUCE(PsiM_HAve_local,PsiM_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       call MPI_ALLREDUCE(PsiH_HAve_local,PsiH_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       call MPI_ALLREDUCE(L_HAve_local,L_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       call MPI_ALLREDUCE(Q_HAve_local,Q_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(MPI_IN_PLACE,PsiM_HAve_local,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(MPI_IN_PLACE,PsiH_HAve_local,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(MPI_IN_PLACE,L_HAve_local,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+       call MPI_ALLREDUCE(MPI_IN_PLACE,Q_HAve_local,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
 
-       PsiM_HAve=PsiM_HAve/(nxc*nzc)
-       PsiH_HAve=PsiH_HAve/(nxc*nzc)
-       L_HAve=L_HAve/(nxc*nzc)
-       Q_HAve=Q_HAve/(nxc*nzc)
+       PsiM_HAve_local=PsiM_HAve_local/(nxc*nzc)
+       PsiH_HAve_local=PsiH_HAve_local/(nxc*nzc)
+       L_HAve_local=L_HAve_local/(nxc*nzc)
+       Q_HAve_local=Q_HAve_local/(nxc*nzc)
     endif
     
     ! Compute friction velocity u_shear and boundary layer height
-    u_shear=k_roughness*S_HAve/(log(delta/z_zero)-PsiM_HAve)
+    u_shear=k_roughness*S_HAve_local/(log(delta/z_zero)-PsiM_HAve_local)
     if (iheight==1) call boundary_height(ux,uy,uz,dBL)
-    if (iscalar==1) zL=dBL/L_HAve
+    if (iscalar==1) zL=dBL/L_HAve_local
 
     if (mod(itime,ilist)==0.and.nrank==0) then
          write(*,*)  ' '
          write(*,*)  ' ABL:'
-         write(*,*)  ' Horizontally-averaged velocity at y=1/2: ', ux_HAve,uz_Have
+         write(*,*)  ' Horizontally-averaged velocity at y=1/2: ', ux_HAve_local,uz_Have_local
          write(*,*)  ' BL height: ', dBL
          write(*,*)  ' Friction velocity: ', u_shear
     
         if (iscalar==1) then
-           write(*,*)  ' Temperature: ', Phi_HAve
-           write(*,*)  ' PsiM: ', PsiM_HAve
-           write(*,*)  ' PsiH: ', PsiH_HAve
-           write(*,*)  ' Obukhov L: ', L_HAve
-           write(*,*)  ' Heatflux: ', Q_HAve
+           write(*,*)  ' Temperature: ', Phi_HAve_local
+           write(*,*)  ' PsiM: ', PsiM_HAve_local
+           write(*,*)  ' PsiH: ', PsiH_HAve_local
+           write(*,*)  ' Obukhov L: ', L_HAve_local
+           write(*,*)  ' Heatflux: ', Q_HAve_local
            write(*,*)  ' z/L: ', zL
         endif
 
@@ -691,7 +691,7 @@ contains
     integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
     real(mytype) :: delta
     real(mytype) :: ux_HAve_local, uz_HAve_local
-    real(mytype) :: ux_HAve, uz_HAve, S_HAve, ux_delta, uz_delta, S_delta
+    real(mytype) :: S_HAve_local, ux_delta, uz_delta, S_delta
     !real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: txy1,tyz1,dtwxydx
     !real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: txy2,tyz2,wallsgsx2,wallsgsz2
     !real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: tyz3,dtwyzdz
@@ -803,12 +803,12 @@ contains
     enddo
     ux_HAve_local=ux_HAve_local
     uz_HAve_local=uz_HAve_local
-    call MPI_ALLREDUCE(ux_HAve_local,ux_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    call MPI_ALLREDUCE(uz_HAve_local,uz_HAve,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    ux_HAve=ux_HAve/(nxc*nzc)
-    uz_HAve=uz_HAve/(nxc*nzc)
-    S_HAve=sqrt(ux_HAve**2.+uz_HAve**2.)
-    u_shear=k_roughness*S_HAve/log(5*dy/z_zero)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,ux_HAve_local,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,uz_HAve_local,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    ux_HAve_local=ux_HAve_local/(nxc*nzc)
+    uz_HAve_local=uz_HAve_local/(nxc*nzc)
+    S_HAve_local=sqrt(ux_HAve_local**2.+uz_HAve_local**2.)
+    u_shear=k_roughness*S_HAve_local/log(5*dy/z_zero)
     
     if (mod(itime,ilist)==0.and.nrank==0) then
        ! Write u_shear in file
@@ -816,7 +816,7 @@ contains
        flush(42)
        ! Print in terminal
        write(*,*)  ' ABL:'
-       write(*,*)  ' Horizontally-averaged velocity at 5*dy: ', ux_HAve,uz_HAve
+       write(*,*)  ' Horizontally-averaged velocity at 5*dy: ', ux_HAve_local,uz_HAve_local
        write(*,*)  ' Friction velocity at 5*dy: ', u_shear
     endif
 
@@ -838,7 +838,7 @@ contains
 
     real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux
     integer :: j,i,k,code
-    real(mytype) :: can,ut3,ut,ut4,xloc
+    real(mytype) :: can,ut3,ut,xloc
 
     ut3=zero
     do k=1,ysize(3)
@@ -858,15 +858,15 @@ contains
     enddo
     ut3=ut3/ysize(1)/ysize(3)
 
-    call MPI_ALLREDUCE(ut3,ut4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    ut4=ut4/nproc
-    if (iconcprec.eq.1) ut4=ut4*(xlx/pdl)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,ut3,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    ut3=ut3/nproc
+    if (iconcprec.eq.1) ut3=ut3*(xlx/pdl)
 
     ! Flow rate for a logarithmic profile
-    !can=-(ustar/k_roughness*yly*(log(yly/z_zero)-1.)-ut4)
-    can=-(ustar/k_roughness*(yly*log(dBL/z_zero)-dBL)-ut4)
+    !can=-(ustar/k_roughness*yly*(log(yly/z_zero)-1.)-ut3)
+    can=-(ustar/k_roughness*(yly*log(dBL/z_zero)-dBL)-ut3)
 
-    if (nrank==0.and.mod(itime,ilist)==0)  write(*,*) '# Rank ',nrank,'correction to ensure constant flow rate',ut4,can
+    if (nrank==0.and.mod(itime,ilist)==0)  write(*,*) '# Rank ',nrank,'correction to ensure constant flow rate',ut3,can
 
     do k=1,ysize(3)
       do i=1,ysize(1)
@@ -1097,9 +1097,9 @@ contains
     implicit none
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux, uy, uz
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: uxy, uyz, temp
-    real(mytype), dimension(ny) :: u_HAve_local, u_HAve, v_HAve_local, v_HAve, w_HAve_local, w_HAve
-    real(mytype), dimension(ny) :: uxy_HAve_local, uxy_HAve, uyz_HAve_local, uyz_HAve, momfl
-    real(mytype), dimension(ny) :: txy_HAve_local, txy_HAve, tyz_HAve_local, tyz_HAve
+    real(mytype), dimension(ny) :: u_HAve_local, v_HAve_local, w_HAve_local
+    real(mytype), dimension(ny) :: uxy_HAve_local, uyz_HAve_local, momfl
+    real(mytype), dimension(ny) :: txy_HAve_local, tyz_HAve_local
     real(mytype) :: h, hBL
     integer :: i,j,k,code
 
@@ -1138,22 +1138,22 @@ contains
       enddo
     enddo
 
-    call MPI_ALLREDUCE(u_HAve_local,u_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    call MPI_ALLREDUCE(v_HAve_local,v_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    call MPI_ALLREDUCE(w_HAve_local,w_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    call MPI_ALLREDUCE(uxy_HAve_local,uxy_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    call MPI_ALLREDUCE(uyz_HAve_local,uyz_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    call MPI_ALLREDUCE(txy_HAve_local,txy_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    call MPI_ALLREDUCE(tyz_HAve_local,tyz_HAve,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    u_HAve  =  u_HAve/real(nx*nz,mytype)
-    v_HAve  =  v_HAve/real(nx*nz,mytype)
-    w_HAve  =  w_HAve/real(nx*nz,mytype)
-    uxy_HAve=uxy_HAve/real(nx*nz,mytype)
-    uyz_HAve=uyz_HAve/real(nx*nz,mytype)
-    txy_HAve=txy_HAve/real(nx*nz,mytype)
-    tyz_HAve=tyz_HAve/real(nx*nz,mytype)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,u_HAve_local,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,v_HAve_local,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,w_HAve_local,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,uxy_HAve_local,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,uyz_HAve_local,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,txy_HAve_local,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,tyz_HAve_local,ny,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    u_HAve_local  =  u_HAve_local/real(nx*nz,mytype)
+    v_HAve_local  =  v_HAve_local/real(nx*nz,mytype)
+    w_HAve_local  =  w_HAve_local/real(nx*nz,mytype)
+    uxy_HAve_local=uxy_HAve_local/real(nx*nz,mytype)
+    uyz_HAve_local=uyz_HAve_local/real(nx*nz,mytype)
+    txy_HAve_local=txy_HAve_local/real(nx*nz,mytype)
+    tyz_HAve_local=tyz_HAve_local/real(nx*nz,mytype)
 
-    momfl = sqrt((uxy_HAve+txy_HAve-u_HAVE*v_HAve)**two + (uyz_HAve+tyz_HAve-v_HAVE*w_HAve)**two)
+    momfl = sqrt((uxy_HAve_local+txy_HAve_local-u_HAVE_local*v_HAve_local)**two + (uyz_HAve_local+tyz_HAve_local-v_HAVE_local*w_HAve_local)**two)
     momfl(1) = u_shear**two
 
     do j=2,ny

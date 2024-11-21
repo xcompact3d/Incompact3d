@@ -1,4 +1,4 @@
-# ABL
+# MHD
 set(case "MHD")
 set(example_files "")
 list(APPEND example_files "adios2_config.xml")
