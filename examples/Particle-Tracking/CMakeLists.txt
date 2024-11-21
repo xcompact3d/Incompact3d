@@ -1,33 +1,8 @@
-# TGV flow with passive particle trackers
-set(case "TGV-Particles")
-set(case_dir "${test_dir}/${case}")
-file(MAKE_DIRECTORY ${case_dir})
-set(input_file "input_tgv_particles.i3d")
-install(DIRECTORY DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/${case})
-install(FILES ${input_file} DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/${case})
-if(ADIOS2_FOUND)
-  install(FILES adios2_config.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/${case})
-endif()
-# If testing active add test
-file(COPY ${input_file} DESTINATION ${case_dir})
-if(ADIOS2_FOUND)
-  file(COPY adios2_config.xml DESTINATION ${case_dir})
-endif()
-add_test(NAME ${case} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:xcompact3d> ${input_file} WORKING_DIRECTORY ${case_dir})
+# Particle-tracking
+set(case "Particle-tracking")
+set(example_files "")
+list(APPEND example_files "adios2_config.xml")
+list(APPEND example_files "input_channel_particles.i3d")
+AddExample("${examples_dir}" "${case}" "${example_files}")
 
-# Channel flow with constantly injected passive particle trackers
-set(case "Channel-Particles")
-set(case_dir "${test_dir}/${case}")
-file(MAKE_DIRECTORY ${case_dir})
-set(input_file "input_channel_particles.i3d")
-install(DIRECTORY DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/${case})
-install(FILES ${input_file} DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/${case})
-if(ADIOS2_FOUND)
-  install(FILES adios2_config.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/${case})
-endif()
-# If testing active add test
-file(COPY ${input_file} DESTINATION ${case_dir})
-if(ADIOS2_FOUND)
-  file(COPY adios2_config.xml DESTINATION ${case_dir})
-endif()
-add_test(NAME ${case} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:xcompact3d> ${input_file} WORKING_DIRECTORY ${case_dir})
+
