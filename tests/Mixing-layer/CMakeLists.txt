@@ -1,5 +1,6 @@
 # Mixing Layer
 set(case "Mixing-layer")
 set(input_file "input_test.i3d")
-CreateMPITest(${test_dir} ${case} ${input_file})
+set(additional_inputs "")
+CreateMPITest(${test_dir} ${case} ${input_file} "${additional_inputs}")
 
