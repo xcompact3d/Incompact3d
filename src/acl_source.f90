@@ -260,11 +260,14 @@ contains
       use MPI
       use param, only: dx,dy,dz,eps_factor,xnu,istret,xlx,yly,zlz
       use var, only: ux1, uy1, uz1, FTx, FTy, FTz, yp
+      !use nvtx
 
       implicit none
       real(mytype), allocatable, dimension(:,:,:) :: ux1_halo, uy1_halo, uz1_halo
       real(mytype) :: xmesh, ymesh,zmesh
       real(mytype) :: dist, epsilon, Kernel
+      real(mytype) :: dist2, dist2_max, epsilon2, prefactor, invepsilon2
+      real(mytype) :: distz2, disty2, distx2
       real(mytype) :: min_dist, ymax,ymin,zmin,zmax
       real(mytype) :: x0,y0,z0,x1,y1,z1,x,y,z,u000,u100,u001,u101,u010,u110,u011,u111
       real(mytype) :: t1,t2, alm_proj_time
@@ -494,22 +497,32 @@ contains
       t1 = MPI_WTIME()
 
       ! Add the source term
-      do k=1,xsize(3)
-         zmesh=real(k+xstart(3)-1-1,mytype)*dz
-         do j=1,xsize(2)
-            if (istret.eq.0) ymesh=real(xstart(2)+j-1-1,mytype)*dy
-            if (istret.ne.0) ymesh=yp(xstart(2)+j-1)
-            do i=1,xsize(1)
-               xmesh=(i-1)*dx
-               do isource=1,NSource
-                  dist = sqrt((Sx(isource)-xmesh)**2+(Sy(isource)-ymesh)**2+(Sz(isource)-zmesh)**2)
-                  epsilon=eps_factor*(dx*dy*dz)**(1.0/3.0)
-                  if (dist<10.0*epsilon) then
-                     Kernel= one/(epsilon**3.0*pi**1.5)*exp(-(dist/epsilon)**2.0)
-                  else
-                     Kernel=zero
-                  endif
+      epsilon = (eps_factor*(dx*dy*dz)**(1.0/3.0)) ! FIXME compatible with stretching ?
+      epsilon2 = epsilon**2
+      dist2_max = 100._mytype * epsilon2
+      prefactor = 1._mytype/(epsilon**3*pi**1.5)
+      invepsilon2 = 1._mytype / epsilon2
+      do isource=1,NSource
+         do k=1,xsize(3)
+            zmesh=real(k+xstart(3)-1-1,mytype)*dz
+            distz2 = (Sz(isource)-zmesh)**2
+            if (distz2 > dist2_max) cycle
+            do j=1,xsize(2)
+               if (istret.eq.0) then
+                  ymesh=real(xstart(2)+j-1-1,mytype)*dy
+               else
+                  ymesh=yp(xstart(2)+j-1)
+               end if
+               disty2 = distz2 + (Sy(isource)-ymesh)**2
+               if (disty2 > dist2_max) cycle
+               do i=1,xsize(1)
+                  xmesh=(i-1)*dx
+                  dist2 = disty2 + (Sx(isource)-xmesh)**2
+                  !if (dist2 > dist2_max) cycle
                   ! First apply a constant lift to induce the
+                  kernel = zero
+                  !if (dist2 < dist2_max) Kernel = prefactor * exp( - dist2 * invepsilon2)
+                  if (dist2 > (xlx*yly*zlz)) Kernel = prefactor * exp( - dist2 * invepsilon2)
                   FTx(i,j,k)=FTx(i,j,k)-SFx(isource)*Kernel
                   FTy(i,j,k)=FTy(i,j,k)-SFy(isource)*Kernel
                   FTz(i,j,k)=FTz(i,j,k)-SFz(isource)*Kernel
