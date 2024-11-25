@@ -266,7 +266,7 @@ contains
       real(mytype) :: xmesh, ymesh,zmesh
       real(mytype) :: dist, epsilon, Kernel
       real(mytype) :: dist2, dist2_max, epsilon2, prefactor, invepsilon2
-      real(mytype) :: distz2, disty2, distx2
+      real(mytype) :: distz2, disty2
       real(mytype) :: min_dist, ymax,ymin,zmin,zmax
       real(mytype) :: x0,y0,z0,x1,y1,z1,x,y,z,u000,u100,u001,u101,u010,u110,u011,u111
       real(mytype) :: t1,t2, alm_proj_time
