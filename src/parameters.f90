@@ -243,7 +243,7 @@ subroutine parameter(input_i3d)
   endif
   
   !!==> Pasha
-  if(itype .eq. 14) then
+  if(itype .eq. 15) then
      read(10, nml=ThetaDotModel); rewind(10)
      read(10, nml=BlowingModel); rewind(10)
      read(10, nml=AdversePresGrad); rewind(10)
