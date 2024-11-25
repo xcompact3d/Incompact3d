@@ -497,10 +497,10 @@ contains
       t1 = MPI_WTIME()
 
       ! Add the source term
-      epsilon = (eps_factor*(dx*dy*dz)**(1.0/3.0)) ! FIXME compatible with stretching ?
+      epsilon = (eps_factor*(dx*dy*dz)**(1._mytype/3._mytype)) ! FIXME compatible with stretching ?
       epsilon2 = epsilon**2
       dist2_max = 100._mytype * epsilon2
-      prefactor = 1._mytype/(epsilon**3*pi**1.5)
+      prefactor = 1._mytype/(epsilon**3*pi**1.5_mytype)
       invepsilon2 = 1._mytype / epsilon2
       do isource=1,NSource
          do k=1,xsize(3)
@@ -518,11 +518,9 @@ contains
                do i=1,xsize(1)
                   xmesh=(i-1)*dx
                   dist2 = disty2 + (Sx(isource)-xmesh)**2
-                  !if (dist2 > dist2_max) cycle
+                  if (dist2 > dist2_max) cycle
                   ! First apply a constant lift to induce the
-                  kernel = zero
-                  !if (dist2 < dist2_max) Kernel = prefactor * exp( - dist2 * invepsilon2)
-                  if (dist2 > (xlx*yly*zlz)) Kernel = prefactor * exp( - dist2 * invepsilon2)
+                  Kernel = prefactor * exp( - dist2 * invepsilon2)
                   FTx(i,j,k)=FTx(i,j,k)-SFx(isource)*Kernel
                   FTy(i,j,k)=FTy(i,j,k)-SFy(isource)*Kernel
                   FTz(i,j,k)=FTz(i,j,k)-SFz(isource)*Kernel
