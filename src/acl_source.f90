@@ -264,7 +264,7 @@ contains
       implicit none
       real(mytype), allocatable, dimension(:,:,:) :: ux1_halo, uy1_halo, uz1_halo
       real(mytype) :: xmesh, ymesh,zmesh
-      real(mytype) :: dist, epsilon, Kernel
+      real(mytype) :: dist, epsilon, kernel
       real(mytype) :: dist2, dist2_max, epsilon2, prefactor, invepsilon2
       real(mytype) :: distz2, disty2
       real(mytype) :: min_dist, ymax,ymin,zmin,zmax
@@ -519,10 +519,10 @@ contains
                   dist2 = disty2 + (Sx(isource)-xmesh)**2
                   if (dist2 > dist2_max) cycle
                   ! First apply a constant lift to induce the
-                  Kernel = prefactor * exp( - dist2 * invepsilon2)
-                  FTx(i,j,k)=FTx(i,j,k)-SFx(isource)*Kernel
-                  FTy(i,j,k)=FTy(i,j,k)-SFy(isource)*Kernel
-                  FTz(i,j,k)=FTz(i,j,k)-SFz(isource)*Kernel
+                  kernel = prefactor * exp( - dist2 * invepsilon2)
+                  FTx(i,j,k)=FTx(i,j,k)-SFx(isource)*kernel
+                  FTy(i,j,k)=FTy(i,j,k)-SFy(isource)*kernel
+                  FTz(i,j,k)=FTz(i,j,k)-SFz(isource)*kernel
                enddo
             enddo
          enddo
