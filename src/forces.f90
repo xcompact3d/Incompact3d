@@ -195,8 +195,8 @@ contains
     do k = 1, xsize(3)
        do j = 1, xsize(2)
           do i = 1, xsize(1)
-             dux(i,j,k) = rhs_dux(i,j,k) - px(i,j,k) / dt
-             duy(i,j,k) = rhs_duy(i,j,k) - py(i,j,k) / dt
+             dux(i,j,k) = dt*rhs_dux(i,j,k) - px(i,j,k)
+             duy(i,j,k) = dt*rhs_duy(i,j,k) - py(i,j,k)
           end do
        end do
     end do
