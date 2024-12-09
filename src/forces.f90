@@ -21,37 +21,33 @@ module forces
   implicit none
 
   integer,save :: nvol,iforces,i2dsim
-  real(mytype),save,allocatable,dimension(:,:,:) :: ux01, uy01, ux11, uy11, ppi1
+  real(mytype),save,allocatable,dimension(:,:,:) :: dux, duy, ppi1
   real(mytype),save,allocatable,dimension(:) :: xld,xrd,yld,yud,zfr,zbk
   integer,save,allocatable,dimension(:) :: icvlf,icvrt,jcvlw,jcvup,kcvfr,kcvbk
   integer,save,allocatable,dimension(:) :: icvlf_lx,icvrt_lx,icvlf_ly,icvrt_ly
   integer,save,allocatable,dimension(:) :: jcvlw_lx,jcvup_lx,jcvlw_ly,jcvup_ly
   integer,save,allocatable,dimension(:) :: kcvfr_lx,kcvbk_lx,kcvfr_ly,kcvbk_ly
 
-  character(len=*), parameter :: io_restart_forces = "restart-forces-io", &
-       resfile = "restart-forces"
-  
+  private
+  public :: iforces, nvol, ppi1, init_forces, setup_forces, forces_unst, force
+
 contains
 
   subroutine init_forces
 
-    USE decomp_2d_io, only : decomp_2d_register_variable, decomp_2d_init_io
     USE param
     USE variables
     implicit none
 
     integer :: iv,stp1,stp2,h
 
-    call alloc_x(ux01)
-    call alloc_x(uy01)
-    call alloc_x(ux11)
-    call alloc_x(uy11)
+    call alloc_x(dux)
+    call alloc_x(duy)
     call alloc_x(ppi1)
 
-    ux01 = zero
-    uy01 = zero
-    ux11 = zero
-    uy11 = zero
+    dux = zero
+    duy = zero
+    ppi1 = zero
 
     allocate(icvlf(nvol),icvrt(nvol),jcvlw(nvol),jcvup(nvol),kcvfr(nvol),kcvbk(nvol))
     allocate(icvlf_lx(nvol),icvrt_lx(nvol),icvlf_ly(nvol),icvrt_ly(nvol))
@@ -141,12 +137,6 @@ contains
        endif
     endif
 
-    call decomp_2d_init_io(io_restart_forces)
-    call decomp_2d_register_variable(io_restart_forces, "ux01", 1, 0, 0, mytype)
-    call decomp_2d_register_variable(io_restart_forces, "uy01", 1, 0, 0, mytype)
-    call decomp_2d_register_variable(io_restart_forces, "ux11", 1, 0, 0, mytype)
-    call decomp_2d_register_variable(io_restart_forces, "uy11", 1, 0, 0, mytype)
-    
   end subroutine init_forces
 
   !
@@ -192,48 +182,26 @@ contains
 
   end subroutine setup_forces
 
-  subroutine restart_forces(itest1)
+  ! Store du/dt to compute the unsteady contribution later
+  subroutine forces_unst(rhs_dux, rhs_duy, px, py, dt)
 
-    USE decomp_2d_io
-    USE variables
-    USE param
-    USE MPI
+    ! Arguments
+    real(mytype), dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: rhs_dux, rhs_duy, px, py
+    real(mytype), intent(in) :: dt
 
-    implicit none
+    ! Local variables
+    integer :: i, j, k
 
-    ! Argument
-    integer, intent(in) :: itest1
+    do k = 1, xsize(3)
+       do j = 1, xsize(2)
+          do i = 1, xsize(1)
+             dux(i,j,k) = rhs_dux(i,j,k) - px(i,j,k) / dt
+             duy(i,j,k) = rhs_duy(i,j,k) - py(i,j,k) / dt
+          end do
+       end do
+    end do
 
-    ! Exit if writing and invalid time step
-    if (itest1 == 1 .and. mod(itime, icheckpoint).ne.0) then
-       return
-    end if
-
-    if (itest1 == 1) then
-       call decomp_2d_open_io(io_restart_forces, resfile, decomp_2d_write_mode)
-    else
-       call decomp_2d_open_io(io_restart_forces, resfile, decomp_2d_read_mode)
-    endif
-    call decomp_2d_start_io(io_restart_forces, resfile)
-    
-    if (itest1==1) then
-       !write
-       call decomp_2d_write_one(1,ux01,resfile,"ux01",0,io_restart_forces)
-       call decomp_2d_write_one(1,uy01,resfile,"uy01",0,io_restart_forces)
-       call decomp_2d_write_one(1,ux11,resfile,"ux11",0,io_restart_forces)
-       call decomp_2d_write_one(1,uy11,resfile,"uy11",0,io_restart_forces)
-    else
-       !read
-       call decomp_2d_read_one(1,ux01,resfile,"ux01",io_restart_forces)
-       call decomp_2d_read_one(1,uy01,resfile,"uy01",io_restart_forces)
-       call decomp_2d_read_one(1,ux11,resfile,"ux11",io_restart_forces)
-       call decomp_2d_read_one(1,uy11,resfile,"uy11",io_restart_forces)
-    endif
-
-    call decomp_2d_end_io(io_restart_forces, resfile)
-    call decomp_2d_close_io(io_restart_forces, resfile)
-    
-  end subroutine restart_forces
+  end subroutine forces_unst
 
   subroutine force(ux1,uy1,uz1,ep1)
 
@@ -286,28 +254,6 @@ contains
           del_y(jj)=yp(jj+1)-yp(jj) 
        endif
     enddo
-
-    if (itime.eq.1) then
-       do k = 1, xsize(3)
-          do j = 1, xsize(2)
-             do i = 1, xsize(1)
-                ux11(i,j,k)=ux1(i,j,k)
-                uy11(i,j,k)=uy1(i,j,k)
-             enddo
-          enddo
-       enddo
-       return
-    elseif (itime.eq.2) then
-       do k = 1, xsize(3)
-          do j = 1, xsize(2)
-             do i = 1, xsize(1)
-                ux01(i,j,k)=ux1(i,j,k)
-                uy01(i,j,k)=uy1(i,j,k)
-             enddo
-          enddo
-       enddo
-       return
-    endif
 
     call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)    ! dudx
     call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy) ! dvdx
@@ -370,12 +316,12 @@ contains
                   !     relative to the volume, and, therefore, this has a sense 
                   !     of a "source".
                   !         fac   = (1.5*ux1(i,j,k)-2.0*ux01(i,j,k)+0.5*ux11(i,j,k))*epcv1(i,j,k)
-                  fac   = (onepfive*ux1(i,j,k)-two*ux01(i,j,k)+half*ux11(i,j,k))*(one-ep1(i,j,k))
+                  fac   = dux(i,j,k)*(one-ep1(i,j,k))
                   tsumx = tsumx+fac*dx*del_y(j+(xstart(2)-1))/dt    !tsumx+fac*dx*dy/dt
                   !sumx(k) = sumx(k)+dudt1*dx*dy
 
                   !         fac   = (1.5*uy1(i,j,k)-2.0*uy01(i,j,k)+0.5*uy11(i,j,k))*epcv1(i,j,k)
-                  fac   = (onepfive*uy1(i,j,k)-two*uy01(i,j,k)+half*uy11(i,j,k))*(one-ep1(i,j,k))
+                  fac   = duy(i,j,k)*(one-ep1(i,j,k))
                   tsumy = tsumy+fac*dx*del_y(j+(xstart(2)-1))/dt !tsumy+fac*dx*dy/dt
                   !sumy(k) = sumy(k)+dudt1*dx*dy
                enddo
@@ -634,12 +580,12 @@ contains
                    !     relative to the volume, and, therefore, this has a sense 
                    !     of a "source".
                    !         fac   = (1.5*ux1(i,j,k)-2.0*ux01(i,j,k)+0.5*ux11(i,j,k))*epcv1(i,j,k)
-                   fac   = (onepfive*ux1(i,j,k)-two*ux01(i,j,k)+half*ux11(i,j,k))*(one-ep1(i,j,k))
+                   fac   = dux(i,j,k)*(one-ep1(i,j,k))
                    tsumx = tsumx+fac*dx*del_y(j+(xstart(2)-1))*dz/dt    !tsumx+fac*dx*dy*dz/dt
                    !sumx(k) = sumx(k)+dudt1*dx*dy
  
                    !         fac   = (1.5*uy1(i,j,k)-2.0*uy01(i,j,k)+0.5*uy11(i,j,k))*epcv1(i,j,k)
-                   fac   = (onepfive*uy1(i,j,k)-two*uy01(i,j,k)+half*uy11(i,j,k))*(one-ep1(i,j,k))
+                   fac   = duy(i,j,k)*(one-ep1(i,j,k))
                    tsumy = tsumy+fac*dx*del_y(j+(xstart(2)-1))*dz/dt !tsumy+fac*dx*dy*dz/dt
                    !sumy(k) = sumy(k)+dudt1*dx*dy
                enddo
@@ -919,19 +865,6 @@ contains
         call execute_command_line("cp forces.dat " //filename)
       endif
     endif
-
-    do k = 1, xsize(3)
-       do j = 1, xsize(2)
-          do i = 1, xsize(1)
-             ux11(i,j,k)=ux01(i,j,k)
-             uy11(i,j,k)=uy01(i,j,k)
-             ux01(i,j,k)=ux1(i,j,k)
-             uy01(i,j,k)=uy1(i,j,k)
-          enddo
-       enddo
-    enddo
-
-    return
 
   end subroutine force
 
