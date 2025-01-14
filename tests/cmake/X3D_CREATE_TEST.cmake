@@ -23,7 +23,7 @@ macro(CreateMPIPythonTest
 		 case
 		 input_file
 		 PyScript
-		 ResuFile)
+		 ResuName)
   # Test main param
   message(STATUS "Add Validation Test (MPI run + Python verification) ${case}")
   set(case_dir "${test_dir}/${case}")
@@ -35,7 +35,13 @@ macro(CreateMPIPythonTest
   # Python
   file(COPY ${PyScript} DESTINATION ${case_dir})
   # Ref Solution
-  set(RefFile "reference_${ResuFile}")
+  if (DOUBLE_PRECISION)
+     set(RefFile "reference_${ResuName}.dat")
+  else()
+     set(RefFile "reference_${ResuName}_single.dat")
+  endif()
+  set(ResuFile "${ResuName}.dat")
+
   file(COPY ${RefFile} DESTINATION ${case_dir})
   # set the MPI command
   set(cmd "${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:xcompact3d> ${input_file}")

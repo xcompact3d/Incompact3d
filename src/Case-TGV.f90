@@ -371,7 +371,11 @@ contains
        
        
        if (nrank==0) then
+#ifdef DOUBLE_PREC
           write(42,'(20e20.12)') (itime-1)*dt,eek,eps,eps2,enst
+#else
+          write(42,'(14e14.6)') (itime-1)*dt,eek,eps,eps2,enst
+#endif
           flush(42)
        endif
 
