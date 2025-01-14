@@ -36,7 +36,7 @@ jobs:
         export PATH=$(pwd)/openmpi-4.1.4/installed/bin/:$PATH
         echo "mpif90 version: $(mpif90 --version | head -1)" >> metadata.txt
         echo "mpirun version: $(mpirun --version | head -1)" >> metadata.txt
-        mv metadata.txt tests/TGV-Taylor-Green-Vortex/
+        mv metadata.txt tests/TGV-Taylor-Green-vortex/
     - name: Build Incompact3d and run TGV reference test case
       run: |
         export PATH=$(pwd)/openmpi-4.1.4/installed/bin/:$PATH
