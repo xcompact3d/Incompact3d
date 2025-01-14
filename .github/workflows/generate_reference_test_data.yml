@@ -8,14 +8,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     # We don't want to build openmpi each time this workflow is
     # run. Setup caching of OpenMPI after it is built and installed.
     # See "Caching dependencies to speed up workflows" on the GH
     # actions docs.
     - name: Cache OpenMPI
       id: cache-openmpi
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: openmpi-4.1.4/installed
         key: openmpi-4.1.4
