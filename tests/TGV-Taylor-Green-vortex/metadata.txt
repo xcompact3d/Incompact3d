@@ -1,6 +1,6 @@
-Tue Nov 8 13:18:42 UTC 2022
-Incompact3d HEAD: 8225eeddf71657822081e8fe726f318f48e66f21
+Tue Jan 14 15:08:17 UTC 2025
+Incompact3d HEAD: fec49d984414040d85800481adfa4341399dc5e0
 make cmd: make
 run cmd: mpirun -np 2 xcompact3d
-mpif90 version: GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.1) 9.4.0
+mpif90 version: GNU Fortran (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0
 mpirun version: mpirun (Open MPI) 4.1.4
