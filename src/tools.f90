@@ -287,28 +287,28 @@ contains
        !
        if (iscalar==1) then
           do is=1, numscalar
-             write(varname, *) "phi-", is
-             call decomp_2d_write_one(1,phi1(:,:,:,is),resfile,varname,0,io_restart,reduce_prec=.false.)
+             write(varname,"('phi-',I2.2)") is
+             call decomp_2d_write_one(1,phi1(:,:,:,is),resfile,trim(varname),0,io_restart,reduce_prec=.false.)
              ! previous time-steps
              if ((itimescheme==2).or.(itimescheme==3)) then ! AB2 or AB3
-                write(varname, *) "dphi-", is, "-2"
-                call decomp_2d_write_one(1,dphi1(:,:,:,2,is),resfile,varname,0,io_restart,reduce_prec=.false.)
+                write(varname,"('dphi-',I2.2,'-2')") is
+                call decomp_2d_write_one(1,dphi1(:,:,:,2,is),resfile,trim(varname),0,io_restart,reduce_prec=.false.)
              end if
              !
              if (itimescheme==3) then ! AB3
-               write(varname, *) "dphi-", is, "-3"
-               call decomp_2d_write_one(1,dphi1(:,:,:,3,is),resfile,varname,0,io_restart,reduce_prec=.false.)
+               write(varname,"('dphi-',I2.2,'-3')") is
+               call decomp_2d_write_one(1,dphi1(:,:,:,3,is),resfile,trim(varname),0,io_restart,reduce_prec=.false.)
              end if
           end do
        endif
        if (ilmn) then
           do is = 1, nrhotime
-             write(varname, *) "rho-", is
-             call decomp_2d_write_one(1,rho1(:,:,:,is),resfile,varname,0,io_restart,reduce_prec=.false.)
+             write(varname,"('rho-',I2.2)") is
+             call decomp_2d_write_one(1,rho1(:,:,:,is),resfile,trim(varname),0,io_restart,reduce_prec=.false.)
           enddo
           do is = 1, ntime
-             write(varname, *) "drho-", is
-             call decomp_2d_write_one(1,drho1(:,:,:,is),resfile,varname,0,io_restart,reduce_prec=.false.)
+             write(varname,"('drho-',I2.2)") is
+             call decomp_2d_write_one(1,drho1(:,:,:,is),resfile,trim(varname),0,io_restart,reduce_prec=.false.)
           enddo
           call decomp_2d_write_one(1,mu1(:,:,:),resfile,"mu",0,io_restart,reduce_prec=.false.)
        endif
@@ -406,17 +406,17 @@ contains
        !
        if (iscalar==1) then
          do is=1, numscalar
-            write(varname, *) "phi-", is
-            call decomp_2d_read_one(1,phi1(:,:,:,is),resfile,varname,io_restart,reduce_prec=.false.)
+            write(varname,"('phi-',I2.2)") is
+            call decomp_2d_read_one(1,phi1(:,:,:,is),resfile,trim(varname),io_restart,reduce_prec=.false.)
            ! previous time-steps
            if ((itimescheme==2).or.(itimescheme==3)) then ! AB2 or AB3
-             write(varname, *) "dphi-", is, "-2"
-             call decomp_2d_read_one(1,dphi1(:,:,:,2,is),resfile,varname,io_restart,reduce_prec=.false.)
+             write(varname,"('dphi-',I2.2,'-2')") is
+             call decomp_2d_read_one(1,dphi1(:,:,:,2,is),resfile,trim(varname),io_restart,reduce_prec=.false.)
            end if
            !
            if (itimescheme==3) then ! AB3
-              write(varname, *) "dphi-", is, "-3"
-              call decomp_2d_read_one(1,dphi1(:,:,:,3,is),resfile,varname,io_restart,reduce_prec=.false.)
+              write(varname,"('dphi-',I2.2,'-3')") is
+              call decomp_2d_read_one(1,dphi1(:,:,:,3,is),resfile,trim(varname),io_restart,reduce_prec=.false.)
            end if
            ! ABL 
            if (itype==itype_abl) then
@@ -434,12 +434,12 @@ contains
        endif
        if (ilmn) then
           do is = 1, nrhotime
-             write(varname, *) "rho-", is
-             call decomp_2d_read_one(1,rho1(:,:,:,is),resfile,varname,io_restart,reduce_prec=.false.)
+             write(varname,"('rho-',I2.2)") is
+             call decomp_2d_read_one(1,rho1(:,:,:,is),resfile,trim(varname),io_restart,reduce_prec=.false.)
           enddo
           do is = 1, ntime
-             write(varname, *) "drho-", is
-             call decomp_2d_read_one(1,drho1(:,:,:,is),resfile,varname,io_restart,reduce_prec=.false.)
+             write(varname,"('drho-',I2.2)") is
+             call decomp_2d_read_one(1,drho1(:,:,:,is),resfile,trim(varname),io_restart,reduce_prec=.false.)
           enddo
           call decomp_2d_read_one(1,mu1,resfile,"mu",io_restart,reduce_prec=.false.)
        end if
@@ -537,7 +537,7 @@ contains
     call decomp_2d_register_variable(io_restart, "pp", 3, 0, 0, mytype, phG) !! XXX: need some way to handle the different grid here...
 
     do is = 1, numscalar
-       write(varname,*) "phi-", is
+       write(varname,"('phi-',I2.2)") is
        call decomp_2d_register_variable(io_restart, trim(varname), 1, 0, 0, mytype)
     end do
 
@@ -547,7 +547,7 @@ contains
        call decomp_2d_register_variable(io_restart, "duz-2", 1, 0, 0, mytype)
 
        do is = 1, numscalar
-          write(varname,*) "dphi-", is, "-2"
+          write(varname,"('dphi-',I2.2,'-2')") is
           call decomp_2d_register_variable(io_restart, trim(varname), 1, 0, 0, mytype)
        end do
 
@@ -557,7 +557,7 @@ contains
           call decomp_2d_register_variable(io_restart, "duz-3", 1, 0, 0, mytype)
 
           do is = 1, numscalar
-             write(varname,*) "dphi-", is, "-3"
+             write(varname,"('dphi-',I2.2,'-3')") is
              call decomp_2d_register_variable(io_restart, trim(varname), 1, 0, 0, mytype)
           end do
        endif
@@ -569,12 +569,12 @@ contains
 
     if (ilmn) then
        do is = 1, nrhotime
-          write(varname, *) "rho-", is
-          call decomp_2d_register_variable(io_restart, varname, 1, 0, 0, mytype)
+          write(varname,"('rho-',I2.2)") is
+          call decomp_2d_register_variable(io_restart, trim(varname), 1, 0, 0, mytype)
        end do
        do is = 1, ntime
-          write(varname, *) "drho-", is
-          call decomp_2d_register_variable(io_restart, varname, 1, 0, 0, mytype)
+          write(varname,"('drho-',I2.2)") is
+          call decomp_2d_register_variable(io_restart, trim(varname), 1, 0, 0, mytype)
        end do
        call decomp_2d_register_variable(io_restart, "mu", 1, 0, 0, mytype)
     end if
