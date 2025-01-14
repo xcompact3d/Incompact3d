@@ -7,6 +7,7 @@ module visu
   use decomp_2d_constants
   use decomp_2d_mpi
   use decomp_2d
+  use x3d_io, only : x3d_live_io
 
   implicit none
 
@@ -24,6 +25,7 @@ module visu
   character(len=9) :: ifilenameformat = '(I3.3)'
   real, save :: tstart, tend
 
+  type(x3d_live_io), target, save :: x3d_io_visu
   character(len=*), parameter :: io_name = "solution-io"
 
   private
@@ -41,8 +43,7 @@ contains
     use param, only : ilmn, iscalar, ilast, ifirst, ioutput, istret
     use variables, only : numscalar, prec, nvisu
     use param, only : dx, dy, dz
-    use decomp_2d_io, only : decomp_2d_init_io, decomp_2d_open_io, decomp_2d_append_mode
-    use decomp_2d_io, only : decomp_2d_register_variable
+    use x3d_io, only : x3d_io_declare, x3d_io_register_var
 
     
     implicit none
@@ -85,21 +86,20 @@ contains
       stop
     endif
 
-    call decomp_2d_init_io(io_name)
+    call x3d_io_declare(x3d_io_visu, io_name)
 
     !! Register variables
-    call decomp_2d_register_variable(io_name, "ux", 1, 0, output2D, mytype)
-    call decomp_2d_register_variable(io_name, "uy", 1, 0, output2D, mytype)
-    call decomp_2d_register_variable(io_name, "uz", 1, 0, output2D, mytype)
-    call decomp_2d_register_variable(io_name, "pp", 1, 0, output2D, mytype)
+    call x3d_io_register_var(x3d_io_visu, "ux", 1, mytype)
+    call x3d_io_register_var(x3d_io_visu, "uy", 1, mytype)
+    call x3d_io_register_var(x3d_io_visu, "uz", 1, mytype)
+    call x3d_io_register_var(x3d_io_visu, "pp", 1, mytype)
     if (ilmn) then
-       call decomp_2d_register_variable(io_name, "rho", 1, 0, output2D, mytype)
+       call x3d_io_register_var(x3d_io_visu, "rho", 1, mytype)
     endif
     if (iscalar.ne.0) then
        do is = 1, numscalar
           write(scname,"('phi',I2.2)") is
-          !call decomp_2d_register_variable(io_name, "phi"//char(48+is), 1, 0, output2D, mytype)
-          call decomp_2d_register_variable(io_name, scname, 1, 0, output2D, mytype)
+          call x3d_io_register_var(x3d_io_visu, scname, 1, mytype)
        enddo
     endif
     

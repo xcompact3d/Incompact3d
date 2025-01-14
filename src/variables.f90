@@ -14,6 +14,9 @@ module var
 
   implicit none
   
+  ! decomp_info objects
+  type(decomp_info), save :: ph1, ph2, ph3, ph4, phG
+
   ! define all major arrays here
   real(mytype), save, allocatable, dimension(:,:,:) :: ux1, ux2, ux3, po3, dv3
   real(mytype), save, allocatable, dimension(:,:,:,:) :: pp3

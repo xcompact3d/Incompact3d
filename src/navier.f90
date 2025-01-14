@@ -28,7 +28,7 @@ contains
 
     USE decomp_2d_poisson, ONLY : poisson
     USE var, ONLY : nzmsize
-    USE var, ONLY : dv3
+    USE var, ONLY : dv3, ph1
     USE param, ONLY : ntime, nrhotime, npress
     USE param, ONLY : ilmn, ivarcoeff, zero, one 
     USE mpi
@@ -260,7 +260,8 @@ contains
     USE variables
     USE var, ONLY: ta1, tb1, tc1, pp1, pgy1, pgz1, di1, &
          duxdxp2, uyp2, uzp2, duydypi2, upi2, ta2, dipp2, &
-         duxydxyp3, uzp3, po3, dipp3, nxmsize, nymsize, nzmsize
+         duxydxyp3, uzp3, po3, dipp3, nxmsize, nymsize, nzmsize, &
+         ph1, ph3, ph4
     USE MPI
     USE ibm_param
 
@@ -389,7 +390,7 @@ contains
     USE variables
     USE MPI
     USE var, only: pp1,pgy1,pgz1,di1,pp2,ppi2,pgy2,pgz2,pgzi2,dip2,&
-         pgz3,ppi3,dip3,nxmsize,nymsize,nzmsize
+         pgz3,ppi3,dip3,nxmsize,nymsize,nzmsize,ph2,ph3
 
     USE forces, only : iforces, ppi1
 
@@ -1109,7 +1110,7 @@ contains
   SUBROUTINE test_varcoeff(converged, divup3norm, pp3, dv3, atol, rtol, poissiter)
 
     USE MPI
-    USE var, ONLY : nzmsize
+    USE var, ONLY : nzmsize, ph1
     USE param, ONLY : npress, itime
     USE variables, ONLY : nxm, nym, nzm, ilist
 
@@ -1213,7 +1214,7 @@ contains
     USE param, ONLY : one
 
     USE var, ONLY : ta1, tb1, tc1
-    USE var, ONLY : nzmsize
+    USE var, ONLY : nzmsize, ph1
 
     IMPLICIT NONE
 

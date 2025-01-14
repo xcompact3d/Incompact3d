@@ -38,6 +38,7 @@ add_executable(xcompact3d
                     genepsi3d.f90
                     ibm.f90
                     implicit.f90
+		    io.f90
                     les_models.f90
                     mhd.f90
                     module_param.f90

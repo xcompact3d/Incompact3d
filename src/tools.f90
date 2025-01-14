@@ -8,14 +8,18 @@ module tools
   use decomp_2d_mpi
   use decomp_2d
   use utilities
+  use x3d_io, only : x3d_live_io
 
   implicit none
 
   logical, save :: adios2_restart_initialised = .false.
 
+  type(x3d_live_io), target, save :: x3d_io_restart
   character(len=*), parameter :: io_restart = "restart-io"
   character(len=*), parameter :: resfile = "checkpoint"
   character(len=*), parameter :: resfile_old = "checkpoint.old"
+
+  type(x3d_live_io), target, save :: x3d_io_ioflow
   character(len=*), parameter :: io_ioflow = "in-outflow-io"
   
   private
@@ -204,7 +208,8 @@ contains
   !##############################################################################
   subroutine restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3,phi1,dphi1,px1,py1,pz1,rho1,drho1,mu1,iresflg)
 
-    use decomp_2d_io
+    use x3d_io
+    use var, only : phG
     use variables
     use param
     use MPI
@@ -264,71 +269,69 @@ contains
     end if
 
     if (iresflg==1) then !write
-       call decomp_2d_open_io(io_restart, resfile, decomp_2d_write_mode)
-       call decomp_2d_start_io(io_restart, resfile)
+       call x3d_io_open(x3d_io_restart, resfile, decomp_2d_write_mode)
 
-       call decomp_2d_write_one(1,ux1,resfile,"ux",0,io_restart,reduce_prec=.false.)
-       call decomp_2d_write_one(1,uy1,resfile,"uy",0,io_restart,reduce_prec=.false.)
-       call decomp_2d_write_one(1,uz1,resfile,"uz",0,io_restart,reduce_prec=.false.)
+       call x3d_io_write(x3d_io_restart, 1, ux1, "_", "ux", opt_reduce_prec=.false.)
+       call x3d_io_write(x3d_io_restart, 1, uy1, "_", "uy", opt_reduce_prec=.false.)
+       call x3d_io_write(x3d_io_restart, 1, uz1, "_", "uz", opt_reduce_prec=.false.)
        ! write previous time-step if necessary for AB2 or AB3
        if ((itimescheme==2).or.(itimescheme==3)) then
-          call decomp_2d_write_one(1,dux1(:,:,:,2),resfile,"dux-2",0,io_restart,reduce_prec=.false.)
-          call decomp_2d_write_one(1,duy1(:,:,:,2),resfile,"duy-2",0,io_restart,reduce_prec=.false.)
-          call decomp_2d_write_one(1,duz1(:,:,:,2),resfile,"duz-2",0,io_restart,reduce_prec=.false.)
+          call x3d_io_write(x3d_io_restart, 1, dux1(:,:,:,2), "_", "dux-2", opt_reduce_prec=.false.)
+          call x3d_io_write(x3d_io_restart, 1, duy1(:,:,:,2), "_", "duy-2", opt_reduce_prec=.false.)
+          call x3d_io_write(x3d_io_restart, 1, duz1(:,:,:,2), "_", "duz-2", opt_reduce_prec=.false.)
        end if
        ! for AB3 one more previous time-step
        if (itimescheme==3) then
-          call decomp_2d_write_one(1,dux1(:,:,:,3),resfile,"dux-3",0,io_restart,reduce_prec=.false.)
-          call decomp_2d_write_one(1,duy1(:,:,:,3),resfile,"duy-3",0,io_restart,reduce_prec=.false.)
-          call decomp_2d_write_one(1,duz1(:,:,:,3),resfile,"duz-3",0,io_restart,reduce_prec=.false.)
+          call x3d_io_write(x3d_io_restart, 1, dux1(:,:,:,3), "_", "dux-3", opt_reduce_prec=.false.)
+          call x3d_io_write(x3d_io_restart, 1, duy1(:,:,:,3), "_", "dux-3", opt_reduce_prec=.false.)
+          call x3d_io_write(x3d_io_restart, 1, duz1(:,:,:,3), "_", "dux-3", opt_reduce_prec=.false.)
        end if
        !
-       call decomp_2d_write_one(3,pp3,resfile,"pp",0,io_restart,opt_decomp=phG,reduce_prec=.false.)
+       call x3d_io_write(x3d_io_restart, 3, pp3, "_", "pp", opt_reduce_prec=.false., opt_decomp=phG)
        !
        if (iscalar==1) then
           do is=1, numscalar
              write(varname, *) "phi-", is
-             call decomp_2d_write_one(1,phi1(:,:,:,is),resfile,varname,0,io_restart,reduce_prec=.false.)
+             call x3d_io_write(x3d_io_restart, 1, phi1(:,:,:,is), "_", trim(varname), opt_reduce_prec=.false.)
              ! previous time-steps
              if ((itimescheme==2).or.(itimescheme==3)) then ! AB2 or AB3
                 write(varname, *) "dphi-", is, "-2"
-                call decomp_2d_write_one(1,dphi1(:,:,:,2,is),resfile,varname,0,io_restart,reduce_prec=.false.)
+                call x3d_io_write(x3d_io_restart, 1, dphi1(:,:,:,2,is), "_", trim(varname), opt_reduce_prec=.false.)
              end if
              !
              if (itimescheme==3) then ! AB3
                write(varname, *) "dphi-", is, "-3"
-               call decomp_2d_write_one(1,dphi1(:,:,:,3,is),resfile,varname,0,io_restart,reduce_prec=.false.)
+               call x3d_io_write(x3d_io_restart, 1, dphi1(:,:,:,3,is), "_", trim(varname), opt_reduce_prec=.false.)
              end if
           end do
        endif
        if (ilmn) then
           do is = 1, nrhotime
              write(varname, *) "rho-", is
-             call decomp_2d_write_one(1,rho1(:,:,:,is),resfile,varname,0,io_restart,reduce_prec=.false.)
+             call x3d_io_write(x3d_io_restart, 1, rho1(:,:,:,is), "_", trim(varname), opt_reduce_prec=.false.)
           enddo
           do is = 1, ntime
              write(varname, *) "drho-", is
-             call decomp_2d_write_one(1,drho1(:,:,:,is),resfile,varname,0,io_restart,reduce_prec=.false.)
+             call x3d_io_write(x3d_io_restart, 1, drho1(:,:,:,is), "_", trim(varname), opt_reduce_prec=.false.)
           enddo
-          call decomp_2d_write_one(1,mu1(:,:,:),resfile,"mu",0,io_restart,reduce_prec=.false.)
+          call x3d_io_write(x3d_io_restart, 1, mu1, "_", "mu", opt_reduce_prec=.false.)
        endif
 
        if (mhd_active .and. mhd_equation == 'induction') then
-          call decomp_2d_write_one(1,Bm(:,:,:,1),resfile,'bx',0,io_restart,reduce_prec=.false.)
-          call decomp_2d_write_one(1,Bm(:,:,:,2),resfile,'by',0,io_restart,reduce_prec=.false.)
-          call decomp_2d_write_one(1,Bm(:,:,:,3),resfile,'bz',0,io_restart,reduce_prec=.false.)
+          call x3d_io_write(x3d_io_restart, 1, Bm(:,:,:,1), "_", "bx", opt_reduce_prec=.false.)
+          call x3d_io_write(x3d_io_restart, 1, Bm(:,:,:,2), "_", "by", opt_reduce_prec=.false.)
+          call x3d_io_write(x3d_io_restart, 1, Bm(:,:,:,3), "_", "bz", opt_reduce_prec=.false.)
           if (itimescheme==3) then
-             call decomp_2d_write_one(1,dBm(:,:,:,1,2),resfile,'dbx-2',0,io_restart,reduce_prec=.false.)
-             call decomp_2d_write_one(1,dBm(:,:,:,2,2),resfile,'dby-2',0,io_restart,reduce_prec=.false.)
-             call decomp_2d_write_one(1,dBm(:,:,:,3,2),resfile,'dbz-2',0,io_restart,reduce_prec=.false.)
-             call decomp_2d_write_one(1,dBm(:,:,:,1,3),resfile,'dbx-3',0,io_restart,reduce_prec=.false.)
-             call decomp_2d_write_one(1,dBm(:,:,:,2,3),resfile,'dby-3',0,io_restart,reduce_prec=.false.)
-             call decomp_2d_write_one(1,dBm(:,:,:,3,3),resfile,'dbz-3',0,io_restart,reduce_prec=.false.)
+             call x3d_io_write(x3d_io_restart, 1, dBm(:,:,:,1,2), "_", "dbx-2", opt_reduce_prec=.false.)
+             call x3d_io_write(x3d_io_restart, 1, dBm(:,:,:,2,2), "_", "dby-2", opt_reduce_prec=.false.)
+             call x3d_io_write(x3d_io_restart, 1, dBm(:,:,:,3,2), "_", "dbz-2", opt_reduce_prec=.false.)
+             call x3d_io_write(x3d_io_restart, 1, dBm(:,:,:,1,3), "_", "dbx-3", opt_reduce_prec=.false.)
+             call x3d_io_write(x3d_io_restart, 1, dBm(:,:,:,2,3), "_", "dby-3", opt_reduce_prec=.false.)
+             call x3d_io_write(x3d_io_restart, 1, dBm(:,:,:,3,3), "_", "dbz-3", opt_reduce_prec=.false.)
           endif
        endif
 
-       call decomp_2d_end_io(io_restart, resfile)
-       call decomp_2d_close_io(io_restart, resfile)
+       call x3d_io_close(x3d_io_restart)
 
        ! Validate restart file then remove old file and update restart.info
        if (validation_restart) then
@@ -383,40 +386,40 @@ contains
          write(*,*)'RESTART from file:', filestart
          write(*,*)'==========================================================='
        end if
-       call decomp_2d_open_io(io_restart, resfile, decomp_2d_read_mode)
-       call decomp_2d_start_io(io_restart, resfile)
+       call x3d_io_open(x3d_io_restart, resfile, decomp_2d_read_mode)
 
-       call decomp_2d_read_one(1,ux1,resfile,"ux",io_restart,reduce_prec=.false.)
-       call decomp_2d_read_one(1,uy1,resfile,"uy",io_restart,reduce_prec=.false.)
-       call decomp_2d_read_one(1,uz1,resfile,"uz",io_restart,reduce_prec=.false.)
+       call x3d_io_read(x3d_io_restart, 1, ux1, "_", "ux", opt_reduce_prec=.false.)
+       call x3d_io_read(x3d_io_restart, 1, uy1, "_", "uy", opt_reduce_prec=.false.)
+       call x3d_io_read(x3d_io_restart, 1, uz1, "_", "uz", opt_reduce_prec=.false.)
+
        ! read previous time-step if necessary for AB2 or AB3
        if ((itimescheme==2).or.(itimescheme==3)) then ! AB2 or AB3
-          call decomp_2d_read_one(1,dux1(:,:,:,2),resfile,"dux-2",io_restart,reduce_prec=.false.)
-          call decomp_2d_read_one(1,duy1(:,:,:,2),resfile,"duy-2",io_restart,reduce_prec=.false.)
-          call decomp_2d_read_one(1,duz1(:,:,:,2),resfile,"duz-2",io_restart,reduce_prec=.false.)
+          call x3d_io_read(x3d_io_restart, 1, dux1(:,:,:,2), "_", "dux-2", opt_reduce_prec=.false.)
+          call x3d_io_read(x3d_io_restart, 1, duy1(:,:,:,2), "_", "duy-2", opt_reduce_prec=.false.)
+          call x3d_io_read(x3d_io_restart, 1, duz1(:,:,:,2), "_", "duz-2", opt_reduce_prec=.false.)
        end if
        ! for AB3 one more previous time-step
        if (itimescheme==3) then ! AB3
-          call decomp_2d_read_one(1,dux1(:,:,:,3),resfile,"dux-3",io_restart,reduce_prec=.false.)
-          call decomp_2d_read_one(1,duy1(:,:,:,3),resfile,"duy-3",io_restart,reduce_prec=.false.)
-          call decomp_2d_read_one(1,duz1(:,:,:,3),resfile,"duz-3",io_restart,reduce_prec=.false.)
+          call x3d_io_read(x3d_io_restart, 1, dux1(:,:,:,3), "_", "dux-3", opt_reduce_prec=.false.)
+          call x3d_io_read(x3d_io_restart, 1, duy1(:,:,:,3), "_", "duy-3", opt_reduce_prec=.false.)
+          call x3d_io_read(x3d_io_restart, 1, duz1(:,:,:,3), "_", "duz-3", opt_reduce_prec=.false.)
        end if
        !
-       call decomp_2d_read_one(3,pp3,resfile,"pp",io_restart,opt_decomp=phG,reduce_prec=.false.)
+       call x3d_io_read(x3d_io_restart, 3, pp3, "_", "pp", opt_reduce_prec=.false., opt_decomp=phG)
        !
        if (iscalar==1) then
          do is=1, numscalar
             write(varname, *) "phi-", is
-            call decomp_2d_read_one(1,phi1(:,:,:,is),resfile,varname,io_restart,reduce_prec=.false.)
+            call x3d_io_read(x3d_io_restart, 1, phi1(:,:,:,is), "_", trim(varname), opt_reduce_prec=.false.)
            ! previous time-steps
            if ((itimescheme==2).or.(itimescheme==3)) then ! AB2 or AB3
              write(varname, *) "dphi-", is, "-2"
-             call decomp_2d_read_one(1,dphi1(:,:,:,2,is),resfile,varname,io_restart,reduce_prec=.false.)
+             call x3d_io_read(x3d_io_restart, 1, dphi1(:,:,:,2,is), "_", trim(varname), opt_reduce_prec=.false.)
            end if
            !
            if (itimescheme==3) then ! AB3
               write(varname, *) "dphi-", is, "-3"
-              call decomp_2d_read_one(1,dphi1(:,:,:,3,is),resfile,varname,io_restart,reduce_prec=.false.)
+              call x3d_io_read(x3d_io_restart, 1, dphi1(:,:,:,3,is), "_", trim(varname), opt_reduce_prec=.false.)
            end if
            ! ABL 
            if (itype==itype_abl) then
@@ -435,31 +438,30 @@ contains
        if (ilmn) then
           do is = 1, nrhotime
              write(varname, *) "rho-", is
-             call decomp_2d_read_one(1,rho1(:,:,:,is),resfile,varname,io_restart,reduce_prec=.false.)
+             call x3d_io_read(x3d_io_restart, 1, rho1(:,:,:,is), "_", trim(varname), opt_reduce_prec=.false.)
           enddo
           do is = 1, ntime
              write(varname, *) "drho-", is
-             call decomp_2d_read_one(1,drho1(:,:,:,is),resfile,varname,io_restart,reduce_prec=.false.)
+             call x3d_io_read(x3d_io_restart, 1, drho1(:,:,:,is), "_", trim(varname), opt_reduce_prec=.false.)
           enddo
-          call decomp_2d_read_one(1,mu1,resfile,"mu",io_restart,reduce_prec=.false.)
+          call x3d_io_read(x3d_io_restart, 1, mu1, "_", "mu", opt_reduce_prec=.false.)
        end if
 
        if(mhd_active .and. mhd_equation == 'induction') then
-          call decomp_2d_read_one(1,Bm(:,:,:,1),resfile,'bx',io_restart,reduce_prec=.false.)
-          call decomp_2d_read_one(1,Bm(:,:,:,2),resfile,'by',io_restart,reduce_prec=.false.)
-          call decomp_2d_read_one(1,Bm(:,:,:,3),resfile,'bz',io_restart,reduce_prec=.false.)
+          call x3d_io_read(x3d_io_restart, 1, Bm(:,:,:,1), "_", "bx", opt_reduce_prec=.false.)
+          call x3d_io_read(x3d_io_restart, 1, Bm(:,:,:,2), "_", "by", opt_reduce_prec=.false.)
+          call x3d_io_read(x3d_io_restart, 1, Bm(:,:,:,3), "_", "bz", opt_reduce_prec=.false.)
           if (itimescheme==3) then
-             call decomp_2d_read_one(1,dBm(:,:,:,1,2),resfile,'dbx-2',io_restart,reduce_prec=.false.)
-             call decomp_2d_read_one(1,dBm(:,:,:,2,2),resfile,'dby-2',io_restart,reduce_prec=.false.)
-             call decomp_2d_read_one(1,dBm(:,:,:,3,2),resfile,'dbz-2',io_restart,reduce_prec=.false.)
-             call decomp_2d_read_one(1,dBm(:,:,:,1,3),resfile,'dbx-3',io_restart,reduce_prec=.false.)
-             call decomp_2d_read_one(1,dBm(:,:,:,2,3),resfile,'dby-3',io_restart,reduce_prec=.false.)
-             call decomp_2d_read_one(1,dBm(:,:,:,3,3),resfile,'dbz-3',io_restart,reduce_prec=.false.)
+             call x3d_io_read(x3d_io_restart, 1, dBm(:,:,:,1,2), "_", "dbx-2", opt_reduce_prec=.false.)
+             call x3d_io_read(x3d_io_restart, 1, dBm(:,:,:,2,2), "_", "dby-2", opt_reduce_prec=.false.)
+             call x3d_io_read(x3d_io_restart, 1, dBm(:,:,:,3,2), "_", "dbz-2", opt_reduce_prec=.false.)
+             call x3d_io_read(x3d_io_restart, 1, dBm(:,:,:,1,3), "_", "dbx-3", opt_reduce_prec=.false.)
+             call x3d_io_read(x3d_io_restart, 1, dBm(:,:,:,2,3), "_", "dby-3", opt_reduce_prec=.false.)
+             call x3d_io_read(x3d_io_restart, 1, dBm(:,:,:,3,3), "_", "dbz-3", opt_reduce_prec=.false.)
           endif
        endif
 
-       call decomp_2d_end_io(io_restart, resfile)
-       call decomp_2d_close_io(io_restart, resfile)
+       call x3d_io_close(x3d_io_restart)
 
        !! Read time of restart file
        write(filename,"(A)") 'restart.info'
@@ -515,10 +517,10 @@ contains
   
   subroutine init_restart_adios2()
 
-    use decomp_2d_io, only : decomp_2d_register_variable, decomp_2d_init_io
+    use x3d_io, only : x3d_io_declare, x3d_io_register_var
     use variables, only : numscalar
     use param, only : ilmn, nrhotime, ntime, mhd_active
-    use var, only : itimescheme, iibm
+    use var, only : itimescheme, iibm, phG
     use mhd, only : mhd_equation
     
     implicit none
@@ -527,69 +529,68 @@ contains
     
     integer :: is
     character(len=80) :: varname
-    
-    call decomp_2d_init_io(io_restart)
-    
-    call decomp_2d_register_variable(io_restart, "ux", 1, 0, 0, mytype)
-    call decomp_2d_register_variable(io_restart, "uy", 1, 0, 0, mytype)
-    call decomp_2d_register_variable(io_restart, "uz", 1, 0, 0, mytype)
 
-    call decomp_2d_register_variable(io_restart, "pp", 3, 0, 0, mytype, phG) !! XXX: need some way to handle the different grid here...
+    call x3d_io_declare(x3d_io_restart, io_restart)
+ 
+    call x3d_io_register_var(x3d_io_restart, "ux", 1, mytype, opt_reduce_prec=.false.)
+    call x3d_io_register_var(x3d_io_restart, "uy", 1, mytype, opt_reduce_prec=.false.)
+    call x3d_io_register_var(x3d_io_restart, "uz", 1, mytype, opt_reduce_prec=.false.)
+    call x3d_io_register_var(x3d_io_restart, "pp", 3, mytype, opt_reduce_prec=.false., opt_decomp=phG)
 
     do is = 1, numscalar
        write(varname,*) "phi-", is
-       call decomp_2d_register_variable(io_restart, trim(varname), 1, 0, 0, mytype)
+       call x3d_io_register_var(x3d_io_restart, trim(varname), 1, mytype, opt_reduce_prec=.false.)
     end do
 
     if ((itimescheme.eq.2) .or. (itimescheme.eq.3)) then
-       call decomp_2d_register_variable(io_restart, "dux-2", 1, 0, 0, mytype)
-       call decomp_2d_register_variable(io_restart, "duy-2", 1, 0, 0, mytype)
-       call decomp_2d_register_variable(io_restart, "duz-2", 1, 0, 0, mytype)
+       call x3d_io_register_var(x3d_io_restart, "dux-2", 1, mytype, opt_reduce_prec=.false.)
+       call x3d_io_register_var(x3d_io_restart, "duy-2", 1, mytype, opt_reduce_prec=.false.)
+       call x3d_io_register_var(x3d_io_restart, "duz-2", 1, mytype, opt_reduce_prec=.false.)
 
        do is = 1, numscalar
           write(varname,*) "dphi-", is, "-2"
-          call decomp_2d_register_variable(io_restart, trim(varname), 1, 0, 0, mytype)
+          call x3d_io_register_var(x3d_io_restart, trim(varname), 1, mytype, opt_reduce_prec=.false.)
        end do
 
        if (itimescheme.eq.3) then
-          call decomp_2d_register_variable(io_restart, "dux-3", 1, 0, 0, mytype)
-          call decomp_2d_register_variable(io_restart, "duy-3", 1, 0, 0, mytype)
-          call decomp_2d_register_variable(io_restart, "duz-3", 1, 0, 0, mytype)
+          call x3d_io_register_var(x3d_io_restart, "dux-3", 1, mytype, opt_reduce_prec=.false.)
+          call x3d_io_register_var(x3d_io_restart, "duy-3", 1, mytype, opt_reduce_prec=.false.)
+          call x3d_io_register_var(x3d_io_restart, "duz-3", 1, mytype, opt_reduce_prec=.false.)
 
           do is = 1, numscalar
              write(varname,*) "dphi-", is, "-3"
-             call decomp_2d_register_variable(io_restart, trim(varname), 1, 0, 0, mytype)
+             call x3d_io_register_var(x3d_io_restart, trim(varname), 1, mytype, opt_reduce_prec=.false.)
           end do
        endif
     endif
 
     if (iibm .ne. 0) then
-       call decomp_2d_register_variable(io_restart, "ep", 1, 0, 0, mytype)
+       call x3d_io_register_var(x3d_io_restart, "ep", 1, mytype, opt_reduce_prec=.false.)
     endif
 
     if (ilmn) then
        do is = 1, nrhotime
           write(varname, *) "rho-", is
-          call decomp_2d_register_variable(io_restart, varname, 1, 0, 0, mytype)
+          call x3d_io_register_var(x3d_io_restart, trim(varname), 1, mytype, opt_reduce_prec=.false.)
        end do
        do is = 1, ntime
           write(varname, *) "drho-", is
-          call decomp_2d_register_variable(io_restart, varname, 1, 0, 0, mytype)
+          call x3d_io_register_var(x3d_io_restart, trim(varname), 1, mytype, opt_reduce_prec=.false.)
        end do
-       call decomp_2d_register_variable(io_restart, "mu", 1, 0, 0, mytype)
+       call x3d_io_register_var(x3d_io_restart, "mu", 1, mytype, opt_reduce_prec=.false.)
     end if
  
     if (mhd_active .and. mhd_equation == 'induction') then
-       call decomp_2d_register_variable(io_restart, "bx", 1, 0, 0, mytype)
-       call decomp_2d_register_variable(io_restart, "by", 1, 0, 0, mytype)
-       call decomp_2d_register_variable(io_restart, "bz", 1, 0, 0, mytype)
+       call x3d_io_register_var(x3d_io_restart, "bx", 1, mytype, opt_reduce_prec=.false.)
+       call x3d_io_register_var(x3d_io_restart, "by", 1, mytype, opt_reduce_prec=.false.)
+       call x3d_io_register_var(x3d_io_restart, "bz", 1, mytype, opt_reduce_prec=.false.)
        if (itimescheme.eq.3) then
-          call decomp_2d_register_variable(io_restart, "dbx-2", 1, 0, 0, mytype)
-          call decomp_2d_register_variable(io_restart, "dby-2", 1, 0, 0, mytype)
-          call decomp_2d_register_variable(io_restart, "dbz-2", 1, 0, 0, mytype)
-          call decomp_2d_register_variable(io_restart, "dbx-3", 1, 0, 0, mytype)
-          call decomp_2d_register_variable(io_restart, "dby-3", 1, 0, 0, mytype)
-          call decomp_2d_register_variable(io_restart, "dbz-3", 1, 0, 0, mytype)
+          call x3d_io_register_var(x3d_io_restart, "dbx-2", 1, mytype, opt_reduce_prec=.false.)
+          call x3d_io_register_var(x3d_io_restart, "dby-2", 1, mytype, opt_reduce_prec=.false.)
+          call x3d_io_register_var(x3d_io_restart, "dbz-2", 1, mytype, opt_reduce_prec=.false.)
+          call x3d_io_register_var(x3d_io_restart, "dbx-3", 1, mytype, opt_reduce_prec=.false.)
+          call x3d_io_register_var(x3d_io_restart, "dby-3", 1, mytype, opt_reduce_prec=.false.)
+          call x3d_io_register_var(x3d_io_restart, "dbz-3", 1, mytype, opt_reduce_prec=.false.)
        endif
     end if
 
@@ -679,20 +680,18 @@ contains
   !############################################################################
   subroutine init_inflow_outflow()
 
-    use decomp_2d_io, only : decomp_2d_init_io, decomp_2d_register_variable
-
+    use x3d_io, only : x3d_io_declare, x3d_io_register_plane
     use param, only : ntimesteps
      
     integer :: nplanes
-    
-    call decomp_2d_init_io(io_ioflow)
+ 
+    call x3d_io_declare(x3d_io_ioflow, io_ioflow)
 
     nplanes = ntimesteps
-    
-    call decomp_2d_register_variable(io_ioflow, "ux", 1, 0, 1, mytype, opt_nplanes=nplanes)
-    call decomp_2d_register_variable(io_ioflow, "uy", 1, 0, 1, mytype, opt_nplanes=nplanes)
-    call decomp_2d_register_variable(io_ioflow, "uz", 1, 0, 1, mytype, opt_nplanes=nplanes)
-    
+    call x3d_io_register_plane(x3d_io_ioflow, "ux", 1, mytype, opt_nplanes=nplanes)
+    call x3d_io_register_plane(x3d_io_ioflow, "uy", 1, mytype, opt_nplanes=nplanes)
+    call x3d_io_register_plane(x3d_io_ioflow, "uz", 1, mytype, opt_nplanes=nplanes)
+
   end subroutine init_inflow_outflow
   !############################################################################
   !!  SUBROUTINE: read_inflow
@@ -1002,7 +1001,7 @@ contains
   subroutine rename(oldname, newname, opt_rank)
 
     use MPI
-    use decomp_2d_io, only : gen_iodir_name
+    use x3d_io, only : gen_iodir_name
     
     character(len=*), intent(in) :: oldname
     character(len=*), intent(in) :: newname
@@ -1097,7 +1096,7 @@ contains
   logical function validate_restart(refname, testname, opt_rank)
 
     use MPI
-    use decomp_2d_io, only : gen_iodir_name
+    use x3d_io, only : gen_iodir_name
     
     character(len=*), intent(in) :: refname
     character(len=*), intent(in) :: testname

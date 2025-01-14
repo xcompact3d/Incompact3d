@@ -982,7 +982,7 @@ contains
    !############################################################################
    !############################################################################
    subroutine pressure_x(pp3, pre1)
-      use var, only: pp1, di1, nxmsize
+      use var, only: pp1, di1, ph1, nxmsize
       use var, only: pp2, ppi2, dip2, ph2, nymsize
       use var, only: ppi3, dip3, ph3, nzmsize
       use var, only: npress

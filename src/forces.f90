@@ -17,6 +17,7 @@ module forces
   use decomp_2d_constants
   use decomp_2d_mpi
   USE decomp_2d
+  use x3d_io
 
   implicit none
 
@@ -28,6 +29,7 @@ module forces
   integer,save,allocatable,dimension(:) :: jcvlw_lx,jcvup_lx,jcvlw_ly,jcvup_ly
   integer,save,allocatable,dimension(:) :: kcvfr_lx,kcvbk_lx,kcvfr_ly,kcvbk_ly
 
+  type(x3d_live_io), target, save :: x3d_io_forces
   character(len=*), parameter :: io_restart_forces = "restart-forces-io", &
        resfile = "restart-forces"
   
@@ -35,9 +37,9 @@ contains
 
   subroutine init_forces
 
-    USE decomp_2d_io, only : decomp_2d_register_variable, decomp_2d_init_io
     USE param
     USE variables
+
     implicit none
 
     integer :: iv,stp1,stp2,h
@@ -141,11 +143,11 @@ contains
        endif
     endif
 
-    call decomp_2d_init_io(io_restart_forces)
-    call decomp_2d_register_variable(io_restart_forces, "ux01", 1, 0, 0, mytype)
-    call decomp_2d_register_variable(io_restart_forces, "uy01", 1, 0, 0, mytype)
-    call decomp_2d_register_variable(io_restart_forces, "ux11", 1, 0, 0, mytype)
-    call decomp_2d_register_variable(io_restart_forces, "uy11", 1, 0, 0, mytype)
+    call x3d_io_declare(x3d_io_forces, io_restart_forces)
+    call x3d_io_register_var(x3d_io_forces, "ux01", 1, mytype, opt_reduce_prec=.false.)
+    call x3d_io_register_var(x3d_io_forces, "uy01", 1, mytype, opt_reduce_prec=.false.)
+    call x3d_io_register_var(x3d_io_forces, "ux11", 1, mytype, opt_reduce_prec=.false.)
+    call x3d_io_register_var(x3d_io_forces, "uy11", 1, mytype, opt_reduce_prec=.false.)
     
   end subroutine init_forces
 
@@ -194,7 +196,6 @@ contains
 
   subroutine restart_forces(itest1)
 
-    USE decomp_2d_io
     USE variables
     USE param
     USE MPI
@@ -210,29 +211,29 @@ contains
     end if
 
     if (itest1 == 1) then
-       call decomp_2d_open_io(io_restart_forces, resfile, decomp_2d_write_mode)
+       call x3d_io_open(x3d_io_forces, resfile, decomp_2d_write_mode)
     else
-       call decomp_2d_open_io(io_restart_forces, resfile, decomp_2d_read_mode)
+       call x3d_io_open(x3d_io_forces, resfile, decomp_2d_read_mode)
     endif
-    call decomp_2d_start_io(io_restart_forces, resfile)
     
     if (itest1==1) then
        !write
-       call decomp_2d_write_one(1,ux01,resfile,"ux01",0,io_restart_forces)
-       call decomp_2d_write_one(1,uy01,resfile,"uy01",0,io_restart_forces)
-       call decomp_2d_write_one(1,ux11,resfile,"ux11",0,io_restart_forces)
-       call decomp_2d_write_one(1,uy11,resfile,"uy11",0,io_restart_forces)
+       ! argument dirname is not used, "_" is provided
+       call x3d_io_write(x3d_io_forces, 1, ux01, "_", "ux01", opt_reduce_prec=.false.)
+       call x3d_io_write(x3d_io_forces, 1, uy01, "_", "uy01", opt_reduce_prec=.false.)
+       call x3d_io_write(x3d_io_forces, 1, ux11, "_", "ux11", opt_reduce_prec=.false.)
+       call x3d_io_write(x3d_io_forces, 1, uy11, "_", "uy11", opt_reduce_prec=.false.)
     else
        !read
-       call decomp_2d_read_one(1,ux01,resfile,"ux01",io_restart_forces)
-       call decomp_2d_read_one(1,uy01,resfile,"uy01",io_restart_forces)
-       call decomp_2d_read_one(1,ux11,resfile,"ux11",io_restart_forces)
-       call decomp_2d_read_one(1,uy11,resfile,"uy11",io_restart_forces)
+       ! argument dirname is not used, "_" is provided
+       call x3d_io_read(x3d_io_forces, 1, ux01, "_", "ux01", opt_reduce_prec=.false.)
+       call x3d_io_read(x3d_io_forces, 1, uy01, "_", "uy01", opt_reduce_prec=.false.)
+       call x3d_io_read(x3d_io_forces, 1, ux11, "_", "ux11", opt_reduce_prec=.false.)
+       call x3d_io_read(x3d_io_forces, 1, uy11, "_", "uy11", opt_reduce_prec=.false.)
     endif
 
-    call decomp_2d_end_io(io_restart_forces, resfile)
-    call decomp_2d_close_io(io_restart_forces, resfile)
-    
+    call x3d_io_close(x3d_io_forces)
+
   end subroutine restart_forces
 
   subroutine force(ux1,uy1,uz1,ep1)
