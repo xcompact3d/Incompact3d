@@ -44,7 +44,7 @@ jobs:
         cmake -S . -B build 
         cmake --build build -j 2
         cmake --install build
-        ctest --test-dir build
+        ctest --test-dir build --rerun-failed --output-on-failure
     - name: Store new reference output
       run: |
         cp -v build/RunTests/RunTests/TGV-Taylor-Green-vortex/time_evol.dat tests/TGV-Taylor-Green-Vortex/reference_time_evol.dat
