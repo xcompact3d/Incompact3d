@@ -8,11 +8,11 @@ message(STATUS "Fortran compiler version ${CMAKE_Fortran_COMPILER_VERSION}")
 
 set(CMAKE_Fortran_PREPROCESS ON)
 if (CMAKE_BUILD_TYPE MATCHES "DEBUG")
-  add_definitions("-DDEBUG -DDEBG")
+  add_definitions("-DDEBUG")
 endif (CMAKE_BUILD_TYPE MATCHES "DEBUG")
 
 if (CMAKE_BUILD_TYPE MATCHES "DEV")
-  message(FATAL_ERROR "The code is not ready for DEV builds")
+  add_definitions("-DDEBUG -DDEBG")
 endif (CMAKE_BUILD_TYPE MATCHES "DEV")
 
 if (ENABLE_INPLACE)
