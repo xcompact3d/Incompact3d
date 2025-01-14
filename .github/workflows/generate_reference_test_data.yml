@@ -41,6 +41,7 @@ jobs:
       run: |
         export PATH=$(pwd)/openmpi-4.1.4/installed/bin/:$PATH
         export FC=mpif90
+        pip install numpy
         cmake -S . -B build 
         cmake --build build -j 2
         cmake --install build
