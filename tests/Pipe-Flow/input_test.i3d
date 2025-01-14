@@ -12,24 +12,24 @@ p_row=0               ! Row partition
 p_col=0               ! Column partition
 
 ! Mesh
-nx=8                  ! X-direction nodes
-ny=320                ! Y-direction nodes
-nz=320                ! Z-direction nodes
+nx=128                ! X-direction nodes
+ny=64                 ! Y-direction nodes
+nz=64                 ! Z-direction nodes
 istret = 0            ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
 beta = 0.0            ! Refinement parameter (beta)
 
 ! Domain
-xlx = 1.25            ! Lx (Size of the box in x-direction)
+xlx = 5.              ! Lx (Size of the box in x-direction)
 yly = 1.6             ! Ly (Size of the box in y-direction)
 zlz = 1.6             ! Lz (Size of the box in z-direction)
 
 ! Flow parameters
-re  = 1500.           ! nu=1/re (Kinematic Viscosity)
+re  = 1000.           ! nu=1/re (Kinematic Viscosity)
 
 ! Time stepping
-dt = 0.0004           ! Time step
+dt = 0.00025          ! Time step
 ifirst = 1            ! First iteration
-ilast = 1000000       ! Last iteration
+ilast = 100           ! Last iteration
 
 ! Enable modelling tools
 ilesmod=0             ! if 0 then DNS
@@ -40,7 +40,7 @@ iibm=2                ! Flag for immersed boundary method
 iin = 1               ! Inflow conditions (1: classic, 2: turbinit, 4: SEM)
 u1  = 1.              ! u1 (max velocity) (for inflow condition)
 u2  = 1.              ! u2 (min velocity) (for inflow condition)
-init_noise = 0.0      ! Turbulence intensity (1=100%) !! Initial condition
+init_noise = 3.0      ! Turbulence intensity (1=100%) !! Initial condition
 inflow_noise = 0.0    ! Turbulence intensity (1=100%) !! Inflow condition
 
 nclx1 = 0
@@ -76,8 +76,8 @@ cnu = 0.44              ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
 
 ! Basic I/O
 irestart = 0          ! Read initial flow field ?
-icheckpoint = 50000   ! Frequency for writing backup file
-ioutput = 10000       ! Frequency for visualization
+icheckpoint = 100     ! Frequency for writing backup file
+ioutput = 50          ! Frequency for visualization
 ilist = 25            ! Frequency for writing to screen        
 nvisu = 1             ! Size for visualisation collection
 
@@ -90,7 +90,7 @@ nvisu = 1             ! Size for visualisation collection
 wrotation = 0.12      ! rotation speed to trigger turbulence
 spinup_time = 5000    ! number of time steps with a rotation to trigger turbulence
 nstat = 1             ! Size arrays for statistic collection
-initstat = 50         ! Time steps after which statistics are collected
+initstat = 100001     ! Time steps after which statistics are collected
 
 /End
 
@@ -104,7 +104,7 @@ initstat = 50         ! Time steps after which statistics are collected
 
 rai=0.50      ! when simulating a pipe, inner radius
 rao=0.70      ! when simulating a pipe, outer radius (defines wall thickness)
-nraf=10000    !level of refinement for iibm==2 to find the surface of the immersed object
+nraf=1000     !level of refinement for iibm==2 to find the surface of the immersed object
 nobjmax=2     !number of immersed objects (DO NOT USE ZERO OBJECTS)
 iforces=0
 

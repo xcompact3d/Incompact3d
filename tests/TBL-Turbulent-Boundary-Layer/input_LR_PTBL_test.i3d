@@ -1,0 +1,152 @@
+! -*- mode: f90 -*-
+!===================
+&BasicParam
+!===================
+! Flow type (1=Lock-exchange, 2=TGV, 3=Channel, 4=Periodic hill, 5=Cylinder, 6=dbg-schemes, 9=Turbulent-Boundary-Layer)
+itype = 15
+
+! Domain decomposition
+p_row = 0               ! Row partition
+p_col = 0               ! Column partition
+
+! Mesh
+nx = 96                ! X-direction nodes
+ny = 129                ! Y-direction nodes
+nz = 32                ! Z-direction nodes
+istret = 3              ! y mesh refinement (0:no, 1:center, 2:both sides, 3:bottom)
+beta =  0.889579572304913             ! Refinement parameter (beta)
+
+! Domain
+xlx = 30.0              ! Lx (Size of the box in x-direction)
+yly = 30.0              ! Ly (Size of the box in y-direction)
+zlz = 10.0              ! Lz (Size of the box in z-direction)
+
+! Boundary conditions
+nclx1 = 0
+nclxn = 0
+ncly1 = 2
+nclyn = 2
+nclz1 = 0
+nclzn = 0
+FreeStream = 0          ! 0 FreeStream off 1 FreeStream on
+
+! Flow parameters
+re = 1000               ! nu=1/re (Kinematic Viscosity)
+iin = 2                 ! Inflow conditions (1: classic, 2: turbinit)
+u1 = 1.0                ! u1 (max velocity) (for inflow condition)
+u2 = 1.0                ! u2 (min velocity) (for inflow condition)
+init_noise = 0.02       ! Turbulence intensity (1=100%) !! Initial condition
+inflow_noise = 0.0      ! Turbulence intensity (1=100%) !! Inflow condition
+
+! Time stepping
+dt = 0.004               ! Time step
+ifirst = 1               ! First iteration
+ilast = 100              ! Last iteration
+
+! Enable modelling tools
+ilesmod = 0            ! if 0 then DNS
+
+/End
+
+!====================
+&NumOptions
+!====================
+! Spatial derivatives
+ifirstder = 4           ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact)
+isecondder = 5          ! (1->2nd central, 2->4th central, 3->4th compact, 4-> 6th compact, 5->hyperviscous 6th)
+ipinter = 2             ! interpolation scheme (1: classic, 2: optimized, 3: optimized agressive)
+
+! Time scheme
+iimplicit = 2           ! Implicit scheme for y-diffusive term
+itimescheme = 3         ! Time integration scheme
+
+! Dissipation control
+nu0nu = 4.0         ! Ratio between hyperviscosity/viscosity at nu
+cnu = 0.44          ! Ratio between hypervisvosity at k_m=2/3pi and k_c= pi
+
+/End
+
+!=================
+&InOutParam
+!=================
+! Basic I/O
+irestart = 0            ! Read initial flow field ?
+icheckpoint = 100       ! Frequency for writing backup file
+ioutput = 50            ! Frequency for visualization
+ilist = 25              ! Frequency for writing to screen
+nvisu = 1               ! Size for visualisation collection
+
+/End
+
+!=================
+&Statistics
+!=================
+nstat = 1               ! Size arrays for statistic collection
+initstat = 100000       ! Time steps after which statistics are collected
+
+/End
+
+!#############################
+! OPTIONAL PARAMETERS
+!#############################
+!================
+&LESModel
+!================
+jles = 0               ! LES Model (1: Phys Smag, 2: Phys WALE, 3: Phys dyn. Smag, 4: iSVV, 5: dyn SEV)
+
+/End
+
+!#############################
+! Theta dot Computation
+!#############################
+!================
+&ThetaDotModel
+!================
+jtheta_dot = 0              ! Theta dot Model (0: Biau, 1: Andy)
+jthickness = 0              ! Model based on (0: Momentum Thickness, 1: Displacement Thickness)
+Method_FT  = 1              ! (0: old, 1: New)
+K_theta    = 1.0            ! K coefficient for e(theta)
+H_12       = 2.4144         ! The ratio of displacement thickness to momentum thickness (laminar flow)
+
+/End
+
+!#############################
+! Blowing
+!#############################
+!================
+&BlowingModel
+!================
+Blowing = 0                 ! Blowing (0: Off, 1: On)
+A_Blowing = 0.0             ! Blowing Power
+Xst_Blowing = 17.5          ! Start Control Region
+Xen_Blowing = 22.5          ! End Control Region
+Range_Smooth = 0.5          ! Adjust this value to control the smoothness of the transition
+
+/End
+
+!#############################
+! Adverse Pressure Gradient
+!#############################
+!================
+&AdversePresGrad
+!================ 
+APG      = 0              ! Adverse Pressure Gradient (0: Off, 1: V1 (APG_DpDX), 2:V2 (Beta) (not working at the moment) )
+APG_DpDX = 2.e-3          ! Pressure gradient
+APG_Beta   = 0.01           ! Beta 
+
+/End
+
+!#############################
+! Probe for Spectra
+!#############################
+!================
+&ProbeSpectra
+!================
+Pro_Spectra   = 0         ! Probe (0: Off, 1: On)
+X_Pro_Spectra = 20        ! X Location
+Z_Pro_Spectra = 7.5       ! Z Location
+
+/End
+
+&CASE
+/End
