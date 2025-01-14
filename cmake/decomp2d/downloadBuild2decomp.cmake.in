@@ -8,7 +8,7 @@ include(ExternalProject)
 
 ExternalProject_Add(downloadBuild2decomp
     GIT_REPOSITORY    "https://github.com/xcompact3d/2decomp-fft"
-    GIT_TAG           "v2.0.3"
+    GIT_TAG           "v2.0.4"
     SOURCE_DIR        "${CMAKE_CURRENT_BINARY_DIR}/decomp2d-src"
     INSTALL_DIR       "${CMAKE_CURRENT_BINARY_DIR}/decomp2d-opt"
     TEST_COMMAND      ""
