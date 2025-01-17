@@ -6,7 +6,7 @@ program xcompact3d
 
   use var
   use case
-
+  use MPI, only: MPI_COMM_WORLD
   use transeq, only : calculate_transeq_rhs
   use time_integrators, only : int_time
   use navier, only : velocity_to_momentum, momentum_to_velocity, pre_correc, &
@@ -20,7 +20,7 @@ program xcompact3d
   use forces, only : force, init_forces, iforces,update_forces, xld,xrd,yld,yud,zld,zrd,torque_calc,nvol
   implicit none
   real(mytype)  :: dummy,drag(10),lift(10),lat(10),grav_effy(10),grav_effx(10),grav_effz(10),xtorq(10),ytorq(10),ztorq(10),maxrad
-  integer :: iounit,ierr,i
+  integer :: iounit,ierr,i,code,ierror
   real, dimension(100) :: x
   character(len=30) :: filename!, filename2
 
@@ -91,7 +91,10 @@ program xcompact3d
                   zld(i) = position(i,3) - maxrad * ra(i) * cvl_scalar
                   zrd(i) = position(i,3) + maxrad * ra(i) * cvl_scalar
                   ! write(*,*) "CV bounds = ", xld(i), xrd(i), yld(i), yud(i), zld(i), zrd(i)
-                  
+                  if ((xld(i).lt.0).or.(xrd(i).gt.xlx).or.(yld(i).lt.0).or.(yud(i).gt.yly).or.(zld(i).lt.0).or.(zrd(i).gt.zlz)) then 
+                     write(*,*) "Body is too close to boundary!"
+                     call MPI_ABORT(MPI_COMM_WORLD,code,ierror)
+                  endif
                endif
             enddo
             if (itime.eq.ifirst) then 
