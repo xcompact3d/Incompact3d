@@ -4,9 +4,9 @@
 
 module ellipsoid_utils
 
-    use decomp_2d, only: mytype
+    ! use decomp_2d, only: mytype
     use param, only: zero, one, two
-    use dbg_schemes, only: sqrt_prec, cos_prec, exp_prec, sin_prec
+    ! use dbg_schemes, only: sqrt_prec, cos_prec, exp_prec, sin_prec
     use ibm_param
     
     implicit none
@@ -153,7 +153,7 @@ contains
       real(mytype),intent(in) :: q(4)
       real(mytype),intent(out):: norm
 
-      norm = sqrt_prec(q(1)**2+q(2)**2+q(3)**2+q(4)**2)
+      norm = sqrt(q(1)**2+q(2)**2+q(3)**2+q(4)**2)
 
     end subroutine QuaternionNorm
 
@@ -217,7 +217,7 @@ contains
          scaled_point(i)=rotated_point(i)/shape(i)
       end do 
 
-      radius=sqrt_prec(scaled_point(1)**2+scaled_point(2)**2+scaled_point(3)**2)
+      radius=sqrt(scaled_point(1)**2+scaled_point(2)**2+scaled_point(3)**2)
 
       ! if (radius /= radius) then
       !     write(*,*) "Got an error in grid check!"
@@ -259,7 +259,7 @@ contains
 
     write(*,*) "Scaled point  = ", scaled_point
 
-    radius=sqrt_prec(scaled_point(1)**2+scaled_point(2)**2+scaled_point(3)**2)
+    radius=sqrt(scaled_point(1)**2+scaled_point(2)**2+scaled_point(3)**2)
 
     write(*,*) "Radius = ", radius
 
@@ -411,9 +411,9 @@ contains
       real(mytype)            :: mag, re_part, im_sc, im_part(3), omega_n1(4)
 
       call QuaternionNorm(omega_q, mag)
-      re_part=cos_prec(mag*time_step*half)
+      re_part=cos(mag*time_step*half)
       if (mag.gt.zero) then
-        im_sc = sin_prec(mag*time_step*half)/mag
+        im_sc = sin(mag*time_step*half)/mag
       else 
         im_sc = zero
       endif
