@@ -263,6 +263,7 @@ contains
          duxydxyp3, uzp3, po3, dipp3, nxmsize, nymsize, nzmsize
     USE MPI
     USE ibm_param
+    USE ellipsoid_utils, ONLY: navierFieldGen
 
     implicit none
 
@@ -274,6 +275,7 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime),intent(in) :: rho1
     !Z PENCILS NXM NYM NZ  -->NXM NYM NZM
     real(mytype),dimension(zsize(1),zsize(2),zsize(3)),intent(in) :: divu3
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3))     :: ep1_ux,ep1_uy,ep1_uz
     real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize),intent(out) :: pp3
 
     integer :: nvect3,i,j,k,nlock
@@ -286,6 +288,11 @@ contains
        ta1(:,:,:) = ux1(:,:,:)
        tb1(:,:,:) = uy1(:,:,:)
        tc1(:,:,:) = uz1(:,:,:)
+    else if (itype.eq.itype_ellip) then
+       call navierFieldGen(ep1, ep1_ux, ep1_uy, ep1_uz)
+       ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:) + ep1(:,:,:)*ep1_ux(:,:,:)
+       tb1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:) + ep1(:,:,:)*ep1_uy(:,:,:)
+       tc1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:) + ep1(:,:,:)*ep1_uz(:,:,:)
     else
        ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:) + ep1(:,:,:)*ubcx
        tb1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:) + ep1(:,:,:)*ubcy
@@ -339,7 +346,7 @@ contains
     pp3(:,:,:) = pp3(:,:,:) + po3(:,:,:)
 
     if (nlock==2) then
-       ! Line below sometimes generates issues with Intel 
+       ! Line below sometimes generates issues with Intel
        !pp3(:,:,:)=pp3(:,:,:)-pp3(ph1%zst(1),ph1%zst(2),nzmsize)
        ! Using a tmp variable seems to sort the issue
        pres_ref = pp3(ph1%zst(1),ph1%zst(2),nzmsize)
@@ -624,9 +631,9 @@ contains
           if (mhd_active) then
              do k=1,xsize(3)
                 do i=1,xsize(1)
-                   ux(i,1,k)=byx1(i,k) 
+                   ux(i,1,k)=byx1(i,k)
                    uy(i,1,k)=byy1(i,k)
-                   uz(i,1,k)=byz1(i,k) 
+                   uz(i,1,k)=byz1(i,k)
                 enddo
              enddo
           else
@@ -654,9 +661,9 @@ contains
           if (mhd_active) then
              do k=1,xsize(3)
                 do i=1,xsize(1)
-                   ux(i,xsize(2),k)=byxn(i,k) 
+                   ux(i,xsize(2),k)=byxn(i,k)
                    uy(i,xsize(2),k)=byyn(i,k)
-                   uz(i,xsize(2),k)=byzn(i,k) 
+                   uz(i,xsize(2),k)=byzn(i,k)
                 enddo
              enddo
           else
@@ -672,9 +679,9 @@ contains
           if (mhd_active) then
              do k=1,xsize(3)
                 do i=1,xsize(1)
-                   ux(i,xsize(2),k)=byxn(i,k) 
+                   ux(i,xsize(2),k)=byxn(i,k)
                    uy(i,xsize(2),k)=byyn(i,k)
-                   uz(i,xsize(2),k)=byzn(i,k) 
+                   uz(i,xsize(2),k)=byzn(i,k)
                 enddo
              enddo
           else
@@ -1195,7 +1202,7 @@ contains
        ! Ensure a default value
        rho0 = 1.0_mytype
     end if
-    
+
   end subroutine calc_rho0
   !############################################################################
   !############################################################################
@@ -1330,7 +1337,7 @@ contains
   !!
   !!  subroutine: pipe_bulk / pipe_bulk_u / pipe_bulk_phi
   !!      AUTHOR: Rodrigo Vicente Cruz
-  !! DESCRIPTION: Correction of pipe's bulk velocity (constant 
+  !! DESCRIPTION: Correction of pipe's bulk velocity (constant
   !!              flow rate) and bulk temperature.
   !!              See Thesis Vicente Cruz 2021 for help.
   !!

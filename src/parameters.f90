@@ -30,7 +30,7 @@ subroutine parameter(input_i3d)
   use mod_stret, only : beta
   use probes, only : nprobes, setup_probes, flag_all_digits, flag_extra_probes, xyzprobes
   use visu, only : output2D
-  use forces, only : iforces, nvol, setup_forces
+  use forces, only : iforces, nvol, xld, xrd, yld, yud, zld, zrd,setup_forces
 
   use mhd, only : mhd_equation,hartmann,stuart,rem
   use particle, only : initype_particle,n_particles,bc_particle,particle_inject_period
@@ -65,17 +65,21 @@ subroutine parameter(input_i3d)
        alpha_sc, beta_sc, g_sc, Tref
   NAMELIST /LESModel/ jles, smagcst, smagwalldamp, nSmag, walecst, maxdsmagcst, iconserv
   NAMELIST /ThetaDotModel/ jtheta_dot,jthickness,Method_FT,K_theta,H_12
-  NAMELIST /BlowingModel/ Blowing,A_Blowing,Xst_Blowing,Xen_Blowing,Range_Smooth  
+  NAMELIST /BlowingModel/ Blowing,A_Blowing,Xst_Blowing,Xen_Blowing,Range_Smooth
   NAMELIST /AdversePresGrad/ APG,APG_DpDX,APG_Beta
   NAMELIST /ProbeSpectra/ Pro_Spectra,X_Pro_Spectra,Z_Pro_Spectra
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
-  NAMELIST /ibmstuff/ cex,cey,cez,ra,rai,rao,nobjmax,nraf,nvol,iforces, npif, izap, ianal, imove, thickness, chord, omega ,ubcx,ubcy,ubcz,rads, c_air
+  NAMELIST /ibmstuff/ ce,sh,ori,lv,av,ra, &
+      nobjmax,nraf,nvol,iforces, cvl_scalar, npif, izap, ianal, imove, thickness, chord, omega , &
+      ubcx,ubcy,ubcz,rads,rho_s, c_air, grav_x,grav_y,grav_z, nozdrift, force_csv, bodies_fixed, cube_flag, tconv2_sign, &
+      torques_flag, orientations_free, shear_flow_ybc, shear_flow_zbc, shear_velocity, torq_debug, torq_flip, ztorq_only, nbody
+  NAMELIST /ForceCVs/ xld, xrd, yld, yud, zld, zrd
   NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, &
        massfrac, mol_weight, imultispecies, primary_species, &
        Fr, ibirman_eos
   NAMELIST /ABL/ z_zero, iwallmodel, k_roughness, ustar, dBL, &
        imassconserve, ibuoyancy, iPressureGradient, iCoriolis, CoriolisFreq, &
-       istrat, idamping, iheight, TempRate, TempFlux, itherm, gravv, UG, T_wall, T_top, ishiftedper, iconcprec, pdl, dsampling 
+       istrat, idamping, iheight, TempRate, TempFlux, itherm, gravv, UG, T_wall, T_top, ishiftedper, iconcprec, pdl, dsampling
   NAMELIST /CASE/ pfront
   NAMELIST/ALMParam/iturboutput,NTurbines,TurbinesPath,NActuatorlines,ActuatorlinesPath,eps_factor,rho_air
   NAMELIST/ADMParam/Ndiscs,ADMcoords,iturboutput,rho_air,T_relax
@@ -130,7 +134,8 @@ subroutine parameter(input_i3d)
      read(10, nml=ProbesParam); rewind(10)
   endif
   if (iforces.eq.1) then
-     call setup_forces(10)
+     allocate(xld(nvol), xrd(nvol), yld(nvol), yud(nvol), zld(nvol), zrd(nvol))
+     read(10, nml=ForceCVs); rewind(10)
   endif
   
   !! Set Scalar BCs same as fluid (may be overridden) [DEFAULT]
@@ -210,7 +215,7 @@ subroutine parameter(input_i3d)
      endif
   endif
 
- 
+
   if(mhd_active) then
     read(10, nml=MHDParam); rewind(10) !! read mhd
     nclxB1(1) = nclxBx1
@@ -234,14 +239,14 @@ subroutine parameter(input_i3d)
    endif
 
    if(particle_active) then
-    read(10, nml=ParTrack); rewind(10) 
+    read(10, nml=ParTrack); rewind(10)
    endif
 
   ! !! These are the 'optional'/model parameters
   if(ilesmod.ne.0) then
      read(10, nml=LESModel); rewind(10)
   endif
-  
+
   !!==> Pasha
   if(itype .eq. 15) then
      read(10, nml=ThetaDotModel); rewind(10)
@@ -298,7 +303,11 @@ subroutine parameter(input_i3d)
   dy2 = dy * dy
   dz2 = dz * dz
 
-  xnu=one/re
+  if (re.gt.0.001) then
+   xnu=one/re
+  else
+   xnu=zero
+  endif
   !! Constant pressure gradient, re = Re_tau -> use to compute Re_centerline
   if (cpg) then
     re_cent = (re/0.116_mytype)**(1.0_mytype/0.88_mytype)
@@ -393,7 +402,9 @@ subroutine parameter(input_i3d)
      elseif (itype.eq.itype_cavity) then
         print *,'Cavity'  
      elseif (itype.eq.itype_ptbl) then
-        print *,'Temporal turbulent boundary layer' 
+        print *,'Temporal turbulent boundary layer'
+     elseif (itype.eq.itype_ellip) then
+        print *,'Simulating Ellipsoid'
      else
         print *,'Unknown itype: ', itype
         stop
@@ -468,32 +479,32 @@ subroutine parameter(input_i3d)
        endif
      endif
      write(*,*) '==========================================================='
-     if (FreeStream==0) then 
+     if (FreeStream==0) then
          write(*,"(' FreeStream (BC)           : ',A10)") "Off"
      else if (FreeStream==1) then
          write(*,"(' FreeStream (BC)           : ',A10)") "On"
-     end if         
+     end if
      write(*,*) '==========================================================='
-      if (jtheta_dot==0) then 
+      if (jtheta_dot==0) then
          write(*,"(' Theta dot Model           : ',A10)") "Biau"
       else if (jtheta_dot==1) then
          write(*,"(' Theta dot Model           : ',A10)") "Andy"
-         if (jthickness ==0) then 
+         if (jthickness ==0) then
             write(*,"(' Model works based on      : ',A25)") "Momentum Thickness"
          else
             write(*,"(' Model works based on      : ',A25)") "Displacement Thickness"
-            write(*,"(' H_12 for scaling          : ',F12.6)") H_12 
+            write(*,"(' H_12 for scaling          : ',F12.6)") H_12
          end if
-         if (Method_FT ==0) then 
+         if (Method_FT ==0) then
             write(*,"(' Theta Model version       : ',A25)") " v1.0 "
-         elseif (Method_FT ==1) then 
+         elseif (Method_FT ==1) then
             write(*,"(' Theta Model version       : ',A25)") " v2.0 "
          end if
-         write(*,"(' K coefficient => e(Th)    : ',F12.6)") K_theta 
+         write(*,"(' K coefficient => e(Th)    : ',F12.6)") K_theta
       endif
 
       write(*,*) '==========================================================='
-      if (Blowing==0) then 
+      if (Blowing==0) then
          write(*,"(' Blowing                   : ',A10)") "Off"
       elseif (Blowing==1) then
          write(*,"(' Blowing                   : ',A10)") "On"
@@ -505,18 +516,18 @@ subroutine parameter(input_i3d)
       endif
 
       write(*,*) '==========================================================='
-      if (APG==0) then 
+      if (APG==0) then
          write(*,"(' Adverse Pressure Gradient : ',A10)") "Off"
       elseif (APG==1) then
          write(*,"(' Adverse Pressure Gradient : ',A10)") "On"
          write(*,"(' Pressure Gradient         : ',F12.6)") APG_DpDX
       elseif (APG==2) then
          write(*,"(' Adverse Pressure Gradient : ',A10)") "On"
-         write(*,"(' Beta of Pressure Gradient : ',F12.6)") APG_Beta         
+         write(*,"(' Beta of Pressure Gradient : ',F12.6)") APG_Beta
       endif
 
       write(*,*) '==========================================================='
-      if (Pro_Spectra==0) then 
+      if (Pro_Spectra==0) then
          write(*,"(' Probe for Spectra         : ',A10)") "Off"
       elseif (Pro_Spectra==1) then
          write(*,"(' Probe for Spectra         : ',A10)") "On"
@@ -685,7 +696,7 @@ subroutine parameter_defaults()
   use visu, only : output2D
   use forces, only : iforces, nvol
 
-  use mhd, only: mhd_equation, rem, stuart, hartmann 
+  use mhd, only: mhd_equation, rem, stuart, hartmann
   use particle, only : initype_particle,n_particles,bc_particle,particle_inject_period
 
   implicit none
@@ -732,11 +743,11 @@ subroutine parameter_defaults()
   smagcst=0.15
   maxdsmagcst=0.3
 
-  
+
   !! SVV stuff
   nu0nu=four
   cnu=0.44_mytype
-  
+
   !! IBM stuff
   nraf = 0
   nobjmax = 0
@@ -750,6 +761,16 @@ subroutine parameter_defaults()
   wrotation = zero
   irotation = 0
   itest=1
+  oriw=one
+  rho_s=one
+  cvl_scalar=onepfive
+  grav_y=zero
+  grav_x=zero
+  grav_z=zero
+  nozdrift=0
+  force_csv=0
+  nbody=1
+  ra(:) = 1.0
 
   !! Gravity field
   gravx = zero

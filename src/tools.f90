@@ -131,6 +131,11 @@ contains
          call MPI_ABORT(MPI_COMM_WORLD,code,ierror)
          stop
        endif
+       if (uxmin1 /= uxmin1) then
+         write(*,*) 'NaN solutions for flow and body occurred!'
+         call MPI_ABORT(MPI_COMM_WORLD,code,ierror)
+         stop
+       endif
 
     endif
 
@@ -143,6 +148,7 @@ contains
     use simulation_stats
     use var
     use MPI
+    use ibm_param, only: position,orientation
 
     implicit none
 
@@ -480,7 +486,7 @@ contains
        end if
 
        if(particle_active) call particle_checkpoint(mode='read')
-       
+
     endif
 
     if (nrank==0) then
@@ -520,7 +526,7 @@ contains
     use param, only : ilmn, nrhotime, ntime, mhd_active
     use var, only : itimescheme, iibm
     use mhd, only : mhd_equation
-    
+
     implicit none
 
     integer :: ierror
@@ -578,7 +584,7 @@ contains
        end do
        call decomp_2d_register_variable(io_restart, "mu", 1, 0, 0, mytype)
     end if
- 
+
     if (mhd_active .and. mhd_equation == 'induction') then
        call decomp_2d_register_variable(io_restart, "bx", 1, 0, 0, mytype)
        call decomp_2d_register_variable(io_restart, "by", 1, 0, 0, mytype)
@@ -735,7 +741,7 @@ contains
   !!  SUBROUTINE: append_outflow
   !############################################################################
   subroutine append_outflow(ux,uy,uz,timestep)
- 
+
     use decomp_2d_io
     use var, only: ux_recoutflow, uy_recoutflow, uz_recoutflow, ilist
     use param
@@ -746,7 +752,7 @@ contains
     integer, intent(in) :: timestep
     integer :: j,k
 
-    if (nrank==0.and.mod(itime,ilist)==0) print *, 'Appending outflow', timestep 
+    if (nrank==0.and.mod(itime,ilist)==0) print *, 'Appending outflow', timestep
     do k=1,xsize(3)
     do j=1,xsize(2)
       ux_recoutflow(timestep,j,k)=ux(xend(1),j,k)
@@ -829,20 +835,20 @@ contains
         write(*,"(' cfl_diff_sum           :        ',F13.8)") cfl_diff_sum
         write(*,*) '==========================================================='
      endif
-     
+
      if( mhd_active .and. mhd_equation=='induction') then
- 
+
         cfl_diff_x = dt/ (dx**2) / rem
         cfl_diff_z = dt/ (dz**2) / rem
-   
+
         if (istret == 0) then
            cfl_diff_y = dt / (dy**2) / rem
         else
            cfl_diff_y = dt / (minval(dyp)**2) / rem
         end if
-   
+
         cfl_diff_sum = cfl_diff_x + cfl_diff_y + cfl_diff_z
-   
+
         if (nrank==0) then
            write(*,*) '==========================================================='
            write(*,*) 'Magnetic Diffusion number'
@@ -852,7 +858,7 @@ contains
            write(*,"(' B cfl_diff_sum           :        ',F13.8)") cfl_diff_sum
            write(*,*) '==========================================================='
         endif
-     endif  
+     endif
 
      return
   end subroutine compute_cfldiff

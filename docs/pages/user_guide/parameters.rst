@@ -245,7 +245,7 @@ cex,cey,ra,nobjmax,nraf,nvol,iforces
 ForceCVs
 --------
 
-xld, xrd, yld, yud
+xld, xrd, yld, yud, zld, zrd
 
 LMN
 ---

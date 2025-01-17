@@ -18,7 +18,7 @@ subroutine derx_00(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz):: sx
   real(mytype), dimension(nx):: ffx,fsx,fwx
-  real(mytype)                      :: lind
+  integer                      :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -79,7 +79,7 @@ subroutine derx_11(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz):: sx
   real(mytype), dimension(nx):: ffx,fsx,fwx
-  real(mytype)                      :: lind
+  integer                     :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -152,7 +152,7 @@ subroutine derx_12(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz):: sx
   real(mytype), dimension(nx):: ffx,fsx,fwx
-  real(mytype)                      :: lind
+  integer                    :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -222,7 +222,7 @@ subroutine derx_21(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz):: sx
   real(mytype), dimension(nx):: ffx,fsx,fwx
-  real(mytype)                      :: lind
+  integer                        :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -292,7 +292,7 @@ subroutine derx_22(tx,ux,rx,sx,ffx,fsx,fwx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz):: sx
   real(mytype), dimension(nx):: ffx,fsx,fwx
-  real(mytype)                      :: lind
+  integer                      :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -337,7 +337,7 @@ subroutine dery_00(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: sy
   real(mytype), dimension(ny) :: ffy,fsy,fwy,ppy
-  real(mytype)                      :: lind
+  integer                           :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -435,7 +435,7 @@ subroutine dery_11(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: sy
   real(mytype), dimension(ny) :: ffy,fsy,fwy,ppy
-  real(mytype)                      :: lind
+  integer                           :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -557,7 +557,7 @@ subroutine dery_12(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: sy
   real(mytype), dimension(ny) :: ffy,fsy,fwy,ppy
-  real(mytype)                      :: lind
+  integer                           :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -676,7 +676,7 @@ subroutine dery_21(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: sy
   real(mytype), dimension(ny) :: ffy,fsy,fwy,ppy
-  real(mytype)                      :: lind
+  integer                           :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -795,7 +795,7 @@ subroutine dery_22(ty,uy,ry,sy,ffy,fsy,fwy,ppy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ry
   real(mytype), dimension(nx,nz)  :: sy
   real(mytype), dimension(ny) :: ffy,fsy,fwy,ppy
-  real(mytype)                      :: lind
+  integer                           :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -869,7 +869,7 @@ subroutine derz_00(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: ffz,fsz,fwz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (nz==1) then
      tz = 0.
@@ -962,7 +962,7 @@ subroutine derz_11(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: ffz,fsz,fwz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)
@@ -1075,7 +1075,7 @@ subroutine derz_12(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: ffz,fsz,fwz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)
@@ -1187,7 +1187,7 @@ subroutine derz_21(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: ffz,fsz,fwz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)
@@ -1299,7 +1299,7 @@ subroutine derz_22(tz,uz,rz,sz,ffz,fsz,fwz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: ffz,fsz,fwz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)
@@ -1365,7 +1365,7 @@ subroutine derxx_00(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: sx
   real(mytype),  dimension(nx):: sfx,ssx,swx
-  real(mytype)                      :: lind
+  integer                      :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -1492,7 +1492,7 @@ subroutine derxx_11(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: sx
   real(mytype),  dimension(nx):: sfx,ssx,swx
-  real(mytype)                      :: lind
+  integer                       :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -1677,7 +1677,7 @@ subroutine derxx_12(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: sx
   real(mytype),  dimension(nx):: sfx,ssx,swx
-  real(mytype)                      :: lind
+  integer                     :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -1833,7 +1833,7 @@ subroutine derxx_21(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: sx
   real(mytype),  dimension(nx):: sfx,ssx,swx
-  real(mytype)                      :: lind
+  integer                       :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -1989,7 +1989,7 @@ subroutine derxx_22(tx,ux,rx,sx,sfx,ssx,swx,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tx,ux,rx
   real(mytype), dimension(ny,nz) :: sx
   real(mytype),  dimension(nx):: sfx,ssx,swx
-  real(mytype)                      :: lind
+  integer                        :: lind
 
   if (iibm.eq.2) call lagpolx(ux)
   if (iibm.eq.3) call cubsplx(ux,lind)
@@ -2063,7 +2063,7 @@ subroutine deryy_00(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ty,uy,ry
   real(mytype), dimension(nx,nz) :: sy
   real(mytype), dimension(ny) :: sfy,ssy,swy
-  real(mytype)                      :: lind
+  integer                           :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -2218,7 +2218,7 @@ subroutine deryy_11(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ty,uy,ry
   real(mytype), dimension(nx,nz) :: sy
   real(mytype), dimension(ny) :: sfy,ssy,swy
-  real(mytype)                      :: lind
+  integer                           :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -2444,7 +2444,7 @@ subroutine deryy_12(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ty,uy,ry
   real(mytype), dimension(nx,nz) :: sy
   real(mytype), dimension(ny) :: sfy,ssy,swy
-  real(mytype)                      :: lind
+  integer                           :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -2642,7 +2642,7 @@ subroutine deryy_21(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ty,uy,ry
   real(mytype), dimension(nx,nz) :: sy
   real(mytype), dimension(ny) :: sfy,ssy,swy
-  real(mytype)                      :: lind
+  integer                           :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -2840,7 +2840,7 @@ subroutine deryy_22(ty,uy,ry,sy,sfy,ssy,swy,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: ty,uy,ry
   real(mytype), dimension(nx,nz) :: sy
   real(mytype), dimension(ny) :: sfy,ssy,swy
-  real(mytype)                      :: lind
+  integer                           :: lind
 
   if (iibm.eq.2) call lagpoly(uy)
   if (iibm.eq.3) call cubsply(uy,lind)
@@ -2934,7 +2934,7 @@ subroutine derzz_00(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: sfz,ssz,swz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (nz==1) then
      tz = 0.
@@ -3093,7 +3093,7 @@ subroutine derzz_11(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: sfz,ssz,swz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)
@@ -3318,7 +3318,7 @@ subroutine derzz_12(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: sfz,ssz,swz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)
@@ -3514,7 +3514,7 @@ subroutine derzz_21(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: sfz,ssz,swz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)
@@ -3710,7 +3710,7 @@ subroutine derzz_22(tz,uz,rz,sz,sfz,ssz,swz,nx,ny,nz,npaire,lind)
   real(mytype), dimension(nx,ny,nz) :: tz,uz,rz
   real(mytype), dimension(nx,ny) :: sz
   real(mytype), dimension(nz) :: sfz,ssz,swz
-  real(mytype)                      :: lind
+  integer                            :: lind
 
   if (iibm.eq.2) call lagpolz(uz)
   if (iibm.eq.3) call cubsplz(uz,lind)

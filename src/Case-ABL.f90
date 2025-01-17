@@ -418,24 +418,24 @@ contains
     endif
 
     call filter(zero)
-    call filx(uxf1,ux,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,ubcx)
-    call filx(uzf1,uz,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
+    call filx(uxf1,ux,di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,1) !x is 1 etc
+    call filx(uzf1,uz,di1,fisx,fiffxp,fifsxp,fifwxp,xsize(1),xsize(2),xsize(3),1,3)
     call transpose_x_to_y(uxf1,ta2)
     call transpose_x_to_y(uzf1,tb2)
     call transpose_y_to_z(ta2,ta3)
     call transpose_y_to_z(tb2,tb3)
-    call filz(uxf3,ta3,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
-    call filz(uzf3,tb3,di3,fisz,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),0,ubcz)
+    call filz(uxf3,ta3,di3,fisz,fiffzp,fifszp,fifwzp,zsize(1),zsize(2),zsize(3),1,1)
+    call filz(uzf3,tb3,di3,fisz,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),0,3)
     call transpose_z_to_y(uxf3,ta2)
     call transpose_z_to_y(uzf3,tb2)
     call transpose_y_to_x(ta2,uxf1)
     call transpose_y_to_x(tb2,uzf1)
 
     if (iscalar==1) then
-      call filx(phif1,phi(:,:,:,1),di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,zero)
+      call filx(phif1,phi(:,:,:,1),di1,fisx,fiffx,fifsx,fifwx,xsize(1),xsize(2),xsize(3),0,0)
       call transpose_x_to_y(phif1,ta2)
       call transpose_y_to_z(ta2,ta3)
-      call filz(phif3,ta3,di3,fisz,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),0,zero)
+      call filz(phif3,ta3,di3,fisz,fiffz,fifsz,fifwz,zsize(1),zsize(2),zsize(3),0,0)
       call transpose_z_to_y(phif3,ta2)
       call transpose_y_to_x(ta2,phif1)
     endif

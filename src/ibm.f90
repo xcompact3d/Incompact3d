@@ -15,6 +15,7 @@ contains
     USE param
     USE decomp_2d
     USE variables
+
     implicit none
     integer :: i,j,k,nlock
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,px,py,pz
@@ -51,7 +52,7 @@ contains
   !############################################################################
   subroutine body(ux1,uy1,uz1,ep1)
     use param, only : zero, one, dx, dz
-    use decomp_2d, only : xstart, xend, xsize
+    use decomp_2d, only : xstart, xend, xsize, mytype, nrank
     !use decomp_2d_io
     use variables, only : ny
     implicit none
@@ -403,6 +404,8 @@ subroutine cubsplx(u,lind)
   USE decomp_2d
   USE variables
   USE ibm_param
+  USE ellipsoid_utils, ONLY: CalculatePointVelocity_Multi, ibm_bcimp_calc
+    !
   USE decomp_2d_mpi, only : decomp_2d_abort
   !
   implicit none
@@ -420,6 +423,8 @@ subroutine cubsplx(u,lind)
   real(mytype)                                       :: bcimp           ! Imposed BC 
   integer                                            :: inxi,inxf
   real(mytype)                                       :: ana_resi,ana_resf         ! Position of Boundary (Analytically)
+  real(mytype)                                       :: point(3),pointVelocity(3)
+  real(mytype)                                       :: xm,ym,zm
   !
   ! Initialise Arrays
   xa(:)=0.
@@ -429,11 +434,16 @@ subroutine cubsplx(u,lind)
   bcimp=lind  
   !
   do k=1,xsize(3)
+   zm=real(xstart(3)+k-1,mytype)*dz
      do j=1,xsize(2)
+      ym=real(xstart(2)+j-1,mytype)*dy
         if(nobjx(j,k).ne.0)then
            ia=0
            do i=1,nobjx(j,k)          
-              !  1st Boundary
+              !  1st Boundary - I DON'T UNDERSTAND THIS XM CONVERSION.
+            ! write(*,*) "Nobjx = ", nobjx(j,k)
+            ! xm=real(xstart(1)+i-2,mytype)*dx
+            xm = xi(i,j,k)
               nxpif=npif
               ia=ia+1
               if (ianal.eq.0) then
@@ -443,6 +453,18 @@ subroutine cubsplx(u,lind)
                  call analitic_x(j,xi(i,j,k),ana_resi,k) ! Calculate the position of BC analytically
                  xa(ia)=ana_resi
               endif
+              point=[xm,ym,zm]
+              call CalculatePointVelocity_Multi(point, pointVelocity)
+            !   write(*,*) "Called CPV at ", point, "returned", pointVelocity
+            !   call EllipsoidalRadius(point, position, orientation, shape, dummy)
+            !   dummy = maxval(abs((point(2:3)-position(2:3))))
+            !   if ((dummy.gt.(1.01)).or.(dummy.lt.0.99)) then
+            !    write(*,*) "At ", point, "r = ", dummy
+            !   endif
+            !   write(*,*) "Radius = ", dummy
+               ! write(*,*) "radius = ", dummy, "At point", point
+              call ibm_bcimp_calc(pointVelocity, lind, bcimp)
+
               ya(ia)=bcimp
               if(xi(i,j,k).gt.0.)then ! Immersed Object
                  inxi=0
@@ -487,7 +509,20 @@ subroutine cubsplx(u,lind)
                  call analitic_x(j,xf(i,j,k),ana_resf,k) ! Calculate the position of BC analytically
                  xa(ia)=ana_resf
               endif              
-              ya(ia)=bcimp              
+              xm = xf(i,j,k)
+              point=[xm,ym,zm]
+              call CalculatePointVelocity_Multi(point, pointVelocity)
+            !   write(*,*) "Called CPV at ", point, "returned", pointVelocity
+            !   call EllipsoidalRadius(point, position, orientation, shape, dummy)
+            !   dummy = maxval(abs(point-position))
+            !   write(*,*) "Radius = ", dummy
+            !   dummy = maxval(abs(point-position))
+            !   if ((dummy.gt.(1.01)).or.(dummy.lt.0.99)) then
+            !    write(*,*) "At ", point, "r = ", dummy
+            !   endif
+              call ibm_bcimp_calc(pointVelocity, lind, bcimp)  !take correct part of pointVelocity for equation type.
+
+              ya(ia)=bcimp
               if(xf(i,j,k).lt.xlx)then ! Immersed Object
                  inxf=0
                  ix=(xf(i,j,k)+dx)/dx+1
@@ -523,20 +558,20 @@ subroutine cubsplx(u,lind)
               ! Special Case
               if (xi(i,j,k).eq.xf(i,j,k)) then
                  call decomp_2d_abort(1, "!! situation not supported by the IBM !!")
-                 !u(ipol,j,k)=bcimp                                   
+                 !u(ipol,j,k)=bcimp
               else
               ! Cubic Spline Reconstruction
                  na=ia
                  do ipol=ipoli,ipolf
                     if ((inxf.eq.1).and.(inxi.eq.1)) then ! If the Body Extends from the Inlet to the Outlet (Special Case)
-                       u(ipol,j,k)=bcimp                            
+                       u(ipol,j,k)=bcimp
                     else
                        xpol=dx*(ipol-1)
                        if (xpol.eq.ana_resi) then
                           u(ipol,j,k)=bcimp
                        elseif (xpol.eq.ana_resf) then
                           u(ipol,j,k)=bcimp
-                       else   
+                       else
                           call cubic_spline(xa,ya,na,xpol,ypol)
                           u(ipol,j,k)=ypol
                        endif
@@ -564,6 +599,7 @@ subroutine cubsply(u,lind)
   USE variables
   USE ibm_param
   USE decomp_2d_mpi, only : decomp_2d_abort
+  USE ellipsoid_utils, ONLY: CalculatePointVelocity_Multi, ibm_bcimp_calc
   !
   implicit none
   !
@@ -580,6 +616,8 @@ subroutine cubsply(u,lind)
   real(mytype)                                       :: bcimp           ! Imposed BC 
   integer                                            :: inxi,inxf  
   real(mytype)                                       :: ana_resi,ana_resf
+  real(mytype)                                       :: point(3),pointVelocity(3)
+  real(mytype)                                       :: xm,ym,zm
   !
   ! Initialise Arrays
   xa(:)=0.
@@ -589,10 +627,13 @@ subroutine cubsply(u,lind)
   bcimp=lind  
   !
   do k=1,ysize(3)
+   zm=real(ystart(3)+k-1,mytype)*dz
      do i=1,ysize(1)
+      xm=real(ystart(1)+i-1,mytype)*dx
         if(nobjy(i,k).ne.0)then
            ia=0
-           do j=1,nobjy(i,k)          
+           do j=1,nobjy(i,k)
+            ! ym=real(ystart(2)+j-2,mytype)*dy
               !  1st Boundary
               nypif=npif
               ia=ia+1
@@ -603,6 +644,12 @@ subroutine cubsply(u,lind)
                  call analitic_y(i,yi(j,i,k),ana_resi,k) ! Calculate the position of BC analytically
                  xa(ia)=ana_resi
               endif  
+              ym = yi(j,i,k)
+              point=[xm,ym,zm]
+              call CalculatePointVelocity_Multi(point, pointVelocity)
+
+              call ibm_bcimp_calc(pointVelocity, lind, bcimp)  !take correct part of pointVelocity for equation type.
+
               ya(ia)=bcimp
               if(yi(j,i,k).gt.0.)then ! Immersed Object
                  jy=1
@@ -652,6 +699,12 @@ subroutine cubsply(u,lind)
                  call analitic_y(i,yf(j,i,k),ana_resf,k) ! Calculate the position of BC analytically
                  xa(ia)=ana_resf
               endif  
+              ym = yf(j,i,k)
+              point=[xm,ym,zm]
+              call CalculatePointVelocity_Multi(point, pointVelocity)
+
+              call ibm_bcimp_calc(pointVelocity, lind, bcimp)  !take correct part of pointVelocity for equation type.
+
               ya(ia)=bcimp
               if(yf(j,i,k).lt.yly)then ! Immersed Object
                  jy=1
@@ -692,7 +745,7 @@ subroutine cubsply(u,lind)
               ! Special Case
               if (yi(j,i,k).eq.yf(j,i,k)) then
                  call decomp_2d_abort(1, "!! situation not supported by the IBM !!")
-                 !u(i,jpol,k)=bcimp                                   
+                 !u(i,jpol,k)=bcimp
               else
                  !calcul du polynôme
                  na=ia
@@ -702,7 +755,7 @@ subroutine cubsply(u,lind)
                        u(i,jpol,k)=bcimp
                     elseif (xpol.eq.ana_resf) then
                        u(i,jpol,k)=bcimp
-                    else   
+                    else
                        call cubic_spline(xa,ya,na,xpol,ypol)
                        u(i,jpol,k)=ypol
                     endif
@@ -729,6 +782,7 @@ subroutine cubsplz(u,lind)
   USE variables
   USE ibm_param
   USE decomp_2d_mpi, only : decomp_2d_abort
+  USE ellipsoid_utils, ONLY: CalculatePointVelocity_Multi, ibm_bcimp_calc
   !
   implicit none
   !
@@ -745,6 +799,9 @@ subroutine cubsplz(u,lind)
   real(mytype)                                       :: bcimp           ! Imposed BC 
   integer                                            :: inxi,inxf  
   real(mytype)                                       :: ana_resi,ana_resf
+  real(mytype)                                       :: point(3),pointVelocity(3)
+  real(mytype)                                       :: xm,ym,zm
+
   !
   ! Initialise Arrays
   xa(:)=zero
@@ -754,11 +811,14 @@ subroutine cubsplz(u,lind)
   bcimp=lind  
   !
   do j=1,zsize(2)
+   ym=real(zstart(2)+j-1,mytype)*dy
      do i=1,zsize(1)
+      xm=real(zstart(1)+i-1,mytype)*dx
         if(nobjz(i,j).ne.0)then
            ia=0
            do k=1,nobjz(i,j)          
               !  1st Boundary
+            ! zm=real(zstart(3)+k-2,mytype)*dz
               nzpif=npif
               ia=ia+1
               if (ianal.eq.0) then
@@ -768,6 +828,12 @@ subroutine cubsplz(u,lind)
 !                 call analitic_z(i,zi(k,i,j),ana_resi,j) ! Calculate the position of BC analytically
                  xa(ia)=ana_resi
               endif  
+              zm = zi(k,i,j)
+              point=[xm,ym,zm]
+              call CalculatePointVelocity_Multi(point, pointVelocity)
+
+              call ibm_bcimp_calc(pointVelocity, lind, bcimp)  !take correct part of pointVelocity for equation type.
+
               ya(ia)=bcimp
               if(zi(k,i,j).gt.0.)then ! Immersed Object
                  inxi=0
@@ -810,6 +876,12 @@ subroutine cubsplz(u,lind)
                  !call analitic_z(i,zf(k,i,j),ana_resf,j) ! Calculate the position of BC analytically
                  xa(ia)=ana_resf
               endif
+              zm = zi(k,i,j)
+              point=[xm,ym,zm]
+              call CalculatePointVelocity_Multi(point, pointVelocity)
+
+              call ibm_bcimp_calc(pointVelocity, lind, bcimp)  !take correct part of pointVelocity for equation type.
+
               ya(ia)=bcimp
               if(zf(k,i,j).lt.zlz)then  ! Immersed Object
                  inxf=0
@@ -846,17 +918,17 @@ subroutine cubsplz(u,lind)
               if (zi(k,i,j).eq.zf(k,i,j)) then
                  !u(i,j,kpol)=bcimp
                  call decomp_2d_abort(1, "!! situation not supported by the IBM !!")
-              else              
+              else
               ! Cubic Spline Reconstruction
                  na=ia
-                 do kpol=kpoli,kpolf 
+                 do kpol=kpoli,kpolf
                  ! Special Case
                     if (zi(k,i,j).eq.zf(k,i,j)) then
                        u(i,j,kpol)=bcimp
                     else
                        if ((inxf.eq.1).and.(inxi.eq.1)) then ! If the Body Extends from the Front to the Back (Special Case)
-                          u(i,j,kpol)=bcimp                            
-                       else              
+                          u(i,j,kpol)=bcimp
+                       else
                           xpol=dz*(kpol-1)
                           call cubic_spline(xa,ya,na,xpol,ypol)
                           u(i,j,kpol)=ypol
@@ -992,9 +1064,9 @@ subroutine ana_y_cyl(i,y_pos,ana_res)
      ceyy = cey
   endif
   if (y_pos.gt.ceyy) then     ! Impose analytical BC
-      ana_res=ceyy + sqrt(ra**2.0-((i+ystart(1)-1-1)*dx-cexx)**2.0)
+      ana_res=ceyy + sqrt(ra(1)**2.0-((i+ystart(1)-1-1)*dx-cexx)**2.0)
   else
-      ana_res=ceyy - sqrt(ra**2.0-((i+ystart(1)-1-1)*dx-cexx)**2.0)
+      ana_res=ceyy - sqrt(ra(1)**2.0-((i+ystart(1)-1-1)*dx-cexx)**2.0)
   endif     
   !
   return
@@ -1023,9 +1095,9 @@ subroutine ana_x_cyl(j,x_pos,ana_res)
      ceyy = cey
   endif
   if (x_pos.gt.cexx) then     ! Impose analytical BC
-      ana_res = cexx + sqrt(ra**2.0-(yp(j+xstart(2)-1)-ceyy)**2.0)
+      ana_res = cexx + sqrt(ra(1)**2.0-(yp(j+xstart(2)-1)-ceyy)**2.0)
   else
-      ana_res = cexx - sqrt(ra**2.0-(yp(j+xstart(2)-1)-ceyy)**2.0)
+      ana_res = cexx - sqrt(ra(1)**2.0-(yp(j+xstart(2)-1)-ceyy)**2.0)
   endif     
   !
   return
