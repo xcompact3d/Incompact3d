@@ -188,6 +188,8 @@ contains
   !############################################################################
   subroutine postprocess_tgv(ux1,uy1,uz1,phi1,ep1)
 
+    use iso_fortran_env
+    
     USE decomp_2d_io
     USE variables, only: nx,ny,nz
     USE MPI
@@ -205,7 +207,8 @@ contains
     real(mytype), allocatable, dimension(:,:,:) :: bx2,by2,bz2,bx3,by3,bz3
     real(mytype) :: eek, enst, eps, eps2
     real(mytype) :: eem,omegam,jmax,disb,omegab
-    integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
+    integer :: xsize1, xsize2, xsize3
+    integer(int64) :: nxc, nyc, nzc
 
     integer :: i,j,k,is,code,nvect1
     character(len=30) :: filename
