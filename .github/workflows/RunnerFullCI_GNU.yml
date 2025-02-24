@@ -24,14 +24,14 @@ jobs:
         clean: true
 
     # Configure-Build-Run-Run on 4 cores 
-    - name: Compile GNU openMPI FFTW CPU
+    - name: Compile GNU openMPI CPU
       run: |
         ls -ltr ~/.bashrc
         source /etc/profile.d/lmod.sh
         source ~/.bash_aliases
         module load foss
         export FC=mpif90
-        cmake -S . -B build -DBUILD_TESTING=ON 
+        cmake -S . -B build -DBUILD_TESTING_FULL=ON 
         cmake --build build -j 4
         cmake --install build 
         ctest --test-dir build --output-on-failure
