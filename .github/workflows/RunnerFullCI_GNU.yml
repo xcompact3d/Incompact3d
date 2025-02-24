@@ -1,0 +1,38 @@
+# This is a basic workflow to help you get started with Actions
+name: FullCI4PR_gnu
+
+defaults:
+  run:
+    shell: bash 
+
+# Controls when the action will run. Triggers the workflow on pull request
+# events but only for the master branch
+on: [pull_request, fork]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a job called "bld_gnu_ompi"
+  Full_CI_GNU_double:
+    # The type of runner that the job will run on
+    runs-on: [self-hosted, linux, x64]
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v4
+      with: 
+        clean: true
+
+    # Configure-Build-Run-Run on 4 cores 
+    - name: Compile GNU openMPI FFTW CPU
+      run: |
+        ls -ltr ~/.bashrc
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
+        module load foss
+        export FC=mpif90
+        cmake -S . -B build -DBUILD_TESTING=ON 
+        cmake --build build -j 4
+        cmake --install build 
+        ctest --test-dir build --output-on-failure
+        rm -rf build  
