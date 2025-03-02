@@ -52,7 +52,7 @@ contains
   !############################################################################
   subroutine body(ux1,uy1,uz1,ep1)
     use param, only : zero, one, dx, dz
-    use decomp_2d, only : xstart, xend, xsize, mytype, nrank
+    use decomp_2d, only : xstart, xend, xsize
     !use decomp_2d_io
     use variables, only : ny
     implicit none
@@ -419,7 +419,7 @@ subroutine cubsplx(u,lind)
   real(mytype)                                       :: xpol,ypol       ! Position and Value of the Reconstructed Solution 
   real(mytype),dimension(10)                         :: xa,ya           ! Position and Value of the Input Data Function 
   integer                                            :: ia,na           
-  real(mytype)                                       :: lind            ! Identifying which BC to Impose
+  integer                                            :: lind,lind_2            ! Identifying which BC to Impose
   real(mytype)                                       :: bcimp           ! Imposed BC 
   integer                                            :: inxi,inxf
   real(mytype)                                       :: ana_resi,ana_resf         ! Position of Boundary (Analytically)
@@ -431,8 +431,12 @@ subroutine cubsplx(u,lind)
   ya(:)=0.
   !
   ! Impose the Correct BC
-  bcimp=lind  
-  !
+  if (itype.eq.itype_ellip) then !variable surface values
+   lind_2=-lind
+  else
+   lind_2=lind  
+  end if
+  
   do k=1,xsize(3)
    zm=real(xstart(3)+k-1,mytype)*dz
      do j=1,xsize(2)
@@ -463,7 +467,7 @@ subroutine cubsplx(u,lind)
             !   endif
             !   write(*,*) "Radius = ", dummy
                ! write(*,*) "radius = ", dummy, "At point", point
-              call ibm_bcimp_calc(pointVelocity, lind, bcimp)
+              call ibm_bcimp_calc(pointVelocity, lind_2, bcimp)
 
               ya(ia)=bcimp
               if(xi(i,j,k).gt.0.)then ! Immersed Object
@@ -520,7 +524,7 @@ subroutine cubsplx(u,lind)
             !   if ((dummy.gt.(1.01)).or.(dummy.lt.0.99)) then
             !    write(*,*) "At ", point, "r = ", dummy
             !   endif
-              call ibm_bcimp_calc(pointVelocity, lind, bcimp)  !take correct part of pointVelocity for equation type.
+              call ibm_bcimp_calc(pointVelocity, lind_2, bcimp)  !take correct part of pointVelocity for equation type.
 
               ya(ia)=bcimp
               if(xf(i,j,k).lt.xlx)then ! Immersed Object
@@ -612,7 +616,7 @@ subroutine cubsply(u,lind)
   real(mytype)                                       :: xpol,ypol,dypol ! Position and Value of the Reconstructed Solution 
   real(mytype),dimension(10)                         :: xa,ya           ! Position and Value of the Input Data Function 
   integer                                            :: ia,na           
-  real(mytype)                                       :: lind            ! Identifying which BC to Impose
+  integer                                            :: lind, lind_2            ! Identifying which BC to Impose
   real(mytype)                                       :: bcimp           ! Imposed BC 
   integer                                            :: inxi,inxf  
   real(mytype)                                       :: ana_resi,ana_resf
@@ -624,7 +628,11 @@ subroutine cubsply(u,lind)
   ya(:)=0.
   !
   ! Impose the Correct BC
-  bcimp=lind  
+  if (itype.eq.itype_ellip) then 
+   lind_2 = -lind
+  else 
+   lind_2 = lind
+  endif
   !
   do k=1,ysize(3)
    zm=real(ystart(3)+k-1,mytype)*dz
@@ -648,7 +656,7 @@ subroutine cubsply(u,lind)
               point=[xm,ym,zm]
               call CalculatePointVelocity_Multi(point, pointVelocity)
 
-              call ibm_bcimp_calc(pointVelocity, lind, bcimp)  !take correct part of pointVelocity for equation type.
+              call ibm_bcimp_calc(pointVelocity, lind_2, bcimp)  !take correct part of pointVelocity for equation type.
 
               ya(ia)=bcimp
               if(yi(j,i,k).gt.0.)then ! Immersed Object
@@ -703,7 +711,7 @@ subroutine cubsply(u,lind)
               point=[xm,ym,zm]
               call CalculatePointVelocity_Multi(point, pointVelocity)
 
-              call ibm_bcimp_calc(pointVelocity, lind, bcimp)  !take correct part of pointVelocity for equation type.
+              call ibm_bcimp_calc(pointVelocity, lind_2, bcimp)  !take correct part of pointVelocity for equation type.
 
               ya(ia)=bcimp
               if(yf(j,i,k).lt.yly)then ! Immersed Object
@@ -795,7 +803,7 @@ subroutine cubsplz(u,lind)
   real(mytype)                                       :: xpol,ypol,dypol !|variables concernant les polynômes
   real(mytype),dimension(10)                         :: xa,ya           !|de Lagrange. A mettre imérativement en 
   integer                                            :: ia,na           !|double précision
-  real(mytype)                                       :: lind            ! Identifying which BC to Impose
+  integer                                            :: lind, lind_2    ! Identifying which BC to Impose
   real(mytype)                                       :: bcimp           ! Imposed BC 
   integer                                            :: inxi,inxf  
   real(mytype)                                       :: ana_resi,ana_resf
@@ -808,7 +816,11 @@ subroutine cubsplz(u,lind)
   ya(:)=zero
   !
   ! Impose the Correct BC
-  bcimp=lind  
+  if (itype.eq.itype_ellip) then
+   lind_2 = -lind
+  else 
+   lind_2 = lind
+  end if  
   !
   do j=1,zsize(2)
    ym=real(zstart(2)+j-1,mytype)*dy
@@ -832,7 +844,7 @@ subroutine cubsplz(u,lind)
               point=[xm,ym,zm]
               call CalculatePointVelocity_Multi(point, pointVelocity)
 
-              call ibm_bcimp_calc(pointVelocity, lind, bcimp)  !take correct part of pointVelocity for equation type.
+              call ibm_bcimp_calc(pointVelocity, lind_2, bcimp)  !take correct part of pointVelocity for equation type.
 
               ya(ia)=bcimp
               if(zi(k,i,j).gt.0.)then ! Immersed Object
@@ -880,7 +892,7 @@ subroutine cubsplz(u,lind)
               point=[xm,ym,zm]
               call CalculatePointVelocity_Multi(point, pointVelocity)
 
-              call ibm_bcimp_calc(pointVelocity, lind, bcimp)  !take correct part of pointVelocity for equation type.
+              call ibm_bcimp_calc(pointVelocity, lind_2, bcimp)  !take correct part of pointVelocity for equation type.
 
               ya(ia)=bcimp
               if(zf(k,i,j).lt.zlz)then  ! Immersed Object

@@ -717,23 +717,42 @@ contains
       if (lind.eq.0) then
         bcimp=zero
       elseif (lind.eq.1) then
-        bcimp=x_pv
+        bcimp=ubcx
         ! write(*,*) bcimp
       elseif (lind.eq.2) then
-        bcimp=y_pv
+        bcimp=ubcy
       elseif (lind.eq.3) then
-        bcimp=z_pv
+        bcimp=ubcz
       elseif (lind.eq.4) then 
-        bcimp=x_pv*x_pv
+        bcimp=ubcx*ubcx
       elseif (lind.eq.5) then
-        bcimp=y_pv*y_pv
+        bcimp=ubcy*ubcy
       elseif (lind.eq.6) then 
-        bcimp=z_pv*z_pv
+        bcimp=ubcz*ubcz
       elseif (lind.eq.7) then
-        bcimp=x_pv*y_pv 
+        bcimp=ubcx*ubcy 
       elseif (lind.eq.8) then 
-        bcimp=x_pv*z_pv
+        bcimp=ubcx*ubcz
       elseif (lind.eq.9) then
+        bcimp=ubcy*ubcz
+      elseif (lind.eq.-1) then
+        bcimp=x_pv
+        ! write(*,*) bcimp
+      elseif (lind.eq.-2) then
+        bcimp=y_pv
+      elseif (lind.eq.-3) then
+        bcimp=z_pv
+      elseif (lind.eq.-4) then 
+        bcimp=x_pv*x_pv
+      elseif (lind.eq.-5) then
+        bcimp=y_pv*y_pv
+      elseif (lind.eq.-6) then 
+        bcimp=z_pv*z_pv
+      elseif (lind.eq.-7) then
+        bcimp=x_pv*y_pv 
+      elseif (lind.eq.-8) then 
+        bcimp=x_pv*z_pv
+      elseif (lind.eq.-9) then
         bcimp=y_pv*z_pv
       endif
     end subroutine

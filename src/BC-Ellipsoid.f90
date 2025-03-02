@@ -1,5 +1,7 @@
 module ellip
 
+USE decomp_2d_constants
+USE decomp_2d_mpi
 USE decomp_2d
 USE variables
 USE param
@@ -18,10 +20,8 @@ contains
 
 subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
 
-    use decomp_2d, only : mytype
     use param, only : one, two, ten
     use ibm_param
-    use dbg_schemes, only: sqrt_prec
     use ellipsoid_utils, only: NormalizeQuaternion, EllipsoidalRadius, EllipsoidalRadius_debug
     use complex_geometry, only: nraf,nyraf
 
@@ -80,32 +80,14 @@ subroutine geomcomplex_ellip(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,dz,remp)
     ! write(*,*) k, zm
         do j=nyi,nyf
         ! ym=(real(j-1,mytype))*dy
-        ym=yp(j)
-        if (ym /= ym) then
-            write(*,*) "ym = ", ym, " should be ", ((real(j-1,mytype))*dy), ", as j = ", j,  " (or maybe it should be ", ((real(j-1,mytype))*dy)/real(nraf,mytype), ")"
-            if (j.lt.(nyraf)) then 
-                write(*,*) "yp(j-1) = ", yp(j-1), " yp(j+1) = ", yp(j+1)
-            endif
-        endif
-
-        do i=nxi,nxf
-            xm=real(i-1,mytype)*dx
-            point=[xm, ym, zm]
+            ym=yp(j)
+            do i=nxi,nxf
+               xm=real(i-1,mytype)*dx
+               point=[xm, ym, zm]
             ! call EllipsoidalRadius(point, position, orientation, shape, r)
-            do i_body = 1,nbody
+               do i_body = 1,nbody
                 if (cube_flag.eq.0) then 
-                    ! if ((nrank.eq.0).and.(torq_debug.eq.1)) then 
-                    !     write(*,*) "Point, position, orientation, shape for body", i_body, " = "
-                    !     write(*,*) point,position(i_body,:),orientation(i_body,:),shape(i_body,:)
-                    ! endif
                     call EllipsoidalRadius(point,position(i_body,:),orientation(i_body,:),shape(i_body,:),r)
-                    ! if (r /= r) then 
-                    !     write(*,*) "Point, position, orientation, shape for body", i_body, " = "
-                    !     write(*,*) point,position(i_body,:),orientation(i_body,:),shape(i_body,:)
-                    !     write(*,*) "R calculated = ", r
-                    !     write(*,*) "Timestep = ", itime
-                    ! endif
-
                     is_inside = (r-ra(i_body)).lt.zeromach
                     ! if (is_inside) then 
                     !     call EllipsoidalRadius_debug(point,position(i_body,:),orientation(i_body,:),shape(i_body,:),r)
@@ -303,7 +285,6 @@ subroutine init_ellip (ux1,uy1,uz1,phi1)
     USE param
     USE MPI
     USE ibm_param
-    use dbg_schemes, only: exp_prec
     use ellipsoid_utils, only: NormalizeQuaternion,ellipInertiaCalculate,ellipMassCalculate
 
 
@@ -363,32 +344,29 @@ subroutine init_ellip (ux1,uy1,uz1,phi1)
     if (iin.ne.0) then
         call system_clock(count=code)
         if (iin.eq.2) code=0
-        
-	if (init_noise.gt.0.001) then 
-	   call random_seed(size = ii)
-           call random_seed(put = code+63946*(nrank+1)*(/ (i - 1, i = 1, ii) /))
+        call random_seed(size = ii)
+        call random_seed(put = code+63946*(nrank+1)*(/ (i - 1, i = 1, ii) /))
 
-           call random_number(ux1)
-           call random_number(uy1)
-           call random_number(uz1)
+        call random_number(ux1)
+        call random_number(uy1)
+        call random_number(uz1)
 
-           do k=1,xsize(3)
-           do j=1,xsize(2)
-               do i=1,xsize(1)
-                   ux1(i,j,k)=init_noise*(ux1(i,j,k)-0.5)
-                   uy1(i,j,k)=init_noise*(uy1(i,j,k)-0.5)
-                   uz1(i,j,k)=init_noise*(uz1(i,j,k)-0.5)
-               enddo
-           enddo
-           enddo
-        endif
+        do k=1,xsize(3)
+        do j=1,xsize(2)
+            do i=1,xsize(1)
+                ux1(i,j,k)=init_noise*(ux1(i,j,k)-0.5)
+                uy1(i,j,k)=init_noise*(uy1(i,j,k)-0.5)
+                uz1(i,j,k)=init_noise*(uz1(i,j,k)-0.5)
+            enddo
+        enddo
+        enddo
 
         !modulation of the random noise
         do k=1,xsize(3)
         do j=1,xsize(2)
             if (istret.eq.0) y=(j+xstart(2)-1-1)*dy-yly/2.
             if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/2.
-            um=exp_prec(-zptwo*y*y)
+            um=exp(-zptwo*y*y)
             do i=1,xsize(1)
                 ux1(i,j,k)=um*ux1(i,j,k)
                 uy1(i,j,k)=um*uy1(i,j,k)
@@ -433,7 +411,6 @@ subroutine postprocess_ellip(ux1,uy1,uz1,ep1)
     USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
     USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
     USE ibm_param
-    use dbg_schemes, only: sqrt_prec
     
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
 
@@ -441,7 +418,7 @@ end subroutine postprocess_ellip
 
 subroutine visu_ellip_init (visu_initialised)
 
-    use decomp_2d, only : mytype
+    use decomp_2d
     use decomp_2d_io, only : decomp_2d_register_variable
     use visu, only : io_name, output2D
     

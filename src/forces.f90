@@ -305,6 +305,47 @@ contains
    !    yld2(:) = yld(:)
    !    yud2(:) = yud(:)
    ! endif
+
+  subroutine setup_forces(iounit)
+
+   implicit none
+
+   ! Argument
+   integer, intent(in) :: iounit
+
+   NAMELIST /ForceCVs/ xld, xrd, yld, yud, zld, zrd! , i2dsim
+
+   ! Safety check
+   if (allocated(xld)) then
+      call decomp_2d_abort(1, "Error in setup_forces")
+   end if
+   if (nvol < 1) then
+      call decomp_2d_abort(nvol, "Invalid nvol in setup_forces")
+   end if
+
+   ! Allocate 1D arrays
+   allocate(xld(nvol), xrd(nvol), yld(nvol), yud(nvol), zld(nvol), zrd(nvol))
+
+   ! Default values in the forces namelist
+   xld = 0._mytype
+   xrd = 0._mytype
+   yld = 0._mytype
+   yud = 0._mytype
+   zld = 0._mytype
+   zrd = 0._mytype
+   ! i2dsim = 1
+
+   ! Read a part of the namelist and rewind
+   read(iounit, nml=ForceCVs)
+   rewind(iounit)
+
+   ! ! Safety check
+   ! if (i2dsim < 0 .or. i2dsim > 1) then
+   !    call decomp_2d_abort(i2dsim, "Invalid value for the parameter i2dsim")
+   ! end if
+
+ end subroutine setup_forces
+
   subroutine restart_forces(itest1)
 
     USE decomp_2d_io

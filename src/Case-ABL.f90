@@ -746,13 +746,13 @@ contains
 
     if (iconserv==0) then
       ! Derivative of wallmodel-corrected SGS stress tensor
-      call dery_22(ta2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),1,ubcy)
-      call dery_22(tb2,th2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),1,ubcy)
+      call dery_22(ta2,te2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),1,2) !ubcy)
+      call dery_22(tb2,th2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),10,2) !ubcy)
       call transpose_y_to_x(ta2,wallsgsx1)
       call transpose_y_to_x(tb2,wallsgsz1)
-      call derx(wallsgsy1,te1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+      call derx(wallsgsy1,te1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,1) !ubcx)
       call transpose_y_to_z(th2,th3)
-      call derz(ti1,th3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
+      call derz(ti1,th3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,3) !ubcz)
       call transpose_z_to_y(ti3,tb2)
       call transpose_y_to_x(tb2,ti1)
       wallsgsy1 = wallsgsy1 + ti1

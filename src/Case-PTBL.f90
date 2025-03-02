@@ -214,9 +214,9 @@ contains
       call transpose_x_to_y(ux1, ux2)
       call transpose_x_to_y(uy1, uy2)
       call transpose_x_to_y(uz1, uz2)
-      call dery(ta2, ux2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
-      call dery(tb2, uy2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
-      call dery(tc2, uz2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
+      call dery(ta2, ux2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, 0) !zero)
+      call dery(tb2, uy2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, 0) !zero)
+      call dery(tc2, uz2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, 0) !zero)
       call transpose_y_to_x(ta2, ta1)
       call transpose_y_to_x(tb2, tb1)
       call transpose_y_to_x(tc2, tc1)
@@ -330,7 +330,7 @@ contains
          omegad = sc(1) * thetad
          if (nrank == 0) write (*, "(' omegad = ',E15.7,'    omega= ',F14.12)") omegad, omega
          if (omegad > 0) then
-            call deryS(ta2, phi2(:, :, :, 1), di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
+            call deryS(ta2, phi2(:, :, :, 1), di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1, 0) !zero)
             call transpose_y_to_x(ta2, ta1)
             do k = 1, xsize(3)
                do j = 1, xsize(2)
@@ -460,21 +460,21 @@ contains
          if (Pro_Spectra ==1) call Gathering_Probe (pre2, p_ins(:, b))
 
          ! Wall-normal derivatives of mean velocity
-         call dery(dudysxz(:, b), usxz(:, b), di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
-         call dery(dvdysxz(:, b), vsxz(:, b), di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
-         call dery(dwdysxz(:, b), wsxz(:, b), di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
+         call dery(dudysxz(:, b), usxz(:, b), di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, 0) !zero)
+         call dery(dvdysxz(:, b), vsxz(:, b), di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, 0) !zero)
+         call dery(dwdysxz(:, b), wsxz(:, b), di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, 0) !zero)
 
          ! Cross derivatives of fluctuating velocity
          call transpose_y_to_x(uy2p, tb1)
          call transpose_y_to_x(uz2p, tc1)
          call transpose_y_to_z(ux2p, ta3)
          call transpose_y_to_z(uy2p, tb3)
-         call derx(te1, tb1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
-         call derx(tf1, tc1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
-         call dery(td2, ux2p, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
-         call dery(tf2, uz2p, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
-         call derz(td3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
-         call derz(te3, tb3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
+         call derx(te1, tb1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, 0) !zero)
+         call derx(tf1, tc1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, 0) !zero)
+         call dery(td2, ux2p, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, 0) !zero)
+         call dery(tf2, uz2p, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, 0) !zero)
+         call derz(td3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, 0) !zero)
+         call derz(te3, tb3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, 0) !zero)
          call transpose_x_to_y(te1, tb2)
          call transpose_x_to_y(tf1, tc2)
          call transpose_z_to_y(td3, tg2)
@@ -674,17 +674,17 @@ contains
     endif
 
     !x-derivatives
-    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
-    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
-    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
+    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,1) !ubcx)
+    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,2) !ubcy)
+    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,3) !ubcz)
     !y-derivatives
-    call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
-    call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
-    call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
+    call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,1) !ubcx)
+    call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,2) !ubcy)
+    call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,3) !ubcz)
     !!z-derivatives
-    call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
-    call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
-    call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
+    call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,1) !ubcx)
+    call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,2) !ubcy)
+    call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,3) !ubcz)
     !!all back to x-pencils
     call transpose_z_to_y(ta3,td2)
     call transpose_z_to_y(tb3,te2)
@@ -764,13 +764,13 @@ contains
       ! Calculate averaged derivatives
       call extract_fluctuat(ux2, ux2m, ux2p)
       call horizontal_avrge(ux2p * uy2, uxuy2pm)
-      call dery(duxuy2pm, uxuy2pm, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
-      call dery(dudy2m, ux2m, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
+      call dery(duxuy2pm, uxuy2pm, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, 0) !zero)
+      call dery(dudy2m, ux2m, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, 0) !zero)
       ydudy2m = dudy2m * yp
 
       ! Viscous term
       iimplicit = -iimplicit
-      call deryy(du2dy22m, ux2m, di2, sy, sfyp, ssyp, swyp, 1, ysize(2), 1, 1, zero)
+      call deryy(du2dy22m, ux2m, di2, sy, sfyp, ssyp, swyp, 1, ysize(2), 1, 1, 0) !zero)
       iimplicit = -iimplicit
       if (istret /= 0) then
          du2dy22m = du2dy22m * pp2y - pp4y * dudy2m
@@ -1018,13 +1018,13 @@ contains
       real(mytype), dimension(ysize(2)) :: tempa2, tempb2, tempc2
 
       call transpose_y_to_x(u1pu2p, ta1)
-      call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
+      call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, 0) !zero)
       call transpose_x_to_y(tb1, ta2)
       call horizontal_avrge(ta2, tempa2)
       call horizontal_avrge(u1pu2p, tempc2)
-      call dery(tempb2, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
+      call dery(tempb2, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, 0) !zero)
       call transpose_y_to_z(u1pu2p, ta3)
-      call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
+      call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, 0) !zero)
       call transpose_z_to_y(tb3, tc2)
       call horizontal_avrge(tc2, tempc2)
       mean_conv = -(um * tempa2 + vm * tempb2 + wm * tempc2)
@@ -1043,13 +1043,13 @@ contains
       real(mytype), dimension(ysize(2)) :: tempa2, tempb2, tempc2
 
       call transpose_y_to_x(u1pu2p * up, ta1)
-      call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
+      call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, 0) !zero)
       call transpose_x_to_y(tb1, ta2)
       call horizontal_avrge(ta2, tempa2)
       call horizontal_avrge(u1pu2p * vp, tempc2)
-      call dery(tempb2, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
+      call dery(tempb2, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, 0) !zero)
       call transpose_y_to_z(u1pu2p * wp, ta3)
-      call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
+      call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, 0)! zero)
       call transpose_z_to_y(tb3, tc2)
       call horizontal_avrge(tc2, tempc2)
       turb_conv = -(tempa2 + tempb2 + tempc2)
@@ -1068,19 +1068,19 @@ contains
       real(mytype), dimension(ysize(2)) :: tempa2, tempb2, tempc2, tempd2
 
       call transpose_y_to_x(u1pu2p, ta1)
-      call derxx(tb1, ta1, di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1, zero)
+      call derxx(tb1, ta1, di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1, 0) !zero)
       call transpose_x_to_y(tb1, ta2)
       call horizontal_avrge(ta2, tempa2)
       call horizontal_avrge(u1pu2p, tempc2)
       iimplicit = -iimplicit
-      call deryy(tempb2, tempc2, di2, sy, sfyp, ssyp, swyp, 1, ysize(2), 1, 1, zero)
+      call deryy(tempb2, tempc2, di2, sy, sfyp, ssyp, swyp, 1, ysize(2), 1, 1, 0) !zero)
       iimplicit = -iimplicit
       if (istret /= 0) then
-         call dery(tempd2, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
+         call dery(tempd2, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, 0) !zero)
          tempb2 = tempb2 * pp2y - pp4y * tempd2
       end if
       call transpose_y_to_z(u1pu2p, ta3)
-      call derzz(tb3, ta3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1, zero)
+      call derzz(tb3, ta3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1, 0) !zero)
       call transpose_z_to_y(tb3, tc2)
       call horizontal_avrge(tc2, tempc2)
       visc_diff = xnu * (tempa2 + tempb2 + tempc2)
@@ -1099,13 +1099,13 @@ contains
       real(mytype), dimension(ysize(2)) :: tempa2, tempb2, tempc2, dudx, dudy, dudz
 
       call transpose_y_to_x(u2, ta1)
-      call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
+      call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, 0) !zero)
       call transpose_x_to_y(tb1, ta2)
       call horizontal_avrge(ta2, dudx)
       call horizontal_avrge(u2, tempc2)
-      call dery(dudy, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
+      call dery(dudy, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, 0) !zero)
       call transpose_y_to_z(u2, ta3)
-      call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
+      call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, 0) !zero)
       call transpose_z_to_y(tb3, tc2)
       call horizontal_avrge(tc2, dudz)
       call horizontal_avrge(u1p * up, tempa2)
@@ -1113,13 +1113,13 @@ contains
       call horizontal_avrge(u1p * wp, tempc2)
       prod = -(tempa2 * dudx + tempb2 * dudy + tempc2 * dudz)
       call transpose_y_to_x(u1, ta1)
-      call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
+      call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, 0) !zero)
       call transpose_x_to_y(tb1, ta2)
       call horizontal_avrge(ta2, dudx)
       call horizontal_avrge(u1, tempc2)
-      call dery(dudy, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
+      call dery(dudy, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, 0) !zero)
       call transpose_y_to_z(u1, ta3)
-      call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
+      call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, 0) !zero)
       call transpose_z_to_y(tb3, tc2)
       call horizontal_avrge(tc2, dudz)
       call horizontal_avrge(u2p * up, tempa2)
@@ -1145,15 +1145,15 @@ contains
       ta2 = u1p * prep
       if (two == 1) then
          call transpose_y_to_x(ta2, ta1)
-         call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
+         call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, 0) !zero)
          call transpose_x_to_y(tb1, ta2)
          call horizontal_avrge(ta2, tempa2)
       else if (two == 2) then
          call horizontal_avrge(ta2, tempc2)
-         call dery(tempa2, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
+         call dery(tempa2, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, 0) !zero)
       else if (two == 3) then
          call transpose_y_to_z(ta2, ta3)
-         call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
+         call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, 0) !zero)
          call transpose_z_to_y(tb3, tc2)
          call horizontal_avrge(tc2, tempa2)
       else
@@ -1163,15 +1163,15 @@ contains
       ta2 = u2p * prep
       if (one == 1) then
          call transpose_y_to_x(ta2, ta1)
-         call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
+         call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, 0) !zero)
          call transpose_x_to_y(tb1, ta2)
          call horizontal_avrge(ta2, tempb2)
       else if (one == 2) then
          call horizontal_avrge(ta2, tempc2)
-         call dery(tempb2, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
+         call dery(tempb2, tempc2, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, 0) !zero)
       else if (one == 3) then
          call transpose_y_to_z(ta2, ta3)
-         call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
+         call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, 0) !zero)
          call transpose_z_to_y(tb3, tc2)
          call horizontal_avrge(tc2, tempb2)
       else
@@ -1194,20 +1194,20 @@ contains
       real(mytype), dimension(ysize(2)) :: tempa2, tempb2, tempc2
 
       call transpose_y_to_x(u1p, ta1)
-      call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
+      call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, 0) !zero)
       call transpose_x_to_y(tb1, ta2)
       call transpose_y_to_x(u2p, ta1)
-      call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, zero)
+      call derx(tb1, ta1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, 0) !zero)
       call transpose_x_to_y(tb1, tb2)
       call horizontal_avrge(ta2 * tb2, tempa2)
-      call dery(ta2, u1p, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
-      call dery(tb2, u2p, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
+      call dery(ta2, u1p, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, 0) !zero)
+      call dery(tb2, u2p, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, 0) !zero)
       call horizontal_avrge(ta2 * tb2, tempb2)
       call transpose_y_to_z(u1p, ta3)
-      call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
+      call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, 0) !zero)
       call transpose_z_to_y(tb3, ta2)
       call transpose_y_to_z(u2p, ta3)
-      call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, zero)
+      call derz(tb3, ta3, di3, sz, ffzp, fszp, fwzp, zsize(1), zsize(2), zsize(3), 1, 0) !zero)
       call transpose_z_to_y(tb3, tb2)
       call horizontal_avrge(ta2 * tb2, tempc2)
       diss = -two * xnu * (tempa2 + tempb2 + tempc2)
@@ -1240,7 +1240,7 @@ contains
       ! Calculate averaged derivatives
       call extract_fluctuat(ux2, ux2m, ux2p)
       call horizontal_avrge(ux2p * uy2, uxuy2pm)
-      call dery(dudy2m, ux2m, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, zero)
+      call dery(dudy2m, ux2m, di2, sy, ffyp, fsyp, fwyp, ppy, 1, ysize(2), 1, 1, 0) !zero)
       
       
        ! G(t) Model based on (0: Momentum Thickness)
