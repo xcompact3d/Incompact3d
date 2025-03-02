@@ -277,6 +277,8 @@ contains
     real(mytype),dimension(zsize(1),zsize(2),zsize(3)),intent(in) :: divu3
     real(mytype),dimension(xsize(1),xsize(2),xsize(3))     :: ep1_ux,ep1_uy,ep1_uz
     real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize),intent(out) :: pp3
+    real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: div_visu_var
+
 
     integer :: nvect3,i,j,k,nlock
     integer :: code
@@ -374,6 +376,8 @@ contains
           write(*,*) 'DIV U* max mean=',real(tmax,mytype),real(tmoy/real(nproc),mytype)
        endif
     endif
+
+    div_visu_var(:,:,:,:)=pp3(:,:,:,:)
 
     return
   end subroutine divergence
