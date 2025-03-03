@@ -1,3 +1,4 @@
 {
-    "fortran.fortls.disabled": true
+    "fortran.fortls.disabled": true,
+    "makefile.configureOnOpen": false
 }

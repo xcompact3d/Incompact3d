@@ -261,7 +261,7 @@ contains
   end subroutine preprocessing
   !##################################################################
   !##################################################################
-  subroutine postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
+  subroutine postprocessing(rho1, ux1, uy1, uz1, pp3, div_visu_var, phi1, ep1)
 
     use decomp_2d, only : xsize, ph1
     use var, only : nzmsize, numscalar, nrhotime, npress, abl_T
@@ -270,7 +270,7 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(in) :: phi1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime), intent(in) :: rho1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ep1
-    real(mytype),dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
+    real(mytype),dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3, div_visu_var
 
     integer :: j
 
@@ -279,15 +279,15 @@ contains
       do j=1,xsize(2)
         abl_T(:,j,:,1) = phi1(:,j,:,1) + Tstat(j,1)
       enddo
-      call run_postprocessing(rho1, ux1, uy1, uz1, pp3, abl_T, ep1)
+      call run_postprocessing(rho1, ux1, uy1, uz1, pp3, div_visu_var, abl_T, ep1)
     else
-      call run_postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
+      call run_postprocessing(rho1, ux1, uy1, uz1, pp3, div_visu_var, phi1, ep1)
     endif
 
   end subroutine postprocessing
   !##################################################################
   !##################################################################
-  subroutine run_postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
+  subroutine run_postprocessing(rho1, ux1, uy1, uz1, pp3, div_visu_var, phi1, ep1)
 
     use decomp_2d, only : xsize, ph1
     use visu, only  : write_snapshot, end_snapshot
@@ -304,12 +304,12 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(in) :: phi1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime), intent(in) :: rho1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ep1
-    real(mytype),dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
+    real(mytype),dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3, div_visu_var
 
     integer :: num
 
     if ((ivisu.ne.0).and.(mod(itime, ioutput).eq.0)) then
-       call write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime, num)
+       call write_snapshot(rho1, ux1, uy1, uz1, pp3, div_visu_var, phi1, ep1, itime, num)
 
        ! XXX: Ultimate goal for ADIOS2 is to pass do all postproc online - do we need this?
        !      Currently, needs some way to "register" variables for IO
@@ -640,7 +640,7 @@ contains
     use decomp_2d
     use param
 
-    use navier, only : divergence
+    use navier, only : divergence2
 
     use var, only : numscalar, dv3
     use tools, only : test_speed_min_max, compute_cfl, test_scalar_min_max
@@ -653,7 +653,7 @@ contains
     real(mytype), dimension(zsize(1), zsize(2), zsize(3)), intent(in) :: divu3
 
     if ((mod(itime,ilist)==0 .or. itime == ifirst .or. itime == ilast)) then
-       call divergence(dv3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,2)
+       call divergence2(dv3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,2)
        call test_speed_min_max(ux1,uy1,uz1)
        call compute_cfl(ux1,uy1,uz1)
        if (iscalar==1) call test_scalar_min_max(phi1)

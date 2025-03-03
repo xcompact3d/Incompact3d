@@ -126,7 +126,7 @@ program xcompact3d
         call pre_correc(ux1,uy1,uz1,ep1)
 
         call calc_divu_constraint(divu3,rho1,phi1)
-        call solve_poisson(pp3,px1,py1,pz1,rho1,ux1,uy1,uz1,ep1,drho1,divu3)
+        call solve_poisson(div_visu_var,pp3,px1,py1,pz1,rho1,ux1,uy1,uz1,ep1,drho1,divu3)
         call cor_vel(ux1,uy1,uz1,px1,py1,pz1)
 
         if(mhd_active .and. mhd_equation == 'induction') then
@@ -145,79 +145,81 @@ program xcompact3d
       !   if (nrank.eq.0) then
       !   write(*,*) 'Going to call force from xcompact3d, itr = ', itr
       !   endif
-        call force(ux1,uy1,uz1,ep1,drag,lift,lat,1)
-        grav_effx = grav_x*(rho_s-1.0)
-        grav_effy = grav_y*(rho_s-1.0)
-        grav_effz = grav_z*(rho_s-1.0)
-        do i = 1,nbody
-         linearForce(i,:) = [drag(i)-grav_effx(i), lift(i)-grav_effy(i), lat(i)-grav_effz(i)]
-        enddo
-        if (nozdrift==1) then
-            linearForce(:,3)=zero
-        endif
-
-        if (bodies_fixed==1) then
-            linearForce(:,:)=zero
-        endif
-
-        if ((nrank==0).and.(force_csv.eq.1)) then
-         ! open(unit=20, file='force_out.dat', action='write')
-         write(20, *) linearForce(1,1), linearForce(1,2), linearForce(1,3)
-         write(*,*) 'Writing forces', linearForce(1,1), linearForce(1,2), linearForce(1,3)
-         flush(20)
-        endif
-
-
-        if (torques_flag.eq.1) then
-         call torque_calc(ux1,uy1,uz1,ep1,xtorq,ytorq,ztorq,1)
-        endif
-        if (orientations_free.eq.1) then
-         do i = 1,nvol
-            torque(i,:) = [xtorq(i), ytorq(i), ztorq(i)]
-         enddo
-         if (ztorq_only.eq.1) then
-            torque(:,1) = zero
-            torque(:,2) = zero
-         endif
-        else
-         torque(:,:) = zero
-        endif
-      !   if (nrank==0) then
-
-      !   if (bodies_fixed==0) then
-        do i = 1,nvol
-
-         call lin_step(position(i,:),linearVelocity(i,:),linearForce(i,:),ellip_m(i),dt,position_1,linearVelocity_1)
-         call ang_step(orientation(i,:),angularVelocity(i,:),torque(i,:),inertia(i,:,:),dt,orientation_1,angularVelocity_1)
-
-         position(i,:) = position_1
-         linearVelocity(i,:) = linearVelocity_1
-
-         orientation(i,:) = orientation_1
-         angularVelocity(i,:) = angularVelocity_1
-        enddo
-
-
-      if ((nrank==0).and.(mod(itime,ilist)==0)) then
+        if (itype.eq.itype_ellip) then 
+         call force(ux1,uy1,uz1,ep1,drag,lift,lat,1)
+         grav_effx = grav_x*(rho_s-1.0)
+         grav_effy = grav_y*(rho_s-1.0)
+         grav_effz = grav_z*(rho_s-1.0)
          do i = 1,nbody
-            write(11+i ,*) t, position(i,1), position(i,2), position(i,3), orientation(i,1), orientation(i,2), orientation(i,3), orientation(i,4), linearVelocity(i,1), linearVelocity(i,2), linearVelocity(i,3), angularVelocity(i,2), angularVelocity(i,3), angularVelocity(i,4), linearForce(i,1), linearForce(i,2), linearForce(i,3), torque(i,1), torque(i,2), torque(i,3)
-            flush(11+i)
+            linearForce(i,:) = [drag(i)-grav_effx(i), lift(i)-grav_effy(i), lat(i)-grav_effz(i)]
          enddo
-      endif
+         if (nozdrift==1) then
+               linearForce(:,3)=zero
+         endif
+
+         if (bodies_fixed==1) then
+               linearForce(:,:)=zero
+         endif
+
+         if ((nrank==0).and.(force_csv.eq.1)) then
+            ! open(unit=20, file='force_out.dat', action='write')
+            write(20, *) linearForce(1,1), linearForce(1,2), linearForce(1,3)
+            write(*,*) 'Writing forces', linearForce(1,1), linearForce(1,2), linearForce(1,3)
+            flush(20)
+         endif
+
+
+         if (torques_flag.eq.1) then
+            call torque_calc(ux1,uy1,uz1,ep1,xtorq,ytorq,ztorq,1)
+         endif
+         if (orientations_free.eq.1) then
+            do i = 1,nvol
+               torque(i,:) = [xtorq(i), ytorq(i), ztorq(i)]
+            enddo
+            if (ztorq_only.eq.1) then
+               torque(:,1) = zero
+               torque(:,2) = zero
+            endif
+         else
+            torque(:,:) = zero
+         endif
+         !   if (nrank==0) then
+
+         !   if (bodies_fixed==0) then
+         do i = 1,nvol
+
+            call lin_step(position(i,:),linearVelocity(i,:),linearForce(i,:),ellip_m(i),dt,position_1,linearVelocity_1)
+            call ang_step(orientation(i,:),angularVelocity(i,:),torque(i,:),inertia(i,:,:),dt,orientation_1,angularVelocity_1)
+
+            position(i,:) = position_1
+            linearVelocity(i,:) = linearVelocity_1
+
+            orientation(i,:) = orientation_1
+            angularVelocity(i,:) = angularVelocity_1
+         enddo
+
 
          if ((nrank==0).and.(mod(itime,ilist)==0)) then
             do i = 1,nbody
-               write(*,*) "Body", i
-               write(*,*) "Position =         ", position(i,:)
-               write(*,*) "Orientation =      ", orientation(i,:)
-               write(*,*) "Linear velocity =  ", linearVelocity(i,:)
-               write(*,*) "Angular velocity = ", angularVelocity(i,:)
-               write(*,*) "Linear Force = ", linearForce(i,:)
-               write(*,*) "Torque = ", torque(i,:)
+               write(11+i ,*) t, position(i,1), position(i,2), position(i,3), orientation(i,1), orientation(i,2), orientation(i,3), orientation(i,4), linearVelocity(i,1), linearVelocity(i,2), linearVelocity(i,3), angularVelocity(i,2), angularVelocity(i,3), angularVelocity(i,4), linearForce(i,1), linearForce(i,2), linearForce(i,3), torque(i,1), torque(i,2), torque(i,3)
+               flush(11+i)
             enddo
-         ! call QuaternionNorm(angularVelocity,dummy)
+         endif
 
-         ! write(*,*) 'Norm of angvel = ', dummy
+            if ((nrank==0).and.(mod(itime,ilist)==0)) then
+               do i = 1,nbody
+                  write(*,*) "Body", i
+                  write(*,*) "Position =         ", position(i,:)
+                  write(*,*) "Orientation =      ", orientation(i,:)
+                  write(*,*) "Linear velocity =  ", linearVelocity(i,:)
+                  write(*,*) "Angular velocity = ", angularVelocity(i,:)
+                  write(*,*) "Linear Force = ", linearForce(i,:)
+                  write(*,*) "Torque = ", torque(i,:)
+               enddo
+            ! call QuaternionNorm(angularVelocity,dummy)
+
+            ! write(*,*) 'Norm of angvel = ', dummy
+            endif
          endif
 
       !   endif
@@ -239,7 +241,7 @@ program xcompact3d
 
      call simu_stats(3)
 
-     call postprocessing(rho1,ux1,uy1,uz1,pp3,phi1,ep1)
+     call postprocessing(rho1,ux1,uy1,uz1,pp3, div_visu_var, phi1,ep1)
 
   enddo !! End time loop
 

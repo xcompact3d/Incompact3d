@@ -170,7 +170,7 @@ contains
   !
   ! Write a snapshot
   !
-  subroutine write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime, num)
+  subroutine write_snapshot(rho1, ux1, uy1, uz1, pp3, div_visu_var, phi1, ep1, itime, num)
 
     use decomp_2d_io, only : decomp_2d_start_io
 
@@ -185,6 +185,7 @@ contains
     use var, only : pp2, ppi2, dip2, ph2, nymsize
     use var, only : ppi3, dip3, ph3, nzmsize
     use var, only : npress
+    ! use var, only : div_visu_var
 
     use tools, only : rescale_pressure
 
@@ -194,8 +195,8 @@ contains
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: ux1, uy1, uz1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: ep1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), nrhotime), intent(in) :: rho1
-    real(mytype), dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize,npress), intent(in) :: pp3
-    real(mytype), dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize,npress) :: div_visu_var
+    real(mytype), dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize,npress), intent(in) :: pp3, div_visu_var
+    ! real(mytype), dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize,npress) :: div_visu_var
 
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar), intent(in) :: phi1
     integer, intent(in) :: itime
