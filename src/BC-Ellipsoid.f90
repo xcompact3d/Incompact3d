@@ -499,6 +499,9 @@ subroutine visu_ellip(ux1, uy1, uz1, pp3, phi1, ep1, num)
     di1(:,:,:)=sqrt(  (tf1(:,:,:)-th1(:,:,:))**2 &
                     + (tg1(:,:,:)-tc1(:,:,:))**2 &
                     + (tb1(:,:,:)-td1(:,:,:))**2)
+
+    if (inviscid_output.eq.0) then 
+
     call write_field(di1, ".", "vort", num, flush = .true.) ! Reusing temporary array, force flush
 
     !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
@@ -508,7 +511,7 @@ subroutine visu_ellip(ux1, uy1, uz1, pp3, phi1, ep1, num)
                 - tg1(:,:,:)*tc1(:,:,:) &
                 - th1(:,:,:)*tf1(:,:,:)
     call write_field(di1, ".", "critq", num, flush = .true.) ! Reusing temporary array, force flush
-
+    endif
 end subroutine visu_ellip
 
 end module ellip

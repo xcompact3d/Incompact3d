@@ -238,9 +238,12 @@ contains
     if (use_xdmf) call write_xdmf_header(".", "snapshot", num)
 
     ! Write velocity
-    call write_field(ux1, ".", "ux", num)
-    call write_field(uy1, ".", "uy", num)
-    call write_field(uz1, ".", "uz", num)
+    if (inviscid_output.eq.0) then 
+
+      call write_field(ux1, ".", "ux", num)
+      call write_field(uy1, ".", "uy", num)
+      call write_field(uz1, ".", "uz", num)
+    endif
     call write_field(ep1, ".", "ep1", num, skip_ibm = .true.)
     
 
@@ -260,10 +263,10 @@ contains
 
     ! Rescale pressure
     call rescale_pressure(ta1)
-
+    if (inviscid_output.eq.0) then 
     ! Write pressure
-    call write_field(ta1, ".", "pp", num, .true., flush=.true.)
-
+      call write_field(ta1, ".", "pp", num, .true., flush=.true.)
+    endif
     !  ! Interpolate div_visu_var
     ! !WORK Z-PENCILS
     ! call interzpv(ppi3,div_visu_var(:,:,:,1),dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
