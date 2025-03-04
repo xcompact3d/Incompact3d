@@ -73,7 +73,7 @@ subroutine parameter(input_i3d)
       nobjmax,nraf,nvol,iforces, cvl_scalar, npif, izap, ianal, imove, thickness, chord, omega , &
       ubcx,ubcy,ubcz,rads,rho_s, c_air, grav_x,grav_y,grav_z, nozdrift, force_csv, bodies_fixed, cube_flag, tconv2_sign, &
       torques_flag, orientations_free, shear_flow_ybc, shear_flow_zbc, shear_velocity, torq_debug, torq_flip, ztorq_only, nbody, &
-      inviscid_output
+      inviscid_output, div_visu_flag
   NAMELIST /ForceCVs/ xld, xrd, yld, yud, zld, zrd
   NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, &
        massfrac, mol_weight, imultispecies, primary_species, &
@@ -772,6 +772,7 @@ subroutine parameter_defaults()
   force_csv=0
   nbody=1
   inviscid_output=0
+  div_visu_flag=0
   ra(:) = 1.0
 
   !! Gravity field
