@@ -2088,7 +2088,7 @@ module particle
 
     ! local data
     real(mytype) :: iface
-    real(mytype),save :: bcord(6)
+    real(mytype),save :: bcord(6),lenpe(6)
     logical,save :: firstcal=.true.
     integer :: idir
     
