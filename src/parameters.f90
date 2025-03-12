@@ -139,9 +139,7 @@ subroutine parameter(input_i3d)
   nclzS1 = nclz1; nclzSn = nclzn
 
   !! set periodic direction
-  if (nclx1.eq.0 .and. nclxn.eq.0) periodic_bc(1)=.true.
-  if (ncly1.eq.0 .and. nclyn.eq.0) periodic_bc(2)=.true.
-  if (nclz1.eq.0 .and. nclzn.eq.0) periodic_bc(3)=.true.
+  periodic_bc = (/nclx1.eq.0, ncly1.eq.0, nclz1.eq.0/)
   
   if (numscalar.ne.0) then
      iscalar = 1
