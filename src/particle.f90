@@ -2087,7 +2087,6 @@ module particle
     integer,intent(inout) :: particle_deduce
 
     ! local data
-    real(mytype) :: iface
     real(mytype),save :: bcord(6),lenpe(6)
     logical,save :: firstcal=.true.
     integer :: idir
