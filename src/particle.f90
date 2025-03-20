@@ -2087,7 +2087,7 @@ module particle
     integer,intent(inout) :: particle_deduce
 
     ! local data
-    real(mytype),save :: bcord(6),lenpe(6)
+    real(mytype), dimension(6), save :: bcord, lenpe
     logical,save :: firstcal=.true.
     integer :: idir
     
@@ -2100,6 +2100,8 @@ module particle
         bcord(5)=0.0_mytype
         bcord(6)=zlz
 
+        ! lenpe is to get the particle back to the domain for periodic boundaries.
+        ! defined as the distance (+ or -) between the two paring periodic boundaries.
         lenpe(1)=xlx
         lenpe(2)=-xlx
         lenpe(3)=yly
