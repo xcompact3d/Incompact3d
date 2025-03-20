@@ -1990,7 +1990,7 @@ module particle
 
       if(npart>npexit) exit
 
-      if(pa%x(1)<0) then
+      if(pa%x(1)<0._mytype) then
 
         ! xmin face
         call particle_bc(face=1,bctype=bc_particle(1),particle=pa,particle_deduce=counter)
@@ -2002,7 +2002,7 @@ module particle
       
       endif
 
-      if(pa%x(2)<0) then
+      if(pa%x(2)<0._mytype) then
 
         ! ymin face
         call particle_bc(face=3,bctype=bc_particle(3),particle=pa,particle_deduce=counter)
@@ -2014,7 +2014,7 @@ module particle
       
       endif
 
-      if(pa%x(3)<0) then
+      if(pa%x(3)<0._mytype) then
 
         ! zmin face
         call particle_bc(face=5,bctype=bc_particle(5),particle=pa,particle_deduce=counter)
@@ -2087,8 +2087,7 @@ module particle
     integer,intent(inout) :: particle_deduce
 
     ! local data
-    real(mytype) :: iface
-    real(mytype),save :: bcord(6)
+    real(mytype), dimension(6), save :: bcord, lenpe
     logical,save :: firstcal=.true.
     integer :: idir
     
@@ -2101,6 +2100,15 @@ module particle
         bcord(5)=0.0_mytype
         bcord(6)=zlz
 
+        ! lenpe is to get the particle back to the domain for periodic boundaries.
+        ! defined as the distance (+ or -) between the two paring periodic boundaries.
+        lenpe(1)=xlx
+        lenpe(2)=-xlx
+        lenpe(3)=yly
+        lenpe(4)=-yly
+        lenpe(5)=zlz
+        lenpe(6)=-zlz
+
         firstcal=.false.
     endif
 
@@ -2111,14 +2119,8 @@ module particle
         call decomp_2d_abort(1,"idir error @ particle_bc")
     endif
 
-    if(mod(face,2)==0) then
-        iface=-1._mytype
-    else
-        iface= 1._mytype
-    endif
-
     if(bctype=='periodic') then
-        particle%x(idir)=particle%x(idir)+bcord(face)*iface
+        particle%x(idir)=particle%x(idir)+lenpe(face)
     elseif(bctype=='reflective') then
         particle%x(idir)=-particle%x(idir)+2.0_mytype*bcord(face)
     elseif(bctype=='outflow') then

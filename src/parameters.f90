@@ -137,6 +137,9 @@ subroutine parameter(input_i3d)
   nclxS1 = nclx1; nclxSn = nclxn
   nclyS1 = ncly1; nclySn = nclyn
   nclzS1 = nclz1; nclzSn = nclzn
+
+  !! set periodic direction
+  periodic_bc = (/nclx1.eq.0, ncly1.eq.0, nclz1.eq.0/)
   
   if (numscalar.ne.0) then
      iscalar = 1
@@ -841,5 +844,7 @@ subroutine parameter_defaults()
   ys_tr_tbl=0.350508_mytype
   ts_tr_tbl=1.402033_mytype
   x0_tr_tbl=3.505082_mytype
+
+  periodic_bc=.false.
 
 end subroutine parameter_defaults
