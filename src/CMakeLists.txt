@@ -15,6 +15,7 @@ add_executable(xcompact3d
                     acl_utils.f90 
                     adm.f90
                     airfoils.f90
+                    BC-Ellipsoid.f90
                     Case-ABL.f90
                     Case-Cavity.f90
                     Case-Channel.f90
@@ -33,6 +34,7 @@ add_executable(xcompact3d
                     derive.f90
                     dynstall.f90
                     dynstall_legacy.f90
+                    ellip_utils.f90
                     filters.f90
                     forces.f90
                     genepsi3d.f90

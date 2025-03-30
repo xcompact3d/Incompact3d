@@ -170,12 +170,12 @@ contains
   !
   ! Write a snapshot
   !
-  subroutine write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime, num)
+  subroutine write_snapshot(rho1, ux1, uy1, uz1, pp3, div_visu_var, phi1, ep1, itime, num)
 
     use decomp_2d_io, only : decomp_2d_start_io
 
     use param, only : nrhotime, ilmn, iscalar, ioutput, irestart
-
+    use ibm_param, only : inviscid_output,div_visu_flag
     use variables, only : sx, cifip6, cisip6, ciwip6, cifx6, cisx6, ciwx6
     use variables, only : sy, cifip6y, cisip6y, ciwip6y, cify6, cisy6, ciwy6
     use variables, only : sz, cifip6z, cisip6z, ciwip6z, cifz6, cisz6, ciwz6
@@ -185,6 +185,7 @@ contains
     use var, only : pp2, ppi2, dip2, ph2, nymsize
     use var, only : ppi3, dip3, ph3, nzmsize
     use var, only : npress
+    ! use var, only : div_visu_var
 
     use tools, only : rescale_pressure
 
@@ -194,7 +195,9 @@ contains
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: ux1, uy1, uz1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: ep1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), nrhotime), intent(in) :: rho1
-    real(mytype), dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize,npress), intent(in) :: pp3
+    real(mytype), dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize,npress), intent(in) :: pp3, div_visu_var
+    ! real(mytype), dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize,npress) :: div_visu_var
+
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), numscalar), intent(in) :: phi1
     integer, intent(in) :: itime
     integer, intent(out) :: num
@@ -235,9 +238,14 @@ contains
     if (use_xdmf) call write_xdmf_header(".", "snapshot", num)
 
     ! Write velocity
-    call write_field(ux1, ".", "ux", num)
-    call write_field(uy1, ".", "uy", num)
-    call write_field(uz1, ".", "uz", num)
+    if (inviscid_output.eq.0) then 
+
+      call write_field(ux1, ".", "ux", num)
+      call write_field(uy1, ".", "uy", num)
+      call write_field(uz1, ".", "uz", num)
+    endif
+    call write_field(ep1, ".", "ep1", num, skip_ibm = .true.)
+    
 
     ! Interpolate pressure
     !WORK Z-PENCILS
@@ -255,10 +263,32 @@ contains
 
     ! Rescale pressure
     call rescale_pressure(ta1)
+    if (inviscid_output.eq.0) then 
+    ! Write pressure
+      call write_field(ta1, ".", "pp", num, .true., flush=.true.)
+    endif
+
+    if (div_visu_flag.eq.1) then 
+     ! Interpolate div_visu_var
+    !WORK Z-PENCILS
+    call interzpv(ppi3,div_visu_var(:,:,:,1),dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
+    (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
+    !WORK Y-PENCILS
+    call transpose_z_to_y(ppi3,pp2,ph3) !nxm nym nz
+    call interypv(ppi2,pp2,dip2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
+            (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
+    !WORK X-PENCILS
+    call transpose_y_to_x(ppi2,pp1,ph2) !nxm ny nz
+    call interxpv(ta1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
+            nxmsize,xsize(1),xsize(2),xsize(3),1)
+
+
+    ! Rescale div_visu_var
+    call rescale_pressure(ta1)
 
     ! Write pressure
-    call write_field(ta1, ".", "pp", num, .true., flush=.true.)
-
+    call write_field(ta1, ".", "div_visu", num, .true., flush=.true.)
+    endif
     ! LMN - write density
     if (ilmn) call write_field(rho1(:,:,:,1), ".", "rho", num)
 

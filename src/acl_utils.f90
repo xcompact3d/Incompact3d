@@ -13,7 +13,7 @@ module actuator_line_model_utils
     interface trilinear_interpolation
       module procedure trilinear_interpolation_scalar
       module procedure trilinear_interpolation_vec3
-    end interface trilinear_interpolation 
+    end interface trilinear_interpolation
 
     public QuatRot, cross, IsoKernel, AnIsoKernel, int2str, trilinear_interpolation
 
@@ -29,7 +29,7 @@ contains
     !
     !*******************************************************************************
       use, intrinsic :: ieee_arithmetic
-      
+
       implicit none
       real(mytype),intent(in) :: x0,y0,z0,x1,y1,z1,x,y,z,u000,u100,u001,u101,u010,u110,u011,u111
       real(mytype) :: c00,c01,c10,c11,c0,c1,xd,yd,zd
@@ -84,7 +84,7 @@ contains
     !
     !*******************************************************************************
       use, intrinsic :: ieee_arithmetic
-      
+
       implicit none
       real(mytype),intent(in) :: x0,y0,z0,x1,y1,z1,x,y,z
       real(mytype),intent(in) :: u000(3),u100(3),u001(3),u101(3),u010(3),u110(3),u011(3),u111(3)

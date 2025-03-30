@@ -16,7 +16,7 @@ module var
   
   ! define all major arrays here
   real(mytype), save, allocatable, dimension(:,:,:) :: ux1, ux2, ux3, po3, dv3
-  real(mytype), save, allocatable, dimension(:,:,:,:) :: pp3
+  real(mytype), save, allocatable, dimension(:,:,:,:) :: pp3, div_visu_var
   real(mytype), save, allocatable, dimension(:,:,:) :: uy1, uy2, uy3
   real(mytype), save, allocatable, dimension(:,:,:) :: uz1, uz2, uz3
   real(mytype), save, allocatable, dimension(:,:,:,:) :: rho1, drho1
@@ -452,6 +452,8 @@ contains
     allocate(pp3(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress))
     pp3=zero
 
+    allocate(div_visu_var(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress))
+    div_visu_var=zero
     call alloc_z(dv3,ph,.true.)
     dv3=zero
     call alloc_z(po3,ph,.true.)

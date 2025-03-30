@@ -139,7 +139,7 @@ module variables
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(ny,nz):: s
        real(mytype), dimension(nx):: ff,fs,fw
-       real(mytype) :: lind
+       integer :: lind
      END SUBROUTINE DERIVATIVE_X
      SUBROUTINE DERIVATIVE_Y(t,u,r,s,ff,fs,fw,pp,nx,ny,nz,npaire,lind)
        use decomp_2d_constants, only : mytype
@@ -147,7 +147,7 @@ module variables
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,nz):: s
        real(mytype), dimension(ny):: ff,fs,fw,pp
-       real(mytype) :: lind
+       integer :: lind
      END SUBROUTINE DERIVATIVE_Y
      SUBROUTINE DERIVATIVE_YY(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
        use decomp_2d_constants, only : mytype
@@ -155,7 +155,7 @@ module variables
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,nz):: s
        real(mytype), dimension(ny):: ff,fs,fw
-       real(mytype) :: lind
+       integer :: lind
      END SUBROUTINE DERIVATIVE_YY
      SUBROUTINE DERIVATIVE_Z(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
        use decomp_2d_constants, only : mytype
@@ -163,7 +163,7 @@ module variables
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,ny):: s
        real(mytype), dimension(nz):: ff,fs,fw
-       real(mytype) :: lind
+       integer :: lind
      END SUBROUTINE DERIVATIVE_Z
   END INTERFACE
 
@@ -193,7 +193,7 @@ module variables
   procedure (DERIVATIVE_Y), pointer :: deryBz
   procedure (DERIVATIVE_YY), pointer :: deryyBz
   procedure (DERIVATIVE_Z), pointer :: derzBz, derzzBz
-  
+
   !O6SVV
   real(mytype),allocatable,dimension(:) :: newsm,newtm,newsmt,newtmt
   !real(mytype),allocatable,dimension(:) :: newrm,ttm,newrmt,ttmt
@@ -206,7 +206,7 @@ module variables
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(ny,nz):: s
        real(mytype), dimension(nx):: ff,fs,fw
-       real(mytype) :: lind
+       integer :: lind
      END SUBROUTINE FILTER_X
      SUBROUTINE FILTER_Y(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
        use decomp_2d_constants, only : mytype
@@ -214,7 +214,7 @@ module variables
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,nz):: s
        real(mytype), dimension(ny):: ff,fs,fw
-       real(mytype) :: lind
+       integer :: lind
      END SUBROUTINE FILTER_Y
      SUBROUTINE FILTER_Z(t,u,r,s,ff,fs,fw,nx,ny,nz,npaire,lind)
        use decomp_2d_constants, only : mytype
@@ -222,7 +222,7 @@ module variables
        real(mytype), dimension(nx,ny,nz) :: t,u,r
        real(mytype), dimension(nx,ny):: s
        real(mytype), dimension(nz):: ff,fs,fw
-       real(mytype) :: lind
+       integer :: lind
      END SUBROUTINE FILTER_Z
   END INTERFACE
 
@@ -303,14 +303,18 @@ module param
        itype_channel = 3, &
        itype_hill = 4, &
        itype_cyl = 5, &
+       itype_dbg = 6, &
        itype_mixlayer = 7, &
+       itype_jet = 8, &
        itype_tbl = 9, &
        itype_abl = 10, &
        itype_uniform = 11, &
        itype_sandbox = 12, &
        itype_cavity = 13, &
        itype_pipe = 14, &
-       itype_ptbl = 15
+       itype_ptbl = 15, &
+       itype_ellip = 16
+
 
   integer :: cont_phi,itr,itime,itest,iprocessing
   integer :: ifft,istret,iforc_entree,iturb
@@ -551,7 +555,7 @@ module complex_geometry
   integer     ,allocatable,dimension(:,:)   :: nobjx,nobjy,nobjz
   integer     ,allocatable,dimension(:,:,:) :: nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif
   real(mytype),allocatable,dimension(:,:,:) :: xi,xf,yi,yf,zi,zf
-  real(mytype),allocatable,dimension(:,:,:) :: xepsi, yepsi, zepsi  
+  real(mytype),allocatable,dimension(:,:,:) :: xepsi, yepsi, zepsi
   integer :: nxraf,nyraf,nzraf,nraf,nobjmax
 end module complex_geometry
 !############################################################################
@@ -663,10 +667,13 @@ end module simulation_stats
 !############################################################################
 module ibm_param
   use decomp_2d_constants, only : mytype
-  real(mytype) :: cex,cey,cez,ra,rai,rao,ubcx,ubcy,ubcz,rads, c_air
-  real(mytype) :: chord,thickness,omega
+  real(mytype) :: cex,cey,cez,shx,shy,shz,oriw,orii,orij,orik,lvx,lvy,lvz,avx,avy,avz,rai,rao,ubcx,ubcy,ubcz,rads,c_air,cvl_scalar,grav_y,grav_x,grav_z
+  real(mytype) :: position(10,3),orientation(10,4),linearVelocity(10,3),angularVelocity(10,4),linearAcceleration(3),linearForce(10,3),torque(10,3),shape(10,3)
+  real(mytype) :: position_1(3),linearVelocity_1(3),orientation_1(4),angularVelocity_1(4),ra(10),rho_s(10),ellip_m(10),inertia(10,3,3)
+  real(mytype) :: chord,thickness,omega, tconv2_sign, shear_velocity
+  real(mytype) :: ce(30),sh(30),ori(40), lv(30), av(30)
   integer :: inana ! Analytical BC as Input
-  integer :: imove
+  integer :: imove, nozdrift, force_csv, bodies_fixed, cube_flag, torques_flag,orientations_free, shear_flow_ybc, shear_flow_zbc,torq_debug, torq_flip, ztorq_only, nbody, inviscid_output, div_visu_flag
 end module ibm_param
 !############################################################################
 !############################################################################

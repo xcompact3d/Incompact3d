@@ -12,7 +12,7 @@ module navier
 
   private
 
-  public :: solve_poisson, divergence, calc_divu_constraint
+  public :: solve_poisson, divergence,divergence2, calc_divu_constraint
   public :: pre_correc, cor_vel
   public :: lmn_t_to_rho_trans, momentum_to_velocity, velocity_to_momentum
   public :: gradp, tbl_flrt
@@ -24,7 +24,7 @@ contains
   !! DESCRIPTION: Takes the intermediate momentum field as input,
   !!              computes div and solves pressure-Poisson equation.
   !############################################################################
-  SUBROUTINE solve_poisson(pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
+  SUBROUTINE solve_poisson(div_visu_var, pp3, px1, py1, pz1, rho1, ux1, uy1, uz1, ep1, drho1, divu3)
 
     USE decomp_2d_poisson, ONLY : poisson
     USE var, ONLY : nzmsize
@@ -43,7 +43,7 @@ contains
     REAL(mytype), DIMENSION(zsize(1), zsize(2), zsize(3)), INTENT(IN) :: divu3
 
     !! Outputs
-    REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
+    REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3, div_visu_var
     REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: px1, py1, pz1
 
     !! Locals
@@ -73,7 +73,7 @@ contains
        CALL momentum_to_velocity(rho1, ux1, uy1, uz1)
     ENDIF
 
-    call divergence(pp3(:,:,:,1),rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
+    call divergence(div_visu_var(:,:,:,1),pp3(:,:,:,1),rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
     IF (ilmn.AND.ivarcoeff) THEN
        dv3(:,:,:) = pp3(:,:,:,1)
     ENDIF
@@ -254,7 +254,7 @@ contains
   ! output : pp3 (on pressure mesh)
   !written by SL 2018
   !############################################################################
-  subroutine divergence (pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
+  subroutine divergence (div_visu_var,pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
 
     USE param
     USE variables
@@ -263,6 +263,7 @@ contains
          duxydxyp3, uzp3, po3, dipp3, nxmsize, nymsize, nzmsize
     USE MPI
     USE ibm_param
+    USE ellipsoid_utils, ONLY: navierFieldGen
 
     implicit none
 
@@ -274,7 +275,10 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime),intent(in) :: rho1
     !Z PENCILS NXM NYM NZ  -->NXM NYM NZM
     real(mytype),dimension(zsize(1),zsize(2),zsize(3)),intent(in) :: divu3
-    real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize),intent(out) :: pp3
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3))     :: ep1_ux,ep1_uy,ep1_uz
+    real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize),intent(out) :: pp3,div_visu_var
+   !  real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: div_visu_var
+
 
     integer :: nvect3,i,j,k,nlock
     integer :: code
@@ -286,6 +290,11 @@ contains
        ta1(:,:,:) = ux1(:,:,:)
        tb1(:,:,:) = uy1(:,:,:)
        tc1(:,:,:) = uz1(:,:,:)
+    else if (itype.eq.itype_ellip) then
+       call navierFieldGen(ep1, ep1_ux, ep1_uy, ep1_uz)
+       ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:) + ep1(:,:,:)*ep1_ux(:,:,:)
+       tb1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:) + ep1(:,:,:)*ep1_uy(:,:,:)
+       tc1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:) + ep1(:,:,:)*ep1_uz(:,:,:)
     else
        ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:) + ep1(:,:,:)*ubcx
        tb1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:) + ep1(:,:,:)*ubcy
@@ -339,7 +348,7 @@ contains
     pp3(:,:,:) = pp3(:,:,:) + po3(:,:,:)
 
     if (nlock==2) then
-       ! Line below sometimes generates issues with Intel 
+       ! Line below sometimes generates issues with Intel
        !pp3(:,:,:)=pp3(:,:,:)-pp3(ph1%zst(1),ph1%zst(2),nzmsize)
        ! Using a tmp variable seems to sort the issue
        pres_ref = pp3(ph1%zst(1),ph1%zst(2),nzmsize)
@@ -368,8 +377,138 @@ contains
        endif
     endif
 
+    div_visu_var(:,:,:)=pp3(:,:,:)
+
     return
   end subroutine divergence
+
+  subroutine divergence2(pp3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,nlock)
+
+   USE param
+   USE variables
+   USE var, ONLY: ta1, tb1, tc1, pp1, pgy1, pgz1, di1, &
+        duxdxp2, uyp2, uzp2, duydypi2, upi2, ta2, dipp2, &
+        duxydxyp3, uzp3, po3, dipp3, nxmsize, nymsize, nzmsize
+   USE MPI
+   USE ibm_param
+   USE ellipsoid_utils, ONLY: navierFieldGen
+
+   implicit none
+
+   !  TYPE(DECOMP_INFO) :: ph1,ph3,ph4
+
+   !X PENCILS NX NY NZ  -->NXM NY NZ
+   real(mytype),dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1,uy1,uz1,ep1
+   real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime),intent(in) :: drho1
+   real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime),intent(in) :: rho1
+   !Z PENCILS NXM NYM NZ  -->NXM NYM NZM
+   real(mytype),dimension(zsize(1),zsize(2),zsize(3)),intent(in) :: divu3
+   real(mytype),dimension(xsize(1),xsize(2),xsize(3))     :: ep1_ux,ep1_uy,ep1_uz
+   real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize),intent(out) :: pp3
+   real(mytype),dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize) :: div_visu_var
+
+
+   integer :: nvect3,i,j,k,nlock
+   integer :: code
+   real(mytype) :: tmax,tmoy,pres_ref
+
+   nvect3=(ph1%zen(1)-ph1%zst(1)+1)*(ph1%zen(2)-ph1%zst(2)+1)*nzmsize
+
+   if (iibm.eq.0) then
+      ta1(:,:,:) = ux1(:,:,:)
+      tb1(:,:,:) = uy1(:,:,:)
+      tc1(:,:,:) = uz1(:,:,:)
+   else if (itype.eq.itype_ellip) then
+      call navierFieldGen(ep1, ep1_ux, ep1_uy, ep1_uz)
+      ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:) + ep1(:,:,:)*ep1_ux(:,:,:)
+      tb1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:) + ep1(:,:,:)*ep1_uy(:,:,:)
+      tc1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:) + ep1(:,:,:)*ep1_uz(:,:,:)
+   else
+      ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:) + ep1(:,:,:)*ubcx
+      tb1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:) + ep1(:,:,:)*ubcy
+      tc1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:) + ep1(:,:,:)*ubcz
+   endif
+
+   !WORK X-PENCILS
+
+   call derxvp(pp1,ta1,di1,sx,cfx6,csx6,cwx6,xsize(1),nxmsize,xsize(2),xsize(3),0)
+
+   if (ilmn.and.(nlock.gt.0)) then
+      if ((nlock.eq.1).and.(.not.ivarcoeff)) then
+         !! Approximate -div(rho u) using ddt(rho)
+         call extrapol_drhodt(ta1, rho1, drho1)
+      elseif ((nlock.eq.2).or.ivarcoeff) then
+         !! Need to check our error against divu constraint
+         !! Or else we are solving the variable-coefficient Poisson equation
+         call transpose_z_to_y(-divu3, ta2)
+         call transpose_y_to_x(ta2, ta1)
+      endif
+      call interxvp(pgy1,ta1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+      pp1(:,:,:) = pp1(:,:,:) + pgy1(:,:,:)
+   endif
+
+   call interxvp(pgy1,tb1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+   call interxvp(pgz1,tc1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+
+   call transpose_x_to_y(pp1,duxdxp2,ph4)!->NXM NY NZ
+   call transpose_x_to_y(pgy1,uyp2,ph4)
+   call transpose_x_to_y(pgz1,uzp2,ph4)
+
+   !WORK Y-PENCILS
+   call interyvp(upi2,duxdxp2,dipp2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
+   call deryvp(duydypi2,uyp2,dipp2,sy,cfy6,csy6,cwy6,ppyi,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),0)
+
+   !! Compute sum dudx + dvdy
+   duydypi2(:,:,:) = duydypi2(:,:,:) + upi2(:,:,:)
+
+   call interyvp(upi2,uzp2,dipp2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
+
+   call transpose_y_to_z(duydypi2,duxydxyp3,ph3)!->NXM NYM NZ
+   call transpose_y_to_z(upi2,uzp3,ph3)
+
+   !WORK Z-PENCILS
+   call interzvp(pp3,duxydxyp3,dipp3,sz,cifzp6,ciszp6,ciwzp6,(ph1%zen(1)-ph1%zst(1)+1),&
+        (ph1%zen(2)-ph1%zst(2)+1),zsize(3),nzmsize,1)
+   call derzvp(po3,uzp3,dipp3,sz,cfz6,csz6,cwz6,(ph1%zen(1)-ph1%zst(1)+1),&
+        (ph1%zen(2)-ph1%zst(2)+1),zsize(3),nzmsize,0)
+
+   !! Compute sum dudx + dvdy + dwdz
+   pp3(:,:,:) = pp3(:,:,:) + po3(:,:,:)
+
+   if (nlock==2) then
+      ! Line below sometimes generates issues with Intel
+      !pp3(:,:,:)=pp3(:,:,:)-pp3(ph1%zst(1),ph1%zst(2),nzmsize)
+      ! Using a tmp variable seems to sort the issue
+      pres_ref = pp3(ph1%zst(1),ph1%zst(2),nzmsize)
+      pp3(:,:,:)=pp3(:,:,:)-pres_ref
+   endif
+
+   tmax=-1609._mytype
+   tmoy=zero
+   do k=1,nzmsize
+      do j=ph1%zst(2),ph1%zen(2)
+         do i=ph1%zst(1),ph1%zen(1)
+            if (pp3(i,j,k).gt.tmax) tmax=pp3(i,j,k)
+            tmoy=tmoy+abs(pp3(i,j,k))
+         enddo
+      enddo
+   enddo
+   tmoy=tmoy/real(nvect3,mytype)
+   call MPI_ALLREDUCE(MPI_IN_PLACE, tmoy, 1, real_type, MPI_SUM, MPI_COMM_WORLD, code)
+   call MPI_ALLREDUCE(MPI_IN_PLACE, tmax, 1, real_type, MPI_MAX, MPI_COMM_WORLD, code)
+
+   if ((nrank == 0) .and. (nlock > 0).and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime==ilast)) then
+      if (nlock == 2) then
+         write(*,*) 'DIV U  max mean=',real(tmax,mytype),real(tmoy/real(nproc),mytype)
+      else
+         write(*,*) 'DIV U* max mean=',real(tmax,mytype),real(tmoy/real(nproc),mytype)
+      endif
+   endif
+
+   div_visu_var(:,:,:)=pp3(:,:,:)
+
+   return
+ end subroutine divergence2
   !############################################################################
   !subroutine GRADP
   !Computation of the pressure gradient from the pressure mesh to the
@@ -624,9 +763,9 @@ contains
           if (mhd_active) then
              do k=1,xsize(3)
                 do i=1,xsize(1)
-                   ux(i,1,k)=byx1(i,k) 
+                   ux(i,1,k)=byx1(i,k)
                    uy(i,1,k)=byy1(i,k)
-                   uz(i,1,k)=byz1(i,k) 
+                   uz(i,1,k)=byz1(i,k)
                 enddo
              enddo
           else
@@ -654,9 +793,9 @@ contains
           if (mhd_active) then
              do k=1,xsize(3)
                 do i=1,xsize(1)
-                   ux(i,xsize(2),k)=byxn(i,k) 
+                   ux(i,xsize(2),k)=byxn(i,k)
                    uy(i,xsize(2),k)=byyn(i,k)
-                   uz(i,xsize(2),k)=byzn(i,k) 
+                   uz(i,xsize(2),k)=byzn(i,k)
                 enddo
              enddo
           else
@@ -672,9 +811,9 @@ contains
           if (mhd_active) then
              do k=1,xsize(3)
                 do i=1,xsize(1)
-                   ux(i,xsize(2),k)=byxn(i,k) 
+                   ux(i,xsize(2),k)=byxn(i,k)
                    uy(i,xsize(2),k)=byyn(i,k)
-                   uz(i,xsize(2),k)=byzn(i,k) 
+                   uz(i,xsize(2),k)=byzn(i,k)
                 enddo
              enddo
           else
@@ -889,7 +1028,7 @@ contains
        !! We need temperature
        CALL calc_temp_eos(ta1, rho1(:,:,:,1), phi1, tb1, xsize(1), xsize(2), xsize(3))
 
-       CALL derxx (tb1, ta1, di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1, zero)
+       CALL derxx (tb1, ta1, di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1, 0)
        IF (imultispecies) THEN
           tb1(:,:,:) = (xnu / prandtl) * tb1(:,:,:) / ta1(:,:,:)
 
@@ -904,7 +1043,7 @@ contains
 
           DO is = 1, numscalar
              IF (massfrac(is)) THEN
-                CALL derxx (tc1, phi1(:,:,:,is), di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1, zero)
+                CALL derxx (tc1, phi1(:,:,:,is), di1, sx, sfxp, ssxp, swxp, xsize(1), xsize(2), xsize(3), 1, 0)
                 tb1(:,:,:) = tb1(:,:,:) + (xnu / sc(is)) * (td1(:,:,:) / mol_weight(is)) * tc1(:,:,:)
              ENDIF
           ENDDO
@@ -924,7 +1063,7 @@ contains
        !! Y-pencil
        tmp = iimplicit
        iimplicit = 0
-       CALL deryy (tc2, ta2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1, zero)
+       CALL deryy (tc2, ta2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1, 0)
        iimplicit = tmp
        IF (imultispecies) THEN
           tc2(:,:,:) = (xnu / prandtl) * tc2(:,:,:) / ta2(:,:,:)
@@ -942,7 +1081,7 @@ contains
              IF (massfrac(is)) THEN
                 tmp = iimplicit
                 iimplicit = 0
-                CALL deryy (td2, phi2(:,:,:,is), di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1, zero)
+                CALL deryy (td2, phi2(:,:,:,is), di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1, 0)
                 iimplicit = tmp
                 tc2(:,:,:) = tc2(:,:,:) + (xnu / sc(is)) * (te2(:,:,:) / mol_weight(is)) * td2(:,:,:)
              ENDIF
@@ -962,7 +1101,7 @@ contains
 
        !!------------------------------------------------------------------------------
        !! Z-pencil
-       CALL derzz (divu3, ta3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1, zero)
+       CALL derzz (divu3, ta3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1, 0)
        IF (imultispecies) THEN
           divu3(:,:,:) = (xnu / prandtl) * divu3(:,:,:) / ta3(:,:,:)
 
@@ -977,7 +1116,7 @@ contains
 
           DO is = 1, numscalar
              IF (massfrac(is)) THEN
-                CALL derzz (tc3, phi3(:,:,:,is), di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1, zero)
+                CALL derzz (tc3, phi3(:,:,:,is), di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1, 0)
                 divu3(:,:,:) = divu3(:,:,:) + (xnu / sc(is)) * (td3(:,:,:) / mol_weight(is)) * tc3(:,:,:)
              ENDIF
           ENDDO
@@ -1084,16 +1223,16 @@ contains
     CALL transpose_y_to_z(rho2, rho3)
 
     !! Diffusion term
-    CALL derzz (ta3,rho3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1, zero)
+    CALL derzz (ta3,rho3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1, 0)
     CALL transpose_z_to_y(ta3, tb2)
 
     iimplicit = -iimplicit
-    CALL deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1, zero)
+    CALL deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1, 0)
     iimplicit = -iimplicit
     ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
     CALL transpose_y_to_x(ta2, te1)
 
-    CALL derxx (td1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1, zero)
+    CALL derxx (td1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1, 0)
     td1(:,:,:) = td1(:,:,:) + te1(:,:,:)
 
     drhodt1_next(:,:,:) = drhodt1_next(:,:,:) - invpe * td1(:,:,:)
@@ -1195,7 +1334,7 @@ contains
        ! Ensure a default value
        rho0 = 1.0_mytype
     end if
-    
+
   end subroutine calc_rho0
   !############################################################################
   !############################################################################
@@ -1227,7 +1366,7 @@ contains
     real(mytype), intent(in) :: rho0
 
     !! OUTPUTS
-    REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: pp3
+    REAL(mytype), DIMENSION(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize) :: pp3,div_visu_var
 
     !! LOCALS
     INTEGER :: nlock, ierr
@@ -1237,7 +1376,7 @@ contains
     tc1(:,:,:) = (one - rho0 / rho1(:,:,:,1)) * pz1(:,:,:)
 
     nlock = -1 !! Don't do any funny business with LMN
-    call divergence(pp3,rho1,ta1,tb1,tc1,ep1,drho1,divu3,nlock)
+    call divergence(div_visu_var,pp3,rho1,ta1,tb1,tc1,ep1,drho1,divu3,nlock)
 
     !! lapl(p) = div((1 - rhomin/rho) grad(p)) + rhomin(div(u*) - div(u))
     !! dv3 contains div(u*) - div(u)
@@ -1270,7 +1409,7 @@ contains
     call transpose_x_to_y(uy1,uy2)
     ! Flow rate at the inlet
     ut1=zero
-    if (ystart(1)==1) then !! CPUs at the inlet
+    if (ystart(1)==1) then !! CPUs at the inletdiv_vi
       do k=1,ysize(3)
         do j=1,ysize(2)-1
           ut1=ut1+(yp(j+1)-yp(j))*(ux2(1,j+1,k)-half*(ux2(1,j+1,k)-ux2(1,j,k)))
@@ -1330,7 +1469,7 @@ contains
   !!
   !!  subroutine: pipe_bulk / pipe_bulk_u / pipe_bulk_phi
   !!      AUTHOR: Rodrigo Vicente Cruz
-  !! DESCRIPTION: Correction of pipe's bulk velocity (constant 
+  !! DESCRIPTION: Correction of pipe's bulk velocity (constant
   !!              flow rate) and bulk temperature.
   !!              See Thesis Vicente Cruz 2021 for help.
   !!

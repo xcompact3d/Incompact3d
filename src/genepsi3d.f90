@@ -49,21 +49,21 @@ contains
 !############################################################################
   subroutine geomcomplex(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
 
-    USE param, ONLY : itype, itype_cyl, itype_hill, itype_channel,&
-                      itype_sandbox, itype_pipe
+    USE param, ONLY : itype, itype_cyl, itype_hill, itype_channel,itype_sandbox, itype_ellip,itype_pipe
     USE cyl, ONLY : geomcomplex_cyl
     USE hill, ONLY : geomcomplex_hill
     USE channel, ONLY : geomcomplex_channel
     USE sandbox, ONLY : geomcomplex_sandbox
+    USE ellip, ONLY : geomcomplex_ellip
     USE pipe, ONLY : geomcomplex_pipe
 
     IMPLICIT NONE
 
-    INTEGER :: nxi,nxf,ny,nyi,nyf,nzi,nzf
-    REAL(mytype),DIMENSION(nxi:nxf,nyi:nyf,nzi:nzf),intent(inout) :: epsi
-    REAL(mytype)               :: dx,dz
-    REAL(mytype),DIMENSION(ny) :: yp
-    REAL(mytype)               :: remp
+    INTEGER, intent(in) :: nxi,nxf,ny,nyi,nyf,nzi,nzf
+    REAL(mytype),DIMENSION(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
+    REAL(mytype), intent(in)               :: dx,dz
+    REAL(mytype),DIMENSION(ny), intent(in) :: yp
+    REAL(mytype), intent(in)               :: remp
 
     IF (itype.EQ.itype_cyl) THEN
 
@@ -81,6 +81,10 @@ contains
      
        CALL  geomcomplex_sandbox(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, yp, remp)
 
+    ELSEIF (itype.EQ.itype_ellip) THEN
+
+       CALL geomcomplex_ellip(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
+
     ELSEIF (itype.EQ.itype_pipe) THEN
 
        CALL geomcomplex_pipe(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
@@ -89,6 +93,104 @@ contains
 
   end subroutine geomcomplex
 !############################################################################
+
+  subroutine param_assign()
+
+   use ibm_param
+   use ellipsoid_utils, only: NormalizeQuaternion,ellipInertiaCalculate,ellipMassCalculate
+   use param
+   use var, only: nrank
+   real(mytype) :: eqr, ori_dummy(4), ellip_m_dummy, inertia_dummy(3,3)
+   integer :: i,ii,j
+
+   do i =1,nbody
+         ii = (i-1)*3
+         ! write(*,*) sh(ii+1), sh(ii+2), sh(ii+3)
+         eqr=(sh(ii+1)*sh(ii+2)*sh(ii+3))**(1.0/3.0)
+         if (eqr.lt.0.001) then
+            eqr=1.0
+         endif
+         do j = 1,3
+            shape(i,j) = sh(ii+j)/eqr
+         enddo
+         if (nrank==0) then
+            write(*,*) "Body ", i, ", eqr = ", eqr
+
+            write(*,*) i, "'s shape = ", shape(i,:)
+         endif
+      enddo
+
+
+      do i = 1,nbody
+         ii = (i-1)*4
+         do j = 1,4
+            ori_dummy(j) = ori(ii+j)
+         enddo
+
+         ! write(*,*) "Body, ", i, "orientation = ", ori_dummy
+         call NormalizeQuaternion(ori_dummy)
+
+         if (nrank==0) then
+            write(*,*) "Body, ", i, "orientation = ", ori_dummy
+         endif
+         orientation(i,:) = ori_dummy
+      enddo
+      ! call NormalizeQuaternion(orientation)
+      do i = 1,nbody
+         ii = (i-1)*3
+         do j = 1,3
+            position(i,j) = ce(ii+j)
+            ! write(*,*) ce(i,j), position(j,i)
+         enddo
+         if (nrank==0) then
+         write(*,*) "Nbody", i, "position = ", position(i, :)
+         endif
+      enddo
+      ! write(*,*) "CE =       ", ce
+      ! write(*,*) "Position = ", position
+      ! position=ce
+      do i = 1,nbody
+         ii = (i-1)*3
+         do j = 1,3
+            linearVelocity(i,j) = lv(ii+j)
+         enddo
+      enddo
+
+      do i = 1,nbody
+         ii = (i-1)*3
+         angularVelocity(i,1)=zero
+         do j = 1,3
+            angularVelocity(i,j+1)=av(ii+j)
+         enddo
+         if (nrank==0) then
+            write(*,*) "Nbody", i, "angvel = ", angularVelocity(i, :)
+         endif
+      enddo
+      ! write(*,*) "Ra = ", ra
+
+      do i = 1,nbody
+         if (nrank==0) then
+         write(*,*) "Nbody = ", i, "Radius = ", ra(i)
+         endif
+      enddo
+      do i = 1,nbody
+         call ellipInertiaCalculate(shape(i,:),rho_s(i),inertia_dummy)
+         inertia(i,:,:) = inertia_dummy
+         if (nrank==0) then
+
+            write(*,*) "Nbody", i, "InertiaM = ", inertia(i,:,:)
+         endif
+      enddo
+      do i = 1,nbody
+         call ellipMassCalculate(shape(i,:), rho_s(i), ellip_m_dummy)
+         ellip_m(i) = ellip_m_dummy
+         if (nrank==0) then
+
+            write(*,*) "Nbody", i, "ellip_m = ", ellip_m(i)
+         endif
+      enddo
+
+  end subroutine param_assign
 !############################################################################
   subroutine genepsi3d(ep1)
 
@@ -179,7 +281,7 @@ contains
     integer,     dimension(ysize(1),ysize(3))        :: nobjy
     integer,     dimension(zsize(1),zsize(2))        :: nobjz
     real(mytype),dimension(ny)                       :: yp
-    
+
     ! Local variables
     integer,     dimension(xsize(2),xsize(3))          :: nobjxraf
     integer,     dimension(ysize(1),ysize(3))          :: nobjyraf
@@ -224,16 +326,18 @@ contains
     else
        dyraf =yly/real(nyraf-1, mytype)
     endif
+    do j=1,ny-1
+       do jraf=1,nraf
+          ypraf(jraf+nraf*(j-1))=yp(j)+real(jraf-1, mytype)*(yp(j+1)-yp(j))/real(nraf, mytype)
+       enddo
+    enddo
+    if (ncly) then
+      do jraf = 1,nraf
+         ypraf(jraf+nraf*(ny-1))=yp(ny)+real(jraf-1,mytype)*(yly-yp(ny))/real(nraf,mytype)
+      enddo
+    endif
 
-    ! Compute ypraf
-    if (istret.eq.0) then
-       do j = 1, nyraf
-          ypraf(j) = (j-1) * dyraf
-       end do
-    else
-       call stretching(nyraf, ypraf, opt_write = .false.)
-    end if
-
+    if(.not.ncly)ypraf(nyraf)=yp(ny)
     yepsi=zero
     call geomcomplex(yepsi,ystart(1),yend(1),nyraf,1,nyraf,ystart(3),yend(3),dx,ypraf,dz,one)
     ! if (nrank==0) print*,'    step 3'

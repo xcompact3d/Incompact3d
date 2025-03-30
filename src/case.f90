@@ -22,6 +22,7 @@ module case
   use cavity
   use pipe
   use ptbl
+  use ellip
 
   use var, only : nzmsize
 
@@ -32,8 +33,8 @@ module case
   private ! All functions/subroutines private by default
   public :: init, boundary_conditions, &
             momentum_forcing, scalar_forcing, set_fluid_properties, &
-            test_flow, preprocessing, postprocessing, visu_case, & 
-            visu_case_init, visu_case_finalise 
+            test_flow, preprocessing, postprocessing, visu_case, &
+            visu_case_init, visu_case_finalise
 
 contains
   !##################################################################
@@ -118,6 +119,10 @@ contains
        elseif (itype.eq.itype_ptbl) then
 
        call init_ptbl(ux1, uy1, uz1, phi1)
+
+    elseif (itype.eq.itype_ellip) then
+
+       call init_ellip (ux1, uy1, uz1, phi1)
 
     else
   
@@ -224,6 +229,10 @@ contains
 
        call boundary_conditions_ptbl(ux, uy, uz, phi)
 
+    elseif (itype.eq.itype_ellip) then
+
+       call boundary_conditions_ellip(ux, uy, uz, phi)
+
     endif
 
   end subroutine boundary_conditions
@@ -252,7 +261,7 @@ contains
   end subroutine preprocessing
   !##################################################################
   !##################################################################
-  subroutine postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
+  subroutine postprocessing(rho1, ux1, uy1, uz1, pp3, div_visu_var, phi1, ep1)
 
     use decomp_2d, only : xsize, ph1
     use var, only : nzmsize, numscalar, nrhotime, npress, abl_T
@@ -261,24 +270,24 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(in) :: phi1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime), intent(in) :: rho1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ep1
-    real(mytype),dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
+    real(mytype),dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3, div_visu_var
 
     integer :: j
 
     ! Recover temperature when decomposed (pressure to be recovered externally)
     if (itype.eq.itype_abl.and.ibuoyancy.eq.1) then
-      do j=1,xsize(2) 
+      do j=1,xsize(2)
         abl_T(:,j,:,1) = phi1(:,j,:,1) + Tstat(j,1)
       enddo
-      call run_postprocessing(rho1, ux1, uy1, uz1, pp3, abl_T, ep1)
+      call run_postprocessing(rho1, ux1, uy1, uz1, pp3, div_visu_var, abl_T, ep1)
     else
-      call run_postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
+      call run_postprocessing(rho1, ux1, uy1, uz1, pp3, div_visu_var, phi1, ep1)
     endif
 
   end subroutine postprocessing
   !##################################################################
   !##################################################################
-  subroutine run_postprocessing(rho1, ux1, uy1, uz1, pp3, phi1, ep1)
+  subroutine run_postprocessing(rho1, ux1, uy1, uz1, pp3, div_visu_var, phi1, ep1)
 
     use decomp_2d, only : xsize, ph1
     use visu, only  : write_snapshot, end_snapshot
@@ -295,12 +304,12 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(in) :: phi1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),nrhotime), intent(in) :: rho1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(in) :: ep1
-    real(mytype),dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
+    real(mytype),dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3, div_visu_var
 
     integer :: num
 
     if ((ivisu.ne.0).and.(mod(itime, ioutput).eq.0)) then
-       call write_snapshot(rho1, ux1, uy1, uz1, pp3, phi1, ep1, itime, num)
+       call write_snapshot(rho1, ux1, uy1, uz1, pp3, div_visu_var, phi1, ep1, itime, num)
 
        ! XXX: Ultimate goal for ADIOS2 is to pass do all postproc online - do we need this?
        !      Currently, needs some way to "register" variables for IO
@@ -378,18 +387,22 @@ contains
 
        call postprocess_cavity(ux, uy, uz, phi)
 
+    elseif (itype.eq.itype_ellip) then
+
+       call postprocess_ellip(ux, uy, uz, ep)
+
     elseif (itype.eq.itype_pipe) then
 
        call postprocess_pipe(ux, uy, uz, pp, phi, ep)
 
     elseif (itype.eq.itype_ptbl) then
-      
+
        call postprocess_ptbl (ux, uy, uz, pp, phi, ep)
 
     endif
 
     if (iforces.eq.1) then
-       call force(ux,uy,uz,ep)
+      !  call force(ux,uy,uz,ep)
        call restart_forces(1)
     endif
 
@@ -431,7 +444,11 @@ contains
 
     else if (itype .eq. itype_uniform) then
 
-       call visu_uniform_init(case_visu_init)      
+       call visu_uniform_init(case_visu_init)
+
+    else if (itype.eq.itype_ellip) then
+
+       call visu_ellip_init(case_visu_init)
 
     else if (itype .eq. itype_ptbl) then
 
@@ -444,11 +461,11 @@ contains
   subroutine visu_case_finalise
 
     implicit none
-  
+
     if (itype .eq. itype_gravitycur) then
 
        call visu_gravitycur_finalise()
-    
+
     end if
   end subroutine visu_case_finalise
   !##################################################################
@@ -508,6 +525,11 @@ contains
        call visu_uniform(ux1, uy1, uz1, pp3, phi1, ep1, num)
        called_visu = .true.
 
+    elseif (itype.eq.itype_ellip) then
+
+      call visu_ellip(ux1, uy1, uz1, pp3, phi1, ep1, num)
+      called_visu = .true.
+
     elseif (itype.eq.itype_ptbl) then
 
        call visu_ptbl(ux1, uy1, uz1, pp3, phi1, ep1, num)
@@ -563,7 +585,7 @@ contains
     if(mhd_active) then
       call momentum_forcing_mhd(dux1(:,:,:,1),duy1(:,:,:,1),duz1(:,:,:,1),ux1,uy1,uz1)
     endif
-    
+
   end subroutine momentum_forcing
   !##################################################################
   !##################################################################
@@ -618,7 +640,7 @@ contains
     use decomp_2d
     use param
 
-    use navier, only : divergence
+    use navier, only : divergence2
 
     use var, only : numscalar, dv3
     use tools, only : test_speed_min_max, compute_cfl, test_scalar_min_max
@@ -631,7 +653,7 @@ contains
     real(mytype), dimension(zsize(1), zsize(2), zsize(3)), intent(in) :: divu3
 
     if ((mod(itime,ilist)==0 .or. itime == ifirst .or. itime == ilast)) then
-       call divergence(dv3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,2)
+       call divergence2(dv3,rho1,ux1,uy1,uz1,ep1,drho1,divu3,2)
        call test_speed_min_max(ux1,uy1,uz1)
        call compute_cfl(ux1,uy1,uz1)
        if (iscalar==1) call test_scalar_min_max(phi1)
