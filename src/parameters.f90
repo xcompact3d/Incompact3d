@@ -69,7 +69,7 @@ subroutine parameter(input_i3d)
   NAMELIST /AdversePresGrad/ APG,APG_DpDX,APG_Beta
   NAMELIST /ProbeSpectra/ Pro_Spectra,X_Pro_Spectra,Z_Pro_Spectra
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
-  NAMELIST /ibmstuff/ ce,sh,ori,lv,av,ra, &
+  NAMELIST /ibmstuff/ ce,sh,ori,lv,av,ra,cex,cey,cez,rai,rao, &
       nobjmax,nraf,nvol,iforces, cvl_scalar, npif, izap, ianal, imove, thickness, chord, omega , &
       ubcx,ubcy,ubcz,rads,rho_s, c_air, grav_x,grav_y,grav_z, nozdrift, force_csv, bodies_fixed, cube_flag, tconv2_sign, &
       torques_flag, orientations_free, shear_flow_ybc, shear_flow_zbc, shear_velocity, torq_debug, torq_flip, ztorq_only, nbody, &

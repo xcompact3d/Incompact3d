@@ -153,20 +153,6 @@ program xcompact3d
          do i = 1,nbody
             linearForce(i,:) = [drag(i)-grav_effx(i), lift(i)-grav_effy(i), lat(i)-grav_effz(i)]
          enddo
-         if (nozdrift==1) then
-               linearForce(:,3)=zero
-         endif
-
-         if (bodies_fixed==1) then
-               linearForce(:,:)=zero
-         endif
-
-         if ((nrank==0).and.(force_csv.eq.1)) then
-            ! open(unit=20, file='force_out.dat', action='write')
-            write(20, *) linearForce(1,1), linearForce(1,2), linearForce(1,3)
-            write(*,*) 'Writing forces', linearForce(1,1), linearForce(1,2), linearForce(1,3)
-            flush(20)
-         endif
 
 
          if (torques_flag.eq.1) then
@@ -345,7 +331,9 @@ subroutine init_xcompact3d()
   call decomp_info_init(nxm, nym, nz, ph3)
 
   call init_variables()
-  call param_assign()
+  if (itype.eq.itype_ellip) then 
+       call param_assign()
+  endif
 
   call schemes()
 
