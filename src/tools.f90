@@ -291,27 +291,27 @@ contains
        !
        if (iscalar==1) then
           do is=1, numscalar
-             write(varname, *) "phi-", is
+             write(varname,"('phi-',I2.2)") is
              call x3d_io_write(x3d_io_restart, 1, phi1(:,:,:,is), "_", trim(varname), opt_reduce_prec=.false.)
              ! previous time-steps
              if ((itimescheme==2).or.(itimescheme==3)) then ! AB2 or AB3
-                write(varname, *) "dphi-", is, "-2"
+                write(varname,"('dphi-',I2.2,'-2')") is
                 call x3d_io_write(x3d_io_restart, 1, dphi1(:,:,:,2,is), "_", trim(varname), opt_reduce_prec=.false.)
              end if
              !
              if (itimescheme==3) then ! AB3
-               write(varname, *) "dphi-", is, "-3"
+               write(varname,"('dphi-',I2.2,'-3')") is
                call x3d_io_write(x3d_io_restart, 1, dphi1(:,:,:,3,is), "_", trim(varname), opt_reduce_prec=.false.)
              end if
           end do
        endif
        if (ilmn) then
           do is = 1, nrhotime
-             write(varname, *) "rho-", is
+             write(varname,"('rho-',I2.2)") is
              call x3d_io_write(x3d_io_restart, 1, rho1(:,:,:,is), "_", trim(varname), opt_reduce_prec=.false.)
           enddo
           do is = 1, ntime
-             write(varname, *) "drho-", is
+             write(varname,"('drho-',I2.2)") is
              call x3d_io_write(x3d_io_restart, 1, drho1(:,:,:,is), "_", trim(varname), opt_reduce_prec=.false.)
           enddo
           call x3d_io_write(x3d_io_restart, 1, mu1, "_", "mu", opt_reduce_prec=.false.)
@@ -409,16 +409,16 @@ contains
        !
        if (iscalar==1) then
          do is=1, numscalar
-            write(varname, *) "phi-", is
+            write(varname,"('phi-',I2.2)") is
             call x3d_io_read(x3d_io_restart, 1, phi1(:,:,:,is), "_", trim(varname), opt_reduce_prec=.false.)
            ! previous time-steps
            if ((itimescheme==2).or.(itimescheme==3)) then ! AB2 or AB3
-             write(varname, *) "dphi-", is, "-2"
+             write(varname,"('dphi-',I2.2,'-2')") is
              call x3d_io_read(x3d_io_restart, 1, dphi1(:,:,:,2,is), "_", trim(varname), opt_reduce_prec=.false.)
            end if
            !
            if (itimescheme==3) then ! AB3
-              write(varname, *) "dphi-", is, "-3"
+              write(varname,"('dphi-',I2.2,'-3')") is
               call x3d_io_read(x3d_io_restart, 1, dphi1(:,:,:,3,is), "_", trim(varname), opt_reduce_prec=.false.)
            end if
            ! ABL 
@@ -437,11 +437,11 @@ contains
        endif
        if (ilmn) then
           do is = 1, nrhotime
-             write(varname, *) "rho-", is
+             write(varname,"('rho-',I2.2)") is
              call x3d_io_read(x3d_io_restart, 1, rho1(:,:,:,is), "_", trim(varname), opt_reduce_prec=.false.)
           enddo
           do is = 1, ntime
-             write(varname, *) "drho-", is
+             write(varname,"('drho-',I2.2)") is
              call x3d_io_read(x3d_io_restart, 1, drho1(:,:,:,is), "_", trim(varname), opt_reduce_prec=.false.)
           enddo
           call x3d_io_read(x3d_io_restart, 1, mu1, "_", "mu", opt_reduce_prec=.false.)
@@ -538,7 +538,7 @@ contains
     call x3d_io_register_var(x3d_io_restart, "pp", 3, mytype, opt_reduce_prec=.false., opt_decomp=phG)
 
     do is = 1, numscalar
-       write(varname,*) "phi-", is
+       write(varname,"('phi-',I2.2)") is
        call x3d_io_register_var(x3d_io_restart, trim(varname), 1, mytype, opt_reduce_prec=.false.)
     end do
 
@@ -548,7 +548,7 @@ contains
        call x3d_io_register_var(x3d_io_restart, "duz-2", 1, mytype, opt_reduce_prec=.false.)
 
        do is = 1, numscalar
-          write(varname,*) "dphi-", is, "-2"
+          write(varname,"('dphi-',I2.2,'-2')") is
           call x3d_io_register_var(x3d_io_restart, trim(varname), 1, mytype, opt_reduce_prec=.false.)
        end do
 
@@ -558,8 +558,9 @@ contains
           call x3d_io_register_var(x3d_io_restart, "duz-3", 1, mytype, opt_reduce_prec=.false.)
 
           do is = 1, numscalar
-             write(varname,*) "dphi-", is, "-3"
+             write(varname,"('dphi-',I2.2,'-3')") is
              call x3d_io_register_var(x3d_io_restart, trim(varname), 1, mytype, opt_reduce_prec=.false.)
+             call decomp_2d_register_variable(io_restart, trim(varname), 1, 0, 0, mytype)
           end do
        endif
     endif
@@ -570,11 +571,11 @@ contains
 
     if (ilmn) then
        do is = 1, nrhotime
-          write(varname, *) "rho-", is
+          write(varname,"('rho-',I2.2)") is
           call x3d_io_register_var(x3d_io_restart, trim(varname), 1, mytype, opt_reduce_prec=.false.)
        end do
        do is = 1, ntime
-          write(varname, *) "drho-", is
+          write(varname,"('drho-',I2.2)") is
           call x3d_io_register_var(x3d_io_restart, trim(varname), 1, mytype, opt_reduce_prec=.false.)
        end do
        call x3d_io_register_var(x3d_io_restart, "mu", 1, mytype, opt_reduce_prec=.false.)

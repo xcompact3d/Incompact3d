@@ -126,6 +126,7 @@ subroutine init_xcompact3d()
 
   use param, only : ilesmod, jles,itype
   use param, only : irestart, mhd_active
+  use param, only : periodic_bc
 
   use variables, only : nx, ny, nz, nxm, nym, nzm
   use variables, only : p_row, p_col
@@ -187,7 +188,8 @@ subroutine init_xcompact3d()
   
   call parameter(InputFN)
 
-  call decomp_2d_init(nx,ny,nz,p_row,p_col)
+  call decomp_2d_init(nx,ny,nz,p_row,p_col,periodic_bc)
+
   call decomp_2d_io_init()
   call init_coarser_mesh_statS(nstat,nstat,nstat,.true.)    !start from 1 == true
   call init_coarser_mesh_statV(nvisu,nvisu,nvisu,.true.)    !start from 1 == true
