@@ -24,6 +24,8 @@ module visu
   integer, save :: output2D
   integer, save :: ioxdmf
   integer, save :: ioxml
+  ! Used for vtk.xml to detect the first snapshot
+  integer, save :: itime_first_snapshot
   character(len=9) :: ifilenameformat = '(I3.3)'
   real, save :: tstart, tend
 
@@ -89,6 +91,7 @@ contains
     endif
 
     ! Use vtk.xml instead of xdmf when ADIOS2 is available
+    itime_first_snapshot = ilast
 #ifdef ADIOS2
     use_xdmf = .false.
     use_vtkxml = .true.
@@ -628,9 +631,11 @@ contains
        endif
     endif
 
+    ! Add the field to vtk.xml if first snapshot
     if (use_vtkxml) then
-       if (nrank.eq.0 .and. num.eq.0) then
+       if (nrank.eq.0 .and. itime.le.itime_first_snapshot) then
           write (ioxml, *) '        <DataArray Name="'//filename//'" />'
+          itime_first_snapshot = itime
        end if
     end if
 
