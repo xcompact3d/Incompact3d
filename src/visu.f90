@@ -558,7 +558,7 @@ contains
     use var, only : zero, one
     use var, only : uvisu
     use var, only : ta1
-    use param, only : iibm
+    use param, only : iibm, itime
     use utilities, only : gen_filename,gen_snapshotname,gen_h5path
     use decomp_2d_io, only : decomp_2d_write_one, decomp_2d_write_plane
 
