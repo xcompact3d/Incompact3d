@@ -219,9 +219,6 @@ contains
     use var, only : npress
 
     use tools, only : rescale_pressure
-#ifdef ADIOS2
-    use utilities, only : gen_filename
-#endif
 
     implicit none
 
