@@ -23,9 +23,7 @@ module visu
   !        3 for 2D output with Z average
   integer, save :: output2D
   integer, save :: ioxdmf
-#ifdef ADIOS2
   integer, save :: ioxml
-#endif
   character(len=9) :: ifilenameformat = '(I3.3)'
   real, save :: tstart, tend
 
