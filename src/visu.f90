@@ -167,7 +167,7 @@ contains
 
     ! Write the vtk.xml file
     if (nrank.eq.0) then
-       open(newunit=ioxml, file="./data.bp4/vtk.xml")
+       open(newunit=ioxml, file=gen_iodir_name//"/vtk.xml")
 
        ! Header for a uniform grid
        write (ioxml, *) '<?xml version="1.0"?>'
