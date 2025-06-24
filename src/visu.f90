@@ -165,15 +165,17 @@ contains
     call decomp_2d_open_io(io_name, "data", mode)
 
     ! Write the vtk.xml file
-    open(newunit=ioxml, file="./data.bp4/vtk.xml")
+    if (nrank.eq.0) then
+       open(newunit=ioxml, file="./data.bp4/vtk.xml")
 
-    ! Header for a uniform grid
-    write (ioxml, *) '<?xml version="1.0"?>'
-    write (ioxml, *) '<VTKFile type="ImageData" version="0.1" byte_order="LittleEndian">'
-    ! Extent should be in reversed order
-    write (ioxml, *) '  <ImageData WholeExtent="1 ', zsize(3), ' 1 ', ysize(2), ' 1 ', xsize(1), '" Origin="0 0 0" Spacing="', dx, ' ', dy, ' ', dz, '">'
-    write (ioxml, *) '    <Piece Extent="1 ', zsize(3), ' 1 ', ysize(2), ' 1 ', xsize(1), '">'
-    write (ioxml, *) '      <PointData>'
+       ! Header for a uniform grid
+       write (ioxml, *) '<?xml version="1.0"?>'
+       write (ioxml, *) '<VTKFile type="ImageData" version="0.1" byte_order="LittleEndian">'
+       ! Extent should be in reversed order
+       write (ioxml, *) '  <ImageData WholeExtent="1 ', zsize(3), ' 1 ', ysize(2), ' 1 ', xsize(1), '" Origin="0 0 0" Spacing="', dx, ' ', dy, ' ', dz, '">'
+       write (ioxml, *) '    <Piece Extent="1 ', zsize(3), ' 1 ', ysize(2), ' 1 ', xsize(1), '">'
+       write (ioxml, *) '      <PointData>'
+    end if
 #endif
     
   end subroutine visu_ready
