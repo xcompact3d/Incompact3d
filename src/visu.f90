@@ -147,7 +147,7 @@ contains
     if (.not.outloc_init) then
        if (irestart == 1) then
           !! Restarting - is the output already available to write to?
-          inquire(file=gen_iodir_name("data", io_name), exist=dir_exists)
+          inquire(file=trim(gen_iodir_name("data", io_name)), exist=dir_exists)
           if (dir_exists) then
              outloc_init = .true.
           end if
@@ -167,7 +167,7 @@ contains
 
     ! Write the vtk.xml file
     if (nrank.eq.0) then
-       open(newunit=ioxml, file=gen_iodir_name("data", io_name)//"/vtk.xml")
+       open(newunit=ioxml, file=trim(gen_iodir_name("data", io_name))//"/vtk.xml")
 
        ! Header for a uniform grid
        write (ioxml, *) '<?xml version="1.0"?>'

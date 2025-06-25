@@ -1023,7 +1023,7 @@ contains
     end if
 
     if (nrank == exe_rank) then
-       oldname_ext = gen_iodir_name(oldname, io_restart)
+       oldname_ext = trim(gen_iodir_name(oldname, io_restart))
        inquire(file=oldname_ext, exist=exist)
        if (exist) then
           cmd = "mv "//oldname_ext//" "//newname
@@ -1124,7 +1124,7 @@ contains
     if (nrank == exe_rank) then
        success = .true.
 
-       testname_ext = gen_iodir_name(testname, io_restart)
+       testname_ext = trim(gen_iodir_name(testname, io_restart))
        
        inquire(file=refname, size=refsize, exist=refexist)
        inquire(file=testname_ext, size=testsize, exist=testexist)
