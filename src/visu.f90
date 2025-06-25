@@ -12,6 +12,8 @@ module visu
 
   ! True to activate the XDMF output
   logical, save :: use_xdmf = .true.
+  ! True to activate vtk.xml output
+  logical, save :: use_vtkxml = .false.
   ! True to use the new enumeration
   logical, save :: filenamedigits = .false.
   ! output2D is defined in the input.i3d file
@@ -20,7 +22,10 @@ module visu
   !        2 for 2D output with Y average
   !        3 for 2D output with Z average
   integer, save :: output2D
-  integer :: ioxdmf
+  integer, save :: ioxdmf
+  integer, save :: ioxml
+  ! Used for vtk.xml to detect the first snapshot
+  integer, save :: itime_first_snapshot
   character(len=9) :: ifilenameformat = '(I3.3)'
   real, save :: tstart, tend
 
@@ -40,7 +45,7 @@ contains
     use MPI
     use param, only : ilmn, iscalar, ilast, ifirst, ioutput, istret
     use variables, only : numscalar, prec, nvisu
-    use param, only : dx, dy, dz
+    use param, only : dx, dy, dz, istret
     use decomp_2d_io, only : decomp_2d_init_io, decomp_2d_open_io, decomp_2d_append_mode
     use decomp_2d_io, only : decomp_2d_register_variable
 
@@ -85,6 +90,13 @@ contains
       stop
     endif
 
+    ! Use vtk.xml instead of xdmf when ADIOS2 is available
+    itime_first_snapshot = ilast
+#ifdef ADIOS2
+    use_xdmf = .false.
+    use_vtkxml = .true.
+#endif
+
     call decomp_2d_init_io(io_name)
 
     !! Register variables
@@ -102,6 +114,12 @@ contains
           call decomp_2d_register_variable(io_name, scname, 1, 0, output2D, mytype)
        enddo
     endif
+
+#ifdef ADIOS2
+    ! The file vtk.xml is sufficient when the mesh is regular
+    ! In case of streching, the Paraview filter "warp_by_scalar" should be used
+    if (istret /= 0) call decomp_2d_register_variable(io_name, "warp", 1, 0, output2D, mytype)
+#endif
     
   end subroutine visu_init
 
@@ -113,8 +131,7 @@ contains
   subroutine visu_ready ()
 
     use decomp_2d_io, only : decomp_2d_open_io, decomp_2d_append_mode, decomp_2d_write_mode, gen_iodir_name
-
-    use param, only : irestart
+    use param, only : irestart, dx, dy, dz
     
     implicit none
 
@@ -147,6 +164,19 @@ contains
     end if
 
     call decomp_2d_open_io(io_name, "data", mode)
+
+    ! Write the vtk.xml file
+    if (nrank.eq.0) then
+       open(newunit=ioxml, file="./data.bp4/vtk.xml")
+
+       ! Header for a uniform grid
+       write (ioxml, *) '<?xml version="1.0"?>'
+       write (ioxml, *) '<VTKFile type="ImageData" version="0.1" byte_order="LittleEndian">'
+       ! Extent should be in reversed order
+       write (ioxml, *) '  <ImageData WholeExtent="1 ', zsize(3), ' 1 ', ysize(2), ' 1 ', xsize(1), '" Origin="0 0 0" Spacing="', dx, ' ', dy, ' ', dz, '">'
+       write (ioxml, *) '    <Piece Extent="1 ', zsize(3), ' 1 ', ysize(2), ' 1 ', xsize(1), '">'
+       write (ioxml, *) '      <PointData>'
+    end if
 #endif
     
   end subroutine visu_ready
@@ -161,6 +191,9 @@ contains
     
     implicit none
 
+    ! Write vtk.xml footer
+    if (use_vtkxml) call write_vtkxml_footer()
+
 #ifdef ADIOS2
     call decomp_2d_close_io(io_name, "data")
 #endif
@@ -174,12 +207,12 @@ contains
 
     use decomp_2d_io, only : decomp_2d_start_io
 
-    use param, only : nrhotime, ilmn, iscalar, ioutput, irestart
+    use param, only : nrhotime, ilmn, iscalar, ioutput, irestart, istret, dy
 
     use variables, only : sx, cifip6, cisip6, ciwip6, cifx6, cisx6, ciwx6
     use variables, only : sy, cifip6y, cisip6y, ciwip6y, cify6, cisy6, ciwy6
     use variables, only : sz, cifip6z, cisip6z, ciwip6z, cifz6, cisz6, ciwz6
-    use variables, only : numscalar
+    use variables, only : numscalar, yp
 
     use var, only : pp1, ta1, di1, nxmsize
     use var, only : pp2, ppi2, dip2, ph2, nymsize
@@ -206,6 +239,9 @@ contains
     integer :: mode
     logical, save :: outloc_init = .false.
     logical :: dir_exists
+#ifdef ADIOS2
+    integer :: i, j, k, jglob
+#endif
 
     ! Update log file
     if (nrank.eq.0) then
@@ -269,6 +305,20 @@ contains
         call write_field(phi1(:,:,:,is), ".", trim(scname), num, .true.)
       enddo
     endif
+
+#ifdef ADIOS2
+    if (istret /= 0) then
+       do k = 1, xsize(3)
+          do j = 1, xsize(2)
+             jglob = j + xstart(2) - 1
+             do i = 1, xsize(1)
+                ta1(i, j, k) = yp(jglob) - (jglob - 1) * dy
+             end do
+          end do
+       end do
+       call write_field(ta1, ".", "warp", num, .true., flush=.true.)
+    end if
+#endif
 
   end subroutine write_snapshot
 
@@ -478,6 +528,25 @@ contains
   end subroutine write_xdmf_footer
 
   !
+  ! Write the footer of the vtk.xml file at the end of the simulation
+  !
+  subroutine write_vtkxml_footer()
+
+    implicit none
+
+#ifdef ADIOS2
+    if (nrank.eq.0) then
+      write (ioxml, *) '      </PointData>'
+      write (ioxml, *) '    </Piece>'
+      write (ioxml, *) '  </ImageData>'
+      write (ioxml, *) '</VTKFile>'
+      close(ioxml)
+    endif
+#endif
+
+  end subroutine write_vtkxml_footer
+
+  !
   ! Write the given field for visualization
   ! Adapted from https://github.com/fschuch/Xcompact3d/blob/master/src/visu.f90
   !
@@ -489,7 +558,7 @@ contains
     use var, only : zero, one
     use var, only : uvisu
     use var, only : ta1
-    use param, only : iibm
+    use param, only : iibm, itime
     use utilities, only : gen_filename,gen_snapshotname,gen_h5path
     use decomp_2d_io, only : decomp_2d_write_one, decomp_2d_write_plane
 
@@ -561,6 +630,14 @@ contains
           write(ioxdmf,*)'        </Attribute>'
        endif
     endif
+
+    ! Add the field to vtk.xml if first snapshot
+    if (use_vtkxml) then
+       if (nrank.eq.0 .and. itime.le.itime_first_snapshot) then
+          write (ioxml, *) '        <DataArray Name="'//filename//'" />'
+          itime_first_snapshot = itime
+       end if
+    end if
 
     if ((iibm == 2) .and. .not.present(skip_ibm)) then
        ta1(:,:,:) = (one - ep1(:,:,:)) * f1(:,:,:)
