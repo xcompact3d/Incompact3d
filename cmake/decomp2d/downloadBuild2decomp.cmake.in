@@ -11,6 +11,15 @@ ExternalProject_Add(downloadBuild2decomp
     GIT_TAG           "v2.0.4"
     SOURCE_DIR        "${CMAKE_CURRENT_BINARY_DIR}/decomp2d-src"
     INSTALL_DIR       "${CMAKE_CURRENT_BINARY_DIR}/decomp2d-opt"
+    # Configure step
+    CMAKE_ARGS        -DDOUBLE_PRECISION=ON
+    
+    # Build step
+    BUILD_COMMAND     ${CMAKE_COMMAND} --build . -j 4
+    
+    # Install step
+    INSTALL_COMMAND   ${CMAKE_COMMAND} --install .
+    
     TEST_COMMAND      ""
 )
 
