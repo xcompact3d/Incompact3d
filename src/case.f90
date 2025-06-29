@@ -388,10 +388,7 @@ contains
 
     endif
 
-    if (iforces.eq.1) then
-       call force(ux,uy,uz,ep)
-       call restart_forces(1)
-    endif
+    if (iforces.eq.1) call force(ux,uy,uz,ep)
 
   end subroutine postprocess_case
   !##################################################################
