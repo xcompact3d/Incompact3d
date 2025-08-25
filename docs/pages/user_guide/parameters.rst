@@ -14,21 +14,23 @@ BasicParam
 
 * ``xlx``, ``yly`` & ``zlz`` are the domain size, normalised with the reference length for the simulation (as an example, for a cylinder case, ``xlx=20D`` where ``D`` is the diameter of the cylinder). You can also decide to run simulations with non-normalised quantities, you just need to be consistent! 
 
-* ``itype`` sets the flow configuration, each one is specified in a different ``BC-<flow-configuration>.f90`` file. They are:
+* ``itype`` sets the flow configuration, each one is specified in a different ``Case-<flow-configuration>.f90`` file. They are:
 
     - 0 - User Custom Configuration;
     - 1 - Turbidity Current in Lock-Release;
     - 2 - Taylor-Green Vortices;
-    - 3 - Periodic Turbulent Channe`;
+    - 3 - Periodic Turbulent Channel;
     - 4 - Periodic Hill;
     - 5 - Flow over a Cylinder;
-    - 6 - Debug Schemes (for developers);
     - 7 - Mixing Layer;
-    - 8 - Turbulent Jet (work in progress, currently unsupported);
     - 9 - Turbulent Boundary Layer;
     - 10 - Atmospheric Boundary Layer;
-    - 11 - Uniform flow.
-You can modify the ``BC-<flow-configuration>.f90`` file to change the inlet and/or initial conditions. Except for the Atmospheric Boundary Layer, quantities are normalised with a reference velocity, a reference length and a constant density, all equal to 1 (as an example, for the cylinder, the reference velocity is the freestream velocity equal to 1,  the diameter equal to 1 and a constant density equal to 1; as a results the Reynolds number is equal to 1/nu).
+    - 11 - Uniform flow;
+    - 12 - Sandbox configuration;
+    - 13 - Differentilly heated cavity;
+    - 14 - Pipe flow;
+    - 15 - Periodic turbulent boundary layer.
+You can modify the ``Case-<flow-configuration>.f90`` file to change the inlet and/or initial conditions. Except for the Atmospheric Boundary Layer, quantities are normalised with a reference velocity, a reference length and a constant density, all equal to 1 (as an example, for the cylinder, the reference velocity is the freestream velocity equal to 1,  the diameter equal to 1 and a constant density equal to 1; as a results the Reynolds number is equal to 1/nu).
 
 
 * ``istret`` controls mesh refinement in y direction only (it is not possible to refine the mesh in more than one direction):
