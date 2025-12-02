@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.20)                        
+set(cmake_minimum_version 3.20)
+cmake_minimum_required(VERSION ${cmake_minimum_version})                        
 cmake_policy(SET CMP0074 NEW)
 
 project(Xcompact3d LANGUAGES Fortran)

@@ -1,6 +1,6 @@
 # downloadBuild2decomp.cmake.in
 #
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION @cmake_minimum_version@)
 
 project(downloadBuild2decomp NONE)
 
