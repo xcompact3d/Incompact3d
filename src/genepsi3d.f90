@@ -215,9 +215,7 @@ contains
     else
        dxraf =xlx/real(nxraf-1, mytype)
     endif
-    xepsi=zero
-    call geomcomplex(xepsi,1,nxraf,ny,xstart(2),xend(2),xstart(3),xend(3),dxraf,yp,dz,one)
-    ! if (nrank==0) print*,'    step 2'
+
     !y-pencil
     if(ncly)then
        dyraf =yly/real(nyraf, mytype)
@@ -234,18 +232,12 @@ contains
        call stretching(nyraf, ypraf, opt_write = .false.)
     end if
 
-    yepsi=zero
-    call geomcomplex(yepsi,ystart(1),yend(1),nyraf,1,nyraf,ystart(3),yend(3),dx,ypraf,dz,one)
-    ! if (nrank==0) print*,'    step 3'
     !z-pencil
     if(nclz)then
        dzraf=zlz/real(nzraf, mytype)
     else
        dzraf=zlz/real(nzraf-1, mytype)
     endif
-    zepsi=zero
-    call geomcomplex(zepsi,zstart(1),zend(1),ny,zstart(2),zend(2),1,nzraf,dx,yp,dzraf,one)
-    ! if (nrank==0) print*,'    step 4'
 
     !x-pencil
     nobjx(:,:)=0
@@ -277,13 +269,14 @@ contains
     inum=0
     do k=1,xsize(3)
        do j=1,xsize(2)
+          call geomcomplex(xepsi,1,nxraf,ny,xstart(2)+j-1,xstart(2)+j-1,xstart(3)+k-1,xstart(3)+k-1,dxraf,yp,dz,one)
           inum=0
-          if(xepsi(1,j,k).eq.1.)then
+          if(xepsi(1,1,1).eq.1.)then
              inum=1
              nobjxraf(j,k)=1
           endif
           do i=1,nxraf-1
-             if(xepsi(i,j,k).eq.zero.and.xepsi(i+1,j,k).eq.one)then
+             if(xepsi(i,1,1).eq.zero.and.xepsi(i+1,1,1).eq.one)then
                 inum=inum+1
                 nobjxraf(j,k)=nobjxraf(j,k)+1
              endif
@@ -333,13 +326,14 @@ contains
     jnum=0
     do k=1,ysize(3)
        do i=1,ysize(1)
+          call geomcomplex(yepsi,ystart(1)+i-1,ystart(1)+i-1,nyraf,1,nyraf,ystart(3)+k-1,ystart(3)+k-1,dx,ypraf,dz,one)
           jnum=0
-          if(yepsi(i,1,k) == one)then
+          if(yepsi(1,1,1) == one)then
              jnum=1
              nobjyraf(i,k)=1
           endif
           do j=1,nyraf-1
-             if(yepsi(i,j,k) == zero .and. yepsi(i,j+1,k) == one)then
+             if(yepsi(1,j,1) == zero .and. yepsi(1,j+1,1) == one)then
                 jnum=jnum+1
                 nobjyraf(i,k)=nobjyraf(i,k)+1
              endif
@@ -389,13 +383,14 @@ contains
     knum=0
     do j=1,zsize(2)
        do i=1,zsize(1)
+          call geomcomplex(zepsi,zstart(1)+i-1,zstart(1)+i-1,ny,zstart(2)+j-1,zstart(2)+j-1,1,nzraf,dx,yp,dzraf,one)
           knum=0
-          if(zepsi(i,j,1) == one)then
+          if(zepsi(1,1,1) == one)then
              knum=1
              nobjzraf(i,j)=1
           endif
           do k=1,nzraf-1
-             if(zepsi(i,j,k) == zero .and. zepsi(i,j,k+1) == one)then
+             if(zepsi(1,1,k) == zero .and. zepsi(1,1,k+1) == one)then
                 knum=knum+1
                 nobjzraf(i,j)=nobjzraf(i,j)+1
              endif
@@ -417,20 +412,21 @@ contains
     !x-pencil
     do k=1,xsize(3)
        do j=1,xsize(2)
+          call geomcomplex(xepsi,1,nxraf,ny,xstart(2)+j-1,xstart(2)+j-1,xstart(3)+k-1,xstart(3)+k-1,dxraf,yp,dz,one)
           inum=0
-          if(xepsi(1,j,k) == one)then
+          if(xepsi(1,1,1) == one)then
              inum=inum+1
              xi(inum,j,k)=-dx!-xlx
           endif
           do i=1,nxraf-1
-             if(xepsi(i,j,k) == zero .and. xepsi(i+1,j,k) == one)then
+             if(xepsi(i,1,1) == zero .and. xepsi(i+1,1,1) == one)then
                 inum=inum+1
                 xi(inum,j,k)=dxraf*(i-1)+dxraf/2.
-             elseif(xepsi(i,j,k) == one .and. xepsi(i+1,j,k)== zero)then
+             elseif(xepsi(i,1,1) == one .and. xepsi(i+1,1,1)== zero)then
                 xf(inum,j,k)=dxraf*(i-1)+dxraf/2.
              endif
           enddo
-          if(xepsi(nxraf,j,k)==1.)then
+          if(xepsi(nxraf,1,1)==1.)then
              xf(inum,j,k)=xlx+dx!2.*xlx
           endif
        enddo
@@ -439,6 +435,7 @@ contains
     if(ibug /= 0)then
        do k=1,xsize(3)
           do j=1,xsize(2)
+             call geomcomplex(xepsi,1,nxraf,ny,xstart(2)+j-1,xstart(2)+j-1,xstart(3)+k-1,xstart(3)+k-1,dxraf,yp,dz,one)
              if(nobjx(j,k) /= nobjxraf(j,k))then
                 iobj=0
                 if(ep1(1,j,k) == one)iobj=iobj+1
@@ -447,10 +444,10 @@ contains
                    if(ep1(i,j,k) == zero .and. ep1(i+1,j,k) == zero)iflu=1
                    if(ep1(i,j,k) ==  one .and. ep1(i+1,j,k) ==  one)isol=1
                    do iraf=1,nraf
-                      if(xepsi(iraf+nraf*(i-1)  ,j,k) == zero .and.&
-                         xepsi(iraf+nraf*(i-1)+1,j,k) ==  one)idebraf=iraf+nraf*(i-1)+1
-                      if(xepsi(iraf+nraf*(i-1)  ,j,k) ==  one .and.&
-                         xepsi(iraf+nraf*(i-1)+1,j,k) == zero)ifinraf=iraf+nraf*(i-1)+1
+                      if(xepsi(iraf+nraf*(i-1)  ,1,1) == zero .and.&
+                         xepsi(iraf+nraf*(i-1)+1,1,1) ==  one)idebraf=iraf+nraf*(i-1)+1
+                      if(xepsi(iraf+nraf*(i-1)  ,1,1) ==  one .and.&
+                         xepsi(iraf+nraf*(i-1)+1,1,1) == zero)ifinraf=iraf+nraf*(i-1)+1
                    enddo
                    if(idebraf /= 0 .and. ifinraf /= 0 .and.&
                       idebraf < ifinraf .and. iflu == 1)then
@@ -485,20 +482,21 @@ contains
     !y-pencil
     do k=1,ysize(3)
        do i=1,ysize(1)
+          call geomcomplex(yepsi,ystart(1)+i-1,ystart(1)+i-1,nyraf,1,nyraf,ystart(3)+k-1,ystart(3)+k-1,dx,ypraf,dz,one)
           jnum=0
-          if(yepsi(i,1,k) == one)then
+          if(yepsi(1,1,1) == one)then
              jnum=jnum+1
              yi(jnum,i,k)=-(yp(2)-yp(1))!-yly
           endif
           do j=1,nyraf-1
-             if(yepsi(i,j,k) == zero .and. yepsi(i,j+1,k) == one)then
+             if(yepsi(1,j,1) == zero .and. yepsi(1,j+1,1) == one)then
                 jnum=jnum+1
                 yi(jnum,i,k)=ypraf(j)+(ypraf(j+1)-ypraf(j))*half!dyraf*(j-1)+dyraf/2.
-             elseif(yepsi(i,j,k) == one .and. yepsi(i,j+1,k) == zero)then
+             elseif(yepsi(1,j,1) == one .and. yepsi(1,j+1,1) == zero)then
                 yf(jnum,i,k)=ypraf(j)+(ypraf(j+1)-ypraf(j))*half!dyraf*(j-1)+dyraf/2.
              endif
           enddo
-          if(yepsi(i,nyraf,k) == one)then
+          if(yepsi(1,nyraf,1) == one)then
              yf(jnum,i,k)=yly+(yp(ny)-yp(ny-1))*half!2.*yly
           endif
        enddo
@@ -507,6 +505,7 @@ contains
     if(jbug /= 0)then
        do k=1,ysize(3)
           do i=1,ysize(1)
+             call geomcomplex(yepsi,ystart(1)+i-1,ystart(1)+i-1,nyraf,1,nyraf,ystart(3)+k-1,ystart(3)+k-1,dx,ypraf,dz,one)
              if(nobjy(i,k) /= nobjyraf(i,k))then
                 jobj=0
                 if(ta2(i,1,k) == one)jobj=jobj+1
@@ -515,10 +514,10 @@ contains
                    if(ta2(i,j,k) == zero .and. ta2(i,j+1,k) == zero)jflu=1
                    if(ta2(i,j,k) ==  one .and. ta2(i,j+1,k) ==  one)jsol=1
                    do jraf=1,nraf
-                      if(yepsi(i,jraf+nraf*(j-1)  ,k) == zero .and.&
-                         yepsi(i,jraf+nraf*(j-1)+1,k) ==  one)jdebraf=jraf+nraf*(j-1)+1
-                      if(yepsi(i,jraf+nraf*(j-1)  ,k) ==  one .and.&
-                         yepsi(i,jraf+nraf*(j-1)+1,k) == zero)jfinraf=jraf+nraf*(j-1)+1
+                      if(yepsi(1,jraf+nraf*(j-1)  ,1) == zero .and.&
+                         yepsi(1,jraf+nraf*(j-1)+1,1) ==  one)jdebraf=jraf+nraf*(j-1)+1
+                      if(yepsi(1,jraf+nraf*(j-1)  ,1) ==  one .and.&
+                         yepsi(1,jraf+nraf*(j-1)+1,1) == zero)jfinraf=jraf+nraf*(j-1)+1
                    enddo
                    if(jdebraf /= 0 .and. jfinraf /= 0 .and.&
                       jdebraf < jfinraf.and.jflu == 1)then
@@ -553,20 +552,21 @@ contains
     !z-pencil
     do j=1,zsize(2)
        do i=1,zsize(1)
+          call geomcomplex(zepsi,zstart(1)+i-1,zstart(1)+i-1,ny,zstart(2)+j-1,zstart(2)+j-1,1,nzraf,dx,yp,dzraf,one)
           knum=0
-          if(zepsi(i,j,1) == one)then
+          if(zepsi(1,1,1) == one)then
              knum=knum+1
              zi(knum,i,j)=-dz!zlz
           endif
           do k=1,nzraf-1
-             if(zepsi(i,j,k) == zero .and. zepsi(i,j,k+1) == one)then
+             if(zepsi(1,1,k) == zero .and. zepsi(1,1,k+1) == one)then
                 knum=knum+1
                 zi(knum,i,j)=dzraf*(k-1)+dzraf*half
-             elseif(zepsi(i,j,k) == one .and. zepsi(i,j,k+1) == zero)then
+             elseif(zepsi(1,1,k) == one .and. zepsi(1,1,k+1) == zero)then
                 zf(knum,i,j)=dzraf*(k-1)+dzraf*half
              endif
           enddo
-          if(zepsi(i,j,nzraf) == one)then
+          if(zepsi(1,1,nzraf) == one)then
              zf(knum,i,j)=zlz+dz!2.*zlz
           endif
        enddo
@@ -576,6 +576,7 @@ contains
     if(kbug.ne.0)then
        do j=1,zsize(2)
           do i=1,zsize(1)
+             call geomcomplex(zepsi,zstart(1)+i-1,zstart(1)+i-1,ny,zstart(2)+j-1,zstart(2)+j-1,1,nzraf,dx,yp,dzraf,one)
              if(nobjz(i,j) /= nobjzraf(i,j))then
                 kobj=0
                 if(ta3(i,j,1) == one)kobj=kobj+1
@@ -584,10 +585,10 @@ contains
                    if(ta3(i,j,k) == zero .and. ta3(i,j,k+1) == zero)kflu=1
                    if(ta3(i,j,k) ==  one .and. ta3(i,j,k+1) ==  one)ksol=1
                    do kraf=1,nraf
-                      if(zepsi(i,j,kraf+nraf*(k-1)  ) == zero .and.&
-                         zepsi(i,j,kraf+nraf*(k-1)+1) ==  one)kdebraf=kraf+nraf*(k-1)+1
-                      if(zepsi(i,j,kraf+nraf*(k-1)  ) ==  one .and.&
-                         zepsi(i,j,kraf+nraf*(k-1)+1) == zero)kfinraf=kraf+nraf*(k-1)+1
+                      if(zepsi(1,1,kraf+nraf*(k-1)  ) == zero .and.&
+                         zepsi(1,1,kraf+nraf*(k-1)+1) ==  one)kdebraf=kraf+nraf*(k-1)+1
+                      if(zepsi(1,1,kraf+nraf*(k-1)  ) ==  one .and.&
+                         zepsi(1,1,kraf+nraf*(k-1)+1) == zero)kfinraf=kraf+nraf*(k-1)+1
                    enddo
                    if(kdebraf /= 0      .and. kfinraf /= 0 .and.&
                       kdebraf < kfinraf .and. kflu    == 1)then

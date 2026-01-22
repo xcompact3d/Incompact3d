@@ -656,11 +656,11 @@ contains
        zi=zero
        allocate(zf(nobjmax,zsize(1),zsize(2)))
        zf=zero
-       allocate(xepsi(nxraf,xsize(2),xsize(3))) 
+       allocate(xepsi(nxraf,1,1)) 
        xepsi=zero
-       allocate(yepsi(ysize(1),nyraf,ysize(3)))
+       allocate(yepsi(1,nyraf,1))
        yepsi=zero
-       allocate(zepsi(zsize(1),zsize(2),nzraf)) 
+       allocate(zepsi(1,1,nzraf)) 
        zepsi=zero
 
     endif
