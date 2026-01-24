@@ -65,6 +65,8 @@ contains
     REAL(mytype),DIMENSION(ny) :: yp
     REAL(mytype)               :: remp
 
+    epsi = 0._mytype
+
     IF (itype.EQ.itype_cyl) THEN
 
        CALL geomcomplex_cyl(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, remp)
@@ -159,7 +161,6 @@ contains
     use var, only : ta2, ta3
     use decomp_2d
     use MPI
-    use complex_geometry, only: xepsi, yepsi, zepsi
     implicit none
     !
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(inout):: ep1
@@ -184,9 +185,9 @@ contains
     integer,     dimension(xsize(2),xsize(3))          :: nobjxraf
     integer,     dimension(ysize(1),ysize(3))          :: nobjyraf
     integer,     dimension(zsize(1),zsize(2))          :: nobjzraf
-    !real(mytype),dimension(nxraf,xsize(2),xsize(3))    :: xepsi
-    !real(mytype),dimension(ysize(1),nyraf,ysize(3))    :: yepsi
-    !real(mytype),dimension(zsize(1),zsize(2),nzraf)    :: zepsi
+    real(mytype),dimension(nxraf,1,1)                  :: xepsi
+    real(mytype),dimension(1,nyraf,1)                  :: yepsi
+    real(mytype),dimension(1,1,nzraf)                  :: zepsi
     real(mytype),dimension(nyraf)                      :: ypraf
     real(mytype)                     :: dxraf,dyraf,dzraf
     integer                          :: i,j,k
