@@ -270,7 +270,9 @@ contains
     inum=0
     do k=1,xsize(3)
        do j=1,xsize(2)
+          ! Generate 1D profile on the refined grid
           call geomcomplex(xepsi,1,nxraf,ny,xstart(2)+j-1,xstart(2)+j-1,xstart(3)+k-1,xstart(3)+k-1,dxraf,yp,dz,one)
+          ! Update nobjxraf, nobjxmaxraf and ibug
           inum=0
           if(xepsi(1,1,1).eq.1.)then
              inum=1
@@ -287,6 +289,23 @@ contains
           endif
           if(nobjx(j,k).ne.nobjxraf(j,k))then
              ibug=ibug+1
+          endif
+          ! Update xi and xf
+          inum=0
+          if(xepsi(1,1,1) == one)then
+             inum=inum+1
+             xi(inum,j,k)=-dx!-xlx
+          endif
+          do i=1,nxraf-1
+             if(xepsi(i,1,1) == zero .and. xepsi(i+1,1,1) == one)then
+                inum=inum+1
+                xi(inum,j,k)=dxraf*(i-1)+dxraf/2.
+             elseif(xepsi(i,1,1) == one .and. xepsi(i+1,1,1)== zero)then
+                xf(inum,j,k)=dxraf*(i-1)+dxraf/2.
+             endif
+          enddo
+          if(xepsi(nxraf,1,1)==1.)then
+             xf(inum,j,k)=xlx+dx!2.*xlx
           endif
        enddo
     enddo
@@ -327,7 +346,9 @@ contains
     jnum=0
     do k=1,ysize(3)
        do i=1,ysize(1)
+          ! Generate 1D profile on the refined grid
           call geomcomplex(yepsi,ystart(1)+i-1,ystart(1)+i-1,nyraf,1,nyraf,ystart(3)+k-1,ystart(3)+k-1,dx,ypraf,dz,one)
+          ! Update nobjyraf, nobjymaxraf and jbug
           jnum=0
           if(yepsi(1,1,1) == one)then
              jnum=1
@@ -344,6 +365,23 @@ contains
           endif
           if(nobjy(i,k).ne.nobjyraf(i,k))then
              jbug=jbug+1
+          endif
+          ! Update yi and yf
+          jnum=0
+          if(yepsi(1,1,1) == one)then
+             jnum=jnum+1
+             yi(jnum,i,k)=-(yp(2)-yp(1))!-yly
+          endif
+          do j=1,nyraf-1
+             if(yepsi(1,j,1) == zero .and. yepsi(1,j+1,1) == one)then
+                jnum=jnum+1
+                yi(jnum,i,k)=ypraf(j)+(ypraf(j+1)-ypraf(j))*half!dyraf*(j-1)+dyraf/2.
+             elseif(yepsi(1,j,1) == one .and. yepsi(1,j+1,1) == zero)then
+                yf(jnum,i,k)=ypraf(j)+(ypraf(j+1)-ypraf(j))*half!dyraf*(j-1)+dyraf/2.
+             endif
+          enddo
+          if(yepsi(1,nyraf,1) == one)then
+             yf(jnum,i,k)=yly+(yp(ny)-yp(ny-1))*half!2.*yly
           endif
        enddo
     enddo
@@ -384,7 +422,9 @@ contains
     knum=0
     do j=1,zsize(2)
        do i=1,zsize(1)
+          ! Generate 1D profile on the refined grid
           call geomcomplex(zepsi,zstart(1)+i-1,zstart(1)+i-1,ny,zstart(2)+j-1,zstart(2)+j-1,1,nzraf,dx,yp,dzraf,one)
+          ! Update nobjzraf, nobjzmaxraf and kbug
           knum=0
           if(zepsi(1,1,1) == one)then
              knum=1
@@ -402,6 +442,23 @@ contains
           if(nobjz(i,j).ne.nobjzraf(i,j))then
              kbug=kbug+1
           endif
+          ! Update zi and zf
+          knum=0
+          if(zepsi(1,1,1) == one)then
+             knum=knum+1
+             zi(knum,i,j)=-dz!zlz
+          endif
+          do k=1,nzraf-1
+             if(zepsi(1,1,k) == zero .and. zepsi(1,1,k+1) == one)then
+                knum=knum+1
+                zi(knum,i,j)=dzraf*(k-1)+dzraf*half
+             elseif(zepsi(1,1,k) == one .and. zepsi(1,1,k+1) == zero)then
+                zf(knum,i,j)=dzraf*(k-1)+dzraf*half
+             endif
+          enddo
+          if(zepsi(1,1,nzraf) == one)then
+             zf(knum,i,j)=zlz+dz!2.*zlz
+          endif
        enddo
     enddo
     call MPI_REDUCE(nobjzmaxraf,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
@@ -409,29 +466,6 @@ contains
     call MPI_REDUCE(kbug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
     ! if (nrank==0) print*,'        kbug=',mpi_aux_i
     ! if (nrank==0) print*,'    step 7'
-
-    !x-pencil
-    do k=1,xsize(3)
-       do j=1,xsize(2)
-          call geomcomplex(xepsi,1,nxraf,ny,xstart(2)+j-1,xstart(2)+j-1,xstart(3)+k-1,xstart(3)+k-1,dxraf,yp,dz,one)
-          inum=0
-          if(xepsi(1,1,1) == one)then
-             inum=inum+1
-             xi(inum,j,k)=-dx!-xlx
-          endif
-          do i=1,nxraf-1
-             if(xepsi(i,1,1) == zero .and. xepsi(i+1,1,1) == one)then
-                inum=inum+1
-                xi(inum,j,k)=dxraf*(i-1)+dxraf/2.
-             elseif(xepsi(i,1,1) == one .and. xepsi(i+1,1,1)== zero)then
-                xf(inum,j,k)=dxraf*(i-1)+dxraf/2.
-             endif
-          enddo
-          if(xepsi(nxraf,1,1)==1.)then
-             xf(inum,j,k)=xlx+dx!2.*xlx
-          endif
-       enddo
-    enddo
 
     if(ibug /= 0)then
        do k=1,xsize(3)
@@ -480,29 +514,6 @@ contains
     endif
     !if (nrank==0) write(*,*) '    step 8'
 
-    !y-pencil
-    do k=1,ysize(3)
-       do i=1,ysize(1)
-          call geomcomplex(yepsi,ystart(1)+i-1,ystart(1)+i-1,nyraf,1,nyraf,ystart(3)+k-1,ystart(3)+k-1,dx,ypraf,dz,one)
-          jnum=0
-          if(yepsi(1,1,1) == one)then
-             jnum=jnum+1
-             yi(jnum,i,k)=-(yp(2)-yp(1))!-yly
-          endif
-          do j=1,nyraf-1
-             if(yepsi(1,j,1) == zero .and. yepsi(1,j+1,1) == one)then
-                jnum=jnum+1
-                yi(jnum,i,k)=ypraf(j)+(ypraf(j+1)-ypraf(j))*half!dyraf*(j-1)+dyraf/2.
-             elseif(yepsi(1,j,1) == one .and. yepsi(1,j+1,1) == zero)then
-                yf(jnum,i,k)=ypraf(j)+(ypraf(j+1)-ypraf(j))*half!dyraf*(j-1)+dyraf/2.
-             endif
-          enddo
-          if(yepsi(1,nyraf,1) == one)then
-             yf(jnum,i,k)=yly+(yp(ny)-yp(ny-1))*half!2.*yly
-          endif
-       enddo
-    enddo
-
     if(jbug /= 0)then
        do k=1,ysize(3)
           do i=1,ysize(1)
@@ -549,29 +560,6 @@ contains
        enddo
     endif
     !if (nrank==0) write(*,*) '    step 9'
-
-    !z-pencil
-    do j=1,zsize(2)
-       do i=1,zsize(1)
-          call geomcomplex(zepsi,zstart(1)+i-1,zstart(1)+i-1,ny,zstart(2)+j-1,zstart(2)+j-1,1,nzraf,dx,yp,dzraf,one)
-          knum=0
-          if(zepsi(1,1,1) == one)then
-             knum=knum+1
-             zi(knum,i,j)=-dz!zlz
-          endif
-          do k=1,nzraf-1
-             if(zepsi(1,1,k) == zero .and. zepsi(1,1,k+1) == one)then
-                knum=knum+1
-                zi(knum,i,j)=dzraf*(k-1)+dzraf*half
-             elseif(zepsi(1,1,k) == one .and. zepsi(1,1,k+1) == zero)then
-                zf(knum,i,j)=dzraf*(k-1)+dzraf*half
-             endif
-          enddo
-          if(zepsi(1,1,nzraf) == one)then
-             zf(knum,i,j)=zlz+dz!2.*zlz
-          endif
-       enddo
-    enddo
 
     kdebraf=0
     if(kbug.ne.0)then
