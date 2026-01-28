@@ -338,33 +338,17 @@ contains
        do i=1,ysize(1)
           ! Generate 1D profile on the refined grid
           call geomcomplex(yepsi,ystart(1)+i-1,ystart(1)+i-1,nyraf,1,nyraf,ystart(3)+k-1,ystart(3)+k-1,dx,ypraf,dz,one)
-          ! Update nobjyraf, nobjymaxraf and jbug
+          ! Update nobjyraf, nobjymaxraf, yi, yf and jbug
           jnum=0
           if(yepsi(1,1,1) == one)then
              jnum=1
              nobjyraf(i,k)=1
-          endif
-          do j=1,nyraf-1
-             if(yepsi(1,j,1) == zero .and. yepsi(1,j+1,1) == one)then
-                jnum=jnum+1
-                nobjyraf(i,k)=nobjyraf(i,k)+1
-             endif
-          enddo
-          if(jnum.gt.nobjymaxraf)then
-             nobjymaxraf=jnum
-          endif
-          if(nobjy(i,k).ne.nobjyraf(i,k))then
-             jbug=jbug+1
-          endif
-          ! Update yi and yf
-          jnum=0
-          if(yepsi(1,1,1) == one)then
-             jnum=jnum+1
              yi(jnum,i,k)=-(yp(2)-yp(1))!-yly
           endif
           do j=1,nyraf-1
              if(yepsi(1,j,1) == zero .and. yepsi(1,j+1,1) == one)then
                 jnum=jnum+1
+                nobjyraf(i,k)=nobjyraf(i,k)+1
                 yi(jnum,i,k)=ypraf(j)+(ypraf(j+1)-ypraf(j))*half!dyraf*(j-1)+dyraf/2.
              elseif(yepsi(1,j,1) == one .and. yepsi(1,j+1,1) == zero)then
                 yf(jnum,i,k)=ypraf(j)+(ypraf(j+1)-ypraf(j))*half!dyraf*(j-1)+dyraf/2.
@@ -372,6 +356,12 @@ contains
           enddo
           if(yepsi(1,nyraf,1) == one)then
              yf(jnum,i,k)=yly+(yp(ny)-yp(ny-1))*half!2.*yly
+          endif
+          if(jnum.gt.nobjymaxraf)then
+             nobjymaxraf=jnum
+          endif
+          if(nobjy(i,k).ne.nobjyraf(i,k))then
+             jbug=jbug+1
           endif
        enddo
     enddo
