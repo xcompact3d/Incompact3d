@@ -272,40 +272,30 @@ contains
        do j=1,xsize(2)
           ! Generate 1D profile on the refined grid
           call geomcomplex(xepsi,1,nxraf,ny,xstart(2)+j-1,xstart(2)+j-1,xstart(3)+k-1,xstart(3)+k-1,dxraf,yp,dz,one)
-          ! Update nobjxraf, nobjxmaxraf and ibug
+          ! Update nobjxraf, nobjxmaxraf, xi, xf and ibug
           inum=0
-          if(xepsi(1,1,1).eq.1.)then
+          if(xepsi(1,1,1) == one)then
              inum=1
              nobjxraf(j,k)=1
+             xi(inum,j,k)=-dx!-xlx
           endif
           do i=1,nxraf-1
-             if(xepsi(i,1,1).eq.zero.and.xepsi(i+1,1,1).eq.one)then
+             if(xepsi(i,1,1) == zero.and.xepsi(i+1,1,1) == one)then
                 inum=inum+1
                 nobjxraf(j,k)=nobjxraf(j,k)+1
+                xi(inum,j,k)=dxraf*(i-1)+dxraf/2.
+             elseif(xepsi(i,1,1) == one .and. xepsi(i+1,1,1) == zero)then
+                xf(inum,j,k)=dxraf*(i-1)+dxraf/2.
              endif
           enddo
+          if(xepsi(nxraf,1,1) == one)then
+             xf(inum,j,k)=xlx+dx!2.*xlx
+          end if
           if(inum.gt.nobjxmaxraf)then
              nobjxmaxraf=inum
           endif
           if(nobjx(j,k).ne.nobjxraf(j,k))then
              ibug=ibug+1
-          endif
-          ! Update xi and xf
-          inum=0
-          if(xepsi(1,1,1) == one)then
-             inum=inum+1
-             xi(inum,j,k)=-dx!-xlx
-          endif
-          do i=1,nxraf-1
-             if(xepsi(i,1,1) == zero .and. xepsi(i+1,1,1) == one)then
-                inum=inum+1
-                xi(inum,j,k)=dxraf*(i-1)+dxraf/2.
-             elseif(xepsi(i,1,1) == one .and. xepsi(i+1,1,1)== zero)then
-                xf(inum,j,k)=dxraf*(i-1)+dxraf/2.
-             endif
-          enddo
-          if(xepsi(nxraf,1,1)==1.)then
-             xf(inum,j,k)=xlx+dx!2.*xlx
           endif
        enddo
     enddo
