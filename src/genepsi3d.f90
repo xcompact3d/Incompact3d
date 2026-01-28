@@ -404,33 +404,17 @@ contains
        do i=1,zsize(1)
           ! Generate 1D profile on the refined grid
           call geomcomplex(zepsi,zstart(1)+i-1,zstart(1)+i-1,ny,zstart(2)+j-1,zstart(2)+j-1,1,nzraf,dx,yp,dzraf,one)
-          ! Update nobjzraf, nobjzmaxraf and kbug
+          ! Update nobjzraf, nobjzmaxraf, zi, zf and kbug
           knum=0
           if(zepsi(1,1,1) == one)then
              knum=1
              nobjzraf(i,j)=1
-          endif
-          do k=1,nzraf-1
-             if(zepsi(1,1,k) == zero .and. zepsi(1,1,k+1) == one)then
-                knum=knum+1
-                nobjzraf(i,j)=nobjzraf(i,j)+1
-             endif
-          enddo
-          if(knum.gt.nobjzmaxraf)then
-             nobjzmaxraf=knum
-          endif
-          if(nobjz(i,j).ne.nobjzraf(i,j))then
-             kbug=kbug+1
-          endif
-          ! Update zi and zf
-          knum=0
-          if(zepsi(1,1,1) == one)then
-             knum=knum+1
              zi(knum,i,j)=-dz!zlz
           endif
           do k=1,nzraf-1
              if(zepsi(1,1,k) == zero .and. zepsi(1,1,k+1) == one)then
                 knum=knum+1
+                nobjzraf(i,j)=nobjzraf(i,j)+1
                 zi(knum,i,j)=dzraf*(k-1)+dzraf*half
              elseif(zepsi(1,1,k) == one .and. zepsi(1,1,k+1) == zero)then
                 zf(knum,i,j)=dzraf*(k-1)+dzraf*half
@@ -438,6 +422,12 @@ contains
           enddo
           if(zepsi(1,1,nzraf) == one)then
              zf(knum,i,j)=zlz+dz!2.*zlz
+          endif
+          if(knum.gt.nobjzmaxraf)then
+             nobjzmaxraf=knum
+          endif
+          if(nobjz(i,j).ne.nobjzraf(i,j))then
+             kbug=kbug+1
           endif
        enddo
     enddo
